@@ -1,6 +1,7 @@
 # 个人档案
 
 ## 基本信息
+- 英文名：Frank（求职时写 Qiyuan (Frank) Deng）
 - 法定姓名：Qiyuan Deng（Given names: Qiyuan；Family name: Deng）
 - 生日：07-31（出生日期 1998-07-31；早先记成 5 月 25 日是错的，已更正，与 Autodesk 学籍表一致）
 - 所在地：澳大利亚新州 Emu Plains
@@ -11,6 +12,16 @@
 - UTS 电气工程本科（Electrical Engineering），五年制
 - 2026 年 Spring 学期入学（目前在读第一学期），预计 2030 年毕业
 - 包含两段强制实习
+- UTS 学号 26747598，学校邮箱 Qiyuan.Deng@student.uts.edu.au
+- 以前的学历：Monash College 科学文凭（Diploma of Science，2018）；Monash 理学学士，化学专业、地球科学辅修（2021 毕业）
+- RPL（学分减免）申请编号：01546493
+- 2026 Spring 在修的 4 门课（按邮件里 2026-08-11 的学习总结整理）：
+  - 33130 Mathematics 1
+  - 48510 电气工程课（EE）
+  - C 编程
+  - 物理建模
+  - 课程代码不全，待在 Canvas 上核对
+- 2026-08-11 是第 3 周，推算第 1 周从 2026-07-27 开始，2026-09-25 大约是第 9 周
 - 想走的方向：power systems（电力系统）
 
 ## 工作与收入
