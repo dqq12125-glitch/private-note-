@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>怪兽样品对比</title>
+<style>
+  body { font-family: "PingFang SC", system-ui, sans-serif; background: #f4f6f8; color: #1d2b36; margin: 0; padding: 16px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  p { margin: 0 0 14px; color: #5b6b76; }
+  table { border-collapse: separate; border-spacing: 8px; }
+  th { font-size: 14px; text-align: center; }
+  td { background: #fff; border-radius: 12px; text-align: center; vertical-align: middle; width: 200px; height: 200px; }
+  td img { width: 190px; height: 190px; object-fit: contain; }
+  td.name { width: 110px; font-weight: 800; }
+  td.name small { display: block; font-weight: 400; color: #5b6b76; }
+  .none { color: #9aa7b0; font-size: 13px; }
+</style>
+<h1>怪兽样品对比</h1>
+<p>同一批 10 只：现在的程序模型、Blender 模型（游戏里的样子，两个角度）、Blender 渲染图、Gemini 画的图。</p>
+<table id="t"><tr><th></th><th>现在</th><th>Blender · 游戏里</th><th>Blender · 侧面</th><th>Blender · 渲染</th><th>Gemini</th></tr></table>
+<script>window.ECHO_BASE = '../';</script>
+<script src="../vendor/three.min.js"></script>
+<script src="../dex.js"></script>
+<script src="../monster3d.js"></script>
+<script>
+  const t = document.getElementById('t');
+  Mon3D.ready.then(() => {
+    Mon3D.samples.forEach(id => {
+      const sp = DEX.list.find(s => s.id === id);
+      const tr = document.createElement('tr');
+      const img = src => src ? '<img src="' + src + '">' : '<span class="none">—</span>';
+      tr.innerHTML = '<td class="name">' + sp.en + '<small>' + sp.zh + '</small></td>' +
+        '<td>' + img(Mon3D.snapshot(sp, 256, { proc: true })) + '</td>' +
+        '<td>' + img(Mon3D.snapshot(sp, 256)) + '</td>' +
+        '<td>' + img(Mon3D.snapshot(sp, 256, { ry: -1.2 })) + '</td>' +
+        '<td>' + img('../art/blender/' + id + '.png') + '</td>' +
+        '<td><img src="../art/gemini/' + id + '.png" onerror="this.outerHTML=\'<span class=none>还没画</span>\'"></td>';
+      t.appendChild(tr);
+    });
+    document.body.dataset.ready = '1';
+  });
+</script>

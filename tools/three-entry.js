@@ -9,3 +9,4 @@ export {
   SRGBColorSpace, NearestFilter, LinearFilter, LinearMipmapLinearFilter, RepeatWrapping, ClampToEdgeWrapping, DoubleSide, FrontSide, PCFSoftShadowMap, PCFShadowMap, RGBADepthPacking, NoToneMapping, ACESFilmicToneMapping, HalfFloatType, UnsignedByteType,
 } from 'three';
 export { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+export { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';

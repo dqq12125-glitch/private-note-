@@ -1,2 +1,5 @@
 node_modules/
 tests/screenshots/
+
+# 美术样品（生成的模型和图片，还没定用哪种）
+art/

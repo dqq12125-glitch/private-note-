@@ -548,7 +548,8 @@ details.pre summary { font-weight: 800; cursor: pointer; }
 .mrow-i small { color: var(--ink-2); }
 .mrow .xpbar { max-width: none; }
 .mrow-b { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; }
-.mrow-b:has(.lvchip) { display: none; }
+.mrow-b { align-items: center; }
+.lead-tag { font-size: 13px; font-weight: 800; color: #b8862b; margin-right: auto; }
 .dex { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .dex-i { position: relative; display: flex; flex-direction: column; align-items: center; padding: 8px 4px 6px; border-radius: 14px; background: var(--card); box-shadow: 0 3px 0 var(--line); text-align: center; }
 .dex-i b { font-size: 12px; }
@@ -825,3 +826,13 @@ body.in-world { overflow: hidden; }
 .fame-mon { display: flex; flex-direction: column; align-items: center; padding: 4px; border-radius: 14px; background: rgba(255,255,255,.55); animation: pop .5s ease-out both; }
 .fame-mon b { font-family: var(--f-display); font-size: 14px; }
 .fame-mon small { font-size: 11px; }
+
+/* ---------- 养成：亲密度、电脑箱子、图鉴出没地点 ---------- */
+.frh { color: #e91e63; font-size: 14px; letter-spacing: 1px; white-space: nowrap; }
+.sum-fr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 2px; font-size: 14px; }
+.pc-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.pc-tabs .btn { min-width: 44px; display: inline-flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.pc-tabs .btn small { font-size: 11px; opacity: .75; }
+.pc-sort { font-size: 13px; margin-bottom: 6px; color: var(--ink-2); }
+.pc-sort .link.on { font-weight: 800; color: var(--ink); text-decoration: underline; }
+.dex-hab { font-size: 14px; background: #f3f8ec; border-radius: 10px; padding: 6px 10px; text-align: left; }

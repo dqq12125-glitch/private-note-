@@ -86,7 +86,41 @@
   const starTex = () => canvasTex('star', 64, 64, g => { g.fillStyle = '#fff'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 12 : 30; g.lineTo(32 + Math.cos(a) * r, 34 + Math.sin(a) * r); } g.fill(); });
 
   // ---------- 零件 ----------
-  function build(sp) {
+  // ---------- 外部美术（样品对比用）：?art=blender 用 Blender 做的模型（art/blender/*.glb） ----------
+  const ART_MODE = (() => { try { return new URLSearchParams(location.search).get('art') || localStorage.getItem('echo-art') || ''; } catch (e) { return ''; } })();
+  const SAMPLES = ['emberpup', 'flamewolf', 'bubbly', 'sprouty', 'zappy', 'songlet', 'owlet', 'twigling', 'moonbunny', 'echodrake'];
+  const EXT = {};
+  const baseId = sp => String(sp.id || '').replace(/_shiny$/, '');
+  function buildExt(sp, ext) {
+    const root = new T3.Group();
+    const R = { root, body: new T3.Group(), head: new T3.Group(), tail: new T3.Group(), wings: [], eyes: [], ears: new T3.Group(), float: 0, height: 1, ext: true };
+    root.add(R.body);
+    const model = ext.scene.clone(true);
+    let top = 0.01;
+    const meshes = []; model.traverse(o => { if (o.isMesh) meshes.push(o); });
+    meshes.forEach(o => {
+      const glow = /glow/.test((o.material && o.material.name) || '');
+      o.material = glow ? (EXT._glow || (EXT._glow = new T3.MeshBasicMaterial({ vertexColors: true }))) : (EXT._toon || (EXT._toon = new T3.MeshToonMaterial({ vertexColors: true, gradientMap: grad })));
+      if (!glow) o.add(new T3.Mesh(o.geometry, line('#2a1c18', .011)));
+      o.geometry.computeBoundingBox();
+      top = Math.max(top, o.geometry.boundingBox.max.y);
+    });
+    model.scale.setScalar(1.15 / top);
+    R.body.add(model);
+    const stage = sp.stage || 1, S = (sp.sz || 1) * (sp.legend ? 1.5 : stage === 1 ? .82 : stage === 2 ? 1 : 1.22);
+    root.scale.setScalar(S);
+    R.size = S; R.height = 1.15 * S; R.base = 0; R.blinkAt = 99;
+    return R;
+  }
+  const ready = (() => {
+    if (ART_MODE !== 'blender' || !T3.GLTFLoader) return Promise.resolve();
+    const L = new T3.GLTFLoader();
+    return Promise.all(SAMPLES.map(id => new Promise(res => L.load((window.ECHO_BASE || '') + 'art/blender/' + id + '.glb', g => { EXT[id] = { scene: g.scene }; res(); }, undefined, () => res()))))
+      .then(() => { for (const k in snapCache) delete snapCache[k]; window.dispatchEvent(new Event('mon3d-ready')); });
+  })();
+
+  function build(sp, opts) {
+    if (!(opts && opts.proc) && EXT[baseId(sp)]) return buildExt(sp, EXT[baseId(sp)]);
     const root = new T3.Group();
     const W = .016;                               // 描边粗细
     const c = sp.c || '#8bc34a', k = sp.k || '#fff4d8', a = sp.a || '#ffca28', dk = shade(c, .42);
@@ -363,9 +397,9 @@
   // ---------- 截图：给菜单、图鉴、2D 画面用 ----------
   let snapR = null, snapScene = null, snapCam = null;
   const snapCache = {};
-  function snapshot(sp, size) {
+  function snapshot(sp, size, opts) {
     size = size || 192;
-    const key = sp.id + ':' + size;
+    const key = sp.id + ':' + size + (opts && opts.proc ? ':p' : '') + (opts && opts.ry != null ? ':r' + opts.ry : '');
     if (snapCache[key]) return snapCache[key];
     try {
       if (!snapR) {
@@ -377,8 +411,8 @@
         snapCam = new T3.PerspectiveCamera(26, 1, .1, 50);
       }
       snapR.setPixelRatio(1); snapR.setSize(size, size, false);
-      const R = build(sp);
-      R.root.rotation.y = -.35;
+      const R = build(sp, opts);
+      R.root.rotation.y = opts && opts.ry != null ? opts.ry : -.35;
       snapScene.add(R.root);
       const h = Math.max(R.height, .9), dist = h * 3.1 + .6;
       snapCam.position.set(dist * .18, h * .62 + dist * .16, dist);
@@ -391,5 +425,5 @@
     } catch (e) { return ''; }
   }
 
-  window.Mon3D = { build, animate, dispose, snapshot, shade };
+  window.Mon3D = { build, animate, dispose, snapshot, shade, ready, mode: ART_MODE, samples: SAMPLES };
 })();

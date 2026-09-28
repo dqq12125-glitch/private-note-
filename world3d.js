@@ -911,7 +911,7 @@
     }
     // 地图上的野生怪兽（剧情用）
     function setMonOn(s, sp) {
-      const key = 'mon:' + sp.en;
+      const key = 'mon:' + sp.id;
       if (s.key === key) return;
       const im = A.monImg(sp);
       if (!im.complete || !im.naturalWidth) return;
@@ -929,7 +929,7 @@
       return { root, mesh: null, sp: null };
     }
     function setMon(f, sp) {
-      if (!sp || f.sp === sp.en) return;
+      if (!sp || f.sp === sp.id) return;
       const im = A.monImg(sp);
       if (!im.complete || !im.naturalWidth) return;
       const c = document.createElement('canvas'); c.width = c.height = Q.cell;
@@ -939,7 +939,7 @@
       f.mesh = sheet(t, 1.05);
       f.mesh.rotation.x = -pitch * .8;
       f.root.add(f.mesh);
-      f.sp = sp.en;
+      f.sp = sp.id;
     }
     function bubbleSprite(ch, col) {
       const t = canvasTexKeep(64, 64, g => {

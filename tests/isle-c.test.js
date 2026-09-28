@@ -190,11 +190,16 @@ const ANS = {
   t.check((await t.dbg()).map === 'd6a', '7 枚徽章：管理员让开，进了钟山');
   await t.shot('c6-d6a');
   // 钟山 1F 的怪力谜题（先把下面的石头推开）
-  await t.tp(4, 5, 'up'); await step('up');
-  await t.p.keyboard.press('ArrowRight'); await W(200);
-  await t.A(); await idle();
-  await step('right');
-  await t.tp(5, 5, 'up'); await step('up', 3); await step('left', 3); await step('up');
+  // 洞里会随机遇到野生怪兽打断推石头：没拿到就重新进洞（石头复位）再推一次
+  for (let k = 0; k < 3 && !(await flags())['p:d6a:2:1']; k++) {
+    if (k) { await t.go('t6', 'from:d6a'); await idle(); await t.go('d6a', 'from:t6'); await idle(); }
+    await t.tp(4, 5, 'up'); await step('up');
+    await t.p.keyboard.press('ArrowRight'); await W(200);
+    await t.A(); await idle();
+    await step('right');
+    await t.tp(5, 5, 'up'); await step('up', 3); await step('left', 3); await step('up');
+    await idle();
+  }
   t.check(!!(await flags())['p:d6a:2:1'], '钟山 1F：推开两块大石头，拿到角落里的道具');
   // 山顶：闷雷和导师欧瑞
   await t.go('d6b', 'from:d6a'); await idle();

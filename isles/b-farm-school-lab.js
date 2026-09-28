@@ -97,6 +97,8 @@
     hiddenItems: ['superpotion', 'rope'],
     links: { s: 'r1', n: 'r2', e: ['r2e', 'r2e'] },
     people: [
+      // 养育屋的奶奶（养成系统）：寄养两只怪兽会有蛋，第一次见面送一个蛋
+      { id: 'daycare', role: 'daycare', name: 'Grandma Lin', look: 'granny', g: 'f', x: 28, y: 26, face: 'down' },
       // 走丢的小男孩蒂姆（井边）
       { id: 'tim', x: 15, y: 21, face: 'down', name: 'Tim', g: 'm', look: LK.tim, role: 'story' },
       // 找到以后，家人来到井边

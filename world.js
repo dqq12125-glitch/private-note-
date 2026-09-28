@@ -285,9 +285,20 @@
     if (story('step')) return;
     const tr = spotTrainer();
     if (tr) { trainerSpotted(tr); return; }
+    const ev = MG.stepHook && MG.stepHook();
+    if (ev && ev.hatch) { hatchScene(ev); return; }
     if (ws.repel > 0) { ws.repel--; if (!ws.repel) E.toast('🧴 驱怪喷雾的效果消失了'); }
     const rate = slid ? 0 : PL.surf && isWater(PL.x, PL.y) ? .08 : EM.ENCOUNTER[t];
     if (rate && !(ws.repel > 0) && Math.random() < rate && MG.anyAlive()) encounter();
+  }
+  // 蛋孵出来了
+  function hatchScene(ev) {
+    const sp = MG.species(ev.sp), line = 'Hello, ' + sp.en + '! Welcome to the world!';
+    talk([
+      { who: '旁白', emo: '🥚', en: 'Oh? The egg is moving!', zh: '咦？蛋在动！' },
+      { who: '旁白', emo: '🐣', en: 'Crack! A baby ' + sp.en + ' came out!', zh: '咔嚓！孵出了一只小 ' + sp.en + '（' + sp.zh + '）！', onShow: () => { const mon = MG.hatch(ev.hatch); E.SFX.win(); E.confetti(140); if (mon && mon.shiny) E.toast('✨ 是异色的！', 'gold'); hud(); } },
+      { who: '{name}', look: playerLook(), g: E.S.player && E.S.player.gender === 'girl' ? 'f' : 'm', en: line, zh: '对刚出生的小怪兽打个招呼：', kind: 'speak', target: line },
+    ], () => setTimeout(() => MG.nickSheet(ev.hatch, 'queue'), 200));
   }
   function spotTrainer() {
     for (const n of M.npcs) {
@@ -470,6 +481,7 @@
     const [dx, dy] = DIRS[PL.dir], tx = PL.x + dx, ty = PL.y + dy, t = tile(tx, ty);
     const n = npcAt(tx, ty) || (t === 'Q' ? npcAt(tx + dx, ty + dy) : null);
     if (n) return { n };
+    if (tx === FL.x && ty === FL.y && !(FL.x === PL.x && FL.y === PL.y) && !PL.surf && MG.lead && MG.lead()) return { follower: true };
     const s = signAt(tx, ty);
     if (s) return { s };
     if (t === 'P') return { pc: true };
@@ -498,6 +510,7 @@
     }
     if (f.n) { f.n.face = faceTo(f.n, PL); if (!story('talk', f.n)) npcTalk(f.n); }
     else if (f.s) signTalk(f.s);
+    else if (f.follower) { E.SFX.tap(); MG.talkSheet(MG.lead().uid); }
     else if (f.pc) { E.SFX.tap(); E.say('Welcome to the monster box!'); MG.pcSheet(); }
     else if (f.statue) { if (!story('tile', f)) markTalk(f); }
     else if (f.gate) { if (!story('tile', f)) talk([{ who: '旁白', emo: '🚧', en: 'The gate is closed.', zh: '机关门关着。' }]); }
@@ -536,6 +549,15 @@
       talk(lines(n.give.say || [['Take this!', '这个送给你！']]).concat([
         P('You got ' + (it ? it.en : n.give.item) + '!', '得到了' + (it ? it.zh : n.give.item) + (n.give.n > 1 ? ' ×' + n.give.n : '') + '！', { onShow: () => { WS().flags['g:' + M.id + ':' + n.id] = 1; MG.addItem(n.give.item, n.give.n || 1); if (n.give.flag) WS().flags['s:' + n.give.flag] = 1; E.save(); hud(); E.SFX.win(); E.toast((it ? it.icon + ' ' + it.zh : n.give.item) + ' +' + (n.give.n || 1), 'gold'); } }),
       ]).concat(lines(n.give.after || [])));
+      return;
+    }
+    if (n.role === 'daycare') {
+      const gk = 'g:daygift';
+      if (!WS().flags[gk]) {
+        talk([P('Hello, dear! We are the daycare. We look after monsters.', '你好呀，孩子！我们开养育屋，帮大家照顾怪兽。'), P('Leave two monsters with us. If they get along, you may find an egg!', '把两只怪兽寄养在这里。它们相处得好的话，说不定会有蛋哦！'),
+          P('Oh! This egg was in our garden this morning. Take it, please!', '哦！今天早上花园里出现了一个蛋，你带走吧！', { onShow: () => { WS().flags[gk] = 1; MG.giveEgg(n.egg || 'moonbunny'); E.save(); E.SFX.win(); E.toast('🥚 得到了一个蛋！放在队伍里走路就会孵出来', 'gold'); } }),
+          P('Walk with it, and it will hatch.', '带着它多走走路，它就会孵出来。')], () => MG.daycareSheet());
+      } else { E.say('Welcome back!', undefined, 'f'); MG.daycareSheet(); }
       return;
     }
     if (n.role === 'guard') {
@@ -709,7 +731,7 @@
     dive: { zh: '潜水', en: 'Dive', icon: '🤿', badge: 10, hm: 'hm_dive', types: ['water', 'dragon'], say: n => n + ', dive down!', what: '在深水（深蓝色）上潜到海底', who: '导师欧瑞（规则城）' },
     falls: { zh: '攀瀑', en: 'Waterfall', icon: '🏞️', badge: 12, hm: 'hm_falls', types: ['water', 'dragon'], say: n => n + ', climb the waterfall!', what: '冲浪时爬上瀑布', who: '天气岛的气象台台长' },
   };
-  const skillMon = k => E.S.mon.team.map(u => E.S.mon.box.find(m => m.uid === u)).filter(Boolean).find(m => MG.species(m.sp).types.some(t => SKILLS[k].types.includes(t)));
+  const skillMon = k => E.S.mon.team.map(u => E.S.mon.box.find(m => m.uid === u)).filter(m => m && !m.egg).find(m => MG.species(m.sp).types.some(t => SKILLS[k].types.includes(t)));
   const hasHM = k => E.S.settings.unlockAll || MG.itemCount(SKILLS[k].hm) > 0;
   const skillOpen = k => E.S.settings.unlockAll || (hasHM(k) && nBadges() >= SKILLS[k].badge);
   const skillReady = k => skillOpen(k) && !!skillMon(k);
@@ -720,7 +742,7 @@
     if (!skillOpen(k)) { talk([nar('You need more badges to use ' + S.en + '.', '要用「' + S.zh + '」' + S.what + '，需要 ' + S.badge + ' 枚徽章。')]); return; }
     const mon = skillMon(k);
     if (!mon) { talk([nar('None of your monsters can use ' + S.en + '.', '队伍里要有' + S.types.map(t => DEX.TYPES[t].zh).join('、') + '系的怪兽，才能用「' + S.zh + '」。')]); return; }
-    const name = MG.species(mon.sp).en;
+    const name = MG.nm(mon);
     talk([{ who: '{name}', look: playerLook(), g: E.S.player && E.S.player.gender === 'girl' ? 'f' : 'm', en: S.say(name), zh: '用「' + S.zh + '」：大声对 ' + name + ' 说出来！', kind: 'speak', target: S.say(name), pass: () => { E.S.stats.spoken = (E.S.stats.spoken || 0); then(mon); return []; } }]);
   }
   function obstacle(f) {
@@ -1123,12 +1145,12 @@
   const playerLook = () => (E.S.player && E.S.player.gender === 'girl') ? LOOKS.girl : LOOKS.boy;
   const imgCache = {};
   function monImg(sp) {
-    if (!imgCache[sp.en]) {
+    if (!imgCache[sp.id]) {
       const im = new Image(), url = window.Mon3D ? Mon3D.snapshot(sp, 192) : '';
       im.src = url || 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Cartoon.monster2d(sp).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
-      imgCache[sp.en] = im;
+      imgCache[sp.id] = im;
     }
-    return imgCache[sp.en];
+    return imgCache[sp.id];
   }
   // 地上的道具球
   function drawItemBall(g, cx, cy, R) {
@@ -1521,7 +1543,7 @@
   }
   function helpSheet() {
     E.openModal('<h2>怎么玩</h2><p>◀▲▼▶ 走路，<b>A</b> 和面前的人说话、看告示牌、进门；<b>B</b> 打开菜单。电脑上可以用方向键 / WASD、空格键。</p>' +
-      '<p>🛤️ 小镇北边是道路，走进深色草丛会遇到野生怪兽。<br>🧑‍🎤 训练师看到你就会过来挑战。<br>⤵️ 台阶只能往下跳。<br>🕳️ 有的路旁边有洞穴，里面怪兽更强。<br>🏥 怪兽中心：找护士恢复体力，用电脑换队伍（最多 6 只）。<br>🏪 商店：买回声球、药水等道具。<br>🏟️ 道馆：打败馆主拿徽章，守卫就会让你去下一段路。<br>🌟 野外技能：拿到徽章后，对着小树、裂开的岩石、大石头、水按 A，大声说出指令就能用（菜单 → 野外技能）。<br>🎣 有钓竿就能对着水钓鱼；🚲 有自行车就点右上角的车骑上。<br>✨ 地上有些道具藏起来了，对着它按 A 才找得到。</p>' +
+      '<p>🛤️ 小镇北边是道路，走进深色草丛会遇到野生怪兽。<br>🧑‍🎤 训练师看到你就会过来挑战。<br>⤵️ 台阶只能往下跳。<br>🕳️ 有的路旁边有洞穴，里面怪兽更强。<br>🏥 怪兽中心：找护士恢复体力，用电脑换队伍（最多 6 只）。<br>🏪 商店：买回声球、药水等道具。<br>🏟️ 道馆：打败馆主拿徽章，守卫就会让你去下一段路。<br>🌟 野外技能：拿到徽章后，对着小树、裂开的岩石、大石头、水按 A，大声说出指令就能用（菜单 → 野外技能）。<br>🎣 有钓竿就能对着水钓鱼；🚲 有自行车就点右上角的车骑上。<br>✨ 地上有些道具藏起来了，对着它按 A 才找得到。<br>💖 转身面对跟着你的怪兽按 A，每天用英语和它说一句话，它会越来越喜欢你。<br>🥚 温馨家庭岛的养育屋可以寄养怪兽、领蛋；蛋放在队伍里走路就会孵出来。</p>' +
       '<button class="btn wide" data-act="close">知道了</button>');
   }
 
