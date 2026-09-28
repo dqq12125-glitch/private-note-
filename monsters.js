@@ -60,7 +60,45 @@
   const live = b => B === b && !b.over;
   const M = () => E.S.mon;
   const svg = sp => window.Cartoon ? Cartoon.monster(SPECIES[sp]) : '<span style="font-size:60px">' + TYPES[SPECIES[sp].type].icon + '</span>';
-  const tchip = t => '<span class="tchip" style="--tc:' + TYPES[t].color + '">' + TYPES[t].icon + ' ' + TYPES[t].zh + '系</span>';
+  // 属性小图标（SVG，不依赖手机的 emoji 字体）
+  const TICON = {
+    fire: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3-1-3 0-6.5 1-9.5z" fill="currentColor"/></svg>',
+    water: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5C9 7 6 10.5 6 14a6 6 0 0 0 12 0c0-3.5-3-7-6-11.5z" fill="currentColor"/></svg>',
+    grass: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4C10 4 4 9 4 16c0 1.5.3 2.8.8 4 1-4 4-8 9-10-4 3-6.5 6.5-7.5 10.5C15 21 20 14 20 4z" fill="currentColor"/></svg>',
+    spark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg>',
+  };
+  const tchip = t => '<span class="tchip" style="--tc:' + TYPES[t].color + '">' + TICON[t] + TYPES[t].zh + '系</span>';
+  // 战斗背景：天空、云、远山、草地（雪地小镇换成白色）
+  function arenaBG(z) {
+    const w = E.W[z], snow = z === 11;
+    let stripes = '';
+    for (let i = 0; i < 6; i++) stripes += '<path d="M0 ' + (188 + i * 20) + ' H400" stroke="' + (snow ? '#e3ecf2' : '#a9da8b') + '" stroke-width="3"/>';
+    return '<svg class="arena-bg" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="bsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + (snow ? '#c3d8e8' : '#9ed8ff') + '"/><stop offset="1" stop-color="#f3fbff"/></linearGradient></defs>' +
+      '<rect width="400" height="300" fill="url(#bsky)"/>' +
+      '<g fill="#fff" opacity=".92"><ellipse cx="70" cy="42" rx="34" ry="11"/><ellipse cx="94" cy="35" rx="21" ry="12"/><ellipse cx="305" cy="62" rx="30" ry="9"/><ellipse cx="326" cy="56" rx="17" ry="10"/></g>' +
+      '<path d="M0 150 Q60 108 130 136 T260 124 T400 132 V300 H0Z" fill="' + w.color + '" opacity=".32"/>' +
+      '<path d="M0 172 Q90 138 190 162 T400 152 V300 H0Z" fill="' + (snow ? '#e9f1f6' : '#97d276') + '"/>' +
+      '<rect y="176" width="400" height="124" fill="' + (snow ? '#f5f9fb' : '#b5e399') + '"/>' + stripes + '</svg>';
+  }
+  // 命中特效：火花 / 泡泡 / 叶子 / 闪电
+  function burst(id, type, big) {
+    if (E.reduced) return;
+    const arena = $('b-arena'); if (!arena || !$(id)) return;
+    const [x, y] = center(id), n = big ? 18 : 12;
+    for (let i = 0; i < n; i++) {
+      const p = document.createElement('i');
+      p.className = 'fx fx-' + type;
+      const a = Math.random() * Math.PI * 2, d = 28 + Math.random() * (big ? 70 : 50);
+      p.style.left = x + 'px'; p.style.top = y + 'px';
+      p.style.setProperty('--dx', (Math.cos(a) * d).toFixed(1) + 'px');
+      p.style.setProperty('--dy', (Math.sin(a) * d - (type === 'fire' ? 26 : type === 'water' ? 14 : 0)).toFixed(1) + 'px');
+      p.style.setProperty('--r', Math.round(Math.random() * 540) + 'deg');
+      p.style.animationDelay = Math.round(Math.random() * 90) + 'ms';
+      arena.appendChild(p);
+      setTimeout(() => p.remove(), 1000);
+    }
+    if (type === 'spark' || big) { const f = document.createElement('i'); f.className = 'fx-flash'; arena.appendChild(f); setTimeout(() => f.remove(), 420); }
+  }
   const byUid = u => M().box.find(m => m.uid === u);
   const lead = () => byUid(M().team[0]) || M().box[0];
   const caughtN = () => ORDER.filter(id => M().dex[id] === 'caught').length;
@@ -175,6 +213,7 @@
     B = { kind, z, foes, fi: 0, team, ti, hp: {}, energy: 0, turn: 'intro', over: false, used: new Set([team[ti]]), task: null, tries: 0, onEnd: opts.onEnd, trainer: opts.trainer, result: '' };
     team.forEach(u => { B.hp[u] = curHp(byUid(u)); });
     B.foeHp = stats(foes[0]).hp;
+    B.enter = 'both';
     foes.forEach(f => { if (M().dex[f.sp] !== 'caught') M().dex[f.sp] = 'seen'; });
     E.save();
     E.show('battle');
@@ -192,15 +231,17 @@
   function renderBattle() {
     const w = E.W[B.z], f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
     $('battle').innerHTML =
-      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.kind === 'wild' ? '⚔️ 野外对战' : B.kind === 'trainer' ? B.trainer.emoji + ' 训练师 ' + B.trainer.name : w.boss.emoji + ' 馆主 ' + w.boss.name) + '</b><small>第 ' + (B.z + 1) + ' 区 · ' + w.name + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
-      '<div class="arena" id="b-arena" style="--wc:' + w.color + '">' +
-      '<div class="hpcard foe"><div><b>' + sf.en + '</b> <span class="lvchip">Lv ' + f.lv + '</span></div>' + tchip(sf.type) + '<div class="hpbar"><i id="b-foehp"></i></div>' +
+      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.kind === 'wild' ? '野外对战' : B.kind === 'trainer' ? '训练师 ' + B.trainer.name : '道馆馆主 ' + w.boss.name) + '</b><small>第 ' + (B.z + 1) + ' 区 · ' + w.name + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
+      '<div class="arena" id="b-arena" style="--wc:' + w.color + '">' + arenaBG(B.z) +
+      '<div class="hpcard foe"><div class="hp-top"><b>' + sf.en + '</b><span class="hp-lv">Lv' + f.lv + '</span></div>' + tchip(sf.type) + '<div class="hprow"><span class="hplab">HP</span><div class="hpbar"><i id="b-foehp"></i></div></div>' +
       (B.kind !== 'wild' ? '<div class="balls">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '">●</span>').join('') + '</div>' : '') + '</div>' +
-      '<div class="pad foe"></div><div class="mon foe" id="b-foe">' + svg(f.sp) + '</div>' +
-      '<div class="pad me"></div><div class="mon me" id="b-me">' + svg(m.sp) + '</div>' +
-      '<div class="hpcard me"><div><b>' + sm.en + '</b> <span class="lvchip">Lv ' + m.lv + '</span></div>' + tchip(sm.type) + '<div class="hpbar"><i id="b-myhp"></i></div><small id="b-myhpn"></small></div>' +
-      (B.kind !== 'wild' ? '<div class="trainer">' + (B.kind === 'trainer' ? B.trainer.emoji : w.boss.emoji) + '</div>' : '') +
+      '<div class="pad foe"></div><div class="mon foe' + (B.enter === 'both' || B.enter === 'foe' ? ' enter' : '') + '" id="b-foe">' + svg(f.sp) + '</div>' +
+      '<div class="pad me"></div><div class="mon me' + (B.enter === 'both' || B.enter === 'me' ? ' enter' : '') + '" id="b-me">' + svg(m.sp) + '</div>' +
+      '<div class="hpcard me"><div class="hp-top"><b>' + sm.en + '</b><span class="hp-lv">Lv' + m.lv + '</span></div>' + tchip(sm.type) + '<div class="hprow"><span class="hplab">HP</span><div class="hpbar"><i id="b-myhp"></i></div></div><small id="b-myhpn"></small>' +
+      '<div class="expbar" title="经验"><i id="b-exp" style="width:' + (m.xp / xpNeed(m.lv) * 100) + '%"></i></div></div>' +
+      (B.kind !== 'wild' ? '<div class="trainer">' + (B.kind === 'trainer' && B.trainer.img ? '<img src="' + B.trainer.img + '" alt="">' : '<span>' + w.boss.emoji + '</span>') + '</div>' : '') +
       '</div><div class="b-msg" id="b-msg"></div><div class="b-panel" id="b-panel"></div>';
+    B.enter = '';
     updHp();
   }
   function updHp() {
@@ -209,7 +250,7 @@
     const bar = (id, v, max) => { const e = $(id); if (!e) return; const p = v / max; e.style.width = (p * 100) + '%'; e.className = p > .5 ? '' : p > .2 ? 'mid' : 'low'; };
     bar('b-foehp', fh, fmax); bar('b-myhp', mh, mmax);
     const n = $('b-myhpn'); if (n) n.textContent = mh + ' / ' + mmax;
-    const en = $('b-energy'); if (en) en.innerHTML = '<span class="on">' + '⚡'.repeat(B.energy) + '</span><span class="off">' + '⚡'.repeat(3 - B.energy) + '</span>';
+    const en = $('b-energy'); if (en) en.innerHTML = [0, 1, 2].map(k => '<span class="' + (k < B.energy ? 'on' : 'off') + '">' + TICON.spark + '</span>').join('');
   }
   const msg = t => { const e = $('b-msg'); if (e) e.innerHTML = t; };
   const panel = h => { const e = $('b-panel'); if (e) e.innerHTML = h; };
@@ -238,7 +279,7 @@
     msg('<b>' + sm.en + '</b> 要用什么技能？念对英语咒语才能打中！');
     panel('<div class="moves">' + MOVES[sm.type].map((mv, i) => {
       const lock = i === 2 && B.energy < 3;
-      return '<button class="move" style="--tc:' + TYPES[sm.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><b>' + mv[0] + '</b><small>' + mv[1] + ' · ' + (lock ? '攒满 3 格能量解锁' : TASK[i]) + ' · 威力 ' + DOTS[i] + '</small></button>';
+      return '<button class="move' + (i === 2 ? ' ult' : '') + '" style="--tc:' + TYPES[sm.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[sm.type] + '</span><b>' + mv[0] + '</b><span class="mv-pow">' + DOTS[i] + '</span></span><small>' + mv[1] + ' · ' + (lock ? '攒满 3 格能量解锁' : TASK[i]) + '</small></button>';
     }).join('') + '</div>' +
       '<div class="b-items">' +
       (B.kind === 'wild' ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 回声球 ×' + M().balls + (canCatch ? '' : ' · 先打虚弱') + '</button>' : '') +
@@ -368,11 +409,11 @@
     const a = $('b-arena').getBoundingClientRect(), r = $(id).getBoundingClientRect();
     return [r.left - a.left + r.width / 2, r.top - a.top + r.height / 2];
   }
-  async function projectile(from, to, icon) {
+  async function projectile(from, to, type) {
     const arena = $('b-arena'); if (!arena) return;
     const [x1, y1] = center(from), [x2, y2] = center(to);
     const p = document.createElement('span');
-    p.className = 'proj'; p.textContent = icon;
+    p.className = 'proj orb orb-' + type;
     p.style.left = x1 + 'px'; p.style.top = y1 + 'px';
     arena.appendChild(p);
     void p.offsetWidth;
@@ -394,12 +435,15 @@
     f.classList.add('lunge', 'attack');
     await sleep(200);
     f.classList.remove('lunge');
-    await projectile(fromId, toId, TYPES[type].icon);
+    await projectile(fromId, toId, type);
     f.classList.remove('attack');
     const t = $(toId);
     if (dmg > 0) {
       t.classList.remove('hit'); void t.offsetWidth; t.classList.add('hit');
       E.SFX.hit();
+      const crit = labels.includes('暴击！');
+      burst(toId, type, crit);
+      if (crit) { const ar = $('b-arena'); ar.classList.remove('shake'); void ar.offsetWidth; ar.classList.add('shake'); }
       pop(toId, '-' + dmg, 'dmg');
       labels.forEach((l, k) => setTimeout(() => pop(toId, l, 'lbl'), 250 + k * 250));
     } else pop(toId, 'MISS', 'lbl');
@@ -500,12 +544,14 @@
     E.say(sf.en + ' fainted!');
     const xp = 10 + f.lv * 8;
     B.used.forEach(u => { const mm = byUid(u); if (mm) gainMonXp(mm, xp); });
+    const eb = $('b-exp'), cm = me(); if (eb && cm) eb.style.width = (cm.xp / xpNeed(cm.lv) * 100) + '%';
     E.save();
     await sleep(1400);
     if (!live(b)) return;
     if (B.fi + 1 < B.foes.length) {
       B.fi++;
       B.foeHp = stats(foe()).hp;
+      B.enter = 'foe';
       renderBattle();
       const n = SPECIES[foe().sp];
       msg((B.kind === 'trainer' ? B.trainer.name : E.W[B.z].boss.name) + '：“还没完！去吧，<b>' + n.en + '</b>！”');
@@ -524,6 +570,7 @@
     const next = B.team.findIndex((u, k) => k !== B.ti && B.hp[u] > 0);
     if (next >= 0) {
       B.ti = next; B.used.add(B.team[next]);
+      B.enter = 'me';
       renderBattle();
       msg('去吧，<b>' + SPECIES[me().sp].en + '</b>！');
       $('b-me').classList.add('appear');
@@ -540,7 +587,7 @@
     panel('');
     msg('去吧，回声球！');
     const ball = document.createElement('span');
-    ball.className = 'proj ball'; ball.textContent = '🔮';
+    ball.className = 'proj ball';
     const arena = $('b-arena'), [x1, y1] = center('b-me'), [x2, y2] = center('b-foe');
     ball.style.left = x1 + 'px'; ball.style.top = y1 + 'px';
     arena.appendChild(ball); void ball.offsetWidth;
