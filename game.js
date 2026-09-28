@@ -90,6 +90,7 @@
       stats: { levels: 0, spoken: 0, perfect: 0, maxCombo: 0, listen: 0, reviewed: 0, threeStars: 0, bosses: 0, flawless: 0, roleplay: 0 }, scenes: {},
       settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false }, seenIntro: false,
       homeTab: 'mon', mon: window.MonsterGame ? MonsterGame.fresh() : { box: [], team: [], dex: {}, badges: {}, balls: 5 },
+      world: window.EchoWorld ? EchoWorld.fresh() : {},
     };
   }
   function merge(base, o) {
@@ -621,13 +622,15 @@
     }
   }
   function show(id) {
-    ['home', 'play', 'result', 'theater', 'battle'].forEach(s => { $('#' + s).hidden = s !== id; });
-    $('#topbar').hidden = id === 'play' || id === 'theater' || id === 'battle';
+    ['home', 'play', 'result', 'theater', 'battle', 'world'].forEach(s => { $('#' + s).hidden = s !== id; });
+    $('#topbar').hidden = id === 'play' || id === 'theater' || id === 'battle' || id === 'world';
+    document.body.classList.toggle('in-world', id === 'world');
     window.scrollTo(0, 0);
   }
   function goHome(tab) {
     if (typeof tab === 'string') S.homeTab = tab;
     if (window.MonsterGame) MonsterGame.stop();
+    if (window.EchoWorld) EchoWorld.stop();
     if (T) { stopScene(); T = null; }
     stopListening();
     if (TTS.ok) speechSynthesis.cancel();
@@ -1536,9 +1539,9 @@
       get S() { return S; }, W, RT, FATAL, SFX, MIC, STOP, SPK,
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
       qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML,
-      reduced,
+      reduced, dayStr,
     };
-    Object.assign(ACT, MonsterGame.init(api), {
+    Object.assign(ACT, MonsterGame.init(api), window.EchoWorld ? EchoWorld.init(api, MonsterGame) : {}, {
       tab: t => { S.homeTab = t.dataset.t; save(); renderHome(); window.scrollTo(0, 0); },
     });
   }

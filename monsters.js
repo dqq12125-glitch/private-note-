@@ -81,13 +81,15 @@
       '<div class="xpbar"><i style="width:' + (L.xp / xpNeed(L.lv) * 100) + '%"></i></div>' +
       '<small>HP ' + st.hp + ' · 攻击 ' + st.atk + (s.evo ? ' · Lv ' + EVO_LV + ' 会进化' : '') + '</small></div>' +
       '<div class="lead-btns"><button class="btn small ghost" data-act="mTeam">🐾 我的怪兽 ' + m.box.length + '</button><button class="btn small ghost" data-act="mDex">📖 图鉴 ' + caughtN() + '/' + ORDER.length + '</button><button class="btn small sun" data-act="mBalls">🔮 回声球 ' + m.balls + '</button></div></section>';
-    h += '<p class="tip">在「📚 闯关练习」每通关一关送 1 个回声球，三星送 2 个。</p>';
-    h += E.W.map((w, z) => {
-      const open = zoneOpen(z), badge = m.badges[z], lv = zoneLv(z);
-      return '<section class="zone' + (open ? '' : ' locked') + '" style="--wc:' + w.color + '"><div class="z-head"><span class="w-ico">' + w.icon + '</span><div class="z-t"><small>第 ' + (z + 1) + ' 区 · 野外 Lv ' + lv + '–' + (lv + 2) + '</small><h3>' + w.name + '</h3></div>' + (badge ? '<span class="z-badge" title="已拿到徽章">🏅</span>' : '') + '</div>' +
-        (open ? '<div class="z-actions"><button class="btn small" data-act="mWild" data-z="' + z + '">⚔️ 野外对战</button><button class="btn small ' + (badge ? 'ghost' : 'sun') + '" data-act="mLeader" data-z="' + z + '">' + w.boss.emoji + ' 挑战馆主 Lv ' + (lv + 2) + '</button></div>'
-          : '<p class="z-lock">🔒 打败上一区的馆主拿到徽章后解锁</p>') + '</section>';
-    }).join('');
+    const ws = E.S.world || {}, wz = ws.started ? ws.z : 0;
+    h += '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? '继续冒险 · 第 ' + (wz + 1) + ' 镇 ' + E.W[wz].name : '出发去冒险！') + '</button>';
+    h += '<p class="tip">走进草丛会遇到野生怪兽，路上的训练师看到你就会来挑战。<br>打败每个小镇的道馆馆主拿到徽章，守卫才会让你去下一个小镇。</p>';
+    const visited = Object.keys(ws.visited || {}).map(Number).sort((a, b) => a - b);
+    if (visited.length > 1) {
+      h += '<section class="mon-card fly"><h3>✈️ 飞回去过的小镇</h3><div class="fly-list">' + visited.map(z =>
+        '<button class="btn small ghost" data-act="wFly" data-z="' + z + '">' + E.W[z].icon + ' ' + E.W[z].name + (m.badges[z] ? ' 🏅' : '') + '</button>').join('') + '</div></section>';
+    }
+    h += '<p class="tip">🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · 🧪 药水 ' + (m.potions || 0) + ' · 在「📚 闯关练习」每通关一关送 1 个回声球，三星送 2 个。</p>';
     return h;
   }
 
@@ -142,20 +144,43 @@
   const me = () => byUid(B.team[B.ti]);
   const foe = () => B.foes[B.fi];
 
-  function startBattle(kind, z) {
-    if (!M().box.length) { E.toast('先选一只初始怪兽吧'); return; }
+  const curHp = mon => { const max = stats(mon).hp; return mon.hp == null ? max : Math.max(0, Math.min(max, mon.hp)); };
+  const anyAlive = () => M().team.some(u => { const m = byUid(u); return m && curHp(m) > 0; });
+  function healAll() { M().box.forEach(m => { m.hp = stats(m).hp; }); E.save(); }
+  // 训练师的怪兽：按区域和编号固定，等级够了自动是进化形态
+  function trainerFoes(z, seed, count, lv) {
+    const pool = WILD.concat(STARTERS);
+    return Array.from({ length: count }, (_, k) => {
+      const sp = pool[(z * 3 + seed * 5 + k) % pool.length], l = lv + k;
+      return newMon(l >= EVO_LV && SPECIES[sp].evo ? SPECIES[sp].evo : sp, l);
+    });
+  }
+  // 把战斗里的体力写回存档（体力会一直保留，到怪兽中心才恢复）
+  function writeBack() {
+    if (!B) return;
+    B.team.forEach(u => { const m = byUid(u); if (m) m.hp = Math.max(0, Math.min(stats(m).hp, Math.round(B.hp[u]))); });
+    E.save();
+  }
+
+  // opts：foes 指定对手，trainer {name, emoji} 训练师，onEnd(result) 从大地图进来时战斗结束的回调
+  function startBattle(kind, z, opts) {
+    opts = opts || {};
+    if (!M().box.length) { E.toast('先选一只初始怪兽吧'); return false; }
+    if (!anyAlive()) { E.toast('怪兽们都没力气了，先去怪兽中心休息'); return false; }
     E.primeTTS(); E.ac();
     stopBattle();
     const team = M().team.filter(byUid);
-    const foes = kind === 'wild' ? [wildFoe(z)] : leaderFoes(z);
-    B = { kind, z, foes, fi: 0, team, ti: 0, hp: {}, energy: 0, turn: 'intro', over: false, used: new Set([team[0]]), task: null, tries: 0 };
-    team.forEach(u => { B.hp[u] = stats(byUid(u)).hp; });
+    const foes = opts.foes || (kind === 'wild' ? [wildFoe(z)] : leaderFoes(z));
+    const ti = team.findIndex(u => curHp(byUid(u)) > 0);
+    B = { kind, z, foes, fi: 0, team, ti, hp: {}, energy: 0, turn: 'intro', over: false, used: new Set([team[ti]]), task: null, tries: 0, onEnd: opts.onEnd, trainer: opts.trainer, result: '' };
+    team.forEach(u => { B.hp[u] = curHp(byUid(u)); });
     B.foeHp = stats(foes[0]).hp;
     foes.forEach(f => { if (M().dex[f.sp] !== 'caught') M().dex[f.sp] = 'seen'; });
     E.save();
     E.show('battle');
     renderBattle();
     intro(B);
+    return true;
   }
   function stopBattle() {
     if (!B) return;
@@ -167,14 +192,14 @@
   function renderBattle() {
     const w = E.W[B.z], f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
     $('battle').innerHTML =
-      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.kind === 'wild' ? '⚔️ 野外对战' : w.boss.emoji + ' 馆主 ' + w.boss.name) + '</b><small>第 ' + (B.z + 1) + ' 区 · ' + w.name + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
+      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.kind === 'wild' ? '⚔️ 野外对战' : B.kind === 'trainer' ? B.trainer.emoji + ' 训练师 ' + B.trainer.name : w.boss.emoji + ' 馆主 ' + w.boss.name) + '</b><small>第 ' + (B.z + 1) + ' 区 · ' + w.name + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
       '<div class="arena" id="b-arena" style="--wc:' + w.color + '">' +
       '<div class="hpcard foe"><div><b>' + sf.en + '</b> <span class="lvchip">Lv ' + f.lv + '</span></div>' + tchip(sf.type) + '<div class="hpbar"><i id="b-foehp"></i></div>' +
-      (B.kind === 'leader' ? '<div class="balls">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '">●</span>').join('') + '</div>' : '') + '</div>' +
+      (B.kind !== 'wild' ? '<div class="balls">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '">●</span>').join('') + '</div>' : '') + '</div>' +
       '<div class="pad foe"></div><div class="mon foe" id="b-foe">' + svg(f.sp) + '</div>' +
       '<div class="pad me"></div><div class="mon me" id="b-me">' + svg(m.sp) + '</div>' +
       '<div class="hpcard me"><div><b>' + sm.en + '</b> <span class="lvchip">Lv ' + m.lv + '</span></div>' + tchip(sm.type) + '<div class="hpbar"><i id="b-myhp"></i></div><small id="b-myhpn"></small></div>' +
-      (B.kind === 'leader' ? '<div class="trainer">' + w.boss.emoji + '</div>' : '') +
+      (B.kind !== 'wild' ? '<div class="trainer">' + (B.kind === 'trainer' ? B.trainer.emoji : w.boss.emoji) + '</div>' : '') +
       '</div><div class="b-msg" id="b-msg"></div><div class="b-panel" id="b-panel"></div>';
     updHp();
   }
@@ -196,7 +221,8 @@
       msg('野生的 <b>' + sf.en + '</b>（' + sf.zh + '）出现了！');
       await E.say('A wild ' + sf.en + ' appeared!');
     } else {
-      msg(w.boss.name + '：“我要派出 <b>' + sf.en + '</b>！”');
+      const who = b.kind === 'trainer' ? b.trainer.name : w.boss.name;
+      msg(who + '：“我要派出 <b>' + sf.en + '</b>！”');
       await E.say("Let's battle! Go, " + sf.en + '!', undefined, 'm');
     }
     if (!live(b)) return;
@@ -214,7 +240,9 @@
       const lock = i === 2 && B.energy < 3;
       return '<button class="move" style="--tc:' + TYPES[sm.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><b>' + mv[0] + '</b><small>' + mv[1] + ' · ' + (lock ? '攒满 3 格能量解锁' : TASK[i]) + ' · 威力 ' + DOTS[i] + '</small></button>';
     }).join('') + '</div>' +
-      (B.kind === 'wild' ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + ' wide" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 扔回声球收服它（剩 ' + M().balls + ' 个）' + (canCatch ? '' : ' · 先把它打虚弱') + '</button>' : ''));
+      '<div class="b-items">' +
+      (B.kind === 'wild' ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 回声球 ×' + M().balls + (canCatch ? '' : ' · 先打虚弱') + '</button>' : '') +
+      '<button class="btn small ghost" data-act="bPotion"' + ((M().potions || 0) > 0 && B.hp[m.uid] < stats(m).hp ? '' : ' disabled') + '>🧪 药水 ×' + (M().potions || 0) + '</button></div>');
   }
 
   // 技能任务：说单词 / 念句子 / 对话大招 / 收服咒语
@@ -459,6 +487,7 @@
     mon.xp += xp;
     while (mon.xp >= xpNeed(mon.lv)) {
       mon.xp -= xpNeed(mon.lv); mon.lv++;
+      if (B && B.hp[mon.uid] > 0) { B.hp[mon.uid] += 6; updHp(); }
       E.toast('⬆️ ' + SPECIES[mon.sp].en + ' 升到了 Lv ' + mon.lv + '！', 'gold');
       const pend = M().pendingEvo || (M().pendingEvo = []);
       if (SPECIES[mon.sp].evo && mon.lv >= EVO_LV && !pend.includes(mon.uid)) pend.push(mon.uid);
@@ -479,7 +508,7 @@
       B.foeHp = stats(foe()).hp;
       renderBattle();
       const n = SPECIES[foe().sp];
-      msg(E.W[B.z].boss.name + '：“还没完！去吧，<b>' + n.en + '</b>！”');
+      msg((B.kind === 'trainer' ? B.trainer.name : E.W[B.z].boss.name) + '：“还没完！去吧，<b>' + n.en + '</b>！”');
       $('b-foe').classList.add('appear');
       await E.say('Go, ' + n.en + '!', undefined, 'm');
       if (!live(b)) return;
@@ -558,6 +587,7 @@
     const topLv = Math.max(...B.foes.map(f => f.lv));
     let coins = 8 + topLv * 2;
     const lines = [];
+    if (B.kind === 'trainer') coins += 6 + topLv;
     if (B.kind === 'leader') {
       const first = !m.badges[z];
       m.badges[z] = 1;
@@ -565,6 +595,8 @@
       if (first) { m.balls += 3; lines.push('🏅 拿到了 ' + w.name + ' 徽章！'); lines.push('🔮 回声球 +3'); if (z + 1 < E.W.length) lines.push('🏝️ 新区域解锁：' + E.W[z + 1].name); }
     }
     E.S.coins += coins;
+    B.result = caught ? 'caught' : 'win';
+    writeBack();
     lines.unshift('💰 金币 +' + coins);
     lines.push('⭐ 出战的怪兽获得经验 +' + (10 + topLv * 8));
     E.gainXp(15 + topLv);
@@ -573,16 +605,36 @@
     const newDay = E.markToday();
     E.save(); E.renderTop();
     if (!caught) { E.SFX.win(); E.confetti(B.kind === 'leader' ? 200 : 90); }
-    msg(caught ? '新伙伴已经加入队伍（队伍满了就在「我的怪兽」里）。' : B.kind === 'leader' ? w.boss.name + '：“你太厉害了！这枚徽章是你的了！”' : '胜利！');
+    msg(caught ? '新伙伴已经加入队伍（队伍满了就在「我的怪兽」里）。' : B.kind === 'leader' ? w.boss.name + '：“你太厉害了！这枚徽章是你的了！”' : B.kind === 'trainer' ? B.trainer.name + '：“你真厉害！”' : '胜利！');
     panel('<div class="b-result"><div class="big">' + (caught ? '🔮' : B.kind === 'leader' ? '🏅' : '🏆') + '</div><b>' + (caught ? '收服成功！' : B.kind === 'leader' ? '打败馆主！' : '胜利！') + '</b><p>' + lines.join('<br>') + '</p>' +
-      '<div class="say-row">' + (B.kind === 'wild' ? '<button class="btn" data-act="mWild" data-z="' + z + '">⚔️ 再战一场</button>' : '') + '<button class="btn ghost" data-act="bHome">回基地</button></div></div>');
+      '<div class="say-row">' + (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>继续冒险 ▶</button>'
+        : (B.kind === 'wild' ? '<button class="btn" data-act="mWild" data-z="' + z + '">⚔️ 再战一场</button>' : '') + '<button class="btn ghost" data-act="bHome">回基地</button>') + '</div></div>');
     if (newDay) setTimeout(() => E.toast('🔥 今日打卡成功！已连续 ' + E.S.streak + ' 天', 'gold'), 900);
     setTimeout(() => { E.checkAch(); evolveNext(); }, 1300);
   }
   function lose() {
-    B.turn = 'done';
+    B.turn = 'done'; B.result = 'lose';
+    writeBack();
     msg('你的怪兽们都累倒了……');
-    panel('<div class="b-result"><div class="big">💤</div><b>先回基地休息一下</b><p>怪兽回到基地就会恢复体力。<br>小窍门：先在前面的区域多打几场把等级练上去，<br>或者用<b>属性克制</b>（🔥 克 🍃，🍃 克 💧，💧 克 🔥）。</p><div class="say-row"><button class="btn" data-act="bHome">回基地</button></div></div>');
+    panel('<div class="b-result"><div class="big">💤</div><b>先去怪兽中心休息一下</b><p>怪兽中心能让怪兽恢复体力。<br>小窍门：多在草丛里打野生怪兽把等级练上去，<br>或者用<b>属性克制</b>（🔥 克 🍃，🍃 克 💧，💧 克 🔥）。</p><div class="say-row">' +
+      (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>去怪兽中心</button>' : '<button class="btn" data-act="bHome">回基地</button>') + '</div></div>');
+  }
+  // 药水：回复 40% 体力，用掉这一回合
+  async function usePotion() {
+    if (!B || B.turn !== 'me' || !(M().potions > 0)) return;
+    const b = B, m = me(), max = stats(m).hp;
+    if (B.hp[m.uid] >= max) return;
+    B.turn = 'busy';
+    M().potions--;
+    const heal = Math.max(20, Math.round(max * 0.4));
+    B.hp[m.uid] = Math.min(max, B.hp[m.uid] + heal);
+    panel('');
+    msg('用了药水！<b>' + SPECIES[m.sp].en + '</b> 恢复了体力。');
+    E.SFX.coin();
+    pop('b-me', '+' + heal, 'lbl');
+    updHp(); E.save();
+    await sleep(1100);
+    if (live(b)) foeTurn(b);
   }
   // 进化排队保存在存档里：就算中途离开战斗，回到基地也会补上进化动画
   function evolveNext() {
@@ -617,6 +669,7 @@
         : k > 0 ? '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '">设为主力</button><button class="btn small ghost" data-act="mBench" data-u="' + mon.uid + '">离队</button>'
           : '<button class="btn small ghost" data-act="mJoin" data-u="' + mon.uid + '"' + (m.team.length >= 3 ? ' disabled' : '') + '>加入队伍</button>';
       return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>' + s.zh + '</small><div class="chips">' + tchip(s.type) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (k >= 0 ? '<span class="lvchip in">队伍中</span>' : '') + '</div>' +
+        '<small>体力 ' + curHp(mon) + ' / ' + stats(mon).hp + (curHp(mon) === 0 ? ' · 累倒了' : '') + '</small>' +
         '<div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div><div class="mrow-b">' + btn + '</div></div>';
     }).join('');
     E.openModal('<h2>我的怪兽</h2><p>队伍最多 3 只，主力先出场，倒下后队友自动接上。</p>' + rows + '<button class="btn ghost wide" data-act="close">关闭</button>');
@@ -662,18 +715,26 @@
     bBack: () => { if (B && B.turn === 'task') { E.stopListening(); menu(); } },
     bDef: t => defend(num(t, 'i')),
     bDefHear: () => B && B.def && E.say(B.def.spell, 0.8, 'm'),
+    bPotion: usePotion,
+    bEnd: () => { if (!B) return; const cb = B.onEnd, res = B.result || 'flee'; E.closeModal(); writeBack(); stopBattle(); if (cb) cb(res); },
     bFlee: () => {
-      if (!B || B.turn === 'done') { actions.bHome(); return; }
-      E.openModal('<h2>' + (B.kind === 'wild' ? '要逃跑吗？' : '要放弃挑战吗？') + '</h2><p>这场战斗不会有奖励。</p><div class="row"><button class="btn ghost" data-act="bHome">离开</button><button class="btn" data-act="close" data-focus>继续战斗</button></div>');
+      if (!B || B.turn === 'done') { B && B.onEnd ? actions.bEnd() : actions.bHome(); return; }
+      E.openModal('<h2>' + (B.kind === 'wild' ? '要逃跑吗？' : '要放弃挑战吗？') + '</h2><p>这场战斗不会有奖励。</p><div class="row"><button class="btn ghost" data-act="' + (B.onEnd ? 'bEnd' : 'bHome') + '">离开</button><button class="btn" data-act="close" data-focus>继续战斗</button></div>');
     },
-    bHome: () => { E.closeModal(); stopBattle(); E.goHome('mon'); },
+    bHome: () => { E.closeModal(); writeBack(); stopBattle(); E.goHome('mon'); },
   };
 
   window.MonsterGame = {
     init(api) { E = api; return actions; },
-    fresh: () => ({ box: [], team: [], dex: {}, badges: {}, balls: 5, wins: 0, caught: 0, evolved: 0 }),
+    fresh: () => ({ box: [], team: [], dex: {}, badges: {}, balls: 5, potions: 2, wins: 0, caught: 0, evolved: 0 }),
     homeHTML,
-    stop: stopBattle,
+    stop: () => { writeBack(); stopBattle(); },
+    battle: startBattle,
+    trainerFoes,
+    healAll,
+    anyAlive,
+    leadSpecies: () => { const L = lead(); return L ? SPECIES[L.sp] : null; },
+    zoneLv,
     afterHome: () => setTimeout(evolveNext, 400),
     caughtCount: s => ORDER.filter(id => s.mon.dex[id] === 'caught').length,
     total: ORDER.length,
