@@ -78,7 +78,7 @@
       v: 1, xp: 0, coins: 50, stars: {}, streak: 0, lastDay: '', freeze: 0,
       quests: { day: '', list: [], chest: false }, wrong: {}, pets: ['🐣'], pet: '🐣', ach: {},
       stats: { levels: 0, spoken: 0, perfect: 0, maxCombo: 0, listen: 0, reviewed: 0, threeStars: 0, bosses: 0, flawless: 0 },
-      settings: { rate: 0.9, voice: '', mode: 'auto', sfx: true, unlockAll: false }, seenIntro: false,
+      settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false }, seenIntro: false,
     };
   }
   function merge(base, o) {
@@ -165,41 +165,83 @@
   };
   function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* 不支持 */ } }
 
-  // ---------- 朗读（浏览器自带 TTS） ----------
-  const TTS = { voices: [], v: null, ok: 'speechSynthesis' in window };
+  // ---------- 朗读：优先用手机/浏览器自带英语声音，没有就用有道在线发音 ----------
+  const TTS = { voices: [], v: null, ok: 'speechSynthesis' in window, loaded: false };
   const PREF = [/(Aria|Jenny|Ava|Emma|Guy).*(Online|Natural)/i, /Google US English/i, /Samantha/i, /Microsoft (Aria|Jenny|Zira|David)/i, /Google UK English Female/i, /Karen|Daniel|Moira|Tessa/i];
+  const ONLINE_TTS = 'https://dict.youdao.com/dictvoice?type=2&audio=';
   function loadVoices() {
     if (!TTS.ok) return;
-    TTS.voices = speechSynthesis.getVoices().filter(v => /^en([-_]|$)/i.test(v.lang));
+    const all = speechSynthesis.getVoices();
+    if (all.length) TTS.loaded = true;
+    TTS.voices = all.filter(v => /^en([-_]|$)/i.test(v.lang));
     pickVoice();
   }
   function pickVoice() {
     const vs = TTS.voices;
     TTS.v = vs.find(v => v.name === S.settings.voice) || PREF.map(p => vs.find(v => p.test(v.name))).find(Boolean) || vs.find(v => /en[-_]US/i.test(v.lang)) || vs[0] || null;
   }
+  // 自带声音不可用（没有英语声音、合成失败）时改用在线发音
+  function useOnline() {
+    const m = S.settings.tts;
+    if (m === 'online') return true;
+    if (m === 'device') return false;
+    return !TTS.ok || RT.ttsBroken || (TTS.loaded && !TTS.voices.length);
+  }
+  function endPlaying() { $$('.spk.playing').forEach(b => b.classList.remove('playing')); }
+  function startPlaying() { const main = $('#p-body .spk:not(.mini)'); if (main) main.classList.add('playing'); }
+  function sayOnline(text, rate, res) {
+    const a = RT.audio || (RT.audio = new Audio());
+    let done = false;
+    const fin = () => { if (done) return; done = true; clearTimeout(t); endPlaying(); res(); };
+    const t = setTimeout(fin, 4000 + text.length * 200);
+    a.onended = fin;
+    a.onerror = () => { toast('在线发音没加载出来，检查一下网络'); fin(); };
+    a.src = ONLINE_TTS + encodeURIComponent(text);
+    a.playbackRate = (rate || S.settings.rate) < 0.75 ? 0.75 : 1;
+    startPlaying();
+    const pr = a.play();
+    if (pr && pr.catch) pr.catch(() => { toast('点一下 🔊 就能听到发音'); fin(); });
+  }
   function say(text, rate) {
     return new Promise(res => {
       if (!text) return res();
-      if (!TTS.ok) { toast('这个浏览器不支持朗读，换 Edge、Chrome 或 Safari 试试'); return res(); }
       stopListening();
-      speechSynthesis.cancel();
+      if (TTS.ok) speechSynthesis.cancel();
+      if (RT.audio) RT.audio.pause();
+      if (useOnline()) { sayOnline(text, rate, res); return; }
       const u = new SpeechSynthesisUtterance(text);
       if (TTS.v) u.voice = TTS.v;
       u.lang = TTS.v ? TTS.v.lang : 'en-US';
       u.rate = rate || S.settings.rate;
       let done = false;
-      const fin = () => { if (done) return; done = true; $$('.spk.playing').forEach(b => b.classList.remove('playing')); res(); };
-      u.onend = fin; u.onerror = fin;
+      const fin = () => { if (done) return; done = true; endPlaying(); res(); };
+      u.onend = fin;
+      u.onerror = e => {
+        // 被新的朗读打断不算失败；真失败就切到在线发音重读一遍
+        if (!done && e && e.error && !/interrupted|canceled/.test(e.error) && S.settings.tts !== 'device') {
+          RT.ttsBroken = true; done = true; sayOnline(text, rate, res); return;
+        }
+        fin();
+      };
       setTimeout(fin, 1800 + text.length * 150 / u.rate);
-      const main = $('#p-body .spk:not(.mini)');
-      if (main) main.classList.add('playing');
+      startPlaying();
       speechSynthesis.speak(u);
     });
   }
+  // iOS / 微信要求第一次出声必须在点击里：点击时先“解锁”两种发音方式
+  function silentWav() {
+    const n = 800, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 16000, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
   function primeTTS() {
-    if (!TTS.ok || RT.primed) return;
+    if (RT.primed) return;
     RT.primed = true;
-    try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) { /* 忽略 */ }
+    if (TTS.ok) { try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) { /* 忽略 */ } }
+    try { RT.audio = RT.audio || new Audio(); RT.audio.src = silentWav(); const p = RT.audio.play(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* 忽略 */ }
   }
 
   // ---------- 语音识别 + 评分 ----------
@@ -551,6 +593,7 @@
   function goHome() {
     stopListening();
     if (TTS.ok) speechSynthesis.cancel();
+    if (RT.audio) RT.audio.pause();
     P = null;
     hideFb();
     RT.scrollCur = true;
@@ -773,6 +816,7 @@
     if (!P || P.answered) return;
     if (RT.listening || RT.recording) { stopListening(); return; }
     if (TTS.ok) speechSynthesis.cancel();
+    if (RT.audio) RT.audio.pause();
     const q = P.q;
     if (speakMode() === 'sr') {
       setMic(true, '正在听……说完会自动停止');
@@ -1101,15 +1145,19 @@
       '<button class="btn ghost wide" data-act="close">关闭</button>');
   }
   function envHTML() {
-    const tts = TTS.ok ? (TTS.voices.length ? '✅ 朗读可用（' + esc(TTS.v ? TTS.v.name : '') + '）' : '⚠️ 没找到英语朗读声音，可能听不到发音') : '❌ 这个浏览器不支持朗读';
+    const tts = useOnline() ? '✅ 朗读：有道在线发音（需要联网）' : TTS.voices.length ? '✅ 朗读：本机声音 ' + esc(TTS.v ? TTS.v.name : '') : '✅ 朗读：本机声音（没听到声音就在「设置」里换成在线发音）';
+    const wx = /MicroMessenger/i.test(navigator.userAgent) ? '<br>📱 你正在微信里打开：点右上角「···」→「在浏览器打开」，录音和语音识别会更稳定。' : '';
     const sr = SRC && !RT.srBroken ? '✅ 支持语音识别，开口会自动打分' : '⚠️ 语音识别不可用，口语题用「录音 + 自评」';
-    return '<div class="env">' + tts + '<br>' + sr + '<br>在中国大陆，电脑上推荐用 <b>Edge 浏览器</b>，手机推荐 <b>iPhone 自带 Safari</b>；Chrome 的语音识别要连 Google 服务器，通常用不了。</div>';
+    return '<div class="env">' + tts + '<br>' + sr + '<br>在中国大陆，电脑上推荐用 <b>Edge 浏览器</b>，手机推荐 <b>iPhone 自带 Safari</b>；Chrome 的语音识别要连 Google 服务器，通常用不了。' + wx + '</div>';
   }
   function settingsSheet() {
     const st = S.settings;
     const voices = TTS.voices.map(v => '<option value="' + esc(v.name) + '"' + (TTS.v && TTS.v.name === v.name ? ' selected' : '') + '>' + esc(v.name + ' (' + v.lang + ')') + '</option>').join('');
     openModal('<h2>设置</h2>' + envHTML() +
       '<div class="set"><label for="set-rate">朗读速度 <span id="rate-v">' + st.rate.toFixed(2) + '</span></label><input type="range" id="set-rate" min="0.6" max="1.1" step="0.05" value="' + st.rate + '"><div class="say-row"><button class="btn small ghost" data-act="testVoice">🔊 试听</button></div></div>' +
+      '<div class="set"><label>发音来源</label><div class="seg">' +
+      [['auto', '自动'], ['device', '本机声音'], ['online', '有道在线']].map(([m, n]) => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + n + '</button>').join('') +
+      '</div><small>手机没声音或发音怪怪的，就选「有道在线」（需要联网）。</small></div>' +
       (voices ? '<div class="set"><label for="set-voice">朗读声音</label><select id="set-voice">' + voices + '</select></div>' : '') +
       '<div class="set"><label>口语打分方式</label><div class="seg">' +
       [['auto', '自动打分（推荐）'], ['self', '录音自评']].map(([m, n]) => '<button class="' + (st.mode === m ? 'on' : '') + '" data-act="setMode" data-m="' + m + '">' + n + '</button>').join('') +
@@ -1186,8 +1234,9 @@
     buyFreeze: () => { if (S.freeze >= 2 || S.coins < 100) return; S.coins -= 100; S.freeze++; save(); SFX.coin(); renderTop(); shopSheet(); },
     ach: achSheet,
     settings: settingsSheet,
-    testVoice: () => { ac(); say('Hello! Welcome to Echo Island. Let\'s learn English together!'); },
+    testVoice: () => { ac(); primeTTS(); say('Hello! Welcome to Echo Island. Let\'s learn English together!'); },
     setMode: t => { S.settings.mode = t.dataset.m; if (t.dataset.m === 'auto') { RT.srBroken = false; RT.noRec = false; if (!SRC) toast('这个浏览器不支持语音识别，会继续用录音自评'); } save(); settingsSheet(); },
+    setTts: t => { S.settings.tts = t.dataset.m; RT.ttsBroken = false; save(); settingsSheet(); primeTTS(); say('Hello! How are you?'); },
     sfx: t => { S.settings.sfx = t.dataset.v === '1'; save(); settingsSheet(); },
     unlock: t => { S.settings.unlockAll = t.dataset.v === '1'; save(); settingsSheet(); renderHome(); },
     reset: t => {
@@ -1230,6 +1279,7 @@
     ensureQuests();
     loadVoices();
     if (TTS.ok && 'onvoiceschanged' in speechSynthesis) speechSynthesis.onvoiceschanged = loadVoices;
+    setTimeout(() => { loadVoices(); TTS.loaded = true; }, 1500); // 一些安卓浏览器永远返回空列表
     const fl = document.createElement('link');
     fl.rel = 'stylesheet';
     fl.href = 'https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@500;700;800&display=swap';

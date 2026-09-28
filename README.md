@@ -38,7 +38,9 @@
 - Chrome 的语音识别依赖 Google 服务器，在国内通常连不上，游戏会自动切到录音自评
 - 微信内置浏览器一般不支持语音识别，建议用“在浏览器中打开”
 
-朗读使用浏览器自带的英语语音，可以在「设置」里换声音、调语速。
+朗读优先用手机/浏览器自带的英语声音。很多安卓浏览器（微信、华为、小米自带浏览器）没有英语声音，这时会自动改用**有道在线发音**（需要联网）。也可以在「设置 → 发音来源」里手动切换。有道发音接口不是官方开放接口，以后可能会变。
+
+在微信里打开时，建议点右上角「···」→「在浏览器打开」，录音和语音识别会更稳定。
 
 ## 运行
 
@@ -49,7 +51,13 @@ python3 -m http.server 8000
 # 然后访问 http://localhost:8000
 ```
 
-也可以开启仓库的 GitHub Pages，用手机直接访问。
+### 用 GitHub Pages 在手机上玩
+
+1. 仓库需要是**公开**的（私有仓库开 Pages 需要付费的 GitHub Pro）：Settings → General → 最下方 Danger Zone → Change visibility → Public
+2. Settings → Pages → Build and deployment → Source 选 **Deploy from a branch**，Branch 选 `claude/english-learning-game-l52ev8`（合并到 main 后改选 `main`），文件夹选 `/ (root)`，点 Save
+3. 等 1–2 分钟，访问 **https://dqq12125-glitch.github.io/private-note-/**
+
+`github.io` 在国内大多数时候能直接打开，但偶尔会慢或打不开；如果需要非常稳定，可以放到国内云服务的静态托管（需要备案域名）。
 
 进度（星星、金币、宠物、错题本）只保存在当前浏览器里，换设备或清理浏览器数据会丢失。
 
