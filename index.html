@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>回声岛 Echo Island</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar" id="topbar">
+    <button class="me" data-act="shop" aria-label="我的宠物">
+      <span class="me-pet" id="t-pet">🐣</span>
+      <span class="me-info">
+        <span class="me-lv"><b id="t-lv">Lv 1</b> <span id="t-title">见习水手</span></span>
+        <span class="xpbar"><i id="t-xp"></i></span>
+      </span>
+    </button>
+    <span class="chip streak" id="t-streak" title="连续打卡天数"><span class="flame">🔥</span><b id="t-streak-n">0</b></span>
+    <span class="chip coins" title="金币"><span class="coin"></span><b id="t-coins">0</b></span>
+  </header>
+
+  <main id="home">
+    <section class="quests" id="quests" aria-label="每日任务"></section>
+    <nav class="tools">
+      <button class="tool" data-act="review"><span>📕</span>错题本<em id="t-wrong"></em></button>
+      <button class="tool" data-act="shop"><span>🛒</span>宠物店</button>
+      <button class="tool" data-act="ach"><span>🏆</span>成就</button>
+      <button class="tool" data-act="settings"><span>⚙️</span>设置</button>
+    </nav>
+    <div id="map" class="map"></div>
+    <p class="foot">回声岛 · 七年级英语听说闯关 · 进度只保存在这台设备的浏览器里</p>
+  </main>
+
+  <section id="play" hidden>
+    <div class="p-top">
+      <button class="x" data-act="quit" aria-label="退出本关">✕</button>
+      <div class="pbar"><i id="p-prog"></i></div>
+      <div class="hearts" id="p-hearts"></div>
+    </div>
+    <div id="p-boss"></div>
+    <div class="combo" id="p-combo"></div>
+    <div id="p-body" class="p-body"></div>
+    <div id="fb" class="fb" aria-live="polite">
+      <div class="fb-in">
+        <div class="fb-msg"><b id="fb-t"></b><div id="fb-d"></div></div>
+        <button id="fb-btn" class="btn" data-act="next">继续</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="result" hidden></section>
+</div>
+
+<div id="modal" class="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
