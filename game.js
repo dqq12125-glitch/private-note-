@@ -46,6 +46,7 @@
     { id: 'pf5', t: '获得 5 次 Perfect 发音', goal: 5, key: 'perfect', rw: 30 },
     { id: 'ls20', t: '听力题答对 20 道', goal: 20, key: 'listen', rw: 20 },
     { id: 'rv5', t: '在错题本复习 5 题', goal: 5, key: 'review', rw: 30 },
+    { id: 'rp1', t: '完成 1 次对话角色扮演', goal: 1, key: 'roleplay', rw: 30 },
   ];
   const QDEF = Object.fromEntries(QPOOL.map(q => [q.id, q]));
 
@@ -69,6 +70,7 @@
     ['rv20', '📕', '知错就改', '在错题本复习 20 题', s => s.stats.reviewed >= 20],
     ['pets3', '🐾', '宠物之家', '拥有 3 只宠物', s => s.pets.length >= 3],
     ['rich', '💰', '小富翁', '同时拥有 500 金币', s => s.coins >= 500],
+    ['actor', '🎬', '小演员', '完成 5 次对话角色扮演', s => s.stats.roleplay >= 5],
   ];
 
   // ---------- 存档 ----------
@@ -77,7 +79,7 @@
     return {
       v: 1, xp: 0, coins: 50, stars: {}, streak: 0, lastDay: '', freeze: 0,
       quests: { day: '', list: [], chest: false }, wrong: {}, pets: ['🐣'], pet: '🐣', ach: {},
-      stats: { levels: 0, spoken: 0, perfect: 0, maxCombo: 0, listen: 0, reviewed: 0, threeStars: 0, bosses: 0, flawless: 0 },
+      stats: { levels: 0, spoken: 0, perfect: 0, maxCombo: 0, listen: 0, reviewed: 0, threeStars: 0, bosses: 0, flawless: 0, roleplay: 0 }, scenes: {},
       settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false }, seenIntro: false,
     };
   }
@@ -168,7 +170,11 @@
   // ---------- 朗读：优先用手机/浏览器自带英语声音，没有就用有道在线发音 ----------
   const TTS = { voices: [], v: null, ok: 'speechSynthesis' in window, loaded: false };
   const PREF = [/(Aria|Jenny|Ava|Emma|Guy).*(Online|Natural)/i, /Google US English/i, /Samantha/i, /Microsoft (Aria|Jenny|Zira|David)/i, /Google UK English Female/i, /Karen|Daniel|Moira|Tessa/i];
-  const ONLINE_TTS = 'https://dict.youdao.com/dictvoice?type=2&audio=';
+  // 有道两种口音（type=2 美音 / type=1 英音）正好给对话里的两个角色用
+  const onlineUrl = (text, g) => 'https://dict.youdao.com/dictvoice?type=' + (g === 'm' ? 1 : 2) + '&audio=' + encodeURIComponent(text);
+  const FEM = /female|samantha|aria|jenny|ava|emma|zira|karen|moira|tessa|serena|victoria|allison|susan|libby|sonia|natasha|michelle|joanna|salli|kendra|fiona|kate/i;
+  const MALE = /\bmale|daniel|david|guy|alex|fred|mark|ryan|aaron|arthur|george|thomas|oliver|christopher|eric|roger|brian|matthew|justin|rishi/i;
+  const genderOf = v => !v ? '' : /female/i.test(v.name) ? 'f' : MALE.test(v.name) ? 'm' : FEM.test(v.name) ? 'f' : '';
   function loadVoices() {
     if (!TTS.ok) return;
     const all = speechSynthesis.getVoices();
@@ -179,6 +185,9 @@
   function pickVoice() {
     const vs = TTS.voices;
     TTS.v = vs.find(v => v.name === S.settings.voice) || PREF.map(p => vs.find(v => p.test(v.name))).find(Boolean) || vs.find(v => /en[-_]US/i.test(v.lang)) || vs[0] || null;
+    const pool = [TTS.v, ...vs.filter(v => /en[-_]US/i.test(v.lang)), ...vs].filter(Boolean);
+    TTS.vf = pool.find(v => genderOf(v) === 'f') || null;
+    TTS.vm = pool.find(v => genderOf(v) === 'm') || null;
   }
   // 自带声音不可用（没有英语声音、合成失败）时改用在线发音
   function useOnline() {
@@ -189,29 +198,33 @@
   }
   function endPlaying() { $$('.spk.playing').forEach(b => b.classList.remove('playing')); }
   function startPlaying() { const main = $('#p-body .spk:not(.mini)'); if (main) main.classList.add('playing'); }
-  function sayOnline(text, rate, res) {
+  function sayOnline(text, rate, res, g) {
     const a = RT.audio || (RT.audio = new Audio());
     let done = false;
     const fin = () => { if (done) return; done = true; clearTimeout(t); endPlaying(); res(); };
     const t = setTimeout(fin, 4000 + text.length * 200);
     a.onended = fin;
-    a.onerror = () => { toast('在线发音没加载出来，检查一下网络'); fin(); };
-    a.src = ONLINE_TTS + encodeURIComponent(text);
+    a.onerror = () => { if (!done) toast('在线发音没加载出来，检查一下网络'); fin(); };
+    a.src = onlineUrl(text, g);
     a.playbackRate = (rate || S.settings.rate) < 0.75 ? 0.75 : 1;
     startPlaying();
     const pr = a.play();
-    if (pr && pr.catch) pr.catch(() => { toast('点一下 🔊 就能听到发音'); fin(); });
+    if (pr && pr.catch) pr.catch(() => { if (!done) toast('点一下 🔊 就能听到发音'); fin(); });
   }
-  function say(text, rate) {
+  // g：对话角色的声音 'f' / 'm'；不传就用默认声音
+  function say(text, rate, g) {
     return new Promise(res => {
       if (!text) return res();
       stopListening();
       if (TTS.ok) speechSynthesis.cancel();
       if (RT.audio) RT.audio.pause();
-      if (useOnline()) { sayOnline(text, rate, res); return; }
+      if (useOnline()) { sayOnline(text, rate, res, g); return; }
       const u = new SpeechSynthesisUtterance(text);
-      if (TTS.v) u.voice = TTS.v;
-      u.lang = TTS.v ? TTS.v.lang : 'en-US';
+      const v = g === 'f' ? (TTS.vf || TTS.v) : g === 'm' ? (TTS.vm || TTS.v) : TTS.v;
+      if (v) u.voice = v;
+      u.lang = v ? v.lang : 'en-US';
+      // 找不到对应性别的声音时，用音调区分两个角色
+      if (g && genderOf(v) !== g) u.pitch = g === 'm' ? 0.75 : 1.3;
       u.rate = rate || S.settings.rate;
       let done = false;
       const fin = () => { if (done) return; done = true; endPlaying(); res(); };
@@ -219,7 +232,7 @@
       u.onerror = e => {
         // 被新的朗读打断不算失败；真失败就切到在线发音重读一遍
         if (!done && e && e.error && !/interrupted|canceled/.test(e.error) && S.settings.tts !== 'device') {
-          RT.ttsBroken = true; done = true; sayOnline(text, rate, res); return;
+          RT.ttsBroken = true; done = true; sayOnline(text, rate, res, g); return;
         }
         fin();
       };
@@ -482,7 +495,12 @@
   }
 
   // ---------- 提示与弹窗 ----------
+  const recentToasts = {};
   function toast(msg, cls) {
+    // 同一句提示 8 秒内只弹一次，避免连续朗读失败时刷屏
+    const now = Date.now();
+    if (recentToasts[msg] && now - recentToasts[msg] < 8000) return;
+    recentToasts[msg] = now;
     const t = document.createElement('div');
     t.className = 'toast ' + (cls || '');
     t.textContent = msg;
@@ -572,7 +590,10 @@
         '<span class="n-ico">' + (un ? (r.boss ? w.boss.emoji : r.icon) : '🔒') + '</span>' +
         '<span class="n-name">' + (r.boss ? 'BOSS · ' + w.boss.name : r.name) + '</span><span class="n-stars">' + (un ? starStr(st) : '') + '</span></button>';
     }).join('');
-    return '<section class="world" style="--wc:' + w.color + '">' + head + '<div class="path">' + nodes + '</div></section>';
+    const sc = window.SCENES && window.SCENES[wi], seen = S.scenes[wi];
+    const scBtn = sc ? '<button class="scene-btn" data-act="scene" data-w="' + wi + '"><span class="sb-ico">🎬</span><span class="sb-t"><b>对话动画 · ' + esc(sc.title) + '</b><small>' +
+      (seen && seen.watched ? '✓ 看过了 · 可以再来跟读、角色扮演' : '先看看这个话题的英语对话怎么说 · 第一次看完 +10 金币') + '</small></span><span class="sb-go">▶</span></button>' : '';
+    return '<section class="world" style="--wc:' + w.color + '">' + head + '<div class="path">' + scBtn + nodes + '</div></section>';
   }
   function renderHome() {
     renderTop();
@@ -586,11 +607,12 @@
     }
   }
   function show(id) {
-    ['home', 'play', 'result'].forEach(s => { $('#' + s).hidden = s !== id; });
-    $('#topbar').hidden = id === 'play';
+    ['home', 'play', 'result', 'theater'].forEach(s => { $('#' + s).hidden = s !== id; });
+    $('#topbar').hidden = id === 'play' || id === 'theater';
     window.scrollTo(0, 0);
   }
   function goHome() {
+    if (T) { stopScene(); T = null; }
     stopListening();
     if (TTS.ok) speechSynthesis.cancel();
     if (RT.audio) RT.audio.pause();
@@ -617,6 +639,7 @@
       '<p>' + r.desc + (r.boss ? '' : ' 共 ' + r.mix.reduce((a, m) => a + m[1], 0) + ' 题，3 颗心。') + '</p>' +
       '<div class="lv-types">' + types + '</div>' +
       (st ? '<p>最好成绩：<span class="n-stars" style="font-size:18px">' + starStr(st) + '</span></p>' : '') +
+      (li === 4 && window.SCENES && window.SCENES[wi] ? '<button class="btn sun wide" data-act="scene" data-w="' + wi + '">🎬 先看对话动画</button>' : '') +
       '<details class="pre"><summary>📖 先预习一下（点一句就能听）</summary><div class="pre-list">' + pre + '</div></details>' +
       '<div class="row"><button class="btn ghost" data-act="close">再想想</button><button class="btn" data-act="start" data-w="' + wi + '" data-l="' + li + '" data-focus>开始闯关</button></div>'
     );
@@ -1089,6 +1112,176 @@
     }, 1000);
   }
 
+
+  // ---------- 对话动画剧场：看动画 / 跟读 / 角色扮演 ----------
+  let T = null;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const MODE_TIP = {
+    watch: '先完整看一遍。关掉英文字幕，就能练纯听力。点下面的对话记录可以单独再听一句。',
+    shadow: '每句播完会停下来，你跟着说一遍，说对了自动继续。',
+    role: '选一个角色，轮到你时大声说出台词，另一个角色由电脑来演。',
+  };
+  function gainXp(n) {
+    if (!n) return;
+    const b = lvInfo(S.xp).lv;
+    S.xp += n;
+    const a = lvInfo(S.xp).lv;
+    if (a > b) { S.coins += 20; toast('🎖️ 升级啦！Lv ' + a + ' ' + titleOf(a) + ' +20 金币', 'gold'); confetti(160); }
+  }
+  function openScene(wi) {
+    const sc = window.SCENES && window.SCENES[wi];
+    if (!sc) return;
+    primeTTS(); ac();
+    T = { wi, sc, idx: -1, mode: 'watch', me: 1, run: 0, playing: false, slow: false, zh: true, en: true, spoke: 0, turn: null, done: false, tries: 0 };
+    show('theater');
+    renderTheater();
+  }
+  function stopScene() {
+    if (!T) return;
+    T.run++;
+    T.playing = false;
+    if (T.turn) { const r = T.turn; T.turn = null; r(false); }
+    stopListening();
+    if (TTS.ok) speechSynthesis.cancel();
+    if (RT.audio) RT.audio.pause();
+  }
+  const playLabel = () => T.playing ? '⏸ 暂停' : (T.idx >= 0 && !T.done ? '▶ 继续' : T.done ? '🔁 再来一遍' : '▶ 开始播放');
+  function updPlay() { const b = $('#th-play'); if (b) b.textContent = playLabel(); }
+  function renderTheater() {
+    const sc = T.sc, w = W[T.wi];
+    const modes = [['watch', '👀 看动画'], ['shadow', '🔁 跟读'], ['role', '🎭 角色扮演']];
+    $('#theater').innerHTML =
+      '<div class="p-top"><button class="x" data-act="thClose" aria-label="退出">✕</button><div class="th-title"><b>🎬 ' + esc(sc.title) + '</b><small>' + w.name + ' · ' + esc(sc.place) + '</small></div></div>' +
+      '<div class="stage" style="--wc:' + w.color + '"><span class="stage-bg">' + sc.bg + '</span>' +
+      sc.cast.map((c, k) => '<div class="actor a' + k + '" id="actor' + k + '"><span class="ae"><span class="af">' + c[1] + '</span></span><span class="an">' + esc(c[0]) + (T.mode === 'role' && T.me === k ? ' · 你' : '') + '</span></div>').join('') +
+      '<div class="stage-sub" id="th-sub"></div></div>' +
+      '<div class="seg th-modes">' + modes.map(([m, n]) => '<button class="' + (T.mode === m ? 'on' : '') + '" data-act="thMode" data-m="' + m + '">' + n + '</button>').join('') + '</div>' +
+      (T.mode === 'role' ? '<div class="seg th-modes"><span class="th-lab">我来演</span>' + sc.cast.map((c, k) => '<button class="' + (T.me === k ? 'on' : '') + '" data-act="thMe" data-i="' + k + '">' + c[1] + ' ' + esc(c[0]) + '</button>').join('') + '</div>' : '') +
+      '<div class="th-ctrl"><button class="btn" id="th-play" data-act="thPlay">' + playLabel() + '</button>' +
+      '<button class="slow' + (T.slow ? ' on' : '') + '" data-act="thSlow" aria-pressed="' + T.slow + '"><span>🐢</span>慢速</button>' +
+      '<button class="slow' + (T.en ? ' on' : '') + '" data-act="thEn" aria-pressed="' + T.en + '"><span>En</span>英文</button>' +
+      '<button class="slow' + (T.zh ? ' on' : '') + '" data-act="thZh" aria-pressed="' + T.zh + '"><span>中</span>中文</button></div>' +
+      '<p class="th-tip">' + MODE_TIP[T.mode] + '</p>' +
+      '<div id="th-turn"></div><div class="th-log" id="th-log"></div>';
+    renderStage(); renderLog();
+    window.scrollTo(0, 0);
+  }
+  function renderStage() {
+    const L = T.sc.lines[T.idx];
+    T.sc.cast.forEach((c, k) => {
+      const a = $('#actor' + k); if (!a) return;
+      a.classList.toggle('talk', !!L && L[0] === k && T.playing);
+      a.classList.toggle('dim', !!L && L[0] !== k);
+    });
+    const sub = $('#th-sub'); if (!sub) return;
+    if (!L) { sub.className = 'stage-sub'; sub.innerHTML = '<span class="ss-zh">' + (T.done ? '🎉 演完啦！' : '点「开始播放」，看看他们怎么说') + '</span>'; return; }
+    sub.className = 'stage-sub ' + (L[0] === 0 ? 'l' : 'r');
+    sub.innerHTML = '<span class="ss-who">' + esc(T.sc.cast[L[0]][0]) + '</span>' +
+      (T.en ? '<span class="ss-en">' + esc(L[1]) + '</span>' : '<span class="ss-en muted">🎧 只用耳朵听……</span>') +
+      (T.zh ? '<span class="ss-zh">' + esc(L[2]) + '</span>' : '');
+  }
+  function renderLog() {
+    const log = $('#th-log'); if (!log) return;
+    const n = T.done ? T.sc.lines.length : Math.max(0, T.idx);
+    log.innerHTML = (n ? '<div class="th-lab">对话记录（点一句再听一遍）</div>' : '') + T.sc.lines.slice(0, n).map((L, i) => {
+      const c = T.sc.cast[L[0]];
+      return '<button class="lg lg' + L[0] + '" data-act="thLine" data-i="' + i + '"><span class="lg-e">' + c[1] + '</span><span class="lg-b"><b>' + esc(L[1]) + '</b><small>' + esc(L[2]) + '</small></span></button>';
+    }).join('');
+  }
+  async function playFrom(i) {
+    const my = ++T.run;
+    T.playing = true; T.done = false;
+    updPlay();
+    const lines = T.sc.lines;
+    for (T.idx = i; T.idx < lines.length; T.idx++) {
+      const [who, en] = lines[T.idx];
+      renderStage(); renderLog();
+      if (T.mode === 'role' && who === T.me) { await kidTurn(); if (my !== T.run) return; continue; }
+      await say(en, T.slow ? 0.65 : S.settings.rate, T.sc.cast[who][2]);
+      if (my !== T.run) return;
+      if (T.mode === 'shadow') { await kidTurn(); if (my !== T.run) return; }
+      else { await sleep(500); if (my !== T.run) return; }
+    }
+    T.playing = false; T.done = true; T.idx = lines.length;
+    renderStage(); renderLog(); updPlay();
+    sceneDone();
+  }
+  function kidTurn() {
+    return new Promise(res => {
+      T.turn = res; T.tries = 0;
+      const L = T.sc.lines[T.idx], sr = speakMode() === 'sr';
+      const a = $('#actor' + L[0]); if (a) a.classList.add('talk');
+      $('#th-turn').innerHTML = '<div class="say-card th-you"><div class="say-zh">' + (T.mode === 'role' ? '轮到你了，大声说：' : '跟着说一遍：') + '</div>' +
+        '<div class="say-text" id="th-say">' + wordsHTML(L[1]) + '</div>' + (T.zh ? '<div class="say-zh">' + esc(L[2]) + '</div>' : '') +
+        (sr ? '<button class="mic" id="th-mic" data-act="thMic" aria-label="开始说话">' + MIC + '</button>' : '') +
+        '<div class="mic-hint" id="th-hint">' + (sr ? '点麦克风，然后大声说' : '大声说出来，说完点「我说完了」') + '</div><div class="heard" id="th-heard"></div>' +
+        '<div class="say-row"><button class="btn small ghost" data-act="thHear">🔊 听示范</button><button class="btn small ' + (sr ? 'ghost' : 'leaf') + '" id="th-done" data-act="thDone">' + (sr ? '跳过这句' : '🎤 我说完了') + '</button></div></div>';
+      $('#th-turn').scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+    });
+  }
+  function endTurn(ok) {
+    const r = T && T.turn; if (!r) return;
+    T.turn = null;
+    stopListening();
+    $('#th-turn').innerHTML = '';
+    if (ok) { T.spoke++; S.stats.spoken++; qProg('spoken', 1); }
+    r(ok);
+  }
+  async function thMic() {
+    if (!T || !T.turn) return;
+    if (RT.listening) { stopListening(); return; }
+    if (TTS.ok) speechSynthesis.cancel();
+    if (RT.audio) RT.audio.pause();
+    const turn = T.turn, L = T.sc.lines[T.idx], m = $('#th-mic');
+    m.classList.add('on'); m.innerHTML = STOP;
+    $('#th-hint').textContent = '正在听……说完会自动停止';
+    const res = await recognize(t => { const h = $('#th-heard'); if (h) h.textContent = t; });
+    if (!T || T.turn !== turn) return;
+    m.classList.remove('on'); m.innerHTML = MIC;
+    if (res.err && FATAL.includes(res.err)) {
+      RT.srBroken = true;
+      if (res.err === 'not-allowed' || res.err === 'audio-capture') RT.noRec = true;
+      toast('这里用不了语音识别，改成自己说、自己确认');
+      m.remove();
+      $('#th-hint').textContent = '大声说出来，说完点「我说完了」';
+      const d = $('#th-done'); d.textContent = '🎤 我说完了'; d.className = 'btn small leaf';
+      return;
+    }
+    if (!res.alts.length) { $('#th-hint').textContent = '没听清，靠近一点、大声一点再试一次'; return; }
+    const r = bestScore(L[1], res.alts);
+    $('#th-heard').textContent = '我听到：“' + r.heard + '”';
+    $$('#th-say .w').forEach((w, k) => { w.classList.toggle('ok', !!r.marks[k]); w.classList.toggle('miss', !r.marks[k]); });
+    if (r.score >= 55) {
+      SFX.ok(T.spoke);
+      if (r.score >= 85) { S.stats.perfect++; qProg('perfect', 1); }
+      $('#th-hint').innerHTML = '<b>' + r.score + ' 分</b> ' + (r.score >= 85 ? 'Perfect！' : 'Good！');
+      setTimeout(() => { if (T && T.turn === turn) endTurn(true); }, 900);
+    } else {
+      T.tries++;
+      SFX.bad();
+      $('#th-hint').textContent = r.score + ' 分，红色的词再读准一点' + (T.tries >= 2 ? '，或者点「跳过这句」' : '');
+    }
+  }
+  function sceneDone() {
+    const rec = S.scenes[T.wi] || (S.scenes[T.wi] = {});
+    const msg = [];
+    let coins = 0, xp = 0;
+    if (T.mode === 'watch' && !rec.watched) { rec.watched = 1; coins += 10; msg.push('第一次看完 +10 金币'); }
+    if (T.mode === 'shadow') { rec.shadow = 1; xp += 20; msg.push('跟读完成 +20 经验'); }
+    if (T.mode === 'role') { rec.role = 1; xp += 30; coins += 10; S.stats.roleplay++; qProg('roleplay', 1); msg.push('角色扮演完成 +30 经验 +10 金币'); }
+    S.coins += coins;
+    gainXp(xp);
+    save(); checkAch();
+    SFX.win(); confetti(90);
+    const other = T.me === 0 ? 1 : 0;
+    const nextBtn = T.mode === 'watch' ? '<button class="btn" data-act="thMode" data-m="shadow" data-go="1">🔁 接着跟读</button>'
+      : T.mode === 'shadow' ? '<button class="btn" data-act="thMode" data-m="role" data-go="1">🎭 试试角色扮演</button>'
+        : '<button class="btn" data-act="thMe" data-i="' + other + '" data-go="1">换演 ' + esc(T.sc.cast[other][0]) + '</button>';
+    $('#th-turn').innerHTML = '<div class="th-end"><div class="big">🎉</div><b>' + (T.mode === 'role' ? '演得真棒！' : T.mode === 'shadow' ? '跟读完成！' : '看完啦！') + '</b>' +
+      '<p>' + (msg.join(' · ') || '多看几遍，对话就能脱口而出') + '</p><div class="say-row">' + nextBtn + '<button class="btn ghost" data-act="thClose">回地图</button></div></div>';
+    renderTop();
+  }
+
   // ---------- 宝箱 / 商店 / 成就 / 设置 ----------
   function openChest() {
     if (S.quests.chest || !S.quests.list.every(q => q.claimed)) return;
@@ -1201,6 +1394,23 @@
     selfReveal: () => { P.selfReveal = true; const st = $('#st'); if (st) { st.classList.remove('mask'); st.innerHTML = wordsHTML(P.q.target); } say(P.q.target); showSelf(false); },
     btOpt: t => onBtOpt(num(t, 'i')),
     bossGo: () => renderQ(),
+    scene: t => { closeModal(); openScene(num(t, 'w')); },
+    thClose: () => goHome(),
+    thPlay: () => {
+      if (!T) return;
+      if (T.playing) { stopScene(); $('#th-turn').innerHTML = ''; updPlay(); renderStage(); return; }
+      primeTTS();
+      playFrom(T.done || T.idx < 0 ? 0 : T.idx);
+    },
+    thMode: t => { stopScene(); T.mode = t.dataset.m; T.idx = -1; T.done = false; renderTheater(); if (t.dataset.go) playFrom(0); },
+    thMe: t => { stopScene(); T.me = num(t, 'i'); T.idx = -1; T.done = false; renderTheater(); if (t.dataset.go) playFrom(0); },
+    thSlow: t => { T.slow = !T.slow; t.classList.toggle('on', T.slow); t.setAttribute('aria-pressed', T.slow); },
+    thEn: t => { T.en = !T.en; t.classList.toggle('on', T.en); t.setAttribute('aria-pressed', T.en); renderStage(); },
+    thZh: t => { T.zh = !T.zh; t.classList.toggle('on', T.zh); t.setAttribute('aria-pressed', T.zh); renderStage(); },
+    thLine: t => { if (!T || T.playing) return; const L = T.sc.lines[num(t, 'i')]; say(L[1], T.slow ? 0.65 : undefined, T.sc.cast[L[0]][2]); },
+    thHear: () => { if (!T || !T.turn) return; const L = T.sc.lines[T.idx]; say(L[1], 0.75, T.sc.cast[L[0]][2]); },
+    thMic: () => thMic(),
+    thDone: () => endTurn(speakMode() !== 'sr'),
     next: onNext,
     quit: () => {
       if (!P) { goHome(); return; }
