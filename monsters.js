@@ -43,6 +43,26 @@
   const STRONG = { fire: ['grass'], grass: ['water', 'spark'], water: ['fire'], spark: ['water'] };
   const eff = (a, d) => STRONG[a].includes(d) ? 1.5 : STRONG[d].includes(a) ? 0.5 : 1;
   const CATCH_LINES = ['Come with me!', "Let's be friends!", 'Welcome to my team!', 'You are my new friend!'];
+  const TEAM_MAX = 6;
+  // 背包道具。回声球和药水沿用老存档里的 balls / potions，其余放在 bag 里
+  const ITEMS = {
+    ball: { zh: '回声球', en: 'Echo Ball', icon: '🔮', price: 10, desc: '收服野生怪兽' },
+    superball: { zh: '超级球', en: 'Super Ball', icon: '💠', price: 25, desc: '更容易收服' },
+    potion: { zh: '药水', en: 'Potion', icon: '🧪', price: 20, desc: '回复 40% 体力', heal: 0.4 },
+    superpotion: { zh: '好伤药', en: 'Super Potion', icon: '💊', price: 40, desc: '回复 80% 体力', heal: 0.8 },
+    revive: { zh: '复活草', en: 'Revive', icon: '🌿', price: 60, desc: '让累倒的怪兽恢复一半体力' },
+    repel: { zh: '驱怪喷雾', en: 'Repel', icon: '🧴', price: 30, desc: '100 步内不遇野生怪兽' },
+    rope: { zh: '逃生绳', en: 'Escape Rope', icon: '🪢', price: 25, desc: '从洞穴里一下回到洞口' },
+  };
+  const BAG_ORDER = ['ball', 'superball', 'potion', 'superpotion', 'revive', 'repel', 'rope'];
+  function itemCount(id) { const m = M(); return id === 'ball' ? m.balls : id === 'potion' ? (m.potions || 0) : ((m.bag || {})[id] || 0); }
+  function addItem(id, n) {
+    const m = M();
+    if (id === 'ball') m.balls += n;
+    else if (id === 'potion') m.potions = (m.potions || 0) + n;
+    else { m.bag = m.bag || {}; m.bag[id] = Math.max(0, (m.bag[id] || 0) + n); }
+  }
+  let FH = null; // 大地图提供的道具效果（驱怪喷雾、逃生绳）
 
   const stats = m => { const s = SPECIES[m.sp]; return { hp: s.hp + m.lv * 6, atk: s.atk + m.lv * 2 }; };
   const xpNeed = lv => lv * 20;
@@ -119,15 +139,15 @@
       '<div class="xpbar"><i style="width:' + (L.xp / xpNeed(L.lv) * 100) + '%"></i></div>' +
       '<small>HP ' + st.hp + ' · 攻击 ' + st.atk + (s.evo ? ' · Lv ' + EVO_LV + ' 会进化' : '') + '</small></div>' +
       '<div class="lead-btns"><button class="btn small ghost" data-act="mTeam">🐾 我的怪兽 ' + m.box.length + '</button><button class="btn small ghost" data-act="mDex">📖 图鉴 ' + caughtN() + '/' + ORDER.length + '</button><button class="btn small sun" data-act="mBalls">🔮 回声球 ' + m.balls + '</button></div></section>';
-    const ws = E.S.world || {}, wz = ws.started ? ws.z : 0;
-    h += '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? '继续冒险 · 第 ' + (wz + 1) + ' 镇 ' + E.W[wz].name : '出发去冒险！') + '</button>';
+    const ws = E.S.world || {}, place = window.EchoWorld && EchoWorld.placeLabel ? EchoWorld.placeLabel() : null;
+    h += '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? '继续冒险' + (place ? ' · ' + place.name : '') : '出发去冒险！') + '</button>';
     h += '<p class="tip">走进草丛会遇到野生怪兽，路上的训练师看到你就会来挑战。<br>打败每个小镇的道馆馆主拿到徽章，守卫才会让你去下一个小镇。</p>';
     const visited = Object.keys(ws.visited || {}).map(Number).sort((a, b) => a - b);
     if (visited.length > 1) {
       h += '<section class="mon-card fly"><h3>✈️ 飞回去过的小镇</h3><div class="fly-list">' + visited.map(z =>
         '<button class="btn small ghost" data-act="wFly" data-z="' + z + '">' + E.W[z].icon + ' ' + E.W[z].name + (m.badges[z] ? ' 🏅' : '') + '</button>').join('') + '</div></section>';
     }
-    h += '<p class="tip">🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · 🧪 药水 ' + (m.potions || 0) + ' · 在「📚 闯关练习」每通关一关送 1 个回声球，三星送 2 个。</p>';
+    h += '<p class="tip">🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · <button class="link" data-act="mBag">🎒 背包</button> · 在「📚 闯关练习」每通关一关送 1 个回声球，三星送 2 个。</p>';
     return h;
   }
 
@@ -166,9 +186,9 @@
   }
 
   // ---------- 战斗 ----------
-  function wildFoe(z) {
+  function wildFoe(z, bonus) {
     let sp = Math.random() < 0.08 ? pick(STARTERS) : Math.random() < 0.45 ? WILD[z % WILD.length] : pick(WILD);
-    const lv = zoneLv(z) + rnd(3);
+    const lv = zoneLv(z) + (bonus || 0) + rnd(3);
     if (lv >= EVO_LV && SPECIES[sp].evo && Math.random() < 0.5) sp = SPECIES[sp].evo;
     return newMon(sp, lv);
   }
@@ -208,7 +228,7 @@
     E.primeTTS(); E.ac();
     stopBattle();
     const team = M().team.filter(byUid);
-    const foes = opts.foes || (kind === 'wild' ? [wildFoe(z)] : leaderFoes(z));
+    const foes = opts.foes || (kind === 'wild' ? [wildFoe(z, opts.lvBonus)] : leaderFoes(z));
     const ti = team.findIndex(u => curHp(byUid(u)) > 0);
     B = { kind, z, foes, fi: 0, team, ti, hp: {}, energy: 0, turn: 'intro', over: false, used: new Set([team[ti]]), task: null, tries: 0, onEnd: opts.onEnd, trainer: opts.trainer, result: '' };
     team.forEach(u => { B.hp[u] = curHp(byUid(u)); });
@@ -282,8 +302,18 @@
       return '<button class="move' + (i === 2 ? ' ult' : '') + '" style="--tc:' + TYPES[sm.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[sm.type] + '</span><b>' + mv[0] + '</b><span class="mv-pow">' + DOTS[i] + '</span></span><small>' + mv[1] + ' · ' + (lock ? '攒满 3 格能量解锁' : TASK[i]) + '</small></button>';
     }).join('') + '</div>' +
       '<div class="b-items">' +
-      (B.kind === 'wild' ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 回声球 ×' + M().balls + (canCatch ? '' : ' · 先打虚弱') + '</button>' : '') +
-      '<button class="btn small ghost" data-act="bPotion"' + ((M().potions || 0) > 0 && B.hp[m.uid] < stats(m).hp ? '' : ' disabled') + '>🧪 药水 ×' + (M().potions || 0) + '</button></div>');
+      (B.kind === 'wild' ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 收服' + (canCatch ? '' : ' · 先打虚弱') + '</button>' : '') +
+      '<button class="btn small ghost" data-act="bBag">🎒 背包</button></div>');
+  }
+  // 战斗里的背包：只能用回复类道具，用掉这一回合
+  function battleBag() {
+    if (!B || B.turn !== 'me') return;
+    const m = me(), full = B.hp[m.uid] >= stats(m).hp;
+    const rows = ['potion', 'superpotion'].map(id => {
+      const it = ITEMS[id], n = itemCount(id);
+      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + ' ×' + n + '</b><small>' + it.desc + '</small></div><button class="btn small sun" data-act="bUse" data-id="' + id + '"' + (n > 0 && !full ? '' : ' disabled') + '>用</button></div>';
+    }).join('');
+    E.openModal('<h2>🎒 背包</h2><p>给 <b>' + SPECIES[m.sp].en + '</b> 用道具（体力 ' + Math.max(0, Math.round(B.hp[m.uid])) + ' / ' + stats(m).hp + '）。用道具会用掉这一回合。</p>' + rows + '<button class="btn ghost wide" data-act="close">返回</button>');
   }
 
   // 技能任务：说单词 / 念句子 / 对话大招 / 收服咒语
@@ -297,9 +327,16 @@
     else { const k = rnd(Wz.dlgs.length), it = Wz.dlgs[k]; B.task = { kind: 'ult', q: { kind: 'dlg', w: B.z, i: k }, prompt: it[0], target: it[1], opts: shuffle([{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))]) }; }
     taskPanel();
   }
-  function onCatch() {
+  function onCatch(ball) {
     if (!B || B.turn !== 'me' || B.kind !== 'wild') return;
-    if (M().balls <= 0) { E.toast('回声球用完了！去「闯关练习」通关就能拿到，或者在基地用金币买'); return; }
+    const nb = itemCount('ball'), ns = itemCount('superball');
+    if (nb + ns <= 0) { E.toast('回声球用完了！去「闯关练习」通关就能拿到，或者去商店买'); return; }
+    if (!ball && nb > 0 && ns > 0) {
+      E.openModal('<h2>用哪种球？</h2><div class="row"><button class="btn sun" data-act="bCatch" data-ball="ball">🔮 回声球 ×' + nb + '</button><button class="btn" data-act="bCatch" data-ball="superball">💠 超级球 ×' + ns + '</button></div><button class="btn ghost wide" data-act="close">返回</button>');
+      return;
+    }
+    E.closeModal();
+    B.ball = ball || (nb > 0 ? 'ball' : 'superball');
     B.turn = 'task'; B.tries = 0; B.hinted = false;
     B.task = { kind: 'catch', target: pick(CATCH_LINES) };
     taskPanel();
@@ -582,10 +619,10 @@
 
   // ---------- 收服 ----------
   async function resolveCatch(score, b) {
-    const f = foe(), sf = SPECIES[f.sp], max = stats(f).hp;
-    M().balls--;
+    const f = foe(), sf = SPECIES[f.sp], max = stats(f).hp, sup = B.ball === 'superball';
+    addItem(sup ? 'superball' : 'ball', -1);
     panel('');
-    msg('去吧，回声球！');
+    msg(sup ? '去吧，超级球！' : '去吧，回声球！');
     const ball = document.createElement('span');
     ball.className = 'proj ball';
     const arena = $('b-arena'), [x1, y1] = center('b-me'), [x2, y2] = center('b-foe');
@@ -596,7 +633,7 @@
     if (!live(b)) return;
     $('b-foe').classList.add('caught-in');
     ball.classList.add('wobble');
-    const p = (0.3 + 0.7 * (1 - Math.max(0, B.foeHp) / max)) * (score >= 85 ? 1.25 : score >= 55 ? 1 : 0.5);
+    const p = (0.3 + 0.7 * (1 - Math.max(0, B.foeHp) / max)) * (score >= 85 ? 1.25 : score >= 55 ? 1 : 0.5) * (sup ? 1.5 : 1);
     const ok = Math.random() < p;
     for (let k = 0; k < 3; k++) { E.SFX.tap(); await sleep(600); if (!live(b)) return; if (!ok && k === 1) break; }
     if (ok) {
@@ -604,7 +641,8 @@
       B.used.forEach(u => { const mm = byUid(u); if (mm) gainMonXp(mm, 10 + f.lv * 8); });
       const mon = newMon(f.sp, f.lv);
       M().box.push(mon);
-      if (M().team.length < 3) M().team.push(mon.uid);
+      if (M().team.length < TEAM_MAX) M().team.push(mon.uid);
+      else B.toBox = true;
       M().dex[f.sp] = 'caught';
       M().caught = (M().caught || 0) + 1;
       E.qProg('catch', 1);
@@ -652,7 +690,7 @@
     const newDay = E.markToday();
     E.save(); E.renderTop();
     if (!caught) { E.SFX.win(); E.confetti(B.kind === 'leader' ? 200 : 90); }
-    msg(caught ? '新伙伴已经加入队伍（队伍满了就在「我的怪兽」里）。' : B.kind === 'leader' ? w.boss.name + '：“你太厉害了！这枚徽章是你的了！”' : B.kind === 'trainer' ? B.trainer.name + '：“你真厉害！”' : '胜利！');
+    msg(caught ? (B.toBox ? '队伍已经有 6 只了，新伙伴被送到了电脑箱子里（去怪兽中心的电脑换）。' : '新伙伴已经加入队伍！') : B.kind === 'leader' ? w.boss.name + '：“你太厉害了！这枚徽章是你的了！”' : B.kind === 'trainer' ? B.trainer.name + '：“你真厉害！”' : '胜利！');
     panel('<div class="b-result"><div class="big">' + (caught ? '🔮' : B.kind === 'leader' ? '🏅' : '🏆') + '</div><b>' + (caught ? '收服成功！' : B.kind === 'leader' ? '打败馆主！' : '胜利！') + '</b><p>' + lines.join('<br>') + '</p>' +
       '<div class="say-row">' + (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>继续冒险 ▶</button>'
         : (B.kind === 'wild' ? '<button class="btn" data-act="mWild" data-z="' + z + '">⚔️ 再战一场</button>' : '') + '<button class="btn ghost" data-act="bHome">回基地</button>') + '</div></div>');
@@ -666,17 +704,19 @@
     panel('<div class="b-result"><div class="big">💤</div><b>先去怪兽中心休息一下</b><p>怪兽中心能让怪兽恢复体力。<br>小窍门：多在草丛里打野生怪兽把等级练上去，<br>或者用<b>属性克制</b>（🔥 克 🍃，🍃 克 💧，💧 克 🔥）。</p><div class="say-row">' +
       (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>去怪兽中心</button>' : '<button class="btn" data-act="bHome">回基地</button>') + '</div></div>');
   }
-  // 药水：回复 40% 体力，用掉这一回合
-  async function usePotion() {
-    if (!B || B.turn !== 'me' || !(M().potions > 0)) return;
+  // 回复道具：用掉这一回合
+  async function usePotion(id) {
+    id = id || 'potion';
+    if (!B || B.turn !== 'me' || itemCount(id) <= 0) return;
     const b = B, m = me(), max = stats(m).hp;
     if (B.hp[m.uid] >= max) return;
+    E.closeModal();
     B.turn = 'busy';
-    M().potions--;
-    const heal = Math.max(20, Math.round(max * 0.4));
+    addItem(id, -1);
+    const heal = Math.max(20, Math.round(max * ITEMS[id].heal));
     B.hp[m.uid] = Math.min(max, B.hp[m.uid] + heal);
     panel('');
-    msg('用了药水！<b>' + SPECIES[m.sp].en + '</b> 恢复了体力。');
+    msg('用了' + ITEMS[id].zh + '！<b>' + SPECIES[m.sp].en + '</b> 恢复了体力。');
     E.SFX.coin();
     pop('b-me', '+' + heal, 'lbl');
     updHp(); E.save();
@@ -708,18 +748,69 @@
   }
 
   // ---------- 我的怪兽 / 图鉴 / 回声球 ----------
+  // 一只怪兽的信息行，btn 是右边的按钮
+  function monRow(mon, btn, inTeam) {
+    const s = SPECIES[mon.sp];
+    return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>' + s.zh + '</small><div class="chips">' + tchip(s.type) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (inTeam ? '<span class="lvchip in">队伍中</span>' : '') + '</div>' +
+      '<small>体力 ' + curHp(mon) + ' / ' + stats(mon).hp + (curHp(mon) === 0 ? ' · 累倒了' : '') + '</small>' +
+      '<div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div><div class="mrow-b">' + btn + '</div></div>';
+  }
+  const teamMons = () => M().team.map(byUid).filter(Boolean);
+  const boxMons = () => M().box.filter(x => !M().team.includes(x.uid)).sort((a, b) => b.lv - a.lv);
+  // 队伍：看状态、换主力。存进箱子 / 从箱子取出要去怪兽中心的电脑
   function teamSheet() {
-    const m = M();
-    const rows = m.box.slice().sort((a, b) => (m.team.indexOf(a.uid) + 1 || 99) - (m.team.indexOf(b.uid) + 1 || 99) || b.lv - a.lv).map(mon => {
-      const s = SPECIES[mon.sp], k = m.team.indexOf(mon.uid);
-      const btn = k === 0 ? '<span class="lvchip">主力</span>'
-        : k > 0 ? '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '">设为主力</button><button class="btn small ghost" data-act="mBench" data-u="' + mon.uid + '">离队</button>'
-          : '<button class="btn small ghost" data-act="mJoin" data-u="' + mon.uid + '"' + (m.team.length >= 3 ? ' disabled' : '') + '>加入队伍</button>';
-      return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>' + s.zh + '</small><div class="chips">' + tchip(s.type) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (k >= 0 ? '<span class="lvchip in">队伍中</span>' : '') + '</div>' +
-        '<small>体力 ' + curHp(mon) + ' / ' + stats(mon).hp + (curHp(mon) === 0 ? ' · 累倒了' : '') + '</small>' +
-        '<div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div><div class="mrow-b">' + btn + '</div></div>';
+    const rows = teamMons().map((mon, k) => monRow(mon, k === 0 ? '<span class="lvchip">主力</span>' : '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '">设为主力</button>', true)).join('');
+    const nb = boxMons().length;
+    E.openModal('<h2>我的队伍 ' + teamMons().length + ' / ' + TEAM_MAX + '</h2><p>主力先出场，倒下后队友自动接上。</p>' + rows +
+      (nb ? '<p class="tip">💻 电脑箱子里还有 ' + nb + ' 只怪兽，去怪兽中心的电脑可以换进队伍。</p>' : '') +
+      '<button class="btn ghost wide" data-act="close">关闭</button>');
+  }
+  // 怪兽中心的电脑：队伍和箱子互相换
+  function pcSheet() {
+    const full = M().team.length >= TEAM_MAX, one = M().team.length <= 1;
+    const team = teamMons().map((mon, k) => monRow(mon, (k ? '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '" data-pc="1">设为主力</button>' : '<span class="lvchip">主力</span>') +
+      '<button class="btn small ghost" data-act="mBench" data-u="' + mon.uid + '" data-pc="1"' + (one ? ' disabled' : '') + '>存进箱子</button>', true)).join('');
+    const box = boxMons().map(mon => monRow(mon, '<button class="btn small sun" data-act="mJoin" data-u="' + mon.uid + '" data-pc="1"' + (full ? ' disabled' : '') + '>放进队伍</button>', false)).join('');
+    E.openModal('<h2>💻 怪兽箱子</h2><p>队伍最多 ' + TEAM_MAX + ' 只。' + (full ? '队伍满了，先存一只进箱子再取。' : '') + '</p><h3 class="pc-h">队伍 ' + M().team.length + ' / ' + TEAM_MAX + '</h3>' + team +
+      '<h3 class="pc-h">箱子 ' + boxMons().length + '</h3>' + (box || '<p class="tip">箱子是空的。收服的怪兽在队伍满了以后会送到这里。</p>') +
+      '<button class="btn ghost wide" data-act="close">关闭电脑</button>');
+  }
+  // 背包：在大地图上用回复道具、驱怪喷雾、逃生绳
+  function bagSheet() {
+    const rows = BAG_ORDER.map(id => {
+      const it = ITEMS[id], n = itemCount(id);
+      if (!n && id !== 'ball' && id !== 'potion') return '';
+      let use = '';
+      if (it.heal || id === 'revive') use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
+      else if (id === 'repel') use = '<button class="btn small" data-act="mUse" data-id="repel"' + (n && FH && FH.inWorld() ? '' : ' disabled') + '>用</button>';
+      else if (id === 'rope') use = '<button class="btn small" data-act="mUse" data-id="rope"' + (n && FH && FH.canRope() ? '' : ' disabled') + '>用</button>';
+      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + ' ×' + n + '</b><small>' + it.desc + ' · ' + it.en + '</small></div>' + use + '</div>';
     }).join('');
-    E.openModal('<h2>我的怪兽</h2><p>队伍最多 3 只，主力先出场，倒下后队友自动接上。</p>' + rows + '<button class="btn ghost wide" data-act="close">关闭</button>');
+    E.openModal('<h2>🎒 背包</h2><p>💰 ' + E.S.coins + ' 金币 · 道具可以在商店买，也可以在路上捡</p>' + rows + '<button class="btn ghost wide" data-act="close">关闭</button>');
+  }
+  // 选一只怪兽用回复道具
+  function useItem(id) {
+    const it = ITEMS[id];
+    if (itemCount(id) <= 0) return;
+    if (id === 'repel') { addItem(id, -1); E.save(); E.closeModal(); FH && FH.repel(); return; }
+    if (id === 'rope') { addItem(id, -1); E.save(); FH && FH.rope(); return; }
+    const rows = teamMons().map(mon => {
+      const max = stats(mon).hp, hp = curHp(mon), ok = id === 'revive' ? hp === 0 : hp > 0 && hp < max;
+      return monRow(mon, '<button class="btn small sun" data-act="mUseOn" data-id="' + id + '" data-u="' + mon.uid + '"' + (ok ? '' : ' disabled') + '>' + it.icon + ' 用</button>', true);
+    }).join('');
+    E.openModal('<h2>' + it.icon + ' ' + it.zh + ' 给谁用？</h2><p>' + it.desc + '</p>' + rows + '<button class="btn ghost wide" data-act="mBag">返回背包</button>');
+  }
+  function useItemOn(id, u) {
+    const mon = byUid(u), it = ITEMS[id];
+    if (!mon || itemCount(id) <= 0) return;
+    const max = stats(mon).hp, hp = curHp(mon);
+    if (id === 'revive') { if (hp > 0) return; mon.hp = Math.round(max / 2); }
+    else { if (hp === 0 || hp >= max) return; mon.hp = Math.min(max, hp + Math.max(20, Math.round(max * it.heal))); }
+    addItem(id, -1);
+    E.save(); E.SFX.coin();
+    E.toast(it.icon + ' ' + SPECIES[mon.sp].en + ' 恢复了体力', 'gold');
+    E.say(SPECIES[mon.sp].en + ' feels better!');
+    if (itemCount(id) > 0) useItem(id); else bagSheet();
   }
   function dexSheet() {
     const m = M();
@@ -747,12 +838,17 @@
     mDex: dexSheet,
     mBalls: ballSheet,
     mBuyBalls: () => { if (E.S.coins < 30) return; E.S.coins -= 30; M().balls += 3; E.save(); E.SFX.coin(); E.renderTop(); E.renderHome(); ballSheet(); },
-    mLead: t => { const m = M(); m.team = [t.dataset.u, ...m.team.filter(u => u !== t.dataset.u)]; E.save(); teamSheet(); E.renderHome(); },
-    mJoin: t => { const m = M(); if (m.team.length < 3) m.team.push(t.dataset.u); E.save(); teamSheet(); },
-    mBench: t => { const m = M(); if (m.team.length > 1) m.team = m.team.filter(u => u !== t.dataset.u); E.save(); teamSheet(); E.renderHome(); },
+    mLead: t => { const m = M(); m.team = [t.dataset.u, ...m.team.filter(u => u !== t.dataset.u)]; E.save(); t.dataset.pc ? pcSheet() : teamSheet(); E.renderHome(); },
+    mJoin: t => { const m = M(); if (m.team.length < TEAM_MAX && !m.team.includes(t.dataset.u)) m.team.push(t.dataset.u); E.save(); E.SFX.tap(); pcSheet(); },
+    mBench: t => { const m = M(); if (m.team.length > 1) m.team = m.team.filter(u => u !== t.dataset.u); E.save(); E.SFX.tap(); pcSheet(); E.renderHome(); },
+    mBag: bagSheet,
+    mUse: t => useItem(t.dataset.id),
+    mUseOn: t => useItemOn(t.dataset.id, t.dataset.u),
+    bBag: battleBag,
+    bUse: t => usePotion(t.dataset.id),
     mEvoOk: () => { E.closeModal(); E.renderHome(); evolveNext(); },
     bMove: t => onMove(num(t, 'i')),
-    bCatch: onCatch,
+    bCatch: t => onCatch(t && t.dataset && t.dataset.ball),
     bMic: onMic,
     bOpt: t => onOpt(num(t, 'i')),
     bRate: t => onRate(num(t, 'v')),
@@ -762,7 +858,7 @@
     bBack: () => { if (B && B.turn === 'task') { E.stopListening(); menu(); } },
     bDef: t => defend(num(t, 'i')),
     bDefHear: () => B && B.def && E.say(B.def.spell, 0.8, 'm'),
-    bPotion: usePotion,
+    bPotion: () => usePotion('potion'),
     bEnd: () => { if (!B) return; const cb = B.onEnd, res = B.result || 'flee'; E.closeModal(); writeBack(); stopBattle(); if (cb) cb(res); },
     bFlee: () => {
       if (!B || B.turn === 'done') { B && B.onEnd ? actions.bEnd() : actions.bHome(); return; }
@@ -773,7 +869,18 @@
 
   window.MonsterGame = {
     init(api) { E = api; return actions; },
-    fresh: () => ({ box: [], team: [], dex: {}, badges: {}, balls: 5, potions: 2, wins: 0, caught: 0, evolved: 0 }),
+    fresh: () => ({ box: [], team: [], dex: {}, badges: {}, balls: 5, potions: 2, bag: {}, wins: 0, caught: 0, evolved: 0 }),
+    // 老存档：队伍从 3 只扩到 6 只，把箱子里等级最高的先补进队伍
+    migrate() {
+      const m = M();
+      if (m.v === 2) return;
+      m.v = 2;
+      m.bag = m.bag || {};
+      boxMons().slice(0, Math.max(0, TEAM_MAX - m.team.length)).forEach(x => m.team.push(x.uid));
+      E.save();
+    },
+    setFieldHooks: h => { FH = h; },
+    ITEMS, itemCount, addItem, pcSheet, bagSheet,
     homeHTML,
     stop: () => { writeBack(); stopBattle(); },
     battle: startBattle,

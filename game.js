@@ -88,7 +88,7 @@
       v: 1, xp: 0, coins: 50, stars: {}, streak: 0, lastDay: '', freeze: 0,
       quests: { day: '', list: [], chest: false }, wrong: {}, pets: ['🐣'], pet: '🐣', ach: {},
       stats: { levels: 0, spoken: 0, perfect: 0, maxCombo: 0, listen: 0, reviewed: 0, threeStars: 0, bosses: 0, flawless: 0, roleplay: 0 }, scenes: {},
-      settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false }, seenIntro: false,
+      settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false, gfx: 'auto', gfxAuto: '' }, seenIntro: false,
       homeTab: 'mon', mon: window.MonsterGame ? MonsterGame.fresh() : { box: [], team: [], dex: {}, badges: {}, balls: 5 },
       world: window.EchoWorld ? EchoWorld.fresh() : {},
     };
@@ -1400,6 +1400,9 @@
       '<div class="set"><label>口语打分方式</label><div class="seg">' +
       [['auto', '自动打分（推荐）'], ['self', '录音自评']].map(([m, n]) => '<button class="' + (st.mode === m ? 'on' : '') + '" data-act="setMode" data-m="' + m + '">' + n + '</button>').join('') +
       '</div><small>自动打分：浏览器能识别语音就自动打分，不能就换成录音自评。</small></div>' +
+      '<div class="set"><label>冒险画面</label><div class="seg wrap">' +
+      [['auto', '自动'], ['high', '精美'], ['mid', '标准'], ['low', '省电'], ['2d', '2D 流畅']].map(([m, n]) => '<button class="' + ((st.gfx || 'auto') === m ? 'on' : '') + '" data-act="setGfx" data-m="' + m + '">' + n + '</button>').join('') +
+      '</div><small>' + ((st.gfx || 'auto') === 'auto' ? '自动：先用标准画质，手机跑不动会自动降一档' + (st.gfxAuto ? '（现在是「' + ({ high: '精美', mid: '标准', low: '省电', '2d': '2D 流畅' })[st.gfxAuto] + '」）' : '') + '。' : '手机发烫或者卡顿，就选省电或 2D 流畅。') + '</small></div>' +
       '<div class="set"><label>音效</label><div class="seg"><button class="' + (st.sfx ? 'on' : '') + '" data-act="sfx" data-v="1">开</button><button class="' + (st.sfx ? '' : 'on') + '" data-act="sfx" data-v="0">关</button></div></div>' +
       '<div class="set"><label>家长 / 老师模式</label><div class="seg"><button class="' + (st.unlockAll ? '' : 'on') + '" data-act="unlock" data-v="0">按顺序解锁</button><button class="' + (st.unlockAll ? 'on' : '') + '" data-act="unlock" data-v="1">全部关卡直接开放</button></div><small>想跟着课本进度直接练某个单元时打开。</small></div>' +
       '<div class="set"><label>清空进度</label><button class="btn small coral" data-act="reset" id="resetbtn">清空全部进度</button><small>星星、金币、宠物都会清零，无法恢复。</small></div>' +
@@ -1498,6 +1501,7 @@
     testVoice: () => { ac(); primeTTS(); say('Hello! Welcome to Echo Island. Let\'s learn English together!'); },
     setMode: t => { S.settings.mode = t.dataset.m; if (t.dataset.m === 'auto') { RT.srBroken = false; RT.noRec = false; if (!SRC) toast('这个浏览器不支持语音识别，会继续用录音自评'); } save(); settingsSheet(); },
     setTts: t => { S.settings.tts = t.dataset.m; RT.ttsBroken = false; save(); settingsSheet(); primeTTS(); say('Hello! How are you?'); },
+    setGfx: t => { S.settings.gfx = t.dataset.m; if (t.dataset.m === 'auto') S.settings.gfxAuto = ''; save(); settingsSheet(); if (window.EchoWorld) EchoWorld.setGfx(); },
     sfx: t => { S.settings.sfx = t.dataset.v === '1'; save(); settingsSheet(); },
     unlock: t => { S.settings.unlockAll = t.dataset.v === '1'; save(); settingsSheet(); renderHome(); },
     reset: t => {
@@ -1549,6 +1553,7 @@
   // ---------- 启动 ----------
   function start(data) {
     S = load(data && data.S);
+    if (window.MonsterGame) MonsterGame.migrate();
     checkStreak();
     ensureQuests();
     loadVoices();
