@@ -9,11 +9,14 @@
 
 | 文件 | 内容 |
 | --- | --- |
-| `index.html` | 页面骨架，按顺序加载 data → cartoon → monsters → people → maps → vendor/three.min.js → world → world3d → story → game |
+| `index.html` | 页面骨架，按顺序加载 data → cartoon → vendor/three.min.js → dex → monster3d → battle3d → monsters → people → maps → world → world3d → story → game |
 | `style.css` | 全部样式（单一明亮主题，颜色变量在 `:root`） |
 | `data.js` | `window.WORLDS`：13 个话题小镇的单词/句子/对话；`window.SCENES`：13 段对话动画台词 |
 | `cartoon.js` | `window.Cartoon`：SVG 画的对话动画角色、场景背景、16 种怪兽 |
-| `monsters.js` | `window.MonsterGame`：怪兽图鉴、战斗（说英语攻击/听英语防御）、收服（回声球/超级球）、升级进化、馆主、训练师；队伍 6 只 + 电脑箱子；背包道具 `ITEMS` |
+| `dex.js` | `window.DEX`：**386 只原创怪兽**（`list` / `byId`）、17 种属性和克制表 `eff()`、每属性 3 个招式 `MOVES`、7 种进化石 `STONES`。怪兽列表由 `node tools/build-dex.js` 从 `tools/dex/*.json` 生成（会检查编号、重名、进化链、参数），数据规格见 `tools/DEX_SPEC.md` |
+| `monster3d.js` | `window.Mon3D`：按图鉴参数拼出卡通渲染的 3D 怪兽（12 种身体 + 头饰/尾巴/翅膀/花纹/装饰，描边、三阶明暗、眨眼、呼吸、摇尾巴）；`snapshot()` 截图给菜单、图鉴和 2D 画面用。预览：`tools/mon3d.html?from=1&to=386` |
+| `battle3d.js` | `window.Battle3D`：3D 战斗画面，出场、放招、受击、倒下、扔球收服，17 种属性各有小招/中招/大招特效（粒子、光束、闪电、冰刺、落石、陨石……）。预览：`tools/fx.html` |
+| `monsters.js` | `window.MonsterGame`：战斗规则（说英语攻击/听英语防御、每只 4 个招式、双属性克制、本属性加成）、收服（回声球/超级球，神兽难抓）、升级、按图鉴等级或进化石进化、野外怪兽表（按区域、地形、稀有度）、13 个主题属性道馆、训练师；队伍 6 只 + 电脑箱子；背包道具 `ITEMS`；分页图鉴 |
 | `people.js` | `window.EchoPeople`：日系 Q 版人物画法（4 方向 × 3 帧动作图集 `atlas()`、对话头像 `portrait()`、大立绘 `standing()`），全部造型 `LOOKS`（主角男/女、对手 Leo/Mia、妈妈、博士……）。改人物后打开 `tools/people.html` 看全部造型 |
 | `story.js` | `window.EchoStory`：剧情脚本（开场、选伙伴画面、1 号路对手）。world.js 在进地图/走一步/说话时调用它的 `enter/step/talk`，`hidden/look` 可以藏起或换掉地图上的人。剧情进度存在 `world.flags` 里 `s:` 开头的键 |
 | `maps.js` | `window.EchoMaps`：全部地图数据。13 个小镇（3 种布局 + 镜像）、12 条道路（7 种路段拼接）、3 个洞穴、每镇 5 间室内（怪兽中心/商店/道馆/两间民居），以及出入口 `warps` 和到达点 `arrival()` |
@@ -46,7 +49,7 @@
 
 范围（已和家长确认的取舍）：
 - 地图：13 个小镇 + 约 12 条道路 + 3–4 个洞穴/小岛，约 30 张地图，房子能进去
-- 怪兽 40–50 种原创（含进化）；招式约 60 个，每个招式对应一个英语任务
+- 怪兽 **386 种**原创（家长 2026-09-28 改成和绿宝石一样多，原来定 40–50），17 种属性、双属性，Lv 1–100，按等级/进化石进化，21 只神兽；招式 51 个（17 属性 × 小招/中招/大招），每个招式对应一个英语任务；**怪兽和战斗都是 3D**，招式有特效
 - 队伍 6 只 + 电脑箱子；背包约 20 种道具；野外技能（砍树、冲浪、推石头、照明）解锁新区域
 - 一个反派组织的主线剧情 + 支线；13 个馆主 + 最终英语冠军赛
 - 做状态异常；**不做**个体值/努力值/特性/性格（对初一太复杂，冲淡学英语）

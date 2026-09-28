@@ -1,0 +1,3636 @@
+[
+ {
+  "no": 152,
+  "id": "teabud",
+  "en": "Teabud",
+  "zh": "茶芽宝",
+  "types": [
+   "grass"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "teabush",
+    "lv": 16
+   }
+  ],
+  "hp": 40,
+  "atk": 11,
+  "b": "quad",
+  "c": "#6fbf5a",
+  "k": "#eef8e0",
+  "a": "#8d6e63",
+  "e": "leaf",
+  "t": "leaf",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "grass",
+   "forest"
+  ],
+  "rarity": 5,
+  "words": [
+   "tea",
+   "bud"
+  ],
+  "dexEn": "Teabud has a tea leaf on its head. It smells fresh in spring.",
+  "dexZh": "茶芽宝头上长着一片茶叶，春天闻起来清清香香。"
+ },
+ {
+  "no": 153,
+  "id": "teabush",
+  "en": "Teabush",
+  "zh": "茶丛兽",
+  "types": [
+   "grass"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "teagrove",
+    "lv": 36
+   }
+  ],
+  "hp": 56,
+  "atk": 15,
+  "b": "quad",
+  "c": "#4fa84a",
+  "k": "#e3f2d0",
+  "a": "#8d6e63",
+  "e": "leaf",
+  "t": "leaf",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [
+   "leafback"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "forest",
+   "mountain"
+  ],
+  "rarity": 5,
+  "words": [
+   "tea",
+   "bush"
+  ],
+  "dexEn": "Teabush grows new leaves every morning. Farmers pick them to make tea.",
+  "dexZh": "茶丛兽每天早上都长出新叶子，农民摘下来做茶。"
+ },
+ {
+  "no": 154,
+  "id": "teagrove",
+  "en": "Teagrove",
+  "zh": "茶林王",
+  "types": [
+   "grass",
+   "ground"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 78,
+  "atk": 22,
+  "b": "quad",
+  "c": "#3a8a3c",
+  "k": "#d7ecc0",
+  "a": "#6d4c41",
+  "e": "horns",
+  "t": "leaf",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "leafback",
+   "antlers"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "forest",
+   "mountain"
+  ],
+  "rarity": 5,
+  "words": [
+   "tea",
+   "grove"
+  ],
+  "dexEn": "A small tea garden grows on its back. Birds rest in its leaves.",
+  "dexZh": "它背上长着一小片茶园，鸟儿在叶子里休息。"
+ },
+ {
+  "no": 155,
+  "id": "lampkit",
+  "en": "Lampkit",
+  "zh": "灯笼崽",
+  "types": [
+   "fire"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "lanternfox",
+    "lv": 16
+   }
+  ],
+  "hp": 38,
+  "atk": 12,
+  "b": "quad",
+  "c": "#f4511e",
+  "k": "#fff3e0",
+  "a": "#ffd54f",
+  "e": "cat",
+  "t": "flame",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "town",
+   "grass"
+  ],
+  "rarity": 5,
+  "words": [
+   "lamp",
+   "kit"
+  ],
+  "dexEn": "Lampkit's tail glows like a little lamp. It lights the way home at night.",
+  "dexZh": "灯笼崽的尾巴像一盏小灯，晚上为人照亮回家的路。"
+ },
+ {
+  "no": 156,
+  "id": "lanternfox",
+  "en": "Lanternfox",
+  "zh": "灯笼狐",
+  "types": [
+   "fire"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "fireworkfox",
+    "lv": 36
+   }
+  ],
+  "hp": 54,
+  "atk": 16,
+  "b": "quad",
+  "c": "#e53935",
+  "k": "#fff3e0",
+  "a": "#ffca28",
+  "e": "cat",
+  "t": "flame",
+  "w": "none",
+  "p": "mask",
+  "m": "fang",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "town",
+   "forest"
+  ],
+  "rarity": 5,
+  "words": [
+   "lantern",
+   "fox"
+  ],
+  "dexEn": "Lanternfox carries a red lantern at festivals. Children follow it in the street.",
+  "dexZh": "灯笼狐在节日里提着红灯笼，孩子们在街上跟着它走。"
+ },
+ {
+  "no": 157,
+  "id": "fireworkfox",
+  "en": "Fireworkfox",
+  "zh": "烟花狐",
+  "types": [
+   "fire",
+   "psychic"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 74,
+  "atk": 23,
+  "b": "biped",
+  "c": "#d32f2f",
+  "k": "#fff8e1",
+  "a": "#ffd740",
+  "e": "cat",
+  "t": "flame",
+  "w": "none",
+  "p": "star",
+  "m": "grin",
+  "x": [
+   "mane",
+   "flames",
+   "scarf"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "town",
+   "mountain"
+  ],
+  "rarity": 5,
+  "words": [
+   "firework",
+   "fox"
+  ],
+  "dexEn": "Fireworkfox jumps into the sky and bursts into colors. Everyone cheers at New Year.",
+  "dexZh": "烟花狐跳上天空，炸开满天色彩。过新年时大家都为它欢呼。"
+ },
+ {
+  "no": 158,
+  "id": "puddleling",
+  "en": "Puddleling",
+  "zh": "水洼仔",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "rainotter",
+    "lv": 16
+   }
+  ],
+  "hp": 42,
+  "atk": 10,
+  "b": "quad",
+  "c": "#42a5f5",
+  "k": "#e3f2fd",
+  "a": "#fff176",
+  "e": "round",
+  "t": "fin",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "water",
+   "town"
+  ],
+  "rarity": 5,
+  "words": [
+   "puddle",
+   "-ling"
+  ],
+  "dexEn": "Puddleling loves rainy days. It jumps in every puddle on the road.",
+  "dexZh": "水洼仔最爱下雨天，路上每个水坑它都要跳一跳。"
+ },
+ {
+  "no": 159,
+  "id": "rainotter",
+  "en": "Rainotter",
+  "zh": "雨水獭",
+  "types": [
+   "water"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "stormotter",
+    "lv": 36
+   }
+  ],
+  "hp": 60,
+  "atk": 14,
+  "b": "biped",
+  "c": "#1e88e5",
+  "k": "#e3f2fd",
+  "a": "#fff176",
+  "e": "round",
+  "t": "fin",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [
+   "whiskers"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "water",
+   "sea"
+  ],
+  "rarity": 5,
+  "words": [
+   "rain",
+   "otter"
+  ],
+  "dexEn": "Rainotter can call a small rain cloud. It waters the farms in summer.",
+  "dexZh": "雨水獭能叫来一小朵雨云，夏天帮农田浇水。"
+ },
+ {
+  "no": 160,
+  "id": "stormotter",
+  "en": "Stormotter",
+  "zh": "风暴獭",
+  "types": [
+   "water",
+   "spark"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 80,
+  "atk": 21,
+  "b": "biped",
+  "c": "#1565c0",
+  "k": "#e1f5fe",
+  "a": "#ffeb3b",
+  "e": "crest",
+  "t": "fin",
+  "w": "none",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "whiskers",
+   "cloud"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "sea",
+   "sky"
+  ],
+  "rarity": 5,
+  "words": [
+   "storm",
+   "otter"
+  ],
+  "dexEn": "When Stormotter is angry, the sky turns dark. Its tail shoots bright lightning.",
+  "dexZh": "风暴獭一生气，天空就变黑。它的尾巴能射出明亮的闪电。"
+ },
+ {
+  "no": 161,
+  "id": "crumbmouse",
+  "en": "Crumbmouse",
+  "zh": "碎屑鼠",
+  "types": [
+   "normal"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "picnicmouse",
+    "lv": 15
+   }
+  ],
+  "hp": 34,
+  "atk": 9,
+  "b": "quad",
+  "c": "#bcaaa4",
+  "k": "#f5efe6",
+  "a": "#ffb74d",
+  "e": "round",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [
+   "whiskers"
+  ],
+  "sz": 0.8,
+  "habitat": [
+   "town",
+   "grass"
+  ],
+  "rarity": 1,
+  "words": [
+   "crumb",
+   "mouse"
+  ],
+  "dexEn": "Crumbmouse eats bread crumbs in the park. It is small but very fast.",
+  "dexZh": "碎屑鼠在公园里吃面包屑。它个子小，跑得却很快。"
+ },
+ {
+  "no": 162,
+  "id": "picnicmouse",
+  "en": "Picnicmouse",
+  "zh": "野餐鼠",
+  "types": [
+   "normal"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 52,
+  "atk": 14,
+  "b": "biped",
+  "c": "#a1887f",
+  "k": "#f5efe6",
+  "a": "#e57373",
+  "e": "round",
+  "t": "long",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [
+   "whiskers",
+   "scarf"
+  ],
+  "sz": 1,
+  "habitat": [
+   "town",
+   "grass"
+  ],
+  "rarity": 2,
+  "words": [
+   "picnic",
+   "mouse"
+  ],
+  "dexEn": "Picnicmouse carries a basket of food. It shares lunch with its friends.",
+  "dexZh": "野餐鼠提着一篮子食物，会和朋友们分享午餐。"
+ },
+ {
+  "no": 163,
+  "id": "breezelet",
+  "en": "Breezelet",
+  "zh": "微风雀",
+  "types": [
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "kitewing",
+    "lv": 18
+   }
+  ],
+  "hp": 36,
+  "atk": 10,
+  "b": "bird",
+  "c": "#90caf9",
+  "k": "#ffffff",
+  "a": "#ffb300",
+  "e": "crest",
+  "t": "feather",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "grass",
+   "sky"
+  ],
+  "rarity": 1,
+  "words": [
+   "breeze",
+   "-let"
+  ],
+  "dexEn": "Breezelet rides the spring breeze. It sings when the wind is warm.",
+  "dexZh": "微风雀乘着春风飞。风暖和的时候它就唱歌。"
+ },
+ {
+  "no": 164,
+  "id": "kitewing",
+  "en": "Kitewing",
+  "zh": "风筝翼",
+  "types": [
+   "flying"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 56,
+  "atk": 15,
+  "b": "bird",
+  "c": "#64b5f6",
+  "k": "#ffffff",
+  "a": "#ff7043",
+  "e": "crest",
+  "t": "long",
+  "w": "feather",
+  "p": "stripes",
+  "m": "beak",
+  "x": [],
+  "sz": 1.1,
+  "habitat": [
+   "sky",
+   "grass"
+  ],
+  "rarity": 2,
+  "words": [
+   "kite",
+   "wing"
+  ],
+  "dexEn": "Kitewing flies high like a kite. Its long tail dances in the wind.",
+  "dexZh": "风筝翼像风筝一样高高飞起，长尾巴在风里跳舞。"
+ },
+ {
+  "no": 165,
+  "id": "silkling",
+  "en": "Silkling",
+  "zh": "丝丝虫",
+  "types": [
+   "bug"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "silkball",
+    "lv": 10
+   }
+  ],
+  "hp": 32,
+  "atk": 8,
+  "b": "bug",
+  "c": "#f5f5f5",
+  "k": "#ffffff",
+  "a": "#a1887f",
+  "e": "antenna",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "forest",
+   "grass"
+  ],
+  "rarity": 1,
+  "words": [
+   "silk",
+   "-ling"
+  ],
+  "dexEn": "Silkling eats green leaves all day. It grows bigger every week.",
+  "dexZh": "丝丝虫整天吃绿叶子，每个星期都长大一点。"
+ },
+ {
+  "no": 166,
+  "id": "silkball",
+  "en": "Silkball",
+  "zh": "丝茧球",
+  "types": [
+   "bug"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "silkwing",
+    "lv": 20
+   }
+  ],
+  "hp": 46,
+  "atk": 12,
+  "b": "blob",
+  "c": "#fafafa",
+  "k": "#ffffff",
+  "a": "#bcaaa4",
+  "e": "none",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "o",
+  "x": [
+   "shell"
+  ],
+  "sz": 0.9,
+  "habitat": [
+   "forest"
+  ],
+  "rarity": 2,
+  "words": [
+   "silk",
+   "ball"
+  ],
+  "dexEn": "Silkball sleeps inside a soft white ball. Please do not wake it up.",
+  "dexZh": "丝茧球睡在软软的白球里。请不要把它吵醒。"
+ },
+ {
+  "no": 167,
+  "id": "silkwing",
+  "en": "Silkwing",
+  "zh": "丝翼蛾",
+  "types": [
+   "bug",
+   "flying"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 62,
+  "atk": 17,
+  "b": "bug",
+  "c": "#fff8e1",
+  "k": "#ffffff",
+  "a": "#ce93d8",
+  "e": "antenna",
+  "t": "none",
+  "w": "bug",
+  "p": "spots",
+  "m": "smile",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "forest",
+   "sky",
+   "night"
+  ],
+  "rarity": 2,
+  "words": [
+   "silk",
+   "wing"
+  ],
+  "dexEn": "Silkwing's wings shine like silk. People in old times made clothes from its thread.",
+  "dexZh": "丝翼蛾的翅膀像丝绸一样闪亮。古时候人们用它的丝做衣服。"
+ },
+ {
+  "no": 168,
+  "id": "berrybug",
+  "en": "Berrybug",
+  "zh": "莓果虫",
+  "types": [
+   "bug"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "berrybeetle",
+    "lv": 16
+   }
+  ],
+  "hp": 34,
+  "atk": 10,
+  "b": "bug",
+  "c": "#e53935",
+  "k": "#ffcdd2",
+  "a": "#212121",
+  "e": "antenna",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "grass",
+   "forest"
+  ],
+  "rarity": 1,
+  "words": [
+   "berry",
+   "bug"
+  ],
+  "dexEn": "Berrybug looks like a red berry. It hides on farm bushes.",
+  "dexZh": "莓果虫看起来像一颗红莓果，喜欢躲在农场的灌木上。"
+ },
+ {
+  "no": 169,
+  "id": "berrybeetle",
+  "en": "Berrybeetle",
+  "zh": "莓果甲虫",
+  "types": [
+   "bug"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 54,
+  "atk": 15,
+  "b": "bug",
+  "c": "#c62828",
+  "k": "#ffcdd2",
+  "a": "#2e7d32",
+  "e": "horn",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "fang",
+  "x": [
+   "leafback"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "forest",
+   "grass"
+  ],
+  "rarity": 2,
+  "words": [
+   "berry",
+   "beetle"
+  ],
+  "dexEn": "Berrybeetle guards the berry fields. It pushes away hungry birds with its horn.",
+  "dexZh": "莓果甲虫守护着莓果田，用角把饿肚子的鸟推开。"
+ },
+ {
+  "no": 170,
+  "id": "barnhoot",
+  "en": "Barnhoot",
+  "zh": "谷仓鸮",
+  "types": [
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 48,
+  "atk": 13,
+  "b": "bird",
+  "c": "#a1887f",
+  "k": "#efebe9",
+  "a": "#ffca28",
+  "e": "cat",
+  "t": "feather",
+  "w": "feather",
+  "p": "spots",
+  "m": "beak",
+  "x": [],
+  "sz": 1,
+  "habitat": [
+   "town",
+   "night",
+   "forest"
+  ],
+  "rarity": 2,
+  "words": [
+   "barn",
+   "hoot"
+  ],
+  "dexEn": "Barnhoot lives on top of old barns. It hoots softly all night.",
+  "dexZh": "谷仓鸮住在老谷仓的屋顶上，整夜轻轻地咕咕叫。"
+ },
+ {
+  "no": 171,
+  "id": "woolpuff",
+  "en": "Woolpuff",
+  "zh": "羊毛球",
+  "types": [
+   "normal"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "woolhorn",
+    "lv": 20
+   }
+  ],
+  "hp": 42,
+  "atk": 9,
+  "b": "blob",
+  "c": "#fafafa",
+  "k": "#ffffff",
+  "a": "#8d6e63",
+  "e": "curl",
+  "t": "fluffy",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "grass",
+   "town"
+  ],
+  "rarity": 1,
+  "words": [
+   "wool",
+   "puff"
+  ],
+  "dexEn": "Woolpuff is soft like a cloud. Farm kids hug it on cold days.",
+  "dexZh": "羊毛球像云朵一样软，农场的孩子冷天会抱着它。"
+ },
+ {
+  "no": 172,
+  "id": "woolhorn",
+  "en": "Woolhorn",
+  "zh": "卷角羊",
+  "types": [
+   "normal"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 62,
+  "atk": 15,
+  "b": "quad",
+  "c": "#f5f5f5",
+  "k": "#ffffff",
+  "a": "#6d4c41",
+  "e": "horns",
+  "t": "fluffy",
+  "w": "none",
+  "p": "none",
+  "m": "grin",
+  "x": [
+   "mane"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "grass",
+   "mountain"
+  ],
+  "rarity": 2,
+  "words": [
+   "wool",
+   "horn"
+  ],
+  "dexEn": "Woolhorn has big round horns. Its warm wool makes nice winter hats.",
+  "dexZh": "卷角羊长着又大又圆的角，它的羊毛能织成暖和的冬帽。"
+ },
+ {
+  "no": 173,
+  "id": "pondlet",
+  "en": "Pondlet",
+  "zh": "池塘仔",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "lotusfin",
+    "lv": 22
+   }
+  ],
+  "hp": 36,
+  "atk": 9,
+  "b": "fish",
+  "c": "#4fc3f7",
+  "k": "#e1f5fe",
+  "a": "#f48fb1",
+  "e": "fin",
+  "t": "fin",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "water"
+  ],
+  "rarity": 1,
+  "words": [
+   "pond",
+   "-let"
+  ],
+  "dexEn": "Pondlet swims under lotus leaves. It blows little bubbles for fun.",
+  "dexZh": "池塘仔在荷叶下游来游去，喜欢吹小泡泡玩。"
+ },
+ {
+  "no": 174,
+  "id": "lotusfin",
+  "en": "Lotusfin",
+  "zh": "荷鳍鱼",
+  "types": [
+   "water",
+   "grass"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 58,
+  "atk": 14,
+  "b": "fish",
+  "c": "#29b6f6",
+  "k": "#e1f5fe",
+  "a": "#f48fb1",
+  "e": "flower",
+  "t": "fin",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 1.1,
+  "habitat": [
+   "water",
+   "swamp"
+  ],
+  "rarity": 2,
+  "words": [
+   "lotus",
+   "fin"
+  ],
+  "dexEn": "A pink lotus grows on Lotusfin's head. It opens in summer.",
+  "dexZh": "荷鳍鱼头上长着一朵粉色的荷花，夏天就会开放。"
+ },
+ {
+  "no": 175,
+  "id": "sunseed",
+  "en": "Sunseed",
+  "zh": "阳光籽",
+  "types": [
+   "grass"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "sunbloom",
+    "lv": 18
+   }
+  ],
+  "hp": 38,
+  "atk": 10,
+  "b": "plant",
+  "c": "#8bc34a",
+  "k": "#fff9c4",
+  "a": "#fbc02d",
+  "e": "leaf",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "grass"
+  ],
+  "rarity": 2,
+  "words": [
+   "sun",
+   "seed"
+  ],
+  "dexEn": "Sunseed sits in the sun all day. Sunshine is its lunch.",
+  "dexZh": "阳光籽整天坐在太阳底下，阳光就是它的午饭。"
+ },
+ {
+  "no": 176,
+  "id": "sunbloom",
+  "en": "Sunbloom",
+  "zh": "向阳朵",
+  "types": [
+   "grass"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "sunharvest",
+    "item": "sunstone"
+   }
+  ],
+  "hp": 54,
+  "atk": 14,
+  "b": "plant",
+  "c": "#7cb342",
+  "k": "#fff9c4",
+  "a": "#fdd835",
+  "e": "flower",
+  "t": "leaf",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "leafback"
+  ],
+  "sz": 1,
+  "habitat": [
+   "grass"
+  ],
+  "rarity": 3,
+  "words": [
+   "sun",
+   "bloom"
+  ],
+  "dexEn": "Sunbloom always turns its face to the sun. It feels sad on rainy days.",
+  "dexZh": "向阳朵总是把脸朝着太阳，下雨天就会不开心。"
+ },
+ {
+  "no": 177,
+  "id": "sunharvest",
+  "en": "Sunharvest",
+  "zh": "丰收日葵",
+  "types": [
+   "grass",
+   "fire"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 76,
+  "atk": 21,
+  "b": "biped",
+  "c": "#689f38",
+  "k": "#fff59d",
+  "a": "#ffb300",
+  "e": "crown",
+  "t": "leaf",
+  "w": "none",
+  "p": "star",
+  "m": "grin",
+  "x": [
+   "leafback",
+   "crown"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "grass",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "sun",
+   "harvest"
+  ],
+  "dexEn": "Sunharvest brings a big harvest to farms. Its face is as bright as the sun.",
+  "dexZh": "丰收日葵给农场带来大丰收，它的脸像太阳一样明亮。"
+ },
+ {
+  "no": 178,
+  "id": "citycat",
+  "en": "Citycat",
+  "zh": "街巷猫",
+  "types": [
+   "normal"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 44,
+  "atk": 12,
+  "b": "quad",
+  "c": "#90a4ae",
+  "k": "#eceff1",
+  "a": "#ffb74d",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [
+   "whiskers"
+  ],
+  "sz": 0.9,
+  "habitat": [
+   "town",
+   "night"
+  ],
+  "rarity": 1,
+  "words": [
+   "city",
+   "cat"
+  ],
+  "dexEn": "Citycat knows every street in town. Ask it the way when you are lost.",
+  "dexZh": "街巷猫认得城里每一条街。迷路时可以问它怎么走。"
+ },
+ {
+  "no": 179,
+  "id": "bulbling",
+  "en": "Bulbling",
+  "zh": "灯泡仔",
+  "types": [
+   "spark"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "lamppost",
+    "item": "thunderstone"
+   }
+  ],
+  "hp": 36,
+  "atk": 11,
+  "b": "blob",
+  "c": "#fff176",
+  "k": "#fffde7",
+  "a": "#9e9e9e",
+  "e": "antenna",
+  "t": "bolt",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "town",
+   "night"
+  ],
+  "rarity": 2,
+  "words": [
+   "bulb",
+   "-ling"
+  ],
+  "dexEn": "Bulbling glows when it is happy. It sleeps in lamps during the day.",
+  "dexZh": "灯泡仔开心时会发光，白天就睡在灯里。"
+ },
+ {
+  "no": 180,
+  "id": "lamppost",
+  "en": "Lamppost",
+  "zh": "路灯怪",
+  "types": [
+   "spark",
+   "steel"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 62,
+  "atk": 17,
+  "b": "golem",
+  "c": "#fdd835",
+  "k": "#fffde7",
+  "a": "#607d8b",
+  "e": "round",
+  "t": "bolt",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "crown"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "town",
+   "night"
+  ],
+  "rarity": 3,
+  "words": [
+   "street",
+   "lamp"
+  ],
+  "dexEn": "Lamppost stands by the road all night. It keeps city streets safe and bright.",
+  "dexZh": "路灯怪整晚站在路边，让城市的街道又安全又明亮。"
+ },
+ {
+  "no": 181,
+  "id": "punchbun",
+  "en": "Punchbun",
+  "zh": "拳包子",
+  "types": [
+   "fight"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "bunboxer",
+    "lv": 24
+   }
+  ],
+  "hp": 40,
+  "atk": 12,
+  "b": "blob",
+  "c": "#fff3e0",
+  "k": "#ffffff",
+  "a": "#e57373",
+  "e": "curl",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "grin",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "town"
+  ],
+  "rarity": 2,
+  "words": [
+   "punch",
+   "bun"
+  ],
+  "dexEn": "Punchbun is soft but strong. It trains in the kitchen every morning.",
+  "dexZh": "拳包子软软的，力气却很大。它每天早上都在厨房里练拳。"
+ },
+ {
+  "no": 182,
+  "id": "bunboxer",
+  "en": "Bunboxer",
+  "zh": "包子拳手",
+  "types": [
+   "fight"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 60,
+  "atk": 18,
+  "b": "biped",
+  "c": "#ffe0b2",
+  "k": "#ffffff",
+  "a": "#d32f2f",
+  "e": "curl",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "grin",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "town",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "bun",
+   "boxer"
+  ],
+  "dexEn": "Bunboxer wears red gloves. Its punch is as hot as fresh buns.",
+  "dexZh": "包子拳手戴着红手套，出拳像刚出锅的包子一样烫。"
+ },
+ {
+  "no": 183,
+  "id": "sourberry",
+  "en": "Sourberry",
+  "zh": "酸莓球",
+  "types": [
+   "poison"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "sourvine",
+    "lv": 24
+   }
+  ],
+  "hp": 38,
+  "atk": 10,
+  "b": "plant",
+  "c": "#8e24aa",
+  "k": "#f3e5f5",
+  "a": "#7cb342",
+  "e": "leaf",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "o",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "forest",
+   "swamp"
+  ],
+  "rarity": 2,
+  "words": [
+   "sour",
+   "berry"
+  ],
+  "dexEn": "Sourberry tastes very sour. Birds never eat it twice.",
+  "dexZh": "酸莓球的味道酸极了，鸟儿吃过一次就不敢再吃。"
+ },
+ {
+  "no": 184,
+  "id": "sourvine",
+  "en": "Sourvine",
+  "zh": "酸藤怪",
+  "types": [
+   "poison",
+   "grass"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 58,
+  "atk": 16,
+  "b": "plant",
+  "c": "#6a1b9a",
+  "k": "#f3e5f5",
+  "a": "#558b2f",
+  "e": "flower",
+  "t": "leaf",
+  "w": "none",
+  "p": "spots",
+  "m": "fang",
+  "x": [
+   "leafback"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "forest",
+   "swamp"
+  ],
+  "rarity": 3,
+  "words": [
+   "sour",
+   "vine"
+  ],
+  "dexEn": "Sourvine climbs up old walls. Its purple berries make you sneeze.",
+  "dexZh": "酸藤怪顺着老墙往上爬，它的紫莓果会让人打喷嚏。"
+ },
+ {
+  "no": 185,
+  "id": "fieldmole",
+  "en": "Fieldmole",
+  "zh": "田野鼹",
+  "types": [
+   "ground"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 50,
+  "atk": 14,
+  "b": "quad",
+  "c": "#795548",
+  "k": "#d7ccc8",
+  "a": "#ffab91",
+  "e": "round",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "whiskers"
+  ],
+  "sz": 0.9,
+  "habitat": [
+   "grass",
+   "cave"
+  ],
+  "rarity": 2,
+  "words": [
+   "field",
+   "mole"
+  ],
+  "dexEn": "Fieldmole digs under farm fields. It helps the soil stay soft.",
+  "dexZh": "田野鼹在农田下面挖洞，让泥土保持松软。"
+ },
+ {
+  "no": 186,
+  "id": "seasonkid",
+  "en": "Seasonkid",
+  "zh": "小季鹿",
+  "types": [
+   "normal"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "springdeer",
+    "item": "leafstone"
+   },
+   {
+    "to": "summerdeer",
+    "item": "firestone"
+   },
+   {
+    "to": "autumndeer",
+    "item": "moonstone"
+   },
+   {
+    "to": "winterdeer",
+    "item": "icestone"
+   }
+  ],
+  "hp": 40,
+  "atk": 11,
+  "b": "quad",
+  "c": "#bcaaa4",
+  "k": "#fff8e1",
+  "a": "#81c784",
+  "e": "round",
+  "t": "fluffy",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "forest",
+   "grass"
+  ],
+  "rarity": 3,
+  "words": [
+   "season",
+   "kid"
+  ],
+  "dexEn": "Its coat changes color with every season. A special stone helps it grow.",
+  "dexZh": "小季鹿的毛色随季节变化。一块特别的石头能帮它长大。"
+ },
+ {
+  "no": 187,
+  "id": "springdeer",
+  "en": "Springdeer",
+  "zh": "春芽鹿",
+  "types": [
+   "grass"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 60,
+  "atk": 16,
+  "b": "quad",
+  "c": "#81c784",
+  "k": "#f1f8e9",
+  "a": "#f48fb1",
+  "e": "flower",
+  "t": "fluffy",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [
+   "antlers"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "forest",
+   "grass"
+  ],
+  "rarity": 4,
+  "words": [
+   "spring",
+   "deer"
+  ],
+  "dexEn": "Flowers open wherever Springdeer walks. It brings spring to cold forests.",
+  "dexZh": "春芽鹿走到哪里，哪里就开花。它把春天带进寒冷的森林。"
+ },
+ {
+  "no": 188,
+  "id": "summerdeer",
+  "en": "Summerdeer",
+  "zh": "夏阳鹿",
+  "types": [
+   "fire"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 58,
+  "atk": 17,
+  "b": "quad",
+  "c": "#ff8a65",
+  "k": "#fff3e0",
+  "a": "#ffd54f",
+  "e": "flame",
+  "t": "flame",
+  "w": "none",
+  "p": "spots",
+  "m": "grin",
+  "x": [
+   "antlers"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "grass",
+   "volcano"
+  ],
+  "rarity": 4,
+  "words": [
+   "summer",
+   "deer"
+  ],
+  "dexEn": "Summerdeer runs across hot fields. Its antlers are warm like summer sun.",
+  "dexZh": "夏阳鹿在炎热的田野上奔跑，它的鹿角像夏天的太阳一样暖。"
+ },
+ {
+  "no": 189,
+  "id": "autumndeer",
+  "en": "Autumndeer",
+  "zh": "秋月鹿",
+  "types": [
+   "psychic"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 60,
+  "atk": 16,
+  "b": "quad",
+  "c": "#c9894a",
+  "k": "#fff3e0",
+  "a": "#9c27b0",
+  "e": "horns",
+  "t": "fluffy",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "antlers"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "forest",
+   "night"
+  ],
+  "rarity": 4,
+  "words": [
+   "autumn",
+   "deer"
+  ],
+  "dexEn": "Autumndeer looks at the full moon in autumn. Its eyes can see the future.",
+  "dexZh": "秋月鹿在秋天看着满月，它的眼睛能看见未来。"
+ },
+ {
+  "no": 190,
+  "id": "winterdeer",
+  "en": "Winterdeer",
+  "zh": "冬雪鹿",
+  "types": [
+   "ice"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 62,
+  "atk": 15,
+  "b": "quad",
+  "c": "#b3e5fc",
+  "k": "#ffffff",
+  "a": "#4fc3f7",
+  "e": "ice",
+  "t": "fluffy",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [
+   "antlers",
+   "crystals"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "snow",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "winter",
+   "deer"
+  ],
+  "dexEn": "Snow falls quietly when Winterdeer walks by. It sleeps in snowy forests.",
+  "dexZh": "冬雪鹿经过时，雪花静静地飘落。它睡在积雪的森林里。"
+ },
+ {
+  "no": 191,
+  "id": "snowchick",
+  "en": "Snowchick",
+  "zh": "雪绒雏",
+  "types": [
+   "ice"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "winterbeak",
+    "lv": 22
+   }
+  ],
+  "hp": 38,
+  "atk": 10,
+  "b": "bird",
+  "c": "#e3f2fd",
+  "k": "#ffffff",
+  "a": "#ffa726",
+  "e": "round",
+  "t": "feather",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "snow"
+  ],
+  "rarity": 2,
+  "words": [
+   "snow",
+   "chick"
+  ],
+  "dexEn": "Snowchick cannot fly yet. It slides on the ice on its belly.",
+  "dexZh": "雪绒雏还不会飞，它用肚子在冰上滑来滑去。"
+ },
+ {
+  "no": 192,
+  "id": "winterbeak",
+  "en": "Winterbeak",
+  "zh": "冬喙鸟",
+  "types": [
+   "ice",
+   "water"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 58,
+  "atk": 16,
+  "b": "bird",
+  "c": "#90caf9",
+  "k": "#ffffff",
+  "a": "#ff7043",
+  "e": "crest",
+  "t": "feather",
+  "w": "feather",
+  "p": "mask",
+  "m": "beak",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "snow",
+   "sea"
+  ],
+  "rarity": 3,
+  "words": [
+   "winter",
+   "beak"
+  ],
+  "dexEn": "Winterbeak dives into icy water for fish. It never feels cold.",
+  "dexZh": "冬喙鸟钻进冰冷的海水里抓鱼，它从来不觉得冷。"
+ },
+ {
+  "no": 193,
+  "id": "cakelet",
+  "en": "Cakelet",
+  "zh": "蛋糕宝",
+  "types": [
+   "normal"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "creamcake",
+    "lv": 16
+   }
+  ],
+  "hp": 36,
+  "atk": 9,
+  "b": "blob",
+  "c": "#f8bbd0",
+  "k": "#fff8e1",
+  "a": "#e53935",
+  "e": "round",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "town"
+  ],
+  "rarity": 2,
+  "words": [
+   "cake",
+   "-let"
+  ],
+  "dexEn": "Cakelet smells like sweet cake. It appears at birthday parties.",
+  "dexZh": "蛋糕宝闻起来像甜甜的蛋糕，常在生日派对上出现。"
+ },
+ {
+  "no": 194,
+  "id": "creamcake",
+  "en": "Creamcake",
+  "zh": "奶油糕",
+  "types": [
+   "normal"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "cakecastle",
+    "lv": 36
+   }
+  ],
+  "hp": 54,
+  "atk": 13,
+  "b": "biped",
+  "c": "#f48fb1",
+  "k": "#fff8e1",
+  "a": "#e53935",
+  "e": "curl",
+  "t": "curl",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [],
+  "sz": 1,
+  "habitat": [
+   "town"
+  ],
+  "rarity": 3,
+  "words": [
+   "cream",
+   "cake"
+  ],
+  "dexEn": "Creamcake makes people smile. Its cream tastes different every day.",
+  "dexZh": "奶油糕能让人开心。它的奶油每天都是不同的味道。"
+ },
+ {
+  "no": 195,
+  "id": "cakecastle",
+  "en": "Cakecastle",
+  "zh": "蛋糕城堡",
+  "types": [
+   "normal",
+   "psychic"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 78,
+  "atk": 19,
+  "b": "golem",
+  "c": "#ec407a",
+  "k": "#fff8e1",
+  "a": "#fdd835",
+  "e": "crown",
+  "t": "none",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "crown",
+   "crystals"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "town",
+   "ruins"
+  ],
+  "rarity": 4,
+  "words": [
+   "cake",
+   "castle"
+  ],
+  "dexEn": "Cakecastle is as big as a house. Small cake monsters live inside it.",
+  "dexZh": "蛋糕城堡像房子一样大，小蛋糕怪兽们都住在里面。"
+ },
+ {
+  "no": 196,
+  "id": "towerbell",
+  "en": "Towerbell",
+  "zh": "钟楼铃",
+  "types": [
+   "steel"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 62,
+  "atk": 15,
+  "b": "golem",
+  "c": "#b0bec5",
+  "k": "#eceff1",
+  "a": "#ffb300",
+  "e": "crown",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [],
+  "sz": 1.1,
+  "habitat": [
+   "town",
+   "ruins"
+  ],
+  "rarity": 3,
+  "words": [
+   "tower",
+   "bell"
+  ],
+  "dexEn": "Towerbell rings every hour in the city. People set their clocks by it.",
+  "dexZh": "钟楼铃在城市里每小时响一次，人们按它的钟声对表。"
+ },
+ {
+  "no": 197,
+  "id": "pepperpop",
+  "en": "Pepperpop",
+  "zh": "辣椒爆",
+  "types": [
+   "fire"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 46,
+  "atk": 16,
+  "b": "plant",
+  "c": "#e53935",
+  "k": "#ffcdd2",
+  "a": "#43a047",
+  "e": "leaf",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "grin",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "grass",
+   "volcano"
+  ],
+  "rarity": 2,
+  "words": [
+   "pepper",
+   "pop"
+  ],
+  "dexEn": "Pepperpop is very hot. Do not put it in your mouth!",
+  "dexZh": "辣椒爆辣得不得了，千万别放进嘴里！"
+ },
+ {
+  "no": 198,
+  "id": "paperkite",
+  "en": "Paperkite",
+  "zh": "纸鸢灵",
+  "types": [
+   "ghost",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 44,
+  "atk": 15,
+  "b": "ghost",
+  "c": "#b39ddb",
+  "k": "#ede7f6",
+  "a": "#ef5350",
+  "e": "none",
+  "t": "long",
+  "w": "none",
+  "p": "star",
+  "m": "o",
+  "x": [],
+  "sz": 1,
+  "habitat": [
+   "sky",
+   "night"
+  ],
+  "rarity": 3,
+  "words": [
+   "paper",
+   "kite"
+  ],
+  "dexEn": "Paperkite was a kite lost in the wind. Now it flies alone at night.",
+  "dexZh": "纸鸢灵原本是一只被风吹走的风筝，现在它在夜里独自飞行。"
+ },
+ {
+  "no": 199,
+  "id": "crowlet",
+  "en": "Crowlet",
+  "zh": "小黑鸦",
+  "types": [
+   "dark"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "nightcrow",
+    "lv": 26
+   }
+  ],
+  "hp": 36,
+  "atk": 12,
+  "b": "bird",
+  "c": "#37474f",
+  "k": "#78909c",
+  "a": "#fdd835",
+  "e": "crest",
+  "t": "feather",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "town",
+   "night"
+  ],
+  "rarity": 2,
+  "words": [
+   "crow",
+   "-let"
+  ],
+  "dexEn": "Crowlet loves shiny things. It takes keys and coins from windows.",
+  "dexZh": "小黑鸦喜欢亮晶晶的东西，会从窗边叼走钥匙和硬币。"
+ },
+ {
+  "no": 200,
+  "id": "nightcrow",
+  "en": "Nightcrow",
+  "zh": "夜幕鸦",
+  "types": [
+   "dark",
+   "flying"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 58,
+  "atk": 18,
+  "b": "bird",
+  "c": "#263238",
+  "k": "#546e7a",
+  "a": "#ffd600",
+  "e": "crest",
+  "t": "feather",
+  "w": "feather",
+  "p": "mask",
+  "m": "beak",
+  "x": [],
+  "sz": 1.15,
+  "habitat": [
+   "night",
+   "town",
+   "forest"
+  ],
+  "rarity": 3,
+  "words": [
+   "night",
+   "crow"
+  ],
+  "dexEn": "Nightcrow leads many crows across the city at night. Its eyes shine gold.",
+  "dexZh": "夜幕鸦夜里带着一群乌鸦飞过城市，它的眼睛闪着金光。"
+ },
+ {
+  "no": 201,
+  "id": "mooncake",
+  "en": "Mooncake",
+  "zh": "月饼宝",
+  "types": [
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 52,
+  "atk": 14,
+  "b": "blob",
+  "c": "#d7a86e",
+  "k": "#fff3e0",
+  "a": "#ab47bc",
+  "e": "gem",
+  "t": "none",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "town",
+   "night"
+  ],
+  "rarity": 3,
+  "words": [
+   "moon",
+   "cake"
+  ],
+  "dexEn": "Mooncake appears at the Mid-Autumn Festival. It watches the full moon with families.",
+  "dexZh": "月饼宝在中秋节出现，它和一家人一起赏月。"
+ },
+ {
+  "no": 202,
+  "id": "dewdrop",
+  "en": "Dewdrop",
+  "zh": "露珠仔",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "dewfairy",
+    "item": "waterstone"
+   }
+  ],
+  "hp": 34,
+  "atk": 9,
+  "b": "blob",
+  "c": "#80deea",
+  "k": "#e0f7fa",
+  "a": "#b2ff59",
+  "e": "round",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "grass",
+   "forest"
+  ],
+  "rarity": 2,
+  "words": [
+   "dew",
+   "drop"
+  ],
+  "dexEn": "Dewdrop rests on grass in the morning. It hides when the sun gets hot.",
+  "dexZh": "露珠仔早上停在草叶上，太阳变热时就躲起来。"
+ },
+ {
+  "no": 203,
+  "id": "dewfairy",
+  "en": "Dewfairy",
+  "zh": "露仙子",
+  "types": [
+   "water",
+   "psychic"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 54,
+  "atk": 15,
+  "b": "blob",
+  "c": "#4dd0e1",
+  "k": "#e0f7fa",
+  "a": "#ce93d8",
+  "e": "gem",
+  "t": "none",
+  "w": "fairy",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "crystals"
+  ],
+  "sz": 1,
+  "habitat": [
+   "forest",
+   "water"
+  ],
+  "rarity": 3,
+  "words": [
+   "dew",
+   "fairy"
+  ],
+  "dexEn": "Dewfairy gives water to thirsty flowers. Its wings shine like rainbows.",
+  "dexZh": "露仙子给口渴的花儿喂水，它的翅膀像彩虹一样闪亮。"
+ },
+ {
+  "no": 204,
+  "id": "brickbit",
+  "en": "Brickbit",
+  "zh": "砖块仔",
+  "types": [
+   "rock"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "brickwall",
+    "lv": 25
+   }
+  ],
+  "hp": 42,
+  "atk": 11,
+  "b": "blob",
+  "c": "#c0694e",
+  "k": "#f3d3c3",
+  "a": "#9e9e9e",
+  "e": "none",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "o",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "town",
+   "ruins"
+  ],
+  "rarity": 2,
+  "words": [
+   "brick",
+   "bit"
+  ],
+  "dexEn": "Brickbit is a small brick with legs. It helps builders in the city.",
+  "dexZh": "砖块仔是一块长了腿的小砖头，在城里给建筑工人帮忙。"
+ },
+ {
+  "no": 205,
+  "id": "brickwall",
+  "en": "Brickwall",
+  "zh": "砖墙怪",
+  "types": [
+   "rock"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "brickgiant",
+    "lv": 40
+   }
+  ],
+  "hp": 62,
+  "atk": 15,
+  "b": "golem",
+  "c": "#b35a3c",
+  "k": "#f3d3c3",
+  "a": "#757575",
+  "e": "none",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "spikesback"
+  ],
+  "sz": 1.15,
+  "habitat": [
+   "town",
+   "ruins"
+  ],
+  "rarity": 3,
+  "words": [
+   "brick",
+   "wall"
+  ],
+  "dexEn": "Brickwall stands in front of towns. Strong winds cannot push it.",
+  "dexZh": "砖墙怪站在小镇前面，大风也推不动它。"
+ },
+ {
+  "no": 206,
+  "id": "brickgiant",
+  "en": "Brickgiant",
+  "zh": "砖石巨人",
+  "types": [
+   "rock",
+   "steel"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 82,
+  "atk": 22,
+  "b": "golem",
+  "c": "#a0482d",
+  "k": "#efc9b6",
+  "a": "#607d8b",
+  "e": "crown",
+  "t": "club",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "spikesback",
+   "crown"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "ruins",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "brick",
+   "giant"
+  ],
+  "dexEn": "Brickgiant can build a bridge in one night. Travelers thank it every day.",
+  "dexZh": "砖石巨人一夜就能搭好一座桥，旅行的人每天都感谢它。"
+ },
+ {
+  "no": 207,
+  "id": "boltkite",
+  "en": "Boltkite",
+  "zh": "电风筝",
+  "types": [
+   "spark"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "thunderkite",
+    "lv": 26
+   }
+  ],
+  "hp": 36,
+  "atk": 12,
+  "b": "bird",
+  "c": "#ffee58",
+  "k": "#fffde7",
+  "a": "#42a5f5",
+  "e": "crest",
+  "t": "bolt",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "sky",
+   "grass"
+  ],
+  "rarity": 2,
+  "words": [
+   "bolt",
+   "kite"
+  ],
+  "dexEn": "Boltkite flies before a storm comes. Its feathers make little sparks.",
+  "dexZh": "电风筝总在暴风雨来之前飞起来，它的羽毛会冒出小火花。"
+ },
+ {
+  "no": 208,
+  "id": "thunderkite",
+  "en": "Thunderkite",
+  "zh": "雷暴鸢",
+  "types": [
+   "spark",
+   "flying"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 56,
+  "atk": 18,
+  "b": "bird",
+  "c": "#fdd835",
+  "k": "#fffde7",
+  "a": "#1e88e5",
+  "e": "crest",
+  "t": "bolt",
+  "w": "feather",
+  "p": "stripes",
+  "m": "beak",
+  "x": [
+   "cloud"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "sky",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "storm",
+   "kite"
+  ],
+  "dexEn": "Thunderkite flies inside storm clouds. It is never afraid of thunder.",
+  "dexZh": "雷暴鸢在暴风云里飞，它从来不怕打雷。"
+ },
+ {
+  "no": 209,
+  "id": "snowbell",
+  "en": "Snowbell",
+  "zh": "雪铃花",
+  "types": [
+   "ice"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 50,
+  "atk": 13,
+  "b": "plant",
+  "c": "#e1f5fe",
+  "k": "#ffffff",
+  "a": "#81d4fa",
+  "e": "flower",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [
+   "crystals"
+  ],
+  "sz": 0.9,
+  "habitat": [
+   "snow",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "snow",
+   "bell"
+  ],
+  "dexEn": "Snowbell rings softly when snow falls. Its song means winter is here.",
+  "dexZh": "下雪时雪铃花会轻轻地响，它的歌声告诉大家冬天来了。"
+ },
+ {
+  "no": 210,
+  "id": "milkcalf",
+  "en": "Milkcalf",
+  "zh": "奶牛犊",
+  "types": [
+   "normal"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "barnbull",
+    "lv": 28
+   }
+  ],
+  "hp": 44,
+  "atk": 10,
+  "b": "quad",
+  "c": "#fafafa",
+  "k": "#fff3e0",
+  "a": "#212121",
+  "e": "horn",
+  "t": "long",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "grass",
+   "town"
+  ],
+  "rarity": 2,
+  "words": [
+   "milk",
+   "calf"
+  ],
+  "dexEn": "Milkcalf drinks lots of milk. It likes to play in green fields.",
+  "dexZh": "奶牛犊喝很多牛奶，喜欢在绿油油的田野里玩。"
+ },
+ {
+  "no": 211,
+  "id": "barnbull",
+  "en": "Barnbull",
+  "zh": "谷仓牛",
+  "types": [
+   "normal"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 64,
+  "atk": 17,
+  "b": "quad",
+  "c": "#eeeeee",
+  "k": "#fff3e0",
+  "a": "#3e2723",
+  "e": "horns",
+  "t": "long",
+  "w": "none",
+  "p": "spots",
+  "m": "grin",
+  "x": [],
+  "sz": 1.25,
+  "habitat": [
+   "grass",
+   "town"
+  ],
+  "rarity": 3,
+  "words": [
+   "barn",
+   "bull"
+  ],
+  "dexEn": "Barnbull pulls heavy carts on the farm. It works hard all year.",
+  "dexZh": "谷仓牛在农场上拉很重的车，一年到头都很勤劳。"
+ },
+ {
+  "no": 212,
+  "id": "pollenpuff",
+  "en": "Pollenpuff",
+  "zh": "花粉团",
+  "types": [
+   "grass"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "blossomkite",
+    "lv": 24
+   }
+  ],
+  "hp": 34,
+  "atk": 10,
+  "b": "blob",
+  "c": "#fff176",
+  "k": "#fffde7",
+  "a": "#f06292",
+  "e": "flower",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "grass",
+   "sky"
+  ],
+  "rarity": 2,
+  "words": [
+   "pollen",
+   "puff"
+  ],
+  "dexEn": "Pollenpuff floats in the spring air. Bees like to follow it.",
+  "dexZh": "花粉团在春天的空气里飘，蜜蜂喜欢跟着它。"
+ },
+ {
+  "no": 213,
+  "id": "blossomkite",
+  "en": "Blossomkite",
+  "zh": "花瓣鸢",
+  "types": [
+   "grass",
+   "flying"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 56,
+  "atk": 15,
+  "b": "bird",
+  "c": "#f48fb1",
+  "k": "#fff8e1",
+  "a": "#aed581",
+  "e": "flower",
+  "t": "leaf",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [],
+  "sz": 1.1,
+  "habitat": [
+   "sky",
+   "forest"
+  ],
+  "rarity": 3,
+  "words": [
+   "blossom",
+   "kite"
+  ],
+  "dexEn": "Blossomkite drops pink petals from the sky. Every town it visits turns pink.",
+  "dexZh": "花瓣鸢从天上撒下粉色花瓣，它飞过的小镇都会变成粉色。"
+ },
+ {
+  "no": 214,
+  "id": "songbug",
+  "en": "Songbug",
+  "zh": "鸣歌虫",
+  "types": [
+   "bug"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 42,
+  "atk": 12,
+  "b": "bug",
+  "c": "#9ccc65",
+  "k": "#f1f8e9",
+  "a": "#6d4c41",
+  "e": "antenna",
+  "t": "none",
+  "w": "bug",
+  "p": "stripes",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "grass",
+   "night"
+  ],
+  "rarity": 2,
+  "words": [
+   "song",
+   "bug"
+  ],
+  "dexEn": "Songbug sings in the fields on summer nights. Kids keep it as a pet.",
+  "dexZh": "夏天的夜里，鸣歌虫在田野里唱歌，孩子们会把它当宠物养。"
+ },
+ {
+  "no": 215,
+  "id": "jumprope",
+  "en": "Jumprope",
+  "zh": "跳绳仔",
+  "types": [
+   "fight"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "ropechamp",
+    "lv": 30
+   }
+  ],
+  "hp": 42,
+  "atk": 12,
+  "b": "biped",
+  "c": "#ff7043",
+  "k": "#fff3e0",
+  "a": "#5c6bc0",
+  "e": "round",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "grin",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "town",
+   "grass"
+  ],
+  "rarity": 3,
+  "words": [
+   "jump",
+   "rope"
+  ],
+  "dexEn": "Jumprope jumps a thousand times a day. Its long tail works like a rope.",
+  "dexZh": "跳绳仔一天能跳一千下，它的长尾巴就像一根跳绳。"
+ },
+ {
+  "no": 216,
+  "id": "ropechamp",
+  "en": "Ropechamp",
+  "zh": "跳绳王",
+  "types": [
+   "fight"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 62,
+  "atk": 18,
+  "b": "biped",
+  "c": "#f4511e",
+  "k": "#fff3e0",
+  "a": "#3949ab",
+  "e": "crest",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.15,
+  "habitat": [
+   "town",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "rope",
+   "champ"
+  ],
+  "dexEn": "Ropechamp wins every game at the sports festival. It never gets tired.",
+  "dexZh": "跳绳王在运动会上每场比赛都赢，它从来不会累。"
+ },
+ {
+  "no": 217,
+  "id": "bubblegum",
+  "en": "Bubblegum",
+  "zh": "泡泡糖怪",
+  "types": [
+   "poison"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 50,
+  "atk": 13,
+  "b": "blob",
+  "c": "#f06292",
+  "k": "#fce4ec",
+  "a": "#ab47bc",
+  "e": "none",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "o",
+  "x": [],
+  "sz": 1,
+  "habitat": [
+   "town",
+   "swamp"
+  ],
+  "rarity": 3,
+  "words": [
+   "bubble",
+   "gum"
+  ],
+  "dexEn": "Bubblegum blows big pink bubbles. They stick to shoes and hair.",
+  "dexZh": "泡泡糖怪吹出大大的粉色泡泡，会粘在鞋子和头发上。"
+ },
+ {
+  "no": 218,
+  "id": "plumbat",
+  "en": "Plumbat",
+  "zh": "紫李蝠",
+  "types": [
+   "poison",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 46,
+  "atk": 14,
+  "b": "bird",
+  "c": "#7b1fa2",
+  "k": "#e1bee7",
+  "a": "#8bc34a",
+  "e": "cat",
+  "t": "none",
+  "w": "bat",
+  "p": "none",
+  "m": "fang",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "forest",
+   "night",
+   "cave"
+  ],
+  "rarity": 2,
+  "words": [
+   "plum",
+   "bat"
+  ],
+  "dexEn": "Plumbat hangs in plum trees at night. It eats fruit that is too old.",
+  "dexZh": "紫李蝠夜里倒挂在李子树上，专吃放坏了的水果。"
+ },
+ {
+  "no": 219,
+  "id": "ribbonlet",
+  "en": "Ribbonlet",
+  "zh": "彩带龙宝",
+  "types": [
+   "dragon"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "ribbontail",
+    "lv": 30
+   }
+  ],
+  "hp": 42,
+  "atk": 12,
+  "b": "serpent",
+  "c": "#ef5350",
+  "k": "#fff8e1",
+  "a": "#fdd835",
+  "e": "horns",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "water",
+   "ruins"
+  ],
+  "rarity": 4,
+  "words": [
+   "ribbon",
+   "-let"
+  ],
+  "dexEn": "Ribbonlet dances like a red ribbon. It appears near festival boats.",
+  "dexZh": "彩带龙宝像红丝带一样跳舞，常在节日龙舟附近出现。"
+ },
+ {
+  "no": 220,
+  "id": "ribbontail",
+  "en": "Ribbontail",
+  "zh": "彩带舞龙",
+  "types": [
+   "dragon"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "festivalwing",
+    "lv": 45
+   }
+  ],
+  "hp": 60,
+  "atk": 17,
+  "b": "serpent",
+  "c": "#e53935",
+  "k": "#fff8e1",
+  "a": "#ffd600",
+  "e": "horns",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "mane"
+  ],
+  "sz": 1.15,
+  "habitat": [
+   "water",
+   "ruins"
+  ],
+  "rarity": 4,
+  "words": [
+   "ribbon",
+   "tail"
+  ],
+  "dexEn": "Ribbontail leads the dragon boat race. Drums play when it swims by.",
+  "dexZh": "彩带舞龙带领龙舟比赛，它游过时鼓声就响起来。"
+ },
+ {
+  "no": 221,
+  "id": "festivalwing",
+  "en": "Festivalwing",
+  "zh": "节庆飞龙",
+  "types": [
+   "dragon",
+   "flying"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 80,
+  "atk": 23,
+  "b": "dragon",
+  "c": "#c62828",
+  "k": "#fff8e1",
+  "a": "#ffd600",
+  "e": "horns",
+  "t": "long",
+  "w": "bat",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "mane",
+   "crown"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "sky",
+   "ruins"
+  ],
+  "rarity": 4,
+  "words": [
+   "festival",
+   "wing"
+  ],
+  "dexEn": "Festivalwing flies over towns on holidays. Fireworks follow its long tail.",
+  "dexZh": "节庆飞龙在节日里飞过小镇，烟花跟着它的长尾巴绽放。"
+ },
+ {
+  "no": 222,
+  "id": "rockcandy",
+  "en": "Rockcandy",
+  "zh": "冰糖石",
+  "types": [
+   "rock"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 54,
+  "atk": 15,
+  "b": "golem",
+  "c": "#f8bbd0",
+  "k": "#fce4ec",
+  "a": "#80deea",
+  "e": "gem",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "crystals"
+  ],
+  "sz": 1,
+  "habitat": [
+   "cave",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "rock",
+   "candy"
+  ],
+  "dexEn": "Rockcandy looks sweet but it is very hard. Please do not bite it.",
+  "dexZh": "冰糖石看起来很甜，其实硬得很，千万别咬它。"
+ },
+ {
+  "no": 223,
+  "id": "foglet",
+  "en": "Foglet",
+  "zh": "雾团团",
+  "types": [
+   "ghost"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "nightfog",
+    "lv": 30
+   }
+  ],
+  "hp": 34,
+  "atk": 11,
+  "b": "ghost",
+  "c": "#b0bec5",
+  "k": "#eceff1",
+  "a": "#7e57c2",
+  "e": "cloud",
+  "t": "cloud",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "swamp",
+   "night"
+  ],
+  "rarity": 3,
+  "words": [
+   "fog",
+   "-let"
+  ],
+  "dexEn": "Foglet comes out on foggy mornings. It likes to play hide-and-seek.",
+  "dexZh": "雾灵灵在起雾的早上出来，最喜欢玩捉迷藏。"
+ },
+ {
+  "no": 224,
+  "id": "nightfog",
+  "en": "Nightfog",
+  "zh": "夜雾灵",
+  "types": [
+   "ghost",
+   "dark"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 56,
+  "atk": 17,
+  "b": "ghost",
+  "c": "#78909c",
+  "k": "#cfd8dc",
+  "a": "#5e35b1",
+  "e": "cloud",
+  "t": "cloud",
+  "w": "none",
+  "p": "mask",
+  "m": "grin",
+  "x": [
+   "cloud"
+  ],
+  "sz": 1.15,
+  "habitat": [
+   "swamp",
+   "night",
+   "ruins"
+  ],
+  "rarity": 3,
+  "words": [
+   "night",
+   "fog"
+  ],
+  "dexEn": "Nightfog covers the whole town at night. Keep your lamp on.",
+  "dexZh": "夜雾灵晚上会把整个小镇盖住。记得把灯开着。"
+ },
+ {
+  "no": 225,
+  "id": "railsnake",
+  "en": "Railsnake",
+  "zh": "铁轨蛇",
+  "types": [
+   "steel",
+   "ground"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 64,
+  "atk": 17,
+  "b": "serpent",
+  "c": "#78909c",
+  "k": "#cfd8dc",
+  "a": "#ff7043",
+  "e": "horn",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "o",
+  "x": [],
+  "sz": 1.2,
+  "habitat": [
+   "town",
+   "cave",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "rail",
+   "snake"
+  ],
+  "dexEn": "Railsnake runs along train tracks. It takes travelers to faraway cities.",
+  "dexZh": "铁轨蛇沿着火车轨道飞奔，把旅客送到遥远的城市。"
+ },
+ {
+  "no": 226,
+  "id": "ferryshell",
+  "en": "Ferryshell",
+  "zh": "渡船龟",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 72,
+  "atk": 13,
+  "b": "shell",
+  "c": "#26a69a",
+  "k": "#e0f2f1",
+  "a": "#ffcc80",
+  "e": "round",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "shell"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "sea",
+   "water"
+  ],
+  "rarity": 3,
+  "words": [
+   "ferry",
+   "shell"
+  ],
+  "dexEn": "Ferryshell carries people across the river on its back. It swims very slowly.",
+  "dexZh": "渡船龟用背驮着人们过河，它游得很慢很慢。"
+ },
+ {
+  "no": 227,
+  "id": "snowpaw",
+  "en": "Snowpaw",
+  "zh": "雪爪崽",
+  "types": [
+   "ice"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "snowtiger",
+    "lv": 32
+   }
+  ],
+  "hp": 40,
+  "atk": 12,
+  "b": "quad",
+  "c": "#eceff1",
+  "k": "#ffffff",
+  "a": "#455a64",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "snow",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "snow",
+   "paw"
+  ],
+  "dexEn": "Snowpaw leaves tiny prints in the snow. It loves snowball fights.",
+  "dexZh": "雪爪崽在雪地上留下小小的脚印，最爱打雪仗。"
+ },
+ {
+  "no": 228,
+  "id": "snowtiger",
+  "en": "Snowtiger",
+  "zh": "雪原虎",
+  "types": [
+   "ice"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 62,
+  "atk": 18,
+  "b": "quad",
+  "c": "#e0e0e0",
+  "k": "#ffffff",
+  "a": "#37474f",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "mane"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "snow",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "snow",
+   "tiger"
+  ],
+  "dexEn": "Snowtiger walks quietly through winter forests. Its white coat keeps it hidden.",
+  "dexZh": "雪原虎在冬天的森林里静静地走，白色的皮毛让它很难被发现。"
+ },
+ {
+  "no": 229,
+  "id": "moonhop",
+  "en": "Moonhop",
+  "zh": "月跳兔",
+  "types": [
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "jaderabbit",
+    "lv": 30
+   }
+  ],
+  "hp": 38,
+  "atk": 11,
+  "b": "quad",
+  "c": "#f3e5f5",
+  "k": "#ffffff",
+  "a": "#ffd54f",
+  "e": "bunny",
+  "t": "fluffy",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "grass",
+   "night"
+  ],
+  "rarity": 3,
+  "words": [
+   "moon",
+   "hop"
+  ],
+  "dexEn": "Moonhop hops higher on full moon nights. It dreams of living on the moon.",
+  "dexZh": "月跳兔在满月的夜晚跳得更高，它梦想住到月亮上。"
+ },
+ {
+  "no": 230,
+  "id": "jaderabbit",
+  "en": "Jaderabbit",
+  "zh": "玉月兔",
+  "types": [
+   "psychic",
+   "normal"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 60,
+  "atk": 16,
+  "b": "biped",
+  "c": "#e1bee7",
+  "k": "#ffffff",
+  "a": "#ffca28",
+  "e": "bunny",
+  "t": "fluffy",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "crown"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "night",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "moon",
+   "rabbit"
+  ],
+  "dexEn": "Jaderabbit makes medicine under the moon. Its song helps people sleep well.",
+  "dexZh": "玉月兔在月光下做药，它的歌声能让人睡个好觉。"
+ },
+ {
+  "no": 231,
+  "id": "strawhat",
+  "en": "Strawhat",
+  "zh": "草帽人",
+  "types": [
+   "grass"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 58,
+  "atk": 14,
+  "b": "biped",
+  "c": "#9ccc65",
+  "k": "#fff9c4",
+  "a": "#fbc02d",
+  "e": "none",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "grass",
+   "town"
+  ],
+  "rarity": 3,
+  "words": [
+   "straw",
+   "hat"
+  ],
+  "dexEn": "Strawhat stands in rice fields all summer. It waves to keep birds away.",
+  "dexZh": "草帽人整个夏天都站在稻田里，挥手把鸟儿赶走。"
+ },
+ {
+  "no": 232,
+  "id": "hotpot",
+  "en": "Hotpot",
+  "zh": "火锅怪",
+  "types": [
+   "fire",
+   "water"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 66,
+  "atk": 16,
+  "b": "blob",
+  "c": "#e53935",
+  "k": "#ffe0b2",
+  "a": "#ffca28",
+  "e": "flame",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "grin",
+  "x": [
+   "flames"
+  ],
+  "sz": 1.15,
+  "habitat": [
+   "town",
+   "volcano"
+  ],
+  "rarity": 3,
+  "words": [
+   "hot",
+   "pot"
+  ],
+  "dexEn": "Hotpot is always warm and bubbly. Friends sit around it in winter.",
+  "dexZh": "火锅怪总是热乎乎、咕嘟咕嘟冒泡，冬天朋友们会围着它坐。"
+ },
+ {
+  "no": 233,
+  "id": "mudcake",
+  "en": "Mudcake",
+  "zh": "泥巴饼",
+  "types": [
+   "ground"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 56,
+  "atk": 14,
+  "b": "blob",
+  "c": "#8d6e63",
+  "k": "#d7ccc8",
+  "a": "#a5d6a7",
+  "e": "none",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 0.95,
+  "habitat": [
+   "swamp",
+   "grass"
+  ],
+  "rarity": 2,
+  "words": [
+   "mud",
+   "pie"
+  ],
+  "dexEn": "Mudcake looks like a pie but it is made of mud. Do not eat it!",
+  "dexZh": "泥巴饼看起来像馅饼，其实是泥做的。可别吃它！"
+ },
+ {
+  "no": 234,
+  "id": "skyballoon",
+  "en": "Skyballoon",
+  "zh": "热气球怪",
+  "types": [
+   "fire",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 52,
+  "atk": 15,
+  "b": "blob",
+  "c": "#ff7043",
+  "k": "#fff3e0",
+  "a": "#42a5f5",
+  "e": "none",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "o",
+  "x": [],
+  "sz": 1.2,
+  "habitat": [
+   "sky"
+  ],
+  "rarity": 3,
+  "words": [
+   "sky",
+   "balloon"
+  ],
+  "dexEn": "Skyballoon carries travelers over mountains. Hot air keeps it up in the sky.",
+  "dexZh": "热气球怪载着旅客飞过群山，热空气让它一直飘在空中。"
+ },
+ {
+  "no": 235,
+  "id": "shadowpaw",
+  "en": "Shadowpaw",
+  "zh": "影爪兽",
+  "types": [
+   "dark"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 56,
+  "atk": 18,
+  "b": "quad",
+  "c": "#424242",
+  "k": "#757575",
+  "a": "#ab47bc",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "mask",
+  "m": "fang",
+  "x": [],
+  "sz": 1,
+  "habitat": [
+   "town",
+   "night"
+  ],
+  "rarity": 3,
+  "words": [
+   "shadow",
+   "paw"
+  ],
+  "dexEn": "Shadowpaw walks without a sound. It hides in the shadows of city walls.",
+  "dexZh": "影爪兽走路一点声音都没有，它躲在城墙的影子里。"
+ },
+ {
+  "no": 236,
+  "id": "maplefrog",
+  "en": "Maplefrog",
+  "zh": "枫叶蛙",
+  "types": [
+   "grass"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 50,
+  "atk": 13,
+  "b": "quad",
+  "c": "#7cb342",
+  "k": "#f1f8e9",
+  "a": "#e64a19",
+  "e": "leaf",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 0.95,
+  "habitat": [
+   "water",
+   "forest"
+  ],
+  "rarity": 2,
+  "words": [
+   "maple",
+   "frog"
+  ],
+  "dexEn": "Maplefrog's leaf turns red in autumn. It sings by the pond after rain.",
+  "dexZh": "枫叶蛙头上的叶子秋天会变红，下过雨后它在池塘边唱歌。"
+ },
+ {
+  "no": 237,
+  "id": "rollbug",
+  "en": "Rollbug",
+  "zh": "滚轮虫",
+  "types": [
+   "bug"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "wheelbug",
+    "lv": 28
+   }
+  ],
+  "hp": 40,
+  "atk": 11,
+  "b": "shell",
+  "c": "#90a4ae",
+  "k": "#eceff1",
+  "a": "#ffb300",
+  "e": "antenna",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "town",
+   "cave"
+  ],
+  "rarity": 3,
+  "words": [
+   "roll",
+   "bug"
+  ],
+  "dexEn": "Rollbug rolls down the road like a ball. It loves long hills.",
+  "dexZh": "滚轮虫像球一样沿着马路滚下去，它最爱长长的坡。"
+ },
+ {
+  "no": 238,
+  "id": "wheelbug",
+  "en": "Wheelbug",
+  "zh": "车轮虫",
+  "types": [
+   "bug",
+   "steel"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "trainbeetle",
+    "lv": 42
+   }
+  ],
+  "hp": 58,
+  "atk": 15,
+  "b": "bug",
+  "c": "#78909c",
+  "k": "#eceff1",
+  "a": "#ffa000",
+  "e": "antenna",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "shell"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "town",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "wheel",
+   "bug"
+  ],
+  "dexEn": "Wheelbug has wheels instead of feet. It races cars on big roads.",
+  "dexZh": "车轮虫没有脚，只有轮子，它会在大路上和汽车赛跑。"
+ },
+ {
+  "no": 239,
+  "id": "trainbeetle",
+  "en": "Trainbeetle",
+  "zh": "列车甲虫",
+  "types": [
+   "bug",
+   "steel"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 76,
+  "atk": 21,
+  "b": "bug",
+  "c": "#607d8b",
+  "k": "#eceff1",
+  "a": "#ff8f00",
+  "e": "horn",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "shell",
+   "spikesback"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "town",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "train",
+   "beetle"
+  ],
+  "dexEn": "Trainbeetle pulls ten carts behind it. Whole families travel on its back.",
+  "dexZh": "列车甲虫身后能拉十节车厢，一家人都可以坐在它背上旅行。"
+ },
+ {
+  "no": 240,
+  "id": "hailwing",
+  "en": "Hailwing",
+  "zh": "冰雹龙",
+  "types": [
+   "ice",
+   "dragon"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 70,
+  "atk": 20,
+  "b": "dragon",
+  "c": "#81d4fa",
+  "k": "#e1f5fe",
+  "a": "#3949ab",
+  "e": "ice",
+  "t": "spike",
+  "w": "bat",
+  "p": "none",
+  "m": "fang",
+  "x": [
+   "crystals"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "snow",
+   "mountain",
+   "sky"
+  ],
+  "rarity": 4,
+  "words": [
+   "hail",
+   "wing"
+  ],
+  "dexEn": "Hailwing brings hail when it flies over farms. Farmers ring bells to warn everyone.",
+  "dexZh": "冰雹龙飞过农场时会下冰雹，农民会敲钟提醒大家。"
+ },
+ {
+  "no": 241,
+  "id": "thunderdrum",
+  "en": "Thunderdrum",
+  "zh": "雷鼓兽",
+  "types": [
+   "spark",
+   "fight"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 68,
+  "atk": 20,
+  "b": "biped",
+  "c": "#fbc02d",
+  "k": "#fff8e1",
+  "a": "#c62828",
+  "e": "horns",
+  "t": "bolt",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "mane"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "mountain",
+   "sky"
+  ],
+  "rarity": 4,
+  "words": [
+   "thunder",
+   "drum"
+  ],
+  "dexEn": "Thunderdrum beats the drum on its belly. The sound is as loud as thunder.",
+  "dexZh": "雷鼓兽敲打肚子上的鼓，声音像打雷一样响。"
+ },
+ {
+  "no": 242,
+  "id": "dancelion",
+  "en": "Dancelion",
+  "zh": "舞狮兽",
+  "types": [
+   "fire",
+   "fight"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 72,
+  "atk": 21,
+  "b": "quad",
+  "c": "#e53935",
+  "k": "#fff3e0",
+  "a": "#ffd600",
+  "e": "horn",
+  "t": "fluffy",
+  "w": "none",
+  "p": "star",
+  "m": "grin",
+  "x": [
+   "mane",
+   "scarf"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "town",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "dance",
+   "lion"
+  ],
+  "dexEn": "Dancelion dances at the Spring Festival. It brings good luck for the new year.",
+  "dexZh": "舞狮兽在春节表演舞蹈，给新的一年带来好运。"
+ },
+ {
+  "no": 246,
+  "id": "stonecub",
+  "en": "Stonecub",
+  "zh": "石幼崽",
+  "types": [
+   "rock",
+   "dark"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "duskrock",
+    "lv": 30
+   }
+  ],
+  "hp": 44,
+  "atk": 13,
+  "b": "quad",
+  "c": "#6d6d6d",
+  "k": "#bdbdbd",
+  "a": "#7c4dff",
+  "e": "horn",
+  "t": "spike",
+  "w": "none",
+  "p": "none",
+  "m": "fang",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "mountain",
+   "cave"
+  ],
+  "rarity": 5,
+  "words": [
+   "stone",
+   "cub"
+  ],
+  "dexEn": "Stonecub eats small rocks in deep caves. It is very rare.",
+  "dexZh": "石幼崽在深深的山洞里吃小石头，非常少见。"
+ },
+ {
+  "no": 247,
+  "id": "duskrock",
+  "en": "Duskrock",
+  "zh": "暮岩兽",
+  "types": [
+   "rock",
+   "dark"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "duskdragon",
+    "lv": 55
+   }
+  ],
+  "hp": 62,
+  "atk": 18,
+  "b": "quad",
+  "c": "#4e4e4e",
+  "k": "#9e9e9e",
+  "a": "#651fff",
+  "e": "horns",
+  "t": "spike",
+  "w": "none",
+  "p": "mask",
+  "m": "fang",
+  "x": [
+   "spikesback"
+  ],
+  "sz": 1.15,
+  "habitat": [
+   "mountain",
+   "cave",
+   "night"
+  ],
+  "rarity": 5,
+  "words": [
+   "dusk",
+   "rock"
+  ],
+  "dexEn": "Duskrock wakes up at dusk. Its hard body can break big rocks.",
+  "dexZh": "暮岩兽在黄昏时醒来，它坚硬的身体能撞碎大石头。"
+ },
+ {
+  "no": 248,
+  "id": "duskdragon",
+  "en": "Duskdragon",
+  "zh": "暮岩龙",
+  "types": [
+   "rock",
+   "dark"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 80,
+  "atk": 24,
+  "b": "dragon",
+  "c": "#3a3a3a",
+  "k": "#8e8e8e",
+  "a": "#7c4dff",
+  "e": "horns",
+  "t": "spike",
+  "w": "bat",
+  "p": "mask",
+  "m": "fang",
+  "x": [
+   "spikesback",
+   "crystals"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "mountain",
+   "night"
+  ],
+  "rarity": 5,
+  "words": [
+   "dusk",
+   "dragon"
+  ],
+  "dexEn": "Duskdragon flies over mountains at dusk. Its wings cover the evening sky.",
+  "dexZh": "暮岩龙黄昏时飞过群山，它的翅膀能遮住傍晚的天空。"
+ }
+]

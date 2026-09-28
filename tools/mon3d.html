@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>3D 怪兽预览</title>
+<style>body { margin: 8px; background: #dfeee6; font: 12px sans-serif; } #g { display: grid; grid-template-columns: repeat(auto-fill, 130px); gap: 6px; } .c { background: linear-gradient(#bfe6ff, #eaf7ff 60%, #b9e39c 60%); border-radius: 8px; text-align: center; } .c img { width: 130px; height: 130px; display: block; } .c b { display: block; padding: 2px; }</style>
+<div id="g"></div>
+<script src="../vendor/three.min.js"></script>
+<script src="../monster3d.js"></script>
+<script src="../dex.js"></script>
+<script>
+// 3D 怪兽预览：?list=样例 或 ?from=1&to=60 看图鉴里的怪兽
+const SAMPLES = [
+  { id: 's1', en: 'Blob', b: 'blob', c: '#4fc3f7', k: '#e1f5fe', e: 'fin', t: 'fin', stage: 1 },
+  { id: 's2', en: 'Biped', b: 'biped', c: '#ff8a4c', k: '#ffe0b2', a: '#ffca28', e: 'cat', t: 'flame', stage: 1 },
+  { id: 's3', en: 'Quad', b: 'quad', c: '#e8532f', k: '#ffd59e', a: '#ffca28', e: 'cat', t: 'flame', x: ['mane'], stage: 2 },
+  { id: 's4', en: 'Bird', b: 'bird', c: '#90caf9', k: '#ffffff', a: '#1e88e5', e: 'crest', t: 'feather', w: 'feather', stage: 2 },
+  { id: 's5', en: 'Fish', b: 'fish', c: '#26a69a', k: '#b2dfdb', a: '#ffd54f', stage: 1 },
+  { id: 's6', en: 'Serpent', b: 'serpent', c: '#7e57c2', k: '#ede7f6', a: '#ffd54f', e: 'horns', stage: 2 },
+  { id: 's7', en: 'Bug', b: 'bug', c: '#fdd835', k: '#fffde7', a: '#5d4037', w: 'bug', stage: 1 },
+  { id: 's8', en: 'Golem', b: 'golem', c: '#a1887f', k: '#d7ccc8', a: '#8d6e63', e: 'gem', stage: 3 },
+  { id: 's9', en: 'Ghost', b: 'ghost', c: '#9575cd', k: '#ede7f6', a: '#e040fb', m: 'grin', stage: 2 },
+  { id: 's10', en: 'Plant', b: 'plant', c: '#8bc34a', k: '#f1f8e9', a: '#66bb6a', e: 'flower', stage: 1 },
+  { id: 's11', en: 'Shell', b: 'shell', c: '#80cbc4', k: '#e0f2f1', a: '#8d6e63', stage: 2 },
+  { id: 's12', en: 'Dragon', b: 'dragon', c: '#5c6bc0', k: '#e8eaf6', a: '#ffca28', e: 'horns', w: 'bat', t: 'long', x: ['spikesback'], stage: 3 },
+  { id: 's13', en: 'Legend', b: 'dragon', c: '#26c6da', k: '#e0f7fa', a: '#ffd54f', e: 'crown', w: 'feather', t: 'long', x: ['aura', 'crystals'], legend: true },
+  { id: 's14', en: 'Bunny', b: 'biped', c: '#f8bbd0', k: '#ffffff', a: '#ec407a', e: 'bunny', t: 'fluffy', p: 'star', stage: 1 },
+  { id: 's15', en: 'Spotty', b: 'quad', c: '#ffcc80', k: '#fff3e0', a: '#6d4c41', e: 'dog', t: 'curl', p: 'spots', m: 'fang', stage: 1 },
+  { id: 's16', en: 'Icy', b: 'blob', c: '#b3e5fc', k: '#ffffff', a: '#4fc3f7', e: 'ice', p: 'none', eye: 'sleepy', stage: 1 },
+];
+const q = new URLSearchParams(location.search), g = document.getElementById('g');
+let list = SAMPLES;
+if (q.get('from') && window.DEX) list = DEX.list.filter(s => s.no >= +q.get('from') && s.no <= +(q.get('to') || q.get('from')));
+list.forEach(sp => {
+  const d = document.createElement('div'); d.className = 'c';
+  d.innerHTML = '<img src="' + Mon3D.snapshot(sp, 260) + '"><b>' + (sp.no ? '#' + sp.no + ' ' : '') + sp.en + (sp.zh ? ' ' + sp.zh : '') + '</b>';
+  g.appendChild(d);
+});
+</script>

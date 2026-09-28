@@ -6,7 +6,7 @@
   const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
   const STEP_MS = 170, JUMP_MS = 300;
   const TRAINER_NAMES = ['Jack', 'Amy', 'Ben', 'Kate', 'Sam', 'Lucy', 'Mike', 'Anna', 'Leo', 'Mia', 'Max', 'Emma', 'Tony', 'Nora', 'Owen', 'Ruby', 'Dan', 'Ivy'];
-  const PICKS = ['ball', 'potion', 'repel', 'superball', 'superpotion', 'revive'];
+  const PICKS = ['ball', 'potion', 'repel', 'superball', 'superpotion', 'revive', 'leafstone', 'firestone', 'waterstone', 'thunderstone', 'moonstone'];
 
   let E = null, MG = null, EM = null;
   let M = null;           // 当前地图
@@ -41,7 +41,7 @@
   const npcAt = (x, y) => M.npcs.find(n => n.x === x && n.y === y && npcVisible(n));
   const pickKey = p => 'p:' + M.id + ':' + p.x + ':' + p.y;
   const pickAt = (x, y) => M.picks.find(p => p.x === x && p.y === y && !WS().flags[pickKey(p)]);
-  const pickType = p => PICKS[(p.x * 7 + p.y * 3 + M.z) % (M.z < 2 ? 2 : M.z < 4 ? 3 : M.z < 6 ? 4 : PICKS.length)];
+  const pickType = p => PICKS[(p.x * 7 + p.y * 3 + M.z) % (M.z < 2 ? 2 : M.z < 4 ? 3 : M.z < 6 ? 4 : M.z < 8 ? 6 : PICKS.length)];
   const walkable = (x, y) => EM.WALK.includes(tile(x, y)) && !npcAt(x, y);
   const warpAt = (x, y) => M.warps.find(w => w.x === x && w.y === y);
   const signAt = (x, y) => M.signs.find(s => s.x === x && s.y === y);
@@ -532,6 +532,8 @@
     if (z >= 2) list.push(['superball', 1], ['rope', 1]);
     if (z >= 3) list.push(['superpotion', 1]);
     if (z >= 4) list.push(['revive', 1]);
+    if (z >= 5) list.push(['leafstone', 1], ['firestone', 1], ['waterstone', 1], ['thunderstone', 1]);
+    if (z >= 8) list.push(['moonstone', 1], ['sunstone', 1], ['icestone', 1]);
     return list;
   }
   function shopSheet() {
@@ -545,7 +547,7 @@
   }
 
   // ---------- 战斗 ----------
-  function encounter() { battle('wild', { lvBonus: M.lvBonus || 0 }); }
+  function encounter() { battle('wild', { lvBonus: M.lvBonus || 0, hab: M.kind === 'cave' ? 'cave' : 'grass' }); }
   async function battle(kind, o) {
     busy = true;
     held = null;
@@ -554,7 +556,7 @@
     await sleep(820);
     stopLoop();
     const ok = MG.battle(kind, M.z, {
-      foes: o.foes, trainer: o.trainer, lvBonus: o.lvBonus, noCatch: o.noCatch,
+      foes: o.foes, trainer: o.trainer, lvBonus: o.lvBonus, noCatch: o.noCatch, hab: o.hab || (M.kind === 'cave' ? 'cave' : 'grass'),
       onEnd: res => {
         E.show('world');
         wp.classList.remove('on');
@@ -813,9 +815,8 @@
   const imgCache = {};
   function monImg(sp) {
     if (!imgCache[sp.en]) {
-      const s = Cartoon.monster(sp).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
-      const im = new Image();
-      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+      const im = new Image(), url = window.Mon3D ? Mon3D.snapshot(sp, 192) : '';
+      im.src = url || 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Cartoon.monster2d(sp).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
       imgCache[sp.en] = im;
     }
     return imgCache[sp.en];

@@ -1,0 +1,2410 @@
+[
+ {
+  "no": 315,
+  "id": "bravekit",
+  "en": "Bravekit",
+  "zh": "勇气小狮",
+  "types": [
+   "fight"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "bravepaw",
+    "lv": 22
+   }
+  ],
+  "hp": 42,
+  "atk": 12,
+  "b": "quad",
+  "c": "#e0a030",
+  "k": "#fff3d6",
+  "a": "#c0392b",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "grass",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "brave",
+   "kit"
+  ],
+  "dexEn": "Bravekit never runs away from a fight. It protects smaller friends.",
+  "dexZh": "勇气小狮从不逃跑，它会保护比自己小的朋友。"
+ },
+ {
+  "no": 316,
+  "id": "bravepaw",
+  "en": "Bravepaw",
+  "zh": "勇爪狮",
+  "types": [
+   "fight"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "bravemane",
+    "lv": 40
+   }
+  ],
+  "hp": 58,
+  "atk": 16,
+  "b": "quad",
+  "c": "#e0a030",
+  "k": "#fff3d6",
+  "a": "#c0392b",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "fang",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "grass",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "brave",
+   "paw"
+  ],
+  "dexEn": "Bravepaw trains on the mountain every morning. Its paws are very strong.",
+  "dexZh": "勇爪狮每天早上都在山上训练，它的爪子非常有力。"
+ },
+ {
+  "no": 317,
+  "id": "bravemane",
+  "en": "Bravemane",
+  "zh": "勇鬃狮王",
+  "types": [
+   "fight",
+   "normal"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 78,
+  "atk": 23,
+  "b": "quad",
+  "c": "#e0a030",
+  "k": "#fff3d6",
+  "a": "#c0392b",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "fang",
+  "x": [
+   "mane",
+   "scarf"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "mountain",
+   "grass"
+  ],
+  "rarity": 4,
+  "words": [
+   "brave",
+   "mane"
+  ],
+  "dexEn": "Bravemane's red mane shines when it feels brave. Trainers call it the hero of the league.",
+  "dexZh": "勇鬃狮王感到勇敢时，红色的鬃毛会发光。训练师们叫它联盟的英雄。"
+ },
+ {
+  "no": 318,
+  "id": "calmlet",
+  "en": "Calmlet",
+  "zh": "静静球",
+  "types": [
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "calmsage",
+    "lv": 30
+   }
+  ],
+  "hp": 40,
+  "atk": 9,
+  "b": "blob",
+  "c": "#9fa8da",
+  "k": "#e8eaf6",
+  "a": "#5c6bc0",
+  "e": "round",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "water",
+   "forest"
+  ],
+  "rarity": 2,
+  "words": [
+   "calm",
+   "-let"
+  ],
+  "dexEn": "Calmlet floats quietly by the lake. Its soft song helps people relax.",
+  "dexZh": "静静球安静地飘在湖边，它轻柔的歌声能让人放松。"
+ },
+ {
+  "no": 319,
+  "id": "calmsage",
+  "en": "Calmsage",
+  "zh": "静心贤者",
+  "types": [
+   "psychic"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 60,
+  "atk": 17,
+  "b": "biped",
+  "c": "#9fa8da",
+  "k": "#e8eaf6",
+  "a": "#5c6bc0",
+  "e": "round",
+  "t": "long",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "water",
+   "forest",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "calm",
+   "sage"
+  ],
+  "dexEn": "Calmsage never gets angry. It helps friends talk about their feelings.",
+  "dexZh": "静心贤者从不生气，它会帮助朋友们说出自己的感受。"
+ },
+ {
+  "no": 320,
+  "id": "moodlet",
+  "en": "Moodlet",
+  "zh": "心情团",
+  "types": [
+   "normal"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "joyburst",
+    "item": "sunstone"
+   },
+   {
+    "to": "grumpcloud",
+    "item": "moonstone"
+   }
+  ],
+  "hp": 38,
+  "atk": 10,
+  "b": "blob",
+  "c": "#f5c6d6",
+  "k": "#fff5f8",
+  "a": "#f06292",
+  "e": "round",
+  "t": "curl",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "town",
+   "grass"
+  ],
+  "rarity": 2,
+  "words": [
+   "mood",
+   "-let"
+  ],
+  "dexEn": "Moodlet changes color with its feelings. Pink means it is happy.",
+  "dexZh": "心情团的颜色会随着心情变化，粉色表示它很开心。"
+ },
+ {
+  "no": 321,
+  "id": "joyburst",
+  "en": "Joyburst",
+  "zh": "欢乐焰",
+  "types": [
+   "fire"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 58,
+  "atk": 17,
+  "b": "biped",
+  "c": "#ff8a65",
+  "k": "#fff5f8",
+  "a": "#ffd54f",
+  "e": "flame",
+  "t": "flame",
+  "w": "none",
+  "p": "star",
+  "m": "grin",
+  "x": [
+   "flames"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "town",
+   "volcano"
+  ],
+  "rarity": 3,
+  "words": [
+   "joy",
+   "burst"
+  ],
+  "dexEn": "Joyburst laughs, and warm sparks fly into the sky. Its smile can end a sad day.",
+  "dexZh": "欢乐焰一笑，温暖的火星就飞上天空。它的笑容能赶走难过的一天。"
+ },
+ {
+  "no": 322,
+  "id": "grumpcloud",
+  "en": "Grumpcloud",
+  "zh": "气鼓云",
+  "types": [
+   "dark",
+   "spark"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 56,
+  "atk": 18,
+  "b": "blob",
+  "c": "#6d6a8f",
+  "k": "#fff5f8",
+  "a": "#ffee58",
+  "e": "cloud",
+  "t": "cloud",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [
+   "cloud"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "sky",
+   "night"
+  ],
+  "rarity": 3,
+  "words": [
+   "grump",
+   "cloud"
+  ],
+  "dexEn": "Grumpcloud gets angry when it is hungry. Then it makes little storms.",
+  "dexZh": "气鼓云一饿就生气，然后会造出小小的暴风雨。"
+ },
+ {
+  "no": 323,
+  "id": "jitterbug",
+  "en": "Jitterbug",
+  "zh": "跳跳电虫",
+  "types": [
+   "bug",
+   "spark"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 46,
+  "atk": 14,
+  "b": "bug",
+  "c": "#fdd835",
+  "k": "#fffde7",
+  "a": "#212121",
+  "e": "antenna",
+  "t": "none",
+  "w": "bug",
+  "p": "stripes",
+  "m": "grin",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "grass",
+   "town",
+   "night"
+  ],
+  "rarity": 2,
+  "words": [
+   "jitter",
+   "bug"
+  ],
+  "dexEn": "Jitterbug cannot stop dancing. Its wings buzz with little sparks.",
+  "dexZh": "跳跳电虫一刻也停不下来地跳舞，翅膀嗡嗡作响，还冒着小电火花。"
+ },
+ {
+  "no": 324,
+  "id": "pagegrub",
+  "en": "Pagegrub",
+  "zh": "书页虫",
+  "types": [
+   "bug"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "storycocoon",
+    "lv": 20
+   }
+  ],
+  "hp": 36,
+  "atk": 9,
+  "b": "bug",
+  "c": "#efe6d0",
+  "k": "#fffaf0",
+  "a": "#6d4c41",
+  "e": "antenna",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [],
+  "sz": 0.8,
+  "habitat": [
+   "ruins",
+   "forest",
+   "town"
+  ],
+  "rarity": 2,
+  "words": [
+   "page",
+   "grub"
+  ],
+  "dexEn": "Pagegrub lives in old books. It eats only the empty pages.",
+  "dexZh": "书页虫住在旧书里，它只吃空白的书页。"
+ },
+ {
+  "no": 325,
+  "id": "storycocoon",
+  "en": "Storycocoon",
+  "zh": "故事茧",
+  "types": [
+   "bug"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "legendmoth",
+    "lv": 36
+   }
+  ],
+  "hp": 50,
+  "atk": 12,
+  "b": "blob",
+  "c": "#efe6d0",
+  "k": "#fffaf0",
+  "a": "#6d4c41",
+  "e": "none",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "o",
+  "x": [],
+  "sz": 1,
+  "habitat": [
+   "ruins",
+   "forest"
+  ],
+  "rarity": 3,
+  "words": [
+   "story",
+   "cocoon"
+  ],
+  "dexEn": "Inside its cocoon, it dreams old stories. Please be quiet near it.",
+  "dexZh": "它在茧里梦见古老的故事。在它身边请保持安静。"
+ },
+ {
+  "no": 326,
+  "id": "legendmoth",
+  "en": "Legendmoth",
+  "zh": "传说蛾",
+  "types": [
+   "bug",
+   "psychic"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 70,
+  "atk": 20,
+  "b": "bug",
+  "c": "#efe6d0",
+  "k": "#fffaf0",
+  "a": "#6d4c41",
+  "e": "antenna",
+  "t": "none",
+  "w": "fairy",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "crown"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "ruins",
+   "forest",
+   "night"
+  ],
+  "rarity": 4,
+  "words": [
+   "legend",
+   "moth"
+  ],
+  "dexEn": "Legendmoth's wings show pictures from old legends. People read them like a book.",
+  "dexZh": "传说蛾的翅膀上有古老传说的图画，人们像读书一样读它们。"
+ },
+ {
+  "no": 327,
+  "id": "luckleaf",
+  "en": "Luckleaf",
+  "zh": "幸运叶",
+  "types": [
+   "grass"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "clovercrown",
+    "item": "leafstone"
+   }
+  ],
+  "hp": 40,
+  "atk": 10,
+  "b": "plant",
+  "c": "#66bb6a",
+  "k": "#f1f8e9",
+  "a": "#ffd54f",
+  "e": "leaf",
+  "t": "leaf",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "grass",
+   "forest"
+  ],
+  "rarity": 3,
+  "words": [
+   "luck",
+   "leaf"
+  ],
+  "dexEn": "Luckleaf has four leaves on its head. Finding one brings good luck.",
+  "dexZh": "幸运叶头上有四片叶子。找到它会带来好运。"
+ },
+ {
+  "no": 328,
+  "id": "clovercrown",
+  "en": "Clovercrown",
+  "zh": "四叶冠",
+  "types": [
+   "grass",
+   "psychic"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 62,
+  "atk": 17,
+  "b": "plant",
+  "c": "#66bb6a",
+  "k": "#f1f8e9",
+  "a": "#ffd54f",
+  "e": "crown",
+  "t": "leaf",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "leafback"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "grass",
+   "forest"
+  ],
+  "rarity": 4,
+  "words": [
+   "clover",
+   "crown"
+  ],
+  "dexEn": "Clovercrown wears a crown of lucky leaves. It shares its luck with kind people.",
+  "dexZh": "四叶冠戴着幸运叶做的王冠，它会把好运分给善良的人。"
+ },
+ {
+  "no": 329,
+  "id": "cloudchick",
+  "en": "Cloudchick",
+  "zh": "云朵雏",
+  "types": [
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "cloudhawk",
+    "lv": 22
+   }
+  ],
+  "hp": 38,
+  "atk": 10,
+  "b": "bird",
+  "c": "#90caf9",
+  "k": "#ffffff",
+  "a": "#ffb74d",
+  "e": "crest",
+  "t": "feather",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "sky",
+   "mountain"
+  ],
+  "rarity": 2,
+  "words": [
+   "cloud",
+   "chick"
+  ],
+  "dexEn": "Cloudchick hides in soft white clouds. It sleeps there on windy days.",
+  "dexZh": "云朵雏躲在软软的白云里，刮风的日子就在那里睡觉。"
+ },
+ {
+  "no": 330,
+  "id": "cloudhawk",
+  "en": "Cloudhawk",
+  "zh": "云鹰",
+  "types": [
+   "flying"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "stormeagle",
+    "lv": 42
+   }
+  ],
+  "hp": 56,
+  "atk": 16,
+  "b": "bird",
+  "c": "#90caf9",
+  "k": "#ffffff",
+  "a": "#ffb74d",
+  "e": "crest",
+  "t": "feather",
+  "w": "feather",
+  "p": "stripes",
+  "m": "beak",
+  "x": [],
+  "sz": 1.05,
+  "habitat": [
+   "sky",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "cloud",
+   "hawk"
+  ],
+  "dexEn": "Cloudhawk flies above the mountain peaks. Its eyes can see very far.",
+  "dexZh": "云鹰在山峰上空飞翔，它的眼睛能看得很远。"
+ },
+ {
+  "no": 331,
+  "id": "stormeagle",
+  "en": "Stormeagle",
+  "zh": "风暴雕",
+  "types": [
+   "flying",
+   "spark"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 76,
+  "atk": 23,
+  "b": "bird",
+  "c": "#64a0dc",
+  "k": "#ffffff",
+  "a": "#ffd54f",
+  "e": "crest",
+  "t": "feather",
+  "w": "feather",
+  "p": "stripes",
+  "m": "beak",
+  "x": [
+   "cloud"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "sky",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "storm",
+   "eagle"
+  ],
+  "dexEn": "Stormeagle flies into big storms for fun. Lightning follows its wings.",
+  "dexZh": "风暴雕喜欢飞进大风暴里玩，闪电跟着它的翅膀走。"
+ },
+ {
+  "no": 332,
+  "id": "cheerpuff",
+  "en": "Cheerpuff",
+  "zh": "加油球",
+  "types": [
+   "normal"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 44,
+  "atk": 11,
+  "b": "blob",
+  "c": "#ffcdd2",
+  "k": "#ffffff",
+  "a": "#e53935",
+  "e": "round",
+  "t": "fluffy",
+  "w": "none",
+  "p": "star",
+  "m": "grin",
+  "x": [
+   "scarf"
+  ],
+  "sz": 0.9,
+  "habitat": [
+   "town",
+   "grass"
+  ],
+  "rarity": 2,
+  "words": [
+   "cheer",
+   "puff"
+  ],
+  "dexEn": "Cheerpuff shouts happy words at every match. It helps its team feel strong.",
+  "dexZh": "加油球在每场比赛都喊着开心的话，让队友觉得自己很强。"
+ },
+ {
+  "no": 333,
+  "id": "shyshell",
+  "en": "Shyshell",
+  "zh": "害羞贝",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "proudshell",
+    "lv": 28
+   }
+  ],
+  "hp": 42,
+  "atk": 10,
+  "b": "shell",
+  "c": "#80deea",
+  "k": "#e0f7fa",
+  "a": "#f48fb1",
+  "e": "none",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "o",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "sea",
+   "water"
+  ],
+  "rarity": 2,
+  "words": [
+   "shy",
+   "shell"
+  ],
+  "dexEn": "Shyshell closes its shell when people look at it. It opens only for friends.",
+  "dexZh": "有人看它时，害羞贝就会合上壳。它只为朋友打开。"
+ },
+ {
+  "no": 334,
+  "id": "proudshell",
+  "en": "Proudshell",
+  "zh": "自信贝",
+  "types": [
+   "water",
+   "rock"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 60,
+  "atk": 16,
+  "b": "shell",
+  "c": "#80deea",
+  "k": "#e0f7fa",
+  "a": "#f48fb1",
+  "e": "spikes",
+  "t": "none",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "crystals"
+  ],
+  "sz": 1.15,
+  "habitat": [
+   "sea",
+   "water"
+  ],
+  "rarity": 3,
+  "words": [
+   "proud",
+   "shell"
+  ],
+  "dexEn": "Proudshell is not shy anymore. It shows its shiny shell to everyone.",
+  "dexZh": "自信贝不再害羞了，它把闪亮的壳展示给每个人看。"
+ },
+ {
+  "no": 335,
+  "id": "anchorpup",
+  "en": "Anchorpup",
+  "zh": "锚锚犬",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "anchorhound",
+    "lv": 24
+   }
+  ],
+  "hp": 42,
+  "atk": 11,
+  "b": "quad",
+  "c": "#1e88e5",
+  "k": "#e3f2fd",
+  "a": "#ffca28",
+  "e": "dog",
+  "t": "curl",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "sea",
+   "town"
+  ],
+  "rarity": 3,
+  "words": [
+   "anchor",
+   "pup"
+  ],
+  "dexEn": "Anchorpup lives on ships in the harbor. Sailors love its happy bark.",
+  "dexZh": "锚锚犬住在港口的船上，水手们都喜欢它开心的叫声。"
+ },
+ {
+  "no": 336,
+  "id": "anchorhound",
+  "en": "Anchorhound",
+  "zh": "锚链犬",
+  "types": [
+   "water"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "seawolf",
+    "lv": 42
+   }
+  ],
+  "hp": 60,
+  "atk": 16,
+  "b": "quad",
+  "c": "#1e88e5",
+  "k": "#e3f2fd",
+  "a": "#ffca28",
+  "e": "dog",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "sea",
+   "town"
+  ],
+  "rarity": 3,
+  "words": [
+   "anchor",
+   "hound"
+  ],
+  "dexEn": "Anchorhound can pull a boat to the shore. It works all day and never feels tired.",
+  "dexZh": "锚链犬能把小船拉到岸边，它整天干活也不觉得累。"
+ },
+ {
+  "no": 337,
+  "id": "seawolf",
+  "en": "Seawolf",
+  "zh": "海狼船长",
+  "types": [
+   "water",
+   "steel"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 80,
+  "atk": 22,
+  "b": "quad",
+  "c": "#1e88e5",
+  "k": "#e3f2fd",
+  "a": "#ffca28",
+  "e": "fin",
+  "t": "fin",
+  "w": "none",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "mane",
+   "scarf"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "sea"
+  ],
+  "rarity": 4,
+  "words": [
+   "sea",
+   "wolf"
+  ],
+  "dexEn": "Seawolf leads ships across the stormy sea. It never gets lost.",
+  "dexZh": "海狼船长带领船只穿过风暴中的大海，它从来不会迷路。"
+ },
+ {
+  "no": 338,
+  "id": "jellysail",
+  "en": "Jellysail",
+  "zh": "帆水母",
+  "types": [
+   "water",
+   "poison"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 48,
+  "atk": 13,
+  "b": "blob",
+  "c": "#ce93d8",
+  "k": "#f3e5f5",
+  "a": "#4fc3f7",
+  "e": "crest",
+  "t": "long",
+  "w": "none",
+  "p": "spots",
+  "m": "o",
+  "x": [],
+  "sz": 0.95,
+  "habitat": [
+   "sea"
+  ],
+  "rarity": 2,
+  "words": [
+   "jelly",
+   "sail"
+  ],
+  "dexEn": "Jellysail uses its body like a sail. The wind carries it across the sea.",
+  "dexZh": "帆水母把身体当成船帆，风会带着它漂过大海。"
+ },
+ {
+  "no": 339,
+  "id": "paintdrop",
+  "en": "Paintdrop",
+  "zh": "颜料滴",
+  "types": [
+   "poison"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "paintsplash",
+    "lv": 26
+   }
+  ],
+  "hp": 38,
+  "atk": 10,
+  "b": "blob",
+  "c": "#ab47bc",
+  "k": "#f3e5f5",
+  "a": "#ffeb3b",
+  "e": "round",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "town",
+   "swamp"
+  ],
+  "rarity": 2,
+  "words": [
+   "paint",
+   "drop"
+  ],
+  "dexEn": "Paintdrop leaves colorful spots on walls. Never put its paint in your mouth.",
+  "dexZh": "颜料滴会在墙上留下彩色的斑点。千万别把它的颜料放进嘴里。"
+ },
+ {
+  "no": 340,
+  "id": "paintsplash",
+  "en": "Paintsplash",
+  "zh": "泼彩怪",
+  "types": [
+   "poison"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 58,
+  "atk": 17,
+  "b": "biped",
+  "c": "#ab47bc",
+  "k": "#f3e5f5",
+  "a": "#ffeb3b",
+  "e": "curl",
+  "t": "curl",
+  "w": "none",
+  "p": "spots",
+  "m": "grin",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "town",
+   "swamp"
+  ],
+  "rarity": 3,
+  "words": [
+   "paint",
+   "splash"
+  ],
+  "dexEn": "Paintsplash throws paint to make big pictures. Every picture shows how it feels.",
+  "dexZh": "泼彩怪泼颜料画出大大的画，每幅画都表现出它的心情。"
+ },
+ {
+  "no": 341,
+  "id": "drumfrog",
+  "en": "Drumfrog",
+  "zh": "鼓鼓蛙",
+  "types": [
+   "spark"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "drumking",
+    "item": "thunderstone"
+   }
+  ],
+  "hp": 46,
+  "atk": 12,
+  "b": "biped",
+  "c": "#ffca28",
+  "k": "#fff8e1",
+  "a": "#6d4c41",
+  "e": "round",
+  "t": "none",
+  "w": "none",
+  "p": "spots",
+  "m": "o",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "swamp",
+   "water"
+  ],
+  "rarity": 3,
+  "words": [
+   "drum",
+   "frog"
+  ],
+  "dexEn": "Drumfrog hits its round belly like a drum. The sound makes small sparks.",
+  "dexZh": "鼓鼓蛙像敲鼓一样拍打圆肚子，声音会冒出小电火花。"
+ },
+ {
+  "no": 342,
+  "id": "drumking",
+  "en": "Drumking",
+  "zh": "雷鼓王",
+  "types": [
+   "spark",
+   "fight"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 64,
+  "atk": 18,
+  "b": "biped",
+  "c": "#ffca28",
+  "k": "#fff8e1",
+  "a": "#6d4c41",
+  "e": "crown",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "swamp",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "drum",
+   "king"
+  ],
+  "dexEn": "Drumking plays a thunder song before every battle. Its beat shakes the ground.",
+  "dexZh": "雷鼓王每次战斗前都会演奏雷鸣之歌，鼓点让大地都在摇晃。"
+ },
+ {
+  "no": 343,
+  "id": "kelplet",
+  "en": "Kelplet",
+  "zh": "海藻宝",
+  "types": [
+   "grass"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "kelpdrifter",
+    "lv": 30
+   }
+  ],
+  "hp": 40,
+  "atk": 11,
+  "b": "serpent",
+  "c": "#43a047",
+  "k": "#dcedc8",
+  "a": "#26c6da",
+  "e": "leaf",
+  "t": "leaf",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "sea",
+   "water"
+  ],
+  "rarity": 2,
+  "words": [
+   "kelp",
+   "-let"
+  ],
+  "dexEn": "Kelplet dances slowly with the waves. Small fish hide in its leaves.",
+  "dexZh": "海藻宝随着海浪慢慢跳舞，小鱼会躲在它的叶子里。"
+ },
+ {
+  "no": 344,
+  "id": "kelpdrifter",
+  "en": "Kelpdrifter",
+  "zh": "海藻漂客",
+  "types": [
+   "grass",
+   "water"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 62,
+  "atk": 16,
+  "b": "serpent",
+  "c": "#43a047",
+  "k": "#dcedc8",
+  "a": "#26c6da",
+  "e": "leaf",
+  "t": "leaf",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [
+   "leafback"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "sea"
+  ],
+  "rarity": 3,
+  "words": [
+   "kelp",
+   "drifter"
+  ],
+  "dexEn": "Kelpdrifter goes on long trips with the waves. It visits islands all over the world.",
+  "dexZh": "海藻漂客跟着海浪去远方旅行，它拜访过世界各地的小岛。"
+ },
+ {
+  "no": 345,
+  "id": "twirlflame",
+  "en": "Twirlflame",
+  "zh": "旋转火苗",
+  "types": [
+   "fire"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "firedancer",
+    "lv": 30
+   }
+  ],
+  "hp": 42,
+  "atk": 12,
+  "b": "biped",
+  "c": "#ef5350",
+  "k": "#ffebee",
+  "a": "#ffca28",
+  "e": "flame",
+  "t": "flame",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "volcano",
+   "town"
+  ],
+  "rarity": 3,
+  "words": [
+   "twirl",
+   "flame"
+  ],
+  "dexEn": "Twirlflame spins on one foot all day. It leaves circles of fire.",
+  "dexZh": "旋转火苗整天用一只脚转圈，身后留下一圈圈火焰。"
+ },
+ {
+  "no": 346,
+  "id": "firedancer",
+  "en": "Firedancer",
+  "zh": "火焰舞者",
+  "types": [
+   "fire"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 60,
+  "atk": 18,
+  "b": "biped",
+  "c": "#ef5350",
+  "k": "#ffebee",
+  "a": "#ffca28",
+  "e": "flame",
+  "t": "flame",
+  "w": "feather",
+  "p": "star",
+  "m": "grin",
+  "x": [
+   "scarf",
+   "flames"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "volcano",
+   "town"
+  ],
+  "rarity": 4,
+  "words": [
+   "fire",
+   "dancer"
+  ],
+  "dexEn": "Firedancer dances in the air like a bright flame. Crowds clap for its shows.",
+  "dexZh": "火焰舞者像明亮的火焰一样在空中跳舞，观众都为它的表演鼓掌。"
+ },
+ {
+  "no": 347,
+  "id": "echobat",
+  "en": "Echobat",
+  "zh": "回声蝠",
+  "types": [
+   "dark",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "echowing",
+    "lv": 28
+   }
+  ],
+  "hp": 40,
+  "atk": 11,
+  "b": "bird",
+  "c": "#5e35b1",
+  "k": "#d1c4e9",
+  "a": "#ffeb3b",
+  "e": "cat",
+  "t": "none",
+  "w": "bat",
+  "p": "none",
+  "m": "fang",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "cave",
+   "night"
+  ],
+  "rarity": 2,
+  "words": [
+   "echo",
+   "bat"
+  ],
+  "dexEn": "Echobat shouts in dark caves. It listens to the echo to find its way.",
+  "dexZh": "回声蝠在黑暗的山洞里大喊，靠听回声来找路。"
+ },
+ {
+  "no": 348,
+  "id": "echowing",
+  "en": "Echowing",
+  "zh": "回响翼",
+  "types": [
+   "dark",
+   "flying"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 60,
+  "atk": 17,
+  "b": "bird",
+  "c": "#5e35b1",
+  "k": "#d1c4e9",
+  "a": "#ffeb3b",
+  "e": "cat",
+  "t": "long",
+  "w": "bat",
+  "p": "mask",
+  "m": "fang",
+  "x": [],
+  "sz": 1.15,
+  "habitat": [
+   "cave",
+   "night",
+   "sky"
+  ],
+  "rarity": 3,
+  "words": [
+   "echo",
+   "wing"
+  ],
+  "dexEn": "Echowing can copy any voice it hears. It repeats your words back to you.",
+  "dexZh": "回响翼能模仿听到的任何声音，它会把你的话再说一遍给你听。"
+ },
+ {
+  "no": 349,
+  "id": "inkpot",
+  "en": "Inkpot",
+  "zh": "墨水罐",
+  "types": [
+   "ghost",
+   "poison"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 52,
+  "atk": 15,
+  "b": "blob",
+  "c": "#37474f",
+  "k": "#90a4ae",
+  "a": "#7e57c2",
+  "e": "round",
+  "t": "curl",
+  "w": "none",
+  "p": "spots",
+  "m": "o",
+  "x": [],
+  "sz": 0.95,
+  "habitat": [
+   "town",
+   "ruins",
+   "night"
+  ],
+  "rarity": 3,
+  "words": [
+   "ink",
+   "pot"
+  ],
+  "dexEn": "Inkpot lives on old writers' desks. It writes secret stories at night.",
+  "dexZh": "墨水罐住在老作家的书桌上，它会在夜里写下秘密的故事。"
+ },
+ {
+  "no": 350,
+  "id": "cliffkid",
+  "en": "Cliffkid",
+  "zh": "崖羊仔",
+  "types": [
+   "rock"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "cliffram",
+    "lv": 32
+   }
+  ],
+  "hp": 42,
+  "atk": 12,
+  "b": "quad",
+  "c": "#a1887f",
+  "k": "#efebe9",
+  "a": "#6d4c41",
+  "e": "horn",
+  "t": "fluffy",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "mountain"
+  ],
+  "rarity": 2,
+  "words": [
+   "cliff",
+   "kid"
+  ],
+  "dexEn": "Cliffkid jumps from rock to rock without fear. A kid is a baby goat.",
+  "dexZh": "崖羊仔毫不害怕地在岩石间跳来跳去。英语里 kid 也指小山羊。"
+ },
+ {
+  "no": 351,
+  "id": "cliffram",
+  "en": "Cliffram",
+  "zh": "崖角羊",
+  "types": [
+   "rock",
+   "fight"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 62,
+  "atk": 18,
+  "b": "quad",
+  "c": "#a1887f",
+  "k": "#efebe9",
+  "a": "#6d4c41",
+  "e": "horns",
+  "t": "fluffy",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "mane"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "cliff",
+   "ram"
+  ],
+  "dexEn": "Cliffram hits rocks with its big horns. It guards the mountain path.",
+  "dexZh": "崖角羊用大角撞击岩石，它守护着山间小路。"
+ },
+ {
+  "no": 352,
+  "id": "claypup",
+  "en": "Claypup",
+  "zh": "陶土犬",
+  "types": [
+   "ground"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "clayguard",
+    "lv": 26
+   }
+  ],
+  "hp": 40,
+  "atk": 11,
+  "b": "quad",
+  "c": "#c1703f",
+  "k": "#f3d9c4",
+  "a": "#6d4c41",
+  "e": "dog",
+  "t": "curl",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "ruins",
+   "desert"
+  ],
+  "rarity": 3,
+  "words": [
+   "clay",
+   "pup"
+  ],
+  "dexEn": "Claypup was made from clay long ago. It still guards old places.",
+  "dexZh": "陶土犬是很久以前用陶土做成的，它至今还守护着古老的地方。"
+ },
+ {
+  "no": 353,
+  "id": "clayguard",
+  "en": "Clayguard",
+  "zh": "陶俑卫士",
+  "types": [
+   "ground"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "claygeneral",
+    "lv": 46
+   }
+  ],
+  "hp": 58,
+  "atk": 16,
+  "b": "biped",
+  "c": "#c1703f",
+  "k": "#f3d9c4",
+  "a": "#6d4c41",
+  "e": "crest",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "o",
+  "x": [
+   "scarf"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "ruins",
+   "desert"
+  ],
+  "rarity": 3,
+  "words": [
+   "clay",
+   "guard"
+  ],
+  "dexEn": "Clayguard stands still for many years. It moves when someone is in danger.",
+  "dexZh": "陶俑卫士一动不动地站了很多年，有人遇到危险时它才会行动。"
+ },
+ {
+  "no": 354,
+  "id": "claygeneral",
+  "en": "Claygeneral",
+  "zh": "陶俑将军",
+  "types": [
+   "ground",
+   "steel"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 80,
+  "atk": 23,
+  "b": "golem",
+  "c": "#c1703f",
+  "k": "#f3d9c4",
+  "a": "#6d4c41",
+  "e": "crest",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "crown",
+   "spikesback"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "ruins",
+   "desert"
+  ],
+  "rarity": 4,
+  "words": [
+   "clay",
+   "general"
+  ],
+  "dexEn": "Claygeneral leads an army of clay friends. Old stories say it is a thousand years old.",
+  "dexZh": "陶俑将军带领着一支陶土朋友组成的军队。古老的故事说它已经一千岁了。"
+ },
+ {
+  "no": 355,
+  "id": "harppup",
+  "en": "Harppup",
+  "zh": "竖琴仔",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "harpseal",
+    "lv": 32
+   }
+  ],
+  "hp": 42,
+  "atk": 10,
+  "b": "quad",
+  "c": "#e0f2f7",
+  "k": "#ffffff",
+  "a": "#4fc3f7",
+  "e": "round",
+  "t": "fin",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "sea",
+   "snow"
+  ],
+  "rarity": 3,
+  "words": [
+   "harp",
+   "pup"
+  ],
+  "dexEn": "Harppup sings to the moon on the ice. Its voice sounds like a harp.",
+  "dexZh": "竖琴仔在冰面上对着月亮唱歌，它的声音像竖琴一样好听。"
+ },
+ {
+  "no": 356,
+  "id": "harpseal",
+  "en": "Harpseal",
+  "zh": "竖琴海豹",
+  "types": [
+   "water",
+   "ice"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 64,
+  "atk": 16,
+  "b": "quad",
+  "c": "#e0f2f7",
+  "k": "#ffffff",
+  "a": "#4fc3f7",
+  "e": "round",
+  "t": "fin",
+  "w": "none",
+  "p": "spots",
+  "m": "smile",
+  "x": [
+   "whiskers"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "sea",
+   "snow"
+  ],
+  "rarity": 3,
+  "words": [
+   "harp",
+   "seal"
+  ],
+  "dexEn": "Harpseal plays music with its long whiskers. Sailors hear its songs in the north.",
+  "dexZh": "竖琴海豹用长长的胡须弹奏音乐，水手们在北方能听到它的歌。"
+ },
+ {
+  "no": 357,
+  "id": "sailray",
+  "en": "Sailray",
+  "zh": "帆鳐",
+  "types": [
+   "water",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 54,
+  "atk": 15,
+  "b": "fish",
+  "c": "#4dd0e1",
+  "k": "#e0f7fa",
+  "a": "#ffffff",
+  "e": "fin",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 1.05,
+  "habitat": [
+   "sea",
+   "sky"
+  ],
+  "rarity": 3,
+  "words": [
+   "sail",
+   "ray"
+  ],
+  "dexEn": "Sailray jumps out of the sea and glides like a boat. It races ships for fun.",
+  "dexZh": "帆鳐跳出海面，像小船一样滑行。它喜欢和大船比赛。"
+ },
+ {
+  "no": 358,
+  "id": "lampshell",
+  "en": "Lampshell",
+  "zh": "灯壳蟹",
+  "types": [
+   "fire"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "lighthouse",
+    "lv": 34
+   }
+  ],
+  "hp": 40,
+  "atk": 11,
+  "b": "shell",
+  "c": "#ff7043",
+  "k": "#fbe9e7",
+  "a": "#ffee58",
+  "e": "flame",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "sea",
+   "town"
+  ],
+  "rarity": 3,
+  "words": [
+   "lamp",
+   "shell"
+  ],
+  "dexEn": "Lampshell carries a small lamp on its back. It helps lost ships at night.",
+  "dexZh": "灯壳蟹背上背着一盏小灯，夜里会帮助迷路的船。"
+ },
+ {
+  "no": 359,
+  "id": "lighthouse",
+  "en": "Lighthouse",
+  "zh": "灯塔蟹",
+  "types": [
+   "fire",
+   "steel"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 64,
+  "atk": 17,
+  "b": "shell",
+  "c": "#ff7043",
+  "k": "#fbe9e7",
+  "a": "#ffee58",
+  "e": "flame",
+  "t": "none",
+  "w": "none",
+  "p": "stripes",
+  "m": "o",
+  "x": [
+   "flames"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "sea",
+   "town"
+  ],
+  "rarity": 4,
+  "words": [
+   "light",
+   "house"
+  ],
+  "dexEn": "Lighthouse stands by the harbor all night. Its bright light keeps sailors safe.",
+  "dexZh": "灯塔蟹整夜守在港口边，它明亮的光让水手们平平安安。"
+ },
+ {
+  "no": 360,
+  "id": "runelet",
+  "en": "Runelet",
+  "zh": "符文石",
+  "types": [
+   "rock"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "runegolem",
+    "lv": 34
+   }
+  ],
+  "hp": 42,
+  "atk": 11,
+  "b": "blob",
+  "c": "#90a4ae",
+  "k": "#eceff1",
+  "a": "#4dd0e1",
+  "e": "gem",
+  "t": "none",
+  "w": "none",
+  "p": "star",
+  "m": "o",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "ruins",
+   "cave"
+  ],
+  "rarity": 3,
+  "words": [
+   "rune",
+   "-let"
+  ],
+  "dexEn": "Runelet has old letters on its body. Nobody can read them yet.",
+  "dexZh": "符文石身上刻着古老的文字，现在还没有人能读懂。"
+ },
+ {
+  "no": 361,
+  "id": "runegolem",
+  "en": "Runegolem",
+  "zh": "符文巨像",
+  "types": [
+   "rock",
+   "psychic"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 64,
+  "atk": 17,
+  "b": "golem",
+  "c": "#90a4ae",
+  "k": "#eceff1",
+  "a": "#4dd0e1",
+  "e": "gem",
+  "t": "none",
+  "w": "none",
+  "p": "star",
+  "m": "o",
+  "x": [
+   "crystals"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "ruins",
+   "cave"
+  ],
+  "rarity": 4,
+  "words": [
+   "rune",
+   "golem"
+  ],
+  "dexEn": "Runegolem's letters glow when it tells a legend. Scientists try to learn its language.",
+  "dexZh": "符文巨像讲传说时，身上的文字会发光。科学家们在努力学习它的语言。"
+ },
+ {
+  "no": 362,
+  "id": "peakbloom",
+  "en": "Peakbloom",
+  "zh": "山巅花",
+  "types": [
+   "grass",
+   "ice"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 50,
+  "atk": 13,
+  "b": "plant",
+  "c": "#81c784",
+  "k": "#ffffff",
+  "a": "#e1f5fe",
+  "e": "flower",
+  "t": "none",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [],
+  "sz": 0.95,
+  "habitat": [
+   "mountain",
+   "snow"
+  ],
+  "rarity": 3,
+  "words": [
+   "peak",
+   "bloom"
+  ],
+  "dexEn": "Peakbloom opens its flower only on the highest peaks. It is not afraid of snow.",
+  "dexZh": "山巅花只在最高的山峰上开花，它一点也不怕雪。"
+ },
+ {
+  "no": 363,
+  "id": "aurorakit",
+  "en": "Aurorakit",
+  "zh": "极光小兔",
+  "types": [
+   "ice"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "aurorahare",
+    "lv": 36
+   }
+  ],
+  "hp": 42,
+  "atk": 11,
+  "b": "quad",
+  "c": "#80cbc4",
+  "k": "#e0f2f1",
+  "a": "#ba68c8",
+  "e": "bunny",
+  "t": "fluffy",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.85,
+  "habitat": [
+   "snow",
+   "night"
+  ],
+  "rarity": 3,
+  "words": [
+   "aurora",
+   "kit"
+  ],
+  "dexEn": "Aurorakit's tail glows green and purple at night. It loves cold, clear skies.",
+  "dexZh": "极光小兔的尾巴在夜里发出绿色和紫色的光，它喜欢寒冷晴朗的天空。"
+ },
+ {
+  "no": 364,
+  "id": "aurorahare",
+  "en": "Aurorahare",
+  "zh": "极光兔",
+  "types": [
+   "ice",
+   "psychic"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 64,
+  "atk": 17,
+  "b": "quad",
+  "c": "#80cbc4",
+  "k": "#e0f2f1",
+  "a": "#ba68c8",
+  "e": "bunny",
+  "t": "fluffy",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [
+   "crystals"
+  ],
+  "sz": 1.15,
+  "habitat": [
+   "snow",
+   "night",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "aurora",
+   "hare"
+  ],
+  "dexEn": "When Aurorahare jumps, lights fill the night sky. People travel far to see it.",
+  "dexZh": "极光兔一跳，夜空就布满光芒。人们从很远的地方赶来看它。"
+ },
+ {
+  "no": 365,
+  "id": "snowyak",
+  "en": "Snowyak",
+  "zh": "雪牦牛",
+  "types": [
+   "ice"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 70,
+  "atk": 17,
+  "b": "quad",
+  "c": "#eceff1",
+  "k": "#ffffff",
+  "a": "#5d4037",
+  "e": "horns",
+  "t": "fluffy",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [
+   "mane"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "snow",
+   "mountain"
+  ],
+  "rarity": 3,
+  "words": [
+   "snow",
+   "yak"
+  ],
+  "dexEn": "Snowyak carries travelers over snowy mountains. Its thick hair keeps it warm.",
+  "dexZh": "雪牦牛驮着旅行者翻过雪山，厚厚的毛让它很暖和。"
+ },
+ {
+  "no": 366,
+  "id": "medalcub",
+  "en": "Medalcub",
+  "zh": "奖牌小虎",
+  "types": [
+   "steel"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "trophytiger",
+    "lv": 38
+   }
+  ],
+  "hp": 44,
+  "atk": 12,
+  "b": "quad",
+  "c": "#ffd54f",
+  "k": "#fff8e1",
+  "a": "#90a4ae",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "town",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "medal",
+   "cub"
+  ],
+  "dexEn": "Medalcub wears a shiny medal on its neck. It wants to win every race.",
+  "dexZh": "奖牌小虎脖子上挂着闪亮的奖牌，它想赢得每一场比赛。"
+ },
+ {
+  "no": 367,
+  "id": "trophytiger",
+  "en": "Trophytiger",
+  "zh": "奖杯虎王",
+  "types": [
+   "steel",
+   "fight"
+  ],
+  "stage": 2,
+  "evo": [],
+  "hp": 64,
+  "atk": 18,
+  "b": "quad",
+  "c": "#ffd54f",
+  "k": "#fff8e1",
+  "a": "#90a4ae",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "crown"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "town",
+   "mountain"
+  ],
+  "rarity": 4,
+  "words": [
+   "trophy",
+   "tiger"
+  ],
+  "dexEn": "Trophytiger has beaten many strong trainers. Its golden body shines like a trophy.",
+  "dexZh": "奖杯虎王打败过很多强大的训练师，它金色的身体像奖杯一样闪亮。"
+ },
+ {
+  "no": 368,
+  "id": "swordfin",
+  "en": "Swordfin",
+  "zh": "剑鳍鱼",
+  "types": [
+   "steel",
+   "water"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 56,
+  "atk": 17,
+  "b": "fish",
+  "c": "#78909c",
+  "k": "#eceff1",
+  "a": "#29b6f6",
+  "e": "fin",
+  "t": "fin",
+  "w": "none",
+  "p": "stripes",
+  "m": "fang",
+  "x": [],
+  "sz": 1.05,
+  "habitat": [
+   "sea"
+  ],
+  "rarity": 3,
+  "words": [
+   "sword",
+   "fin"
+  ],
+  "dexEn": "Swordfin's nose is sharp like a sword. It swims faster than a boat.",
+  "dexZh": "剑鳍鱼的鼻子像剑一样尖，它游得比船还快。"
+ },
+ {
+  "no": 369,
+  "id": "ghostsail",
+  "en": "Ghostsail",
+  "zh": "幽灵帆",
+  "types": [
+   "ghost",
+   "water"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 58,
+  "atk": 17,
+  "b": "ghost",
+  "c": "#b0bec5",
+  "k": "#eceff1",
+  "a": "#4db6ac",
+  "e": "none",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "o",
+  "x": [
+   "cloud"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "sea",
+   "night"
+  ],
+  "rarity": 4,
+  "words": [
+   "ghost",
+   "sail"
+  ],
+  "dexEn": "Ghostsail looks like an old white sail. It sails on foggy nights and helps lost boats.",
+  "dexZh": "幽灵帆看起来像一面旧的白帆，它在起雾的夜里航行，帮助迷路的船。"
+ },
+ {
+  "no": 370,
+  "id": "mythowl",
+  "en": "Mythowl",
+  "zh": "神话鸮",
+  "types": [
+   "dark",
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 62,
+  "atk": 18,
+  "b": "bird",
+  "c": "#4527a0",
+  "k": "#d1c4e9",
+  "a": "#ffab40",
+  "e": "cat",
+  "t": "feather",
+  "w": "feather",
+  "p": "mask",
+  "m": "beak",
+  "x": [],
+  "sz": 1.05,
+  "habitat": [
+   "night",
+   "ruins",
+   "forest"
+  ],
+  "rarity": 4,
+  "words": [
+   "myth",
+   "owl"
+  ],
+  "dexEn": "Mythowl knows every myth in the world. It tells them to children at night.",
+  "dexZh": "神话鸮知道世界上所有的神话，它会在夜里讲给孩子们听。"
+ },
+ {
+  "no": 371,
+  "id": "peakling",
+  "en": "Peakling",
+  "zh": "山峰小龙",
+  "types": [
+   "dragon"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "peakdrake",
+    "lv": 30
+   }
+  ],
+  "hp": 44,
+  "atk": 12,
+  "b": "quad",
+  "c": "#5c6bc0",
+  "k": "#e8eaf6",
+  "a": "#b0bec5",
+  "e": "horn",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 0.9,
+  "habitat": [
+   "mountain",
+   "sky"
+  ],
+  "rarity": 5,
+  "words": [
+   "peak",
+   "-ling"
+  ],
+  "dexEn": "Peakling climbs to the top of high mountains. It dreams of flying one day.",
+  "dexZh": "山峰小龙会爬到高山顶上，它梦想有一天能飞起来。"
+ },
+ {
+  "no": 372,
+  "id": "peakdrake",
+  "en": "Peakdrake",
+  "zh": "山峰翼龙",
+  "types": [
+   "dragon",
+   "flying"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "summitdragon",
+    "lv": 50
+   }
+  ],
+  "hp": 62,
+  "atk": 18,
+  "b": "quad",
+  "c": "#5c6bc0",
+  "k": "#e8eaf6",
+  "a": "#b0bec5",
+  "e": "horns",
+  "t": "long",
+  "w": "bat",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "spikesback"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "mountain",
+   "sky"
+  ],
+  "rarity": 5,
+  "words": [
+   "peak",
+   "drake"
+  ],
+  "dexEn": "Peakdrake's small wings are not strong yet. It practices flying from cliffs every day.",
+  "dexZh": "山峰翼龙的小翅膀还不够有力，它每天都从悬崖上练习飞行。"
+ },
+ {
+  "no": 373,
+  "id": "summitdragon",
+  "en": "Summitdragon",
+  "zh": "巅峰龙王",
+  "types": [
+   "dragon",
+   "flying"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 80,
+  "atk": 24,
+  "b": "dragon",
+  "c": "#5c6bc0",
+  "k": "#e8eaf6",
+  "a": "#b0bec5",
+  "e": "horns",
+  "t": "spike",
+  "w": "bat",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "crown",
+   "spikesback"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "mountain",
+   "sky"
+  ],
+  "rarity": 5,
+  "words": [
+   "summit",
+   "dragon"
+  ],
+  "dexEn": "Summitdragon flies above the highest summit in the world. Only true champions ever see it.",
+  "dexZh": "巅峰龙王在世界最高的山顶上空飞翔，只有真正的冠军才见过它。"
+ },
+ {
+  "no": 374,
+  "id": "hopeflame",
+  "en": "Hopeflame",
+  "zh": "希望火",
+  "types": [
+   "fire"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 60,
+  "atk": 18,
+  "b": "blob",
+  "c": "#ffb74d",
+  "k": "#fffde7",
+  "a": "#ff7043",
+  "e": "flame",
+  "t": "none",
+  "w": "none",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "crystals"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "mountain",
+   "town",
+   "night"
+  ],
+  "rarity": 4,
+  "words": [
+   "hope",
+   "flame"
+  ],
+  "dexEn": "Hopeflame burns at the gate of the champion league. Its fire never goes out.",
+  "dexZh": "希望火在冠军联盟的大门前燃烧，它的火焰永远不会熄灭。"
+ },
+ {
+  "no": 375,
+  "id": "mythserpent",
+  "en": "Mythserpent",
+  "zh": "神话海蛇",
+  "types": [
+   "water",
+   "dragon"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 72,
+  "atk": 20,
+  "b": "serpent",
+  "c": "#00897b",
+  "k": "#b2dfdb",
+  "a": "#ffd54f",
+  "e": "crest",
+  "t": "fin",
+  "w": "none",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "spikesback"
+  ],
+  "sz": 1.3,
+  "habitat": [
+   "sea"
+  ],
+  "rarity": 4,
+  "words": [
+   "myth",
+   "serpent"
+  ],
+  "dexEn": "Sailors tell stories about Mythserpent. Few people have seen it in real life.",
+  "dexZh": "水手们讲述着神话海蛇的故事，真正见过它的人却很少。"
+ },
+ {
+  "no": 376,
+  "id": "gloryhorn",
+  "en": "Gloryhorn",
+  "zh": "荣耀角",
+  "types": [
+   "normal"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 72,
+  "atk": 20,
+  "b": "quad",
+  "c": "#fafafa",
+  "k": "#ffffff",
+  "a": "#ffc107",
+  "e": "horn",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "mane",
+   "crown"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "mountain",
+   "sky"
+  ],
+  "rarity": 5,
+  "words": [
+   "glory",
+   "horn"
+  ],
+  "dexEn": "Gloryhorn appears when a new champion wins. Its golden horn shines like the sun.",
+  "dexZh": "新的冠军诞生时，荣耀角就会出现，它金色的角像太阳一样闪耀。"
+ }
+]

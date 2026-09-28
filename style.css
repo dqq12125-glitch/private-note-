@@ -766,3 +766,26 @@ body.in-world { overflow: hidden; }
 .ng-mons { display: flex; justify-content: center; gap: 4px; }
 .ng-mons .st-svg { width: 84px; }
 .ng-mons svg { width: 100%; height: auto; }
+
+/* ---------- 3D 战斗画面 ---------- */
+.arena .b3d { position: absolute; inset: 0; z-index: 0; display: block; }
+.arena.is3d .arena-bg, .arena.is3d .pad, .arena.is3d .mon, .arena.is3d .proj, .arena.is3d .fx, .arena.is3d .fx-flash { display: none; }
+.arena.is3d .hpcard, .arena.is3d .trainer, .arena.is3d .b-pop { z-index: 2; }
+.b3d-flash { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; }
+.mon-img { object-fit: contain; aspect-ratio: 1; }
+.mv-eff { font-style: normal; font-weight: 800; color: #d32f2f; }
+/* 图鉴 */
+.dex-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0; font-weight: 800; }
+.dex-i { position: relative; border: 0; font: inherit; color: inherit; cursor: pointer; }
+.dex-i:disabled { cursor: default; }
+.dex-no { position: absolute; top: 4px; left: 6px; font-size: 11px; color: var(--ink-2); font-weight: 800; }
+.dex-i.seen .dex-svg img { filter: brightness(0) opacity(.3); }
+.dex-big { width: 180px; margin: 0 auto; }
+.dex-en { font-family: var(--f-display); font-size: 18px; text-align: center; }
+.dex-zh { text-align: center; color: var(--ink-2); }
+.dex-chain { display: flex; justify-content: center; align-items: flex-end; gap: 4px; flex-wrap: wrap; margin: 8px 0; }
+.dc { display: flex; flex-direction: column; align-items: center; font-size: 12px; }
+.dc i { font-style: normal; color: var(--ink-2); font-size: 11px; }
+.dc-svg { width: 64px; height: 64px; }
+.dc.on small { font-weight: 800; color: var(--lagoon); }
+.moves .move.ult { grid-column: auto; }

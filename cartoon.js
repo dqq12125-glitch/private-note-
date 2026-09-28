@@ -201,5 +201,17 @@
     return '<svg class="mon-svg" viewBox="-14 -34 156 156" aria-hidden="true"><ellipse cx="60" cy="' + (cy + ry + 4) + '" rx="' + (rx + 4) + '" ry="6" fill="rgba(0,0,0,.14)"/><g class="m-body">' + back + front + '</g></svg>';
   }
 
-  window.Cartoon = { actor: actorSVG, set: setSVG, has: name => !!CHARS[name], monster: monsterSVG };
+  function legacy(sp) {
+    const ears = { cat: 'cat', dog: 'dog', round: 'round', bunny: 'round', leaf: 'leaf', flower: 'leaf', fin: 'fin', antenna: 'antenna' }[sp.e] || 'round';
+    const tail = { flame: 'flame', fin: 'fin', leaf: 'leaf', bolt: 'bolt' }[sp.t] || 'none';
+    const x = sp.x || [];
+    return { color: sp.c, belly: sp.k, accent: sp.a, ears, tail, stage: sp.stage, shape: { quad: 'wide', golem: 'wide', shell: 'wide', biped: 'tall', dragon: 'tall', serpent: 'tall' }[sp.b] || 'round',
+      extra: sp.w && sp.w !== 'none' ? 'wings' : x.includes('mane') ? 'mane' : x.includes('crown') || sp.e === 'crown' ? 'crown' : /horn/.test(sp.e || '') ? 'horn' : '' };
+  }
+  function monster(sp) {
+    if (!sp || !sp.b) return monsterSVG(sp);
+    const url = window.Mon3D ? Mon3D.snapshot(sp, 256) : '';
+    return url ? '<img class="mon-svg mon-img" alt="" src="' + url + '">' : monsterSVG(legacy(sp));
+  }
+  window.Cartoon = { actor: actorSVG, set: setSVG, has: name => !!CHARS[name], monster, monster2d: sp => monsterSVG(sp && sp.b ? legacy(sp) : sp) };
 })();

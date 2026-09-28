@@ -240,6 +240,22 @@
     E.save();
   }
 
+  // ---------- 洞穴深处的神兽（每只只有一次机会） ----------
+  const LEGENDS = { c0: ['rockgiant', 4, 1], c1: ['icegiant', 16, 1], c2: ['irongiant', 15, 1] };
+  async function legendMeet(C, n) {
+    const MG = C.MG, sp = MG.species(n.mon), lv = MG.zoneLv(C.map.route) + 10;
+    await C.talk([
+      nar('The legendary ' + sp.en + ' is looking at you!', '传说中的' + sp.zh + '正盯着你！'),
+      nar('Are you ready? Here it comes!', '准备好了吗？它冲过来了！'),
+    ]);
+    const res = await C.battle('wild', { foes: [MG.newMon(n.mon, lv)], hab: 'cave', noWhiteout: false });
+    if (res === 'win' || res === 'caught') {
+      C.set('leg:' + n.mon);
+      C.remove(n);
+      if (res === 'win') await C.talk([nar(sp.en + ' went back to sleep deep in the cave.', sp.zh + '回到洞穴深处睡着了。再也见不到它了。')]);
+    }
+  }
+
   // ---------- 对外 ----------
   window.EchoStory = {
     enter(C, how) {
@@ -253,6 +269,8 @@
       if (has && !(C.E.S.player && C.E.S.player.name)) return () => intro(C, true);
       if (id === 'i0H' && !C.flag('intro')) return () => wakeUp(C);
       if (id === 't0' && C.flag('mom') && !C.flag('starter')) return () => rescue(C);
+      const L = LEGENDS[id];
+      if (L && !C.flag('leg:' + L[0]) && !C.npc(n => n.mon === L[0])) return () => { C.spawn({ mon: L[0], role: 'legend', x: L[1], y: L[2], face: 'down' }); };
       return null;
     },
     step(C) {
@@ -262,6 +280,7 @@
     },
     talk(C, n) {
       if (C.map.id === 'i0H' && n.role === 'house') return () => momTalk(C, n);
+      if (n.role === 'legend') return () => legendMeet(C, n);
       return null;
     },
     hidden(C, n) {

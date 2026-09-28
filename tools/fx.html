@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>技能特效预览</title>
+<style>body { margin: 0; font: 13px sans-serif; } #arena { position: relative; width: 390px; height: 300px; overflow: hidden; } #bar { padding: 6px; display: flex; flex-wrap: wrap; gap: 4px; } button { padding: 4px 8px; }</style>
+<div id="arena"></div>
+<div id="bar"></div>
+<script src="../vendor/three.min.js"></script>
+<script src="../dex.js"></script>
+<script src="../monster3d.js"></script>
+<script src="../battle3d.js"></script>
+<script>
+// 技能特效预览：点按钮放招；?me=emberpup&foe=songlet 换怪兽
+const q = new URLSearchParams(location.search);
+const B3 = Battle3D.create(document.getElementById('arena'), {});
+B3.setMon('me', DEX.byId[q.get('me') || 'emberpup']);
+B3.setMon('foe', DEX.byId[q.get('foe') || 'bubbly']);
+window.B3 = B3;
+const bar = document.getElementById('bar');
+DEX.ORDER.forEach(t => [0, 1, 2].forEach(k => {
+  const b = document.createElement('button'); b.textContent = DEX.TYPES[t].zh + k;
+  b.onclick = async () => { await B3.attack('me', t, k); B3.hit('foe', { crit: k === 2 }); };
+  bar.appendChild(b);
+}));
+</script>

@@ -1,0 +1,1183 @@
+[
+ {
+  "no": 1,
+  "id": "sprouty",
+  "en": "Sprouty",
+  "zh": "小芽芽",
+  "types": [
+   "grass"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "bloomtail",
+    "lv": 16
+   }
+  ],
+  "hp": 42,
+  "atk": 10,
+  "b": "blob",
+  "c": "#8bc34a",
+  "k": "#f1f8e9",
+  "a": "#66bb6a",
+  "e": "leaf",
+  "t": "leaf",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 1,
+  "habitat": [
+   "grass",
+   "forest"
+  ],
+  "rarity": 5,
+  "words": [
+   "sprout",
+   "-y"
+  ],
+  "dexEn": "Sprouty loves sunny days. The leaf on its head grows a little every day.",
+  "dexZh": "小芽芽最喜欢晴天。它头上的叶子每天都会长大一点点。",
+  "starter": true
+ },
+ {
+  "no": 2,
+  "id": "bloomtail",
+  "en": "Bloomtail",
+  "zh": "花尾兽",
+  "types": [
+   "grass"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "groveguard",
+    "lv": 36
+   }
+  ],
+  "hp": 56,
+  "atk": 14,
+  "b": "biped",
+  "c": "#43a047",
+  "k": "#dcedc8",
+  "a": "#f48fb1",
+  "e": "flower",
+  "t": "leaf",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "leafback"
+  ],
+  "sz": 1,
+  "habitat": [
+   "forest"
+  ],
+  "rarity": 5,
+  "words": [
+   "bloom",
+   "tail"
+  ],
+  "dexEn": "A flower blooms on its tail. It smells sweet in spring.",
+  "dexZh": "它的尾巴上开着一朵花，春天的时候香香的。"
+ },
+ {
+  "no": 3,
+  "id": "groveguard",
+  "en": "Groveguard",
+  "zh": "林守兽",
+  "types": [
+   "grass",
+   "ground"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 74,
+  "atk": 21,
+  "b": "quad",
+  "c": "#2e7d32",
+  "k": "#c5e1a5",
+  "a": "#f06292",
+  "e": "flower",
+  "t": "leaf",
+  "w": "none",
+  "p": "none",
+  "m": "fang",
+  "x": [
+   "leafback",
+   "mane"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "forest"
+  ],
+  "rarity": 5,
+  "words": [
+   "grove",
+   "guard"
+  ],
+  "dexEn": "Groveguard protects the old forest. Trees grow where it walks.",
+  "dexZh": "林守兽守护着古老的森林。它走过的地方会长出大树。"
+ },
+ {
+  "no": 4,
+  "id": "emberpup",
+  "en": "Emberpup",
+  "zh": "火苗狗",
+  "types": [
+   "fire"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "blazehound",
+    "lv": 16
+   }
+  ],
+  "hp": 38,
+  "atk": 11,
+  "b": "biped",
+  "c": "#ff8a4c",
+  "k": "#ffe0b2",
+  "a": "#ffca28",
+  "e": "dog",
+  "t": "flame",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 1,
+  "habitat": [
+   "grass",
+   "volcano"
+  ],
+  "rarity": 5,
+  "words": [
+   "ember",
+   "pup"
+  ],
+  "dexEn": "Emberpup has a little fire on its tail. It is warm to hug.",
+  "dexZh": "火苗狗的尾巴上有一小团火。抱起来暖暖的。",
+  "starter": true
+ },
+ {
+  "no": 5,
+  "id": "blazehound",
+  "en": "Blazehound",
+  "zh": "烈焰犬",
+  "types": [
+   "fire"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "flamewolf",
+    "lv": 36
+   }
+  ],
+  "hp": 52,
+  "atk": 15,
+  "b": "quad",
+  "c": "#e8532f",
+  "k": "#ffd59e",
+  "a": "#ffca28",
+  "e": "cat",
+  "t": "flame",
+  "w": "none",
+  "p": "none",
+  "m": "fang",
+  "x": [
+   "mane"
+  ],
+  "sz": 1,
+  "habitat": [
+   "volcano"
+  ],
+  "rarity": 5,
+  "words": [
+   "blaze",
+   "hound"
+  ],
+  "dexEn": "Blazehound runs very fast. Its mane burns like the sun.",
+  "dexZh": "烈焰犬跑得飞快，它的鬃毛像太阳一样燃烧。"
+ },
+ {
+  "no": 6,
+  "id": "flamewolf",
+  "en": "Flamewolf",
+  "zh": "炎狼王",
+  "types": [
+   "fire",
+   "fight"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 70,
+  "atk": 23,
+  "b": "quad",
+  "c": "#c62828",
+  "k": "#ffcc80",
+  "a": "#ffd54f",
+  "e": "horns",
+  "t": "flame",
+  "w": "none",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "mane",
+   "flames"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "volcano",
+   "mountain"
+  ],
+  "rarity": 5,
+  "words": [
+   "flame",
+   "wolf"
+  ],
+  "dexEn": "Flamewolf howls on the mountain top. Its voice is very loud.",
+  "dexZh": "炎狼王在山顶上嚎叫，声音非常响亮。"
+ },
+ {
+  "no": 7,
+  "id": "bubbly",
+  "en": "Bubbly",
+  "zh": "泡泡鱼",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [
+   {
+    "to": "tidalfin",
+    "lv": 16
+   }
+  ],
+  "hp": 46,
+  "atk": 9,
+  "b": "blob",
+  "c": "#4fc3f7",
+  "k": "#e1f5fe",
+  "a": "#81d4fa",
+  "e": "fin",
+  "t": "fin",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [],
+  "sz": 1,
+  "habitat": [
+   "water",
+   "sea"
+  ],
+  "rarity": 5,
+  "words": [
+   "bubble",
+   "-y"
+  ],
+  "dexEn": "Bubbly blows bubbles when it is happy. It sings in the rain.",
+  "dexZh": "泡泡鱼开心的时候会吹泡泡，下雨时还会唱歌。",
+  "starter": true
+ },
+ {
+  "no": 8,
+  "id": "tidalfin",
+  "en": "Tidalfin",
+  "zh": "潮汐鳍",
+  "types": [
+   "water"
+  ],
+  "stage": 2,
+  "evo": [
+   {
+    "to": "waveking",
+    "lv": 36
+   }
+  ],
+  "hp": 62,
+  "atk": 13,
+  "b": "fish",
+  "c": "#1e88e5",
+  "k": "#bbdefb",
+  "a": "#ffd54f",
+  "e": "fin",
+  "t": "fin",
+  "w": "none",
+  "p": "stripes",
+  "m": "smile",
+  "x": [
+   "crown"
+  ],
+  "sz": 1,
+  "habitat": [
+   "sea"
+  ],
+  "rarity": 5,
+  "words": [
+   "tidal",
+   "fin"
+  ],
+  "dexEn": "Tidalfin swims with the tide. It can jump over big waves.",
+  "dexZh": "潮汐鳍跟着潮水游泳，能跳过很大的浪。"
+ },
+ {
+  "no": 9,
+  "id": "waveking",
+  "en": "Waveking",
+  "zh": "浪涛王",
+  "types": [
+   "water",
+   "dragon"
+  ],
+  "stage": 3,
+  "evo": [],
+  "hp": 78,
+  "atk": 20,
+  "b": "serpent",
+  "c": "#1565c0",
+  "k": "#e3f2fd",
+  "a": "#ffd54f",
+  "e": "crown",
+  "t": "fin",
+  "w": "none",
+  "p": "none",
+  "m": "fang",
+  "x": [
+   "crystals"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "sea"
+  ],
+  "rarity": 5,
+  "words": [
+   "wave",
+   "king"
+  ],
+  "dexEn": "Waveking rules the deep sea. Ships stop when it sings.",
+  "dexZh": "浪涛王统治着深海。它一唱歌，船都会停下来。"
+ },
+ {
+  "no": 144,
+  "id": "frostwing",
+  "en": "Frostwing",
+  "zh": "霜羽鸟",
+  "types": [
+   "ice",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 82,
+  "atk": 22,
+  "b": "bird",
+  "c": "#81d4fa",
+  "k": "#e1f5fe",
+  "a": "#e0f7fa",
+  "e": "ice",
+  "t": "feather",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [
+   "aura",
+   "crystals"
+  ],
+  "sz": 1,
+  "habitat": [
+   "snow",
+   "sky"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "frost",
+   "wing"
+  ],
+  "dexEn": "Frostwing flies over snowy mountains. Snow falls where it flies.",
+  "dexZh": "霜羽鸟在雪山上空飞翔，它飞过的地方会下雪。"
+ },
+ {
+  "no": 145,
+  "id": "stormwing",
+  "en": "Stormwing",
+  "zh": "雷羽鸟",
+  "types": [
+   "spark",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 80,
+  "atk": 24,
+  "b": "bird",
+  "c": "#fdd835",
+  "k": "#fffde7",
+  "a": "#3949ab",
+  "e": "crest",
+  "t": "bolt",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [
+   "aura"
+  ],
+  "sz": 1,
+  "habitat": [
+   "sky"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "storm",
+   "wing"
+  ],
+  "dexEn": "Stormwing lives in thunder clouds. Its wings make lightning.",
+  "dexZh": "雷羽鸟住在雷雨云里，它扇动翅膀就会打闪电。"
+ },
+ {
+  "no": 146,
+  "id": "blazewing",
+  "en": "Blazewing",
+  "zh": "焰羽鸟",
+  "types": [
+   "fire",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 80,
+  "atk": 24,
+  "b": "bird",
+  "c": "#ff7043",
+  "k": "#ffe0b2",
+  "a": "#ffca28",
+  "e": "flame",
+  "t": "flame",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [
+   "aura",
+   "flames"
+  ],
+  "sz": 1,
+  "habitat": [
+   "volcano",
+   "sky"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "blaze",
+   "wing"
+  ],
+  "dexEn": "Blazewing sleeps in a volcano. Its feathers glow at night.",
+  "dexZh": "焰羽鸟睡在火山里，它的羽毛在夜里会发光。"
+ },
+ {
+  "no": 150,
+  "id": "mindra",
+  "en": "Mindra",
+  "zh": "念灵",
+  "types": [
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 88,
+  "atk": 27,
+  "b": "biped",
+  "c": "#b39ddb",
+  "k": "#ede7f6",
+  "a": "#7e57c2",
+  "e": "cat",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "aura",
+   "crystals"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "ruins"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "fierce",
+  "words": [
+   "mind",
+   "-ra"
+  ],
+  "dexEn": "Mindra can hear your thoughts. It speaks every language.",
+  "dexZh": "念灵能听见你心里的想法，它会说所有的语言。"
+ },
+ {
+  "no": 151,
+  "id": "lullaby",
+  "en": "Lullaby",
+  "zh": "摇篮灵",
+  "types": [
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 80,
+  "atk": 22,
+  "b": "blob",
+  "c": "#f8bbd0",
+  "k": "#ffffff",
+  "a": "#ce93d8",
+  "e": "round",
+  "t": "long",
+  "w": "fairy",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "aura"
+  ],
+  "sz": 0.8,
+  "habitat": [
+   "sky",
+   "ruins"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "big",
+  "words": [
+   "lullaby"
+  ],
+  "dexEn": "Lullaby sings children to sleep. Few people have seen it awake.",
+  "dexZh": "摇篮灵会唱歌哄孩子们睡觉。很少有人见过它醒着的样子。"
+ },
+ {
+  "no": 243,
+  "id": "voltlion",
+  "en": "Voltlion",
+  "zh": "雷狮",
+  "types": [
+   "spark"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 84,
+  "atk": 24,
+  "b": "quad",
+  "c": "#ffd54f",
+  "k": "#fff8e1",
+  "a": "#5c6bc0",
+  "e": "horns",
+  "t": "bolt",
+  "w": "none",
+  "p": "stripes",
+  "m": "fang",
+  "x": [
+   "aura",
+   "mane"
+  ],
+  "sz": 1,
+  "habitat": [
+   "grass",
+   "mountain"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "volt",
+   "lion"
+  ],
+  "dexEn": "Voltlion runs as fast as lightning. It never stays in one place.",
+  "dexZh": "雷狮跑得像闪电一样快，从不在一个地方停留。"
+ },
+ {
+  "no": 244,
+  "id": "flamelion",
+  "en": "Flamelion",
+  "zh": "炎狮",
+  "types": [
+   "fire"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 90,
+  "atk": 24,
+  "b": "quad",
+  "c": "#e65100",
+  "k": "#ffcc80",
+  "a": "#ffd54f",
+  "e": "crown",
+  "t": "flame",
+  "w": "none",
+  "p": "none",
+  "m": "fang",
+  "x": [
+   "aura",
+   "mane",
+   "flames"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "volcano"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "flame",
+   "lion"
+  ],
+  "dexEn": "Flamelion was born in a volcano. Its roar makes the ground shake.",
+  "dexZh": "炎狮在火山里出生，它一吼大地都会摇晃。"
+ },
+ {
+  "no": 245,
+  "id": "springlion",
+  "en": "Springlion",
+  "zh": "泉狮",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 88,
+  "atk": 22,
+  "b": "quad",
+  "c": "#4dd0e1",
+  "k": "#e0f7fa",
+  "a": "#b388ff",
+  "e": "gem",
+  "t": "long",
+  "w": "none",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "aura",
+   "mane"
+  ],
+  "sz": 1,
+  "habitat": [
+   "water"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "spring",
+   "lion"
+  ],
+  "dexEn": "Springlion makes dirty water clean. It walks on rivers.",
+  "dexZh": "泉狮能把脏水变干净，它可以在河面上行走。"
+ },
+ {
+  "no": 249,
+  "id": "tidewing",
+  "en": "Tidewing",
+  "zh": "潮翼",
+  "types": [
+   "psychic",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 96,
+  "atk": 25,
+  "b": "dragon",
+  "c": "#eceff1",
+  "k": "#bbdefb",
+  "a": "#1e88e5",
+  "e": "fin",
+  "t": "long",
+  "w": "feather",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "aura",
+   "spikesback"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "sea"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "tide",
+   "wing"
+  ],
+  "dexEn": "Tidewing sleeps at the bottom of the sea. It wakes up in a storm.",
+  "dexZh": "潮翼睡在海底，暴风雨来的时候才会醒。"
+ },
+ {
+  "no": 250,
+  "id": "rainbowing",
+  "en": "Rainbowing",
+  "zh": "虹翼",
+  "types": [
+   "fire",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 96,
+  "atk": 25,
+  "b": "bird",
+  "c": "#ef5350",
+  "k": "#fff59d",
+  "a": "#66bb6a",
+  "e": "crest",
+  "t": "feather",
+  "w": "feather",
+  "p": "none",
+  "m": "beak",
+  "x": [
+   "aura",
+   "crown"
+  ],
+  "sz": 1.1,
+  "habitat": [
+   "sky"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "rainbow",
+   "wing"
+  ],
+  "dexEn": "A rainbow follows Rainbowing. It brings good luck.",
+  "dexZh": "虹翼飞过的地方会出现彩虹，它会带来好运。"
+ },
+ {
+  "no": 251,
+  "id": "timesprout",
+  "en": "Timesprout",
+  "zh": "时之芽",
+  "types": [
+   "psychic",
+   "grass"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 84,
+  "atk": 22,
+  "b": "plant",
+  "c": "#aed581",
+  "k": "#f1f8e9",
+  "a": "#4db6ac",
+  "e": "leaf",
+  "t": "none",
+  "w": "fairy",
+  "p": "none",
+  "m": "smile",
+  "x": [
+   "aura"
+  ],
+  "sz": 0.85,
+  "habitat": [
+   "forest"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "big",
+  "words": [
+   "time",
+   "sprout"
+  ],
+  "dexEn": "Timesprout travels through time. Old trees remember its song.",
+  "dexZh": "时之芽可以穿越时间，古老的大树还记得它的歌。"
+ },
+ {
+  "no": 377,
+  "id": "rockgiant",
+  "en": "Rockgiant",
+  "zh": "岩石巨人",
+  "types": [
+   "rock"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 86,
+  "atk": 22,
+  "b": "golem",
+  "c": "#a1887f",
+  "k": "#d7ccc8",
+  "a": "#ff7043",
+  "e": "gem",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "grin",
+  "x": [
+   "aura",
+   "crystals"
+  ],
+  "sz": 1,
+  "habitat": [
+   "cave",
+   "ruins"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "fierce",
+  "words": [
+   "rock",
+   "giant"
+  ],
+  "dexEn": "Rockgiant sleeps deep in a cave. It is older than the islands.",
+  "dexZh": "岩石巨人睡在洞穴深处，它比这些岛还要古老。"
+ },
+ {
+  "no": 378,
+  "id": "icegiant",
+  "en": "Icegiant",
+  "zh": "冰晶巨人",
+  "types": [
+   "ice"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 84,
+  "atk": 22,
+  "b": "golem",
+  "c": "#b3e5fc",
+  "k": "#e1f5fe",
+  "a": "#4fc3f7",
+  "e": "ice",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "grin",
+  "x": [
+   "aura",
+   "crystals"
+  ],
+  "sz": 1,
+  "habitat": [
+   "cave",
+   "snow"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "fierce",
+  "words": [
+   "ice",
+   "giant"
+  ],
+  "dexEn": "Icegiant is made of ice that never melts. It loves cold nights.",
+  "dexZh": "冰晶巨人由永远不会融化的冰做成，它喜欢寒冷的夜晚。"
+ },
+ {
+  "no": 379,
+  "id": "irongiant",
+  "en": "Irongiant",
+  "zh": "钢铁巨人",
+  "types": [
+   "steel"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 86,
+  "atk": 21,
+  "b": "golem",
+  "c": "#90a4ae",
+  "k": "#cfd8dc",
+  "a": "#ffd54f",
+  "e": "horn",
+  "t": "none",
+  "w": "none",
+  "p": "none",
+  "m": "grin",
+  "x": [
+   "aura"
+  ],
+  "sz": 1,
+  "habitat": [
+   "cave",
+   "ruins"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "fierce",
+  "words": [
+   "iron",
+   "giant"
+  ],
+  "dexEn": "Irongiant is harder than any metal. It guards an old door.",
+  "dexZh": "钢铁巨人比任何金属都硬，它守护着一扇古老的门。"
+ },
+ {
+  "no": 380,
+  "id": "skysong",
+  "en": "Skysong",
+  "zh": "天歌",
+  "types": [
+   "dragon",
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 84,
+  "atk": 23,
+  "b": "dragon",
+  "c": "#ef9a9a",
+  "k": "#ffffff",
+  "a": "#e53935",
+  "e": "fin",
+  "t": "long",
+  "w": "feather",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "aura"
+  ],
+  "sz": 0.95,
+  "habitat": [
+   "sky"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "sky",
+   "song"
+  ],
+  "dexEn": "Skysong sings with the wind. Its song can calm a storm.",
+  "dexZh": "天歌和风一起唱歌，它的歌声能让暴风雨平静下来。"
+ },
+ {
+  "no": 381,
+  "id": "skyecho",
+  "en": "Skyecho",
+  "zh": "天响",
+  "types": [
+   "dragon",
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 86,
+  "atk": 24,
+  "b": "dragon",
+  "c": "#90caf9",
+  "k": "#ffffff",
+  "a": "#1e88e5",
+  "e": "fin",
+  "t": "long",
+  "w": "feather",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "aura"
+  ],
+  "sz": 1,
+  "habitat": [
+   "sky"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "sky",
+   "echo"
+  ],
+  "dexEn": "Skyecho repeats every word it hears. It flies faster than a jet.",
+  "dexZh": "天响会重复它听到的每一个词，它飞得比喷气机还快。"
+ },
+ {
+  "no": 382,
+  "id": "tidewhale",
+  "en": "Tidewhale",
+  "zh": "潮语鲸",
+  "types": [
+   "water"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 104,
+  "atk": 28,
+  "b": "fish",
+  "c": "#1976d2",
+  "k": "#e3f2fd",
+  "a": "#ff5252",
+  "e": "crown",
+  "t": "fin",
+  "w": "none",
+  "p": "stripes",
+  "m": "grin",
+  "x": [
+   "aura",
+   "crystals"
+  ],
+  "sz": 1.2,
+  "habitat": [
+   "sea"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "fierce",
+  "words": [
+   "tide",
+   "whale"
+  ],
+  "dexEn": "Tidewhale can copy any sound. The sea listens to its voice.",
+  "dexZh": "潮语鲸能模仿任何声音，大海都听从它的声音。"
+ },
+ {
+  "no": 383,
+  "id": "hushking",
+  "en": "Hushking",
+  "zh": "寂静之王",
+  "types": [
+   "ghost",
+   "dark"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 104,
+  "atk": 29,
+  "b": "ghost",
+  "c": "#37474f",
+  "k": "#607d8b",
+  "a": "#b388ff",
+  "e": "crown",
+  "t": "none",
+  "w": "bat",
+  "p": "mask",
+  "m": "o",
+  "x": [
+   "aura"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "ruins",
+   "night"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "fierce",
+  "words": [
+   "hush",
+   "king"
+  ],
+  "dexEn": "Hushking swallows every sound. It is afraid of loud noises.",
+  "dexZh": "寂静之王会吞掉所有的声音，其实它很怕吵闹。"
+ },
+ {
+  "no": 384,
+  "id": "echodrake",
+  "en": "Echodrake",
+  "zh": "回声龙",
+  "types": [
+   "dragon",
+   "flying"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 104,
+  "atk": 30,
+  "b": "dragon",
+  "c": "#26a69a",
+  "k": "#e0f2f1",
+  "a": "#ffd54f",
+  "e": "horns",
+  "t": "long",
+  "w": "feather",
+  "p": "none",
+  "m": "fang",
+  "x": [
+   "aura",
+   "crystals",
+   "spikesback"
+  ],
+  "sz": 1.25,
+  "habitat": [
+   "sky"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "words": [
+   "echo",
+   "drake"
+  ],
+  "dexEn": "Echodrake wakes up when many people speak together. It protects the islands.",
+  "dexZh": "当很多人一起说话时，回声龙就会醒来。它守护着这些岛屿。"
+ },
+ {
+  "no": 385,
+  "id": "wishstar",
+  "en": "Wishstar",
+  "zh": "愿望星",
+  "types": [
+   "steel",
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 84,
+  "atk": 22,
+  "b": "blob",
+  "c": "#fff59d",
+  "k": "#ffffff",
+  "a": "#ffb300",
+  "e": "crown",
+  "t": "none",
+  "w": "fairy",
+  "p": "star",
+  "m": "smile",
+  "x": [
+   "aura"
+  ],
+  "sz": 0.8,
+  "habitat": [
+   "sky",
+   "night"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "big",
+  "words": [
+   "wish",
+   "star"
+  ],
+  "dexEn": "Wishstar wakes up once in a thousand years. Make a wish!",
+  "dexZh": "愿望星一千年才醒来一次。快许个愿吧！"
+ },
+ {
+  "no": 386,
+  "id": "starcore",
+  "en": "Starcore",
+  "zh": "星核",
+  "types": [
+   "psychic"
+  ],
+  "stage": 1,
+  "evo": [],
+  "hp": 86,
+  "atk": 27,
+  "b": "biped",
+  "c": "#ff7043",
+  "k": "#b2ebf2",
+  "a": "#26c6da",
+  "e": "gem",
+  "t": "long",
+  "w": "none",
+  "p": "stripes",
+  "m": "o",
+  "x": [
+   "aura",
+   "crystals"
+  ],
+  "sz": 1.05,
+  "habitat": [
+   "sky"
+  ],
+  "rarity": 5,
+  "legend": true,
+  "eye": "fierce",
+  "words": [
+   "star",
+   "core"
+  ],
+  "dexEn": "Starcore came from a falling star. It changes its shape.",
+  "dexZh": "星核来自一颗流星，它可以改变自己的形状。"
+ }
+]

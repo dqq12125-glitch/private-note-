@@ -2,7 +2,9 @@
 export {
   WebGLRenderer, WebGLRenderTarget, Scene, PerspectiveCamera, OrthographicCamera, Color, Fog, Vector2, Vector3, Matrix4, Object3D, Group, Mesh, InstancedMesh,
   PlaneGeometry, BoxGeometry, CylinderGeometry, ConeGeometry, IcosahedronGeometry, SphereGeometry, BufferGeometry, BufferAttribute, Float32BufferAttribute, InstancedBufferAttribute,
-  MeshLambertMaterial, MeshBasicMaterial, MeshDepthMaterial, ShaderMaterial, CanvasTexture, Texture,
+  MeshLambertMaterial, MeshBasicMaterial, MeshDepthMaterial, MeshToonMaterial, ShaderMaterial, CanvasTexture, Texture, DataTexture,
+  CapsuleGeometry, TorusGeometry, LatheGeometry, OctahedronGeometry, TubeGeometry, ShapeGeometry, ExtrudeGeometry, Shape, CatmullRomCurve3, QuadraticBezierCurve3,
+  Points, Quaternion, Euler, MathUtils, AdditiveBlending, NormalBlending, BackSide, RedFormat, Vector4,
   HemisphereLight, DirectionalLight, AmbientLight, PointLight,
   SRGBColorSpace, NearestFilter, LinearFilter, LinearMipmapLinearFilter, RepeatWrapping, ClampToEdgeWrapping, DoubleSide, FrontSide, PCFSoftShadowMap, PCFShadowMap, RGBADepthPacking, NoToneMapping, ACESFilmicToneMapping, HalfFloatType, UnsignedByteType,
 } from 'three';

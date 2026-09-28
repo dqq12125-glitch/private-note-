@@ -57,6 +57,24 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.waitForTimeout(9000);
   const tier = await p.evaluate(() => ({ tier: EchoWorld._debug().R.tier, auto: JSON.parse(localStorage.getItem('echo-island-v1')).settings.gfxAuto }));
   check(tier.auto && tier.auto !== 'mid', '慢设备上自动降档 ' + JSON.stringify(tier));
+  // 3D 战斗：出场、放招特效、截图
+  await p.evaluate(() => { EchoWorld.stop(); MonsterGame.battle('wild', 0, { onEnd() {}, hab: 'grass' }); });
+  await p.waitForTimeout(3500);
+  check(await p.$('#b-arena.is3d canvas.b3d') !== null, '3D 战斗画面');
+  const nMoves = (await p.$$('[data-act=bMove]')).length;
+  check(nMoves === 4, '4 个招式按钮（' + nMoves + '）');
+  await p.click('[data-act=bMove][data-i="1"]');
+  await p.click('[data-act=bRate][data-v="2"]');
+  await p.waitForTimeout(900);
+  await p.screenshot({ path: out + '/3d-battle-fx.png' });
+  await p.waitForTimeout(2500);
+  await p.screenshot({ path: out + '/3d-battle.png' });
+  await p.click('[data-act=bFlee]'); await p.click('#sheet [data-act=bEnd]');
+  await p.waitForTimeout(500);
+  check(!(await p.$('canvas.b3d')), '战斗结束后 3D 战斗画面释放了');
+  // 图鉴：386 只，翻页
+  const total = await p.evaluate(() => DEX.total);
+  check(total === 386, '图鉴 386 只');
   check(!errs.length, '没有报错' + (errs.length ? '：' + errs.slice(0, 3).join(' | ') : ''));
   console.log(fails ? 'FAIL ' + fails : 'PASS');
   if (fails) process.exitCode = 1;
