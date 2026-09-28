@@ -84,9 +84,12 @@
     iceheal: { zh: '解冻药', en: 'Ice Heal', icon: '🔥', price: 20, desc: '治好冰冻' },
     fullheal: { zh: '万灵药', en: 'Full Heal', icon: '✨', price: 50, desc: '治好所有异常状态' },
     expshare: { zh: '学习装置', en: 'Exp. Share', icon: '📡', price: 0, desc: '带着它，没出场的怪兽也能分到一半经验', key: true },
+    rod: { zh: '钓竿', en: 'Fishing Rod', icon: '🎣', price: 150, desc: '对着水按 A 钓鱼', key: true },
+    bike: { zh: '自行车', en: 'Bike', icon: '🚲', price: 300, desc: '骑车走得快一倍（右上角 🚲 按钮）', key: true },
+    dowsing: { zh: '寻宝器', en: 'Dowsing Machine', icon: '📟', price: 200, desc: '藏起来的道具会一闪一闪', key: true },
   });
   Object.entries(D.STONES).forEach(([id, st]) => { ITEMS[id] = { zh: st.zh, en: st.en, icon: st.icon, price: 120, desc: '能让某些怪兽进化', stone: true }; });
-  const BAG_ORDER = ['expshare', 'ball', 'superball', 'potion', 'superpotion', 'revive', 'antidote', 'burnheal', 'paraheal', 'awakening', 'iceheal', 'fullheal', 'repel', 'rope'].concat(Object.keys(D.STONES));
+  const BAG_ORDER = ['expshare', 'bike', 'rod', 'dowsing', 'ball', 'superball', 'potion', 'superpotion', 'revive', 'antidote', 'burnheal', 'paraheal', 'awakening', 'iceheal', 'fullheal', 'repel', 'rope'].concat(Object.keys(D.STONES));
   function itemCount(id) { const m = M(); return id === 'ball' ? m.balls : id === 'potion' ? (m.potions || 0) : ((m.bag || {})[id] || 0); }
   function addItem(id, n) {
     const m = M();
@@ -1229,7 +1232,10 @@
       const it = ITEMS[id], n = itemCount(id);
       if (!n && id !== 'ball' && id !== 'potion') return '';
       let use = '';
-      if (it.key) use = '<button class="btn small ' + (M().expShareOn !== false ? 'sun' : 'ghost') + '" data-act="mExpShare">' + (M().expShareOn !== false ? '开着' : '关着') + '</button>';
+      if (id === 'expshare') use = '<button class="btn small ' + (M().expShareOn !== false ? 'sun' : 'ghost') + '" data-act="mExpShare">' + (M().expShareOn !== false ? '开着' : '关着') + '</button>';
+      else if (id === 'dowsing') use = '<button class="btn small ' + (M().dowseOn !== false ? 'sun' : 'ghost') + '" data-act="mDowse">' + (M().dowseOn !== false ? '开着' : '关着') + '</button>';
+      else if (id === 'bike') use = '<button class="btn small" data-act="mUse" data-id="bike"' + (FH && FH.inWorld() ? '' : ' disabled') + '>骑</button>';
+      else if (it.key) use = '';
       else if (STATUS_HEAL[id]) use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
       else if (it.stone) use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
       else if (it.heal || id === 'revive') use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
@@ -1245,6 +1251,7 @@
     if (itemCount(id) <= 0) return;
     if (id === 'repel') { addItem(id, -1); E.save(); E.closeModal(); FH && FH.repel(); return; }
     if (id === 'rope') { addItem(id, -1); E.save(); FH && FH.rope(); return; }
+    if (id === 'bike') { FH && FH.bike(); return; }
     const rows = teamMons().map(mon => {
       const max = stats(mon).hp, hp = curHp(mon), ok = STATUS_HEAL[id] ? STATUS_HEAL[id].includes(mon.st) : it.stone ? !!itemEvo(mon, id) : id === 'revive' ? hp === 0 : hp > 0 && hp < max;
       return monRow(mon, '<button class="btn small sun" data-act="mUseOn" data-id="' + id + '" data-u="' + mon.uid + '"' + (ok ? '' : ' disabled') + '>' + it.icon + ' 用</button>', true);
@@ -1329,6 +1336,7 @@
     mLearnMic: t => learnMic(+t.dataset.k),
     mHearLearn: () => { const it = (M().pendingLearn || [])[0]; if (it) E.say(SPECIES[byUid(it.u).sp].en + ', learn ' + mvName(parseMove(it.id))[0] + '!', .8); },
     mExpShare: () => { M().expShareOn = M().expShareOn === false; E.save(); bagSheet(); },
+    mDowse: () => { M().dowseOn = M().dowseOn === false; E.save(); bagSheet(); },
     bSwitch: switchSheet,
     bSwitchTo: t => doSwitch(+t.dataset.k),
     bMove: t => onMove(num(t, 'i')),

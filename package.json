@@ -4,7 +4,7 @@
   "description": "回声岛：初中英语听说冒险游戏（纯静态网页）",
   "scripts": {
     "start": "python -m http.server 8000",
-    "test": "node tests/maps.test.js && node tests/practice.test.js && node tests/story.test.js && node tests/battle.test.js && node tests/adventure.test.js && node tests/render3d.test.js",
+    "test": "node tests/maps.test.js && node tests/practice.test.js && node tests/story.test.js && node tests/battle.test.js && node tests/field.test.js && node tests/adventure.test.js && node tests/render3d.test.js",
     "build:three": "esbuild tools/three-entry.js --bundle --minify --format=iife --global-name=THREE --outfile=vendor/three.min.js --legal-comments=none --banner:js=\"/* three.js r186 (MIT License, Copyright 2010-2025 three.js authors) - trimmed build, see tools/three-entry.js */\""
   },
   "devDependencies": {

@@ -4,7 +4,7 @@
   'use strict';
 
   const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
-  const STEP_MS = 170, JUMP_MS = 300;
+  const STEP_MS = 170, JUMP_MS = 300, BIKE_MS = 95;
   const TRAINER_NAMES = ['Jack', 'Amy', 'Ben', 'Kate', 'Sam', 'Lucy', 'Mike', 'Anna', 'Leo', 'Mia', 'Max', 'Emma', 'Tony', 'Nora', 'Owen', 'Ruby', 'Dan', 'Ivy'];
   const PICKS = ['ball', 'potion', 'repel', 'superball', 'superpotion', 'revive', 'leafstone', 'firestone', 'waterstone', 'thunderstone', 'moonstone'];
 
@@ -36,13 +36,17 @@
   }
 
   // ---------- 地图查询 ----------
-  const tile = (x, y) => (M.grid[y] && M.grid[y][x]) || (M.kind === 'inside' ? 'W' : M.kind === 'cave' ? 'X' : '#');
+  const rawTile = (x, y) => (M.grid[y] && M.grid[y][x]) || (M.kind === 'inside' ? 'W' : M.kind === 'cave' ? 'X' : '#');
+  const boulderAt = (x, y) => (M._bould || []).find(b => b.x === x && b.y === y);
+  const tile = (x, y) => { if (M._cleared && M._cleared.has(x + ',' + y)) return M.kind === 'cave' ? ':' : '.'; if (boulderAt(x, y)) return 'O'; return rawTile(x, y); };
   const npcVisible = n => !(n.role === 'guard' && hasBadge(M.z)) && !(window.EchoStory && EchoStory.hidden(SC, n));
   const npcAt = (x, y) => M.npcs.find(n => n.x === x && n.y === y && npcVisible(n));
   const pickKey = p => 'p:' + M.id + ':' + p.x + ':' + p.y;
   const pickAt = (x, y) => M.picks.find(p => p.x === x && p.y === y && !WS().flags[pickKey(p)]);
   const pickType = p => PICKS[(p.x * 7 + p.y * 3 + M.z) % (M.z < 2 ? 2 : M.z < 4 ? 3 : M.z < 6 ? 4 : M.z < 8 ? 6 : PICKS.length)];
-  const walkable = (x, y) => EM.WALK.includes(tile(x, y)) && !npcAt(x, y);
+  const walkable = (x, y) => (EM.WALK.includes(tile(x, y)) || (PL.surf && tile(x, y) === '~')) && !npcAt(x, y);
+  const hiddenKey = h => 'h:' + M.id + ':' + h.x + ':' + h.y;
+  const hiddenAt = (x, y) => (M.hidden || []).find(h => h.x === x && h.y === y && !WS().flags[hiddenKey(h)]);
   const warpAt = (x, y) => M.warps.find(w => w.x === x && w.y === y);
   const signAt = (x, y) => M.signs.find(s => s.x === x && s.y === y);
   const trainerKey = n => 't:' + M.id + ':' + n.id;
@@ -93,6 +97,10 @@
   function loadMap(id, how) {
     M = EM.get(id) || EM.get('t0');
     M.npcs = M.npcs.filter(n => !n.temp);
+    // 每次进地图：砍掉的树、碎掉的石头会长回来，大石头回到原位；怪力、闪光要重新用
+    M._cleared = new Set(); M._bould = (M.boulders || []).map(b => ({ x: b.x, y: b.y, rx: b.x, ry: b.y })); M._strength = false; M._flash = false;
+    PL.surf = false;
+    if (M.kind === 'inside') PL.bike = false;
     const ws = WS();
     if (M.kind === 'town') ws.visited[M.z] = 1;
     let p = how && typeof how === 'object' ? how : EM.arrival(M, how === 'start' ? null : how);
@@ -161,6 +169,8 @@
     $('w-zsub').textContent = M.kind === 'route' || M.kind === 'cave' ? '野外 Lv ' + (MG.zoneLv(M.z) + (M.lvBonus || 0)) + '–' + (MG.zoneLv(M.z) + (M.lvBonus || 0) + 2) : p.sub;
     $('w-badges').textContent = '🏅 ' + Object.keys(E.S.mon.badges).length;
     $('w-balls').textContent = '🔮 ' + E.S.mon.balls;
+    const bk = $('w-bike');
+    if (bk) { bk.hidden = !(MG.itemCount('bike') > 0) || M.kind === 'inside'; bk.classList.toggle('on', !!PL.bike); }
   }
 
   // ---------- 移动 ----------
@@ -177,8 +187,16 @@
       E.SFX.tap();
       return;
     }
+    // 怪力：推着大石头往前走一格
+    if (t === 'O' && M._strength) {
+      const bx = nx + dx, by = ny + dy, b = boulderAt(nx, ny);
+      if (b && EM.WALK.includes(tile(bx, by)) && !npcAt(bx, by) && !warpAt(bx, by) && !(bx === FL.x && by === FL.y)) { b.x = bx; b.y = by; E.SFX.tap(); step(nx, ny, STEP_MS * 1.6, false); }
+      return;
+    }
     if (!walkable(nx, ny)) return;
-    step(nx, ny, STEP_MS, false);
+    // 冲浪中走上岸就下来
+    if (PL.surf && tile(nx, ny) !== '~') { PL.surf = false; E.toast('🏖️ 上岸了'); }
+    step(nx, ny, PL.bike && !PL.surf ? BIKE_MS : STEP_MS, false);
   }
   function step(nx, ny, dur, jump) {
     FL.fx = FL.x; FL.fy = FL.y; FL.x = PL.x; FL.y = PL.y;
@@ -197,7 +215,7 @@
     const tr = spotTrainer();
     if (tr) { trainerSpotted(tr); return; }
     if (ws.repel > 0) { ws.repel--; if (!ws.repel) E.toast('🧴 驱怪喷雾的效果消失了'); }
-    const rate = EM.ENCOUNTER[t];
+    const rate = PL.surf && t === '~' ? .08 : EM.ENCOUNTER[t];
     if (rate && !(ws.repel > 0) && Math.random() < rate && MG.anyAlive()) encounter();
   }
   function spotTrainer() {
@@ -384,6 +402,10 @@
     const s = signAt(tx, ty);
     if (s) return { s };
     if (t === 'P') return { pc: true };
+    if (t === 'n' || t === 'b' || t === 'O') return { obst: t, x: tx, y: ty };
+    if (t === '~' && !PL.surf && (skillReady('surf') || MG.itemCount('rod') > 0)) return { water: true, x: tx, y: ty };
+    const hid = hiddenAt(tx, ty);
+    if (hid) return { hidden: hid, quiet: true };
     const w = warpAt(tx, ty);
     if (w && !EM.WALK.includes(t) && PL.dir === 'up') return { w };
     return null;
@@ -396,6 +418,9 @@
     if (f.n) { f.n.face = faceTo(f.n, PL); if (!story('talk', f.n)) npcTalk(f.n); }
     else if (f.s) signTalk(f.s);
     else if (f.pc) { E.SFX.tap(); E.say('Welcome to the monster box!'); MG.pcSheet(); }
+    else if (f.obst) obstacle(f);
+    else if (f.water) waterMenu(f);
+    else if (f.hidden) foundHidden(f.hidden);
     else if (f.w) goMap(f.w.to, f.w.arrive);
   }
   function signTalk(s) {
@@ -536,20 +561,119 @@
     if (z >= 4) list.push(['revive', 1]);
     if (z >= 5) list.push(['leafstone', 1], ['firestone', 1], ['waterstone', 1], ['thunderstone', 1]);
     if (z >= 8) list.push(['moonstone', 1], ['sunstone', 1], ['icestone', 1]);
+    list.push(['rod', 1]);
+    if (z >= 1) list.push(['bike', 1]);
+    if (z >= 2) list.push(['dowsing', 1]);
     return list;
   }
   function shopSheet() {
     E.openModal('<div class="big">🏪</div><h2>小镇商店</h2><p>你有 <b>' + E.S.coins + '</b> 金币</p>' +
       shopStock().map(([id, n], i) => {
-        const it = MG.ITEMS[id], price = it.price * n;
-        return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + (n > 1 ? ' ×' + n : '') + '</b><small>' + it.desc + ' · ' + it.en + ' · 有 ' + MG.itemCount(id) + '</small></div>' +
-          '<button class="btn small sun" data-act="wBuy" data-i="' + i + '"' + (E.S.coins < price ? ' disabled' : '') + '>' + price + ' 金币</button></div>';
+        const it = MG.ITEMS[id], price = it.price * n, owned = it.key && MG.itemCount(id) > 0;
+        return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + (n > 1 ? ' ×' + n : '') + '</b><small>' + it.desc + ' · ' + it.en + (it.key ? '' : ' · 有 ' + MG.itemCount(id)) + '</small></div>' +
+          '<button class="btn small sun" data-act="wBuy" data-i="' + i + '"' + (owned || E.S.coins < price ? ' disabled' : '') + '>' + (owned ? '已有' : price + ' 金币') + '</button></div>';
       }).join('') +
       '<button class="btn ghost wide" data-act="close">Thank you! 谢谢</button>');
   }
 
+  // ---------- 野外技能：拿到徽章解锁，队伍里要有合适属性的怪兽，用的时候要对它说英语指令 ----------
+  const SKILLS = {
+    cut: { zh: '居合斩', en: 'Cut', icon: '🌿', badge: 1, types: ['grass', 'bug', 'steel', 'normal', 'fight', 'dark', 'dragon', 'ground'], say: n => n + ', cut the tree!', what: '砍掉挡路的小树' },
+    flash: { zh: '闪光', en: 'Flash', icon: '💡', badge: 2, types: ['spark', 'psychic', 'fire'], say: n => n + ', light up the cave!', what: '照亮漆黑的洞穴' },
+    smash: { zh: '碎岩', en: 'Rock Smash', icon: '🪨', badge: 3, types: ['fight', 'rock', 'ground', 'steel', 'normal', 'dragon'], say: n => n + ', smash the rock!', what: '打碎有裂缝的岩石' },
+    strength: { zh: '怪力', en: 'Strength', icon: '💪', badge: 4, types: ['fight', 'rock', 'ground', 'normal', 'steel', 'dragon', 'water'], say: n => n + ', push the rock!', what: '推动大石头' },
+    surf: { zh: '冲浪', en: 'Surf', icon: '🌊', badge: 5, types: ['water', 'ice', 'dragon'], say: n => n + ", let's surf!", what: '在水上前进' },
+    fly: { zh: '飞空', en: 'Fly', icon: '🕊️', badge: 6, types: ['flying', 'dragon'], say: n => n + ', fly me there!', what: '飞回去过的小镇' },
+  };
+  const nBadges = () => Object.keys(E.S.mon.badges).length;
+  const skillMon = k => E.S.mon.team.map(u => E.S.mon.box.find(m => m.uid === u)).filter(Boolean).find(m => MG.species(m.sp).types.some(t => SKILLS[k].types.includes(t)));
+  const skillOpen = k => E.S.settings.unlockAll || nBadges() >= SKILLS[k].badge;
+  const skillReady = k => skillOpen(k) && !!skillMon(k);
+  // 用技能：说对指令才会生效
+  function useSkill(k, then) {
+    const S = SKILLS[k], nar = (en, zh) => ({ who: '旁白', emo: S.icon, en, zh });
+    if (!skillOpen(k)) { talk([nar('You need more badges to use ' + S.en + '.', '要用「' + S.zh + '」' + S.what + '，需要 ' + S.badge + ' 枚徽章。')]); return; }
+    const mon = skillMon(k);
+    if (!mon) { talk([nar('None of your monsters can use ' + S.en + '.', '队伍里要有' + S.types.map(t => DEX.TYPES[t].zh).join('、') + '系的怪兽，才能用「' + S.zh + '」。')]); return; }
+    const name = MG.species(mon.sp).en;
+    talk([{ who: '{name}', look: playerLook(), g: E.S.player && E.S.player.gender === 'girl' ? 'f' : 'm', en: S.say(name), zh: '用「' + S.zh + '」：大声对 ' + name + ' 说出来！', kind: 'speak', target: S.say(name), pass: () => { E.S.stats.spoken = (E.S.stats.spoken || 0); then(mon); return []; } }]);
+  }
+  function obstacle(f) {
+    if (f.obst === 'n') useSkill('cut', mon => { M._cleared.add(f.x + ',' + f.y); E.SFX.hit(); E.toast('🌿 ' + MG.species(mon.sp).en + ' 砍掉了小树！', 'gold'); if (R && R.fx) R.fx('cut', f.x, f.y); });
+    else if (f.obst === 'b') useSkill('smash', mon => { M._cleared.add(f.x + ',' + f.y); E.SFX.hit(); E.toast('🪨 ' + MG.species(mon.sp).en + ' 打碎了岩石！', 'gold'); if (R && R.fx) R.fx('smash', f.x, f.y); });
+    else if (f.obst === 'O') {
+      if (M._strength) { talk([{ who: '旁白', emo: '💪', en: 'Walk into the rock to push it.', zh: '朝大石头走过去，就能把它推开。' }]); return; }
+      useSkill('strength', mon => { M._strength = true; E.toast('💪 ' + MG.species(mon.sp).en + ' 可以推动大石头了！', 'gold'); });
+    }
+  }
+  // 面对水：冲浪或者钓鱼
+  function waterMenu(f) {
+    const canSurf = skillReady('surf'), rod = MG.itemCount('rod') > 0;
+    const surf = () => useSkill('surf', () => { PL.surf = true; PL.bike = false; step(f.x, f.y, STEP_MS, false); hud(); });
+    if (canSurf && rod) talk([{ who: '旁白', emo: '🌊', en: 'The water is calm. What do you want to do?', zh: '水面很平静。要做什么？', kind: 'choice', opts: [{ html: '🌊 冲浪', cls: 'sun' }, { html: '🎣 钓鱼' }], pick: i => { setTimeout(i ? fish : surf, 50); return []; } }]);
+    else if (canSurf) surf();
+    else if (rod) fish();
+  }
+  // 钓鱼：等浮标动了，听鱼说的英语，选出意思才能拉上来
+  function fish() {
+    const w = E.W[M.z], k = Math.floor(Math.random() * w.words.length), it = w.words[k];
+    const others = w.words.filter((x, j) => j !== k && x[1] !== it[1]).sort(() => Math.random() - .5).slice(0, 2);
+    const opts = [{ c: true, t: it[1], e: it[2] }, ...others.map(o => ({ t: o[1], e: o[2] }))].sort(() => Math.random() - .5);
+    let hooked = false;
+    talk([{
+      who: '旁白', emo: '🎣', en: 'You cast your line...', zh: '甩出鱼线……', kind: 'custom',
+      html: '<div class="fish"><div class="fish-water"><span class="bobber" id="fish-bob"></span></div><p class="fish-q" id="fish-q">静静等着，浮标一动就注意听！</p><div class="opts" id="fish-opts"></div><div class="b-timer" id="fish-bar" hidden><i id="fish-t"></i></div></div>',
+      mount: (el, done) => {
+        const wait = 1400 + Math.random() * 2600;
+        setTimeout(() => {
+          const bob = document.getElementById('fish-bob'); if (!bob) return;
+          bob.classList.add('bite'); E.SFX.tap();
+          document.getElementById('fish-q').innerHTML = '<b>咬钩了！</b>它说了一个词，是什么意思？';
+          E.say(it[0]);
+          const box = document.getElementById('fish-opts');
+          box.innerHTML = opts.map((o, i) => '<button class="opt" data-i="' + i + '"><span class="o-e">' + o.e + '</span><span class="o-t">' + E.esc(o.t) + '</span></button>').join('') + '<button class="spk mini" id="fish-hear" aria-label="再听一遍">' + E.SPK + '</button>';
+          const bar = document.getElementById('fish-bar'), t = document.getElementById('fish-t');
+          bar.hidden = false; t.style.transition = 'none'; t.style.width = '100%'; void t.offsetWidth; t.style.transition = 'width 7s linear'; t.style.width = '0%';
+          const timer = setTimeout(() => finish(-1), 7000);
+          const finish = i => {
+            clearTimeout(timer);
+            const ok = i >= 0 && opts[i].c;
+            box.querySelectorAll('.opt').forEach((b, j) => b.classList.add(opts[j].c ? 'right' : j === i ? 'wrong' : 'dim'));
+            hooked = ok;
+            if (ok) { E.SFX.ok(2); E.S.stats.listen = (E.S.stats.listen || 0) + 1; E.qProg('listen', 1); } else { E.SFX.bad(); E.addWrong({ kind: 'word', w: M.z, i: k }); }
+            setTimeout(() => done([{ who: '旁白', emo: ok ? '🐟' : '💨', en: ok ? 'You hooked a monster!' : 'It got away...', zh: ok ? '钓上来了！是一只怪兽！' : '鱼跑掉了……它说的是 ' + it[0] + ' = ' + it[1] }]), 700);
+          };
+          box.addEventListener('click', e => { e.stopPropagation(); if (e.target.closest('#fish-hear')) { E.say(it[0], .8); return; } const b = e.target.closest('.opt'); if (b && !b.classList.contains('dim') && !b.classList.contains('right')) finish(+b.dataset.i); });
+        }, wait);
+      },
+    }], () => { if (hooked && MG.anyAlive()) battle('wild', { hab: 'water', lvBonus: (M.lvBonus || 0) + 1 }); });
+  }
+  // 藏起来的道具：对着它按 A 才能找到；有寻宝器会一闪一闪
+  const HIDDEN_PICKS = ['superpotion', 'superball', 'revive', 'fullheal', 'leafstone', 'firestone', 'waterstone', 'thunderstone', 'moonstone', 'sunstone', 'icestone', 'superball'];
+  function foundHidden(h) {
+    WS().flags[hiddenKey(h)] = 1;
+    const id = HIDDEN_PICKS[(h.x * 5 + h.y * 11 + M.z * 3) % (M.z < 4 ? 4 : HIDDEN_PICKS.length)], it = MG.ITEMS[id];
+    MG.addItem(id, 1);
+    E.save(); E.SFX.coin();
+    talk([{ who: '旁白', emo: '✨', en: 'You found a hidden ' + it.en + '!', zh: '你发现了藏起来的' + it.zh + '！' }]);
+  }
+  function skillsSheet() {
+    E.openModal('<h2>🌟 野外技能</h2><p>拿到徽章就会解锁。队伍里要有合适属性的怪兽，用的时候要大声对它说英语指令。</p>' +
+      Object.entries(SKILLS).map(([k, S]) => {
+        const open = skillOpen(k), mon = skillMon(k);
+        const btn = k === 'flash' ? '<button class="btn small sun" data-act="wUseSkill" data-k="flash"' + (open && mon && M.kind === 'cave' && !M._flash ? '' : ' disabled') + '>用</button>'
+          : k === 'fly' ? '<button class="btn small sun" data-act="wUseSkill" data-k="fly"' + (open && mon && M.kind !== 'inside' ? '' : ' disabled') + '>用</button>'
+            : '<small class="tip">对着障碍按 A</small>';
+        return '<div class="ach' + (open ? '' : ' locked') + '"><span class="ae">' + S.icon + '</span><div style="flex:1"><b>' + S.zh + ' ' + S.en + '</b><small>' + S.what + ' · ' + (open ? (mon ? '由 ' + MG.species(mon.sp).en + ' 来用' : '需要 ' + S.types.slice(0, 3).map(t => DEX.TYPES[t].zh).join('/') + ' 系怪兽') : '需要 ' + S.badge + ' 枚徽章') + '</small></div>' + (open ? btn : '<span class="lvchip">🔒</span>') + '</div>';
+      }).join('') + '<button class="btn ghost wide" data-act="close">关闭</button>');
+  }
+  function flyTo(z) {
+    E.closeModal();
+    goMap('t' + z, 'door:C');
+  }
+
   // ---------- 战斗 ----------
-  function encounter() { battle('wild', { lvBonus: M.lvBonus || 0, hab: M.kind === 'cave' ? 'cave' : 'grass' }); }
+  function encounter() { battle('wild', { lvBonus: M.lvBonus || 0, hab: PL.surf ? 'water' : M.kind === 'cave' ? 'cave' : 'grass' }); }
   async function battle(kind, o) {
     busy = true;
     held = null;
@@ -686,7 +810,7 @@
     let hint = null;
     if (f) {
       const [dx, dy] = DIRS[PL.dir];
-      hint = f.n ? { x: f.n.x, y: f.n.y } : { x: PL.x + dx, y: PL.y + dy };
+      if (!f.quiet) hint = f.n ? { x: f.n.x, y: f.n.y } : { x: PL.x + dx, y: PL.y + dy };
     }
     const lead = MG.leadSpecies();
     return {
@@ -698,6 +822,9 @@
       npcs: M.npcs.filter(npcVisible).map(n => ({ n, look: n.mon ? null : npcLook(n).look, mon: n.mon ? MG.species(n.mon) : null, x: n.x, y: n.y, face: n.face, alert: n.alert && now - n.alert < 1100 })),
       picks: M.picks.filter(p => !WS().flags[pickKey(p)]),
       hint,
+      obst: [...(M._bould || []).map((b, i) => ({ k: 'O', id: 'O' + i, x: b.x, y: b.y }))],
+      cleared: M._cleared, surf: !!PL.surf, bike: !!PL.bike && !PL.surf, flash: M.kind === 'cave' ? !!M._flash : true,
+      sparkles: MG.itemCount('dowsing') > 0 && E.S.mon.dowseOn !== false ? (M.hidden || []).filter(h => !WS().flags[hiddenKey(h)]) : [],
     };
   }
 
@@ -1023,9 +1150,30 @@
         else person2d(q.look, q.face, 0, sx + T / 2, sy + T * .9);
         if (q.alert) bubble(sx + T / 2, sy - T * .45, '!', '#e53935');
       } }));
+      // 野外技能的障碍：小树、裂开的岩石、大石头
+      obstTiles.forEach(o => { if (!V.cleared || !V.cleared.has(o.x + ',' + o.y)) ents.push({ y: o.y, f: () => obst2d(o.k, o.x * T - camX, o.y * T - camY) }); });
+      V.obst.forEach(o => ents.push({ y: o.y, f: () => obst2d('O', o.x * T - camX, o.y * T - camY) }));
       const fx = V.fx * T - camX, fy = V.fy * T - camY;
-      if (V.showF) ents.push({ y: V.fy, f: () => follower(fx, fy - V.fhop * T, now, V) });
-      ents.push({ y: V.py + .01, f: () => person2d(V.plook, V.pdir, V.pmoving ? 1 + (Math.floor(now / 85) % 2) : 0, px - camX + T / 2, py - camY + T * .9 - V.hop * T) });
+      if (V.showF && !V.surf) ents.push({ y: V.fy, f: () => follower(fx, fy - V.fhop * T, now, V) });
+      ents.push({ y: V.py + .01, f: () => {
+        const cx = px - camX + T / 2, fyy = py - camY + T * .9 - V.hop * T;
+        if (V.surf) {
+          // 冲浪：坐在自己的怪兽背上
+          ctx.fillStyle = 'rgba(255,255,255,.55)'; ell(ctx, cx, fyy + T * .02, T * .5, T * .16); ctx.fill();
+          if (V.lead) { const im = monImg(V.lead); if (im.complete && im.naturalWidth) ctx.drawImage(im, cx - T * .55, fyy - T * .78 + Math.sin(now / 300) * 2, T * 1.1, T * 1.1); }
+          person2d(V.plook, V.pdir, 0, cx, fyy - T * .3);
+          return;
+        }
+        if (V.bike) { ctx.strokeStyle = '#37474f'; ctx.lineWidth = Math.max(2, T * .06); const side = V.pdir === 'left' || V.pdir === 'right'; [-1, 1].forEach(k => { circ(ctx, cx + (side ? k * T * .24 : 0), fyy - T * .1 + (side ? 0 : k * T * .08), T * .16); ctx.stroke(); }); }
+        person2d(V.plook, V.pdir, V.pmoving && !V.bike ? 1 + (Math.floor(now / 85) % 2) : 0, cx, fyy - (V.bike ? T * .12 : 0));
+      } });
+      // 寻宝器：藏起来的道具一闪一闪
+      V.sparkles.forEach(h => {
+        const a = (Math.sin(now / 260 + h.x * 3 + h.y) + 1) / 2;
+        ctx.fillStyle = 'rgba(255,245,160,' + (.35 + a * .6).toFixed(2) + ')';
+        const sx = h.x * T - camX + T / 2, sy = h.y * T - camY + T / 2, r = T * (.1 + a * .12);
+        ctx.beginPath(); for (let k = 0; k < 8; k++) { const an = k * Math.PI / 4, rr2 = k % 2 ? r * .35 : r; ctx.lineTo(sx + Math.cos(an) * rr2, sy + Math.sin(an) * rr2); } ctx.fill();
+      });
       ents.sort((a, b) => a.y - b.y).forEach(e => e.f());
       // 站在草丛里时，草盖住腿
       [[V.inGrass, px - camX, py - camY], [V.fInGrass && V.showF, fx, fy]].forEach(([on, sx, sy]) => {
@@ -1035,8 +1183,8 @@
       if (V.hint) bubble(V.hint.x * T - camX + T / 2, V.hint.y * T - camY - T * .2 + Math.sin(now / 220) * 3, 'A', '#e53935', true);
       if (m.kind === 'cave') {
         const cx = px - camX + T / 2, cy = py - camY + T / 2;
-        const gr = ctx.createRadialGradient(cx, cy, T * 1.2, cx, cy, T * 4.2);
-        gr.addColorStop(0, 'rgba(10,6,4,0)'); gr.addColorStop(1, 'rgba(10,6,4,.78)');
+        const gr = V.flash ? ctx.createRadialGradient(cx, cy, T * 2.5, cx, cy, T * 7) : ctx.createRadialGradient(cx, cy, T * .8, cx, cy, T * 2.6);
+        gr.addColorStop(0, 'rgba(10,6,4,0)'); gr.addColorStop(1, V.flash ? 'rgba(10,6,4,.5)' : 'rgba(6,4,2,.94)');
         ctx.fillStyle = gr; ctx.fillRect(0, 0, VW, VH);
       }
     }
@@ -1045,6 +1193,22 @@
       const S = Math.round(T / .7), dpr = Math.min(2, window.devicePixelRatio || 1), A = PPL.atlas(look, Math.round(S * dpr)), cs = A.width / 4;
       ctx.fillStyle = 'rgba(0,0,0,.2)'; ell(ctx, cx, fy, T * .27, T * .08); ctx.fill();
       ctx.drawImage(A, ({ down: 0, left: 1, right: 2, up: 3 })[dir] * cs, frame * cs, cs, cs, cx - S / 2, fy - S * .96, S, S);
+    }
+    let obstTiles = [];
+    function obst2d(k, sx, sy) {
+      ctx.lineWidth = Math.max(1.4, T * .04); ctx.strokeStyle = OUT;
+      ctx.fillStyle = 'rgba(0,0,0,.18)'; ell(ctx, sx + T / 2, sy + T * .86, T * .34, T * .1); ctx.fill();
+      if (k === 'n') {
+        ctx.fillStyle = '#6d4121'; ctx.fillRect(sx + T * .45, sy + T * .55, T * .1, T * .3);
+        ctx.fillStyle = '#7bc043'; circ(ctx, sx + T / 2, sy + T * .45, T * .3); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = '#3f7d20'; ctx.beginPath(); ctx.moveTo(sx + T * .35, sy + T * .4); ctx.lineTo(sx + T * .65, sy + T * .5); ctx.stroke();
+      } else if (k === 'b') {
+        ctx.fillStyle = '#b8a58a'; ell(ctx, sx + T / 2, sy + T * .55, T * .38, T * .32); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = '#5d4a3a'; ctx.beginPath(); ctx.moveTo(sx + T * .4, sy + T * .3); ctx.lineTo(sx + T * .52, sy + T * .52); ctx.lineTo(sx + T * .44, sy + T * .7); ctx.moveTo(sx + T * .52, sy + T * .52); ctx.lineTo(sx + T * .68, sy + T * .6); ctx.stroke();
+      } else {
+        ctx.fillStyle = '#9e9e9e'; circ(ctx, sx + T / 2, sy + T * .5, T * .42); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#bdbdbd'; circ(ctx, sx + T * .4, sy + T * .38, T * .14); ctx.fill();
+      }
     }
     function bubble(bx, by, ch, col, round) {
       ctx.fillStyle = 'rgba(0,0,0,.2)'; circ(ctx, bx + 1, by + 2, T * .22); ctx.fill();
@@ -1070,7 +1234,11 @@
     }
     return {
       kind: '2d',
-      load(map) { m = map; resize(); },
+      load(map) {
+        m = map; resize();
+        obstTiles = [];
+        for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) { const c = m.grid[y][x]; if (c === 'n' || c === 'b') obstTiles.push({ k: c, x, y }); }
+      },
       resize,
       draw,
       destroy() { cv.remove(); },
@@ -1090,7 +1258,7 @@
     const sec = $('world');
     sec.innerHTML =
       '<div class="w-hud"><button class="x" data-act="wExit" aria-label="回首页">✕</button><div class="w-zone"><b id="w-zname"></b><small id="w-zsub"></small></div>' +
-      '<span class="chip" id="w-badges"></span><span class="chip" id="w-balls"></span><button class="w-menu" data-act="wMenu" aria-label="菜单">☰</button></div>' +
+      '<span class="chip" id="w-badges"></span><span class="chip" id="w-balls"></span><button class="w-bike" id="w-bike" data-act="wBike" aria-label="骑车" hidden>🚲</button><button class="w-menu" data-act="wMenu" aria-label="菜单">☰</button></div>' +
       '<div class="w-view" id="w-view"><div class="w-scene" id="w-scene" hidden></div><div class="w-banner" id="w-banner" hidden></div><div class="w-wipe" id="w-wipe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="w-dlg" id="w-dlg" data-act="wA" hidden></div></div>' +
       '<div class="w-ctrl"><div class="dpad" id="w-dpad">' +
       ['up', 'left', 'right', 'down'].map(d => '<button class="dp dp-' + d + '" data-dir="' + d + '" aria-label="' + { up: '上', left: '左', right: '右', down: '下' }[d] + '">' + { up: '▲', left: '◀', right: '▶', down: '▼' }[d] + '</button>').join('') +
@@ -1127,13 +1295,13 @@
   function menuSheet() {
     const m = E.S.mon;
     E.openModal('<h2>冒险菜单</h2><p>🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · 💰 ' + E.S.coins + (WS().repel > 0 ? ' · 🧴 还剩 ' + WS().repel + ' 步' : '') + '</p>' +
-      '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">🐾 我的队伍</button><button class="btn ghost" data-act="mBag">🎒 背包</button><button class="btn ghost" data-act="mDex">📖 图鉴</button>' +
+      '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">🐾 我的队伍</button><button class="btn ghost" data-act="mBag">🎒 背包</button><button class="btn ghost" data-act="mDex">📖 图鉴</button><button class="btn ghost" data-act="wSkills">🌟 野外技能</button>' +
       '<button class="btn ghost" data-act="wHelp">❓ 怎么玩</button><button class="btn ghost" data-act="settings">⚙️ 设置</button><button class="btn ghost" data-act="wExit">🏠 回首页</button></div>' +
       '<button class="btn wide" data-act="close">继续冒险</button>');
   }
   function helpSheet() {
     E.openModal('<h2>怎么玩</h2><p>◀▲▼▶ 走路，<b>A</b> 和面前的人说话、看告示牌、进门；<b>B</b> 打开菜单。电脑上可以用方向键 / WASD、空格键。</p>' +
-      '<p>🛤️ 小镇北边是道路，走进深色草丛会遇到野生怪兽。<br>🧑‍🎤 训练师看到你就会过来挑战。<br>⤵️ 台阶只能往下跳。<br>🕳️ 有的路旁边有洞穴，里面怪兽更强。<br>🏥 怪兽中心：找护士恢复体力，用电脑换队伍（最多 6 只）。<br>🏪 商店：买回声球、药水等道具。<br>🏟️ 道馆：打败馆主拿徽章，守卫就会让你去下一段路。</p>' +
+      '<p>🛤️ 小镇北边是道路，走进深色草丛会遇到野生怪兽。<br>🧑‍🎤 训练师看到你就会过来挑战。<br>⤵️ 台阶只能往下跳。<br>🕳️ 有的路旁边有洞穴，里面怪兽更强。<br>🏥 怪兽中心：找护士恢复体力，用电脑换队伍（最多 6 只）。<br>🏪 商店：买回声球、药水等道具。<br>🏟️ 道馆：打败馆主拿徽章，守卫就会让你去下一段路。<br>🌟 野外技能：拿到徽章后，对着小树、裂开的岩石、大石头、水按 A，大声说出指令就能用（菜单 → 野外技能）。<br>🎣 有钓竿就能对着水钓鱼；🚲 有自行车就点右上角的车骑上。<br>✨ 地上有些道具藏起来了，对着它按 A 才找得到。</p>' +
       '<button class="btn wide" data-act="close">知道了</button>');
   }
 
@@ -1147,6 +1315,18 @@
     wPick: t => { const pg = page(); if (!pg || pg.kind !== 'choice') return; const extra = pg.pick(+t.dataset.i); insertPages(extra); pg.kind = null; nextPage(); },
     wMenu: () => menuSheet(),
     wHelp: () => helpSheet(),
+    wSkills: () => skillsSheet(),
+    wBike: () => { if (M.kind === 'inside' || PL.surf) return; PL.bike = !PL.bike; E.SFX.tap(); E.toast(PL.bike ? '🚲 骑上自行车了' : '🚶 下车走路'); hud(); },
+    wUseSkill: t => {
+      const k = t.dataset.k;
+      E.closeModal();
+      if (k === 'flash') useSkill('flash', () => { M._flash = true; E.toast('💡 洞穴被照亮了！', 'gold'); });
+      else if (k === 'fly') {
+        const v = Object.keys(WS().visited || {}).map(Number).sort((a, b) => a - b);
+        E.openModal('<h2>🕊️ 飞到哪里？</h2><div class="fly-list">' + v.map(z => '<button class="btn small ghost" data-act="wFlyTo" data-z="' + z + '">' + E.W[z].icon + ' ' + E.W[z].name + '</button>').join('') + '</div><button class="btn ghost wide" data-act="close">取消</button>');
+      }
+    },
+    wFlyTo: t => { const z = +t.dataset.z; E.closeModal(); useSkill('fly', () => flyTo(z)); },
     wHear: () => { const pg = page(); if (pg) E.say(pg.kind === 'speak' ? pg.target : pg.en, 0.8, pg.g); },
     wMic: () => dlgMic(),
     wSelfDone: () => { const pg = page(); if (pg && pg.kind) passTask(70); },
@@ -1156,7 +1336,7 @@
       const [id, n] = shopStock()[+t.dataset.i] || [], it = MG.ITEMS[id];
       if (!it) return;
       const price = it.price * n;
-      if (E.S.coins < price) return;
+      if (E.S.coins < price || (it.key && MG.itemCount(id) > 0)) return;
       E.S.coins -= price;
       MG.addItem(id, n);
       E.save(); E.SFX.coin(); E.renderTop(); hud();
@@ -1170,6 +1350,7 @@
     repel: () => { WS().repel = 100; E.save(); E.toast('🧴 接下来 100 步不会遇到野生怪兽'); },
     canRope: () => running && M && M.kind === 'cave',
     rope: () => { E.closeModal(); goMap('r' + M.route, 'cave'); },
+    bike: () => { E.closeModal(); if (running && M) actions.wBike(); },
   };
   const api3d = { tile: (x, y) => tile(x, y) };
   const ART = { drawPerson, portrait, atlas: PPL.atlas, paintGround, shade, hsh, rr, circ, ell, OUT, LOOKS, monImg, drawItemBall, buildColor: BUILD_COLORS };

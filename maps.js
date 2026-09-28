@@ -3,13 +3,15 @@
   'use strict';
 
   // ---------- 地块 ----------
-  // 户外：# 边界树  T 树  . 草地  , 草丛(遇怪)  = 小路  ~ 水  F 花  B 告示牌  o 道具  S 沙地  R 岩壁  r 石头  L 台阶(只能往下跳)  f 栅栏
+  // 户外：# 边界树  T 树  . 草地  , 草丛(遇怪)  = 小路  ~ 水(冲浪)  F 花  B 告示牌  o 道具  * 藏起来的道具  S 沙地  R 岩壁  r 石头  L 台阶(只能往下跳)  f 栅栏
+  //       野外技能障碍：n 小树(居合斩)  b 裂开的岩石(碎岩)  O 大石头(怪力推)
   //       ^ 北出口  v 南出口  K 洞口  @ 起点  1-9 人物
   //       建筑：C/c 怪兽中心/门  M/m 商店/门  G/g 道馆/门  H/h、J/j 民房/门
   // 洞穴：X 岩壁  : 洞穴地面(遇怪)  e 出口
   // 室内：W 墙  _ 地板  u 地毯  Q 柜台  P 电脑  Y 桌子  k 书架  p 盆栽  d 床  t 电视  Z 雕像  e 门口地垫
   const WALK = '.,=F^vo@S:_ue';
   const ENCOUNTER = { ',': 0.13, ':': 0.07 };
+  const OBST = 'nbO';
 
   // ---------- 小镇 ----------
   // 每个小镇：徽章守卫 2 在北边路口；1 是博士（第 1 镇）或村民；3 出题老师；4、5 村民
@@ -188,6 +190,55 @@
         '#........==........#',
       ], npc: { 1: { role: 'trainer', face: 'left', sight: 7, under: ',' } },
     },
+    // 野外技能路段：障碍后面是道具、稀有草丛或湖心岛，不挡主路
+    grove: {
+      rows: [
+        '#........==........#',
+        '#TTTTTT..==........#',
+        '#T,,o,T..==..,,,,..#',
+        '#T,,,,T..==..,,,,..#',
+        '#T,,,,T..==........#',
+        '#TTnTTT..==...*....#',
+        '#........==........#',
+        '#........==........#',
+      ],
+    },
+    lake: {
+      rows: [
+        '#........==........#',
+        '#..~~~~~.==.~~~~~~.#',
+        '#.~~~~~~.==.~~o~~~.#',
+        '#.~~~~~~.==.~~~~~~.#',
+        '#..~~~~..==..~~~~..#',
+        '#.......,==,.......#',
+        '#.*.....,==,.....,.#',
+        '#........==........#',
+      ],
+    },
+    rubble: {
+      rows: [
+        '#........==........#',
+        '#RRRRRRR.==.RRRRRRR#',
+        '#RR.o.RR.==.RR,,,RR#',
+        '#RR...RR.==.RR,,,RR#',
+        '#RRRbRRR.==.RRRbRRR#',
+        '#........==........#',
+        '#..r..*..==....r...#',
+        '#........==........#',
+      ],
+    },
+    boulder: {
+      rows: [
+        '#........==........#',
+        '#TTTTTTT.==.TTTTTTT#',
+        '#T.o...T.==.T.,,,.T#',
+        '#T.....T.==.T.,,,.T#',
+        '#TTTOTTT.==.TTTTOTT#',
+        '#........==........#',
+        '#...*....==........#',
+        '#........==........#',
+      ],
+    },
     cave: {
       rows: [
         '#........==........#',
@@ -203,17 +254,17 @@
   };
   const ROUTES = [
     ['grass', 'pond', 'ledge'],
-    ['alley', 'grass', 'meadow'],
-    ['rocks', 'cave', 'grass'],
-    ['pond', 'alley', 'meadow', 'ledge'],
-    ['grass', 'rocks', 'pond', 'alley'],
-    ['meadow', 'ledge', 'grass', 'alley'],
-    ['cave', 'pond', 'rocks', 'grass'],
-    ['alley', 'meadow', 'ledge', 'pond'],
-    ['rocks', 'grass', 'alley', 'meadow'],
-    ['pond', 'cave', 'alley', 'grass'],
-    ['ledge', 'rocks', 'meadow', 'alley'],
-    ['grass', 'alley', 'pond', 'rocks'],
+    ['grove', 'alley', 'grass', 'meadow'],
+    ['rubble', 'rocks', 'cave', 'grass'],
+    ['boulder', 'pond', 'alley', 'meadow', 'ledge'],
+    ['lake', 'grass', 'rocks', 'pond', 'alley'],
+    ['grove', 'meadow', 'ledge', 'grass', 'alley'],
+    ['lake', 'cave', 'pond', 'rocks', 'grass'],
+    ['rubble', 'alley', 'meadow', 'ledge', 'pond'],
+    ['boulder', 'rocks', 'grass', 'alley', 'meadow'],
+    ['lake', 'pond', 'cave', 'alley', 'grass'],
+    ['grove', 'ledge', 'rocks', 'meadow', 'alley'],
+    ['rubble', 'grass', 'alley', 'pond', 'rocks'],
   ];
 
   // ---------- 洞穴 ----------
@@ -348,6 +399,7 @@
   // 扫描地图：把人物、起点、告示牌、道具、建筑找出来
   function scan(m, spec) {
     const { grid } = m, signN = new Map();
+    m.hidden = m.hidden || []; m.boulders = m.boulders || [];
     for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
       const c = grid[y][x];
       const seg = spec.segAt ? spec.segAt(y) : spec;
@@ -360,6 +412,18 @@
       } else if (c === '@') { m.start = { x, y }; grid[y][x] = '.'; }
       else if (c === 'B') { const k = signN.get(seg) || 0; signN.set(seg, k + 1); m.signs.push({ x, y, kind: (seg.signs || [])[k] || 'tip' }); }
       else if (c === 'o') m.picks.push({ x, y });
+      else if (c === '*') { m.hidden.push({ x, y }); grid[y][x] = m.kind === 'cave' ? ':' : '.'; }
+      else if (c === 'O') { m.boulders.push({ x, y }); grid[y][x] = '.'; }
+    }
+    // 小镇和洞穴里再藏一个道具：挑一块四周都空的地面
+    if ((m.kind === 'town' || m.kind === 'cave') && !m.hidden.length) {
+      const floor = m.kind === 'cave' ? ':' : '.', ok = [];
+      for (let y = 2; y < m.H - 2; y++) for (let x = 2; x < m.W - 2; x++) {
+        let good = true;
+        for (let dy = -1; dy <= 1 && good; dy++) for (let dx = -1; dx <= 1; dx++) if (grid[y + dy][x + dx] !== floor) { good = false; break; }
+        if (good && !m.npcs.some(n => Math.abs(n.x - x) + Math.abs(n.y - y) < 3)) ok.push({ x, y });
+      }
+      if (ok.length) m.hidden.push(ok[(m.id.length * 7 + (m.z || 0) * 13) % ok.length]);
     }
     m.buildings = {};
     'CGMHJ'.split('').forEach(L => {
@@ -481,7 +545,7 @@
   }
 
   window.EchoMaps = {
-    WALK, ENCOUNTER,
+    WALK, ENCOUNTER, OBST,
     setTownCount: n => { TOWN_COUNT = n; for (const k in cache) delete cache[k]; },
     get, all, arrival,
     caves: CAVES.map(c => c.route),

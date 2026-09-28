@@ -7,15 +7,17 @@ const ctx = { window: {} };
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'maps.js'), 'utf8'), ctx);
 const MAPS = ctx.window.EchoMaps;
-const KNOWN = '#T.,=~FBoSRrLf^vK@CcMmGgHhJjX:WuQPYkpdtZe_';
+const KNOWN = '#T.,=~FBoSRrLf^vK@CcMmGgHhJjX:WuQPYkpdtZe_nb';
 const DIRS = [[0, -1], [0, 1], [-1, 0], [1, 0]];
 let fails = 0;
 const bad = (id, msg) => { fails++; console.log('✗', id, msg); };
 
-function reach(m, from, blockGuard) {
+// skills：有了全部野外技能（冲浪、居合斩、碎岩、推石头）以后能走到哪
+function reach(m, from, blockGuard, skills) {
   const npc = new Set(m.npcs.filter(n => blockGuard || n.role !== 'guard').map(n => n.x + ',' + n.y));
+  const rocks = new Set((m.boulders || []).map(b => b.x + ',' + b.y));
   const t = (x, y) => (m.grid[y] && m.grid[y][x]) || '#';
-  const ok = (x, y) => MAPS.WALK.includes(t(x, y)) && !npc.has(x + ',' + y);
+  const ok = (x, y) => ((MAPS.WALK.includes(t(x, y)) && (skills || !rocks.has(x + ',' + y))) || (skills && '~nb'.includes(t(x, y)))) && !npc.has(x + ',' + y);
   const seen = new Set([from.x + ',' + from.y]), q = [[from.x, from.y]];
   while (q.length) {
     const [x, y] = q.shift();
@@ -59,7 +61,8 @@ for (const id of ids) {
       const ch = m.grid[w.y][w.x], walk = MAPS.WALK.includes(ch);
       if (walk ? !has(R, w.x, w.y) : !has(R, w.x, w.y + 1)) bad(id, '从 ' + how + ' 走不到出口 ' + ch + ' @' + w.x + ',' + w.y);
     }
-    for (const o of m.picks) if (!has(R, o.x, o.y)) bad(id, '从 ' + how + ' 捡不到道具 @' + o.x + ',' + o.y);
+    const RS = reach(m, p, false, true);
+    for (const o of m.picks.concat(m.hidden || [])) if (!has(RS, o.x, o.y)) bad(id, '从 ' + how + ' 用上野外技能也捡不到道具 @' + o.x + ',' + o.y);
     for (const s of m.signs) if (!near(R, s.x, s.y)) bad(id, '告示牌走不到 @' + s.x + ',' + s.y);
     for (const n of m.npcs) {
       const counter = DIRS.some(([dx, dy]) => m.grid[n.y + dy] && m.grid[n.y + dy][n.x + dx] === 'Q' && has(R, n.x + dx * 2, n.y + dy * 2));

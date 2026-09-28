@@ -208,7 +208,7 @@
         mesh(new T3.PlaneGeometry(m.W + 40, m.H + 40).rotateX(-Math.PI / 2), og, m.W / 2, -0.02, m.H / 2);
       }
       scene.background = C(m.kind === 'inside' ? '#1a1410' : m.kind === 'cave' ? '#0d0907' : A.shade(pal.tree, .55));
-      buildTrees(); buildGrass(); buildWater(); buildRocks(); buildBuildings(); buildProps(); buildIndoor();
+      buildTrees(); buildGrass(); buildWater(); buildRocks(); buildBuildings(); buildProps(); buildIndoor(); buildObst();
       // 灯光
       const cave = m.kind === 'cave', inside = m.kind === 'inside';
       hemi.intensity = cave ? .8 : inside ? 1.9 : 1.6;
@@ -224,6 +224,11 @@
       if (!follower) follower = monSprite();
       world.add(follower.root);
       if (!hintS) hintS = bubbleSprite('A', '#e53935');
+      if (!bike) bike = makeBike();
+      world.add(bike);
+      if (!ripple) { ripple = new T3.Mesh(new T3.TorusGeometry(.5, .04, 6, 28), new T3.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .7 })); ripple.rotation.x = Math.PI / 2; }
+      world.add(ripple);
+      sparkS.forEach(sp => world.add(sp));
       world.add(hintS);
       camT.set(-999, 0, 0);
       snap = '';
@@ -492,6 +497,45 @@
       }
     }
 
+    // ---------- 野外技能的障碍：小树、裂开的岩石、大石头 ----------
+    let obstM = [], bouldM = [], bike = null, ripple = null;
+    const sparkS = [];
+    function buildObst() {
+      obstM = []; bouldM = [];
+      for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
+        const c = at(x, y);
+        if (c === 'n') {
+          const g = new T3.Group();
+          const tr = new T3.CylinderGeometry(.06, .08, .35, 6).translate(0, .17, 0); tint(tr, '#6d4121');
+          const cr = new T3.IcosahedronGeometry(.3, 1).translate(0, .55, 0); tint(cr, '#7bc043');
+          g.add(new T3.Mesh(tr, vcol), new T3.Mesh(cr, vcolFlat)); own.push(tr, cr);
+          g.position.set(x + .5, 0, y + .5); g.traverse(o => { o.castShadow = !!Q.shadow; });
+          world.add(g); obstM.push({ g, key: x + ',' + y });
+        } else if (c === 'b') {
+          const rg = new T3.IcosahedronGeometry(.38, 0).translate(0, .3, 0); tint(rg, '#b8a58a');
+          const g = new T3.Mesh(rg, vcolFlat); own.push(rg);
+          const crack = new T3.Mesh(new T3.BoxGeometry(.03, .34, .02), new T3.MeshBasicMaterial({ color: '#4e3b2c' })); crack.position.set(0, .34, .34); crack.rotation.z = .4; g.add(crack); own.push(crack.geometry, crack.material);
+          g.position.set(x + .5, 0, y + .5); g.castShadow = !!Q.shadow;
+          world.add(g); obstM.push({ g, key: x + ',' + y });
+        }
+      }
+      (m.boulders || []).forEach(b => {
+        const bg = new T3.IcosahedronGeometry(.45, 1).translate(0, .42, 0); tint(bg, '#9e9e9e');
+        const g = new T3.Mesh(bg, vcolFlat); own.push(bg);
+        g.position.set(b.x + .5, 0, b.y + .5); g.castShadow = !!Q.shadow;
+        world.add(g); bouldM.push(g);
+      });
+    }
+    function makeBike() {
+      const g = new T3.Group(), wm = new T3.MeshLambertMaterial({ color: '#37474f' }), fm = new T3.MeshLambertMaterial({ color: '#e53935' });
+      [-1, 1].forEach(k => { const w = new T3.Mesh(new T3.TorusGeometry(.17, .03, 6, 16), wm); w.position.set(0, .18, k * .24); w.rotation.y = Math.PI / 2; g.add(w); });
+      const f = new T3.Mesh(new T3.BoxGeometry(.05, .05, .5), fm); f.position.set(0, .3, 0); g.add(f);
+      const h = new T3.Mesh(new T3.BoxGeometry(.32, .04, .04), wm); h.position.set(0, .45, .2); g.add(h);
+      return g;
+    }
+    const sparkTex = canvasTexKeep(32, 32, g => { const gr = g.createRadialGradient(16, 16, 0, 16, 16, 16); gr.addColorStop(0, 'rgba(255,255,220,1)'); gr.addColorStop(.4, 'rgba(255,240,150,.8)'); gr.addColorStop(1, 'rgba(255,240,150,0)'); g.fillStyle = gr; g.fillRect(0, 0, 32, 32); });
+    for (let i = 0; i < 4; i++) { const sp = new T3.Mesh(new T3.PlaneGeometry(.5, .5), new T3.MeshBasicMaterial({ map: sparkTex, transparent: true, depthWrite: false, blending: T3.AdditiveBlending })); sp.rotation.x = -.9; sp.visible = false; sparkS.push(sp); }
+
     // ---------- 人物纸片 ----------
     function atlas(look) {
       const key = JSON.stringify(look);
@@ -624,13 +668,23 @@
       setLook(player, V.plook);
       setFrame(player, V.pdir, V.pmoving ? 1 + (Math.floor(now / 85) % 2) : 0);
       player.root.position.set(V.px + .5, 0, V.py + .5);
-      player.mesh.position.y = V.hop;
+      player.mesh.position.y = V.hop + (V.surf ? .42 : V.bike ? .16 : 0);
+      bike.visible = !!V.bike;
+      if (V.bike) { bike.position.set(V.px + .5, 0, V.py + .5); bike.rotation.y = V.pdir === 'left' || V.pdir === 'right' ? Math.PI / 2 : 0; }
+      ripple.visible = !!V.surf;
+      if (V.surf) { ripple.position.set(V.px + .5, .06, V.py + .5); ripple.scale.setScalar(1 + Math.sin(now / 250) * .08); }
+      // 障碍：砍掉 / 碎掉的不画；大石头滑到新位置
+      obstM.forEach(o => { o.g.visible = !V.cleared || !V.cleared.has(o.key); });
+      V.obst.forEach((b, i) => { const g = bouldM[i]; if (!g) return; g.position.x += (b.x + .5 - g.position.x) * .3; g.position.z += (b.y + .5 - g.position.z) * .3; });
+      // 寻宝器的闪光
+      sparkS.forEach((sp, i) => { const h = V.sparkles[i]; sp.visible = !!h; if (h) { sp.position.set(h.x + .5, .15, h.y + .5); sp.material.opacity = .4 + .6 * (Math.sin(now / 230 + i * 2) + 1) / 2; sp.scale.setScalar(.7 + .5 * (Math.sin(now / 300 + i) + 1) / 2); } });
       // 跟着走的怪兽
-      follower.root.visible = V.showF;
-      if (V.showF) {
+      follower.root.visible = V.showF || (V.surf && !!V.lead);
+      if (V.showF || V.surf) {
         setMon(follower, V.lead);
         const bob = V.pmoving ? Math.abs(Math.sin(now / 90)) * .08 : Math.sin(now / 600) * .02;
         follower.root.position.set(V.fx + .5, 0, V.fy + .5);
+        if (V.surf) follower.root.position.set(V.px + .5, -.1, V.py + .55);
         if (follower.mesh) follower.mesh.position.y = bob + V.fhop;
       }
       // 其他人物：位置平滑跟上（训练师走过来时不会一格一格跳）
@@ -681,12 +735,13 @@
         if (key !== snap) { snap = key; sun.target.position.set(sx, 0, sz - 1); sun.position.set(sx - 7, 16, sz + 6); sun.target.updateMatrixWorld(); renderer.shadowMap.needsUpdate = true; }
       } else { sun.position.set(camT.x - 7, 16, camT.z + 6); sun.target.position.set(camT.x, 0, camT.z); }
       lamp.position.set(V.px + .5, 1.8, V.py + .8);
+      if (m.kind === 'cave') { lamp.intensity = V.flash ? 18 : 9; lamp.distance = V.flash ? 14 : 4.5; hemi.intensity = V.flash ? 1.1 : .45; }
       if (post) {
         tmp.set(V.px + .5, .6, V.py + .5).project(camera);
         const u = post.mat.uniforms;
         u.uFocus.value = tmp.y * .5 + .5;
         u.uCenter.value.set(tmp.x * .5 + .5, tmp.y * .5 + .5);
-        u.uDark.value = m.kind === 'cave' ? .92 : 0;
+        u.uDark.value = m.kind === 'cave' ? (V.flash ? .35 : .97) : 0;
         u.uVig.value = m.kind === 'inside' ? .35 : .55;
         u.uBand.value = m.kind === 'inside' ? .3 : .2;
         renderer.setRenderTarget(rt);
