@@ -1,0 +1,12 @@
+{
+  "name": "echo-island",
+  "private": true,
+  "description": "回声岛：初中英语听说冒险游戏（纯静态网页）",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node tests/practice.test.js && node tests/adventure.test.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
