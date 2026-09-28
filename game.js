@@ -1554,6 +1554,8 @@
   function start(data) {
     S = load(data && data.S);
     if (window.MonsterGame) MonsterGame.migrate();
+    // 链接带 ?quiet：不方便说话时，所有口语任务都改成按按钮（等同设置里的「录音自评」）
+    if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast('🔇 不用说话模式：要说话的地方都变成按钮了'), 800); }
     checkStreak();
     ensureQuests();
     loadVoices();
