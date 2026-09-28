@@ -91,6 +91,7 @@
       settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false, gfx: 'auto', gfxAuto: '' }, seenIntro: false,
       homeTab: 'mon', mon: window.MonsterGame ? MonsterGame.fresh() : { box: [], team: [], dex: {}, badges: {}, balls: 5 },
       world: window.EchoWorld ? EchoWorld.fresh() : {},
+      player: { gender: '', name: '' },
     };
   }
   function merge(base, o) {

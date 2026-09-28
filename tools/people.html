@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>人物预览</title>
+<style>body { margin: 8px; background: #cfe8d8; font: 12px sans-serif; } .row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; } .row b { width: 60px; } canvas { background: #9fd27f; border-radius: 6px; } img { width: 64px; }</style>
+<div id="out"></div>
+<script src="../people.js"></script>
+<script>
+// 人物预览：每个造型 4 个方向 × 3 帧 + 头像。改人物画法后打开这页看
+const P = EchoPeople, out = document.getElementById('out');
+const looks = Object.entries(P.LOOKS).concat(P.VILLAGERS.map(v => [v[0], v[2]]), P.TRAINERS.map((t, i) => ['T' + i, t[1]]));
+const only = new URLSearchParams(location.search).get('only');
+looks.filter(([n]) => !only || only.split(',').includes(n)).forEach(([name, L]) => {
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = '<b>' + name + '</b>';
+  const S = +(new URLSearchParams(location.search).get('s') || 72), c = document.createElement('canvas');
+  c.width = S * 4; c.height = S * 3 / 3;
+  const a = P.atlas(L, S);
+  c.height = S; c.width = S * 12;
+  const g = c.getContext('2d');
+  const ds = (new URLSearchParams(location.search).get('d') || '0123').split('').map(Number);
+  c.width = S * ds.length * 3;
+  ds.forEach((d, j) => { for (let f = 0; f < 3; f++) g.drawImage(a, d * S, f * S, S, S, (j * 3 + f) * S, 0, S, S); });
+  row.appendChild(c);
+  const im = new Image(); im.src = P.portrait(L); row.appendChild(im);
+  out.appendChild(row);
+});
+</script>

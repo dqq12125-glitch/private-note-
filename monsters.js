@@ -128,9 +128,9 @@
   function homeHTML() {
     const m = M(), esc = E.esc;
     if (!m.box.length) {
-      return '<section class="mon-card starter-pick"><h2>选择你的第一只怪兽</h2><p>它会陪你在 13 个区域冒险。用英语念咒语攻击，听懂对手的咒语来防御。</p><div class="starters">' +
-        STARTERS.map(id => { const s = SPECIES[id]; return '<button class="starter" data-act="mStarter" data-sp="' + id + '"><span class="st-svg">' + svg(id) + '</span><b>' + s.en + '</b><small>' + s.zh + '</small>' + tchip(s.type) + '</button>'; }).join('') +
-        '</div><p class="tip">🔥 火克 🍃 草，🍃 草克 💧 水，💧 水克 🔥 火</p></section>';
+      return '<section class="mon-card starter-pick new-game"><div class="ng-mons">' + STARTERS.map(id => '<span class="st-svg">' + svg(id) + '</span>').join('') + '</div>' +
+        '<h2>新的冒险</h2><p>你刚搬到回声群岛最南边的你好岛。这里的怪兽听得懂英语——话说得越清楚，怪兽就越强。<br>回声博士好像遇到麻烦了……</p>' +
+        '<button class="btn sun wide world-go" data-act="wEnter">🌅 开始冒险</button></section>';
     }
     const L = lead(), s = SPECIES[L.sp], st = stats(L);
     let h = '<section class="mon-card lead" style="--tc:' + TYPES[s.type].color + '"><div class="lead-mon">' + svg(L.sp) + '</div><div class="lead-info">' +
@@ -230,7 +230,7 @@
     const team = M().team.filter(byUid);
     const foes = opts.foes || (kind === 'wild' ? [wildFoe(z, opts.lvBonus)] : leaderFoes(z));
     const ti = team.findIndex(u => curHp(byUid(u)) > 0);
-    B = { kind, z, foes, fi: 0, team, ti, hp: {}, energy: 0, turn: 'intro', over: false, used: new Set([team[ti]]), task: null, tries: 0, onEnd: opts.onEnd, trainer: opts.trainer, result: '' };
+    B = { kind, z, foes, fi: 0, team, ti, hp: {}, energy: 0, turn: 'intro', over: false, used: new Set([team[ti]]), task: null, tries: 0, onEnd: opts.onEnd, trainer: opts.trainer, result: '', noCatch: !!opts.noCatch };
     team.forEach(u => { B.hp[u] = curHp(byUid(u)); });
     B.foeHp = stats(foes[0]).hp;
     B.enter = 'both';
@@ -295,14 +295,14 @@
   function menu() {
     B.turn = 'me'; B.task = null;
     const m = me(), sm = SPECIES[m.sp], f = foe();
-    const canCatch = B.kind === 'wild' && B.foeHp <= stats(f).hp * 0.6;
+    const canCatch = B.kind === 'wild' && !B.noCatch && B.foeHp <= stats(f).hp * 0.6;
     msg('<b>' + sm.en + '</b> 要用什么技能？念对英语咒语才能打中！');
     panel('<div class="moves">' + MOVES[sm.type].map((mv, i) => {
       const lock = i === 2 && B.energy < 3;
       return '<button class="move' + (i === 2 ? ' ult' : '') + '" style="--tc:' + TYPES[sm.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[sm.type] + '</span><b>' + mv[0] + '</b><span class="mv-pow">' + DOTS[i] + '</span></span><small>' + mv[1] + ' · ' + (lock ? '攒满 3 格能量解锁' : TASK[i]) + '</small></button>';
     }).join('') + '</div>' +
       '<div class="b-items">' +
-      (B.kind === 'wild' ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 收服' + (canCatch ? '' : ' · 先打虚弱') + '</button>' : '') +
+      (B.kind === 'wild' && !B.noCatch ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 收服' + (canCatch ? '' : ' · 先打虚弱') + '</button>' : '') +
       '<button class="btn small ghost" data-act="bBag">🎒 背包</button></div>');
   }
   // 战斗里的背包：只能用回复类道具，用掉这一回合
@@ -880,6 +880,18 @@
       E.save();
     },
     setFieldHooks: h => { FH = h; },
+    STARTERS, STRONG,
+    species: id => SPECIES[id],
+    newMon,
+    // 开场剧情里从博士的包里选的伙伴
+    giveStarter(id) {
+      const m = M();
+      if (m.box.length) return null;
+      const mon = newMon(id, 5);
+      m.box.push(mon); m.team = [mon.uid]; m.dex[id] = 'caught';
+      E.save();
+      return mon;
+    },
     ITEMS, itemCount, addItem, pcSheet, bagSheet,
     homeHTML,
     stop: () => { writeBack(); stopBattle(); },

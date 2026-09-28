@@ -188,7 +188,7 @@
       if (world) { scene.remove(world); world.traverse(o => { if (o.material && o.material._own) o.material.dispose(); }); }
       own.forEach(o => o.dispose && o.dispose());
       own = [];
-      sprites.forEach(s => { if (s.mesh) { s.mesh.geometry.dispose(); s.mesh.material.dispose(); } if (s.alert) { s.alert.geometry.dispose(); s.alert.material.dispose(); } });
+      sprites.forEach(s => { if (s.mesh) { s.mesh.geometry.dispose(); s.mesh.material.dispose(); if (s.mesh.material.userData.tex) s.mesh.material.userData.tex.dispose(); } if (s.alert) { s.alert.geometry.dispose(); s.alert.material.dispose(); } });
       sprites.length = 0; pickSprites = [];
       world = new T3.Group();
       scene.add(world);
@@ -496,13 +496,7 @@
     function atlas(look) {
       const key = JSON.stringify(look);
       if (atlasCache[key]) return atlasCache[key];
-      const S = Q.cell, c = document.createElement('canvas');
-      c.width = S * 4; c.height = S * 3;
-      const g = c.getContext('2d');
-      ['down', 'left', 'right', 'up'].forEach((dir, col) => [[0, false], [Math.PI / 2, true], [Math.PI * 1.5, true]].forEach(([ph, mv], row) => {
-        A.drawPerson(g, col * S + S / 2, row * S + S * .95, S * .7, look, dir, ph, mv, true);
-      }));
-      const t = new T3.CanvasTexture(c);
+      const t = new T3.CanvasTexture(A.atlas(look, Q.cell));
       t.colorSpace = T3.SRGBColorSpace;
       t.anisotropy = 4;
       return (atlasCache[key] = t);
@@ -515,7 +509,7 @@
     }
     function person(n, isPlayer) {
       const root = new T3.Group();
-      const look = isPlayer ? A.LOOKS.player : null;
+      const look = null;
       const s = { n, root, look, key: '', frame: -1, dir: '', mesh: null, rx: n ? n.x : 0, ry: n ? n.y : 0 };
       const sh = new T3.Mesh(blobGeo, blobMat); sh.scale.set(.75, 1, .45); sh.position.y = .015; root.add(sh);
       if (look) setLook(s, look);
@@ -538,6 +532,20 @@
       const uv = s.mesh.geometry.attributes.uv;
       uv.setXY(0, u0, vt); uv.setXY(1, u1, vt); uv.setXY(2, u0, vb); uv.setXY(3, u1, vb);
       uv.needsUpdate = true;
+    }
+    // 地图上的野生怪兽（剧情用）
+    function setMonOn(s, sp) {
+      const key = 'mon:' + sp.en;
+      if (s.key === key) return;
+      const im = A.monImg(sp);
+      if (!im.complete || !im.naturalWidth) return;
+      const c = document.createElement('canvas'); c.width = c.height = Q.cell;
+      c.getContext('2d').drawImage(im, 0, 0, Q.cell, Q.cell);
+      const t = new T3.CanvasTexture(c); t.colorSpace = T3.SRGBColorSpace;
+      if (s.mesh) { s.root.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }
+      s.mesh = sheet(t, 1.05); s.mesh.rotation.x = -pitch * .8; s.mesh.material.userData.tex = t;
+      s.root.add(s.mesh);
+      s.key = key;
     }
     function monSprite() {
       const root = new T3.Group();
@@ -613,6 +621,7 @@
       U.uTime.value = now / 1000;
       renderer.info.reset();
       // 主角
+      setLook(player, V.plook);
       setFrame(player, V.pdir, V.pmoving ? 1 + (Math.floor(now / 85) % 2) : 0);
       player.root.position.set(V.px + .5, 0, V.py + .5);
       player.mesh.position.y = V.hop;
@@ -627,14 +636,15 @@
       // 其他人物：位置平滑跟上（训练师走过来时不会一格一格跳）
       const seen = new Set();
       V.npcs.forEach(q => {
-        const s = sprites.find(x => x.n === q.n);
-        if (!s) return;
+        let s = sprites.find(x => x.n === q.n);
+        if (!s) { s = person(q.n); sprites.push(s); }   // 剧情里临时出现的人
         seen.add(s);
-        setLook(s, q.look);
+        if (q.mon) setMonOn(s, q.mon); else setLook(s, q.look);
         const k = 1 - Math.exp(-dt * 14);
         s.rx += (q.x - s.rx) * k; s.ry += (q.y - s.ry) * k;
         const walking = Math.abs(q.x - s.rx) + Math.abs(q.y - s.ry) > .05;
-        setFrame(s, q.face, walking ? 1 + (Math.floor(now / 90) % 2) : 0);
+        if (q.mon) { if (s.mesh) s.mesh.position.y = Math.abs(Math.sin(now / 110)) * .12; }
+        else setFrame(s, q.face, walking ? 1 + (Math.floor(now / 90) % 2) : 0);
         s.root.position.set(s.rx + .5, 0, s.ry + .5);
         s.root.visible = true;
         if (q.alert) { if (!s.alert) { s.alert = bubbleSprite('!', '#e53935'); s.root.add(s.alert); s.alert.position.set(0, 1.55, 0); } s.alert.visible = true; }

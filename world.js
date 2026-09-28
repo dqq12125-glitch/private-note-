@@ -37,7 +37,7 @@
 
   // ---------- 地图查询 ----------
   const tile = (x, y) => (M.grid[y] && M.grid[y][x]) || (M.kind === 'inside' ? 'W' : M.kind === 'cave' ? 'X' : '#');
-  const npcVisible = n => !(n.role === 'guard' && hasBadge(M.z));
+  const npcVisible = n => !(n.role === 'guard' && hasBadge(M.z)) && !(window.EchoStory && EchoStory.hidden(SC, n));
   const npcAt = (x, y) => M.npcs.find(n => n.x === x && n.y === y && npcVisible(n));
   const pickKey = p => 'p:' + M.id + ':' + p.x + ':' + p.y;
   const pickAt = (x, y) => M.picks.find(p => p.x === x && p.y === y && !WS().flags[pickKey(p)]);
@@ -69,6 +69,9 @@
     return { name: TRAINER_NAMES[k], g: e[0], look: e[1] };
   }
   function npcLook(n) {
+    if (n.look) return { name: n.name, g: n.g || 'm', look: n.look };
+    const o = window.EchoStory && EchoStory.look(SC, n);
+    if (o) return o;
     if (n.role === 'guard') return { name: 'Guard', g: 'm', look: LOOKS.guard };
     if (n.role === 'talk' && M.kind === 'town' && M.z === 0 && n.id === '1') return { name: 'Professor Echo', g: 'f', look: LOOKS.prof };
     if (n.role === 'quiz') return { name: 'Mr Wise', g: 'm', look: LOOKS.teacher };
@@ -89,6 +92,7 @@
   }
   function loadMap(id, how) {
     M = EM.get(id) || EM.get('t0');
+    M.npcs = M.npcs.filter(n => !n.temp);
     const ws = WS();
     if (M.kind === 'town') ws.visited[M.z] = 1;
     let p = how && typeof how === 'object' ? how : EM.arrival(M, how === 'start' ? null : how);
@@ -108,7 +112,6 @@
     hud();
   }
   function enter(z, how) {
-    if (!E.S.mon.box.length) { E.toast('先在「怪兽冒险」里选一只初始怪兽'); return; }
     E.primeTTS(); E.ac();
     E.closeModal();
     E.show('world');
@@ -116,22 +119,20 @@
     migrate();
     const ws = WS();
     ensureRenderer();
-    if (how === 'resume' && ws.started && ws.map) loadMap(ws.map, ws.x >= 0 ? { x: ws.x, y: ws.y, dir: ws.dir } : ws.arrive || 'door:C');
+    // 还没有怪兽：新游戏，从开场剧情开始（在自己家里醒来）
+    const fresh = !E.S.mon.box.length;
+    if (fresh) {
+      Object.keys(ws.flags).forEach(k => { if (k.startsWith('s:')) delete ws.flags[k]; });
+      loadMap('i0H', { x: 6, y: 2, dir: 'down' });
+    } else if (how === 'resume' && ws.started && ws.map) loadMap(ws.map, ws.x >= 0 ? { x: ws.x, y: ws.y, dir: ws.dir } : ws.arrive || 'door:C');
     else if (how === 'fly') loadMap('t' + z, 'door:C');
-    else loadMap('t0', 'start');
-    ws.started = true;
+    else loadMap('t0', 'door:C');
+    ws.started = true; ws.introDone = true;
     E.save();
     resize();
     startLoop();
-    banner();
-    if (!ws.introDone) {
-      ws.introDone = true; E.save();
-      setTimeout(() => talk([
-        { who: '旁白', emo: '📣', en: 'Welcome to the Echo Islands!', zh: '欢迎来到回声群岛！' },
-        { who: '旁白', emo: '📣', en: 'Use the arrow pad to walk. Press A to talk.', zh: '用方向键走路，走到别人面前按 A 键和他说话。' },
-        { who: '旁白', emo: '📣', en: 'First, go and find Professor Echo!', zh: '先去找小镇里的回声博士吧！她就在你右边。' },
-      ]), 1800);
-    }
+    if (!fresh) banner();
+    story('enter', 'begin');
   }
   async function goMap(id, how) {
     busy = true;
@@ -145,6 +146,7 @@
     v.classList.remove('fade');
     if (M.kind !== 'inside' && !(prevKind === 'inside' && M.kind === 'town')) banner();
     busy = false;
+    story('enter', how);
   }
   function banner() {
     const b = $('w-banner'), p = placeName();
@@ -184,12 +186,14 @@
     PL.moving = true; PL.jump = jump; PL.dur = dur; PL.t0 = performance.now();
   }
   function onStep() {
+    if (PL.scripted) return;
     const t = tile(PL.x, PL.y), ws = WS();
     savePos();
     const w = warpAt(PL.x, PL.y);
     if (w) { goMap(w.to, w.arrive); return; }
     const p = pickAt(PL.x, PL.y);
     if (p) { pickup(p); return; }
+    if (story('step')) return;
     const tr = spotTrainer();
     if (tr) { trainerSpotted(tr); return; }
     if (ws.repel > 0) { ws.repel--; if (!ws.repel) E.toast('🧴 驱怪喷雾的效果消失了'); }
@@ -228,7 +232,14 @@
   }
 
   // ---------- 对话框 ----------
-  function talk(pages, onDone) { dlg = { pages, i: 0, onDone, tries: 0 }; showPage(); }
+  // 台词里的 {name} {rival} 换成主角和对手的名字
+  const pname = () => (E.S.player && E.S.player.name) || 'Trainer';
+  const rivalInfo = () => (E.S.player && E.S.player.gender === 'girl') ? { name: 'Leo', g: 'm', look: LOOKS.leo } : { name: 'Mia', g: 'f', look: LOOKS.mia };
+  const fill = v => typeof v === 'string' ? v.split('{name}').join(pname()).split('{rival}').join(rivalInfo().name) : v;
+  function talk(pages, onDone) {
+    pages.forEach(p => ['en', 'zh', 'target', 'who'].forEach(k => { p[k] = fill(p[k]); }));
+    dlg = { pages, i: 0, onDone, tries: 0 }; showPage();
+  }
   const page = () => dlg && dlg.pages[dlg.i];
   function showPage() {
     const pg = page(), box = $('w-dlg');
@@ -251,8 +262,12 @@
         (sr ? '<small class="tip">选一句正确的回答，<b>大声说出来</b>（点选项可以先听）</small><button class="mic" id="w-mic" data-act="wMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="w-hint"></div><div class="heard" id="w-heard"></div>'
           : '<small class="tip" id="w-hint">点出正确的回答，再大声说一遍</small>') +
         '<button class="link" data-act="wSkip">先跳过</button></div>';
-    } else body += '<span class="d-next">▼</span>';
+    } else if (pg.kind === 'choice') {
+      body += '<div class="d-task"><div class="d-choice">' + pg.opts.map((o, k) => '<button class="btn ' + (o.cls || 'ghost') + '" data-act="wPick" data-i="' + k + '">' + o.html + '</button>').join('') + '</div></div>';
+    } else if (pg.kind === 'custom') body += '<div class="d-task" id="w-custom">' + pg.html + '</div>';
+    else body += '<span class="d-next">▼</span>';
     box.innerHTML = body;
+    if (pg.kind === 'custom' && pg.mount) pg.mount($('w-custom'), extra => { if (page() !== pg) return; insertPages(extra); pg.kind = null; nextPage(); });
     box.classList.toggle('task', !!pg.kind);
     box.hidden = false;
     if (typing) {
@@ -378,7 +393,7 @@
     if (busy || PL.moving || !$('modal').hidden) return;
     const f = facing();
     if (!f) return;
-    if (f.n) { f.n.face = faceTo(f.n, PL); npcTalk(f.n); }
+    if (f.n) { f.n.face = faceTo(f.n, PL); if (!story('talk', f.n)) npcTalk(f.n); }
     else if (f.s) signTalk(f.s);
     else if (f.pc) { E.SFX.tap(); E.say('Welcome to the monster box!'); MG.pcSheet(); }
     else if (f.w) goMap(f.w.to, f.w.arrive);
@@ -463,7 +478,7 @@
       talk([P('Hello, young trainer!', '你好呀，小训练师！'), P(t[0], t[1]), P('Can you say it?', '你能跟我说一遍吗？', { kind: 'speak', target: t[0], pass: () => coins(dk, 'Well done! Here are 10 coins.', '说得真好！送你 10 个金币。') })]);
     } else if (M.kind === 'town' && z === 0 && n.id === '1') {
       talk([
-        P("Hello! I'm Professor Echo.", '你好！我是回声博士。'),
+        P('Hello again, {name}! How is your monster?', '又见面了，{name}！你的怪兽还好吗？'),
         P('Monsters on these islands understand English.', '这些岛上的怪兽都听得懂英语。'),
         P('Speak clearly, and your monsters will be strong!', '英语说得越清楚，你的怪兽就越强！'),
         P('Wild monsters live in the tall grass on the road north.', '北边的路上有草丛，里面住着野生怪兽。'),
@@ -539,18 +554,18 @@
     await sleep(820);
     stopLoop();
     const ok = MG.battle(kind, M.z, {
-      foes: o.foes, trainer: o.trainer, lvBonus: o.lvBonus,
+      foes: o.foes, trainer: o.trainer, lvBonus: o.lvBonus, noCatch: o.noCatch,
       onEnd: res => {
         E.show('world');
         wp.classList.remove('on');
         resize(); hud();
         startLoop();
         busy = false;
-        if (res === 'lose') whiteout();
+        if (res === 'lose' && !o.noWhiteout) whiteout();
         else if (o.after) o.after(res);
       },
     });
-    if (!ok) { wp.classList.remove('on'); startLoop(); busy = false; }
+    if (!ok) { wp.classList.remove('on'); startLoop(); busy = false; if (o.after) o.after('none'); }
   }
   function whiteout() {
     MG.healAll();
@@ -561,6 +576,45 @@
       { who: 'Nurse Amy', look: LOOKS.nurse, g: 'f', en: "Your monsters are healed now. Don't give up!", zh: '怪兽们已经恢复了，别灰心，再去试试吧！' },
     ]);
   }
+
+  // ---------- 剧情（脚本在 story.js） ----------
+  let overlay = null;   // 剧情里的全屏画面（比如选伙伴）接管方向键和 A/B 键
+  // hook：enter 进地图 / step 走了一步 / talk 和人说话。story.js 返回一段剧情（async 函数）就播放它
+  function story(hook, arg) {
+    const ST = window.EchoStory, scene = ST && ST[hook] && ST[hook](SC, arg);
+    if (!scene) return false;
+    busy = true; held = null;
+    Promise.resolve().then(scene).catch(e => console.error(e)).then(() => { busy = false; overlay = null; PL.scripted = false; hud(); });
+    return true;
+  }
+  const SC = {
+    get E() { return E; }, get MG() { return MG; }, get map() { return M; }, pl: PL, fl: FL, get LOOKS() { return LOOKS; }, pname, rivalInfo, portrait: l => portrait(l), plook: () => playerLook(),
+    flag: k => !!WS().flags['s:' + k],
+    set: k => { WS().flags['s:' + k] = 1; E.save(); },
+    talk: pages => new Promise(r => talk(pages, r)),
+    wait: sleep,
+    npc: pred => M.npcs.find(pred),
+    // 临时人物：离开地图就消失。look/name 自定义造型；mon 是怪兽编号（画成怪兽）
+    spawn: spec => { const n = Object.assign({ id: 'tmp' + Math.random().toString(36).slice(2, 7), face: 'down', seed: 0, sight: 0, role: 'story', temp: true }, spec); n.home = n.face; M.npcs.push(n); return n; },
+    remove: n => { M.npcs = M.npcs.filter(q => q !== n); },
+    walk: async (n, dir, steps, ms) => { const [dx, dy] = DIRS[dir]; for (let i = 0; i < steps; i++) { n.face = dir; n.x += dx; n.y += dy; await sleep(ms || 200); } },
+    walkPlayer: async (dir, steps) => {
+      PL.scripted = true;
+      const [dx, dy] = DIRS[dir];
+      for (let i = 0; i < steps; i++) { PL.dir = dir; step(PL.x + dx, PL.y + dy, STEP_MS, false); await sleep(STEP_MS + 30); }
+      PL.scripted = false;
+    },
+    face: (n, dir) => { n.face = dir; },
+    facePlayer: dir => { PL.dir = dir; },
+    faceEach: n => { n.face = faceTo(n, PL); PL.dir = faceTo(PL, n); },
+    alert: async n => { n.alert = performance.now(); E.SFX.tap(); await sleep(800); },
+    battle: (kind, o) => new Promise(res => battle(kind, Object.assign({}, o, { after: r => { busy = true; res(r); } }))),
+    scene: () => $('w-scene'),
+    setOverlay: fn => { overlay = fn; },
+    goMap: (id, how) => goMap(id, how),
+    hud: () => hud(),
+    say: (t, g) => E.say(t, undefined, g),
+  };
 
   // ---------- 渲染器 ----------
   // 画质：auto 自动 / high 精美 / mid 标准 / low 省电 / 2d 流畅模式
@@ -583,18 +637,20 @@
     perf.n = 0; perf.sum = 0; perf.t0 = 0;
   }
   // 自动画质：进地图后量 3 秒帧率，太慢就降一档
+  // 超过 250ms 的帧（页面在后台、被系统限流、正在切地图）不算；有效帧太少就过一会儿重新量
   const perf = { n: 0, sum: 0, t0: 0 };
   function autoTune(now, dt) {
     const st = E.S.settings;
-    if ((st.gfx || 'auto') !== 'auto' || !R || R.kind === '2d' || busy || dlg) return;
+    if ((st.gfx || 'auto') !== 'auto' || !R || R.kind === '2d' || busy || dlg || document.hidden) return;
     if (!perf.t0) { perf.t0 = now; return; }
-    if (now - perf.t0 < 1200 || dt > 1500) return;
+    if (now - perf.t0 < 1200 || dt > 250) return;
     perf.n++; perf.sum += dt;
     if (perf.n < 150 && now - perf.t0 < 4500) return;
-    if (perf.n < 8) return;
+    if (perf.n < 20) { perf.n = 0; perf.sum = 0; perf.t0 = now; return; }
     const avg = perf.sum / perf.n;
     perf.n = 0; perf.sum = 0; perf.t0 = now + 1e9;
-    const cur = R.tier, next = avg > 30 ? (cur === 'high' ? 'mid' : cur === 'mid' ? 'low' : '2d') : avg > 21 && cur !== 'low' ? (cur === 'high' ? 'mid' : 'low') : null;
+    // 精美 > 20ms（不到 50 帧）降到标准；标准 > 24ms（不到 42 帧）降到省电；省电 > 45ms（不到 22 帧）才换 2D
+    const cur = R.tier, next = cur === 'high' ? (avg > 20 ? 'mid' : null) : cur === 'mid' ? (avg > 24 ? 'low' : null) : (avg > 45 ? '2d' : null);
     if (!next) { st.gfxAuto = cur; E.save(); return; }
     st.gfxAuto = next; E.save();
     ensureRenderer(); R.load(M, api3d); resize();
@@ -610,7 +666,7 @@
     if (!PL.moving && held && !dlg && !busy) tryMove(held);
     // 镇上的人会时不时转头看看四周
     M.npcs.forEach(n => {
-      if (n.role === 'trainer' || n.role === 'guard' || n.role === 'nurse' || n.role === 'clerk' || n.role === 'leader') return;
+      if (n.temp || n.role === 'trainer' || n.role === 'guard' || n.role === 'nurse' || n.role === 'clerk' || n.role === 'leader') return;
       if (!n.nextTurn) n.nextTurn = now + 1500 + Math.random() * 3000;
       if (now > n.nextTurn && !dlg) { n.face = ['up', 'down', 'left', 'right', 'down'][Math.floor(Math.random() * 5)]; n.nextTurn = now + 2000 + Math.random() * 3500; }
     });
@@ -630,12 +686,12 @@
     }
     const lead = MG.leadSpecies();
     return {
-      now, map: M,
+      now, map: M, plook: playerLook(),
       px: PL.fx + (PL.x - PL.fx) * prog, py: PL.fy + (PL.y - PL.fy) * prog, hop, pdir: PL.dir, pmoving: PL.moving,
       fx: FL.fx + (FL.x - FL.fx) * prog, fy: FL.fy + (FL.y - FL.fy) * prog, fhop: Math.abs(FL.y - FL.fy) + Math.abs(FL.x - FL.fx) > 1 ? Math.sin(prog * Math.PI) * .5 : 0,
       showF: !(FL.x === PL.x && FL.y === PL.y) && !!lead, lead,
       inGrass: !PL.moving && tile(PL.x, PL.y) === ',', fInGrass: !PL.moving && tile(FL.x, FL.y) === ',',
-      npcs: M.npcs.filter(npcVisible).map(n => ({ n, look: npcLook(n).look, x: n.x, y: n.y, face: n.face, alert: n.alert && now - n.alert < 1100 })),
+      npcs: M.npcs.filter(npcVisible).map(n => ({ n, look: n.mon ? null : npcLook(n).look, mon: n.mon ? MG.species(n.mon) : null, x: n.x, y: n.y, face: n.face, alert: n.alert && now - n.alert < 1100 })),
       picks: M.picks.filter(p => !WS().flags[pickKey(p)]),
       hint,
     };
@@ -747,136 +803,13 @@
     }
   }
 
-  // ---------- 人物（手绘小人：四个方向，走路摆臂） ----------
-  const LOOKS = {
-    player: { skin: '#ffd9b8', hair: '#3b2a20', style: 'short', hat: 'cap', hatC: '#e53935', shirt: '#3a86ff', bottom: '#2e3a59', bag: '#ffb300' },
-    prof: { skin: '#ffe0c4', hair: '#b8b8b8', style: 'bun', shirt: '#8e6cef', coat: '#ffffff', bottom: '#455a64', skirt: true, glasses: true },
-    nurse: { skin: '#ffdcc2', hair: '#e57373', style: 'long', hat: 'nurse', shirt: '#f8bbd0', bottom: '#f48fb1', skirt: true },
-    guard: { skin: '#f1c7a0', hair: '#2b2b2b', style: 'short', hat: 'helmet', hatC: '#1e3a8a', shirt: '#1e40af', bottom: '#1e293b' },
-    teacher: { skin: '#f5d0b0', hair: '#5d4037', style: 'short', shirt: '#2cae69', bottom: '#34495e', glasses: true },
-    clerk: { skin: '#ffdcc2', hair: '#1b1b1b', style: 'short', hat: 'cap', hatC: '#3d8fe0', shirt: '#ffffff', bottom: '#3d8fe0' },
-    leader: { skin: '#f1c7a0', hair: '#3e2723', style: 'short', shirt: '#e53935', coat: '#263238', bottom: '#212121' },
-  };
-  const HIKER_LOOK = { skin: '#e8b88f', hair: '#5d4037', style: 'short', hat: 'straw', shirt: '#8d6e63', bottom: '#4e342e', bag: '#ff8f00' };
-  const VILLAGER_LOOKS = [
-    ['Granny', 'f', { skin: '#f6d5bd', hair: '#e6e6e6', style: 'bun', shirt: '#b388ff', bottom: '#6a5acd', skirt: true }],
-    ['Grandpa', 'm', { skin: '#efc9a8', hair: '#cfcfcf', style: 'bald', shirt: '#8d6e63', bottom: '#5d4037', glasses: true }],
-    ['Ms Li', 'f', { skin: '#ffdcc2', hair: '#212121', style: 'long', shirt: '#ff8a65', bottom: '#455a64', skirt: true }],
-    ['Farmer Joe', 'm', { skin: '#e8b88f', hair: '#6d4c41', style: 'short', hat: 'straw', shirt: '#43a047', bottom: '#1565c0' }],
-    ['Chef Mei', 'f', { skin: '#ffdcc2', hair: '#3e2723', style: 'short', hat: 'chef', shirt: '#ffffff', bottom: '#424242' }],
-    ['Mr Brown', 'm', { skin: '#d9a57b', hair: '#4e342e', style: 'short', shirt: '#0288d1', bottom: '#37474f' }],
-    ['Lily', 'f', { skin: '#ffe0c4', hair: '#6d4c41', style: 'pigtails', shirt: '#ffca28', bottom: '#5c6bc0', skirt: true }],
-    ['Uncle Wang', 'm', { skin: '#f1c7a0', hair: '#212121', style: 'short', shirt: '#78909c', bottom: '#263238', glasses: true }],
-  ];
-  const TRAINER_LOOKS = [
-    ['m', { skin: '#ffdcc2', hair: '#2b2b2b', style: 'short', hat: 'cap', hatC: '#43a047', shirt: '#ffb300', bottom: '#1e3a8a' }],
-    ['f', { skin: '#ffe0c4', hair: '#f4a261', style: 'pigtails', shirt: '#ec407a', bottom: '#6a1b9a', skirt: true }],
-    ['m', { skin: '#e8b88f', hair: '#5d4037', style: 'short', shirt: '#26a69a', bottom: '#37474f' }],
-    ['f', { skin: '#ffdcc2', hair: '#c62828', style: 'long', shirt: '#7e57c2', bottom: '#263238', skirt: true }],
-    ['m', { skin: '#ffd9b8', hair: '#1b1b1b', style: 'short', hat: 'cap', hatC: '#1e88e5', shirt: '#e53935', bottom: '#2e3a59' }],
-    ['f', { skin: '#ffe0c4', hair: '#ffd54f', style: 'long', hat: 'cap', hatC: '#ff7043', shirt: '#29b6f6', bottom: '#455a64', skirt: true }],
-  ];
-  // 以 40px 为设计尺寸画一个 Q 版小人：cx 脚底中心 x，fy 脚底 y，s 缩放后的格子大小
-  function drawPerson(g, cx, fy, s, L, dir, phase, moving, noShadow) {
-    const k = s / 40, sw = moving ? Math.sin(phase) : 0, bob = moving ? Math.abs(Math.sin(phase)) * 1.4 : 0;
-    const side = dir === 'left' || dir === 'right', back = dir === 'up';
-    const fill = (c, stroke) => { g.fillStyle = c; g.fill(); if (stroke !== false) g.stroke(); };
-    g.save();
-    g.translate(cx, fy); g.scale(k, k);
-    g.lineWidth = 1.5; g.strokeStyle = OUT; g.lineJoin = 'round'; g.lineCap = 'round';
-    if (!noShadow) { g.fillStyle = 'rgba(0,0,0,.2)'; ell(g, 0, 0, 11, 3.4); g.fill(); }
-    g.translate(0, -bob);
-    if (dir === 'left') g.scale(-1, 1);
-    const legC = L.bottom, dark = shade(legC, .8);
-    // 腿和鞋
-    if (side) {
-      rr(g, -3 + sw * 3, -12, 5, 11, 2); fill(dark);
-      rr(g, -3 - sw * 3, -12, 5, 11, 2); fill(legC);
-      rr(g, -3.5 - sw * 3, -3.2, 7, 3.4, 1.6); fill('#3b2f2f');
-    } else {
-      rr(g, -6, -12 + (sw > 0 ? -1.5 : 0), 5, 11, 2); fill(legC);
-      rr(g, 1, -12 + (sw < 0 ? -1.5 : 0), 5, 11, 2); fill(legC);
-      rr(g, -6.5, -3.2 + (sw > 0 ? -1.5 : 0), 6, 3.4, 1.6); fill('#3b2f2f');
-      rr(g, .5, -3.2 + (sw < 0 ? -1.5 : 0), 6, 3.4, 1.6); fill('#3b2f2f');
-    }
-    // 后面那只手（侧面）
-    if (side) { rr(g, -2 + sw * 3.5, -23, 4.4, 10.5, 2.2); fill(shade(L.coat || L.shirt, .85)); }
-    // 裙子 / 身体 / 白大褂
-    if (L.skirt) { g.beginPath(); g.moveTo(-8, -18); g.lineTo(8, -18); g.lineTo(10, -9); g.lineTo(-10, -9); g.closePath(); fill(L.bottom); }
-    rr(g, -8.5, -25, 17, 14, 5); fill(L.shirt);
-    if (L.coat) { rr(g, -9, -25, 18, 17, 4); fill(L.coat); if (!back) { g.beginPath(); g.moveTo(0, -24); g.lineTo(0, -9); g.stroke(); g.fillStyle = L.shirt; g.fillRect(-2.5, -24.5, 5, 6); } }
-    if (back && L.bag) { rr(g, -7, -25, 14, 12, 3.5); fill(L.bag); g.beginPath(); g.moveTo(-4, -20); g.lineTo(4, -20); g.stroke(); }
-    // 手臂
-    const armC = L.coat || L.shirt;
-    if (side) { rr(g, -2 - sw * 3.5, -23, 4.4, 10.5, 2.2); fill(armC); circ(g, -.2 - sw * 3.5, -12, 2.4); fill(L.skin); }
-    else {
-      rr(g, -12.4, -23.5 + sw * 1.5, 4.4, 10.5, 2.2); fill(armC); circ(g, -10.2, -12.5 + sw * 1.5, 2.4); fill(L.skin);
-      rr(g, 8, -23.5 - sw * 1.5, 4.4, 10.5, 2.2); fill(armC); circ(g, 10.2, -12.5 - sw * 1.5, 2.4); fill(L.skin);
-    }
-    // 头发（后面）
-    const hy = -34;
-    if (L.style === 'long') { rr(g, -11, hy - 4, 22, 17, 6); fill(L.hair); }
-    if (L.style === 'pigtails') { circ(g, -12, hy + 3, 5); fill(L.hair); circ(g, 12, hy + 3, 5); fill(L.hair); }
-    if (L.style === 'bun') { circ(g, back ? 0 : (side ? -6 : 0), hy - 10, 5.5); fill(L.hair); }
-    // 头
-    circ(g, 0, hy, 10.5); fill(L.skin);
-    // 头发（前面）
-    g.fillStyle = L.hair;
-    if (L.style === 'bald') { g.beginPath(); g.arc(0, hy, 10.5, Math.PI * .9, Math.PI * 1.15); g.lineTo(-9, hy); g.fill(); g.beginPath(); g.arc(0, hy, 10.5, -Math.PI * .15, Math.PI * .1); g.lineTo(9, hy); g.fill(); }
-    else if (back) { g.beginPath(); g.arc(0, hy, 10.8, Math.PI * .92, Math.PI * 2.08); g.closePath(); fill(L.hair); }
-    else if (side) { g.beginPath(); g.arc(0, hy, 10.8, Math.PI * .95, Math.PI * 1.9); g.quadraticCurveTo(4, hy - 3, 1, hy - 1); g.quadraticCurveTo(-8, hy - 3, -10, hy + 6); g.closePath(); fill(L.hair); }
-    else { g.beginPath(); g.arc(0, hy, 10.8, Math.PI * 1.02, Math.PI * 1.98); g.quadraticCurveTo(6, hy - 5, 2, hy - 3); g.quadraticCurveTo(-4, hy - 6, -10.6, hy - 1); g.closePath(); fill(L.hair); }
-    // 脸
-    if (!back) {
-      g.fillStyle = '#1d2a36';
-      if (side) { ell(g, 5, hy + 1.5, 1.5, 2.2); g.fill(); g.fillStyle = '#ffffff'; circ(g, 5.5, hy + .7, .6); g.fill(); g.fillStyle = 'rgba(255,120,120,.45)'; circ(g, 5.5, hy + 5, 2); g.fill(); g.strokeStyle = '#7a3b2e'; g.beginPath(); g.moveTo(7, hy + 6); g.lineTo(9, hy + 5.6); g.stroke(); }
-      else {
-        [-4, 4].forEach(ex => { g.fillStyle = '#1d2a36'; ell(g, ex, hy + 1.5, 1.5, 2.2); g.fill(); g.fillStyle = '#ffffff'; circ(g, ex + .5, hy + .7, .6); g.fill(); });
-        g.fillStyle = 'rgba(255,120,120,.45)'; circ(g, -6.5, hy + 5, 2); g.fill(); circ(g, 6.5, hy + 5, 2); g.fill();
-        g.strokeStyle = '#7a3b2e'; g.beginPath(); g.arc(0, hy + 4.5, 2, .2, Math.PI - .2); g.stroke();
-      }
-      g.strokeStyle = OUT;
-      if (L.glasses) { g.lineWidth = 1.1; if (side) { circ(g, 5, hy + 1.5, 3); g.stroke(); } else { circ(g, -4, hy + 1.5, 3); g.stroke(); circ(g, 4, hy + 1.5, 3); g.stroke(); g.beginPath(); g.moveTo(-1, hy + 1.5); g.lineTo(1, hy + 1.5); g.stroke(); } g.lineWidth = 1.5; }
-    }
-    // 帽子
-    if (L.hat === 'cap') {
-      g.beginPath(); g.arc(0, hy - 1, 11, Math.PI, 0); g.closePath(); fill(L.hatC);
-      g.fillStyle = '#ffffff'; circ(g, side ? -2 : 0, hy - 7, 2.2); g.fill();
-      if (dir === 'down') { ell(g, 0, hy - 1.5, 11.5, 2.6); fill(shade(L.hatC, .8)); }
-      else if (side) { rr(g, 4, hy - 3.5, 10, 3, 1.5); fill(shade(L.hatC, .8)); }
-    } else if (L.hat === 'helmet') {
-      g.beginPath(); g.arc(0, hy - .5, 12, Math.PI, 0); g.closePath(); fill(L.hatC);
-      rr(g, -12.5, hy - 1.5, 25, 3, 1.5); fill(shade(L.hatC, .75));
-      if (!back) { g.fillStyle = '#ffc53d'; circ(g, side ? 3 : 0, hy - 7, 2.6); g.fill(); }
-    } else if (L.hat === 'nurse') {
-      rr(g, -6, hy - 15, 12, 7, 2); fill('#ffffff');
-      g.fillStyle = '#e53935'; g.fillRect(-1, hy - 14, 2, 5); g.fillRect(-2.5, hy - 12.5, 5, 2);
-    } else if (L.hat === 'chef') {
-      rr(g, -8, hy - 12, 16, 6, 1.5); fill('#ffffff');
-      g.beginPath(); g.arc(-4.5, hy - 15, 5, 0, Math.PI * 2); g.arc(4.5, hy - 15, 5, 0, Math.PI * 2); g.arc(0, hy - 18, 5.5, 0, Math.PI * 2); fill('#ffffff');
-    } else if (L.hat === 'straw') {
-      ell(g, 0, hy - 5, 16, 3.6); fill('#e9c46a');
-      g.beginPath(); g.arc(0, hy - 6, 8, Math.PI, 0); g.closePath(); fill('#e9c46a');
-      g.fillStyle = '#c0392b'; g.fillRect(-8, hy - 8, 16, 2);
-    }
-    g.restore();
-  }
-  // 对话框头像
-  const portraitCache = {};
-  function portrait(look) {
-    const key = JSON.stringify(look);
-    if (!portraitCache[key]) {
-      const c = document.createElement('canvas'); c.width = c.height = 128;
-      const g = c.getContext('2d');
-      g.fillStyle = '#dff1ef'; circ(g, 64, 64, 64); g.fill();
-      g.save(); circ(g, 64, 64, 62); g.clip();
-      g.fillStyle = '#bfe3dd'; ell(g, 64, 132, 60, 26); g.fill();
-      drawPerson(g, 64, 142, 100, look, 'down', 0, false);
-      g.restore();
-      portraitCache[key] = c.toDataURL();
-    }
-    return portraitCache[key];
-  }
+  // ---------- 人物（画法在 people.js） ----------
+  const PPL = window.EchoPeople;
+  const LOOKS = PPL.LOOKS, drawPerson = PPL.drawPerson, portrait = PPL.portrait;
+  const HIKER_LOOK = LOOKS.hiker;
+  const VILLAGER_LOOKS = PPL.VILLAGERS, TRAINER_LOOKS = PPL.TRAINERS;
+  // 主角的样子跟开场选的男孩 / 女孩走
+  const playerLook = () => (E.S.player && E.S.player.gender === 'girl') ? LOOKS.girl : LOOKS.boy;
   const imgCache = {};
   function monImg(sp) {
     if (!imgCache[sp.en]) {
@@ -1083,12 +1016,13 @@
       } }));
       V.npcs.forEach(q => ents.push({ y: q.y, f: () => {
         const sx = q.x * T - camX, sy = q.y * T - camY;
-        drawPerson(ctx, sx + T / 2, sy + T * .9, T, q.look, q.face, 0, false);
+        if (q.mon) monster2d(q.mon, sx, sy - Math.abs(Math.sin(now / 110)) * T * .1);
+        else person2d(q.look, q.face, 0, sx + T / 2, sy + T * .9);
         if (q.alert) bubble(sx + T / 2, sy - T * .45, '!', '#e53935');
       } }));
       const fx = V.fx * T - camX, fy = V.fy * T - camY;
       if (V.showF) ents.push({ y: V.fy, f: () => follower(fx, fy - V.fhop * T, now, V) });
-      ents.push({ y: V.py + .01, f: () => drawPerson(ctx, px - camX + T / 2, py - camY + T * .9 - V.hop * T, T, LOOKS.player, V.pdir, now / 75, V.pmoving) });
+      ents.push({ y: V.py + .01, f: () => person2d(V.plook, V.pdir, V.pmoving ? 1 + (Math.floor(now / 85) % 2) : 0, px - camX + T / 2, py - camY + T * .9 - V.hop * T) });
       ents.sort((a, b) => a.y - b.y).forEach(e => e.f());
       // 站在草丛里时，草盖住腿
       [[V.inGrass, px - camX, py - camY], [V.fInGrass && V.showF, fx, fy]].forEach(([on, sx, sy]) => {
@@ -1103,6 +1037,12 @@
         ctx.fillStyle = gr; ctx.fillRect(0, 0, VW, VH);
       }
     }
+    // 人物从动作图集里取一帧来画（比每帧重新画快很多）
+    function person2d(look, dir, frame, cx, fy) {
+      const S = Math.round(T / .7), dpr = Math.min(2, window.devicePixelRatio || 1), A = PPL.atlas(look, Math.round(S * dpr)), cs = A.width / 4;
+      ctx.fillStyle = 'rgba(0,0,0,.2)'; ell(ctx, cx, fy, T * .27, T * .08); ctx.fill();
+      ctx.drawImage(A, ({ down: 0, left: 1, right: 2, up: 3 })[dir] * cs, frame * cs, cs, cs, cx - S / 2, fy - S * .96, S, S);
+    }
     function bubble(bx, by, ch, col, round) {
       ctx.fillStyle = 'rgba(0,0,0,.2)'; circ(ctx, bx + 1, by + 2, T * .22); ctx.fill();
       ctx.fillStyle = '#ffffff';
@@ -1110,6 +1050,12 @@
       ctx.fill();
       ctx.strokeStyle = round ? col : OUT; ctx.lineWidth = round ? 2.5 : 2; ctx.stroke();
       ctx.fillStyle = col; ctx.font = '900 ' + Math.round(T * .28) + 'px "Baloo 2", Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ch, bx, by + 1);
+    }
+    function monster2d(sp, sx, sy) {
+      const im = monImg(sp);
+      if (!im.complete || !im.naturalWidth) return;
+      ctx.fillStyle = 'rgba(0,0,0,.18)'; ell(ctx, sx + T / 2, sy + T * .86, T * .26, T * .08); ctx.fill();
+      ctx.drawImage(im, sx - T * .05, sy - T * .2, T * 1.1, T * 1.1);
     }
     function follower(sx, sy, now, V) {
       if (!window.Cartoon) return;
@@ -1142,12 +1088,12 @@
     sec.innerHTML =
       '<div class="w-hud"><button class="x" data-act="wExit" aria-label="回首页">✕</button><div class="w-zone"><b id="w-zname"></b><small id="w-zsub"></small></div>' +
       '<span class="chip" id="w-badges"></span><span class="chip" id="w-balls"></span><button class="w-menu" data-act="wMenu" aria-label="菜单">☰</button></div>' +
-      '<div class="w-view" id="w-view"><div class="w-banner" id="w-banner" hidden></div><div class="w-wipe" id="w-wipe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="w-dlg" id="w-dlg" data-act="wA" hidden></div></div>' +
+      '<div class="w-view" id="w-view"><div class="w-scene" id="w-scene" hidden></div><div class="w-banner" id="w-banner" hidden></div><div class="w-wipe" id="w-wipe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="w-dlg" id="w-dlg" data-act="wA" hidden></div></div>' +
       '<div class="w-ctrl"><div class="dpad" id="w-dpad">' +
       ['up', 'left', 'right', 'down'].map(d => '<button class="dp dp-' + d + '" data-dir="' + d + '" aria-label="' + { up: '上', left: '左', right: '右', down: '下' }[d] + '">' + { up: '▲', left: '◀', right: '▶', down: '▼' }[d] + '</button>').join('') +
       '</div><div class="ab"><button class="bb" data-act="wB">B<small>菜单</small></button><button class="ba" data-act="wA">A<small>对话</small></button></div></div>';
     const dp = $('w-dpad');
-    const down = e => { const b = e.target.closest('[data-dir]'); if (!b) return; e.preventDefault(); held = b.dataset.dir; b.classList.add('on'); tryMove(held); };
+    const down = e => { const b = e.target.closest('[data-dir]'); if (!b) return; e.preventDefault(); if (overlay) { overlay(b.dataset.dir); return; } held = b.dataset.dir; b.classList.add('on'); tryMove(held); };
     const up = () => { held = null; dp.querySelectorAll('.on').forEach(b => b.classList.remove('on')); };
     dp.addEventListener('pointerdown', down);
     dp.addEventListener('pointerup', up);
@@ -1157,7 +1103,12 @@
     window.addEventListener('resize', () => { if (running) resize(); });
     const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
     document.addEventListener('keydown', e => {
-      if (!running || !$('modal').hidden) return;
+      if (!running || !$('modal').hidden || (e.target && e.target.tagName === 'INPUT')) return;
+      if (overlay && (KEYS[e.key] || e.key === ' ' || e.key === 'Enter' || e.key === 'z' || e.key === 'Escape' || e.key === 'x')) {
+        e.preventDefault();
+        overlay(KEYS[e.key] || (e.key === 'Escape' || e.key === 'x' ? 'B' : 'A'));
+        return;
+      }
       if (KEYS[e.key]) { e.preventDefault(); held = KEYS[e.key]; tryMove(held); }
       else if (e.key === ' ' || e.key === 'Enter' || e.key === 'z') { e.preventDefault(); interact(); }
       else if (e.key === 'Escape' || e.key === 'x') { e.preventDefault(); bButton(); }
@@ -1188,8 +1139,9 @@
     wEnter: () => enter(0, 'resume'),
     wFly: t => enter(+t.dataset.z, 'fly'),
     wExit: () => { E.closeModal(); E.goHome('mon'); },
-    wA: () => interact(),
-    wB: () => bButton(),
+    wA: () => overlay ? overlay('A') : interact(),
+    wB: () => overlay ? overlay('B') : bButton(),
+    wPick: t => { const pg = page(); if (!pg || pg.kind !== 'choice') return; const extra = pg.pick(+t.dataset.i); insertPages(extra); pg.kind = null; nextPage(); },
     wMenu: () => menuSheet(),
     wHelp: () => helpSheet(),
     wHear: () => { const pg = page(); if (pg) E.say(pg.kind === 'speak' ? pg.target : pg.en, 0.8, pg.g); },
@@ -1217,7 +1169,7 @@
     rope: () => { E.closeModal(); goMap('r' + M.route, 'cave'); },
   };
   const api3d = { tile: (x, y) => tile(x, y) };
-  const ART = { drawPerson, portrait, paintGround, shade, hsh, rr, circ, ell, OUT, LOOKS, monImg, drawItemBall, buildColor: BUILD_COLORS };
+  const ART = { drawPerson, portrait, atlas: PPL.atlas, paintGround, shade, hsh, rr, circ, ell, OUT, LOOKS, monImg, drawItemBall, buildColor: BUILD_COLORS };
   window.EchoWorld = {
     init(api, mg) { E = api; MG = mg; EM = window.EchoMaps; EM.setTownCount(E.W.length); MG.setFieldHooks && MG.setFieldHooks(fieldHooks); return actions; },
     fresh: () => ({ started: false, map: 't0', z: 0, x: -1, y: -1, dir: 'up', arrive: null, visited: {}, flags: {}, daily: {}, center: null, introDone: false, repel: 0 }),

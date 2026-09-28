@@ -17,11 +17,15 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   const errs = [];
   p.on('pageerror', e => errs.push(e.message));
   await p.goto(PAGE);
-  await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: '2d', sfx: false } })));
+  // 从开场剧情已经看完的存档开始（开场剧情由 story.test.js 测）
+  await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({
+    seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: '2d', sfx: false }, player: { gender: 'boy', name: 'Tom' },
+    mon: { v: 2, box: [{ uid: 'm1', sp: 'bubbly', lv: 5, xp: 0 }], team: ['m1'], dex: { bubbly: 'caught' } },
+    world: { v: 2, started: true, map: 't0', x: 8, y: 22, dir: 'up', flags: { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1 } },
+  })));
   await p.reload(); await p.waitForTimeout(400);
-  await p.click('[data-act=mStarter][data-sp=bubbly]'); await p.click('[data-act=mStarterGo]'); await p.waitForTimeout(500);
   await p.click('[data-act=wEnter]');
-  await p.waitForTimeout(2300);
+  await p.waitForTimeout(1500);
   const dbg = () => p.evaluate(() => { const d = EchoWorld._debug(); return { map: d.M.id, x: d.PL.x, y: d.PL.y, dir: d.PL.dir, dlg: !!d.dlg, busy: d.busy }; });
   const A = async () => { for (let i = 0; i < 40; i++) { const t = await p.evaluate(() => { const d = EchoWorld._debug().dlg; return !!(d && d.typing); }); if (!t) break; await p.waitForTimeout(100); } await p.click('#world [data-act=wA].ba'); await p.waitForTimeout(250); };
   const step = async (key, n = 1) => { for (let i = 0; i < n; i++) { await p.keyboard.down(key); await p.waitForTimeout(40); await p.keyboard.up(key); await p.waitForTimeout(300); } };
@@ -30,16 +34,16 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   const typed = async () => { for (let i = 0; i < 40; i++) { const t = await p.evaluate(() => { const d = EchoWorld._debug().dlg; return !!(d && d.typing); }); if (!t) return; await p.waitForTimeout(100); } };
   const closeDlg = async () => { for (let i = 0; i < 12 && (await dbg()).dlg; i++) await A(); };
 
-  // ---------- 第 1 镇：开场 + 博士 ----------
-  for (let i = 0; i < 3; i++) await A();
+  // ---------- 第 1 镇：博士 ----------
   let s = await dbg();
-  check(s.map === 't0' && !s.dlg, '开场白后在第 1 镇 ' + JSON.stringify(s));
+  check(s.map === 't0' && !s.dlg, '在第 1 镇 ' + JSON.stringify(s));
   await p.screenshot({ path: out + '/w1-town.png' });
   await step('ArrowRight');
   await A();
   await p.waitForTimeout(300);
   await p.screenshot({ path: out + '/w2-prof.png' });
   for (let i = 0; i < 5; i++) await A();
+  await p.waitForSelector('#w-dlg [data-act=wSelfDone]');
   await p.click('#w-dlg [data-act=wSelfDone]'); await p.waitForTimeout(300);
   check(/10 个金币/.test(await p.textContent('#w-dlg .d-zh')), '博士的口语任务给金币');
   await closeDlg();

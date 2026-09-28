@@ -9,11 +9,13 @@
 
 | 文件 | 内容 |
 | --- | --- |
-| `index.html` | 页面骨架，按顺序加载 data → cartoon → monsters → maps → vendor/three.min.js → world → world3d → game |
+| `index.html` | 页面骨架，按顺序加载 data → cartoon → monsters → people → maps → vendor/three.min.js → world → world3d → story → game |
 | `style.css` | 全部样式（单一明亮主题，颜色变量在 `:root`） |
 | `data.js` | `window.WORLDS`：13 个话题小镇的单词/句子/对话；`window.SCENES`：13 段对话动画台词 |
 | `cartoon.js` | `window.Cartoon`：SVG 画的对话动画角色、场景背景、16 种怪兽 |
 | `monsters.js` | `window.MonsterGame`：怪兽图鉴、战斗（说英语攻击/听英语防御）、收服（回声球/超级球）、升级进化、馆主、训练师；队伍 6 只 + 电脑箱子；背包道具 `ITEMS` |
+| `people.js` | `window.EchoPeople`：日系 Q 版人物画法（4 方向 × 3 帧动作图集 `atlas()`、对话头像 `portrait()`、大立绘 `standing()`），全部造型 `LOOKS`（主角男/女、对手 Leo/Mia、妈妈、博士……）。改人物后打开 `tools/people.html` 看全部造型 |
+| `story.js` | `window.EchoStory`：剧情脚本（开场、选伙伴画面、1 号路对手）。world.js 在进地图/走一步/说话时调用它的 `enter/step/talk`，`hidden/look` 可以藏起或换掉地图上的人。剧情进度存在 `world.flags` 里 `s:` 开头的键 |
 | `maps.js` | `window.EchoMaps`：全部地图数据。13 个小镇（3 种布局 + 镜像）、12 条道路（7 种路段拼接）、3 个洞穴、每镇 5 间室内（怪兽中心/商店/道馆/两间民居），以及出入口 `warps` 和到达点 `arrival()` |
 | `world.js` | `window.EchoWorld`：大地图逻辑——按地图 id 切换、走路、跳台阶、门/洞口/出口、草丛和洞穴遇怪、训练师视线、护士/电脑/店员/馆主/出题人/送礼村民、驱怪喷雾、逃生绳、宝可梦式对话框；2D「流畅模式」渲染器；自动画质 |
 | `world3d.js` | `window.EchoWorld3D`：three.js 的 2.5D 渲染器（地面贴图 + 低多边形树/房子/岩壁 + 随风摆的草丛 + 水面着色器 + 纸片人物 + 移轴景深）。三档画质 high/mid/low |
@@ -24,6 +26,7 @@
 - 所有按钮用 `data-act="名字"`，由 `game.js` 里的 `ACT` 对象统一处理；monsters.js / world.js 通过 `init()` 返回自己的 actions 合并进去。
 - 存档在 `localStorage['echo-island-v1']`，结构见 `game.js` 的 `fresh()`；新增字段要在 `fresh()` 里给默认值（`merge` 会自动补给老存档）。**不要在 `fresh()` 里放版本号**——merge 会让老存档看起来已经迁移过；版本号由迁移函数写（`EchoWorld` 的 `migrate()`、`MonsterGame.migrate()`）。
 - 地图 id：`t0`–`t12` 小镇、`r0`–`r11` 道路（`r{z}` 连着 `t{z}` 和 `t{z+1}`，练的是第 z 镇的话题）、`c0`–`c2` 洞穴、`i{z}{C|M|G|H|J}` 室内。改地图后跑 `node tests/maps.test.js`：检查每行长度、未知地块、所有入口都能走到所有出口/门/人物/道具、道路南北能走通（不靠跳台阶）、守卫挡住北出口。
+- 剧情脚本写法：`story.js` 里返回一个 async 函数，用 world.js 提供的 `SC`（`talk` 对话、`spawn/walk/remove` 临时人物、`battle`、`scene()` 全屏画面、`setOverlay` 接管按键、`flag/set` 剧情进度）。台词里 `{name}` `{rival}` 会换成主角和对手的名字。完整故事线在 `STORY.md`。
 - 渲染器接口：`load(map)`、`resize()`、`draw(now, V)`、`destroy()`；`V` 由 `world.js` 的 `view()` 每帧给出（主角/跟随怪兽/人物/道具/提示的位置）。2D 和 3D 共用的画法（人物、地面）在 `EchoWorld._art`。
 - 屏幕切换用 `show(id)`：home / play / result / theater / battle / world。
 - 口语打分：`speakMode()` 返回 `'sr'`（浏览器语音识别）或 `'self'`（自评）；`scoreSpeech()` 做 0–100 打分。
@@ -87,6 +90,7 @@ npm test            # 跑 tests/ 里的端到端测试，截图存到 tests/scre
 - `tests/maps.test.js`：地图数据检查（不开浏览器，秒出结果）
 - `tests/adventure.test.js`：2D 模式下走一遍：博士 → 怪兽中心（护士、电脑）→ 商店 → 守卫 → 拿徽章 → 1 号路（跳台阶、训练师、草丛、战斗背包）→ 第 2 镇；最后测老存档迁移
 - `tests/render3d.test.js`：3D 渲染器在每类地图都能画出来、切地图不泄漏显存、设置里 2D/3D 切换、慢设备自动降档（无头浏览器用软件渲染，正好很慢）
+- `tests/story.test.js`：开场剧情走一遍（选女孩、起名、妈妈、救博士、包里选伙伴、第一场战斗、1 号路对手），以及老存档补问名字
 - `tests/practice.test.js`：闯关练习第 1 关全对，检查三星和回声球奖励
 - 测试里把发音来源设成在线、口语设成自评，这样不依赖本机声音和麦克风
-- 改完画面要看截图确认；改完逻辑要跑 `npm test`（四个测试全过才提交）
+- 改完画面要看截图确认；改完逻辑要跑 `npm test`（五个测试全过才提交）

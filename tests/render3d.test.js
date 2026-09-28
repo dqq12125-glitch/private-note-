@@ -18,9 +18,12 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   p.on('pageerror', e => errs.push(e.message));
   p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto(PAGE);
-  await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: 'mid', sfx: false }, world: { introDone: true } })));
+  await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({
+    seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: 'mid', sfx: false }, player: { gender: 'girl', name: 'Amy' },
+    mon: { v: 2, box: [{ uid: 'm1', sp: 'emberpup', lv: 5, xp: 0 }], team: ['m1'], dex: { emberpup: 'caught' } },
+    world: { v: 2, started: true, map: 't0', x: 8, y: 22, dir: 'up', flags: { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1 } },
+  })));
   await p.reload(); await p.waitForTimeout(400);
-  await p.click('[data-act=mStarter][data-sp=emberpup]'); await p.click('[data-act=mStarterGo]'); await p.waitForTimeout(400);
   await p.click('[data-act=wEnter]');
   await p.waitForTimeout(1500);
   const kind = await p.evaluate(() => EchoWorld._debug().R.kind);
