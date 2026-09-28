@@ -89,7 +89,13 @@
     dowsing: { zh: '寻宝器', en: 'Dowsing Machine', icon: '📟', price: 200, desc: '藏起来的道具会一闪一闪', key: true },
   });
   Object.entries(D.STONES).forEach(([id, st]) => { ITEMS[id] = { zh: st.zh, en: st.en, icon: st.icon, price: 120, desc: '能让某些怪兽进化', stone: true }; });
-  const BAG_ORDER = ['expshare', 'bike', 'rod', 'dowsing', 'ball', 'superball', 'potion', 'superpotion', 'revive', 'antidote', 'burnheal', 'paraheal', 'awakening', 'iceheal', 'fullheal', 'repel', 'rope'].concat(Object.keys(D.STONES));
+  // 秘传学习器：剧情里的人送的重要物品，有了它再拿够徽章，就能在野外用对应的技能
+  [['cut', '居合斩', 'Cut', '🌿'], ['flash', '闪光', 'Flash', '💡'], ['smash', '碎岩', 'Rock Smash', '🪨'], ['strength', '怪力', 'Strength', '💪'],
+    ['surf', '冲浪', 'Surf', '🌊'], ['fly', '飞空', 'Fly', '🕊️'], ['dive', '潜水', 'Dive', '🤿'], ['falls', '攀瀑', 'Waterfall', '🏞️']].forEach(([k, zh, en, icon]) => {
+    ITEMS['hm_' + k] = { zh: '秘传学习器 · ' + zh, en: 'HM ' + en, icon: '💿', price: 0, desc: '野外技能「' + zh + '」' + icon + '（菜单 → 野外技能）', key: true, hm: true };
+  });
+  ITEMS.ticket = { zh: '船票', en: 'Ferry Ticket', icon: '🎫', price: 0, desc: '坐渡轮去别的岛', key: true };
+  const BAG_ORDER = ['expshare', 'hm_cut', 'hm_flash', 'hm_smash', 'hm_strength', 'hm_surf', 'hm_fly', 'hm_dive', 'hm_falls', 'ticket', 'bike', 'rod', 'dowsing','ball', 'superball', 'potion', 'superpotion', 'revive', 'antidote', 'burnheal', 'paraheal', 'awakening', 'iceheal', 'fullheal', 'repel', 'rope'].concat(Object.keys(D.STONES));
   function itemCount(id) { const m = M(); return id === 'ball' ? m.balls : id === 'potion' ? (m.potions || 0) : ((m.bag || {})[id] || 0); }
   function addItem(id, n) {
     const m = M();
@@ -302,7 +308,10 @@
       onEnd: opts.onEnd, trainer: opts.trainer, result: '', noCatch: !!opts.noCatch,
       stg: { me: newStages(), foe: newStages() }, conf: { me: 0, foe: 0 },
       fpot: kind === 'leader' ? 2 : kind === 'trainer' ? 1 : 0,
+      rules: opts.rules || null,
     };
+    if (rule('talk')) B.energy = 3;
+    if (B.rules) setTimeout(() => { if (B && B.rules) E.toast(RULE_TEXT[ruleNow()] || '', 'gold'); }, 1500);
     team.forEach(u => { B.hp[u] = curHp(byUid(u)); });
     B.foeHp = stats(foes[0]).hp;
     B.enter = 'both';
@@ -311,7 +320,7 @@
     E.show('battle');
     // 3D 战斗画面：设置里选了 2D 流畅或者手机不支持就用原来的 2D 画面
     if (window.Battle3D && (E.S.settings.gfx || 'auto') !== '2d' && E.S.settings.gfxAuto !== '2d') {
-      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab), shadows: (E.S.settings.gfxAuto || E.S.settings.gfx) !== 'low', dpr: E.S.settings.gfx === 'high' ? 2 : 1.5 }); } catch (e) { B3 = null; }
+      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena), shadows: (E.S.settings.gfxAuto || E.S.settings.gfx) !== 'low', dpr: E.S.settings.gfx === 'high' ? 2 : 1.5 }); } catch (e) { B3 = null; }
     }
     renderBattle();
     intro(B);
@@ -348,8 +357,27 @@
     updHp();
   }
   // 战斗场地的样子：洞穴暗、雪地白，其余是草地
-  function arenaTheme(z, hab) {
+  // 各岛的战斗场地：沙滩、糖果色、农田、雪地、雾里的古迹……
+  const ARENAS = {
+    hello: { sky1: '#7cc8f0', sky2: '#e6f6ff', ground: '#f3e3b0', hill: '#9ad66e', pad: '#fff4d6', rim: '#d9643a' },
+    crayon: { sky1: '#a7d8ff', sky2: '#fff0f7', ground: '#b8e68c', hill: '#f7b9c9', pad: '#fff7b3', rim: '#f06292' },
+    farm: { sky1: '#8fd0f0', sky2: '#fff6de', ground: '#c9dc7a', hill: '#e0a24a', pad: '#f3e1b0', rim: '#a0703c' },
+    school: { sky1: '#86c5f0', sky2: '#eef8ff', ground: '#96d38a', hill: '#b5543c', pad: '#e8e2d4', rim: '#6d4c41' },
+    lab: { sky1: '#8fd3f4', sky2: '#f2fbff', ground: '#a6e3c4', hill: '#9fb4c0', pad: '#ffffff', rim: '#5c6bc0' },
+    circus: { sky1: '#ffb74d', sky2: '#fff3d6', ground: '#f3d38a', hill: '#e53935', pad: '#fff6e0', rim: '#ffca28' },
+    clock: { sky1: '#9fb7c9', sky2: '#f0ebe0', ground: '#8e9a74', hill: '#6b4f45', pad: '#cfc6b6', rim: '#4f9e8a' },
+    party: { sky1: '#ffc1d9', sky2: '#fff8ec', ground: '#c7ee9a', hill: '#ff8fb1', pad: '#fff4e0', rim: '#ff80ab' },
+    jungle: { sky1: '#79c7a0', sky2: '#e8f7e0', ground: '#5fae48', hill: '#1f6f2f', pad: '#c9a36a', rim: '#6d4121' },
+    city: { sky1: '#9fb7d0', sky2: '#eef3f8', ground: '#a7afb8', hill: '#78909c', pad: '#dfe3e6', rim: '#ffca28' },
+    sports: { sky1: '#6fc3ff', sky2: '#eaf8ff', ground: '#7fd35a', hill: '#ff7043', pad: '#ffffff', rim: '#1e88e5' },
+    snow: { sky1: '#a9c9e0', sky2: '#eef6fb', ground: '#eef4f8', hill: '#cfe3ee', pad: '#ffffff', rim: '#9fc3d6' },
+    ruins: { sky1: '#9aa6a8', sky2: '#e4e6e0', ground: '#9cb39a', hill: '#8f8a80', pad: '#cfc6b3', rim: '#6d8b5a' },
+  };
+  function arenaTheme(z, hab, arena) {
     if (hab === 'cave') return { sky1: '#231b24', sky2: '#4a3a36', ground: '#6a5646', hill: '#3a2e28', pad: '#8a7560', rim: '#c9a46a' };
+    if (hab === 'water' && arena === 'under') return { sky1: '#0f4c63', sky2: '#2f8fa8', ground: '#d8c79a', hill: '#2c7a6a', pad: '#e0cfa0', rim: '#4fc3f7' };
+    const key = ARENAS[arena] ? arena : window.EchoMaps ? EchoMaps.themeOf(z) : null;
+    if (ARENAS[key]) return ARENAS[key];
     if (z === 11) return { sky1: '#a9c9e0', sky2: '#eef6fb', ground: '#eef4f8', hill: '#cfe3ee', pad: '#ffffff', rim: '#9fc3d6' };
     return { rim: E.W[z] ? E.W[z].color : '#7aa85a' };
   }
@@ -432,7 +460,7 @@
     const ids = ['potion', 'superpotion'].concat(Object.keys(STATUS_HEAL).filter(id => itemCount(id) > 0));
     const rows = ids.map(id => {
       const it = ITEMS[id], n = itemCount(id), ok = n > 0 && (it.heal ? !full : STATUS_HEAL[id].includes(m.st));
-      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + ' ×' + n + '</b><small>' + it.desc + '</small></div><button class="btn small sun" data-act="bUse" data-id="' + id + '"' + (ok ? '' : ' disabled') + '>用</button></div>';
+      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + (it.key ? '' : ' ×' + n) + '</b><small>' + it.desc + '</small></div><button class="btn small sun" data-act="bUse" data-id="' + id + '"' + (ok ? '' : ' disabled') + '>用</button></div>';
     }).join('');
     E.openModal('<h2>🎒 背包</h2><p>给 <b>' + SPECIES[m.sp].en + '</b> 用道具（体力 ' + Math.max(0, Math.round(B.hp[m.uid])) + ' / ' + stats(m).hp + (m.st ? ' · ' + STATUS[m.st].zh : '') + '）。用道具会用掉这一回合。</p>' + rows + '<button class="btn ghost wide" data-act="close">返回</button>');
   }
@@ -786,12 +814,26 @@
     await sleep(650);
   }
 
+  // ---------- 英语冠军赛的特殊规则 ----------
+  // words 单词大师：小招伤害 ×1.5；listen 听力大师：防御只有 8 秒；clear 口语大师：念得很准 ×1.6、一般 ×0.8；talk 对话大师：一上场就有 3 格能量
+  // rotate：冠军每只怪兽换一种规则
+  const RULE_TEXT = {
+    words: '📖 单词大师的规则：你的小招伤害 ×1.5',
+    listen: '👂 听力大师的规则：防御只有 8 秒，要听得快！',
+    clear: '🗣️ 口语大师的规则：念得很准伤害 ×1.6，一般只有 ×0.8',
+    talk: '💬 对话大师的规则：一上场就有 3 格能量，可以直接放大招！',
+  };
+  const ruleNow = () => !B || !B.rules ? null : B.rules.rotate ? B.rules.rotate[B.fi % B.rules.rotate.length] : B.rules.kind;
+  const rule = k => ruleNow() === k;
+
   // ---------- 我方出手 ----------
   async function myAttack(score, why, b) {
     if (!(await canAct('me', b))) return;
     const m = me(), sm = SPECIES[m.sp], mvo = B.mv, mv = mvName(mvo);
     let mult = score >= 85 ? 1.3 : score >= 55 ? 1 : score >= 30 ? 0.6 : 0;
+    if (rule('clear')) mult = score >= 85 ? 1.6 : score >= 55 ? 0.8 : score >= 30 ? 0.4 : 0;
     if (B.hinted) mult = Math.min(mult, 1);
+    if (rule('words') && mvo.tier === 0 && !mvo.sup) mult *= 1.5;
     panel('');
     msg('<b>' + sm.en + '</b> 使用了 <b>' + mv[0] + '</b>！');
     E.say(sm.en + ', use ' + mv[0] + '!');
@@ -881,8 +923,9 @@
     if (!live(b) || B.def !== d || d.done) return;
     $('b-foe').classList.remove('attack');
     const bar = $('b-timer');
-    if (bar) { bar.style.transition = 'none'; bar.style.width = '100%'; void bar.offsetWidth; bar.style.transition = 'width 12s linear'; bar.style.width = '0%'; }
-    B.defTimer = setTimeout(() => { if (live(b) && B.def === d) defend(-1); }, 12000);
+    const dt = rule('listen') ? 8 : 12;
+    if (bar) { bar.style.transition = 'none'; bar.style.width = '100%'; void bar.offsetWidth; bar.style.transition = 'width ' + dt + 's linear'; bar.style.width = '0%'; }
+    B.defTimer = setTimeout(() => { if (live(b) && B.def === d) defend(-1); }, dt * 1000);
   }
   async function defend(i) {
     const d = B && B.def;
@@ -999,6 +1042,8 @@
     if (B.fi + 1 < B.foes.length) {
       B.fi++;
       B.foeHp = stats(foe()).hp; B.stg.foe = newStages(); B.conf.foe = 0; B.fen = 0;
+      // 冠军换怪兽也换规则
+      if (B.rules && B.rules.rotate) { if (rule('talk')) B.energy = 3; E.toast(RULE_TEXT[ruleNow()], 'gold'); }
       B.enter = 'foe';
       renderBattle();
       const n = SPECIES[foe().sp];

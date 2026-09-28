@@ -22,7 +22,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({
     seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: '2d', sfx: false }, player: { gender: 'boy', name: 'Tom' },
     mon: { v: 2, box: [{ uid: 'm1', sp: 'bubbly', lv: 5, xp: 0 }], team: ['m1'], dex: { bubbly: 'caught' } },
-    world: { v: 2, started: true, map: 't0', x: 8, y: 22, dir: 'up', flags: { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:ch1': 1 } },
+    world: { v: 2, started: true, map: 't0', x: 11, y: 9, dir: 'up', flags: { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:ch1': 1 } },
   })));
   await p.reload(); await p.waitForTimeout(400);
   await p.click('[data-act=wEnter]');
@@ -37,7 +37,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
 
   // ---------- 第 1 镇：博士 ----------
   let s = await dbg();
-  check(s.map === 't0' && !s.dlg, '在第 1 镇 ' + JSON.stringify(s));
+  check(s.map === 't0' && !s.dlg, '在你好岛 ' + JSON.stringify(s));
   await p.screenshot({ path: out + '/w1-town.png' });
   await step('ArrowRight');
   await A();
@@ -105,7 +105,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   s = await dbg();
   check(s.map === saved.map && s.x === saved.x && s.y === saved.y, '重新进入时回到存档的位置 ' + JSON.stringify(s));
   await tp(g.x, g.y + 1, 'up');
-  await step('ArrowUp', 2);
+  await step('ArrowUp', 3);
   check(await waitMap('r0'), '走到 1 号路');
   await p.waitForTimeout(2800);
   await p.screenshot({ path: out + '/w5-route.png' });
@@ -204,7 +204,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.click('[data-act=wEnter]'); await p.waitForTimeout(700);
   s = await dbg();
   const st2 = await p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')));
-  check(s.map === 't2' && st2.world.v === 2, '老存档：回到第 3 镇怪兽中心门口 ' + JSON.stringify(s));
+  check(s.map === 't2' && st2.world.v === 3, '老存档：回到第 3 镇怪兽中心门口 ' + JSON.stringify(s));
   check(st2.mon.team.length === 4 && Object.keys(st2.mon.badges).length === 2, '老存档：怪兽和徽章都在，队伍补到 4 只');
   check(!errs.length, '迁移后没有报错' + (errs.length ? '：' + errs.join(' | ') : ''));
   console.log(fails ? 'FAIL ' + fails : 'PASS');

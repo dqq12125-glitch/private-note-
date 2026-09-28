@@ -118,7 +118,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   // ---------- 1 号路遇到对手 ----------
   await p.evaluate(() => EchoWorld._debug().goMap('r0', 'south'));
   await p.waitForTimeout(400);
-  for (let i = 0; i < 10 && !(await dbg()).busy; i++) { await p.keyboard.press('ArrowUp'); await p.waitForTimeout(260); }
+  for (let i = 0; i < 20 && !(await dbg()).busy; i++) { await p.keyboard.press('ArrowUp'); await p.waitForTimeout(260); }
   await p.waitForTimeout(1800);
   await typed();
   check(/Coco/.test(await en()), '对手跑过来打招呼：' + await en());

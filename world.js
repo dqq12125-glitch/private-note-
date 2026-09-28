@@ -23,9 +23,18 @@
   // ---------- 存档迁移：旧版只有 13 个小镇，没有道路和房子 ----------
   function migrate() {
     const ws = WS();
-    if (ws.v === 2) return;
+    if (ws.v === 2) {
+      // v3：地图全部重做 + 秘传学习器。老存档站在已经不存在的地图上就回到当前小镇的怪兽中心；按徽章数补发学习器
+      ws.v = 3;
+      if (!EM.all().includes(ws.map)) { ws.map = 't' + Math.max(0, Math.min(E.W.length - 1, ws.z || 0)); ws.x = -1; ws.y = -1; ws.arrive = 'door:C'; }
+      const nb = Object.keys(E.S.mon.badges).length;
+      Object.entries(SKILLS).forEach(([k, S]) => { if (nb >= S.badge && !MG.itemCount(S.hm)) MG.addItem(S.hm, 1); });
+      E.save();
+      return;
+    }
+    if (ws.v === 3) return;
     const z = Math.max(0, Math.min(E.W.length - 1, ws.z || 0));
-    ws.v = 2;
+    ws.v = 3;
     ws.map = 't' + z;
     ws.x = -1; ws.y = -1;
     ws.arrive = 'door:C';
@@ -36,15 +45,28 @@
   }
 
   // ---------- 地图查询 ----------
-  const rawTile = (x, y) => (M.grid[y] && M.grid[y][x]) || (M.kind === 'inside' ? 'W' : M.kind === 'cave' ? 'X' : '#');
+  const rawTile = (x, y) => (M.grid[y] && M.grid[y][x]) || (M.kind === 'inside' ? 'W' : M.kind === 'cave' ? 'X' : M.kind === 'under' ? 'R' : '#');
   const boulderAt = (x, y) => (M._bould || []).find(b => b.x === x && b.y === y);
-  const tile = (x, y) => { if (M._cleared && M._cleared.has(x + ',' + y)) return M.kind === 'cave' ? ':' : '.'; if (boulderAt(x, y)) return 'O'; return rawTile(x, y); };
-  const npcVisible = n => !(n.role === 'guard' && hasBadge(M.z)) && !(window.EchoStory && EchoStory.hidden(SC, n));
+  const floorCh = () => M.kind === 'cave' ? ':' : M.kind === 'inside' ? '_' : '.';
+  const tile = (x, y) => {
+    const k = x + ',' + y;
+    if (M._cleared && M._cleared.has(k)) return floorCh();
+    if (M._open && M._open.has(k)) return floorCh();
+    if (boulderAt(x, y)) return 'O';
+    return rawTile(x, y);
+  };
+  const WATER = '~Dw';
+  const isWater = (x, y) => WATER.includes(tile(x, y)) || (M._wet && M._wet.has(x + ',' + y));
+  const nBadges = () => Object.keys(E.S.mon.badges).length;
+  const guardGone = n => n.badge != null ? nBadges() >= n.badge || E.S.settings.unlockAll : hasBadge(M.z);
+  const flagOK = n => (!n.showIf || [].concat(n.showIf).every(k => WS().flags['s:' + k])) && (!n.hideIf || ![].concat(n.hideIf).some(k => WS().flags['s:' + k]));
+  const npcVisible = n => !(n.role === 'guard' && guardGone(n)) && flagOK(n) && !(window.EchoStory && EchoStory.hidden(SC, n));
   const npcAt = (x, y) => M.npcs.find(n => n.x === x && n.y === y && npcVisible(n));
   const pickKey = p => 'p:' + M.id + ':' + p.x + ':' + p.y;
   const pickAt = (x, y) => M.picks.find(p => p.x === x && p.y === y && !WS().flags[pickKey(p)]);
-  const pickType = p => PICKS[(p.x * 7 + p.y * 3 + M.z) % (M.z < 2 ? 2 : M.z < 4 ? 3 : M.z < 6 ? 4 : M.z < 8 ? 6 : PICKS.length)];
-  const walkable = (x, y) => (EM.WALK.includes(tile(x, y)) || (PL.surf && tile(x, y) === '~')) && !npcAt(x, y);
+  const pickType = p => p.item || PICKS[(p.x * 7 + p.y * 3 + M.z) % (M.z < 2 ? 2 : M.z < 4 ? 3 : M.z < 6 ? 4 : M.z < 8 ? 6 : PICKS.length)];
+  // 水边的出口格（出口外面是水）：要冲浪才能走
+  const walkable = (x, y) => (PL.surf ? (isWater(x, y) && tile(x, y) !== 'w') || EM.WALK.includes(tile(x, y)) : EM.WALK.includes(tile(x, y)) && !(M._wet && M._wet.has(x + ',' + y))) && !npcAt(x, y);
   const hiddenKey = h => 'h:' + M.id + ':' + h.x + ':' + h.y;
   const hiddenAt = (x, y) => (M.hidden || []).find(h => h.x === x && h.y === y && !WS().flags[hiddenKey(h)]);
   const warpAt = (x, y) => M.warps.find(w => w.x === x && w.y === y);
@@ -57,6 +79,7 @@
   function placeName(m) {
     m = m || M;
     const w = E.W[m.z];
+    if (m.name) return { icon: m.icon || { town: w.icon, route: '🛤️', cave: '🕳️', under: '🌊', inside: '🏠' }[m.kind] || '📍', name: m.name, en: m.en || m.name, sub: m.sub || (m.kind === 'town' ? '第 ' + (m.z + 1) + ' 岛' : w.name) };
     if (m.kind === 'town') return { icon: w.icon, name: w.name, en: w.en.replace(/[!?]/g, '') + ' Town', sub: '第 ' + (m.z + 1) + ' 镇' };
     if (m.kind === 'route') return { icon: '🛤️', name: (m.z + 1) + ' 号路', en: 'Route ' + (m.z + 1), sub: w.name + ' → ' + E.W[m.z + 1].name };
     if (m.kind === 'cave') return { icon: '🕳️', name: '回声洞 ' + (EM.caves.indexOf(m.route) + 1), en: 'Echo Cave', sub: (m.route + 1) + ' 号路旁边' };
@@ -67,13 +90,14 @@
   // ---------- 人物造型 ----------
   function trainerInfo(n) {
     const k = (M.z * 5 + n.seed) % TRAINER_NAMES.length;
+    if (n.look) { const l = typeof n.look === 'string' ? LOOKS[n.look] : n.look; return { name: n.name || TRAINER_NAMES[k], g: n.g || 'm', look: l || HIKER_LOOK }; }
     if (M.kind === 'cave') return { name: 'Hiker ' + TRAINER_NAMES[k], g: 'm', look: HIKER_LOOK };
     if (M.kind === 'inside') return { name: TRAINER_NAMES[k], g: n.seed % 2 ? 'f' : 'm', look: Object.assign({}, TRAINER_LOOKS[n.seed % TRAINER_LOOKS.length][1], { shirt: E.W[M.z].color }) };
     const e = TRAINER_LOOKS[(M.z + n.seed) % TRAINER_LOOKS.length];
     return { name: TRAINER_NAMES[k], g: e[0], look: e[1] };
   }
   function npcLook(n) {
-    if (n.look) return { name: n.name, g: n.g || 'm', look: n.look };
+    if (n.look && n.role !== 'trainer') return { name: n.name || 'Friend', g: n.g || 'm', look: typeof n.look === 'string' ? LOOKS[n.look] || LOOKS.hiker : n.look };
     const o = window.EchoStory && EchoStory.look(SC, n);
     if (o) return o;
     if (n.role === 'guard') return { name: 'Guard', g: 'm', look: LOOKS.guard };
@@ -96,16 +120,25 @@
   }
   function loadMap(id, how) {
     M = EM.get(id) || EM.get('t0');
+    const vw = $('w-view');
+    if (vw) { vw.querySelectorAll('canvas').forEach(c => { c.style.filter = ''; }); const nt = $('w-note'); if (nt) nt.hidden = true; }
     M.npcs = M.npcs.filter(n => !n.temp);
     // 每次进地图：砍掉的树、碎掉的石头会长回来，大石头回到原位；怪力、闪光要重新用
     M._cleared = new Set(); M._bould = (M.boulders || []).map(b => ({ x: b.x, y: b.y, rx: b.x, ry: b.y })); M._strength = false; M._flash = false;
+    // 机关门：解开过的（存档里记着）一直开着
+    M._open = new Set((M.gates || []).filter(g => WS().flags['gate:' + M.id + ':' + g.i]).map(g => g.x + ',' + g.y));
+    // 水边的出口格
+    M._wet = new Set();
+    (M.warps || []).forEach(w => { if (!'^v<>'.includes(w.via)) return; const [dx, dy] = { '^': [0, 1], v: [0, -1], '<': [1, 0], '>': [-1, 0] }[w.via]; if (WATER.includes(rawTile(w.x + dx, w.y + dy))) M._wet.add(w.x + ',' + w.y); });
+    const wasSurf = PL.surf;
     PL.surf = false;
-    if (M.kind === 'inside') PL.bike = false;
+    if (M.kind === 'inside' || M.kind === 'under') PL.bike = false;
     const ws = WS();
     if (M.kind === 'town') ws.visited[M.z] = 1;
     let p = how && typeof how === 'object' ? how : EM.arrival(M, how === 'start' ? null : how);
+    if (p.surf || (wasSurf && isWater(p.x, p.y)) || (M._wet.size && isWater(p.x, p.y))) PL.surf = true;
     // 到达点被人挡住（比如守卫）时往旁边让一让
-    if (!EM.WALK.includes(tile(p.x, p.y)) || npcAt(p.x, p.y)) {
+    if ((!EM.WALK.includes(tile(p.x, p.y)) && !(PL.surf && isWater(p.x, p.y))) || npcAt(p.x, p.y)) {
       const alt = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([dx, dy]) => ({ x: p.x + dx, y: p.y + dy, dir: p.dir })).find(q => walkable(q.x, q.y) && !warpAt(q.x, q.y));
       p = alt || EM.arrival(M, null);
     }
@@ -118,6 +151,8 @@
     if (R) R.load(M, api3d);
     savePos();
     hud();
+    // 逃生绳回到最后一次待过的户外地图
+    if ((M.kind === 'town' || M.kind === 'route') && !PL.surf) ws.lastOut = { map: M.id, x: PL.x, y: PL.y, dir: PL.dir };
   }
   function enter(z, how) {
     E.primeTTS(); E.ac();
@@ -149,6 +184,8 @@
     E.SFX.tap();
     await sleep(300);
     const prevKind = M.kind;
+    const nt = $('w-note'); if (nt) nt.hidden = true;
+    v.querySelectorAll('canvas').forEach(c => { c.style.filter = ''; });
     loadMap(id, how);
     await sleep(60);
     v.classList.remove('fade');
@@ -166,11 +203,11 @@
   function hud() {
     const p = placeName();
     $('w-zname').textContent = p.icon + ' ' + p.name;
-    $('w-zsub').textContent = M.kind === 'route' || M.kind === 'cave' ? '野外 Lv ' + (MG.zoneLv(M.z) + (M.lvBonus || 0)) + '–' + (MG.zoneLv(M.z) + (M.lvBonus || 0) + 2) : p.sub;
+    $('w-zsub').textContent = M.kind === 'route' || M.kind === 'cave' || M.kind === 'under' ? '野外 Lv ' + (MG.zoneLv(M.z) + (M.lvBonus || 0)) + '–' + (MG.zoneLv(M.z) + (M.lvBonus || 0) + 2) : p.sub;
     $('w-badges').textContent = '🏅 ' + Object.keys(E.S.mon.badges).length;
     $('w-balls').textContent = '🔮 ' + E.S.mon.balls;
     const bk = $('w-bike');
-    if (bk) { bk.hidden = !(MG.itemCount('bike') > 0) || M.kind === 'inside'; bk.classList.toggle('on', !!PL.bike); }
+    if (bk) { bk.hidden = !(MG.itemCount('bike') > 0) || M.kind === 'inside' || M.kind === 'under'; bk.classList.toggle('on', !!PL.bike); }
   }
 
   // ---------- 移动 ----------
@@ -180,6 +217,15 @@
     const [dx, dy] = DIRS[dir], nx = PL.x + dx, ny = PL.y + dy, t = tile(nx, ny);
     const w = warpAt(nx, ny);
     if (w && !EM.WALK.includes(t)) { if (dir === 'up') goMap(w.to, w.arrive); return; }   // 门、洞口
+    // 瀑布：冲浪时往上要用「攀瀑」，往下会顺着水冲下去；左右水流太急过不去
+    if (t === 'w') {
+      if (!PL.surf) return;
+      if (dir === 'down') { step(nx, ny, STEP_MS * .7, false); return; }
+      if (dir !== 'up') return;
+      if (skillReady('falls')) useSkill('falls', () => climbFalls());
+      else talk([{ who: '旁白', emo: '🌊', en: 'The waterfall is too strong!', zh: '瀑布的水太急了，爬不上去。' + (skillOpen('falls') ? '队伍里要有水系或龙系的怪兽。' : '') }]);
+      return;
+    }
     // 台阶：只能往下跳，一下跳两格
     if (t === 'L') {
       if (dir !== 'down' || !walkable(nx, ny + 1)) return;
@@ -195,7 +241,7 @@
     }
     if (!walkable(nx, ny)) return;
     // 冲浪中走上岸就下来
-    if (PL.surf && tile(nx, ny) !== '~') { PL.surf = false; E.toast('🏖️ 上岸了'); }
+    if (PL.surf && !isWater(nx, ny)) { PL.surf = false; E.toast('🏖️ 上岸了'); }
     step(nx, ny, PL.bike && !PL.surf ? BIKE_MS : STEP_MS, false);
   }
   function step(nx, ny, dur, jump) {
@@ -203,19 +249,44 @@
     PL.fx = PL.x; PL.fy = PL.y; PL.x = nx; PL.y = ny;
     PL.moving = true; PL.jump = jump; PL.dur = dur; PL.t0 = performance.now();
   }
+  // 攀瀑：一直往上爬到瀑布顶上
+  async function climbFalls() {
+    busy = true;
+    E.SFX.hit();
+    PL.x = PL.x; PL.dir = 'up';
+    while (tile(PL.x, PL.y - 1) === 'w' || (tile(PL.x, PL.y) === 'w' && isWater(PL.x, PL.y - 1))) {
+      PL.scripted = true;
+      step(PL.x, PL.y - 1, STEP_MS * 1.2, false);
+      await sleep(STEP_MS * 1.2 + 30);
+      if (tile(PL.x, PL.y) !== 'w') break;
+    }
+    await sleep(40);
+    PL.scripted = false; PL.moving = false; PL.fx = PL.x; PL.fy = PL.y;
+    busy = false;
+    savePos();
+  }
   function onStep() {
     if (PL.scripted) return;
     const t = tile(PL.x, PL.y), ws = WS();
     savePos();
     const w = warpAt(PL.x, PL.y);
     if (w) { goMap(w.to, w.arrive); return; }
+    // 冰面：一直滑，撞到东西才停；瀑布往下冲
+    if (t === 'I' || (t === 'w' && PL.dir === 'down')) {
+      const [dx, dy] = DIRS[PL.dir], nx = PL.x + dx, ny = PL.y + dy;
+      if (walkable(nx, ny) || (t === 'w' && PL.surf && isWater(nx, ny) && !npcAt(nx, ny))) {
+        if (PL.surf && !isWater(nx, ny)) PL.surf = false;
+        step(nx, ny, t === 'I' ? STEP_MS * .6 : STEP_MS * .7, false); PL.slide = true; return;
+      }
+    }
+    const slid = PL.slide; PL.slide = false;
     const p = pickAt(PL.x, PL.y);
     if (p) { pickup(p); return; }
     if (story('step')) return;
     const tr = spotTrainer();
     if (tr) { trainerSpotted(tr); return; }
     if (ws.repel > 0) { ws.repel--; if (!ws.repel) E.toast('🧴 驱怪喷雾的效果消失了'); }
-    const rate = PL.surf && t === '~' ? .08 : EM.ENCOUNTER[t];
+    const rate = slid ? 0 : PL.surf && isWater(PL.x, PL.y) ? .08 : EM.ENCOUNTER[t];
     if (rate && !(ws.repel > 0) && Math.random() < rate && MG.anyAlive()) encounter();
   }
   function spotTrainer() {
@@ -226,7 +297,7 @@
       for (let d = 1; d <= n.sight; d++) {
         const cx = n.x + dx * d, cy = n.y + dy * d;
         if (cx === PL.x && cy === PL.y) return n;
-        if (!EM.WALK.includes(tile(cx, cy)) || npcAt(cx, cy)) break;
+        if (!(EM.WALK.includes(tile(cx, cy)) || isWater(cx, cy)) || npcAt(cx, cy)) break;
       }
     }
     return null;
@@ -239,7 +310,7 @@
     while (Math.abs(n.x - PL.x) + Math.abs(n.y - PL.y) > 1) {
       n.face = faceTo(n, PL);
       const [dx, dy] = DIRS[n.face];
-      if (!EM.WALK.includes(tile(n.x + dx, n.y + dy)) || (n.x + dx === FL.x && n.y + dy === FL.y && !(n.x + dx === PL.x && n.y + dy === PL.y))) break;
+      if (!(EM.WALK.includes(tile(n.x + dx, n.y + dy)) || isWater(n.x + dx, n.y + dy)) || (n.x + dx === FL.x && n.y + dy === FL.y && !(n.x + dx === PL.x && n.y + dy === PL.y))) break;
       n.x += dx; n.y += dy;
       await sleep(180);
     }
@@ -263,12 +334,12 @@
     const pg = page(), box = $('w-dlg');
     if (!pg) { closeDlg(); return; }
     dlg.tries = 0; dlg.picked = false;
-    const sr = E.speakMode() === 'sr', esc = E.esc, typing = !pg.kind && !!pg.en;
+    const sr = E.speakMode() === 'sr', esc = E.esc, typing = !pg.kind && !!pg.en && !pg.hideEn;
     clearInterval(dlg.tw);
     const face = pg.look ? '<img class="d-face" src="' + portrait(pg.look) + '" alt="">' : '<span class="d-face emo">' + (pg.emo || '💬') + '</span>';
     let body = '<div class="d-name">' + esc(pg.who || '') + '</div><button class="spk mini d-hear" data-act="wHear" aria-label="再听一遍">' + E.SPK + '</button>' +
       '<div class="d-row">' + face + '<div class="d-text">' +
-      (pg.en ? '<div class="d-en" id="d-en">' + (typing ? '' : esc(pg.en)) + '</div>' : '') +
+      (pg.en ? '<div class="d-en' + (pg.hideEn ? ' hid' : '') + '" id="d-en">' + (pg.hideEn ? '🔊 仔细听！（点右上角的喇叭再听一遍）' : typing ? '' : esc(pg.en)) + '</div>' : '') +
       (pg.zh ? '<div class="d-zh' + (typing ? ' wait' : '') + '" id="d-zh">' + esc(pg.zh) + '</div>' : '') + '</div></div>';
     if (pg.kind === 'speak') {
       body += '<div class="d-task"><div class="say-text" id="w-say">' + E.wordsHTML(pg.target) + '</div>' +
@@ -404,7 +475,9 @@
     if (t === 'P') return { pc: true };
     if (t === 'n' || t === 'b' || t === 'O') return { obst: t, x: tx, y: ty };
     if (t === 'Z') return { statue: true, x: tx, y: ty };
-    if (t === '~' && !PL.surf && (skillReady('surf') || MG.itemCount('rod') > 0)) return { water: true, x: tx, y: ty };
+    if (t === '|') return { gate: true, x: tx, y: ty };
+    if ((t === '~' || t === 'D') && !PL.surf && (skillReady('surf') || MG.itemCount('rod') > 0)) return { water: true, x: tx, y: ty };
+    if (t === 'w' && !PL.surf) return { falls: true, quiet: true };
     const hid = hiddenAt(tx, ty);
     if (hid) return { hidden: hid, quiet: true };
     const w = warpAt(tx, ty);
@@ -415,17 +488,32 @@
     if (dlg) { nextPage(); return; }
     if (busy || PL.moving || !$('modal').hidden) return;
     const f = facing();
-    if (!f) return;
+    if (!f || f.falls) {
+      // 站在深水上：潜下去；在海底的光圈上：浮上去
+      const here = tile(PL.x, PL.y);
+      if (PL.surf && here === 'D') { const d = M.dives.find(q => q.x === PL.x && q.y === PL.y); if (d) useSkill('dive', () => goMap(d.to, d.arrive)); else talk([{ who: '旁白', emo: '🌊', en: 'The sea is very deep here.', zh: '这里的海很深。' }]); return; }
+      if (here === 'U') { const u = M.surfaces.find(q => q.x === PL.x && q.y === PL.y); if (u) { talk([{ who: '旁白', emo: '🫧', en: 'Light is shining from above. Swim up?', zh: '上面有光照下来。要浮上去吗？', kind: 'choice', opts: [{ html: '🫧 浮上去 Swim up', cls: 'sun' }, { html: '先不' }], pick: i => { if (!i) setTimeout(() => goMap(u.to, u.arrive), 60); return []; } }]); } return; }
+      if (f && f.falls) talk([{ who: '旁白', emo: '🌊', en: 'It is a big waterfall.', zh: '一道大瀑布。要先冲浪到瀑布下面。' }]);
+      return;
+    }
     if (f.n) { f.n.face = faceTo(f.n, PL); if (!story('talk', f.n)) npcTalk(f.n); }
     else if (f.s) signTalk(f.s);
     else if (f.pc) { E.SFX.tap(); E.say('Welcome to the monster box!'); MG.pcSheet(); }
-    else if (f.statue) { if (!story('tile', f)) talk([{ who: '旁白', emo: '🗿', en: 'It is a big statue.', zh: '一座高大的雕像。' }]); }
+    else if (f.statue) { if (!story('tile', f)) markTalk(f); }
+    else if (f.gate) { if (!story('tile', f)) talk([{ who: '旁白', emo: '🚧', en: 'The gate is closed.', zh: '机关门关着。' }]); }
     else if (f.obst) obstacle(f);
     else if (f.water) waterMenu(f);
     else if (f.hidden) foundHidden(f.hidden);
     else if (f.w) goMap(f.w.to, f.w.arrive);
   }
+  function markTalk(f) {
+    const zs = []; for (let y = 0; y < M.H; y++) for (let x = 0; x < M.W; x++) if (M.grid[y][x] === 'Z') zs.push(x + ',' + y);
+    const mk = (M.def && M.def.marks || [])[zs.indexOf(f.x + ',' + f.y)];
+    if (mk) talk((Array.isArray(mk[0]) ? mk : [mk]).map(([en, zh]) => ({ who: '旁白', emo: '🗿', en, zh })));
+    else talk([{ who: '旁白', emo: '🗿', en: 'It is a big statue.', zh: '一座高大的雕像。' }]);
+  }
   function signTalk(s) {
+    if (s.en) { talk([].concat(s.more ? [[s.en, s.zh]].concat(s.more) : [[s.en, s.zh]]).map(([en, zh]) => ({ who: '告示牌', emo: '🪧', en, zh }))); return; }
     const w = E.W[M.z], nx = E.W[M.z + 1], town = w.en.replace(/[!?]/g, '') + ' Town', next = nx ? nx.en.replace(/[!?]/g, '') + ' Town' : '';
     const S = (en, zh) => ({ who: '告示牌', emo: '🪧', en, zh });
     const pages = {
@@ -441,10 +529,28 @@
     const w = E.W[M.z], info = npcLook(n), g = info.g, name = info.name, z = M.z, dk = 'd:' + M.id + ':' + n.id;
     const P = (en, zh, extra) => Object.assign({ who: name, look: info.look, g, en, zh }, extra || {});
     const coins = (k, en, zh) => dailyDone(k) ? [P('Good job!', '说得真好！')] : (markDaily(k), E.S.coins += 10, E.renderTop(), [P(en, zh, { onShow: () => { E.SFX.coin(); E.toast('💰 金币 +10', 'gold'); } })]);
+    const lines = arr => arr.map(q => Array.isArray(q) ? P(q[0], q[1]) : P(q.en, q.zh, q));
+    if (n.give && !WS().flags['g:' + M.id + ':' + n.id]) {
+      // 一次性送东西（秘传学习器、道具）
+      const it = MG.ITEMS[n.give.item];
+      talk(lines(n.give.say || [['Take this!', '这个送给你！']]).concat([
+        P('You got ' + (it ? it.en : n.give.item) + '!', '得到了' + (it ? it.zh : n.give.item) + (n.give.n > 1 ? ' ×' + n.give.n : '') + '！', { onShow: () => { WS().flags['g:' + M.id + ':' + n.id] = 1; MG.addItem(n.give.item, n.give.n || 1); if (n.give.flag) WS().flags['s:' + n.give.flag] = 1; E.save(); hud(); E.SFX.win(); E.toast((it ? it.icon + ' ' + it.zh : n.give.item) + ' +' + (n.give.n || 1), 'gold'); } }),
+      ]).concat(lines(n.give.after || [])));
+      return;
+    }
     if (n.role === 'guard') {
-      talk([P("Stop! You can't go north without this town's badge.", '站住！没有本镇的徽章不能往北走。'), P('Beat the gym leader first!', '先去道馆打败馆主吧！')]);
+      talk(n.say ? lines(n.say) : [P("Stop! You can't go north without this town's badge.", '站住！没有本镇的徽章不能往北走。'), P('Beat the gym leader first!', '先去道馆打败馆主吧！')]);
+    } else if (n.role === 'ferry') {
+      // 渡轮 / 船：带你去别的岛
+      const ok = (n.badge == null || nBadges() >= n.badge) && (!n.need || WS().flags['s:' + n.need]);
+      if (!ok) { talk(lines(n.no || [['Sorry, the boat is not ready yet.', '抱歉，船还不能开。']])); return; }
+      talk(lines(n.say || [['All aboard! Do you want to go?', '上船啦！要出发吗？']]).concat([P(n.ask || 'Where do you want to go?', '要坐船去' + (n.toName || '对面的岛') + '吗？', { kind: 'choice', opts: [{ html: '⛴️ ' + (n.toName || '出发') + ' Let\'s go!', cls: 'sun' }, { html: '先不 Not now' }], pick: i => { if (!i) setTimeout(() => sail(n), 80); return []; } })]));
+    } else if (n.say && n.role !== 'trainer') {
+      const pg = lines(n.say);
+      if (n.speak) pg.push(P('Can you say it?', '你能跟我说一遍吗？', { kind: 'speak', target: n.speak, pass: () => coins(dk, 'Good job! Here are 10 coins.', '说得真好！送你 10 个金币。') }));
+      talk(pg);
     } else if (n.role === 'trainer') {
-      if (beaten(n)) talk([P('You are really strong! Let me train more.', '你真厉害！我要再多练练。')]);
+      if (beaten(n)) talk(n.after ? lines(n.after) : [P('You are really strong! Let me train more.', '你真厉害！我要再多练练。')]);
       else trainerTalk(n);
     } else if (n.role === 'nurse') {
       talk([
@@ -528,19 +634,32 @@
       ]);
     }
   }
+  async function sail(n) {
+    busy = true;
+    const v = $('w-view'); v.classList.add('fade');
+    E.SFX.tap();
+    await sleep(500);
+    E.toast('⛴️ 船开了……', 'gold');
+    await sleep(900);
+    busy = false;
+    v.classList.remove('fade');
+    goMap(n.to, n.how || null);
+  }
   function trainerTalk(n) {
     const t = trainerInfo(n), z = M.z, lv = MG.zoneLv(z) + (M.lvBonus || 0);
     const lines = [["Hi! I'm " + t.name + ". Let's have a monster battle!", '你好！我是 ' + t.name + '，我们来一场怪兽对战吧！'],
       ['Our eyes met! Now we must battle!', '我们的眼神对上了！那就来对战吧！'],
       ['I trained here every day. Are you ready?', '我每天都在这里训练。你准备好了吗？']];
-    const ln = lines[n.seed % lines.length];
-    talk([{ who: t.name, look: t.look, g: t.g, en: ln[0], zh: ln[1] }], () => {
-      const two = n.seed % 2 === 1 && M.kind !== 'inside';
+    const ln = n.lines || [lines[n.seed % lines.length]];
+    talk(ln.map(q => ({ who: t.name, look: t.look, g: t.g, en: q[0], zh: q[1] })), () => {
+      const two = n.seed % 2 === 1 && M.kind !== 'inside', k = n.n || (two ? 2 : 1), tl = lv + (n.lv || 0) + (k > 1 ? 0 : 1);
       battle('trainer', {
-        foes: MG.trainerFoes(z, n.seed, two ? 2 : 1, two ? lv : lv + 1),
+        foes: n.team ? n.team.map(([sp, l]) => MG.newMon(MG.grown(sp, tl + (l || 0)), tl + (l || 0))) : n.types ? MG.teamOf(n.types, k, tl, M.id + n.id) : MG.trainerFoes(z, n.seed, k, tl),
         trainer: { name: t.name, img: portrait(t.look) },
         after: res => {
-          if (res === 'win') { WS().flags[trainerKey(n)] = 1; E.save(); talk([{ who: t.name, look: t.look, g: t.g, en: 'Wow, you are really strong!', zh: '哇，你真的很厉害！' }]); }
+          // 走过来对战的训练师打完回到原来的位置，不会堵住路
+          if (n.ox != null && (n.x !== n.ox || n.y !== n.oy)) { n.x = n.ox; n.y = n.oy; n.face = n.home; }
+          if (res === 'win') { WS().flags[trainerKey(n)] = 1; E.save(); talk([{ who: t.name, look: t.look, g: t.g, en: (n.win || ['Wow, you are really strong!'])[0], zh: (n.win || [0, '哇，你真的很厉害！'])[1] }]); }
         },
       });
     });
@@ -579,21 +698,25 @@
   }
 
   // ---------- 野外技能：拿到徽章解锁，队伍里要有合适属性的怪兽，用的时候要对它说英语指令 ----------
+  // 仿绿宝石：秘传学习器（hm）是剧情里的人送的，还要有足够的徽章才能在野外用
   const SKILLS = {
-    cut: { zh: '居合斩', en: 'Cut', icon: '🌿', badge: 1, types: ['grass', 'bug', 'steel', 'normal', 'fight', 'dark', 'dragon', 'ground'], say: n => n + ', cut the tree!', what: '砍掉挡路的小树' },
-    flash: { zh: '闪光', en: 'Flash', icon: '💡', badge: 2, types: ['spark', 'psychic', 'fire'], say: n => n + ', light up the cave!', what: '照亮漆黑的洞穴' },
-    smash: { zh: '碎岩', en: 'Rock Smash', icon: '🪨', badge: 3, types: ['fight', 'rock', 'ground', 'steel', 'normal', 'dragon'], say: n => n + ', smash the rock!', what: '打碎有裂缝的岩石' },
-    strength: { zh: '怪力', en: 'Strength', icon: '💪', badge: 4, types: ['fight', 'rock', 'ground', 'normal', 'steel', 'dragon', 'water'], say: n => n + ', push the rock!', what: '推动大石头' },
-    surf: { zh: '冲浪', en: 'Surf', icon: '🌊', badge: 5, types: ['water', 'ice', 'dragon'], say: n => n + ", let's surf!", what: '在水上前进' },
-    fly: { zh: '飞空', en: 'Fly', icon: '🕊️', badge: 6, types: ['flying', 'dragon'], say: n => n + ', fly me there!', what: '飞回去过的小镇' },
+    cut: { zh: '居合斩', en: 'Cut', icon: '🌿', badge: 3, hm: 'hm_cut', types: ['grass', 'bug', 'steel', 'normal', 'fight', 'dark', 'dragon', 'ground'], say: n => n + ', cut the tree!', what: '砍掉挡路的小树', who: '温馨家庭岛的树医生' },
+    flash: { zh: '闪光', en: 'Flash', icon: '💡', badge: 2, hm: 'hm_flash', types: ['spark', 'psychic', 'fire'], say: n => n + ', light up the cave!', what: '照亮漆黑的洞穴', who: '回声洞里的登山家' },
+    smash: { zh: '碎岩', en: 'Rock Smash', icon: '🪨', badge: 4, hm: 'hm_smash', types: ['fight', 'rock', 'ground', 'steel', 'normal', 'dragon'], say: n => n + ', smash the rock!', what: '打碎有裂缝的岩石', who: '校园岛的矿工' },
+    strength: { zh: '怪力', en: 'Strength', icon: '💪', badge: 6, hm: 'hm_strength', types: ['fight', 'rock', 'ground', 'normal', 'steel', 'dragon', 'water'], say: n => n + ', push the rock!', what: '推动大石头', who: '社团岛的大力士' },
+    surf: { zh: '冲浪', en: 'Surf', icon: '🌊', badge: 8, hm: 'hm_surf', types: ['water', 'ice', 'dragon'], say: n => n + ", let's surf!", what: '在水上前进', who: '爸爸（生日派对岛）' },
+    fly: { zh: '飞空', en: 'Fly', icon: '🕊️', badge: 9, hm: 'hm_fly', types: ['flying', 'dragon'], say: n => n + ', fly me there!', what: '飞回去过的小岛', who: '小凯（动物岛）' },
+    dive: { zh: '潜水', en: 'Dive', icon: '🤿', badge: 10, hm: 'hm_dive', types: ['water', 'dragon'], say: n => n + ', dive down!', what: '在深水（深蓝色）上潜到海底', who: '导师欧瑞（规则城）' },
+    falls: { zh: '攀瀑', en: 'Waterfall', icon: '🏞️', badge: 12, hm: 'hm_falls', types: ['water', 'dragon'], say: n => n + ', climb the waterfall!', what: '冲浪时爬上瀑布', who: '天气岛的气象台台长' },
   };
-  const nBadges = () => Object.keys(E.S.mon.badges).length;
   const skillMon = k => E.S.mon.team.map(u => E.S.mon.box.find(m => m.uid === u)).filter(Boolean).find(m => MG.species(m.sp).types.some(t => SKILLS[k].types.includes(t)));
-  const skillOpen = k => E.S.settings.unlockAll || nBadges() >= SKILLS[k].badge;
+  const hasHM = k => E.S.settings.unlockAll || MG.itemCount(SKILLS[k].hm) > 0;
+  const skillOpen = k => E.S.settings.unlockAll || (hasHM(k) && nBadges() >= SKILLS[k].badge);
   const skillReady = k => skillOpen(k) && !!skillMon(k);
   // 用技能：说对指令才会生效
   function useSkill(k, then) {
     const S = SKILLS[k], nar = (en, zh) => ({ who: '旁白', emo: S.icon, en, zh });
+    if (!hasHM(k)) { talk([nar('Maybe a monster could help here...', '也许怪兽能帮上忙……（要先拿到「' + S.zh + '」的秘传学习器）')]); return; }
     if (!skillOpen(k)) { talk([nar('You need more badges to use ' + S.en + '.', '要用「' + S.zh + '」' + S.what + '，需要 ' + S.badge + ' 枚徽章。')]); return; }
     const mon = skillMon(k);
     if (!mon) { talk([nar('None of your monsters can use ' + S.en + '.', '队伍里要有' + S.types.map(t => DEX.TYPES[t].zh).join('、') + '系的怪兽，才能用「' + S.zh + '」。')]); return; }
@@ -654,18 +777,19 @@
   const HIDDEN_PICKS = ['superpotion', 'superball', 'revive', 'fullheal', 'leafstone', 'firestone', 'waterstone', 'thunderstone', 'moonstone', 'sunstone', 'icestone', 'superball'];
   function foundHidden(h) {
     WS().flags[hiddenKey(h)] = 1;
-    const id = HIDDEN_PICKS[(h.x * 5 + h.y * 11 + M.z * 3) % (M.z < 4 ? 4 : HIDDEN_PICKS.length)], it = MG.ITEMS[id];
+    const id = h.item || HIDDEN_PICKS[(h.x * 5 + h.y * 11 + M.z * 3) % (M.z < 4 ? 4 : HIDDEN_PICKS.length)], it = MG.ITEMS[id];
     MG.addItem(id, 1);
     E.save(); E.SFX.coin();
     talk([{ who: '旁白', emo: '✨', en: 'You found a hidden ' + it.en + '!', zh: '你发现了藏起来的' + it.zh + '！' }]);
   }
   function skillsSheet() {
-    E.openModal('<h2>🌟 野外技能</h2><p>拿到徽章就会解锁。队伍里要有合适属性的怪兽，用的时候要大声对它说英语指令。</p>' +
+    E.openModal('<h2>🌟 野外技能</h2><p>先从剧情里的人手上拿到秘传学习器，再拿够徽章才能用。队伍里要有合适属性的怪兽，用的时候要大声对它说英语指令。</p>' +
       Object.entries(SKILLS).map(([k, S]) => {
         const open = skillOpen(k), mon = skillMon(k);
-        const btn = k === 'flash' ? '<button class="btn small sun" data-act="wUseSkill" data-k="flash"' + (open && mon && M.kind === 'cave' && !M._flash ? '' : ' disabled') + '>用</button>'
+        if (!hasHM(k)) return '<div class="ach locked"><span class="ae">' + S.icon + '</span><div style="flex:1"><b>' + S.zh + ' ' + S.en + '</b><small>' + S.what + ' · 还没拿到秘传学习器（' + S.who + '）</small></div><span class="lvchip">🔒</span></div>';
+        const btn = k === 'flash' ? '<button class="btn small sun" data-act="wUseSkill" data-k="flash"' + (open && mon && M.dark && !M._flash ? '' : ' disabled') + '>用</button>'
           : k === 'fly' ? '<button class="btn small sun" data-act="wUseSkill" data-k="fly"' + (open && mon && M.kind !== 'inside' ? '' : ' disabled') + '>用</button>'
-            : '<small class="tip">对着障碍按 A</small>';
+            : k === 'dive' ? '<small class="tip">冲浪到深水上按 A</small>' : k === 'falls' ? '<small class="tip">冲浪时往瀑布上走</small>' : '<small class="tip">对着障碍按 A</small>';
         return '<div class="ach' + (open ? '' : ' locked') + '"><span class="ae">' + S.icon + '</span><div style="flex:1"><b>' + S.zh + ' ' + S.en + '</b><small>' + S.what + ' · ' + (open ? (mon ? '由 ' + MG.species(mon.sp).en + ' 来用' : '需要 ' + S.types.slice(0, 3).map(t => DEX.TYPES[t].zh).join('/') + ' 系怪兽') : '需要 ' + S.badge + ' 枚徽章') + '</small></div>' + (open ? btn : '<span class="lvchip">🔒</span>') + '</div>';
       }).join('') + '<button class="btn ghost wide" data-act="close">关闭</button>');
   }
@@ -675,7 +799,7 @@
   }
 
   // ---------- 战斗 ----------
-  function encounter() { battle('wild', { lvBonus: M.lvBonus || 0, hab: PL.surf ? 'water' : M.kind === 'cave' ? 'cave' : 'grass' }); }
+  function encounter() { battle('wild', { lvBonus: M.lvBonus || 0, hab: PL.surf || M.kind === 'under' ? 'water' : M.hab || (M.kind === 'cave' ? 'cave' : 'grass') }); }
   async function battle(kind, o) {
     busy = true;
     held = null;
@@ -684,14 +808,14 @@
     await sleep(820);
     stopLoop();
     const ok = MG.battle(kind, M.z, {
-      foes: o.foes, trainer: o.trainer, lvBonus: o.lvBonus, noCatch: o.noCatch, hab: o.hab || (M.kind === 'cave' ? 'cave' : 'grass'),
+      foes: o.foes, trainer: o.trainer, lvBonus: o.lvBonus, noCatch: o.noCatch, hab: o.hab || M.hab || (M.kind === 'cave' ? 'cave' : 'grass'), arena: M.arena || M.theme, rules: o.rules,
       onEnd: res => {
         E.show('world');
         wp.classList.remove('on');
         resize(); hud();
         startLoop();
         busy = false;
-        if (res === 'lose' && !o.noWhiteout) whiteout();
+        if (res === 'lose' && !o.noWhiteout) { whiteout(); if (o.after && o.fromStory) o.after('lose'); }
         else if (o.after) o.after(res);
       },
     });
@@ -700,7 +824,7 @@
   function whiteout() {
     MG.healAll();
     const c = WS().center;
-    loadMap(c && c.map ? c.map : 'i' + M.z + 'C', 'nurse');
+    loadMap(c && c.map && EM.get(c.map) ? c.map : EM.get('i' + M.z + 'C') ? 'i' + M.z + 'C' : 'i0C', 'nurse');
     talk([
       { who: '旁白', emo: '💤', en: 'Your monsters are tired. You hurried to the Monster Center.', zh: '你的怪兽都累倒了……你赶快跑回了怪兽中心。' },
       { who: 'Nurse Amy', look: LOOKS.nurse, g: 'f', en: "Your monsters are healed now. Don't give up!", zh: '怪兽们已经恢复了，别灰心，再去试试吧！' },
@@ -738,11 +862,30 @@
     facePlayer: dir => { PL.dir = dir; },
     faceEach: n => { n.face = faceTo(n, PL); PL.dir = faceTo(PL, n); },
     alert: async n => { n.alert = performance.now(); E.SFX.tap(); await sleep(800); },
-    battle: (kind, o) => new Promise(res => battle(kind, Object.assign({}, o, { after: r => { busy = true; res(r); } }))),
+    battle: (kind, o) => new Promise(res => battle(kind, Object.assign({}, o, { fromStory: true, after: r => { busy = true; res(r); } }))),
     scene: () => $('w-scene'),
     setOverlay: fn => { overlay = fn; },
+    // 画面上方的小提示条（道馆机关用：现在要踩什么颜色、红灯绿灯……）
+    // 整个画面加滤镜（颜色被偷走的岛：grayscale(1)）；换地图会自动清掉
+    filter: css => { $('w-view').querySelectorAll('canvas').forEach(c => { c.style.filter = css || ''; }); },
+    note: html => { const n = $('w-note'); if (!n) return; if (!html) { n.hidden = true; return; } n.innerHTML = html; n.hidden = false; },
+    setOver: (x, y, ch) => { if (M.over && M.over[y]) M.over[y][x] = ch; },
+    over: (x, y) => (M.over && M.over[y] && M.over[y][x]) || '',
     goMap: (id, how) => goMap(id, how),
     hud: () => hud(),
+    // 机关门：open(i 或 'all', keep 存档记住)；closed(i)
+    openGate: (i, keep) => { (M.gates || []).forEach(g => { if (i === 'all' || g.i === i) { M._open.add(g.x + ',' + g.y); if (keep) WS().flags['gate:' + M.id + ':' + g.i] = 1; } }); E.SFX.ok(2); E.save(); },
+    closeGate: i => { (M.gates || []).forEach(g => { if (i === 'all' || g.i === i) { M._open.delete(g.x + ',' + g.y); delete WS().flags['gate:' + M.id + ':' + g.i]; } }); E.save(); },
+    gateOpen: i => { const g = (M.gates || [])[i]; return !!g && M._open.has(g.x + ',' + g.y); },
+    teleport: (x, y, dir) => { PL.x = PL.fx = x; PL.y = PL.fy = y; PL.moving = false; if (dir) PL.dir = dir; FL.x = FL.fx = x; FL.y = FL.fy = y; savePos(); },
+    refresh: () => { if (R) R.load(M, api3d); },
+    tile: (x, y) => tile(x, y),
+    skillReady: k => skillReady(k),
+    hasHM: k => hasHM(k),
+    give: (item, n) => { MG.addItem(item, n || 1); E.save(); hud(); const it = MG.ITEMS[item]; E.SFX.win(); E.toast((it ? it.icon + ' ' + it.zh : item) + ' +' + (n || 1), 'gold'); },
+    badges: () => nBadges(),
+    daily: (k, fn) => { if (dailyDone(k)) return false; markDaily(k); fn && fn(); E.save(); return true; },
+    flags: () => WS().flags,
     say: (t, g) => E.say(t, undefined, g),
   };
 
@@ -773,7 +916,9 @@
     const st = E.S.settings;
     if ((st.gfx || 'auto') !== 'auto' || !R || R.kind === '2d' || busy || dlg || document.hidden) return;
     if (!perf.t0) { perf.t0 = now; return; }
-    if (now - perf.t0 < 1200 || dt > 250) return;
+    // 偶尔一帧很慢（切到后台、切地图）不算；可是一直很慢（连续 12 帧都超过 250ms）就是设备太慢
+    if (dt > 250) { perf.slow = (perf.slow || 0) + 1; if (perf.slow < 12 || now - perf.t0 < 1200) return; perf.n = 20; perf.sum = 20 * dt; perf.slow = 0; }
+    else { perf.slow = 0; if (now - perf.t0 < 1200) return; }
     perf.n++; perf.sum += dt;
     if (perf.n < 150 && now - perf.t0 < 4500) return;
     if (perf.n < 20) { perf.n = 0; perf.sum = 0; perf.t0 = now; return; }
@@ -825,7 +970,8 @@
       picks: M.picks.filter(p => !WS().flags[pickKey(p)]),
       hint,
       obst: [...(M._bould || []).map((b, i) => ({ k: 'O', id: 'O' + i, x: b.x, y: b.y }))],
-      cleared: M._cleared, surf: !!PL.surf, bike: !!PL.bike && !PL.surf, flash: M.kind === 'cave' ? !!M._flash : true,
+      cleared: M._cleared, surf: !!PL.surf, bike: !!PL.bike && !PL.surf, flash: M.dark ? !!M._flash : true, dark: !!M.dark,
+      open: M._open,
       sparkles: MG.itemCount('dowsing') > 0 && E.S.mon.dowseOn !== false ? (M.hidden || []).filter(h => !WS().flags[hiddenKey(h)]) : [],
     };
   }
@@ -849,8 +995,19 @@
   const OUT = 'rgba(32,38,50,.78)';
 
   // 地面图层：草地、小路、沙地、水、花、洞穴地面、室内地板。3D 模式下树、房子、草丛、岩石另外用模型
+  // 道馆机关的地板：m.over 图层里的字符 → def.paint 里的颜色和字
+  function paintOver(g, m, T) {
+    if (!m.over || !m.def || !m.def.paint) return;
+    for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
+      const ch = m.over[y] && m.over[y][x], d = ch && m.def.paint[ch];
+      if (!d) continue;
+      const o = typeof d === 'string' ? { c: d } : d, sx = x * T, sy = y * T;
+      if (o.c) { g.fillStyle = shade(o.c, .8); rr(g, sx + T * .04, sy + T * .04, T * .92, T * .92, T * .14); g.fill(); g.fillStyle = o.c; rr(g, sx + T * .09, sy + T * .07, T * .82, T * .8, T * .12); g.fill(); }
+      if (o.t) { g.fillStyle = o.tc || '#2b2b3a'; g.font = '800 ' + Math.round(T * (o.t.length > 6 ? .2 : o.t.length > 3 ? .28 : .38)) + 'px "Baloo 2", Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(o.t, sx + T / 2, sy + T * .5); }
+    }
+  }
   function paintGround(g, m, T, for3d) {
-    const t = (x, y) => (m.grid[y] && m.grid[y][x]) || '';
+    const t = (x, y) => { const c = (m.grid[y] && m.grid[y][x]) || ''; return (c === 'o' || c === 'r') && m.paintAs ? m.paintAs[x + ',' + y] || c : c; };
     const is = set => (x, y) => set.includes(t(x, y));
     const p = m.pal, sd = m.z * 31 + m.id.length;
     const blob = (x, y, same, inset, color, R) => {
@@ -872,7 +1029,11 @@
       for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
         if (t(x, y) === 'u') { blob(x, y, rug, T * .06, shade(p.rug, .85), T * .2); blob(x, y, rug, T * .14, p.rug, T * .16); }
         if (t(x, y) === 'e') { g.fillStyle = '#c62828'; rr(g, x * T + T * .08, y * T + T * .1, T * .84, T * .6, T * .1); g.fill(); g.fillStyle = '#ffcdd2'; g.fillRect(x * T + T * .2, y * T + T * .36, T * .6, T * .06); }
+        else if (t(x, y) === 'I') { g.fillStyle = '#d6f1fb'; g.fillRect(x * T, y * T, T + .5, T + .5); g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = T * .05; g.beginPath(); g.moveTo(x * T + T * .2, y * T + T * .7); g.lineTo(x * T + T * .45, y * T + T * .35); g.stroke(); }
+        else if (t(x, y) === '%') stairs(g, x, y, T, p.trim || '#8d6e63');
+        else if (t(x, y) === '^') { g.fillStyle = shade(p.rug || '#ffca28', .9); rr(g, x * T + T * .1, y * T + T * .1, T * .8, T * .8, T * .1); g.fill(); }
       }
+      paintOver(g, m, T);
       return;
     }
     if (m.kind === 'cave') {
@@ -885,7 +1046,10 @@
       for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
         if (t(x, y) === '~') { blob(x, y, wet, 0, shade(p.floor, .7)); blob(x, y, wet, T * .12, for3d ? '#2a5f86' : p.water, T * .3); }
         if (t(x, y) === 'e') { g.fillStyle = 'rgba(255,240,200,.55)'; rr(g, x * T + T * .1, y * T + T * .1, T * .8, T * .8, T * .2); g.fill(); }
+        else if (t(x, y) === 'I') { g.fillStyle = '#cdeefa'; g.fillRect(x * T, y * T, T + .6, T + .6); g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = T * .05; g.beginPath(); g.moveTo(x * T + T * .2, y * T + T * .7); g.lineTo(x * T + T * .45, y * T + T * .35); g.moveTo(x * T + T * .55, y * T + T * .8); g.lineTo(x * T + T * .75, y * T + T * .5); g.stroke(); }
+        else if (t(x, y) === '%') stairs(g, x, y, T, p.wallTop || '#8a7260');
       }
+      paintOver(g, m, T);
       return;
     }
     // 户外
@@ -903,7 +1067,10 @@
         g.fillStyle = '#ffc93c'; circ(g, fx, fy, T * .03); g.fill();
       }
     }
-    const isPath = is('=^v'), isWater = is('~'), isSand = is('S'), isTall = is(',');
+    // 出口格外面是水的话画成水
+    const wetEdge = (x, y) => { const c = t(x, y), d = { '^': [0, 1], v: [0, -1], '<': [1, 0], '>': [-1, 0] }[c]; return d && '~Dw'.includes(t(x + d[0], y + d[1])); };
+    const isPath = (x, y) => '=^v<>'.includes(t(x, y)) && t(x, y) !== '' && !wetEdge(x, y), isWater = (x, y) => ('~Dw'.includes(t(x, y)) && t(x, y) !== '') || wetEdge(x, y), isSand = is('SU'), isTall = is(',');
+    const isIce = is('I');
     for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
       const c = t(x, y);
       if (isPath(x, y)) {
@@ -915,7 +1082,13 @@
         blob(x, y, isWater, 0, for3d ? shade(p.sand, .92) : '#e9f8fc');
         blob(x, y, isWater, T * .1, for3d ? '#3f9fcf' : '#6fcdf0', T * .32);
         blob(x, y, isWater, T * .22, for3d ? '#2f86b8' : '#4ab6e6', T * .24);
-      } else if (isTall(x, y) && for3d) blob(x, y, isTall, T * .02, shade(p.tall, .95), T * .3);
+        if (c === 'D') { g.fillStyle = for3d ? 'rgba(10,40,90,.5)' : '#1f6fa8'; rr(g, x * T + T * .06, y * T + T * .06, T * .88, T * .88, T * .3); g.fill(); }
+        if (c === 'w' && !for3d) { g.fillStyle = 'rgba(255,255,255,.7)'; for (let k = 0; k < 3; k++) g.fillRect(x * T + T * (.2 + k * .25), y * T, T * .08, T); }
+      } else if (isIce(x, y)) {
+        blob(x, y, isIce, 0, '#bfe6f5', T * .1);
+        g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = T * .05; g.beginPath(); g.moveTo(x * T + T * .2, y * T + T * .7); g.lineTo(x * T + T * .45, y * T + T * .35); g.stroke();
+      } else if (c === '%') stairs(g, x, y, T, p.rock || '#a39b8b');
+      else if (isTall(x, y) && for3d) blob(x, y, isTall, T * .02, shade(p.tall, .95), T * .3);
       else if (c === 'F') {
         const sx = x * T, sy = y * T;
         [['#ff6b9d', .28, .38], ['#ffd54f', .7, .3], ['#ffffff', .5, .72], ['#b388ff', .82, .78]].forEach(([col, fx, fy]) => {
@@ -926,14 +1099,19 @@
         });
       }
       // 出口箭头
-      if (c === '^' || c === 'v') {
+      if ('^v<>'.includes(c) && !wetEdge(x, y)) {
         g.fillStyle = 'rgba(18,48,74,.28)';
-        const up = c === '^', cx = x * T + T / 2, cy = y * T + T / 2;
-        g.beginPath(); g.moveTo(cx - T * .18, cy + (up ? T * .1 : -T * .1)); g.lineTo(cx + T * .18, cy + (up ? T * .1 : -T * .1)); g.lineTo(cx, cy + (up ? -T * .14 : T * .14)); g.fill();
+        const cx = x * T + T / 2, cy = y * T + T / 2, [ax, ay] = { '^': [0, -1], v: [0, 1], '<': [-1, 0], '>': [1, 0] }[c];
+        g.beginPath(); g.moveTo(cx - ax * T * .1 - ay * T * .18, cy - ay * T * .1 - ax * T * .18); g.lineTo(cx - ax * T * .1 + ay * T * .18, cy - ay * T * .1 + ax * T * .18); g.lineTo(cx + ax * T * .14, cy + ay * T * .14); g.fill();
       }
+      if (c === 'U') { const gr = g.createRadialGradient(x * T + T / 2, y * T + T / 2, 0, x * T + T / 2, y * T + T / 2, T * .5); gr.addColorStop(0, 'rgba(230,252,255,.95)'); gr.addColorStop(1, 'rgba(230,252,255,0)'); g.fillStyle = gr; g.fillRect(x * T, y * T, T, T); }
       // 房子、树、岩石底下的地面稍暗一点，3D 模型的影子更自然
-      if (for3d && '#TRrCGMHJKX'.includes(c)) { g.fillStyle = 'rgba(20,50,20,.10)'; g.fillRect(x * T, y * T, T + .6, T + .6); }
+      if (for3d && '#TRrCGMHJAEKX'.includes(c)) { g.fillStyle = 'rgba(20,50,20,.10)'; g.fillRect(x * T, y * T, T + .6, T + .6); }
     }
+    paintOver(g, m, T);
+  }
+  function stairs(g, x, y, T, col) {
+    for (let k = 0; k < 3; k++) { g.fillStyle = shade(col, .8 + k * .12); g.fillRect(x * T + T * .1, y * T + T * (.1 + k * .27), T * .8, T * .24); }
   }
 
   // ---------- 人物（画法在 people.js） ----------
@@ -995,13 +1173,14 @@
         else if (c === 'L') ledge(g, x, y);
         else if (c === 'f') fence(g, x, y);
       }
-      Object.entries(m.buildings).forEach(([L, b]) => building(g, L, b));
+      Object.entries(m.buildings).forEach(([L, b]) => building(g, b.L || L, b));
       for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
         const c = t(x, y);
         if (c === 'R' || c === 'X') rockWall(g, x, y, c);
         else if (c === 'K') caveMouth(g, x, y);
         else if (c === 'r') boulder(g, x, y);
-        else if ('WQPYkpdtZ'.includes(c)) furniture(g, x, y, c);
+        else if ('WQPYkpdt'.includes(c) || (c === 'Z' && m.kind === 'inside')) furniture(g, x, y, c);
+        else if (c === 'Z') landmark(g, x, y);
       }
       for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) if ('#T'.includes(t(x, y))) tree(g, x, y);
       key = m.id + ':' + T;
@@ -1055,7 +1234,7 @@
       g.fillStyle = '#1b1411'; rr(g, sx + T * .14, sy + T * .28, T * .72, T * .72, [T * .36, T * .36, 0, 0]); g.fill();
     }
     function boulder(g, x, y) {
-      const sx = x * T, sy = y * T, col = m.kind === 'cave' ? pal().wallTop : pal().rock;
+      const sx = x * T, sy = y * T, col = (m.kind === 'cave' ? pal().wallTop : pal().rock) || pal().wallTop || pal().trim || '#9e9e9e';
       g.fillStyle = 'rgba(0,0,0,.18)'; ell(g, sx + T / 2, sy + T * .82, T * .38, T * .12); g.fill();
       g.fillStyle = col; ell(g, sx + T / 2, sy + T * .55, T * .38, T * .32); g.fill(); g.strokeStyle = OUT; g.lineWidth = Math.max(1.2, T * .035); g.stroke();
       g.fillStyle = shade(col, 1.2); ell(g, sx + T * .4, sy + T * .45, T * .12, T * .08); g.fill();
@@ -1080,8 +1259,31 @@
       else if (c === 't') { g.fillStyle = '#37474f'; rr(g, sx + T * .1, sy + T * .2, T * .8, T * .55, T * .06); g.fill(); g.stroke(); g.fillStyle = '#80deea'; g.fillRect(sx + T * .18, sy + T * .27, T * .64, T * .4); }
       else if (c === 'Z') { g.fillStyle = '#b0bec5'; rr(g, sx + T * .2, sy + T * .55, T * .6, T * .35, T * .05); g.fill(); g.stroke(); g.fillStyle = '#ffc53d'; circ(g, sx + T * .5, sy + T * .35, T * .22); g.fill(); g.stroke(); }
     }
+    // 户外地标：按岛的风格画个简单的样子
+    function landmark(g, x, y) {
+      const sx = x * T, sy = y * T, th = m.theme;
+      g.lineWidth = Math.max(1.2, T * .035); g.strokeStyle = OUT;
+      g.fillStyle = 'rgba(0,0,0,.18)'; ell(g, sx + T / 2, sy + T * .88, T * .34, T * .1); g.fill();
+      const col = { hello: '#546e7a', crayon: '#ef5350', farm: '#e8c35a', school: '#ffca28', lab: '#eceff1', circus: '#e53935', clock: '#37474f', party: '#ff80ab', jungle: '#8d6e63', city: '#263238', sports: '#ffca28', snow: '#ffffff', ruins: '#8f8a80' }[th] || '#b0bec5';
+      if (th === 'clock') { g.fillStyle = '#37474f'; g.fillRect(sx + T * .45, sy + T * .3, T * .1, T * .58); g.fillStyle = '#fffdf5'; circ(g, sx + T / 2, sy + T * .28, T * .24); g.fill(); g.stroke(); g.beginPath(); g.moveTo(sx + T / 2, sy + T * .28); g.lineTo(sx + T / 2, sy + T * .12); g.moveTo(sx + T / 2, sy + T * .28); g.lineTo(sx + T * .62, sy + T * .32); g.stroke(); return; }
+      if (th === 'snow') { g.fillStyle = '#fff'; circ(g, sx + T / 2, sy + T * .66, T * .24); g.fill(); g.stroke(); circ(g, sx + T / 2, sy + T * .32, T * .17); g.fill(); g.stroke(); g.fillStyle = '#ff7043'; g.fillRect(sx + T * .5, sy + T * .31, T * .12, T * .04); return; }
+      g.fillStyle = shade(col, .8); rr(g, sx + T * .25, sy + T * .15, T * .5, T * .72, T * .1); g.fill(); g.stroke();
+      g.fillStyle = col; rr(g, sx + T * .3, sy + T * .2, T * .4, T * .4, T * .1); g.fill();
+    }
     function tree(g, x, y) {
       const p = pal(), sx = x * T, sy = y * T, r = hsh(x, y, 1), border = t2(x, y) === '#';
+      const style = (EM.THEMES[m.theme] || {}).tree;
+      if (style === 'palm' || style === 'pine' || style === 'snowpine' || style === 'pencil' || style === 'lolli' || style === 'cypress') {
+        const cx = sx + T / 2, by = sy + T * .9;
+        g.fillStyle = 'rgba(0,0,0,.16)'; ell(g, cx, by, T * .3, T * .09); g.fill();
+        if (style === 'palm') { g.strokeStyle = '#a8793f'; g.lineWidth = T * .1; g.beginPath(); g.moveTo(cx, by); g.quadraticCurveTo(cx + T * .1, sy + T * .5, cx + T * .02, sy + T * .22); g.stroke(); g.fillStyle = p.tree; for (let k = 0; k < 6; k++) { const a = k / 6 * 6.28; ell(g, cx + Math.cos(a) * T * .22, sy + T * .22 + Math.sin(a) * T * .1, T * .24, T * .08); g.fill(); } g.fillStyle = p.treeHi; circ(g, cx, sy + T * .2, T * .1); g.fill(); return; }
+        if (style === 'pencil') { const cols = ['#ef5350', '#ffca28', '#42a5f5', '#66bb6a', '#ab47bc']; g.fillStyle = cols[Math.floor(r * cols.length)]; g.fillRect(cx - T * .16, sy + T * .3, T * .32, T * .58); g.fillStyle = '#f5d7a1'; g.beginPath(); g.moveTo(cx - T * .16, sy + T * .3); g.lineTo(cx + T * .16, sy + T * .3); g.lineTo(cx, sy + T * .02); g.fill(); g.fillStyle = '#37474f'; g.beginPath(); g.moveTo(cx - T * .05, sy + T * .1); g.lineTo(cx + T * .05, sy + T * .1); g.lineTo(cx, sy + T * .02); g.fill(); return; }
+        if (style === 'lolli') { g.fillStyle = '#fffdf5'; g.fillRect(cx - T * .03, sy + T * .4, T * .06, T * .5); const cols = ['#ff80ab', '#ffd54f', '#80deea', '#b39ddb']; g.fillStyle = cols[Math.floor(r * cols.length)]; circ(g, cx, sy + T * .32, T * .28); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = T * .05; circ(g, cx, sy + T * .32, T * .15); g.stroke(); return; }
+        g.fillStyle = '#6d4121'; g.fillRect(cx - T * .05, sy + T * .7, T * .1, T * .2);
+        const tiers = style === 'cypress' ? [[.2, .75, .02]] : [[.42, .78, .3], [.34, .56, .12], [.24, .36, -.04]];
+        tiers.forEach(([w, yb, yt]) => { g.fillStyle = p.tree; g.beginPath(); g.moveTo(cx - T * w, sy + T * yb); g.lineTo(cx + T * w, sy + T * yb); g.lineTo(cx, sy + T * yt); g.fill(); if (style === 'snowpine') { g.fillStyle = '#f4f9fb'; g.beginPath(); g.moveTo(cx - T * w * .4, sy + T * (yt + (yb - yt) * .4)); g.lineTo(cx + T * w * .4, sy + T * (yt + (yb - yt) * .4)); g.lineTo(cx, sy + T * yt); g.fill(); } });
+        return;
+      }
       const cx = sx + T / 2 + (border ? (r - .5) * T * .14 : 0), cy = sy + T * (border ? .42 : .4);
       const R = T * (border ? .52 : .44);
       g.fillStyle = 'rgba(0,0,0,.16)'; ell(g, cx, sy + T * .9, R * .8, T * .11); g.fill();
@@ -1092,17 +1294,25 @@
       g.fillStyle = p.treeHi; circ(g, cx - R * .36, cy - R * .36, R * .28); g.fill();
     }
     function building(g, L, b) {
-      const x = b.x0 * T, y = b.y0 * T, w = (b.x1 - b.x0 + 1) * T, h = (b.y1 - b.y0 + 1) * T, house = L === 'H' || L === 'J';
-      const roofC = BUILD_COLORS(L, m), wallC = L === 'C' ? '#fff6ea' : L === 'M' ? '#f2f8ff' : house ? '#fff8ec' : '#fbf1de';
+      L = b.L || L;
+      const x = b.x0 * T, y = b.y0 * T, w = (b.x1 - b.x0 + 1) * T, h = (b.y1 - b.y0 + 1) * T, house = L !== 'C' && L !== 'M' && L !== 'G';
+      const TH = EM.THEMES[m.theme] || {}, style = b.style || (L === 'C' || L === 'M' ? 'std' : TH.house || 'std'), P = m.pal;
+      const roofC = L === 'C' || L === 'M' ? BUILD_COLORS(L, m) : style === 'std' ? BUILD_COLORS(L, m) : ({ med: '#d9643a', crayon: '#f5d7a1', farm: '#e8c35a', brick: '#6d4c41', dome: '#8fd3f4', tent: '#e53935', tower: '#4f9e8a', cake: '#ff8fb1', hut: '#4c8f3a', city: '#546e7a', market: '#ff7043', chalet: '#f4f8fb', temple: '#a39a84' }[style] || P.roof || BUILD_COLORS(L, m));
+      const wallC = L === 'C' ? '#fff6ea' : L === 'M' ? '#f2f8ff' : ({ farm: '#c9955e', brick: '#b5543c', tower: '#cfc6b6', hut: '#a0703c', city: '#b0bec5', chalet: '#8d6e63', temple: '#c9bfa8', cake: '#fff4e0', crayon: ['#ffd1dc', '#c8e6ff', '#fff3b0', '#d4f5c9'][Math.floor(hsh(b.x0, b.y0, 3) * 4)] }[style] || (house ? '#fff8ec' : '#fbf1de'));
       const lw = Math.max(1.4, T * .04), rh = h * .5;
       g.lineWidth = lw; g.strokeStyle = OUT;
       g.fillStyle = 'rgba(0,0,0,.2)'; rr(g, x + T * .15, y + h - T * .1, w - T * .1, T * .22, T * .1); g.fill();
       g.fillStyle = wallC; rr(g, x + T * .12, y + rh * .75, w - T * .24, h - rh * .75, T * .06); g.fill(); g.stroke();
       g.fillStyle = shade(wallC, .86); g.fillRect(x + T * .12 + lw / 2, y + h - T * .2, w - T * .24 - lw, T * .2 - lw / 2);
       g.fillStyle = roofC;
-      g.beginPath(); g.moveTo(x - T * .06, y + rh); g.lineTo(x + T * .34, y + T * .06); g.lineTo(x + w - T * .34, y + T * .06); g.lineTo(x + w + T * .06, y + rh); g.closePath(); g.fill(); g.stroke();
-      g.strokeStyle = shade(roofC, .8); g.lineWidth = Math.max(1, T * .03);
-      for (let k = 1; k < 4; k++) { const yy = y + T * .06 + (rh - T * .06) * k / 4, inset = T * .34 * (1 - k / 4); g.beginPath(); g.moveTo(x + inset, yy); g.lineTo(x + w - inset, yy); g.stroke(); }
+      if (style === 'brick' || style === 'city' || style === 'market' || style === 'temple') { rr(g, x, y + T * .1, w, rh, T * .06); g.fill(); g.stroke(); }
+      else if (style === 'dome' || style === 'cake') { g.beginPath(); g.ellipse(x + w / 2, y + rh, w / 2, rh * .95, 0, Math.PI, 0); g.closePath(); g.fill(); g.stroke(); if (style === 'cake') { g.fillStyle = '#e53935'; circ(g, x + w / 2, y + T * .1, T * .12); g.fill(); } }
+      else if (style === 'tent' || style === 'crayon' || style === 'tower') { g.beginPath(); g.moveTo(x - T * .06, y + rh); g.lineTo(x + w / 2, y - T * .3); g.lineTo(x + w + T * .06, y + rh); g.closePath(); g.fill(); g.stroke(); if (style === 'crayon') { g.fillStyle = '#37474f'; g.beginPath(); g.moveTo(x + w / 2 - T * .12, y - T * .05); g.lineTo(x + w / 2 + T * .12, y - T * .05); g.lineTo(x + w / 2, y - T * .3); g.fill(); } if (style === 'tent') { g.strokeStyle = '#ffffff'; g.lineWidth = T * .08; for (let k = 1; k < 4; k++) { g.beginPath(); g.moveTo(x + w * k / 4, y + rh); g.lineTo(x + w / 2, y - T * .25); g.stroke(); } } }
+      else {
+        g.beginPath(); g.moveTo(x - T * .06, y + rh); g.lineTo(x + T * .34, y + T * .06); g.lineTo(x + w - T * .34, y + T * .06); g.lineTo(x + w + T * .06, y + rh); g.closePath(); g.fill(); g.stroke();
+        g.strokeStyle = shade(roofC, .8); g.lineWidth = Math.max(1, T * .03);
+        for (let k = 1; k < 4; k++) { const yy = y + T * .06 + (rh - T * .06) * k / 4, inset = T * .34 * (1 - k / 4); g.beginPath(); g.moveTo(x + inset, yy); g.lineTo(x + w - inset, yy); g.stroke(); }
+      }
       g.lineWidth = lw; g.strokeStyle = OUT;
       if (!house) {
         const label = L === 'C' ? 'CENTER' : L === 'M' ? 'SHOP' : 'GYM';
@@ -1111,12 +1321,13 @@
         g.fillStyle = '#ffffff'; rr(g, px, py, pw, ph, ph / 2); g.fill(); g.strokeStyle = shade(roofC, .7); g.stroke();
         g.fillStyle = roofC; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(label, x + w / 2, py + ph / 2 + 1);
         g.strokeStyle = OUT;
-      } else { g.fillStyle = shade(roofC, .7); g.fillRect(x + w - T * .9, y - T * .05, T * .22, T * .35); g.strokeRect(x + w - T * .9, y - T * .05, T * .22, T * .35); }
+      } else if (style === 'std' || style === 'med' || style === 'farm' || style === 'chalet') { g.fillStyle = shade(roofC, .7); g.fillRect(x + w - T * .9, y - T * .05, T * .22, T * .35); g.strokeRect(x + w - T * .9, y - T * .05, T * .22, T * .35); }
       const wy = y + rh + (h - rh) * .28, ww = T * .5, wh = T * .4;
       [x + w * .14, x + w * .86 - ww].forEach(wx => {
-        if (Math.abs(wx + ww / 2 - (b.door.x * T + T / 2)) < T * .6) return;
+        if (b.door && Math.abs(wx + ww / 2 - (b.door.x * T + T / 2)) < T * .6) return;
         g.fillStyle = '#8fd3f4'; rr(g, wx, wy, ww, wh, T * .05); g.fill(); g.stroke();
       });
+      if (!b.door) return;
       const dx = b.door.x * T, dy = b.door.y * T;
       g.fillStyle = '#6b4a36'; rr(g, dx + T * .2, dy + T * .3, T * .6, T * .7, [T * .12, T * .12, 0, 0]); g.fill(); g.stroke();
       g.fillStyle = L === 'C' ? '#c9ecff' : '#8d6e63'; rr(g, dx + T * .27, dy + T * .37, T * .46, T * .56, [T * .08, T * .08, 0, 0]); g.fill();
@@ -1128,7 +1339,7 @@
       const mw = m.W * T, mh = m.H * T;
       const camX = mw <= VW ? (mw - VW) / 2 : Math.max(0, Math.min(mw - VW, px + T / 2 - VW / 2));
       const camY = mh <= VH ? (mh - VH) / 2 : Math.max(0, Math.min(mh - VH, py + T / 2 - VH / 2));
-      ctx.fillStyle = m.kind === 'inside' ? '#1a1410' : m.kind === 'cave' ? '#1b1411' : shade(m.pal.tree, .7); ctx.fillRect(0, 0, VW, VH);
+      ctx.fillStyle = m.kind === 'inside' ? '#1a1410' : m.kind === 'cave' ? '#1b1411' : m.kind === 'under' ? '#123c4a' : shade(m.pal.tree, .7); ctx.fillRect(0, 0, VW, VH);
       ctx.drawImage(SC, -camX, -camY, mw, mh);
       // 水面闪光
       const x0 = Math.max(0, Math.floor(camX / T)), x1 = Math.min(m.W - 1, Math.ceil((camX + VW) / T));
@@ -1155,6 +1366,7 @@
       // 野外技能的障碍：小树、裂开的岩石、大石头
       obstTiles.forEach(o => { if (!V.cleared || !V.cleared.has(o.x + ',' + o.y)) ents.push({ y: o.y, f: () => obst2d(o.k, o.x * T - camX, o.y * T - camY) }); });
       V.obst.forEach(o => ents.push({ y: o.y, f: () => obst2d('O', o.x * T - camX, o.y * T - camY) }));
+      (m.gates || []).forEach(q => { if (!V.open || !V.open.has(q.x + ',' + q.y)) ents.push({ y: q.y, f: () => gate2d(q.x * T - camX, q.y * T - camY) }); });
       const fx = V.fx * T - camX, fy = V.fy * T - camY;
       if (V.showF && !V.surf) ents.push({ y: V.fy, f: () => follower(fx, fy - V.fhop * T, now, V) });
       ents.push({ y: V.py + .01, f: () => {
@@ -1183,7 +1395,8 @@
         [[.25, .98], [.5, 1.02], [.75, .98]].forEach(([ax, ay]) => clump(ctx, sx + T * ax, sy + T * ay, T * .3));
       });
       if (V.hint) bubble(V.hint.x * T - camX + T / 2, V.hint.y * T - camY - T * .2 + Math.sin(now / 220) * 3, 'A', '#e53935', true);
-      if (m.kind === 'cave') {
+      if (m.kind === 'under') { ctx.fillStyle = 'rgba(20,90,120,.28)'; ctx.fillRect(0, 0, VW, VH); }
+      if (m.dark) {
         const cx = px - camX + T / 2, cy = py - camY + T / 2;
         const gr = V.flash ? ctx.createRadialGradient(cx, cy, T * 2.5, cx, cy, T * 7) : ctx.createRadialGradient(cx, cy, T * .8, cx, cy, T * 2.6);
         gr.addColorStop(0, 'rgba(10,6,4,0)'); gr.addColorStop(1, V.flash ? 'rgba(10,6,4,.5)' : 'rgba(6,4,2,.94)');
@@ -1211,6 +1424,11 @@
         ctx.fillStyle = '#9e9e9e'; circ(ctx, sx + T / 2, sy + T * .5, T * .42); ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#bdbdbd'; circ(ctx, sx + T * .4, sy + T * .38, T * .14); ctx.fill();
       }
+    }
+    function gate2d(sx, sy) {
+      ctx.lineWidth = Math.max(1.4, T * .04); ctx.strokeStyle = OUT;
+      ctx.fillStyle = '#5d4037'; rr(ctx, sx + T * .05, sy + T * .05, T * .9, T * .14, T * .05); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ff7043'; [.2, .45, .7].forEach(f => { rr(ctx, sx + T * f, sy + T * .15, T * .1, T * .75, T * .04); ctx.fill(); ctx.stroke(); });
     }
     function bubble(bx, by, ch, col, round) {
       ctx.fillStyle = 'rgba(0,0,0,.2)'; circ(ctx, bx + 1, by + 2, T * .22); ctx.fill();
@@ -1261,7 +1479,7 @@
     sec.innerHTML =
       '<div class="w-hud"><button class="x" data-act="wExit" aria-label="回首页">✕</button><div class="w-zone"><b id="w-zname"></b><small id="w-zsub"></small></div>' +
       '<span class="chip" id="w-badges"></span><span class="chip" id="w-balls"></span><button class="w-bike" id="w-bike" data-act="wBike" aria-label="骑车" hidden>🚲</button><button class="w-menu" data-act="wMenu" aria-label="菜单">☰</button></div>' +
-      '<div class="w-view" id="w-view"><div class="w-scene" id="w-scene" hidden></div><div class="w-banner" id="w-banner" hidden></div><div class="w-wipe" id="w-wipe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="w-dlg" id="w-dlg" data-act="wA" hidden></div></div>' +
+      '<div class="w-view" id="w-view"><div class="w-note" id="w-note" hidden></div><div class="w-scene" id="w-scene" hidden></div><div class="w-banner" id="w-banner" hidden></div><div class="w-wipe" id="w-wipe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="w-dlg" id="w-dlg" data-act="wA" hidden></div></div>' +
       '<div class="w-ctrl"><div class="dpad" id="w-dpad">' +
       ['up', 'left', 'right', 'down'].map(d => '<button class="dp dp-' + d + '" data-dir="' + d + '" aria-label="' + { up: '上', left: '左', right: '右', down: '下' }[d] + '">' + { up: '▲', left: '◀', right: '▶', down: '▼' }[d] + '</button>').join('') +
       '</div><div class="ab"><button class="bb" data-act="wB">B<small>菜单</small></button><button class="ba" data-act="wA">A<small>对话</small></button></div></div>';
@@ -1318,7 +1536,7 @@
     wMenu: () => menuSheet(),
     wHelp: () => helpSheet(),
     wSkills: () => skillsSheet(),
-    wBike: () => { if (M.kind === 'inside' || PL.surf) return; PL.bike = !PL.bike; E.SFX.tap(); E.toast(PL.bike ? '🚲 骑上自行车了' : '🚶 下车走路'); hud(); },
+    wBike: () => { if (M.kind === 'inside' || M.kind === 'under' || PL.surf) return; PL.bike = !PL.bike; E.SFX.tap(); E.toast(PL.bike ? '🚲 骑上自行车了' : '🚶 下车走路'); hud(); },
     wUseSkill: t => {
       const k = t.dataset.k;
       E.closeModal();
@@ -1350,8 +1568,8 @@
   const fieldHooks = {
     inWorld: () => running && !!M,
     repel: () => { WS().repel = 100; E.save(); E.toast('🧴 接下来 100 步不会遇到野生怪兽'); },
-    canRope: () => running && M && M.kind === 'cave',
-    rope: () => { E.closeModal(); goMap('r' + M.route, 'cave'); },
+    canRope: () => running && M && (M.kind === 'cave' || M.kind === 'under' || (M.def && M.def.dungeon)) && !!(WS().lastOut && WS().lastOut.map),
+    rope: () => { E.closeModal(); const o = WS().lastOut; goMap(o.map, o.x != null ? { x: o.x, y: o.y, dir: o.dir || 'down' } : null); },
     bike: () => { E.closeModal(); if (running && M) actions.wBike(); },
   };
   const api3d = { tile: (x, y) => tile(x, y) };
@@ -1363,7 +1581,7 @@
     // 设置里改了画质
     setGfx: () => { if (!M || !$('w-view')) return; ensureRenderer(); R.load(M, api3d); resize(); },
     placeLabel: () => { const ws = E.S.world; if (!ws.started || !ws.map || !window.EchoMaps) return null; const m = EchoMaps.get(ws.map); return m ? placeName(m) : null; },
-    _debug: () => ({ M, PL, FL, dlg, busy, R, goMap: (id, how) => goMap(id, how) }),
+    _debug: () => ({ M, PL, FL, dlg, busy, R, perf, goMap: (id, how) => goMap(id, how) }),
     _art: ART,
   };
 })();

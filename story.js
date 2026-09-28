@@ -167,11 +167,11 @@
   }
 
   // ---------- 博士被野生怪兽追 ----------
-  const LOOP = [[7, 6], [8, 6], [9, 6], [10, 6], [11, 6], [11, 7], [11, 8], [10, 8], [9, 8], [8, 8], [7, 8], [7, 7]];
+  const LOOP0 = [[7, 6], [8, 6], [9, 6], [10, 6], [11, 6], [11, 7], [11, 8], [10, 8], [9, 8], [8, 8], [7, 8], [7, 7]];
   async function rescue(C) {
-    const E = C.E, MG = C.MG;
-    const p = C.spawn({ look: P.LOOKS.prof, name: 'Professor Echo', g: 'f', x: 9, y: 6, face: 'right' });
-    const w = C.spawn({ mon: 'zappy', x: 7, y: 6, face: 'right' });
+    const E = C.E, MG = C.MG, LOOP = (C.map.def && C.map.def.rescueLoop) || LOOP0;
+    const p = C.spawn({ look: P.LOOKS.prof, name: 'Professor Echo', g: 'f', x: LOOP[2][0], y: LOOP[2][1], face: 'right' });
+    const w = C.spawn({ mon: 'zappy', x: LOOP[0][0], y: LOOP[0][1], face: 'right' });
     let run = true, k = 2;
     const at = j => LOOP[((j % LOOP.length) + LOOP.length) % LOOP.length];
     const place = (n, j) => { const [x, y] = at(j), [nx, ny] = at(j + 1); n.x = x; n.y = y; n.face = nx > x ? 'right' : nx < x ? 'left' : ny > y ? 'down' : 'up'; };
@@ -243,7 +243,7 @@
   // ---------- 洞穴深处的神兽（每只只有一次机会） ----------
   const LEGENDS = { c0: ['rockgiant', 4, 1], c1: ['icegiant', 16, 1], c2: ['irongiant', 15, 1] };
   async function legendMeet(C, n) {
-    const MG = C.MG, sp = MG.species(n.mon), lv = C.map.kind === 'town' ? MG.zoneLv(C.map.z) + 9 : MG.zoneLv(C.map.route) + 10;
+    const MG = C.MG, sp = MG.species(n.mon), lv = C.map.kind === 'town' ? MG.zoneLv(C.map.z) + 9 : MG.zoneLv(C.map.route != null ? C.map.route : C.map.z) + 10;
     await C.talk([
       nar('The legendary ' + sp.en + ' is looking at you!', '传说中的' + sp.zh + '正盯着你！'),
       nar('Are you ready? Here it comes!', '准备好了吗？它冲过来了！'),
@@ -375,7 +375,7 @@
   }
   // 最后一章：13 座岛的声音一起唤醒回声龙
   async function echodrakeWakes(C) {
-    const b = C.map.buildings.G, nar = (en, zh) => ({ who: '旁白', emo: '🐉', en, zh });
+    const b = C.map.buildings.G || { door: { x: C.pl.x, y: C.pl.y - 3 } }, nar = (en, zh) => ({ who: '旁白', emo: '🐉', en, zh });
     C.E.SFX.win();
     await C.talk([
       nar('The ground is shaking...', '大地在摇晃……'),
@@ -403,6 +403,10 @@
   function leaderGate(C, n) {
     const z = C.map.z, b = C.E.W[z].boss;
     const L = (en, zh) => ({ who: b.name, emo: b.emoji, g: 'm', en, zh });
+    if (ISLES[C.map.isle]) {
+      if (z >= 1 && !C.flag(chFlag(z)) && !C.E.S.mon.badges[z]) return () => C.talk([L(...(ISLES[C.map.isle].busy || ['Something is wrong on our island. I cannot battle now.', '岛上出事了，我现在没心思对战。'])), L('Please help the people on the island first!', '请你先去帮帮岛上的人吧！')]);
+      return null;
+    }
     if (z >= 1 && !C.flag(chFlag(z)) && !C.E.S.mon.badges[z]) return () => C.talk([L('Team Hush took our crystal! I cannot battle now.', '嘘声团偷走了我们的水晶！我现在没心思对战。'), L('Please get it back first!', '请你先把水晶抢回来！')]);
     if (litN(C, z) < 3 && !C.E.S.mon.badges[z]) return () => C.talk([L('Welcome to my Gym!', '欢迎来到我的道馆！'), L('Light up three statues first. Answer their questions in English!', '先点亮三座雕像：用英语回答它们的问题！')]);
     return null;
@@ -435,21 +439,54 @@
     C.remove(r);
   }
 
+  // 对手的队伍：克制你的初始怪兽 + 几只别的；k 越大越强
+  function rivalTeam(C, k, lv) {
+    const MG = C.MG, lead = MG.leadSpecies(), mine = lead ? lead.type : 'fire';
+    const star = MG.STARTERS.find(id => MG.STRONG[MG.species(id).type].includes(mine)) || MG.STARTERS[0];
+    return MG.teamOf(['normal', 'flying', 'spark', 'bug', 'rock', 'water', 'psychic'], Math.min(5, k - 1), lv - 1, 'rival' + k).concat([MG.newMon(MG.grown(star, lv + 1), lv + 1)]);
+  }
+  async function rivalFight(C, k, lv) {
+    const R = C.rivalInfo(), say = (en, zh) => ({ who: R.name, look: R.look, g: R.g, en, zh });
+    const res = await C.battle('trainer', { foes: rivalTeam(C, k, lv || C.MG.zoneLv(C.map.z) + 2), trainer: { name: R.name, img: C.portrait(R.look) }, noWhiteout: true });
+    if (res === 'lose') { C.MG.healAll(); await C.talk([say("I won! But you're getting stronger. Let me heal your team.", '我赢了！不过你越来越强了。我帮你的队伍恢复一下。')]); }
+    return res;
+  }
+  // 和嘘声团打一场（key：grunt / gruntF / whisper / rumble / mute）
+  async function hushFight(C, n, key, o) {
+    o = o || {};
+    const h = HUSH[key], MG = C.MG, z = C.map.z, look = n && n.look ? (typeof n.look === 'string' ? P.LOOKS[n.look] || P.LOOKS[h.look] : n.look) : P.LOOKS[h.look];
+    if (n) C.faceEach(n);
+    const H = (en, zh) => ({ who: h.name, look, g: h.g, en, zh });
+    await C.talk((o.lines || h.lines).map(([en, zh]) => H(en, zh)));
+    const lv = MG.zoneLv(z) + (o.lv != null ? o.lv : key === 'mute' ? 6 : key === 'grunt' || key === 'gruntF' ? 1 : 3);
+    const res = await C.battle('trainer', { foes: MG.teamOf(o.types || ['poison', 'dark'], o.n || h.n, lv, 'hush' + C.map.id + key + (n ? n.id : '')), trainer: { name: h.name, img: C.portrait(look) } });
+    if (res === 'win' && o.win !== false) await C.talk([H(...(o.win || ['Shh... You win this time!', '嘘……这次算你赢！']))]);
+    return res;
+  }
+  // 说话的人：S = sayer('Kai', 'kai', 'm')；S('Hi!', '你好！')
+  const sayer = (who, look, g) => (en, zh, x) => Object.assign({ who, look: typeof look === 'string' ? P.LOOKS[look] : look, g: g || 'm', en, zh }, x || {});
+  const me = C => (en, zh, x) => Object.assign({ who: '{name}', look: C.plook(), g: C.E.S.player && C.E.S.player.gender === 'girl' ? 'f' : 'm', en, zh }, x || {});
+  // 让玩家大声说一句
+  const speak = (C, target, zh, x) => Object.assign(me(C)(target, zh || '大声说出来！'), { kind: 'speak', target }, x || {});
+  // 听一句话，选出正确的回答再说出来（right：正确回答；wrong：错的选项）
+  const ask = (S, en, zh, right, wrong, x) => S(en, zh, Object.assign({ kind: 'answer', opts: [{ c: true, t: right }].concat(wrong.map(t => ({ t }))).sort(() => Math.random() - .5) }, x || {}));
+
   // ---------- 英语冠军赛：四位大师 + 冠军 ----------
   const LEAGUE = {
-    1: { name: 'Master Sage', look: 'master1', g: 'm', types: ['steel', 'rock'], lines: [['I am Sage, the master of words.', '我是智者，词语大师。'], ['Every word has power. Show me yours!', '每个词都有力量。让我看看你的！']] },
-    2: { name: 'Master Luna', look: 'master2', g: 'f', types: ['ghost', 'dark'], lines: [['I am Luna. I love stories in the dark.', '我是露娜，我喜欢在黑暗里讲故事。'], ['Tell me your story with your monsters!', '用你的怪兽告诉我你的故事吧！']] },
-    3: { name: 'Master Frost', look: 'master3', g: 'f', types: ['ice', 'water'], lines: [['I am Frost. My English is cool and clear.', '我是冰霜，我的英语又酷又清楚。'], ['Can you speak clearly in the cold?', '你在寒冷里也能说得清楚吗？']] },
-    4: { name: 'Master Talon', look: 'master4', g: 'm', types: ['dragon', 'fire'], lines: [['I am Talon, the last master.', '我是利爪，最后一位大师。'], ['Only the bravest speakers can pass!', '只有最勇敢的说话者才能通过！']] },
-    5: { name: 'Champion Aria', look: 'champion', g: 'f', types: ['water', 'flying', 'psychic', 'dragon'], lines: [['Welcome, {name}. I am Aria, the English Champion.', '欢迎你，{name}。我是英语冠军阿丽娅。'], ['You came all the way from Hello Island.', '你从你好岛一路走到了这里。'], ['Now, show me everything you have learned!', '现在，让我看看你学到的一切吧！']] },
+    1: { name: 'Master Sage', look: 'master1', g: 'm', types: ['steel', 'rock'], rule: 'words', ruleLines: [['In my room, every word is strong. Your small moves hit harder!', '在我的房间里，每个词都很有力量。你的小招伤害 ×1.5！']], lines: [['I am Sage, the master of words.', '我是智者，词语大师。'], ['Every word has power. Show me yours!', '每个词都有力量。让我看看你的！']] },
+    2: { name: 'Master Luna', look: 'master2', g: 'f', types: ['ghost', 'dark'], rule: 'listen', ruleLines: [['In the dark, you must listen fast. You have only eight seconds to defend!', '在黑暗里要听得快。防御只有 8 秒！']], lines: [['I am Luna. I love stories in the dark.', '我是露娜，我喜欢在黑暗里讲故事。'], ['Tell me your story with your monsters!', '用你的怪兽告诉我你的故事吧！']] },
+    3: { name: 'Master Frost', look: 'master3', g: 'f', types: ['ice', 'water'], rule: 'clear', ruleLines: [['Clear words hit hard. Unclear words are weak!', '说得清楚，招式就强；说得含糊，招式就弱（很准 ×1.6，一般 ×0.8）！']], lines: [['I am Frost. My English is cool and clear.', '我是冰霜，我的英语又酷又清楚。'], ['Can you speak clearly in the cold?', '你在寒冷里也能说得清楚吗？']] },
+    4: { name: 'Master Talon', look: 'master4', g: 'm', types: ['dragon', 'fire'], rule: 'talk', ruleLines: [["Let's talk with our biggest moves! You start with full energy!", '让我们用最强的招式对话吧！你一上场就有 3 格能量！']], lines: [['I am Talon, the last master.', '我是利爪，最后一位大师。'], ['Only the bravest speakers can pass!', '只有最勇敢的说话者才能通过！']] },
+    5: { name: 'Champion Aria', look: 'champion', g: 'f', types: ['water', 'flying', 'psychic', 'dragon'], rotate: ['words', 'listen', 'clear', 'talk', 'words'], ruleLines: [['Each of my monsters brings a different rule. Watch the top of the screen!', '我的每只怪兽都带着不同的规则。注意看屏幕上方的提示！']], lines: [['Welcome, {name}. I am Aria, the English Champion.', '欢迎你，{name}。我是英语冠军阿丽娅。'], ['You came all the way from Hello Island.', '你从你好岛一路走到了这里。'], ['Now, show me everything you have learned!', '现在，让我看看你学到的一切吧！']] },
   };
   async function leagueBattle(C, n) {
     const k = C.map.room, L = LEAGUE[k], MG = C.MG, look = P.LOOKS[L.look];
     C.faceEach(n);
     const S = (en, zh) => ({ who: L.name, look, g: L.g, en, zh });
-    await C.talk(L.lines.map(([en, zh]) => S(en, zh)));
+    await C.talk(L.lines.concat(L.ruleLines || []).map(([en, zh]) => S(en, zh)));
     const lv = MG.zoneLv(12) + 4 + (+k) * 2;
-    const res = await C.battle('trainer', { foes: MG.teamOf(L.types, k === '5' ? 5 : 3, lv, 'league' + k), trainer: { name: L.name, img: C.portrait(look) } });
+    const rules = L.rotate ? { rotate: L.rotate } : L.rule ? { kind: L.rule } : null;
+    const res = await C.battle('trainer', { foes: MG.teamOf(L.types, k === '5' ? 5 : 3, lv, 'league' + k), trainer: { name: L.name, img: C.portrait(look) }, rules });
     if (res !== 'win') return;
     C.set('lg' + k);
     if (k !== '5') { await C.talk([S('You are strong. The next room is waiting for you.', '你很强。下一个房间在等你。')]); C.remove(n); return; }
@@ -475,8 +512,15 @@
     E.toast('💰 金币 +500', 'gold');
   }
 
+  // ---------- 各岛的剧情（isles/*.js 用 EchoStory.isle(z, hooks) 登记） ----------
+  const ISLES = {};
+  const isleHook = (hook, C, arg) => { const h = ISLES[C.map.isle]; return h && h[hook] ? h[hook](C, arg) : null; };
+  const legacy = C => !ISLES[C.map.isle];
+
   // ---------- 对外 ----------
   window.EchoStory = {
+    isle(z, hooks) { ISLES[z] = hooks; },
+    lib: { P, prof, mom, nar, HUSH, CH, rival1, sayer, me, speak, ask, hushFight, rivalFight, rivalTeam, restoreCrystal, echodrakeWakes, legendMeet, leagueBattle, hallOfFame, chFlag },
     enter(C, how) {
       const id = C.map.id, has = C.MG.leadSpecies();
       // 老存档：已经有怪兽，开场就算看过了；还没起名字的补问一次
@@ -488,8 +532,9 @@
       if (has && !(C.E.S.player && C.E.S.player.name)) return () => intro(C, true);
       if (id === 'i0H' && !C.flag('intro')) return () => wakeUp(C);
       if (id === 't0' && C.flag('mom') && !C.flag('starter')) return () => rescue(C);
-      // 主线：第 2–13 镇的嘘声团
-      if (C.map.kind === 'town' && CH[C.map.z] && C.flag('starter')) {
+      const ih = isleHook('enter', C, how); if (ih) return ih;
+      // 主线：第 2–13 镇的嘘声团（还没做成独立剧情的岛用这套模板）
+      if (C.map.kind === 'town' && CH[C.map.z] && C.flag('starter') && legacy(C)) {
         const z = C.map.z;
         if (!C.flag(chFlag(z)) && !C.E.S.mon.badges[z]) {
           if (!C.flag('chint' + z)) return () => chapterIntro(C, z);
@@ -499,12 +544,14 @@
           return () => { C.spawn({ mon: 'echodrake', role: 'legend', x: b.door.x, y: b.door.y + 2, face: 'down' }); };
         }
       }
-      const L = LEGENDS[id];
+      const L = legacy(C) && LEGENDS[id];
       if (L && !C.flag('leg:' + L[0]) && !C.npc(n => n.mon === L[0])) return () => { C.spawn({ mon: L[0], role: 'legend', x: L[1], y: L[2], face: 'down' }); };
       return null;
     },
     step(C) {
       const m = C.map, pl = C.pl;
+      const ih = isleHook('step', C); if (ih) return ih;
+      if (!legacy(C)) return null;
       const rk = RIVAL_AT[m.id];
       if (rk && C.flag('starter') && !C.flag('rival' + rk) && C.MG.anyAlive() && (pl.x === 9 || pl.x === 10) && pl.y <= m.H - 7 && pl.y >= 6) return () => rivalAgain(C, rk);
       if (m.id === 'r0' && C.flag('starter') && !C.flag('rival1') && C.MG.anyAlive() && (pl.x === 9 || pl.x === 10) && pl.y <= m.H - 7 && pl.y >= 6) return () => rival1(C);
@@ -512,6 +559,7 @@
     },
     talk(C, n) {
       if (C.map.id === 'i0H' && n.role === 'house') return () => momTalk(C, n);
+      const ih = isleHook('talk', C, n); if (ih) return ih;
       if (n.role === 'legend') return () => legendMeet(C, n);
       if (n.role === 'hush') return () => hushBattle(C, n);
       if ((n.role === 'master' || n.role === 'champion') && !C.flag('lg' + C.map.room)) return () => leagueBattle(C, n);
@@ -521,15 +569,20 @@
       return null;
     },
     tile(C, f) {
-      if (C.map.kind === 'inside' && C.map.room === 'G') return () => statueQuiz(C, f);
+      const ih = isleHook('tile', C, f); if (ih) return ih;
+      if (C.map.kind === 'inside' && C.map.room === 'G' && legacy(C)) return () => statueQuiz(C, f);
       return null;
     },
     hidden(C, n) {
+      const h = ISLES[C.map.isle];
+      if (h && h.hidden) { const r = h.hidden(C, n); if (r != null) return r; }
       if (n.role === 'master' && C.flag('lg' + C.map.room)) return true;
       // 博士开场时在外面被追，救下她以前她不在老地方
       return C.map.id === 't0' && n.role === 'talk' && n.id === '1' && !C.flag('starter');
     },
     look(C, n) {
+      const h = ISLES[C.map.isle];
+      if (h && h.look) { const r = h.look(C, n); if (r) return r; }
       if (C.map.id === 'i0H' && n.role === 'house') return { name: 'Mom', g: 'f', look: P.LOOKS.mom };
       return null;
     },
