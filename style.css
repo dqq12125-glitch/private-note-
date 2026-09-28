@@ -789,3 +789,26 @@ body.in-world { overflow: hidden; }
 .dc-svg { width: 64px; height: 64px; }
 .dc.on small { font-weight: 800; color: var(--lagoon); }
 .moves .move.ult { grid-column: auto; }
+
+/* ---------- 战斗：异常状态、能力升降、辅助招式 ---------- */
+.st-chip { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; background: var(--sc, #ec407a); color: #fff; font-size: 12px; font-weight: 800; }
+.st-chip:empty, .st-chip[hidden] { display: none; }
+.stg { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; font-size: 11px; font-weight: 800; }
+.stg .up { color: #2e7d32; } .stg .down { color: #1565c0; }
+.move.sup { background: linear-gradient(135deg, var(--tc), color-mix(in srgb, var(--tc) 55%, #fff)); }
+.mv-card { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 6px 10px; border-left: 5px solid var(--tc); border-radius: 10px; background: var(--foam, #f3fbf9); text-align: left; }
+.mv-card .mv-ico { display: none; }
+.mv-card b { font-family: var(--f-display); font-size: 16px; }
+.mv-card small { color: var(--ink-2); font-size: 12px; }
+.learn-new { display: flex; justify-content: center; margin: 6px 0 10px; }
+.learn-old { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.learn-old .btn { padding: 4px; }
+.learn-old .mv-card { width: 100%; background: none; }
+.sum-top { display: flex; gap: 12px; align-items: center; }
+.sum-pic { width: 110px; flex: none; }
+.sum-top h2 { margin: 0; } .sum-top h2 small { font-size: 14px; color: var(--ink-2); }
+.sum-stats { display: grid; gap: 6px; margin: 10px 0; }
+.sum-stat { display: grid; grid-template-columns: 76px 64px 1fr; align-items: center; gap: 6px; font-size: 13px; }
+.sum-stat i { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.sum-stat em { display: block; height: 100%; background: var(--lagoon); }
+.sum-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }

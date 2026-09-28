@@ -62,8 +62,8 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.waitForTimeout(3500);
   check(await p.$('#b-arena.is3d canvas.b3d') !== null, '3D 战斗画面');
   const nMoves = (await p.$$('[data-act=bMove]')).length;
-  check(nMoves === 4, '4 个招式按钮（' + nMoves + '）');
-  await p.click('[data-act=bMove][data-i="1"]');
+  check(nMoves >= 2 && nMoves <= 4, '招式按钮 ' + nMoves + ' 个（按等级学会的）');
+  await p.click('[data-act=bMove][data-i="0"]');
   await p.click('[data-act=bRate][data-v="2"]');
   await p.waitForTimeout(900);
   await p.screenshot({ path: out + '/3d-battle-fx.png' });

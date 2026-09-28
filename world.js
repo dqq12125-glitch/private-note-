@@ -528,7 +528,9 @@
   // 商店：越往后的小镇卖的东西越多
   function shopStock() {
     const z = M.z, list = [['ball', 3], ['potion', 1]];
-    if (z >= 1) list.push(['repel', 1]);
+    if (z >= 1) list.push(['repel', 1], ['antidote', 1], ['paraheal', 1], ['awakening', 1]);
+    if (z >= 2) list.push(['burnheal', 1], ['iceheal', 1]);
+    if (z >= 5) list.push(['fullheal', 1]);
     if (z >= 2) list.push(['superball', 1], ['rope', 1]);
     if (z >= 3) list.push(['superpotion', 1]);
     if (z >= 4) list.push(['revive', 1]);

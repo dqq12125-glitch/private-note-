@@ -16,12 +16,51 @@
   // 属性克制：招式属性打对手（对手可能是双属性）
   const eff = (atkType, defId) => D.eff(atkType, SPECIES[defId].types);
   const effLabel = e => e > 1 ? '效果拔群！' : e <= .3 ? '几乎没效果' : e < 1 ? '效果一般' : '';
-  // 每只怪兽 4 个招式：本属性小招、本属性中招、第二属性中招（单属性就是普通小招）、本属性大招
-  function movesOf(mon) {
-    const t = SPECIES[mon.sp].types;
-    return [{ type: t[0], tier: 0 }, { type: t[0], tier: 1 }, t[1] ? { type: t[1], tier: 1 } : { type: t[0] === 'normal' ? 'fight' : 'normal', tier: 0 }, { type: t[0], tier: 2 }];
+  // ---------- 招式 ----------
+  // 招式编号：攻击招式 "fire:1"（属性:小招0/中招1/大招2），辅助招式 "s:sleep"
+  const SUP = {
+    roar: { en: 'Big Roar', zh: '大吼', type: 'normal', fx: { foe: { atk: -1 } }, desc: '对手攻击↓' },
+    guard: { en: 'Iron Guard', zh: '铁壁', type: 'steel', fx: { self: { def: 2 } }, desc: '自己防御↑↑' },
+    power: { en: 'Power Up', zh: '蓄力', type: 'fight', fx: { self: { atk: 2 } }, desc: '自己攻击↑↑' },
+    speed: { en: 'Speed Up', zh: '加速', type: 'flying', fx: { self: { spd: 2 } }, desc: '自己速度↑↑' },
+    chill: { en: 'Cold Wind', zh: '寒风', type: 'ice', fx: { foe: { spd: -2 } }, desc: '对手速度↓↓' },
+    spooky: { en: 'Spooky Face', zh: '鬼脸', type: 'ghost', fx: { foe: { def: -2 } }, desc: '对手防御↓↓' },
+    sleep: { en: 'Sleepy Song', zh: '催眠曲', type: 'grass', status: 'slp', desc: '让对手睡着' },
+    poison: { en: 'Poison Mist', zh: '毒雾', type: 'poison', status: 'psn', desc: '让对手中毒' },
+    para: { en: 'Static Zap', zh: '麻痹电', type: 'spark', status: 'par', desc: '让对手麻痹' },
+    burn: { en: 'Hot Breath', zh: '灼热吐息', type: 'fire', status: 'brn', desc: '让对手烧伤' },
+    confuse: { en: 'Dizzy Dance', zh: '眩晕舞', type: 'psychic', status: 'conf', desc: '让对手混乱' },
+    heal: { en: 'Sweet Rest', zh: '甜蜜休息', type: 'water', heal: .45, desc: '回复一半体力' },
+  };
+  const SUP_OF = { normal: 'roar', fire: 'burn', water: 'heal', grass: 'sleep', spark: 'para', ice: 'chill', fight: 'power', poison: 'poison', ground: 'guard', flying: 'speed', psychic: 'confuse', bug: 'poison', rock: 'guard', ghost: 'spooky', dragon: 'power', dark: 'spooky', steel: 'guard' };
+  const STATUS = {
+    brn: { zh: '烧伤', color: '#f0642f', got: '被烧伤了！每回合都会掉血🔥' },
+    psn: { zh: '中毒', color: '#9b4dca', got: '中毒了！每回合都会掉血☠️' },
+    par: { zh: '麻痹', color: '#d9a000', got: '麻痹了！有时候会动不了⚡' },
+    slp: { zh: '睡眠', color: '#5c6bc0', got: '睡着了💤' },
+    frz: { zh: '冰冻', color: '#4fc3e8', got: '被冻住了🧊' },
+    conf: { zh: '混乱', color: '#ec407a', got: '混乱了！有时候会撞到自己😵' },
+  };
+  function parseMove(id) {
+    if (id.startsWith('s:')) { const sup = SUP[id.slice(2)]; return { id, sup, type: sup.type, tier: 1 }; }
+    const [type, t] = id.split(':');
+    return { id, type, tier: +t };
   }
-  const mvName = mv => MOVES[mv.type][mv.tier];
+  const mvName = mv => mv.sup ? [mv.sup.en, mv.sup.zh] : MOVES[mv.type][mv.tier];
+  // 学招表：Lv1 本属性小招 + 普通小招，Lv9 辅助招式，Lv15 本属性中招，Lv21 第二属性（或普通）中招，Lv28 本属性大招……
+  const learnCache = {};
+  function learnset(s) {
+    if (learnCache[s.id]) return learnCache[s.id];
+    const t1 = s.types[0], t2 = s.types[1], alt = t1 === 'normal' ? 'fight' : 'normal';
+    const L = [[1, t1 + ':0'], [1, alt + ':0'], [9, 's:' + SUP_OF[t1]], [15, t1 + ':1'], [21, (t2 || alt) + ':1'], [28, t1 + ':2']];
+    if (t2 && SUP_OF[t2] !== SUP_OF[t1]) L.push([34, 's:' + SUP_OF[t2]]);
+    L.push([40, t2 ? t2 + ':2' : 's:' + (SUP_OF[t1] === 'heal' ? 'guard' : 'heal')]);
+    return (learnCache[s.id] = L);
+  }
+  // 按等级应该会的招式：学过的里面最新的 4 个
+  function defaultMoves(sp, lv) { const got = learnset(SPECIES[sp]).filter(([l]) => l <= lv).map(([, id]) => id); return got.filter((id, i) => got.indexOf(id) === i).slice(-4); }
+  function ensureMoves(mon) { if (mon && (!mon.moves || !mon.moves.length)) mon.moves = defaultMoves(mon.sp, mon.lv); return mon; }
+  const movesOf = mon => ensureMoves(mon).moves.map(parseMove);
   // 进化：等级到了（lv）或者用了进化石（item）
   const lvEvo = mon => (SPECIES[mon.sp].evo || []).find(e => e.lv && mon.lv >= e.lv);
   const itemEvo = (mon, item) => (SPECIES[mon.sp].evo || []).find(e => e.item === item);
@@ -37,8 +76,17 @@
     repel: { zh: '驱怪喷雾', en: 'Repel', icon: '🧴', price: 30, desc: '100 步内不遇野生怪兽' },
     rope: { zh: '逃生绳', en: 'Escape Rope', icon: '🪢', price: 25, desc: '从洞穴里一下回到洞口' },
   };
+  Object.assign(ITEMS, {
+    antidote: { zh: '解毒药', en: 'Antidote', icon: '🟣', price: 15, desc: '治好中毒' },
+    burnheal: { zh: '烫伤药', en: 'Burn Heal', icon: '🧯', price: 20, desc: '治好烧伤' },
+    paraheal: { zh: '解麻药', en: 'Paralyze Heal', icon: '🟡', price: 20, desc: '治好麻痹' },
+    awakening: { zh: '清醒铃', en: 'Awakening', icon: '🔔', price: 20, desc: '叫醒睡着的怪兽' },
+    iceheal: { zh: '解冻药', en: 'Ice Heal', icon: '🔥', price: 20, desc: '治好冰冻' },
+    fullheal: { zh: '万灵药', en: 'Full Heal', icon: '✨', price: 50, desc: '治好所有异常状态' },
+    expshare: { zh: '学习装置', en: 'Exp. Share', icon: '📡', price: 0, desc: '带着它，没出场的怪兽也能分到一半经验', key: true },
+  });
   Object.entries(D.STONES).forEach(([id, st]) => { ITEMS[id] = { zh: st.zh, en: st.en, icon: st.icon, price: 120, desc: '能让某些怪兽进化', stone: true }; });
-  const BAG_ORDER = ['ball', 'superball', 'potion', 'superpotion', 'revive', 'repel', 'rope'].concat(Object.keys(D.STONES));
+  const BAG_ORDER = ['expshare', 'ball', 'superball', 'potion', 'superpotion', 'revive', 'antidote', 'burnheal', 'paraheal', 'awakening', 'iceheal', 'fullheal', 'repel', 'rope'].concat(Object.keys(D.STONES));
   function itemCount(id) { const m = M(); return id === 'ball' ? m.balls : id === 'potion' ? (m.potions || 0) : ((m.bag || {})[id] || 0); }
   function addItem(id, n) {
     const m = M();
@@ -48,11 +96,22 @@
   }
   let FH = null; // 大地图提供的道具效果（驱怪喷雾、逃生绳）
 
-  const stats = m => { const s = SPECIES[m.sp]; return { hp: s.hp + m.lv * 6, atk: s.atk + m.lv * 2 }; };
+  // 能力值：图鉴给了体力和攻击；防御和速度按身体类型和属性推出来（同一种怪兽永远一样）
+  const BODY_DEF = { golem: 1.35, shell: 1.4, quad: 1.05, dragon: 1.1, serpent: 1, blob: .95, biped: .95, bird: .8, fish: .9, bug: .85, ghost: .9, plant: 1 };
+  const BODY_SPD = { bird: 1.35, fish: 1.15, bug: 1.2, serpent: 1.05, quad: 1.15, biped: 1.05, blob: .9, ghost: 1.1, dragon: 1.05, plant: .75, golem: .6, shell: .55 };
+  const TYPE_DEF = { steel: .25, rock: .2, ground: .1, bug: -.05, psychic: -.1, flying: -.05 };
+  const TYPE_SPD = { spark: .2, flying: .2, psychic: .1, dark: .1, fight: .05, steel: -.15, rock: -.15, ground: -.05 };
+  function baseStats(s) {
+    if (s._b) return s._b;
+    const h = ((s.no * 2654435761) >>> 0) % 1000 / 1000;
+    const td = s.types.reduce((a, t) => a + (TYPE_DEF[t] || 0), 0), ts = s.types.reduce((a, t) => a + (TYPE_SPD[t] || 0), 0);
+    return (s._b = { hp: s.hp, atk: s.atk, def: Math.round(s.atk * (BODY_DEF[s.b] || 1) * (1 + td) * (.9 + h * .2)), spd: Math.round(s.atk * (BODY_SPD[s.b] || 1) * (1 + ts) * (1.1 - h * .2)) });
+  }
+  const stats = m => { const b = baseStats(SPECIES[m.sp]); return { hp: b.hp + m.lv * 6, atk: b.atk + m.lv * 2, def: b.def + m.lv * 2, spd: b.spd + m.lv * 2 }; };
   const xpNeed = lv => lv * 20;
   const zoneLv = z => 2 + z * 2;
   const uid = () => 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const newMon = (sp, lv) => ({ uid: uid(), sp, lv, xp: 0 });
+  const newMon = (sp, lv) => ({ uid: uid(), sp, lv, xp: 0, moves: defaultMoves(sp, lv) });
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const $ = id => document.getElementById(id);
   const rnd = n => Math.floor(Math.random() * n);
@@ -203,16 +262,20 @@
   }
   const me = () => byUid(B.team[B.ti]);
   const foe = () => B.foes[B.fi];
+  const monOf = side => side === 'me' ? me() : foe();
+  const hpOf = side => side === 'me' ? B.hp[me().uid] : B.foeHp;
+  const addHp = (side, v) => { if (side === 'me') B.hp[me().uid] = Math.max(0, Math.min(stats(me()).hp, B.hp[me().uid] + v)); else B.foeHp = Math.max(0, Math.min(stats(foe()).hp, B.foeHp + v)); };
 
   const curHp = mon => { const max = stats(mon).hp; return mon.hp == null ? max : Math.max(0, Math.min(max, mon.hp)); };
   const anyAlive = () => M().team.some(u => { const m = byUid(u); return m && curHp(m) > 0; });
-  function healAll() { M().box.forEach(m => { m.hp = stats(m).hp; }); E.save(); }
+  // 怪兽中心：体力回满，异常状态全好
+  function healAll() { M().box.forEach(m => { m.hp = stats(m).hp; m.st = null; }); E.save(); }
   // 训练师的怪兽：按区域和编号固定，等级够了自动是进化形态
   function trainerFoes(z, seed, count, lv) {
     const pool = wildTable(z, 'grass').concat(wildTable(z, 'water'));
     return Array.from({ length: count }, (_, k) => { const sp = pool[(seed * 5 + k * 3) % pool.length], l = lv + k; return newMon(grown(sp.id, l), l); });
   }
-  // 把战斗里的体力写回存档（体力会一直保留，到怪兽中心才恢复）
+  // 把战斗里的体力写回存档（体力和异常状态会一直保留，到怪兽中心才恢复）
   function writeBack() {
     if (!B) return;
     B.team.forEach(u => { const m = byUid(u); if (m) m.hp = Math.max(0, Math.min(stats(m).hp, Math.round(B.hp[u]))); });
@@ -227,9 +290,16 @@
     E.primeTTS(); E.ac();
     stopBattle();
     const team = M().team.filter(byUid);
+    team.forEach(u => ensureMoves(byUid(u)));
     const foes = opts.foes || (kind === 'wild' ? [wildFoe(z, opts.lvBonus, opts.hab)] : leaderFoes(z));
+    foes.forEach(ensureMoves);
     const ti = team.findIndex(u => curHp(byUid(u)) > 0);
-    B = { kind, z, foes, fi: 0, team, ti, hp: {}, energy: 0, turn: 'intro', over: false, used: new Set([team[ti]]), task: null, tries: 0, onEnd: opts.onEnd, trainer: opts.trainer, result: '', noCatch: !!opts.noCatch };
+    B = {
+      kind, z, foes, fi: 0, team, ti, hp: {}, energy: 0, fen: 0, turn: 'intro', over: false, used: new Set([team[ti]]), task: null, tries: 0,
+      onEnd: opts.onEnd, trainer: opts.trainer, result: '', noCatch: !!opts.noCatch,
+      stg: { me: newStages(), foe: newStages() }, conf: { me: 0, foe: 0 },
+      fpot: kind === 'leader' ? 2 : kind === 'trainer' ? 1 : 0,
+    };
     team.forEach(u => { B.hp[u] = curHp(byUid(u)); });
     B.foeHp = stats(foes[0]).hp;
     B.enter = 'both';
@@ -249,6 +319,7 @@
     if (!B) return;
     B.over = true;
     clearTimeout(B.defTimer);
+    if (B.defDone) { const r = B.defDone; B.defDone = null; r(); }
     E.stopListening();
     B = null;
   }
@@ -257,12 +328,12 @@
     $('battle').innerHTML =
       '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.kind === 'wild' ? '野外对战' : B.kind === 'trainer' ? '训练师 ' + B.trainer.name : '道馆馆主 ' + w.boss.name) + '</b><small>第 ' + (B.z + 1) + ' 区 · ' + w.name + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
       '<div class="arena" id="b-arena" style="--wc:' + w.color + '">' + arenaBG(B.z) +
-      '<div class="hpcard foe"><div class="hp-top"><b>' + sf.en + '</b><span class="hp-lv">Lv' + f.lv + '</span></div>' + chips(f.sp) + '<div class="hprow"><span class="hplab">HP</span><div class="hpbar"><i id="b-foehp"></i></div></div>' +
-      (B.kind !== 'wild' ? '<div class="balls">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '">●</span>').join('') + '</div>' : '') + '</div>' +
+      '<div class="hpcard foe"><div class="hp-top"><b>' + sf.en + '</b><span class="hp-lv">Lv' + f.lv + '</span></div><div class="chips">' + chips(f.sp) + '<span class="st-chip" id="b-foest"></span></div><div class="hprow"><span class="hplab">HP</span><div class="hpbar"><i id="b-foehp"></i></div></div>' +
+      (B.kind !== 'wild' ? '<div class="balls">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '">●</span>').join('') + '</div>' : '') + '<div class="stg" id="b-foestg"></div></div>' +
       '<div class="pad foe"></div><div class="mon foe' + (B.enter === 'both' || B.enter === 'foe' ? ' enter' : '') + '" id="b-foe">' + svg(f.sp) + '</div>' +
       '<div class="pad me"></div><div class="mon me' + (B.enter === 'both' || B.enter === 'me' ? ' enter' : '') + '" id="b-me">' + svg(m.sp) + '</div>' +
-      '<div class="hpcard me"><div class="hp-top"><b>' + sm.en + '</b><span class="hp-lv">Lv' + m.lv + '</span></div>' + chips(m.sp) + '<div class="hprow"><span class="hplab">HP</span><div class="hpbar"><i id="b-myhp"></i></div></div><small id="b-myhpn"></small>' +
-      '<div class="expbar" title="经验"><i id="b-exp" style="width:' + (m.xp / xpNeed(m.lv) * 100) + '%"></i></div></div>' +
+      '<div class="hpcard me"><div class="hp-top"><b>' + sm.en + '</b><span class="hp-lv">Lv' + m.lv + '</span></div><div class="chips">' + chips(m.sp) + '<span class="st-chip" id="b-myst"></span></div><div class="hprow"><span class="hplab">HP</span><div class="hpbar"><i id="b-myhp"></i></div></div><small id="b-myhpn"></small>' +
+      '<div class="expbar" title="经验"><i id="b-exp" style="width:' + (m.xp / xpNeed(m.lv) * 100) + '%"></i></div><div class="stg" id="b-mystg"></div></div>' +
       (B.kind !== 'wild' ? '<div class="trainer">' + (B.kind === 'trainer' && B.trainer.img ? '<img src="' + B.trainer.img + '" alt="">' : '<span>' + w.boss.emoji + '</span>') + '</div>' : '') +
       '</div><div class="b-msg" id="b-msg"></div><div class="b-panel" id="b-panel"></div>';
     if (B3) {
@@ -279,13 +350,19 @@
     if (z === 11) return { sky1: '#a9c9e0', sky2: '#eef6fb', ground: '#eef4f8', hill: '#cfe3ee', pad: '#ffffff', rim: '#9fc3d6' };
     return { rim: E.W[z] ? E.W[z].color : '#7aa85a' };
   }
+  const STAT_ZH = { atk: '攻', def: '防', spd: '速' };
   function updHp() {
     const f = foe(), m = me();
     const fmax = stats(f).hp, mmax = stats(m).hp, fh = Math.max(0, B.foeHp), mh = Math.max(0, B.hp[m.uid]);
     const bar = (id, v, max) => { const e = $(id); if (!e) return; const p = v / max; e.style.width = (p * 100) + '%'; e.className = p > .5 ? '' : p > .2 ? 'mid' : 'low'; };
     bar('b-foehp', fh, fmax); bar('b-myhp', mh, mmax);
-    const n = $('b-myhpn'); if (n) n.textContent = mh + ' / ' + mmax;
+    const n = $('b-myhpn'); if (n) n.textContent = Math.round(mh) + ' / ' + mmax;
     const en = $('b-energy'); if (en) en.innerHTML = [0, 1, 2].map(k => '<span class="' + (k < B.energy ? 'on' : 'off') + '">' + TICON.spark + '</span>').join('');
+    [['me', 'b-myst', 'b-mystg'], ['foe', 'b-foest', 'b-foestg']].forEach(([side, sid, gid]) => {
+      const mon = monOf(side), st = mon.st, e1 = $(sid), e2 = $(gid);
+      if (e1) { e1.textContent = st ? STATUS[st].zh : B.conf[side] ? '混乱' : ''; e1.style.setProperty('--sc', st ? STATUS[st].color : '#ec407a'); e1.hidden = !st && !B.conf[side]; }
+      if (e2) e2.innerHTML = Object.entries(B.stg[side]).filter(([, v]) => v).map(([k, v]) => '<span class="' + (v > 0 ? 'up' : 'down') + '">' + STAT_ZH[k] + (v > 0 ? '↑' : '↓') + Math.abs(v) + '</span>').join('');
+    });
   }
   const msg = t => { const e = $('b-msg'); if (e) e.innerHTML = t; };
   const panel = h => { const e = $('b-panel'); if (e) e.innerHTML = h; };
@@ -310,39 +387,92 @@
     if (!live(b)) return;
     menu();
   }
+
+  // ---------- 我方回合：选招式 ----------
   function menu() {
-    B.turn = 'me'; B.task = null;
+    if (!B) return;
+    B.turn = 'me'; B.task = null; B.mv = null;
     const m = me(), sm = SPECIES[m.sp], f = foe();
+    // 睡着 / 冻住：这一回合要先叫醒它
+    if (m.st === 'slp' || m.st === 'frz') {
+      if (m.st === 'slp') { m.slp = (m.slp || 1) - 1; if (m.slp <= 0) m.st = null; }
+      else if (Math.random() < .2) m.st = null;
+      if (!m.st) { E.toast((m.slp != null ? '☀️ ' : '🔥 ') + sm.en + ' 自己恢复了！'); updHp(); }
+      else { wakeTask(); return; }
+    }
     const canCatch = B.kind === 'wild' && !B.noCatch && B.foeHp <= stats(f).hp * 0.6;
-    msg('<b>' + sm.en + '</b> 要用什么技能？念对英语咒语才能打中！');
+    const others = B.team.some((u, k) => k !== B.ti && B.hp[u] > 0);
+    msg('<b>' + sm.en + '</b> 要用什么技能？念对英语咒语才能成功！');
     panel('<div class="moves">' + movesOf(m).map((mv, i) => {
-      const lock = mv.tier === 2 && B.energy < 3, nm = mvName(mv), e = eff(mv.type, f.sp);
-      return '<button class="move' + (mv.tier === 2 ? ' ult' : '') + '" style="--tc:' + TYPES[mv.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><span class="mv-pow">' + DOTS[mv.tier] + '</span></span><small>' + nm[1] + ' · ' + TYPES[mv.type].zh + (e > 1 ? ' · <em class="mv-eff">克制</em>' : e < 1 ? ' · 不太管用' : '') + ' · ' + (lock ? '攒满 3 格能量解锁' : TASK[mv.tier]) + '</small></button>';
+      const lock = mv.tier === 2 && B.energy < 3, nm = mvName(mv), e = mv.sup ? 1 : eff(mv.type, f.sp);
+      const tag = mv.sup ? mv.sup.desc : (e > 1 ? '<em class="mv-eff">克制</em>' : e < 1 ? '不太管用' : TYPES[mv.type].zh);
+      return '<button class="move' + (mv.tier === 2 ? ' ult' : '') + (mv.sup ? ' sup' : '') + '" style="--tc:' + TYPES[mv.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><span class="mv-pow">' + (mv.sup ? '✦' : DOTS[mv.tier]) + '</span></span><small>' + nm[1] + ' · ' + tag + ' · ' + (lock ? '攒满 3 格能量' : TASK[mv.sup ? 1 : mv.tier]) + '</small></button>';
     }).join('') + '</div>' +
       '<div class="b-items">' +
       (B.kind === 'wild' && !B.noCatch ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 收服' + (canCatch ? '' : ' · 先打虚弱') + '</button>' : '') +
+      '<button class="btn small ghost" data-act="bSwitch"' + (others ? '' : ' disabled') + '>🔄 换怪兽</button>' +
       '<button class="btn small ghost" data-act="bBag">🎒 背包</button></div>');
   }
-  // 战斗里的背包：只能用回复类道具，用掉这一回合
+  // 叫醒睡着 / 冻住的怪兽：大声喊它的名字
+  function wakeTask() {
+    const m = me(), sm = SPECIES[m.sp], slp = m.st === 'slp';
+    B.turn = 'task'; B.tries = 0; B.hinted = false;
+    B.task = { kind: 'wake', target: (slp ? 'Wake up, ' : 'Warm up, ') + sm.en + '!', zh: slp ? '快醒醒！' : '快暖和起来！' };
+    taskPanel();
+    msg('<b>' + sm.en + '</b> ' + (slp ? '睡着了💤' : '被冻住了🧊') + '！大声喊它，念得越准越容易' + (slp ? '叫醒' : '化开') + '。');
+  }
+  // 战斗里的背包：回复体力、治异常状态，用掉这一回合
+  const STATUS_HEAL = { antidote: ['psn'], burnheal: ['brn'], paraheal: ['par'], awakening: ['slp'], iceheal: ['frz'], fullheal: ['psn', 'brn', 'par', 'slp', 'frz'] };
   function battleBag() {
     if (!B || B.turn !== 'me') return;
     const m = me(), full = B.hp[m.uid] >= stats(m).hp;
-    const rows = ['potion', 'superpotion'].map(id => {
-      const it = ITEMS[id], n = itemCount(id);
-      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + ' ×' + n + '</b><small>' + it.desc + '</small></div><button class="btn small sun" data-act="bUse" data-id="' + id + '"' + (n > 0 && !full ? '' : ' disabled') + '>用</button></div>';
+    const ids = ['potion', 'superpotion'].concat(Object.keys(STATUS_HEAL).filter(id => itemCount(id) > 0));
+    const rows = ids.map(id => {
+      const it = ITEMS[id], n = itemCount(id), ok = n > 0 && (it.heal ? !full : STATUS_HEAL[id].includes(m.st));
+      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + ' ×' + n + '</b><small>' + it.desc + '</small></div><button class="btn small sun" data-act="bUse" data-id="' + id + '"' + (ok ? '' : ' disabled') + '>用</button></div>';
     }).join('');
-    E.openModal('<h2>🎒 背包</h2><p>给 <b>' + SPECIES[m.sp].en + '</b> 用道具（体力 ' + Math.max(0, Math.round(B.hp[m.uid])) + ' / ' + stats(m).hp + '）。用道具会用掉这一回合。</p>' + rows + '<button class="btn ghost wide" data-act="close">返回</button>');
+    E.openModal('<h2>🎒 背包</h2><p>给 <b>' + SPECIES[m.sp].en + '</b> 用道具（体力 ' + Math.max(0, Math.round(B.hp[m.uid])) + ' / ' + stats(m).hp + (m.st ? ' · ' + STATUS[m.st].zh : '') + '）。用道具会用掉这一回合。</p>' + rows + '<button class="btn ghost wide" data-act="close">返回</button>');
+  }
+  // 换怪兽：换上来的怪兽会挨对手这一回合的攻击
+  function switchSheet() {
+    if (!B || B.turn !== 'me') return;
+    const rows = B.team.map((u, k) => {
+      if (k === B.ti) return '';
+      const mon = byUid(u), s = SPECIES[mon.sp], hp = Math.max(0, Math.round(B.hp[u]));
+      return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>Lv ' + mon.lv + '</small><div class="chips">' + chips(mon.sp) + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + STATUS[mon.st].zh + '</span>' : '') + '</div><small>体力 ' + hp + ' / ' + stats(mon).hp + '</small></div><div class="mrow-b"><button class="btn small sun" data-act="bSwitchTo" data-k="' + k + '"' + (hp > 0 ? '' : ' disabled') + '>就决定是你了</button></div></div>';
+    }).join('');
+    E.openModal('<h2>🔄 换哪只上场？</h2><p>换怪兽会用掉这一回合。</p>' + rows + '<button class="btn ghost wide" data-act="close">返回</button>');
+  }
+  function doSwitch(k) {
+    if (!B || B.turn !== 'me' || k === B.ti || !(B.hp[B.team[k]] > 0)) return;
+    E.closeModal();
+    const b = B;
+    B.turn = 'busy';
+    round(b, Object.assign(async () => {
+      const old = SPECIES[me().sp];
+      msg('回来吧，<b>' + old.en + '</b>！');
+      E.say(old.en + ', come back!');
+      await sleep(700);
+      B.ti = k; B.used.add(B.team[k]); B.stg.me = newStages(); B.conf.me = 0;
+      B.enter = 'me';
+      renderBattle();
+      const n = SPECIES[me().sp];
+      msg('去吧，<b>' + n.en + '</b>！');
+      $('b-me').classList.add('appear');
+      if (B3) B3.enter('me', true);
+      await E.say('Go, ' + n.en + '!');
+    }, { priority: true }));
   }
 
-  // 技能任务：说单词 / 念句子 / 对话大招 / 收服咒语
+  // 技能任务：说单词 / 念句子 / 对话大招 / 辅助招式 / 收服咒语 / 叫醒
   function onMove(i) {
     if (!B || B.turn !== 'me') return;
     const mv = movesOf(me())[i];
     if (!mv || (mv.tier === 2 && B.energy < 3)) return;
     const Wz = E.W[B.z];
     B.mv = mv; B.move = mv.tier; B.tries = 0; B.hinted = false; B.turn = 'task';
-    if (mv.tier === 0) { const k = rnd(Wz.words.length), it = Wz.words[k]; B.task = { kind: 'word', q: { kind: 'word', w: B.z, i: k }, target: it[0], zh: it[1], em: it[2] }; }
-    else if (mv.tier === 1) { const k = rnd(Wz.sents.length), it = Wz.sents[k]; B.task = { kind: 'sent', q: { kind: 'sent', w: B.z, i: k }, target: it[0], zh: it[1] }; }
+    if (mv.tier === 0 && !mv.sup) { const k = rnd(Wz.words.length), it = Wz.words[k]; B.task = { kind: 'word', q: { kind: 'word', w: B.z, i: k }, target: it[0], zh: it[1], em: it[2] }; }
+    else if (mv.tier === 1 || mv.sup) { const k = rnd(Wz.sents.length), it = Wz.sents[k]; B.task = { kind: 'sent', q: { kind: 'sent', w: B.z, i: k }, target: it[0], zh: it[1] }; }
     else { const k = rnd(Wz.dlgs.length), it = Wz.dlgs[k]; B.task = { kind: 'ult', q: { kind: 'dlg', w: B.z, i: k }, prompt: it[0], target: it[1], opts: shuffle([{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))]) }; }
     taskPanel();
   }
@@ -375,6 +505,9 @@
       body = '<div class="say-row"><button class="spk mini" data-act="bHearQ" aria-label="再听一遍">' + E.SPK + '</button><span class="hidden-line blur" id="b-q">' + esc(t.prompt) + '</span></div>' +
         '<div class="opts list">' + t.opts.map((o, k) => '<button class="opt en" data-act="bOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>' +
         (sr ? '<small class="tip">点选项可以先听一听</small>' : '');
+    } else if (t.kind === 'wake') {
+      head = '📣 大声喊它！';
+      body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-zh">' + esc(t.zh) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="听示范">' + E.SPK + '</button></div>';
     } else {
       head = '🔮 念出收服咒语，把它装进回声球！';
       body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="听示范">' + E.SPK + '</button></div>';
@@ -383,8 +516,8 @@
     panel('<div class="task"><div class="task-h">' + head + '</div>' + body +
       (sr ? '<button class="mic" id="b-mic" data-act="bMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="b-hint">点麦克风，大声念出来</div><div class="heard" id="b-heard"></div>'
         : '<div class="mic-hint" id="b-hint">' + (t.kind === 'ult' ? '先点出正确的回答' : '大声念出来，然后诚实地给自己打分') + '</div><div id="b-rate"' + (t.kind === 'ult' ? ' hidden' : '') + '>' + rate + '</div>') +
-      '<button class="link" data-act="bBack">换个技能</button></div>');
-    msg(t.kind === 'catch' ? '<b>' + SPECIES[foe().sp].en + '</b> 已经很虚弱了，快收服它！' : '念得越准，伤害越高；念得特别准会<b>暴击</b>！');
+      (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">换个技能</button>') + '</div>');
+    if (t.kind !== 'wake') msg(t.kind === 'catch' ? '<b>' + SPECIES[foe().sp].en + '</b> 已经很虚弱了，快收服它！' : B.mv && B.mv.sup ? '念得清楚，辅助招式才会成功！' : '念得越准，伤害越高；念得特别准会<b>暴击</b>！');
     if (t.kind === 'ult') E.say(t.prompt, undefined, 'm');
   }
   async function onMic() {
@@ -450,14 +583,145 @@
     finishTask([20, 65, 88][v], false);
   }
   function finishTask(score, measured, why) {
-    const t = B.task;
+    const t = B.task, b = B;
     B.turn = 'busy';
     if (score >= 55) {
       E.S.stats.spoken++; E.qProg('spoken', 1);
       if (measured && score >= 85) { E.S.stats.perfect++; E.qProg('perfect', 1); }
     } else if (t.q) E.addWrong(t.q);
-    if (t.kind === 'catch') resolveCatch(score, B);
-    else resolveAttack(score, why, B);
+    if (t.kind === 'catch') round(b, Object.assign(() => resolveCatch(score, b), { priority: true }));
+    else if (t.kind === 'wake') round(b, () => resolveWake(score, b));
+    else round(b, () => myAttack(score, why, b));
+  }
+
+  // ---------- 一个回合：速度快的先出手 ----------
+  // mine：我方这回合做的事（async）；priority 的（道具、换怪兽、扔球）永远先
+  const newStages = () => ({ atk: 0, def: 0, spd: 0 });
+  const stageMul = s => s >= 0 ? (2 + s) / 2 : 2 / (2 - s);
+  function spdOf(side) { const mon = monOf(side); let v = stats(mon).spd * stageMul(B.stg[side].spd); if (mon.st === 'par') v /= 2; return v; }
+  async function round(b, mine) {
+    const foeFirst = !(mine && mine.priority) && spdOf('foe') > spdOf('me');
+    if (foeFirst) { msg('<b>' + SPECIES[foe().sp].en + '</b> 速度更快，抢先出手！'); await sleep(800); }
+    for (const who of foeFirst ? ['foe', 'me'] : ['me', 'foe']) {
+      if (!live(b)) return;
+      if (who === 'me') { if (mine) { const r = await mine(); if (r === 'end') return; } }
+      else if (B.foeHp > 0 && B.hp[me().uid] > 0) await foeAct(b);
+      if (!live(b)) return;
+      if (B.foeHp <= 0) { await foeFaint(b); return; }
+      if (B.hp[me().uid] <= 0) { await myFaint(b); return; }
+    }
+    await endOfRound(b);
+    if (!live(b)) return;
+    if (B.foeHp <= 0) { await foeFaint(b); return; }
+    if (B.hp[me().uid] <= 0) { await myFaint(b); return; }
+    menu();
+  }
+  // 行动前：睡着、冰冻、麻痹、混乱、不听话
+  async function canAct(side, b) {
+    const mon = monOf(side), name = SPECIES[mon.sp].en;
+    if (side === 'foe' && (mon.st === 'slp' || mon.st === 'frz')) {
+      if (mon.st === 'slp') { mon.slp = (mon.slp || 1) - 1; if (mon.slp <= 0) mon.st = null; }
+      else if (Math.random() < .25) mon.st = null;
+      updHp();
+      msg(mon.st ? '<b>' + name + '</b> ' + (mon.st === 'slp' ? '正在呼呼大睡💤' : '被冻住了，动不了🧊') : '<b>' + name + '</b> ' + '醒过来了！');
+      await sleep(900);
+      if (mon.st) return false;
+    }
+    if (mon.st === 'par' && Math.random() < .25) { msg('<b>' + name + '</b> 身体麻痹，动不了！⚡'); if (B3) B3.status(side, 'par'); await sleep(1000); return false; }
+    if (B.conf[side] > 0) {
+      B.conf[side]--;
+      if (!B.conf[side]) { msg('<b>' + name + '</b> 不再混乱了。'); updHp(); await sleep(700); }
+      else if (Math.random() < .33) {
+        const s = stats(mon), dmg = Math.max(1, Math.round(s.atk * .5 * Math.sqrt((s.atk + 20) / (s.def + 20))));
+        msg('<b>' + name + '</b> 晕头转向，撞到了自己！');
+        if (B3) B3.status(side, 'conf');
+        addHp(side, -dmg); pop(side === 'me' ? 'b-me' : 'b-foe', '-' + dmg, 'dmg'); updHp();
+        await sleep(1000);
+        return false;
+      }
+    }
+    if (side === 'me') {
+      const cap = 20 + 10 * Object.keys(M().badges).length;
+      if (mon.lv > cap && Math.random() < .3) { msg('<b>' + name + '</b> 等级太高，不太听你的话，在发呆……（多拿徽章它就会听话了）'); await sleep(1200); return false; }
+    }
+    return live(b);
+  }
+  // 回合结束：烧伤、中毒扣血
+  async function endOfRound(b) {
+    for (const side of ['me', 'foe']) {
+      const mon = monOf(side);
+      if (!(mon.st === 'brn' || mon.st === 'psn') || hpOf(side) <= 0) continue;
+      const dmg = Math.max(1, Math.floor(stats(mon).hp / 8));
+      addHp(side, -dmg);
+      msg('<b>' + SPECIES[mon.sp].en + '</b> ' + (mon.st === 'brn' ? '被烧伤了，好烫！🔥' : '中毒了，好难受……☠️'));
+      if (B3) B3.status(side, mon.st);
+      pop(side === 'me' ? 'b-me' : 'b-foe', '-' + dmg, 'dmg');
+      updHp();
+      await sleep(900);
+      if (!live(b)) return;
+    }
+  }
+  // 伤害：攻击 × 招式威力 × 发音 × 属性克制 × 本属性加成 × 攻防比
+  function damage(att, def, mv, mult) {
+    const a = monOf(att), d = monOf(def), sa = SPECIES[a.sp];
+    const atk = stats(a).atk * stageMul(B.stg[att].atk) * (a.st === 'brn' ? .6 : 1), dfn = stats(d).def * stageMul(B.stg[def].def);
+    const e = eff(mv.type, d.sp), stab = sa.types.includes(mv.type) ? 1.2 : 1;
+    const dmg = mult ? Math.max(1, Math.round(atk * POWER[mv.tier] * mult * e * stab * Math.sqrt((atk + 20) / (dfn + 20)) * (0.9 + Math.random() * 0.2))) : 0;
+    return { dmg, e };
+  }
+  // 附加效果：招式有概率让对手烧伤 / 冰冻 / 麻痹 / 中毒 / 混乱
+  const SIDE_FX = { fire: 'brn', ice: 'frz', spark: 'par', poison: 'psn', psychic: 'conf', ghost: 'conf' };
+  async function sideEffect(att, def, mv) {
+    const kind = SIDE_FX[mv.type];
+    if (!kind || hpOf(def) <= 0) return;
+    const chance = (kind === 'psn' ? .2 : .1) + (mv.tier === 2 ? .2 : 0);
+    if (Math.random() < chance) await inflict(def, kind);
+  }
+  // 让一方陷入异常状态（已经有状态的不叠加；火系不会烧伤、冰系不会冻住……）
+  async function inflict(side, kind) {
+    const mon = monOf(side), s = SPECIES[mon.sp], name = s.en;
+    if (kind === 'conf') {
+      if (B.conf[side]) return false;
+      B.conf[side] = 2 + rnd(3);
+    } else {
+      const immune = { brn: ['fire'], frz: ['ice'], par: ['spark'], psn: ['poison', 'steel'], slp: [] }[kind];
+      if (mon.st || s.types.some(t => immune.includes(t))) return false;
+      mon.st = kind;
+      if (kind === 'slp') mon.slp = 1 + rnd(3);
+    }
+    updHp();
+    if (B3) B3.status(side, kind);
+    msg('<b>' + name + '</b> ' + STATUS[kind].got);
+    E.SFX.bad();
+    await sleep(1000);
+    return true;
+  }
+  // 能力升降
+  async function stage(side, stat, n) {
+    const cur = B.stg[side][stat], nv = Math.max(-6, Math.min(6, cur + n)), name = SPECIES[monOf(side).sp].en;
+    if (nv === cur) { msg('<b>' + name + '</b> 的' + { atk: '攻击', def: '防御', spd: '速度' }[stat] + '已经不能再' + (n > 0 ? '提高' : '降低') + '了。'); await sleep(800); return; }
+    B.stg[side][stat] = nv;
+    updHp();
+    if (B3) B3.buff(side, n > 0);
+    msg('<b>' + name + '</b> 的' + { atk: '攻击', def: '防御', spd: '速度' }[stat] + (n > 0 ? (n > 1 ? '大幅提高了！' : '提高了！') : (n < -1 ? '大幅降低了！' : '降低了！')));
+    await sleep(900);
+  }
+  // 辅助招式的效果
+  async function supEffect(att, def, sup) {
+    if (sup.status) { if (!(await inflict(def, sup.status))) { msg('但是没有效果……'); await sleep(800); } }
+    if (sup.fx) {
+      for (const [stat, n] of Object.entries(sup.fx.self || {})) await stage(att, stat, n);
+      for (const [stat, n] of Object.entries(sup.fx.foe || {})) await stage(def, stat, n);
+    }
+    if (sup.heal) {
+      const mon = monOf(att), max = stats(mon).hp, v = Math.round(max * sup.heal);
+      if (hpOf(att) >= max) { msg('体力已经是满的了。'); await sleep(800); return; }
+      addHp(att, v); updHp();
+      if (B3) B3.heal(att);
+      pop(att === 'me' ? 'b-me' : 'b-foe', '+' + v, 'lbl');
+      msg('<b>' + SPECIES[mon.sp].en + '</b> 恢复了体力！');
+      await sleep(900);
+    }
   }
 
   // ---------- 动画 ----------
@@ -519,33 +783,80 @@
     await sleep(650);
   }
 
-  async function resolveAttack(score, why, b) {
-    const m = me(), f = foe(), sm = SPECIES[m.sp], sf = SPECIES[f.sp], mvo = B.mv, mv = mvName(mvo);
+  // ---------- 我方出手 ----------
+  async function myAttack(score, why, b) {
+    if (!(await canAct('me', b))) return;
+    const m = me(), sm = SPECIES[m.sp], mvo = B.mv, mv = mvName(mvo);
     let mult = score >= 85 ? 1.3 : score >= 55 ? 1 : score >= 30 ? 0.6 : 0;
     if (B.hinted) mult = Math.min(mult, 1);
-    const e = eff(mvo.type, f.sp), stab = sm.types.includes(mvo.type) ? 1.2 : 1;
-    const dmg = mult ? Math.max(1, Math.round(stats(m).atk * POWER[mvo.tier] * mult * e * stab * (0.9 + Math.random() * 0.2))) : 0;
-    if (mvo.tier === 2) B.energy = 0; else if (mult) B.energy = Math.min(3, B.energy + 1);
     panel('');
     msg('<b>' + sm.en + '</b> 使用了 <b>' + mv[0] + '</b>！');
     E.say(sm.en + ', use ' + mv[0] + '!');
+    if (mvo.sup) {
+      if (score < 55) { msg('咒语' + (why || '念得不够清楚') + '，<b>' + mv[0] + '</b> 失败了！'); await sleep(1000); return; }
+      B.energy = Math.min(3, B.energy + 1);
+      if (B3) await B3.attack('me', mvo.type, 0, true);
+      await supEffect('me', 'foe', mvo.sup);
+      return;
+    }
+    const { dmg, e } = damage('me', 'foe', mvo, mult);
+    if (mvo.tier === 2) B.energy = 0; else if (mult) B.energy = Math.min(3, B.energy + 1);
     const labels = [];
     if (mult >= 1.3) labels.push('暴击！');
     if (dmg && effLabel(e)) labels.push(effLabel(e));
     await strike('b-me', 'b-foe', mvo.type, dmg, labels, mvo.tier);
     if (!live(b)) return;
-    B.foeHp -= dmg;
+    addHp('foe', -dmg);
+    if (dmg && foe().st === 'frz' && mvo.type === 'fire') { foe().st = null; }
     updHp();
     msg(dmg ? (mult >= 1.3 ? '发音超准，<b>暴击</b>！' : mult < 1 ? '咒语有点含糊，只擦伤了它。' : '打中了！') + (e > 1 ? '属性克制，效果拔群！' : e < 1 ? '属性不太对，效果一般。' : '') : '咒语' + (why || '没念准') + '，攻击落空了！');
     await sleep(900);
-    if (!live(b)) return;
-    if (B.foeHp <= 0) foeFaint(b); else foeTurn(b);
+    if (dmg) await sideEffect('me', 'foe', mvo);
+  }
+  // 叫醒自己的怪兽
+  async function resolveWake(score, b) {
+    const m = me(), name = SPECIES[m.sp].en, slp = m.st === 'slp';
+    panel('');
+    if (score >= 55 && Math.random() < (score >= 85 ? .9 : .6)) {
+      m.st = null; updHp();
+      msg('<b>' + name + '</b> ' + (slp ? '被你叫醒了！' : '身上的冰化开了！') + '下一回合可以出招。');
+      E.SFX.ok(2);
+    } else msg('<b>' + name + '</b> 还是' + (slp ? '没醒……' : '冻着……') + (score < 55 ? '喊得再清楚一点！' : '下回合再试试。'));
+    await sleep(1100);
   }
 
-  // 对手回合：听懂它的咒语来防御
-  async function foeTurn(b) {
+  // ---------- 对手出手：听懂它的咒语来防御 ----------
+  function foeMoveChoice(f) {
+    const mv = movesOf(f), dmgMv = mv.filter(x => !x.sup && x.tier < 2), ult = mv.find(x => x.tier === 2), sup = mv.filter(x => x.sup);
+    if (ult && B.fen >= 3 && (B.kind !== 'wild' || Math.random() < .4)) { B.fen = 0; return ult; }
+    if (sup.length && Math.random() < .22) {
+      const s = pick(sup);
+      if (!(s.sup.status && (me().st || s.sup.status === 'conf' && B.conf.me))) return s;
+    }
+    return dmgMv.length ? pick(dmgMv) : { type: SPECIES[f.sp].types[0], tier: 0 };
+  }
+  async function foeAct(b) {
+    const f = foe(), sf = SPECIES[f.sp];
+    // 训练师和馆主体力低的时候会用药
+    if (B.fpot > 0 && B.foeHp < stats(f).hp * .3 && Math.random() < .7) {
+      B.fpot--;
+      const v = Math.round(stats(f).hp * .5);
+      addHp('foe', v); updHp();
+      if (B3) B3.heal('foe');
+      pop('b-foe', '+' + v, 'lbl');
+      msg((B.kind === 'leader' ? E.W[B.z].boss.name : B.trainer.name) + ' 给 <b>' + sf.en + '</b> 用了药水！');
+      E.say('Here, take this potion!', undefined, 'm');
+      await sleep(1300);
+      return;
+    }
+    if (!(await canAct('foe', b))) return;
+    B.fen++;
+    const mvo = foeMoveChoice(f);
+    await new Promise(res => { B.defDone = res; foeTurn(b, mvo); });
+  }
+  async function foeTurn(b, mvo) {
     B.turn = 'foe';
-    const f = foe(), sf = SPECIES[f.sp], Wz = E.W[B.z], mv = rnd(2), esc = E.esc;
+    const f = foe(), sf = SPECIES[f.sp], Wz = E.W[B.z], mv = mvo.tier === 0 && !mvo.sup ? 0 : 1, esc = E.esc;
     let d;
     if (mv === 0) {
       const k = rnd(Wz.words.length), it = Wz.words[k];
@@ -556,8 +867,9 @@
       const others = shuffle(Wz.sents.filter((x, j) => j !== k)).slice(0, 2);
       d = { q: { kind: 'sent', w: B.z, i: k }, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, t: it[1] }, ...others.map(o => ({ t: o[1] }))]) };
     }
-    d.mv = mv; d.type = pick(sf.types); B.def = d;
-    msg('<b>' + sf.en + '</b> 要用 <b>' + MOVES[d.type][mv][0] + '</b> 了！听懂它的咒语来防御！');
+    d.mv = mv; d.mvo = mvo; d.type = mvo.type; B.def = d;
+    const nm = mvName(mvo);
+    msg('<b>' + sf.en + '</b> 要用 <b>' + nm[0] + '</b>（' + nm[1] + '）了！' + (mvo.tier === 2 ? '<b>这是大招！</b>' : '') + '听懂它的咒语来防御！');
     panel('<div class="task def"><div class="task-h">🛡️ 它念的咒语是什么意思？选对就能挡住</div><div class="b-timer"><i id="b-timer"></i></div>' +
       '<div class="say-row"><button class="spk mini" data-act="bDefHear" aria-label="再听一遍">' + E.SPK + '</button></div>' +
       '<div class="opts' + (mv === 0 ? '' : ' list') + '">' + d.opts.map((o, k) => '<button class="opt" data-act="bDef" data-i="' + k + '">' + (o.e ? '<span class="o-e">' + o.e + '</span>' : '') + '<span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div></div>');
@@ -574,52 +886,116 @@
     if (!d || d.done) return;
     d.done = true;
     clearTimeout(B.defTimer);
-    const b = B, ok = i >= 0 && d.opts[i].c;
+    const b = B, ok = i >= 0 && d.opts[i].c, finish = () => { const r = B && B.defDone; if (B) B.defDone = null; if (r) r(); };
     document.querySelectorAll('#b-panel .opt').forEach((btn, k) => btn.classList.add(d.opts[k].c ? 'right' : k === i ? 'wrong' : 'dim'));
     const bar = $('b-timer'); if (bar) { bar.style.transition = 'none'; }
     if (ok) { B.energy = Math.min(3, B.energy + 1); E.S.stats.listen++; E.qProg('listen', 1); E.SFX.ok(2); }
     else { E.addWrong(d.q); E.SFX.bad(); }
-    const f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
-    const e = eff(d.type, m.sp);
-    const dmg = Math.max(1, Math.round(stats(f).atk * [0.8, 1.2][d.mv] * e * (ok ? 0.15 : 1) * (0.9 + Math.random() * 0.2)));
-    msg(ok ? '🛡️ <b>防住了！</b>只受到一点点伤害。' : (i < 0 ? '⏰ 来不及了！' : '没听懂……') + '它念的是：<b>' + E.esc(d.ans) + '</b>');
+    msg(ok ? '🛡️ <b>防住了！</b>' + (d.mvo.sup ? '它的招式没有效果。' : '只受到一点点伤害。') : (i < 0 ? '⏰ 来不及了！' : '没听懂……') + '它念的是：<b>' + E.esc(d.ans) + '</b>');
     await sleep(700);
-    if (!live(b)) return;
+    if (!live(b)) return finish();
     panel('');
-    await strike('b-foe', 'b-me', d.type, dmg, ok ? ['挡住了'] : effLabel(e) ? [effLabel(e)] : [], d.mv);
-    if (!live(b)) return;
-    B.hp[m.uid] -= dmg;
+    if (d.mvo.sup) {
+      if (B3) await B3.attack('foe', d.type, 0, true);
+      if (!ok) await supEffect('foe', 'me', d.mvo.sup);
+      return finish();
+    }
+    const { dmg: raw, e } = damage('foe', 'me', d.mvo, [0.8, 1, 1.15][d.mvo.tier] * 1);
+    const dmg = Math.max(1, Math.round(raw * (ok ? 0.15 : 1)));
+    await strike('b-foe', 'b-me', d.type, dmg, ok ? ['挡住了'] : effLabel(e) ? [effLabel(e)] : [], d.mvo.tier);
+    if (!live(b)) return finish();
+    addHp('me', -dmg);
+    if (me().st === 'frz' && d.type === 'fire') me().st = null;
     updHp();
     await sleep(500);
-    if (!live(b)) return;
-    if (B.hp[m.uid] <= 0) myFaint(b); else menu();
+    if (!ok && live(b)) await sideEffect('foe', 'me', d.mvo);
+    finish();
   }
 
-  function gainMonXp(mon, xp) {
+  // ---------- 经验、升级、学新招 ----------
+  function gainMonXp(mon, xp, quiet) {
     mon.xp += xp;
-    while (mon.xp >= xpNeed(mon.lv)) {
+    ensureMoves(mon);
+    while (mon.xp >= xpNeed(mon.lv) && mon.lv < 100) {
       mon.xp -= xpNeed(mon.lv); mon.lv++;
       if (B && B.hp[mon.uid] > 0) { B.hp[mon.uid] += 6; updHp(); }
-      E.toast('⬆️ ' + SPECIES[mon.sp].en + ' 升到了 Lv ' + mon.lv + '！', 'gold');
+      if (!quiet) E.toast('⬆️ ' + SPECIES[mon.sp].en + ' 升到了 Lv ' + mon.lv + '！', 'gold');
       const pend = M().pendingEvo || (M().pendingEvo = []);
       if (lvEvo(mon) && !pend.includes(mon.uid)) pend.push(mon.uid);
+      learnAt(mon, mon.lv);
     }
   }
+  // 到了这个等级能学的招式：没满 4 个直接学会，满了就排队问要不要换
+  function learnAt(mon, lv) {
+    learnset(SPECIES[mon.sp]).filter(([l]) => l === lv).forEach(([, id]) => {
+      if (mon.moves.includes(id)) return;
+      if (mon.moves.length < 4) { mon.moves.push(id); E.toast('✨ ' + SPECIES[mon.sp].en + ' 学会了 ' + mvName(parseMove(id))[0] + '！', 'gold'); }
+      else (M().pendingLearn || (M().pendingLearn = [])).push({ u: mon.uid, id });
+    });
+  }
+  // 学新招：选一个忘掉，然后大声说 "Emberpup, learn Flame Wave!"
+  function learnNext() {
+    const q = M().pendingLearn || [];
+    if (!q.length || !$('modal').hidden) return false;
+    const it = q[0], mon = byUid(it.u);
+    if (!mon || mon.moves.includes(it.id)) { q.shift(); E.save(); return learnNext(); }
+    const s = SPECIES[mon.sp], nm = mvName(parseMove(it.id));
+    E.openModal('<h2>' + s.en + ' 想学新招式！</h2><div class="learn-new">' + moveCard(parseMove(it.id)) + '</div><p>它已经会 4 个招式了。要忘掉哪一个，换成 <b>' + nm[0] + '</b>？</p>' +
+      '<div class="learn-old">' + mon.moves.map((id, k) => '<button class="btn ghost" data-act="mForget" data-k="' + k + '">' + moveCard(parseMove(id)) + '</button>').join('') + '</div>' +
+      '<button class="btn ghost wide" data-act="mForget" data-k="-1">不学了</button>', { locked: true });
+    E.say(s.en + ' wants to learn ' + nm[0] + '.');
+    return true;
+  }
+  function forget(k) {
+    const q = M().pendingLearn || [], it = q[0];
+    if (!it) { E.closeModal(); return; }
+    const mon = byUid(it.u), s = SPECIES[mon.sp], nm = mvName(parseMove(it.id));
+    if (k < 0) { q.shift(); E.save(); E.closeModal(); E.toast(s.en + ' 没有学 ' + nm[0]); setTimeout(afterBattleQueue, 300); return; }
+    const old = mvName(parseMove(mon.moves[k]));
+    const line = s.en + ', learn ' + nm[0] + '!', sr = E.speakMode() === 'sr';
+    E.openModal('<h2>1, 2, 3……忘掉了 ' + old[0] + '！</h2><p>现在大声教它新招式：</p><div class="say-text" id="lr-say">' + E.wordsHTML(line) + '</div>' +
+      (sr ? '<button class="mic" id="lr-mic" data-act="mLearnMic" data-k="' + k + '">' + E.MIC + '</button><div class="mic-hint" id="lr-hint">点麦克风，大声说</div>' : '<button class="btn leaf wide" data-act="mLearnGo" data-k="' + k + '">🎤 我说了！</button>') +
+      '<button class="btn ghost wide" data-act="mHearLearn">🔊 听一遍</button>', { locked: true });
+    E.say(line);
+  }
+  function learnDone(k) {
+    const q = M().pendingLearn || [], it = q.shift();
+    if (!it) return;
+    const mon = byUid(it.u);
+    if (mon) mon.moves[k] = it.id;
+    E.save(); E.closeModal(); E.SFX.win();
+    E.toast('✨ ' + SPECIES[mon.sp].en + ' 学会了 ' + mvName(parseMove(it.id))[0] + '！', 'gold');
+    setTimeout(afterBattleQueue, 400);
+  }
+  async function learnMic(k) {
+    const m = $('lr-mic'); if (!m) return;
+    if (E.RT.listening) { E.stopListening(); return; }
+    m.classList.add('on'); m.innerHTML = E.STOP; $('lr-hint').textContent = '正在听……';
+    const it = (M().pendingLearn || [])[0], line = it ? SPECIES[byUid(it.u).sp].en + ', learn ' + mvName(parseMove(it.id))[0] : '';
+    const res = await E.recognize();
+    if (!$('lr-mic')) return;
+    m.classList.remove('on'); m.innerHTML = E.MIC;
+    if (res.err && E.FATAL.includes(res.err)) { E.RT.srBroken = true; learnDone(k); return; }
+    if (!res.alts.length) { $('lr-hint').textContent = '没听清，再大声一点'; return; }
+    if (E.bestScore(line, res.alts).score >= 45) learnDone(k); else $('lr-hint').textContent = '再清楚一点，再说一次！';
+  }
+  // 战斗结束后依次处理：学新招 → 进化
+  function afterBattleQueue() { if (!learnNext()) evolveNext(); }
+
   async function foeFaint(b) {
     const f = foe(), sf = SPECIES[f.sp];
     $('b-foe').classList.add('faint');
     if (B3) B3.faint('foe');
     msg('<b>' + sf.en + '</b> 倒下了！');
     E.say(sf.en + ' fainted!');
-    const xp = 10 + f.lv * 8;
-    B.used.forEach(u => { const mm = byUid(u); if (mm) gainMonXp(mm, xp); });
+    shareXp(10 + f.lv * 8);
     const eb = $('b-exp'), cm = me(); if (eb && cm) eb.style.width = (cm.xp / xpNeed(cm.lv) * 100) + '%';
     E.save();
     await sleep(1400);
     if (!live(b)) return;
     if (B.fi + 1 < B.foes.length) {
       B.fi++;
-      B.foeHp = stats(foe()).hp;
+      B.foeHp = stats(foe()).hp; B.stg.foe = newStages(); B.conf.foe = 0; B.fen = 0;
       B.enter = 'foe';
       renderBattle();
       const n = SPECIES[foe().sp];
@@ -631,16 +1007,22 @@
       menu();
     } else win(b, false);
   }
+  // 经验：出过场的拿全部；带着学习装置的话，队伍里其他怪兽也拿一半
+  function shareXp(xp) {
+    B.used.forEach(u => { const mm = byUid(u); if (mm && B.hp[u] > 0) gainMonXp(mm, xp); });
+    if (itemCount('expshare') > 0 && M().expShareOn !== false) B.team.forEach(u => { if (!B.used.has(u)) { const mm = byUid(u); if (mm && B.hp[u] > 0) gainMonXp(mm, Math.round(xp / 2), true); } });
+  }
   async function myFaint(b) {
     const m = me();
     $('b-me').classList.add('faint');
     if (B3) B3.faint('me');
     msg('<b>' + SPECIES[m.sp].en + '</b> 累倒了……');
+    m.st = null;
     await sleep(1300);
     if (!live(b)) return;
     const next = B.team.findIndex((u, k) => k !== B.ti && B.hp[u] > 0);
     if (next >= 0) {
-      B.ti = next; B.used.add(B.team[next]);
+      B.ti = next; B.used.add(B.team[next]); B.stg.me = newStages(); B.conf.me = 0;
       B.enter = 'me';
       renderBattle();
       msg('去吧，<b>' + SPECIES[me().sp].en + '</b>！');
@@ -665,17 +1047,19 @@
     arena.appendChild(ball); void ball.offsetWidth;
     ball.style.left = x2 + 'px'; ball.style.top = (y2 + 20) + 'px';
     if (B3) await B3.catchThrow(sup); else await sleep(500);
-    if (!live(b)) return;
+    if (!live(b)) return 'end';
     $('b-foe').classList.add('caught-in');
     ball.classList.add('wobble');
-    const p = (0.3 + 0.7 * (1 - Math.max(0, B.foeHp) / max)) * (score >= 85 ? 1.25 : score >= 55 ? 1 : 0.5) * (sup ? 1.5 : 1) * (sf.legend ? .35 : 1);
+    const stBonus = f.st === 'slp' || f.st === 'frz' ? 2 : f.st ? 1.5 : 1;
+    const p = (0.3 + 0.7 * (1 - Math.max(0, B.foeHp) / max)) * (score >= 85 ? 1.25 : score >= 55 ? 1 : 0.5) * (sup ? 1.5 : 1) * (sf.legend ? .35 : 1) * stBonus;
     const ok = Math.random() < p;
-    for (let k = 0; k < 3; k++) { E.SFX.tap(); if (B3) await B3.wobble(); else await sleep(600); if (!live(b)) return; if (!ok && k === 1) break; }
+    for (let k = 0; k < 3; k++) { E.SFX.tap(); if (B3) await B3.wobble(); else await sleep(600); if (!live(b)) return 'end'; if (!ok && k === 1) break; }
     if (ok) {
       ball.classList.remove('wobble'); ball.classList.add('sealed');
       if (B3) B3.sealed();
-      B.used.forEach(u => { const mm = byUid(u); if (mm) gainMonXp(mm, 10 + f.lv * 8); });
+      shareXp(10 + f.lv * 8);
       const mon = newMon(f.sp, f.lv);
+      mon.moves = f.moves.slice();
       M().box.push(mon);
       if (M().team.length < TEAM_MAX) M().team.push(mon.uid);
       else B.toBox = true;
@@ -687,19 +1071,17 @@
       E.say('Gotcha! ' + sf.en + ' was caught!');
       E.save();
       await sleep(1200);
-      if (!live(b)) return;
+      if (!live(b)) return 'end';
       win(b, true);
-    } else {
-      ball.remove();
-      $('b-foe').classList.remove('caught-in');
-      if (B3) B3.breakOut();
-      E.SFX.bad();
-      msg('哎呀，<b>' + sf.en + '</b> 挣脱了！' + (score < 55 ? '收服咒语要念得清楚一点。' : '再把它打虚弱一点试试。'));
-      E.save();
-      await sleep(1200);
-      if (!live(b)) return;
-      foeTurn(b);
+      return 'end';
     }
+    ball.remove();
+    $('b-foe').classList.remove('caught-in');
+    if (B3) B3.breakOut();
+    E.SFX.bad();
+    msg('哎呀，<b>' + sf.en + '</b> 挣脱了！' + (score < 55 ? '收服咒语要念得清楚一点。' : '再把它打虚弱一点，或者让它睡着、麻痹再试试。'));
+    E.save();
+    await sleep(1200);
   }
 
   // ---------- 结算 ----------
@@ -714,13 +1096,13 @@
       const first = !m.badges[z];
       m.badges[z] = 1;
       coins += first ? 40 : 10;
-      if (first) { m.balls += 3; lines.push('🏅 拿到了 ' + w.name + ' 徽章！'); lines.push('🔮 回声球 +3'); if (z + 1 < E.W.length) lines.push('🏝️ 新区域解锁：' + E.W[z + 1].name); }
+      if (first) { m.balls += 3; lines.push('🏅 拿到了 ' + w.name + ' 徽章！'); lines.push('🔮 回声球 +3'); lines.push('🐾 等级 ' + (20 + 10 * Object.keys(m.badges).length) + ' 以下的怪兽都会听你的话'); if (z + 1 < E.W.length) lines.push('🏝️ 新区域解锁：' + E.W[z + 1].name); }
     }
     E.S.coins += coins;
     B.result = caught ? 'caught' : 'win';
     writeBack();
     lines.unshift('💰 金币 +' + coins);
-    lines.push('⭐ 出战的怪兽获得经验 +' + (10 + topLv * 8));
+    lines.push('⭐ 出战的怪兽获得经验 +' + (10 + topLv * 8) + (itemCount('expshare') > 0 && m.expShareOn !== false ? '（学习装置：其他队员也分到一半）' : ''));
     E.gainXp(15 + topLv);
     m.wins = (m.wins || 0) + 1;
     E.qProg('battle', 1);
@@ -732,34 +1114,37 @@
       '<div class="say-row">' + (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>继续冒险 ▶</button>'
         : (B.kind === 'wild' ? '<button class="btn" data-act="mWild" data-z="' + z + '">⚔️ 再战一场</button>' : '') + '<button class="btn ghost" data-act="bHome">回基地</button>') + '</div></div>');
     if (newDay) setTimeout(() => E.toast('🔥 今日打卡成功！已连续 ' + E.S.streak + ' 天', 'gold'), 900);
-    setTimeout(() => { E.checkAch(); evolveNext(); }, 1300);
+    setTimeout(() => { E.checkAch(); afterBattleQueue(); }, 1300);
   }
   function lose() {
     B.turn = 'done'; B.result = 'lose';
     writeBack();
     msg('你的怪兽们都累倒了……');
-    panel('<div class="b-result"><div class="big">💤</div><b>先去怪兽中心休息一下</b><p>怪兽中心能让怪兽恢复体力。<br>小窍门：多在草丛里打野生怪兽把等级练上去，<br>或者用<b>属性克制</b>（🔥 克 🍃，🍃 克 💧，💧 克 🔥）。</p><div class="say-row">' +
+    panel('<div class="b-result"><div class="big">💤</div><b>先去怪兽中心休息一下</b><p>怪兽中心能让怪兽恢复体力、治好异常状态。<br>小窍门：多在草丛里打野生怪兽把等级练上去，<br>用<b>属性克制</b>的招式，或者先用辅助招式降低对手的攻击。</p><div class="say-row">' +
       (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>去怪兽中心</button>' : '<button class="btn" data-act="bHome">回基地</button>') + '</div></div>');
   }
-  // 回复道具：用掉这一回合
-  async function usePotion(id) {
+  // 战斗里用道具：回复体力或治异常状态，用掉这一回合
+  function usePotion(id) {
     id = id || 'potion';
     if (!B || B.turn !== 'me' || itemCount(id) <= 0) return;
-    const b = B, m = me(), max = stats(m).hp;
-    if (B.hp[m.uid] >= max) return;
+    const b = B, m = me(), max = stats(m).hp, it = ITEMS[id];
+    if (it.heal ? B.hp[m.uid] >= max : !(STATUS_HEAL[id] || []).includes(m.st)) return;
     E.closeModal();
     B.turn = 'busy';
-    addItem(id, -1);
-    const heal = Math.max(20, Math.round(max * ITEMS[id].heal));
-    B.hp[m.uid] = Math.min(max, B.hp[m.uid] + heal);
-    panel('');
-    msg('用了' + ITEMS[id].zh + '！<b>' + SPECIES[m.sp].en + '</b> 恢复了体力。');
-    E.SFX.coin();
-    pop('b-me', '+' + heal, 'lbl');
-    if (B3) B3.heal('me');
-    updHp(); E.save();
-    await sleep(1100);
-    if (live(b)) foeTurn(b);
+    round(b, Object.assign(async () => {
+      addItem(id, -1);
+      panel('');
+      if (it.heal) {
+        const heal = Math.max(20, Math.round(max * it.heal));
+        B.hp[m.uid] = Math.min(max, B.hp[m.uid] + heal);
+        msg('用了' + it.zh + '！<b>' + SPECIES[m.sp].en + '</b> 恢复了体力。');
+        pop('b-me', '+' + heal, 'lbl');
+      } else { m.st = null; msg('用了' + it.zh + '！<b>' + SPECIES[m.sp].en + '</b> 恢复正常了。'); }
+      E.SFX.coin();
+      if (B3) B3.heal('me');
+      updHp(); E.save();
+      await sleep(1100);
+    }, { priority: true }));
   }
   // 进化排队保存在存档里：就算中途离开战斗，回到基地也会补上进化动画
   function evolveNext() {
@@ -789,13 +1174,34 @@
     }, 2600);
   }
 
+  // ---------- 怪兽详情 ----------
+  function moveCard(mv) {
+    const nm = mvName(mv);
+    return '<span class="mv-card" style="--tc:' + TYPES[mv.type].color + '"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><small>' + nm[1] + ' · ' + TYPES[mv.type].zh + ' · ' + (mv.sup ? mv.sup.desc : ['小招', '中招', '大招'][mv.tier]) + '</small></span>';
+  }
+  function summarySheet(u, back) {
+    const mon = byUid(u); if (!mon) return;
+    ensureMoves(mon);
+    const s = SPECIES[mon.sp], st = stats(mon), hp = curHp(mon), esc = E.esc;
+    const bar = (k, v, max) => '<div class="sum-stat"><span>' + k + '</span><b>' + v + '</b><i><em style="width:' + Math.min(100, v / max * 100) + '%"></em></i></div>';
+    const nextEvo = (s.evo || []).map(e => e.lv ? 'Lv ' + e.lv + ' 进化成 ' + SPECIES[e.to].en : D.STONES[e.item].zh + ' → ' + SPECIES[e.to].en).join('；');
+    const nextMoves = learnset(s).filter(([l, id]) => l > mon.lv && !mon.moves.includes(id)).slice(0, 2).map(([l, id]) => 'Lv ' + l + ' ' + mvName(parseMove(id))[0]).join('，');
+    E.openModal('<div class="sum-top"><span class="sum-pic">' + svg(mon.sp) + '</span><div><h2>' + s.en + ' <small>' + s.zh + '</small></h2><div class="chips">' + chips(mon.sp) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + STATUS[mon.st].zh + '</span>' : '') + '</div>' +
+      '<small>经验 ' + mon.xp + ' / ' + xpNeed(mon.lv) + '</small><div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div></div>' +
+      '<div class="sum-stats">' + bar('体力 HP', hp + '/' + st.hp, st.hp) + bar('攻击 ATK', st.atk, 250) + bar('防御 DEF', st.def, 250) + bar('速度 SPD', st.spd, 250) + '</div>' +
+      '<h3 class="pc-h">招式</h3><div class="sum-moves">' + mon.moves.map(id => moveCard(parseMove(id))).join('') + '</div>' +
+      (nextMoves ? '<p class="tip">以后还能学：' + nextMoves + '</p>' : '') + (nextEvo ? '<p class="tip">进化：' + nextEvo + '</p>' : '') +
+      '<p class="dex-en">' + esc(s.dexEn) + '</p><p class="dex-zh">' + esc(s.dexZh) + '</p>' +
+      '<button class="btn ghost wide" data-act="' + (back || 'mTeam') + '">返回</button>');
+  }
+
   // ---------- 我的怪兽 / 图鉴 / 回声球 ----------
   // 一只怪兽的信息行，btn 是右边的按钮
   function monRow(mon, btn, inTeam) {
     const s = SPECIES[mon.sp];
     return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>' + s.zh + '</small><div class="chips">' + chips(mon.sp) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (inTeam ? '<span class="lvchip in">队伍中</span>' : '') + '</div>' +
-      '<small>体力 ' + curHp(mon) + ' / ' + stats(mon).hp + (curHp(mon) === 0 ? ' · 累倒了' : '') + '</small>' +
-      '<div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div><div class="mrow-b">' + btn + '</div></div>';
+      '<small>体力 ' + curHp(mon) + ' / ' + stats(mon).hp + (curHp(mon) === 0 ? ' · 累倒了' : mon.st ? ' · ' + STATUS[mon.st].zh : '') + '</small>' +
+      '<div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div><div class="mrow-b"><button class="btn small ghost" data-act="mSum" data-u="' + mon.uid + '">详情</button>' + btn + '</div></div>';
   }
   const teamMons = () => M().team.map(byUid).filter(Boolean);
   const boxMons = () => M().box.filter(x => !M().team.includes(x.uid)).sort((a, b) => b.lv - a.lv);
@@ -823,7 +1229,9 @@
       const it = ITEMS[id], n = itemCount(id);
       if (!n && id !== 'ball' && id !== 'potion') return '';
       let use = '';
-      if (it.stone) use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
+      if (it.key) use = '<button class="btn small ' + (M().expShareOn !== false ? 'sun' : 'ghost') + '" data-act="mExpShare">' + (M().expShareOn !== false ? '开着' : '关着') + '</button>';
+      else if (STATUS_HEAL[id]) use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
+      else if (it.stone) use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
       else if (it.heal || id === 'revive') use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
       else if (id === 'repel') use = '<button class="btn small" data-act="mUse" data-id="repel"' + (n && FH && FH.inWorld() ? '' : ' disabled') + '>用</button>';
       else if (id === 'rope') use = '<button class="btn small" data-act="mUse" data-id="rope"' + (n && FH && FH.canRope() ? '' : ' disabled') + '>用</button>';
@@ -838,7 +1246,7 @@
     if (id === 'repel') { addItem(id, -1); E.save(); E.closeModal(); FH && FH.repel(); return; }
     if (id === 'rope') { addItem(id, -1); E.save(); FH && FH.rope(); return; }
     const rows = teamMons().map(mon => {
-      const max = stats(mon).hp, hp = curHp(mon), ok = it.stone ? !!itemEvo(mon, id) : id === 'revive' ? hp === 0 : hp > 0 && hp < max;
+      const max = stats(mon).hp, hp = curHp(mon), ok = STATUS_HEAL[id] ? STATUS_HEAL[id].includes(mon.st) : it.stone ? !!itemEvo(mon, id) : id === 'revive' ? hp === 0 : hp > 0 && hp < max;
       return monRow(mon, '<button class="btn small sun" data-act="mUseOn" data-id="' + id + '" data-u="' + mon.uid + '"' + (ok ? '' : ' disabled') + '>' + it.icon + ' 用</button>', true);
     }).join('');
     E.openModal('<h2>' + it.icon + ' ' + it.zh + ' 给谁用？</h2><p>' + it.desc + '</p>' + rows + '<button class="btn ghost wide" data-act="mBag">返回背包</button>');
@@ -847,6 +1255,7 @@
     const mon = byUid(u), it = ITEMS[id];
     if (!mon || itemCount(id) <= 0) return;
     const max = stats(mon).hp, hp = curHp(mon);
+    if (STATUS_HEAL[id]) { if (!STATUS_HEAL[id].includes(mon.st)) return; mon.st = null; addItem(id, -1); E.save(); E.SFX.coin(); E.toast(it.icon + ' ' + SPECIES[mon.sp].en + ' 恢复正常了', 'gold'); if (itemCount(id) > 0) useItem(id); else bagSheet(); return; }
     if (it.stone) { const ev = itemEvo(mon, id); if (!ev) return; addItem(id, -1); E.closeModal(); evolveTo(mon, ev.to); return; }
     if (id === 'revive') { if (hp > 0) return; mon.hp = Math.round(max / 2); }
     else { if (hp === 0 || hp >= max) return; mon.hp = Math.min(max, hp + Math.max(20, Math.round(max * it.heal))); }
@@ -913,7 +1322,15 @@
     mUseOn: t => useItemOn(t.dataset.id, t.dataset.u),
     bBag: battleBag,
     bUse: t => usePotion(t.dataset.id),
-    mEvoOk: () => { E.closeModal(); E.renderHome(); evolveNext(); },
+    mEvoOk: () => { E.closeModal(); E.renderHome(); afterBattleQueue(); },
+    mSum: t => summarySheet(t.dataset.u),
+    mForget: t => forget(+t.dataset.k),
+    mLearnGo: t => learnDone(+t.dataset.k),
+    mLearnMic: t => learnMic(+t.dataset.k),
+    mHearLearn: () => { const it = (M().pendingLearn || [])[0]; if (it) E.say(SPECIES[byUid(it.u).sp].en + ', learn ' + mvName(parseMove(it.id))[0] + '!', .8); },
+    mExpShare: () => { M().expShareOn = M().expShareOn === false; E.save(); bagSheet(); },
+    bSwitch: switchSheet,
+    bSwitchTo: t => doSwitch(+t.dataset.k),
     bMove: t => onMove(num(t, 'i')),
     bCatch: t => onCatch(t && t.dataset && t.dataset.ball),
     bMic: onMic,
@@ -926,7 +1343,7 @@
     bDef: t => defend(num(t, 'i')),
     bDefHear: () => B && B.def && E.say(B.def.spell, 0.8, 'm'),
     bPotion: () => usePotion('potion'),
-    bEnd: () => { if (!B) return; const cb = B.onEnd, res = B.result || 'flee'; E.closeModal(); writeBack(); stopBattle(); if (cb) cb(res); },
+    bEnd: () => { if (!B) return; const cb = B.onEnd, res = B.result || 'flee'; E.closeModal(); writeBack(); stopBattle(); if (cb) cb(res); setTimeout(afterBattleQueue, 500); },
     bFlee: () => {
       if (!B || B.turn === 'done') { B && B.onEnd ? actions.bEnd() : actions.bHome(); return; }
       E.openModal('<h2>' + (B.kind === 'wild' ? '要逃跑吗？' : '要放弃挑战吗？') + '</h2><p>这场战斗不会有奖励。</p><div class="row"><button class="btn ghost" data-act="' + (B.onEnd ? 'bEnd' : 'bHome') + '">离开</button><button class="btn" data-act="close" data-focus>继续战斗</button></div>');
@@ -940,6 +1357,7 @@
     // 老存档：队伍从 3 只扩到 6 只，把箱子里等级最高的先补进队伍
     migrate() {
       const m = M();
+      (m.box || []).forEach(ensureMoves);
       if (m.v === 2) return;
       m.v = 2;
       m.bag = m.bag || {};
@@ -959,7 +1377,7 @@
       E.save();
       return mon;
     },
-    ITEMS, itemCount, addItem, pcSheet, bagSheet,
+    ITEMS, itemCount, addItem, pcSheet, bagSheet, learnset, parseMove, stats,
     homeHTML,
     stop: () => { writeBack(); stopBattle(); },
     battle: startBattle,
@@ -968,7 +1386,7 @@
     anyAlive,
     leadSpecies: () => { const L = lead(); return L ? SPECIES[L.sp] : null; },
     zoneLv,
-    afterHome: () => setTimeout(evolveNext, 400),
+    afterHome: () => setTimeout(afterBattleQueue, 400),
     caughtCount: s => ORDER.filter(id => s.mon.dex[id] === 'caught').length,
     total: ORDER.length,
   };

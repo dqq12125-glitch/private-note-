@@ -339,9 +339,19 @@
       else emit(24, () => ({ pos: m.R.root.position.clone().add(V(rnd(-.6, .6), .05, rnd(-.6, .6))), vel: V(rnd(-.5, .5), rnd(.3, .8), rnd(-.5, .5)), col: C('#e8dcb0'), size: .6, life: .6, t: 0 }));
       await tween(420, k => { const e = 1 - Math.pow(1 - k, 3); m.R.root.scale.setScalar(s * (e + Math.sin(k * Math.PI) * .15)); });
     }
-    async function attack(side, type, tier) {
+    async function attack(side, type, tier, support) {
       const other = side === 'me' ? 'foe' : 'me', m = M[side], o = M[other];
       if (!m || !o) return;
+      if (support) {
+        // 辅助招式：原地发光一圈，不飞出去
+        m.talk = 1;
+        const c = TYPE_COL[type] || TYPE_COL.normal, p = center(side);
+        ring(m.R.root.position.clone().setY(.08), c[0], .3, 1.4, .6, .06);
+        rise(m.R.root.position.clone(), c, 40, .5, 1.6, .45, .8);
+        await tween(500, k => { m.off.y = Math.sin(k * Math.PI) * .15; });
+        m.talk = 0;
+        return;
+      }
       const a = center(side), b = center(other), dir = b.clone().sub(a).setY(0).normalize();
       m.talk = 1;
       const physical = type === 'fight' || type === 'normal';
@@ -365,6 +375,25 @@
       await tween(700, k => { m.off.y = -k * .6; ms.forEach(q => { q.opacity = 1 - k; }); });
       m.R.root.visible = false; m.gone = true;
       ms.forEach(q => { q.opacity = 1; q.transparent = false; }); m.off.set(0, 0, 0);
+    }
+    // 异常状态：烧伤火星、中毒泡泡、麻痹电光、睡眠 Z、冰冻冰块、混乱星星
+    const ST_COL = { brn: ['#ff5a1f', '#ffd54f'], psn: ['#9b4dca', '#e1bee7'], par: ['#ffe14d', '#ffffff'], slp: ['#7986cb', '#e8eaf6'], frz: ['#9be7ff', '#ffffff'], conf: ['#ff5ea8', '#fff59d'] };
+    function status(side, kind) {
+      const m = M[side]; if (!m) return;
+      const c = ST_COL[kind] || ST_COL.conf, p = center(side);
+      if (kind === 'slp' || kind === 'psn') rise(m.R.root.position.clone().setY(.4), c, 30, .4, 1.2, .5, 1.2);
+      else if (kind === 'par') { for (let i = 0; i < 3; i++) addFx(bolt(p.clone().add(sph(.5)), p.clone().add(sph(.5)), '#ffe14d', .02, .15), .25, o => { o.visible = Math.random() > .3; }); burst(p, c, 25, 2.5, .3, .4); }
+      else if (kind === 'frz') { chunks(() => new T3.OctahedronGeometry(.08, 0), '#bff3ff', 10, p, .3, .9); burst(p, c, 30, 2, .4, .6); }
+      else if (kind === 'conf') { for (let i = 0; i < 3; i++) ring(p.clone().add(V(0, .5, 0)), c[i % 2], .1, .5, .8, .03).rotation.x = Math.PI / 2; }
+      else burst(p, c, 40, 2.5, .45, .7, 1);
+      m.flash = .6;
+    }
+    // 能力升降：往上飘的绿光 / 往下沉的蓝光
+    function buff(side, up) {
+      const m = M[side]; if (!m) return;
+      const at = m.R.root.position.clone();
+      emit(40, () => { const a = rnd(0, 6.28), r = rnd(.2, .7); return { pos: at.clone().add(V(Math.cos(a) * r, up ? rnd(0, .4) : rnd(1, 1.6), Math.sin(a) * r)), vel: V(0, up ? rnd(1.2, 2) : -rnd(1.2, 2), 0), col: C(up ? '#7dffb0' : '#6ab7ff'), size: .35, life: .8, t: 0 }; });
+      ring(at.clone().setY(up ? .1 : 1.2), up ? '#7dffb0' : '#6ab7ff', .3, 1.1, .5, .05);
     }
     function heal(side) { const m = M[side]; if (!m) return; rise(m.R.root.position.clone(), ['#7dffb0', '#ffffff'], 60, .6, 1.8, .45, 1); }
     // 扔球收服：wobbles 次摇晃；ok 为 true 就收服成功
@@ -456,7 +485,7 @@
     setEnv(opts.theme);
     mount(host);
     raf = requestAnimationFrame(frame);
-    return { setEnv, setMon, enter, attack, hit, faint, heal, catchThrow, wobble, sealed, breakOut, removeBall, screenPos, mount, resize, destroy, get canvas() { return canvas; } };
+    return { setEnv, setMon, enter, attack, hit, faint, heal, status, buff, catchThrow, wobble, sealed, breakOut, removeBall, screenPos, mount, resize, destroy, get canvas() { return canvas; } };
   }
 
   window.Battle3D = { create, TYPE_COL };

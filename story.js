@@ -256,6 +256,18 @@
     }
   }
 
+  async function giveExpShare(C, n) {
+    C.faceEach(n);
+    await C.talk([
+      prof('{name}! You won the first badge! Well done!', '{name}！你拿到第一枚徽章了！真棒！'),
+      prof('Take this. It is an Exp. Share.', '这个送给你，它叫学习装置。', { onShow: () => { C.MG.addItem('expshare', 1); C.E.SFX.win(); C.E.toast('📡 得到了学习装置！', 'gold'); } }),
+      prof('With it, all the monsters in your team can learn from every battle.', '带着它，队伍里没出场的怪兽也能分到经验。'),
+      prof('You can turn it on or off in your bag.', '在背包里可以打开或者关掉它。'),
+    ]);
+    C.set('expshare');
+    C.E.save();
+  }
+
   // ---------- 对外 ----------
   window.EchoStory = {
     enter(C, how) {
@@ -281,6 +293,8 @@
     talk(C, n) {
       if (C.map.id === 'i0H' && n.role === 'house') return () => momTalk(C, n);
       if (n.role === 'legend') return () => legendMeet(C, n);
+      // 拿到第一枚徽章以后，博士送学习装置
+      if (C.map.id === 't0' && n.role === 'talk' && n.id === '1' && C.E.S.mon.badges[0] && !C.flag('expshare')) return () => giveExpShare(C, n);
       return null;
     },
     hidden(C, n) {
