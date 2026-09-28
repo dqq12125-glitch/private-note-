@@ -365,3 +365,57 @@ details.pre summary { font-weight: 800; cursor: pointer; }
   .stage { height: 270px; }
   .th-ctrl .slow { width: 54px; height: 56px; }
 }
+
+/* ---------- 动画片：SVG 角色与场景 ---------- */
+.stage.cartoon { height: 330px; background: #fff; }
+.stage.cartoon::after { display: none; }
+.stage-set { position: absolute; inset: 0; }
+.set-svg { display: block; width: 100%; height: 100%; }
+.stage.cartoon .actor { bottom: 4px; gap: 0; transition: transform .9s cubic-bezier(.2, .8, .3, 1), opacity .25s; }
+.stage.cartoon .actor.dim { transform: none; opacity: .88; }
+.stage.cartoon:not(.live) .actor.a0 { transform: translateX(-170%); }
+.stage.cartoon:not(.live) .actor.a1 { transform: translateX(170%); }
+.toon { display: block; width: 96px; height: auto; overflow: visible; }
+.toon.tall { width: 106px; }
+.toon-body { transform-origin: 60px 200px; animation: breathe 3.2s ease-in-out infinite; }
+.toon .m-o { opacity: 0; }
+.actor.talk .toon .m-o { animation: mouthOpen .28s steps(1, end) infinite; }
+.actor.talk .toon .m-c { animation: mouthShut .28s steps(1, end) infinite; }
+.toon .eyes { transform-origin: 60px 58px; animation: blink 4.2s infinite; }
+.actor.a1 .toon .eyes { animation-delay: 1.4s; }
+.actor.talk .toon .head { animation: nodL .7s ease-in-out infinite; }
+.actor.a1.talk .toon .head { animation-name: nodR; }
+.actor.a0.talk .toon .arm-r { animation: gestR 1.1s ease-in-out infinite; }
+.actor.a1.talk .toon .arm-l { animation: gestL 1.1s ease-in-out infinite; }
+.stage.bye .actor.a0 .toon .arm-r { animation: waveR .5s ease-in-out infinite; }
+.stage.bye .actor.a1 .toon .arm-l { animation: waveL .5s ease-in-out infinite; }
+.stage.cartoon .actor .an { margin-top: -2px; }
+.stage-sub { transition: opacity .3s; }
+.stage-sub.gone { opacity: 0; }
+.clap { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: var(--ink); color: #fff; text-align: center; animation: pop .45s; }
+.clap small { font-size: 13px; letter-spacing: .2em; color: var(--sun); }
+.clap b { font-family: var(--f-display); font-size: 30px; }
+.clap span { font-size: 14px; opacity: .8; }
+.stage-set .snow { animation: snow 2.8s linear infinite; }
+.stage-set .float { animation: floaty 3s ease-in-out infinite; }
+.stage-set .steam { animation: steam 1.6s ease-in-out infinite; }
+.stage-set .flame { transform-origin: 200px 134px; animation: flicker .4s ease-in-out infinite alternate; }
+@keyframes mouthOpen { 0% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes mouthShut { 0% { opacity: 0; } 50% { opacity: 1; } }
+@keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+@keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.015); } }
+@keyframes nodL { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-4deg); } }
+@keyframes nodR { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(4deg); } }
+@keyframes gestR { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-38deg); } }
+@keyframes gestL { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(38deg); } }
+@keyframes waveR { 0%, 100% { transform: rotate(-140deg); } 50% { transform: rotate(-170deg); } }
+@keyframes waveL { 0%, 100% { transform: rotate(140deg); } 50% { transform: rotate(170deg); } }
+@keyframes snow { from { transform: translateY(-10px); } to { transform: translateY(40px); } }
+@keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes steam { 0%, 100% { opacity: .2; transform: translateY(2px); } 50% { opacity: 1; transform: translateY(-3px); } }
+@keyframes flicker { from { transform: scale(1); } to { transform: scale(1.15, .9); } }
+@media (max-width: 380px) {
+  .stage.cartoon { height: 310px; }
+  .toon { width: 84px; }
+  .toon.tall { width: 92px; }
+}

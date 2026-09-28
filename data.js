@@ -322,10 +322,10 @@ window.WORLDS = [
   },
 ];
 
-// 对话动画：每个岛一段情景对话。cast: [名字, 形象, 声音 f/m]，lines: [第几个角色, 英文, 中文]
+// 对话动画：每个岛一段情景对话。set: 背景（见 cartoon.js），cast: [名字, 形象, 声音 f/m]，lines: [第几个角色, 英文, 中文]
 window.SCENES = [
   {
-    title: '开学第一天', place: '教室门口', bg: '🏫',
+    title: '开学第一天', place: '教室门口', bg: '🏫', set: 'gate',
     cast: [['Lily', '👧', 'f'], ['Tom', '👦', 'm']],
     lines: [
       [0, "Good morning! I'm Lily. What's your name?", '早上好！我是莉莉。你叫什么名字？'],
@@ -339,7 +339,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '这是谁的？', place: '教室里', bg: '🎒',
+    title: '这是谁的？', place: '教室里', bg: '🎒', set: 'classroom',
     cast: [['Tom', '👦', 'm'], ['Lily', '👧', 'f']],
     lines: [
       [0, 'Excuse me, Lily. Is this your pencil?', '打扰一下，莉莉。这是你的铅笔吗？'],
@@ -352,7 +352,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '看全家福', place: '莉莉家', bg: '📷',
+    title: '看全家福', place: '莉莉家', bg: '📷', set: 'living',
     cast: [['Lily', '👧', 'f'], ['Tom', '👦', 'm']],
     lines: [
       [0, 'Tom, look! This is my family photo.', '汤姆，看！这是我的全家福。'],
@@ -366,7 +366,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '新同学问路', place: '校园里', bg: '🏫',
+    title: '新同学问路', place: '校园里', bg: '🏫', set: 'campus',
     cast: [['Tom', '👦', 'm'], ['Lily', '👧', 'f']],
     lines: [
       [0, 'Excuse me, where is the library?', '打扰一下，图书馆在哪里？'],
@@ -378,7 +378,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '你最喜欢哪一科？', place: '课间', bg: '📐',
+    title: '你最喜欢哪一科？', place: '课间', bg: '📐', set: 'classroom',
     cast: [['Lily', '👧', 'f'], ['Tom', '👦', 'm']],
     lines: [
       [0, "What's your favourite subject, Tom?", '汤姆，你最喜欢什么科目？'],
@@ -391,7 +391,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '加入社团', place: '社团招新', bg: '🎸',
+    title: '加入社团', place: '社团招新', bg: '🎸', set: 'club',
     cast: [['Lily', '👧', 'f'], ['Tom', '👦', 'm']],
     lines: [
       [0, 'Tom, what club do you want to join?', '汤姆，你想加入什么社团？'],
@@ -403,7 +403,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '你几点起床？', place: '上学路上', bg: '⏰',
+    title: '你几点起床？', place: '上学路上', bg: '⏰', set: 'street',
     cast: [['Tom', '👦', 'm'], ['Lily', '👧', 'f']],
     lines: [
       [0, 'What time do you usually get up, Lily?', '莉莉，你通常几点起床？'],
@@ -416,7 +416,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '生日派对', place: '莉莉的生日会', bg: '🎂',
+    title: '生日派对', place: '莉莉的生日会', bg: '🎂', set: 'party',
     cast: [['Tom', '👦', 'm'], ['Lily', '👧', 'f']],
     lines: [
       [0, 'Happy birthday, Lily! This gift is for you.', '生日快乐，莉莉！这是给你的礼物。'],
@@ -429,7 +429,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '逛动物园', place: '动物园', bg: '🐼',
+    title: '逛动物园', place: '动物园', bg: '🐼', set: 'zoo',
     cast: [['Lily', '👧', 'f'], ['Tom', '👦', 'm']],
     lines: [
       [0, "Let's see the pandas first.", '我们先去看熊猫吧。'],
@@ -442,7 +442,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '别在走廊跑！', place: '学校走廊', bg: '🚦',
+    title: '别在走廊跑！', place: '学校走廊', bg: '🚦', set: 'hallway',
     cast: [['Ms Wang', '👩‍🏫', 'f'], ['Tom', '👦', 'm']],
     lines: [
       [0, "Tom, don't run in the hallways.", '汤姆，不要在走廊里跑。'],
@@ -454,7 +454,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '去面馆点餐', place: '面馆', bg: '🍜',
+    title: '去面馆点餐', place: '面馆', bg: '🍜', set: 'shop',
     cast: [['Waiter', '🧑‍🍳', 'm'], ['Lily', '👧', 'f']],
     lines: [
       [0, 'Hello! What would you like?', '你好！你想要点什么？'],
@@ -466,7 +466,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '打电话聊天气', place: '北京 ↔ 哈尔滨', bg: '📞',
+    title: '打电话聊天气', place: '北京 ↔ 哈尔滨', bg: '📞', set: 'phone',
     cast: [['Lily', '👧', 'f'], ['Tom', '👦', 'm']],
     lines: [
       [0, "Hi, Tom! It's Lily. How's the weather in Harbin?", '嗨，汤姆！我是莉莉。哈尔滨天气怎么样？'],
@@ -478,7 +478,7 @@ window.SCENES = [
     ],
   },
   {
-    title: '周末去哪儿了？', place: '星期一早上', bg: '📸',
+    title: '周末去哪儿了？', place: '星期一早上', bg: '📸', set: 'classroom',
     cast: [['Lily', '👧', 'f'], ['Tom', '👦', 'm']],
     lines: [
       [0, 'How was your weekend, Tom?', '汤姆，你周末过得怎么样？'],

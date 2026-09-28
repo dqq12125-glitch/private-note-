@@ -1148,13 +1148,17 @@
   const playLabel = () => T.playing ? '⏸ 暂停' : (T.idx >= 0 && !T.done ? '▶ 继续' : T.done ? '🔁 再来一遍' : '▶ 开始播放');
   function updPlay() { const b = $('#th-play'); if (b) b.textContent = playLabel(); }
   function renderTheater() {
-    const sc = T.sc, w = W[T.wi];
+    const sc = T.sc, w = W[T.wi], toon = !!window.Cartoon;
     const modes = [['watch', '👀 看动画'], ['shadow', '🔁 跟读'], ['role', '🎭 角色扮演']];
     $('#theater').innerHTML =
       '<div class="p-top"><button class="x" data-act="thClose" aria-label="退出">✕</button><div class="th-title"><b>🎬 ' + esc(sc.title) + '</b><small>' + w.name + ' · ' + esc(sc.place) + '</small></div></div>' +
-      '<div class="stage" style="--wc:' + w.color + '"><span class="stage-bg">' + sc.bg + '</span>' +
-      sc.cast.map((c, k) => '<div class="actor a' + k + '" id="actor' + k + '"><span class="ae"><span class="af">' + c[1] + '</span></span><span class="an">' + esc(c[0]) + (T.mode === 'role' && T.me === k ? ' · 你' : '') + '</span></div>').join('') +
-      '<div class="stage-sub" id="th-sub"></div></div>' +
+      '<div class="stage' + (toon ? ' cartoon' : '') + ' live" id="stage" style="--wc:' + w.color + '">' +
+      (toon && Cartoon.set(sc.set) ? '<div class="stage-set">' + Cartoon.set(sc.set) + '</div>' : '<span class="stage-bg">' + sc.bg + '</span>') +
+      sc.cast.map((c, k) => '<div class="actor a' + k + '" id="actor' + k + '">' +
+        (toon && Cartoon.has(c[0]) ? Cartoon.actor(c[0]) : '<span class="ae"><span class="af">' + c[1] + '</span></span>') +
+        '<span class="an">' + esc(c[0]) + (T.mode === 'role' && T.me === k ? ' · 你' : '') + '</span></div>').join('') +
+      '<div class="stage-sub" id="th-sub"></div>' +
+      '<div class="clap" id="th-clap" hidden><small>第 ' + (T.wi + 1) + ' 集</small><b>' + esc(sc.title) + '</b><span>' + esc(sc.place) + '</span></div></div>' +
       '<div class="seg th-modes">' + modes.map(([m, n]) => '<button class="' + (T.mode === m ? 'on' : '') + '" data-act="thMode" data-m="' + m + '">' + n + '</button>').join('') + '</div>' +
       (T.mode === 'role' ? '<div class="seg th-modes"><span class="th-lab">我来演</span>' + sc.cast.map((c, k) => '<button class="' + (T.me === k ? 'on' : '') + '" data-act="thMe" data-i="' + k + '">' + c[1] + ' ' + esc(c[0]) + '</button>').join('') + '</div>' : '') +
       '<div class="th-ctrl"><button class="btn" id="th-play" data-act="thPlay">' + playLabel() + '</button>' +
@@ -1174,7 +1178,7 @@
       a.classList.toggle('dim', !!L && L[0] !== k);
     });
     const sub = $('#th-sub'); if (!sub) return;
-    if (!L) { sub.className = 'stage-sub'; sub.innerHTML = '<span class="ss-zh">' + (T.done ? '🎉 演完啦！' : '点「开始播放」，看看他们怎么说') + '</span>'; return; }
+    if (!L) { sub.className = 'stage-sub'; sub.innerHTML = T.done ? '<span class="ss-en">The End</span><span class="ss-zh">🎉 演完啦！</span>' : '<span class="ss-zh">点「开始播放」，看看他们怎么说</span>'; return; }
     sub.className = 'stage-sub ' + (L[0] === 0 ? 'l' : 'r');
     sub.innerHTML = '<span class="ss-who">' + esc(T.sc.cast[L[0]][0]) + '</span>' +
       (T.en ? '<span class="ss-en">' + esc(L[1]) + '</span>' : '<span class="ss-en muted">🎧 只用耳朵听……</span>') +
@@ -1188,22 +1192,41 @@
       return '<button class="lg lg' + L[0] + '" data-act="thLine" data-i="' + i + '"><span class="lg-e">' + c[1] + '</span><span class="lg-b"><b>' + esc(L[1]) + '</b><small>' + esc(L[2]) + '</small></span></button>';
     }).join('');
   }
+  // 关掉或切换模式后，还在等待的旧播放流程要安静退出
+  const alive = (t, my) => T === t && t.run === my;
+  async function intro(my) {
+    const t = T;
+    const stage = $('#stage'), clap = $('#th-clap');
+    if (!stage || reduced) return;
+    stage.classList.remove('live', 'bye');
+    $('#th-sub').className = 'stage-sub gone';
+    clap.hidden = false;
+    SFX.tap();
+    await sleep(1500);
+    if (!alive(t, my)) return;
+    clap.hidden = true;
+    void stage.offsetWidth;
+    stage.classList.add('live');
+    await sleep(900);
+  }
   async function playFrom(i) {
-    const my = ++T.run;
+    const t = T, my = ++T.run;
     T.playing = true; T.done = false;
     updPlay();
     const lines = T.sc.lines;
+    if (i === 0) { await intro(my); if (!alive(t, my)) return; }
     for (T.idx = i; T.idx < lines.length; T.idx++) {
       const [who, en] = lines[T.idx];
       renderStage(); renderLog();
-      if (T.mode === 'role' && who === T.me) { await kidTurn(); if (my !== T.run) return; continue; }
+      if (T.mode === 'role' && who === T.me) { await kidTurn(); if (!alive(t, my)) return; continue; }
       await say(en, T.slow ? 0.65 : S.settings.rate, T.sc.cast[who][2]);
-      if (my !== T.run) return;
-      if (T.mode === 'shadow') { await kidTurn(); if (my !== T.run) return; }
-      else { await sleep(500); if (my !== T.run) return; }
+      if (!alive(t, my)) return;
+      if (T.mode === 'shadow') { await kidTurn(); if (!alive(t, my)) return; }
+      else { await sleep(500); if (!alive(t, my)) return; }
     }
     T.playing = false; T.done = true; T.idx = lines.length;
     renderStage(); renderLog(); updPlay();
+    const stage = $('#stage'); if (stage) stage.classList.add('bye');
     sceneDone();
   }
   function kidTurn() {
@@ -1398,7 +1421,12 @@
     thClose: () => goHome(),
     thPlay: () => {
       if (!T) return;
-      if (T.playing) { stopScene(); $('#th-turn').innerHTML = ''; updPlay(); renderStage(); return; }
+      if (T.playing) {
+        stopScene(); $('#th-turn').innerHTML = ''; updPlay(); renderStage();
+        const clap = $('#th-clap'); if (clap) clap.hidden = true;
+        const stage = $('#stage'); if (stage) stage.classList.add('live');
+        return;
+      }
       primeTTS();
       playFrom(T.done || T.idx < 0 ? 0 : T.idx);
     },
