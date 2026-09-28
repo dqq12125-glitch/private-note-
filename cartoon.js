@@ -142,5 +142,64 @@
     return '<svg class="set-svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">' + f() + '</svg>';
   }
 
-  window.Cartoon = { actor: actorSVG, set: setSVG, has: name => !!CHARS[name] };
+  // ---------- 怪兽：用参数拼出身体、耳朵、尾巴和进化后的装饰 ----------
+  function shade(hex, f) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(v * f))));
+    return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+  }
+  const BODY = { round: [74, 36, 34], tall: [70, 31, 40], wide: [78, 44, 30] };
+  function monsterSVG(sp) {
+    const [cy, rx, ry] = BODY[sp.shape] || BODY.round;
+    const top = cy - ry, col = sp.color, dk = shade(col, .78), acc = sp.accent || '#ffca28';
+    const bx = 60 + rx * .88, by = cy + ry * .3;
+    let back = '', front = '';
+    // 尾巴（画在身体后面）
+    const tails = {
+      flame: '<path d="M0 0 Q26 -4 24 -34 Q16 -20 10 -26 Q12 -40 2 -50 Q-2 -30 -8 -22 Q-12 -10 0 0 Z" fill="#ff7043"/><path d="M2 -5 Q16 -8 14 -24 Q8 -16 4 -20 Q2 -12 2 -5 Z" fill="#ffca28"/>',
+      fin: '<path d="M-2 0 L24 -20 Q18 0 24 20 Z" fill="' + dk + '"/>',
+      leaf: '<path d="M-2 0 Q16 -32 40 -22 Q26 -2 -2 0 Z" fill="#66bb6a"/><path d="M2 -2 Q18 -14 34 -20" stroke="#388e3c" stroke-width="2" fill="none"/>',
+      bolt: '<path d="M-2 0 L14 -10 L8 -14 L26 -32 L14 -16 L20 -12 Z" fill="#ffca28" stroke="#e6a800" stroke-width="2" stroke-linejoin="round"/>',
+    };
+    if (tails[sp.tail]) back += '<g class="m-tail" style="transform-origin:' + bx + 'px ' + by + 'px"><g transform="translate(' + bx + ' ' + by + ')">' + tails[sp.tail] + '</g></g>';
+    if (sp.extra === 'wings') {
+      back += '<path d="M' + (60 - rx * .5) + ' ' + (cy - 8) + ' Q' + (60 - rx - 30) + ' ' + (cy - 46) + ' ' + (60 - rx - 16) + ' ' + (cy + 4) + ' Z" fill="rgba(255,255,255,.9)" stroke="' + dk + '" stroke-width="2"/>' +
+        '<path d="M' + (60 + rx * .5) + ' ' + (cy - 8) + ' Q' + (60 + rx + 30) + ' ' + (cy - 46) + ' ' + (60 + rx + 16) + ' ' + (cy + 4) + ' Z" fill="rgba(255,255,255,.9)" stroke="' + dk + '" stroke-width="2"/>';
+    }
+    if (sp.extra === 'mane') {
+      for (let k = 0; k < 9; k++) {
+        const a = Math.PI + (k / 8) * Math.PI;
+        back += '<circle cx="' + (60 + Math.cos(a) * (rx + 4)) + '" cy="' + (cy - 6 + Math.sin(a) * (ry + 2)) + '" r="11" fill="' + acc + '"/>';
+      }
+    }
+    // 耳朵 / 头顶
+    const ears = {
+      cat: '<path d="M' + (60 - rx * .78) + ' ' + (top + 16) + ' L' + (60 - rx * .5) + ' ' + (top - 16) + ' L' + (60 - rx * .08) + ' ' + (top + 5) + ' Z" fill="' + col + '"/><path d="M' + (60 - rx * .66) + ' ' + (top + 11) + ' L' + (60 - rx * .5) + ' ' + (top - 6) + ' L' + (60 - rx * .24) + ' ' + (top + 7) + ' Z" fill="' + sp.belly + '"/>' +
+        '<path d="M' + (60 + rx * .78) + ' ' + (top + 16) + ' L' + (60 + rx * .5) + ' ' + (top - 16) + ' L' + (60 + rx * .08) + ' ' + (top + 5) + ' Z" fill="' + col + '"/><path d="M' + (60 + rx * .66) + ' ' + (top + 11) + ' L' + (60 + rx * .5) + ' ' + (top - 6) + ' L' + (60 + rx * .24) + ' ' + (top + 7) + ' Z" fill="' + sp.belly + '"/>',
+      dog: '<ellipse cx="' + (60 - rx * .86) + '" cy="' + (top + 20) + '" rx="9" ry="19" fill="' + dk + '" transform="rotate(22 ' + (60 - rx * .86) + ' ' + (top + 20) + ')"/><ellipse cx="' + (60 + rx * .86) + '" cy="' + (top + 20) + '" rx="9" ry="19" fill="' + dk + '" transform="rotate(-22 ' + (60 + rx * .86) + ' ' + (top + 20) + ')"/>',
+      round: '<circle cx="' + (60 - rx * .62) + '" cy="' + (top + 6) + '" r="12" fill="' + col + '"/><circle cx="' + (60 - rx * .62) + '" cy="' + (top + 6) + '" r="6" fill="' + sp.belly + '"/><circle cx="' + (60 + rx * .62) + '" cy="' + (top + 6) + '" r="12" fill="' + col + '"/><circle cx="' + (60 + rx * .62) + '" cy="' + (top + 6) + '" r="6" fill="' + sp.belly + '"/>',
+      leaf: '<path d="M60 ' + (top + 3) + ' L60 ' + (top - 10) + '" stroke="#388e3c" stroke-width="3"/><path d="M60 ' + (top - 8) + ' Q76 ' + (top - 28) + ' 90 ' + (top - 14) + ' Q74 ' + (top - 2) + ' 60 ' + (top - 8) + ' Z" fill="#66bb6a"/><path d="M60 ' + (top - 6) + ' Q48 ' + (top - 20) + ' 38 ' + (top - 10) + ' Q50 ' + (top) + ' 60 ' + (top - 6) + ' Z" fill="#81c784"/>',
+      fin: '<path d="M48 ' + (top + 6) + ' Q60 ' + (top - 24) + ' 78 ' + (top + 6) + ' Z" fill="' + dk + '"/>',
+      antenna: '<path d="M52 ' + (top + 4) + ' Q46 ' + (top - 10) + ' 40 ' + (top - 18) + ' M68 ' + (top + 4) + ' Q74 ' + (top - 10) + ' 80 ' + (top - 18) + '" stroke="' + dk + '" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="40" cy="' + (top - 19) + '" r="5" fill="' + acc + '"/><circle cx="80" cy="' + (top - 19) + '" r="5" fill="' + acc + '"/>',
+    };
+    back += ears[sp.ears] || '';
+    // 手、脚、身体、肚子
+    front += '<ellipse cx="' + (60 - rx * .45) + '" cy="' + (cy + ry - 2) + '" rx="11" ry="6.5" fill="' + dk + '"/><ellipse cx="' + (60 + rx * .45) + '" cy="' + (cy + ry - 2) + '" rx="11" ry="6.5" fill="' + dk + '"/>';
+    front += '<ellipse cx="60" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '" fill="' + col + '"/>';
+    front += '<ellipse cx="60" cy="' + (cy + ry * .42) + '" rx="' + (rx * .56) + '" ry="' + (ry * .42) + '" fill="' + sp.belly + '"/>';
+    front += '<ellipse cx="' + (60 - rx * .92) + '" cy="' + (cy + ry * .18) + '" rx="7" ry="11" fill="' + col + '" stroke="' + dk + '" stroke-width="1.5"/><ellipse cx="' + (60 + rx * .92) + '" cy="' + (cy + ry * .18) + '" rx="7" ry="11" fill="' + col + '" stroke="' + dk + '" stroke-width="1.5"/>';
+    if (sp.extra === 'horn') front += '<path d="M55 ' + (top + 5) + ' L60 ' + (top - 15) + ' L65 ' + (top + 5) + ' Z" fill="' + acc + '" stroke="' + dk + '" stroke-width="1.5"/>';
+    if (sp.extra === 'crown') [[-13, 3], [0, -4], [13, 3]].forEach(([dx, dy]) => { front += '<circle cx="' + (60 + dx) + '" cy="' + (top + dy) + '" r="6.5" fill="' + acc + '"/><circle cx="' + (60 + dx) + '" cy="' + (top + dy) + '" r="2.5" fill="#fff3c4"/>'; });
+    // 脸
+    const ey = cy - ry * .22, ex = rx * .38;
+    front += '<g class="m-eyes" style="transform-origin:60px ' + ey + 'px">' + [-1, 1].map(s => '<ellipse cx="' + (60 + s * ex) + '" cy="' + ey + '" rx="8" ry="9.5" fill="#fff"/><circle cx="' + (60 + s * ex + 1.5) + '" cy="' + (ey + 1) + '" r="5.2" fill="#1d2a36"/><circle cx="' + (60 + s * ex + 3) + '" cy="' + (ey - 1.5) + '" r="1.8" fill="#fff"/>').join('') + '</g>';
+    if (sp.stage === 2) front += '<path d="M' + (60 - ex - 9) + ' ' + (ey - 13) + ' L' + (60 - ex + 7) + ' ' + (ey - 9) + ' M' + (60 + ex + 9) + ' ' + (ey - 13) + ' L' + (60 + ex - 7) + ' ' + (ey - 9) + '" stroke="' + shade(col, .5) + '" stroke-width="3" stroke-linecap="round"/>';
+    const my = cy + ry * .1;
+    front += '<circle cx="' + (60 - rx * .62) + '" cy="' + (my + 2) + '" r="5" fill="#ff8a80" opacity=".5"/><circle cx="' + (60 + rx * .62) + '" cy="' + (my + 2) + '" r="5" fill="#ff8a80" opacity=".5"/>';
+    front += '<path class="m-c" d="M54 ' + my + ' Q60 ' + (my + 6) + ' 66 ' + my + '" stroke="#5d2a1e" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
+    front += '<g class="m-o"><ellipse cx="60" cy="' + (my + 2) + '" rx="7" ry="6" fill="#5d2a1e"/><ellipse cx="60" cy="' + (my + 5) + '" rx="4" ry="2" fill="#ff8a8a"/></g>';
+    return '<svg class="mon-svg" viewBox="-14 -34 156 156" aria-hidden="true"><ellipse cx="60" cy="' + (cy + ry + 4) + '" rx="' + (rx + 4) + '" ry="6" fill="rgba(0,0,0,.14)"/><g class="m-body">' + back + front + '</g></svg>';
+  }
+
+  window.Cartoon = { actor: actorSVG, set: setSVG, has: name => !!CHARS[name], monster: monsterSVG };
 })();

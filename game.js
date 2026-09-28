@@ -47,6 +47,8 @@
     { id: 'ls20', t: '听力题答对 20 道', goal: 20, key: 'listen', rw: 20 },
     { id: 'rv5', t: '在错题本复习 5 题', goal: 5, key: 'review', rw: 30 },
     { id: 'rp1', t: '完成 1 次对话角色扮演', goal: 1, key: 'roleplay', rw: 30 },
+    { id: 'bt3', t: '赢得 3 场怪兽对战', goal: 3, key: 'battle', rw: 30 },
+    { id: 'ct1', t: '收服 1 只野生怪兽', goal: 1, key: 'catch', rw: 40 },
   ];
   const QDEF = Object.fromEntries(QPOOL.map(q => [q.id, q]));
 
@@ -71,6 +73,12 @@
     ['pets3', '🐾', '宠物之家', '拥有 3 只宠物', s => s.pets.length >= 3],
     ['rich', '💰', '小富翁', '同时拥有 500 金币', s => s.coins >= 500],
     ['actor', '🎬', '小演员', '完成 5 次对话角色扮演', s => s.stats.roleplay >= 5],
+    ['catch1', '🔮', '第一个伙伴', '收服第 1 只野生怪兽', s => (s.mon.caught || 0) >= 1],
+    ['dex8', '📖', '图鉴收集家', '图鉴点亮 8 种怪兽', s => window.MonsterGame && MonsterGame.caughtCount(s) >= 8],
+    ['dexall', '🌈', '怪兽大师', '图鉴点亮全部 16 种怪兽', s => window.MonsterGame && MonsterGame.caughtCount(s) >= MonsterGame.total],
+    ['evo1', '✨', '进化！', '第一次让怪兽进化', s => (s.mon.evolved || 0) >= 1],
+    ['badge5', '🏅', '徽章收集者', '拿到 5 枚馆主徽章', s => Object.keys(s.mon.badges).length >= 5],
+    ['badgeall', '🏆', '冠军训练师', '拿到全部 13 枚馆主徽章', s => Object.keys(s.mon.badges).length >= W.length],
   ];
 
   // ---------- 存档 ----------
@@ -81,6 +89,7 @@
       quests: { day: '', list: [], chest: false }, wrong: {}, pets: ['🐣'], pet: '🐣', ach: {},
       stats: { levels: 0, spoken: 0, perfect: 0, maxCombo: 0, listen: 0, reviewed: 0, threeStars: 0, bosses: 0, flawless: 0, roleplay: 0 }, scenes: {},
       settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false }, seenIntro: false,
+      homeTab: 'mon', mon: window.MonsterGame ? MonsterGame.fresh() : { box: [], team: [], dex: {}, badges: {}, balls: 5 },
     };
   }
   function merge(base, o) {
@@ -597,7 +606,12 @@
   }
   function renderHome() {
     renderTop();
+    const tab = window.MonsterGame && S.homeTab !== 'quiz' ? 'mon' : 'quiz';
+    $('#tabs').innerHTML = window.MonsterGame ? '<button class="' + (tab === 'mon' ? 'on' : '') + '" data-act="tab" data-t="mon">🐲 怪兽冒险</button><button class="' + (tab === 'quiz' ? 'on' : '') + '" data-act="tab" data-t="quiz">📚 闯关练习</button>' : '';
     $('#quests').innerHTML = questHTML();
+    $('#mon-home').hidden = tab !== 'mon';
+    $('#quiz-home').hidden = tab !== 'quiz';
+    if (tab === 'mon') { $('#mon-home').innerHTML = MonsterGame.homeHTML(); MonsterGame.afterHome(); return; }
     const cur = currentNode();
     $('#map').innerHTML = W.map((w, wi) => worldHTML(w, wi, cur)).join('');
     if (RT.scrollCur) {
@@ -607,11 +621,13 @@
     }
   }
   function show(id) {
-    ['home', 'play', 'result', 'theater'].forEach(s => { $('#' + s).hidden = s !== id; });
-    $('#topbar').hidden = id === 'play' || id === 'theater';
+    ['home', 'play', 'result', 'theater', 'battle'].forEach(s => { $('#' + s).hidden = s !== id; });
+    $('#topbar').hidden = id === 'play' || id === 'theater' || id === 'battle';
     window.scrollTo(0, 0);
   }
-  function goHome() {
+  function goHome(tab) {
+    if (typeof tab === 'string') S.homeTab = tab;
+    if (window.MonsterGame) MonsterGame.stop();
     if (T) { stopScene(); T = null; }
     stopListening();
     if (TTS.ok) speechSynthesis.cancel();
@@ -1047,6 +1063,8 @@
     if (lucky) coins *= 2;
     const firstThree = !P.review && stars === 3 && prev < 3;
     if (firstThree) coins += 15;
+    const balls = stars === 3 ? 2 : 1;
+    S.mon.balls += balls;
     const xp = P.xp + 20 + stars * 10;
     const before = lvInfo(S.xp).lv;
     S.xp += xp; S.coins += coins;
@@ -1078,6 +1096,7 @@
       '<div class="r-stars" id="rstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>' +
       (lucky ? '<div class="lucky">🍀 幸运暴击！金币翻倍</div>' : '') +
       (firstThree ? '<div class="lucky">首次三星奖励 +15 金币</div>' : '') +
+      (window.MonsterGame ? '<div class="lucky">🔮 回声球 +' + balls + '（去怪兽冒险收服怪兽）</div>' : '') +
       (newWorld ? '<div class="lucky">🏝️ 新岛屿解锁：' + W[P.wi + 1].name + '</div>' : '') +
       '<div class="r-stats"><div class="stat xp"><b>+' + xp + '</b><small>经验</small></div><div class="stat cn"><b>+' + coins + '</b><small>金币</small></div><div class="stat cb"><b>' + P.maxCombo + '</b><small>最高连击</small></div></div>' +
       '<p class="r-sub" style="margin:0">答对 ' + P.correct + ' / ' + P.total + (stars < 3 ? ' · ' + (P.lost ? '不丢心、' : '') + '答对 90% 以上可拿三星' : '') + '</p>' +
@@ -1385,8 +1404,9 @@
   }
   function introSheet() {
     openModal('<div class="big">🏝️</div><h2>欢迎来到回声岛！</h2>' +
-      '<p>13 座小岛，每座岛是七年级的一个话题。<b>先听，再说</b>，每岛 7 关，最后打败岛主 Boss 解锁下一座岛。</p>' +
-      '<p>🔥 连续答对有连击，经验翻倍<br>⭐ 不丢心、答对 90% 拿三星<br>🎁 每天 3 个任务，做完开宝箱<br>🐾 攒金币买宠物，陪你一起闯关</p>' +
+      '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用英语念咒语攻击，听懂对手的英语来防御。收服新怪兽、升级进化，打败 13 个区域的馆主拿徽章。</p>' +
+      '<p><b>📚 闯关练习</b>：13 座岛、每岛 7 关的听说练习，还有对话动画片。每通关一关送回声球，用来收服怪兽。</p>' +
+      '<p>🎁 每天 3 个任务，做完开宝箱 · 🔥 每天打一场就算打卡</p>' +
       envHTML() +
       '<div class="row"><button class="btn ghost" data-act="testVoice">🔊 试试声音</button><button class="btn" data-act="introGo" data-focus>出发！</button></div>', { locked: true });
   }
@@ -1509,6 +1529,19 @@
     }
     if (e.key === ' ' && e.target === document.body) { e.preventDefault(); if (P.q) say(P.q.audio || P.q.target); }
   });
+
+  // ---------- 怪兽对战模块（monsters.js）用到的工具 ----------
+  if (window.MonsterGame) {
+    const api = {
+      get S() { return S; }, W, RT, FATAL, SFX, MIC, STOP, SPK,
+      save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
+      qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML,
+      reduced,
+    };
+    Object.assign(ACT, MonsterGame.init(api), {
+      tab: t => { S.homeTab = t.dataset.t; save(); renderHome(); window.scrollTo(0, 0); },
+    });
+  }
 
   // ---------- 启动 ----------
   function start(data) {
