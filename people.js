@@ -291,6 +291,15 @@
     leader: { skin: '#f1c7a0', hair: '#3e2723', style: 'spiky', eye: '#3a2a20', shirt: '#e53935', coat: '#263238', bottom: '#212121' },
     hiker: { skin: '#e8b88f', hair: '#5d4037', style: 'short', eye: '#3a2a20', hat: 'straw', shirt: '#8d6e63', bottom: '#4e342e', bag: '#ff8f00' },
     grunt: { skin: '#f1d0b8', hair: '#4a4a55', style: 'short', eye: '#3a3a4a', hat: 'cap', hatC: '#5a5f6e', hatLogo: '#cfd4dc', shirt: '#cfd4dc', jacket: '#5a5f6e', bottom: '#3a3f4b', shoes: '#22252c' },
+    gruntF: { skin: '#f6d5c0', hair: '#5a4a6a', style: 'ponytail', eye: '#3a3a4a', hat: 'cap', hatC: '#5a5f6e', hatLogo: '#cfd4dc', shirt: '#cfd4dc', jacket: '#5a5f6e', bottom: '#3a3f4b', skirt: true, shoes: '#22252c' },
+    whisper: { skin: '#f3e0d6', hair: '#9575cd', style: 'long', eye: '#6a3fa0', shirt: '#b39ddb', coat: '#4a4458', bottom: '#2f2a3a', skirt: true, shoes: '#2a2433' },
+    rumble: { skin: '#e6b995', hair: '#3e2723', style: 'spiky', eye: '#4a2a1a', shirt: '#ff7043', jacket: '#455a64', bottom: '#263238', shoes: '#1c1c1c' },
+    mute: { skin: '#eed7c5', hair: '#cfd8dc', style: 'short', eye: '#37474f', shirt: '#37474f', coat: '#212121', bottom: '#212121', glasses: true, shoes: '#111111' },
+    champion: { skin: '#ffe0c8', hair: '#26a69a', style: 'long', eye: '#00796b', hat: 'band', hatC: '#ffd54f', shirt: '#ffffff', coat: '#00897b', bottom: '#004d40', skirt: true, shoes: '#ffd54f' },
+    master1: { skin: '#f1c7a0', hair: '#9e9e9e', style: 'short', eye: '#455a64', shirt: '#b0bec5', coat: '#546e7a', bottom: '#37474f', glasses: true },
+    master2: { skin: '#f3e0e6', hair: '#4a148c', style: 'bob', eye: '#7b1fa2', shirt: '#ce93d8', coat: '#311b92', bottom: '#1a0f3a', skirt: true },
+    master3: { skin: '#fbe9e7', hair: '#e1f5fe', style: 'long', eye: '#0288d1', shirt: '#b3e5fc', coat: '#ffffff', bottom: '#4fc3f7', skirt: true },
+    master4: { skin: '#e0a878', hair: '#bf360c', style: 'spiky', eye: '#5d4037', shirt: '#ffab40', jacket: '#4e342e', bottom: '#3e2723' },
   };
   const VILLAGERS = [
     ['Granny', 'f', { skin: '#f6d5bd', hair: '#e6e6e6', style: 'bun', shirt: '#b388ff', bottom: '#6a5acd', skirt: true, glasses: true }],

@@ -60,7 +60,7 @@
     if (m.kind === 'town') return { icon: w.icon, name: w.name, en: w.en.replace(/[!?]/g, '') + ' Town', sub: '第 ' + (m.z + 1) + ' 镇' };
     if (m.kind === 'route') return { icon: '🛤️', name: (m.z + 1) + ' 号路', en: 'Route ' + (m.z + 1), sub: w.name + ' → ' + E.W[m.z + 1].name };
     if (m.kind === 'cave') return { icon: '🕳️', name: '回声洞 ' + (EM.caves.indexOf(m.route) + 1), en: 'Echo Cave', sub: (m.route + 1) + ' 号路旁边' };
-    const room = { C: ['🏥', '怪兽中心', 'Monster Center'], M: ['🏪', '商店', 'Shop'], G: ['🏟️', '道馆', 'Gym'], H: ['🏠', '民居', 'House'], J: ['🏠', '民居', 'House'] }[m.room];
+    const room = { C: ['🏥', '怪兽中心', 'Monster Center'], M: ['🏪', '商店', 'Shop'], G: ['🏟️', '道馆', 'Gym'], H: ['🏠', '民居', 'House'], J: ['🏠', '民居', 'House'], L: ['🏆', '英语冠军赛会场', 'English League'], 1: ['🏆', '第一位大师', 'Master 1'], 2: ['🏆', '第二位大师', 'Master 2'], 3: ['🏆', '第三位大师', 'Master 3'], 4: ['🏆', '第四位大师', 'Master 4'], 5: ['👑', '冠军的房间', 'Champion'] }[m.room];
     return { icon: room[0], name: w.name + ' · ' + room[1], en: room[2], sub: '第 ' + (m.z + 1) + ' 镇' };
   }
 
@@ -403,6 +403,7 @@
     if (s) return { s };
     if (t === 'P') return { pc: true };
     if (t === 'n' || t === 'b' || t === 'O') return { obst: t, x: tx, y: ty };
+    if (t === 'Z') return { statue: true, x: tx, y: ty };
     if (t === '~' && !PL.surf && (skillReady('surf') || MG.itemCount('rod') > 0)) return { water: true, x: tx, y: ty };
     const hid = hiddenAt(tx, ty);
     if (hid) return { hidden: hid, quiet: true };
@@ -418,6 +419,7 @@
     if (f.n) { f.n.face = faceTo(f.n, PL); if (!story('talk', f.n)) npcTalk(f.n); }
     else if (f.s) signTalk(f.s);
     else if (f.pc) { E.SFX.tap(); E.say('Welcome to the monster box!'); MG.pcSheet(); }
+    else if (f.statue) { if (!story('tile', f)) talk([{ who: '旁白', emo: '🗿', en: 'It is a big statue.', zh: '一座高大的雕像。' }]); }
     else if (f.obst) obstacle(f);
     else if (f.water) waterMenu(f);
     else if (f.hidden) foundHidden(f.hidden);
@@ -1361,7 +1363,7 @@
     // 设置里改了画质
     setGfx: () => { if (!M || !$('w-view')) return; ensureRenderer(); R.load(M, api3d); resize(); },
     placeLabel: () => { const ws = E.S.world; if (!ws.started || !ws.map || !window.EchoMaps) return null; const m = EchoMaps.get(ws.map); return m ? placeName(m) : null; },
-    _debug: () => ({ M, PL, FL, dlg, busy, R, goMap: (id, how) => loadMap(id, how) }),
+    _debug: () => ({ M, PL, FL, dlg, busy, R, goMap: (id, how) => goMap(id, how) }),
     _art: ART,
   };
 })();

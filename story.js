@@ -243,7 +243,7 @@
   // ---------- 洞穴深处的神兽（每只只有一次机会） ----------
   const LEGENDS = { c0: ['rockgiant', 4, 1], c1: ['icegiant', 16, 1], c2: ['irongiant', 15, 1] };
   async function legendMeet(C, n) {
-    const MG = C.MG, sp = MG.species(n.mon), lv = MG.zoneLv(C.map.route) + 10;
+    const MG = C.MG, sp = MG.species(n.mon), lv = C.map.kind === 'town' ? MG.zoneLv(C.map.z) + 9 : MG.zoneLv(C.map.route) + 10;
     await C.talk([
       nar('The legendary ' + sp.en + ' is looking at you!', '传说中的' + sp.zh + '正盯着你！'),
       nar('Are you ready? Here it comes!', '准备好了吗？它冲过来了！'),
@@ -268,6 +268,213 @@
     C.E.save();
   }
 
+  // ---------- 第一年主线：嘘声团偷走每座岛的词语水晶（第 2–13 镇） ----------
+  // stages：要打败的人，按顺序站在道馆门口；say：夺回水晶后大声念的句子（这座岛的主题）
+  const CH = [
+    null,
+    { crystal: 'Color Crystal', zh: '颜色水晶', hush: ['poison', 'dark'], stages: ['grunt', 'gruntF'],
+      flavor: ['Look! All the colors are gone. Everything is grey!', '你看！颜色全不见了，到处都是灰色的！'],
+      say: 'Red, yellow, blue and green. Colors, come back!', sayZh: '红、黄、蓝、绿，颜色们，快回来！' },
+    { crystal: 'Family Crystal', zh: '家庭水晶', hush: ['poison', 'dark'], stages: ['grunt', 'grunt'],
+      flavor: ['A little boy forgot the words for his mom and dad!', '一个小男孩连“妈妈”“爸爸”都说不出来了！'],
+      say: 'My family is the best family in the world!', sayZh: '我的家是世界上最好的家！' },
+    { crystal: 'School Crystal', zh: '校园水晶', hush: ['poison', 'dark', 'ghost'], stages: ['grunt', 'whisper'],
+      flavor: ['They want to stop our English class!', '他们要取消我们的英语课！'],
+      say: "Let's learn English together!", sayZh: '我们一起学英语吧！' },
+    { crystal: 'Subject Crystal', zh: '学科水晶', hush: ['poison', 'dark'], stages: ['gruntF', 'grunt'],
+      flavor: ["Doctor Octo's books are all mixed up!", '八爪博士的书全被弄乱了！'],
+      say: 'I like English, math and science.', sayZh: '我喜欢英语、数学和科学。' },
+    { crystal: 'Club Crystal', zh: '社团水晶', hush: ['dark', 'ghost'], stages: ['grunt', 'rumble'],
+      flavor: ['They broke the speakers at the talent show!', '他们把才艺表演的音响弄坏了！'],
+      say: 'We can sing and dance together!', sayZh: '我们可以一起唱歌跳舞！' },
+    { crystal: 'Clock Crystal', zh: '时钟水晶', hush: ['dark', 'steel'], stages: ['grunt', 'gruntF'],
+      flavor: ['The clock tower stopped. Nobody knows the time!', '钟楼停了，谁都不知道现在几点！'],
+      say: "It's seven o'clock. Time to get up!", sayZh: '七点了，该起床了！' },
+    { crystal: 'Party Crystal', zh: '派对水晶', hush: ['poison', 'dark'], stages: ['gruntF', 'whisper'],
+      flavor: ["They took the crystal from {rival}'s birthday cake!", '他们把 {rival} 生日蛋糕里的水晶抢走了！'],
+      say: 'Happy birthday to you!', sayZh: '祝你生日快乐！' },
+    { crystal: 'Animal Crystal', zh: '动物水晶', hush: ['poison', 'dark', 'bug'], stages: ['grunt', 'grunt'],
+      flavor: ['They are catching wild monsters and putting them in cages!', '他们在抓野生怪兽，把它们关进笼子！'],
+      say: 'Animals are our friends.', sayZh: '动物是我们的朋友。' },
+    { crystal: 'Rule Crystal', zh: '规则水晶', hush: ['dark', 'poison'], stages: ['gruntF', 'rumble'],
+      flavor: ['They are breaking all the rules in town!', '他们在镇上乱闯红灯、乱扔垃圾！'],
+      say: "Don't break the rules!", sayZh: '不要破坏规则！' },
+    { crystal: 'Health Crystal', zh: '健康水晶', hush: ['poison', 'dark'], stages: ['grunt', 'gruntF'],
+      flavor: ['Everyone is eating junk food and staying in bed!', '大家都在吃垃圾食品、躺在床上不动！'],
+      say: 'Eat well and keep fit!', sayZh: '好好吃饭，锻炼身体！' },
+    { crystal: 'Weather Crystal', zh: '天气水晶', hush: ['dark', 'ghost', 'ice'], stages: ['whisper', 'rumble'],
+      flavor: ['Their weather machine made a storm that never stops!', '他们的天气机让暴风雨一直下个不停！'],
+      say: 'Rain, rain, go away!', sayZh: '雨呀雨，快走开！' },
+    { crystal: 'Memory Crystal', zh: '回忆水晶', hush: ['dark', 'ghost', 'poison'], stages: ['grunt', 'gruntF', 'mute'],
+      flavor: ['Mr. Mute is here! He wants to wake the Hush King!', '默先生来了！他要唤醒寂静之王！'],
+      say: 'We remember! Echodrake, wake up!', sayZh: '我们记得！回声龙，醒来吧！' },
+  ];
+  const HUSH = {
+    grunt: { name: 'Hush Grunt', look: 'grunt', g: 'm', n: 2, lines: [['Shh! Words only make trouble!', '嘘！说话只会惹麻烦！'], ['Silence is peace!', '安静就是和平！'], ['You talk too much, kid!', '小朋友，你话太多了！']] },
+    gruntF: { name: 'Hush Grunt', look: 'gruntF', g: 'f', n: 2, lines: [['Be quiet! This crystal is ours now!', '安静！这颗水晶现在是我们的了！'], ['Shh... go home, little trainer.', '嘘……回家去吧，小训练师。']] },
+    whisper: { name: 'Admin Whisper', look: 'whisper', g: 'f', n: 3, lines: [['Shh... I am Whisper. I only need to whisper.', '嘘……我是低语。我说话只需要悄悄话。']] },
+    rumble: { name: 'Admin Rumble', look: 'rumble', g: 'm', n: 3, lines: [["I'm Rumble! I don't talk, I fight!", '我是闷雷！我不说话，我只对战！']] },
+    mute: { name: 'Mr. Mute', look: 'mute', g: 'm', n: 4, lines: [['So you are the child who talks to monsters.', '你就是那个和怪兽说话的孩子。'], ['Words make people fight. A quiet world is a happy world.', '话说多了，人们就会吵架。安静的世界才是快乐的世界。']] },
+  };
+  const chFlag = z => 'ch' + z;
+  const chStage = (C, z) => C.E.S.world.flags['s:chs' + z] || 0;
+  const hushAt = (C, z) => C.npc(n => n.role === 'hush');
+  function spawnHush(C, z) {
+    const ch = CH[z], k = chStage(C, z), b = C.map.buildings.G;
+    if (!ch || C.flag(chFlag(z)) || k >= ch.stages.length || !b || hushAt(C, z)) return null;
+    const h = HUSH[ch.stages[k]];
+    return C.spawn({ role: 'hush', look: P.LOOKS[h.look], name: h.name, g: h.g, x: b.door.x, y: b.door.y + 1, face: 'down', stage: k });
+  }
+  // 第一次来到这座岛：村民跑过来求助
+  async function chapterIntro(C, z) {
+    const ch = CH[z], w = C.E.W[z], pl = C.pl;
+    const v = C.spawn({ look: P.VILLAGERS[z % P.VILLAGERS.length][2], name: P.VILLAGERS[z % P.VILLAGERS.length][0], g: P.VILLAGERS[z % P.VILLAGERS.length][1], x: pl.x + 1, y: pl.y - 1, face: 'left' });
+    await C.alert(v);
+    C.faceEach(v);
+    const V = (en, zh) => ({ who: v.name, look: v.look, g: v.g, en, zh });
+    await C.talk([
+      V('Oh, a trainer! Please help us!', '啊，是训练师！请帮帮我们！'),
+      V('Team Hush took our ' + ch.crystal + '!', '嘘声团把我们的' + ch.zh + '偷走了！'),
+      V(ch.flavor[0], ch.flavor[1]),
+      V('Without the crystal, people forget the words of ' + w.en.replace(/[!?]/g, '') + '.', '没有水晶，大家会慢慢忘掉这座岛的英语。'),
+      V('They are standing at the Gym door. Please get it back!', '他们就守在道馆门口。请你帮我们抢回来！'),
+    ]);
+    C.set('chint' + z);
+    C.remove(v);
+    spawnHush(C, z);
+  }
+  // 和嘘声团对战；打完最后一个就夺回水晶，要大声念出这座岛的句子
+  async function hushBattle(C, n) {
+    const z = C.map.z, ch = CH[z], key = ch.stages[n.stage], h = HUSH[key], MG = C.MG;
+    C.faceEach(n);
+    const H = (en, zh) => ({ who: h.name, look: n.look, g: h.g, en, zh });
+    await C.talk(h.lines.map(([en, zh]) => H(en, zh)));
+    const lv = MG.zoneLv(z) + (key === 'mute' ? 6 : key === 'grunt' || key === 'gruntF' ? 1 : 3);
+    const res = await C.battle('trainer', { foes: MG.teamOf(ch.hush, h.n, lv, 'hush' + z + key), trainer: { name: h.name, img: C.portrait(n.look) } });
+    if (res !== 'win') return;
+    await C.talk([H(key === 'mute' ? 'How... how can words be so strong?' : 'Shh... You win this time!', key === 'mute' ? '怎么……话语怎么会这么有力量？' : '嘘……这次算你赢！')]);
+    C.remove(n);
+    C.E.S.world.flags['s:chs' + z] = n.stage + 1;
+    C.E.save();
+    if (n.stage + 1 < ch.stages.length) { const nx = spawnHush(C, z); if (nx) { await C.alert(nx); await C.talk([{ who: HUSH[ch.stages[n.stage + 1]].name, look: nx.look, g: HUSH[ch.stages[n.stage + 1]].g, en: 'Not so fast!', zh: '别想走！' }]); } return; }
+    await restoreCrystal(C, z);
+  }
+  async function restoreCrystal(C, z) {
+    const ch = CH[z], E = C.E, nar = (en, zh, x) => Object.assign({ who: '旁白', emo: '💎', en, zh }, x || {});
+    await C.talk([
+      nar('You got the ' + ch.crystal + ' back!', '你夺回了' + ch.zh + '！'),
+      nar('Say the magic words to make it shine again!', '大声念出这句话，让水晶重新亮起来！'),
+      { who: '{name}', look: C.plook(), g: E.S.player.gender === 'girl' ? 'f' : 'm', en: ch.say, zh: ch.sayZh, kind: 'speak', target: ch.say },
+      nar('The crystal is shining! Everyone remembers the words again!', '水晶亮起来了！大家又想起了这些英语！', { onShow: () => { E.SFX.win(); E.confetti(180); } }),
+    ]);
+    C.set(chFlag(z));
+    C.MG.addItem('superball', 3);
+    E.toast('💠 超级球 +3（村民的谢礼）', 'gold');
+    if (z === 12) await echodrakeWakes(C);
+    else await C.talk([nar('Now you can challenge the Gym Leader!', '现在可以去挑战道馆馆主了！')]);
+  }
+  // 最后一章：13 座岛的声音一起唤醒回声龙
+  async function echodrakeWakes(C) {
+    const b = C.map.buildings.G, nar = (en, zh) => ({ who: '旁白', emo: '🐉', en, zh });
+    C.E.SFX.win();
+    await C.talk([
+      nar('The ground is shaking...', '大地在摇晃……'),
+      nar('The voices of thirteen islands woke up Echodrake!', '十三座岛的声音唤醒了回声龙！'),
+      prof('{name}! Echodrake wants to see how strong your voice is!', '{name}！回声龙想看看你的声音有多强！'),
+    ]);
+    if (!C.flag('leg:echodrake')) C.spawn({ mon: 'echodrake', role: 'legend', x: b.door.x, y: b.door.y + 2, face: 'down' });
+  }
+
+  // ---------- 道馆：点亮三座雕像（回答英语问题），馆主才接受挑战 ----------
+  const litN = (C, z) => Object.keys(C.E.S.world.flags).filter(k => k.startsWith('s:g' + z + ':')).length;
+  async function statueQuiz(C, f) {
+    const z = C.map.z, key = 'g' + z + ':' + f.x + ':' + f.y, w = C.E.W[z], nar = (en, zh, x) => Object.assign({ who: '雕像', emo: '🗿', en, zh }, x || {});
+    if (C.flag(key)) { await C.talk([nar('The statue is shining.', '这座雕像已经亮了。')]); return; }
+    const k = Math.floor(Math.random() * w.dlgs.length), it = w.dlgs[k];
+    const opts = [{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))].sort(() => Math.random() - .5);
+    let ok = false;
+    await C.talk([nar(it[0], '雕像在问你问题。选出合适的回答，再大声说出来。', { kind: 'answer', opts, q: { kind: 'dlg', w: z, i: k }, pass: () => { ok = true; return []; }, fail: () => [nar('The statue stays dark. Try again!', '雕像没有亮。再试一次吧！')] })]);
+    if (!ok) return;
+    C.set(key);
+    const n = litN(C, z);
+    C.E.SFX.ok(3);
+    await C.talk([nar('The statue lights up! (' + n + '/4)', '雕像亮起来了！（' + n + '/4）' + (n >= 3 ? '现在可以挑战馆主了！' : '再点亮 ' + (3 - n) + ' 座就能挑战馆主。'))]);
+  }
+  function leaderGate(C, n) {
+    const z = C.map.z, b = C.E.W[z].boss;
+    const L = (en, zh) => ({ who: b.name, emo: b.emoji, g: 'm', en, zh });
+    if (z >= 1 && !C.flag(chFlag(z)) && !C.E.S.mon.badges[z]) return () => C.talk([L('Team Hush took our crystal! I cannot battle now.', '嘘声团偷走了我们的水晶！我现在没心思对战。'), L('Please get it back first!', '请你先把水晶抢回来！')]);
+    if (litN(C, z) < 3 && !C.E.S.mon.badges[z]) return () => C.talk([L('Welcome to my Gym!', '欢迎来到我的道馆！'), L('Light up three statues first. Answer their questions in English!', '先点亮三座雕像：用英语回答它们的问题！')]);
+    return null;
+  }
+
+  // ---------- 对手：在第 4、8、11 条路上再来比 ----------
+  const RIVAL_AT = { r3: 2, r7: 3, r10: 4 };
+  async function rivalAgain(C, k) {
+    const MG = C.MG, R = C.rivalInfo(), pl = C.pl, z = C.map.z;
+    const r = C.spawn({ look: R.look, name: R.name, g: R.g, x: pl.x, y: pl.y - 5, face: 'down' });
+    await C.alert(r);
+    await C.walk(r, 'down', 4, 160);
+    C.faceEach(r);
+    const say = (en, zh) => ({ who: R.name, look: R.look, g: R.g, en, zh });
+    const lines = {
+      2: [["{name}! I got a new badge too. Let's battle again!", '{name}！我也拿到新徽章了，再比一场吧！']],
+      3: [['Team Hush is everywhere. We must get stronger!', '到处都是嘘声团，我们得变得更强！'], ['Show me your best!', '拿出你最强的本事吧！']],
+      4: [['This is our last battle before the English League!', '这是英语冠军赛之前我们最后一场对战了！'], ["I won't lose this time!", '这次我可不会输！']],
+    }[k];
+    await C.talk(lines.map(([en, zh]) => say(en, zh)));
+    const lead = MG.leadSpecies(), mine = lead ? lead.type : 'fire';
+    const star = MG.STARTERS.find(id => MG.STRONG[MG.species(id).type].includes(mine)) || MG.STARTERS[0];
+    const lv = MG.zoneLv(z) + 2;
+    const foes = MG.teamOf(['normal', 'flying', 'spark', 'bug', 'rock'], k - 1, lv - 1, 'rival' + k).concat([MG.newMon(MG.grown(star, lv + 1), lv + 1)]);
+    const res = await C.battle('trainer', { foes, trainer: { name: R.name, img: C.portrait(R.look) }, noWhiteout: true });
+    if (res === 'lose') { MG.healAll(); await C.talk([say("I won! But you're getting stronger. Let me heal your team.", '我赢了！不过你越来越强了。我帮你的队伍恢复一下。')]); }
+    else await C.talk([say('You beat me again! See you at the next island!', '又输给你了！下个岛见！')]);
+    C.set('rival' + k);
+    await C.walk(r, 'up', 6, 140);
+    C.remove(r);
+  }
+
+  // ---------- 英语冠军赛：四位大师 + 冠军 ----------
+  const LEAGUE = {
+    1: { name: 'Master Sage', look: 'master1', g: 'm', types: ['steel', 'rock'], lines: [['I am Sage, the master of words.', '我是智者，词语大师。'], ['Every word has power. Show me yours!', '每个词都有力量。让我看看你的！']] },
+    2: { name: 'Master Luna', look: 'master2', g: 'f', types: ['ghost', 'dark'], lines: [['I am Luna. I love stories in the dark.', '我是露娜，我喜欢在黑暗里讲故事。'], ['Tell me your story with your monsters!', '用你的怪兽告诉我你的故事吧！']] },
+    3: { name: 'Master Frost', look: 'master3', g: 'f', types: ['ice', 'water'], lines: [['I am Frost. My English is cool and clear.', '我是冰霜，我的英语又酷又清楚。'], ['Can you speak clearly in the cold?', '你在寒冷里也能说得清楚吗？']] },
+    4: { name: 'Master Talon', look: 'master4', g: 'm', types: ['dragon', 'fire'], lines: [['I am Talon, the last master.', '我是利爪，最后一位大师。'], ['Only the bravest speakers can pass!', '只有最勇敢的说话者才能通过！']] },
+    5: { name: 'Champion Aria', look: 'champion', g: 'f', types: ['water', 'flying', 'psychic', 'dragon'], lines: [['Welcome, {name}. I am Aria, the English Champion.', '欢迎你，{name}。我是英语冠军阿丽娅。'], ['You came all the way from Hello Island.', '你从你好岛一路走到了这里。'], ['Now, show me everything you have learned!', '现在，让我看看你学到的一切吧！']] },
+  };
+  async function leagueBattle(C, n) {
+    const k = C.map.room, L = LEAGUE[k], MG = C.MG, look = P.LOOKS[L.look];
+    C.faceEach(n);
+    const S = (en, zh) => ({ who: L.name, look, g: L.g, en, zh });
+    await C.talk(L.lines.map(([en, zh]) => S(en, zh)));
+    const lv = MG.zoneLv(12) + 4 + (+k) * 2;
+    const res = await C.battle('trainer', { foes: MG.teamOf(L.types, k === '5' ? 5 : 3, lv, 'league' + k), trainer: { name: L.name, img: C.portrait(look) } });
+    if (res !== 'win') return;
+    C.set('lg' + k);
+    if (k !== '5') { await C.talk([S('You are strong. The next room is waiting for you.', '你很强。下一个房间在等你。')]); C.remove(n); return; }
+    await C.talk([S('Amazing! You are the new English Champion!', '太棒了！你就是新的英语冠军！')]);
+    await hallOfFame(C);
+  }
+  async function hallOfFame(C) {
+    const E = C.E, MG = C.MG, sc = C.scene(), team = E.S.mon.team.map(u => E.S.mon.box.find(m => m.uid === u)).filter(Boolean);
+    sc.className = 'w-scene fame'; sc.hidden = false;
+    sc.innerHTML = '<div class="fame-in"><h2>🏆 名人堂 Hall of Fame</h2><p class="fame-name">' + E.esc(C.pname()) + '</p><div class="fame-team">' +
+      team.map(m => { const s = MG.species(m.sp); return '<span class="fame-mon">' + Cartoon.monster(s) + '<b>' + s.en + '</b><small>Lv ' + m.lv + '</small></span>'; }).join('') + '</div><p>英语冠军赛冠军 · ' + new Date().toLocaleDateString('zh-CN') + '</p></div>';
+    E.SFX.win(); E.confetti(300);
+    C.set('champion');
+    E.S.coins += 500; E.renderTop();
+    await C.wait(600);
+    await C.talk([
+      { who: '旁白', emo: '🏆', en: 'Congratulations, {name}! You are the Champion!', zh: '恭喜你，{name}！你成为了英语冠军！' },
+      { who: '旁白', emo: '🏆', en: 'Your monsters and your English made it happen.', zh: '是你的怪兽和你的英语一起做到的。' },
+      prof('Wonderful, {name}! But the world is bigger than these islands...', '太棒了，{name}！不过世界比这些岛大得多……'),
+      prof('Far to the north, new islands are waiting. See you next year!', '在遥远的北方，还有新的群岛在等你。明年见！'),
+    ]);
+    sc.classList.add('out'); await C.wait(700); sc.hidden = true; sc.className = 'w-scene'; sc.innerHTML = '';
+    E.toast('💰 金币 +500', 'gold');
+  }
+
   // ---------- 对外 ----------
   window.EchoStory = {
     enter(C, how) {
@@ -281,23 +488,44 @@
       if (has && !(C.E.S.player && C.E.S.player.name)) return () => intro(C, true);
       if (id === 'i0H' && !C.flag('intro')) return () => wakeUp(C);
       if (id === 't0' && C.flag('mom') && !C.flag('starter')) return () => rescue(C);
+      // 主线：第 2–13 镇的嘘声团
+      if (C.map.kind === 'town' && CH[C.map.z] && C.flag('starter')) {
+        const z = C.map.z;
+        if (!C.flag(chFlag(z)) && !C.E.S.mon.badges[z]) {
+          if (!C.flag('chint' + z)) return () => chapterIntro(C, z);
+          if (!hushAt(C, z)) return () => { spawnHush(C, z); };
+        } else if (z === 12 && !C.flag('leg:echodrake') && !C.npc(n => n.mon === 'echodrake')) {
+          const b = C.map.buildings.G;
+          return () => { C.spawn({ mon: 'echodrake', role: 'legend', x: b.door.x, y: b.door.y + 2, face: 'down' }); };
+        }
+      }
       const L = LEGENDS[id];
       if (L && !C.flag('leg:' + L[0]) && !C.npc(n => n.mon === L[0])) return () => { C.spawn({ mon: L[0], role: 'legend', x: L[1], y: L[2], face: 'down' }); };
       return null;
     },
     step(C) {
       const m = C.map, pl = C.pl;
+      const rk = RIVAL_AT[m.id];
+      if (rk && C.flag('starter') && !C.flag('rival' + rk) && C.MG.anyAlive() && (pl.x === 9 || pl.x === 10) && pl.y <= m.H - 7 && pl.y >= 6) return () => rivalAgain(C, rk);
       if (m.id === 'r0' && C.flag('starter') && !C.flag('rival1') && C.MG.anyAlive() && (pl.x === 9 || pl.x === 10) && pl.y <= m.H - 7 && pl.y >= 6) return () => rival1(C);
       return null;
     },
     talk(C, n) {
       if (C.map.id === 'i0H' && n.role === 'house') return () => momTalk(C, n);
       if (n.role === 'legend') return () => legendMeet(C, n);
+      if (n.role === 'hush') return () => hushBattle(C, n);
+      if ((n.role === 'master' || n.role === 'champion') && !C.flag('lg' + C.map.room)) return () => leagueBattle(C, n);
+      if (n.role === 'leader') { const g = leaderGate(C, n); if (g) return g; }
       // 拿到第一枚徽章以后，博士送学习装置
       if (C.map.id === 't0' && n.role === 'talk' && n.id === '1' && C.E.S.mon.badges[0] && !C.flag('expshare')) return () => giveExpShare(C, n);
       return null;
     },
+    tile(C, f) {
+      if (C.map.kind === 'inside' && C.map.room === 'G') return () => statueQuiz(C, f);
+      return null;
+    },
     hidden(C, n) {
+      if (n.role === 'master' && C.flag('lg' + C.map.room)) return true;
       // 博士开场时在外面被追，救下她以前她不在老地方
       return C.map.id === 't0' && n.role === 'talk' && n.id === '1' && !C.flag('starter');
     },

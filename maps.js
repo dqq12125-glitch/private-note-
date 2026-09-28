@@ -372,6 +372,23 @@
     },
   };
   INSIDE.J = { rows: INSIDE.H.rows.map(r => [...r].reverse().join('')), npc: { 1: { role: 'gift' } } };
+  // 英语冠军赛会场（最后一镇北边）：大厅 L → 四位大师 1–4 → 冠军 5，一间通一间
+  INSIDE.L = {
+    rows: [
+      'WWWWW^WWWWW',
+      'W_1_____2_W',
+      'WQQQ___QQQW',
+      'W_________W',
+      'Wp_______pW',
+      'W___uuu___W',
+      'W_________W',
+      'WWWWWeWWWWW',
+    ], npc: { 1: { role: 'nurse' }, 2: { role: 'clerk' } },
+  };
+  const MASTER_ROOM = ['WWWW^WWWW', 'W___1___W', 'WZ_____ZW', 'W_uuuuu_W', 'W_u___u_W', 'W_uuuuu_W', 'W_______W', 'WWWWeWWWW'];
+  ['1', '2', '3', '4'].forEach(k => { INSIDE[k] = { rows: MASTER_ROOM, npc: { 1: { role: 'master' } } }; });
+  INSIDE['5'] = { rows: ['WWWWWWWWW', 'WZ__1__ZW', 'W_______W', 'W_uuuuu_W', 'W_u___u_W', 'W_uuuuu_W', 'W_______W', 'WWWWeWWWW'], npc: { 1: { role: 'champion' } } };
+  const LEAGUE = ['L', '1', '2', '3', '4', '5'];
 
   // ---------- 配色 ----------
   const PALETTES = [
@@ -388,6 +405,12 @@
     H: { floor: '#e8c9a0', floor2: '#dcb98b', wall: '#fff6e6', trim: '#a0724a', rug: '#ef9a9a' },
   };
   INDOOR.J = { floor: '#d9c3a5', floor2: '#cbb190', wall: '#f3f7ec', trim: '#6d8b5a', rug: '#a5d6a7' };
+  INDOOR.L = { floor: '#ede7f6', floor2: '#d1c4e9', wall: '#f3e5f5', trim: '#7e57c2', rug: '#ffd54f' };
+  INDOOR['1'] = { floor: '#cfd8dc', floor2: '#b0bec5', wall: '#eceff1', trim: '#546e7a', rug: '#90a4ae' };
+  INDOOR['2'] = { floor: '#4a3b6b', floor2: '#3d2f5c', wall: '#5e4a86', trim: '#b388ff', rug: '#7e57c2' };
+  INDOOR['3'] = { floor: '#e1f5fe', floor2: '#b3e5fc', wall: '#ffffff', trim: '#4fc3f7', rug: '#81d4fa' };
+  INDOOR['4'] = { floor: '#8d6e63', floor2: '#795548', wall: '#d7ccc8', trim: '#ff7043', rug: '#ffab40' };
+  INDOOR['5'] = { floor: '#fff8e1', floor2: '#ffecb3', wall: '#fffde7', trim: '#ffb300', rug: '#26a69a' };
   const palFor = z => z === 11 ? SNOW : PALETTES[z % PALETTES.length];
 
   // ---------- 生成 ----------
@@ -442,12 +465,12 @@
     const m = { id: 't' + z, kind: 'town', z, pal: palFor(z), npcs: [], signs: [], picks: [] };
     const rows = (mirror ? TOWNS[t].map(flip) : TOWNS[t]).map(r => r
       .replace('v', z === 0 ? '#' : 'v')
-      .replace('^', z === TOWN_COUNT - 1 ? '#' : '^'));
+      .replace('^', '^'));
     m.grid = rows.map(r => [...r]); m.H = rows.length; m.W = rows[0].length;
     m.start = { x: 1, y: m.H - 2 };
     scan(m, { npc: TOWN_NPC, mirror, signs: TOWN_SIGNS, seed: z * 7 });
     // 第 1 镇没有南边的路，最后一镇没有北边的路：守卫也不需要了
-    if (z === TOWN_COUNT - 1) m.npcs = m.npcs.filter(n => n.role !== 'guard');
+    // 最后一镇的守卫挡着英语冠军赛会场（要 13 枚徽章）
     return m;
   }
 
@@ -495,7 +518,7 @@
     for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
       const c = m.grid[y][x];
       if (m.kind === 'town') {
-        if (c === '^') at(x, y, 'r' + m.z, 'south');
+        if (c === '^') at(x, y, m.z === TOWN_COUNT - 1 ? 'i' + m.z + 'L' : 'r' + m.z, m.z === TOWN_COUNT - 1 ? 'mat' : 'south');
         else if (c === 'v') at(x, y, 'r' + (m.z - 1), 'north');
         else if ('cmghj'.includes(c)) at(x, y, 'i' + m.z + c.toUpperCase(), 'mat');
       } else if (m.kind === 'route') {
@@ -505,7 +528,11 @@
       } else if (m.kind === 'cave') {
         if (c === 'e') at(x, y, 'r' + m.route, 'cave');
       } else if (m.kind === 'inside') {
-        if (c === 'e') at(x, y, 't' + m.z, 'door:' + m.room);
+        const li = LEAGUE.indexOf(m.room);
+        if (li >= 0) {
+          if (c === 'e') at(x, y, li ? 'i' + m.z + LEAGUE[li - 1] : 't' + m.z, 'north');
+          else if (c === '^' && li < LEAGUE.length - 1) at(x, y, 'i' + m.z + LEAGUE[li + 1], 'mat');
+        } else if (c === 'e') at(x, y, 't' + m.z, 'door:' + m.room);
       }
     }
     m.warps = w;
@@ -540,6 +567,7 @@
   function all() {
     const ids = [];
     for (let z = 0; z < TOWN_COUNT; z++) { ids.push('t' + z); 'CMGHJ'.split('').forEach(L => ids.push('i' + z + L)); if (z < TOWN_COUNT - 1) ids.push('r' + z); }
+    LEAGUE.forEach(k => ids.push('i' + (TOWN_COUNT - 1) + k));
     CAVES.forEach((c, i) => ids.push('c' + i));
     return ids;
   }

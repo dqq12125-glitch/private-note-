@@ -13,6 +13,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
   p.setDefaultTimeout(6000);
+  const tryClick = async el => { try { await el.click({ timeout: 2000 }); } catch (e) { /* 按钮被换掉了 */ } };
   const errs = [];
   p.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split(/\n/).slice(1, 4).join(' ')));
   await p.goto(PAGE);
@@ -92,13 +93,13 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
       await p.waitForTimeout(250);
       if (await p.$('#b-panel [data-act=bEnd]')) return (await p.textContent('#b-panel .b-result')).replace(/\s+/g, ' ');
       const moves = await p.$$('[data-act=bMove]:not([disabled])');
-      if (moves.length) { await moves[moves.length - 1].click(); continue; }
+      if (moves.length) { await tryClick(moves[moves.length - 1]); continue; }
       const opt = await p.$('#b-panel .opt[data-act=bOpt]:not(.right):not(.wrong):not(.dim)');
-      if (opt && await p.$('#b-rate[hidden]')) { await opt.click(); continue; }
+      if (opt && await p.$('#b-rate[hidden]')) { await tryClick(opt); continue; }
       const rate = await p.$('#b-panel [data-act=bRate][data-v="2"]');
-      if (rate && await rate.isVisible()) { await rate.click(); continue; }
+      if (rate && await rate.isVisible()) { await tryClick(rate); continue; }
       const def = await p.$('#b-panel [data-act=bDef]:not(.right):not(.wrong):not(.dim)');
-      if (def) { await def.click(); continue; }
+      if (def) { await tryClick(def); continue; }
     }
     return 'timeout';
   };

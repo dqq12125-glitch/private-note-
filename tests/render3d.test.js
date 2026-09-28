@@ -21,7 +21,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({
     seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: 'mid', sfx: false }, player: { gender: 'girl', name: 'Amy' },
     mon: { v: 2, box: [{ uid: 'm1', sp: 'emberpup', lv: 5, xp: 0 }], team: ['m1'], dex: { emberpup: 'caught' } },
-    world: { v: 2, started: true, map: 't0', x: 8, y: 22, dir: 'up', flags: { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1 } },
+    world: { v: 2, started: true, map: 't0', x: 8, y: 22, dir: 'up', flags: Object.assign({ 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1 }, Object.fromEntries([...Array(13).keys()].map(i => ['s:ch' + i, 1]))) },
   })));
   await p.reload(); await p.waitForTimeout(400);
   await p.click('[data-act=wEnter]');

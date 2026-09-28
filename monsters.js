@@ -1373,7 +1373,14 @@
       E.save();
     },
     setFieldHooks: h => { FH = h; },
-    STARTERS, STRONG,
+    STARTERS, STRONG, grown,
+    // 按属性配一队怪兽（反派、大师、冠军用）：同一个 seed 每次都一样，等级够了就是进化形态
+    teamOf(types, n, lv, seed) {
+      let pool = D.list.filter(s => !s.legend && !s.starter && s.stage === 1 && s.no <= 251 && s.types.some(t => types.includes(t)));
+      if (!pool.length) pool = REGION1.filter(s => s.stage === 1);
+      pool = pool.slice().sort((a, b) => hash(seed, a.id) - hash(seed, b.id));
+      return Array.from({ length: n }, (_, k) => { const l = lv + k; return newMon(grown(pool[k % pool.length].id, l + 2), l); });
+    },
     species: id => SPECIES[id],
     newMon,
     // 开场剧情里从博士的包里选的伙伴

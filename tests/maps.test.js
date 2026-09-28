@@ -14,7 +14,7 @@ const bad = (id, msg) => { fails++; console.log('✗', id, msg); };
 
 // skills：有了全部野外技能（冲浪、居合斩、碎岩、推石头）以后能走到哪
 function reach(m, from, blockGuard, skills) {
-  const npc = new Set(m.npcs.filter(n => blockGuard || n.role !== 'guard').map(n => n.x + ',' + n.y));
+  const npc = new Set(m.npcs.filter(n => blockGuard || (n.role !== 'guard' && n.role !== 'master')).map(n => n.x + ',' + n.y));  // 守卫和大师打赢就让开
   const rocks = new Set((m.boulders || []).map(b => b.x + ',' + b.y));
   const t = (x, y) => (m.grid[y] && m.grid[y][x]) || '#';
   const ok = (x, y) => ((MAPS.WALK.includes(t(x, y)) && (skills || !rocks.has(x + ',' + y))) || (skills && '~nb'.includes(t(x, y)))) && !npc.has(x + ',' + y);
@@ -55,7 +55,7 @@ for (const id of ids) {
     const p = how === 'start' ? m.start : MAPS.arrival(m, how);
     const c = m.grid[p.y] && m.grid[p.y][p.x];
     if (!MAPS.WALK.includes(c) || m.warps.some(w => w.x === p.x && w.y === p.y)) { bad(id, '到达点不能站 ' + how + ' @' + p.x + ',' + p.y + ' (' + c + ')'); continue; }
-    if (m.npcs.some(n => n.x === p.x && n.y === p.y && !(n.role === 'guard' && how === 'north'))) bad(id, '到达点上站着人 ' + how); // 从北边回来时已经有徽章，守卫不在
+    if (m.npcs.some(n => n.x === p.x && n.y === p.y && !((n.role === 'guard' || n.role === 'master') && how === 'north'))) bad(id, '到达点上站着人 ' + how); // 从北边回来时已经有徽章，守卫不在
     const R = reach(m, p, false);
     for (const w of m.warps) {
       const ch = m.grid[w.y][w.x], walk = MAPS.WALK.includes(ch);

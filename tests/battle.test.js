@@ -18,6 +18,8 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
     world: { v: 2, flags: {} },
   }, x))), extra || {});
   const W = ms => p.waitForTimeout(ms);
+  // 战斗面板会重画：点到已经被换掉的按钮就跳过，下一轮再找
+  const tryClick = async el => { try { await el.click({ timeout: 2000 }); } catch (e) { /* 按钮被换掉了 */ } };
   const panelHas = sel => p.$('#b-panel ' + sel);
   const msg = () => p.textContent('#b-msg');
   const until = async (fn, max = 60) => { for (let i = 0; i < max; i++) { if (await fn()) return true; await W(150); } return false; };
@@ -53,8 +55,8 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.click('[data-act=bRate][data-v="2"]');
   await until(async () => (await panelHas('[data-act=bMove]')) || (await panelHas('[data-act=bDef]')) || (await panelHas('.task')));
   for (let i = 0; i < 20 && !(await panelHas('[data-act=bMove]')); i++) {
-    const d = await panelHas('[data-act=bDef]'); if (d) { await d.click(); await W(300); continue; }
-    const r = await panelHas('[data-act=bRate][data-v="2"]'); if (r) { await r.click(); await W(300); continue; }
+    const d = await panelHas('[data-act=bDef]'); if (d) { await tryClick(d); await W(300); continue; }
+    const r = await panelHas('[data-act=bRate][data-v="2"]'); if (r) { await tryClick(r); await W(300); continue; }
     await W(300);
   }
   check(!!(await panelHas('[data-act=bMove]')), '叫醒以后可以出招');
@@ -88,9 +90,9 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.reload(); await W(400);
   await p.evaluate(() => MonsterGame.battle('wild', 0, { onEnd() {}, foes: [MonsterGame.newMon('twigling', 2)] }));
   for (let i = 0; i < 60 && !(await p.$('#b-panel [data-act=bEnd]')); i++) {
-    const mv = await panelHas('[data-act=bMove][data-i="0"]'); if (mv) { await mv.click(); await W(200); continue; }
-    const r = await panelHas('[data-act=bRate][data-v="2"]'); if (r) { await r.click(); await W(200); continue; }
-    const d = await panelHas('[data-act=bDef]:not(.right):not(.wrong):not(.dim)'); if (d) { await d.click(); await W(200); continue; }
+    const mv = await panelHas('[data-act=bMove][data-i="0"]'); if (mv) { await tryClick(mv); await W(200); continue; }
+    const r = await panelHas('[data-act=bRate][data-v="2"]'); if (r) { await tryClick(r); await W(200); continue; }
+    const d = await panelHas('[data-act=bDef]:not(.right):not(.wrong):not(.dim)'); if (d) { await tryClick(d); await W(200); continue; }
     await W(250);
   }
   check(await until(() => p.$('#sheet [data-act=mForget]')), '升到 Lv15 想学 Flame Wave：问要忘掉哪一招');
