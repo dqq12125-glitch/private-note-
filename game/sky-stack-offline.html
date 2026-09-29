@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+</head>
+<body>
+<title>云端叠塔</title>
+<style>
+/* Layout: full-screen canvas; HUD text drawn on the canvas. Deliberately one dusk-to-space look in both themes. */
+:root {
+  --bg: #1b1f3a;
+  --fg: #f4f1ff;
+  --font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "PingFang SC", sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); overflow: hidden;
+  overscroll-behavior: none; -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent; touch-action: none;
+}
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+</style>
+
+<canvas id="c" aria-label="叠塔游戏，点击屏幕放下方块"></canvas>
+
+<script>
+(() => {
+  const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+  const FONT = getComputedStyle(document.documentElement).getPropertyValue("--font");
+  const BH = 28, KEY = "skystack.best";
+  let W = 0, H = 0, base = 0;
+  let blocks, mover, debris, sparks, camY, state, combo, flash, best = 0, overAt = 0, shake = 0;
+  try { best = +localStorage.getItem(KEY) || 0; } catch (e) {}
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    base = Math.min(W * 0.62, 280);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  const hue = (i) => (200 + i * 9) % 360;
+  function reset() {
+    blocks = [{ x: (W - base) / 2, w: base, i: 0 }];
+    debris = []; sparks = []; camY = 0; combo = 0; flash = null;
+    newMover();
+    state = "ready";
+  }
+  function newMover() {
+    const top = blocks[blocks.length - 1], i = blocks.length;
+    const fromLeft = i % 2 === 0;
+    mover = { x: fromLeft ? -top.w : W, w: top.w, i, dir: fromLeft ? 1 : -1, speed: Math.min(170 + i * 7, 460) };
+  }
+  const yOf = (i) => H - 90 - (i + 1) * BH + camY; // screen y of block i's top edge
+
+  function drop() {
+    if (state === "ready") { state = "play"; return; }
+    if (state === "over") { if (performance.now() - overAt > 450) reset(); return; }
+    const p = blocks[blocks.length - 1], m = mover;
+    const left = Math.max(m.x, p.x), right = Math.min(m.x + m.w, p.x + p.w);
+    if (right - left <= 0) {
+      debris.push({ x: m.x, w: m.w, i: m.i, y: yOf(m.i), vy: 0, vx: m.dir * 60, rot: 0 });
+      state = "over"; overAt = performance.now(); shake = 10;
+      const score = blocks.length - 1;
+      if (score > best) { best = score; try { localStorage.setItem(KEY, best); } catch (e) {} }
+      return;
+    }
+    let nb;
+    if (Math.abs(m.x - p.x) < 5) {
+      combo++;
+      const grow = combo >= 3 ? Math.min(12, base - p.w) : 0;
+      nb = { x: p.x - grow / 2, w: p.w + grow, i: m.i };
+      flash = { text: combo >= 3 ? `完美 ×${combo}  变宽了` : combo > 1 ? `完美 ×${combo}` : "完美", t: 1 };
+      for (let k = 0; k < 18; k++) sparks.push({ x: nb.x + Math.random() * nb.w, y: yOf(m.i) + BH, vx: (Math.random() - 0.5) * 160, vy: -Math.random() * 180, t: 1, h: hue(m.i) });
+    } else {
+      combo = 0;
+      nb = { x: left, w: right - left, i: m.i };
+      const cutX = m.x < p.x ? m.x : right;
+      debris.push({ x: cutX, w: m.w - nb.w, i: m.i, y: yOf(m.i), vy: 0, vx: (m.x < p.x ? -1 : 1) * 40, rot: 0 });
+    }
+    blocks.push(nb);
+    newMover();
+  }
+
+  function block(x, y, w, i, alpha = 1) {
+    const h = hue(i);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = `hsl(${h} 75% 62%)`;
+    ctx.fillRect(x, y, w, BH);
+    ctx.fillStyle = `hsl(${h} 85% 75%)`;
+    ctx.fillRect(x, y, w, 5);
+    ctx.fillStyle = `hsl(${h} 60% 42%)`;
+    ctx.fillRect(x, y + BH - 4, w, 4);
+    ctx.globalAlpha = 1;
+  }
+
+  const stars = Array.from({ length: 90 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.4 + 0.3 }));
+  function sky(height) {
+    const k = Math.min(height / 60, 1); // 0 = dusk, 1 = deep space
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, `hsl(${250 - k * 20} ${55 - k * 25}% ${30 - k * 22}%)`);
+    g.addColorStop(1, `hsl(${20 + k * 230} ${70 - k * 40}% ${60 - k * 48}%)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#ffffff";
+    stars.forEach((s) => {
+      ctx.globalAlpha = Math.min(1, k * 1.4) * (0.5 + 0.5 * Math.sin(performance.now() / 700 + s.x * 40));
+      ctx.fillRect(s.x * W, ((s.y * H + camY * 0.2) % H), s.r, s.r);
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function text(str, x, y, size, weight = 800, alpha = 1) {
+    ctx.globalAlpha = alpha;
+    ctx.font = `${weight} ${size}px ${FONT}`;
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#f4f1ff";
+    ctx.fillText(str, x, y);
+    ctx.globalAlpha = 1;
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    const n = blocks.length;
+
+    if (state === "play") {
+      mover.x += mover.dir * mover.speed * dt;
+      if (mover.x + mover.w > W + 10 && mover.dir > 0) mover.dir = -1;
+      if (mover.x < -10 && mover.dir < 0) mover.dir = 1;
+    }
+    const target = Math.max(0, (n + 1) * BH - H * 0.5);
+    camY += (target - camY) * Math.min(1, dt * 6);
+    debris.forEach((d) => { d.vy += 1400 * dt; d.y += d.vy * dt; d.x += d.vx * dt; d.rot += d.vx * dt * 0.01; });
+    debris = debris.filter((d) => d.y < H + 200);
+    sparks.forEach((s) => { s.vy += 500 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.t -= dt * 1.6; });
+    sparks = sparks.filter((s) => s.t > 0);
+    if (flash) { flash.t -= dt * 1.2; if (flash.t <= 0) flash = null; }
+    shake *= 0.88;
+
+    ctx.save();
+    if (shake > 0.3) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    sky(n);
+
+    // ground
+    ctx.fillStyle = "rgba(20, 16, 40, 0.55)";
+    ctx.fillRect(0, H - 90 + camY, W, 90 + BH);
+
+    blocks.forEach((b) => { const y = yOf(b.i); if (y > -BH && y < H) block(b.x, y, b.w, b.i); });
+    if (state !== "over") block(mover.x, yOf(mover.i), mover.w, mover.i);
+    debris.forEach((d) => {
+      ctx.save();
+      ctx.translate(d.x + d.w / 2, d.y + BH / 2);
+      ctx.rotate(d.rot);
+      block(-d.w / 2, -BH / 2, d.w, d.i, 0.9);
+      ctx.restore();
+    });
+    sparks.forEach((s) => { ctx.globalAlpha = s.t; ctx.fillStyle = `hsl(${s.h} 90% 80%)`; ctx.fillRect(s.x, s.y, 3, 3); });
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    const top = Math.max(env("top"), 0);
+    text(String(n - 1), W / 2, top + 84, 64);
+    text(`最高 ${best}`, W / 2, top + 112, 15, 600, 0.7);
+    if (flash) text(flash.text, W / 2, top + 150, 22, 800, Math.min(1, flash.t * 2));
+
+    if (state === "ready") {
+      text("云端叠塔", W / 2, H * 0.36, 40);
+      text("点屏幕放下方块，对不齐的部分会被切掉", W / 2, H * 0.36 + 34, 15, 600, 0.85);
+      text("连续完美对齐 3 次，方块会重新变宽", W / 2, H * 0.36 + 58, 15, 600, 0.85);
+      text("点一下开始", W / 2, H * 0.36 + 100, 18, 800, 0.6 + 0.4 * Math.sin(now / 300));
+    } else if (state === "over") {
+      text("塌了！", W / 2, H * 0.36, 40);
+      text(`盖了 ${n - 1} 层${n - 1 >= best && n > 1 ? "，新纪录" : ""}`, W / 2, H * 0.36 + 34, 18, 700, 0.9);
+      text("点一下再来", W / 2, H * 0.36 + 76, 18, 800, 0.6 + 0.4 * Math.sin(now / 300));
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // Safe-area inset for the HUD, read once from a probe element.
+  const probe = document.createElement("div");
+  probe.style.cssText = "position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden";
+  document.body.appendChild(probe);
+  const env = () => probe.offsetHeight;
+
+  cv.addEventListener("pointerdown", (e) => { e.preventDefault(); drop(); });
+  document.addEventListener("keydown", (e) => { if (e.code === "Space" || e.key === "Enter") { e.preventDefault(); drop(); } });
+
+  reset();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
