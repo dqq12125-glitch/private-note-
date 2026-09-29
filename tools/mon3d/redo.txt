@@ -1,0 +1,19 @@
+# 下次 Gemini 额度恢复后：先画 183–222，再重画下面这些家族（新开对话，必要时在 gembatch.py 的 OVERRIDE 里改描述）
+7    peeplet/songwing/stormhawk  尾巴分离；像波波/比比鸟 → 换成别的鸟形（比如信鸽邮差、带邮包）
+25   owlet/wiseowl               画成了 3 只（应为 2）
+6    buzzbee/thunderwing         闪电尾像皮卡丘 → 换尾巴造型；两只都像蜂狗，差异不够
+127  strawhat                    对话后段画风漂移，四只都像同一只熊
+128  hotpot                      同上
+129  mudcake                     应是泥巴派团子
+130  skyballoon                  应是热气球
+145  cinderchick/sunrooster/solarknight  终形像某火鸡格斗进化线
+80-82 frostwing/stormwing/blazewing       三神鸟，检查是否太像急冻鸟/闪电鸟/火焰鸟
+5    nibbler/bigtooth            像小拉达/拉达
+47   shadowlet/nightcloak/midnight  midnight 像耿鬼且太扁 → 换成披斗篷的夜猫头鹰/灯笼幽灵之类，别用紫色尖刺+咧嘴
+112  boltkite/thunderkite           闪电形尾巴像皮卡丘 → 尾巴改成风筝尾飘带
+164  cometlet/cometdrake/cometdragon  蓝蛇龙像哈克龙 → 改成带尾焰的小陨石龙（四足、岩石+火焰）
+193  twirlflame/firedancer          红色小火蜥蜴＋头顶火苗像小火龙/喷火龙 → 改成跳舞的火焰小狐/陀螺造型，别用红蜥蜴
+98   bulbling/lamppost              bulbling 黄身体＋闪电尾像皮卡丘 → 改成灯泡头的小萤火虫/台灯造型
+104  cakelet/creamcake/cakecastle   画成灰熊和岩石魔像，没有蛋糕元素 → 强调奶油蛋糕身体、草莓、蜡烛
+76   ghostship                      画成幽灵加云，没有船 → 幽灵帆船造型
+117  jumprope/ropechamp             画成猴子，没有跳绳 → 手持/尾巴是跳绳

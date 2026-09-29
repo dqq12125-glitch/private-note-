@@ -170,6 +170,19 @@
   // 从哪一只进化来的：一直往回找到第一阶段
   const baseOf = id => { let x = SPECIES[id]; while (x.from && SPECIES[x.from]) x = SPECIES[x.from]; return x.id; };
   let B3 = null;   // 3D 战斗画面（battle3d.js）
+  // 会动的 3D 模型（assets/mon3d）：出场前先下载，最多等 2.5 秒，没下完就先用程序拼的模型
+  const prep = sps => window.Mon3D && Mon3D.preload ? Promise.race([Mon3D.preload(sps).catch(() => {}), sleep(2500)]) : Promise.resolve();
+  const teamSps = () => M().team.map(byUid).filter(m => m && !m.egg).map(spOf);
+  function preloadTeam() { if (window.Mon3D && Mon3D.preload) Mon3D.preload(teamSps()); }
+  // 3D 战斗里换上刚下载好的模型（出场前调用，这时候怪兽还藏着）
+  function upgrade3D() {
+    if (!B3 || !B || !window.Mon3D || !Mon3D.isLoaded) return;
+    B.rig3 = B.rig3 || {};
+    [['me', me()], ['foe', foe()]].forEach(([side, mon]) => {
+      const sp = spOf(mon);
+      if (!B.rig3[side] && Mon3D.hasModel(sp) && Mon3D.isLoaded(sp)) { B3.setMon(side, sp, true); B.rig3[side] = true; }
+    });
+  }
   // 战斗背景：天空、云、远山、草地（雪地小镇换成白色）
   function arenaBG(z) {
     const w = E.W[z], snow = z === 11;
@@ -349,12 +362,13 @@
     team.forEach(u => { B.hp[u] = curHp(byUid(u)); });
     B.foeHp = stats(foes[0]).hp;
     B.enter = 'both';
+    B.pre = prep(foes.concat(team.map(byUid)).map(spOf));
     foes.forEach(f => { if (M().dex[f.sp] !== 'caught') M().dex[f.sp] = 'seen'; });
     E.save();
     E.show('battle');
     // 3D 战斗画面：设置里选了 2D 流畅或者手机不支持就用原来的 2D 画面
     if (window.Battle3D && (E.S.settings.gfx || 'auto') !== '2d' && E.S.settings.gfxAuto !== '2d') {
-      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena), shadows: (E.S.settings.gfxAuto || E.S.settings.gfx) !== 'low', dpr: E.S.settings.gfx === 'high' ? 2 : 1.5 }); } catch (e) { B3 = null; }
+      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena, opts.rules), shadows: (E.S.settings.gfxAuto || E.S.settings.gfx) !== 'low', dpr: E.S.settings.gfx === 'high' ? 2 : 1.5 }); } catch (e) { B3 = null; }
     }
     renderBattle();
     intro(B);
@@ -369,46 +383,67 @@
     E.stopListening();
     B = null;
   }
+  // 血量比例 → 颜色：绿 → 黄 → 红，平滑过渡（不是三档跳变）
+  function hpColor(p) {
+    const G = [148, 62, 44], Y = [45, 96, 52], R = [4, 84, 56];
+    const mix = (a, b, k) => a.map((v, i) => v + (b[i] - v) * Math.max(0, Math.min(1, k)));
+    const c = p > .5 ? mix(Y, G, (p - .5) / .15) : p > .25 ? Y : mix(R, Y, (p - .1) / .15);
+    return 'hsl(' + c[0].toFixed(0) + ' ' + c[1].toFixed(0) + '% ' + c[2].toFixed(0) + '%)';
+  }
+  // 名牌（仿新作的半透明小牌子）：对手在场地左上、自己在右下，都贴着边，不挡怪兽
+  // 名字一行（✨异色 + 名字 + 等级）、血条（掉血时后面留一截浅色慢慢缩）、属性 / 异常状态 / 能力升降一行
+  function plate(side, mon, name, extra, bottom) {
+    const mine = side === 'me', max = stats(mon).hp, p = Math.max(0, mine ? B.hp[mon.uid] : B.foeHp) / max, w = (p * 100) + '%';
+    const id = mine ? 'my' : 'foe', t0 = SPECIES[mon.sp].types[0];
+    return '<div class="hpcard ' + side + (B.enter === 'both' || B.enter === side ? ' enter' : '') + '" style="--tc:' + TYPES[t0].color + '">' +
+      '<div class="hp-top"><b>' + (mon.shiny ? '<span class="shiny" title="异色">✨</span>' : '') + name + '</b><span class="hp-lv"><small>Lv</small>' + mon.lv + '</span></div>' +
+      '<div class="hprow"><span class="hplab">HP</span><div class="hpbar"><span class="hp-ghost" id="b-' + id + 'ghost" style="width:' + w + '"></span><i id="b-' + id + 'hp" style="width:' + w + ';background-color:' + hpColor(p) + '"></i></div></div>' +
+      '<div class="hp-foot">' + (extra || '') + '<div class="chips">' + chips(mon.sp) + '<span class="st-chip" id="b-' + id + 'st"></span><span class="stg" id="b-' + id + 'stg"></span></div></div>' +
+      (bottom || '') + '</div>';
+  }
   function renderBattle() {
     const w = E.W[B.z], f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
     $('battle').innerHTML =
       '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.kind === 'wild' ? '野外对战' : B.kind === 'trainer' ? '训练师 ' + B.trainer.name : '道馆馆主 ' + w.boss.name) + '</b><small>第 ' + (B.z + 1) + ' 区 · ' + w.name + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
       '<div class="arena" id="b-arena" style="--wc:' + w.color + '">' + arenaBG(B.z) +
-      '<div class="hpcard foe"><div class="hp-top"><b>' + (f.shiny ? '✨' : '') + sf.en + '</b><span class="hp-lv">Lv' + f.lv + '</span></div><div class="chips">' + chips(f.sp) + '<span class="st-chip" id="b-foest"></span></div><div class="hprow"><span class="hplab">HP</span><div class="hpbar"><i id="b-foehp"></i></div></div>' +
-      (B.kind !== 'wild' ? '<div class="balls">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '">●</span>').join('') + '</div>' : '') + '<div class="stg" id="b-foestg"></div></div>' +
+      plate('foe', f, sf.en, (B.kind !== 'wild' ? '<div class="balls" title="对手剩下的怪兽">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '"></span>').join('') + '</div>' : '')) +
       '<div class="pad foe"></div><div class="mon foe' + (B.enter === 'both' || B.enter === 'foe' ? ' enter' : '') + '" id="b-foe">' + svgMon(f) + '</div>' +
       '<div class="pad me"></div><div class="mon me' + (B.enter === 'both' || B.enter === 'me' ? ' enter' : '') + '" id="b-me">' + svgMon(m) + '</div>' +
-      '<div class="hpcard me"><div class="hp-top"><b>' + (m.shiny ? '✨' : '') + nm(m) + '</b><span class="hp-lv">Lv' + m.lv + '</span></div><div class="chips">' + chips(m.sp) + '<span class="st-chip" id="b-myst"></span></div><div class="hprow"><span class="hplab">HP</span><div class="hpbar"><i id="b-myhp"></i></div></div><small id="b-myhpn"></small>' +
-      '<div class="expbar" title="经验"><i id="b-exp" style="width:' + (m.xp / xpNeed(m.lv) * 100) + '%"></i></div><div class="stg" id="b-mystg"></div></div>' +
+      plate('me', m, nm(m), '<small class="hpnum" id="b-myhpn"></small>', '<div class="expbar" title="经验"><i id="b-exp" style="width:' + (m.xp / xpNeed(m.lv) * 100) + '%"></i></div>') +
       (B.kind !== 'wild' ? '<div class="trainer">' + (B.kind === 'trainer' && B.trainer.img ? '<img src="' + B.trainer.img + '" alt="">' : '<span>' + w.boss.emoji + '</span>') + '</div>' : '') +
       '</div><div class="b-msg" id="b-msg"></div><div class="b-panel" id="b-panel"></div>';
     if (B3) {
       const ar = $('b-arena'); ar.classList.add('is3d'); B3.mount(ar);
-      if (B.enter === 'both' || B.enter === 'foe') B3.setMon('foe', spOf(f), true);
-      if (B.enter === 'both' || B.enter === 'me') B3.setMon('me', spOf(m), true);
+      B.rig3 = B.rig3 || {};
+      if (B.enter === 'both' || B.enter === 'foe') { B3.setMon('foe', spOf(f), true); B.rig3.foe = !!(Mon3D.isLoaded && Mon3D.isLoaded(spOf(f))); }
+      if (B.enter === 'both' || B.enter === 'me') { B3.setMon('me', spOf(m), true); B.rig3.me = !!(Mon3D.isLoaded && Mon3D.isLoaded(spOf(m))); }
     }
     B.enter = '';
     updHp();
   }
   // 战斗场地的样子：洞穴暗、雪地白，其余是草地
-  // 各岛的战斗场地：沙滩、糖果色、农田、雪地、雾里的古迹……
+  // 各岛的战斗场地：沙滩、糖果色、农田、雪地、雾里的古迹……（ground 取自远景画里空地的颜色，bdFloor 是画里空地从多高开始）
   const ARENAS = {
-    hello: { sky1: '#7cc8f0', sky2: '#e6f6ff', ground: '#f3e3b0', hill: '#9ad66e', pad: '#fff4d6', rim: '#d9643a' },
-    crayon: { sky1: '#a7d8ff', sky2: '#fff0f7', ground: '#b8e68c', hill: '#f7b9c9', pad: '#fff7b3', rim: '#f06292' },
-    farm: { sky1: '#8fd0f0', sky2: '#fff6de', ground: '#c9dc7a', hill: '#e0a24a', pad: '#f3e1b0', rim: '#a0703c' },
-    school: { sky1: '#86c5f0', sky2: '#eef8ff', ground: '#96d38a', hill: '#b5543c', pad: '#e8e2d4', rim: '#6d4c41' },
-    lab: { sky1: '#8fd3f4', sky2: '#f2fbff', ground: '#a6e3c4', hill: '#9fb4c0', pad: '#ffffff', rim: '#5c6bc0' },
-    circus: { sky1: '#ffb74d', sky2: '#fff3d6', ground: '#f3d38a', hill: '#e53935', pad: '#fff6e0', rim: '#ffca28' },
-    clock: { sky1: '#9fb7c9', sky2: '#f0ebe0', ground: '#8e9a74', hill: '#6b4f45', pad: '#cfc6b6', rim: '#4f9e8a' },
-    party: { sky1: '#ffc1d9', sky2: '#fff8ec', ground: '#c7ee9a', hill: '#ff8fb1', pad: '#fff4e0', rim: '#ff80ab' },
-    jungle: { sky1: '#79c7a0', sky2: '#e8f7e0', ground: '#5fae48', hill: '#1f6f2f', pad: '#c9a36a', rim: '#6d4121' },
-    city: { sky1: '#9fb7d0', sky2: '#eef3f8', ground: '#a7afb8', hill: '#78909c', pad: '#dfe3e6', rim: '#ffca28' },
-    sports: { sky1: '#6fc3ff', sky2: '#eaf8ff', ground: '#7fd35a', hill: '#ff7043', pad: '#ffffff', rim: '#1e88e5' },
-    snow: { sky1: '#a9c9e0', sky2: '#eef6fb', ground: '#eef4f8', hill: '#cfe3ee', pad: '#ffffff', rim: '#9fc3d6' },
-    ruins: { sky1: '#9aa6a8', sky2: '#e4e6e0', ground: '#9cb39a', hill: '#8f8a80', pad: '#cfc6b3', rim: '#6d8b5a' },
+    hello: { sky1: '#7cc8f0', sky2: '#e6f6ff', ground: '#ebc684', hill: '#9ad66e', pad: '#fff4d6', rim: '#d9643a', backdrop: 'assets/arena/hello.jpg', bdFloor: .63 },
+    crayon: { sky1: '#a7d8ff', sky2: '#fff0f7', ground: '#f3d493', hill: '#f7b9c9', pad: '#fff7b3', rim: '#f06292', backdrop: 'assets/arena/crayon.jpg', bdFloor: .66 },
+    farm: { sky1: '#8fd0f0', sky2: '#fff6de', ground: '#f4d28d', hill: '#e0a24a', pad: '#f3e1b0', rim: '#a0703c', backdrop: 'assets/arena/farm.jpg', bdFloor: .65 },
+    school: { sky1: '#86c5f0', sky2: '#eef8ff', ground: '#f4d089', hill: '#b5543c', pad: '#e8e2d4', rim: '#6d4c41', backdrop: 'assets/arena/school.jpg', bdFloor: .66 },
+    lab: { sky1: '#8fd3f4', sky2: '#f2fbff', ground: '#f5cf83', hill: '#9fb4c0', pad: '#ffffff', rim: '#5c6bc0', backdrop: 'assets/arena/lab.jpg', bdFloor: .65 },
+    circus: { sky1: '#ffb74d', sky2: '#fff3d6', ground: '#f6ce7e', hill: '#e53935', pad: '#fff6e0', rim: '#e53935', backdrop: 'assets/arena/circus.jpg', bdFloor: .66 },
+    clock: { sky1: '#9fb7c9', sky2: '#f0ebe0', ground: '#c19f78', hill: '#6b4f45', pad: '#cfc6b6', rim: '#4f9e8a', backdrop: 'assets/arena/clock.jpg', bdFloor: .67 },
+    party: { sky1: '#ffc1d9', sky2: '#fff8ec', ground: '#f1cd93', hill: '#ff8fb1', pad: '#fff4e0', rim: '#ff80ab', backdrop: 'assets/arena/party.jpg', bdFloor: .66 },
+    jungle: { sky1: '#79c7a0', sky2: '#e8f7e0', ground: '#f2cb8d', hill: '#1f6f2f', pad: '#fbeccb', rim: '#6d4121', backdrop: 'assets/arena/jungle.jpg', bdFloor: .70 },
+    city: { sky1: '#9fb7d0', sky2: '#eef3f8', ground: '#9fa7b0', hill: '#78909c', pad: '#dfe3e6', rim: '#ffca28', backdrop: 'assets/arena/city.jpg', bdFloor: .71 },
+    sports: { sky1: '#6fc3ff', sky2: '#eaf8ff', ground: '#d1ae7b', hill: '#ff7043', pad: '#ffffff', rim: '#1e88e5', backdrop: 'assets/arena/sports.jpg', bdFloor: .70 },
+    snow: { sky1: '#a9c9e0', sky2: '#eef6fb', ground: '#dbe5fa', hill: '#cfe3ee', pad: '#ffffff', rim: '#9fc3d6', backdrop: 'assets/arena/snow.jpg', bdFloor: .68 },
+    ruins: { sky1: '#9aa6a8', sky2: '#e4e6e0', ground: '#af9a72', hill: '#8f8a80', pad: '#cfc6b3', rim: '#6d8b5a', backdrop: 'assets/arena/ruins.jpg', bdFloor: .71 },
+    // 英语冠军赛（四大师和冠军的对战都带 rules）：体育场
+    league: { sky1: '#3f6fd8', sky2: '#dfe9ff', ground: '#d2b494', hill: '#5c6bc0', pad: '#ffffff', rim: '#ffca28', backdrop: 'assets/arena/league.jpg', bdFloor: .74 },
   };
-  function arenaTheme(z, hab, arena) {
-    if (hab === 'cave') return { sky1: '#231b24', sky2: '#4a3a36', ground: '#6a5646', hill: '#3a2e28', pad: '#8a7560', rim: '#c9a46a' };
+  // 场地的 backdrop 是远景画（assets/arena/*.jpg，约 21:9～3:1，下面三成多是空地），没有这张图就用程序画的小山
+  function arenaTheme(z, hab, arena, rules) {
+    if (rules) return ARENAS.league;
+    if (hab === 'cave') return { sky1: '#231b24', sky2: '#4a3a36', ground: '#877569', hill: '#3a2e28', pad: '#c2b09a', rim: '#7fb8ff', backdrop: 'assets/arena/cave.jpg', bdFloor: .73 };
     if (hab === 'water' && arena === 'under') return { sky1: '#0f4c63', sky2: '#2f8fa8', ground: '#d8c79a', hill: '#2c7a6a', pad: '#e0cfa0', rim: '#4fc3f7' };
     const key = ARENAS[arena] ? arena : window.EchoMaps ? EchoMaps.themeOf(z) : null;
     if (ARENAS[key]) return ARENAS[key];
@@ -419,8 +454,12 @@
   function updHp() {
     const f = foe(), m = me();
     const fmax = stats(f).hp, mmax = stats(m).hp, fh = Math.max(0, B.foeHp), mh = Math.max(0, B.hp[m.uid]);
-    const bar = (id, v, max) => { const e = $(id); if (!e) return; const p = v / max; e.style.width = (p * 100) + '%'; e.className = p > .5 ? '' : p > .2 ? 'mid' : 'low'; };
-    bar('b-foehp', fh, fmax); bar('b-myhp', mh, mmax);
+    const bar = (id, v, max) => {
+      const e = $(id + 'hp'), g = $(id + 'ghost'); if (!e) return;
+      const p = v / max; e.style.width = (p * 100) + '%'; e.style.backgroundColor = hpColor(p); e.className = p > .5 ? '' : p > .2 ? 'mid' : 'low';
+      if (g) g.style.width = (p * 100) + '%';   // 浅色的那截晚一点才缩（CSS 里有延迟）
+    };
+    bar('b-foe', fh, fmax); bar('b-my', mh, mmax);
     const n = $('b-myhpn'); if (n) n.textContent = Math.round(mh) + ' / ' + mmax;
     const en = $('b-energy'); if (en) en.innerHTML = [0, 1, 2].map(k => '<span class="' + (k < B.energy ? 'on' : 'off') + '">' + TICON.spark + '</span>').join('');
     [['me', 'b-myst', 'b-mystg'], ['foe', 'b-foest', 'b-foestg']].forEach(([side, sid, gid]) => {
@@ -433,6 +472,7 @@
   const panel = h => { const e = $('b-panel'); if (e) e.innerHTML = h; };
 
   async function intro(b) {
+    if (B3 && b.pre) { await b.pre; if (!live(b)) return; upgrade3D(); }
     const f = foe(), sf = SPECIES[f.sp], w = E.W[b.z];
     $('b-foe').classList.add('appear');
     if (b.kind === 'wild') {
@@ -518,7 +558,7 @@
       const old = SPECIES[me().sp];
       msg('回来吧，<b>' + old.en + '</b>！');
       E.say(old.en + ', come back!');
-      await sleep(700);
+      await Promise.all([sleep(700), prep([spOf(byUid(B.team[k]))])]);
       B.ti = k; B.used.add(B.team[k]); B.stg.me = newStages(); B.conf.me = 0;
       B.enter = 'me';
       renderBattle();
@@ -827,7 +867,7 @@
         pop(toId, '-' + dmg, 'dmg');
         labels.forEach((l, k) => setTimeout(() => pop(toId, l, 'lbl'), 250 + k * 250));
       } else pop(toId, 'MISS', 'lbl');
-      await sleep(600);
+      await sleep(dmg > 0 ? (labels.includes('暴击！') ? 1300 : 1100) : 600);   // 挨打的画面多留一会儿
       return;
     }
     const f = $(fromId);
@@ -1089,6 +1129,8 @@
       B.foeHp = stats(foe()).hp; B.stg.foe = newStages(); B.conf.foe = 0; B.fen = 0;
       // 冠军换怪兽也换规则
       if (B.rules && B.rules.rotate) { if (rule('talk')) B.energy = 3; E.toast(RULE_TEXT[ruleNow()], 'gold'); }
+      await prep([spOf(foe())]);
+      if (!live(b)) return;
       B.enter = 'foe';
       renderBattle();
       const n = SPECIES[foe().sp];
@@ -1115,6 +1157,8 @@
     if (!live(b)) return;
     const next = B.team.findIndex((u, k) => k !== B.ti && B.hp[u] > 0);
     if (next >= 0) {
+      await prep([spOf(byUid(B.team[next]))]);
+      if (!live(b)) return;
       B.ti = next; B.used.add(B.team[next]); B.stg.me = newStages(); B.conf.me = 0;
       B.enter = 'me';
       renderBattle();
@@ -1253,6 +1297,7 @@
   }
   function evolveTo(mon, toId) {
     const from = SPECIES[mon.sp], to = SPECIES[toId];
+    if (window.Mon3D && Mon3D.preload) Mon3D.preload([toId]);
     E.openModal('<h2>咦？' + from.en + ' 的样子在变化……</h2><div class="evo-stage"><div class="evo-old">' + svg(mon.sp) + '</div><div class="evo-new">' + svg(toId) + '</div></div>' +
       '<p id="evo-t">' + from.zh + ' 正在进化！</p><button class="btn sun wide" data-act="mEvoOk" id="evo-ok" hidden>太棒了！</button>', { locked: true });
     E.say('What? ' + from.en + ' is evolving!');
@@ -1696,6 +1741,8 @@
     migrate() {
       const m = M();
       (m.box || []).forEach(ensureMoves);
+      // 箱子里异色怪兽的 2D 图标先转好色（菜单、图鉴、队伍打开时就是异色）
+      if (window.Mon3D && Mon3D.prepIcons) Mon3D.prepIcons((m.box || []).filter(x => x.shiny && !x.egg && SPECIES[x.sp]).map(spOf));
       if (m.v === 2) return;
       m.v = 2;
       m.bag = m.bag || {};
@@ -1730,6 +1777,7 @@
     healAll,
     anyAlive,
     leadSpecies: () => { const L = lead(); return L ? spOf(L) : null; },
+    preloadTeam,
     lead: () => lead(),
     nm, spOf, hearts, befriend, talkSheet, nickSheet, daycareSheet, stepHook, hatch, giveEgg, makeEgg,
     habitats: id => habitatIndex()[id] || [],

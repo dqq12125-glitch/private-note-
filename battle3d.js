@@ -23,8 +23,9 @@
     renderer.shadowMap.enabled = opts.shadows !== false;
     renderer.shadowMap.type = T3.PCFShadowMap;
     const scene = new T3.Scene();
-    const cam = new T3.PerspectiveCamera(38, 1, .1, 80);
-    const CAM = { pos: V(-2.1, 2.1, 5.6), look: V(.45, .6, -.7) };
+    const FOV = 38;
+    const cam = new T3.PerspectiveCamera(FOV, 1, .1, 200);
+    const CAM = { pos: V(-2.1, 1.85, 5.6), look: V(.45, .72, -.7) };   // 默认机位：低一点、平一点，远景画露得多
     const hemi = new T3.HemisphereLight(0xeaf6ff, 0x9fcf7a, 1.5);
     const sun = new T3.DirectionalLight(0xfff1d8, 2.2);
     sun.position.set(-3, 7, 4); sun.castShadow = renderer.shadowMap.enabled; sun.shadow.mapSize.set(1024, 1024);
@@ -34,26 +35,131 @@
     // ---------- 场地 ----------
     const env = new T3.Group(); scene.add(env);
     const POS = { me: V(-1.15, 0, 1.25), foe: V(1.45, 0, -1.7) };
+    const ARENA_C = V((POS.me.x + POS.foe.x) / 2, 0, (POS.me.z + POS.foe.z) / 2);
+    // 远景画（theme.backdrop）：像舞台布景一样画在最底层（不参与深度），贴在一圈很远的圆柱内壁上。
+    // 竖直方向按默认机位摆：画里的地平线落在画面上方 43% 处、地标顶（画高 15% 处）刚好到画面顶；
+    // 横向一张画占 90°，左右镜像接成一整圈（镜头转到哪儿都有画）。画的下半截是平地，往下淡出，露出同色的 3D 地面
+    const BD = { R: 60, FH: .43, FT: .03, LM: .15, FLOOR: .64, SEG: 48 };   // 半径、地平线/地标顶在画面的位置、画里地标顶和空地起点的高度比例
+    const bdFail = {};   // 载不到的图记住，同一张不再反复请求
+    let envTok = 0, bdCur = null;
+    const assetUrl = u => /^(https?:|data:|blob:|\/|\.\.?\/)/.test(u) ? u : (window.ECHO_BASE || '') + u;
+    function loadImg(url, ok) {
+      // file:// 打开时浏览器不让把本地图片当贴图用（跨域），就用程序画的背景
+      if (!url || bdFail[url] || (location.protocol === 'file:' && !/^(data:|blob:)/.test(url))) return;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => ok(img);
+      img.onerror = () => { bdFail[url] = 1; };
+      img.src = url;
+    }
+    const imgTex = img => { const tx = new T3.Texture(img); tx.colorSpace = T3.SRGBColorSpace; tx.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 1); tx.needsUpdate = true; return tx; };
+    // 取画里一块区域的平均颜色（u0..u1、v0..v1 是 0–1 的比例，v 从上往下）
+    function avgColor(img, u0, u1, v0, v1) {
+      try {
+        const c = document.createElement('canvas'); c.width = 64; c.height = 64;
+        const g = c.getContext('2d'); g.drawImage(img, 0, 0, 64, 64);
+        const d = g.getImageData(Math.floor(u0 * 64), Math.floor(v0 * 64), Math.max(1, Math.round((u1 - u0) * 64)), Math.max(1, Math.round((v1 - v0) * 64))).data;
+        let r = 0, gg = 0, b = 0; for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; }
+        const n = d.length / 4; return new T3.Color().setRGB(r / n / 255, gg / n / 255, b / n / 255, T3.SRGBColorSpace);
+      } catch (e) { return null; }
+    }
+    // 按默认机位算圆柱的高低和大小（CAM 变了要重算）
+    function backdropMesh(tx, hz, lm, fv) {
+      const dir = CAM.look.clone().sub(CAM.pos).normalize(), pitch = Math.asin(dir.y);
+      const hd = V(dir.x, 0, dir.z).normalize(), a0 = Math.atan2(hd.x, hd.z);
+      // 从默认机位水平往前，到圆柱的距离
+      const o = CAM.pos.clone().sub(ARENA_C).setY(0), bq = o.dot(hd), D = -bq + Math.sqrt(bq * bq - o.lengthSq() + BD.R * BD.R);
+      const tf = Math.tan(FOV / 2 * Math.PI / 180), ang = f => pitch + Math.atan((1 - 2 * f) * tf);
+      const yH = CAM.pos.y + D * Math.tan(ang(BD.FH)), yT = CAM.pos.y + D * Math.tan(ang(BD.FT));
+      const H = (yT - yH) / (hz - lm), top = yT + lm * H;   // 画的顶边在世界里的高度；v 往下每 1 就低 H
+      const A = Math.PI / 2;   // 一张画占 90°（横向会按这个稍微拉伸/压缩一点），4 张接成一圈
+      const f0 = fv + .03, f1 = Math.min(.99, fv + .21), vs = [0, .06, f0, f0 + (f1 - f0) * .33, f0 + (f1 - f0) * .67, f1];
+      const alpha = v => v <= .06 ? v / .06 : v <= f0 ? 1 : v >= f1 ? 0 : (k => 1 - k * k * (3 - 2 * k))((v - f0) / (f1 - f0));
+      // u 从 -1.5 到 2.5：[0,1] 是原图，两边镜像；首尾都落在原图正中那一列，接缝看不出来
+      const fold = u => u < -1 ? u + 2 : u < 0 ? -u : u <= 1 ? u : u <= 2 ? 2 - u : u - 2;
+      const NA = BD.SEG * 4, pos = [], uv = [], col = [], idx = [];
+      for (let j = 0; j < vs.length; j++) {
+        const v = vs[j], y = top - v * H, al = alpha(v);
+        for (let i = 0; i <= NA; i++) {
+          const u = -1.5 + i / BD.SEG, an = a0 + (u - .5) * A;   // 角度变大是往左转，所以贴图横向反过来
+          pos.push(ARENA_C.x + Math.sin(an) * BD.R, y, ARENA_C.z + Math.cos(an) * BD.R);
+          uv.push(1 - fold(u), 1 - v);
+          col.push(1, 1, 1, al);
+        }
+      }
+      for (let j = 0; j < vs.length - 1; j++) for (let i = 0; i < NA; i++) {
+        const p = j * (NA + 1) + i, q = p + NA + 1;
+        idx.push(p, q, p + 1, p + 1, q, q + 1);
+      }
+      const geo = new T3.BufferGeometry();
+      geo.setAttribute('position', new T3.Float32BufferAttribute(pos, 3));
+      geo.setAttribute('uv', new T3.Float32BufferAttribute(uv, 2));
+      geo.setAttribute('color', new T3.Float32BufferAttribute(col, 4));
+      geo.setIndex(idx);
+      // 放在不透明队列里、紧跟地面画：不测深度；混合用 5 = CustomBlending（默认参数就是 SrcAlpha / OneMinusSrcAlpha），
+      // 这样 3D 地面在它下面、台子和怪兽在它上面
+      const mat = new T3.MeshBasicMaterial({ map: tx, vertexColors: true, depthTest: false, depthWrite: false, fog: false, side: T3.DoubleSide });
+      mat.blending = 5;
+      const mesh = new T3.Mesh(geo, mat);
+      mesh.renderOrder = -1; mesh.frustumCulled = false; mesh.userData.backdrop = true;
+      return mesh;
+    }
+    function placeBackdrop() {
+      if (!bdCur) return;
+      if (bdCur.mesh) { env.remove(bdCur.mesh); bdCur.mesh.geometry.dispose(); bdCur.mesh.material.dispose(); }
+      bdCur.mesh = backdropMesh(bdCur.tx, bdCur.hz, bdCur.lm, bdCur.fv);
+      env.add(bdCur.mesh);
+    }
+    // 朝上的 3D 地面被半球光 + 太阳照着，颜色会偏一点（实测线性空间里约 ×0.96 / ×0.95 / ×0.87），反过来除掉，和画里的平地一个颜色
+    const GROUND_L = [.964, .947, .865];
     function setEnv(theme) {
-      while (env.children.length) { const o = env.children.pop(); o.traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material && q.material.map) q.material.map.dispose(); }); }
+      const tok = ++envTok;
+      if (bdCur) { bdCur.tx.dispose(); bdCur = null; }
+      while (env.children.length) { const o = env.children.pop(); o.traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material) { if (q.material.map) q.material.map.dispose(); q.material.dispose(); } }); }
       const t = Object.assign({ sky1: '#7fc8f8', sky2: '#e8f7ff', ground: '#8fd16a', hill: '#6fbf5a', pad: '#c8e6a0', rim: '#7aa85a' }, theme || {});
-      const sky = document.createElement('canvas'); sky.width = 4; sky.height = 256;
-      const g = sky.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, t.sky1); gr.addColorStop(.7, t.sky2); gr.addColorStop(1, t.sky2);
-      g.fillStyle = gr; g.fillRect(0, 0, 4, 256);
-      const st = new T3.CanvasTexture(sky); st.colorSpace = T3.SRGBColorSpace; scene.background = st;
+      const skyTex = (c1, c2) => {
+        const sky = document.createElement('canvas'); sky.width = 4; sky.height = 256;
+        const g = sky.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, c1); gr.addColorStop(.7, c2); gr.addColorStop(1, c2);
+        g.fillStyle = gr; g.fillRect(0, 0, 4, 256);
+        if (scene.background && scene.background.dispose) scene.background.dispose();
+        const st = new T3.CanvasTexture(sky); st.colorSpace = T3.SRGBColorSpace; scene.background = st;
+      };
+      skyTex(t.sky1, t.sky2);
       scene.fog = new T3.Fog(t.sky2, 14, 34);
-      const ground = new T3.Mesh(new T3.PlaneGeometry(60, 60).rotateX(-Math.PI / 2), new T3.MeshLambertMaterial({ color: t.ground }));
-      ground.receiveShadow = true; env.add(ground);
-      // 远处的小山和云
+      const gMat = new T3.MeshLambertMaterial({ color: t.ground });
+      const ground = new T3.Mesh(new T3.PlaneGeometry(160, 160).rotateX(-Math.PI / 2), gMat);
+      ground.receiveShadow = true; ground.renderOrder = -2; env.add(ground);
+      // 地面贴图（可选，theme.groundTex）：一块能平铺的图
+      if (t.groundTex) loadImg(assetUrl(t.groundTex), img => {
+        if (tok !== envTok) return;
+        const tx = imgTex(img); tx.wrapS = tx.wrapT = T3.RepeatWrapping; tx.repeat.set(t.groundRepeat || 14, t.groundRepeat || 14);
+        gMat.map = tx; gMat.color.set('#ffffff'); gMat.needsUpdate = true;
+      });
+      // 远处的小山和云（有远景画时藏起来）
+      const proc = [];
       for (let i = 0; i < 7; i++) {
         const h = new T3.Mesh(new T3.SphereGeometry(3 + (i % 3), 16, 10), new T3.MeshLambertMaterial({ color: i % 2 ? t.hill : new T3.Color(t.hill).offsetHSL(0, 0, .06) }));
-        h.scale.set(1.4, .55, 1); h.position.set(-12 + i * 4.5, -.4, -14 - (i % 2) * 3); env.add(h);
+        h.scale.set(1.4, .55, 1); h.position.set(-12 + i * 4.5, -.4, -14 - (i % 2) * 3); env.add(h); proc.push(h);
       }
       for (let i = 0; i < 5; i++) {
         const cl = new T3.Group();
         [[0, 0, .8], [.8, .1, .6], [-.7, .05, .55]].forEach(([x, y, r]) => { const s = new T3.Mesh(new T3.SphereGeometry(r, 12, 8), new T3.MeshBasicMaterial({ color: '#ffffff' })); s.position.set(x, y, 0); cl.add(s); });
-        cl.position.set(-9 + i * 5, 6 + (i % 2), -18); cl.userData.drift = .2 + i * .05; env.add(cl);
+        cl.position.set(-9 + i * 5, 6 + (i % 2), -18); cl.userData.drift = .2 + i * .05; env.add(cl); proc.push(cl);
       }
+      if (t.backdrop) loadImg(assetUrl(t.backdrop), img => {
+        if (tok !== envTok) return;   // 已经换了场地
+        // bdFloor：画里空地从多高开始（0–1，从上往下量）；地平线默认在它上面一点
+        const fv = t.bdFloor || BD.FLOOR;
+        bdCur = { tx: imgTex(img), fv, hz: t.horizon || fv - .06, lm: t.landmark || BD.LM };
+        placeBackdrop();
+        proc.forEach(o => { o.visible = false; });
+        // 3D 地面：用画里平地那一块的平均色（theme.floor 可以强行指定）；天空：画最上面一条的颜色，镜头抬高时接得上
+        const gc = t.floor ? new T3.Color(t.floor) : avgColor(img, .3, .7, fv + .05, Math.min(.98, fv + .22));
+        if (gc && !t.groundTex) gMat.color.setRGB(gc.r / GROUND_L[0], gc.g / GROUND_L[1], gc.b / GROUND_L[2]);
+        const top = avgColor(img, .2, .8, 0, .04);
+        if (top) { const hx = '#' + top.getHexString(); skyTex(hx, hx); }
+        scene.fog = null;   // 画自己有空气感；3D 地面远处被画盖住，不用雾
+      });
       // 两个台子
       ['me', 'foe'].forEach(k => {
         const pad = new T3.Mesh(new T3.CylinderGeometry(1.15, 1.25, .12, 40), new T3.MeshToonMaterial({ color: t.pad }));
@@ -69,7 +175,7 @@
     function setMon(side, sp, hidden) {
       if (M[side]) { scene.remove(M[side].R.root); Mon3D.dispose(M[side].R); }
       const R = Mon3D.build(sp, { unique: true });
-      R.root.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material && o.material.isMeshToonMaterial) o.material = o.material.clone(); } });
+      R.root.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material && o.material.isMeshToonMaterial && !o.material.userData.own) o.material = o.material.clone(); if (o.material && o.material.userData.sprite) o.castShadow = false; } });
       const P = POS[side], other = POS[side === 'me' ? 'foe' : 'me'];
       R.root.position.copy(P);
       R.root.rotation.y = Math.atan2(other.x - P.x, other.z - P.z) + (side === 'me' ? .1 : -.55);
@@ -81,7 +187,7 @@
       R.root.visible = !hidden;
       return M[side];
     }
-    const mats = side => { const a = []; M[side].R.root.traverse(o => { if (o.isMesh && o.material && o.material.isMeshToonMaterial) a.push(o.material); }); return a; };
+    const mats = side => { const a = []; M[side].R.root.traverse(o => { if (o.isMesh && o.material && (o.material.isMeshToonMaterial || o.material.userData.sprite)) a.push(o.material); }); return a; };
 
     // ---------- 粒子 ----------
     const MAXP = 700;
@@ -152,6 +258,87 @@
       flashEl.style.transition = 'none'; flashEl.style.opacity = '.8';
       void flashEl.offsetWidth;
       flashEl.style.transition = 'opacity ' + (ms || 350) + 'ms'; flashEl.style.opacity = '0';
+    }
+
+    // ---------- 运镜（仿新世代对战：开场横扫、放招过肩、命中推近、倒下慢推） ----------
+    // 镜头的目标用函数给出，怪兽动了镜头也跟着；拍完一定回到默认机位（CAM），screenPos 按默认机位算
+    const RM = opts.reduced != null ? !!opts.reduced : !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const CINE = opts.cinematic !== false && !RM;   // 减少动态效果时只用默认机位
+    const EZ = {
+      io: k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2,
+      out: k => 1 - Math.pow(1 - k, 3),
+      sine: k => .5 - Math.cos(k * Math.PI) / 2,
+    };
+    const cur = { pos: CAM.pos.clone(), look: CAM.look.clone(), fov: FOV };   // 当前机位（不含呼吸和震动）
+    let shot = null, punch = null, camTimer = 0, introDone = false, camF = 1;
+    const HOME = () => CAM;
+    // to：() => { pos, look }；orbit：绕场地中心转过去（开场横扫用），不走直线
+    function camTo(to, ms, ez, orbit) {
+      clearTimeout(camTimer);
+      if (!CINE) return;
+      shot = { a: { pos: cur.pos.clone(), look: cur.look.clone(), fov: cur.fov }, to, t0: performance.now(), ms: Math.max(1, ms), ez: ez || EZ.io, orbit };
+    }
+    function camHome(ms, delay) {
+      clearTimeout(camTimer);
+      if (!CINE || !shot) return;
+      const go = () => { if (shot && shot.to !== HOME) camTo(HOME, ms || 650, EZ.io); };
+      if (delay) camTimer = setTimeout(go, delay); else go();
+    }
+    function camPunch(at, amt, ms) { if (CINE) punch = { at, amt, t0: performance.now(), ms: ms || 480 }; }
+    const lerpV = (a, b, k) => a.clone().lerp(b, k);
+    const monH = side => { const m = M[side]; return m ? m.R.height * m.R.root.scale.x / m.R.size : 1; };
+    // 放招前：站在出招方身后（过肩），看着对手
+    function shotShoulder(side) {
+      return () => {
+        const other = side === 'me' ? 'foe' : 'me', a = center(side), b = center(other);
+        const d = b.clone().sub(a).setY(0).normalize(), r = V(-d.z, 0, d.x), h = monH(side);
+        if (side === 'me') {
+          // 我方：从右后方低一点看过去，自己在左下、对手在画面中间偏右
+          const back = (1.9 + h * .8) * camF;
+          const pos = a.clone().addScaledVector(d, -back).addScaledVector(r, 1.35 * camF).setY(Math.max(1.3, h * 1.25));
+          return { pos, look: lerpV(a, b, .62).setY(b.y * .8 + .2) };
+        }
+        // 对方：从它身后高处往下看我方（远景画在背后，抬高机位让画面里不露出没画的那一侧）
+        const back = (2.4 + h * .6) * camF;
+        const pos = a.clone().addScaledVector(d, -back).addScaledVector(r, 1.3 * camF).setY(Math.max(3.3, h * 2.2));
+        return { pos, look: lerpV(a, b, .68).setY(.3) };
+      };
+    }
+    // 招式飞出去：从默认机位稍微推向挨打的一方
+    function shotToward(side, k, lk) { return () => { const c = center(side); return { pos: lerpV(CAM.pos, c, k), look: lerpV(CAM.look, c, lk) }; }; }
+    // 开场：从侧面低处的远景绕到默认机位
+    function intro(ms) {
+      introDone = true;
+      if (!CINE) return;
+      const rel = CAM.pos.clone().sub(ARENA_C), an = Math.atan2(rel.x, rel.z) + .65, rad = Math.hypot(rel.x, rel.z) * 1.15;
+      // 起点不要太低：远景画是按默认机位摆的，镜头太低会看到画的上边
+      cur.pos.set(ARENA_C.x + Math.sin(an) * rad, 1.2, ARENA_C.z + Math.cos(an) * rad);
+      cur.look.copy(lerpV(ARENA_C, POS.foe, .55)).setY(.45);
+      camTo(HOME, ms || 1600, EZ.io, true);
+    }
+    function camStep(now) {
+      if (shot) {
+        const k = Math.min(1, (now - shot.t0) / shot.ms), e = shot.ez(k), b = shot.to();
+        if (shot.orbit) {
+          // 绕场地中心：角度、半径、高度分别插值
+          const ra = shot.a.pos.clone().sub(ARENA_C), rb = b.pos.clone().sub(ARENA_C);
+          let a0 = Math.atan2(ra.x, ra.z), a1 = Math.atan2(rb.x, rb.z); if (a1 - a0 > Math.PI) a1 -= Math.PI * 2; if (a0 - a1 > Math.PI) a1 += Math.PI * 2;
+          const an = a0 + (a1 - a0) * e, rad = Math.hypot(ra.x, ra.z) + (Math.hypot(rb.x, rb.z) - Math.hypot(ra.x, ra.z)) * e;
+          cur.pos.set(ARENA_C.x + Math.sin(an) * rad, shot.a.pos.y + (b.pos.y - shot.a.pos.y) * EZ.sine(k), ARENA_C.z + Math.cos(an) * rad);
+        } else cur.pos.lerpVectors(shot.a.pos, b.pos, e);
+        cur.look.lerpVectors(shot.a.look, b.look, e);
+        cur.fov = shot.a.fov + ((b.fov || FOV) - shot.a.fov) * e;   // 可以顺便变焦
+        if (k >= 1 && shot.to === HOME) shot = null;
+      } else { cur.pos.copy(CAM.pos); cur.look.copy(CAM.look); cur.fov = FOV; }
+      const pos = cur.pos.clone(), look = cur.look.clone();
+      if (punch) {
+        const k = Math.min(1, (now - punch.t0) / punch.ms), env = k < .16 ? EZ.out(k / .16) : 1 - EZ.sine((k - .16) / .84);
+        const at = punch.at(), d = at.clone().sub(pos), len = d.length();
+        pos.addScaledVector(d.normalize(), Math.min(punch.amt, len * .3) * env);
+        look.lerp(at, .2 * env);
+        if (k >= 1) punch = null;
+      }
+      return { pos, look, fov: cur.fov };
     }
 
     // ---------- 招式特效 ----------
@@ -334,6 +521,9 @@
     async function enter(side, fromBall) {
       const m = M[side]; if (!m) return;
       m.gone = false; m.R.root.visible = true;
+      if (Mon3D.play) Mon3D.play(m.R, 'idle');
+      if (!introDone) intro();
+      else if (!shot) { camTo(shotToward(side, .16, .45), 450, EZ.out); camHome(750, 700); }
       const s = m.R.baseScale;
       if (fromBall) { const p = center(side); burst(p, ['#ffffff', '#b388ff'], 40, 3, .5, .5); ring(p.clone().setY(.1), '#ffffff', .2, 1.5, .45); }
       else emit(24, () => ({ pos: m.R.root.position.clone().add(V(rnd(-.6, .6), .05, rnd(-.6, .6))), vel: V(rnd(-.5, .5), rnd(.3, .8), rnd(-.5, .5)), col: C('#e8dcb0'), size: .6, life: .6, t: 0 }));
@@ -345,36 +535,55 @@
       if (support) {
         // 辅助招式：原地发光一圈，不飞出去
         m.talk = 1;
+        camTo(shotToward(side, .14, .4), 350, EZ.out);
         const c = TYPE_COL[type] || TYPE_COL.normal, p = center(side);
         ring(m.R.root.position.clone().setY(.08), c[0], .3, 1.4, .6, .06);
         rise(m.R.root.position.clone(), c, 40, .5, 1.6, .45, .8);
         await tween(500, k => { m.off.y = Math.sin(k * Math.PI) * .15; });
         m.talk = 0;
+        camHome(600, 150);
         return;
       }
       const a = center(side), b = center(other), dir = b.clone().sub(a).setY(0).normalize();
       m.talk = 1;
       const physical = type === 'fight' || type === 'normal';
-      await tween(physical ? 260 : 200, k => { m.off.copy(dir).multiplyScalar(Math.sin(k * Math.PI) * (physical ? .9 : .35)); });
+      // 运镜：先切到出招方身后（过肩），蓄力时看着对手；招式飞出去时镜头跟着推向对手
+      if (CINE) { camTo(shotShoulder(side), 300, EZ.out); await sleep(150); }
+      if (Mon3D.play && Mon3D.play(m.R, 'attack')) await sleep(physical ? 430 : 360);   // 会动的模型自己扑出去
+      else await tween(physical ? 260 : 200, k => { m.off.copy(dir).multiplyScalar(Math.sin(k * Math.PI) * (physical ? .9 : .35)); });
       m.talk = 0;
+      camTo(shotToward(other, other === 'me' ? .12 : .2, .5), 520, EZ.io);
       const cols = TYPE_COL[type] || TYPE_COL.normal;
       await (FX[type] || FX.default)(a.clone().addScaledVector(dir, .3), b, tier || 0, cols, side);
+      camHome(650, 260);   // 命中后稍停一下再回默认机位（hit 会再推一下）
     }
     function hit(side, opt) {
       const m = M[side]; if (!m) return;
       opt = opt || {};
-      m.flash = 1;
+      m.flash = 1.6;
+      // 打击停顿：命中那一下先定住（暴击更久），再放慢一点播受击动作——像新作那样让「挨打」看得清楚
+      const stop = opt.crit ? 170 : 90;
+      if (m.R.mixer) { m.R.mixer.timeScale = 0; setTimeout(() => { if (m.R.mixer) m.R.mixer.timeScale = 1; if (Mon3D.play) Mon3D.play(m.R, 'hit', .65); }, stop); }
+      else if (Mon3D.play) Mon3D.play(m.R, 'hit');
       const back = center(side).sub(center(side === 'me' ? 'foe' : 'me')).setY(0).normalize();
-      tween(380, k => { m.off.copy(back).multiplyScalar(Math.sin(k * Math.PI) * (opt.crit ? .35 : .18)); m.off.x += Math.sin(k * 40) * .03 * (1 - k); });
-      if (opt.crit) { shake = Math.max(shake, .25); flash('#fff8e1', 250); }
+      tween(opt.crit ? 900 : 720, k => { const e = k < .25 ? Math.sin(k / .25 * Math.PI / 2) : 1 - (k - .25) / .75; m.off.copy(back).multiplyScalar(e * (opt.crit ? .38 : .22)); m.off.x += Math.sin(k * 46) * .035 * (1 - k); });
+      if (opt.crit) { shake = Math.max(shake, .3); flash('#fff8e1', 320); }
+      camPunch(() => center(side), opt.crit ? .9 : .45, opt.crit ? 1000 : 800);   // 命中：镜头往挨打的一方推近，多停一会儿
+      if (shot && shot.to !== HOME) camHome(750, opt.crit ? 900 : 700);
     }
     async function faint(side) {
       const m = M[side]; if (!m) return;
       const ms = mats(side);
+      const fall = Mon3D.play ? Mon3D.play(m.R, 'faint') : 0;
+      // 倒下时镜头慢慢推过去（怪兽在往下沉，按开始的位置推）；对方离得远，主要靠变焦，别从我方怪兽背后穿过去
+      const at = center(side), foe = side === 'foe';
+      camTo(() => ({ pos: lerpV(CAM.pos, at, foe ? .1 : .26).add(V(foe ? .35 * camF : 0, foe ? .45 : 0, 0)), look: lerpV(CAM.look, at, .8), fov: foe ? 27 : 33 }), fall ? fall * 1000 + 650 : 900, EZ.sine);
+      if (fall) await sleep(fall * 1000 + 250);   // 会动的模型先侧倒，再淡出
       ms.forEach(q => { q.transparent = true; });
-      await tween(700, k => { m.off.y = -k * .6; ms.forEach(q => { q.opacity = 1 - k; }); });
+      await tween(fall ? 400 : 700, k => { if (!fall) m.off.y = -k * .6; ms.forEach(q => { q.opacity = 1 - k; }); });
       m.R.root.visible = false; m.gone = true;
-      ms.forEach(q => { q.opacity = 1; q.transparent = false; }); m.off.set(0, 0, 0);
+      ms.forEach(q => { q.opacity = 1; q.transparent = !!q.userData.sprite; }); m.off.set(0, 0, 0);
+      camHome(750, 200);
     }
     // 异常状态：烧伤火星、中毒泡泡、麻痹电光、睡眠 Z、冰冻冰块、混乱星星
     const ST_COL = { brn: ['#ff5a1f', '#ffd54f'], psn: ['#9b4dca', '#e1bee7'], par: ['#ffe14d', '#ffffff'], slp: ['#7986cb', '#e8eaf6'], frz: ['#9be7ff', '#ffffff'], conf: ['#ff5ea8', '#fff59d'] };
@@ -436,7 +645,7 @@
         const m = M[side]; if (!m) return;
         Mon3D.animate(m.R, t + (side === 'me' ? 0 : 1.3), { talk: m.talk ? Math.floor(t * 8) % 2 === 0 : false });
         m.R.root.position.copy(POS[side]).add(m.off);
-        if (m.flash > 0) { m.flash = Math.max(0, m.flash - dt * 4); const e = Math.floor(m.flash * 10) % 2 ? m.flash : 0; mats(side).forEach(q => { q.emissive.setRGB(e, e, e); }); }
+        if (m.flash > 0) { m.flash = Math.max(0, m.flash - dt * 2.6); const e = Math.floor(m.flash * 10) % 2 ? m.flash : 0; mats(side).forEach(q => { if (q.emissive) q.emissive.setRGB(e, e, e); else q.color.setScalar(1 + e * 3); }); }
       });
       env.children.forEach(o => { if (o.userData.drift) { o.position.x += o.userData.drift * dt; if (o.position.x > 14) o.position.x = -14; } });
       // 粒子
@@ -453,8 +662,11 @@
       for (let i = fx.length - 1; i >= 0; i--) { const f = fx[i]; f.t += dt; const k = Math.min(1, f.t / f.life); if (f.update) f.update(f.obj, k, dt); if (k >= 1) { scene.remove(f.obj); f.obj.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); fx.splice(i, 1); } }
       // 镜头：轻轻呼吸 + 震动
       shake = Math.max(0, shake - dt * 1.2);
-      cam.position.copy(CAM.pos).add(V(Math.sin(t * .4) * .08, Math.sin(t * .5) * .04, 0)).add(shake ? sph(shake * .25) : V(0, 0, 0));
-      cam.lookAt(CAM.look);
+      const cs = camStep(now);
+      const drift = RM ? 0 : 1;   // 平时很慢地晃（减少动态效果时不晃）
+      cam.position.copy(cs.pos).add(V(Math.sin(t * .23) * .12 * drift, Math.sin(t * .31) * .05 * drift, Math.sin(t * .17) * .06 * drift)).add(shake ? sph(shake * .25) : V(0, 0, 0));
+      cam.lookAt(cs.look);
+      if (Math.abs(cam.fov - cs.fov) > .01) { cam.fov = cs.fov; cam.updateProjectionMatrix(); }
       renderer.render(scene, cam);
     }
     function resize() {
@@ -465,19 +677,24 @@
       cam.aspect = w / h;
       // 竖屏把镜头拉远一点，两只怪兽都在画面里
       const f = w / h < 1 ? 1 + (1 - w / h) * .9 : 1;
-      CAM.pos.set(-2.1 * f, 2.1 + (f - 1) * 1.1, 5.6 * f);
+      CAM.pos.set(-2.1 * f, 1.85 + (f - 1) * 1.1, 5.6 * f);
+      if (f !== camF) { camF = f; placeBackdrop(); }
       cam.updateProjectionMatrix();
       pMat.uniforms.uScale.value = h * 1.3;
     }
     // 怪兽在画面上的位置（给伤害数字、提示用），相对 host 左上角
     function screenPos(side) {
       const m = M[side]; if (!m) return [0, 0];
-      const p = center(side).project(cam);
+      // 按默认机位算：运镜时镜头会动，但伤害数字、提示要和平时站位对齐（镜头一会儿就回来）
+      homeCam.aspect = cam.aspect; homeCam.fov = FOV; homeCam.updateProjectionMatrix();
+      homeCam.position.copy(CAM.pos); homeCam.lookAt(CAM.look); homeCam.updateMatrixWorld();
+      const p = center(side).project(homeCam);
       return [(p.x + 1) / 2 * host.clientWidth, (1 - p.y) / 2 * host.clientHeight];
     }
+    const homeCam = new T3.PerspectiveCamera(38, 1, .1, 80);
     function mount(el) { host = el; el.prepend(canvas); resize(); }
     function destroy() {
-      alive = false; cancelAnimationFrame(raf);
+      alive = false; cancelAnimationFrame(raf); clearTimeout(camTimer); envTok++;
       ['me', 'foe'].forEach(s => { if (M[s]) { scene.remove(M[s].R.root); Mon3D.dispose(M[s].R); } });
       renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) { /* 忽略 */ }
       canvas.remove(); if (flashEl) flashEl.remove();
@@ -485,7 +702,7 @@
     setEnv(opts.theme);
     mount(host);
     raf = requestAnimationFrame(frame);
-    return { setEnv, setMon, enter, attack, hit, faint, heal, status, buff, catchThrow, wobble, sealed, breakOut, removeBall, screenPos, mount, resize, destroy, get canvas() { return canvas; } };
+    return { intro, setEnv, setMon, enter, attack, hit, faint, heal, status, buff, catchThrow, wobble, sealed, breakOut, removeBall, screenPos, mount, resize, destroy, get canvas() { return canvas; }, get camBusy() { return !!(shot || punch); } };
   }
 
   window.Battle3D = { create, TYPE_COL };

@@ -492,19 +492,6 @@ details.pre summary { font-weight: 800; cursor: pointer; }
 .mon.faint { transform: translateY(40%) scale(.8); opacity: 0; }
 .mon.appear { animation: pop .45s; }
 .mon.caught-in { transform: scale(.1); opacity: 0; transition: transform .4s ease-in, opacity .4s; }
-.hpcard { position: absolute; z-index: 3; display: flex; flex-direction: column; gap: 3px; min-width: 42%; max-width: 50%; padding: 8px 10px; border-radius: 14px; background: rgba(255, 255, 255, .94); box-shadow: 0 3px 0 rgba(0, 0, 0, .08); font-size: 13px; }
-.hpcard b { font-family: var(--f-display); font-size: 16px; }
-.hpcard.foe { left: 10px; top: 10px; }
-.hpcard.me { right: 10px; bottom: 12px; }
-.hpcard .tchip { align-self: flex-start; }
-.hpcard small { color: var(--ink-2); font-variant-numeric: tabular-nums; text-align: right; }
-.hpbar { height: 9px; border-radius: 6px; background: #e0e7ea; overflow: hidden; }
-.hpbar i { display: block; height: 100%; width: 100%; background: var(--leaf); border-radius: 6px; transition: width .6s ease-out, background .3s; }
-.hpbar i.mid { background: var(--sun); }
-.hpbar i.low { background: var(--coral); }
-.hpcard .balls { font-size: 12px; color: var(--coral); letter-spacing: 2px; }
-.hpcard .balls .down { color: var(--locked); }
-.trainer { position: absolute; right: 8px; top: 8px; z-index: 3; font-size: 34px; }
 .proj { position: absolute; z-index: 5; font-size: 32px; transform: translate(-50%, -50%); transition: left .45s ease-in, top .45s ease-in, transform .45s; pointer-events: none; }
 .proj.ball { transition: left .5s ease-out, top .5s cubic-bezier(.3, -0.6, .7, 1), transform .5s; }
 .proj.ball.wobble { animation: wobble .6s ease-in-out infinite; }
@@ -665,24 +652,8 @@ body.in-world { overflow: hidden; }
 .arena { background: #b5e399; border: 3px solid #2b3440; box-shadow: 0 5px 0 rgba(0, 0, 0, .18); }
 .arena-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
 .pad { z-index: 1; background: radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, .55) 0 30%, transparent 31%), radial-gradient(ellipse at 50% 50%, #9ad17c 0 58%, #6fae55 59% 68%, transparent 70%); }
-.hpcard { gap: 4px; min-width: 46%; padding: 8px 10px 9px; border: 3px solid #2b3440; border-radius: 14px 14px 14px 4px; background: #fffdf5; box-shadow: 0 4px 0 rgba(0, 0, 0, .18); }
-.hpcard.me { border-radius: 14px 14px 4px 14px; }
-.hp-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
-.hp-top b { font-size: 17px; }
-.hp-lv { font-family: var(--f-display); font-weight: 800; font-size: 14px; color: var(--ink-2); }
-.hprow { display: flex; align-items: center; gap: 5px; }
-.hplab { font-family: var(--f-display); font-size: 11px; font-weight: 800; color: #ffc53d; background: #2b3440; border-radius: 5px; padding: 0 5px; line-height: 16px; }
-.hprow .hpbar { flex: 1; height: 11px; padding: 1.5px; border: 2px solid #2b3440; background: #4b5763; border-radius: 7px; }
-.hpbar i { background: linear-gradient(#7ae59a, #2cae69); }
-.hpbar i.mid { background: linear-gradient(#ffe082, #f0b400); }
-.hpbar i.low { background: linear-gradient(#ff9a8a, #e53935); }
-.expbar { height: 5px; border-radius: 3px; background: #d5dde2; overflow: hidden; }
-.expbar i { display: block; height: 100%; background: linear-gradient(90deg, #6ab8ff, #3a86ff); transition: width .8s ease-out; }
 .tchip { display: inline-flex; align-items: center; gap: 2px; }
 .tchip svg { width: 11px; height: 11px; }
-.trainer { left: 14px; right: auto; top: 100px; }
-.trainer img { width: 52px; height: 52px; border-radius: 50%; border: 3px solid #2b3440; background: #fff; }
-.trainer span { font-size: 34px; }
 .mon.foe.enter { animation: slideR .7s cubic-bezier(.2, .8, .3, 1); }
 .mon.me.enter { animation: slideL .7s cubic-bezier(.2, .8, .3, 1); }
 .orb { width: 26px; height: 26px; border-radius: 50%; font-size: 0; }
@@ -773,8 +744,9 @@ body.in-world { overflow: hidden; }
 
 /* ---------- 3D 战斗画面 ---------- */
 .arena .b3d { position: absolute; inset: 0; z-index: 0; display: block; }
+.arena.is3d .hpcard, .arena.is3d .trainer { z-index: 2; }
+.arena.is3d .b-pop { z-index: 3; }
 .arena.is3d .arena-bg, .arena.is3d .pad, .arena.is3d .mon, .arena.is3d .proj, .arena.is3d .fx, .arena.is3d .fx-flash { display: none; }
-.arena.is3d .hpcard, .arena.is3d .trainer, .arena.is3d .b-pop { z-index: 2; }
 .b3d-flash { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; }
 .mon-img { object-fit: contain; aspect-ratio: 1; }
 .mv-eff { font-style: normal; font-weight: 800; color: #d32f2f; }
@@ -795,10 +767,6 @@ body.in-world { overflow: hidden; }
 .moves .move.ult { grid-column: auto; }
 
 /* ---------- 战斗：异常状态、能力升降、辅助招式 ---------- */
-.st-chip { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; background: var(--sc, #ec407a); color: #fff; font-size: 12px; font-weight: 800; }
-.st-chip:empty, .st-chip[hidden] { display: none; }
-.stg { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; font-size: 11px; font-weight: 800; }
-.stg .up { color: #2e7d32; } .stg .down { color: #1565c0; }
 .move.sup { background: linear-gradient(135deg, var(--tc), color-mix(in srgb, var(--tc) 55%, #fff)); }
 .mv-card { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 6px 10px; border-left: 5px solid var(--tc); border-radius: 10px; background: var(--foam, #f3fbf9); text-align: left; }
 .mv-card .mv-ico { display: none; }
@@ -836,3 +804,63 @@ body.in-world { overflow: hidden; }
 .pc-sort { font-size: 13px; margin-bottom: 6px; color: var(--ink-2); }
 .pc-sort .link.on { font-weight: 800; color: var(--ink); text-decoration: underline; }
 .dex-hab { font-size: 14px; background: #f3f8ec; border-radius: 10px; padding: 6px 10px; text-align: left; }
+
+/* ---------- 战斗名牌（仿新作：半透明深色小牌子，贴着场地边，不挡怪兽） ---------- */
+/* 对手在左上、自己在右下；--tc 是第一属性的颜色，做外侧那条色边 */
+.hpcard { position: absolute; z-index: 3; display: flex; flex-direction: column; gap: 3px; width: clamp(156px, 46%, 214px); padding: 6px 10px 7px; border: 1.5px solid rgba(255, 255, 255, .3); border-radius: 14px; color: #fff; overflow: hidden;
+  background: linear-gradient(160deg, rgba(22, 48, 72, .80), rgba(14, 34, 54, .66)); -webkit-backdrop-filter: blur(10px) saturate(1.4); backdrop-filter: blur(10px) saturate(1.4);
+  box-shadow: 0 6px 16px rgba(8, 24, 40, .28), inset 0 1px 0 rgba(255, 255, 255, .18); font-size: 12px; line-height: 1.2; pointer-events: none; }
+.hpcard.foe { left: 8px; top: 8px; border-top-left-radius: 6px; box-shadow: 0 6px 16px rgba(8, 24, 40, .28), inset 0 1px 0 rgba(255, 255, 255, .18), inset 4px 0 0 var(--tc); padding-left: 13px; }
+.hpcard.me { right: 8px; bottom: 8px; border-bottom-right-radius: 6px; box-shadow: 0 6px 16px rgba(8, 24, 40, .28), inset 0 1px 0 rgba(255, 255, 255, .18), inset -4px 0 0 var(--tc); padding-right: 13px; padding-bottom: 9px; }
+.hp-top { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.hp-top b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--f-display); font-size: 16px; font-weight: 800; letter-spacing: .2px; text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+.hp-top .shiny { margin-right: 2px; font-size: 13px; filter: drop-shadow(0 0 4px #ffe27a); }
+.hp-lv { flex: none; font-family: var(--f-display); font-weight: 800; font-size: 15px; color: #ffd866; text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+.hp-lv small { margin-right: 1px; font-size: 10px; color: #ffe9a8; }
+.hprow { display: flex; align-items: center; gap: 5px; }
+.hplab { flex: none; font-family: var(--f-display); font-size: 10px; font-weight: 800; line-height: 13px; padding: 0 4px; border-radius: 4px; color: #1b2f40; background: #ffd866; }
+.hpbar { position: relative; flex: 1; height: 8px; border-radius: 99px; overflow: hidden; background: rgba(0, 0, 0, .42); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); }
+.hpbar i, .hpbar .hp-ghost { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; }
+.hpbar i { width: 100%; background-color: #2cae69; background-image: linear-gradient(rgba(255, 255, 255, .45), rgba(255, 255, 255, 0) 55%); transition: width .6s ease-out, background-color .6s ease-out; }
+/* 掉血时后面那截浅色的慢一点才跟上，看得出掉了多少 */
+.hpbar .hp-ghost { width: 100%; background: #ffe6a6; transition: width .7s ease-in .45s; }
+.hpbar i.low { animation: hpLow 1s ease-in-out infinite; }
+/* 属性 / 异常 / 能力升降排成一行，放不下就折到下一行；血量数字和对手剩下的球靠右（float，文字绕着走） */
+.hp-foot { display: block; line-height: 19px; margin-bottom: -2px; }
+.hpcard .chips { display: inline; }
+.hpcard .chips > * { vertical-align: middle; margin: 0 3px 2px 0; }
+.hpcard .tchip { padding: 0 5px; border-radius: 6px; font-size: 10px; line-height: 16px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+.hpcard .tchip svg { width: 10px; height: 10px; }
+.st-chip { display: inline-flex; align-items: center; padding: 0 6px; border-radius: 99px; background: var(--sc, #ec407a); color: #fff; font-size: 10.5px; font-weight: 800; line-height: 16px; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .85); }
+.st-chip:empty, .st-chip[hidden] { display: none; }
+.stg { display: inline; font-size: 10.5px; font-weight: 800; }
+.stg:empty { display: none; }
+.stg span { display: inline-block; margin-right: 3px; padding: 0 5px; border-radius: 6px; line-height: 16px; color: #fff; }
+.stg .up { background: #e8663d; } .stg .down { background: #3f7fe0; }
+.hpnum { float: right; margin-left: 4px; font-family: var(--f-display); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+.hpcard .balls { float: right; display: flex; gap: 3px; height: 19px; align-items: center; margin-left: 4px; }
+.hpcard .balls span { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid #fff; background: linear-gradient(#ff6b57 0 45%, #1b2f40 45% 58%, #fff 58%); }
+.hpcard .balls .down { opacity: .35; filter: grayscale(1); }
+/* 经验条：贴在自己名牌的最下沿 */
+.expbar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(0, 0, 0, .35); }
+.expbar i { display: block; height: 100%; background: linear-gradient(90deg, #6ad0ff, #3a86ff); transition: width .8s ease-out; }
+/* 训练师 / 馆主的头像：右上角的小圆牌 */
+.trainer { position: absolute; right: 8px; top: 8px; z-index: 3; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255, 255, 255, .85);
+  background: rgba(22, 48, 72, .55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: 0 4px 10px rgba(8, 24, 40, .25); pointer-events: none; }
+.trainer img { width: 100%; height: 100%; object-fit: cover; background: #fff; }
+.trainer span { font-size: 24px; line-height: 1; }
+/* 出场：名牌从各自的边滑进来 */
+.hpcard.foe.enter { animation: plateInL .5s cubic-bezier(.2, .9, .3, 1.15) .15s both; }
+.hpcard.me.enter { animation: plateInR .5s cubic-bezier(.2, .9, .3, 1.15) .35s both; }
+@keyframes plateInL { from { transform: translateX(calc(-100% - 12px)); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes plateInR { from { transform: translateX(calc(100% + 12px)); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes hpLow { 50% { filter: brightness(1.35); } }
+@media (min-width: 480px) {
+  .hpcard { padding-top: 7px; padding-bottom: 8px; gap: 4px; }
+  .hp-top b { font-size: 17px; }
+  .hpbar { height: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hpcard.enter, .hpbar i.low { animation: none !important; }
+  .hpbar .hp-ghost { transition: none !important; }
+}

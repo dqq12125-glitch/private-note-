@@ -622,6 +622,8 @@
       if (n) setTimeout(() => n.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' }), 120);
     }
   }
+  // 样品美术（?art=blender / gemini）加载完之后，首页的怪兽卡片重画一次
+  window.addEventListener('mon3d-ready', () => { if (!$('#home').hidden) renderHome(); });
   function show(id) {
     ['home', 'play', 'result', 'theater', 'battle', 'world'].forEach(s => { $('#' + s).hidden = s !== id; });
     $('#topbar').hidden = id === 'play' || id === 'theater' || id === 'battle' || id === 'world';

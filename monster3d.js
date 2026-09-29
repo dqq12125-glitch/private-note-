@@ -86,11 +86,17 @@
   const starTex = () => canvasTex('star', 64, 64, g => { g.fillStyle = '#fff'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 12 : 30; g.lineTo(32 + Math.cos(a) * r, 34 + Math.sin(a) * r); } g.fill(); });
 
   // ---------- 零件 ----------
-  // ---------- 外部美术（样品对比用）：?art=blender 用 Blender 做的模型（art/blender/*.glb） ----------
-  const ART_MODE = (() => { try { return new URLSearchParams(location.search).get('art') || localStorage.getItem('echo-art') || ''; } catch (e) { return ''; } })();
+  // ---------- 外部美术（样品对比用）：?art=blender 用 Blender 做的模型（art/blender/*.glb），?art=gemini 用 Gemini 画的图，?art=3d 用 Gemini 图生成的会动的模型 ----------
+  const ART_MODE = (() => { try { return window.ECHO_ART || new URLSearchParams(location.search).get('art') || localStorage.getItem('echo-art') || ''; } catch (e) { return ''; } })();
   const SAMPLES = ['emberpup', 'flamewolf', 'bubbly', 'sprouty', 'zappy', 'songlet', 'owlet', 'twigling', 'moonbunny', 'echodrake'];
   const EXT = {};
   const baseId = sp => String(sp.id || '').replace(/_shiny$/, '');
+  // 默认模式 PUB：用发布的资源（assets/mon3d/*.glb 会动的模型、assets/mon2d/*.webp 图标），没有的怪兽用程序拼的模型
+  // ?art=proc（或 localStorage echo-art=proc）强制全用程序模型；blender / gemini / 3d 是老的样品对比模式
+  const PUB = !['proc', 'blender', 'gemini', '3d'].includes(ART_MODE);
+  const HAS3D = new Set(), HAS2D = new Set();
+  const assetUrl = u => (window.ECHO_BASE || '') + u;
+  let idxP = Promise.resolve();   // 两个索引读完（不管成败）
   function buildExt(sp, ext) {
     const root = new T3.Group();
     const R = { root, body: new T3.Group(), head: new T3.Group(), tail: new T3.Group(), wings: [], eyes: [], ears: new T3.Group(), float: 0, height: 1, ext: true };
@@ -112,15 +118,223 @@
     R.size = S; R.height = 1.15 * S; R.base = 0; R.blinkAt = 99;
     return R;
   }
+  // ?art=gemini：Gemini 画的图（art/gemini/cut/*.png，tools/cutout.py 抠好的透明图），立成一张永远面向镜头的纸片
+  const GEM_URL = id => (window.ECHO_BASE || '') + 'art/gemini/cut/' + id + '.png';
+  function buildImg(sp, ext) {
+    const root = new T3.Group();
+    const R = { root, body: new T3.Group(), head: new T3.Group(), tail: new T3.Group(), wings: [], eyes: [], ears: new T3.Group(), float: 0, height: 1, ext: true };
+    root.add(R.body);
+    const h = 1.3, mat = new T3.MeshBasicMaterial({ map: ext.tex, transparent: true, alphaTest: .12, side: T3.DoubleSide });
+    mat.userData.sprite = true;
+    if (ext.wait) { mat.visible = false; ext.wait.push(mat); }
+    const m = new T3.Mesh(ext.geo || (ext.geo = new T3.PlaneGeometry(1, 1).translate(0, .5, 0)), mat);
+    m.scale.set(h, h, 1);
+    const q = new T3.Quaternion(), fw = new T3.Vector3(), cr = new T3.Vector3();
+    // 画面上转向：图里的怪兽大多朝左，所以朝右站的（我方）左右翻过来
+    m.onBeforeRender = (r, s, cam) => {
+      root.getWorldQuaternion(q);
+      fw.set(0, 0, 1).applyQuaternion(q);
+      cr.set(1, 0, 0).applyQuaternion(cam.quaternion);
+      m.parent.getWorldQuaternion(q).invert();
+      m.quaternion.copy(q).multiply(cam.quaternion);
+      m.scale.x = (fw.dot(cr) > .05 ? -1 : 1) * h;
+      m.updateMatrixWorld(true);
+    };
+    R.body.add(m);
+    const stage = sp.stage || 1, S = (sp.sz || 1) * (sp.legend ? 1.5 : stage === 1 ? .82 : stage === 2 ? 1 : 1.22);
+    root.scale.setScalar(S);
+    R.size = S; R.height = h * .95 * S; R.base = 0; R.blinkAt = 99;
+    return R;
+  }
+  // 会动的模型（默认）：Gemini 画的图 → Hunyuan3D 生成带贴图的模型 → Blender 绑骨骼、做动作（art/mon3d/*.glb 母版；tools/mon3d/gen.py、tools/blender/monrig.py）
+  // → tools/mon3d/publish.js 压缩成 assets/mon3d/*.glb 随网页发布。?art=3d 是老的样品模式，直接读 art/mon3d 里那 10 只
+  // 异色：贴图颜色转 150°（和 monsters.js 的 spOf 一样），用和 CSS hue-rotate 同一个矩阵，这样 3D 模型和 2D 图标颜色一致
+  const SHINY_DEG = 150;
+  const isShiny = sp => !!(sp && (sp.shiny || /_shiny$/.test(String(sp.id || ''))));
+  function shinyPatch(m) {
+    const a = SHINY_DEG * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), f = v => v.toFixed(5);
+    // CSS/SVG feColorMatrix hueRotate（按行），GLSL mat3 按列填，所以转置
+    const M = [.213 + c * .787 - s * .213, .715 - c * .715 - s * .715, .072 - c * .072 + s * .928,
+      .213 - c * .213 + s * .143, .715 + c * .285 + s * .140, .072 - c * .072 - s * .283,
+      .213 - c * .213 - s * .787, .715 - c * .715 + s * .715, .072 + c * .928 + s * .072];
+    const glsl = 'mat3(' + [0, 3, 6, 1, 4, 7, 2, 5, 8].map(i => f(M[i])).join(',') + ')';
+    m.onBeforeCompile = sh => {
+      // 贴图在 shader 里已经是线性颜色：转回 sRGB 转色相再转回来
+      sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n  diffuseColor.rgb = pow(clamp(' + glsl + ' * pow(max(diffuseColor.rgb, vec3(0.0)), vec3(1.0 / 2.2)), 0.0, 1.0), vec3(2.2));');
+    };
+    m.customProgramCacheKey = () => 'mon-shiny';
+    m.userData.shiny = true;
+  }
+  let skinLineMat = null;
+  const skinLine = () => skinLineMat || (skinLineMat = (() => {
+    // 描边：蒙皮之后再沿法线往外推，只画背面（跟着骨骼动）
+    const m = new T3.MeshBasicMaterial({ color: '#2a1c18', side: T3.BackSide });
+    m.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <skinning_vertex>', '#include <skinning_vertex>\n  transformed += normalize(objectNormal) * 0.008;'); };
+    return m;
+  })());
+  function buildRig(sp, ext) {
+    const root = new T3.Group();
+    const R = { root, body: new T3.Group(), head: new T3.Group(), tail: new T3.Group(), wings: [], eyes: [], ears: new T3.Group(), float: 0, height: 1, ext: true, rig: true };
+    root.add(R.body);
+    const model = T3.cloneSkinned(ext.scene);
+    const meshes = []; model.traverse(o => { if (o.isMesh) meshes.push(o); });
+    const shiny = isShiny(sp);
+    meshes.forEach(o => {
+      o.material = new T3.MeshToonMaterial({ map: o.material.map, gradientMap: grad });  // 每只一份材质，受击闪白、倒下变透明互不影响
+      o.material.userData.own = true;    // 已经是这一只自己的材质（battle3d 不用再 clone，clone 会丢掉异色的 onBeforeCompile）
+      if (shiny) shinyPatch(o.material);
+      o.frustumCulled = false;
+      if (o.isSkinnedMesh) {
+        const ol = new T3.SkinnedMesh(o.geometry, skinLine());
+        ol.bind(o.skeleton, o.bindMatrix); ol.position.copy(o.position); ol.quaternion.copy(o.quaternion); ol.scale.copy(o.scale);
+        ol.frustumCulled = false; o.parent.add(ol);
+      }
+    });
+    model.scale.setScalar(1.15);   // 流水线里已经归一化成身高 1
+    R.body.add(model);
+    R.mixer = new T3.AnimationMixer(model); R.acts = {};
+    ext.clips.forEach(c => { R.acts[c.name] = R.mixer.clipAction(c); });
+    R.mixer.addEventListener('finished', e => { if (e.action !== R.acts.faint) play(R, 'idle'); });
+    R.cur = 'idle';
+    if (R.acts.idle) { R.acts.idle.play(); R.acts.idle.time = Math.random() * 2; }
+    const stage = sp.stage || 1, S = (sp.sz || 1) * (sp.legend ? 1.5 : stage === 1 ? .82 : stage === 2 ? 1 : 1.22);
+    root.scale.setScalar(S);
+    R.size = S; R.height = 1.15 * S; R.base = 0; R.blinkAt = 99;
+    R.src = ext; ext.users = (ext.users || 0) + 1;   // 引用计数：缓存淘汰时正在用的不释放
+    return R;
+  }
+  // 播一个动作（idle/walk 循环，attack/hit 播完回 idle，faint 停在最后）；返回动作秒数，没有这个动作返回 0
+  function play(R, name, speed) {
+    const a = R && R.acts && R.acts[name];
+    if (!a) return 0;
+    a.timeScale = speed || 1;   // 可以放慢（受击用慢一点的）
+    const once = name === 'attack' || name === 'hit' || name === 'faint';
+    if (R.cur === name && !once) return a.getClip().duration / a.timeScale;
+    const prev = R.acts[R.cur];
+    a.reset(); a.setLoop(once ? T3.LoopOnce : T3.LoopRepeat, Infinity); a.clampWhenFinished = name === 'faint';
+    a.setEffectiveWeight(1); a.fadeIn(.1).play();
+    if (prev && prev !== a) prev.fadeOut(.1);
+    R.cur = name;
+    return a.getClip().duration / a.timeScale;
+  }
   const ready = (() => {
-    if (ART_MODE !== 'blender' || !T3.GLTFLoader) return Promise.resolve();
-    const L = new T3.GLTFLoader();
-    return Promise.all(SAMPLES.map(id => new Promise(res => L.load((window.ECHO_BASE || '') + 'art/blender/' + id + '.glb', g => { EXT[id] = { scene: g.scene }; res(); }, undefined, () => res()))))
-      .then(() => { for (const k in snapCache) delete snapCache[k]; window.dispatchEvent(new Event('mon3d-ready')); });
+    if (ART_MODE === 'gemini') {
+      return Promise.all(SAMPLES.map(id => new Promise(res => {
+        const im = new Image();
+        im.onload = () => { const t = new T3.Texture(im); t.colorSpace = T3.SRGBColorSpace; t.needsUpdate = true; EXT[id] = { tex: t, img: true }; res(); };
+        im.onerror = () => res();
+        im.src = GEM_URL(id);
+      }))).then(() => { for (const k in snapCache) delete snapCache[k]; window.dispatchEvent(new Event('mon3d-ready')); });
+    }
+    if (ART_MODE === '3d' && T3.GLTFLoader) {
+      const L = new T3.GLTFLoader();
+      return Promise.all(SAMPLES.map(id => new Promise(res => L.load((window.ECHO_BASE || '') + 'art/mon3d/' + id + '.glb', g => { EXT[id] = { scene: g.scene, clips: g.animations, rig: true }; res(); }, undefined, () => res()))))
+        .then(() => { for (const k in snapCache) delete snapCache[k]; window.dispatchEvent(new Event('mon3d-ready')); });
+    }
+    if (ART_MODE === 'blender' && T3.GLTFLoader) {
+      const L = new T3.GLTFLoader();
+      return Promise.all(SAMPLES.map(id => new Promise(res => L.load((window.ECHO_BASE || '') + 'art/blender/' + id + '.glb', g => { EXT[id] = { scene: g.scene }; res(); }, undefined, () => res()))))
+        .then(() => { for (const k in snapCache) delete snapCache[k]; window.dispatchEvent(new Event('mon3d-ready')); });
+    }
+    // file:// 打开时浏览器不让读文件（fetch 和模型都读不了），直接用程序模型
+    if (!PUB || location.protocol === 'file:') return Promise.resolve();
+    // 默认：先读两个索引（哪些怪兽有发布的模型 / 图标），最多等 2 秒；读不到（404、file://）就全用程序拼的模型，不耽误游戏
+    const get = u => fetch(assetUrl(u), { cache: 'no-cache' }).then(r => r.ok ? r.json() : []).catch(() => []);
+    const idx = idxP = Promise.all([get('assets/mon3d/index.json'), get('assets/mon2d/index.json')]).then(([a, b]) => {
+      (Array.isArray(a) ? a : []).forEach(id => HAS3D.add(id));
+      (Array.isArray(b) ? b : []).forEach(id => HAS2D.add(id));
+      for (const k in snapCache) delete snapCache[k];
+      window.dispatchEvent(new Event('mon3d-ready'));
+    });
+    return Promise.race([idx, new Promise(res => setTimeout(res, 2000))]);
   })();
 
+  // ---------- 发布的模型：按需加载 + 最近用过的留 16 只 ----------
+  const RIG_CAP = 16;
+  const RIGS = new Map();      // id → { scene, clips, rig: true, users }，Map 的顺序就是最近使用顺序
+  const LOADING = {};          // id → Promise（同一只同时只下载一次）
+  let gltfL = null;
+  const loader = () => {
+    if (gltfL) return gltfL;
+    gltfL = new T3.GLTFLoader();
+    if (T3.MeshoptDecoder) gltfL.setMeshoptDecoder(T3.MeshoptDecoder);
+    return gltfL;
+  };
+  const touch = id => { const e = RIGS.get(id); if (e) { RIGS.delete(id); RIGS.set(id, e); } return e; };
+  // 释放一只模型的几何和贴图（克隆出来的都共用这些，所以只在没人用的时候放）
+  function freeExt(e) {
+    e.scene.traverse(o => {
+      if (o.geometry) o.geometry.dispose();
+      const m = o.material; if (!m) return;
+      (Array.isArray(m) ? m : [m]).forEach(q => { for (const k in q) if (q[k] && q[k].isTexture) q[k].dispose(); q.dispose(); });
+    });
+  }
+  function trim() {
+    if (RIGS.size <= RIG_CAP) return;
+    for (const [id, e] of RIGS) {
+      if (RIGS.size <= RIG_CAP) break;
+      if (e.users > 0) continue;
+      RIGS.delete(id); freeExt(e);
+    }
+  }
+  function loadRig(id) {
+    if (RIGS.has(id)) return Promise.resolve(touch(id));
+    if (LOADING[id]) return LOADING[id];
+    return (LOADING[id] = new Promise(res => {
+      loader().load(assetUrl('assets/mon3d/' + id + '.glb'), g => {
+        delete LOADING[id];
+        const e = { scene: g.scene, clips: g.animations, rig: true, users: 0 };
+        RIGS.set(id, e); trim();
+        // 没有 2D 图标的，菜单截图之前用的是程序模型，模型到了重截
+        if (!HAS2D.has(id)) {
+          let n = 0;
+          for (const k in snapCache) if (k.split(':')[0].replace(/_shiny$/, '') === id) { delete snapCache[k]; n++; }
+          if (n) window.dispatchEvent(new Event('mon3d-ready'));
+        }
+        res(e);
+      }, undefined, () => { delete LOADING[id]; HAS3D.delete(id); res(null); });   // 下载失败：这一局都用程序模型
+    }));
+  }
+  // 把这些怪兽（图鉴条目或 id）的模型下载好；返回 Promise，全部下完（或失败）时完成
+  function preload(list) {
+    if (!PUB) return Promise.resolve();
+    const ids = [...new Set((list || []).filter(Boolean).map(x => typeof x === 'string' ? x.replace(/_shiny$/, '') : baseId(x)))];
+    prepIcons(list);   // 异色的 2D 图标顺便准备好
+    return idxP.then(() => Promise.all(ids.filter(id => HAS3D.has(id)).map(loadRig))).then(() => undefined);
+  }
+  // 异色怪兽的 2D 图标要先读图再转色（异步）；提前准备好，打开菜单时就已经是异色的颜色
+  function prepIcons(list) {
+    if (!PUB) return;
+    idxP.then(() => (list || []).forEach(x => { if (x && typeof x === 'object' && isShiny(x) && HAS2D.has(baseId(x))) shinyIcon(baseId(x)); }));
+  }
+  // 2D 图标做成贴图（纸片用）。图还没读好时纸片先藏起来（没图的贴图会画成黑块），读好再显示；异色的没转好色先用原色
+  const ICON_TEX = {};
+  function iconTex(sp) {
+    const id = baseId(sp), su = isShiny(sp) ? shinyIcon(id) : '';
+    const key = su ? id + '_shiny' : id;
+    if (ICON_TEX[key]) return ICON_TEX[key];
+    const e = ICON_TEX[key] = { tex: new T3.Texture(), img: true, wait: [] };
+    const im = new Image();
+    im.onload = () => { e.tex.image = im; e.tex.colorSpace = T3.SRGBColorSpace; e.tex.needsUpdate = true; e.wait.forEach(m => { m.visible = true; }); e.wait = null; };
+    im.src = su || icon2d(id);
+    return e;
+  }
+  const hasModel = sp => !!sp && PUB && HAS3D.has(baseId(sp));
+  const isLoaded = sp => !!sp && (PUB ? RIGS.has(baseId(sp)) : !!EXT[baseId(sp)]);
+
   function build(sp, opts) {
-    if (!(opts && opts.proc) && EXT[baseId(sp)]) return buildExt(sp, EXT[baseId(sp)]);
+    if (!(opts && opts.proc)) {
+      const ext = EXT[baseId(sp)];
+      if (ext) return ext.img ? buildImg(sp, ext) : ext.rig ? buildRig(sp, ext) : buildExt(sp, ext);
+      if (PUB && HAS3D.has(baseId(sp))) {
+        const e = touch(baseId(sp));
+        if (e) return buildRig(sp, e);
+        loadRig(baseId(sp));   // 还没下载：这次先用程序模型，后台去下载
+      } else if (PUB && HAS2D.has(baseId(sp))) {
+        // 还没做出 3D 模型的：用 Gemini 原画（2D 图标）立一张面向镜头的纸片，比程序拼的好看
+        return buildImg(sp, iconTex(sp));
+      }
+    }
     const root = new T3.Group();
     const W = .016;                               // 描边粗细
     const c = sp.c || '#8bc34a', k = sp.k || '#fff4d8', a = sp.a || '#ffca28', dk = shade(c, .42);
@@ -378,6 +592,7 @@
   // 每帧动画：呼吸、漂浮、眨眼、摇尾巴、扇翅膀；state.talk 张嘴
   function animate(R, t, state) {
     state = state || {};
+    if (R.mixer) { const dt = R._lt == null ? 0 : Math.max(0, Math.min(.1, t - R._lt)); R._lt = t; R.mixer.update(dt); return; }
     const br = Math.sin(t * 2.4) * .025;
     R.body.scale.set(1 - br * .5, 1 + br, 1 - br * .5);
     R.body.position.y = R.base + (R.float ? R.float / R.size * (1 + Math.sin(t * 1.8)) : 0);
@@ -392,7 +607,15 @@
   }
 
   // 释放（贴图和材质是共用的，不在这里释放）
-  function dispose(R) { R.root.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
+  function dispose(R) {
+    if (R.mixer) {
+      R.mixer.stopAllAction(); R.mixer.uncacheRoot(R.mixer.getRoot());
+      R.root.traverse(o => { if (o.material && o.material.isMeshToonMaterial) o.material.dispose(); });
+      if (R.src && !R.freed) { R.freed = true; R.src.users = Math.max(0, (R.src.users || 0) - 1); trim(); }
+      return;
+    }
+    R.root.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  }
 
   // ---------- 截图：给菜单、图鉴、2D 画面用 ----------
   let snapR = null, snapScene = null, snapCam = null;
@@ -401,6 +624,13 @@
     size = size || 192;
     const key = sp.id + ':' + size + (opts && opts.proc ? ':p' : '') + (opts && opts.ry != null ? ':r' + opts.ry : '');
     if (snapCache[key]) return snapCache[key];
+    if (!(opts && opts.proc) && EXT[baseId(sp)] && EXT[baseId(sp)].img) return (snapCache[key] = GEM_URL(baseId(sp)));
+    // 有发布的 2D 图标就直接用图标（异色的先用原色图标顶着，转好色再换）
+    if (PUB && !(opts && (opts.proc || opts.ry != null)) && HAS2D.has(baseId(sp))) {
+      if (!isShiny(sp)) return (snapCache[key] = icon2d(baseId(sp)));
+      const u = shinyIcon(baseId(sp));
+      return u ? (snapCache[key] = u) : icon2d(baseId(sp));
+    }
     try {
       if (!snapR) {
         const cv = document.createElement('canvas');
@@ -412,6 +642,7 @@
       }
       snapR.setPixelRatio(1); snapR.setSize(size, size, false);
       const R = build(sp, opts);
+      if (R.mixer) R.mixer.update(0);   // 会动的模型摆成待机动作的姿势（不然是绑骨骼时的姿势）
       R.root.rotation.y = opts && opts.ry != null ? opts.ry : -.35;
       snapScene.add(R.root);
       const h = Math.max(R.height, .9), dist = h * 3.1 + .6;
@@ -424,6 +655,43 @@
       return (snapCache[key] = url);
     } catch (e) { return ''; }
   }
+  // 2D 图标（assets/mon2d/<id>.webp，publish.js 做的 256×256 透明图）
+  const icon2d = id => assetUrl('assets/mon2d/' + id + '.webp');
+  // 异色图标：把图标读进来，逐像素转色相（和 3D 模型的 shinyPatch 同一个矩阵），存成 dataURL；还没转好返回 ''
+  const SHINY_ICON = {};
+  function shinyIcon(id) {
+    const c = SHINY_ICON[id];
+    if (typeof c === 'string') return c;
+    if (c) return '';
+    const im = new Image();
+    SHINY_ICON[id] = im;
+    const done = url => {
+      SHINY_ICON[id] = url;
+      for (const k in snapCache) if (k.split(':')[0] === id + '_shiny') delete snapCache[k];
+      window.dispatchEvent(new Event('mon3d-ready'));
+    };
+    im.onload = () => {
+      try {
+        const cv = document.createElement('canvas'); cv.width = im.naturalWidth; cv.height = im.naturalHeight;
+        const g = cv.getContext('2d'); g.drawImage(im, 0, 0);
+        const d = g.getImageData(0, 0, cv.width, cv.height), p = d.data;
+        const a = SHINY_DEG * Math.PI / 180, co = Math.cos(a), si = Math.sin(a);
+        const M = [.213 + co * .787 - si * .213, .715 - co * .715 - si * .715, .072 - co * .072 + si * .928,
+          .213 - co * .213 + si * .143, .715 + co * .285 + si * .140, .072 - co * .072 - si * .283,
+          .213 - co * .213 - si * .787, .715 - co * .715 + si * .715, .072 + co * .928 + si * .072];
+        for (let i = 0; i < p.length; i += 4) {
+          if (!p[i + 3]) continue;
+          const r = p[i], gg = p[i + 1], b = p[i + 2];
+          p[i] = M[0] * r + M[1] * gg + M[2] * b; p[i + 1] = M[3] * r + M[4] * gg + M[5] * b; p[i + 2] = M[6] * r + M[7] * gg + M[8] * b;
+        }
+        g.putImageData(d, 0, 0);
+        done(cv.toDataURL('image/webp', .85));
+      } catch (e) { done(icon2d(id)); }
+    };
+    im.onerror = () => done('');
+    im.src = icon2d(id);
+    return '';
+  }
 
-  window.Mon3D = { build, animate, dispose, snapshot, shade, ready, mode: ART_MODE, samples: SAMPLES };
+  window.Mon3D = { build, animate, dispose, snapshot, shade, ready, play, preload, prepIcons, hasModel, isLoaded, mode: ART_MODE, samples: SAMPLES };
 })();

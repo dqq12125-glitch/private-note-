@@ -14,7 +14,8 @@
 | `data.js` | `window.WORLDS`：13 个话题小镇的单词/句子/对话；`window.SCENES`：13 段对话动画台词 |
 | `cartoon.js` | `window.Cartoon`：SVG 画的对话动画角色、场景背景、16 种怪兽 |
 | `dex.js` | `window.DEX`：**386 只原创怪兽**（`list` / `byId`）、17 种属性和克制表 `eff()`、每属性 3 个招式 `MOVES`、7 种进化石 `STONES`。怪兽列表由 `node tools/build-dex.js` 从 `tools/dex/*.json` 生成（会检查编号、重名、进化链、参数），数据规格见 `tools/DEX_SPEC.md` |
-| `monster3d.js` | `window.Mon3D`：按图鉴参数拼出卡通渲染的 3D 怪兽（12 种身体 + 头饰/尾巴/翅膀/花纹/装饰，描边、三阶明暗、眨眼、呼吸、摇尾巴）；`snapshot()` 截图给菜单、图鉴和 2D 画面用。预览：`tools/mon3d.html?from=1&to=386` |
+| `monster3d.js` | `window.Mon3D`：怪兽的样子。**默认用发布的会动的模型**（`assets/mon3d/<id>.glb`：蒙皮 + 贴图 + idle/walk/attack/hit/faint 五个动作，`play(R, 名字)` 播动作）：启动时读 `assets/mon3d/index.json`、`assets/mon2d/index.json`（`ready`，最多等 2 秒，读不到就不用），`preload(列表)` 按需下载、同时只下一次、最近用过的留 16 只（多了释放没在用的）；`build(sp)` 模型已下载就用，没有就先用程序拼的模型、后台下载。没有模型的怪兽用程序拼的卡通模型（12 种身体 + 头饰/尾巴/翅膀/花纹/装饰，描边、三阶明暗、眨眼、呼吸、摇尾巴）。异色：模型贴图在 shader 里转色相 150°，2D 图标逐像素转同样的色相。`snapshot()` 给菜单、图鉴、队伍和大地图用：有 2D 图标（`assets/mon2d/<id>.webp`）就用图标，没有就截 3D 图。`?art=proc`（或 `localStorage['echo-art']='proc'`）强制全用程序模型；`?art=blender / gemini / 3d` 是老的样品对比模式。`file://` 打开时读不了资源，全用程序模型（测试就是这样跑的）。预览：`tools/mon3d.html?from=1&to=386` |
+| `assets/` | 随网页发布的美术：`arena/*.jpg` 战斗远景画、`mon3d/*.glb` 怪兽模型（meshopt 压缩 + WebP 贴图，每只约 200KB）、`mon2d/*.webp` 怪兽图标（256×256 透明）、两个 `index.json`。由 `node tools/mon3d/publish.js` 从 `art/` 生成，不要手改 |
 | `battle3d.js` | `window.Battle3D`：3D 战斗画面，出场、放招、受击、倒下、扔球收服，17 种属性各有小招/中招/大招特效（粒子、光束、闪电、冰刺、落石、陨石……）。预览：`tools/fx.html` |
 | `monsters.js` | `window.MonsterGame`：战斗规则（说英语攻击/听英语防御、每只 4 个招式、双属性克制、本属性加成）、收服（回声球/超级球，神兽难抓）、升级、按图鉴等级或进化石进化、野外怪兽表（按区域、地形、稀有度）、13 个主题属性道馆、训练师；队伍 6 只 + 电脑箱子；背包道具 `ITEMS`；分页图鉴 |
 | `people.js` | `window.EchoPeople`：日系 Q 版人物画法（4 方向 × 3 帧动作图集 `atlas()`、对话头像 `portrait()`、大立绘 `standing()`），全部造型 `LOOKS`（主角男/女、对手 Leo/Mia、妈妈、博士……）。改人物后打开 `tools/people.html` 看全部造型 |
@@ -23,7 +24,7 @@
 | `maps.js` | `window.EchoMaps`：地图引擎。地块表、13 座岛的风格 `THEMES`（地面配色、树、房子）、地图登记表 `define(id, def)`、出入口分组和配对 `link()`（地图四边的出口、洞口、楼梯、门、地垫、潜水点）、到达点 `arrival()`（`from:来的地图@第几组:偏移`）。没登记的地图（怪兽中心、商店、普通民房）用这里的老模板 |
 | `world.js` | `window.EchoWorld`：大地图逻辑——按地图 id 切换、走路、跳台阶、冰面滑行、瀑布、潜水/浮上来、楼梯、机关门、门/洞口/出口、草丛和洞穴遇怪、训练师视线、护士/电脑/店员/馆主/出题人/送礼村民/渡轮、秘传技能、驱怪喷雾、逃生绳、宝可梦式对话框（可以只听不看英文）；2D「流畅模式」渲染器；自动画质 |
 | `world3d.js` | `window.EchoWorld3D`：three.js 的 2.5D 渲染器（地面贴图 + 低多边形树/房子/岩壁 + 随风摆的草丛 + 水面着色器 + 纸片人物 + 移轴景深）。三档画质 high/mid/low |
-| `vendor/three.min.js` | 裁剪过的 three.js（只打包用到的类）。要加新的 three 类：改 `tools/three-entry.js`，跑 `npm run build:three` |
+| `vendor/three.min.js` | 裁剪过的 three.js（只打包用到的类，含 GLTFLoader + MeshoptDecoder + SkeletonUtils）。要加新的 three 类：改 `tools/three-entry.js`，跑 `npm run build:three` |
 | `game.js` | 主程序：存档、朗读（TTS + 有道在线兜底）、语音识别与打分、闯关练习（13 岛 × 7 关）、对话动画剧场、每日任务、成就、宠物店、设置（含冒险画面画质）；最后把工具以 `api` 对象交给 MonsterGame / EchoWorld |
 
 关键约定：
@@ -36,6 +37,16 @@
 - 屏幕切换用 `show(id)`：home / play / result / theater / battle / world。
 - 口语打分：`speakMode()` 返回 `'sr'`（浏览器语音识别）或 `'self'`（自评）；`scoreSpeech()` 做 0–100 打分。
 - 调试入口：`EchoWorld._debug()` 可以拿到当前地图、玩家位置、渲染器，`goMap(id, how)` 直接传送（测试里用）。
+
+## 怪兽 3D 资源
+
+- `art/` 是**母版**（不进仓库，`.gitignore` 忽略）：`art/gemini/cut2/<id>.png` Gemini 画的抠好的图、`art/hy3d/` Hunyuan3D 生成的模型、`art/mon3d/<id>.glb` 绑好骨骼做好动作的模型（约 600KB，未压缩）。
+- `assets/` 是**发布版**（进仓库、随 GitHub Pages 发布）：`assets/mon3d/<id>.glb`（约 200KB）、`assets/mon2d/<id>.webp`（约 15KB）和两个 `index.json`。游戏只读 `assets/`。
+- 重新生成的流程：`tools/mon3d/gen.py`（图 → Hunyuan3D 模型）→ 写 `tools/mon3d/rigs/<id>.json`（骨骼位置，见 `tools/mon3d/RIGGING.md`）→ `bash tools/mon3d/rigtool.sh rig <id>`（`tools/blender/monrig.py` 绑骨骼、做五个动作，导出 `art/mon3d/<id>.glb`）→ **`node tools/mon3d/publish.js`**（压缩发布到 `assets/`，更新索引）。
+- `publish.js` 按修改时间只做有变化的（可以反复跑；`--force` 全部重做，后面跟 id 只做这几只；刚写出来 10 秒内的文件先跳过）。3D 用 `gltf-transform optimize --compress meshopt --texture-compress webp --texture-size 1024 --simplify false`（蒙皮和五个动作都保留，已核对过姿势和原文件一致）；贴图改 512（`TEX_SIZE=512 node tools/mon3d/publish.js --force`）只小两成左右，大头是几何。2D 图标用 Python + Pillow（裁透明边、放进 256×256、脚贴底）。没有 cut2 图的用 `art/gemini/cut/` 的。
+- 386 只都有 Gemini 原画（`assets/mon2d`）。还没有 3D 模型的（没生成完、或列在 `tools/mon3d/hold.txt` 里暂不发布的：模型太扁/多了底座/等重画），战斗里用 2D 原画立一张面向镜头的纸片（`monster3d.js` 的 `iconTex` + `buildImg`），不再用程序拼的模型。
+- 出图流程：`art/gemini/families.json` 每个家族一张图（Gemini 网页版，`tools/mon3d/gembatch.py` 生成浏览器动作，撞脸宝可梦的在它的 `OVERRIDE` 里改描述；`gemwatch.py` 按队列把下载的图存成 `art/gemini/fam/NNN.png`）→ `tools/mon3d/split.py` 切成单只。`redo.txt` / `lookalike.txt` / `regen.txt` 记着要重画、撞脸、要重新生成 3D 的。
+- 战斗：`monsters.js` 开战时 `prep()` 把双方队伍的模型都下载好（最多等 2.5 秒，没下完先用程序模型，出场前下完就换上）；换怪兽、对手换下一只、我方倒下换人前也会等一下；进大地图时后台下载自己队伍的，进化时下载新样子的。
 
 ## 必须遵守的限制
 

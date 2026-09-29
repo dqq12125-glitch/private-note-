@@ -911,9 +911,8 @@
     }
     // 地图上的野生怪兽（剧情用）
     function setMonOn(s, sp) {
-      const key = 'mon:' + sp.id;
-      if (s.key === key) return;
-      const im = A.monImg(sp);
+      const key = 'mon:' + sp.id, im = A.monImg(sp);
+      if (s.key === key && s.im === im) return;
       if (!im.complete || !im.naturalWidth) return;
       const c = document.createElement('canvas'); c.width = c.height = Q.cell;
       c.getContext('2d').drawImage(im, 0, 0, Q.cell, Q.cell);
@@ -921,7 +920,7 @@
       if (s.mesh) { s.root.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }
       s.mesh = sheet(t, 1.05); s.mesh.rotation.x = -pitch * .8; s.mesh.material.userData.tex = t;
       s.root.add(s.mesh);
-      s.key = key;
+      s.key = key; s.im = im;
     }
     function monSprite() {
       const root = new T3.Group();
@@ -929,8 +928,9 @@
       return { root, mesh: null, sp: null };
     }
     function setMon(f, sp) {
-      if (!sp || f.sp === sp.id) return;
+      if (!sp) return;
       const im = A.monImg(sp);
+      if (f.sp === sp.id && f.im === im) return;
       if (!im.complete || !im.naturalWidth) return;
       const c = document.createElement('canvas'); c.width = c.height = Q.cell;
       c.getContext('2d').drawImage(im, 0, 0, Q.cell, Q.cell);
@@ -939,7 +939,7 @@
       f.mesh = sheet(t, 1.05);
       f.mesh.rotation.x = -pitch * .8;
       f.root.add(f.mesh);
-      f.sp = sp.id;
+      f.sp = sp.id; f.im = im;
     }
     function bubbleSprite(ch, col) {
       const t = canvasTexKeep(64, 64, g => {

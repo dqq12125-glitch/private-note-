@@ -156,6 +156,7 @@
   }
   function enter(z, how) {
     E.primeTTS(); E.ac();
+    if (MG.preloadTeam) MG.preloadTeam();   // 队伍的 3D 模型先在后台下载，开战时就不用等
     E.closeModal();
     E.show('world');
     ensureDom();
@@ -1143,14 +1144,20 @@
   const VILLAGER_LOOKS = PPL.VILLAGERS, TRAINER_LOOKS = PPL.TRAINERS;
   // 主角的样子跟开场选的男孩 / 女孩走
   const playerLook = () => (E.S.player && E.S.player.gender === 'girl') ? LOOKS.girl : LOOKS.boy;
+  // 怪兽图：Mon3D 的图标（发布的 2D 图标或 3D 截图）；图标索引读完、异色图标转好色时（mon3d-ready）重新取一次地址
   const imgCache = {};
+  let imgVer = 0;
+  window.addEventListener('mon3d-ready', () => { imgVer++; });
   function monImg(sp) {
-    if (!imgCache[sp.id]) {
-      const im = new Image(), url = window.Mon3D ? Mon3D.snapshot(sp, 192) : '';
-      im.src = url || 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Cartoon.monster2d(sp).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
-      imgCache[sp.id] = im;
-    }
-    return imgCache[sp.id];
+    const c = imgCache[sp.id];
+    if (c && c._v === imgVer) return c;
+    const url = window.Mon3D ? Mon3D.snapshot(sp, 192) : '';
+    if (c && c._url === url) { c._v = imgVer; return c; }
+    const im = new Image();
+    im._url = url; im._v = imgVer;
+    im.src = url || 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Cartoon.monster2d(sp).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
+    imgCache[sp.id] = im;
+    return im;
   }
   // 地上的道具球
   function drawItemBall(g, cx, cy, R) {
