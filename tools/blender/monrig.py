@@ -162,6 +162,16 @@ def build(id_, spec):
     # 去掉飘在旁边的小碎块（和主体不相连、顶点数不到最大块 2% 的部分）
     import bmesh
     bm = bmesh.new(); bm.from_mesh(obj.data); bm.verts.ensure_lookup_table()
+    # "cutbase": 0.02 → 脚下连着的薄底板（Hunyuan3D 有时会生成一块地面圆盘）：删掉所有顶点都低于这个高度的面，
+    # 再删掉因此孤立的点；脚底会少一层薄皮，看不出来。之后的去碎块会顺便清掉底板断开后剩下的边角
+    if spec.get('cutbase'):
+        hb = float(spec['cutbase'])
+        low = [f for f in bm.faces if all(v.co.z < hb for v in f.verts)]
+        bmesh.ops.delete(bm, geom=low, context='FACES')
+        lone = [v for v in bm.verts if not v.link_faces]
+        if lone: bmesh.ops.delete(bm, geom=lone, context='VERTS')
+        bm.verts.ensure_lookup_table()
+        print('CUTBASE', id_, len(low), 'faces')
     seen, parts = set(), []
     for v in bm.verts:
         if v.index in seen: continue
@@ -176,7 +186,9 @@ def build(id_, spec):
     big = max(len(c) for c in parts)
     junk = [x for c in parts if len(c) < big * 0.02 for x in c]
     if junk:
-        bmesh.ops.delete(bm, geom=junk, context='VERTS'); bm.to_mesh(obj.data); obj.data.update()
+        bmesh.ops.delete(bm, geom=junk, context='VERTS')
+    if junk or spec.get('cutbase'):   # 切了底板但没有碎块时也要写回网格
+        bm.to_mesh(obj.data); obj.data.update()
     print('PARTS', id_, len(parts), 'removed', len(junk), 'verts')
     bm.free()
     m = obj.modifiers.new('dec', 'DECIMATE'); m.ratio = min(1, spec.get('faces', 9000) / len(obj.data.polygons))

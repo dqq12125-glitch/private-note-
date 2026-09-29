@@ -19,3 +19,10 @@ aurorakit/aurorahare 大耳朵毛领狐兔像伊布/冰伊布 → 家族 203 重
 kelplet 绿蛇头顶叶子（轻，像藤藤蛇）
 museumowl 棕猫头鹰领结（轻，像木木枭）
 echobat/echowing 紫蝙蝠大耳朵（轻，像嗡蝠）
+radarwing 尾巴末端黄色闪电像皮卡丘尾巴 → 待重画尾巴
+polarcub 浅蓝小熊（轻）
+proudshell 蓝色大圆耳头顶尖刺像尼多后 → 家族 187 重画
+radiohound 黄黑＋闪电尾像皮卡丘/雷电狗 → 重画
+seasonkid 棕色斑点小鹿＋季节，像四季鹿 → 重画
+plugpup 黄白小狗（轻，像来电汪）
+sunpainter 画家主题＋画笔尾巴，和图图犬同一创意（外形不同，轻）

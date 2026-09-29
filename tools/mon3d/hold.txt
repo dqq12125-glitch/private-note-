@@ -1,37 +1,23 @@
 # 暂不发布 3D 模型的怪兽（游戏里显示 2D 原画纸片）。重新生成、重新绑好骨骼后从这里删掉再跑 publish.js
 # 模型太扁（纸片）/ 正面贴平板
 cloudsheep
-dreamlet
-lampy
-kitefish
-drizzle
-lavalet
 foglet
-ghostship
-dreamwhale
-jumprope
 bricklet
-cakelet
 breezelet
-dewdrop
-gemmy
 # 多了底座 / 零件分离
-jadehorn
-drumbear
-drumpaw
-cactuskid
-lavarock
-chilly
 # 和宝可梦太像，等 Gemini 重画
 # 第二批绑骨骼发现的
-legendmoth
 ghostsail
 mistlet
 cloudchick
 drumfrog
-lighthouse
-cheerpuff
-boltkite
 cinderchick
-grumpcloud
 nightfog
+paperkite
+joyburst
+pollenpuff
+moodlet
+runelet
+shellbit
+shyshell
+silkball

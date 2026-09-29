@@ -49,13 +49,20 @@ if '--noshape' not in sys.argv:
         t = time.time()
         img = square(Image.open(os.path.join(SRC, i + '.png')))
         # 生成得太扁（最薄的一边 < 最长边的 25%）就换种子重来，最多试 4 个种子，挑最厚的
+        # --seeds=21,42,5 自己给种子；--pca 用顶点主成分量厚度（最薄方向 / 最长方向），带底座、翅膀的纸片也量得出来，并且试完所有种子挑最厚的
         best = None
-        for sd in [SEED, 1, 3, 11][:4]:
+        seeds = [int(x) for x in opt['seeds'].split(',')] if 'seeds' in opt else [SEED, 1, 3, 11]
+        for sd in seeds:
             m = shape(image=img, num_inference_steps=STEPS, octree_resolution=OCT, guidance_scale=6.0,
                       generator=torch.manual_seed(sd))[0]
-            e = m.bounds[1] - m.bounds[0]; ratio = float(min(e) / max(e))
+            if '--pca' in sys.argv:
+                import numpy as np
+                v = np.asarray(m.vertices, dtype=np.float64); v = v - v.mean(0)
+                ev = np.linalg.eigvalsh(np.cov(v.T)); ratio = float(np.sqrt(max(ev[0], 0) / ev[-1]))
+            else:
+                e = m.bounds[1] - m.bounds[0]; ratio = float(min(e) / max(e))
             if best is None or ratio > best[0]: best = (ratio, m, sd)
-            if ratio >= 0.25: break
+            if ratio >= (0.5 if '--pca' in sys.argv else 0.25): break
             print('  flat', i, 'seed', sd, round(ratio, 2), flush=True)
         mesh = best[1]
         mesh = FloaterRemover()(mesh); mesh = DegenerateFaceRemover()(mesh); mesh = FaceReducer()(mesh, max_facenum=60000)

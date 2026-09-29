@@ -44,6 +44,8 @@
 - `assets/` 是**发布版**（进仓库、随 GitHub Pages 发布）：`assets/mon3d/<id>.glb`（约 200KB）、`assets/mon2d/<id>.webp`（约 15KB）和两个 `index.json`。游戏只读 `assets/`。
 - 重新生成的流程：`tools/mon3d/gen.py`（图 → Hunyuan3D 模型）→ 写 `tools/mon3d/rigs/<id>.json`（骨骼位置，见 `tools/mon3d/RIGGING.md`）→ `bash tools/mon3d/rigtool.sh rig <id>`（`tools/blender/monrig.py` 绑骨骼、做五个动作，导出 `art/mon3d/<id>.glb`）→ **`node tools/mon3d/publish.js`**（压缩发布到 `assets/`，更新索引）。
 - `publish.js` 按修改时间只做有变化的（可以反复跑；`--force` 全部重做，后面跟 id 只做这几只；刚写出来 10 秒内的文件先跳过）。3D 用 `gltf-transform optimize --compress meshopt --texture-compress webp --texture-size 1024 --simplify false`（蒙皮和五个动作都保留，已核对过姿势和原文件一致）；贴图改 512（`TEX_SIZE=512 node tools/mon3d/publish.js --force`）只小两成左右，大头是几何。2D 图标用 Python + Pillow（裁透明边、放进 256×256、脚贴底）。没有 cut2 图的用 `art/gemini/cut/` 的。
+- 现状（2026-09-30）：386 只都有原画，368 只有会动的 3D 模型，18 只（`hold.txt`，大多是生成出来像纸片的）先用原画纸片。
+- 生成得太扁：`gen.py --pca --seeds=21,42,5,9` 用顶点主成分量厚度、多试种子挑最厚的；不加 `--turbo` 用完整版（50 步）有时更立体。脚下连着薄地面圆盘的：骨骼 json 里加 `"cutbase": 0.02`（`monrig.py` 删掉贴地的薄层）。
 - 386 只都有 Gemini 原画（`assets/mon2d`）。还没有 3D 模型的（没生成完、或列在 `tools/mon3d/hold.txt` 里暂不发布的：模型太扁/多了底座/等重画），战斗里用 2D 原画立一张面向镜头的纸片（`monster3d.js` 的 `iconTex` + `buildImg`），不再用程序拼的模型。
 - 出图流程：`art/gemini/families.json` 每个家族一张图（Gemini 网页版，`tools/mon3d/gembatch.py` 生成浏览器动作，撞脸宝可梦的在它的 `OVERRIDE` 里改描述；`gemwatch.py` 按队列把下载的图存成 `art/gemini/fam/NNN.png`）→ `tools/mon3d/split.py` 切成单只。`redo.txt` / `lookalike.txt` / `regen.txt` 记着要重画、撞脸、要重新生成 3D 的。
 - 战斗：`monsters.js` 开战时 `prep()` 把双方队伍的模型都下载好（最多等 2.5 秒，没下完先用程序模型，出场前下完就换上）；换怪兽、对手换下一只、我方倒下换人前也会等一下；进大地图时后台下载自己队伍的，进化时下载新样子的。
