@@ -918,7 +918,25 @@
   function gfxTier() {
     const st = E.S.settings, g = st.gfx || 'auto';
     if (g !== 'auto') return g;
-    return st.gfxAuto || 'mid';
+    return st.gfxAuto || (strongDevice() ? 'high' : 'mid');
+  }
+  // 好手机（APK 里、8GB 以上内存、或 8 核以上 + WebGL2）自动档直接从「精美」开始；跑不动 autoTune 照样会往下降
+  // 显卡是软件模拟的（SwiftShader、llvmpipe，比如显卡被浏览器拉黑）就不算好手机
+  let strong = null;
+  function strongDevice() {
+    if (strong !== null) return strong;
+    strong = false;
+    try {
+      const c = document.createElement('canvas'), gl = c.getContext('webgl2');
+      if (!gl) return strong;
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      const name = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) || '');
+      const lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
+      if (/swiftshader|llvmpipe|softpipe|software/i.test(name)) return strong;
+      const n = navigator;
+      strong = !!window.ECHO_APP || (n.deviceMemory || 0) >= 8 || (n.hardwareConcurrency || 0) >= 8;
+    } catch (e) { strong = false; }
+    return strong;
   }
   function ensureRenderer() {
     const tier = gfxTier();
@@ -956,11 +974,11 @@
     if (next === '2d') E.toast('这台手机跑 3D 有点吃力，已切换成流畅模式（可以在设置里改）');
   }
   function resize() { if (R) R.resize(); }
-  function startLoop() { if (running) return; running = true; lastNow = 0; raf = requestAnimationFrame(frame); }
+  let nextDraw = 0;
+  function startLoop() { if (running) return; running = true; lastNow = 0; nextDraw = 0; raf = requestAnimationFrame(frame); }
   function stopLoop() { running = false; cancelAnimationFrame(raf); held = null; }
   function frame(now) {
     if (!running) return;
-    const dt = lastNow ? now - lastNow : 16; lastNow = now;
     if (PL.moving && now - PL.t0 >= PL.dur) { PL.moving = false; PL.jump = false; PL.fx = PL.x; PL.fy = PL.y; FL.fx = FL.x; FL.fy = FL.y; onStep(); }
     if (!PL.moving && held && !dlg && !busy) tryMove(held);
     // 镇上的人会时不时转头看看四周
@@ -969,6 +987,13 @@
       if (!n.nextTurn) n.nextTurn = now + 1500 + Math.random() * 3000;
       if (now > n.nextTurn && !dlg) { n.face = ['up', 'down', 'left', 'right', 'down'][Math.floor(Math.random() * 5)]; n.nextTurn = now + 2000 + Math.random() * 3500; }
     });
+    // 精美画质每秒最多画 60 次：120Hz 的屏幕每秒画 120 次只会更烫更费电，看不出区别。
+    // 走路、动画都按时间算，上面的走路判定每一帧照样跑，只是不重画
+    if (R.tier === 'high') {
+      if (now < nextDraw - 2) { raf = requestAnimationFrame(frame); return; }
+      nextDraw = Math.max(nextDraw + 1000 / 60, now + 1000 / 60 - 6);
+    }
+    const dt = lastNow ? now - lastNow : 16; lastNow = now;
     R.draw(now, view(now));
     autoTune(now, dt);
     raf = requestAnimationFrame(frame);
@@ -1636,6 +1661,8 @@
     stop: () => { stopLoop(); if (dlg) { clearInterval(dlg.tw); dlg = null; const d = $('w-dlg'); if (d) d.hidden = true; } busy = false; },
     // 设置里改了画质
     setGfx: () => { if (!M || !$('w-view')) return; ensureRenderer(); R.load(M, api3d); resize(); },
+    // 现在用哪一档画质（自动档按设备和量出来的帧率；战斗画面也按这个）
+    gfxTier: () => gfxTier(),
     placeLabel: () => { const ws = E.S.world; if (!ws.started || !ws.map || !window.EchoMaps) return null; const m = EchoMaps.get(ws.map); return m ? placeName(m) : null; },
     _debug: () => ({ M, PL, FL, dlg, busy, R, perf, goMap: (id, how) => goMap(id, how) }),
     _art: ART,

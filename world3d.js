@@ -3,8 +3,10 @@
 (function () {
   'use strict';
 
+  // dpr 是上限（实际取 min(设备像素比, dpr)）：精美档在 3 倍屏的手机上按 3 倍画，不再放大发糊
+  // tex：地面贴图每格多少像素（整张贴图最长边不超过 4096，见 load）；cell：人物图集每帧多少像素
   const TIERS = {
-    high: { dpr: 2, shadow: 2048, soft: true, post: true, taps: 16, tex: 48, cell: 128 },
+    high: { dpr: 3, shadow: 2048, soft: true, post: true, taps: 16, tex: 64, cell: 160 },
     mid: { dpr: 1.5, shadow: 1024, soft: false, post: true, taps: 10, tex: 32, cell: 96 },
     low: { dpr: 1, shadow: 0, soft: false, post: false, taps: 0, tex: 24, cell: 64 },
   };
@@ -49,13 +51,14 @@
     if (Q.post) {
       rt = new T3.WebGLRenderTarget(4, 4, { samples: 4, colorSpace: T3.SRGBColorSpace, depthBuffer: true });
       const mat = new T3.ShaderMaterial({
-        uniforms: { tDiffuse: { value: rt.texture }, uRes: { value: new T3.Vector2(1, 1) }, uFocus: { value: .45 }, uBand: { value: .16 }, uBlur: { value: 5 }, uVig: { value: .55 }, uCenter: { value: new T3.Vector2(.5, .5) }, uDark: { value: 0 } },
+        uniforms: { tDiffuse: { value: rt.texture }, uRes: { value: new T3.Vector2(1, 1) }, uFocus: { value: .45 }, uBand: { value: .16 }, uBlur: { value: 5 }, uNear: { value: 1.4 }, uVig: { value: .55 }, uCenter: { value: new T3.Vector2(.5, .5) }, uDark: { value: 0 } },
         vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
         fragmentShader: [
-          'uniform sampler2D tDiffuse; uniform vec2 uRes; uniform float uFocus, uBand, uBlur, uVig, uDark; uniform vec2 uCenter; varying vec2 vUv;',
+          'uniform sampler2D tDiffuse; uniform vec2 uRes; uniform float uFocus, uBand, uBlur, uNear, uVig, uDark; uniform vec2 uCenter; varying vec2 vUv;',
           'void main(){',
           '  vec3 col = texture2D(tDiffuse, vUv).rgb;',
-          '  float dy = vUv.y - uFocus; float amt = smoothstep(uBand, uBand + 0.45, dy > 0.0 ? dy : -dy * 1.4);',
+          // uNear：画面下方（离镜头近的一侧）模糊得快一点；竖屏时不加（见 draw）
+          '  float dy = vUv.y - uFocus; float amt = smoothstep(uBand, uBand + 0.45, dy > 0.0 ? dy : -dy * uNear);',
           '  if (amt > 0.01) {',
           '    vec3 acc = col; float n = 1.0;',
           '    for (int i = 0; i < ' + Q.taps + '; i++) {',
@@ -67,7 +70,8 @@
           '  float l = dot(col, vec3(0.299, 0.587, 0.114));',
           '  col = mix(vec3(l), col, 1.12) * vec3(1.02, 1.0, 0.97);',
           '  vec2 q = vUv - 0.5; col *= 1.0 - uVig * dot(q, q) * 1.5;',
-          '  if (uDark > 0.0) { float d = length((vUv - uCenter) * vec2(uRes.x / uRes.y, 1.0)); col *= mix(1.0, 0.1 + 0.9 * smoothstep(0.58, 0.14, d), uDark); }',
+          // 洞穴里只有主角身边亮（smoothstep 的两个边界不能反着写，GLSL ES 里结果没有定义）
+          '  if (uDark > 0.0) { float d = length((vUv - uCenter) * vec2(uRes.x / uRes.y, 1.0)); col *= mix(1.0, 0.1 + 0.9 * (1.0 - smoothstep(0.14, 0.58, d)), uDark); }',
           '  gl_FragColor = vec4(col, 1.0);',
           '  #include <colorspace_fragment>',
           '}',
@@ -133,10 +137,11 @@
       g.setAttribute('color', new T3.BufferAttribute(col, 3));
       return g;
     }
-    // 人字形屋顶（屋脊沿 x 方向）
+    // 人字形屋顶（屋脊沿 x 方向）。底面也封上：开口的壳在阴影图里只剩东边那块三角形，
+    // 会在房子旁边投出一条和房子分开的「尖刺」影子；封口以后整个屋顶都投影子（底面朝下，镜头看不到）
     function gable(w, d, h) {
       const hw = w / 2, hd = d / 2, A = [-hw, 0, hd], B = [hw, 0, hd], Cc = [hw, h, 0], D = [-hw, h, 0], Ee = [-hw, 0, -hd], F = [hw, 0, -hd];
-      const tri = [A, B, Cc, A, Cc, D, F, Ee, D, F, D, Cc, A, D, Ee, B, F, Cc];
+      const tri = [A, B, Cc, A, Cc, D, F, Ee, D, F, D, Cc, A, D, Ee, B, F, Cc, A, Ee, F, A, F, B];
       const g = new T3.BufferGeometry();
       g.setAttribute('position', new T3.Float32BufferAttribute(tri.flat(), 3));
       g.computeVertexNormals();
@@ -160,7 +165,7 @@
     let player = null, follower = null, hintS = null, alertTex = null, hintTex = null, pickSprites = [];
     const camT = new T3.Vector3(), camGoal = new T3.Vector3();
     const room = () => m && m.kind === 'inside' && m.W <= 13 && m.H <= 13;
-    let VW = 1, VH = 1, dist = 22, pitch = 50 * Math.PI / 180, lastT = 0, snap = '';
+    let VW = 1, VH = 1, dist = 22, pitch = 50 * Math.PI / 180, lastT = 0, snap = '', blur0 = 4.5, roomCam = null, darkLit = null;
 
     function add(o) { world.add(o); return o; }
     function mesh(geo, mat, x, y, z, cast) {
@@ -203,8 +208,8 @@
       clear();
       THEME = (window.EchoMaps && EchoMaps.THEMES[m.theme]) || {};
       const pal = m.pal, out = m.kind === 'town' || m.kind === 'route' || m.kind === 'under', sea = !!(m.def && m.def.sea);
-      // 地面贴图
-      const px = Q.tex, tex = canvasTex(m.W * px, m.H * px, g => A.paintGround(g, m, px, true));
+      // 地面贴图（最长边不超过 4096 像素：再大手机上的画布和贴图都可能建不出来）
+      const px = Math.min(Q.tex, Math.floor(4096 / Math.max(m.W, m.H))), tex = canvasTex(m.W * px, m.H * px, g => A.paintGround(g, m, px, true));
       const gmat = new T3.MeshLambertMaterial({ map: tex }); gmat._own = true;
       const ground = mesh(new T3.PlaneGeometry(m.W, m.H).rotateX(-Math.PI / 2), gmat, m.W / 2, 0, m.H / 2);
       ground.castShadow = false;
@@ -230,6 +235,7 @@
       sun.intensity = dark ? .15 : cave ? 1.1 : inside ? 1.2 : under ? 1.0 : 2.1;
       sun.color.set(under ? '#bfefff' : THEME.pal && THEME.pal.fog ? '#e8e4d8' : '#fff1d8');
       lamp.intensity = dark ? 14 : 0;
+      darkLit = null;   // 漆黑洞穴里闪光开没开，draw 里按每帧的状态设灯光
       pitch = (inside && room() ? 56 : 52) * Math.PI / 180;
       // 人物
       m.npcs.forEach(n => sprites.push(person(n)));
@@ -402,7 +408,8 @@
           'uniform float uTime; uniform vec3 uDeep, uShallow; varying float vE, vD, vF; varying vec2 vW;',
           'void main(){',
           '  float w = sin(vW.x * 2.3 + uTime * 1.2) * 0.5 + sin(vW.y * 3.1 - uTime * 0.9 + vW.x) * 0.5;',
-          '  float s = smoothstep(0.86, 0.99, sin(vW.x * 5.3 + uTime * 1.7) * sin(vW.y * 4.1 - uTime * 1.3 + vW.x * 0.7));',
+          // 波光点：洞穴里不要（暗的水面上一格一格的白点像下雪、像星空）
+          cave ? '  float s = 0.0;' : '  float s = smoothstep(0.86, 0.99, sin(vW.x * 5.3 + uTime * 1.7) * sin(vW.y * 4.1 - uTime * 1.3 + vW.x * 0.7));',
           '  vec3 c = mix(uShallow, uDeep, smoothstep(0.3, 1.0, vE)) + w * 0.035 + s * 0.55;',
           '  c = mix(c, uDeep * 0.55, vD * 0.7);',
           '  float f = smoothstep(0.55, 1.0, sin(vW.y * 7.0 - uTime * 10.0 + sin(vW.x * 3.0) * 1.5));',
@@ -505,19 +512,38 @@
           if (tex) { const mt = texMat(wallTex(tex, texCol), Math.max(1, Math.round(w)), Math.max(1, Math.round(h * 1.4))); mesh(new T3.BoxGeometry(w - .24, h, d).translate(0, h / 2, 0), mt, cx, 0, cz, true); }
           else mesh(cbox(w - .24, h, d, wallC, wallC, A.shade(wallC, .84)), vcol, cx, 0, cz, true);
         };
-        const gableRoof = (h, col, over = .5, y = wallH) => { const rg = gable(w + .1, d + over, h); tint(rg, col); mesh(rg, vcolFlat, cx, y, cz, true); mesh(cbox(w + .14, .09, .16, A.shade(col, 1.18)), vcol, cx, y + h - .05, cz, false); roofTop = y + h; };
-        const pyramid = (r, h, col, y = wallH, segs = 4) => { const g = new T3.ConeGeometry(r, h, segs, 1).rotateY(segs === 4 ? Math.PI / 4 : 0).translate(0, h / 2, 0); tint(g, col); mesh(g, vcolFlat, cx, y, cz, true); roofTop = y + h; };
+        // 有英文招牌（CENTER / SHOP / GYM）的房子：屋檐短一点。镜头从斜上方往下看，屋檐伸出去多少，前墙最上面就被挡住多少，
+        // 招牌原来只露出下半截。lim：前墙上不被屋檐挡住的最高处（按画面下方、看得最斜的地方算）
+        const signed = L === 'C' || L === 'M' || gym;
+        let lim = 99, roundR = 0;
+        const eave = (y, o) => { lim = Math.min(lim, y - Math.max(0, o - .05) * 1.5 - .02); };
+        const gableRoof = (h, col, over = .5, y = wallH) => {
+          if (signed) over = Math.min(over, .2);
+          const rg = gable(w + .1, d + over, h); tint(rg, col); mesh(rg, vcolFlat, cx, y, cz, true); mesh(cbox(w + .14, .09, .16, A.shade(col, 1.18)), vcol, cx, y + h - .05, cz, false); roofTop = y + h;
+          eave(y, over / 2);
+        };
+        // 尖顶：平的一边朝前（4 条边的转 45°、6 条边的转 30°；尖角朝前会挡住门上的招牌）。
+        // 有招牌或钟的房子前后压扁一点，屋檐最多伸出前墙 0.2；返回前后压扁的比例
+        const tight = signed || style === 'tower';
+        const pyramid = (r, h, col, y = wallH, segs = 4) => {
+          const half = segs === 4 ? r * Math.SQRT1_2 : segs === 6 ? r * Math.cos(Math.PI / 6) : r, sz = tight ? Math.min(1, (d / 2 + .2) / half) : 1;
+          const g = new T3.ConeGeometry(r, h, segs, 1).rotateY(segs === 4 ? Math.PI / 4 : segs === 6 ? Math.PI / 6 : 0).translate(0, h / 2, 0).scale(1, 1, sz);
+          tint(g, col); mesh(g, vcolFlat, cx, y, cz, true); roofTop = y + h;
+          eave(y, half * sz - d / 2);
+          return sz;
+        };
         const cyl = (r, h, col, y, segs = 16, x = cx, z = cz) => { const g = new T3.CylinderGeometry(r, r, h, segs).translate(0, h / 2, 0); tint(g, col); return mesh(g, vcol, x, y, z, true); };
-        const flatRoof = (col, y = wallH, lip = true) => { box(w - .1, .14, d + .1, col, cx, y, cz, true); if (lip) { box(w - .1, .18, .1, A.shade(col, .85), cx, y + .14, front, false); box(w - .1, .18, .1, A.shade(col, .85), cx, y + .14, back - .05, false); } roofTop = y + .3; };
-        let round = false;
+        const flatRoof = (col, y = wallH, lip = true) => { box(w - .1, .14, d + .1, col, cx, y, cz, true); if (lip) { box(w - .1, .18, .1, A.shade(col, .85), cx, y + .14, front, false); box(w - .1, .18, .1, A.shade(col, .85), cx, y + .14, back - .05, false); } roofTop = y + .3; eave(y, .05); };
+        let round = false, clock = false;
         switch (style) {
           case 'std': wallBox(wallH); gableRoof(.8, roofC); break;
           case 'med': wallC = '#fbf7ef'; wallBox(wallH); gableRoof(.55, gym ? roofC : '#d9643a', .4); break;
           case 'crayon': {
             wallC = HCOL[Math.floor(hsh * HCOL.length)]; wallBox(wallH);
-            box(w - .1, .14, d + .1, ['#ef5350', '#42a5f5', '#66bb6a', '#ffca28', '#ab47bc'][Math.floor(hsh * 5)], cx, wallH, cz, false);
-            const r = Math.min(w, d + .4) * .62; pyramid(r, 1.0, '#f5d7a1', wallH + .14, 6);
-            const tip = new T3.ConeGeometry(r * .3, .3, 6).translate(0, .15, 0); tint(tip, '#37474f'); mesh(tip, vcolFlat, cx, wallH + .14 + .7, cz, false);
+            box(w - .1, .14, d + .1, ['#ef5350', '#42a5f5', '#66bb6a', '#ffca28', '#ab47bc'][Math.floor(hsh * 5)], cx, wallH, cz, false); eave(wallH, .05);
+            const r = Math.min(w, d + .4) * .62, sz = pyramid(r, 1.0, '#f5d7a1', wallH + .14, 6);
+            // 铅笔尖：比木头尖顶在那个高度粗一点、抬高一点，两个面不重合（重合会闪烁的花点）
+            const tip = new T3.ConeGeometry(r * .33, .3, 6).rotateY(Math.PI / 6).translate(0, .15, 0).scale(1, 1, sz); tint(tip, '#37474f'); mesh(tip, vcolFlat, cx, wallH + .14 + .72, cz, false);
             break;
           }
           case 'farm': wallBox(wallH, 'plank', P.wall || '#c9955e'); gableRoof(.95, '#e8c35a', .75); break;
@@ -529,8 +555,14 @@
           case 'dome': {
             wallC = '#f6fafc'; wallBox(wallH); box(w - .2, .12, d + .04, P.trim || '#5c6bc0', cx, wallH - .3, cz, false);
             const dm = new T3.MeshLambertMaterial({ color: '#8fd3f4', transparent: true, opacity: .78, emissive: 0x16334a }); dm._own = true;
-            mesh(new T3.SphereGeometry(Math.min(w - .24, d) * .5, 18, 10, 0, 6.29, 0, Math.PI / 2).scale(w > d + .5 ? (w - .24) / d : 1, 1, 1), dm, cx, wallH, cz, true);
-            roofTop = wallH + Math.min(w, d) * .5;
+            const dr = Math.min(w - .24, d) * .5, dsx = w > d + .5 ? (w - .24) / d : 1;
+            mesh(new T3.SphereGeometry(dr, 18, 10, 0, 6.29, 0, Math.PI / 2).scale(dsx, 1, 1), dm, cx, wallH, cz, true);
+            // 底下封一块朝下的圆片（镜头看不到）：开口的半球在阴影图里只剩一半，影子是歪的一块
+            const fan = [];
+            for (let k = 0; k < 18; k++) { const a0 = k / 18 * Math.PI * 2, a1 = (k + 1) / 18 * Math.PI * 2; fan.push(0, 0, 0, Math.cos(a0) * dr * dsx, 0, Math.sin(a0) * dr, Math.cos(a1) * dr * dsx, 0, Math.sin(a1) * dr); }
+            const disc = new T3.BufferGeometry(); disc.setAttribute('position', new T3.Float32BufferAttribute(fan, 3)); disc.computeVertexNormals();
+            mesh(disc, dm, cx, wallH + .001, cz, true);
+            roofTop = wallH + Math.min(w, d) * .5; eave(wallH - .3, .02);
             box(.05, .5, .05, '#90a4ae', cx + w * .3, roofTop - .2, cz, false);
             break;
           }
@@ -538,6 +570,7 @@
             round = true;
             const r = Math.min(w - .2, d + .2) / 2, stripe = texMat(wallTex('stripe', gym ? roofC : ['#e53935', '#1e88e5', '#8e24aa', '#43a047'][Math.floor(hsh * 4)]), 6, 1);
             mesh(new T3.CylinderGeometry(r, r, wallH, 20).translate(0, wallH / 2, 0), stripe, cx, 0, cz, true);
+            roundR = r; eave(wallH, r * .12);
             const cone = new T3.ConeGeometry(r * 1.12, 1.25, 20).translate(0, .62, 0);
             mesh(cone, texMat(wallTex('stripe', gym ? roofC : '#ffca28'), 8, 1), cx, wallH, cz, true);
             roofTop = wallH + 1.25;
@@ -548,12 +581,13 @@
           case 'tower': {
             wallH = gym ? 2.6 : 2.0; wallBox(wallH, 'stone', '#cfc6b6');
             pyramid(Math.max(w, d + .5) * .6, 1.2, '#4f9e8a');
-            const cf = circleSign('#fffdf5', '#b8862b', 'clock'); mesh(new T3.PlaneGeometry(.6, .6), cf, cx, wallH - .5, front + .015, false);
+            clock = true;   // 钟面在下面放（要躲开屋檐和招牌）
             break;
           }
           case 'cake': {
             round = true;
             const r = Math.min(w - .2, d + .2) / 2;
+            roundR = r;
             cyl(r, wallH * .62, '#fff4e0', 0, 24); cyl(r * .72, wallH * .45, '#ffe0ea', wallH * .62, 24);
             const icing = new T3.TorusGeometry(r, .09, 6, 24).rotateX(Math.PI / 2); tint(icing, '#ff8fb1'); mesh(icing, vcol, cx, wallH * .62, cz, false);
             const icing2 = new T3.TorusGeometry(r * .72, .08, 6, 24).rotateX(Math.PI / 2); tint(icing2, '#ffffff'); mesh(icing2, vcol, cx, wallH * 1.07, cz, false);
@@ -582,12 +616,13 @@
             const awT = canvasTex(128, 32, g => { for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? '#ffffff' : ['#ff7043', '#1e88e5', '#43a047', '#fdd835'][Math.floor(hsh * 4)]; g.fillRect(k * 16, 0, 16, 32); } });
             const am = new T3.MeshLambertMaterial({ map: awT, side: T3.DoubleSide }); am._own = true;
             const aw = mesh(new T3.PlaneGeometry(w - .3, .5), am, cx, wallH * .78, front + .22, true); aw.rotation.x = -1.0;
+            eave(wallH * .78 - .21, .43);
             break;
           }
           case 'chalet': wallBox(wallH, 'log', '#8d6e63'); gableRoof(1.3, '#f4f8fb', .8); box(.24, .55, .24, '#6d4c41', x1 - .8, wallH + .5, cz - .1, true); box(.3, .08, .3, '#ffffff', x1 - .8, wallH + 1.05, cz - .1, false); break;
           case 'temple': {
             wallBox(wallH + .15, 'stone', '#c9bfa8'); wallH += .15;
-            box(w + .1, .16, d + .5, '#b3a992', cx, wallH, cz, true); box(w - .5, .16, d, '#a39a84', cx, wallH + .16, cz, true); roofTop = wallH + .32;
+            box(w + .1, .16, d + .5, '#b3a992', cx, wallH, cz, true); box(w - .5, .16, d, '#a39a84', cx, wallH + .16, cz, true); roofTop = wallH + .32; eave(wallH, .25);
             [x0 + .35, x1 - .35].forEach(px => { const g = new T3.CylinderGeometry(.12, .14, wallH, 10).translate(0, wallH / 2, 0); tint(g, '#ddd4bf'); mesh(g, vcol, px, 0, front + .22, true); });
             const vine = new T3.PlaneGeometry(.4, .7); tint(vine, '#6d8b5a'); mesh(vine, vcol, x0 + .8, wallH - .45, front + .013, false);
             break;
@@ -596,7 +631,7 @@
             round = true;
             const r = .45, h = 3.2, stripe = texMat(wallTex('stripe', '#e53935'), 1, 1);
             stripe.map.rotation = Math.PI / 2; stripe.map.repeat.set(3, 1);
-            mesh(new T3.CylinderGeometry(r * .8, r, h, 16).translate(0, h / 2, 0), stripe, cx, 0, cz, true);
+            mesh(new T3.CylinderGeometry(r * .8, r, h, 16).translate(0, h / 2, 0), stripe, cx, 0, cz, true); roundR = r * .97;
             const lm = new T3.MeshBasicMaterial({ color: '#fff59d' }); lm._own = true; mesh(new T3.CylinderGeometry(.3, .3, .35, 12).translate(0, .17, 0), lm, cx, h, cz, false);
             pyramid(.42, .4, '#37474f', h + .35, 12); wallH = 1.1;
             break;
@@ -611,7 +646,7 @@
           case 'stadium': {
             round = true;
             const r = Math.min(w, d + .3) / 2;
-            const ring = new T3.CylinderGeometry(r, r * 1.05, wallH, 28, 1, true).translate(0, wallH / 2, 0); tint(ring, '#eceff1');
+            const ring = new T3.CylinderGeometry(r, r * 1.05, wallH, 28, 1, true).translate(0, wallH / 2, 0); tint(ring, '#eceff1'); roundR = r * 1.04;
             const rm = new T3.MeshLambertMaterial({ vertexColors: true, side: T3.DoubleSide }); rm._own = true; mesh(ring, rm, cx, 0, cz, true);
             const band = new T3.TorusGeometry(r, .08, 6, 28).rotateX(Math.PI / 2); tint(band, roofC); mesh(band, vcol, cx, wallH, cz, false);
             box(r * 1.2, .02, r * .9, '#66bb6a', cx, .02, cz, false);
@@ -630,7 +665,8 @@
           });
           const dm = new T3.MeshLambertMaterial({ map: doorT, transparent: true }); dm._own = true;
           const dy = style === 'hut' ? .45 : 0;
-          mesh(new T3.PlaneGeometry(.62, .93), dm, dx, .465 + dy, (round ? front + .02 : front + .012), false);
+          const dz = roundR ? cz + Math.sqrt(Math.max(0, roundR * roundR - (dx - cx) * (dx - cx))) + .02 : round ? front + .02 : front + .012;
+          mesh(new T3.PlaneGeometry(.62, .93), dm, dx, .465 + dy, dz, false);
           if (style === 'hut') { const lad = new T3.PlaneGeometry(.4, .5); tint(lad, '#8a5a33'); const o = mesh(lad, vcol, dx, .25, front + .35, false); o.rotation.x = -.5; }
         }
         // 窗户
@@ -646,38 +682,72 @@
           [x0 + .75, x1 - .75].forEach(wx => { if (!b.door || Math.abs(wx - (b.door.x + .5)) > .7) mesh(new T3.PlaneGeometry(.5, .4), wm, wx, wy, front + .012, false); });
           if (style === 'med' || style === 'farm') [x0 + .75, x1 - .75].forEach(wx => { if (!b.door || Math.abs(wx - (b.door.x + .5)) > .7) box(.5, .1, .12, '#8a5a33', wx, wy - .3, front + .06, false, '#e57373'); });
         }
-        // 招牌
-        if (L === 'C' || L === 'M' || gym) {
+        // 招牌：贴在门上面一点，整块都在屋檐下面看得到的地方（lim）；屋檐下地方不够就把招牌缩小一点
+        const doorTop = (style === 'hut' ? .45 : 0) + .93;
+        let signTop = doorTop;
+        if (signed) {
           const label = L === 'C' ? 'CENTER' : L === 'M' ? 'SHOP' : 'GYM';
-          const signT = canvasTex(256, 72, g => {
-            g.fillStyle = '#ffffff'; A.rr(g, 2, 2, 252, 68, 34); g.fill();
-            g.lineWidth = 5; g.strokeStyle = A.shade(roofC, .7); g.stroke();
-            g.fillStyle = roofC; g.font = '800 44px "Baloo 2", Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-            g.fillText(label, 138, 40);
-            if (L === 'C') { g.fillRect(24, 30, 30, 12); g.fillRect(33, 21, 12, 30); }
-            if (L === 'G') { g.fillStyle = '#ffc53d'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 8 : 18; g.lineTo(38 + Math.cos(a) * r, 37 + Math.sin(a) * r); } g.fill(); }
+          // 字用屋顶的颜色；屋顶颜色太浅（雪岛的白屋顶、农场的黄屋顶、实验室的浅蓝圆顶）白底上看不清，就用岛上的点缀色
+          const rc = new T3.Color(roofC), ink = rc.r * .2126 + rc.g * .7152 + rc.b * .0722 > .45 ? (P.trim || '#37474f') : roofC;
+          const signT = canvasTex(256, 64, g => {
+            g.fillStyle = '#ffffff'; A.rr(g, 2, 2, 252, 60, 30); g.fill();
+            g.lineWidth = 5; g.strokeStyle = A.shade(ink, .7); g.stroke();
+            g.fillStyle = ink; g.font = '800 46px "Baloo 2", Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+            g.fillText(label, 144, 36, 180);
+            if (L === 'C') { g.fillRect(25, 27, 28, 10); g.fillRect(34, 18, 10, 28); }
+            if (L === 'G') { g.fillStyle = '#ffc53d'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 7 : 17; g.lineTo(39 + Math.cos(a) * r, 33 + Math.sin(a) * r); } g.fill(); }
           });
           const sm = new T3.MeshLambertMaterial({ map: signT, transparent: true, emissive: 0x222222 }); sm._own = true;
-          const sw = Math.min(w - .5, 1.9);
-          mesh(new T3.PlaneGeometry(sw, sw * 72 / 256), sm, cx, Math.min(wallH, 1.8) - .22 + (style === 'hut' ? .45 : 0), front + (round ? .06 : .02), false);
+          const sw0 = Math.min(w - .5, 1.9), sh = Math.max(.3, Math.min(sw0 / 4, lim - doorTop - .05)), sw = sh * 4;
+          // 蛋糕房子的下层太矮，门上面放不下，还挂在原来的地方
+          const sy = style === 'cake' ? wallH - .22 : doorTop + .04 + sh / 2;
+          const sz = roundR ? cz + roundR + .03 : front + .05;
+          const sg = mesh(new T3.PlaneGeometry(sw, sh), sm, cx, sy, sz, false);
+          sg.receiveShadow = false;   // 屋檐的影子不落在招牌上，招牌一直是亮的
+          signTop = sy + sh / 2;
         }
+        // 钟楼的钟面：屋檐下面看得到的地方、招牌上面
+        if (clock) {
+          const cf = circleSign('#fffdf5', '#b8862b', 'clock');
+          const cy = Math.max(Math.min(wallH - .55, lim - .32), signTop + .33, doorTop + .33);
+          mesh(new T3.PlaneGeometry(.6, .6), cf, cx, cy, front + .015, false).receiveShadow = false;
+        }
+        // 商店的条纹雨棚：只搭在两边窗户上面，中间留给门和 SHOP 招牌（原来整排雨棚把招牌挡住了）
         if (L === 'M' && style === 'std') {
-          const awT = canvasTex(128, 32, g => { for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? '#ffffff' : roofC; g.fillRect(k * 16, 0, 16, 32); } });
+          const awT = canvasTex(64, 32, g => { for (let k = 0; k < 4; k++) { g.fillStyle = k % 2 ? '#ffffff' : roofC; g.fillRect(k * 16, 0, 16, 32); } });
           const am = new T3.MeshLambertMaterial({ map: awT, side: T3.DoubleSide }); am._own = true;
-          const aw = mesh(new T3.PlaneGeometry(w - .5, .45), am, cx, wallH * .72, front + .2, true);
-          aw.rotation.x = -1.0;
+          [x0 + .75, x1 - .75].forEach(ax => {
+            if (b.door && Math.abs(ax - (b.door.x + .5)) <= .7) return;
+            const aw = mesh(new T3.PlaneGeometry(.9, .45), am, ax, wallH * .72, front + .2, true);
+            aw.rotation.x = -1.0;
+          });
         }
         if (style === 'std' && (L === 'H' || L === 'J')) box(.22, .5, .22, A.shade(roofC, .7), x1 - .8, wallH + .25, cz - .1, true);
-        BLD.push({ objs: world.children.slice(n0), x0, x1, z0, top: roofTop, a: 1, own: false });
+        BLD.push({ objs: world.children.slice(n0), x0, x1, z0, top: roofTop, a: 1, own: false, sil: null });
       });
     }
     // 主角 / 跟着的怪兽走到房子后面、被屋顶挡住时，这栋房子慢慢变半透明（镜头斜着往下看，屋顶会盖住后面一排）
+    // 只在真的挡住了一大截（约三分之一个人）时才变：sil 是这栋房子在画面上最靠上（最北）的那条边，
+    // 按每个顶点算「z − 高度 × cot(俯角)」取最小；人的脚在 z，脚比 sil 往南超过 0.5 才算挡住
     const BLD = [];
+    function silhouette(b, cot) {
+      let s = Infinity;
+      const v = new T3.Vector3();
+      b.objs.forEach(o => {
+        o.updateMatrixWorld(true);
+        o.traverse(c => {
+          const p = c.geometry && c.geometry.attributes.position;
+          if (!p) return;
+          for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(c.matrixWorld); s = Math.min(s, v.z - Math.max(0, v.y) * cot); }
+        });
+      });
+      return s;
+    }
     function fadeBuildings(pts, dt) {
       const k = 1 - Math.exp(-dt * 10), cot = 1 / Math.tan(pitch);
       BLD.forEach(b => {
-        const reach = b.top * cot + .5;
-        const hit = pts.some(([x, z]) => x > b.x0 - .3 && x < b.x1 + .3 && z < b.z0 + .6 && z > b.z0 - reach);
+        if (b.sil === null || b.cot !== cot) { b.sil = silhouette(b, cot); b.cot = cot; }
+        const hit = pts.some(([x, z]) => x > b.x0 - .3 && x < b.x1 + .3 && z < b.z0 + .6 && z > b.sil + .5);
         const want = hit ? .3 : 1;
         if (b.a === want) return;
         b.a += (want - b.a) * k; if (Math.abs(b.a - want) < .02) b.a = want;
@@ -902,11 +972,13 @@
       const mat = new T3.MeshLambertMaterial({ map, alphaTest: .5, emissive: 0x2a2a2a });
       // 纸片人画的时候往后斜（正对镜头好看），头会插进身后的柜台、墙里被切掉一截。
       // 远近按「人笔直站在脚底那一格」来算：身后的东西永远挡不住他，身前的照样挡
+      // 光照最多把纸片照到比原画亮一点点：洞穴里主角头顶的灯很强，不封顶的话人物和怪兽会被照得发白、变色
       mat.onBeforeCompile = sh => {
         sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
   { vec3 up = vec3(0.0, length(modelMatrix[1].xyz) * position.y, .15);
     vec4 wp = vec4(modelMatrix[3].xyz + modelMatrix[0].xyz * position.x + up, 1.0);
     vec4 pv = projectionMatrix * viewMatrix * wp; gl_Position.z = pv.z / pv.w * gl_Position.w; }`);
+        sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', 'outgoingLight = min(outgoingLight, diffuseColor.rgb * 1.1);\n#include <opaque_fragment>');
       };
       const o = new T3.Mesh(geo, mat);
       return o;
@@ -964,10 +1036,26 @@
       c.getContext('2d').drawImage(im, 0, 0, Q.cell, Q.cell);
       const t = new T3.CanvasTexture(c); t.colorSpace = T3.SRGBColorSpace;
       if (f.mesh) { f.root.remove(f.mesh); f.mesh.geometry.dispose(); f.mesh.material.map.dispose(); f.mesh.material.dispose(); }
+      f.base = iconFace(c);
       f.mesh = sheet(t, 1.05);
       f.mesh.rotation.x = -pitch * .8;
       f.root.add(f.mesh);
       f.sp = sp.id; f.im = im;
+    }
+    // 原画里的怪兽朝哪边（1 朝右、-1 朝左、0 正面或看不出来）：上面 40%（头）的重心比整只的重心偏右就是朝右。
+    // 386 张图里朝左朝右的都有，不能一律当成朝左
+    function iconFace(c) {
+      try {
+        const n = c.width, a = c.getContext('2d').getImageData(0, 0, n, n).data;
+        let y0 = n, y1 = -1, x0 = n, x1 = -1;
+        for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (a[(y * n + x) * 4 + 3] > 128) { if (y < y0) y0 = y; y1 = y; if (x < x0) x0 = x; if (x > x1) x1 = x; }
+        if (y1 < 0) return 0;
+        const yh = y0 + (y1 - y0) * .4;
+        let sx = 0, sn = 0, hx = 0, hn = 0;
+        for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (a[(y * n + x) * 4 + 3] > 128) { sx += x; sn++; if (y < yh) { hx += x; hn++; } }
+        const v = (hx / Math.max(1, hn) - sx / Math.max(1, sn)) / (x1 - x0 + 1);
+        return v > .02 ? 1 : v < -.02 ? -1 : 0;
+      } catch (e) { return 0; }
     }
     function bubbleSprite(ch, col) {
       const t = canvasTexKeep(64, 64, g => {
@@ -1013,11 +1101,33 @@
       dist = camera.aspect < 1.15 ? wantW / (2 * tan * camera.aspect) : (room() ? m.H + 1 : 9.4) / (2 * tan);
       camera.far = dist * 3;
       camera.updateProjectionMatrix();
+      roomCam = room() && camera.aspect < 1.15 ? fitRoom() : null;
       if (rt) {
         rt.setSize(Math.round(VW * dpr), Math.round(VH * dpr));
         post.mat.uniforms.uRes.value.set(VW * dpr, VH * dpr);
-        post.mat.uniforms.uBlur.value = (tier === 'high' ? 4.5 : 3.5) * dpr;
+        blur0 = (tier === 'high' ? 4.5 : 3.5) * dpr;   // 每帧在 draw 里按横竖屏、室内外再调
       }
+    }
+    // 竖屏的小房间（怪兽中心、商店、民房）：整间屋子的宽度都放进画面、在画面里上下居中，镜头不再跟着主角左右移
+    // （原来只看 8.6 格宽：两边的电脑、书架被切掉，下面却空着一大片黑）。透视下算不出简单的公式，就投影几个角、调几轮
+    function fitRoom() {
+      // 上下按整间屋子（含墙高）居中；左右让屋里能走的地方（四周墙里面，再带一点墙）刚好放下，最外面的厚墙在近处可以切掉一点
+      const box = [], fit = [];
+      [0, m.W].forEach(x => box.push([x, 0, 0], [x, 0, m.H], [x, 2.1, 0], [x, .55, m.H]));
+      [.7, m.W - .7].forEach(x => fit.push([x, 0, 1], [x, 0, m.H - 1]));
+      const v = new T3.Vector3(), half = FOV / 2 * Math.PI / 180, cx = m.W / 2;
+      let cz = m.H / 2, d = dist;
+      camera.far = 400; camera.updateProjectionMatrix();
+      for (let it = 0; it < 10; it++) {
+        camera.position.set(cx, Math.sin(pitch) * d, cz + Math.cos(pitch) * d); camera.lookAt(cx, 0, cz); camera.updateMatrixWorld();
+        let xm = 0, y0 = 9, y1 = -9;
+        fit.forEach(p => { xm = Math.max(xm, Math.abs(v.set(p[0], p[1], p[2]).project(camera).x)); });
+        box.forEach(p => { v.set(p[0], p[1], p[2]).project(camera); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); });
+        cz -= (y0 + y1) / 2 * d * Math.tan(half) / Math.sin(pitch);   // 上下的空白一样多
+        d *= xm / .98;                                                // 屋里的地板刚好在左右边以内
+      }
+      dist = d; camera.far = dist * 3; camera.updateProjectionMatrix();
+      return { x: cx, z: cz };
     }
     const tmp = new T3.Vector3();
     function draw(now, V) {
@@ -1048,7 +1158,10 @@
         const bob = V.pmoving ? Math.abs(Math.sin(now / 90)) * .08 : Math.sin(now / 600) * .02;
         follower.root.position.set(V.fx + .5, 0, V.fy + .5);
         if (V.surf) follower.root.position.set(V.px + .5, -.1, V.py + .55);
-        if (follower.mesh) follower.mesh.position.y = bob + V.fhop;
+        // 朝着主角那边看（跟着往左走就朝左、往右走就朝右；上下走时保持原来的朝向）：原画朝向和要朝的方向相反就左右翻过来
+        const fdx = V.px - V.fx;
+        if (!V.surf && Math.abs(fdx) > .05) follower.face = fdx > 0 ? 1 : -1;
+        if (follower.mesh) { follower.mesh.position.y = bob + V.fhop; follower.mesh.scale.x = follower.base && follower.face && follower.face !== follower.base ? -1 : 1; }
       }
       // 其他人物：位置平滑跟上（训练师走过来时不会一格一格跳）
       const seen = new Set();
@@ -1087,8 +1200,11 @@
       const halfW = dist * Math.tan(half) * camera.aspect;
       const pad = room() ? .6 : m.kind === 'cave' || m.kind === 'inside' || m.kind === 'under' ? .8 : 1.6;
       const clamp = (v, lo, hi) => lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, v));
-      camGoal.x = clamp(camGoal.x, halfW - pad, m.W - halfW + pad);
-      camGoal.z = clamp(camGoal.z, north - pad, m.H - south + (room() ? pad : .2));
+      if (roomCam) camGoal.set(roomCam.x, 0, roomCam.z);
+      else {
+        camGoal.x = clamp(camGoal.x, halfW - pad, m.W - halfW + pad);
+        camGoal.z = clamp(camGoal.z, north - pad, m.H - south + (room() ? pad : .2));
+      }
       if (camT.x < -900) camT.copy(camGoal);
       else camT.lerp(camGoal, 1 - Math.exp(-dt * 9));
       camera.position.set(camT.x, Math.sin(pitch) * dist, camT.z + Math.cos(pitch) * dist);
@@ -1099,15 +1215,26 @@
         if (key !== snap) { snap = key; sun.target.position.set(sx, 0, sz - 1); sun.position.set(sx - 7, 16, sz + 6); sun.target.updateMatrixWorld(); renderer.shadowMap.needsUpdate = true; }
       } else { sun.position.set(camT.x - 7, 16, camT.z + 6); sun.target.position.set(camT.x, 0, camT.z); }
       lamp.position.set(V.px + .5, 1.8, V.py + .8);
-      if (m.dark) { lamp.intensity = V.flash ? 18 : 9; lamp.distance = V.flash ? 14 : 4.5; hemi.intensity = V.flash ? 1.1 : .45; }
+      // 漆黑的洞穴：没用闪光只有主角身边一小圈亮；用了闪光整个洞亮起来（中性白光 + 一点太阳），
+      // 主角身上的灯不再那么强（人物纸片也不会被它照得发白，见 sheet）
+      if (m.dark && darkLit !== !!V.flash) {
+        darkLit = !!V.flash;
+        lamp.intensity = darkLit ? 7 : 9; lamp.distance = darkLit ? 10 : 4.5;
+        hemi.intensity = darkLit ? 1.5 : .45; hemi.color.set(darkLit ? '#f1f1ee' : '#8a7a70'); hemi.groundColor.set(darkLit ? A.shade(m.pal.floor || '#5a4a3a', .7) : '#2a2018');
+        sun.intensity = darkLit ? .6 : .15;
+      }
       if (post) {
         tmp.set(V.px + .5, .6, V.py + .5).project(camera);
-        const u = post.mat.uniforms;
-        u.uFocus.value = tmp.y * .5 + .5;
-        u.uCenter.value.set(tmp.x * .5 + .5, tmp.y * .5 + .5);
-        u.uDark.value = m.dark ? (V.flash ? .35 : .97) : 0;
+        const u = post.mat.uniforms, py = tmp.y * .5 + .5, tall = camera.aspect < 1, inside = m.kind === 'inside';
+        // 移轴景深：竖屏时清楚的一条宽一点、虚化轻一点、下方不额外加重；
+        // 焦点往画面中间拉一半（镜头在地图边上停住时主角在画面边上，能走的地方还是清楚的）；室内再轻一半
+        u.uFocus.value = tall ? py + (.5 - py) * .5 : py;
+        u.uCenter.value.set(tmp.x * .5 + .5, py);
+        u.uDark.value = m.dark ? (V.flash ? .15 : .97) : 0;
         u.uVig.value = room() ? .35 : m.kind === 'under' ? .8 : .55;
-        u.uBand.value = room() ? .3 : .2;
+        u.uBand.value = inside ? (tall ? .38 : .35) : tall ? .32 : .2;
+        u.uBlur.value = blur0 * (tall ? .6 : 1) * (inside ? .5 : 1);
+        u.uNear.value = tall ? 1 : 1.4;
         renderer.setRenderTarget(rt);
         renderer.render(scene, camera);
         renderer.setRenderTarget(null);

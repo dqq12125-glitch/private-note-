@@ -172,18 +172,22 @@
 
     // ---------- 怪兽 ----------
     const M = { me: null, foe: null };
+    // 朝向：在「正对对手」的基础上再转多少。我方平时侧过身来、露出 3/4 正面（图生 3D 的模型背面最难看），
+    // 出招时才转过去对着对手，打完再转回来
+    const TURN = { me: -1.85, foe: -.55 }, TURN_ATK = .1;
     function setMon(side, sp, hidden) {
       if (M[side]) { scene.remove(M[side].R.root); Mon3D.dispose(M[side].R); }
       const R = Mon3D.build(sp, { unique: true });
       R.root.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material && o.material.isMeshToonMaterial && !o.material.userData.own) o.material = o.material.clone(); if (o.material && o.material.userData.sprite) o.castShadow = false; } });
       const P = POS[side], other = POS[side === 'me' ? 'foe' : 'me'];
       R.root.position.copy(P);
-      R.root.rotation.y = Math.atan2(other.x - P.x, other.z - P.z) + (side === 'me' ? .1 : -.55);
+      const yaw = Math.atan2(other.x - P.x, other.z - P.z);
+      R.root.rotation.y = yaw + TURN[side];
       const k = (side === 'me' ? 1.05 : 1.25) * (sp.legend ? 1.3 : 1) / Math.max(1, R.height * .9);
       R.root.scale.multiplyScalar(k);
       R.baseScale = R.root.scale.x;
       scene.add(R.root);
-      M[side] = { R, sp, off: V(0, 0, 0), flash: 0, talk: 0, gone: !!hidden };
+      M[side] = { R, sp, off: V(0, 0, 0), flash: 0, talk: 0, gone: !!hidden, yaw, turn: TURN[side] };
       R.root.visible = !hidden;
       return M[side];
     }
@@ -191,23 +195,31 @@
 
     // ---------- 粒子 ----------
     const MAXP = 700;
-    const pGeo = new T3.BufferGeometry();
-    const pPos = new Float32Array(MAXP * 3), pCol = new Float32Array(MAXP * 3), pSize = new Float32Array(MAXP), pAlpha = new Float32Array(MAXP);
-    pGeo.setAttribute('position', new T3.BufferAttribute(pPos, 3));
-    pGeo.setAttribute('color', new T3.BufferAttribute(pCol, 3));
-    pGeo.setAttribute('size', new T3.BufferAttribute(pSize, 1));
-    pGeo.setAttribute('alpha', new T3.BufferAttribute(pAlpha, 1));
     const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.35, 'rgba(255,255,255,.7)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new T3.CanvasTexture(c); })();
-    const pMat = new T3.ShaderMaterial({
-      uniforms: { uTex: { value: glowTex }, uScale: { value: 300 } },
-      vertexShader: 'attribute float size; attribute float alpha; attribute vec3 color; varying vec3 vC; varying float vA; uniform float uScale; void main(){ vC = color; vA = alpha; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = size * uScale / -mv.z; gl_Position = projectionMatrix * mv; }',
-      fragmentShader: 'uniform sampler2D uTex; varying vec3 vC; varying float vA; void main(){ vec4 t = texture2D(uTex, gl_PointCoord); float core = smoothstep(0.55, 1.0, t.a); gl_FragColor = vec4(mix(vC, vec3(1.0), core * 0.45), t.a * vA); }',
-      transparent: true, depthWrite: false, blending: T3.NormalBlending,
-    });
-    const points = new T3.Points(pGeo, pMat); points.frustumCulled = false; scene.add(points);
-    const parts = [];
+    // 两组粒子：亮的颜色用叠加混合（发光），暗的颜色（幽灵、恶系的黑烟）叠加上去看不见，还用普通混合
+    const pUni = { uTex: { value: glowTex }, uScale: { value: 300 } };
+    function pool(blending) {
+      const geo = new T3.BufferGeometry();
+      const P = { geo, parts: [], pos: new Float32Array(MAXP * 3), col: new Float32Array(MAXP * 3), size: new Float32Array(MAXP), alpha: new Float32Array(MAXP) };
+      geo.setAttribute('position', new T3.BufferAttribute(P.pos, 3));
+      geo.setAttribute('color', new T3.BufferAttribute(P.col, 3));
+      geo.setAttribute('size', new T3.BufferAttribute(P.size, 1));
+      geo.setAttribute('alpha', new T3.BufferAttribute(P.alpha, 1));
+      const mat = new T3.ShaderMaterial({
+        uniforms: pUni,
+        vertexShader: 'attribute float size; attribute float alpha; attribute vec3 color; varying vec3 vC; varying float vA; uniform float uScale; void main(){ vC = color; vA = alpha; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = size * uScale / -mv.z; gl_Position = projectionMatrix * mv; }',
+        // 叠加的那组透明度打个折：一大团粒子叠在一起不会整片变成白色（水还是蓝的）
+        fragmentShader: 'uniform sampler2D uTex; varying vec3 vC; varying float vA; void main(){ vec4 t = texture2D(uTex, gl_PointCoord); float core = smoothstep(0.55, 1.0, t.a); gl_FragColor = vec4(mix(vC, vec3(1.0), core * 0.45), t.a * vA * ' + (blending === T3.AdditiveBlending ? '0.55' : '1.0') + '); }',
+        transparent: true, depthWrite: false, blending,
+      });
+      const pts = new T3.Points(geo, mat); pts.frustumCulled = false; scene.add(pts);
+      return P;
+    }
+    const POOLS = [pool(T3.AdditiveBlending), pool(T3.NormalBlending)];
+    const lum = c => c.r * .3 + c.g * .59 + c.b * .11;   // 线性颜色的亮度
+    const DIM = .09;
     // p：{ pos, vel, col, size, life, grav, drag, grow, fade }
-    function emit(n, fn) { for (let i = 0; i < n && parts.length < MAXP; i++) parts.push(fn(i)); }
+    function emit(n, fn) { for (let i = 0; i < n; i++) { const p = fn(i), P = POOLS[lum(p.col) < DIM ? 1 : 0]; if (P.parts.length < MAXP) P.parts.push(p); } }
     const rnd = (a, b) => a + Math.random() * (b - a);
     const sph = s => V(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).normalize().multiplyScalar(s);
     const C = h => new T3.Color(h);
@@ -215,13 +227,14 @@
     // ---------- 特效用的小物件（带生命周期的网格） ----------
     const fx = [];
     function addFx(obj, life, update) { scene.add(obj); fx.push({ obj, t: 0, life, update }); return obj; }
-    const glowMat = (col, op) => new T3.MeshBasicMaterial({ color: col, transparent: true, opacity: op == null ? .9 : op, depthWrite: false });
+    // add：叠加混合（越叠越亮，像真的在发光，光球用）；暗颜色叠加看不见，还用普通混合。光环、光束保留本来的颜色，用普通混合
+    const glowMat = (col, op, add) => { const c = new T3.Color(col); return new T3.MeshBasicMaterial({ color: c, transparent: true, opacity: op == null ? .9 : op, depthWrite: false, blending: add && lum(c) >= DIM ? T3.AdditiveBlending : T3.NormalBlending }); };
     function ring(at, col, r0, r1, life, thick, flat) {
       const m = new T3.Mesh(new T3.TorusGeometry(1, thick || .06, 6, 40), glowMat(col));
       m.position.copy(at); if (flat !== false) m.rotation.x = Math.PI / 2;
       return addFx(m, life, (o, k) => { const r = r0 + (r1 - r0) * k; o.scale.set(r, r, r); o.material.opacity = .9 * (1 - k); });
     }
-    function orb(col, r) { const g = new T3.Group(); g.add(new T3.Mesh(new T3.SphereGeometry(r, 14, 10), glowMat(col, .95))); g.add(new T3.Mesh(new T3.SphereGeometry(r * 1.8, 14, 10), glowMat(col, .35))); return g; }
+    function orb(col, r) { const g = new T3.Group(); g.add(new T3.Mesh(new T3.SphereGeometry(r, 14, 10), glowMat(col, .95, true))); g.add(new T3.Mesh(new T3.SphereGeometry(r * 1.8, 14, 10), glowMat(col, .35, true))); return g; }
     function bolt(a, b, col, width, jag) {
       const pts = [], n = 9;
       for (let i = 0; i <= n; i++) { const p = a.clone().lerp(b, i / n); if (i && i < n) p.add(V(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).multiplyScalar(jag || .25)); pts.push(p); }
@@ -547,8 +560,12 @@
       const a = center(side), b = center(other), dir = b.clone().sub(a).setY(0).normalize();
       m.talk = 1;
       const physical = type === 'fight' || type === 'normal';
+      // 我方平时侧着身子，出招前先转过去对着对手（扑出去的动作才朝着对手）
+      const turn0 = TURN[side], turned = side === 'me', tok = m.turnTok = (m.turnTok || 0) + 1;
+      if (turned) tween(260, k => { if (m.turnTok === tok) m.turn = turn0 + (TURN_ATK - turn0) * EZ.out(k); });
       // 运镜：先切到出招方身后（过肩），蓄力时看着对手；招式飞出去时镜头跟着推向对手
       if (CINE) { camTo(shotShoulder(side), 300, EZ.out); await sleep(150); }
+      else if (turned) await sleep(200);
       if (Mon3D.play && Mon3D.play(m.R, 'attack')) await sleep(physical ? 430 : 360);   // 会动的模型自己扑出去
       else await tween(physical ? 260 : 200, k => { m.off.copy(dir).multiplyScalar(Math.sin(k * Math.PI) * (physical ? .9 : .35)); });
       m.talk = 0;
@@ -556,6 +573,7 @@
       const cols = TYPE_COL[type] || TYPE_COL.normal;
       await (FX[type] || FX.default)(a.clone().addScaledVector(dir, .3), b, tier || 0, cols, side);
       camHome(650, 260);   // 命中后稍停一下再回默认机位（hit 会再推一下）
+      if (turned) setTimeout(() => { if (M[side] === m && m.turnTok === tok) tween(520, k => { if (m.turnTok === tok) m.turn = TURN_ATK + (turn0 - TURN_ATK) * EZ.io(k); }); }, 350);
     }
     function hit(side, opt) {
       const m = M[side]; if (!m) return;
@@ -633,11 +651,14 @@
     function removeBall() { if (ball) { scene.remove(ball); ball = null; } }
 
     // ---------- 每帧 ----------
-    let raf = 0, last = 0, alive = true;
+    let raf = 0, last = 0, alive = true, nextDraw = 0;
     const tmpC = new T3.Color();
     function frame(now) {
       if (!alive) return;
       raf = requestAnimationFrame(frame);
+      // 每秒最多画 60 次（120Hz 的屏幕不用画两倍，省电不烫手）；动画都按时间算，不受影响
+      if (now < nextDraw - 2) return;
+      nextDraw = Math.max(nextDraw + 1000 / 60, now + 1000 / 60 - 6);
       const dt = Math.min(.05, last ? (now - last) / 1000 : .016); last = now;
       const t = now / 1000;
       for (let i = anim.length - 1; i >= 0; i--) { const a = anim[i], k = Math.min(1, (now - a.t0) / a.ms); a.fn(k); if (k >= 1) { anim.splice(i, 1); a.res(); } }
@@ -645,20 +666,24 @@
         const m = M[side]; if (!m) return;
         Mon3D.animate(m.R, t + (side === 'me' ? 0 : 1.3), { talk: m.talk ? Math.floor(t * 8) % 2 === 0 : false });
         m.R.root.position.copy(POS[side]).add(m.off);
+        m.R.root.rotation.y = m.yaw + m.turn;
         if (m.flash > 0) { m.flash = Math.max(0, m.flash - dt * 2.6); const e = Math.floor(m.flash * 10) % 2 ? m.flash : 0; mats(side).forEach(q => { if (q.emissive) q.emissive.setRGB(e, e, e); else q.color.setScalar(1 + e * 3); }); }
       });
       env.children.forEach(o => { if (o.userData.drift) { o.position.x += o.userData.drift * dt; if (o.position.x > 14) o.position.x = -14; } });
       // 粒子
-      for (let i = parts.length - 1; i >= 0; i--) {
-        const p = parts[i]; p.t += dt;
-        if (p.t >= p.life) { parts.splice(i, 1); continue; }
-        p.vel.y += (p.grav || 0) * dt; p.vel.multiplyScalar(Math.max(0, 1 - (p.drag || 0) * dt)); p.pos.addScaledVector(p.vel, dt);
-      }
-      const n = Math.min(parts.length, MAXP);
-      for (let i = 0; i < n; i++) { const p = parts[i], k = p.t / p.life; pPos[i * 3] = p.pos.x; pPos[i * 3 + 1] = p.pos.y; pPos[i * 3 + 2] = p.pos.z; pCol[i * 3] = p.col.r; pCol[i * 3 + 1] = p.col.g; pCol[i * 3 + 2] = p.col.b; pSize[i] = p.size * (1 - k * .5); pAlpha[i] = 1 - k; }
-      pGeo.setDrawRange(0, n);
-      pMat.uniforms.uScale.value = host.clientHeight * 1.3;
-      ['position', 'color', 'size', 'alpha'].forEach(k => { pGeo.attributes[k].needsUpdate = true; });
+      POOLS.forEach(P => {
+        const parts = P.parts;
+        for (let i = parts.length - 1; i >= 0; i--) {
+          const p = parts[i]; p.t += dt;
+          if (p.t >= p.life) { parts.splice(i, 1); continue; }
+          p.vel.y += (p.grav || 0) * dt; p.vel.multiplyScalar(Math.max(0, 1 - (p.drag || 0) * dt)); p.pos.addScaledVector(p.vel, dt);
+        }
+        const n = Math.min(parts.length, MAXP);
+        for (let i = 0; i < n; i++) { const p = parts[i], k = p.t / p.life; P.pos[i * 3] = p.pos.x; P.pos[i * 3 + 1] = p.pos.y; P.pos[i * 3 + 2] = p.pos.z; P.col[i * 3] = p.col.r; P.col[i * 3 + 1] = p.col.g; P.col[i * 3 + 2] = p.col.b; P.size[i] = p.size * (1 - k * .5); P.alpha[i] = 1 - k; }
+        P.geo.setDrawRange(0, n);
+        ['position', 'color', 'size', 'alpha'].forEach(k => { P.geo.attributes[k].needsUpdate = true; });
+      });
+      pUni.uScale.value = host.clientHeight * 1.3;
       for (let i = fx.length - 1; i >= 0; i--) { const f = fx[i]; f.t += dt; const k = Math.min(1, f.t / f.life); if (f.update) f.update(f.obj, k, dt); if (k >= 1) { scene.remove(f.obj); f.obj.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); fx.splice(i, 1); } }
       // 镜头：轻轻呼吸 + 震动
       shake = Math.max(0, shake - dt * 1.2);
@@ -680,7 +705,7 @@
       CAM.pos.set(-2.1 * f, 1.85 + (f - 1) * 1.1, 5.6 * f);
       if (f !== camF) { camF = f; placeBackdrop(); }
       cam.updateProjectionMatrix();
-      pMat.uniforms.uScale.value = h * 1.3;
+      pUni.uScale.value = h * 1.3;
     }
     // 怪兽在画面上的位置（给伤害数字、提示用），相对 host 左上角
     function screenPos(side) {

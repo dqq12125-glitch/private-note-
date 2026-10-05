@@ -136,6 +136,9 @@
   // 属性小图标（SVG，不依赖手机的 emoji 字体）
   const TICON = {}; D.ORDER.forEach(t => { TICON[t] = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + TYPES[t].icon + '" fill="currentColor"/></svg>'; });
   const tchip = t => '<span class="tchip" style="--tc:' + TYPES[t].color + '">' + TICON[t] + TYPES[t].zh + '系</span>';
+  // 颜色很浅的属性（电、飞行、普通、冰……）招式按钮上用深色字，白字看不清
+  const LIGHT = {};
+  D.ORDER.forEach(t => { const n = parseInt(TYPES[t].color.slice(1), 16), lin = v => { v /= 255; return v <= .04045 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; LIGHT[t] = .2126 * lin(n >> 16) + .7152 * lin((n >> 8) & 255) + .0722 * lin(n & 255) > .32; });
   const chips = id => SPECIES[id].types.map(tchip).join('');
 
   // ---------- 养成：英文昵称、亲密度、异色、蛋 ----------
@@ -368,7 +371,10 @@
     E.show('battle');
     // 3D 战斗画面：设置里选了 2D 流畅或者手机不支持就用原来的 2D 画面
     if (window.Battle3D && (E.S.settings.gfx || 'auto') !== '2d' && E.S.settings.gfxAuto !== '2d') {
-      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena, opts.rules), shadows: (E.S.settings.gfxAuto || E.S.settings.gfx) !== 'low', dpr: E.S.settings.gfx === 'high' ? 2 : 1.5 }); } catch (e) { B3 = null; }
+      // 画质和大地图同一档：精美用满屏幕的像素比（最多 3）
+      let tier = (E.S.settings.gfx === 'auto' ? E.S.settings.gfxAuto : E.S.settings.gfx) || 'mid';
+      try { if (window.EchoWorld && EchoWorld.gfxTier) tier = EchoWorld.gfxTier(); } catch (e) { /* 大地图还没初始化就按设置 */ }
+      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena, opts.rules), shadows: tier !== 'low', dpr: tier === 'high' ? 3 : 1.5 }); } catch (e) { B3 = null; }
     }
     renderBattle();
     intro(B);
@@ -512,7 +518,7 @@
     panel('<div class="moves">' + movesOf(m).map((mv, i) => {
       const lock = mv.tier === 2 && B.energy < 3, nm = mvName(mv), e = mv.sup ? 1 : eff(mv.type, f.sp);
       const tag = mv.sup ? mv.sup.desc : (e > 1 ? '<em class="mv-eff">克制</em>' : e < 1 ? '不太管用' : TYPES[mv.type].zh);
-      return '<button class="move' + (mv.tier === 2 ? ' ult' : '') + (mv.sup ? ' sup' : '') + '" style="--tc:' + TYPES[mv.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><span class="mv-pow">' + (mv.sup ? '✦' : DOTS[mv.tier]) + '</span></span><small>' + nm[1] + ' · ' + tag + ' · ' + (lock ? '攒满 3 格能量' : TASK[mv.sup ? 1 : mv.tier]) + '</small></button>';
+      return '<button class="move' + (mv.tier === 2 ? ' ult' : '') + (mv.sup ? ' sup' : '') + (LIGHT[mv.type] ? ' lt' : '') + '" style="--tc:' + TYPES[mv.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><span class="mv-pow">' + (mv.sup ? '✦' : DOTS[mv.tier]) + '</span></span><small>' + nm[1] + ' · ' + tag + ' · ' + (lock ? '攒满 3 格能量' : TASK[mv.sup ? 1 : mv.tier]) + '</small></button>';
     }).join('') + '</div>' +
       '<div class="b-items">' +
       (B.kind === 'wild' && !B.noCatch ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 收服' + (canCatch ? '' : ' · 先打虚弱') + '</button>' : '') +

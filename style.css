@@ -749,7 +749,12 @@ body.in-world { overflow: hidden; }
 .arena.is3d .arena-bg, .arena.is3d .pad, .arena.is3d .mon, .arena.is3d .proj, .arena.is3d .fx, .arena.is3d .fx-flash { display: none; }
 .b3d-flash { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; }
 .mon-img { object-fit: contain; aspect-ratio: 1; }
-.mv-eff { font-style: normal; font-weight: 800; color: #d32f2f; }
+/* 「克制」：白底小胶囊 + 深红字 + 向上的箭头，放在什么颜色的招式按钮上都看得清 */
+.mv-eff { display: inline-block; font-style: normal; font-weight: 800; color: #b71c1c; background: #fff; border-radius: 8px; padding: 0 5px 0 3px; line-height: 1.35; box-shadow: 0 1px 0 rgba(0, 0, 0, .18); }
+.mv-eff::before { content: '▲'; font-size: .7em; margin-right: 1px; vertical-align: 1px; }
+/* 颜色很浅的属性（电、飞行、普通、冰……）：按钮上用深色字 */
+.move.lt:not(:disabled) { color: var(--ink); }
+.move.lt:not(:disabled) .mv-ico { background: rgba(255, 255, 255, .5); }
 /* 图鉴 */
 .dex-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0; font-weight: 800; }
 .dex-i { position: relative; border: 0; font: inherit; color: inherit; cursor: pointer; }
@@ -945,3 +950,6 @@ body.in-world { overflow: hidden; }
 .rev-card small { color: var(--ink-2); font-size: 13px; }
 .rev-card em { font-style: normal; font-weight: 800; background: var(--coral, #ff6b57); color: #fff; border-radius: 12px; padding: 6px 12px; flex: none; }
 .rev-card.done { background: #eaf7f1; box-shadow: 0 4px 0 #cfe9dd; }
+.seg.books { margin-top: 8px; }
+.seg.books button { flex: 1 0 15%; padding: 7px 4px; font-weight: 700; }
+.pick-h { margin: 12px 0 4px; font-size: 15px; color: var(--ink-2); }

@@ -1581,7 +1581,7 @@
       '</div><small>自动打分：浏览器能识别语音就自动打分，不能就换成录音自评。</small></div>' +
       '<div class="set"><label>冒险画面</label><div class="seg wrap">' +
       [['auto', '自动'], ['high', '精美'], ['mid', '标准'], ['low', '省电'], ['2d', '2D 流畅']].map(([m, n]) => '<button class="' + ((st.gfx || 'auto') === m ? 'on' : '') + '" data-act="setGfx" data-m="' + m + '">' + n + '</button>').join('') +
-      '</div><small>' + ((st.gfx || 'auto') === 'auto' ? '自动：先用标准画质，手机跑不动会自动降一档' + (st.gfxAuto ? '（现在是「' + ({ high: '精美', mid: '标准', low: '省电', '2d': '2D 流畅' })[st.gfxAuto] + '」）' : '') + '。' : '手机发烫或者卡顿，就选省电或 2D 流畅。') + '</small></div>' +
+      '</div><small>' + ((st.gfx || 'auto') === 'auto' ? '自动：好手机先用精美画质，其他先用标准，跑不动会自动降一档' + (st.gfxAuto ? '（现在是「' + ({ high: '精美', mid: '标准', low: '省电', '2d': '2D 流畅' })[st.gfxAuto] + '」）' : '') + '。' : '手机发烫或者卡顿，就选省电或 2D 流畅。') + '</small></div>' +
       (BK.length ? '<div class="set"><label>冒险里的英语题</label><div class="seg">' +
         [[.6, '多出课本'], [.3, '少量课本'], [0, '只用岛上话题']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + n + '</button>').join('') +
         '</div><small>打怪兽、答村民的题时，有一部分换成课本正在学的单元（' + esc(curUnit().name) + '，在闯关页「📗 课本同步」里改）。</small></div>' : '') +
