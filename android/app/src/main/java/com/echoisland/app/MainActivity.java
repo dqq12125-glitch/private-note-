@@ -21,7 +21,23 @@ import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import android.content.SharedPreferences;
+import android.webkit.JavascriptInterface;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.WebSocketListener;
 
 // 回声岛：全屏 WebView。游戏网页在 APK 的 assets/www 里，用 https://appassets.androidplatform.net 这个
 // 虚拟的安全地址打开（这样麦克风、fetch 读模型和配音都能用，不能用 file://）。
@@ -30,11 +46,18 @@ public class MainActivity extends Activity {
     private static final int REQ_MIC = 7;
     private WebView web;
     private PermissionRequest pendingMic;
+    private SharedPreferences prefs;
+    // 直连阿里云：带密钥的 WebSocket（实时语音）和 HTTPS（聊完打分）。只许连 dashscope.aliyuncs.com
+    private final OkHttpClient http = new OkHttpClient.Builder().pingInterval(20, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS).readTimeout(0, TimeUnit.SECONDS).build();
+    private final Map<Integer, okhttp3.WebSocket> socks = new ConcurrentHashMap<>();
 
     @Override
     protected void onCreate(Bundle saved) {
         super.onCreate(saved);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        prefs = getSharedPreferences("echo", MODE_PRIVATE);
+        if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true);   // 调试包：电脑上能用 Chrome 开发者工具看网页
         web = new WebView(this);
         web.setBackgroundColor(Color.parseColor("#12304a"));
         setContentView(web);
@@ -92,14 +115,61 @@ public class MainActivity extends Activity {
                 });
             }
         });
+        web.addJavascriptInterface(new Native(), "EchoNative");
         if (saved != null) web.restoreState(saved); else web.loadUrl(HOME);
+    }
+
+    // 密钥：手机上「设置服务」填的优先，没有就用打包时 KEY_FILE 里的
+    private String key() {
+        String k = prefs.getString("key", "");
+        return k.isEmpty() ? BuildConfig.DASHSCOPE_KEY : k;
+    }
+
+    // 回调网页：window.__echoNative(id, 类型, 数据)
+    private void cb(int id, String type, String data) {
+        final String js = "window.__echoNative&&window.__echoNative(" + id + "," + jsStr(type) + "," + jsStr(data) + ")";
+        runOnUiThread(() -> web.evaluateJavascript(js, null));
+    }
+
+    // 给网页用的原生桥（talk.js 的 directSocket）。网页拿不到密钥本身，只能请这里带着密钥去连阿里云
+    private class Native {
+        @JavascriptInterface public boolean hasKey() { return !key().isEmpty(); }
+        @JavascriptInterface public void setKey(String k) { prefs.edit().putString("key", k == null ? "" : k.trim()).apply(); }
+        @JavascriptInterface public void wsOpen(final int id, String url) {
+            if (url == null || !url.startsWith("wss://dashscope.aliyuncs.com/")) { cb(id, "error", "bad url"); return; }
+            Request r = new Request.Builder().url(url).header("Authorization", "Bearer " + key()).build();
+            socks.put(id, http.newWebSocket(r, new WebSocketListener() {
+                @Override public void onOpen(okhttp3.WebSocket ws, Response res) { cb(id, "open", ""); }
+                @Override public void onMessage(okhttp3.WebSocket ws, String text) { cb(id, "message", text); }
+                @Override public void onClosing(okhttp3.WebSocket ws, int code, String reason) { ws.close(1000, null); }
+                @Override public void onClosed(okhttp3.WebSocket ws, int code, String reason) { socks.remove(id); cb(id, "closed", reason); }
+                @Override public void onFailure(okhttp3.WebSocket ws, Throwable t, Response res) {
+                    socks.remove(id);
+                    cb(id, "error", (res != null ? "HTTP " + res.code() + " " : "") + (t.getMessage() == null ? t.getClass().getSimpleName() : t.getMessage()));
+                }
+            }));
+        }
+        @JavascriptInterface public void wsSend(int id, String text) { okhttp3.WebSocket w = socks.get(id); if (w != null) w.send(text); }
+        @JavascriptInterface public void wsClose(int id) { okhttp3.WebSocket w = socks.remove(id); if (w != null) w.close(1000, "bye"); }
+        @JavascriptInterface public void post(final int id, String url, String body) {
+            if (url == null || !url.startsWith("https://dashscope.aliyuncs.com/")) { cb(id, "fail", "bad url"); return; }
+            Request r = new Request.Builder().url(url).header("Authorization", "Bearer " + key())
+                    .post(RequestBody.create(body == null ? "" : body, MediaType.get("application/json"))).build();
+            http.newCall(r).enqueue(new Callback() {
+                @Override public void onFailure(Call call, IOException e) { cb(id, "fail", String.valueOf(e.getMessage())); }
+                @Override public void onResponse(Call call, Response res) throws IOException {
+                    String t = res.body() != null ? res.body().string() : "";
+                    cb(id, res.isSuccessful() ? "ok" : "fail", t);
+                }
+            });
+        }
     }
 
     private static String jsStr(String v) {
         StringBuilder b = new StringBuilder("\"");
         for (char c : (v == null ? "" : v).toCharArray()) {
             if (c == '"' || c == '\\') b.append('\\').append(c);
-            else if (c < 0x20 || c == '<') b.append(String.format("\\u%04x", (int) c));
+            else if (c < 0x20 || c == '<' || c == 0x2028 || c == 0x2029) b.append(String.format("\\u%04x", (int) c));
             else b.append(c);
         }
         return b.append('"').toString();

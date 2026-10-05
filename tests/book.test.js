@@ -32,10 +32,10 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, homeTab: 'quiz', settings: { tts: 'online', mode: 'self', sfx: false } })));
   await p.reload(); await W(500);
   check(await p.isVisible('.book-head'), '闯关页默认显示课本同步');
-  check(await p.evaluate(() => document.querySelectorAll('.world.unit').length) === 8, '8 个单元');
+  check(await p.evaluate(() => document.querySelectorAll('.world.unit').length === window.BOOKS.list[0].units.length), '显示正在学这一册的单元');
   await p.click('[data-act=bookPick]'); await W(200);
-  await p.click('#modal [data-act=bookCur][data-n="2"]'); await W(400);
-  check((await S()).book.cur === 2, '选了 Unit 2');
+  await p.click('#modal [data-act=bookAt][data-i="1"]'); await W(400);
+  check((await S()).book.at === 1, '选了七上 Unit 2');
   check(await p.evaluate(() => !!document.querySelector('.world.unit.now') && document.querySelector('.world.unit.now').textContent.includes('School life')), 'Unit 2 标成正在学');
   await p.click('.node.cur'); await p.click('#sheet [data-act=start]');
   for (let k = 0; k < 14; k++) {
@@ -43,7 +43,7 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
     if (await p.isVisible('#result')) break;
     const info = await p.evaluate(word => {
       const opts = [...document.querySelectorAll('#p-body .opt[data-act=pick] .o-t')].map(e => e.textContent);
-      const w = window.BOOK.units[1].words.find(x => x[0] === word);
+      const w = window.BOOKS.list[0].units[1].words.find(x => x[0] === word);
       return { opts, idx: opts.findIndex(t => t === word || (w && t === w[1])) };
     }, last);
     if (info.idx >= 0) await p.click('#p-body .opt[data-act=pick] >> nth=' + info.idx).catch(() => {});
@@ -92,7 +92,7 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   await p.evaluate(() => document.querySelector('[data-act=review]').click()); await W(300);
   await p.click('#modal [data-act=startReview]'); await W(700);
   const qtext = await p.textContent('#p-body').catch(() => '');
-  check(/get up|half past six|六点半/.test(qtext) || await p.isVisible('#p-body [data-act=tok]'), '聊天句子能出成复习题', qtext.slice(0, 60));
+  check(/六点半/.test(qtext) || ['usually', 'half', 'past', 'six'].every(w => qtext.includes(w)), '聊天句子能出成复习题（跟读或排句子）', qtext.slice(0, 60));
   await p.screenshot({ path: path.join(out, 'book-freeq.png') });
 
   // ---------- 4. 老存档的错题本搬进每日复习 ----------
@@ -102,9 +102,14 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   const s4 = await p.evaluate(() => window.EchoGame.S);
   check(s4.rev.items['word:0:2'] && s4.rev.items['word:0:2'].b === 0 && s4.rev.items['word:0:2'].x === 3 && !Object.keys(s4.wrong).length, '老错题本搬进每日复习');
 
+  // 只有七上那时的老存档：book.cur（第几单元）→ book.at
+  await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, settings: { tts: 'online', mode: 'self' }, book: { cur: 5, mix: .6, view: 'book' } })));
+  await p.reload(); await W(400);
+  check(await p.evaluate(() => window.EchoGame.S.book.at === 4 && window.EchoGame.curUnit().en === 'Off to space'), '老存档的「学到第 5 单元」迁移成七上 Unit 5');
+
   // ---------- 5. 冒险出题有几成来自正在学的单元 ----------
   const mix = await p.evaluate(() => {
-    const s = window.EchoGame.S; s.book.cur = 3; s.book.mix = .6;
+    const s = window.EchoGame.S; s.book.at = 2; s.book.mix = .6;
     let unit = 0, cur = 0; for (let k = 0; k < 2000; k++) { const r = window.EchoGame.src(4); if (r.w >= 13) { unit++; if (r.w === 15) cur++; } }
     s.book.mix = 0; let none = 0; for (let k = 0; k < 200; k++) if (window.EchoGame.src(4).w >= 13) none++;
     return { unit: unit / 2000, cur: cur / Math.max(1, unit), none };
@@ -112,7 +117,7 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   check(mix.unit > .5 && mix.unit < .7 && mix.cur > .6 && mix.none === 0, '冒险出题约六成来自课本（其中七成是正在学的单元），关掉就没有', mix);
 
   // ---------- 6. 聊天页：课本话题在前，正在学的单元排第一 ----------
-  await p.evaluate(() => { localStorage.setItem('echo-talk-url', 'ws://127.0.0.1:9'); const s = window.EchoGame.S; s.book.cur = 4; s.homeTab = 'talk'; localStorage.setItem('echo-island-v1', JSON.stringify(s)); });
+  await p.evaluate(() => { localStorage.setItem('echo-talk-url', 'ws://127.0.0.1:9'); const s = window.EchoGame.S; s.book.at = 3; s.homeTab = 'talk'; localStorage.setItem('echo-island-v1', JSON.stringify(s)); });
   await p.reload(); await W(500);
   const first = await p.evaluate(() => { const c = document.querySelector('.tk-card'); return c ? c.dataset.npc + (c.classList.contains('now') ? ' now' : '') : ''; });
   check(first === 'hj7a-u4 now', '聊天页第一个是正在学的单元', first);

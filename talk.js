@@ -19,7 +19,10 @@
   } catch (e) {}
   // 从 trycloudflare 隧道打开（游戏和对话服务是同一个地址）：连同一个地址
   const sameHost = () => location.protocol === 'https:' && /\.(ts\.net|trycloudflare\.com)$/.test(location.hostname);
+  // 安卓 APK 里有原生桥（EchoNative）并且存了百炼密钥：直连阿里云，不用中转服务（逻辑在 talk-core.js，和中转服务一样）
+  const direct = () => { try { return !!(window.EchoNative && window.TalkCore && EchoNative.hasKey()); } catch (e) { return false; } };
   function relayUrl() {
+    if (direct()) return 'direct:';
     const own = LS('echo-talk-url');
     if (own) return own.replace(/\/+$/, '');
     if (window.ECHO_TALK_URL) return window.ECHO_TALK_URL;
@@ -56,9 +59,10 @@
         '<small>🔊 ' + esc(n.voiceZh) + (best ? ' · ' + '★'.repeat(best) : '') + '</small></span><span class="tk-go">🎙️</span></button>';
     };
     // 课本单元的聊天角色放前面，正在学的单元排第一个；后面是岛上的人
-    const cur = G.bookCur ? G.bookCur() : 0, units = NPCS.list.filter(n => n.unit), isle = NPCS.list.filter(n => !n.unit);
-    const order = units.filter(n => n.unit === cur).concat(units.filter(n => n.unit !== cur));
-    const cards = (units.length ? '<h3 class="tk-h">📗 课本话题 · ' + esc(units[0].book) + '</h3>' + order.map(n => card(n, n.unit === cur)).join('') + '<h3 class="tk-h">🏝️ 岛上的人</h3>' : '') +
+    // 只列正在学的这一册（别的册在闯关页每个单元上点「聊这个单元」）
+    const cu = G.curUnit ? G.curUnit() : null, units = cu ? NPCS.list.filter(n => n.book === cu.book) : [], isle = NPCS.list.filter(n => !n.unit);
+    const order = units.filter(n => n.unit === cu.n).concat(units.filter(n => n.unit !== cu.n));
+    const cards = (units.length ? '<h3 class="tk-h">📗 课本话题 · ' + esc(cu.bshort) + '</h3>' + order.map(n => card(n, n.unit === cu.n)).join('') + '<h3 class="tk-h">🏝️ 岛上的人</h3>' : '') +
       isle.map(n => card(n, false)).join('');
     return '<section class="tk-home">' +
       '<div class="tk-intro"><b>🗣️ 用英语和岛民聊天</b><p>按住话筒说英语，松开就发出去；岛民会用自己的声音回答你。每段聊天有一个小目标，完成了有金币！</p></div>' +
@@ -180,7 +184,8 @@
     if (npc.desc) { const d = npc.desc; q.set('p', b64(JSON.stringify({ name: d.name, g: d.g, kid: !!d.kid, role: d.role, island: d.island, place: d.place, lines: d.lines, words: d.words }))); }
     const code = LS('echo-talk-code'); if (code) q.set('code', code);
     let ws;
-    try { ws = new WebSocket(url + '/talk?' + q); } catch (e) { status('服务地址不对：' + url); return; }
+    if (url === 'direct:') ws = directSocket(npc, (G.S.player && G.S.player.name) || '');
+    else try { ws = new WebSocket(url + '/talk?' + q); } catch (e) { status('服务地址不对：' + url); return; }
     c.ws = ws;
     ws.onmessage = e => {
       if (c !== C) return;
@@ -205,7 +210,7 @@
         if (p) { p.textContent = m.text; p.classList.remove('wait'); } else bubble('you', m.text);
         c.turns.push({ who: 'you', text: m.text });
       } else if (m.type === 'limit') { status(m.zh); }
-      else if (m.type === 'error') { status('⚠️ ' + m.zh); if (m.code === 'code') setTimeout(configure, 600); }
+      else if (m.type === 'error') { c.err = m.zh; status('⚠️ ' + m.zh); if (m.code === 'code') setTimeout(configure, 600); }
       else if (m.type === 'eval') { c.ended = true; showEval(c, m); }
     };
     ws.onerror = () => { if (c === C && !c.ended) status('⚠️ 连不上对话服务（' + url + '）。请家长检查服务有没有开。'); };
@@ -290,6 +295,7 @@
         '<b>' + (ev.done ? '🎯 目标完成！' : '还差一点点，下次试试把目标说完整') + '</b><p>' + esc(ev.praise) + '</p>' +
         (ev.tips.length ? '<div class="tk-tips"><b>可以这样说更好（明天的每日复习里会再练）：</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
         (coins ? '<p class="tk-coin">🪙 +' + coins + ' 金币</p>' : '')
+        : c.err && !c.turns.some(t => t.who === 'you') ? '<b>⚠️ 没连上</b><p>' + esc(c.err) + '</p><p>' + (/401|403|Unauthorized|InvalidApiKey/i.test(c.err) ? '密钥不对：请家长在「设置 → AI 聊天和口语打分」里重新填。' : '检查一下网络，过一会儿再试。') + '</p>'
         : '<b>聊完啦！</b><p>这次没拿到老师的评价（可能是说得太少或网络问题）。</p>') +
       '<p class="tk-time">这次聊了 ' + m.sec + ' 秒 · 今天还能聊 ' + Math.floor(m.left / 60) + ' 分钟</p>' +
       '<div class="tk-btns"><button class="btn" data-act="talk_again" data-npc="' + npc.id + '">再聊一次</button><button class="btn ghost" data-act="talk_close">返回</button></div></div>';
@@ -297,7 +303,125 @@
   }
 
   // ---------- 家长：设置服务地址 / 家庭口令；看记录 ----------
+  // ---------- 安卓 APK 直连：原生 WebSocket（带密钥）⇄ 阿里云；对外装成和中转服务一样的 WebSocket，聊天界面不用改 ----------
+  const NWS = {}; let nid = 0;
+  window.__echoNative = (id, type, data) => { const h = NWS[id]; if (h) h(type, data); };
+  const DAILY_SEC = 30 * 60, SESSION_SEC = 8 * 60;   // 和中转服务的默认值一样：每天 30 分钟、每段 8 分钟
+  function usage(add) {
+    const day = G.dayStr(); let U = {};
+    try { U = JSON.parse(LS('echo-talk-usage') || '{}'); } catch (e) {}
+    for (const k of Object.keys(U)) if (k !== day) delete U[k];
+    if (add) { U[day] = (U[day] || 0) + add; LS('echo-talk-usage', JSON.stringify(U)); }
+    return U[day] || 0;
+  }
+  function directSocket(npcIn, player) {
+    const C = window.TalkCore, N = window.EchoNative, id = ++nid;
+    const sock = { readyState: 0, onmessage: null, onerror: null, onclose: null };
+    const toGame = m => { if (sock.onmessage) sock.onmessage({ data: JSON.stringify(m) }); };
+    const shut = () => { if (sock.readyState === 3) return; sock.readyState = 3; delete NWS[id]; if (sock.onclose) sock.onclose(); };
+    const npc = npcIn.desc ? C.personNpc(npcIn.desc) : npcIn;
+    const left = DAILY_SEC - usage();
+    if (!npc || left < 20) { setTimeout(() => { toGame({ type: 'error', code: 'daily', zh: npc ? '今天的聊天时间用完了，明天再来吧！' : '没有这个岛民' }); shut(); }, 0); sock.send = () => {}; sock.close = shut; return sock; }
+    const S = C.session({
+      npc, player: String(player).replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16), limitSec: Math.min(SESSION_SEC, left), leftSec: left,
+      up: m => { try { N.wsSend(id, JSON.stringify(m)); } catch (e) {} },
+      out: toGame,
+      evaluate: (n, turns) => new Promise(res => {
+        const body = C.evalBody(n, turns); if (!body) return res(null);
+        const pid = ++nid, tm = setTimeout(() => { delete NWS[pid]; res(null); }, 15000);
+        NWS[pid] = (type, data) => { clearTimeout(tm); delete NWS[pid]; let ev = null; try { if (type === 'ok') ev = C.parseEval(JSON.parse(data)); } catch (e) {} res(ev); };
+        try { N.post(pid, C.EVAL_URL, JSON.stringify(body)); } catch (e) { clearTimeout(tm); res(null); }
+      }),
+      onEnd: ({ sec }) => { usage(sec); try { N.wsClose(id); } catch (e) {} setTimeout(shut, 300); },
+    });
+    NWS[id] = (type, data) => {
+      if (type === 'open') { sock.readyState = 1; S.start(); }
+      else if (type === 'message') { let m; try { m = JSON.parse(data); } catch (e) { return; } S.fromUp(m); }
+      else if (type === 'closed') S.upClosed();
+      else if (type === 'error') { if (sock.readyState === 0 && sock.onerror) sock.onerror({}); S.upClosed('连不上对话服务（' + String(data || '').slice(0, 60) + '）'); }
+    };
+    sock.send = str => { let m; try { m = JSON.parse(str); } catch (e) { return; } S.fromGame(m); };
+    sock.close = () => { if (!S.closed) S.finish(); else shut(); };
+    try { N.wsOpen(id, C.REALTIME_URL + '?model=' + encodeURIComponent(C.MODEL)); } catch (e) { setTimeout(() => NWS[id] && NWS[id]('error', e.message), 0); }
+    return sock;
+  }
+
+  // 原生桥的 HTTPS（带密钥）：→ Promise<{ ok, text }>
+  function nativePost(url, body, ms) {
+    return new Promise(res => {
+      const pid = ++nid, tm = setTimeout(() => { delete NWS[pid]; res({ ok: false, text: 'timeout' }); }, ms || 15000);
+      NWS[pid] = (type, data) => { clearTimeout(tm); delete NWS[pid]; res({ ok: type === 'ok', text: data || '' }); };
+      try { window.EchoNative.post(pid, url, body); } catch (e) { clearTimeout(tm); delete NWS[pid]; res({ ok: false, text: e.message }); }
+    });
+  }
+
+  // ---------- 跟读打分：APK 的 WebView 没有浏览器语音识别 → 录一句话，交给阿里云识别成文字（game.js 再按原来的办法打分） ----------
+  // 说完停顿 1 秒多自动结束；5 秒都没出声就算没说；最长 8 秒
+  const SR = { stop: null };
+  function wav16(chunks, len, rate) {
+    const all = new Float32Array(len); let o = 0;
+    chunks.forEach(c => { all.set(c, o); o += c.length; });
+    const k = rate / 16000, n = Math.floor(len / k), b = new DataView(new ArrayBuffer(44 + n * 2));
+    const str = (p, t) => { for (let i = 0; i < t.length; i++) b.setUint8(p + i, t.charCodeAt(i)); };
+    str(0, 'RIFF'); b.setUint32(4, 36 + n * 2, true); str(8, 'WAVEfmt '); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true);
+    b.setUint32(24, 16000, true); b.setUint32(28, 32000, true); b.setUint16(32, 2, true); b.setUint16(34, 16, true); str(36, 'data'); b.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, all[Math.floor(i * k)])); b.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true); }
+    const bytes = new Uint8Array(b.buffer); let s = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(s);
+  }
+  async function listenOnce(o) {
+    o = o || {};
+    if (!direct()) return { text: '', err: 'service-not-allowed' };
+    if (C) return { text: '', err: 'busy' };   // 正在和岛民聊天，麦克风被占着
+    let stream, ctx;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+    catch (e) { return { text: '', err: 'not-allowed' }; }
+    try {
+      try { ctx = new AudioContext({ sampleRate: 16000 }); } catch (e) { ctx = new AudioContext(); }
+      await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' })));
+    } catch (e) { try { stream.getTracks().forEach(t => t.stop()); } catch (er) {} return { text: '', err: 'audio-capture' }; }
+    const node = new AudioWorkletNode(ctx, 'tk-cap'), rate = ctx.sampleRate, chunks = [];
+    ctx.createMediaStreamSource(stream).connect(node);
+    let len = 0, voiced = 0, quiet = 0, done = false;
+    const t0 = performance.now();
+    return new Promise(resolve => {
+      const finish = async why => {
+        if (done) return; done = true; SR.stop = null; node.port.onmessage = null;
+        try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        try { ctx.close(); } catch (e) {}
+        if (voiced < 3 || len < rate * 0.3) return resolve({ text: '', err: why === 'user' ? 'aborted' : 'no-speech' });
+        if (o.onState) o.onState('🎧 识别中……');
+        const body = { model: 'qwen3-asr-flash', stream: false, asr_options: { language: 'en', enable_itn: false },
+          messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + wav16(chunks, len, rate) } }] }] };
+        const r = await nativePost('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', JSON.stringify(body), 12000);
+        let text = '';
+        try { text = String(JSON.parse(r.text).choices[0].message.content || '').trim(); } catch (e) {}
+        resolve(r.ok ? { text, err: text ? null : 'no-speech' } : { text: '', err: 'network' });
+      };
+      SR.stop = () => finish('user');
+      node.port.onmessage = e => {
+        const d = e.data; chunks.push(d); len += d.length;
+        let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
+        const loud = Math.sqrt(sum / d.length) > 0.02, now = performance.now();
+        if (loud) { voiced++; quiet = 0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > 1100) finish('silence'); }
+        if (now - t0 > (o.maxMs || 8000)) finish('max');
+        else if (voiced < 3 && now - t0 > 5000) finish('silence');
+      };
+      if (o.onState) o.onState('🎤 请说……');
+    });
+  }
+
   function configure() {
+    if (window.EchoNative) {   // 安卓 APK：家长在这台手机上填一次百炼密钥（只存在这台手机里），直连阿里云
+      const k = prompt('家长设置：阿里云百炼 API Key（只存在这台手机里，用来和岛民聊天）\n已经设置过的话，留空就是不改；填 clear 删除', '');
+      if (k === null) return;
+      if (k.trim() === 'clear') EchoNative.setKey('');
+      else if (k.trim()) EchoNative.setKey(k.trim());
+      G.toast(direct() ? '✅ 已连上阿里云，可以和岛民聊天了' : '还没有设置密钥');
+      if (G.renderHome) G.renderHome();
+      return;
+    }
     const cur = relayUrl();
     const u = prompt('对话服务地址（家长填）：\n例如 wss://你的服务器域名 ；本机试用填 ws://localhost:8787\n留空恢复默认', LS('echo-talk-url') || cur);
     if (u === null) return;
@@ -328,5 +452,5 @@
       talk_log: () => showLog(),
     };
   }
-  window.EchoTalk = { init, homeHTML, open, openPerson, relayUrl };
+  window.EchoTalk = { init, homeHTML, open, openPerson, relayUrl, cloudSR: direct, listenOnce, stopListen: () => SR.stop && SR.stop() };
 })();

@@ -1,0 +1,2190 @@
+{
+ "id": "hj9b",
+ "name": "沪教版 英语 九年级下册（旧版）",
+ "short": "九下",
+ "press": "上海教育出版社 2015 年 1 月第 1 版（新版预计 2027 年春季出版）",
+ "old": true,
+ "units": [
+  {
+   "n": 1,
+   "en": "Great explorations",
+   "zh": "伟大的探险",
+   "icon": "🧭",
+   "color": "#1E6F9F",
+   "key": "What can we learn from great explorers?",
+   "grammar": {
+    "title": "结果状语从句；too…to；enough to",
+    "tip": "so + 形容词/副词 + that… 和 such + (a/an) + 形容词 + 名词 + that… 都表示“如此……以至于……”：It was such a long voyage that the sailors missed home. too + 形容词 + (for 某人) + to do 表示“太……而不能……”，本身带否定，不要再加 not，常可改写成 so…that…can't / couldn't：The sea was too rough for the ships to set sail. = The sea was so rough that the ships couldn't set sail. 形容词 + enough to do 表示“足够……可以……”，enough 要放在形容词后面：The ship is big enough to carry us all."
+   },
+   "boss": {
+    "emoji": "🦢",
+    "name": "远飞天鹅",
+    "hello": "I'm Farwing, the swan. I've flown over every ocean. Are you brave enough to explore?"
+   },
+   "words": [
+    [
+     "voyage",
+     "航行",
+     "⛵"
+    ],
+    [
+     "repetition",
+     "重复",
+     "🔁"
+    ],
+    [
+     "American",
+     "美洲的",
+     "🌎"
+    ],
+    [
+     "continent",
+     "大陆",
+     "🗺️"
+    ],
+    [
+     "route",
+     "路线",
+     "🛣️"
+    ],
+    [
+     "discovery",
+     "发现",
+     "🔍"
+    ],
+    [
+     "rise",
+     "崛起；兴盛",
+     "📈"
+    ],
+    [
+     "official",
+     "官员",
+     "👨‍💼"
+    ],
+    [
+     "develop",
+     "增强；加强",
+     "💪"
+    ],
+    [
+     "relation",
+     "关系；交往",
+     "🤝"
+    ],
+    [
+     "trade",
+     "贸易；交换",
+     "💱"
+    ],
+    [
+     "foreign",
+     "外国的",
+     "🛂"
+    ],
+    [
+     "fleet",
+     "船队",
+     "🚢"
+    ],
+    [
+     "Africa",
+     "非洲",
+     "🌍"
+    ],
+    [
+     "nowhere",
+     "无处；哪里都不",
+     "🚫"
+    ],
+    [
+     "silk",
+     "丝绸",
+     "🧵"
+    ],
+    [
+     "giraffe",
+     "长颈鹿",
+     "🦒"
+    ],
+    [
+     "besides",
+     "除……之外还",
+     "➕"
+    ],
+    [
+     "development",
+     "发展；壮大",
+     "🌱"
+    ],
+    [
+     "region",
+     "地区",
+     "📍"
+    ],
+    [
+     "pioneer",
+     "先锋；先驱",
+     "🧭"
+    ],
+    [
+     "people",
+     "民族",
+     "👥"
+    ],
+    [
+     "wealth",
+     "财富",
+     "💰"
+    ],
+    [
+     "spread",
+     "传播",
+     "📢"
+    ],
+    [
+     "open up",
+     "开辟",
+     "🔓"
+    ],
+    [
+     "go on a trip",
+     "去旅行",
+     "🧳"
+    ],
+    [
+     "set up",
+     "建立；设立",
+     "🏗️"
+    ],
+    [
+     "set sail",
+     "起航",
+     "⚓"
+    ],
+    [
+     "(be) known as",
+     "被称为",
+     "🏷️"
+    ],
+    [
+     "as well as",
+     "以及；也",
+     "🔗"
+    ],
+    [
+     "lead to",
+     "导致",
+     "➡️"
+    ],
+    [
+     "compare ... with ...",
+     "把……与……对比",
+     "⚖️"
+    ]
+   ],
+   "sents": [
+    [
+     "Zheng He developed China's relations with many foreign countries.",
+     "郑和加强了中国与许多外国的关系。"
+    ],
+    [
+     "The fleet was so big that it looked like a floating city.",
+     "那支船队庞大得像一座漂浮的城市。"
+    ],
+    [
+     "The sea was too rough for the ships to set sail.",
+     "海上风浪太大，船只无法起航。"
+    ],
+    [
+     "The ship was big enough to bring a giraffe from Africa.",
+     "这艘船足够大，能从非洲运来一只长颈鹿。"
+    ],
+    [
+     "It was such a long voyage that the sailors missed home.",
+     "那是一次如此漫长的航行，水手们都想家了。"
+    ],
+    [
+     "Zhang Qian opened up a route to the Western Regions.",
+     "张骞开辟了一条通往西域的道路。"
+    ],
+    [
+     "Chinese silk spread to many regions of the world.",
+     "中国丝绸传到了世界上许多地区。"
+    ],
+    [
+     "The Silk Road helped different peoples learn from each other.",
+     "丝绸之路帮助不同民族互相学习。"
+    ],
+    [
+     "China's wealth was so great that Marco Polo could hardly believe it.",
+     "中国的财富多得让马可·波罗几乎不敢相信。"
+    ],
+    [
+     "The weather was too bad for us to go on a trip.",
+     "天气太糟糕了，我们没法去旅行。"
+    ],
+    [
+     "Are you brave enough to sail to a faraway continent?",
+     "你有足够的勇气航行到遥远的大陆吗？"
+    ],
+    [
+     "Columbus's voyage led to the European discovery of the American continent.",
+     "哥伦布的航行使欧洲人发现了美洲大陆。"
+    ],
+    [
+     "Repetition helps us remember new English words.",
+     "重复能帮助我们记住英语新单词。"
+    ],
+    [
+     "The small port rose to become a great centre of trade.",
+     "这个小港口崛起，成了一个重要的贸易中心。"
+    ],
+    [
+     "Xu Xiake is known as a great travel writer.",
+     "徐霞客被称为伟大的游记作家。"
+    ],
+    [
+     "Our class set up a club for young explorers.",
+     "我们班成立了一个少年探险家俱乐部。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Why couldn't the fleet set sail that morning?",
+     "Because the wind was too strong.",
+     [
+      "Because the sea was calm enough.",
+      "Because the ships set sail early."
+     ]
+    ],
+    [
+     "What was your first sea voyage like?",
+     "It was such a rough voyage that I felt sick.",
+     [
+      "I went on it with my uncle during the summer holiday.",
+      "I would like to sail around the world one day."
+     ]
+    ],
+    [
+     "Did you enjoy the book about Zheng He?",
+     "Yes, it was so interesting that I read it twice.",
+     [
+      "No, it was so exciting that I couldn't put it down.",
+      "Yes, it was too boring to finish."
+     ]
+    ],
+    [
+     "Is the boat big enough for all six of us?",
+     "No, it's too small for six people.",
+     [
+      "Yes, there is only room for four of us.",
+      "No, it's big enough for all of us."
+     ]
+    ],
+    [
+     "Where did you go during the winter holiday?",
+     "Nowhere. It was too cold to go out.",
+     [
+      "Nowhere. I went to Hainan with my family.",
+      "Yes, I went there with my family."
+     ]
+    ],
+    [
+     "Why do people call Zhang Qian a pioneer?",
+     "Because he was the first to open up the Silk Road.",
+     [
+      "Because he was too old to travel to faraway places.",
+      "Because he stayed at home for most of his life."
+     ]
+    ],
+    [
+     "What did Zheng He's voyages lead to?",
+     "They led to the development of foreign trade.",
+     [
+      "There were seven of them in total.",
+      "They were led by a Ming official."
+     ]
+    ],
+    [
+     "Besides silk, what else did Chinese traders sell?",
+     "They also sold a lot of tea.",
+     [
+      "They only sold silk to Europe.",
+      "They sold it on the Silk Road."
+     ]
+    ],
+    [
+     "Do you speak any foreign languages?",
+     "Yes, I speak English as well as Chinese.",
+     [
+      "No, I only speak foreign languages.",
+      "Yes, I went to a foreign country."
+     ]
+    ],
+    [
+     "Excuse me, could you repeat the question, please?",
+     "Of course. I asked which continent Columbus reached.",
+     [
+      "Of course. Columbus reached the American continent.",
+      "Of course. I can answer the question."
+     ]
+    ],
+    [
+     "Compare Zheng He's ships with Columbus's. Which were bigger?",
+     "The Chinese ships were much bigger.",
+     [
+      "Columbus's ships were much older.",
+      "Both fleets set sail from China."
+     ]
+    ],
+    [
+     "What can we learn from great explorers?",
+     "We can learn to be brave and curious.",
+     [
+      "They sailed across the ocean long ago.",
+      "We learnt about them last term."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Captain Zhou",
+    "zh": "周船长",
+    "topic": "Famous explorers",
+    "topicZh": "著名探险家",
+    "persona": "You are Captain Zhou, a retired sea captain who now runs the little sea museum on Echo Island. You are building a new Great Explorers wall for the museum and want the student to tell you about one famous explorer; you speak slowly and kindly, and you happily say things again when the student asks for repetition.",
+    "goal": "Tell Captain Zhou about one famous explorer for her museum wall: who the explorer was, where and when he or she travelled, what the journey led to, and why he or she was great. Use at least one sentence with so ... that, too ... to or enough to.",
+    "goalZh": "为周船长博物馆的“伟大探险家”墙介绍一位著名探险家：他是谁、什么时候去了哪里、这次旅行带来了什么、他为什么伟大；至少用一次 so…that、too…to 或 enough to。",
+    "opener": "Hello! I'm Captain Zhou from the sea museum. Do you like stories about explorers?",
+    "words": [
+     "set sail from",
+     "made a voyage to",
+     "opened up a new route",
+     "is known as",
+     "led to the discovery of",
+     "so brave that",
+     "brave enough to",
+     "Pardon? Could you say that again?"
+    ],
+    "look": "swimmerF",
+    "voice": "Jennifer",
+    "voiceZh": "亲切的姐姐"
+   }
+  },
+  {
+   "n": 2,
+   "en": "Culture shock",
+   "zh": "文化冲击",
+   "icon": "🌏",
+   "color": "#D9480F",
+   "key": "How can we get used to life in another country?",
+   "grammar": {
+    "title": "目的状语从句（so that）和状语从句复习",
+    "tip": "想说“为了……、好让……”，就用 so that 加一个完整的句子，从句里常带 can / could / would：We left early so that we could catch the bus.（更正式的说法是 in order that。）复习其他状语从句：时间用 when / before / until，原因用 because，条件用 if，让步用 although（although 不能再和 but 一起用）：She made friends although she spoke little English."
+   },
+   "boss": {
+    "emoji": "🦢",
+    "name": "旅行天鹅",
+    "hello": "I'm Tess. I fly abroad every winter. Do you know about culture shock?"
+   },
+   "words": [
+    [
+     "culture shock",
+     "文化冲击",
+     "😵"
+    ],
+    [
+     "camp",
+     "度假营；夏令营",
+     "⛺"
+    ],
+    [
+     "firework",
+     "烟花；烟火",
+     "🎆"
+    ],
+    [
+     "turkey",
+     "火鸡",
+     "🦃"
+    ],
+    [
+     "international",
+     "国际的",
+     "🌐"
+    ],
+    [
+     "admit",
+     "（勉强）承认",
+     "😅"
+    ],
+    [
+     "spare",
+     "空闲的；空余的",
+     "🛋️"
+    ],
+    [
+     "degree",
+     "程度",
+     "🎚️"
+    ],
+    [
+     "fail",
+     "失败；未能做到",
+     "❌"
+    ],
+    [
+     "manage",
+     "设法完成（难事）",
+     "🧗"
+    ],
+    [
+     "idiom",
+     "习语；惯用语",
+     "💬"
+    ],
+    [
+     "everyday",
+     "每天的；日常的",
+     "☕"
+    ],
+    [
+     "uniform",
+     "校服",
+     "👔"
+    ],
+    [
+     "whatever",
+     "任何事物",
+     "🎲"
+    ],
+    [
+     "pink",
+     "粉红色的",
+     "🎀"
+    ],
+    [
+     "purple",
+     "紫色的",
+     "🟣"
+    ],
+    [
+     "anyway",
+     "无论如何；反正",
+     "🤷"
+    ],
+    [
+     "especially",
+     "尤其；特别",
+     "⭐"
+    ],
+    [
+     "baseball",
+     "棒球运动",
+     "⚾"
+    ],
+    [
+     "education",
+     "有教益的经历",
+     "🎓"
+    ],
+    [
+     "state",
+     "州",
+     "🗺️"
+    ],
+    [
+     "national",
+     "国家的；全国的",
+     "🏛️"
+    ],
+    [
+     "president",
+     "总统",
+     "🎩"
+    ],
+    [
+     "vacation",
+     "假期",
+     "🏖️"
+    ],
+    [
+     "schedule",
+     "日程安排",
+     "🗓️"
+    ],
+    [
+     "set off",
+     "燃放；引爆",
+     "🧨"
+    ],
+    [
+     "take off",
+     "脱下",
+     "👟"
+    ],
+    [
+     "in one's spare time",
+     "在某人空闲时间",
+     "🎮"
+    ],
+    [
+     "to a certain degree",
+     "在某种程度上",
+     "🤏"
+    ],
+    [
+     "get used to",
+     "习惯于；适应",
+     "🔄"
+    ],
+    [
+     "under the weather",
+     "略有不适",
+     "🤒"
+    ]
+   ],
+   "sents": [
+    [
+     "Many students experience culture shock when they study abroad.",
+     "很多学生出国留学时都会经历文化冲击。"
+    ],
+    [
+     "We left early so that we could catch the camp bus.",
+     "我们很早就出发了，好赶上夏令营的大巴。"
+    ],
+    [
+     "Lucy learns everyday idioms so that she can chat with local students.",
+     "露西学习日常习语，以便能和当地学生聊天。"
+    ],
+    [
+     "My cousin joined the baseball team so that he could make friends.",
+     "我表哥加入了棒球队，这样他就能交到朋友。"
+    ],
+    [
+     "She used simple words so that the international students could understand her.",
+     "她用了简单的词，好让国际学生能听懂她的话。"
+    ],
+    [
+     "Our teachers made a schedule so that nobody would get bored.",
+     "老师们排好了日程，好让大家都不会无聊。"
+    ],
+    [
+     "We wore our uniforms so that our guests could recognise us.",
+     "我们穿着校服，好让客人们能认出我们。"
+    ],
+    [
+     "I have to admit that I miss Chinese food.",
+     "我得承认，我很想念中国菜。"
+    ],
+    [
+     "He failed to understand the joke because it used an idiom.",
+     "他没听懂那个笑话，因为里面用了一个习语。"
+    ],
+    [
+     "She managed to make friends although she spoke little English.",
+     "虽然她英语说得不多，但她还是交到了朋友。"
+    ],
+    [
+     "It took me two months to get used to the food.",
+     "我花了两个月才习惯这里的饮食。"
+    ],
+    [
+     "Fireworks are set off when the new year begins.",
+     "新年到来的时候，人们会燃放烟花。"
+    ],
+    [
+     "Thanksgiving is a national holiday when families eat turkey.",
+     "感恩节是全国性的节日，这一天家家户户吃火鸡。"
+    ],
+    [
+     "Tom stayed at home because he was under the weather.",
+     "汤姆身体有点不舒服，所以待在家里。"
+    ],
+    [
+     "What do you like doing in your spare time?",
+     "你空闲的时候喜欢做什么？"
+    ],
+    [
+     "Visiting three states in America was a real education for me.",
+     "在美国游览了三个州，这段经历让我受益匪浅。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Why are you learning English idioms?",
+     "So that I can understand everyday English.",
+     [
+      "For about two years now.",
+      "In the school library."
+     ]
+    ],
+    [
+     "Why did you get up so early?",
+     "So that I could catch the camp bus.",
+     [
+      "At half past five this morning.",
+      "So that I could sleep a bit longer."
+     ]
+    ],
+    [
+     "Should I take off my shoes?",
+     "Yes, please, so that the floor stays clean.",
+     [
+      "Yes, please put them on quickly.",
+      "No, I bought them yesterday."
+     ]
+    ],
+    [
+     "Why did you wear your school uniform today?",
+     "So that our guests could find us easily.",
+     [
+      "At the airport this morning.",
+      "It's blue and white."
+     ]
+    ],
+    [
+     "Why does the camp have a schedule?",
+     "So that everyone knows what to do.",
+     [
+      "It starts next Monday.",
+      "So that nobody knows what to do."
+     ]
+    ],
+    [
+     "Is it hard to live in another country?",
+     "Yes, to a certain degree.",
+     [
+      "Yes, it's thirty degrees.",
+      "Yes, I'm in Grade Nine."
+     ]
+    ],
+    [
+     "What can I wear to the camp party?",
+     "You can wear whatever you like.",
+     [
+      "You can eat whatever you like.",
+      "It starts at seven o'clock."
+     ]
+    ],
+    [
+     "What colour is your new T-shirt?",
+     "It's pink with purple stars.",
+     [
+      "It's made of cotton.",
+      "It's in my schoolbag."
+     ]
+    ],
+    [
+     "Did you enjoy your vacation in America?",
+     "Yes, especially the baseball games.",
+     [
+      "Yes, I'd love to go there.",
+      "For two weeks in July."
+     ]
+    ],
+    [
+     "Would you like to join our picnic on Sunday?",
+     "Sorry, I'm busy, but thanks anyway.",
+     [
+      "Yes, I had a picnic yesterday.",
+      "It's in the park near my home."
+     ]
+    ],
+    [
+     "Have you got used to the food here?",
+     "Yes, I've got used to it now.",
+     [
+      "Yes, I used to cook it.",
+      "No, I've never been there."
+     ]
+    ],
+    [
+     "Where does the American president live?",
+     "In the White House in Washington.",
+     [
+      "During the summer vacation.",
+      "In all fifty states."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Owen",
+    "zh": "外教欧文",
+    "look": "teacher",
+    "voice": "Dolce",
+    "voiceZh": "热情的大哥",
+    "topic": "Helping a new teacher with culture shock",
+    "topicZh": "帮新外教适应中国生活",
+    "persona": "You are Owen, a friendly young English teacher from America who has just arrived at the school on Echo Island. Everything here feels new and you have a little culture shock, so you want the student's tips on everyday life and customs in China.",
+    "goal": "Tell Owen two things that are different in China from America (for example taking off shoes at home, school uniforms or festival customs), then give him two tips using so that, such as: Learn some Chinese so that you can order food.",
+    "goalZh": "告诉欧文老师两处中国和美国不一样的地方（比如进门脱鞋、穿校服、过节的习俗），再用 so that 给他两条建议，帮他适应这里的生活。",
+    "opener": "Hi! I'm Owen, a new teacher from America. Do you wear a school uniform?",
+    "words": [
+     "culture shock",
+     "get used to",
+     "take off your shoes",
+     "school uniform",
+     "set off fireworks",
+     "so that you can",
+     "in your spare time",
+     "to a certain degree"
+    ]
+   }
+  },
+  {
+   "n": 3,
+   "en": "The environment",
+   "zh": "环境",
+   "icon": "🌳",
+   "color": "#3B7D23",
+   "key": "What can we do to protect the environment?",
+   "grammar": {
+    "title": "比较异同：the same as / different from / like",
+    "tip": "比较两样东西：一样用 the same as，不同用 different from，相像用 like，例如 The river is not the same as before. 想说哪方面一样，就把名词放在 the same 和 as 中间：the same colour as、the same number of bottles as。A 和 B 一起作主语时直接说 are the same 或 are different，后面不再加 as 或 from。"
+   },
+   "boss": {
+    "emoji": "🐻‍❄️",
+    "name": "浮冰白熊",
+    "hello": "I'm Frosty. My ice home is melting. What can we do to protect the environment?"
+   },
+   "words": [
+    [
+     "concern",
+     "担忧",
+     "😟"
+    ],
+    [
+     "atmosphere",
+     "大气层",
+     "☁️"
+    ],
+    [
+     "temperature",
+     "温度；气温",
+     "🌡️"
+    ],
+    [
+     "consumer",
+     "消费者",
+     "🛒"
+    ],
+    [
+     "guess",
+     "猜测",
+     "🤔"
+    ],
+    [
+     "green",
+     "环保的",
+     "💚"
+    ],
+    [
+     "lifeless",
+     "无生命的",
+     "🏜️"
+    ],
+    [
+     "fuel",
+     "燃料",
+     "⛽"
+    ],
+    [
+     "coal",
+     "煤",
+     "⛏️"
+    ],
+    [
+     "result",
+     "结果",
+     "📊"
+    ],
+    [
+     "increase",
+     "增加",
+     "📈"
+    ],
+    [
+     "sea level",
+     "海平面",
+     "🏝️"
+    ],
+    [
+     "destroy",
+     "摧毁",
+     "💥"
+    ],
+    [
+     "nature",
+     "大自然",
+     "🏞️"
+    ],
+    [
+     "surface",
+     "表面",
+     "🌍"
+    ],
+    [
+     "soil",
+     "土壤",
+     "🌱"
+    ],
+    [
+     "flood",
+     "洪水",
+     "🌊"
+    ],
+    [
+     "habit",
+     "习惯",
+     "🔁"
+    ],
+    [
+     "proper",
+     "恰当的",
+     "✅"
+    ],
+    [
+     "friendly",
+     "（对环境）友好的",
+     "🌿"
+    ],
+    [
+     "recycle",
+     "回收利用",
+     "♻️"
+    ],
+    [
+     "purpose",
+     "目的；用途",
+     "🎯"
+    ],
+    [
+     "solution",
+     "解决办法",
+     "💡"
+    ],
+    [
+     "government",
+     "政府",
+     "🏛️"
+    ],
+    [
+     "role model",
+     "榜样",
+     "🦸"
+    ],
+    [
+     "greenhouse effect",
+     "温室效应",
+     "🏭"
+    ],
+    [
+     "in danger",
+     "处于危险中",
+     "⚠️"
+    ],
+    [
+     "as a result of",
+     "由于",
+     "🔗"
+    ],
+    [
+     "result in",
+     "导致；造成",
+     "➡️"
+    ],
+    [
+     "mountains of",
+     "大量的；成堆的",
+     "⛰️"
+    ],
+    [
+     "take action",
+     "采取行动",
+     "🏃"
+    ],
+    [
+     "make a difference",
+     "起作用；有影响",
+     "🌟"
+    ],
+    [
+     "act as",
+     "充当；担任",
+     "🎭"
+    ]
+   ],
+   "sents": [
+    [
+     "Temperatures are rising because of the greenhouse effect.",
+     "因为温室效应，气温正在升高。"
+    ],
+    [
+     "The sea level is rising as a result of global warming.",
+     "由于全球变暖，海平面正在上升。"
+    ],
+    [
+     "Burning too much coal can result in air pollution.",
+     "燃烧过多的煤会导致空气污染。"
+    ],
+    [
+     "Floods can destroy whole villages.",
+     "洪水能摧毁整个村庄。"
+    ],
+    [
+     "The government will increase the number of electric buses.",
+     "政府将增加电动公交车的数量。"
+    ],
+    [
+     "We produce mountains of rubbish every day.",
+     "我们每天都制造大量的垃圾。"
+    ],
+    [
+     "We must take action to protect nature.",
+     "我们必须采取行动保护大自然。"
+    ],
+    [
+     "Please put your rubbish in the proper bin.",
+     "请把垃圾扔进正确的垃圾桶。"
+    ],
+    [
+     "Everyone can make a difference to the environment.",
+     "每个人都能为环境带来改变。"
+    ],
+    [
+     "My green habits are the same as my sister's.",
+     "我的环保习惯和我姐姐的一样。"
+    ],
+    [
+     "The atmosphere on Mars is very different from ours.",
+     "火星的大气层和我们的很不一样。"
+    ],
+    [
+     "I want to be a green role model like Gary.",
+     "我想像加里一样成为环保榜样。"
+    ],
+    [
+     "The surface of the lake is not the same colour as before.",
+     "湖面的颜色和以前不一样了。"
+    ],
+    [
+     "We recycled the same number of bottles as Class Two.",
+     "我们回收的瓶子和二班一样多。"
+    ],
+    [
+     "I have the same concern as my science teacher.",
+     "我和我的科学老师有同样的担忧。"
+    ],
+    [
+     "Our solution and theirs are different.",
+     "我们的解决办法和他们的不一样。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Is coal a clean fuel?",
+     "No, burning it pollutes the air.",
+     [
+      "Yes, it is black and shiny.",
+      "Yes, it keeps our homes warm."
+     ]
+    ],
+    [
+     "I'm worried about the air in our city.",
+     "So am I. We should take action.",
+     [
+      "Yes, I live in the city centre.",
+      "Thanks. I like your city too."
+     ]
+    ],
+    [
+     "Why are polar bears in danger?",
+     "Because the ice is melting.",
+     [
+      "Because they like cold weather.",
+      "Because they are good swimmers."
+     ]
+    ],
+    [
+     "Is this lunch box environmentally friendly?",
+     "Yes, you can use it again and again.",
+     [
+      "Yes, it is very friendly to me.",
+      "No, I had noodles for lunch."
+     ]
+    ],
+    [
+     "Is a paper bag the same as a plastic bag?",
+     "No, it is different from a plastic bag.",
+     [
+      "Yes, I always carry a paper bag.",
+      "No, I left my bag at home."
+     ]
+    ],
+    [
+     "Is the river the same colour as before?",
+     "No, it is dark and lifeless now.",
+     [
+      "It is about ten metres wide.",
+      "No, my favourite colour is blue."
+     ]
+    ],
+    [
+     "What is a city without trees like?",
+     "It is like an oven in summer.",
+     [
+      "I like climbing trees very much.",
+      "Yes, I like this city a lot."
+     ]
+    ],
+    [
+     "Do you have the same concern as Lucy?",
+     "Yes, we both worry about plastic waste.",
+     [
+      "Yes, we are in the same class.",
+      "No, I don't know her address."
+     ]
+    ],
+    [
+     "Is the soil here the same as in your garden?",
+     "No, it is much drier than mine.",
+     [
+      "My garden is behind our building.",
+      "No, my garden is very small."
+     ]
+    ],
+    [
+     "What is the purpose of this questionnaire?",
+     "To find out about our green habits.",
+     [
+      "It is on the teacher's desk.",
+      "We finished it last Friday."
+     ]
+    ],
+    [
+     "What can this old tyre act as?",
+     "It can act as a flower pot.",
+     [
+      "It can act in a school play.",
+      "It is round and black."
+     ]
+    ],
+    [
+     "Guess how long a plastic bottle takes to break down.",
+     "I guess it takes hundreds of years.",
+     [
+      "It holds about one litre.",
+      "It is on the kitchen table."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Willow",
+    "zh": "科学家薇洛",
+    "topic": "Environmental problems in our city",
+    "topicZh": "我们城市的环境问题",
+    "persona": "You are Willow, a friendly environmental scientist at the Echo Island weather station. You are writing a report about environmental problems in different cities, and you want to hear what the student sees and worries about in their own city.",
+    "goal": "The student tells Willow about one environmental problem in their city and says why they are worried about it, compares the city now with the past using the same as or different from, and suggests one action people can take.",
+    "goalZh": "向薇洛介绍你所在城市的一个环境问题，说说你为什么担心；用 the same as 或 different from 比较城市现在和过去，再提出一个大家可以采取的行动。",
+    "opener": "Hi! I'm Willow, a scientist on Echo Island. Is the air clean in your city?",
+    "words": [
+     "I'm worried about",
+     "I'm concerned about",
+     "It's not the same as before",
+     "different from",
+     "as a result of",
+     "result in",
+     "take action",
+     "make a difference"
+    ],
+    "look": "prof",
+    "voice": "Tina",
+    "voiceZh": "甜美的姐姐"
+   }
+  },
+  {
+   "n": 4,
+   "en": "Natural disasters",
+   "zh": "自然灾害",
+   "icon": "🌋",
+   "color": "#B3261E",
+   "key": "How can we stay safe in a natural disaster?",
+   "grammar": {
+    "title": "用 it 作形式主语",
+    "tip": "当主语是一个很长的「to + 动词」或 that 从句时，先用 it 占住主语的位置，把真正的主语放到后面：It is important to stay calm.（保持冷静很重要。）常用句型：It is + 形容词 + (for 某人) + to do，It is + 形容词 + that 从句，还有 It took us two weeks to clean up the town.（花了我们两周才把镇子清理干净。）这个 it 只是占位，不要翻译成「它」。"
+   },
+   "boss": {
+    "emoji": "🦅",
+    "name": "风暴雄鹰",
+    "hello": "I'm Storm the eagle. When a typhoon comes, do you know what to do?"
+   },
+   "words": [
+    [
+     "asteroid",
+     "小行星",
+     "☄️"
+    ],
+    [
+     "typhoon",
+     "台风",
+     "🌀"
+    ],
+    [
+     "earthquake",
+     "地震",
+     "🏚️"
+    ],
+    [
+     "melt",
+     "融化",
+     "🧊"
+    ],
+    [
+     "flood",
+     "淹没",
+     "🌊"
+    ],
+    [
+     "badly",
+     "严重地",
+     "🤕"
+    ],
+    [
+     "alive",
+     "活着的",
+     "💓"
+    ],
+    [
+     "pool",
+     "水坑",
+     "💧"
+    ],
+    [
+     "object",
+     "物体",
+     "📦"
+    ],
+    [
+     "coach",
+     "长途汽车",
+     "🚌"
+    ],
+    [
+     "pass",
+     "通过",
+     "➡️"
+    ],
+    [
+     "line",
+     "电话线路",
+     "☎️"
+    ],
+    [
+     "dead",
+     "没电的；不通的",
+     "📵"
+    ],
+    [
+     "boss",
+     "老板",
+     "👔"
+    ],
+    [
+     "deaf",
+     "聋的",
+     "🦻"
+    ],
+    [
+     "stare",
+     "凝视",
+     "👁️"
+    ],
+    [
+     "screen",
+     "屏幕",
+     "📺"
+    ],
+    [
+     "notice",
+     "注意到",
+     "🧐"
+    ],
+    [
+     "awake",
+     "（使）醒来",
+     "⏰"
+    ],
+    [
+     "immediately",
+     "立即",
+     "⚡"
+    ],
+    [
+     "missing",
+     "失踪的",
+     "🔎"
+    ],
+    [
+     "fellow",
+     "同伴的",
+     "👫"
+    ],
+    [
+     "natural disaster",
+     "自然灾害",
+     "🌋"
+    ],
+    [
+     "pass by",
+     "从旁边经过",
+     "🚶"
+    ],
+    [
+     "stick with",
+     "坚持",
+     "💪"
+    ],
+    [
+     "sit around",
+     "闲坐",
+     "🛋️"
+    ],
+    [
+     "have no time to do",
+     "没时间做……",
+     "⌛"
+    ],
+    [
+     "fall on deaf ears",
+     "不被理睬",
+     "🙉"
+    ],
+    [
+     "stare at",
+     "盯着……看",
+     "👀"
+    ],
+    [
+     "in surprise",
+     "惊讶地",
+     "😲"
+    ],
+    [
+     "for now",
+     "暂时",
+     "⏸️"
+    ],
+    [
+     "survival kit",
+     "救生包",
+     "🎒"
+    ]
+   ],
+   "sents": [
+    [
+     "In a natural disaster, it is important to stay calm.",
+     "在自然灾害中保持冷静很重要。"
+    ],
+    [
+     "Heavy rain flooded the streets of our town.",
+     "大雨淹没了我们镇上的街道。"
+    ],
+    [
+     "The coach could not pass because the road was flooded.",
+     "因为路被淹了，长途汽车没法通过。"
+    ],
+    [
+     "After a flood, it is dangerous to play in pools of water.",
+     "洪水过后在水坑里玩耍很危险。"
+    ],
+    [
+     "Before the flood came, we had no time to pack our things.",
+     "洪水来之前，我们没时间收拾东西。"
+    ],
+    [
+     "The earthquake awoke the whole family.",
+     "地震把全家人都惊醒了。"
+    ],
+    [
+     "It is amazing that the little cat is alive.",
+     "那只小猫竟然活着，真令人惊讶。"
+    ],
+    [
+     "It took the rescue workers three days to find the missing boy.",
+     "救援人员花了三天才找到那个失踪的男孩。"
+    ],
+    [
+     "When the line is dead, it is hard to call for help.",
+     "电话线路不通的时候，很难打电话求助。"
+    ],
+    [
+     "Scientists noticed a huge asteroid moving towards the Earth.",
+     "科学家们注意到一颗巨大的小行星正朝地球飞来。"
+    ],
+    [
+     "Everyone stared at the screen as the asteroid passed by.",
+     "小行星从旁边经过时，大家都盯着屏幕看。"
+    ],
+    [
+     "Our warnings about the typhoon fell on deaf ears.",
+     "我们关于台风的警告没人理睬。"
+    ],
+    [
+     "It is unsafe to walk on melting ice.",
+     "在正在融化的冰面上行走不安全。"
+    ],
+    [
+     "Do not sit around when your fellow students need help.",
+     "同学们需要帮助时，不要闲坐着。"
+    ],
+    [
+     "It is clear that every family needs a survival kit.",
+     "很显然，每个家庭都需要一个救生包。"
+    ],
+    [
+     "It is interesting to learn how a typhoon gets its name.",
+     "了解台风是怎么得名的很有趣。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "What should we do when the ground starts shaking?",
+     "Get under a desk and protect your head from falling objects.",
+     [
+      "It shook for about one minute last night.",
+      "Because a big earthquake hit our city."
+     ]
+    ],
+    [
+     "Our project on survival tips is really hard. Should we give up?",
+     "No, let's stick with it until the end.",
+     [
+      "Yes, it's a project about typhoons.",
+      "No, I gave it to the teacher."
+     ]
+    ],
+    [
+     "The water is rising fast! What should we do?",
+     "It's important to go upstairs immediately.",
+     [
+      "It rained all night long.",
+      "The river is very wide here."
+     ]
+    ],
+    [
+     "How long did it take to clean up the town?",
+     "It took us about two weeks.",
+     [
+      "It was about two metres deep.",
+      "We cleaned it with our friends."
+     ]
+    ],
+    [
+     "Why is it important to have a survival kit?",
+     "It can help us stay alive in an emergency.",
+     [
+      "It is in the cupboard downstairs.",
+      "My dad bought it last week."
+     ]
+    ],
+    [
+     "How did you feel when the earthquake started?",
+     "I was really frightened at first.",
+     [
+      "It lasted about one minute.",
+      "I was at home with my mum."
+     ]
+    ],
+    [
+     "Is it possible to stop an earthquake?",
+     "No, but it's possible to get ready for one.",
+     [
+      "Yes, it stopped an hour ago.",
+      "No, it was not very strong."
+     ]
+    ],
+    [
+     "The typhoon has passed. Is it safe for us to go home now?",
+     "Yes, it's safe for now.",
+     [
+      "Yes, my home is near here.",
+      "No, I went home yesterday."
+     ]
+    ],
+    [
+     "Was the bridge to Echo Island damaged in the flood?",
+     "Yes, it was badly damaged.",
+     [
+      "It's the oldest bridge on the island.",
+      "The flood came last night."
+     ]
+    ],
+    [
+     "Did people listen to the typhoon warning?",
+     "No, it fell on deaf ears.",
+     [
+      "It was about a big typhoon.",
+      "The warning came on Monday."
+     ]
+    ],
+    [
+     "What did your sister do when she heard the news?",
+     "She stared at me in surprise.",
+     [
+      "She heard it on the radio.",
+      "She is in Year Nine now."
+     ]
+    ],
+    [
+     "Can your mum leave work early because of the typhoon?",
+     "Yes, her boss told everyone to go home.",
+     [
+      "Yes, she works in a big office.",
+      "No, she leaves home at eight."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Tess",
+    "zh": "救援队长苔丝",
+    "topic": "Get ready for a natural disaster",
+    "topicZh": "为自然灾害做准备",
+    "persona": "You are Tess, the leader of the Echo Island rescue team. Typhoon season is coming, so you visit schools to help students make survival kits and learn what to do in a natural disaster.",
+    "goal": "Help Tess plan a family survival kit: name at least four things to put in it and say why, then tell her one thing to do in an earthquake or a typhoon.",
+    "goalZh": "帮苔丝队长规划一个家庭救生包：说出至少四样要放进去的东西和理由，再告诉她地震或台风时该做的一件事。",
+    "opener": "Hi, I'm Tess from the rescue team. Do you have a survival kit at home?",
+    "words": [
+     "survival kit",
+     "It is important to",
+     "It is a good idea to",
+     "bottled water",
+     "a torch",
+     "a first aid kit",
+     "stay calm",
+     "stick with your family"
+    ],
+    "look": "champion",
+    "voice": "Mione",
+    "voiceZh": "英式口音的阿姨"
+   }
+  },
+  {
+   "n": 5,
+   "en": "Sport",
+   "zh": "体育运动",
+   "icon": "🏅",
+   "color": "#C92A2A",
+   "key": "How can sport make our lives better?",
+   "grammar": {
+    "title": "时态复习；被动语态复习",
+    "tip": "先看时间选时态：经常做用一般现在时，过去做完用一般过去时，当时正在做用过去进行时（I was checking in at the airport.），从过去持续到现在用现在完成时（have played），将来要做用一般将来时（will + 动词原形）。被动语态 = be + 过去分词，be 跟着时态变：are taught、was beaten、will be held；情态动词后面用 be + 过去分词：must be worn。例如 The final will be held in the gym."
+   },
+   "boss": {
+    "emoji": "🐆",
+    "name": "滑雪雪豹",
+    "hello": "I'm Flurry, the skiing snow leopard. Can you keep your balance on my slopes?"
+   },
+   "words": [
+    [
+     "announcement",
+     "公告；通知",
+     "📢"
+    ],
+    [
+     "passport",
+     "护照",
+     "🛂"
+    ],
+    [
+     "the Pacific",
+     "太平洋",
+     "🌊"
+    ],
+    [
+     "Canada",
+     "加拿大",
+     "🇨🇦"
+    ],
+    [
+     "resort",
+     "度假胜地",
+     "🏨"
+    ],
+    [
+     "Canadian",
+     "加拿大（人）的",
+     "🍁"
+    ],
+    [
+     "slope",
+     "斜坡；坡道",
+     "⛷️"
+    ],
+    [
+     "opposite",
+     "在……对面",
+     "↔️"
+    ],
+    [
+     "glove",
+     "手套",
+     "🧤"
+    ],
+    [
+     "couple",
+     "夫妻；情侣",
+     "💑"
+    ],
+    [
+     "gentle",
+     "平缓的",
+     "〰️"
+    ],
+    [
+     "honest",
+     "坦率的",
+     "😇"
+    ],
+    [
+     "rope",
+     "绳索",
+     "🪢"
+    ],
+    [
+     "rapid",
+     "迅速的",
+     "⚡"
+    ],
+    [
+     "over",
+     "结束",
+     "🏁"
+    ],
+    [
+     "shame",
+     "遗憾的事",
+     "😞"
+    ],
+    [
+     "fee",
+     "费用",
+     "💰"
+    ],
+    [
+     "enter",
+     "报名参加",
+     "📝"
+    ],
+    [
+     "semi-final",
+     "半决赛",
+     "🆚"
+    ],
+    [
+     "final",
+     "决赛",
+     "🏆"
+    ],
+    [
+     "badminton",
+     "羽毛球运动",
+     "🏸"
+    ],
+    [
+     "stress",
+     "精神压力",
+     "😰"
+    ],
+    [
+     "be dying to do something",
+     "极想；想得要命",
+     "🤩"
+    ],
+    [
+     "check in",
+     "登记；报到",
+     "🛎️"
+    ],
+    [
+     "can't wait to do something",
+     "迫不及待；等不及",
+     "🙌"
+    ],
+    [
+     "to be honest",
+     "说实在的",
+     "💬"
+    ],
+    [
+     "fall over",
+     "摔倒",
+     "🤕"
+    ],
+    [
+     "keep one's balance",
+     "保持平衡",
+     "⚖️"
+    ],
+    [
+     "build up",
+     "建立",
+     "🧱"
+    ]
+   ],
+   "sents": [
+    [
+     "Did you hear the announcement about the flight?",
+     "你听到关于航班的通知了吗？"
+    ],
+    [
+     "Don't forget to take your passport with you.",
+     "别忘了随身带上你的护照。"
+    ],
+    [
+     "Canada is on the other side of the Pacific.",
+     "加拿大在太平洋的另一边。"
+    ],
+    [
+     "I am dying to learn how to ski.",
+     "我特别想学滑雪。"
+    ],
+    [
+     "We are taught by a Canadian ski coach.",
+     "我们由一位加拿大滑雪教练来教。"
+    ],
+    [
+     "Gloves must be worn by all the skiers.",
+     "所有滑雪的人都必须戴手套。"
+    ],
+    [
+     "Beginners should start on a gentle slope.",
+     "初学者应该从平缓的坡道开始。"
+    ],
+    [
+     "A rope was used to pull people up the hill.",
+     "一根绳索被用来把人们拉上山坡。"
+    ],
+    [
+     "It is hard to keep your balance on skis.",
+     "穿着滑雪板很难保持平衡。"
+    ],
+    [
+     "The young skier is making rapid progress.",
+     "这个年轻的滑雪者进步得很快。"
+    ],
+    [
+     "Thirty of us have entered the table tennis competition.",
+     "我们当中有三十人报名参加了乒乓球比赛。"
+    ],
+    [
+     "Our team was beaten in the semi-final.",
+     "我们队在半决赛中被打败了。"
+    ],
+    [
+     "The final will be held in the gym.",
+     "决赛将在体育馆举行。"
+    ],
+    [
+     "It is a shame that the match is over.",
+     "比赛已经结束了，真遗憾。"
+    ],
+    [
+     "I have played badminton for three years.",
+     "我打羽毛球已经三年了。"
+    ],
+    [
+     "Kung fu helps young people build up confidence.",
+     "功夫帮助年轻人建立自信。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Excuse me, how can I get to the sports centre?",
+     "Go straight on. It's opposite the library.",
+     [
+      "It's the biggest one in our town.",
+      "It opens at nine every morning."
+     ]
+    ],
+    [
+     "What were you doing when you heard the announcement?",
+     "I was checking in at the airport.",
+     [
+      "I will check in at the airport.",
+      "It was about our flight to Canada."
+     ]
+    ],
+    [
+     "Have you ever been skiing?",
+     "Yes, I went skiing in Canada last winter.",
+     [
+      "Yes, I will go skiing next winter.",
+      "No, I can ski very well."
+     ]
+    ],
+    [
+     "Where did the couple next door stay in Canada?",
+     "They stayed at a ski resort.",
+     [
+      "They stayed there for a week.",
+      "They went there by plane."
+     ]
+    ],
+    [
+     "How was your first skiing lesson?",
+     "To be honest, I fell over many times.",
+     [
+      "To be honest, I will go there tomorrow.",
+      "I had it at a ski resort."
+     ]
+    ],
+    [
+     "How does playing sport help you?",
+     "It helps me deal with stress.",
+     [
+      "I play it twice a week.",
+      "It was a shame we lost."
+     ]
+    ],
+    [
+     "Is the entry fee for the competition expensive?",
+     "No, it's only five yuan.",
+     [
+      "No, the competition is on Sunday.",
+      "Yes, I have entered the competition."
+     ]
+    ],
+    [
+     "Has Lucy entered the table tennis competition?",
+     "Yes, she entered it last week.",
+     [
+      "Yes, she will enter it next year.",
+      "No, she is very good at it."
+     ]
+    ],
+    [
+     "How long have you played table tennis?",
+     "I have played it for five years.",
+     [
+      "I played it last Sunday.",
+      "I will play it after school."
+     ]
+    ],
+    [
+     "Was your team beaten in the semi-final?",
+     "Yes, we were beaten by Class Three.",
+     [
+      "Yes, we beat Class Three easily.",
+      "No, it is held every year."
+     ]
+    ],
+    [
+     "When will the final be held?",
+     "It will be held next Saturday.",
+     [
+      "It was held last Saturday.",
+      "It will be held in the gym."
+     ]
+    ],
+    [
+     "I'm dying to watch the badminton final.",
+     "Me too. I can't wait to see it.",
+     [
+      "Me too. It was over an hour ago.",
+      "Me neither. I don't like badminton."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Coach Martin",
+    "zh": "体育老师马丁",
+    "topic": "My favourite sport",
+    "topicZh": "我最喜欢的运动",
+    "persona": "You are Coach Martin, the cheerful sports coach at the Echo Island school who runs the Table Tennis Club and the winter ski trip. You are making a school guidebook to a healthy lifestyle, so you want to hear about the player's favourite sport.",
+    "goal": "Tell Coach Martin about your favourite sport: what it is, how long you have played it, when and where you play it, and how it helps you.",
+    "goalZh": "向马丁教练介绍你最喜欢的运动：是什么运动、练了多久、什么时候在哪里练，以及它对你有什么帮助。",
+    "opener": "Hi, I'm Coach Martin, the sports coach at our school. What's your favourite sport?",
+    "words": [
+     "my favourite sport",
+     "I have played it for",
+     "enter the competition",
+     "keep my balance",
+     "to be honest",
+     "I can't wait to",
+     "deal with stress",
+     "build up"
+    ],
+    "look": "athlete",
+    "voice": "Joyner",
+    "voiceZh": "幽默的大哥"
+   }
+  },
+  {
+   "n": 6,
+   "en": "Caring for your health",
+   "zh": "关爱健康",
+   "icon": "🩺",
+   "color": "#1E8050",
+   "key": "How can we lead a healthy and balanced life?",
+   "grammar": {
+    "title": "形容词 + that 从句；宾语从句（复习）",
+    "tip": "说自己的感受或有多确定时，用「be + 形容词 + that 从句」，常用 sure、glad、sorry、afraid、worried，that 可以省略：I'm glad that you are feeling better. 复习宾语从句：从句一律用陈述语序，「是否」用 whether 或 if：Please tell me how I can guard against eye problems. 主句是过去时，从句一般也用过去时（讲客观事实、真理时仍用一般现在时）：The dentist asked me whether I used a soft toothbrush."
+   },
+   "boss": {
+    "emoji": "🐼",
+    "name": "养生熊猫",
+    "hello": "I'm Bamboo, a panda. I do tai chi every morning. How do you keep healthy?"
+   },
+   "words": [
+    [
+     "conduct",
+     "实施；执行",
+     "📋"
+    ],
+    [
+     "lifestyle",
+     "生活方式",
+     "🧘"
+    ],
+    [
+     "quarrel",
+     "争吵",
+     "😠"
+    ],
+    [
+     "focus",
+     "集中；专注于",
+     "🎯"
+    ],
+    [
+     "peer",
+     "同龄人；同辈",
+     "🧑‍🤝‍🧑"
+    ],
+    [
+     "pressure",
+     "压力",
+     "😰"
+    ],
+    [
+     "whether",
+     "是否",
+     "❓"
+    ],
+    [
+     "risk",
+     "风险",
+     "⚠️"
+    ],
+    [
+     "guard",
+     "守卫；保卫",
+     "💂"
+    ],
+    [
+     "positive",
+     "积极乐观的",
+     "😄"
+    ],
+    [
+     "cancel",
+     "取消",
+     "❌"
+    ],
+    [
+     "bright",
+     "有希望的",
+     "🌟"
+    ],
+    [
+     "force",
+     "强迫；迫使",
+     "⛓️"
+    ],
+    [
+     "concert",
+     "音乐会",
+     "🎤"
+    ],
+    [
+     "private",
+     "私人的",
+     "🔒"
+    ],
+    [
+     "silent",
+     "沉默的",
+     "🤐"
+    ],
+    [
+     "musical instrument",
+     "乐器",
+     "🎻"
+    ],
+    [
+     "enemy",
+     "大敌；危害物",
+     "👿"
+    ],
+    [
+     "regular",
+     "有规律的",
+     "⏰"
+    ],
+    [
+     "cheer",
+     "鼓励；鼓舞",
+     "📣"
+    ],
+    [
+     "low",
+     "沮丧的；消沉的",
+     "😞"
+    ],
+    [
+     "eyesight",
+     "视力",
+     "👁️"
+    ],
+    [
+     "dentist",
+     "牙科医生",
+     "🦷"
+    ],
+    [
+     "recovery",
+     "恢复；痊愈",
+     "🩹"
+    ],
+    [
+     "deal with",
+     "处理；应对",
+     "🔧"
+    ],
+    [
+     "guard against",
+     "防止；提防",
+     "🛡️"
+    ],
+    [
+     "cancel out",
+     "抵消",
+     "⚖️"
+    ],
+    [
+     "look on the bright side",
+     "往好的方面看",
+     "☀️"
+    ],
+    [
+     "take up",
+     "学着做；开始做",
+     "🎨"
+    ],
+    [
+     "(be) busy with",
+     "忙于",
+     "📚"
+    ],
+    [
+     "leave ... behind",
+     "把……抛在后面",
+     "🏃"
+    ],
+    [
+     "cheer ... up",
+     "（使）振作起来",
+     "🤗"
+    ]
+   ],
+   "sents": [
+    [
+     "I am sure that regular exercise lowers the risk of illness.",
+     "我确信规律的锻炼能降低患病的风险。"
+    ],
+    [
+     "I am worried that my eyesight is getting worse.",
+     "我担心我的视力越来越差了。"
+    ],
+    [
+     "We are glad that you are making a quick recovery.",
+     "我们很高兴你恢复得这么快。"
+    ],
+    [
+     "I am sorry that you had to cancel the concert.",
+     "很遗憾你不得不取消那场音乐会。"
+    ],
+    [
+     "The dentist asked me whether I used a soft toothbrush.",
+     "牙医问我是否用软毛牙刷。"
+    ],
+    [
+     "Please tell me how I can guard against eye problems.",
+     "请告诉我怎样才能预防眼睛出问题。"
+    ],
+    [
+     "My mum told me that sugar is bad for my teeth.",
+     "妈妈告诉我，糖对牙齿有害。"
+    ],
+    [
+     "It is hard to focus on homework when you are tired.",
+     "累的时候很难专心写作业。"
+    ],
+    [
+     "My friends cheer me up when I feel low.",
+     "我情绪低落时，朋友们会让我振作起来。"
+    ],
+    [
+     "Try to look on the bright side when things go wrong.",
+     "事情不顺利时，试着往好的方面看。"
+    ],
+    [
+     "Do not let peer pressure force you to do the wrong thing.",
+     "别让同伴压力逼你做错事。"
+    ],
+    [
+     "Talking to a friend helps you deal with your worries.",
+     "和朋友聊聊能帮你解决烦恼。"
+    ],
+    [
+     "Our class conducted a survey on healthy lifestyles.",
+     "我们班做了一项关于健康生活方式的调查。"
+    ],
+    [
+     "Everyone needs some private time to relax.",
+     "每个人都需要一些独处放松的时间。"
+    ],
+    [
+     "After a quarrel, do not stay silent.",
+     "吵架以后，不要一直闷着不说话。"
+    ],
+    [
+     "My monster dances when I play a musical instrument.",
+     "我演奏乐器的时候，我的怪兽就会跳舞。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "I'm afraid I can't come to the concert. I have a fever.",
+     "I'm sorry that you are ill. Get well soon.",
+     [
+      "I'm glad that the concert was cancelled.",
+      "I'm sure that you will enjoy the music."
+     ]
+    ],
+    [
+     "Do you know whether the football match is cancelled?",
+     "Yes, it's cancelled because of the heavy rain.",
+     [
+      "Yes, I know how to play football well.",
+      "No, the football field is very big."
+     ]
+    ],
+    [
+     "Can you tell me how I can protect my eyesight?",
+     "Don't read in the dark, and rest your eyes often.",
+     [
+      "I had my eyes checked at the hospital last Friday.",
+      "My eyesight is much better than my brother's."
+     ]
+    ],
+    [
+     "I feel low today. I failed my maths test.",
+     "Look on the bright side. You can do better next time.",
+     [
+      "Well done! You must be very proud of yourself.",
+      "Great! Let's go out and have a big party tonight."
+     ]
+    ],
+    [
+     "Why are you so happy today?",
+     "I'm glad that my grandpa is out of hospital.",
+     [
+      "I'm afraid that I'll miss the school bus.",
+      "I'm sorry that I broke your new pen."
+     ]
+    ],
+    [
+     "Have you taken up any new hobbies this term?",
+     "Yes, I've taken up the violin.",
+     [
+      "Yes, I took them to the park.",
+      "No, I've lost my new school bag."
+     ]
+    ],
+    [
+     "Why didn't you come to football practice yesterday?",
+     "Sorry, I was busy with a science project.",
+     [
+      "Because I scored two goals yesterday.",
+      "Yes, I like playing football very much."
+     ]
+    ],
+    [
+     "My friend and I had a quarrel. What should I do?",
+     "Talk to your friend and try to understand each other.",
+     [
+      "Drink more water and go to bed early tonight.",
+      "Your friend is good at playing the piano."
+     ]
+    ],
+    [
+     "Can you tell me what the dentist said?",
+     "She said that sugar is the enemy of healthy teeth.",
+     [
+      "Yes, the dentist is on the second floor.",
+      "I go to the dentist twice a year."
+     ]
+    ],
+    [
+     "Is it true that junk food can cancel out the good effects of exercise?",
+     "Yes, so we should eat healthy food as well.",
+     [
+      "No, I cancelled my swimming lesson today.",
+      "Yes, I like to exercise in the morning."
+     ]
+    ],
+    [
+     "I'm worried that I'm not good enough for the school team.",
+     "Don't worry. Stay positive and keep practising.",
+     [
+      "Great! I'm glad that you won the match.",
+      "Don't worry. The school team plays on Friday."
+     ]
+    ],
+    [
+     "I'm still upset about losing the match.",
+     "Leave it behind and look forward to the next one.",
+     [
+      "Congratulations! You must be so proud of your team.",
+      "Really? I didn't know that your team won the match."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Nurse Lucy",
+    "zh": "校医露西",
+    "topic": "Your healthy lifestyle",
+    "topicZh": "聊聊你的健康生活方式",
+    "persona": "You are Nurse Lucy, the kind and cheerful school nurse at the Echo Island school. You are doing health checks for the students this week, so you want to hear how the player keeps healthy and deals with stress.",
+    "goal": "Tell Nurse Lucy about your lifestyle: how often you exercise and how much you sleep, what you do to protect your eyesight, and how you deal with pressure or cheer yourself up when you feel low.",
+    "goalZh": "向校医露西介绍你的生活方式：多久锻炼一次、睡多久，怎样保护视力，以及有压力或情绪低落时你怎样应对、怎样让自己振作起来。",
+    "opener": "Hello, I'm Nurse Lucy, the school nurse. How do you keep healthy?",
+    "words": [
+     "regular exercise",
+     "protect my eyesight",
+     "deal with pressure",
+     "I'm sure that",
+     "I'm worried that",
+     "cheer me up",
+     "look on the bright side",
+     "a balanced life"
+    ],
+    "look": "nurse",
+    "voice": "Katerina",
+    "voiceZh": "成熟的女声"
+   }
+  }
+ ]
+}

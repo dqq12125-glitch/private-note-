@@ -1,0 +1,2871 @@
+{
+ "id": "hj8b",
+ "name": "沪教版 英语 八年级下册",
+ "short": "八下",
+ "press": "上海教育出版社 2026 年春季版",
+ "units": [
+  {
+   "n": 1,
+   "en": "Helping those in need",
+   "zh": "帮助有需要的人",
+   "icon": "💝",
+   "color": "#C2255C",
+   "key": "Why is it important to help others?",
+   "grammar": {
+    "title": "动词不定式（to + 动词原形）",
+    "tip": "不定式就是 to + 动词原形：说 to help，不说 to helping（look forward to doing 里的 to 是介词，不算不定式）。它常跟在 want、would like、plan、decide、hope、offer 这些动词后面，说想做或打算做的事：I plan to do voluntary work. 它还能说明目的、回答 Why，也可以换成 in order to：We held a cake sale to raise money. 句型 It is + 形容词 + to do 也很常用：It is important to help others."
+   },
+   "boss": {
+    "emoji": "🐘",
+    "name": "爱心小象",
+    "hello": "I'm Ellie the elephant. I love to help. Why is it important to help others?"
+   },
+   "words": [
+    [
+     "elderly",
+     "上了年纪的",
+     "👵"
+    ],
+    [
+     "offer",
+     "主动提出",
+     "🤲"
+    ],
+    [
+     "serious",
+     "严重的",
+     "⚠️"
+    ],
+    [
+     "disease",
+     "疾病",
+     "🦠"
+    ],
+    [
+     "cancer",
+     "癌症",
+     "🎗️"
+    ],
+    [
+     "spirits",
+     "情绪；心境",
+     "🎭"
+    ],
+    [
+     "pain",
+     "痛苦；苦恼",
+     "😣"
+    ],
+    [
+     "belong",
+     "适应；合得来",
+     "🧩"
+    ],
+    [
+     "spare",
+     "空闲的",
+     "🕰️"
+    ],
+    [
+     "volunteer",
+     "自愿做",
+     "🙋"
+    ],
+    [
+     "joy",
+     "喜悦；快乐",
+     "😄"
+    ],
+    [
+     "lose",
+     "丧失；失去",
+     "🥀"
+    ],
+    [
+     "raise",
+     "筹募；筹款",
+     "💰"
+    ],
+    [
+     "pound",
+     "英镑",
+     "💷"
+    ],
+    [
+     "structure",
+     "结构",
+     "🏗️"
+    ],
+    [
+     "permission",
+     "准许；许可",
+     "✅"
+    ],
+    [
+     "arrange",
+     "排列；布置",
+     "🗂️"
+    ],
+    [
+     "donate",
+     "捐赠",
+     "🎁"
+    ],
+    [
+     "mighty",
+     "巨大的；非凡的",
+     "💪"
+    ],
+    [
+     "pleasant",
+     "令人愉快的",
+     "🌷"
+    ],
+    [
+     "ease",
+     "减轻；缓解",
+     "🩹"
+    ],
+    [
+     "ache",
+     "隐隐作痛",
+     "🤕"
+    ],
+    [
+     "voluntary work",
+     "志愿工作",
+     "🦺"
+    ],
+    [
+     "disabled people",
+     "残障人士",
+     "♿"
+    ],
+    [
+     "look after",
+     "照料；照顾",
+     "🤗"
+    ],
+    [
+     "suffer from",
+     "遭受；患病",
+     "🤒"
+    ],
+    [
+     "cheer somebody up",
+     "逗某人开心",
+     "🎈"
+    ],
+    [
+     "raise one's spirits",
+     "使某人振奋",
+     "🌈"
+    ],
+    [
+     "in low spirits",
+     "情绪低落",
+     "😔"
+    ],
+    [
+     "in order to",
+     "为了；目的是",
+     "🎯"
+    ],
+    [
+     "in need",
+     "有困难的",
+     "🆘"
+    ],
+    [
+     "flower arranging",
+     "插花",
+     "💐"
+    ],
+    [
+     "tidy up",
+     "收拾；整理",
+     "🧹"
+    ],
+    [
+     "in vain",
+     "徒劳；白费",
+     "💨"
+    ]
+   ],
+   "sents": [
+    [
+     "It is pleasant to chat with elderly people.",
+     "和老年人聊天是件愉快的事。"
+    ],
+    [
+     "My aunt volunteers to look after disabled people.",
+     "我姑姑自愿照顾残障人士。"
+    ],
+    [
+     "Tom offered to help me tidy up.",
+     "汤姆主动提出帮我收拾。"
+    ],
+    [
+     "We plan to raise five hundred pounds for the animal centre.",
+     "我们计划为动物救助中心筹集五百英镑。"
+    ],
+    [
+     "It is important to help those in need.",
+     "帮助那些有困难的人很重要。"
+    ],
+    [
+     "We held a cake sale in order to raise money.",
+     "为了筹款，我们办了一次蛋糕义卖。"
+    ],
+    [
+     "My grandma taught me how to do flower arranging.",
+     "奶奶教我怎么插花。"
+    ],
+    [
+     "We sang songs to cheer him up.",
+     "我们唱歌逗他开心。"
+    ],
+    [
+     "Some children suffer from serious diseases like cancer.",
+     "有些孩子患有癌症之类的重病。"
+    ],
+    [
+     "Do you have any spare time to help us?",
+     "你有空余时间来帮我们吗？"
+    ],
+    [
+     "May we have your permission to hold a charity sale?",
+     "我们能得到您的许可，举办一次义卖吗？"
+    ],
+    [
+     "Healthy adults can donate blood to save lives.",
+     "健康的成年人可以通过献血挽救生命。"
+    ],
+    [
+     "Doing voluntary work brings me a lot of joy.",
+     "做志愿工作给我带来很多快乐。"
+    ],
+    [
+     "Kind words can ease the pain of others.",
+     "友善的话语能减轻别人的痛苦。"
+    ],
+    [
+     "People in low spirits may lose interest in everything.",
+     "情绪低落的人可能对什么都失去兴趣。"
+    ],
+    [
+     "Your efforts to help others are never in vain.",
+     "你帮助他人的努力永远不会白费。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Why is it important to help others?",
+     "Because everyone needs help sometimes.",
+     [
+      "Because I am busy at the weekend.",
+      "Yes, it is very important."
+     ]
+    ],
+    [
+     "What do you plan to do this summer?",
+     "I plan to do voluntary work at a care home.",
+     [
+      "I did voluntary work at a care home.",
+      "It's a care home near my school."
+     ]
+    ],
+    [
+     "Would you like to help at our cake sale?",
+     "Yes, I'd love to.",
+     [
+      "Yes, I like cakes very much.",
+      "No, I didn't see it."
+     ]
+    ],
+    [
+     "What did your class decide to do for Charity Week?",
+     "We decided to sell our old toys.",
+     [
+      "We sold them last Friday morning.",
+      "We decided it was a good idea."
+     ]
+    ],
+    [
+     "Do your arms ache? Let me carry the box for you.",
+     "Yes, a little. Thank you very much.",
+     [
+      "You're welcome. I'm happy to help.",
+      "Yes, I carried it for you."
+     ]
+    ],
+    [
+     "Why are you saving your pocket money?",
+     "To buy books for children in need.",
+     [
+      "For two months, I think.",
+      "In a box under my bed."
+     ]
+    ],
+    [
+     "Why did your dad go to the blood centre?",
+     "He went there to donate blood.",
+     [
+      "He went there by bike.",
+      "He went there last Monday."
+     ]
+    ],
+    [
+     "Sam is in low spirits today. What can we do?",
+     "Let's tell him some jokes to raise his spirits.",
+     [
+      "Let's ask him to tidy up the room.",
+      "He was very happy at the party."
+     ]
+    ],
+    [
+     "May we use the school hall for our charity show?",
+     "Yes, you may. I'm happy to help.",
+     [
+      "Yes, it is. It's very big.",
+      "No, we didn't have a show."
+     ]
+    ],
+    [
+     "What did you do at the care home last weekend?",
+     "We arranged flowers for the elderly people there.",
+     [
+      "We are going there next weekend.",
+      "It's about ten minutes from my home."
+     ]
+    ],
+    [
+     "How do you like your new volunteer group?",
+     "I love it. I really feel I belong.",
+     [
+      "I joined it a month ago.",
+      "It has about twenty members."
+     ]
+    ],
+    [
+     "What did you learn from the poem about kindness?",
+     "Small acts of kindness can add up to something mighty.",
+     [
+      "The poem has four short lines.",
+      "I read it in my English class."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Ben",
+    "zh": "志愿队长本",
+    "topic": "Plans for voluntary work",
+    "topicZh": "志愿活动计划",
+    "persona": "You are Ben, a friendly young nurse who leads the volunteer team at the Echo Island community centre. You are planning a Helping Hands Week and want to hear each student's plan for voluntary work.",
+    "goal": "The student tells Ben about a plan for one voluntary activity. They say what they would like to do or plan to do (for example visit elderly people, tidy up the park or raise money for children in need), when they have spare time to do it, and why. They use to or in order to at least once to give the purpose.",
+    "goalZh": "向本说出你的一项志愿活动计划：想做或打算做什么（比如看望老人、打扫公园、为有困难的孩子筹款），什么时候有空去做，以及为什么做，至少用一次 to 或 in order to 说明目的。",
+    "opener": "Hi! I'm Ben, the volunteer leader on Echo Island. Would you like to help?",
+    "words": [
+     "I'd like to",
+     "I plan to",
+     "in my spare time",
+     "visit elderly people",
+     "raise money for",
+     "in order to",
+     "help those in need",
+     "It is important to"
+    ],
+    "look": "scientist",
+    "voice": "Dolce",
+    "voiceZh": "热情的大哥"
+   }
+  },
+  {
+   "n": 2,
+   "en": "Body language",
+   "zh": "肢体语言",
+   "icon": "👋",
+   "color": "#D9480F",
+   "key": "What does body language mean to us?",
+   "grammar": {
+    "title": "动名词作主语和宾语；-ing 和 -ed 形容词",
+    "tip": "动词加 -ing 可以当名词用：放在句首作主语时，后面的动词用单数（Making eye contact is important.），也可以放在 enjoy、keep、how about 和介词后面作宾语。-ing 形容词表示「令人……的」（多说事物，也能说人），-ed 形容词表示人「感到……的」：The ballet was exciting, so we were excited."
+   },
+   "boss": {
+    "emoji": "🦢",
+    "name": "舞语天鹅",
+    "hello": "I'm Lumi the swan. I dance without words. What does body language mean to you?"
+   },
+   "words": [
+    [
+     "shake",
+     "摇动；握（手）",
+     "🤝"
+    ],
+    [
+     "clap",
+     "鼓掌；拍手",
+     "👏"
+    ],
+    [
+     "madam",
+     "夫人；女士",
+     "👩"
+    ],
+    [
+     "boss",
+     "老板",
+     "🧑‍💼"
+    ],
+    [
+     "expression",
+     "表情；神色",
+     "🎭"
+    ],
+    [
+     "impression",
+     "印象",
+     "💭"
+    ],
+    [
+     "hold",
+     "使保持（某位置）",
+     "🧍"
+    ],
+    [
+     "observe",
+     "观察到；看出",
+     "🔍"
+    ],
+    [
+     "remind",
+     "提醒；使想起",
+     "🎗️"
+    ],
+    [
+     "ballet",
+     "芭蕾舞",
+     "🩰"
+    ],
+    [
+     "emphasize",
+     "强调",
+     "❗"
+    ],
+    [
+     "nod",
+     "点头",
+     "🙆"
+    ],
+    [
+     "meaning",
+     "意义；意思",
+     "📖"
+    ],
+    [
+     "immediately",
+     "立即；马上",
+     "⚡"
+    ],
+    [
+     "shy",
+     "害羞的；腼腆的",
+     "🙈"
+    ],
+    [
+     "case",
+     "情况；事例",
+     "🗂️"
+    ],
+    [
+     "direct",
+     "直接的",
+     "🎯"
+    ],
+    [
+     "truly",
+     "真诚地",
+     "💖"
+    ],
+    [
+     "suppose",
+     "假定；假设",
+     "🤔"
+    ],
+    [
+     "behaviour",
+     "行为；举止",
+     "🙇"
+    ],
+    [
+     "uncomfortable",
+     "不自在的",
+     "😣"
+    ],
+    [
+     "hold something up",
+     "抬起；举起",
+     "🙋"
+    ],
+    [
+     "sit up",
+     "坐直",
+     "🪑"
+    ],
+    [
+     "make a good impression on",
+     "给……留下好印象",
+     "🌟"
+    ],
+    [
+     "eye contact",
+     "目光接触",
+     "👀"
+    ],
+    [
+     "pay attention",
+     "注意；专心",
+     "🧐"
+    ]
+   ],
+   "sents": [
+    [
+     "Making eye contact shows that you are listening.",
+     "进行目光接触表明你在认真听。"
+    ],
+    [
+     "Nodding your head means that you agree.",
+     "点头表示你同意。"
+    ],
+    [
+     "Shaking hands is a polite way to greet people.",
+     "握手是一种礼貌的问候方式。"
+    ],
+    [
+     "Smiling makes a good impression on new classmates.",
+     "微笑会给新同学留下好印象。"
+    ],
+    [
+     "Sitting up is good for your back.",
+     "坐直对你的背有好处。"
+    ],
+    [
+     "Ballet dancers tell stories without saying a word.",
+     "芭蕾舞演员不说一句话就能讲故事。"
+    ],
+    [
+     "The shy boy was interested in ballet.",
+     "那个害羞的男孩对芭蕾舞很感兴趣。"
+    ],
+    [
+     "I observed that he kept touching his nose.",
+     "我注意到他一直在摸自己的鼻子。"
+    ],
+    [
+     "Good classroom behaviour includes paying attention to the teacher.",
+     "良好的课堂表现包括专心听老师讲课。"
+    ],
+    [
+     "Learning the meaning of gestures is interesting.",
+     "学习手势的含义很有趣。"
+    ],
+    [
+     "Her expression told me that she was bored.",
+     "她的表情告诉我她觉得很无聊。"
+    ],
+    [
+     "The ballet was so exciting that everyone clapped.",
+     "芭蕾舞太精彩了，大家都鼓起了掌。"
+    ],
+    [
+     "Some people think direct eye contact is rude.",
+     "有些人认为直视别人的眼睛不礼貌。"
+    ],
+    [
+     "This traditional gesture reminds me of my grandfather.",
+     "这个传统手势让我想起了我的爷爷。"
+    ],
+    [
+     "A good speaker uses gestures to emphasize key points.",
+     "好的演讲者会用手势来强调要点。"
+    ],
+    [
+     "Holding your head high makes you look confident.",
+     "昂起头会让你看起来很自信。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "What's your new hobby?",
+     "Learning Chinese Sign Language. It's really interesting.",
+     [
+      "Yes, my hobby is very new.",
+      "I'm interested in your hobby too."
+     ]
+    ],
+    [
+     "What does nodding your head mean?",
+     "It usually means that you agree.",
+     [
+      "Yes, I nod my head a lot.",
+      "My head hurts a little today."
+     ]
+    ],
+    [
+     "How did you feel about the ballet show?",
+     "I was amazed. It was really exciting!",
+     [
+      "I watched it with my aunt.",
+      "It starts at seven tonight."
+     ]
+    ],
+    [
+     "You look uncomfortable. What's wrong?",
+     "I'm nervous about giving my presentation.",
+     [
+      "I'm excited about going to the party.",
+      "My presentation was really interesting."
+     ]
+    ],
+    [
+     "I keep looking at my notes when I give a talk. Any advice?",
+     "Why not make more eye contact with your audience?",
+     [
+      "Why not hold your notes closer to your face?",
+      "I always enjoy listening to your talks."
+     ]
+    ],
+    [
+     "How about practising your speech in front of a mirror?",
+     "Good idea. I'll try that tonight.",
+     [
+      "You're welcome. It's my pleasure.",
+      "Yes, it's a very big mirror."
+     ]
+    ],
+    [
+     "Is shaking hands polite in China?",
+     "Yes, it is. It's a common greeting.",
+     [
+      "Yes, they are. They're very polite.",
+      "No, I don't. I never shake my head."
+     ]
+    ],
+    [
+     "Excuse me, madam. Is this seat free?",
+     "Yes, it is. Please sit down.",
+     [
+      "Yes, I'm free this afternoon.",
+      "No, thanks. I'm full."
+     ]
+    ],
+    [
+     "The boss wants to see you immediately.",
+     "All right. I'll go to her office now.",
+     [
+      "All right. I saw her last week.",
+      "Sorry, I'm not her boss."
+     ]
+    ],
+    [
+     "Suppose a new classmate looks shy. What will you do?",
+     "I'll smile and say hello first.",
+     [
+      "I'll stay at home and sleep.",
+      "She looked shy yesterday."
+     ]
+    ],
+    [
+     "Is direct eye contact polite everywhere?",
+     "No. In some cases it can seem rude.",
+     [
+      "Yes, I always wear my glasses.",
+      "No, I don't know where it is."
+     ]
+    ],
+    [
+     "You gave a great talk today!",
+     "Thanks. I truly enjoyed giving it.",
+     [
+      "Thanks. I'm truly sorry about that.",
+      "Never mind. Try again next time."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Coral",
+    "zh": "海洋学家科拉尔",
+    "topic": "Body language for a talk",
+    "topicZh": "帮科拉尔改进演讲时的肢体语言",
+    "persona": "You are Coral, a young sea scientist on Echo Island who will give her first talk to students at the Echo Island school next week. You feel nervous because you always look at your notes, speak quietly and cross your arms, so you want a student's advice on body language.",
+    "goal": "Give Coral at least three suggestions about body language for her talk, such as making eye contact, standing up straight or smiling, using Why not or How about. Then tell her what body language means to you.",
+    "goalZh": "给科拉尔至少三条演讲时的肢体语言建议（比如目光接触、站直、微笑），用 Why not… 或 How about… 来说；最后告诉她肢体语言对你意味着什么。",
+    "opener": "Hi, I'm Coral, a sea scientist. Can you help me with my talk?",
+    "words": [
+     "Why not make eye contact with",
+     "How about smiling at",
+     "Hold your head up",
+     "Stand up straight",
+     "Don't cross your arms",
+     "Use your hands to show",
+     "You will make a good impression on",
+     "Body language means"
+    ],
+    "look": "swimmerF",
+    "voice": "Mione",
+    "voiceZh": "英式口音的阿姨"
+   }
+  },
+  {
+   "n": 3,
+   "en": "Comics and animation",
+   "zh": "漫画与动画",
+   "icon": "🎬",
+   "color": "#6A3FD1",
+   "key": "What can comics and animation bring to our lives?",
+   "grammar": {
+    "title": "一般现在时的被动语态",
+    "tip": "想说“某物被怎样”时用被动语态：am / is / are + 动词的过去分词，要说出是谁做的就加 by：This classic cartoon is loved by many children. 否定在 is / are 后面加 not：This comic strip is not drawn by hand. 问句把 is / are 放到句首：Is artificial intelligence used in your school? — Yes, it is."
+   },
+   "boss": {
+    "emoji": "🦑",
+    "name": "水墨乌贼",
+    "hello": "I'm Mo the squid. My ink is used to draw comics. What do comics bring you?"
+   },
+   "words": [
+    [
+     "performance",
+     "表演；演出",
+     "🎭"
+    ],
+    [
+     "combine",
+     "结合；组合",
+     "🔗"
+    ],
+    [
+     "theme",
+     "主题",
+     "💡"
+    ],
+    [
+     "advanced",
+     "先进的",
+     "🚀"
+    ],
+    [
+     "artificial intelligence",
+     "人工智能",
+     "🤖"
+    ],
+    [
+     "hero",
+     "男主角",
+     "🦸‍♂️"
+    ],
+    [
+     "classic",
+     "经典的",
+     "🏆"
+    ],
+    [
+     "speech",
+     "讲话",
+     "🗣️"
+    ],
+    [
+     "text",
+     "文本；文字",
+     "📄"
+    ],
+    [
+     "warning",
+     "警告；警示",
+     "⚠️"
+    ],
+    [
+     "mind",
+     "注意（某物）",
+     "👀"
+    ],
+    [
+     "gap",
+     "缺口；空隙",
+     "🕳️"
+    ],
+    [
+     "crash",
+     "碰撞声",
+     "💥"
+    ],
+    [
+     "wave",
+     "海浪；波浪",
+     "🌊"
+    ],
+    [
+     "folk",
+     "民间的",
+     "🏮"
+    ],
+    [
+     "risk",
+     "风险；危险",
+     "🎲"
+    ],
+    [
+     "leather",
+     "皮革",
+     "👞"
+    ],
+    [
+     "advantage",
+     "优点；优势",
+     "👍"
+    ],
+    [
+     "breath",
+     "呼吸；气息",
+     "🫁"
+    ],
+    [
+     "element",
+     "要素；元素",
+     "🧩"
+    ],
+    [
+     "shadow puppet",
+     "皮影",
+     "🎎"
+    ],
+    [
+     "ink-wash painting",
+     "水墨画",
+     "🖌️"
+    ],
+    [
+     "come to life",
+     "活起来；显得逼真",
+     "🪄"
+    ],
+    [
+     "with the help of",
+     "在……的帮助下",
+     "🤝"
+    ],
+    [
+     "comic strip",
+     "连环漫画",
+     "💬"
+    ],
+    [
+     "watch out",
+     "小心；留神",
+     "🚧"
+    ],
+    [
+     "look out",
+     "当心",
+     "❗"
+    ],
+    [
+     "weather forecast",
+     "天气预报",
+     "📡"
+    ],
+    [
+     "life jacket",
+     "救生衣",
+     "🦺"
+    ],
+    [
+     "thank goodness",
+     "谢天谢地",
+     "😅"
+    ],
+    [
+     "make it",
+     "渡过难关",
+     "🙌"
+    ],
+    [
+     "date back",
+     "追溯到",
+     "📜"
+    ],
+    [
+     "have an influence on",
+     "对……有影响",
+     "🧲"
+    ],
+    [
+     "folk art",
+     "民间艺术",
+     "🪁"
+    ],
+    [
+     "at risk of",
+     "有……的危险",
+     "🚨"
+    ],
+    [
+     "in the shape of",
+     "呈……的形状",
+     "🔷"
+    ],
+    [
+     "take one's eyes off something",
+     "把视线移开",
+     "🙈"
+    ],
+    [
+     "hold one's breath",
+     "屏住呼吸",
+     "🤿"
+    ],
+    [
+     "neither ... nor ...",
+     "既不……也不……",
+     "🚫"
+    ]
+   ],
+   "sents": [
+    [
+     "Many shadow puppets are made of leather.",
+     "很多皮影是用皮革制作的。"
+    ],
+    [
+     "Most cartoons are made with the help of computers.",
+     "大多数动画片是借助电脑制作的。"
+    ],
+    [
+     "Many elements are combined in comics.",
+     "漫画里结合了许多元素。"
+    ],
+    [
+     "This classic cartoon is loved by many children.",
+     "这部经典动画片深受许多孩子喜爱。"
+    ],
+    [
+     "The word crash is written in big letters.",
+     "拟声词“哐当”用大号字母书写。"
+    ],
+    [
+     "Thought bubbles are drawn in the shape of a cloud.",
+     "思考气泡画成云朵的形状。"
+    ],
+    [
+     "This comic strip is not drawn by hand.",
+     "这部连环漫画不是手绘的。"
+    ],
+    [
+     "Chinese animation dates back about one hundred years.",
+     "中国动画的历史可以追溯到大约一百年前。"
+    ],
+    [
+     "Animation makes ink-wash paintings come to life.",
+     "动画让水墨画活了起来。"
+    ],
+    [
+     "Folk art has an influence on many cartoons.",
+     "民间艺术对许多动画片都有影响。"
+    ],
+    [
+     "This old folk art is at risk of dying out.",
+     "这门古老的民间艺术面临失传的危险。"
+    ],
+    [
+     "Mind the gap when you get off the train.",
+     "下车时请注意站台空隙。"
+    ],
+    [
+     "We check the weather forecast before going to the beach.",
+     "我们去海滩之前会查看天气预报。"
+    ],
+    [
+     "Neither the hero nor his friends know the way.",
+     "男主角和他的朋友们都不认识路。"
+    ],
+    [
+     "I could not take my eyes off the screen.",
+     "我的目光无法从屏幕上移开。"
+    ],
+    [
+     "I hold my breath when the hero jumps into the sea.",
+     "男主角跳进大海时，我会屏住呼吸。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "What are shadow puppets made of?",
+     "They are made of leather.",
+     [
+      "They are moved with sticks.",
+      "They are shown at night."
+     ]
+    ],
+    [
+     "How are most cartoons made today?",
+     "They are made with advanced computers.",
+     [
+      "They are made for young children.",
+      "They are made in about a year."
+     ]
+    ],
+    [
+     "Where is the text written in a comic strip?",
+     "It's written in speech bubbles.",
+     [
+      "It's written by the artist.",
+      "It's written very quickly."
+     ]
+    ],
+    [
+     "Is artificial intelligence used in your school?",
+     "Yes, it is. We use it in class.",
+     [
+      "Yes, it does. We have it in every room.",
+      "Yes, they are. They help us with homework."
+     ]
+    ],
+    [
+     "Where is the shadow puppet performance held?",
+     "It's held in the town hall.",
+     [
+      "It's held every Saturday evening.",
+      "It's held by our art club."
+     ]
+    ],
+    [
+     "What is your comic strip called?",
+     "It's called Island Heroes.",
+     [
+      "It's about two brave heroes.",
+      "It's drawn by my best friend."
+     ]
+    ],
+    [
+     "Look out! A big wave is coming!",
+     "Thanks! I'm wearing my life jacket.",
+     [
+      "Thanks! I'll take off my life jacket.",
+      "Great! Let's swim out to meet it."
+     ]
+    ],
+    [
+     "What warning can you give your friend by the river?",
+     "Watch out! The water is deep.",
+     [
+      "Have fun! The water is warm.",
+      "Well done! The water is clean."
+     ]
+    ],
+    [
+     "Did the boy make it back to the beach?",
+     "Yes, thank goodness. He is safe now.",
+     [
+      "Yes, he is still out at sea.",
+      "No, he is on the beach now."
+     ]
+    ],
+    [
+     "What can comics and animation bring to our lives?",
+     "They bring us fun and new ideas.",
+     [
+      "They bring us food and water.",
+      "They are brought by the postman."
+     ]
+    ],
+    [
+     "What is the theme of your comic strip?",
+     "The theme is friendship.",
+     [
+      "It has six pictures in it.",
+      "The hero is a little monster."
+     ]
+    ],
+    [
+     "What is one advantage of comic strips?",
+     "They are easy to read.",
+     [
+      "They are hard to find.",
+      "They are drawn at night."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Iris",
+    "zh": "漫画家艾瑞丝",
+    "topic": "Plan a comic strip",
+    "topicZh": "一起策划一部连环漫画",
+    "persona": "You are Iris, a friendly comic artist on Echo Island who draws the weekly comic strip for the island newspaper. You need a new story idea, so you want the student's help to plan a short four-picture comic strip.",
+    "goal": "Plan a four-picture comic strip with Iris: give it a title (It is called ...), describe the hero, say the theme, tell what happens in the story, and write one warning for a speech bubble, such as Watch out! or Look out!",
+    "goalZh": "和艾瑞丝一起策划一部四格连环漫画：起个标题（It is called ...），介绍男主角，说出主题，讲讲故事里发生了什么，再给对话气泡写一句警告语，比如 Watch out! 或 Look out!",
+    "opener": "Hi! I'm Iris, a comic artist. Do you like reading comics?",
+    "words": [
+     "comic strip",
+     "It is called",
+     "The hero is",
+     "The theme is",
+     "speech bubble",
+     "Watch out!",
+     "Look out!",
+     "thank goodness"
+    ],
+    "look": "whisper",
+    "voice": "Katerina",
+    "voiceZh": "成熟的女声"
+   }
+  },
+  {
+   "n": 4,
+   "en": "Arts and heritage",
+   "zh": "艺术与遗产",
+   "icon": "🖌️",
+   "color": "#B5452B",
+   "key": "What role do arts and crafts play in our lives?",
+   "grammar": {
+    "title": "一般过去时和一般将来时的被动语态",
+    "tip": "主语是动作的承受者时用被动语态：be + 过去分词，想说出是谁做的就加 by。一般过去时用 was/were + 过去分词：This masterpiece was painted by Wang Ximeng. 一般将来时用 will be + 过去分词：A new art exhibition will be held next month."
+   },
+   "boss": {
+    "emoji": "🦑",
+    "name": "墨鱼画师",
+    "hello": "I'm Sepia the cuttlefish. I paint with my own ink. What art do you love?"
+   },
+   "words": [
+    [
+     "master",
+     "绘画大师",
+     "🧑‍🎨"
+    ],
+    [
+     "masterpiece",
+     "杰作；代表作",
+     "🏆"
+    ],
+    [
+     "whenever",
+     "每当；每次",
+     "🕰️"
+    ],
+    [
+     "alone",
+     "独自",
+     "🧍"
+    ],
+    [
+     "copy",
+     "临摹；复制品",
+     "🖨️"
+    ],
+    [
+     "damage",
+     "损坏；毁坏",
+     "💔"
+    ],
+    [
+     "separate",
+     "不同的；分开的",
+     "🗂️"
+    ],
+    [
+     "exhibition",
+     "展览",
+     "🖼️"
+    ],
+    [
+     "lifestyle",
+     "生活方式",
+     "🏡"
+    ],
+    [
+     "detail",
+     "细节；局部",
+     "🔎"
+    ],
+    [
+     "require",
+     "需要",
+     "🧰"
+    ],
+    [
+     "daughter",
+     "女儿",
+     "👩‍👧"
+    ],
+    [
+     "priceless",
+     "无价的",
+     "💎"
+    ],
+    [
+     "sculpture",
+     "雕像",
+     "🗿"
+    ],
+    [
+     "unfortunately",
+     "不幸地；遗憾地",
+     "😞"
+    ],
+    [
+     "graduate",
+     "毕业",
+     "🎓"
+    ],
+    [
+     "limit",
+     "限制；限量",
+     "🚧"
+    ],
+    [
+     "temperature",
+     "温度",
+     "🌡️"
+    ],
+    [
+     "preserve",
+     "保存；维持原状",
+     "🛡️"
+    ],
+    [
+     "in one sitting",
+     "一口气（做完）",
+     "🛋️"
+    ],
+    [
+     "in the mood",
+     "有心情",
+     "😌"
+    ],
+    [
+     "pass along",
+     "沿……而过",
+     "🚣"
+    ],
+    [
+     "be at one with ...",
+     "与……融为一体",
+     "🏞️"
+    ],
+    [
+     "next to",
+     "紧邻；在……旁边",
+     "🏘️"
+    ],
+    [
+     "at last",
+     "最后；终于",
+     "🏁"
+    ],
+    [
+     "all walks of life",
+     "各行各业",
+     "👥"
+    ],
+    [
+     "all the time",
+     "一直；始终",
+     "♾️"
+    ],
+    [
+     "make up one's mind",
+     "下定决心",
+     "✊"
+    ]
+   ],
+   "sents": [
+    [
+     "This masterpiece was painted by Wang Ximeng.",
+     "这幅杰作是王希孟画的。"
+    ],
+    [
+     "A new art exhibition will be held next month.",
+     "下个月将举办一场新的艺术展览。"
+    ],
+    [
+     "This sculpture was made more than a thousand years ago.",
+     "这座雕像是一千多年前制作的。"
+    ],
+    [
+     "The number of visitors will be limited.",
+     "参观人数将会受到限制。"
+    ],
+    [
+     "Our paintings will be shown in separate rooms.",
+     "我们的画将分别在不同的展厅展出。"
+    ],
+    [
+     "This painting was copied by my art teacher.",
+     "我的美术老师临摹过这幅画。"
+    ],
+    [
+     "These priceless wall paintings will be preserved for future generations.",
+     "这些无价的壁画将为子孙后代保存下来。"
+    ],
+    [
+     "The old painting was damaged by the flood.",
+     "那幅古画在洪水中被损坏了。"
+    ],
+    [
+     "My grandma cuts a paper flower whenever I visit her.",
+     "每次我去看望奶奶，她都会剪一朵纸花。"
+    ],
+    [
+     "Two fishing boats pass along the river.",
+     "两艘渔船沿着河流驶过。"
+    ],
+    [
+     "The old fisherman seems to be at one with nature.",
+     "那位老渔夫仿佛与大自然融为一体。"
+    ],
+    [
+     "Art is an important part of my lifestyle.",
+     "艺术是我生活方式中重要的一部分。"
+    ],
+    [
+     "Paper cutting requires great attention to detail.",
+     "剪纸需要非常注重细节。"
+    ],
+    [
+     "The master painted an eagle in one sitting.",
+     "那位绘画大师一口气画完了一只鹰。"
+    ],
+    [
+     "Fan Jinshi made up her mind to stay in Dunhuang.",
+     "樊锦诗下定决心留在敦煌。"
+    ],
+    [
+     "People from all walks of life love her paper cuttings.",
+     "各行各业的人都喜爱她的剪纸作品。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Who painted the Mona Lisa?",
+     "It was painted by Leonardo da Vinci.",
+     [
+      "It was painted more than five hundred years ago.",
+      "It is kept in a museum in Paris."
+     ]
+    ],
+    [
+     "When will the school art show be held?",
+     "It will be held next Saturday.",
+     [
+      "It will be held in the school hall.",
+      "It will be opened by our head teacher."
+     ]
+    ],
+    [
+     "Where will our paper cuttings be shown?",
+     "They will be shown in the library.",
+     [
+      "They will be shown next Friday.",
+      "They will be shown to our parents."
+     ]
+    ],
+    [
+     "Why are you so happy today?",
+     "I finished my paper cutting at last.",
+     [
+      "My painting was damaged by water.",
+      "I'm not in the mood for painting."
+     ]
+    ],
+    [
+     "What happened to the old painting?",
+     "Unfortunately, it was damaged by water.",
+     [
+      "It was painted about two hundred years ago.",
+      "Yes, it is a great masterpiece."
+     ]
+    ],
+    [
+     "How will the wall paintings be protected?",
+     "Fewer visitors will be allowed into the caves.",
+     [
+      "They were painted over a thousand years ago.",
+      "They are very old and very beautiful."
+     ]
+    ],
+    [
+     "Which university did Fan Jinshi graduate from?",
+     "She graduated from Peking University.",
+     [
+      "She graduated about sixty years ago.",
+      "She went to Dunhuang after that."
+     ]
+    ],
+    [
+     "Why is Fan Jinshi called the daughter of Dunhuang?",
+     "Because she gave most of her life to Dunhuang.",
+     [
+      "Because Dunhuang is a city in the desert.",
+      "Because the caves were painted long ago."
+     ]
+    ],
+    [
+     "Shall we paint together this afternoon?",
+     "Sure, I'm in the mood for painting.",
+     [
+      "Sure, it was painted by a master.",
+      "Sure, it will be painted next year."
+     ]
+    ],
+    [
+     "Where is the new art museum?",
+     "It's next to the city library.",
+     [
+      "It's open from nine to five.",
+      "It was built two years ago."
+     ]
+    ],
+    [
+     "Who did you go to the exhibition with?",
+     "Nobody. I went there alone.",
+     [
+      "It was held in the city centre.",
+      "It will be open until Sunday."
+     ]
+    ],
+    [
+     "How do the workers protect the wall paintings?",
+     "They check the temperature in the caves all the time.",
+     [
+      "They were painted on the walls long ago.",
+      "They will be shown in a new exhibition."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Granny Hua",
+    "zh": "剪纸花奶奶",
+    "topic": "Introduce an artwork you love",
+    "topicZh": "介绍一件你喜爱的艺术品",
+    "persona": "You are Granny Hua, a warm 70-year-old paper-cut artist with a small studio next to the art museum on Echo Island. You are planning an art appreciation session for the school and want to hear which artwork the player loves.",
+    "goal": "Introduce one artwork you love to Granny Hua: what it is, who it was made by, when it was made, and why you like it.",
+    "goalZh": "向花奶奶介绍一件你喜爱的艺术品：它是什么、是谁创作的、什么时候创作的，以及你为什么喜欢它。",
+    "opener": "Hello, dear! I'm Granny Hua, a paper-cut artist. Do you like art?",
+    "words": [
+     "My favourite artwork is",
+     "It was painted by",
+     "It was made",
+     "years ago",
+     "a masterpiece",
+     "the details",
+     "whenever I look at it",
+     "I like it because"
+    ],
+    "look": "granny",
+    "voice": "Serena",
+    "voiceZh": "慈祥的奶奶"
+   }
+  },
+  {
+   "n": 5,
+   "en": "Saving animals in danger",
+   "zh": "拯救濒危动物",
+   "icon": "🐾",
+   "color": "#B23A48",
+   "key": "What can we do to protect animals in danger?",
+   "grammar": {
+    "title": "it 作形式主语；形容词 + enough + to do",
+    "tip": "说「做某事是……的」时，先用 it 占住主语的位置，把真正要做的事 to do 放到后面，想说明是谁做，就在 to 前面加 for + 人：It isn't easy for pandas to have babies. 说「足够……可以做某事」用 形容词 + enough + to do，enough 要放在形容词后面：The baby elephant isn't strong enough to walk far.（enough 修饰名词时放在名词前面：enough water）"
+   },
+   "boss": {
+    "emoji": "🐘",
+    "name": "长鼻象奶奶",
+    "hello": "I'm Granny Trunk. It isn't easy for my family to find water. Can you help us?"
+   },
+   "words": [
+    [
+     "recognize",
+     "认出；辨认",
+     "👀"
+    ],
+    [
+     "mirror",
+     "镜子",
+     "🪞"
+    ],
+    [
+     "gun",
+     "枪",
+     "🔫"
+    ],
+    [
+     "handsome",
+     "英俊的；漂亮的",
+     "🤵"
+    ],
+    [
+     "force",
+     "强迫；迫使",
+     "⛓️"
+    ],
+    [
+     "corn",
+     "谷物；谷粒",
+     "🌾"
+    ],
+    [
+     "direction",
+     "方向；方位",
+     "🧭"
+    ],
+    [
+     "progress",
+     "前进；行进",
+     "🚶"
+    ],
+    [
+     "value",
+     "重视；珍视",
+     "💖"
+    ],
+    [
+     "official",
+     "官方的",
+     "🏛️"
+    ],
+    [
+     "throw",
+     "抛；扔",
+     "🤾"
+    ],
+    [
+     "law",
+     "法律；法规",
+     "⚖️"
+    ],
+    [
+     "punish",
+     "处罚；惩罚",
+     "🚔"
+    ],
+    [
+     "blog",
+     "博客",
+     "💻"
+    ],
+    [
+     "publish",
+     "发表；公布",
+     "📤"
+    ],
+    [
+     "shoulder",
+     "肩膀",
+     "🤷"
+    ],
+    [
+     "rare",
+     "稀有的；珍贵的",
+     "💎"
+    ],
+    [
+     "slim",
+     "苗条的",
+     "🧍‍♀️"
+    ],
+    [
+     "alarmed",
+     "担忧的",
+     "😟"
+    ],
+    [
+     "typical",
+     "典型的",
+     "🏷️"
+    ],
+    [
+     "thirsty",
+     "口渴的",
+     "🥤"
+    ],
+    [
+     "sore",
+     "疼痛的；酸痛的",
+     "🤕"
+    ],
+    [
+     "red-crowned crane",
+     "丹顶鹤",
+     "🦢"
+    ],
+    [
+     "polar bear",
+     "北极熊",
+     "🐻‍❄️"
+    ],
+    [
+     "more than enough",
+     "绰绰有余",
+     "🧺"
+    ],
+    [
+     "shoot dead",
+     "枪杀；击毙",
+     "💥"
+    ],
+    [
+     "make use of",
+     "使用；利用",
+     "🛠️"
+    ],
+    [
+     "without a care in the world",
+     "无忧无虑",
+     "😌"
+    ],
+    [
+     "ought to",
+     "应该；应当",
+     "☝️"
+    ],
+    [
+     "up to",
+     "多达；至多",
+     "🔝"
+    ],
+    [
+     "nature reserve",
+     "自然保护区",
+     "🏞️"
+    ],
+    [
+     "day and night",
+     "夜以继日",
+     "🌓"
+    ],
+    [
+     "go missing",
+     "失踪；不见",
+     "❓"
+    ],
+    [
+     "look for",
+     "寻找",
+     "🔍"
+    ],
+    [
+     "lose one's life",
+     "丧命；牺牲生命",
+     "🕯️"
+    ]
+   ],
+   "sents": [
+    [
+     "It is important to value wild animals.",
+     "珍视野生动物很重要。"
+    ],
+    [
+     "It is against the law to hunt red-crowned cranes.",
+     "猎捕丹顶鹤是违法的。"
+    ],
+    [
+     "It is wrong to throw rubbish into the river.",
+     "往河里扔垃圾是不对的。"
+    ],
+    [
+     "Elephants are clever enough to recognize themselves in a mirror.",
+     "大象很聪明，能在镜子里认出自己。"
+    ],
+    [
+     "This nature reserve is big enough for pandas to live in.",
+     "这个自然保护区足够大，大熊猫可以在里面生活。"
+    ],
+    [
+     "Our blog post is good enough to publish.",
+     "我们的博客文章写得够好，可以发表了。"
+    ],
+    [
+     "People who kill rare animals ought to be punished.",
+     "猎杀珍稀动物的人应该受到惩罚。"
+    ],
+    [
+     "Rangers make use of drones to look for lost animals.",
+     "巡护员利用无人机寻找走失的动物。"
+    ],
+    [
+     "Polar bears need sea ice to catch seals.",
+     "北极熊需要海冰来捕捉海豹。"
+    ],
+    [
+     "Hunger forced the elephants to leave the forest.",
+     "饥饿迫使大象离开了森林。"
+    ],
+    [
+     "Some elephants can live for up to seventy years.",
+     "有些大象最多能活到七十岁。"
+    ],
+    [
+     "Carrying corn for the cranes made my shoulders sore.",
+     "给鹤搬谷物让我的肩膀都酸了。"
+    ],
+    [
+     "Villagers were alarmed by the sound of a gun.",
+     "听到枪声，村民们很担忧。"
+    ],
+    [
+     "Why did the baby crane go missing?",
+     "那只小鹤为什么走失了？"
+    ],
+    [
+     "Some rangers have lost their lives protecting wild animals.",
+     "一些巡护员为保护野生动物献出了生命。"
+    ],
+    [
+     "The thirsty elephants walked a long way to find water.",
+     "口渴的大象走了很远的路去找水。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Is it easy for pandas to have babies?",
+     "No, it isn't. They have very few babies.",
+     [
+      "Yes, it is. They have very few babies.",
+      "No, they aren't. They have very few babies."
+     ]
+    ],
+    [
+     "Is the baby elephant strong enough to walk far?",
+     "No, it isn't. It's still too weak.",
+     [
+      "Yes, it is. It's still too weak.",
+      "No, it doesn't. It's still too weak."
+     ]
+    ],
+    [
+     "Are you old enough to join the volunteer club?",
+     "Yes, I am. I'm fourteen now.",
+     [
+      "Yes, I do. I'm fourteen now.",
+      "Yes, it is. I'm fourteen now."
+     ]
+    ],
+    [
+     "Can people hunt red-crowned cranes?",
+     "No, they can't. It's against the law.",
+     [
+      "Yes, they can. It's against the law.",
+      "No, they don't. It's against the law."
+     ]
+    ],
+    [
+     "Is it all right to throw food to the zoo animals?",
+     "No. It's not safe for them to eat our food.",
+     [
+      "Yes. It's good for them to eat our food.",
+      "Yes. It's kind of us to throw them food."
+     ]
+    ],
+    [
+     "Is there enough water for the thirsty elephants?",
+     "Yes, there's more than enough.",
+     [
+      "No, there's more than enough.",
+      "Yes, they're more than enough."
+     ]
+    ],
+    [
+     "What should we do to help polar bears?",
+     "We ought to use less energy.",
+     [
+      "We ought to hunt more seals.",
+      "We ought to drive more cars."
+     ]
+    ],
+    [
+     "Which direction did the elephants go?",
+     "They went south, towards the river.",
+     [
+      "They went there very slowly.",
+      "They went there to find food."
+     ]
+    ],
+    [
+     "Why are the rangers so alarmed?",
+     "They heard gunshots near the cranes.",
+     [
+      "They saw the cranes dancing happily.",
+      "They gave the cranes some corn."
+     ]
+    ],
+    [
+     "Did you find the crane that went missing?",
+     "Yes, we did. We looked for it day and night.",
+     [
+      "No, we didn't. We found it near the lake.",
+      "Yes, we did. It is still missing now."
+     ]
+    ],
+    [
+     "What does a typical red-crowned crane look like?",
+     "It's tall and slim, with a red crown.",
+     [
+      "It lives in a nature reserve.",
+      "It eats fish, insects and corn."
+     ]
+    ],
+    [
+     "What can we do to protect animals in danger?",
+     "We can build more nature reserves.",
+     [
+      "We can keep them as pets.",
+      "We can buy things made from them."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Mira",
+    "zh": "科学家米拉",
+    "look": "weather",
+    "voice": "Maia",
+    "voiceZh": "知性的女声",
+    "topic": "Protecting animals in danger",
+    "topicZh": "保护濒危动物",
+    "persona": "You are Mira, a friendly wildlife scientist at the Echo Island nature reserve who studies red-crowned cranes and other animals in danger. You are making a quiz and a poster for the island school, and you want the student's ideas about how to protect these animals.",
+    "goal": "The student names one animal in danger and says one reason why it is in danger, then gives at least two ideas to protect it using 'It is important to ...' or 'We ought to ...' (for example stop hunting, build nature reserves, keep rivers clean, use less energy), so Mira can put them on her poster.",
+    "goalZh": "说出一种濒危动物和它面临危险的一个原因，再用 It is important to ... 或 We ought to ... 提出至少两个保护它的办法，帮米拉做海报。",
+    "opener": "Hi, I'm Mira. I study cranes. Can you name an animal in danger?",
+    "words": [
+     "animals in danger",
+     "It is important to",
+     "We ought to",
+     "against the law",
+     "nature reserve",
+     "strong enough to",
+     "lose their homes",
+     "look for"
+    ]
+   }
+  },
+  {
+   "n": 6,
+   "en": "Learning by doing",
+   "zh": "做中学",
+   "icon": "🎭",
+   "color": "#7B3FA0",
+   "key": "How can we make English learning meaningful and fun?",
+   "grammar": {
+    "title": "情态动词 should 和 had better",
+    "tip": "should 意思是“应该”，用来给别人提建议：You should practise English every day. had better 意思是“最好”，语气比 should 更强，带有提醒的味道。两个后面都跟动词原形，否定直接在后面加 not：You had better not be late."
+   },
+   "boss": {
+    "emoji": "🦜",
+    "name": "戏台鹦鹉",
+    "hello": "I'm Pip the stage parrot. I learn by doing! How can English be fun?"
+   },
+   "words": [
+    [
+     "stage",
+     "舞台",
+     "🎭"
+    ],
+    [
+     "clue",
+     "线索",
+     "🔍"
+    ],
+    [
+     "promote",
+     "促进",
+     "📣"
+    ],
+    [
+     "abroad",
+     "在国外",
+     "✈️"
+    ],
+    [
+     "costume",
+     "戏服",
+     "🦸"
+    ],
+    [
+     "opportunity",
+     "机会",
+     "🚪"
+    ],
+    [
+     "acquire",
+     "获得",
+     "🧲"
+    ],
+    [
+     "sheet",
+     "一张（纸）",
+     "📄"
+    ],
+    [
+     "conclusion",
+     "结尾",
+     "🏁"
+    ],
+    [
+     "poetry",
+     "诗歌",
+     "📜"
+    ],
+    [
+     "concerned",
+     "担心的；关切的",
+     "😟"
+    ],
+    [
+     "creative",
+     "有创造力的",
+     "🎨"
+    ],
+    [
+     "pleasure",
+     "快乐",
+     "😊"
+    ],
+    [
+     "rosy",
+     "粉红色的",
+     "🌸"
+    ],
+    [
+     "youth",
+     "青春",
+     "🌱"
+    ],
+    [
+     "worth",
+     "值得；有价值",
+     "💎"
+    ],
+    [
+     "Christmas",
+     "圣诞节",
+     "🎄"
+    ],
+    [
+     "eve",
+     "前夜",
+     "🌙"
+    ],
+    [
+     "spelling bee",
+     "拼写比赛",
+     "🐝"
+    ],
+    [
+     "treasure hunt",
+     "寻宝游戏",
+     "🗺️"
+    ],
+    [
+     "cultural exchange",
+     "文化交流",
+     "🌏"
+    ],
+    [
+     "technological development",
+     "技术发展",
+     "🤖"
+    ],
+    [
+     "no wonder",
+     "难怪",
+     "💡"
+    ],
+    [
+     "high-speed train",
+     "高铁",
+     "🚄"
+    ],
+    [
+     "pass by",
+     "经过",
+     "🚶"
+    ],
+    [
+     "go by",
+     "（时间）流逝",
+     "⏳"
+    ]
+   ],
+   "sents": [
+    [
+     "Lily's cheeks turned rosy when she walked onto the stage.",
+     "莉莉走上舞台时，脸颊变得红扑扑的。"
+    ],
+    [
+     "You should wear a costume for the English play.",
+     "你应该为英语剧穿上戏服。"
+    ],
+    [
+     "We had better follow the clue to the library.",
+     "我们最好顺着线索去图书馆。"
+    ],
+    [
+     "Everyone enjoyed the treasure hunt in the school garden.",
+     "大家都很喜欢在学校花园里玩寻宝游戏。"
+    ],
+    [
+     "Our notice should tell everyone when the spelling bee starts.",
+     "我们的通知应该告诉大家拼写比赛什么时候开始。"
+    ],
+    [
+     "Students should take every opportunity to speak English.",
+     "学生们应该抓住一切机会说英语。"
+    ],
+    [
+     "You had better not be late for the poetry reading.",
+     "诗歌朗诵会你最好别迟到。"
+    ],
+    [
+     "You should write your name at the top of this sheet.",
+     "你应该把名字写在这张纸的最上方。"
+    ],
+    [
+     "What should I say in the conclusion of my speech?",
+     "我在演讲的结尾应该说些什么？"
+    ],
+    [
+     "We should find creative ways to make English fun.",
+     "我们应该想出有创意的方法，让英语变得有趣。"
+    ],
+    [
+     "High-speed trains show China's great technological development.",
+     "高铁展现了中国技术的巨大发展。"
+    ],
+    [
+     "Cultural exchange helps us understand other countries.",
+     "文化交流帮助我们了解其他国家。"
+    ],
+    [
+     "We can acquire new words by playing games.",
+     "我们可以通过玩游戏学到新单词。"
+    ],
+    [
+     "The little fir tree did not enjoy its youth.",
+     "小枞树没有好好享受它的青春。"
+    ],
+    [
+     "No wonder you speak English so well.",
+     "难怪你英语说得这么好。"
+    ],
+    [
+     "The days of English Week went by too fast.",
+     "英语周的日子过得太快了。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "I keep forgetting new words. What should I do?",
+     "You should say them aloud every day.",
+     [
+      "Yes, I forgot my English book at home yesterday.",
+      "They are in the word list."
+     ]
+    ],
+    [
+     "I want to stay up late to watch a film tonight.",
+     "You had better not. The spelling bee is tomorrow.",
+     [
+      "Sure, you had better be late tomorrow.",
+      "Yes, the film was very long."
+     ]
+    ],
+    [
+     "Should I wear a costume for the English play?",
+     "Yes, you should. It will look great.",
+     [
+      "It was a great play with lots of music.",
+      "No, it is not my costume."
+     ]
+    ],
+    [
+     "What activity should we have to promote English learning?",
+     "We should have a treasure hunt.",
+     [
+      "It lasts for five days.",
+      "It starts next Monday and ends on Friday afternoon."
+     ]
+    ],
+    [
+     "I'm concerned about my speech for English Week.",
+     "Don't worry. You should practise in front of a mirror.",
+     [
+      "Don't worry. The speech was last year.",
+      "Yes, the weather is very cold today."
+     ]
+    ],
+    [
+     "Should I go to Beijing by bus or by high-speed train?",
+     "You had better take the high-speed train.",
+     [
+      "Yes, you should go by both.",
+      "It passes by our town every day."
+     ]
+    ],
+    [
+     "How can we make English learning meaningful and fun?",
+     "We should learn by doing, like acting in plays.",
+     [
+      "We have learnt English for six years.",
+      "English is a very old language."
+     ]
+    ],
+    [
+     "Is the English drama club worth joining?",
+     "Yes, it is really worth joining.",
+     [
+      "It is next to the music room.",
+      "It meets in the school hall every Wednesday after school."
+     ]
+    ],
+    [
+     "My cousin Tom studied abroad for three years.",
+     "No wonder his English is so good.",
+     [
+      "No wonder he is so tall.",
+      "Yes, he will go abroad soon."
+     ]
+    ],
+    [
+     "Where did you find the last clue?",
+     "Under the stage in the school hall.",
+     [
+      "At half past ten this morning, after the second class.",
+      "Because it was very easy."
+     ]
+    ],
+    [
+     "Thank you for reading my poem so carefully.",
+     "It's my pleasure. I love poetry.",
+     [
+      "Yes, I wrote it last night.",
+      "No, it is not a poem."
+     ]
+    ],
+    [
+     "What do many families do on Christmas Eve?",
+     "They decorate a Christmas tree together.",
+     [
+      "It is the evening of the twenty-fourth of December.",
+      "They eat mooncakes under the full moon."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Miss Rose",
+    "zh": "罗丝老师",
+    "topic": "Planning English Week",
+    "topicZh": "一起策划英语周",
+    "persona": "You are Miss Rose, a warm and lively English teacher at the school on Echo Island. You are planning next month's English Week and want students' ideas for activities that make English meaningful and fun.",
+    "goal": "Help Miss Rose plan English Week: suggest two activities you would like, say why each one makes English fun or useful, and give one piece of advice for the week using should or had better.",
+    "goalZh": "帮罗丝老师策划英语周：推荐两个你喜欢的活动，说说每个活动为什么有趣或有用，再用 should 或 had better 给这次英语周提一条建议。",
+    "opener": "Hello! I'm Miss Rose. What activity should we have for English Week?",
+    "words": [
+     "English Week",
+     "a spelling bee",
+     "a treasure hunt",
+     "act on the stage",
+     "We should",
+     "We had better",
+     "I think",
+     "because it is fun"
+    ],
+    "look": "prof",
+    "voice": "Jennifer",
+    "voiceZh": "亲切的姐姐"
+   }
+  },
+  {
+   "n": 7,
+   "en": "Space exploration",
+   "zh": "太空探索",
+   "icon": "🚀",
+   "color": "#4338CA",
+   "key": "What has China done to explore space?",
+   "grammar": {
+    "title": "过去进行时",
+    "tip": "过去进行时 = was/were + 动词-ing，表示「过去某个时刻正在做的事」：At eight last night, I was reading a book. 它常和 when（后面接一般过去时的短动作）或 while（后面接正在进行的长动作）连用：What were you doing when the rocket took off? 回答一般疑问句要说 Yes, I was. 或 No, I wasn't.，不能说 Yes, I did."
+   },
+   "boss": {
+    "emoji": "🐙",
+    "name": "轨道章鱼",
+    "hello": "I'm Orbo. I catch space junk with my arms. What has China done in space?"
+   },
+   "words": [
+    [
+     "beef",
+     "牛肉",
+     "🥩"
+    ],
+    [
+     "seafood",
+     "海鲜",
+     "🦐"
+    ],
+    [
+     "afford",
+     "承担得起",
+     "💸"
+    ],
+    [
+     "mistake",
+     "错误；失误",
+     "❌"
+    ],
+    [
+     "stick",
+     "粘；贴",
+     "🩹"
+    ],
+    [
+     "hit",
+     "碰撞；撞击",
+     "💥"
+    ],
+    [
+     "muscle",
+     "肌肉",
+     "💪"
+    ],
+    [
+     "gym",
+     "健身房",
+     "🏋️"
+    ],
+    [
+     "satellite",
+     "人造卫星",
+     "🛰️"
+    ],
+    [
+     "destroy",
+     "摧毁",
+     "🏚️"
+    ],
+    [
+     "average",
+     "平均的",
+     "📊"
+    ],
+    [
+     "probable",
+     "很可能的",
+     "🎲"
+    ],
+    [
+     "select",
+     "挑选；选拔",
+     "☑️"
+    ],
+    [
+     "spaceflight",
+     "航天；太空飞行",
+     "🚀"
+    ],
+    [
+     "serve",
+     "服务；效力",
+     "🛎️"
+    ],
+    [
+     "deliver",
+     "运送；传送",
+     "📦"
+    ],
+    [
+     "fuel",
+     "燃料",
+     "⛽"
+    ],
+    [
+     "supplies",
+     "补给品",
+     "🥫"
+    ],
+    [
+     "point",
+     "时刻；阶段",
+     "⏱️"
+    ],
+    [
+     "lab",
+     "实验室",
+     "🔬"
+    ],
+    [
+     "take off",
+     "起飞",
+     "🛫"
+    ],
+    [
+     "for a while",
+     "一段时间",
+     "⏳"
+    ],
+    [
+     "turn out",
+     "结果是；证明是",
+     "🔄"
+    ],
+    [
+     "cannot afford to",
+     "承担不起",
+     "🚫"
+    ],
+    [
+     "by mistake",
+     "无意中；错误地",
+     "😅"
+    ],
+    [
+     "daily routine",
+     "日常作息",
+     "🗓️"
+    ],
+    [
+     "space junk",
+     "太空垃圾",
+     "🗑️"
+    ],
+    [
+     "naked eye",
+     "肉眼",
+     "👁️"
+    ]
+   ],
+   "sents": [
+    [
+     "The gym helps astronauts keep their muscles strong.",
+     "健身房帮助航天员保持肌肉强壮。"
+    ],
+    [
+     "We cannot afford to make mistakes in space.",
+     "我们在太空中可犯不起错。"
+    ],
+    [
+     "In space, you have to stick things to the wall.",
+     "在太空中，你得把东西粘在墙上。"
+    ],
+    [
+     "What is an astronaut's daily routine like?",
+     "航天员的日常作息是什么样的？"
+    ],
+    [
+     "At lunchtime, the astronauts were eating beef noodles.",
+     "午饭时间，航天员们正在吃牛肉面。"
+    ],
+    [
+     "What were you doing when the rocket took off?",
+     "火箭起飞的时候，你在做什么？"
+    ],
+    [
+     "My dad was cooking seafood when the spaceship landed.",
+     "飞船着陆时，我爸爸正在做海鲜。"
+    ],
+    [
+     "In the lab, two astronauts were doing an experiment.",
+     "在实验室里，两名航天员当时正在做实验。"
+    ],
+    [
+     "While I was walking home, I saw a satellite.",
+     "我走路回家的时候，看到了一颗卫星。"
+    ],
+    [
+     "A piece of space junk was flying towards the space station.",
+     "一块太空垃圾正朝空间站飞去。"
+    ],
+    [
+     "We were trying to see the space station with the naked eye.",
+     "我们当时正试着用肉眼看到空间站。"
+    ],
+    [
+     "The mission turned out to be a great success.",
+     "这次任务结果非常成功。"
+    ],
+    [
+     "Yang Liwei was selected to be China's first astronaut in space.",
+     "杨利伟被选为中国第一位进入太空的航天员。"
+    ],
+    [
+     "Cargo spaceships deliver fresh supplies to Tiangong.",
+     "货运飞船给天宫空间站送去新鲜补给。"
+    ],
+    [
+     "It is probable that humans will visit Mars.",
+     "人类很可能会去火星。"
+    ],
+    [
+     "After landing, the astronauts had to rest for a while.",
+     "着陆后，航天员们得休息一段时间。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "What were you doing at eight last night?",
+     "I was reading a book about space.",
+     [
+      "I am reading a book about space now.",
+      "I will read a book about space."
+     ]
+    ],
+    [
+     "What was your brother doing when the spaceship landed?",
+     "He was doing his homework in his room.",
+     [
+      "It landed in the evening.",
+      "He is a student at my school."
+     ]
+    ],
+    [
+     "Were you watching the launch at that time?",
+     "Yes, I was. It was so exciting!",
+     [
+      "Yes, I did. It was so exciting!",
+      "No, I don't. I was at school."
+     ]
+    ],
+    [
+     "What were the workers doing before the launch?",
+     "They were filling the rocket with fuel.",
+     [
+      "The rocket took off at night.",
+      "They will fill it next week."
+     ]
+    ],
+    [
+     "Why didn't you answer my call last night?",
+     "Sorry, I was exercising in the gym.",
+     [
+      "Yes, I answered it at nine.",
+      "Sorry, I will go to the gym."
+     ]
+    ],
+    [
+     "What has China done to explore space?",
+     "China has built its own space station.",
+     [
+      "China has a very long history.",
+      "China is famous for its tea."
+     ]
+    ],
+    [
+     "How long was Yang Liwei's spaceflight?",
+     "It lasted about twenty-one hours.",
+     [
+      "It was in October 2003.",
+      "It was a small spaceship."
+     ]
+    ],
+    [
+     "Will people live on Mars at some point?",
+     "It's possible, but it won't be easy.",
+     [
+      "Yes, they lived there for a while.",
+      "No, Mars is very close to us."
+     ]
+    ],
+    [
+     "What happens if space junk hits a satellite?",
+     "It can destroy the satellite.",
+     [
+      "It can deliver the supplies.",
+      "It can take off very fast."
+     ]
+    ],
+    [
+     "How long do astronauts serve on Tiangong?",
+     "They serve there for about six months.",
+     [
+      "They serve beef and seafood.",
+      "They serve at nine o'clock."
+     ]
+    ],
+    [
+     "Is the average temperature on Mars high?",
+     "No, it's very cold on Mars.",
+     [
+      "Yes, it's very cold on Mars.",
+      "No, it's very hot on Mars."
+     ]
+    ],
+    [
+     "Hey, that's my Echo Ball, not yours!",
+     "Sorry, I took it by mistake.",
+     [
+      "Thanks, I was looking for it.",
+      "Yes, I'm glad you like it."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Grandpa Wei",
+    "zh": "退休火箭工程师魏爷爷",
+    "topic": "China's space exploration and life on Mars",
+    "topicZh": "中国的太空探索与火星生活",
+    "persona": "You are Grandpa Wei, a kind retired rocket engineer who now volunteers at the Space Museum on Echo Island. You worked at a launch centre for many years and love talking with young visitors about China's space missions, and you want to hear their own ideas too.",
+    "goal": "Tell Grandpa Wei two things China has done to explore space, then say whether you think people can live on Mars one day and why.",
+    "goalZh": "向魏爷爷说出中国在太空探索方面做过的两件事，再说说你认为人类将来能不能住在火星上、为什么。",
+    "opener": "Hello! I'm Grandpa Wei. I used to build rockets. Do you like space?",
+    "words": [
+     "China has built",
+     "space station",
+     "take off",
+     "deliver supplies",
+     "with the naked eye",
+     "It's probable that",
+     "I was watching",
+     "at some point"
+    ],
+    "look": "grandpa",
+    "voice": "Theo Calm",
+    "voiceZh": "沉稳的爷爷"
+   }
+  },
+  {
+   "n": 8,
+   "en": "Imagine that!",
+   "zh": "想象未知",
+   "icon": "🛸",
+   "color": "#5B3FC4",
+   "key": "How much do you know about the unknown world?",
+   "grammar": {
+    "title": "原因状语从句（because / as / since）",
+    "tip": "because、as、since 都能说原因：because 语气最强，回答 Why 时用它；as 和 since 常放句首，说大家已经知道的原因，如 Since it's dark, let's go tomorrow. because 后面接句子，because of 后面接名词：We got lost because of the sandstorm. 另外，because 和 so 不能在同一句里一起用。"
+   },
+   "boss": {
+    "emoji": "🦕",
+    "name": "时光恐龙",
+    "hello": "I'm Tiko, the time dinosaur. I can travel backward in time. Imagine that!"
+   },
+   "words": [
+    [
+     "mention",
+     "提到",
+     "💬"
+    ],
+    [
+     "tonight",
+     "今晚",
+     "🌙"
+    ],
+    [
+     "frightened",
+     "害怕的",
+     "😨"
+    ],
+    [
+     "throat",
+     "喉咙",
+     "🗣️"
+    ],
+    [
+     "cough",
+     "咳嗽",
+     "😷"
+    ],
+    [
+     "fear",
+     "恐惧",
+     "😱"
+    ],
+    [
+     "creature",
+     "生物",
+     "👾"
+    ],
+    [
+     "ugly",
+     "丑陋的",
+     "👹"
+    ],
+    [
+     "crazy",
+     "疯狂的",
+     "🤪"
+    ],
+    [
+     "refuse",
+     "拒绝",
+     "🙅"
+    ],
+    [
+     "emergency",
+     "紧急情况",
+     "🚨"
+    ],
+    [
+     "camera",
+     "照相机",
+     "📷"
+    ],
+    [
+     "tent",
+     "帐篷",
+     "⛺"
+    ],
+    [
+     "unnecessary",
+     "不必要的",
+     "🗑️"
+    ],
+    [
+     "whether",
+     "是否",
+     "🤔"
+    ],
+    [
+     "backward",
+     "向后；倒着",
+     "⏪"
+    ],
+    [
+     "disappoint",
+     "使失望",
+     "😞"
+    ],
+    [
+     "argue",
+     "争吵",
+     "🗯️"
+    ],
+    [
+     "keep quiet",
+     "保持安静",
+     "🤫"
+    ],
+    [
+     "because of",
+     "因为；由于",
+     "🔗"
+    ],
+    [
+     "in fear",
+     "恐惧地",
+     "😰"
+    ],
+    [
+     "landing site",
+     "着陆点",
+     "🛬"
+    ],
+    [
+     "agree with",
+     "同意",
+     "👍"
+    ],
+    [
+     "disagree with",
+     "不同意",
+     "👎"
+    ],
+    [
+     "move about",
+     "四处走动",
+     "🚶"
+    ],
+    [
+     "in all directions",
+     "向四面八方",
+     "🧭"
+    ],
+    [
+     "speed up",
+     "加速",
+     "⏩"
+    ]
+   ],
+   "sents": [
+    [
+     "Since Grandpa is asleep, we must keep quiet.",
+     "既然爷爷睡着了，我们得保持安静。"
+    ],
+    [
+     "As it might rain, we need to take a tent.",
+     "因为可能会下雨，我们需要带一顶帐篷。"
+    ],
+    [
+     "I disagree with you because a camera is unnecessary.",
+     "我不同意你的看法，因为照相机没必要带。"
+    ],
+    [
+     "The astronauts got lost because of the sandstorm.",
+     "由于沙尘暴，宇航员们迷路了。"
+    ],
+    [
+     "We could not find the landing site because it was dark.",
+     "因为天很黑，我们找不到着陆点。"
+    ],
+    [
+     "She kept coughing because of her sore throat.",
+     "她因为喉咙痛一直咳嗽。"
+    ],
+    [
+     "Everyone ran in all directions because they were frightened.",
+     "大家因为害怕，向四面八方跑去。"
+    ],
+    [
+     "We must speed up because our air is running out.",
+     "我们必须加速，因为我们的空气快用完了。"
+    ],
+    [
+     "We didn't run away in fear because the creature was friendly.",
+     "因为那个生物很友好，我们没有吓得逃跑。"
+    ],
+    [
+     "The bird people moved about in the forest.",
+     "鸟族人在森林里四处走动。"
+    ],
+    [
+     "I wonder whether there is life on Mars.",
+     "我想知道火星上是否有生命。"
+    ],
+    [
+     "The time machine can travel backward in time.",
+     "这台时间机器可以穿越回过去。"
+    ],
+    [
+     "The ugly creature helped us find our way home.",
+     "那个丑陋的生物帮我们找到了回家的路。"
+    ],
+    [
+     "Nobody mentioned the strange lights to me.",
+     "没有人跟我提起过那些奇怪的光。"
+    ],
+    [
+     "Please don't argue because we need to work together.",
+     "请不要争吵，因为我们需要齐心协力。"
+    ],
+    [
+     "This science fiction story did not disappoint me.",
+     "这个科幻故事没有让我失望。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Why were the people so frightened?",
+     "Because a strange spaceship landed nearby.",
+     [
+      "Because they were very happy and calm.",
+      "Yes, they were frightened last night."
+     ]
+    ],
+    [
+     "Do you know whether the creature is friendly?",
+     "Yes, I do. It's friendly but a bit ugly.",
+     [
+      "Yes, it does. It has big eyes.",
+      "Yes, I am. I'm very friendly."
+     ]
+    ],
+    [
+     "Why did the astronauts get lost?",
+     "Because of the terrible sandstorm.",
+     [
+      "Because they had a very good map.",
+      "They got lost on a cold planet."
+     ]
+    ],
+    [
+     "Shall we look for the landing site tonight?",
+     "No. As it's too dark, let's go tomorrow.",
+     [
+      "Yes. As it's dark, we can't see it.",
+      "Yes, it is near the big rock."
+     ]
+    ],
+    [
+     "The astronauts are shaking with fear. What should we do?",
+     "Let's talk to them and keep them calm.",
+     [
+      "Let's leave them alone in the dark.",
+      "Let's shout at them and run away."
+     ]
+    ],
+    [
+     "What would you take in an emergency?",
+     "Some water, some food and a torch.",
+     [
+      "Yes, I would take them with me.",
+      "Because it was a big emergency."
+     ]
+    ],
+    [
+     "Should we take a camera in an emergency?",
+     "No, because it's unnecessary.",
+     [
+      "Yes, because we don't need it.",
+      "No, because it's very important."
+     ]
+    ],
+    [
+     "I think we should take a tent.",
+     "I agree with you. It might rain.",
+     [
+      "I disagree with you. A tent is useful.",
+      "I agree with you. It's unnecessary."
+     ]
+    ],
+    [
+     "I think science fiction is a waste of time.",
+     "I disagree with you. It makes us think.",
+     [
+      "I agree with you. It's very useful.",
+      "I disagree with you. It's a waste of time."
+     ]
+    ],
+    [
+     "Why did you refuse to watch the alien film?",
+     "Because I get frightened easily.",
+     [
+      "Because it was my favourite film.",
+      "Yes, I refused to watch it."
+     ]
+    ],
+    [
+     "Why did people laugh at the young inventor?",
+     "Because they thought his idea was crazy.",
+     [
+      "Because they loved his idea very much.",
+      "Yes, they laughed at him a lot."
+     ]
+    ],
+    [
+     "How much do you know about the unknown world?",
+     "Not much, but I want to learn more.",
+     [
+      "Yes, I know it very well.",
+      "It's about ten kilometres away."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Captain Nolan",
+    "zh": "救援队长诺兰",
+    "topic": "Things to take in an emergency",
+    "topicZh": "紧急情况带什么",
+    "persona": "You are Captain Nolan, the friendly leader of the space rescue team at the Echo Island space station. Your team is packing an emergency bag before a trip to an unknown planet, and you want the student's ideas about what to take and why.",
+    "goal": "The student chooses at least three things to take in an emergency and gives a reason for each using because, as or since (for example a tent because it might rain). The student also agrees or disagrees with at least one of Nolan's ideas, such as taking a camera, using 'I agree with you' or 'I disagree with you'.",
+    "goalZh": "选出至少三样紧急情况下要带的东西，用 because / as / since 说出理由；再对诺兰的一个提议（比如带照相机）说 I agree with you 或 I disagree with you。",
+    "opener": "Hi, I'm Captain Nolan. Would you take a torch in an emergency?",
+    "words": [
+     "in an emergency",
+     "I agree with you",
+     "I disagree with you",
+     "because it's useful",
+     "as it might rain",
+     "since it gets dark",
+     "a tent and a torch",
+     "it's unnecessary"
+    ],
+    "look": "police",
+    "voice": "Joyner",
+    "voiceZh": "幽默的大哥"
+   }
+  }
+ ]
+}

@@ -9,6 +9,14 @@ def cfgFile = rootProject.file('echo.properties')
 if (cfgFile.exists()) cfgFile.withInputStream { cfg.load(it) }
 def q = { String s -> '"' + (s ?: '').replace('\\', '\\\\').replace('"', '\\"') + '"' }
 
+// 直连阿里云用的百炼密钥：KEY_FILE 指向一个写着 DASHSCOPE_API_KEY=... 的文件（不进仓库）。不填就在手机上「设置服务」里输入
+def keyFromFile = {
+    def f = cfg.getProperty('KEY_FILE')
+    if (!f || !new File(f).exists()) return ''
+    def line = new File(f).readLines().find { it.trim().startsWith('DASHSCOPE_API_KEY') }
+    return line ? line.substring(line.indexOf('=') + 1).trim().replaceAll(/^["']|["']$/, '') : ''
+}
+
 android {
     namespace 'com.echoisland.app'
     compileSdk 35
@@ -21,6 +29,7 @@ android {
         versionName '1.0'
         buildConfigField 'String', 'TALK_URL', q(cfg.getProperty('TALK_URL'))
         buildConfigField 'String', 'TALK_CODE', q(cfg.getProperty('TALK_CODE'))
+        buildConfigField 'String', 'DASHSCOPE_KEY', q(keyFromFile())
     }
 
     signingConfigs {
@@ -51,6 +60,7 @@ android {
 
 dependencies {
     implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'   // 直连阿里云：带密钥的 WebSocket / HTTPS
 }
 
 // 把游戏网页复制进 APK 的 assets/www（只拿运行时要的文件）

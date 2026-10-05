@@ -1,0 +1,2756 @@
+{
+ "id": "hj9a",
+ "name": "沪教版 英语 九年级上册",
+ "short": "九上",
+ "press": "上海教育出版社 2026 年秋季版",
+ "units": [
+  {
+   "n": 1,
+   "en": "Great people",
+   "zh": "伟人",
+   "icon": "🌟",
+   "color": "#A0522D",
+   "key": "How did great people contribute to our society?",
+   "grammar": {
+    "title": "形容词 + that 从句",
+    "tip": "表示心情或看法的形容词（sure、glad、proud、afraid、surprised、convinced）后面可以接一个 that 从句，说清楚“确信什么、为什么高兴”：I'm sure that she was a great scientist. 也可以用 It is + 形容词 + that……，比如 It is clear that penicillin saved many lives. 口语里 that 常常可以省略。"
+   },
+   "boss": {
+    "emoji": "🐢",
+    "name": "观星龟",
+    "hello": "I'm Astra, the star-gazing turtle. How did great people contribute to our society?"
+   },
+   "words": [
+    [
+     "outstanding",
+     "杰出的",
+     "🏆"
+    ],
+    [
+     "old-fashioned",
+     "过时的",
+     "🕰️"
+    ],
+    [
+     "classical",
+     "古典的",
+     "🎻"
+    ],
+    [
+     "ordinary",
+     "普通的",
+     "🧍"
+    ],
+    [
+     "lamp",
+     "灯",
+     "🪔"
+    ],
+    [
+     "poet",
+     "诗人",
+     "📜"
+    ],
+    [
+     "convinced",
+     "坚信的",
+     "💯"
+    ],
+    [
+     "philosopher",
+     "哲学家",
+     "🤔"
+    ],
+    [
+     "dramatist",
+     "剧作家",
+     "🎭"
+    ],
+    [
+     "judgement",
+     "看法；意见",
+     "⚖️"
+    ],
+    [
+     "evaluation",
+     "评估；评定",
+     "📝"
+    ],
+    [
+     "consider",
+     "认为；觉得",
+     "💭"
+    ],
+    [
+     "background",
+     "背景",
+     "🏡"
+    ],
+    [
+     "significant",
+     "意义重大的",
+     "❗"
+    ],
+    [
+     "milestone",
+     "里程碑",
+     "🚩"
+    ],
+    [
+     "manage",
+     "设法完成",
+     "🧗"
+    ],
+    [
+     "impact",
+     "巨大影响",
+     "💥"
+    ],
+    [
+     "truth",
+     "真理",
+     "🔍"
+    ],
+    [
+     "concentrated",
+     "全神贯注的",
+     "🎯"
+    ],
+    [
+     "belief",
+     "相信；信念",
+     "🙏"
+    ],
+    [
+     "with something in mind",
+     "心怀；牢记",
+     "🧠"
+    ],
+    [
+     "in addition to",
+     "除……之外",
+     "➕"
+    ],
+    [
+     "be fond of",
+     "喜爱",
+     "😍"
+    ],
+    [
+     "reach for",
+     "伸手去拿",
+     "✋"
+    ],
+    [
+     "fight for",
+     "为……奋斗",
+     "✊"
+    ]
+   ],
+   "sents": [
+    [
+     "Wang Zhenyi was an outstanding scholar in the Qing dynasty.",
+     "王贞仪是清代一位杰出的学者。"
+    ],
+    [
+     "She used a lamp to explain a lunar eclipse.",
+     "她用一盏灯来解释月食。"
+    ],
+    [
+     "She was convinced that girls could learn science.",
+     "她坚信女孩能够学科学。"
+    ],
+    [
+     "In addition to studying science, she also wrote poems.",
+     "除了研究科学，她还写诗。"
+    ],
+    [
+     "With this belief in mind, she never gave up.",
+     "心怀这个信念，她从未放弃。"
+    ],
+    [
+     "I am sure that ordinary people can change the world.",
+     "我确信普通人也能改变世界。"
+    ],
+    [
+     "I am glad that old-fashioned ideas are changing.",
+     "我很高兴陈旧的观念正在改变。"
+    ],
+    [
+     "Li Bai was a great poet of the Tang dynasty.",
+     "李白是唐代的一位伟大诗人。"
+    ],
+    [
+     "Confucius is the most famous philosopher in China.",
+     "孔子是中国最著名的哲学家。"
+    ],
+    [
+     "Many people consider Shakespeare a great dramatist.",
+     "很多人认为莎士比亚是一位伟大的剧作家。"
+    ],
+    [
+     "My grandpa is fond of classical music.",
+     "我爷爷喜欢古典音乐。"
+    ],
+    [
+     "Chen Wangdao was so concentrated on his work that he ate ink.",
+     "陈望道太专注于工作，竟然吃了墨汁。"
+    ],
+    [
+     "It is surprising that an accidental discovery became a medical milestone.",
+     "一次意外发现竟成了医学里程碑，真令人惊讶。"
+    ],
+    [
+     "It is true that penicillin had an impact on the whole world.",
+     "青霉素确实对全世界产生了巨大影响。"
+    ],
+    [
+     "It is clear that Wang Zhenyi's studies were significant.",
+     "显然，王贞仪的研究意义重大。"
+    ],
+    [
+     "We are proud that our grandparents fought for a better life.",
+     "祖辈们为更好的生活而奋斗，我们为此自豪。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Who was Wang Zhenyi?",
+     "She was a great scientist and poet in the Qing dynasty.",
+     [
+      "Because she studied science and maths every day.",
+      "She went to the cinema with her friends."
+     ]
+    ],
+    [
+     "What did Wang Zhenyi use as the sun?",
+     "She used a lamp as the sun.",
+     [
+      "She used a mirror as the moon.",
+      "She used a table as the Earth."
+     ]
+    ],
+    [
+     "Are you sure that Fleming discovered penicillin?",
+     "Yes, I'm sure that he found it by accident.",
+     [
+      "Yes, I'm sure that she wrote it in ink.",
+      "Yes, I'm sure that it tastes very sweet."
+     ]
+    ],
+    [
+     "How do you feel about your speech?",
+     "I'm glad that I managed to finish it.",
+     [
+      "I'm sorry that the lamp is broken.",
+      "I'm sure that the museum is closed."
+     ]
+    ],
+    [
+     "What are you proud of?",
+     "I'm proud that I won the science prize.",
+     [
+      "I'm afraid that I lost my pencil.",
+      "I'm sure that it will rain today."
+     ]
+    ],
+    [
+     "What do you think of Confucius?",
+     "I'm sure that he was a great philosopher.",
+     [
+      "I'm afraid that he is not at home.",
+      "I'm sure that he will call me tonight."
+     ]
+    ],
+    [
+     "What is your evaluation of Fleming's discovery?",
+     "It's clear that it saved many lives.",
+     [
+      "It's clear that it was a sunny day.",
+      "It's clear that he was a poet."
+     ]
+    ],
+    [
+     "In your judgement, who is a great person?",
+     "I consider Fleming a great person.",
+     [
+      "I consider it a very good book.",
+      "Yes, I consider him very kind."
+     ]
+    ],
+    [
+     "What should I write first in my article?",
+     "Write about the person's background first.",
+     [
+      "Write your name on the board first.",
+      "Write to your pen friend first."
+     ]
+    ],
+    [
+     "What does the story of Chen Wangdao tell us?",
+     "It tells us that the taste of truth is sweet.",
+     [
+      "It tells us that the soup is too salty.",
+      "It tells us that the lamp is too bright."
+     ]
+    ],
+    [
+     "The monster saw a berry on a tree. What did it do?",
+     "It reached for the berry.",
+     [
+      "It is fond of red berries.",
+      "It was a very old tree."
+     ]
+    ],
+    [
+     "How did great people contribute to our society?",
+     "They fought for truth and made our lives better.",
+     [
+      "They were born in different places.",
+      "They are fond of classical music."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Grant",
+    "zh": "讲解员格兰特",
+    "topic": "Talk about a great person",
+    "topicZh": "介绍一位伟人",
+    "persona": "You are Grant, a friendly guide at the Hall of Great Minds, a small museum on Echo Island. You are planning a new exhibition about the great people that students admire, so you want to hear who the player chooses and why.",
+    "goal": "Tell Grant about one great person: who the person was, what he or she did for society, and your own judgement of the person, using a sentence like I'm sure that she was very brave.",
+    "goalZh": "向格兰特介绍一位伟人：他或她是谁、为社会做了什么贡献，再说说你的评价（试着用 I'm sure that 或 I consider her a great scientist 这样的句子）。",
+    "opener": "Hello, I'm Grant, the museum guide. Which great person do you like best?",
+    "words": [
+     "outstanding",
+     "I'm sure that",
+     "I'm proud that",
+     "I consider",
+     "fought for",
+     "had a great impact on",
+     "a milestone in history",
+     "In my judgement"
+    ],
+    "look": "teacher",
+    "voice": "Aiden",
+    "voiceZh": "开朗的年轻人"
+   }
+  },
+  {
+   "n": 2,
+   "en": "Great ideas",
+   "zh": "伟大的想法",
+   "icon": "💡",
+   "color": "#B45309",
+   "key": "How do great ideas change the world?",
+   "grammar": {
+    "title": "四种句子类型",
+    "tip": "英语句子按用途分四种：陈述句讲事实，疑问句提问题，祈使句用动词原形开头提要求（不让做就用 Don't 开头），感叹句表达惊讶或赞叹。感叹句有两种：What +（a/an）+ 形容词 + 名词（+ 主语 + 谓语）！单数可数名词前要加 a/an，复数和不可数名词前不加；How + 形容词/副词（+ 主语 + 谓语）！感叹句里主语在谓语前面，不像疑问句那样倒装。例：What a clever idea it is! What great inventions they are! How simple the idea is!"
+   },
+   "boss": {
+    "emoji": "🦛",
+    "name": "灵感河马",
+    "hello": "I'm Eureka, the bath-loving hippo. How do great ideas change the world?"
+   },
+   "words": [
+    [
+     "firm",
+     "牢固的；坚硬的",
+     "🧱"
+    ],
+    [
+     "ignorance",
+     "无知",
+     "🙈"
+    ],
+    [
+     "application",
+     "应用",
+     "🛠️"
+    ],
+    [
+     "fancy",
+     "精致的；绚丽的",
+     "🎀"
+    ],
+    [
+     "satisfied",
+     "满意的",
+     "😌"
+    ],
+    [
+     "prince",
+     "王子",
+     "🤴"
+    ],
+    [
+     "displace",
+     "排出；取代",
+     "🛁"
+    ],
+    [
+     "fool",
+     "欺骗；愚弄",
+     "🤡"
+    ],
+    [
+     "prison",
+     "监狱",
+     "⛓️"
+    ],
+    [
+     "wire",
+     "金属丝；电线",
+     "🔌"
+    ],
+    [
+     "prove",
+     "证明",
+     "✅"
+    ],
+    [
+     "hardly",
+     "几乎不",
+     "🤏"
+    ],
+    [
+     "balanced",
+     "平衡的",
+     "⚖️"
+    ],
+    [
+     "reject",
+     "拒绝接受",
+     "🙅"
+    ],
+    [
+     "thus",
+     "因此",
+     "➡️"
+    ],
+    [
+     "be satisfied with",
+     "对……感到满足",
+     "👍"
+    ],
+    [
+     "fill ... with",
+     "用……装满",
+     "🪣"
+    ],
+    [
+     "run over",
+     "溢出",
+     "💦"
+    ],
+    [
+     "go straight to",
+     "直奔",
+     "🏃"
+    ],
+    [
+     "lightning rod",
+     "避雷针",
+     "⚡"
+    ],
+    [
+     "as a whole",
+     "作为一个整体",
+     "🧩"
+    ],
+    [
+     "get something across",
+     "把某事讲清楚",
+     "🗣️"
+    ]
+   ],
+   "sents": [
+    [
+     "What a fancy crown the prince is wearing!",
+     "王子戴的王冠真华丽啊！"
+    ],
+    [
+     "How cleverly Archimedes solved the problem!",
+     "阿基米德解决问题的方法真巧妙啊！"
+    ],
+    [
+     "Don't fill the cup with too much water.",
+     "别往杯子里倒太多水。"
+    ],
+    [
+     "The bath was too full, and thus the water ran over.",
+     "浴缸太满了，因此水溢了出来。"
+    ],
+    [
+     "The crown displaced too much water to be pure gold.",
+     "王冠排开的水太多，不可能是纯金的。"
+    ],
+    [
+     "Archimedes proved that the king was fooled.",
+     "阿基米德证明了国王被骗了。"
+    ],
+    [
+     "Was the king satisfied with his new crown?",
+     "国王对他的新王冠满意吗？"
+    ],
+    [
+     "Benjamin Franklin invented the lightning rod.",
+     "本杰明·富兰克林发明了避雷针。"
+    ],
+    [
+     "The lightning rod leads the lightning into the ground.",
+     "避雷针把闪电引入地下。"
+    ],
+    [
+     "Your idea is good, but how can you get it across?",
+     "你的想法不错，但你怎样才能把它讲清楚呢？"
+    ],
+    [
+     "Laozi said it is wise to know your own ignorance.",
+     "老子说，知道自己的无知是明智的。"
+    ],
+    [
+     "Don't laugh at an idea because it is new.",
+     "不要因为一个想法很新就嘲笑它。"
+    ],
+    [
+     "Hardly anyone believed his strange idea.",
+     "几乎没人相信他那个奇怪的想法。"
+    ],
+    [
+     "Think about the problem as a whole.",
+     "要从整体上考虑这个问题。"
+    ],
+    [
+     "Let's go straight to the science lab!",
+     "我们直接去科学实验室吧！"
+    ],
+    [
+     "The application of this idea changed our lives.",
+     "这个想法的应用改变了我们的生活。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Let's make a poster about a great idea for our science fair.",
+     "Good idea! Which idea shall we choose?",
+     [
+      "No, thanks. I'm not hungry now.",
+      "Sorry, the poster is not mine."
+     ]
+    ],
+    [
+     "Did you know Benjamin Franklin invented the lightning rod?",
+     "No, I didn't. What a great invention!",
+     [
+      "No, I don't. What a great invention!",
+      "No, he didn't. What a great invention!"
+     ]
+    ],
+    [
+     "Archimedes jumped out of the bath and ran into the street!",
+     "Really? I can hardly believe it!",
+     [
+      "Really? I can hardly hear you!",
+      "Really? I can hardly swim!"
+     ]
+    ],
+    [
+     "How did Archimedes prove the goldsmith fooled the king?",
+     "He put the crown in water.",
+     [
+      "He put the crown on his head.",
+      "He sold the crown to a prince."
+     ]
+    ],
+    [
+     "Don't fill the bath with too much water.",
+     "OK. I don't want it to run over.",
+     [
+      "OK. I want it to run over.",
+      "OK. I don't want it to get lost."
+     ]
+    ],
+    [
+     "How can I get my idea across to the class?",
+     "Use a simple picture to explain it.",
+     [
+      "Walk across the street with care.",
+      "Use a big box to carry it."
+     ]
+    ],
+    [
+     "The crown displaced more water than the gold. What does that mean?",
+     "The crown was not pure gold.",
+     [
+      "The crown was made of pure gold.",
+      "The water was too cold for him."
+     ]
+    ],
+    [
+     "Laozi lived a long time ago, didn't he?",
+     "Yes, he did. He was a great thinker.",
+     [
+      "Yes, he was. He was a great thinker.",
+      "Yes, he does. He is a great thinker."
+     ]
+    ],
+    [
+     "What a brilliant idea!",
+     "Thank you. I'm glad you like it.",
+     [
+      "You're welcome. I like it too.",
+      "Sorry. I don't have any ideas."
+     ]
+    ],
+    [
+     "Are you satisfied with your poster?",
+     "Yes, I am. It looks balanced and clear.",
+     [
+      "Yes, I do. It looks balanced and clear.",
+      "Yes, it is. It looks balanced and clear."
+     ]
+    ],
+    [
+     "Why do people try to think outside the box?",
+     "To find new ways to solve problems.",
+     [
+      "To keep their toys in the box.",
+      "To find a bigger box to sit in."
+     ]
+    ],
+    [
+     "My water monster jumped into the bath, and the water ran over!",
+     "Oh no! What a mess!",
+     [
+      "Oh good! What a nice day!",
+      "Oh no! What a long trip!"
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Otto",
+    "zh": "发明家奥托",
+    "topic": "Talking about a great idea",
+    "topicZh": "聊一个改变世界的伟大想法",
+    "persona": "You are Otto, a cheerful inventor in his fifties who runs the Idea Workshop on Echo Island. You are building a wall of posters about great ideas, so you want to hear which great idea the student admires and how it changed the world.",
+    "goal": "The student names one great idea or invention (for example paper, the lightning rod or the Internet), says who had the idea or where it came from, explains what problem it solved and how it changed people's lives, and reacts to one surprising fact that Otto shares with an exclamation such as 'What a clever idea!' or 'How amazing!'",
+    "goalZh": "选一个你佩服的伟大想法或发明（比如纸、避雷针、互联网）介绍给奥托：说出是谁想出来的或它从哪里来、它解决了什么问题、怎样改变了人们的生活；奥托讲一个令人惊讶的事实时，用感叹句回应，比如 What a clever idea! 或 How amazing!",
+    "opener": "Hello! I'm Otto, an inventor on Echo Island. Which great idea do you like best?",
+    "words": [
+     "What a brilliant idea!",
+     "How amazing!",
+     "I can hardly believe it.",
+     "It solved the problem of",
+     "It changed the way we",
+     "as a whole",
+     "get the idea across",
+     "lightning rod"
+    ],
+    "look": "scientist",
+    "voice": "Ryan",
+    "voiceZh": "豪爽的大叔"
+   }
+  },
+  {
+   "n": 3,
+   "en": "Family traditions",
+   "zh": "家庭传统",
+   "icon": "👪",
+   "color": "#B4532A",
+   "key": "Why are family traditions important?",
+   "grammar": {
+    "title": "系动词（连系动词）",
+    "tip": "系动词把主语和后面的表语连起来，说明主语“怎么样”或“变得怎么样”。除了 be，常用的还有感官类 look、sound、smell、taste、feel，表示“似乎”的 seem，表示变化的 get、become、turn、grow，表示保持的 keep、stay。表语多为形容词，也可以是名词（It seems a shame.），但不能用副词：The soup tastes delicious.（不说 deliciously）"
+   },
+   "boss": {
+    "emoji": "🐧",
+    "name": "企鹅老爸",
+    "hello": "I'm Papa Snowfoot. Our egg stayed warm on my feet. What are your family traditions?"
+   },
+   "words": [
+    [
+     "indeed",
+     "确实",
+     "✔️"
+    ],
+    [
+     "match",
+     "火柴",
+     "🔥"
+    ],
+    [
+     "shame",
+     "遗憾的事",
+     "😞"
+    ],
+    [
+     "remove",
+     "去掉",
+     "➖"
+    ],
+    [
+     "lower",
+     "把……放低",
+     "🔉"
+    ],
+    [
+     "practice",
+     "实践",
+     "🔨"
+    ],
+    [
+     "decision",
+     "决定",
+     "🔀"
+    ],
+    [
+     "cheat",
+     "欺骗；作弊",
+     "🤥"
+    ],
+    [
+     "strengthen",
+     "加强；巩固",
+     "🔗"
+    ],
+    [
+     "fold",
+     "折叠",
+     "🧺"
+    ],
+    [
+     "repetition",
+     "重复",
+     "🔂"
+    ],
+    [
+     "pardon",
+     "请再说一遍",
+     "🙉"
+    ],
+    [
+     "vacation",
+     "假期",
+     "⛱️"
+    ],
+    [
+     "somehow",
+     "不知为什么",
+     "🤷"
+    ],
+    [
+     "awkward",
+     "令人尴尬的",
+     "😬"
+    ],
+    [
+     "laughter",
+     "笑声",
+     "😂"
+    ],
+    [
+     "tear",
+     "眼泪",
+     "😢"
+    ],
+    [
+     "with admiration",
+     "钦佩地",
+     "👏"
+    ],
+    [
+     "right and wrong",
+     "是非",
+     "⚖️"
+    ],
+    [
+     "fresh in one's memory",
+     "记忆犹新",
+     "🎞️"
+    ],
+    [
+     "bed sheet",
+     "床单",
+     "🛏️"
+    ]
+   ],
+   "sents": [
+    [
+     "Our family dinners never get boring.",
+     "我们家的聚餐从来都不无聊。"
+    ],
+    [
+     "Grandpa's jokes filled the room with laughter.",
+     "爷爷的笑话让满屋子都是笑声。"
+    ],
+    [
+     "Mum's eyes filled with tears of joy.",
+     "妈妈的眼里噙满了喜悦的泪水。"
+    ],
+    [
+     "That trip is still fresh in my memory.",
+     "那次旅行我至今记忆犹新。"
+    ],
+    [
+     "Somehow food tastes better at Grandma's house.",
+     "不知为什么，在奶奶家吃饭就是更香。"
+    ],
+    [
+     "It seems a shame to miss the family dinner.",
+     "错过家庭聚餐似乎太可惜了。"
+    ],
+    [
+     "Getting a puppy was a hard decision for us.",
+     "养一只小狗对我们来说是个艰难的决定。"
+    ],
+    [
+     "Dad showed me how to remove the hook.",
+     "爸爸教我怎样取下鱼钩。"
+    ],
+    [
+     "My dad puts his own advice into practice.",
+     "爸爸给我们的建议，他自己也身体力行。"
+    ],
+    [
+     "It is wrong to cheat in exams.",
+     "考试作弊是不对的。"
+    ],
+    [
+     "Parents teach us the difference between right and wrong.",
+     "父母教我们明辨是非。"
+    ],
+    [
+     "I help Mum fold the bed sheets.",
+     "我帮妈妈叠床单。"
+    ],
+    [
+     "Saying sorry to my dad felt a bit awkward.",
+     "向爸爸道歉让我觉得有点尴尬。"
+    ],
+    [
+     "Our winter vacation plan sounds exciting.",
+     "我们的寒假计划听起来真让人兴奋。"
+    ],
+    [
+     "The whole family clapped with admiration.",
+     "全家人都钦佩地鼓起掌来。"
+    ],
+    [
+     "Pardon is a polite way to ask for repetition.",
+     "“Pardon”是请别人重复一遍的礼貌说法。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Why are family traditions important?",
+     "They help strengthen our family bonds.",
+     [
+      "We eat mooncakes at the Mid-Autumn Festival.",
+      "Our family has lots of them."
+     ]
+    ],
+    [
+     "How does Grandma's soup taste?",
+     "It tastes delicious.",
+     [
+      "It sounds very noisy.",
+      "She makes it every week."
+     ]
+    ],
+    [
+     "Why do you look so happy today?",
+     "My cousins are visiting us tonight.",
+     [
+      "Yes, I look very happy.",
+      "I look like my dad."
+     ]
+    ],
+    [
+     "What was your family trip like?",
+     "It was relaxing and fun.",
+     [
+      "We went there by train.",
+      "It was in July."
+     ]
+    ],
+    [
+     "How did you feel when you forgot Mum's birthday?",
+     "I felt awkward and sorry.",
+     [
+      "I felt proud and happy.",
+      "Her birthday is in early May."
+     ]
+    ],
+    [
+     "Do you still remember your first family trip?",
+     "Yes, it's still fresh in my memory.",
+     [
+      "Yes, I've already forgotten it.",
+      "Yes, it will be next summer."
+     ]
+    ],
+    [
+     "Grandpa's stories are amazing, aren't they?",
+     "Yes, indeed. He tells them so well.",
+     [
+      "Yes, indeed. He never tells stories.",
+      "No, they aren't. I love them so much."
+     ]
+    ],
+    [
+     "I can't come to the family picnic this Sunday.",
+     "What a shame! We'll miss you.",
+     [
+      "Great news! We'll miss you.",
+      "What a shame! See you there."
+     ]
+    ],
+    [
+     "We need to light the birthday candles.",
+     "Here's a box of matches.",
+     [
+      "Here's a pair of scissors.",
+      "Here's a glass of water."
+     ]
+    ],
+    [
+     "Pardon? I didn't hear you clearly.",
+     "I said we're having dumplings tonight.",
+     [
+      "I heard you very clearly too.",
+      "OK, I'll lower my voice then."
+     ]
+    ],
+    [
+     "Grandma is taking a nap now.",
+     "All right. I'll lower my voice.",
+     [
+      "All right. I'll turn up the music.",
+      "All right. I'll wake her up now."
+     ]
+    ],
+    [
+     "How can we communicate better with our parents?",
+     "We can listen and share our feelings.",
+     [
+      "We can play games on our phones.",
+      "We can keep our feelings to ourselves."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Miss Bell",
+    "zh": "贝尔老师",
+    "topic": "My family traditions",
+    "topicZh": "我家的传统",
+    "persona": "You are Miss Bell, a warm English teacher at the school on Echo Island. Your class is making a survey about family traditions, so you want to hear about the student's favourite family tradition and why it matters.",
+    "goal": "Tell Miss Bell about one family tradition: when your family does it, what you do together, how it makes you feel, and why it is important. If you miss something she says, ask her politely to repeat it, for example Pardon?",
+    "goalZh": "向贝尔老师介绍你家的一个传统：什么时候做、全家一起做什么、它让你有什么感受、为什么它很重要。没听清时，要礼貌地请她再说一遍，比如说 Pardon?",
+    "opener": "Hello, I'm Miss Bell. Does your family have a special tradition?",
+    "words": [
+     "Every Spring Festival, we",
+     "family tradition",
+     "It makes me feel",
+     "It tastes delicious",
+     "strengthen our family bond",
+     "fresh in my memory",
+     "Pardon?",
+     "Could you repeat that, please?"
+    ],
+    "look": "prof",
+    "voice": "Tina",
+    "voiceZh": "甜美的姐姐"
+   }
+  },
+  {
+   "n": 4,
+   "en": "A better me",
+   "zh": "更好的自己",
+   "icon": "🌱",
+   "color": "#7B3FA0",
+   "key": "How do you deal with common teenage problems?",
+   "grammar": {
+    "title": "基本句型（五种简单句结构）",
+    "tip": "英语句子有五种基本句型：主谓、主谓宾、主系表、主谓双宾、主谓宾补。feel、look、get 等系动词后面接形容词：I feel awful. give、tell 后可以接“人＋物”两个宾语，make、drive 后的宾语还能再带补语：She gave me some advice. Homework drives me mad."
+   },
+   "boss": {
+    "emoji": "🦔",
+    "name": "缩球刺猬",
+    "hello": "I'm Curly. I curl up under pressure! How do you deal with it?"
+   },
+   "words": [
+    [
+     "manage",
+     "管理（时间等）",
+     "🗓️"
+    ],
+    [
+     "pressure",
+     "心理压力",
+     "😫"
+    ],
+    [
+     "addicted",
+     "上瘾的",
+     "📱"
+    ],
+    [
+     "bullying",
+     "霸凌",
+     "🚫"
+    ],
+    [
+     "charge",
+     "职责；责任",
+     "📋"
+    ],
+    [
+     "awful",
+     "很糟糕的",
+     "😖"
+    ],
+    [
+     "focus",
+     "集中（注意力）",
+     "🎯"
+    ],
+    [
+     "affect",
+     "影响",
+     "🔄"
+    ],
+    [
+     "hate",
+     "讨厌；厌恶",
+     "🙅"
+    ],
+    [
+     "embarrassed",
+     "尴尬的",
+     "😳"
+    ],
+    [
+     "mad",
+     "很生气的",
+     "😡"
+    ],
+    [
+     "mess",
+     "弄脏；弄乱",
+     "🌪️"
+    ],
+    [
+     "radio",
+     "广播",
+     "📻"
+    ],
+    [
+     "ashamed",
+     "惭愧的；羞愧的",
+     "😔"
+    ],
+    [
+     "respond",
+     "回答；回复",
+     "💬"
+    ],
+    [
+     "sympathy",
+     "同情",
+     "🤗"
+    ],
+    [
+     "section",
+     "部分；版块",
+     "🧩"
+    ],
+    [
+     "newspaper",
+     "报纸",
+     "📰"
+    ],
+    [
+     "operate",
+     "运营；经营",
+     "⚙️"
+    ],
+    [
+     "helpline",
+     "求助热线",
+     "☎️"
+    ],
+    [
+     "click",
+     "点击",
+     "🖱️"
+    ],
+    [
+     "get addicted to",
+     "对……上瘾",
+     "🎮"
+    ],
+    [
+     "be in charge of",
+     "负责……",
+     "🔑"
+    ],
+    [
+     "focus on",
+     "专注于……",
+     "🔍"
+    ],
+    [
+     "drive somebody mad",
+     "使某人发狂",
+     "🤯"
+    ],
+    [
+     "mess something up",
+     "把某物弄乱",
+     "🧦"
+    ],
+    [
+     "hit it off with somebody",
+     "和某人投缘",
+     "🤝"
+    ],
+    [
+     "fall out with somebody",
+     "与某人闹翻",
+     "💔"
+    ],
+    [
+     "feel ashamed of",
+     "对……感到羞愧",
+     "🙈"
+    ],
+    [
+     "advice column",
+     "答问专栏",
+     "🗞️"
+    ],
+    [
+     "agony aunt",
+     "答问专栏作者",
+     "👩‍💼"
+    ]
+   ],
+   "sents": [
+    [
+     "Too much homework makes me feel awful.",
+     "太多的作业让我觉得很糟糕。"
+    ],
+    [
+     "Exam pressure drives some students mad.",
+     "考试压力让一些学生抓狂。"
+    ],
+    [
+     "Don't get addicted to your mobile phone.",
+     "别沉迷于你的手机。"
+    ],
+    [
+     "We should tell a teacher about bullying.",
+     "我们应该把霸凌的事告诉老师。"
+    ],
+    [
+     "The radio host gave me some useful advice.",
+     "那位电台主持人给了我一些有用的建议。"
+    ],
+    [
+     "I don't want to fall out with my best friend.",
+     "我不想和我最好的朋友闹翻。"
+    ],
+    [
+     "I hit it off with my new classmate.",
+     "我和新同学很投缘。"
+    ],
+    [
+     "Echo Island School operates a helpline for students.",
+     "回声岛学校运营着一条面向学生的求助热线。"
+    ],
+    [
+     "I can't focus on my homework.",
+     "我没法专心写作业。"
+    ],
+    [
+     "I've just tidied my room, so don't mess it up.",
+     "我刚把房间收拾好，所以别把它弄乱。"
+    ],
+    [
+     "Who is in charge of the newspaper's advice section?",
+     "谁负责报纸的建议版块？"
+    ],
+    [
+     "Don't feel embarrassed about asking for help.",
+     "寻求帮助时别不好意思。"
+    ],
+    [
+     "He felt ashamed of telling a lie.",
+     "他为自己说了谎感到羞愧。"
+    ],
+    [
+     "Lack of sleep can affect your mood.",
+     "睡眠不足会影响你的情绪。"
+    ],
+    [
+     "Could you give me some advice on managing my time?",
+     "你能就如何安排时间给我一些建议吗？"
+    ],
+    [
+     "The agony aunt writes an advice column for teenagers.",
+     "这位知心大姐为青少年撰写答问专栏。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "How do you deal with common teenage problems?",
+     "I talk to someone I trust.",
+     [
+      "I have many teenage problems.",
+      "They are very common at school."
+     ]
+    ],
+    [
+     "What do you hate most about exams?",
+     "I hate the pressure.",
+     [
+      "I love the pressure.",
+      "They are on Friday."
+     ]
+    ],
+    [
+     "How does too much homework make you feel?",
+     "It makes me feel awful.",
+     [
+      "It makes my teacher feel happy.",
+      "I usually do it after dinner."
+     ]
+    ],
+    [
+     "How does loud music affect you when you study?",
+     "It drives me mad.",
+     [
+      "It drives me to school.",
+      "I bought it last weekend."
+     ]
+    ],
+    [
+     "How did you feel after you lied to your mum?",
+     "I felt ashamed of myself.",
+     [
+      "She felt ashamed of herself.",
+      "I told her the truth."
+     ]
+    ],
+    [
+     "Who gave you this useful advice?",
+     "My big sister gave it to me.",
+     [
+      "I gave it to my big sister.",
+      "My big sister is very kind."
+     ]
+    ],
+    [
+     "Why are you so mad at your little sister?",
+     "She messed up my desk again.",
+     [
+      "She helped me tidy my desk.",
+      "She gave me a nice present."
+     ]
+    ],
+    [
+     "Why is your brother always on his phone?",
+     "He's addicted to short videos.",
+     [
+      "He's ashamed of short videos.",
+      "He doesn't have a phone."
+     ]
+    ],
+    [
+     "Do you get on well with your new classmate?",
+     "Yes, we hit it off at once.",
+     [
+      "No, we hit it off at once.",
+      "Yes, we fell out at once."
+     ]
+    ],
+    [
+     "Why aren't you talking to Lily?",
+     "We fell out over a silly game.",
+     [
+      "We hit it off last week.",
+      "She is my best friend."
+     ]
+    ],
+    [
+     "Could you give me some advice? I can't focus on my homework.",
+     "Why don't you turn off your phone?",
+     [
+      "Why don't you play more games?",
+      "Why don't you watch more videos?"
+     ]
+    ],
+    [
+     "What does an agony aunt do?",
+     "She responds to letters about people's problems.",
+     [
+      "She writes stories for young children.",
+      "She reads the news on the radio."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Aunt Clara",
+    "zh": "知心阿姨克拉拉",
+    "topic": "Giving advice on teenage problems",
+    "topicZh": "给青少年的烦恼出主意",
+    "persona": "You are Aunt Clara, a kind agony aunt who writes the advice column in the Echo Island School newspaper, and this week a reader called Ethan wrote that he is addicted to his phone, can't focus on his homework and has fallen out with his best friend, so you want the student's tips for your reply. Keep the chat on everyday problems such as homework, phones and friends and do not ask about the student's own private worries; if the student mentions bullying or feeling very sad or unsafe, kindly say they should talk to a parent, a teacher or another adult they trust, then go back to Ethan's letter.",
+    "goal": "The student tells Aunt Clara one common teenage problem and how they deal with it, then gives Ethan at least two pieces of advice using 'You should' or 'Why don't you', so Clara can respond to his letter in her column.",
+    "goalZh": "向知心阿姨克拉拉说一个青少年常见的烦恼和你的应对办法，再用 You should / Why don't you 给来信的 Ethan 提至少两条建议，帮她在专栏里回信。",
+    "opener": "Hi, I'm Aunt Clara from the school advice column. Do you ever feel stressed?",
+    "words": [
+     "You should",
+     "Why don't you",
+     "a lot of pressure",
+     "get addicted to",
+     "focus on",
+     "fall out with",
+     "manage your time",
+     "talk to someone you trust"
+    ],
+    "look": "mom",
+    "voice": "Mione",
+    "voiceZh": "英式口音的阿姨"
+   }
+  },
+  {
+   "n": 5,
+   "en": "My time, my joy",
+   "zh": "闲暇时光",
+   "icon": "🎬",
+   "color": "#9C36B5",
+   "key": "How can you make good use of your leisure time?",
+   "grammar": {
+    "title": "让步状语从句（although / though / even though / even if）",
+    "tip": "although、though、even though 表示“虽然；尽管”，even if 表示“即使（就算）”，从句放在句首时后面加逗号。中文说“虽然……但是……”，可英语里 although 和 but 不能同时用在一个句子里！例：Although it was cold, we went outdoors. / I will go even if it rains."
+   },
+   "boss": {
+    "emoji": "🦥",
+    "name": "悠闲树懒",
+    "hello": "I'm Sloane the sloth. Although I'm slow, I never waste my free time!"
+   },
+   "words": [
+    [
+     "director",
+     "导演",
+     "🎬"
+    ],
+    [
+     "studio",
+     "演播室",
+     "🎙️"
+    ],
+    [
+     "contestant",
+     "参赛者",
+     "🙋"
+    ],
+    [
+     "upon",
+     "在……上",
+     "🔛"
+    ],
+    [
+     "zone",
+     "区域",
+     "🗺️"
+    ],
+    [
+     "outdoors",
+     "在户外",
+     "🏕️"
+    ],
+    [
+     "conduct",
+     "实施；开展",
+     "📋"
+    ],
+    [
+     "concert",
+     "音乐会",
+     "🎻"
+    ],
+    [
+     "gain",
+     "获得",
+     "📈"
+    ],
+    [
+     "recommendation",
+     "推荐",
+     "👍"
+    ],
+    [
+     "plot",
+     "故事情节",
+     "📖"
+    ],
+    [
+     "calm",
+     "使平静",
+     "😌"
+    ],
+    [
+     "snowboarding",
+     "滑雪板运动",
+     "🏂"
+    ],
+    [
+     "challenging",
+     "有挑战性的",
+     "🧗"
+    ],
+    [
+     "aim",
+     "目的；目标",
+     "🎯"
+    ],
+    [
+     "various",
+     "各种各样的",
+     "🌈"
+    ],
+    [
+     "lighting operator",
+     "灯光师",
+     "💡"
+    ],
+    [
+     "make-up artist",
+     "化妆师",
+     "💄"
+    ],
+    [
+     "sound operator",
+     "音响师",
+     "🎚️"
+    ],
+    [
+     "quiz show",
+     "智力竞赛节目",
+     "❓"
+    ],
+    [
+     "reality show",
+     "真人秀节目",
+     "📹"
+    ],
+    [
+     "talent show",
+     "才艺表演",
+     "🎤"
+    ],
+    [
+     "talk show",
+     "脱口秀",
+     "🗣️"
+    ],
+    [
+     "travel show",
+     "旅游节目",
+     "✈️"
+    ],
+    [
+     "TV drama",
+     "电视连续剧",
+     "📺"
+    ],
+    [
+     "shine down upon somebody",
+     "照在某人身上",
+     "☀️"
+    ],
+    [
+     "pass out",
+     "昏迷；失去知觉",
+     "😵"
+    ],
+    [
+     "time zone",
+     "时区",
+     "🌐"
+    ],
+    [
+     "hang out",
+     "常去某处；闲逛",
+     "🛹"
+    ],
+    [
+     "film review",
+     "影评",
+     "⭐"
+    ],
+    [
+     "board game",
+     "棋类游戏",
+     "🎲"
+    ]
+   ],
+   "sents": [
+    [
+     "The morning sun shone down upon the campers.",
+     "清晨的阳光照在露营的人们身上。"
+    ],
+    [
+     "It is the lighting operator's job to control the lights.",
+     "控制灯光是灯光师的工作。"
+    ],
+    [
+     "A make-up artist made the actors look older.",
+     "化妆师让演员们看起来老了一些。"
+    ],
+    [
+     "I was the director of our short film.",
+     "我是我们这部短片的导演。"
+    ],
+    [
+     "Our short film won a prize although the plot was very simple.",
+     "尽管情节很简单，我们的短片还是获奖了。"
+    ],
+    [
+     "End your film review with a clear recommendation.",
+     "用一条明确的推荐来结束你的影评。"
+    ],
+    [
+     "Our class conducted a survey on leisure activities.",
+     "我们班开展了一项关于休闲活动的调查。"
+    ],
+    [
+     "Travel shows help me learn about various places.",
+     "旅游节目帮助我了解各种各样的地方。"
+    ],
+    [
+     "My grandparents watch TV dramas every evening.",
+     "我爷爷奶奶每天晚上都看电视剧。"
+    ],
+    [
+     "Board games are popular even though we have smartphones.",
+     "尽管我们有智能手机，棋类游戏依然很受欢迎。"
+    ],
+    [
+     "Our class took part in a quiz show.",
+     "我们班参加了一档智力竞赛节目。"
+    ],
+    [
+     "Everyone enjoyed the talent show even though the hall was very hot.",
+     "尽管礼堂里很热，大家还是很喜欢这场才艺表演。"
+    ],
+    [
+     "My uncle goes swimming outdoors even though it is winter.",
+     "尽管是冬天，我叔叔还是去户外游泳。"
+    ],
+    [
+     "My cousin tried snowboarding even though it looked difficult.",
+     "尽管单板滑雪看起来很难，我表妹还是去试了试。"
+    ],
+    [
+     "I gained many new skills although the project was challenging.",
+     "尽管这个项目很有挑战性，我还是学到了很多新技能。"
+    ],
+    [
+     "The aim of my video is to show my weekend activities.",
+     "我做这个视频的目的是展示我的周末活动。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "How do you usually spend your leisure time?",
+     "I usually hang out with my friends.",
+     [
+      "I usually spend about fifty yuan.",
+      "It usually takes me half an hour."
+     ]
+    ],
+    [
+     "Excuse me, could you answer a few questions for our survey?",
+     "Sure, I'd be happy to help.",
+     [
+      "Sure, I'd like a cup of tea.",
+      "Yes, it was a great survey."
+     ]
+    ],
+    [
+     "Do you like watching reality shows?",
+     "Yes, although some of them are a bit silly.",
+     [
+      "Yes, although I have never watched one.",
+      "No, because they are really fun."
+     ]
+    ],
+    [
+     "Who controls the sound in the studio?",
+     "The sound operator does.",
+     [
+      "The make-up artist does.",
+      "The lighting operator does."
+     ]
+    ],
+    [
+     "Why did the contestant pass out?",
+     "Because the studio lights were too hot.",
+     [
+      "Because the questions were very easy.",
+      "He passed out at about eight."
+     ]
+    ],
+    [
+     "The talent show lasted three hours. Did you enjoy it?",
+     "Yes, I enjoyed it although it was long.",
+     [
+      "Yes, I enjoyed it because it was short.",
+      "Yes, I will enjoy it next time."
+     ]
+    ],
+    [
+     "I'm not good at sports. Should I try snowboarding?",
+     "Yes, try it even if you fall at first.",
+     [
+      "Yes, I tried it in the studio.",
+      "No, I'm not good at board games."
+     ]
+    ],
+    [
+     "How was the outdoor concert in the rain?",
+     "Although it was wet, we had a great time.",
+     [
+      "Although it was sunny, we got very wet.",
+      "It was in the park near my home."
+     ]
+    ],
+    [
+     "You were so busy last week. Did you finish your film review?",
+     "Yes, I finished it although I was busy.",
+     [
+      "Yes, I will write it next week.",
+      "No, I finished it two days ago."
+     ]
+    ],
+    [
+     "Your cousin lives in London now. Do you still chat?",
+     "Yes, even though we're in different time zones.",
+     [
+      "Yes, because we're in the same class.",
+      "No, she lives in the same time zone."
+     ]
+    ],
+    [
+     "Why do you like that talk show so much?",
+     "Because the host is really funny.",
+     [
+      "Because I watched it last night.",
+      "I usually watch it on Fridays."
+     ]
+    ],
+    [
+     "I'm so nervous before the show. What should I do?",
+     "Take a deep breath to calm yourself down.",
+     [
+      "The show started an hour ago.",
+      "You should take a photo of the studio."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Director Sean",
+    "zh": "导演肖恩",
+    "topic": "A survey on leisure activities",
+    "topicZh": "休闲活动小调查",
+    "persona": "You are Sean, a friendly TV director at the Echo Island TV studio. You are making a short programme called My Time, My Joy about how teenagers spend their leisure time, so you are doing a quick survey with students.",
+    "goal": "Answer Sean's survey: name two leisure activities you do, say how often you do them and why you enjoy them, use at least one although or even though sentence (for example: I go running even though it is cold.), and then politely ask Sean one question back.",
+    "goalZh": "回答肖恩的调查：说出你常做的两项休闲活动、多久做一次、为什么喜欢，至少用一次 although 或 even though（比如 I go running even though it is cold.），最后礼貌地反问他一个问题。",
+    "opener": "Hi, I'm Sean, a TV director. What do you do in your free time?",
+    "words": [
+     "in my free time",
+     "hang out with friends",
+     "play board games",
+     "go snowboarding",
+     "once a week",
+     "although",
+     "even though",
+     "Could you tell me"
+    ],
+    "look": "dad",
+    "voice": "Raymond",
+    "voiceZh": "爽朗的叔叔"
+   }
+  },
+  {
+   "n": 6,
+   "en": "Food and health",
+   "zh": "食物与健康",
+   "icon": "🥗",
+   "color": "#2F8F46",
+   "key": "What is the relationship between food and health?",
+   "grammar": {
+    "title": "宾语从句",
+    "tip": "宾语从句是跟在 think、know、wonder、ask、tell 等动词后面的“小句子”：陈述事情用 that（常可省略），问“是否”用 if 或 whether，问具体内容用 what、where、why、how 等。从句要用陈述句语序：Do you know where the canteen is?（不说 where is the canteen；但疑问词本身作主语时语序不变，如 what is on the menu）。主句是过去时，从句一般也用过去的时态（客观真理除外，仍用一般现在时）：Mum asked if I wanted some tofu."
+   },
+   "boss": {
+    "emoji": "🐸",
+    "name": "稻田蛙",
+    "hello": "I'm Paddy, a rice field frog. What is the relationship between food and health?"
+   },
+   "words": [
+    [
+     "boil",
+     "用沸水煮",
+     "🍲"
+    ],
+    [
+     "biscuit",
+     "饼干",
+     "🍪"
+    ],
+    [
+     "score",
+     "分数；得分",
+     "💯"
+    ],
+    [
+     "tofu",
+     "豆腐",
+     "🫘"
+    ],
+    [
+     "stuff",
+     "东西",
+     "📦"
+    ],
+    [
+     "overweight",
+     "超重的",
+     "⚖️"
+    ],
+    [
+     "sugary",
+     "含糖的",
+     "🍬"
+    ],
+    [
+     "menu",
+     "菜单",
+     "📋"
+    ],
+    [
+     "cucumber",
+     "黄瓜",
+     "🥒"
+    ],
+    [
+     "carrot",
+     "胡萝卜",
+     "🥕"
+    ],
+    [
+     "cabbage",
+     "卷心菜",
+     "🥬"
+    ],
+    [
+     "preference",
+     "偏好；偏爱",
+     "💖"
+    ],
+    [
+     "waiter",
+     "服务员",
+     "🤵"
+    ],
+    [
+     "sweat",
+     "汗水",
+     "💦"
+    ],
+    [
+     "soil",
+     "土壤",
+     "🌱"
+    ],
+    [
+     "welcoming",
+     "令人惬意的",
+     "🤗"
+    ],
+    [
+     "gentle",
+     "温和的",
+     "😌"
+    ],
+    [
+     "whisper",
+     "低语；私语",
+     "🤫"
+    ],
+    [
+     "tend",
+     "照料；照管",
+     "🧑‍🌾"
+    ],
+    [
+     "fizzy drink",
+     "起泡饮料",
+     "🥤"
+    ],
+    [
+     "fried food",
+     "油炸食品",
+     "🍟"
+    ],
+    [
+     "a balanced diet",
+     "均衡的饮食",
+     "🥗"
+    ],
+    [
+     "in general",
+     "总的来说；大体上",
+     "📊"
+    ],
+    [
+     "dairy product",
+     "乳制品",
+     "🥛"
+    ],
+    [
+     "get through",
+     "度过；熬过",
+     "🌉"
+    ],
+    [
+     "would rather",
+     "宁愿",
+     "👉"
+    ],
+    [
+     "remind somebody of ...",
+     "使某人想起",
+     "💭"
+    ]
+   ],
+   "sents": [
+    [
+     "I think a balanced diet keeps us healthy.",
+     "我认为均衡的饮食能让我们保持健康。"
+    ],
+    [
+     "I didn't know that this fizzy drink had so much sugar.",
+     "我以前不知道这种起泡饮料里有这么多糖。"
+    ],
+    [
+     "The waiter asked if we wanted some boiled tofu.",
+     "服务员问我们要不要来点水煮豆腐。"
+    ],
+    [
+     "I wonder whether my monster can eat biscuits.",
+     "我想知道我的怪兽能不能吃饼干。"
+    ],
+    [
+     "Can you tell me what is on the lunch menu?",
+     "你能告诉我午餐菜单上有什么吗？"
+    ],
+    [
+     "Mum asked me why I didn't like cucumbers.",
+     "妈妈问我为什么不喜欢黄瓜。"
+    ],
+    [
+     "Could you tell me which drink is less sugary?",
+     "你能告诉我哪种饮料含糖少一些吗？"
+    ],
+    [
+     "Farmers know what the soil needs.",
+     "农民知道土壤需要什么。"
+    ],
+    [
+     "Too much fried food can make you overweight.",
+     "吃太多油炸食品会让人超重。"
+    ],
+    [
+     "I would rather not eat sugary snacks.",
+     "我宁愿不吃含糖的零食。"
+    ],
+    [
+     "This cabbage soup reminds me of my grandma.",
+     "这道卷心菜汤让我想起了奶奶。"
+    ],
+    [
+     "Every grain of rice comes from the farmer's sweat.",
+     "每一粒米都来自农民的汗水。"
+    ],
+    [
+     "My grandparents tend a small vegetable garden.",
+     "我的爷爷奶奶照料着一个小菜园。"
+    ],
+    [
+     "We felt the restaurant was very welcoming.",
+     "我们觉得那家餐厅让人很惬意。"
+    ],
+    [
+     "This restaurant gets a score of eight out of ten.",
+     "这家餐厅得了八分，满分十分。"
+    ],
+    [
+     "A good breakfast helps me get through the morning.",
+     "一顿好早餐帮我撑过整个上午。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Can you tell me what a balanced diet is?",
+     "It means eating the right amounts of different foods.",
+     [
+      "It is next to the school library.",
+      "We had it for lunch yesterday."
+     ]
+    ],
+    [
+     "Do you know how much sugar is in this fizzy drink?",
+     "Yes, there is a lot of sugar in it.",
+     [
+      "Yes, I know how to open it.",
+      "It costs five yuan a bottle."
+     ]
+    ],
+    [
+     "What did the doctor tell you about fried food?",
+     "She told me that I should eat less of it.",
+     [
+      "She told me where the hospital was.",
+      "She told me that she liked her job."
+     ]
+    ],
+    [
+     "Do you think tofu is good for you?",
+     "Yes, I think it is very healthy.",
+     [
+      "Yes, I think it is in the fridge.",
+      "No, I don't know who made it."
+     ]
+    ],
+    [
+     "Could you tell me what you would like to drink?",
+     "I'd like a glass of water, please.",
+     [
+      "I'd like a table by the window.",
+      "I'd like to pay by phone."
+     ]
+    ],
+    [
+     "Do you know why sugary stuff is bad for us?",
+     "Yes, it can hurt our teeth.",
+     [
+      "Yes, I know where it is.",
+      "Yes, I bought some yesterday."
+     ]
+    ],
+    [
+     "What did the gentle old farmer whisper to you?",
+     "He said that the soil needed more water.",
+     [
+      "He walked slowly back to his field.",
+      "He was wearing a big straw hat."
+     ]
+    ],
+    [
+     "What's your preference, rice or noodles?",
+     "I'd rather have noodles today.",
+     [
+      "I'd rather go there by bike.",
+      "I'd rather not wash the dishes."
+     ]
+    ],
+    [
+     "What do you usually have for breakfast?",
+     "In general, I have an egg and some milk.",
+     [
+      "In general, I get up at seven.",
+      "In general, I walk to school."
+     ]
+    ],
+    [
+     "Which dairy products do you like?",
+     "I like milk and cheese.",
+     [
+      "I like carrots and cabbage.",
+      "I like tofu and biscuits."
+     ]
+    ],
+    [
+     "How should we cook these carrots?",
+     "Let's boil them in some water.",
+     [
+      "Let's buy them at the market.",
+      "Let's give them to the rabbit."
+     ]
+    ],
+    [
+     "What does this rice field remind you of?",
+     "It reminds me of my grandpa's village.",
+     [
+      "It reminds me to drink more water.",
+      "It is very green and beautiful."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Mandy",
+    "zh": "食堂厨师曼迪",
+    "topic": "Plan a healthy lunch menu",
+    "topicZh": "设计一份健康午餐菜单",
+    "persona": "You are Mandy, the friendly cook at the school canteen on Echo Island. You are planning next week's healthy lunch menu, so you want to hear what students like to eat and what they think a balanced diet is.",
+    "goal": "Plan a healthy lunch with Mandy: choose a staple food such as rice or noodles, a vegetable dish and a drink, say what you would rather have, and explain why it is healthy.",
+    "goalZh": "和曼迪一起设计一份健康午餐：选一种主食（比如米饭或面条）、一道蔬菜和一种饮料，说说你更想吃什么，并解释为什么它健康。",
+    "opener": "Hi, I'm Mandy, the school cook. What do you like for lunch?",
+    "words": [
+     "a balanced diet",
+     "I'd rather have",
+     "boiled vegetables",
+     "fried food",
+     "fizzy drinks",
+     "dairy products",
+     "I think that",
+     "it's good for"
+    ],
+    "look": "mom",
+    "voice": "Katerina",
+    "voiceZh": "成熟的女声"
+   }
+  },
+  {
+   "n": 7,
+   "en": "Reading Mark Twain",
+   "zh": "走近马克·吐温",
+   "icon": "🖋️",
+   "color": "#9C5A1E",
+   "key": "How can we appreciate Mark Twain's works?",
+   "grammar": {
+    "title": "定语从句（who / that / which）",
+    "tip": "想给一个名词加说明，就把一个小句子放在它后面：说人用 who 或 that，说东西用 which 或 that。who / which / that 已经代替了前面的名词，后面别再加 him 或 it。例：Tom is a boy who hates hard work. This is the fence that Tom painted."
+   },
+   "boss": {
+    "emoji": "🐈",
+    "name": "说书猫",
+    "hello": "I'm Whiskers, a cat who loves funny stories. Who is your favourite character?"
+   },
+   "words": [
+    [
+     "associate",
+     "联想；联系",
+     "🔗"
+    ],
+    [
+     "humour",
+     "幽默；幽默感",
+     "😂"
+    ],
+    [
+     "fence",
+     "栅栏；篱笆",
+     "🚧"
+    ],
+    [
+     "sink",
+     "下沉；下陷",
+     "⚓"
+    ],
+    [
+     "yard",
+     "码（长度单位）",
+     "📏"
+    ],
+    [
+     "survey",
+     "查看；审视",
+     "🧐"
+    ],
+    [
+     "aloud",
+     "大声地",
+     "📢"
+    ],
+    [
+     "pity",
+     "遗憾；可惜",
+     "😔"
+    ],
+    [
+     "gentleman",
+     "有教养的人",
+     "🎩"
+    ],
+    [
+     "concern",
+     "担心；忧虑",
+     "😟"
+    ],
+    [
+     "sort",
+     "种类；类别",
+     "🗂️"
+    ],
+    [
+     "spring",
+     "活力；朝气",
+     "⚡"
+    ],
+    [
+     "bet",
+     "打赌",
+     "🤝"
+    ],
+    [
+     "afterwards",
+     "后来",
+     "⏭️"
+    ],
+    [
+     "brief",
+     "简短的；简洁的",
+     "⏱️"
+    ],
+    [
+     "journalist",
+     "新闻记者",
+     "📰"
+    ],
+    [
+     "pilot",
+     "领航员；引水员",
+     "🛳️"
+    ],
+    [
+     "failure",
+     "失败",
+     "📉"
+    ],
+    [
+     "regard",
+     "把……视为",
+     "👀"
+    ],
+    [
+     "first-person point of view",
+     "第一人称视角",
+     "🙋"
+    ],
+    [
+     "pick up",
+     "捡起；重新开始",
+     "🤏"
+    ],
+    [
+     "carry on with something",
+     "坚持做某事",
+     "▶️"
+    ],
+    [
+     "go on",
+     "继续下去",
+     "⏩"
+    ],
+    [
+     "be particular about",
+     "讲究；挑剔",
+     "🔍"
+    ],
+    [
+     "get tired",
+     "变得疲倦",
+     "🥱"
+    ],
+    [
+     "with a spring in one's step",
+     "迈着轻快的步伐",
+     "🕺"
+    ],
+    [
+     "public speaker",
+     "演讲者",
+     "🎤"
+    ],
+    [
+     "make a fortune",
+     "发财；赚大钱",
+     "💰"
+    ],
+    [
+     "pay ... back",
+     "还钱",
+     "💵"
+    ]
+   ],
+   "sents": [
+    [
+     "Mark Twain wrote stories that are full of humour.",
+     "马克·吐温写过充满幽默的故事。"
+    ],
+    [
+     "Tom has to paint a fence which is thirty yards long.",
+     "汤姆得刷一道三十码长的栅栏。"
+    ],
+    [
+     "Mark Twain was a pilot who knew the Mississippi well.",
+     "马克·吐温是一位很熟悉密西西比河的领航员。"
+    ],
+    [
+     "I like the sort of stories that make me laugh.",
+     "我喜欢那种能逗我笑的故事。"
+    ],
+    [
+     "Jim Smiley had a frog which he trained to jump.",
+     "吉姆·斯迈利养了一只青蛙，还训练它跳远。"
+    ],
+    [
+     "Mark Twain became a public speaker who travelled around the world.",
+     "马克·吐温成了一位周游世界的演讲家。"
+    ],
+    [
+     "My grandpa is particular about the books that he reads.",
+     "我爷爷对他读的书很讲究。"
+    ],
+    [
+     "Let me give you a brief introduction to Mark Twain.",
+     "我来给你简单介绍一下马克·吐温。"
+    ],
+    [
+     "People regard Mark Twain as the father of American literature.",
+     "人们把马克·吐温视为美国文学之父。"
+    ],
+    [
+     "Huck Finn tells his story from the first-person point of view.",
+     "哈克·费恩用第一人称视角讲述自己的故事。"
+    ],
+    [
+     "Mark Twain made a fortune from his books.",
+     "马克·吐温靠他的书发了大财。"
+    ],
+    [
+     "It is a pity that the story ends so soon.",
+     "可惜这个故事这么快就结束了。"
+    ],
+    [
+     "Mark Twain never let failure stop him.",
+     "马克·吐温从不让失败阻挡自己。"
+    ],
+    [
+     "The show must go on.",
+     "演出必须继续下去。"
+    ],
+    [
+     "She left the exam room with a spring in her step.",
+     "她迈着轻快的步伐走出了考场。"
+    ],
+    [
+     "Let's carry on with our one-act play.",
+     "我们接着演独幕剧吧。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Who was Mark Twain?",
+     "He was a writer who made people laugh.",
+     [
+      "It was a boat which sailed down the river.",
+      "It was a book which he wrote at home."
+     ]
+    ],
+    [
+     "What did Mark Twain do before he became a writer?",
+     "He was a river pilot and a journalist.",
+     [
+      "He made a fortune from his books.",
+      "He will be a famous public speaker."
+     ]
+    ],
+    [
+     "What sort of stories do you like?",
+     "I like stories which are full of humour.",
+     [
+      "I like a writer who lives near me.",
+      "I read stories every night in bed."
+     ]
+    ],
+    [
+     "Who is your favourite character in the story?",
+     "Tom. He's a boy who's full of clever ideas.",
+     [
+      "The river. It's the one which runs past the town.",
+      "The book. It's the one which I read last week."
+     ]
+    ],
+    [
+     "What is a gentleman?",
+     "A man who is polite and kind to others.",
+     [
+      "A thing which helps you paint a fence.",
+      "A place which is full of old books."
+     ]
+    ],
+    [
+     "What was Tom's biggest concern on Saturday morning?",
+     "The long fence which he had to paint.",
+     [
+      "The big apple which Ben gave him.",
+      "The nice lunch which his aunt cooked."
+     ]
+    ],
+    [
+     "Who won the bet in the jumping frog story?",
+     "The stranger who tricked Jim Smiley.",
+     [
+      "The box which Jim Smiley carried.",
+      "Yes, he won it in the end."
+     ]
+    ],
+    [
+     "How do you know a story uses the first-person point of view?",
+     "The storyteller uses I and me.",
+     [
+      "The storyteller uses he and she.",
+      "The story has a happy ending."
+     ]
+    ],
+    [
+     "Shall we stop practising our play now?",
+     "No, let's carry on with it.",
+     [
+      "No, let's stop it right now.",
+      "Yes, let's keep practising it."
+     ]
+    ],
+    [
+     "Let's act out Tom Sawyer in the Echo Island school play!",
+     "That's a great idea! I'll be Tom.",
+     [
+      "That's a pity! I'll be Tom.",
+      "You're welcome! I'll be Tom."
+     ]
+    ],
+    [
+     "Can you lend me ten yuan? I'll pay you back tomorrow.",
+     "Sure, no problem. Here you are.",
+     [
+      "Sure. I'll pay you back tomorrow.",
+      "Thank you. You're very kind."
+     ]
+    ],
+    [
+     "How can we appreciate Mark Twain's works?",
+     "We can read them aloud and enjoy their humour.",
+     [
+      "We can paint them white like Tom's fence.",
+      "We can sell them and make a fortune."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Miss Page",
+    "zh": "图书管理员佩姬老师",
+    "topic": "Mark Twain's stories and characters",
+    "topicZh": "马克·吐温的故事和人物",
+    "persona": "You are Miss Page, the friendly librarian at the Echo Island school. You are planning a Mark Twain week, and the school will act out a one-act play from one of his stories, so you want to hear which characters and stories students enjoy.",
+    "goal": "The student describes one character from a Mark Twain story (for example Tom Sawyer, Huck Finn or Jim Smiley) in at least two sentences with who, that or which, and gives one reason to enjoy Mark Twain's works (such as his humour), so Miss Page can choose a scene for the school play.",
+    "goalZh": "用 who / that / which 至少说两句话，描述马克·吐温故事里的一个人物（比如汤姆·索亚），再说一个欣赏他作品的理由（比如幽默），帮佩姬老师挑选校园独幕剧的场景。",
+    "opener": "Hello! I'm Miss Page, the school librarian. Do you like funny stories?",
+    "words": [
+     "a boy who hates hard work",
+     "a story that makes me laugh",
+     "full of humour",
+     "the sort of stories I like",
+     "read it aloud",
+     "That's a great idea",
+     "one-act play",
+     "a writer who"
+    ],
+    "look": "weather",
+    "voice": "Maia",
+    "voiceZh": "知性的女声"
+   }
+  },
+  {
+   "n": 8,
+   "en": "The power of love",
+   "zh": "爱的力量",
+   "icon": "💝",
+   "color": "#C2255C",
+   "key": "Why is love important?",
+   "grammar": {
+    "title": "形容词、名词、动词后的介词",
+    "tip": "有些形容词、名词和动词后面要跟固定的介词，最好整块记住：be proud of、be careful with、love for、agree with、pay for。例如：Grandma is proud of her handmade scarf. / I don't agree with you. 介词后面接名词、代词或动词 -ing 形式。"
+   },
+   "boss": {
+    "emoji": "🦘",
+    "name": "暖兜袋鼠",
+    "hello": "I'm Cosy. I carry my baby everywhere. Why is love important to you?"
+   },
+   "words": [
+    [
+     "wallet",
+     "钱包",
+     "👛"
+    ],
+    [
+     "possession",
+     "私人物品",
+     "🧳"
+    ],
+    [
+     "knee",
+     "膝盖",
+     "🦵"
+    ],
+    [
+     "scarf",
+     "围巾",
+     "🧣"
+    ],
+    [
+     "cash",
+     "现金",
+     "💵"
+    ],
+    [
+     "scissors",
+     "剪刀",
+     "✂️"
+    ],
+    [
+     "chain",
+     "链子",
+     "⛓️"
+    ],
+    [
+     "display",
+     "陈列；展览",
+     "🪟"
+    ],
+    [
+     "shelf",
+     "架子；搁板",
+     "📚"
+    ],
+    [
+     "bill",
+     "账单",
+     "🧾"
+    ],
+    [
+     "handmade",
+     "手工制作的",
+     "🧶"
+    ],
+    [
+     "mutton",
+     "羊肉",
+     "🍖"
+    ],
+    [
+     "oven",
+     "烤箱",
+     "🥧"
+    ],
+    [
+     "lie",
+     "平放；躺",
+     "🛌"
+    ],
+    [
+     "analysis",
+     "分析",
+     "📊"
+    ],
+    [
+     "conditions",
+     "条件；环境",
+     "🏘️"
+    ],
+    [
+     "selfless",
+     "无私的",
+     "🤲"
+    ],
+    [
+     "poverty",
+     "贫困",
+     "🏚️"
+    ],
+    [
+     "handwritten",
+     "手写的",
+     "✍️"
+    ],
+    [
+     "degree",
+     "度（温度）",
+     "🌡️"
+    ],
+    [
+     "flu",
+     "流感",
+     "🤧"
+    ],
+    [
+     "pale",
+     "苍白的",
+     "🫥"
+    ],
+    [
+     "earn",
+     "挣得；赚得",
+     "💰"
+    ],
+    [
+     "upstairs",
+     "在楼上；往楼上",
+     "🪜"
+    ],
+    [
+     "freeze",
+     "结冰；冻结",
+     "🧊"
+    ],
+    [
+     "porridge",
+     "粥",
+     "🥣"
+    ],
+    [
+     "pass something down",
+     "世代相传",
+     "👵"
+    ],
+    [
+     "have no choice",
+     "别无选择",
+     "🤷"
+    ],
+    [
+     "fix one's eyes on",
+     "凝视",
+     "👁️"
+    ],
+    [
+     "a set of",
+     "一套；一副",
+     "🧰"
+    ],
+    [
+     "take away",
+     "带走；记住",
+     "🥡"
+    ],
+    [
+     "photo album",
+     "相册",
+     "📔"
+    ],
+    [
+     "turn out",
+     "结果是",
+     "🔄"
+    ],
+    [
+     "ivy vine",
+     "常春藤",
+     "🌿"
+    ]
+   ],
+   "sents": [
+    [
+     "Della sold her long hair to buy a watch chain.",
+     "德拉卖掉了她的长发，买了一条表链。"
+    ],
+    [
+     "The gold watch was passed down from Jim's grandfather.",
+     "这块金表是吉姆的祖父传下来的。"
+    ],
+    [
+     "Jim sold his watch to buy a set of combs.",
+     "吉姆卖掉了他的手表，买了一套梳子。"
+    ],
+    [
+     "The young couple lived in poor conditions.",
+     "这对年轻夫妇的生活条件很差。"
+    ],
+    [
+     "What can we take away from this story?",
+     "我们能从这个故事中学到什么？"
+    ],
+    [
+     "We should care about children living in poverty.",
+     "我们应该关心生活贫困的孩子。"
+    ],
+    [
+     "I don't quite agree with your analysis.",
+     "我不太同意你的分析。"
+    ],
+    [
+     "Thank you for the handwritten card.",
+     "谢谢你手写的卡片。"
+    ],
+    [
+     "Grandma is very proud of her handmade scarf.",
+     "奶奶为她亲手做的围巾感到非常自豪。"
+    ],
+    [
+     "Mum's porridge is full of love.",
+     "妈妈熬的粥里满是爱。"
+    ],
+    [
+     "Dad keeps a photo of me in his wallet.",
+     "爸爸的钱包里放着一张我的照片。"
+    ],
+    [
+     "I spent all my cash on a gift for Mum.",
+     "我把所有现金都花在给妈妈的礼物上了。"
+    ],
+    [
+     "I earned the money by washing Dad's car.",
+     "我是靠给爸爸洗车挣到这笔钱的。"
+    ],
+    [
+     "My knee hurt, so Dad carried me upstairs.",
+     "我膝盖疼，所以爸爸把我背上了楼。"
+    ],
+    [
+     "The sick girl fixed her eyes on the ivy vine.",
+     "那个生病的女孩凝视着常春藤。"
+    ],
+    [
+     "The last leaf turned out to be a painting.",
+     "最后那片叶子原来是一幅画。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "What is your most special possession?",
+     "My grandpa's old watch.",
+     [
+      "I keep it in a small box.",
+      "Because it reminds me of him."
+     ]
+    ],
+    [
+     "What did you see on display in the shop?",
+     "A set of handmade cups.",
+     [
+      "I went there with my mum.",
+      "It's next to the bus stop."
+     ]
+    ],
+    [
+     "Mum, where is my photo album?",
+     "It's lying on the top shelf.",
+     [
+      "It's full of family photos.",
+      "It's a gift from Grandpa."
+     ]
+    ],
+    [
+     "Can I borrow your scissors?",
+     "Sure. Be careful with them.",
+     [
+      "No, thanks. I have my own.",
+      "Sorry, I don't agree with you."
+     ]
+    ],
+    [
+     "What's that delicious smell?",
+     "Grandpa is roasting mutton in the oven.",
+     [
+      "Grandpa is waiting for the bus.",
+      "Grandpa is looking for his glasses."
+     ]
+    ],
+    [
+     "Who paid for dinner last night?",
+     "My uncle paid the bill.",
+     [
+      "We had fish and noodles.",
+      "It was a lovely evening."
+     ]
+    ],
+    [
+     "You look pale. What's wrong?",
+     "I'm worried about Grandma. She has flu.",
+     [
+      "I'm proud of my little sister.",
+      "I'm interested in old stories."
+     ]
+    ],
+    [
+     "What's your temperature now?",
+     "It's thirty-eight degrees.",
+     [
+      "It's very cold outside.",
+      "It's time for bed."
+     ]
+    ],
+    [
+     "It's freezing outside. Take my scarf.",
+     "Thanks. You're always so kind to me.",
+     [
+      "You're welcome. It's my pleasure.",
+      "Never mind. It's not your fault."
+     ]
+    ],
+    [
+     "Why did you walk home in the rain?",
+     "I lost my bus card. I had no choice.",
+     [
+      "I walked home with Tom.",
+      "It took me half an hour."
+     ]
+    ],
+    [
+     "What does the story of Della and Jim teach us?",
+     "True love is selfless.",
+     [
+      "It was written long ago.",
+      "It is in our English book."
+     ]
+    ],
+    [
+     "I think money is the best gift.",
+     "Really? I'm not sure I agree with you.",
+     [
+      "Thanks. I'm glad you like it.",
+      "Sure. Here you are."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Grandma Dot",
+    "zh": "多特奶奶",
+    "topic": "My most special gift",
+    "topicZh": "我最特别的礼物",
+    "persona": "You are Grandma Dot, a warm 70-year-old who runs a small handmade gift shop near the harbour on Echo Island. You are collecting stories about special gifts and the love behind them for a story wall in your shop.",
+    "goal": "Tell Grandma Dot about your most special gift: what it is, who gave it to you, and why it means a lot to you. Use at least one chunk such as proud of or thankful for.",
+    "goalZh": "跟多特奶奶讲讲你最特别的礼物：它是什么、是谁送的、为什么对你意义重大，并且至少用一次 proud of 或 thankful for 这样的固定搭配。",
+    "opener": "Hello, dear! I'm Grandma Dot. Do you have a special gift at home?",
+    "words": [
+     "My most special gift is",
+     "It was a gift from",
+     "It is handmade",
+     "It means a lot to me",
+     "I am proud of",
+     "I am thankful for",
+     "It is full of love",
+     "pass it down"
+    ],
+    "look": "granny",
+    "voice": "Serena",
+    "voiceZh": "慈祥的奶奶"
+   }
+  }
+ ]
+}

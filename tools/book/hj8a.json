@@ -1,0 +1,2991 @@
+{
+ "id": "hj8a",
+ "name": "沪教版 英语 八年级上册",
+ "short": "八上",
+ "press": "上海教育出版社 2025 年 7 月第 1 版",
+ "units": [
+  {
+   "n": 1,
+   "en": "Look it up!",
+   "zh": "查阅百科",
+   "icon": "🔍",
+   "color": "#B5542C",
+   "key": "What can we learn from encyclopaedias?",
+   "grammar": {
+    "title": "some / any 与复合不定代词",
+    "tip": "some 多用于肯定句，any 多用于否定句和疑问句：I found some facts. / Are there any facts about dinosaurs? 但请求别人或主动提供东西的问句里仍然用 some：Would you like some help? / Can you tell me something about it? somebody、anything 这类合成词也按这个规则选；它们作主语时谓语动词用单数，形容词要放在它们后面：Nobody knows. / something interesting。"
+   },
+   "boss": {
+    "emoji": "🦕",
+    "name": "翻页龙",
+    "hello": "I'm Flip. My scales are pages. What can we learn from encyclopaedias?"
+   },
+   "words": [
+    [
+     "dinosaur",
+     "恐龙",
+     "🦖"
+    ],
+    [
+     "intelligent",
+     "聪明的",
+     "🧠"
+    ],
+    [
+     "talented",
+     "有才能的",
+     "🌟"
+    ],
+    [
+     "artistic",
+     "有艺术天赋的",
+     "🖌️"
+    ],
+    [
+     "perhaps",
+     "也许",
+     "🤔"
+    ],
+    [
+     "notebook",
+     "笔记本",
+     "📓"
+    ],
+    [
+     "vehicle",
+     "交通工具",
+     "🚗"
+    ],
+    [
+     "prehistoric",
+     "史前的",
+     "🦴"
+    ],
+    [
+     "completely",
+     "完全地",
+     "💯"
+    ],
+    [
+     "original",
+     "原来的",
+     "🌱"
+    ],
+    [
+     "birth",
+     "出生",
+     "👶"
+    ],
+    [
+     "suffering",
+     "苦难",
+     "😣"
+    ],
+    [
+     "artist",
+     "艺术家；画家",
+     "🧑‍🎨"
+    ],
+    [
+     "death",
+     "死亡",
+     "🥀"
+    ],
+    [
+     "whole",
+     "全部的",
+     "🌕"
+    ],
+    [
+     "piece",
+     "一首；一篇",
+     "🎼"
+    ],
+    [
+     "editor",
+     "编辑",
+     "📝"
+    ],
+    [
+     "organize",
+     "组织；安排",
+     "🗂️"
+    ],
+    [
+     "order",
+     "顺序",
+     "🔢"
+    ],
+    [
+     "record",
+     "记录",
+     "✍️"
+    ],
+    [
+     "die out",
+     "灭绝",
+     "☄️"
+    ],
+    [
+     "a type of",
+     "一种",
+     "🏷️"
+    ],
+    [
+     "be related to",
+     "与……属同类",
+     "🧬"
+    ],
+    [
+     "general education",
+     "通识教育",
+     "🎓"
+    ],
+    [
+     "go back a long way",
+     "历史悠久",
+     "📜"
+    ],
+    [
+     "be similar to",
+     "与……相似",
+     "👯"
+    ],
+    [
+     "alphabetical order",
+     "字母顺序",
+     "🔤"
+    ],
+    [
+     "play an important role",
+     "起重要作用",
+     "🔑"
+    ]
+   ],
+   "sents": [
+    [
+     "Why did the dinosaurs die out?",
+     "恐龙为什么灭绝了？"
+    ],
+    [
+     "Birds are related to dinosaurs.",
+     "鸟类与恐龙有亲缘关系。"
+    ],
+    [
+     "Does this encyclopaedia say anything about prehistoric animals?",
+     "这本百科全书里讲到史前动物了吗？"
+    ],
+    [
+     "Some of these facts were completely new to me.",
+     "其中一些知识对我来说是全新的。"
+    ],
+    [
+     "Leonardo da Vinci was a talented Italian artist.",
+     "列奥纳多·达·芬奇是一位才华横溢的意大利艺术家。"
+    ],
+    [
+     "Da Vinci's notebooks have drawings of vehicles.",
+     "达·芬奇的笔记本里有交通工具的图画。"
+    ],
+    [
+     "Nobody is as artistic as my little sister.",
+     "没有人像我妹妹那样有艺术天赋。"
+    ],
+    [
+     "Everybody says my grandpa is very intelligent.",
+     "大家都说我爷爷非常聪明。"
+    ],
+    [
+     "An encyclopaedia is a type of reference book.",
+     "百科全书是一种工具书。"
+    ],
+    [
+     "Can anybody tell me something about this piece of music?",
+     "有谁能给我讲讲这首乐曲吗？"
+    ],
+    [
+     "The entry begins with Beethoven's date of birth.",
+     "这个词条以贝多芬的出生日期开头。"
+    ],
+    [
+     "Let's record something interesting about Leonardo da Vinci.",
+     "我们把达·芬奇的趣事记下来吧。"
+    ],
+    [
+     "The history of encyclopaedias goes back a long way.",
+     "百科全书的历史非常悠久。"
+    ],
+    [
+     "Can you put these names in alphabetical order?",
+     "你能把这些名字按字母顺序排列吗？"
+    ],
+    [
+     "The editor organized the facts in a clear order.",
+     "这位编辑把这些资料整理得条理清楚。"
+    ],
+    [
+     "Encyclopaedias play an important role in general education.",
+     "百科全书在通识教育中起着重要作用。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Is there anything about dinosaurs in this book?",
+     "Yes, there's a whole page about them.",
+     [
+      "Yes, I like dinosaurs very much.",
+      "No, I haven't got any pens."
+     ]
+    ],
+    [
+     "Would you like some help with your encyclopaedia entry?",
+     "Yes, please. That's very kind of you.",
+     [
+      "Yes, I can help you with it.",
+      "Yes, please. I'd like some apple juice."
+     ]
+    ],
+    [
+     "Does anybody know when the dinosaurs died out?",
+     "Yes, about sixty-six million years ago.",
+     [
+      "Yes, they are related to birds.",
+      "No, nobody has a pet dinosaur."
+     ]
+    ],
+    [
+     "Does the entry tell us about Beethoven's birth?",
+     "Yes, he was born in Germany.",
+     [
+      "Yes, he died in Austria.",
+      "No, it hasn't got any pictures."
+     ]
+    ],
+    [
+     "Whose notebook is this? Somebody left it here.",
+     "I think it's Lucy's notebook.",
+     [
+      "It's a notebook about dinosaurs.",
+      "Nobody is in the classroom now."
+     ]
+    ],
+    [
+     "Does anybody know what this monster eats?",
+     "Nobody does, so let's look it up.",
+     [
+      "Yes, it's a type of sea monster.",
+      "It lives near Echo Island."
+     ]
+    ],
+    [
+     "Is an online encyclopaedia similar to a paper one?",
+     "Yes, but it's much faster to search.",
+     [
+      "Yes, I bought one last week.",
+      "No, it's in alphabetical order."
+     ]
+    ],
+    [
+     "Who do you admire most?",
+     "My grandpa. He's kind and intelligent.",
+     [
+      "Because he's kind and intelligent.",
+      "I visit him every weekend."
+     ]
+    ],
+    [
+     "Where can we find the original story of our play?",
+     "Perhaps it's in the school library.",
+     [
+      "Perhaps it's about the Monkey King.",
+      "We'll act it out next Friday."
+     ]
+    ],
+    [
+     "Beethoven's life was full of suffering. Did he give up?",
+     "No, he kept writing music until his death.",
+     [
+      "Yes, he lived in a big city.",
+      "No, he didn't have any pianos."
+     ]
+    ],
+    [
+     "How do editors organize an encyclopaedia?",
+     "They put the entries in alphabetical order.",
+     [
+      "They organize a big party.",
+      "It goes back a long way."
+     ]
+    ],
+    [
+     "What can we learn from encyclopaedias?",
+     "We can learn about science, history and art.",
+     [
+      "We can buy them at a bookshop.",
+      "They have thousands of pages."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Mrs Reed",
+    "zh": "编辑里德太太",
+    "look": "prof",
+    "voice": "Mione",
+    "voiceZh": "英式口音的阿姨",
+    "topic": "Someone you admire",
+    "topicZh": "介绍你钦佩的人",
+    "persona": "You are Mrs Reed, a warm and curious editor of the Echo Island Children's Encyclopaedia. You are collecting short entries about people that students admire, so you want to hear about the person the student admires most.",
+    "goal": "Tell Mrs Reed about someone you admire: who the person is, what he or she is good at (talented, intelligent or artistic), one or two facts about his or her life, and why you admire him or her, so she can write a short encyclopaedia entry.",
+    "goalZh": "向里德太太介绍一位你钦佩的人：他/她是谁、擅长什么（有才能、聪明或有艺术天赋）、生平的一两件事，以及你为什么钦佩他/她，帮她写一个简短的百科词条。",
+    "opener": "Hello, I'm Mrs Reed, an encyclopaedia editor. Who do you admire most?",
+    "words": [
+     "The person I admire most is",
+     "is very talented",
+     "intelligent and artistic",
+     "was born in",
+     "is good at",
+     "plays an important role in",
+     "something interesting about",
+     "because"
+    ]
+   }
+  },
+  {
+   "n": 2,
+   "en": "Amazing numbers",
+   "zh": "神奇的数字",
+   "icon": "🔢",
+   "color": "#7C3AED",
+   "key": "What is the role of numbers in our daily lives?",
+   "grammar": {
+    "title": "基数词和序数词",
+    "tip": "基数词说「有多少」：twenty-one、three hundred and five（hundred 后面还有十位、个位时加 and；前面有具体数字时，hundred、thousand、million 不加 -s）。序数词说「第几」：first、second、third 要单独记，其余大多加 -th，注意 fifth、eighth、ninth、twelfth、twentieth 的拼写；twenty-first 这样的只把最后一个词变成序数词。序数词前面常加 the，日期、楼层、名次都用它。例：A chessboard has sixty-four squares. My birthday is on the twelfth of March."
+   },
+   "boss": {
+    "emoji": "🐚",
+    "name": "数字鹦鹉螺",
+    "hello": "I'm Spiral. My shell hides a number secret. What do numbers do for you?"
+   },
+   "words": [
+    [
+     "flight",
+     "航班",
+     "✈️"
+    ],
+    [
+     "schedule",
+     "日程安排",
+     "🗓️"
+    ],
+    [
+     "everywhere",
+     "到处",
+     "🌐"
+    ],
+    [
+     "challenge",
+     "向某人挑战",
+     "🤺"
+    ],
+    [
+     "prize",
+     "奖赏",
+     "🏆"
+    ],
+    [
+     "promise",
+     "承诺",
+     "🤝"
+    ],
+    [
+     "chessboard",
+     "国际象棋棋盘",
+     "♟️"
+    ],
+    [
+     "silver",
+     "银",
+     "🥈"
+    ],
+    [
+     "reply",
+     "回复",
+     "💬"
+    ],
+    [
+     "hesitation",
+     "犹豫",
+     "🤔"
+    ],
+    [
+     "wonder",
+     "想知道",
+     "❓"
+    ],
+    [
+     "agree",
+     "同意",
+     "👍"
+    ],
+    [
+     "per cent",
+     "百分之……",
+     "💯"
+    ],
+    [
+     "currently",
+     "目前",
+     "📍"
+    ],
+    [
+     "check",
+     "检查",
+     "🔍"
+    ],
+    [
+     "budget",
+     "预算",
+     "💰"
+    ],
+    [
+     "province",
+     "省份",
+     "🗺️"
+    ],
+    [
+     "sharply",
+     "急剧地",
+     "⚡"
+    ],
+    [
+     "count",
+     "计数；清点",
+     "🧮"
+    ],
+    [
+     "system",
+     "系统",
+     "⚙️"
+    ],
+    [
+     "symbol",
+     "符号",
+     "🔣"
+    ],
+    [
+     "represent",
+     "代表",
+     "👉"
+    ],
+    [
+     "exactly",
+     "确切地",
+     "🎯"
+    ],
+    [
+     "flight schedule",
+     "航班时刻表",
+     "🛫"
+    ],
+    [
+     "price tag",
+     "价格标签",
+     "🏷️"
+    ],
+    [
+     "for a moment",
+     "片刻",
+     "⏱️"
+    ],
+    [
+     "without hesitation",
+     "毫不犹豫",
+     "💨"
+    ],
+    [
+     "go up",
+     "上升",
+     "📈"
+    ],
+    [
+     "go down",
+     "下降",
+     "📉"
+    ],
+    [
+     "write down",
+     "写下；记下",
+     "✍️"
+    ],
+    [
+     "instead of",
+     "代替；而不是",
+     "🔄"
+    ]
+   ],
+   "sents": [
+    [
+     "We can see numbers everywhere.",
+     "我们到处都能看到数字。"
+    ],
+    [
+     "A chessboard has sixty-four squares.",
+     "国际象棋棋盘有六十四个格子。"
+    ],
+    [
+     "My cousin challenged me to a game of chess.",
+     "我表哥向我发起挑战，要和我下一盘国际象棋。"
+    ],
+    [
+     "The king promised to give him a prize.",
+     "国王答应给他一份奖赏。"
+    ],
+    [
+     "There are four grains of rice on the third square.",
+     "第三格上有四粒米。"
+    ],
+    [
+     "Let's count the monsters on Echo Island.",
+     "我们来数一数回声岛上的怪兽吧。"
+    ],
+    [
+     "Our flight takes off at half past seven.",
+     "我们的航班七点半起飞。"
+    ],
+    [
+     "The price tag says ninety-nine yuan.",
+     "价格标签上写着九十九元。"
+    ],
+    [
+     "We have a budget of three hundred yuan.",
+     "我们有三百元的预算。"
+    ],
+    [
+     "This province has more than fifty million people.",
+     "这个省有五千多万人口。"
+    ],
+    [
+     "Our city's population went up to ten million.",
+     "我们城市的人口增长到了一千万。"
+    ],
+    [
+     "The number of farmers went down by twenty per cent.",
+     "农民的数量下降了百分之二十。"
+    ],
+    [
+     "Our number system uses ten symbols.",
+     "我们的数字系统使用十个符号。"
+    ],
+    [
+     "Our new schedule starts on the first of September.",
+     "我们的新日程安排从九月一日开始。"
+    ],
+    [
+     "She won first prize in the maths competition.",
+     "她在数学竞赛中获得了一等奖。"
+    ],
+    [
+     "I wonder how many people live in Shanghai.",
+     "我想知道有多少人住在上海。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "How many squares does a chessboard have?",
+     "It has sixty-four squares.",
+     [
+      "It is on the table.",
+      "It is black and white."
+     ]
+    ],
+    [
+     "What did the old man ask for as his prize?",
+     "He asked for rice instead of silver.",
+     [
+      "He asked the king very politely.",
+      "He asked for it after the game."
+     ]
+    ],
+    [
+     "Did your parents agree to the school trip?",
+     "Yes, they agreed without hesitation.",
+     [
+      "Yes, it was on the first floor.",
+      "No, they went by train."
+     ]
+    ],
+    [
+     "Wait for a moment, please. I need to reply to Mum.",
+     "OK, I'll wait here.",
+     [
+      "OK, it's half past six.",
+      "No, I'm not very hungry."
+     ]
+    ],
+    [
+     "When is your birthday?",
+     "It's on the twelfth of March.",
+     [
+      "It's my twelfth birthday.",
+      "I was born in a small town."
+     ]
+    ],
+    [
+     "What's the time exactly?",
+     "It's exactly three fifteen.",
+     [
+      "It's on the fifteenth.",
+      "It's three kilometres away."
+     ]
+    ],
+    [
+     "How much is this T-shirt?",
+     "The price tag says sixty yuan.",
+     [
+      "It's a medium size.",
+      "It's made of cotton."
+     ]
+    ],
+    [
+     "I don't know when our flight leaves.",
+     "Let's check the flight schedule.",
+     [
+      "Let's check the price tag.",
+      "Let's write down the budget."
+     ]
+    ],
+    [
+     "Which floor is your classroom on?",
+     "It's on the fourth floor.",
+     [
+      "It has four big windows.",
+      "It's next to the library."
+     ]
+    ],
+    [
+     "Did the price of rice go up or go down?",
+     "It went down sharply last month.",
+     [
+      "I bought some last month.",
+      "No, I don't like rice."
+     ]
+    ],
+    [
+     "What does this symbol represent?",
+     "It represents the number ten.",
+     [
+      "It is in my notebook.",
+      "I wrote it down yesterday."
+     ]
+    ],
+    [
+     "How many people currently live in your city?",
+     "About twenty million people live here.",
+     [
+      "They live in tall buildings.",
+      "Most of them work here."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Penny",
+    "zh": "店主彭妮阿姨",
+    "topic": "Numbers in my daily life",
+    "topicZh": "聊聊我生活中的数字",
+    "persona": "You are Penny, a friendly woman who runs the market shop on Echo Island and loves prices, dates and times. You are making a poster called Numbers in Our Lives, so you want to hear how the player uses numbers every day.",
+    "goal": "Tell Penny four ways you use numbers: what time you get up, how much a snack you like costs, which floor your classroom is on, and the date of a festival you like, said with an ordinal number such as the first of October.",
+    "goalZh": "告诉彭妮阿姨你生活中用到数字的四个地方：几点起床、你喜欢的零食多少钱、教室在几楼，以及一个你喜欢的节日是几月几号（用序数词说，比如 the first of October）。",
+    "opener": "Hello! I'm Penny. I run the market shop. What time do you get up?",
+    "words": [
+     "I get up at",
+     "half past six",
+     "It costs",
+     "yuan",
+     "on the third floor",
+     "on the first of October",
+     "My lucky number is",
+     "What about you?"
+    ],
+    "look": "mom",
+    "voice": "Katerina",
+    "voiceZh": "成熟的女声"
+   }
+  },
+  {
+   "n": 3,
+   "en": "Our digital lives",
+   "zh": "数字生活",
+   "icon": "📱",
+   "color": "#8B3FD9",
+   "key": "How has digital technology changed our lives?",
+   "grammar": {
+    "title": "形容词的比较级和最高级",
+    "tip": "两样东西比，用“比较级 + than”：短词加 -er，长词前面加 more，如 My phone is newer than yours. 注意拼写：big → bigger，heavy → heavier。想说“……得多”，在比较级前加 much，如 much heavier。三样或更多里选“最……”，用最高级：加 -est 或在前面加 most，前面别忘了 the，如 It is the most popular app in our class. 不规则的单独记：good → better → best，bad → worse → worst。"
+   },
+   "boss": {
+    "emoji": "🕷️",
+    "name": "织网蜘蛛",
+    "hello": "I'm Webby. My web is bigger than the internet! How has technology changed your life?"
+   },
+   "words": [
+    [
+     "network",
+     "网络",
+     "🌐"
+    ],
+    [
+     "flood",
+     "洪水",
+     "🌊"
+    ],
+    [
+     "multimedia",
+     "多媒体",
+     "🎞️"
+    ],
+    [
+     "expert",
+     "专家",
+     "🎓"
+    ],
+    [
+     "mobile",
+     "可移动的",
+     "📶"
+    ],
+    [
+     "payment",
+     "付款",
+     "💳"
+    ],
+    [
+     "warn",
+     "警告；提醒",
+     "⚠️"
+    ],
+    [
+     "treatment",
+     "治疗",
+     "🩺"
+    ],
+    [
+     "data",
+     "数据",
+     "💾"
+    ],
+    [
+     "company",
+     "公司",
+     "💼"
+    ],
+    [
+     "traffic",
+     "交通；车流",
+     "🚦"
+    ],
+    [
+     "flow",
+     "流动",
+     "〰️"
+    ],
+    [
+     "smoothly",
+     "平稳地；顺畅地",
+     "⛸️"
+    ],
+    [
+     "laptop",
+     "笔记本电脑",
+     "💻"
+    ],
+    [
+     "screen",
+     "屏幕",
+     "🖥️"
+    ],
+    [
+     "weight",
+     "重量",
+     "⚖️"
+    ],
+    [
+     "digital",
+     "数码的；数字的",
+     "🔢"
+    ],
+    [
+     "social",
+     "社交的",
+     "🫂"
+    ],
+    [
+     "message",
+     "信息；消息",
+     "💬"
+    ],
+    [
+     "interview",
+     "采访",
+     "🎙️"
+    ],
+    [
+     "positive",
+     "积极的；正面的",
+     "👍"
+    ],
+    [
+     "negative",
+     "消极的；负面的",
+     "👎"
+    ],
+    [
+     "effect",
+     "影响",
+     "💫"
+    ],
+    [
+     "opinion",
+     "意见；看法",
+     "🗳️"
+    ],
+    [
+     "novel",
+     "小说",
+     "📕"
+    ],
+    [
+     "comment",
+     "评论",
+     "✍️"
+    ],
+    [
+     "basis",
+     "基础",
+     "🧱"
+    ],
+    [
+     "microprocessor",
+     "微处理器",
+     "🧮"
+    ],
+    [
+     "microchip",
+     "芯片",
+     "🔲"
+    ],
+    [
+     "major",
+     "主要的；重大的",
+     "🥇"
+    ],
+    [
+     "breakthrough",
+     "突破",
+     "💥"
+    ],
+    [
+     "electronic",
+     "电子的",
+     "🔌"
+    ],
+    [
+     "software",
+     "软件",
+     "💿"
+    ],
+    [
+     "app",
+     "应用程序",
+     "📱"
+    ],
+    [
+     "era",
+     "时代",
+     "🕰️"
+    ],
+    [
+     "download",
+     "下载",
+     "⏬"
+    ],
+    [
+     "tiny",
+     "微小的",
+     "🐜"
+    ],
+    [
+     "connect to",
+     "连接到",
+     "🔗"
+    ],
+    [
+     "bring big changes to",
+     "给……带来巨变",
+     "🪄"
+    ],
+    [
+     "mobile payment",
+     "移动支付",
+     "📲"
+    ],
+    [
+     "take ... for example",
+     "以……为例",
+     "👉"
+    ],
+    [
+     "rubbish bin",
+     "垃圾箱",
+     "🚮"
+    ],
+    [
+     "social media",
+     "社交媒体",
+     "🤳"
+    ],
+    [
+     "in person",
+     "亲自；当面",
+     "🧍"
+    ],
+    [
+     "the general public",
+     "公众；大众",
+     "🏙️"
+    ]
+   ],
+   "sents": [
+    [
+     "Mobile phones have brought big changes to our lives.",
+     "手机给我们的生活带来了巨大的变化。"
+    ],
+    [
+     "Downloading a novel is quicker than buying one in a shop.",
+     "下载一本小说比去商店买一本更快。"
+    ],
+    [
+     "Mobile payment is faster than paying with cash.",
+     "移动支付比用现金付款更快。"
+    ],
+    [
+     "Smart systems can warn people about floods.",
+     "智能系统能提醒人们提防洪水。"
+    ],
+    [
+     "Smart traffic lights help traffic flow smoothly.",
+     "智能红绿灯帮助车流平稳通行。"
+    ],
+    [
+     "Doctors can use data to find the best treatment.",
+     "医生可以借助数据找到最好的治疗方法。"
+    ],
+    [
+     "This laptop's screen is bigger than mine.",
+     "这台笔记本电脑的屏幕比我的大。"
+    ],
+    [
+     "My sister downloaded the most popular music app.",
+     "我姐姐下载了最受欢迎的音乐应用程序。"
+    ],
+    [
+     "Meeting friends in person is better than sending them messages.",
+     "当面见朋友比给他们发消息更好。"
+    ],
+    [
+     "Social media can have a negative effect on our sleep.",
+     "社交媒体可能会对我们的睡眠产生负面影响。"
+    ],
+    [
+     "Some internet comments are not true.",
+     "网上有些评论不是真的。"
+    ],
+    [
+     "Multimedia makes our English lessons more interesting.",
+     "多媒体让我们的英语课更有趣。"
+    ],
+    [
+     "My phone cannot connect to the school network.",
+     "我的手机连不上学校的网络。"
+    ],
+    [
+     "The invention of the microchip was a major breakthrough.",
+     "芯片的发明是一项重大突破。"
+    ],
+    [
+     "The first computers were much heavier than today's laptops.",
+     "最早的计算机比如今的笔记本电脑重得多。"
+    ],
+    [
+     "Tiny microchips are the basis of the digital era.",
+     "小小的芯片是数字时代的基础。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Why did you choose this new laptop?",
+     "Because it is lighter than my old one.",
+     [
+      "I bought it in a shop near my home.",
+      "It is in my schoolbag right now."
+     ]
+    ],
+    [
+     "What is the weight of the new laptop?",
+     "It is about one kilogram.",
+     [
+      "It is about two hours.",
+      "It is about four thousand yuan."
+     ]
+    ],
+    [
+     "Which is cheaper, the electronic dictionary or the paper one?",
+     "The paper one is cheaper.",
+     [
+      "The paper one is thicker.",
+      "Yes, the electronic one is."
+     ]
+    ],
+    [
+     "What is the quickest way to tell your mum the news?",
+     "Sending her a message is the quickest way.",
+     [
+      "My mum is the kindest person I know.",
+      "The news was on TV last night."
+     ]
+    ],
+    [
+     "Who is the best at computers in your family?",
+     "My sister is the best at computers.",
+     [
+      "My sister is the youngest in my family.",
+      "Yes, we have two computers at home."
+     ]
+    ],
+    [
+     "What does a microprocessor do?",
+     "It works like the brain of a computer.",
+     [
+      "It is as tiny as a grain of rice.",
+      "It was made in the last century."
+     ]
+    ],
+    [
+     "How has digital technology changed our lives?",
+     "It has made our lives more convenient.",
+     [
+      "It was invented a long time ago.",
+      "Yes, it has changed a lot."
+     ]
+    ],
+    [
+     "What is your opinion of social media?",
+     "It has both positive and negative effects.",
+     [
+      "I use it after I finish my homework.",
+      "It is on my mum's phone."
+     ]
+    ],
+    [
+     "Who did you interview for the school newspaper?",
+     "We interviewed a computer expert.",
+     [
+      "We interviewed her last Friday.",
+      "We wrote about smart homes."
+     ]
+    ],
+    [
+     "What does your aunt do?",
+     "She works for a software company.",
+     [
+      "She works very hard every day.",
+      "She goes to work by underground."
+     ]
+    ],
+    [
+     "Can you give me an example of smart technology?",
+     "Take smart rubbish bins for example.",
+     [
+      "Take the bus to the city centre.",
+      "Take your laptop to school tomorrow."
+     ]
+    ],
+    [
+     "Is the new Echo Island library only for students?",
+     "No, it is open to the general public.",
+     [
+      "No, it is open from nine to five.",
+      "No, it is on the second floor."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Grandma Mei",
+    "zh": "梅奶奶",
+    "look": "granny",
+    "voice": "Serena",
+    "voiceZh": "慈祥的奶奶",
+    "topic": "How digital technology has changed my life",
+    "topicZh": "数字技术怎样改变了我的生活",
+    "persona": "You are Grandma Mei, a warm 68-year-old grandmother on Echo Island who has just got her first smartphone. Life was very different when you were young, so you are curious how digital technology has changed the player's life, and you would love a few tips.",
+    "goal": "Tell Grandma Mei how digital technology has changed your life: name your most useful app, compare one thing with the past (for example, it is faster or more convenient now), and give her one rule for using phones well.",
+    "goalZh": "告诉梅奶奶数字技术怎样改变了你的生活：说出你最有用的应用程序，用比较级说一件事比过去更快或更方便，再教她一条用好手机的规矩。",
+    "opener": "Hello! I'm Grandma Mei. I've just got my first smartphone. What apps do you use?",
+    "words": [
+     "the most useful app",
+     "faster than",
+     "more convenient",
+     "mobile payment",
+     "send messages",
+     "meet friends in person",
+     "Take my mum for example",
+     "I think we should"
+    ]
+   }
+  },
+  {
+   "n": 4,
+   "en": "Inventions",
+   "zh": "发明",
+   "icon": "💡",
+   "color": "#C2571A",
+   "key": "What makes an invention great?",
+   "grammar": {
+    "title": "good / bad / far 的比较级和最高级；(not) as … as",
+    "tip": "good、bad、far 的比较级和最高级不加 -er / -est，要单独记：good → better → best，bad → worse → worst，far → farther / further → farthest / furthest。说“和……一样”用 as + 形容词或副词原级 + as，说“不如……”用 not as + 形容词或副词原级 + as。例：Metal wheels are better than wooden ones. / Travelling on foot is not as fast as cycling."
+   },
+   "boss": {
+    "emoji": "🦝",
+    "name": "发明家浣熊",
+    "hello": "I'm Cog, the raccoon inventor. Which invention is the best of all time?"
+   },
+   "words": [
+    [
+     "balloon",
+     "气球",
+     "🎈"
+    ],
+    [
+     "wheel",
+     "轮子；车轮",
+     "🛞"
+    ],
+    [
+     "central",
+     "在中心的",
+     "🎯"
+    ],
+    [
+     "although",
+     "虽然；尽管",
+     "⚖️"
+    ],
+    [
+     "attach",
+     "固定；附上",
+     "📎"
+    ],
+    [
+     "pull",
+     "拉；拽",
+     "🧲"
+    ],
+    [
+     "international",
+     "国际的",
+     "🌐"
+    ],
+    [
+     "path",
+     "小路；小径",
+     "🥾"
+    ],
+    [
+     "technique",
+     "技巧；技艺",
+     "🔧"
+    ],
+    [
+     "depend",
+     "取决于",
+     "🔗"
+    ],
+    [
+     "doubt",
+     "疑惑；疑问",
+     "🤨"
+    ],
+    [
+     "personally",
+     "就个人而言",
+     "🙋"
+    ],
+    [
+     "prediction",
+     "预测；预言",
+     "🔮"
+    ],
+    [
+     "statement",
+     "陈述；说明",
+     "📝"
+    ],
+    [
+     "benefit",
+     "好处；益处",
+     "👍"
+    ],
+    [
+     "wing",
+     "机翼；翅膀",
+     "✈️"
+    ],
+    [
+     "distance",
+     "距离",
+     "📏"
+    ],
+    [
+     "petrol",
+     "汽油",
+     "⛽"
+    ],
+    [
+     "avoid",
+     "避免；防止",
+     "🚫"
+    ],
+    [
+     "anywhere",
+     "任何地方",
+     "🌍"
+    ],
+    [
+     "notice",
+     "注意到",
+     "👀"
+    ],
+    [
+     "type",
+     "印刷活字",
+     "🔠"
+    ],
+    [
+     "mixture",
+     "混合物",
+     "🥣"
+    ],
+    [
+     "heat",
+     "加热",
+     "🔥"
+    ],
+    [
+     "press",
+     "压；按压",
+     "🗜️"
+    ],
+    [
+     "metal",
+     "金属",
+     "🔩"
+    ],
+    [
+     "steam locomotive",
+     "蒸汽机车",
+     "🚂"
+    ],
+    [
+     "crewed spacecraft",
+     "载人航天器",
+     "🚀"
+    ],
+    [
+     "on foot",
+     "步行",
+     "🚶"
+    ],
+    [
+     "a number of",
+     "若干；一些",
+     "🔢"
+    ],
+    [
+     "take place",
+     "发生；举行",
+     "🗓️"
+    ],
+    [
+     "for instance",
+     "例如；比如",
+     "👉"
+    ],
+    [
+     "large amounts of",
+     "大量的",
+     "📦"
+    ],
+    [
+     "international trade",
+     "国际贸易",
+     "🚢"
+    ],
+    [
+     "depend on",
+     "依靠；依赖",
+     "🤝"
+    ],
+    [
+     "3D printer",
+     "3D 打印机",
+     "🖨️"
+    ],
+    [
+     "without doubt",
+     "毫无疑问",
+     "💯"
+    ],
+    [
+     "of all time",
+     "有史以来",
+     "🏆"
+    ],
+    [
+     "make fun of",
+     "取笑",
+     "😜"
+    ],
+    [
+     "traffic jam",
+     "堵车",
+     "🚗"
+    ]
+   ],
+   "sents": [
+    [
+     "The wheel is one of the best inventions of all time.",
+     "车轮是有史以来最好的发明之一。"
+    ],
+    [
+     "Metal wheels are better than wooden ones.",
+     "金属轮子比木头轮子更好。"
+    ],
+    [
+     "Burning petrol makes air pollution worse.",
+     "燃烧汽油会让空气污染更严重。"
+    ],
+    [
+     "Rainy Mondays bring the worst traffic jams.",
+     "下雨的星期一堵车最严重。"
+    ],
+    [
+     "Steam locomotives could travel farther than horses.",
+     "蒸汽机车能比马跑得更远。"
+    ],
+    [
+     "Your invention is as good as mine.",
+     "你的发明和我的一样好。"
+    ],
+    [
+     "Travelling on foot is not as fast as cycling.",
+     "步行没有骑自行车快。"
+    ],
+    [
+     "Two horses pulled the cart along the path.",
+     "两匹马拉着车沿小路前进。"
+    ],
+    [
+     "International trade needs ships to carry large amounts of goods.",
+     "国际贸易需要轮船运送大量货物。"
+    ],
+    [
+     "Nobody should make fun of other people's ideas.",
+     "谁都不应该取笑别人的想法。"
+    ],
+    [
+     "Bi Sheng pressed the type into the mixture.",
+     "毕昇把活字压进混合物里。"
+    ],
+    [
+     "My invention has a number of benefits.",
+     "我的发明有好几个好处。"
+    ],
+    [
+     "The invention fair takes place next Friday.",
+     "发明展览会下周五举行。"
+    ],
+    [
+     "A crewed spacecraft can carry people into space.",
+     "载人航天器能把人送上太空。"
+    ],
+    [
+     "Although the stars are far away, telescopes help us see them.",
+     "虽然星星离我们很远，望远镜却能帮我们看到它们。"
+    ],
+    [
+     "Did you notice the wings on this robot?",
+     "你注意到这个机器人身上的翅膀了吗？"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Which invention is the best of all time?",
+     "Without doubt, it's the wheel.",
+     [
+      "Yes, it's the best of all time.",
+      "It was invented long ago."
+     ]
+    ],
+    [
+     "Who lives the farthest from our school?",
+     "Lily lives the farthest.",
+     [
+      "Lily runs the fastest.",
+      "Yes, she lives far away."
+     ]
+    ],
+    [
+     "Is your new bike better than your old one?",
+     "Yes, it's much better.",
+     [
+      "Yes, it's much worse.",
+      "It's in the garden now."
+     ]
+    ],
+    [
+     "Why were you late this morning?",
+     "The traffic jam was worse than usual.",
+     [
+      "The traffic jam was better than usual.",
+      "My home is not far from school."
+     ]
+    ],
+    [
+     "Can a balloon fly as far as a plane?",
+     "No, it can't fly as far.",
+     [
+      "Yes, it can fly much farther.",
+      "Yes, it's as big as a plane."
+     ]
+    ],
+    [
+     "What do you think of the 3D printer?",
+     "Personally, I think it's really useful.",
+     [
+      "I bought it last weekend.",
+      "It's in the science lab."
+     ]
+    ],
+    [
+     "Which inventions help us travel?",
+     "Planes and trains, for instance.",
+     [
+      "Pens and pencils, for instance.",
+      "Yes, they help us a lot."
+     ]
+    ],
+    [
+     "How long does it take you to get to school?",
+     "It depends on the traffic.",
+     [
+      "The distance is about two kilometres.",
+      "I usually go with my dad."
+     ]
+    ],
+    [
+     "Why did Bi Sheng heat the metal plate?",
+     "To make the mixture soft.",
+     [
+      "To make the type colourful.",
+      "He wanted to cook some food."
+     ]
+    ],
+    [
+     "How can your invention help people?",
+     "It helps drivers avoid traffic jams.",
+     [
+      "It's made of metal and wood.",
+      "I made it last summer."
+     ]
+    ],
+    [
+     "Where can your flying bike go?",
+     "With its wings, it can fly anywhere.",
+     [
+      "With its wheels, it can go fast.",
+      "It can fly at nine o'clock."
+     ]
+    ],
+    [
+     "What makes an invention great?",
+     "It makes our lives easier and better.",
+     [
+      "It is very old and heavy.",
+      "It was made in a big factory."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Doctor Wren",
+    "zh": "发明家雷恩博士",
+    "topic": "A great invention",
+    "topicZh": "聊一项了不起的发明",
+    "persona": "You are Doctor Wren, a cheerful inventor who runs the Invention Fair at the school on Echo Island. You are choosing the best invention for this year's fair, so you want to hear which invention the student thinks is great and why.",
+    "goal": "Tell Doctor Wren about one invention you think is great: what it is, what it helps people do, and why it is better than the old way, using 'better than' or 'not as ... as' (for example: Cycling is better than walking. / A letter is not as fast as a phone call.). Then say one thing your own invention would do.",
+    "goalZh": "向雷恩博士介绍一项你觉得了不起的发明：它是什么、能帮人们做什么，并用 better than 或 not as … as 说说它为什么比老办法好；最后说说你自己想发明的东西能做什么。",
+    "opener": "Hi, I'm Doctor Wren, an inventor. What's the best invention you use every day?",
+    "words": [
+     "I think the best invention is",
+     "It's better than",
+     "is not as fast as",
+     "Personally, I think",
+     "Without doubt",
+     "for instance",
+     "It helps people",
+     "My invention can"
+    ],
+    "look": "prof",
+    "voice": "Maia",
+    "voiceZh": "知性的女声"
+   }
+  },
+  {
+   "n": 5,
+   "en": "Going on an exchange trip",
+   "zh": "交流之旅",
+   "icon": "🧳",
+   "color": "#C0392B",
+   "key": "What is it like to experience a new culture?",
+   "grammar": {
+    "title": "现在完成时",
+    "tip": "现在完成时 = have/has + 过去分词，表示过去做的事对现在有影响，或者从过去一直持续到现在：I have already learnt to use chopsticks. already 放在 have 和过去分词之间，yet 放在否定句和疑问句的末尾；ever 问「曾经……过吗」，never 表示「从来没有」。since 后面接时间点（since last May），for 后面接一段时间（for two weeks）。注意：说出过去的具体时间（yesterday、last summer）就要改用一般过去时：Have you ever been to Beijing? — Yes, I have. I went there last summer."
+   },
+   "boss": {
+    "emoji": "🦀",
+    "name": "换壳寄居蟹",
+    "hello": "I'm Shelby. I've moved into many new shells. What is a new culture like?"
+   },
+   "words": [
+    [
+     "exchange",
+     "交流",
+     "🔄"
+    ],
+    [
+     "nervous",
+     "紧张的",
+     "😬"
+    ],
+    [
+     "grateful",
+     "感激的",
+     "🙏"
+    ],
+    [
+     "chopstick",
+     "筷子",
+     "🥢"
+    ],
+    [
+     "tour",
+     "旅行；游览",
+     "🚌"
+    ],
+    [
+     "tai chi",
+     "太极拳",
+     "☯️"
+    ],
+    [
+     "yet",
+     "还；尚未",
+     "⏳"
+    ],
+    [
+     "independent",
+     "独立自主的",
+     "🧭"
+    ],
+    [
+     "content",
+     "内容",
+     "📄"
+    ],
+    [
+     "feeling",
+     "感觉；感情",
+     "💓"
+    ],
+    [
+     "shock",
+     "震惊",
+     "😱"
+    ],
+    [
+     "foreign",
+     "外国的",
+     "🌍"
+    ],
+    [
+     "confused",
+     "迷惑的",
+     "😕"
+    ],
+    [
+     "anxious",
+     "忧虑的",
+     "😟"
+    ],
+    [
+     "phase",
+     "阶段",
+     "🌓"
+    ],
+    [
+     "honeymoon",
+     "蜜月期",
+     "🥰"
+    ],
+    [
+     "unfamiliar",
+     "陌生的",
+     "❓"
+    ],
+    [
+     "homesick",
+     "想家的",
+     "🏠"
+    ],
+    [
+     "lonely",
+     "孤独的",
+     "😔"
+    ],
+    [
+     "deal",
+     "应付；对付",
+     "🤹"
+    ],
+    [
+     "expect",
+     "预料；预期",
+     "🔮"
+    ],
+    [
+     "situation",
+     "情况",
+     "🧩"
+    ],
+    [
+     "accept",
+     "接受",
+     "✅"
+    ],
+    [
+     "adaptation",
+     "适应",
+     "🦎"
+    ],
+    [
+     "Beijing opera",
+     "京剧",
+     "🎭"
+    ],
+    [
+     "host family",
+     "寄宿家庭",
+     "👨‍👩‍👧"
+    ],
+    [
+     "snake its way",
+     "蜿蜒",
+     "🐍"
+    ],
+    [
+     "culture shock",
+     "文化冲击",
+     "🤯"
+    ],
+    [
+     "deal with",
+     "处理……",
+     "🛠️"
+    ],
+    [
+     "feel at home",
+     "感到舒适自在",
+     "🛋️"
+    ]
+   ],
+   "sents": [
+    [
+     "Have you ever been on an exchange trip?",
+     "你参加过交流旅行吗？"
+    ],
+    [
+     "I have never seen Beijing opera before.",
+     "我以前从来没看过京剧。"
+    ],
+    [
+     "Lucy has known her host family for two weeks.",
+     "露西认识她的寄宿家庭已经两周了。"
+    ],
+    [
+     "We have practised tai chi since last Monday.",
+     "从上周一起，我们一直在练太极拳。"
+    ],
+    [
+     "He hasn't learnt to use chopsticks yet.",
+     "他还没学会用筷子。"
+    ],
+    [
+     "The exchange trip has made me more independent.",
+     "这次交流旅行让我变得更独立了。"
+    ],
+    [
+     "The exchange students have taken a tour of Echo Island.",
+     "交流生们已经游览过回声岛了。"
+    ],
+    [
+     "In the honeymoon phase, everything feels exciting.",
+     "在蜜月期，一切都让人感到兴奋。"
+    ],
+    [
+     "A new situation can make you feel confused.",
+     "新的情况可能会让你感到迷惑。"
+    ],
+    [
+     "In an unfamiliar place, some students feel lonely.",
+     "在陌生的地方，有些学生会感到孤独。"
+    ],
+    [
+     "Speaking two languages helps you understand a foreign culture.",
+     "会说两种语言能帮你理解外国文化。"
+    ],
+    [
+     "Talking to friends can help you deal with culture shock.",
+     "和朋友聊天能帮你应对文化冲击。"
+    ],
+    [
+     "My host family made me feel at home.",
+     "寄宿家庭让我感觉像在家一样自在。"
+    ],
+    [
+     "I was nervous because I didn't know what to expect.",
+     "我很紧张，因为我不知道会遇到什么。"
+    ],
+    [
+     "I am grateful for your kind help during my stay.",
+     "我很感激你在我逗留期间的热心帮助。"
+    ],
+    [
+     "A little river snakes its way through the village.",
+     "一条小河蜿蜒流过村庄。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Have you ever been to Beijing?",
+     "Yes, I have. I went there last summer.",
+     [
+      "Yes, I do. I go there every summer.",
+      "No, I haven't. I went there last summer."
+     ]
+    ],
+    [
+     "Have you finished your thank-you email yet?",
+     "Not yet. I'm still writing it.",
+     [
+      "Yes, I'm still writing it.",
+      "Not yet. I sent it yesterday."
+     ]
+    ],
+    [
+     "How long have you known your exchange partner?",
+     "I have known her since last May.",
+     [
+      "I met her at the school gate.",
+      "She is in Grade Eight now."
+     ]
+    ],
+    [
+     "Have you learnt to use chopsticks yet?",
+     "Yes, I have already learnt to use them.",
+     [
+      "Yes, I have already learnt to swim.",
+      "Yes, I haven't learnt to use them yet."
+     ]
+    ],
+    [
+     "How long have you practised tai chi?",
+     "I have practised it for three years.",
+     [
+      "I practise it in the park.",
+      "I practised it with my grandpa."
+     ]
+    ],
+    [
+     "Has your exchange partner ever tried hot pot?",
+     "No, she has never tried it before.",
+     [
+      "Yes, she has never tried it before.",
+      "No, she eats it every weekend."
+     ]
+    ],
+    [
+     "How did you feel before the exchange trip?",
+     "I felt anxious, but also excited.",
+     [
+      "I will feel anxious, but also excited.",
+      "I went there by plane."
+     ]
+    ],
+    [
+     "Why do people feel homesick in a foreign country?",
+     "Because they miss their family and friends.",
+     [
+      "Because they are with their family.",
+      "Because they enjoy their new life there."
+     ]
+    ],
+    [
+     "I feel lonely on Echo Island. What can I do?",
+     "Talk to your host family or your friends.",
+     [
+      "Yes, I felt lonely yesterday.",
+      "Because you are very lonely."
+     ]
+    ],
+    [
+     "What is the honeymoon phase like?",
+     "Everything feels new and exciting.",
+     [
+      "You feel homesick and lonely.",
+      "It comes after the adaptation phase."
+     ]
+    ],
+    [
+     "How can I deal with culture shock?",
+     "Try to accept the differences and make friends.",
+     [
+      "Yes, I can deal with it.",
+      "It happened to me last year."
+     ]
+    ],
+    [
+     "What is it like to experience a new culture?",
+     "It is exciting, but sometimes it is hard.",
+     [
+      "I experienced it in Beijing last year.",
+      "Yes, I have experienced it before."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Grandma Hilda",
+    "zh": "寄宿奶奶希尔达",
+    "topic": "The benefits of an exchange trip",
+    "topicZh": "交流之旅的收获",
+    "persona": "You are Grandma Hilda, a warm and cheerful grandmother on Echo Island who has hosted exchange students for twenty years. You are making a welcome brochure for the new exchange students, so you want to hear what the student has tried and what an exchange trip can teach young people.",
+    "goal": "The student tells Grandma Hilda two things he or she has done or has never done, using the present perfect (for example 'I have never seen Beijing opera' or 'I have already learnt tai chi'), and gives two benefits of an exchange trip, such as becoming more independent or making foreign friends, for her welcome brochure.",
+    "goalZh": "用现在完成时说两件你做过或从没做过的事（比如 I have never seen Beijing opera），再说出交流之旅的两个好处（比如变得更独立、交到外国朋友），帮希尔达奶奶写欢迎手册。",
+    "opener": "Hello, dear! I'm Grandma Hilda. Have you ever tried tai chi?",
+    "words": [
+     "Have you ever tried",
+     "I have never",
+     "I have already",
+     "host family",
+     "feel at home",
+     "more independent",
+     "deal with culture shock",
+     "make foreign friends"
+    ],
+    "look": "granny",
+    "voice": "Serena",
+    "voiceZh": "慈祥的奶奶"
+   }
+  },
+  {
+   "n": 6,
+   "en": "Wisdom counts",
+   "zh": "智慧的力量",
+   "icon": "🏺",
+   "color": "#A65A1F",
+   "key": "What can we learn from ancient stories?",
+   "grammar": {
+    "title": "现在完成时与一般过去时",
+    "tip": "现在完成时（have / has + 过去分词）说到现在为止的经历或结果，不说具体的过去时间，常和 ever、never、just、yet 连用：Have you ever read this story? 一般过去时说过去某个时间发生的事，常带 yesterday、last week、at midnight，或用 When 来问：I read it last week. 记住：句子里有具体的过去时间，或者用 When 提问，就用一般过去时；注意不规则变化，如 beat → beat → beaten，hide → hid → hidden。"
+   },
+   "boss": {
+    "emoji": "🐴",
+    "name": "木马精灵",
+    "hello": "Neigh! I'm Oakhoof, a wooden horse spirit. Have you ever heard my story?"
+   },
+   "words": [
+    [
+     "author",
+     "作者；作家",
+     "✍️"
+    ],
+    [
+     "remains",
+     "遗迹；遗址",
+     "🏛️"
+    ],
+    [
+     "locate",
+     "把……安置在",
+     "📍"
+    ],
+    [
+     "soldier",
+     "士兵",
+     "🪖"
+    ],
+    [
+     "captain",
+     "首领；领导者",
+     "🎖️"
+    ],
+    [
+     "empty",
+     "空的",
+     "🈳"
+    ],
+    [
+     "victory",
+     "胜利",
+     "🏆"
+    ],
+    [
+     "joke",
+     "笑话；玩笑",
+     "😂"
+    ],
+    [
+     "midnight",
+     "午夜",
+     "🕛"
+    ],
+    [
+     "except",
+     "除……之外",
+     "➖"
+    ],
+    [
+     "hide",
+     "藏；隐蔽",
+     "🙈"
+    ],
+    [
+     "secretly",
+     "秘密地",
+     "🤫"
+    ],
+    [
+     "enter",
+     "进入；进来",
+     "🚪"
+    ],
+    [
+     "succeed",
+     "达到目的；成功",
+     "🎯"
+    ],
+    [
+     "trick",
+     "诡计",
+     "🪤"
+    ],
+    [
+     "fight",
+     "打仗；战斗",
+     "⚔️"
+    ],
+    [
+     "beat",
+     "打败；敲打",
+     "🥊"
+    ],
+    [
+     "pretend",
+     "假装",
+     "🎭"
+    ],
+    [
+     "enemy",
+     "敌人",
+     "🦹"
+    ],
+    [
+     "fail",
+     "失败；未能做到",
+     "❌"
+    ],
+    [
+     "therefore",
+     "因此；所以",
+     "➡️"
+    ],
+    [
+     "within",
+     "在……之内",
+     "⏱️"
+    ],
+    [
+     "fill",
+     "把……装满",
+     "🪣"
+    ],
+    [
+     "towards",
+     "向；朝着",
+     "🧭"
+    ],
+    [
+     "attack",
+     "袭击；攻击",
+     "💥"
+    ],
+    [
+     "fog",
+     "雾",
+     "🌫️"
+    ],
+    [
+     "make jokes about",
+     "开……的玩笑",
+     "🤭"
+    ],
+    [
+     "succeed in",
+     "在……方面成功",
+     "🥇"
+    ],
+    [
+     "be tired of",
+     "厌烦；厌倦",
+     "😩"
+    ],
+    [
+     "go on board",
+     "上船",
+     "🚢"
+    ],
+    [
+     "be jealous of",
+     "嫉妒",
+     "😒"
+    ],
+    [
+     "be full of",
+     "满是；充满着",
+     "🈵"
+    ]
+   ],
+   "sents": [
+    [
+     "The Greeks fought against Troy for ten years.",
+     "希腊人和特洛伊打了十年仗。"
+    ],
+    [
+     "Both sides were tired of the long war.",
+     "双方都厌倦了这场漫长的战争。"
+    ],
+    [
+     "The captain filled the horse with his best soldiers.",
+     "首领在木马里装满了他最精锐的士兵。"
+    ],
+    [
+     "Look! The Greek soldiers have just gone on board their ships.",
+     "看！希腊士兵刚刚登上了他们的船。"
+    ],
+    [
+     "The Greeks pretended to go home by sea.",
+     "希腊人假装走海路回家。"
+    ],
+    [
+     "The beach was empty except for a huge wooden horse.",
+     "海滩上空荡荡的，只剩下一匹巨大的木马。"
+    ],
+    [
+     "The Greek soldiers won a great victory over Troy.",
+     "希腊士兵大胜特洛伊。"
+    ],
+    [
+     "The remains of Troy are located in Turkey.",
+     "特洛伊古城的遗址位于土耳其。"
+    ],
+    [
+     "Have you ever visited the remains of an ancient city?",
+     "你参观过古城的遗址吗？"
+    ],
+    [
+     "When did the author write this famous story?",
+     "作者是什么时候写下这个著名故事的？"
+    ],
+    [
+     "Zhuge Liang's boats were hidden by the thick fog.",
+     "诸葛亮的船被浓雾遮住了。"
+    ],
+    [
+     "Zhuge Liang's straw boats were full of arrows.",
+     "诸葛亮的草船上插满了箭。"
+    ],
+    [
+     "Have you ever been jealous of a friend?",
+     "你曾经嫉妒过朋友吗？"
+    ],
+    [
+     "I have never played a trick on my friends.",
+     "我从来没有捉弄过我的朋友。"
+    ],
+    [
+     "We shouldn't make jokes about other people's mistakes.",
+     "我们不应该拿别人的错误开玩笑。"
+    ],
+    [
+     "Our class has succeeded in performing a short play.",
+     "我们班成功地表演了一出短剧。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Have you ever read the story of the Trojan Horse?",
+     "Yes, I have. I read it last term.",
+     [
+      "Yes, I do. I read it last term.",
+      "No, I haven't. I read it last term."
+     ]
+    ],
+    [
+     "When did the Greeks enter the city?",
+     "They entered it at midnight.",
+     [
+      "They have entered it twice.",
+      "They entered it very quietly."
+     ]
+    ],
+    [
+     "Have the Greeks left the beach yet?",
+     "Yes, they have. The beach is empty now.",
+     [
+      "Yes, they did. The beach is empty now.",
+      "No, they haven't. The beach is empty now."
+     ]
+    ],
+    [
+     "Why did the people of Troy take the horse into the city?",
+     "They thought it was a gift.",
+     [
+      "They knew it was a trick.",
+      "They knew the soldiers were inside."
+     ]
+    ],
+    [
+     "Were the people of Troy ready for the attack?",
+     "No, they weren't. They were all asleep.",
+     [
+      "Yes, they were. They were all asleep.",
+      "No, they aren't. They are all asleep."
+     ]
+    ],
+    [
+     "What did the soldiers do after they climbed out of the horse?",
+     "They secretly opened the city gates.",
+     [
+      "They secretly went back to sleep.",
+      "They secretly sailed home to Greece."
+     ]
+    ],
+    [
+     "Did the Greeks succeed in the end?",
+     "Yes, they did. Their trick worked.",
+     [
+      "Yes, they did. Their trick failed.",
+      "Yes, they have. Their trick works."
+     ]
+    ],
+    [
+     "How did Zhuge Liang get so many arrows?",
+     "He borrowed them from his enemy.",
+     [
+      "He bought them from a shop.",
+      "He made them all by himself."
+     ]
+    ],
+    [
+     "The enemy couldn't see anything in the fog. What did they do?",
+     "They shot arrows towards the sound of the drums.",
+     [
+      "They rowed out to fight in the fog.",
+      "They sailed away towards their homes."
+     ]
+    ],
+    [
+     "Have you finished your story about wisdom yet?",
+     "Not yet. I'll finish it within a week.",
+     [
+      "Yes, I have. I'll finish it within a week.",
+      "Not yet. I finished it last night."
+     ]
+    ],
+    [
+     "Have you ever beaten Leo in a monster battle?",
+     "Yes, I have. I beat him last week.",
+     [
+      "No, I haven't. I beat him last week.",
+      "Yes, I have. I have never beaten him."
+     ]
+    ],
+    [
+     "What can we learn from ancient stories?",
+     "We can learn to solve problems with wisdom.",
+     [
+      "We can learn to give up easily.",
+      "We can learn to make fun of others."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Mr Hart",
+    "zh": "戏剧老师哈特",
+    "topic": "Acting out an ancient story",
+    "topicZh": "表演古代故事",
+    "persona": "You are Mr Hart, the friendly drama teacher at the Echo Island school. The school is putting on a short play of a famous ancient story, and you are choosing the story and the actors, so you want to hear which story the student knows and what it teaches about wisdom.",
+    "goal": "The student names an ancient story they would like to act out (for example the Trojan Horse or borrowing arrows in the fog), tells Mr Hart two things that happened in it using the simple past, chooses a role to play, and says one thing we can learn from the story about wisdom.",
+    "goalZh": "选一个想表演的古代故事（比如特洛伊木马或草船借箭），用一般过去时讲出故事里发生的两件事，选一个想演的角色，再说出这个故事教给我们的一点智慧。",
+    "opener": "Hello! I'm Mr Hart, the drama teacher. Have you ever acted in a play?",
+    "words": [
+     "Have you ever read",
+     "pretended to go home",
+     "hid inside the horse",
+     "at midnight",
+     "won a great victory",
+     "borrowed arrows from the enemy",
+     "succeed in",
+     "We can learn to"
+    ],
+    "look": "teacher",
+    "voice": "Raymond",
+    "voiceZh": "爽朗的叔叔"
+   }
+  },
+  {
+   "n": 7,
+   "en": "The secret of memory",
+   "zh": "记忆的秘密",
+   "icon": "🧠",
+   "color": "#7B3FB0",
+   "key": "What does it take to remember something?",
+   "grammar": {
+    "title": "if 条件句（二）与 unless",
+    "tip": "if 那半句用一般现在时，另一半可以用 will、can、may 或祈使句；说一般规律时，两半都用一般现在时：If you are stressed, you tend to forget things. unless 的意思是「除非；如果不」，等于 if ... not，所以 unless 那半句里不再加 not：Unless you repeat a word, you will forget it. = If you don't repeat a word, you will forget it."
+   },
+   "boss": {
+    "emoji": "🐘",
+    "name": "过目不忘象",
+    "hello": "I'm Ellie. Elephants never forget. Unless you practise, you can't beat me!"
+   },
+   "words": [
+    [
+     "regularly",
+     "有规律地",
+     "📅"
+    ],
+    [
+     "repeat",
+     "重复",
+     "🔁"
+    ],
+    [
+     "note",
+     "笔记；记录",
+     "📝"
+    ],
+    [
+     "visual",
+     "视觉的",
+     "👁️"
+    ],
+    [
+     "mentally",
+     "精神上",
+     "🧠"
+    ],
+    [
+     "link",
+     "联系；相联系",
+     "🔗"
+    ],
+    [
+     "list",
+     "清单",
+     "📋"
+    ],
+    [
+     "especially",
+     "尤其；特别",
+     "👉"
+    ],
+    [
+     "diet",
+     "日常饮食",
+     "🥗"
+    ],
+    [
+     "maintain",
+     "维持；保持",
+     "⚖️"
+    ],
+    [
+     "nut",
+     "坚果",
+     "🥜"
+    ],
+    [
+     "relax",
+     "放松；休息",
+     "🧘"
+    ],
+    [
+     "stressed",
+     "焦虑不安的",
+     "😫"
+    ],
+    [
+     "tend",
+     "往往会",
+     "🔄"
+    ],
+    [
+     "normal",
+     "正常的",
+     "👌"
+    ],
+    [
+     "loss",
+     "丧失；损失",
+     "📉"
+    ],
+    [
+     "fork",
+     "餐叉",
+     "🍴"
+    ],
+    [
+     "onion",
+     "洋葱",
+     "🧅"
+    ],
+    [
+     "ant",
+     "蚂蚁",
+     "🐜"
+    ],
+    [
+     "context",
+     "语境；上下文",
+     "🧩"
+    ],
+    [
+     "image",
+     "图像",
+     "🖼️"
+    ],
+    [
+     "sense",
+     "感官",
+     "👂"
+    ],
+    [
+     "summary",
+     "总结；概括",
+     "📑"
+    ],
+    [
+     "contain",
+     "包含；含有",
+     "📦"
+    ],
+    [
+     "particular",
+     "特定的",
+     "🎯"
+    ],
+    [
+     "chemistry",
+     "化学；化学组成",
+     "🧪"
+    ],
+    [
+     "flash card",
+     "识字卡片",
+     "🗂️"
+    ],
+    [
+     "make a point of doing something",
+     "特意做某事",
+     "📌"
+    ],
+    [
+     "last but not least",
+     "最后但同样重要的",
+     "🏁"
+    ],
+    [
+     "natural disaster",
+     "自然灾害",
+     "🌪️"
+    ],
+    [
+     "figure out",
+     "弄懂；弄清楚",
+     "💡"
+    ]
+   ],
+   "sents": [
+    [
+     "Flash cards help me remember new English words.",
+     "识字卡片帮我记住英语新单词。"
+    ],
+    [
+     "If you want to remember something, make a note of it.",
+     "如果你想记住某件事，就把它记下来。"
+    ],
+    [
+     "If you want to maintain a good memory, exercise every day.",
+     "如果你想保持良好的记忆力，就每天锻炼身体吧。"
+    ],
+    [
+     "If you learn words in context, they will stay in your memory.",
+     "如果你在语境中学单词，它们就会留在你的记忆里。"
+    ],
+    [
+     "Unless you repeat a new word, you will forget it.",
+     "除非你重复一个新单词，否则你会忘记它。"
+    ],
+    [
+     "Write a short summary if you want to remember the lesson.",
+     "如果你想记住这节课的内容，就写一份简短的总结。"
+    ],
+    [
+     "If you count a tree's rings, you can figure out its age.",
+     "如果你数一数树的年轮，就能弄清楚它的年龄。"
+    ],
+    [
+     "If you do not make a list, you may forget the onions.",
+     "如果你不列个清单，可能就会忘了买洋葱。"
+    ],
+    [
+     "Stressed students tend to forget things.",
+     "焦虑不安的学生往往会忘事。"
+    ],
+    [
+     "Use all your senses when you learn new things.",
+     "学习新东西时，要调动你所有的感官。"
+    ],
+    [
+     "Nuts are an important part of a healthy diet.",
+     "坚果是健康饮食的重要组成部分。"
+    ],
+    [
+     "Colourful images are useful for visual learners.",
+     "色彩鲜艳的图像对视觉型学习者很有用。"
+    ],
+    [
+     "I make a point of reviewing my notes.",
+     "我会特意复习自己的笔记。"
+    ],
+    [
+     "Tree rings contain information about natural disasters.",
+     "树木年轮里含有关于自然灾害的信息。"
+    ],
+    [
+     "Each tree ring tells us about a particular year.",
+     "每一圈年轮都能告诉我们某个特定年份的情况。"
+    ],
+    [
+     "Last but not least, get enough sleep.",
+     "最后但同样重要的是，要保证充足的睡眠。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "What can scientists learn from the chemistry of tree rings?",
+     "They can learn about the weather in the past.",
+     [
+      "They planted these trees in the park last spring.",
+      "The rings are round and dark brown."
+     ]
+    ],
+    [
+     "What will happen if you don't review your notes?",
+     "I will forget most of the lesson.",
+     [
+      "My notes are in my schoolbag.",
+      "I took notes in my English class."
+     ]
+    ],
+    [
+     "Will my monster remember its new skill?",
+     "It will forget unless you practise with it regularly.",
+     [
+      "Its new skill is really cool.",
+      "It is sleeping in its little house right now."
+     ]
+    ],
+    [
+     "What should I do if I feel stressed before a test?",
+     "Take a deep breath and try to relax.",
+     [
+      "I felt very stressed before the last test.",
+      "The test is on Monday morning."
+     ]
+    ],
+    [
+     "If you forget a word, what do you do?",
+     "I look it up and repeat it.",
+     [
+      "I forgot to bring my homework today.",
+      "I learned this word in Grade Seven."
+     ]
+    ],
+    [
+     "What's the best way to remember a shopping list?",
+     "Link each thing to a funny picture.",
+     [
+      "The shop near my home opens at nine o'clock.",
+      "I bought some onions there."
+     ]
+    ],
+    [
+     "Can you remember the three things in the picture?",
+     "Yes, a fork, an onion and an ant.",
+     [
+      "Yes, I took the picture myself.",
+      "No, the picture is on the classroom wall."
+     ]
+    ],
+    [
+     "Is it normal to forget things sometimes?",
+     "Yes, everyone forgets things sometimes.",
+     [
+      "Yes, it is a normal school.",
+      "No, I left them at home."
+     ]
+    ],
+    [
+     "If I want a better memory, what should I eat?",
+     "Nuts are especially good for your brain.",
+     [
+      "I ate an apple this morning.",
+      "My memory is better than yours."
+     ]
+    ],
+    [
+     "My grandpa is worried about memory loss. What can he do?",
+     "He can read books and do puzzles every day.",
+     [
+      "He can remember my birthday.",
+      "He is seventy years old and lives with us."
+     ]
+    ],
+    [
+     "What does it take to remember something?",
+     "It takes practice and a good method.",
+     [
+      "It takes ten minutes by bus.",
+      "I remember my first teacher."
+     ]
+    ],
+    [
+     "What happens if you do not sleep enough?",
+     "I feel mentally tired the next day.",
+     [
+      "I sleep for eight hours a night.",
+      "I went to bed at ten last night."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Doctor Maya",
+    "zh": "脑科学家玛雅博士",
+    "topic": "Tips for remembering English words",
+    "topicZh": "记英语单词的妙招",
+    "persona": "You are Doctor Maya, a friendly brain scientist who runs the memory lab at the school on Echo Island. You are collecting students' best tricks for remembering English words, and you love testing new memory techniques.",
+    "goal": "Tell Doctor Maya at least two ways you remember new English words and why they help, and say at least one sentence with if or unless, such as Unless I repeat a word, I forget it.",
+    "goalZh": "告诉玛雅博士你记英语单词的至少两个方法，以及它们为什么有用；并且至少说一句带 if 或 unless 的句子，例如 Unless I repeat a word, I forget it.",
+    "opener": "Hi, I'm Doctor Maya. I study memory. How do you remember new words?",
+    "words": [
+     "I use flash cards",
+     "I repeat them regularly",
+     "learn words in context",
+     "link the word to an image",
+     "If I don't review, I forget",
+     "Unless I practise, I forget",
+     "I make a point of",
+     "last but not least"
+    ],
+    "look": "prof",
+    "voice": "Jennifer",
+    "voiceZh": "亲切的姐姐"
+   }
+  },
+  {
+   "n": 8,
+   "en": "Pets and us",
+   "zh": "宠物与我们",
+   "icon": "🐾",
+   "color": "#B4572E",
+   "key": "Why do people keep pets?",
+   "grammar": {
+    "title": "副词及副词的比较级和最高级",
+    "tip": "副词说明动作做得“怎么样”，多数由形容词加 -ly 变来（quick→quickly，gentle→gently，happy→happily），good 变成 well，fast、hard、early、late 形式不变。两者比较用比较级 + than：My dog runs faster than my cat. 三者及以上用最高级：Which pet learns tricks most quickly? 变化规则：fast、hard、early、late 加 -er / -est（faster, earlier, earliest）；由形容词加 -ly 变来的副词前面加 more / most（more gently, most quickly）；well→better→best。"
+   },
+   "boss": {
+    "emoji": "🦜",
+    "name": "学舌鹦鹉",
+    "hello": "I'm Kiko. I learn words faster than you! Why do people keep pets?"
+   },
+   "words": [
+    [
+     "attack",
+     "攻击；袭击",
+     "⚔️"
+    ],
+    [
+     "faithful",
+     "忠诚的",
+     "🐕"
+    ],
+    [
+     "hold",
+     "抱着；拿着",
+     "🤲"
+    ],
+    [
+     "responsible",
+     "负责的；可信赖的",
+     "👍"
+    ],
+    [
+     "awake",
+     "醒着的",
+     "👀"
+    ],
+    [
+     "flat",
+     "公寓",
+     "🏢"
+    ],
+    [
+     "choice",
+     "选择",
+     "🤔"
+    ],
+    [
+     "advise",
+     "建议；劝告",
+     "💡"
+    ],
+    [
+     "cause",
+     "引起；导致",
+     "💥"
+    ],
+    [
+     "complain",
+     "抱怨；投诉",
+     "😤"
+    ],
+    [
+     "litter",
+     "猫砂",
+     "🐈"
+    ],
+    [
+     "relieve",
+     "方便；解手",
+     "🚽"
+    ],
+    [
+     "unlikely",
+     "不大可能的",
+     "🙅"
+    ],
+    [
+     "indoors",
+     "在室内",
+     "🏠"
+    ],
+    [
+     "magical",
+     "有魔力的",
+     "🪄"
+    ],
+    [
+     "wealth",
+     "财富",
+     "💰"
+    ],
+    [
+     "queen",
+     "女王",
+     "👑"
+    ],
+    [
+     "servant",
+     "仆人",
+     "🤵"
+    ],
+    [
+     "pride",
+     "自豪；骄傲",
+     "🏅"
+    ],
+    [
+     "among",
+     "在……之中",
+     "👥"
+    ],
+    [
+     "relationship",
+     "关系",
+     "🔗"
+    ],
+    [
+     "grow up",
+     "长大",
+     "🌱"
+    ],
+    [
+     "care for",
+     "照顾；照料",
+     "🤗"
+    ],
+    [
+     "in short",
+     "总之",
+     "📌"
+    ],
+    [
+     "have no choice but to do",
+     "只好；不得不",
+     "😓"
+    ],
+    [
+     "run free",
+     "自由奔跑",
+     "🏃"
+    ],
+    [
+     "lie around",
+     "懒散度日",
+     "🛋️"
+    ],
+    [
+     "complain about",
+     "抱怨某事",
+     "🗯️"
+    ],
+    [
+     "in addition",
+     "此外",
+     "➕"
+    ],
+    [
+     "catch the eye of somebody",
+     "引起某人注意",
+     "🌟"
+    ]
+   ],
+   "sents": [
+    [
+     "My grandpa takes great pride in his clever parrot.",
+     "爷爷为他那只聪明的鹦鹉感到非常自豪。"
+    ],
+    [
+     "Most pet dogs are unlikely to attack people.",
+     "大多数宠物狗不太可能攻击人。"
+    ],
+    [
+     "The puppy grew up faster than we expected.",
+     "小狗长得比我们预想的还快。"
+    ],
+    [
+     "My cat stays awake later than I do.",
+     "我的猫比我睡得还晚。"
+    ],
+    [
+     "Responsible owners treat their pets well.",
+     "负责任的主人会好好对待自己的宠物。"
+    ],
+    [
+     "You should hold the kitten more gently.",
+     "你应该把小猫抱得再轻柔一点。"
+    ],
+    [
+     "Which pet causes the most trouble?",
+     "哪种宠物惹的麻烦最多？"
+    ],
+    [
+     "Our dog barked so loudly that our neighbour complained.",
+     "我们的狗叫得太响，邻居都来投诉了。"
+    ],
+    [
+     "Cats relieve themselves in a litter box.",
+     "猫在猫砂盆里方便。"
+    ],
+    [
+     "I advise you to keep your cat indoors.",
+     "我建议你把猫养在室内。"
+    ],
+    [
+     "In addition, young parrots learn words faster than old ones.",
+     "此外，小鹦鹉学单词比老鹦鹉快。"
+    ],
+    [
+     "In short, dogs need space to run free.",
+     "总之，狗需要能自由奔跑的空间。"
+    ],
+    [
+     "Ancient Egyptians believed cats were magical.",
+     "古埃及人认为猫有魔力。"
+    ],
+    [
+     "Servants cared for the queen's dogs.",
+     "仆人们照料着女王的狗。"
+    ],
+    [
+     "My dog and I have a very close relationship.",
+     "我和我的狗关系非常亲密。"
+    ],
+    [
+     "The colourful parrot caught the eye of every visitor.",
+     "那只色彩鲜艳的鹦鹉吸引了每位参观者的目光。"
+    ]
+   ],
+   "dlgs": [
+    [
+     "Why do people keep pets?",
+     "Because pets are faithful friends and make them happy.",
+     [
+      "They usually keep cats and dogs at home.",
+      "They often keep them in small flats."
+     ]
+    ],
+    [
+     "Which runs faster, your dog or your cat?",
+     "My dog runs much faster.",
+     [
+      "My dog is much bigger.",
+      "Yes, my dog runs fast."
+     ]
+    ],
+    [
+     "How well can your parrot talk now?",
+     "It can talk quite well now.",
+     [
+      "It can talk to my grandma.",
+      "It talks in the morning."
+     ]
+    ],
+    [
+     "How should I hold my kitten?",
+     "Hold it gently with both hands.",
+     [
+      "Hold it tightly by its tail.",
+      "It sleeps quietly in its bed."
+     ]
+    ],
+    [
+     "Which pet learns tricks most quickly?",
+     "I think dogs learn them most quickly.",
+     [
+      "I think dogs like them the most.",
+      "I think dogs sleep the longest."
+     ]
+    ],
+    [
+     "My neighbour complains about my dog barking. What can I do?",
+     "Walk it more often so it gets tired.",
+     [
+      "Wash it more often so it smells nice.",
+      "Feed it more so it grows faster."
+     ]
+    ],
+    [
+     "My cat doesn't use its litter box. Any advice?",
+     "Keep the litter box clean every day.",
+     [
+      "Put the cat food in the litter box.",
+      "Give your cat a bath every day."
+     ]
+    ],
+    [
+     "Is a big dog a good choice for a small flat?",
+     "Not really. Big dogs need space to run free.",
+     [
+      "Yes, I bought it a new bowl.",
+      "It's on the fifth floor."
+     ]
+    ],
+    [
+     "Why did rich people long ago keep rare pets?",
+     "They wanted to show off their wealth.",
+     [
+      "They kept them in big gardens.",
+      "Rare pets were very cheap then."
+     ]
+    ],
+    [
+     "Which puppy caught your eye at the animal centre?",
+     "The small brown one caught my eye.",
+     [
+      "The animal centre opens at nine.",
+      "It caught a cold last week."
+     ]
+    ],
+    [
+     "Why is your dog lying around today?",
+     "It's raining, so it has no choice but to stay indoors.",
+     [
+      "It's sunny, so it can run free outside.",
+      "It's lying on the rug in the hall."
+     ]
+    ],
+    [
+     "Among the three baby monsters, which one runs the fastest?",
+     "The blue one runs the fastest.",
+     [
+      "The blue one is the biggest.",
+      "The blue one eats the most."
+     ]
+    ]
+   ],
+   "talk": {
+    "name": "Doctor Mabel",
+    "zh": "兽医梅布尔",
+    "topic": "Your perfect pet",
+    "topicZh": "说说你心目中的完美宠物",
+    "persona": "You are Doctor Mabel, a warm and patient vet at the animal clinic on Echo Island. You are making a pet care booklet for the island school, so you want to hear which pet the player has or would like, and how they would care for it.",
+    "goal": "Tell Doctor Mabel about your perfect pet: what it is, why it is a good choice for your home, how you will care for it, and one reason people keep pets.",
+    "goalZh": "向梅布尔医生介绍你心目中的完美宠物：是什么动物、为什么适合你家、你会怎样照顾它，再说一个人们养宠物的理由。",
+    "opener": "Hello, I'm Doctor Mabel, the island vet. Do you have a pet?",
+    "words": [
+     "a good choice for",
+     "care for",
+     "walk it every day",
+     "run free",
+     "stay indoors",
+     "faithful",
+     "more quickly than",
+     "in short"
+    ],
+    "look": "nurse",
+    "voice": "Tina",
+    "voiceZh": "甜美的姐姐"
+   }
+  }
+ ]
+}

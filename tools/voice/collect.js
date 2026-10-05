@@ -31,7 +31,7 @@ for (const w of ctx.window.WORLDS) {
 }
 // 课本同步（book.js）：单元单词表、句子、对话、Boss 开场白
 vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'book.js'), 'utf8'), ctx);
-for (const u of (ctx.window.BOOK || { units: [] }).units) {
+for (const u of ((ctx.window.BOOKS || { list: [] }).list).flatMap(b => b.units)) {
   u.words.forEach(x => add(x[0], ['f']));
   u.sents.forEach(x => add(x[0], ['f']));
   u.dlgs.forEach(d => { add(d[0]); add(d[1]); (d[2] || []).forEach(o => add(o)); });

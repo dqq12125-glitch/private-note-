@@ -9,9 +9,10 @@
 
 | 文件 | 内容 |
 | --- | --- |
-| `index.html` | 页面骨架，按顺序加载 data → cartoon → vendor/three.min.js → dex → monster3d → battle3d → monsters → people → maps → world → world3d → story → game |
+| `index.html` | 页面骨架，按顺序加载 data → book → cartoon → vendor/three.min.js → dex → monster3d → battle3d → monsters → people → maps → world → world3d → story → isles → talk-npcs → talk-core → talk → game |
 | `style.css` | 全部样式（单一明亮主题，颜色变量在 `:root`） |
 | `data.js` | `window.WORLDS`：13 个话题小镇的单词/句子/对话；`window.SCENES`：13 段对话动画台词 |
+| `book.js` | **课本同步** `window.BOOKS`：沪教版（上海教育出版社 2024 新教材）初中英语七上、七下、八上、八下、九上（各 8 单元）、九下（新书 2027 春才出，先用旧版 6 单元）。每单元 = 书后单元词汇表的全部单词短语 + 16 句 + 12 段对话 + 语法提示 + Boss，格式和 `WORLDS` 一样。**由 `node tools/book/build.js` 从 `tools/book/<册>.json` 生成**（同时把每单元的 AI 聊天角色写进 `talk-npcs.js` 的 BEGIN/END 之间），不要手改。词表是对着课本扫描页两人独立转写再核对的；句子对话是子代理按单元话题/语法新写、两轮审校的（不抄课文）。`BOOKS.start` = 弟弟上初一那年（2026），按日期猜现在学到哪册哪单元 |
 | `cartoon.js` | `window.Cartoon`：SVG 画的对话动画角色、场景背景、16 种怪兽 |
 | `dex.js` | `window.DEX`：**386 只原创怪兽**（`list` / `byId`）、17 种属性和克制表 `eff()`、每属性 3 个招式 `MOVES`、7 种进化石 `STONES`。怪兽列表由 `node tools/build-dex.js` 从 `tools/dex/*.json` 生成（会检查编号、重名、进化链、参数），数据规格见 `tools/DEX_SPEC.md` |
 | `monster3d.js` | `window.Mon3D`：怪兽的样子。**默认用发布的会动的模型**（`assets/mon3d/<id>.glb`：蒙皮 + 贴图 + idle/walk/attack/hit/faint 五个动作，`play(R, 名字)` 播动作）：启动时读 `assets/mon3d/index.json`、`assets/mon2d/index.json`（`ready`，最多等 2 秒，读不到就不用），`preload(列表)` 按需下载、同时只下一次、最近用过的留 16 只（多了释放没在用的）；`build(sp)` 模型已下载就用，没有就先用程序拼的模型、后台下载。没有模型的怪兽用程序拼的卡通模型（12 种身体 + 头饰/尾巴/翅膀/花纹/装饰，描边、三阶明暗、眨眼、呼吸、摇尾巴）。异色：模型贴图在 shader 里转色相 150°，2D 图标逐像素转同样的色相。`snapshot()` 给菜单、图鉴、队伍和大地图用：有 2D 图标（`assets/mon2d/<id>.webp`）就用图标，没有就截 3D 图。`?art=proc`（或 `localStorage['echo-art']='proc'`）强制全用程序模型；`?art=blender / gemini / 3d` 是老的样品对比模式。`file://` 打开时读不了资源，全用程序模型（测试就是这样跑的）。预览：`tools/mon3d.html?from=1&to=386` |
@@ -25,9 +26,10 @@
 | `world.js` | `window.EchoWorld`：大地图逻辑——按地图 id 切换、走路、跳台阶、冰面滑行、瀑布、潜水/浮上来、楼梯、机关门、门/洞口/出口、草丛和洞穴遇怪、训练师视线、护士/电脑/店员/馆主/出题人/送礼村民/渡轮、秘传技能、驱怪喷雾、逃生绳、宝可梦式对话框（可以只听不看英文）；2D「流畅模式」渲染器；自动画质 |
 | `world3d.js` | `window.EchoWorld3D`：three.js 的 2.5D 渲染器（地面贴图 + 低多边形树/房子/岩壁 + 随风摆的草丛 + 水面着色器 + 纸片人物 + 移轴景深）。三档画质 high/mid/low |
 | `vendor/three.min.js` | 裁剪过的 three.js（只打包用到的类，含 GLTFLoader + MeshoptDecoder + SkeletonUtils）。要加新的 three 类：改 `tools/three-entry.js`，跑 `npm run build:three` |
-| `talk-npcs.js` / `talk.js` | **和岛民用英语自由聊天（AI 语音）**：`talk-npcs.js` 是岛民名单（人设、音色、对话目标、提示词），游戏和中转服务共用；`talk.js`（`window.EchoTalk`）是首页第三个标签和对话界面——按住说话（16kHz PCM 分块发出）、岛民用自己的音色回答（24kHz PCM 边收边播）、显示双方的话、聊完打星给金币、本机聊天记录 |
+| `talk-npcs.js` / `talk-core.js` / `talk.js` | **和岛民用英语自由聊天（AI 语音）**：`talk-npcs.js` 是岛民名单（8 个岛民 + 每个课本单元一个角色，人设、音色、对话目标），游戏、中转服务、APK 共用；`talk-core.js`（`window.TalkCore` / Node 模块）是对话核心：安全规则和人设 `instructions()`、地图上随便一个人的临时人设、聊完打分的请求和解析、`session()`（游戏消息 ⇄ Qwen-Omni 实时语音事件的翻译、计时、记录）——**中转服务和 APK 直连跑的是同一份**；`talk.js`（`window.EchoTalk`）是首页第三个标签和对话界面——按住说话（16kHz PCM 分块发出）、岛民用自己的音色回答（24kHz PCM 边收边播）、显示双方的话、聊完打星给金币、老师给的「更好的说法」进每日复习、本机聊天记录。APK 里有原生桥 `EchoNative` 时走 `directSocket()` 直连阿里云（装成和中转服务一样的 WebSocket），还提供 `listenOnce()`：录一句交给阿里云 qwen3-asr-flash 识别，给口语题自动打分 |
+| `android/` | **安卓 APK**（弟弟的手机是 REDMI Turbo 5）：全屏 WebView 壳，游戏文件打包时整个复制进 `assets/www`（离线能玩），用 `https://appassets.androidplatform.net` 打开（麦克风、fetch 才能用）；原生桥 `EchoNative`（OkHttp）带着百炼密钥连阿里云实时语音和 HTTPS，只许连 `dashscope.aliyuncs.com`，网页拿不到密钥本身；密钥来源：手机上「设置 → AI 聊天和口语打分」填的（SharedPreferences），或打包时 `echo.properties` 的 `KEY_FILE`。返回键交给 `window.EchoBack`。打包和安装见 `android/README.md`；JDK 17 / Gradle 8.10 / Android SDK 装在 `D:\Claude\tools\android`，模拟器 `echo35` |
 | `server/` | AI 对话中转服务（Node + ws）：保管百炼密钥，按岛民 id 连 Qwen-Omni 实时语音，每天时长上限、家庭口令、对话记录 `/logs`。说明见 `server/README.md`（不在 GitHub Pages 上运行，要单独部署） |
-| `game.js` | 主程序：存档、朗读（TTS + 有道在线兜底）、语音识别与打分、闯关练习（13 岛 × 7 关）、对话动画剧场、每日任务、成就、宠物店、设置（含冒险画面画质）；最后把工具以 `api` 对象交给 MonsterGame / EchoWorld |
+| `game.js` | 主程序：存档、朗读（自然配音 + 有道在线兜底）、语音识别与打分（APK 里用阿里云识别）、闯关练习（📗 课本同步每单元 7 关 + 13 岛 × 7 关；`WX = WORLDS.concat(课本单元)`，课本单元从第 13 号起编号）、**每日复习**（间隔复习 `S.rev`：答错当天复习，复习答对隔 1、2、4、7、15、30 天再来，课本新学的第二天复习一次，AI 聊天里老师改过的句子第二天练；首页「今日复习」卡片）、**冒险出题来源** `src(z)`（按设置有几成换成课本正在学的单元）、对话动画剧场、每日任务（连得上 AI 时每天固定一个「和岛民聊天」任务）、成就、宠物店、设置；最后把工具以 `api` 对象交给 MonsterGame / EchoWorld |
 
 关键约定：
 - 所有按钮用 `data-act="名字"`，由 `game.js` 里的 `ACT` 对象统一处理；monsters.js / world.js 通过 `init()` 返回自己的 actions 合并进去。
@@ -54,6 +56,7 @@
 
 ## 必须遵守的限制
 
+- **孩子的手机是 REDMI Turbo 5**（天玑 8500-Ultra、12+4GB、2756×1268、HyperOS 3），**最终交付是 APK**（`android/`）。家长的要求：孩子要真的能和 AI 用英语对话（不只是背单词），每天有错题本、温故而知新；课本是沪教版，要覆盖整个初中。
 - **用户在中国大陆**：Google 服务（字体、Chrome 语音识别）基本不可用；很多安卓浏览器没有英语 TTS 声音，已用有道在线发音兜底。新功能都要在"没有语音识别"的情况下也能玩（自评模式）。
 - **不能用宝可梦的版权内容**：名字、角色、怪兽、Logo 都不能用，只做"类似的玩法和风格"，怪兽和人物都是原创。
 - **儿童安全**：AI 对话只扮演游戏角色、限定话题、不收集个人信息；对话记录家长可查。
@@ -102,7 +105,7 @@ AI 语音：推荐**火山引擎（豆包）端到端实时语音大模型**（�
 
 ## 已经定下来的
 
-- **孩子的手机：OPPO 安卓，2000 元左右（2026-09-28 家长确认）**。按中端机做：3D 默认"中"画质（像素比 ≤1.5、1024 阴影、移轴景深），开头几秒测帧率，不够就自动降到"省电"（无实时阴影、无后期），WebGL 不可用时退回 2D 流畅模式。OPPO 自带浏览器和微信内置浏览器都没有可用的语音识别，也常常没有英语 TTS 声音——默认按"有道在线发音 + 自评"设计，第 3 阶段用火山引擎补上真正的听说。
+- **孩子的手机：REDMI Turbo 5（2026-10-06 家长拍照确认；之前说的 OPPO 2000 元档作废）**。天玑 8500-Ultra、12+4GB 内存、2756×1268：3D 默认「精美」（WebGL2 + 内存够或 APK 里），开头几秒测帧率，跑不动自动降档，WebGL 不可用时退回 2D 流畅模式。APK 的 WebView 没有能用的浏览器语音识别、也没有 speechSynthesis——朗读靠打包进去的自然配音（没有的句子用有道在线），口语打分靠阿里云识别（listenOnce），没密钥/没网时录音自评。
 
 ## 还没定下来的（开始相关阶段前要问家长）
 
@@ -127,5 +130,6 @@ npm test            # 跑 tests/ 里的端到端测试，截图存到 tests/scre
 - `tests/isle-a.test.js` … `isle-e.test.js`：每组岛的主线剧情、道馆机关、秘传学习器、卡点，外加 2D / 3D 截图；公用工具在 `tests/helpers.js`
 - `tests/battle.test.js`：战斗规则（先后手、睡眠叫醒、换怪兽、辅助招式、学新招忘旧招、学习装置、详情页）
 - `tests/practice.test.js`：闯关练习第 1 关全对，检查三星和回声球奖励
+- `tests/book.test.js`：课本同步（选单元、单元第 1 关通关、老存档迁移）、每日复习的排期（答错当天、答对隔 1/2/4/7… 天、AI 聊天句子进复习）、冒险出题里课本占的比例、聊天页课本角色排序
 - 测试里把发音来源设成在线、口语设成自评，这样不依赖本机声音和麦克风
 - 改完画面要看截图确认；改完逻辑要跑 `npm test`（全部测试都过才提交；岛的测试比较慢，整套大约 1 小时）

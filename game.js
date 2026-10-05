@@ -5,7 +5,9 @@
   const W = window.WORLDS;
   // 课本同步（book.js）：课本的每个单元和小岛一样有单词/句子/对话，接在 13 座岛后面编号（第 NB 号起），
   // 闯关、错题本、冒险出题都用 WX[编号]；只有岛屿才有的东西（馆主、徽章、飞空、对话动画）还是用 W
-  const BOOK = window.BOOK || null, BK = BOOK ? BOOK.units : [], NB = W.length, WX = W.concat(BK);
+  const BOOKS = (window.BOOKS && window.BOOKS.list) || [];
+  const BK = BOOKS.flatMap((b, bi) => b.units.map(u => Object.assign(u, { book: b.id, bshort: b.short, bi })));   // 所有册的单元排成一列
+  const NB = W.length, WX = W.concat(BK);
   const isUnit = wi => wi >= NB;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -98,7 +100,7 @@
       world: window.EchoWorld ? EchoWorld.fresh() : {},
       player: { gender: '', name: '' },
       talk: { log: [], done: {}, days: {} },   // 和岛民聊天（talk.js）：最近的记录、每个岛民最好几星、今天拿过金币的
-      book: { cur: 0, mix: .6, view: 'book' },
+      book: { at: -1, mix: .6, view: 'book', vb: '' },   // 课本同步：正在学的单元（BK 里第几个，-1 = 没选过，按日期猜）、冒险出题里课本占几成、闯关页看课本还是小岛、正在看哪一册
       rev: { items: {}, v: 0 },   // 每日复习（间隔复习）：见 revWrong / revRight / dueList   // 课本同步：正在学第几单元（0 = 还没选，按日期猜）、冒险出题里课本占几成、闯关页先看课本还是小岛
     };
   }
@@ -307,12 +309,25 @@
   const SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
   const FATAL = ['not-allowed', 'service-not-allowed', 'network', 'audio-capture', 'language-not-supported'];
   const canRecord = () => !RT.noRec && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+  // 安卓 APK：WebView 里没有能用的浏览器语音识别 → 有阿里云密钥就录一句交给阿里云识别（talk.js listenOnce），连不上两次就改回录音自评
+  const cloudSR = () => !!(window.EchoTalk && EchoTalk.cloudSR && EchoTalk.cloudSR()) && !RT.cloudBroken;
   function speakMode() {
     if (S.settings.mode === 'self') return 'self';
-    if (!SRC || RT.srBroken) return 'self';
+    if (cloudSR()) return 'sr';
+    if (!SRC || RT.srBroken || window.ECHO_APP) return 'self';
     return 'sr';
   }
   function recognize(onInterim) {
+    if (cloudSR()) {
+      RT.listening = true;
+      return EchoTalk.listenOnce({ onState: onInterim }).then(r => {
+        RT.listening = false;
+        if (r.err === 'network') { RT.cloudFails = (RT.cloudFails || 0) + 1; if (RT.cloudFails >= 2) { RT.cloudBroken = true; toast('网络不好，口语先改成录音自评'); } }
+        else if (r.err === 'not-allowed' || r.err === 'audio-capture') RT.cloudBroken = true;   // 没给麦克风权限：改录音自评（调用的地方会提示）
+        else if (!r.err) RT.cloudFails = 0;
+        return { alts: r.text ? [r.text] : [], err: r.err === 'network' || r.err === 'busy' ? 'no-speech' : r.err };
+      });
+    }
     return new Promise(resolve => {
       let r;
       try { r = new SRC(); } catch (e) { return resolve({ alts: [], err: 'service-not-allowed' }); }
@@ -340,6 +355,7 @@
     });
   }
   function stopListening() {
+    if (window.EchoTalk && EchoTalk.stopListen) EchoTalk.stopListen();
     if (RT.rec) { try { RT.rec.stop(); } catch (e) { /* 忽略 */ } }
     if (RT.mr && RT.recording) { try { RT.mr.stop(); } catch (e) { /* 忽略 */ } }
   }
@@ -709,39 +725,50 @@
     const sc = window.SCENES && window.SCENES[wi], seen = S.scenes[wi];
     const scBtn = sc ? '<button class="scene-btn" data-act="scene" data-w="' + wi + '"><span class="sb-ico">🎬</span><span class="sb-t"><b>对话动画 · ' + esc(sc.title) + '</b><small>' +
       (seen && seen.watched ? '✓ 看过了 · 可以再来跟读、角色扮演' : '先看看这个话题的英语对话怎么说 · 第一次看完 +10 金币') + '</small></span><span class="sb-go">▶</span></button>' : '';
-    return '<section class="world' + (isUnit(wi) ? ' unit' + (w.n === bookCur() ? ' now' : '') : '') + '" id="w' + wi + '" style="--wc:' + w.color + '">' + head + '<div class="path">' + scBtn + nodes + '</div></section>';
+    return '<section class="world' + (isUnit(wi) ? ' unit' + (wi - NB === curIdx() ? ' now' : '') : '') + '" id="w' + wi + '" style="--wc:' + w.color + '">' + head + '<div class="path">' + scBtn + nodes + '</div></section>';
   }
   // ---------- 课本同步 ----------
-  // 正在学第几单元：家长/孩子在闯关页选；没选过就按开学日期猜（9 月 1 日开学，一个单元两周多）
-  function bookCur() {
-    if (!BK.length) return 0;
-    if (S.book.cur) return Math.min(S.book.cur, BK.length);
-    const d = new Date(), y = d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1, days = (d - new Date(y, 8, 1)) / 864e5;
-    return Math.max(1, Math.min(BK.length, 1 + Math.floor(days / 17)));
+  // 正在学哪个单元：家长/孩子在闯关页选；没选过就按日期猜——七上从 BOOKS.start 那年秋天开始，
+  // 秋季学期 9 月到次年 1 月、春季学期 2 月到 8 月，一个学期 8 个单元，一个单元两周多
+  function guessIdx() {
+    const d = new Date(), y = d.getFullYear(), m = d.getMonth() + 1, start = (window.BOOKS && window.BOOKS.start) || y;
+    const sem = Math.max(0, (y - start) * 2 + (m >= 9 ? 0 : m >= 2 ? -1 : -2));
+    const b = BOOKS[Math.min(sem, BOOKS.length - 1)];
+    const s0 = m >= 9 || m < 2 ? new Date(m >= 9 ? y : y - 1, 8, 1) : new Date(y, 1, 20);
+    const n = Math.max(1, Math.min(b.units.length, 1 + Math.floor((d - s0) / 864e5 / 17)));
+    return BK.findIndex(u => u.book === b.id && u.n === n);
   }
+  function curIdx() {
+    if (!BK.length) return -1;
+    return S.book.at >= 0 ? Math.min(S.book.at, BK.length - 1) : guessIdx();
+  }
+  const curUnit = () => BK[curIdx()] || null;
+  const viewBook = () => { const vb = S.book.vb; return BOOKS.find(b => b.id === vb) || BOOKS[(curUnit() || { bi: 0 }).bi]; };
   function unitHead(u, wi, tot) {
-    const now = u.n === bookCur();
-    return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">Unit ' + u.n + (now ? ' · 📍 正在学' : '') + '</div><h2>' + esc(u.en) + ' <small>' + esc(u.zh) + '</small></h2><p class="w-en">' + esc(u.key) + '</p></div>' +
+    const now = wi - NB === curIdx();
+    return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · Unit ' + u.n + (now ? ' · 📍 正在学' : '') + '</div><h2>' + esc(u.en) + ' <small>' + esc(u.zh) + '</small></h2><p class="w-en">' + esc(u.key) + '</p></div>' +
       '<span class="w-stars">★ ' + tot + '/21</span></div>' +
       '<div class="u-bar"><button class="link" data-act="bookGram" data-w="' + wi + '">📐 语法：' + esc(u.grammar.title) + '</button>' +
       (unitTalk(u) ? '<button class="btn small sun" data-act="talk_open" data-npc="' + unitTalk(u).id + '">🗣️ 和 ' + esc(unitTalk(u).name) + ' 聊这个单元</button>' : '') +
-      (now ? '' : '<button class="btn small ghost" data-act="bookCur" data-n="' + u.n + '">设为正在学</button>') + '</div>';
+      (now ? '' : '<button class="btn small ghost" data-act="bookAt" data-i="' + (wi - NB) + '">设为正在学</button>') + '</div>';
   }
   function unitTalk(u) {   // 这个单元的 AI 聊天角色（连不上对话服务就不显示）
     if (!window.EchoTalk || !EchoTalk.relayUrl() || !window.TALK_NPCS) return null;
-    return window.TALK_NPCS.list.find(n => n.unit === u.n && n.book === BOOK.short) || null;
+    return window.TALK_NPCS.byId[u.book + '-u' + u.n] || null;
   }
   function bookNode() {   // 「开始」标在正在学的单元里第一关没拿星的地方
-    const wi = NB + bookCur() - 1;
+    const wi = NB + curIdx();
     for (let li = 0; li < 7; li++) if (isUnlocked(wi, li) && !(S.stars[wi + '-' + li] > 0)) return wi + '-' + li;
     return '';
   }
   function bookHTML() {
-    const cur = bookCur(), u = BK[cur - 1];
-    return '<div class="book-head"><b>📗 ' + esc(BOOK.name) + ' · 课本同步</b>' +
-      '<p>单词和短语就是课本书后的单元词汇表；句子和对话按单元的话题和语法新编，和课堂学的配套。</p>' +
-      '<p>正在学：<b>Unit ' + cur + ' ' + esc(u.en) + '</b>' + (S.book.cur ? '' : '（按日期猜的）') + ' <button class="link" data-act="bookPick">改</button></p></div>' +
-      BK.map((x, j) => worldHTML(x, NB + j, bookNode())).join('');
+    const cu = curUnit(), vb = viewBook();
+    const chips = '<div class="seg books">' + BOOKS.map(b => '<button class="' + (b === vb ? 'on' : '') + '" data-act="bookView" data-b="' + b.id + '">' + esc(b.short) + (b.id === cu.book ? ' 📍' : '') + '</button>').join('') + '</div>';
+    return '<div class="book-head"><b>📗 沪教版初中英语 · 课本同步</b>' +
+      '<p>七年级到九年级六册书，单词和短语就是每册书后的单元词汇表；句子和对话按单元的话题和语法新编，和课堂学的配套。</p>' +
+      '<p>正在学：<b>' + esc(cu.bshort) + ' Unit ' + cu.n + ' ' + esc(cu.en) + '</b>' + (S.book.at >= 0 ? '' : '（按日期猜的）') + ' <button class="link" data-act="bookPick">改</button></p>' + chips +
+      (vb.old ? '<p class="tip">' + esc(vb.short) + '的新教材还没出版（预计 2027 年春季），现在先用旧版教材的单元，新书出来后会换掉。</p>' : '') + '</div>' +
+      BK.map((x, j) => x.book === vb.id ? worldHTML(x, NB + j, bookNode()) : '').join('');
   }
   function renderHome() {
     renderTop();
@@ -1531,6 +1558,10 @@
       '<button class="btn ghost wide" data-act="close">关闭</button>');
   }
   function envHTML() {
+    if (window.ECHO_APP) {   // 安卓 APK：不用讲浏览器的事
+      return '<div class="env">✅ 朗读：自然配音（装在手机里，不用联网）<br>' +
+        (cloudSR() ? '✅ 口语自动打分：说完一句交给阿里云识别（要联网）' : '⚠️ 口语题用「录音 + 自评」；家长在「和岛民聊天 → ⚙️ 设置服务」填好密钥后，就能自动打分、和岛民聊天') + '</div>';
+    }
     const tts = useOnline() ? '✅ 朗读：有道在线发音（需要联网）' : TTS.voices.length ? '✅ 朗读：本机声音 ' + esc(TTS.v ? TTS.v.name : '') : '✅ 朗读：本机声音（没听到声音就在「设置」里换成在线发音）';
     const wx = /MicroMessenger/i.test(navigator.userAgent) ? '<br>📱 你正在微信里打开：点右上角「···」→「在浏览器打开」，录音和语音识别会更稳定。' : '';
     const sr = SRC && !RT.srBroken ? '✅ 支持语音识别，开口会自动打分' : '⚠️ 语音识别不可用，口语题用「录音 + 自评」';
@@ -1553,7 +1584,8 @@
       '</div><small>' + ((st.gfx || 'auto') === 'auto' ? '自动：先用标准画质，手机跑不动会自动降一档' + (st.gfxAuto ? '（现在是「' + ({ high: '精美', mid: '标准', low: '省电', '2d': '2D 流畅' })[st.gfxAuto] + '」）' : '') + '。' : '手机发烫或者卡顿，就选省电或 2D 流畅。') + '</small></div>' +
       (BK.length ? '<div class="set"><label>冒险里的英语题</label><div class="seg">' +
         [[.6, '多出课本'], [.3, '少量课本'], [0, '只用岛上话题']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + n + '</button>').join('') +
-        '</div><small>打怪兽、答村民的题时，有一部分换成课本正在学的单元（Unit ' + bookCur() + '，在闯关页「📗 课本同步」里改）。</small></div>' : '') +
+        '</div><small>打怪兽、答村民的题时，有一部分换成课本正在学的单元（' + esc(curUnit().name) + '，在闯关页「📗 课本同步」里改）。</small></div>' : '') +
+      (window.EchoNative ? '<div class="set"><label>🗣️ AI 聊天和口语打分</label><div class="say-row"><span>' + (EchoTalk.cloudSR() ? '✅ 已连上阿里云' : '⚠️ 还没设置密钥') + '</span><button class="btn small ghost" data-act="talk_cfg">家长设置密钥</button></div><small>用阿里云百炼的 API Key（只存在这台手机里）。设好以后能和岛民用英语聊天，口语题也会自动打分。</small></div>' : '') +
       '<div class="set"><label>音效</label><div class="seg"><button class="' + (st.sfx ? 'on' : '') + '" data-act="sfx" data-v="1">开</button><button class="' + (st.sfx ? '' : 'on') + '" data-act="sfx" data-v="0">关</button></div></div>' +
       '<div class="set"><label>家长 / 老师模式</label><div class="seg"><button class="' + (st.unlockAll ? '' : 'on') + '" data-act="unlock" data-v="0">按顺序解锁</button><button class="' + (st.unlockAll ? 'on' : '') + '" data-act="unlock" data-v="1">全部关卡直接开放</button></div><small>想跟着课本进度直接练某个单元时打开。</small></div>' +
       '<div class="set"><label>清空进度</label><button class="btn small coral" data-act="reset" id="resetbtn">清空全部进度</button><small>星星、金币、宠物都会清零，无法恢复。</small></div>' +
@@ -1562,7 +1594,8 @@
   function introSheet() {
     openModal('<div class="big">🏝️</div><h2>欢迎来到回声岛！</h2>' +
       '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用英语念咒语攻击，听懂对手的英语来防御。收服新怪兽、升级进化，打败 13 个区域的馆主拿徽章。</p>' +
-      '<p><b>📚 闯关练习</b>：13 座岛、每岛 7 关的听说练习，还有对话动画片。每通关一关送回声球，用来收服怪兽。</p>' +
+      '<p><b>📚 闯关练习</b>：📗 课本同步（沪教版七年级到九年级，跟着学校的单元走）和 13 座话题小岛。每通关一关送回声球，用来收服怪兽。</p>' +
+      '<p><b>🗣️ 和岛民聊天</b>：按住话筒，用英语和岛上的人真的聊天；聊完老师打分，说错的句子第二天会出现在 📕 每日复习里。</p>' +
       '<p>🎁 每天 3 个任务，做完开宝箱 · 🔥 每天打一场就算打卡</p>' +
       envHTML() +
       '<div class="row"><button class="btn ghost" data-act="testVoice">🔊 试试声音</button><button class="btn" data-act="introGo" data-focus>出发！</button></div>', { locked: true });
@@ -1573,9 +1606,15 @@
   const ACT = {
     level: t => { SFX.tap(); levelSheet(num(t, 'w'), num(t, 'l')); },
     quizView: t => { S.book.view = t.dataset.v; save(); RT.scrollCur = true; renderHome(); },
-    bookCur: t => { S.book.cur = num(t, 'n'); save(); closeModal(); RT.scrollCur = true; renderHome(); toast('📍 现在学 Unit ' + S.book.cur + '：冒险里的英语题也会多出这个单元的'); },
-    bookPick: () => openModal('<h2>📗 课本学到哪个单元了？</h2><p>选好以后，闯关页会标出这个单元；怪兽冒险里的英语题也会多出这个单元的单词和句子。</p><div class="fly-list">' +
-      BK.map(u => '<button class="btn small ' + (u.n === bookCur() ? '' : 'ghost') + '" data-act="bookCur" data-n="' + u.n + '">' + u.icon + ' Unit ' + u.n + ' ' + esc(u.en) + '</button>').join('') + '</div><button class="btn ghost wide" data-act="close">取消</button>'),
+    bookAt: t => { const i = num(t, 'i'); S.book.at = i; S.book.vb = BK[i].book; save(); closeModal(); RT.scrollCur = true; renderHome(); toast('📍 现在学 ' + BK[i].bshort + ' Unit ' + BK[i].n + '，冒险里会多出它的题'); },
+    bookView: t => { S.book.vb = t.dataset.b; save(); renderHome(); },
+    bookPick: () => {
+      const ci = curIdx();
+      openModal('<h2>📗 课本学到哪个单元了？</h2><p>选好以后，闯关页会标出这个单元；怪兽冒险里的英语题也会多出这个单元的单词和句子。</p>' +
+        BOOKS.map(b => '<h3 class="pick-h">' + esc(b.name) + (b.old ? '（旧版）' : '') + '</h3><div class="fly-list">' +
+          BK.map((u, i) => u.book !== b.id ? '' : '<button class="btn small ' + (i === ci ? '' : 'ghost') + '" data-act="bookAt" data-i="' + i + '">' + u.icon + ' U' + u.n + ' ' + esc(u.en) + '</button>').join('') + '</div>').join('') +
+        '<button class="btn ghost wide" data-act="close">取消</button>');
+    },
     bookGram: t => { const u = WX[num(t, 'w')]; openModal('<div class="big">📐</div><h2>Unit ' + u.n + ' 语法：' + esc(u.grammar.title) + '</h2><p>' + esc(u.grammar.tip) + '</p><button class="btn wide" data-act="close" data-focus>知道了</button>'); },
     setBookMix: t => { S.book.mix = +t.dataset.m; save(); settingsSheet(); },
     start: t => { closeModal(); startLevel(num(t, 'w'), num(t, 'l')); },
@@ -1704,16 +1743,16 @@
   // 冒险里出英语题用哪份内容：按设置有几成换成课本正在学的单元（其中三成复习前面学过的单元），其余用这座岛的话题。
   // 返回 { w: 编号（存进错题本的 q.w）, d: 内容（words/sents/dlgs） }
   function src(z) {
-    const mix = S.book.mix, cur = bookCur();
-    if (!cur || !(Math.random() < mix)) return { w: z, d: W[z] };
-    const n = cur > 1 && Math.random() < .3 ? 1 + rnd(cur - 1) : cur;
-    return { w: NB + n - 1, d: BK[n - 1] };
+    const mix = S.book.mix, cur = curIdx();
+    if (cur < 0 || !(Math.random() < mix)) return { w: z, d: W[z] };
+    const i = cur > 0 && Math.random() < .3 ? cur - 1 - rnd(Math.min(cur, 8)) : cur;   // 三成复习最近学过的 8 个单元（可以是上一册的）
+    return { w: NB + i, d: BK[i] };
   }
 
   // ---------- 怪兽对战模块（monsters.js）用到的工具 ----------
   if (window.MonsterGame) {
     const api = {
-      get S() { return S; }, W, WX, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit: () => BK[bookCur() - 1] || null, bookCur, revRight, revAddFree,
+      get S() { return S; }, W, WX, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit, curIdx, revRight, revAddFree,
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
       qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML,
       reduced, dayStr,
@@ -1732,12 +1771,13 @@
   };
 
   // 测试用：课本出题来源、每日复习
-  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), bookCur: () => bookCur(), get S() { return S; } };
+  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), get S() { return S; } };
 
   // ---------- 启动 ----------
   function start(data) {
     S = load(data && data.S);
     revMigrate();
+    if (S.book.cur && S.book.at < 0) { S.book.at = S.book.cur - 1; delete S.book.cur; }
     if (window.MonsterGame) MonsterGame.migrate();
     // 链接带 ?quiet：不方便说话时，所有口语任务都改成按按钮（等同设置里的「录音自评」）
     if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast('🔇 不用说话模式：要说话的地方都变成按钮了'), 800); }

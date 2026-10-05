@@ -1,7 +1,12 @@
-# 复制成 echo.properties（不进仓库）再打包。AI 对话中转服务的地址和家庭口令会写进 APK。
-TALK_URL=wss://example.trycloudflare.com
+# 复制成 echo.properties（不进仓库）再打包。
+# 直连阿里云（推荐，不用服务器）：KEY_FILE 指向一个写着 DASHSCOPE_API_KEY=sk-... 的文件，密钥会打进 APK。
+# 不填也行：装好以后在手机上「和岛民聊天 → ⚙️ 设置服务」里输入密钥（只存在那台手机里）。
+# 请用单独给游戏建的百炼 API Key，并在阿里云里设好花费上限。
+KEY_FILE=
+# 或者用中转服务（server/relay.js）：地址和家庭口令
+TALK_URL=
 TALK_CODE=
-# 签名（release 包用；不填就用 debug 签名）
+# 签名（release 包用；不填就用 debug 签名）。签名文件要备份：丢了就不能覆盖安装升级，只能卸载重装（存档会丢）
 STORE_FILE=D:/Claude/tools/echo-relay/echo-release.jks
 STORE_PASSWORD=
 KEY_ALIAS=echo
