@@ -61,7 +61,11 @@
   function parseEval(j) {
     try {
       const e = JSON.parse(j.choices[0].message.content);
-      return { done: !!e.done, stars: Math.max(1, Math.min(3, e.stars | 0 || 1)), praise: String(e.praise || '').slice(0, 60), tips: (e.tips || []).slice(0, 2).map(t => ({ said: String(t.said || '').slice(0, 120), better: String(t.better || '').slice(0, 120), zh: String(t.zh || '').slice(0, 60) })) };
+      // 只要「改错」：原句本来就对、只是被加了几个词的（或者一字没改的）不算，免得把说对的句子塞进复习
+      const nm = x => String(x || '').toLowerCase().replace(/[^a-z' ]/g, ' ').replace(/\s+/g, ' ').trim();
+      const tips = (e.tips || []).map(t => ({ said: String(t.said || '').slice(0, 120), better: String(t.better || '').slice(0, 120), zh: String(t.zh || '').slice(0, 60) }))
+        .filter(t => t.better && nm(t.better) !== nm(t.said) && !nm(t.better).startsWith(nm(t.said) + ' ')).slice(0, 2);
+      return { done: !!e.done, stars: Math.max(1, Math.min(3, e.stars | 0 || 1)), praise: String(e.praise || '').slice(0, 60), tips };
     } catch (e) { return null; }
   }
 
