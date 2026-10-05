@@ -972,12 +972,35 @@
     autoTune(now, dt);
     raf = requestAnimationFrame(frame);
   }
+  // ---------- 和面前的人用英语自由聊天（talk.js + AI 语音）：原来的剧情对话不动，另加一个按钮 ----------
+  let chatNpc = null;
+  function chatBtn(n) {
+    if (n === chatNpc) return;
+    chatNpc = n;
+    const b = $('w-chat'); if (b) b.hidden = !n;
+  }
+  const ROLE_EN = { talk: 'a friendly villager', guard: 'the island guard', nurse: 'the nurse at the Monster Center', clerk: 'the shop clerk', trainer: 'a young monster trainer', leader: 'the Gym Leader', quiz: 'the quiz teacher', ferry: 'a ferry captain', hiker: 'a hiker who loves mountains', daycare: 'the owner of the monster daycare', gift: 'a kind villager', story: 'a person you meet on your journey' };
+  function chatWith(n) {
+    if (!n || !window.EchoTalk) return;
+    const info = npcLook(n), w = E.W[M.z] || E.W[0];
+    // 这个人原来说过的话（让 AI 说话的口气和内容跟他一致）；通用村民就用这座岛的句子
+    const own = (n.say || n.no || []).filter(q => Array.isArray(q) && typeof q[0] === 'string').map(q => fill(q[0]));
+    const lines = (own.length ? own : w.sents.slice(0, 3).map(q => q[0])).slice(0, 5);
+    const kid = /kid|student/i.test(typeof n.look === 'string' ? n.look : '') || /kid/i.test(JSON.stringify(info.look || {}).slice(0, 80));
+    EchoTalk.openPerson({
+      name: fill(info.name || 'Friend'), g: info.g === 'f' ? 'f' : 'm', kid, lookObj: info.look,
+      role: ROLE_EN[n.role] || ROLE_EN.talk, island: w.en.replace(/[!?]/g, '') + ' Island', islandZh: w.name,
+      place: M.kind === 'inside' ? 'inside a house' : M.kind === 'town' ? 'in the town' : M.kind === 'route' ? 'on the road' : 'outdoors',
+      lines, words: w.words.slice(0, 8).map(q => q[0]),
+    });
+  }
   // 给渲染器的一帧画面信息
   function view(now) {
     const prog = PL.moving ? Math.min(1, (now - PL.t0) / PL.dur) : 1;
     const hop = PL.jump ? Math.sin(prog * Math.PI) * .55 : 0;
     const f = !dlg && !PL.moving && !busy ? facing() : null;
     let hint = null;
+    chatBtn(f && f.n && !f.n.mon && window.EchoTalk && EchoTalk.relayUrl() ? f.n : null);
     if (f) {
       const [dx, dy] = DIRS[PL.dir];
       if (!f.quiet) hint = f.n ? { x: f.n.x, y: f.n.y } : { x: PL.x + dx, y: PL.y + dy };
@@ -1511,7 +1534,8 @@
       '<div class="w-view" id="w-view"><div class="w-note" id="w-note" hidden></div><div class="w-scene" id="w-scene" hidden></div><div class="w-banner" id="w-banner" hidden></div><div class="w-wipe" id="w-wipe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="w-dlg" id="w-dlg" data-act="wA" hidden></div></div>' +
       '<div class="w-ctrl"><div class="dpad" id="w-dpad">' +
       ['up', 'left', 'right', 'down'].map(d => '<button class="dp dp-' + d + '" data-dir="' + d + '" aria-label="' + { up: '上', left: '左', right: '右', down: '下' }[d] + '">' + { up: '▲', left: '◀', right: '▶', down: '▼' }[d] + '</button>').join('') +
-      '</div><div class="ab"><button class="bb" data-act="wB">B<small>菜单</small></button><button class="ba" data-act="wA">A<small>对话</small></button></div></div>';
+      '</div><div class="ab"><button class="bb" data-act="wB">B<small>菜单</small></button><button class="ba" data-act="wA">A<small>对话</small></button></div>' +
+      '<button class="w-chat" id="w-chat" data-act="wChat" hidden>🗣️<small>英语聊天</small></button></div>';
     const dp = $('w-dpad');
     const down = e => { const b = e.target.closest('[data-dir]'); if (!b) return; e.preventDefault(); if (overlay) { overlay(b.dataset.dir); return; } held = b.dataset.dir; b.classList.add('on'); tryMove(held); };
     const up = () => { held = null; dp.querySelectorAll('.on').forEach(b => b.classList.remove('on')); };
@@ -1560,6 +1584,7 @@
     wFly: t => enter(+t.dataset.z, 'fly'),
     wExit: () => { E.closeModal(); E.goHome('mon'); },
     wA: () => overlay ? overlay('A') : interact(),
+    wChat: () => { if (!overlay && !dlg && !busy && chatNpc) { chatNpc.face = faceTo(chatNpc, PL); chatWith(chatNpc); } },
     wB: () => overlay ? overlay('B') : bButton(),
     wPick: t => { const pg = page(); if (!pg || pg.kind !== 'choice') return; const extra = pg.pick(+t.dataset.i); insertPages(extra); pg.kind = null; nextPage(); },
     wMenu: () => menuSheet(),

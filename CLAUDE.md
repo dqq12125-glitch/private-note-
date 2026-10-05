@@ -25,6 +25,8 @@
 | `world.js` | `window.EchoWorld`：大地图逻辑——按地图 id 切换、走路、跳台阶、冰面滑行、瀑布、潜水/浮上来、楼梯、机关门、门/洞口/出口、草丛和洞穴遇怪、训练师视线、护士/电脑/店员/馆主/出题人/送礼村民/渡轮、秘传技能、驱怪喷雾、逃生绳、宝可梦式对话框（可以只听不看英文）；2D「流畅模式」渲染器；自动画质 |
 | `world3d.js` | `window.EchoWorld3D`：three.js 的 2.5D 渲染器（地面贴图 + 低多边形树/房子/岩壁 + 随风摆的草丛 + 水面着色器 + 纸片人物 + 移轴景深）。三档画质 high/mid/low |
 | `vendor/three.min.js` | 裁剪过的 three.js（只打包用到的类，含 GLTFLoader + MeshoptDecoder + SkeletonUtils）。要加新的 three 类：改 `tools/three-entry.js`，跑 `npm run build:three` |
+| `talk-npcs.js` / `talk.js` | **和岛民用英语自由聊天（AI 语音）**：`talk-npcs.js` 是岛民名单（人设、音色、对话目标、提示词），游戏和中转服务共用；`talk.js`（`window.EchoTalk`）是首页第三个标签和对话界面——按住说话（16kHz PCM 分块发出）、岛民用自己的音色回答（24kHz PCM 边收边播）、显示双方的话、聊完打星给金币、本机聊天记录 |
+| `server/` | AI 对话中转服务（Node + ws）：保管百炼密钥，按岛民 id 连 Qwen-Omni 实时语音，每天时长上限、家庭口令、对话记录 `/logs`。说明见 `server/README.md`（不在 GitHub Pages 上运行，要单独部署） |
 | `game.js` | 主程序：存档、朗读（TTS + 有道在线兜底）、语音识别与打分、闯关练习（13 岛 × 7 关）、对话动画剧场、每日任务、成就、宠物店、设置（含冒险画面画质）；最后把工具以 `api` 对象交给 MonsterGame / EchoWorld |
 
 关键约定：

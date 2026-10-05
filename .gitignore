@@ -3,3 +3,9 @@ tests/screenshots/
 
 # 美术样品（生成的模型和图片，还没定用哪种）
 art/
+
+# AI 对话中转服务的密钥、用量和对话记录（不进仓库）
+server/.env
+server/logs/
+server/usage.json
+server/debug/

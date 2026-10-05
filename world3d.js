@@ -191,7 +191,7 @@
       own.forEach(o => o.dispose && o.dispose());
       own = [];
       sprites.forEach(s => { if (s.mesh) { s.mesh.geometry.dispose(); s.mesh.material.dispose(); if (s.mesh.material.userData.tex) s.mesh.material.userData.tex.dispose(); } if (s.alert) { s.alert.geometry.dispose(); s.alert.material.dispose(); } });
-      sprites.length = 0; pickSprites = [];
+      sprites.length = 0; pickSprites = []; BLD.length = 0;
       spinners.length = 0; glows.length = 0; gateM = [];
       for (const k in WALLTEX) delete WALLTEX[k];
       world = new T3.Group();
@@ -490,10 +490,12 @@
     function buildBuildings() {
       const house0 = THEME.house || 'med', P = m.pal;
       Object.values(m.buildings || {}).forEach(b => {
+        const n0 = world.children.length;   // 这栋房子加进场景的东西从这里开始（给「挡住主角就变半透明」用）
         const L = b.L, gym = L === 'G', std = L === 'C' || L === 'M';
         const style = b.style || (std ? 'std' : house0);
         const x0 = b.x0, x1 = b.x1 + 1, z0 = b.y0, z1 = b.y1 + 1, w = x1 - x0, cx = (x0 + x1) / 2;
-        const front = z1 - .06, back = z0 + .3, d = front - back, cz = (front + back) / 2;
+        // 前墙往里收一点：人站在房子前面那一排时和墙之间留出空隙，不会看起来像陷进墙里
+        const front = z1 - .24, back = z0 + .3, d = front - back, cz = (front + back) / 2;
         const hsh = rnd(b.x0, b.y0, 3);
         let wallH = gym ? 1.75 : L === 'H' || L === 'J' ? 1.25 : 1.45, roofTop = wallH;
         const roofC = std ? A.buildColor(L, m) : gym ? (P.roof || A.buildColor(L, m)) : (P.roof || A.buildColor(L, m));
@@ -666,6 +668,24 @@
           aw.rotation.x = -1.0;
         }
         if (style === 'std' && (L === 'H' || L === 'J')) box(.22, .5, .22, A.shade(roofC, .7), x1 - .8, wallH + .25, cz - .1, true);
+        BLD.push({ objs: world.children.slice(n0), x0, x1, z0, top: roofTop, a: 1, own: false });
+      });
+    }
+    // 主角 / 跟着的怪兽走到房子后面、被屋顶挡住时，这栋房子慢慢变半透明（镜头斜着往下看，屋顶会盖住后面一排）
+    const BLD = [];
+    function fadeBuildings(pts, dt) {
+      const k = 1 - Math.exp(-dt * 10), cot = 1 / Math.tan(pitch);
+      BLD.forEach(b => {
+        const reach = b.top * cot + .5;
+        const hit = pts.some(([x, z]) => x > b.x0 - .3 && x < b.x1 + .3 && z < b.z0 + .6 && z > b.z0 - reach);
+        const want = hit ? .3 : 1;
+        if (b.a === want) return;
+        b.a += (want - b.a) * k; if (Math.abs(b.a - want) < .02) b.a = want;
+        if (!b.own) {   // 第一次要变透明时才给这栋房子单独复制一份材质（平时和别的房子共用）
+          b.own = true;
+          b.objs.forEach(o => o.traverse(c => { if (c.material && !Array.isArray(c.material)) { const mt = c.material.clone(); mt._own = true; mt._op = c.material.opacity; mt._tr = c.material.transparent; c.material = mt; } }));
+        }
+        b.objs.forEach(o => o.traverse(c => { const mt = c.material; if (!mt || mt._op === undefined) return; mt.opacity = mt._op * b.a; mt.transparent = b.a < 1 || mt._tr; mt.depthWrite = b.a >= 1; }));
       });
     }
     // 圆形的钟面 / 标志
@@ -880,6 +900,14 @@
     function sheet(map, size) {
       const geo = new T3.PlaneGeometry(size, size).translate(0, size / 2, 0);
       const mat = new T3.MeshLambertMaterial({ map, alphaTest: .5, emissive: 0x2a2a2a });
+      // 纸片人画的时候往后斜（正对镜头好看），头会插进身后的柜台、墙里被切掉一截。
+      // 远近按「人笔直站在脚底那一格」来算：身后的东西永远挡不住他，身前的照样挡
+      mat.onBeforeCompile = sh => {
+        sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
+  { vec3 up = vec3(0.0, length(modelMatrix[1].xyz) * position.y, .15);
+    vec4 wp = vec4(modelMatrix[3].xyz + modelMatrix[0].xyz * position.x + up, 1.0);
+    vec4 pv = projectionMatrix * viewMatrix * wp; gl_Position.z = pv.z / pv.w * gl_Position.w; }`);
+      };
       const o = new T3.Mesh(geo, mat);
       return o;
     }
@@ -1049,6 +1077,7 @@
       // A 键提示
       hintS.visible = !!V.hint;
       if (V.hint) hintS.position.set(V.hint.x + .5, 1.6 + Math.sin(now / 220) * .06, V.hint.y + .5);
+      fadeBuildings(V.showF ? [[V.px + .5, V.py + .5], [V.fx + .5, V.fy + .5]] : [[V.px + .5, V.py + .5]], dt);
       // 镜头跟着主角，靠近地图边上时停住
       camGoal.set(V.px + .5, 0, V.py + .5);
       U.uPlayer.value.set(V.px + .5, 0, V.py + .5);

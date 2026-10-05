@@ -92,6 +92,7 @@
       homeTab: 'mon', mon: window.MonsterGame ? MonsterGame.fresh() : { box: [], team: [], dex: {}, badges: {}, balls: 5 },
       world: window.EchoWorld ? EchoWorld.fresh() : {},
       player: { gender: '', name: '' },
+      talk: { log: [], done: {}, days: {} },   // 和岛民聊天（talk.js）：最近的记录、每个岛民最好几星、今天拿过金币的
     };
   }
   function merge(base, o) {
@@ -182,6 +183,23 @@
   const TTS = { voices: [], v: null, ok: 'speechSynthesis' in window, loaded: false };
   const PREF = [/(Aria|Jenny|Ava|Emma|Guy).*(Online|Natural)/i, /Google US English/i, /Samantha/i, /Microsoft (Aria|Jenny|Zira|David)/i, /Google UK English Female/i, /Karen|Daniel|Moira|Tessa/i];
   // 有道两种口音（type=2 美音 / type=1 英音）正好给对话里的两个角色用
+  // ---------- 自然配音：tools/voice/gen.py 用本机开源模型提前合成的固定句子（assets/voice/{f,m}/<key>.mp3） ----------
+  // 文件名是规范化文本的 FNV-1a 哈希，和 tools/voice/key.js 一样；没合成的句子（拼了名字的）再用有道 / 本机声音
+  const CLIP = { f: new Set(), m: new Set() };
+  function clipKey(t) {
+    const s = String(t).replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
+    let h = 0x811c9dc5;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h.toString(36);
+  }
+  try {
+    if (location.protocol !== 'file:') fetch('assets/voice/index.json').then(r => (r.ok ? r.json() : null)).then(j => { if (j) { CLIP.f = new Set(j.f || []); CLIP.m = new Set(j.m || []); } }).catch(() => {});
+  } catch (e) { /* file:// 打开时读不了，就不用配音 */ }
+  function clipUrl(text, g) {
+    const k = clipKey(text);
+    for (const x of g === 'm' ? ['m', 'f'] : ['f', 'm']) if (CLIP[x].has(k)) return 'assets/voice/' + x + '/' + k + '.mp3';
+    return '';
+  }
   const onlineUrl = (text, g) => 'https://dict.youdao.com/dictvoice?type=' + (g === 'm' ? 1 : 2) + '&audio=' + encodeURIComponent(text);
   const FEM = /female|samantha|aria|jenny|ava|emma|zira|karen|moira|tessa|serena|victoria|allison|susan|libby|sonia|natasha|michelle|joanna|salli|kendra|fiona|kate/i;
   const MALE = /\bmale|daniel|david|guy|alex|fred|mark|ryan|aaron|arthur|george|thomas|oliver|christopher|eric|roger|brian|matthew|justin|rishi/i;
@@ -209,14 +227,19 @@
   }
   function endPlaying() { $$('.spk.playing').forEach(b => b.classList.remove('playing')); }
   function startPlaying() { const main = $('#p-body .spk:not(.mini)'); if (main) main.classList.add('playing'); }
-  function sayOnline(text, rate, res, g) {
+  function sayOnline(text, rate, res, g, clip) {
     const a = RT.audio || (RT.audio = new Audio());
     let done = false;
     const fin = () => { if (done) return; done = true; clearTimeout(t); endPlaying(); res(); };
     const t = setTimeout(fin, 4000 + text.length * 200);
     a.onended = fin;
-    a.onerror = () => { if (!done) toast('在线发音没加载出来，检查一下网络'); fin(); };
-    a.src = onlineUrl(text, g);
+    a.onerror = () => {
+      if (done) return;
+      if (clip) { done = true; clearTimeout(t); sayOnline(text, rate, res, g); return; }   // 配音文件没加载出来：改用有道
+      if ((S.settings.tts || 'auto') === 'auto' && TTS.ok && !RT.ttsBroken) { RT.onlineBroken = true; done = true; clearTimeout(t); say(text, rate, g).then(res); return; }   // 有道不通：这次起改用本机声音
+      toast('在线发音没加载出来，检查一下网络'); fin();
+    };
+    a.src = clip || onlineUrl(text, g);
     a.playbackRate = (rate || S.settings.rate) < 0.75 ? 0.75 : 1;
     startPlaying();
     const pr = a.play();
@@ -229,7 +252,12 @@
       stopListening();
       if (TTS.ok) speechSynthesis.cancel();
       if (RT.audio) RT.audio.pause();
-      if (useOnline()) { sayOnline(text, rate, res, g); return; }
+      const clip = S.settings.tts === 'device' ? '' : clipUrl(text, g);
+      if (clip) { sayOnline(text, rate, res, g, clip); return; }
+      // 自动化测试时记下没有配音的句子（tools/voice/misshook.js 收集，再补合成）
+      if (navigator.webdriver && S.settings.tts !== 'device') { try { console.log('[voice-miss]' + JSON.stringify([text, g || ''])); } catch (e) {} }
+      // 没有配音的句子：「自然配音」模式先用有道在线（比浏览器自带的自然），没网才用本机声音
+      if (useOnline() || (S.settings.tts || 'auto') === 'auto' && navigator.onLine !== false && !RT.onlineBroken) { sayOnline(text, rate, res, g); return; }
       const u = new SpeechSynthesisUtterance(text);
       const v = g === 'f' ? (TTS.vf || TTS.v) : g === 'm' ? (TTS.vm || TTS.v) : TTS.v;
       if (v) u.voice = v;
@@ -608,11 +636,16 @@
   }
   function renderHome() {
     renderTop();
-    const tab = window.MonsterGame && S.homeTab !== 'quiz' ? 'mon' : 'quiz';
-    $('#tabs').innerHTML = window.MonsterGame ? '<button class="' + (tab === 'mon' ? 'on' : '') + '" data-act="tab" data-t="mon">🐲 怪兽冒险</button><button class="' + (tab === 'quiz' ? 'on' : '') + '" data-act="tab" data-t="quiz">📚 闯关练习</button>' : '';
+    const talkOn = !!(window.EchoTalk && EchoTalk.relayUrl());   // 连得上对话服务才显示「和岛民聊天」
+    const tab = S.homeTab === 'talk' && talkOn ? 'talk' : window.MonsterGame && S.homeTab !== 'quiz' ? 'mon' : 'quiz';
+    $('#tabs').innerHTML = window.MonsterGame ? '<button class="' + (tab === 'mon' ? 'on' : '') + '" data-act="tab" data-t="mon">🐲 怪兽冒险</button><button class="' + (tab === 'quiz' ? 'on' : '') + '" data-act="tab" data-t="quiz">📚 闯关练习</button>' +
+      (talkOn ? '<button class="' + (tab === 'talk' ? 'on' : '') + '" data-act="tab" data-t="talk">🗣️ 和岛民聊天</button>' : '') : '';
+    $('#tabs').classList.toggle('three', talkOn);
     $('#quests').innerHTML = questHTML();
     $('#mon-home').hidden = tab !== 'mon';
     $('#quiz-home').hidden = tab !== 'quiz';
+    $('#talk-home').hidden = tab !== 'talk';
+    if (tab === 'talk') { $('#talk-home').innerHTML = EchoTalk.homeHTML(); return; }
     if (tab === 'mon') { $('#mon-home').innerHTML = MonsterGame.homeHTML(); MonsterGame.afterHome(); return; }
     const cur = currentNode();
     $('#map').innerHTML = W.map((w, wi) => worldHTML(w, wi, cur)).join('');
@@ -1397,8 +1430,8 @@
     openModal('<h2>设置</h2>' + envHTML() +
       '<div class="set"><label for="set-rate">朗读速度 <span id="rate-v">' + st.rate.toFixed(2) + '</span></label><input type="range" id="set-rate" min="0.6" max="1.1" step="0.05" value="' + st.rate + '"><div class="say-row"><button class="btn small ghost" data-act="testVoice">🔊 试听</button></div></div>' +
       '<div class="set"><label>发音来源</label><div class="seg">' +
-      [['auto', '自动'], ['device', '本机声音'], ['online', '有道在线']].map(([m, n]) => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + n + '</button>').join('') +
-      '</div><small>手机没声音或发音怪怪的，就选「有道在线」（需要联网）。</small></div>' +
+      [['auto', '自然配音'], ['device', '本机声音'], ['online', '有道在线']].map(([m, n]) => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + n + '</button>').join('') +
+      '</div><small>「自然配音」：固定的句子用提前合成的真人感配音，拼了名字的句子用有道在线或本机声音。选「本机声音」就全部用浏览器自带的朗读。</small></div>' +
       (voices ? '<div class="set"><label for="set-voice">朗读声音</label><select id="set-voice">' + voices + '</select></div>' : '') +
       '<div class="set"><label>口语打分方式</label><div class="seg">' +
       [['auto', '自动打分（推荐）'], ['self', '录音自评']].map(([m, n]) => '<button class="' + (st.mode === m ? 'on' : '') + '" data-act="setMode" data-m="' + m + '">' + n + '</button>').join('') +
@@ -1548,7 +1581,7 @@
       qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML,
       reduced, dayStr,
     };
-    Object.assign(ACT, MonsterGame.init(api), window.EchoWorld ? EchoWorld.init(api, MonsterGame) : {}, {
+    Object.assign(ACT, MonsterGame.init(api), window.EchoWorld ? EchoWorld.init(api, MonsterGame) : {}, window.EchoTalk ? EchoTalk.init(api) : {}, {
       tab: t => { S.homeTab = t.dataset.t; save(); renderHome(); window.scrollTo(0, 0); },
     });
   }

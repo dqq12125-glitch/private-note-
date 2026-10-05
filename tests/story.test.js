@@ -20,7 +20,11 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: '2d', sfx: false } })));
   await p.reload(); await p.waitForTimeout(400);
   const dbg = () => p.evaluate(() => { const d = EchoWorld._debug(); return { map: d.M.id, x: d.PL.x, y: d.PL.y, dlg: !!d.dlg, busy: d.busy }; });
-  const en = () => p.evaluate(() => { const e = document.querySelector('#w-dlg:not([hidden]) .d-en'); return e ? e.textContent : ''; });
+  // 读对话英文前先等逐字打完（不然偶尔只读到半句）
+  const en = async () => {
+    for (let i = 0; i < 60; i++) { if (!(await p.evaluate(() => { const d = window.EchoWorld && EchoWorld._debug && EchoWorld._debug().dlg; return !!(d && d.typing); }))) break; await p.waitForTimeout(80); }
+    return p.evaluate(() => { const e = document.querySelector('#w-dlg:not([hidden]) .d-en'); return e ? e.textContent : ''; });
+  };
   const typed = async () => { for (let i = 0; i < 50; i++) { const t = await p.evaluate(() => { const d = EchoWorld._debug().dlg; return !!(d && d.typing); }); if (!t) return; await p.waitForTimeout(80); } };
   const A = async () => { await typed(); await p.click('#world [data-act=wA].ba'); await p.waitForTimeout(260); };
   // 一直按 A，直到出现 sel（选项、输入框、说话按钮……）
