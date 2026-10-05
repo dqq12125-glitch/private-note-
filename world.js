@@ -413,6 +413,7 @@
     const pg = page();
     E.S.stats.spoken++; E.qProg('spoken', 1);
     if (score >= 85) { E.S.stats.perfect++; E.qProg('perfect', 1); }
+    if (pg.q && E.revRight) E.revRight(pg.q);
     E.SFX.ok(3);
     insertPages(pg.pass ? pg.pass(score) : null);
     E.save();
@@ -593,12 +594,12 @@
         },
       }));
     } else if (n.role === 'quiz') {
-      const k = Math.floor(Math.random() * w.dlgs.length), it = w.dlgs[k];
+      const sr = E.src ? E.src(z) : { w: z, d: w }, k = Math.floor(Math.random() * sr.d.dlgs.length), it = sr.d.dlgs[k];   // 有几成换成课本正在学的单元
       const opts = [{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))].sort(() => Math.random() - .5);
       talk([
         P('Hello! Can you answer my question?', '你好！你能回答我的问题吗？' + (dailyDone(dk) ? '' : '答对了今天有礼物哦。')),
         P(it[0], '听一听，选出合适的回答，然后说出来。', {
-          kind: 'answer', opts, q: { kind: 'dlg', w: z, i: k },
+          kind: 'answer', opts, q: { kind: 'dlg', w: sr.w, i: k },
           pass: () => {
             if (dailyDone(dk)) return [P('Great answer! See you tomorrow.', '回答得真好！明天再来吧。')];
             markDaily(dk); E.S.mon.balls += 1; hud();
@@ -609,12 +610,12 @@
       ]);
     } else if (n.role === 'gift') {
       // 看图说单词，答对每天送一瓶药水
-      const k = (n.seed + new Date().getDate()) % w.words.length, it = w.words[k];
-      const others = w.words.filter((x, j) => j !== k).sort(() => Math.random() - .5).slice(0, 2);
+      const sr = E.src ? E.src(z) : { w: z, d: w }, L = sr.d.words, k = (n.seed + new Date().getDate()) % L.length, it = L[k];
+      const others = L.filter((x, j) => j !== k).sort(() => Math.random() - .5).slice(0, 2);
       const opts = [{ c: true, t: it[0] }, ...others.map(o => ({ t: o[0] }))].sort(() => Math.random() - .5);
       talk([
         P('Hi! What is this in English?', '你好！这个用英语怎么说？（' + it[1] + '）', {
-          kind: 'answer', opts, pic: it[2], q: { kind: 'word', w: z, i: k },
+          kind: 'answer', opts, pic: it[2], q: { kind: 'word', w: sr.w, i: k },
           pass: () => {
             if (dailyDone(dk)) return [P('Yes! You know it well.', '对！你记得真牢。')];
             markDaily(dk); MG.addItem('potion', 1);
@@ -645,13 +646,13 @@
         }),
       ]);
     } else {
-      const s1 = w.sents[(n.seed + z) % w.sents.length], s2 = w.sents[(n.seed + z + 3) % w.sents.length];
+      const sr = E.src ? E.src(z) : { w: z, d: w }, L = sr.d.sents, s1 = L[(n.seed + z) % L.length], s2 = L[(n.seed + z + 3) % L.length];
       talk([
         P('Hi there!', '你好呀！'),
         P(s1[0], s1[1]),
         P(s2[0], s2[1]),
         P('Can you say it?', '你能跟我说一遍吗？', {
-          kind: 'speak', target: s2[0], q: { kind: 'sent', w: z, i: w.sents.indexOf(s2) },
+          kind: 'speak', target: s2[0], q: { kind: 'sent', w: sr.w, i: L.indexOf(s2) },
           pass: () => coins(dk, 'Good job! Here are 10 coins.', '说得真好！送你 10 个金币。'),
         }),
       ]);
@@ -764,7 +765,7 @@
   }
   // 钓鱼：等浮标动了，听鱼说的英语，选出意思才能拉上来
   function fish() {
-    const w = E.W[M.z], k = Math.floor(Math.random() * w.words.length), it = w.words[k];
+    const sr = E.src ? E.src(M.z) : { w: M.z, d: E.W[M.z] }, w = sr.d, k = Math.floor(Math.random() * w.words.length), it = w.words[k];
     const others = w.words.filter((x, j) => j !== k && x[1] !== it[1]).sort(() => Math.random() - .5).slice(0, 2);
     const opts = [{ c: true, t: it[1], e: it[2] }, ...others.map(o => ({ t: o[1], e: o[2] }))].sort(() => Math.random() - .5);
     let hooked = false;
@@ -788,7 +789,7 @@
             const ok = i >= 0 && opts[i].c;
             box.querySelectorAll('.opt').forEach((b, j) => b.classList.add(opts[j].c ? 'right' : j === i ? 'wrong' : 'dim'));
             hooked = ok;
-            if (ok) { E.SFX.ok(2); E.S.stats.listen = (E.S.stats.listen || 0) + 1; E.qProg('listen', 1); } else { E.SFX.bad(); E.addWrong({ kind: 'word', w: M.z, i: k }); }
+            if (ok) { E.SFX.ok(2); E.S.stats.listen = (E.S.stats.listen || 0) + 1; E.qProg('listen', 1); } else { E.SFX.bad(); E.addWrong({ kind: 'word', w: sr.w, i: k }); }
             setTimeout(() => done([{ who: '旁白', emo: ok ? '🐟' : '💨', en: ok ? 'You hooked a monster!' : 'It got away...', zh: ok ? '钓上来了！是一只怪兽！' : '鱼跑掉了……它说的是 ' + it[0] + ' = ' + it[1] }]), 700);
           };
           box.addEventListener('click', e => { e.stopPropagation(); if (e.target.closest('#fish-hear')) { E.say(it[0], .8); return; } const b = e.target.closest('.opt'); if (b && !b.classList.contains('dim') && !b.classList.contains('right')) finish(+b.dataset.i); });
@@ -991,7 +992,8 @@
       name: fill(info.name || 'Friend'), g: info.g === 'f' ? 'f' : 'm', kid, lookObj: info.look,
       role: ROLE_EN[n.role] || ROLE_EN.talk, island: w.en.replace(/[!?]/g, '') + ' Island', islandZh: w.name,
       place: M.kind === 'inside' ? 'inside a house' : M.kind === 'town' ? 'in the town' : M.kind === 'route' ? 'on the road' : 'outdoors',
-      lines, words: w.words.slice(0, 8).map(q => q[0]),
+      // 聊天时建议用的词：一半是这座岛的，一半是课本正在学的单元（孩子在课上刚学的词，正好在聊天里用上）
+      lines, words: [...w.words.slice(0, 4), ...((E.curUnit && E.curUnit()) || w).words.filter(q => q[0].split(' ').length <= 3).sort(() => Math.random() - .5).slice(0, 4)].map(q => q[0]),
     });
   }
   // 给渲染器的一帧画面信息

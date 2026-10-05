@@ -575,11 +575,11 @@
     if (!B || B.turn !== 'me') return;
     const mv = movesOf(me())[i];
     if (!mv || (mv.tier === 2 && B.energy < 3)) return;
-    const Wz = E.W[B.z];
+    const sr = E.src ? E.src(B.z) : { w: B.z, d: E.W[B.z] }, Wz = sr.d;   // 有几成换成课本正在学的单元
     B.mv = mv; B.move = mv.tier; B.tries = 0; B.hinted = false; B.turn = 'task';
-    if (mv.tier === 0 && !mv.sup) { const k = rnd(Wz.words.length), it = Wz.words[k]; B.task = { kind: 'word', q: { kind: 'word', w: B.z, i: k }, target: it[0], zh: it[1], em: it[2] }; }
-    else if (mv.tier === 1 || mv.sup) { const k = rnd(Wz.sents.length), it = Wz.sents[k]; B.task = { kind: 'sent', q: { kind: 'sent', w: B.z, i: k }, target: it[0], zh: it[1] }; }
-    else { const k = rnd(Wz.dlgs.length), it = Wz.dlgs[k]; B.task = { kind: 'ult', q: { kind: 'dlg', w: B.z, i: k }, prompt: it[0], target: it[1], opts: shuffle([{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))]) }; }
+    if (mv.tier === 0 && !mv.sup) { const k = rnd(Wz.words.length), it = Wz.words[k]; B.task = { kind: 'word', q: { kind: 'word', w: sr.w, i: k }, target: it[0], zh: it[1], em: it[2] }; }
+    else if (mv.tier === 1 || mv.sup) { const k = rnd(Wz.sents.length), it = Wz.sents[k]; B.task = { kind: 'sent', q: { kind: 'sent', w: sr.w, i: k }, target: it[0], zh: it[1] }; }
+    else { const k = rnd(Wz.dlgs.length), it = Wz.dlgs[k]; B.task = { kind: 'ult', q: { kind: 'dlg', w: sr.w, i: k }, prompt: it[0], target: it[1], opts: shuffle([{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))]) }; }
     taskPanel();
   }
   function onCatch(ball) {
@@ -694,6 +694,7 @@
     if (score >= 55) {
       E.S.stats.spoken++; E.qProg('spoken', 1);
       if (measured && score >= 85) { E.S.stats.perfect++; E.qProg('perfect', 1); }
+      if (t.q && E.revRight) E.revRight(t.q);   // 课本新学的内容答对了：排进明天的复习
     } else if (t.q) E.addWrong(t.q);
     if (t.kind === 'catch') round(b, Object.assign(() => resolveCatch(score, b), { priority: true }));
     else if (t.kind === 'wake') round(b, () => resolveWake(score, b));
@@ -977,16 +978,16 @@
   }
   async function foeTurn(b, mvo) {
     B.turn = 'foe';
-    const f = foe(), sf = SPECIES[f.sp], Wz = E.W[B.z], mv = mvo.tier === 0 && !mvo.sup ? 0 : 1, esc = E.esc;
+    const sr = E.src ? E.src(B.z) : { w: B.z, d: E.W[B.z] }, f = foe(), sf = SPECIES[f.sp], Wz = sr.d, mv = mvo.tier === 0 && !mvo.sup ? 0 : 1, esc = E.esc;
     let d;
     if (mv === 0) {
       const k = rnd(Wz.words.length), it = Wz.words[k];
       const others = shuffle(Wz.words.filter((x, j) => j !== k && x[1] !== it[1])).slice(0, 2);
-      d = { q: { kind: 'word', w: B.z, i: k }, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, e: it[2], t: it[1] }, ...others.map(o => ({ e: o[2], t: o[1] }))]) };
+      d = { q: { kind: 'word', w: sr.w, i: k }, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, e: it[2], t: it[1] }, ...others.map(o => ({ e: o[2], t: o[1] }))]) };
     } else {
       const k = rnd(Wz.sents.length), it = Wz.sents[k];
       const others = shuffle(Wz.sents.filter((x, j) => j !== k)).slice(0, 2);
-      d = { q: { kind: 'sent', w: B.z, i: k }, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, t: it[1] }, ...others.map(o => ({ t: o[1] }))]) };
+      d = { q: { kind: 'sent', w: sr.w, i: k }, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, t: it[1] }, ...others.map(o => ({ t: o[1] }))]) };
     }
     d.mv = mv; d.mvo = mvo; d.type = mvo.type; B.def = d;
     const nm = mvName(mvo);
@@ -1011,7 +1012,7 @@
     const b = B, ok = i >= 0 && d.opts[i].c, finish = () => { const r = B && B.defDone; if (B) B.defDone = null; if (r) r(); };
     document.querySelectorAll('#b-panel .opt').forEach((btn, k) => btn.classList.add(d.opts[k].c ? 'right' : k === i ? 'wrong' : 'dim'));
     const bar = $('b-timer'); if (bar) { bar.style.transition = 'none'; }
-    if (ok) { B.energy = Math.min(3, B.energy + 1); E.S.stats.listen++; E.qProg('listen', 1); E.SFX.ok(2); }
+    if (ok) { B.energy = Math.min(3, B.energy + 1); E.S.stats.listen++; E.qProg('listen', 1); E.SFX.ok(2); if (E.revRight) E.revRight(d.q); }
     else { E.addWrong(d.q); E.SFX.bad(); }
     msg(ok ? '🛡️ <b>防住了！</b>' + (d.mvo.sup ? '它的招式没有效果。' : '只受到一点点伤害。') : (i < 0 ? '⏰ 来不及了！' : '没听懂……') + '它念的是：<b>' + E.esc(d.ans) + '</b>');
     await sleep(700);

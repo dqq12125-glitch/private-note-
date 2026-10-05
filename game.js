@@ -3,6 +3,10 @@
   'use strict';
 
   const W = window.WORLDS;
+  // 课本同步（book.js）：课本的每个单元和小岛一样有单词/句子/对话，接在 13 座岛后面编号（第 NB 号起），
+  // 闯关、错题本、冒险出题都用 WX[编号]；只有岛屿才有的东西（馆主、徽章、飞空、对话动画）还是用 W
+  const BOOK = window.BOOK || null, BK = BOOK ? BOOK.units : [], NB = W.length, WX = W.concat(BK);
+  const isUnit = wi => wi >= NB;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -45,10 +49,11 @@
     { id: 'st3', t: '拿到 1 次三星', goal: 1, key: 'three', rw: 30 },
     { id: 'pf5', t: '获得 5 次 Perfect 发音', goal: 5, key: 'perfect', rw: 30 },
     { id: 'ls20', t: '听力题答对 20 道', goal: 20, key: 'listen', rw: 20 },
-    { id: 'rv5', t: '在错题本复习 5 题', goal: 5, key: 'review', rw: 30 },
+    { id: 'rv5', t: '每日复习答对 5 题', goal: 5, key: 'review', rw: 30 },
     { id: 'rp1', t: '完成 1 次对话角色扮演', goal: 1, key: 'roleplay', rw: 30 },
     { id: 'bt3', t: '赢得 3 场怪兽对战', goal: 3, key: 'battle', rw: 30 },
     { id: 'ct1', t: '收服 1 只野生怪兽', goal: 1, key: 'catch', rw: 40 },
+    { id: 'tk1', t: '用英语和岛民聊天，完成 1 个目标', goal: 1, key: 'talk', rw: 40 },
   ];
   const QDEF = Object.fromEntries(QPOOL.map(q => [q.id, q]));
 
@@ -69,7 +74,7 @@
     ['st30', '🏅', '月度坚持', '连续打卡 30 天', s => s.streak >= 30],
     ['three10', '⭐', '星星收集者', '拿到 10 次三星', s => s.stats.threeStars >= 10],
     ['world', '🏝️', '完美海岛', '一个岛的 7 关全部三星', s => W.some((w, i) => range(7).every(l => (s.stars[i + '-' + l] || 0) === 3))],
-    ['rv20', '📕', '知错就改', '在错题本复习 20 题', s => s.stats.reviewed >= 20],
+    ['rv20', '📕', '温故知新', '每日复习答对 20 题', s => s.stats.reviewed >= 20],
     ['pets3', '🐾', '宠物之家', '拥有 3 只宠物', s => s.pets.length >= 3],
     ['rich', '💰', '小富翁', '同时拥有 500 金币', s => s.coins >= 500],
     ['actor', '🎬', '小演员', '完成 5 次对话角色扮演', s => s.stats.roleplay >= 5],
@@ -93,6 +98,8 @@
       world: window.EchoWorld ? EchoWorld.fresh() : {},
       player: { gender: '', name: '' },
       talk: { log: [], done: {}, days: {} },   // 和岛民聊天（talk.js）：最近的记录、每个岛民最好几星、今天拿过金币的
+      book: { cur: 0, mix: .6, view: 'book' },
+      rev: { items: {}, v: 0 },   // 每日复习（间隔复习）：见 revWrong / revRight / dueList   // 课本同步：正在学第几单元（0 = 还没选，按日期猜）、冒险出题里课本占几成、闯关页先看课本还是小岛
     };
   }
   function merge(base, o) {
@@ -353,7 +360,9 @@
     if (n < 100) return TENS[Math.floor(n / 10)] + ' ' + ord(n % 10);
     return n2w(n);
   }
-  const SPELL = { colour: 'color', favourite: 'favorite', maths: 'math', grey: 'gray', centre: 'center', okay: 'ok', mum: 'mom', mr: 'mister', ms: 'miss', pingpong: 'ping pong', cannot: 'can not' };
+  const SPELL = { colour: 'color', favourite: 'favorite', maths: 'math', grey: 'gray', centre: 'center', okay: 'ok', mum: 'mom', mr: 'mister', ms: 'miss', pingpong: 'ping pong', cannot: 'can not',
+    // 英式拼写 → 美式识别结果（差两个字母，tokEq 认不出来）
+    kilometre: 'kilometer', kilometres: 'kilometers', metre: 'meter', metres: 'meters', programme: 'program', programmes: 'programs' };
   function norm(s) {
     s = ' ' + String(s).toLowerCase().replace(/[’‘`]/g, "'") + ' ';
     s = s.replace(/\b((?:[a-z]\.){2,})/g, m => m.replace(/\./g, ''));
@@ -428,7 +437,7 @@
   const tokens = s => s.split(/\s+/).map(t => t.replace(/[.,!?]+$/g, '')).filter(Boolean);
 
   function makeQ(type, wi, i) {
-    const w = W[wi];
+    const w = WX[wi];
     const q = { type, kind: KIND[type], w: wi, i };
     if (q.kind === 'word') {
       const it = w.words[i];
@@ -456,13 +465,14 @@
     const r = RECIPES[li], bags = {}, qs = [];
     const next = (kind, wj) => {
       const k = wj + ':' + kind;
-      const len = kind === 'word' ? W[wj].words.length : kind === 'sent' ? W[wj].sents.length : W[wj].dlgs.length;
+      const len = kind === 'word' ? WX[wj].words.length : kind === 'sent' ? WX[wj].sents.length : WX[wj].dlgs.length;
       if (!bags[k] || !bags[k].length) bags[k] = shuffle(range(len));
       return bags[k].pop();
     };
+    const first = isUnit(wi) ? NB : 0;   // 「挑战」复习前面的内容：小岛复习前面的岛，课本复习前面的单元
     r.mix.forEach(([t, n]) => {
       for (let k = 0; k < n; k++) {
-        const wj = r.review && wi > 0 && Math.random() < 0.3 ? rnd(wi) : wi;
+        const wj = r.review && wi > first && Math.random() < 0.3 ? first + rnd(wi - first) : wi;
         qs.push(makeQ(t, wj, next(KIND[t], wj)));
       }
     });
@@ -471,22 +481,86 @@
     return [bt[0], bt[1], lo[0], bt[2], bt[3], lo[1], bt[4], bt[5]].filter(Boolean);
   }
 
+  // ---------- 每日复习（温故而知新）----------
+  // 每道题一条记录 S.rev.items[键]：b = 第几格（0 = 刚答错），due = 哪天该复习，x = 答错过几次，src = 'chat' 表示 AI 聊天里老师给的更好说法。
+  // 答错（闯关、对战、村民出题、复习里）→ 回到第 0 格，当天就进复习；复习答对 → 进一格，隔 1、2、4、7、15、30 天再来；第 7 格算掌握。
+  // 课本单元的题第一次答对 → 第 1 格，第二天复习一次（新学的东西趁热巩固），之后按上面的间隔。
+  const GAP = [0, 1, 2, 4, 7, 15, 30];
+  const REV_MAX = 15;   // 一次复习最多几题
+  const addDays = (d, n) => { const [y, m, dd] = d.split('-').map(Number); return dayStr(new Date(y, m - 1, dd + n)); };
+  const revKey = q => q.free || q.kind + ':' + q.w + ':' + q.i;
+  function revItemOk(e) {
+    if (e.k === 'free') return !!e.en;
+    const w = WX[e.w], L = w && (e.k === 'word' ? w.words : e.k === 'sent' ? w.sents : w.dlgs);
+    return !!(L && L[e.i]);
+  }
+  function revMigrate() {   // 老存档的错题本搬进来（只做一次）
+    if (S.rev.v) return;
+    for (const [k, e] of Object.entries(S.wrong || {})) if (!S.rev.items[k]) S.rev.items[k] = { k: e.k, w: e.w, i: e.i, b: 0, due: dayStr(), x: e.m || 1 };
+    S.wrong = {}; S.rev.v = 1;
+  }
+  function revWrong(q) {
+    if (!q || !q.kind) return;
+    const k = revKey(q), e = S.rev.items[k] || (S.rev.items[k] = q.free ? { k: 'free', en: q.en, zh: q.zh, src: 'chat' } : { k: q.kind, w: q.w, i: q.i });
+    e.b = 0; e.due = dayStr(); e.x = (e.x || 0) + 1;
+    revTrim();
+  }
+  const addWrong = revWrong;   // 老名字：monsters.js / world.js 还在用
+  function revRight(q, inReview) {
+    if (!q || !q.kind) return;
+    const k = revKey(q), e = S.rev.items[k], today = dayStr();
+    if (inReview && e) {
+      e.b = Math.min(GAP.length, (e.b || 0) + 1);
+      e.due = e.b >= GAP.length ? '' : addDays(today, GAP[e.b]); e.seen = today;
+      S.stats.reviewed++; qProg('review', 1);
+      return;
+    }
+    if (!e && !q.free && isUnit(q.w)) S.rev.items[k] = { k: q.kind, w: q.w, i: q.i, b: 1, due: addDays(today, 1), x: 0 };   // 课本新学的：明天复习
+  }
+  // AI 聊天结束时老师给的「更好的说法」：明天复习（跟读 + 排句子）
+  function revAddFree(en, zh) {
+    en = String(en || '').trim(); if (!en || en.split(/\s+/).length > 14) return;
+    const k = 'free:' + en.toLowerCase().replace(/[^a-z' ]/g, '').trim();
+    if (S.rev.items[k]) return;
+    S.rev.items[k] = { k: 'free', en, zh: String(zh || ''), src: 'chat', b: 0, due: addDays(dayStr(), 1), x: 0 };
+    revTrim(); save();
+  }
+  function revTrim() {   // 最多留 400 条：先删已经掌握的，再删最久以后才到期的
+    const ks = Object.keys(S.rev.items);
+    if (ks.length <= 400) return;
+    ks.sort((a, b) => { const A = S.rev.items[a], B = S.rev.items[b]; return (A.due ? 1 : 0) - (B.due ? 1 : 0) || (B.due || '').localeCompare(A.due || ''); });
+    for (const k of ks.slice(0, ks.length - 400)) delete S.rev.items[k];
+  }
+  function dueList() {   // 今天该复习的：先错题（第 0 格、错得多的），再按到期早晚
+    const today = dayStr();
+    for (const [k, e] of Object.entries(S.rev.items)) if (!revItemOk(e)) delete S.rev.items[k];
+    return Object.entries(S.rev.items).filter(([, e]) => e.due && e.due <= today)
+      .sort((a, b) => (a[1].b || 0) - (b[1].b || 0) || (b[1].x || 0) - (a[1].x || 0) || a[1].due.localeCompare(b[1].due));
+  }
+  function freeQ(type, e, k) {   // AI 聊天句子出题：跟读或听音排句
+    const q = { type, kind: 'sent', w: -1, i: -1, free: k, en: e.en, zh: e.zh, audio: e.en };
+    if (type === 'lo') { q.tokens = tokens(e.en); q.bank = shuffle(range(q.tokens.length)); }
+    else q.target = e.en;
+    return q;
+  }
   function buildReview() {
-    const ents = Object.entries(S.wrong).sort((a, b) => b[1].m - a[1].m).slice(0, 10);
-    return shuffle(ents.map(([k, e]) => {
+    return shuffle(dueList().slice(0, REV_MAX).map(([k, e]) => {
+      if (e.k === 'free') return freeQ(e.en.split(/\s+/).length >= 3 && Math.random() < .5 ? 'lo' : 'sr_s', e, k);
       const t = e.k === 'word' ? pick(['lw', 'ls', 'sp']) : e.k === 'sent' ? pick(['lm', 'lo', 'sr_s']) : pick(['lr', 'sr_d']);
       const q = makeQ(t, e.w, e.i);
       q.rkey = k;
       return q;
     }));
   }
-  function addWrong(q) {
-    if (!q || !q.kind) return;
-    const k = q.kind + ':' + q.w + ':' + q.i;
-    const prev = S.wrong[k];
-    S.wrong[k] = { k: q.kind, w: q.w, i: q.i, m: (prev ? prev.m : 0) + 1 };
-    const keys = Object.keys(S.wrong);
-    if (keys.length > 80) { keys.sort((a, b) => S.wrong[a].m - S.wrong[b].m); delete S.wrong[keys[0]]; }
+  function revSummary() {
+    const d = dueList(), wrong = d.filter(([, e]) => !e.b).length, chat = d.filter(([, e]) => e.k === 'free').length;
+    return { n: d.length, wrong, chat, old: d.length - wrong - chat };
+  }
+  function revCard() {   // 首页上方：今天的复习
+    const r = revSummary();
+    if (!r.n) return '<div class="rev-card done"><span>✅</span><div><b>今天的复习做完了</b><small>答错的题、课本新学的内容会按 1、2、4、7…天的间隔自动回来</small></div></div>';
+    const parts = [r.wrong ? r.wrong + ' 道错题' : '', r.old ? r.old + ' 道学过的' : '', r.chat ? r.chat + ' 句聊天里的' : ''].filter(Boolean).join(' + ');
+    return '<button class="rev-card" data-act="review"><span>📕</span><div><b>今日复习 ' + r.n + ' 题</b><small>' + parts + (r.n > REV_MAX ? '，一次复习 ' + REV_MAX + ' 题' : '') + '</small></div><em>开始</em></button>';
   }
 
   // ---------- 每日任务 ----------
@@ -499,8 +573,10 @@
     const t = dayStr();
     if (S.quests.day === t && S.quests.list.length) return;
     const r = seeded(t);
-    const pool = QPOOL.filter(q => q.key !== 'review' || Object.keys(S.wrong).length >= 5);
-    const picked = [], keys = new Set();
+    const talkOn = !!(window.EchoTalk && EchoTalk.relayUrl());
+    const pool = QPOOL.filter(q => (q.key !== 'review' || dueList().length >= 5) && q.key !== 'talk');
+    // 连得上 AI 对话服务时，每天固定有一个「和岛民聊天」的任务：每天都真的开口用英语交流
+    const picked = talkOn ? [{ id: 'tk1', p: 0, claimed: false }] : [], keys = new Set(talkOn ? ['talk'] : []);
     let guard = 0;
     while (picked.length < 3 && guard++ < 100) {
       const q = pool[Math.floor(r() * pool.length)];
@@ -573,6 +649,7 @@
   // ---------- 首页 ----------
   function isUnlocked(wi, li) {
     if (S.settings.unlockAll) return true;
+    if (isUnit(wi)) return li === 0 || (S.stars[wi + '-' + (li - 1)] || 0) > 0;   // 课本单元：哪个单元都能直接开始，单元里按顺序
     if (li === 0) return wi === 0 || (S.stars[(wi - 1) + '-6'] || 0) > 0;
     return (S.stars[wi + '-' + (li - 1)] || 0) > 0;
   }
@@ -593,7 +670,7 @@
     $('#t-streak-n').textContent = S.streak;
     $('#t-streak').classList.toggle('off', S.lastDay !== dayStr());
     $('#t-streak').title = S.lastDay === dayStr() ? '今天已打卡，连续 ' + S.streak + ' 天' : '今天还没打卡，完成任意一关就算';
-    const n = Object.keys(S.wrong).length;
+    const n = dueList().length;
     $('#t-wrong').textContent = n ? n : '';
   }
   function questHTML() {
@@ -612,13 +689,13 @@
     }).join('');
     const opened = S.quests.chest, ready = allDone && !opened;
     const chest = '<button class="chest-btn ' + (ready ? 'ready' : '') + '" data-act="chest" ' + (ready ? '' : 'disabled') + '><span class="ch">' + (opened ? '📭' : '🎁') + '</span><span><b>' + (opened ? '今天的宝箱已经打开' : ready ? '每日宝箱可以打开了！' : '每日宝箱') + '</b><br><small>' + (opened ? '明天任务会刷新，记得回来' : '领完 3 个任务奖励就能打开，可能开出限定宠物') + '</small></span></button>';
-    return '<div class="q-head"><h3>今日任务</h3><small>' + hrs + ' 小时后刷新</small></div>' + rows + chest;
+    return revCard() + '<div class="q-head"><h3>今日任务</h3><small>' + hrs + ' 小时后刷新</small></div>' + rows + chest;
   }
   const OFFS = [0, -56, -78, -34, 38, 76, 0];
   function worldHTML(w, wi, cur) {
     const unlocked = isUnlocked(wi, 0);
     const tot = range(7).reduce((a, l) => a + (S.stars[wi + '-' + l] || 0), 0);
-    const head = '<div class="w-head"><span class="w-ico">' + w.icon + '</span><div><div class="w-no">第 ' + (wi + 1) + ' 岛</div><h2>' + w.name + '</h2><p class="w-en">' + esc(w.en) + '</p></div>' +
+    const head = isUnit(wi) ? unitHead(w, wi, tot) : '<div class="w-head"><span class="w-ico">' + w.icon + '</span><div><div class="w-no">第 ' + (wi + 1) + ' 岛</div><h2>' + w.name + '</h2><p class="w-en">' + esc(w.en) + '</p></div>' +
       (unlocked ? '<span class="w-stars">★ ' + tot + '/21</span>' : '<span class="w-lock">🔒 打败上一岛的 Boss 解锁</span>') + '</div>';
     if (!unlocked) return '<section class="world locked" style="--wc:' + w.color + '">' + head + '</section>';
     const nodes = RECIPES.map((r, li) => {
@@ -632,7 +709,39 @@
     const sc = window.SCENES && window.SCENES[wi], seen = S.scenes[wi];
     const scBtn = sc ? '<button class="scene-btn" data-act="scene" data-w="' + wi + '"><span class="sb-ico">🎬</span><span class="sb-t"><b>对话动画 · ' + esc(sc.title) + '</b><small>' +
       (seen && seen.watched ? '✓ 看过了 · 可以再来跟读、角色扮演' : '先看看这个话题的英语对话怎么说 · 第一次看完 +10 金币') + '</small></span><span class="sb-go">▶</span></button>' : '';
-    return '<section class="world" style="--wc:' + w.color + '">' + head + '<div class="path">' + scBtn + nodes + '</div></section>';
+    return '<section class="world' + (isUnit(wi) ? ' unit' + (w.n === bookCur() ? ' now' : '') : '') + '" id="w' + wi + '" style="--wc:' + w.color + '">' + head + '<div class="path">' + scBtn + nodes + '</div></section>';
+  }
+  // ---------- 课本同步 ----------
+  // 正在学第几单元：家长/孩子在闯关页选；没选过就按开学日期猜（9 月 1 日开学，一个单元两周多）
+  function bookCur() {
+    if (!BK.length) return 0;
+    if (S.book.cur) return Math.min(S.book.cur, BK.length);
+    const d = new Date(), y = d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1, days = (d - new Date(y, 8, 1)) / 864e5;
+    return Math.max(1, Math.min(BK.length, 1 + Math.floor(days / 17)));
+  }
+  function unitHead(u, wi, tot) {
+    const now = u.n === bookCur();
+    return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">Unit ' + u.n + (now ? ' · 📍 正在学' : '') + '</div><h2>' + esc(u.en) + ' <small>' + esc(u.zh) + '</small></h2><p class="w-en">' + esc(u.key) + '</p></div>' +
+      '<span class="w-stars">★ ' + tot + '/21</span></div>' +
+      '<div class="u-bar"><button class="link" data-act="bookGram" data-w="' + wi + '">📐 语法：' + esc(u.grammar.title) + '</button>' +
+      (unitTalk(u) ? '<button class="btn small sun" data-act="talk_open" data-npc="' + unitTalk(u).id + '">🗣️ 和 ' + esc(unitTalk(u).name) + ' 聊这个单元</button>' : '') +
+      (now ? '' : '<button class="btn small ghost" data-act="bookCur" data-n="' + u.n + '">设为正在学</button>') + '</div>';
+  }
+  function unitTalk(u) {   // 这个单元的 AI 聊天角色（连不上对话服务就不显示）
+    if (!window.EchoTalk || !EchoTalk.relayUrl() || !window.TALK_NPCS) return null;
+    return window.TALK_NPCS.list.find(n => n.unit === u.n && n.book === BOOK.short) || null;
+  }
+  function bookNode() {   // 「开始」标在正在学的单元里第一关没拿星的地方
+    const wi = NB + bookCur() - 1;
+    for (let li = 0; li < 7; li++) if (isUnlocked(wi, li) && !(S.stars[wi + '-' + li] > 0)) return wi + '-' + li;
+    return '';
+  }
+  function bookHTML() {
+    const cur = bookCur(), u = BK[cur - 1];
+    return '<div class="book-head"><b>📗 ' + esc(BOOK.name) + ' · 课本同步</b>' +
+      '<p>单词和短语就是课本书后的单元词汇表；句子和对话按单元的话题和语法新编，和课堂学的配套。</p>' +
+      '<p>正在学：<b>Unit ' + cur + ' ' + esc(u.en) + '</b>' + (S.book.cur ? '' : '（按日期猜的）') + ' <button class="link" data-act="bookPick">改</button></p></div>' +
+      BK.map((x, j) => worldHTML(x, NB + j, bookNode())).join('');
   }
   function renderHome() {
     renderTop();
@@ -647,8 +756,10 @@
     $('#talk-home').hidden = tab !== 'talk';
     if (tab === 'talk') { $('#talk-home').innerHTML = EchoTalk.homeHTML(); return; }
     if (tab === 'mon') { $('#mon-home').innerHTML = MonsterGame.homeHTML(); MonsterGame.afterHome(); return; }
+    const book = BK.length && S.book.view !== 'isle';
+    const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">📗 课本同步</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">🏝️ 话题小岛</button></div>' : '';
     const cur = currentNode();
-    $('#map').innerHTML = W.map((w, wi) => worldHTML(w, wi, cur)).join('');
+    $('#map').innerHTML = seg + (book ? bookHTML() : W.map((w, wi) => worldHTML(w, wi, cur)).join(''));
     if (RT.scrollCur) {
       RT.scrollCur = false;
       const n = $('.node.cur');
@@ -680,7 +791,7 @@
 
   // ---------- 关卡详情 ----------
   function levelSheet(wi, li) {
-    const w = W[wi], r = RECIPES[li];
+    const w = WX[wi], r = RECIPES[li];
     const st = S.stars[wi + '-' + li] || 0;
     const types = [...new Set(r.mix.map(m => m[0]))].map(t => '<span class="tag">' + TYPE_TAG[t] + '</span>').join('');
     let items;
@@ -704,7 +815,7 @@
   function startLevel(wi, li, review) {
     primeTTS(); ac();
     const qs = review ? buildReview() : buildLevel(wi, li);
-    if (!qs.length) { toast('错题本是空的，太棒了！'); return; }
+    if (!qs.length) { toast('今天没有要复习的题，太棒了！'); return; }
     const boss = !review && RECIPES[li].boss;
     P = { wi, li, review: !!review, qs, idx: 0, total: qs.length, hearts: 3, combo: 0, maxCombo: 0, correct: 0, xp: 0, lost: 0, hits: 0, boss, bossMax: qs.filter(q => q.type === 'bt').length, revived: false };
     show('play');
@@ -712,7 +823,7 @@
     $('#p-combo').textContent = '';
     $('#p-boss').innerHTML = boss ? bossBar() : '';
     if (boss) {
-      const b = W[wi].boss;
+      const b = WX[wi].boss;
       hideFb();
       $('#p-prog').style.width = '0%';
       $('#p-body').innerHTML = '<div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="hidden-line">' + esc(b.hello) + '</div></div></div>' +
@@ -722,7 +833,7 @@
     } else renderQ();
   }
   function bossBar() {
-    const b = W[P.wi].boss;
+    const b = WX[P.wi].boss;
     const pct = P.bossMax ? (1 - P.hits / P.bossMax) * 100 : 100;
     return '<div class="boss-hp" id="bosshp"><span class="be">' + b.emoji + '</span><span class="bn">' + b.name + '</span><div class="hp"><i style="width:' + pct + '%"></i></div></div>';
   }
@@ -785,7 +896,7 @@
       '<div class="say-card"><div class="say-emoji">' + q.em + '</div><div class="say-zh">' + esc(q.zh) + '</div><div class="say-text mask" id="st">' + esc(q.target.replace(/[a-z]/gi, '_')) + '</div>' +
       '<div class="say-row"><button class="btn small ghost" data-act="hint" id="hintbtn">💡 提示</button></div></div>' + micHTML(q);
     else if (t === 'bt') {
-      const b = W[P.wi].boss, sr = speakMode() === 'sr';
+      const b = WX[P.wi].boss, sr = speakMode() === 'sr';
       h += '<div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="再听一遍">' + SPK + '</button><button class="slow" data-act="saySlow"><span>🐢</span>慢速</button></div>' +
         '<div class="hidden-line blur" id="hl">' + esc(q.prompt) + '</div><button class="link" data-act="reveal">看原文</button></div></div>' +
         '<p class="say-zh" style="text-align:center;margin:0">' + (sr ? '选一句正确的回答，<b>大声说出来</b>攻击它！（点选项可以先听一听）' : '先点出正确的回答，再大声说出来攻击它！') + '</p>' +
@@ -815,7 +926,7 @@
     P.xp += gain;
     if (speak) { S.stats.spoken++; qProg('spoken', 1); if (perfect) { S.stats.perfect++; qProg('perfect', 1); } }
     else { S.stats.listen++; qProg('listen', 1); }
-    if (P.review && P.q.rkey && S.wrong[P.q.rkey]) { delete S.wrong[P.q.rkey]; S.stats.reviewed++; qProg('review', 1); }
+    revRight(P.q, P.review);
     SFX.ok(P.combo);
     showCombo();
     if (P.boss && P.q.type === 'bt') bossHit();
@@ -1003,7 +1114,7 @@
     }
     if (sp && st) { st.classList.remove('mask'); st.innerHTML = wordsHTML(q.target); if (hasRec) say(q.target); }
     box.hidden = false;
-    box.innerHTML = '<p>' + (q.type === 'bt' ? '现在对着' + W[P.wi].boss.name + '大声说：<b>' + esc(q.target) + '</b>' : hasRec ? '听听自己的录音，和原音比一比，像不像？' : '大声读 2 遍，然后诚实地给自己打个分') + '</p>' +
+    box.innerHTML = '<p>' + (q.type === 'bt' ? '现在对着' + WX[P.wi].boss.name + '大声说：<b>' + esc(q.target) + '</b>' : hasRec ? '听听自己的录音，和原音比一比，像不像？' : '大声读 2 遍，然后诚实地给自己打个分') + '</p>' +
       '<div class="say-row">' + (hasRec ? '<button class="btn small ghost" data-act="playMine">▶ 我的录音</button>' : '') + '<button class="btn small ghost" data-act="sayT">🔊 原音</button></div>' +
       '<div class="rate"><button class="btn coral" data-act="rate" data-v="0">😅 再练练</button><button class="btn sun" data-act="rate" data-v="1">🙂 还行</button><button class="btn leaf" data-act="rate" data-v="2">😎 很像</button></div>';
   }
@@ -1036,7 +1147,7 @@
       markBt(q.opts.findIndex(o => o.c), bi);
       const hl = $('#hl'); if (hl) hl.classList.remove('blur');
       bad();
-      showFb(false, W[P.wi].boss.name + ' 躲开了！这句回答不对', '正确回答：' + detailOf(q));
+      showFb(false, WX[P.wi].boss.name + ' 躲开了！这句回答不对', '正确回答：' + detailOf(q));
       setTimeout(() => say(q.en), 300);
     } else {
       P.tries++;
@@ -1071,7 +1182,7 @@
       markBt(q.opts.findIndex(o => o.c), i);
       const hl = $('#hl'); if (hl) hl.classList.remove('blur');
       bad();
-      showFb(false, W[P.wi].boss.name + ' 躲开了！这句回答不对', '正确回答：' + detailOf(q));
+      showFb(false, WX[P.wi].boss.name + ' 躲开了！这句回答不对', '正确回答：' + detailOf(q));
       setTimeout(() => say(q.en), 300);
     }
   }
@@ -1120,18 +1231,19 @@
     save();
     renderTop();
 
-    const w = W[P.wi], r = RECIPES[P.li];
+    const w = WX[P.wi], r = RECIPES[P.li];
     const newWorld = P.boss && prev === 0 && P.wi + 1 < W.length;
     let nextBtn = '';
     if (!P.review) {
       if (P.li < 6) nextBtn = '<button class="btn wide" data-act="go" data-w="' + P.wi + '" data-l="' + (P.li + 1) + '" data-focus>下一关 →</button>';
       else if (P.wi + 1 < W.length) nextBtn = '<button class="btn wide" data-act="go" data-w="' + (P.wi + 1) + '" data-l="0" data-focus>出发去 ' + W[P.wi + 1].name + ' →</button>';
+      else if (isUnit(P.wi) && P.wi + 1 < WX.length) nextBtn = '<button class="btn wide" data-act="go" data-w="' + (P.wi + 1) + '" data-l="0" data-focus>下一单元：' + esc(WX[P.wi + 1].name) + ' →</button>';
     }
-    const title = P.review ? '错题复习完成！' : P.boss ? '打败 ' + w.boss.name + '！' : stars === 3 ? '完美通关！' : '通关！';
+    const title = P.review ? '复习完成！' : P.boss ? '打败 ' + w.boss.name + '！' : stars === 3 ? '完美通关！' : '通关！';
     $('#result').innerHTML =
       '<div class="big" style="font-size:64px">' + (P.boss ? w.boss.emoji + '💥' : S.pet) + '</div>' +
       '<h1 class="r-title">' + title + '</h1>' +
-      '<p class="r-sub">' + (P.review ? '错题本还剩 ' + Object.keys(S.wrong).length + ' 题' : w.name + ' · ' + r.name) + '</p>' +
+      '<p class="r-sub">' + (P.review ? (dueList().length ? '今天还有 ' + dueList().length + ' 题可以复习' : '今天的复习全部完成 ✅') : w.name + ' · ' + r.name) + '</p>' +
       '<div class="r-stars" id="rstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>' +
       (lucky ? '<div class="lucky">🍀 幸运暴击！金币翻倍</div>' : '') +
       (firstThree ? '<div class="lucky">首次三星奖励 +15 金币</div>' : '') +
@@ -1439,6 +1551,9 @@
       '<div class="set"><label>冒险画面</label><div class="seg wrap">' +
       [['auto', '自动'], ['high', '精美'], ['mid', '标准'], ['low', '省电'], ['2d', '2D 流畅']].map(([m, n]) => '<button class="' + ((st.gfx || 'auto') === m ? 'on' : '') + '" data-act="setGfx" data-m="' + m + '">' + n + '</button>').join('') +
       '</div><small>' + ((st.gfx || 'auto') === 'auto' ? '自动：先用标准画质，手机跑不动会自动降一档' + (st.gfxAuto ? '（现在是「' + ({ high: '精美', mid: '标准', low: '省电', '2d': '2D 流畅' })[st.gfxAuto] + '」）' : '') + '。' : '手机发烫或者卡顿，就选省电或 2D 流畅。') + '</small></div>' +
+      (BK.length ? '<div class="set"><label>冒险里的英语题</label><div class="seg">' +
+        [[.6, '多出课本'], [.3, '少量课本'], [0, '只用岛上话题']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + n + '</button>').join('') +
+        '</div><small>打怪兽、答村民的题时，有一部分换成课本正在学的单元（Unit ' + bookCur() + '，在闯关页「📗 课本同步」里改）。</small></div>' : '') +
       '<div class="set"><label>音效</label><div class="seg"><button class="' + (st.sfx ? 'on' : '') + '" data-act="sfx" data-v="1">开</button><button class="' + (st.sfx ? '' : 'on') + '" data-act="sfx" data-v="0">关</button></div></div>' +
       '<div class="set"><label>家长 / 老师模式</label><div class="seg"><button class="' + (st.unlockAll ? '' : 'on') + '" data-act="unlock" data-v="0">按顺序解锁</button><button class="' + (st.unlockAll ? 'on' : '') + '" data-act="unlock" data-v="1">全部关卡直接开放</button></div><small>想跟着课本进度直接练某个单元时打开。</small></div>' +
       '<div class="set"><label>清空进度</label><button class="btn small coral" data-act="reset" id="resetbtn">清空全部进度</button><small>星星、金币、宠物都会清零，无法恢复。</small></div>' +
@@ -1457,6 +1572,12 @@
   const num = (t, k) => +t.dataset[k];
   const ACT = {
     level: t => { SFX.tap(); levelSheet(num(t, 'w'), num(t, 'l')); },
+    quizView: t => { S.book.view = t.dataset.v; save(); RT.scrollCur = true; renderHome(); },
+    bookCur: t => { S.book.cur = num(t, 'n'); save(); closeModal(); RT.scrollCur = true; renderHome(); toast('📍 现在学 Unit ' + S.book.cur + '：冒险里的英语题也会多出这个单元的'); },
+    bookPick: () => openModal('<h2>📗 课本学到哪个单元了？</h2><p>选好以后，闯关页会标出这个单元；怪兽冒险里的英语题也会多出这个单元的单词和句子。</p><div class="fly-list">' +
+      BK.map(u => '<button class="btn small ' + (u.n === bookCur() ? '' : 'ghost') + '" data-act="bookCur" data-n="' + u.n + '">' + u.icon + ' Unit ' + u.n + ' ' + esc(u.en) + '</button>').join('') + '</div><button class="btn ghost wide" data-act="close">取消</button>'),
+    bookGram: t => { const u = WX[num(t, 'w')]; openModal('<div class="big">📐</div><h2>Unit ' + u.n + ' 语法：' + esc(u.grammar.title) + '</h2><p>' + esc(u.grammar.tip) + '</p><button class="btn wide" data-act="close" data-focus>知道了</button>'); },
+    setBookMix: t => { S.book.mix = +t.dataset.m; save(); settingsSheet(); },
     start: t => { closeModal(); startLevel(num(t, 'w'), num(t, 'l')); },
     go: t => { const wi = num(t, 'w'), li = num(t, 'l'); if (!isUnlocked(wi, li)) { goHome(); return; } startLevel(wi, li); },
     close: () => { if ($('#restbtn') && $('#restbtn').disabled) return; closeModal(); },
@@ -1515,10 +1636,17 @@
       P.idx++; if (P.idx >= P.total) finish(); else renderQ();
     },
     review: () => {
-      const n = Object.keys(S.wrong).length;
-      if (!n) { toast('错题本是空的，继续保持！'); return; }
-      openModal('<div class="big">📕</div><h2>错题本 · ' + n + ' 题</h2><p>答错或没说好的题都在这里。复习时答对一次，就从错题本里移除。</p>' +
-        '<div class="row"><button class="btn ghost" data-act="close">等会儿</button><button class="btn" data-act="startReview" data-focus>复习 ' + Math.min(10, n) + ' 题</button></div>');
+      const r = revSummary(), all = Object.values(S.rev.items);
+      const wrongs = all.filter(e => e.x > 0 && e.due).sort((a, b) => b.x - a.x).slice(0, 30);
+      const txt = e => e.k === 'free' ? [e.en, e.zh] : (() => { const w = WX[e.w], it = e.k === 'word' ? w.words[e.i] : e.k === 'sent' ? w.sents[e.i] : w.dlgs[e.i]; return e.k === 'dlg' ? [it[0] + ' → ' + it[1], ''] : [it[0], it[1]]; })();
+      const list = wrongs.map(e => { const [en, zh] = txt(e); return '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + esc(en) + '</b><span>' + esc(zh) + (e.x > 1 ? ' · 错过 ' + e.x + ' 次' : '') + '</span></button>'; }).join('');
+      const mastered = all.filter(e => !e.due).length, waiting = all.filter(e => e.due && e.due > dayStr()).length;
+      openModal('<div class="big">📕</div><h2>每日复习</h2>' +
+        '<p>' + (r.n ? '今天要复习 <b>' + r.n + '</b> 题：' + [r.wrong ? r.wrong + ' 道错题' : '', r.old ? r.old + ' 道学过的' : '', r.chat ? r.chat + ' 句 AI 聊天里老师教的说法' : ''].filter(Boolean).join('、') + '。' : '今天的复习做完了！') +
+        '答错的题当天就复习；复习答对一次，隔 1、2、4、7、15、30 天再考一次，都对了就算掌握。</p>' +
+        '<p class="tip">⏳ 以后会回来的 ' + waiting + ' 题 · 🏅 已经掌握 ' + mastered + ' 题</p>' +
+        (list ? '<details class="pre"><summary>📖 错题本（点一句就能听）</summary><div class="pre-list">' + list + '</div></details>' : '') +
+        '<div class="row"><button class="btn ghost" data-act="close">等会儿</button>' + (r.n ? '<button class="btn" data-act="startReview" data-focus>复习 ' + Math.min(REV_MAX, r.n) + ' 题</button>' : '') + '</div>');
     },
     startReview: () => { closeModal(); startLevel(0, 0, true); },
     claim: t => {
@@ -1573,10 +1701,19 @@
     if (e.key === ' ' && e.target === document.body) { e.preventDefault(); if (P.q) say(P.q.audio || P.q.target); }
   });
 
+  // 冒险里出英语题用哪份内容：按设置有几成换成课本正在学的单元（其中三成复习前面学过的单元），其余用这座岛的话题。
+  // 返回 { w: 编号（存进错题本的 q.w）, d: 内容（words/sents/dlgs） }
+  function src(z) {
+    const mix = S.book.mix, cur = bookCur();
+    if (!cur || !(Math.random() < mix)) return { w: z, d: W[z] };
+    const n = cur > 1 && Math.random() < .3 ? 1 + rnd(cur - 1) : cur;
+    return { w: NB + n - 1, d: BK[n - 1] };
+  }
+
   // ---------- 怪兽对战模块（monsters.js）用到的工具 ----------
   if (window.MonsterGame) {
     const api = {
-      get S() { return S; }, W, RT, FATAL, SFX, MIC, STOP, SPK,
+      get S() { return S; }, W, WX, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit: () => BK[bookCur() - 1] || null, bookCur, revRight, revAddFree,
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
       qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML,
       reduced, dayStr,
@@ -1586,9 +1723,21 @@
     });
   }
 
+  // 安卓 APK 的返回键（android/MainActivity.java 调用）：关弹窗 → 关聊天 → 回首页；已经在首页就返回 false，APK 退到后台
+  window.EchoBack = () => {
+    if (!$('#modal').hidden) { if ($('#modal [data-act=close]')) closeModal(); return true; }
+    const tk = $('#tk-ov'); if (tk && ACT.talk_close) { ACT.talk_close(); return true; }
+    if ($('#home').hidden) { goHome(); return true; }
+    return false;
+  };
+
+  // 测试用：课本出题来源、每日复习
+  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), bookCur: () => bookCur(), get S() { return S; } };
+
   // ---------- 启动 ----------
   function start(data) {
     S = load(data && data.S);
+    revMigrate();
     if (window.MonsterGame) MonsterGame.migrate();
     // 链接带 ?quiet：不方便说话时，所有口语任务都改成按按钮（等同设置里的「录音自评」）
     if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast('🔇 不用说话模式：要说话的地方都变成按钮了'), 800); }

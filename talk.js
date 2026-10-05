@@ -47,14 +47,19 @@
   }
   function homeHTML() {
     const esc = G.esc, T = state(), url = relayUrl();
-    const cards = NPCS.list.map(n => {
+    const card = (n, now) => {
       const best = T.done[n.id];
-      return '<button class="tk-card" data-act="talk_open" data-npc="' + n.id + '">' +
+      return '<button class="tk-card' + (now ? ' now' : '') + '" data-act="talk_open" data-npc="' + n.id + '">' +
         '<img src="' + face(n) + '" alt="">' +
-        '<span class="tk-t"><b>' + esc(n.zh) + ' <small>' + esc(n.name) + '</small></b>' +
+        '<span class="tk-t"><b>' + (n.unit ? '<em>Unit ' + n.unit + (now ? ' · 📍 正在学' : '') + '</em> ' : '') + esc(n.zh) + ' <small>' + esc(n.name) + '</small></b>' +
         '<span>' + esc(n.topicZh) + ' · <i>' + esc(n.topic) + '</i></span>' +
         '<small>🔊 ' + esc(n.voiceZh) + (best ? ' · ' + '★'.repeat(best) : '') + '</small></span><span class="tk-go">🎙️</span></button>';
-    }).join('');
+    };
+    // 课本单元的聊天角色放前面，正在学的单元排第一个；后面是岛上的人
+    const cur = G.bookCur ? G.bookCur() : 0, units = NPCS.list.filter(n => n.unit), isle = NPCS.list.filter(n => !n.unit);
+    const order = units.filter(n => n.unit === cur).concat(units.filter(n => n.unit !== cur));
+    const cards = (units.length ? '<h3 class="tk-h">📗 课本话题 · ' + esc(units[0].book) + '</h3>' + order.map(n => card(n, n.unit === cur)).join('') + '<h3 class="tk-h">🏝️ 岛上的人</h3>' : '') +
+      isle.map(n => card(n, false)).join('');
     return '<section class="tk-home">' +
       '<div class="tk-intro"><b>🗣️ 用英语和岛民聊天</b><p>按住话筒说英语，松开就发出去；岛民会用自己的声音回答你。每段聊天有一个小目标，完成了有金币！</p></div>' +
       (url ? '' : '<div class="tk-warn">还没连上对话服务。请家长点下面的「设置服务」。</div>') +
@@ -273,14 +278,17 @@
       if (npc.id !== 'dyn') T.done[npc.id] = Math.max(T.done[npc.id] || 0, ev.stars);
       T.days = T.days || {};
       if (ev.done && !T.days[key]) { T.days[key] = 1; coins = 10 + 5 * ev.stars; G.S.coins += coins; }
+      if (ev.done && G.qProg) G.qProg('talk', 1);   // 每日任务「和岛民聊天，完成 1 个目标」
       for (const k of Object.keys(T.days)) if (!k.endsWith(G.dayStr())) delete T.days[k];
     }
+    // 老师给的「更好的说法」进每日复习：明天跟读、排句子
+    if (ev && ev.tips && G.revAddFree) ev.tips.forEach(t => G.revAddFree(t.better, t.zh));
     G.save(); if (G.renderTop) G.renderTop();
     const box = $('#tk-ov .tk-box'); if (!box) return;
     box.innerHTML = '<div class="tk-eval"><img src="' + face(npc) + '" alt="">' +
       (ev ? '<div class="tk-stars">' + '★'.repeat(ev.stars) + '<i>' + '★'.repeat(3 - ev.stars) + '</i></div>' +
         '<b>' + (ev.done ? '🎯 目标完成！' : '还差一点点，下次试试把目标说完整') + '</b><p>' + esc(ev.praise) + '</p>' +
-        (ev.tips.length ? '<div class="tk-tips"><b>可以这样说更好：</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
+        (ev.tips.length ? '<div class="tk-tips"><b>可以这样说更好（明天的每日复习里会再练）：</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
         (coins ? '<p class="tk-coin">🪙 +' + coins + ' 金币</p>' : '')
         : '<b>聊完啦！</b><p>这次没拿到老师的评价（可能是说得太少或网络问题）。</p>') +
       '<p class="tk-time">这次聊了 ' + m.sec + ' 秒 · 今天还能聊 ' + Math.floor(m.left / 60) + ' 分钟</p>' +

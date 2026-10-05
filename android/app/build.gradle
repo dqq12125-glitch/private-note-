@@ -1,0 +1,65 @@
+// 回声岛安卓版：一个全屏 WebView，游戏网页整个打进 APK（离线能玩），只有 AI 聊天要联网连中转服务。
+// 打包：见 android/README.md
+plugins {
+    id 'com.android.application'
+}
+
+def cfg = new Properties()
+def cfgFile = rootProject.file('echo.properties')
+if (cfgFile.exists()) cfgFile.withInputStream { cfg.load(it) }
+def q = { String s -> '"' + (s ?: '').replace('\\', '\\\\').replace('"', '\\"') + '"' }
+
+android {
+    namespace 'com.echoisland.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.echoisland.app'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+        buildConfigField 'String', 'TALK_URL', q(cfg.getProperty('TALK_URL'))
+        buildConfigField 'String', 'TALK_CODE', q(cfg.getProperty('TALK_CODE'))
+    }
+
+    signingConfigs {
+        release {
+            if (cfg.getProperty('STORE_FILE') && cfg.getProperty('STORE_PASSWORD')) {
+                storeFile file(cfg.getProperty('STORE_FILE'))
+                storePassword cfg.getProperty('STORE_PASSWORD')
+                keyAlias cfg.getProperty('KEY_ALIAS', 'echo')
+                keyPassword cfg.getProperty('KEY_PASSWORD', cfg.getProperty('STORE_PASSWORD'))
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release.storeFile ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+    buildFeatures { buildConfig true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // 配音 mp3、怪兽模型 glb、图片本来就是压缩过的，不再压一遍（读得快）
+    androidResources { noCompress += ['mp3', 'glb', 'webp', 'jpg', 'png', 'json'] }
+    sourceSets { main { assets.srcDirs += "$buildDir/generated/web" } }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
+
+// 把游戏网页复制进 APK 的 assets/www（只拿运行时要的文件）
+def webRoot = rootProject.file('..')
+tasks.register('copyWeb', Sync) {
+    from(webRoot) {
+        include 'index.html', '*.js', 'style.css', 'assets/**', 'vendor/**', 'isles/**'
+        exclude 'android/**', 'server/**', 'tools/**', 'tests/**', 'art/**', 'node_modules/**', 'package*.json'
+    }
+    into "$buildDir/generated/web/www"
+}
+preBuild.dependsOn 'copyWeb'

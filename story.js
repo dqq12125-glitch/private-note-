@@ -390,10 +390,10 @@
   async function statueQuiz(C, f) {
     const z = C.map.z, key = 'g' + z + ':' + f.x + ':' + f.y, w = C.E.W[z], nar = (en, zh, x) => Object.assign({ who: '雕像', emo: '🗿', en, zh }, x || {});
     if (C.flag(key)) { await C.talk([nar('The statue is shining.', '这座雕像已经亮了。')]); return; }
-    const k = Math.floor(Math.random() * w.dlgs.length), it = w.dlgs[k];
+    const sr = C.E.src ? C.E.src(z) : { w: z, d: w }, k = Math.floor(Math.random() * sr.d.dlgs.length), it = sr.d.dlgs[k];   // 有几成换成课本正在学的单元
     const opts = [{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))].sort(() => Math.random() - .5);
     let ok = false;
-    await C.talk([nar(it[0], '雕像在问你问题。选出合适的回答，再大声说出来。', { kind: 'answer', opts, q: { kind: 'dlg', w: z, i: k }, pass: () => { ok = true; return []; }, fail: () => [nar('The statue stays dark. Try again!', '雕像没有亮。再试一次吧！')] })]);
+    await C.talk([nar(it[0], '雕像在问你问题。选出合适的回答，再大声说出来。', { kind: 'answer', opts, q: { kind: 'dlg', w: sr.w, i: k }, pass: () => { ok = true; return []; }, fail: () => [nar('The statue stays dark. Try again!', '雕像没有亮。再试一次吧！')] })]);
     if (!ok) return;
     C.set(key);
     const n = litN(C, z);

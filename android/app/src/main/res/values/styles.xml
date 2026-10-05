@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 全屏、启动时先显示深蓝底（和游戏的冒险画面一样），不闪白 -->
+    <style name="EchoTheme" parent="android:Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@color/echo_bg</item>
+        <item name="android:statusBarColor">@color/echo_bg</item>
+        <item name="android:navigationBarColor">@color/echo_bg</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+    <color name="echo_bg">#12304a</color>
+</resources>

@@ -1,0 +1,8 @@
+# 复制成 echo.properties（不进仓库）再打包。AI 对话中转服务的地址和家庭口令会写进 APK。
+TALK_URL=wss://example.trycloudflare.com
+TALK_CODE=
+# 签名（release 包用；不填就用 debug 签名）
+STORE_FILE=D:/Claude/tools/echo-relay/echo-release.jks
+STORE_PASSWORD=
+KEY_ALIAS=echo
+KEY_PASSWORD=

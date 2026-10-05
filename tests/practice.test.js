@@ -15,7 +15,7 @@ const launch = () => chromium.launch(process.env.CHROMIUM_PATH ? { executablePat
   p.on('pageerror', e => console.log('PAGEERR', e.message));
   p.on('request', r => { const m = /audio=([^&]+)/.exec(r.url()); if (m) last = decodeURIComponent(m[1]); });
   await p.goto(PAGE);
-  await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, settings: { tts: 'online', mode: 'self' } })));
+  await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, settings: { tts: 'online', mode: 'self' }, book: { view: 'isle' } })));
   await p.reload(); await p.waitForTimeout(400);
   await p.click('[data-act=tab][data-t=quiz]'); await p.click('.node.cur'); await p.click('#sheet [data-act=start]');
   for (let k = 0; k < 14; k++) {

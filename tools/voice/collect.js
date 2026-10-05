@@ -29,6 +29,14 @@ for (const w of ctx.window.WORLDS) {
   if (w.boss && w.boss.hello) add(w.boss.hello);
   if (w.en) add(w.en, ['f']);
 }
+// 课本同步（book.js）：单元单词表、句子、对话、Boss 开场白
+vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'book.js'), 'utf8'), ctx);
+for (const u of (ctx.window.BOOK || { units: [] }).units) {
+  u.words.forEach(x => add(x[0], ['f']));
+  u.sents.forEach(x => add(x[0], ['f']));
+  u.dlgs.forEach(d => { add(d[0]); add(d[1]); (d[2] || []).forEach(o => add(o)); });
+  if (u.boss && u.boss.hello) add(u.boss.hello);
+}
 for (const s of ctx.window.SCENES || []) {
   (s.lines || []).forEach(l => { const c = s.cast[l[0]]; add(l[1], c && c[2] === 'm' ? ['m'] : c && c[2] === 'f' ? ['f'] : null); });
 }

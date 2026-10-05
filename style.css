@@ -921,3 +921,27 @@ body.in-world { overflow: hidden; }
 .w-chat { position: absolute; right: 18px; top: -58px; border: 0; border-radius: 16px; padding: 7px 12px; font: inherit; font-size: 18px; font-weight: 800; color: #fff; background: #2e9e8f; box-shadow: 0 4px 0 #1d6b61; display: flex; align-items: center; gap: 4px; z-index: 3; }
 .w-chat small { font-size: 13px; }
 .w-chat:active { transform: translateY(3px); box-shadow: 0 1px 0 #1d6b61; }
+
+/* ---------- 课本同步（闯关页的「📗 课本同步」和聊天页的课本话题） ---------- */
+.seg.qv { padding: 2px 0; }
+.seg.qv button { font-size: 15px; padding: 9px 6px; }
+.book-head { background: var(--card); border-radius: 18px; padding: 12px 14px; box-shadow: 0 4px 0 var(--line); }
+.book-head p { margin: 6px 0 0; color: var(--ink-2); font-size: 14px; }
+.book-head .link { padding: 0 4px; }
+.world.unit .w-head h2 small { font-size: 15px; font-weight: 600; opacity: .9; }
+.world.unit .w-en { font-style: italic; }
+.world.unit.now { outline: 3px solid var(--wc); outline-offset: 3px; }
+.u-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px 0; flex-wrap: wrap; }
+.u-bar .link { color: var(--ink-2); font-weight: 700; text-decoration: none; }
+.tk-h { margin: 6px 2px 0; font-size: 15px; color: var(--ink-2); }
+.tk-card.now { outline: 3px solid var(--lagoon); outline-offset: 2px; }
+.tk-t b em { font-style: normal; font-size: 12px; font-family: var(--f-body, inherit); background: #e8f4f2; color: var(--lagoon); border-radius: 8px; padding: 1px 6px; margin-right: 4px; vertical-align: 2px; }
+
+/* ---------- 每日复习（首页「今日任务」上面那张卡） ---------- */
+.rev-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 0; border-radius: 16px; padding: 12px 14px; margin-bottom: 12px; background: linear-gradient(135deg, #ffe7ec, #fff4e0); box-shadow: 0 4px 0 #f3c9d2; color: var(--ink); font: inherit; }
+.rev-card > span { font-size: 30px; flex: none; }
+.rev-card div { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rev-card b { font-family: var(--f-display); font-size: 18px; }
+.rev-card small { color: var(--ink-2); font-size: 13px; }
+.rev-card em { font-style: normal; font-weight: 800; background: var(--coral, #ff6b57); color: #fff; border-radius: 12px; padding: 6px 12px; flex: none; }
+.rev-card.done { background: #eaf7f1; box-shadow: 0 4px 0 #cfe9dd; }
