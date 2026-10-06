@@ -17,7 +17,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   const errs = [];
   p.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split(/\n/).slice(1, 4).join(' ')));
   await p.goto(PAGE);
-  await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: '2d', sfx: false } })));
+  await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: '2d', sfx: false, gate: false } })));
   await p.reload(); await p.waitForTimeout(400);
   const dbg = () => p.evaluate(() => { const d = EchoWorld._debug(); return { map: d.M.id, x: d.PL.x, y: d.PL.y, dlg: !!d.dlg, busy: d.busy }; });
   // 读对话英文前先等逐字打完（不然偶尔只读到半句）
@@ -123,8 +123,10 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   // ---------- 1 号路遇到对手 ----------
   await p.evaluate(() => EchoWorld._debug().goMap('r0', 'south'));
   await p.waitForTimeout(400);
-  for (let i = 0; i < 20 && !(await dbg()).busy; i++) { await p.keyboard.press('ArrowUp'); await p.waitForTimeout(260); }
-  await p.waitForTimeout(1800);
+  check(await p.evaluate(() => { const n = EchoWorld._debug().M.npcs.find(q => q.id === 'rival1'); return !!n && n.x === 12 && n.y === 24 && !EchoWorld._debug().busy; }), '对手先站在 1 号路的小路上，远远就能看见');
+  for (let i = 0; i < 24 && !(await dbg()).busy; i++) { await p.keyboard.press('ArrowUp'); await p.waitForTimeout(260); }
+  for (let i = 0; i < 40 && !(await dbg()).dlg; i++) await p.waitForTimeout(150);   // 「!」一下、走过来，再开口
+  await p.waitForTimeout(300);
   await typed();
   check(/Coco/.test(await en()), '对手跑过来打招呼：' + await en());
   const rv = await p.evaluate(() => { const n = EchoWorld._debug().M.npcs.find(q => q.temp); return n && n.name; });

@@ -86,7 +86,7 @@ button:disabled { cursor: default; }
 .chest-btn:disabled { opacity: .6; }
 
 /* ---------- 工具按钮 ---------- */
-.tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.tools { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
 .tool { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border: 0; border-radius: 14px; background: var(--card); box-shadow: 0 3px 0 var(--line); font-size: 13px; }
 .tool span { font-size: 22px; }
 .tool em { position: absolute; top: 4px; right: 8px; font-style: normal; font-size: 11px; background: var(--coral); color: #fff; border-radius: 9px; padding: 0 6px; min-width: 18px; }
@@ -1256,3 +1256,62 @@ body.in-world { overflow: hidden; }
 
 /* AI 老师点评（说得不准时，接在「我听到」后面） */
 .ai-tip { display: block; margin-top: 4px; padding: 4px 10px; border-radius: 10px; background: #fff6d6; color: #6b4e00; font-size: 14px; font-weight: 700; line-height: 1.4; }
+
+/* ---------- 学习锁（怪兽冒险页上面）：先复习、先聊一次，再冒险 ---------- */
+.gate-card { margin: 12px 0 10px; padding: 12px 14px; border-radius: 18px; background: #fff7e0; box-shadow: 0 4px 0 #f1dca0; }
+.gate-card.open { background: #e8f7ef; box-shadow: 0 4px 0 #c7e8d4; }
+.gate-card h3 { margin: 0 0 6px; font-size: 17px; }
+.gate-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px dashed rgba(0, 0, 0, .1); }
+.gate-row span { font-size: 18px; }
+.gate-row b { flex: 1; font-size: 15px; font-weight: 700; }
+.gate-row.ok b { color: var(--ink-2); }
+.gate-card .link { padding: 6px 0 0; }
+.world-go.locked { background: #fff3c4; box-shadow: 0 5px 0 #e9d48a; color: var(--ink); }
+.gate-row .todo { width: 18px; height: 18px; border: 2.5px solid var(--ink-3); border-radius: 50%; flex: none; margin: 0 2px; }
+.gate-card.nudge { animation: nudge .5s ease-in-out; }
+@keyframes nudge { 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
+
+/* ---------- 学习周报（截图发给家长，竖屏一屏放下） ---------- */
+#sheet:has(> .report) { max-height: calc(100dvh - 12px); padding: 14px 14px 10px; }
+.report h2 { margin: 0; font-size: 21px; }
+.report h3 { margin: 8px 0 2px; font-size: 14px; color: var(--ink-2); }
+.rp-sub { margin: 2px 0 4px; color: var(--ink-2); font-size: 12.5px; }
+.rp-warn { margin: 0 0 4px; color: #b45309; font-size: 13px; font-weight: 700; }
+.rp-chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 112px; padding: 4px 6px 0; border-radius: 14px; background: var(--foam); }
+.rp-day { display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; gap: 1px; }
+.rp-day em { font-style: normal; font-size: 11px; line-height: 1; min-height: 12px; }
+.rp-bar { width: 70%; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+.rp-bar i { display: block; width: 100%; }
+.rp-bar i:first-child { border-radius: 4px 4px 0 0; }
+.rp-bar i.l, .rp-legend i.l { background: var(--lagoon); }
+.rp-bar i.p, .rp-legend i.p { background: #f4a261; }
+.rp-bar i.o, .rp-legend i.o { background: #cfd8dc; }
+.rp-day b { font-size: 12px; } .rp-day small { font-size: 11px; color: var(--ink-3); padding-bottom: 3px; }
+.rp-legend { margin: 4px 0 6px; font-size: 12.5px; color: var(--ink-2); }
+.rp-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 3px 0 6px; vertical-align: -1px; }
+.rp-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.rp-tile { display: flex; flex-direction: column; align-items: center; padding: 5px 4px; border-radius: 12px; background: var(--card); box-shadow: 0 3px 0 var(--line); text-align: center; }
+.rp-tile b { font-family: var(--f-display); font-size: 19px; line-height: 1.1; }
+.rp-tile small { font-size: 11.5px; color: var(--ink-2); line-height: 1.2; }
+.rp-line { margin: 8px 0 0; font-size: 13px; }
+.rp-list { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.5; }
+.rp-list li { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rp-list small { color: var(--ink-3); }
+.rp-list s { color: var(--coral-d); }
+.rp-end { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; color: var(--ink-3); font-size: 13px; }
+@media (orientation: landscape) and (max-height: 600px) {
+  .report { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; }
+  .report > h2, .report > .rp-sub, .report > .rp-end { grid-column: 1 / -1; }
+  .report > .rp-warn, .report > .rp-chart, .report > .rp-legend, .report > .rp-tiles, .report > .rp-line { grid-column: 1; }
+  .report > .rp-more { grid-column: 2; grid-row: 3 / span 5; align-self: start; }   /* 左边 4–5 行（有没有警告那一行） */
+}
+
+/* ---------- 对战（竖屏 / 大屏）：整屏不滚动——上面标题、中间战场尽量大、下面说明和招式贴底 ---------- */
+@media not all and (orientation: landscape) and (max-height: 600px) {
+  body.scr-battle #battle { position: fixed; inset: 0; z-index: 14; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top, 0px) 12px calc(env(safe-area-inset-bottom, 0px) + 8px); background: var(--foam); overflow: hidden; }
+  body.scr-battle #battle .p-top { position: static; margin: 0; padding-block: 6px; flex: none; }
+  body.scr-battle #battle .arena { flex: 1 1 auto; height: auto; min-height: 220px; }
+  body.scr-battle #battle .b-msg { flex: none; margin-top: 8px; }
+  body.scr-battle #battle .b-panel { flex: 0 1 auto; margin-top: 8px; max-height: 58%; overflow-y: auto; padding-bottom: 2px; }
+}

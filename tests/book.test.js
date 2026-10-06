@@ -123,6 +123,65 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   check(first === 'hj7a-u4 now', '聊天页第一个是正在学的单元', first);
   await p.screenshot({ path: path.join(out, 'book-talk.png') });
 
+  // ---------- 7. 学习锁：有复习没做 / 没聊天时不能进冒险；做完就开 ----------
+  await p.goto(PAGE);
+  await p.evaluate(() => {
+    const d = new Date(), t = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    localStorage.setItem('echo-talk-url', 'ws://127.0.0.1:9');   // 假装连得上对话服务：聊天也算一项
+    localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, homeTab: 'mon', settings: { tts: 'online', mode: 'self', sfx: false },
+      mon: { v: 2, box: [{ uid: 'u0', sp: 'sprouty', lv: 5, xp: 0 }], team: ['u0'], dex: {}, balls: 5, potions: 0, bag: {}, badges: {} },
+      rev: { v: 1, items: { 'word:13:0': { k: 'word', w: 13, i: 0, b: 0, due: '2000-01-01', x: 1 } } } }));
+  });
+  await p.reload(); await W(500);
+  let g = await p.evaluate(() => window.EchoGame.gate());
+  check(!g.open && !g.revDone && g.chatOn && !g.chatDone, '学习锁关着：复习没做、没聊天', g);
+  check(await p.isVisible('.gate-card') && await p.isVisible('.world-go.locked'), '怪兽冒险页显示学习锁卡片、冒险按钮锁着');
+  await p.screenshot({ path: path.join(out, 'book-gate.png') });
+  await p.click('.world-go'); await W(400);
+  check(await p.isHidden('#world'), '锁着时点「继续冒险」进不去');
+  await p.evaluate(() => { const S = window.EchoGame.S, d = window.EchoGame.dayLog(); d.revSess = 1; S.talk.days = { ['hj7a-u1:' + Object.keys(S.log).sort().pop()]: 1 }; });
+  g = await p.evaluate(() => window.EchoGame.gate());
+  check(g.open, '复习做完、聊过一次：学习锁打开', g);
+  // 打开以后当天一直开着：冒险里又答错一题也不会再锁上
+  g = await p.evaluate(() => { const S = window.EchoGame.S; S.rev.items['word:13:1'] = { k: 'word', w: 13, i: 1, b: 0, due: '2000-01-01', x: 1 }; window.EchoGame.dayLog().revSess = 0; return window.EchoGame.gate(); });
+  check(g.open, '当天打开过就一直开着（又答错一题也不锁）', g);
+  // 聊天连不上：今天聊天这一项免了
+  g = await p.evaluate(() => { const S = window.EchoGame.S, L = window.EchoGame.dayLog(); delete L.gateOpen; L.revSess = 1; S.talk.days = {}; L.chatFail = 1; return window.EchoGame.gate(); });
+  check(g.open && g.chatFail, '聊天连不上时这一项免了', g);
+  // 手机日期往回调：锁着
+  g = await p.evaluate(() => { const S = window.EchoGame.S; S.maxDay = '2099-01-01'; return window.EchoGame.gate(); });
+  check(!g.open && g.back, '手机日期被往回调：锁着', g);
+  await p.evaluate(() => { window.EchoGame.S.maxDay = ''; });
+  // 关学习锁要家长密码：第一次设 1234，再关一次输错不行
+  const answers = ['1234', '0000'];
+  p.on('dialog', d => d.accept(answers.shift() || ''));
+  await p.evaluate(() => { const S = window.EchoGame.S; S.settings.gate = true; S.settings.pin = ''; });
+  await p.evaluate(() => document.querySelector('[data-act=settings]') ? document.querySelector('[data-act=settings]').click() : null);
+  await p.evaluate(() => { const b = document.querySelector('#sheet [data-act=setGate][data-m="0"]'); if (b) b.click(); });
+  await W(300);
+  let st = await p.evaluate(() => ({ gate: window.EchoGame.S.settings.gate, pin: window.EchoGame.S.settings.pin, off: !!window.EchoGame.dayLog().gateOff }));
+  check(st.gate === false && st.pin === '1234' && st.off, '第一次关学习锁：设好家长密码，当天记下「关过」', st);
+  await p.evaluate(() => { const b = document.querySelector('#sheet [data-act=setGate][data-m="1"]'); if (b) b.click(); });
+  await W(200);
+  await p.evaluate(() => { const b = document.querySelector('#sheet [data-act=setGate][data-m="0"]'); if (b) b.click(); });
+  await W(300);
+  st = await p.evaluate(() => ({ gate: window.EchoGame.S.settings.gate }));
+  check(st.gate === true, '密码输错关不了学习锁', st);
+  await p.evaluate(() => { const S = window.EchoGame.S; S.talk.days = {}; S.settings.gate = false; });
+  check(await p.evaluate(() => window.EchoGame.gate().open), '家长把学习锁关了也能进');
+
+  // ---------- 8. 学习周报 ----------
+  await p.evaluate(() => {
+    const S = window.EchoGame.S, L = window.EchoGame.dayLog();
+    Object.assign(L, { min: 25, learn: 18, play: 7, levels: 2, spoken: 9, review: 6 });
+    S.talk.log = [{ t: Date.now(), npc: 'hj7a-u1', turns: [], eval: { done: true, stars: 3, praise: '好', tips: [{ said: 'I goes to school.', better: 'I go to school.', zh: '' }] }, sec: 90 }];
+    window.EchoGame.reportSheet();
+  });
+  await W(300);
+  const rp = await p.textContent('#sheet .report').catch(() => '');
+  check(/学习周报/.test(rp) && /25/.test(rp) && /I go to school/.test(rp) && /开口说对/.test(rp), '周报：时间、开口次数、聊天里改过的句子', rp.slice(0, 80));
+  await p.screenshot({ path: path.join(out, 'book-report.png') });
+
   check(!errs.length, '没有报错', errs.slice(0, 3));
   console.log(fails ? 'FAIL ' + fails : 'PASS');
   if (fails) process.exitCode = 1;

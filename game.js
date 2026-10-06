@@ -95,7 +95,8 @@
       v: 1, xp: 0, coins: 50, stars: {}, streak: 0, lastDay: '', freeze: 0,
       quests: { day: '', list: [], chest: false }, wrong: {}, pets: ['🐣'], pet: '🐣', ach: {},
       stats: { levels: 0, spoken: 0, perfect: 0, maxCombo: 0, listen: 0, reviewed: 0, threeStars: 0, bosses: 0, flawless: 0, roleplay: 0 }, scenes: {},
-      settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false, gfx: 'auto', gfxAuto: '', ctl: 'joy', orient: 'portrait' }, seenIntro: false,
+      settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false, gfx: 'auto', gfxAuto: '', ctl: 'joy', orient: 'portrait', gate: true }, seenIntro: false,
+      log: {},   // 每天的学习记录（周报用）：日期 → { min 玩了几分钟, learn 学习分钟, play 冒险分钟, levels 关卡, spoken 开口说对, review 复习答对, … }
       homeTab: 'mon', mon: window.MonsterGame ? MonsterGame.fresh() : { box: [], team: [], dex: {}, badges: {}, balls: 5 },
       world: window.EchoWorld ? EchoWorld.fresh() : {},
       player: { gender: '', name: '' },
@@ -244,9 +245,11 @@
     a.onended = fin;
     a.onerror = () => {
       if (done) return;
-      if (clip) { done = true; clearTimeout(t); sayOnline(text, rate, res, g); return; }   // 配音文件没加载出来：改用有道
+      // 配音文件 / 合成的音频没加载出来：短词改用有道（有道现在只给单词、短语发音，整句会失败）
+      if (clip && text.split(/\s+/).length <= 3) { done = true; clearTimeout(t); sayOnline(text, rate, res, g); return; }
+      if (clip) { if (!RT.ttsWarned) { RT.ttsWarned = true; toast('这句的发音没加载出来，检查一下网络'); } fin(); return; }
       if ((S.settings.tts || 'auto') === 'auto' && TTS.ok && !RT.ttsBroken) { RT.onlineBroken = true; done = true; clearTimeout(t); say(text, rate, g).then(res); return; }   // 有道不通：这次起改用本机声音
-      toast('在线发音没加载出来，检查一下网络'); fin();
+      if (!RT.ttsWarned) { RT.ttsWarned = true; toast('在线发音没加载出来，检查一下网络'); } fin();
     };
     a.src = clip || onlineUrl(text, g);
     a.playbackRate = (rate || S.settings.rate) < 0.75 ? 0.75 : 1;
@@ -262,7 +265,20 @@
       if (TTS.ok) speechSynthesis.cancel();
       if (RT.audio) RT.audio.pause();
       const clip = S.settings.tts === 'device' ? '' : clipUrl(text, g);
+      const id = RT.sayId = (RT.sayId || 0) + 1, noCloud = RT.noCloudOnce; RT.noCloudOnce = false;
       if (clip) { sayOnline(text, rate, res, g, clip); return; }
+      // 没有提前配音的句子（带名字的台词等）：能连阿里云就现场合成（约 1–2 秒），比有道、本机声音都自然
+      if (!noCloud && S.settings.tts !== 'device' && navigator.onLine !== false && window.EchoTalk && EchoTalk.cloudTTS && EchoTalk.cloudSR && EchoTalk.cloudSR() && !RT.cloudTTSBroken) {
+        EchoTalk.cloudTTS(text, g).then(url => {
+          if (RT.sayId !== id) return res();   // 等合成的时候已经换了别的句子
+          if (url) { sayOnline(text, rate, res, g, url); return; }
+          RT.cloudTTSFails = (RT.cloudTTSFails || 0) + 1; if (RT.cloudTTSFails >= 3) RT.cloudTTSBroken = true;
+          if (text.split(/\s+/).length <= 3) sayOnline(text, rate, res, g);   // 短词：有道
+          else if (TTS.ok && !RT.ttsBroken) { RT.noCloudOnce = true; RT.onlineBroken = true; say(text, rate, g).then(res); }   // 本机声音（这次不再试阿里云）
+          else res();
+        });
+        return;
+      }
       // 自动化测试时记下没有配音的句子（tools/voice/misshook.js 收集，再补合成）
       if (navigator.webdriver && S.settings.tts !== 'device') { try { console.log('[voice-miss]' + JSON.stringify([text, g || ''])); } catch (e) {} }
       // 没有配音的句子：「自然配音」模式先用有道在线（比浏览器自带的自然），没网才用本机声音
@@ -530,7 +546,8 @@
   function revWrong(q) {
     if (!q || !q.kind) return;
     const k = revKey(q), e = S.rev.items[k] || (S.rev.items[k] = q.free ? { k: 'free', en: q.en, zh: q.zh, src: 'chat' } : { k: q.kind, w: q.w, i: q.i });
-    e.b = 0; e.due = dayStr(); e.x = (e.x || 0) + 1;
+    e.b = 0; e.due = dayStr(); e.x = (e.x || 0) + 1; if (!e.c) e.c = dayStr();
+    dayLog().wrongs = (dayLog().wrongs || 0) + 1;
     revTrim();
   }
   const addWrong = revWrong;   // 老名字：monsters.js / world.js 还在用
@@ -543,14 +560,14 @@
       S.stats.reviewed++; qProg('review', 1);
       return;
     }
-    if (!e && !q.free && isUnit(q.w)) S.rev.items[k] = { k: q.kind, w: q.w, i: q.i, b: 1, due: addDays(today, 1), x: 0 };   // 课本新学的：明天复习
+    if (!e && !q.free && isUnit(q.w)) { S.rev.items[k] = { k: q.kind, w: q.w, i: q.i, b: 1, due: addDays(today, 1), x: 0, c: today }; dayLog().fresh = (dayLog().fresh || 0) + 1; }   // 课本新学的：明天复习
   }
   // AI 聊天结束时老师给的「更好的说法」：明天复习（跟读 + 排句子）
   function revAddFree(en, zh) {
     en = String(en || '').trim(); if (!en || en.split(/\s+/).length > 14) return;
     const k = 'free:' + en.toLowerCase().replace(/[^a-z' ]/g, '').trim();
     if (S.rev.items[k]) return;
-    S.rev.items[k] = { k: 'free', en, zh: String(zh || ''), src: 'chat', b: 0, due: addDays(dayStr(), 1), x: 0 };
+    S.rev.items[k] = { k: 'free', en, zh: String(zh || ''), src: 'chat', b: 0, due: addDays(dayStr(), 1), x: 0, c: dayStr() };
     revTrim(); save();
   }
   function revTrim() {   // 最多留 400 条：先删已经掌握的，再删最久以后才到期的
@@ -572,9 +589,10 @@
     return q;
   }
   function buildReview() {
+    const off = (navigator.onLine === false || (RT.cloudFails || 0) >= 2) && speakMode() === 'sr';   // 没网就打不了分：只出听力题
     return shuffle(dueList().slice(0, REV_MAX).map(([k, e]) => {
-      if (e.k === 'free') return freeQ(e.en.split(/\s+/).length >= 3 && Math.random() < .5 ? 'lo' : 'sr_s', e, k);
-      const t = e.k === 'word' ? pick(['lw', 'ls', 'sp']) : e.k === 'sent' ? pick(['lm', 'lo', 'sr_s']) : pick(['lr', 'sr_d']);
+      if (e.k === 'free') return freeQ(e.en.split(/\s+/).length >= 3 && (off || Math.random() < .5) ? 'lo' : 'sr_s', e, k);
+      const t = e.k === 'word' ? pick(off ? ['lw', 'ls'] : ['lw', 'ls', 'sp']) : e.k === 'sent' ? pick(off ? ['lm', 'lo'] : ['lm', 'lo', 'sr_s']) : off ? 'lr' : pick(['lr', 'sr_d']);
       const q = makeQ(t, e.w, e.i);
       q.rkey = k;
       return q;
@@ -586,6 +604,7 @@
   }
   function revCard() {   // 首页上方：今天的复习
     const r = revSummary();
+    if (r.n && (dayLog().revSess || 0) > 0) return '<button class="rev-card done" data-act="review"><span>✅</span><div><b>今天复习过了</b><small>还可以加练 ' + r.n + ' 题（不练也行）</small></div></button>';
     if (!r.n) return '<div class="rev-card done"><span>✅</span><div><b>今天的复习做完了</b><small>答错的题、课本新学的内容会按 1、2、4、7…天的间隔自动回来</small></div></div>';
     const parts = [r.wrong ? r.wrong + ' 道错题' : '', r.old ? r.old + ' 道学过的' : '', r.chat ? r.chat + ' 句聊天里的' : ''].filter(Boolean).join(' + ');
     return '<button class="rev-card" data-act="review"><span>📕</span><div><b>今日复习 ' + r.n + ' 题</b><small>' + parts + (r.n > REV_MAX ? '，一次复习 ' + REV_MAX + ' 题' : '') + '</small></div><em>开始</em></button>';
@@ -615,6 +634,7 @@
     save();
   }
   function qProg(key, n, isMax) {
+    if (!isMax) { const L = dayLog(); L[key] = (L[key] || 0) + n; }
     ensureQuests();
     S.quests.list.forEach(q => {
       const d = QDEF[q.id];
@@ -813,6 +833,7 @@
   // 样品美术（?art=blender / gemini）加载完之后，首页的怪兽卡片重画一次
   window.addEventListener('mon3d-ready', () => { if (!$('#home').hidden) renderHome(); });
   function show(id) {
+    RT.scr = id;
     ['home', 'play', 'result', 'theater', 'battle', 'world'].forEach(s => { $('#' + s).hidden = s !== id; document.body.classList.toggle('scr-' + s, s === id); });
     $('#topbar').hidden = id === 'play' || id === 'theater' || id === 'battle' || id === 'world';
     document.body.classList.toggle('in-world', id === 'world');
@@ -911,7 +932,7 @@
         '<div class="heard" id="heard"></div><div id="score"></div></div>';
     }
     h += '<div class="self" id="self" hidden></div>';
-    if (mode !== 'sr') h += '<button class="link" data-act="skip">现在不方便开口？跳过这题</button>';   // 开口模式不能跳过：说三次还不行会记进每日复习
+    if (mode !== 'sr' || (P && P.review && (RT.cloudFails || 0) >= 2)) h += '<button class="link" data-act="skip">' + (mode === 'sr' ? '网络不好，先跳过这题' : '现在不方便开口？跳过这题') + '</button>';   // 开口模式不能跳过：说三次还不行会记进每日复习
     return h;
   }
   // 口语题分两块：q-main 是题目卡片，q-side 是话筒 / 自评 / 跳过（竖屏照常上下排，横屏左右两栏）
@@ -1289,6 +1310,7 @@
     S.stats.maxCombo = Math.max(S.stats.maxCombo, P.maxCombo);
     qProg('combo', P.maxCombo, true);
     qProg('levels', 1);
+    if (P.review && P.correct >= Math.ceil(P.total / 2)) dayLog().revSess = (dayLog().revSess || 0) + 1;
     const newDay = markToday();
     if (after > before) S.coins += 20;
     save();
@@ -1302,6 +1324,8 @@
       else if (P.wi + 1 < W.length) nextBtn = '<button class="btn wide" data-act="go" data-w="' + (P.wi + 1) + '" data-l="0" data-focus>出发去 ' + W[P.wi + 1].name + ' →</button>';
       else if (isUnit(P.wi) && P.wi + 1 < WX.length) nextBtn = '<button class="btn wide" data-act="go" data-w="' + (P.wi + 1) + '" data-l="0" data-focus>下一单元：' + esc(WX[P.wi + 1].name) + ' →</button>';
     }
+    const gt = P.review && S.settings.gate !== false ? gate() : null;
+    if (P.review && gt && gt.open) nextBtn = '<button class="btn sun wide" data-act="goAdventure" data-focus>🗺️ 去冒险</button>';
     const title = P.review ? '复习完成！' : P.boss ? '打败 ' + w.boss.name + '！' : stars === 3 ? '完美通关！' : '通关！';
     // r-hero（大图、标题、星星）和 r-body（奖励、数据、按钮）：竖屏照常一列，横屏左右两栏
     $('#result').innerHTML =
@@ -1313,6 +1337,7 @@
       (firstThree ? '<div class="lucky">首次三星奖励 +15 金币</div>' : '') +
       (window.MonsterGame ? '<div class="lucky">🔮 回声球 +' + balls + '（去怪兽冒险收服怪兽）</div>' : '') +
       (newWorld ? '<div class="lucky">🏝️ 新岛屿解锁：' + W[P.wi + 1].name + '</div>' : '') +
+      (gt ? '<div class="lucky">' + (gt.open ? '🔓 冒险解锁了！今天可以去怪兽冒险了' : gt.revDone ? '✅ 复习完成 · 再和岛民用英语聊一次就能去冒险' : '再复习一轮（答对一半以上）才算完成哦') + '</div>' : '') +
       '<div class="r-stats"><div class="stat xp"><b>+' + xp + '</b><small>经验</small></div><div class="stat cn"><b>+' + coins + '</b><small>金币</small></div><div class="stat cb"><b>' + P.maxCombo + '</b><small>最高连击</small></div></div>' +
       '<p class="r-sub" style="margin:0">答对 ' + P.correct + ' / ' + P.total + (stars < 3 ? ' · ' + (P.lost ? '不丢心、' : '') + '答对 90% 以上可拿三星' : '') + '</p>' +
       '<div class="r-actions">' + nextBtn + '<div class="row" style="display:flex;gap:10px"><button class="btn ghost" style="flex:1" data-act="home">回地图</button>' +
@@ -1624,6 +1649,9 @@
         [[.6, '多出课本'], [.3, '少量课本'], [0, '只用岛上话题']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + n + '</button>').join('') +
         '</div><small>打怪兽、答村民的题时，有一部分换成课本正在学的单元（' + esc(curUnit().name) + '，在闯关页「📗 课本同步」里改）。</small></div>' : '') +
       (window.EchoNative ? '<div class="set"><label>🗣️ AI 聊天和口语打分</label><div class="say-row"><span>' + (EchoTalk.cloudSR() ? '✅ 已连上阿里云' : '⚠️ 还没设置密钥') + '</span><button class="btn small ghost" data-act="talk_cfg">家长设置密钥</button></div><small>用阿里云百炼的 API Key（只存在这台手机里）。设好以后能和岛民用英语聊天，口语题也会自动打分。</small></div>' : '') +
+      '<div class="set"><label>家长：先学习再冒险</label><div class="seg">' +
+        [[true, '🔒 开（推荐）'], [false, '关']].map(([m, n]) => '<button class="' + ((S.settings.gate !== false) === m ? 'on' : '') + '" data-act="setGate" data-m="' + (m ? 1 : 0) + '">' + n + '</button>').join('') +
+        '</div><small>开着时，每天要先做完每日复习、用英语和岛民聊一次，才能进怪兽冒险。关掉要输家长密码（第一次会让你设），关过的天周报上会标出来。</small></div>' +
       '<div class="set"><label>冒险里的操作</label><div class="seg">' +
         [['joy', '🕹️ 摇杆'], ['pad', '✚ 方向键']].map(([m, n]) => '<button class="' + ((st.ctl || 'joy') === m ? 'on' : '') + '" data-act="setCtl" data-m="' + m + '">' + n + '</button>').join('') +
         '</div><small>' + (st.ctl === 'pad' ? '方向键：左下角十字键走路；A / B 在右下角。' : '摇杆：左手按住屏幕左边任意地方推着走；A / B 在右下角。') + '</small></div>' +
@@ -1661,6 +1689,15 @@
     },
     bookGram: t => { const u = WX[num(t, 'w')]; openModal('<div class="big">📐</div><h2>Unit ' + u.n + ' 语法：' + esc(u.grammar.title) + '</h2><p>' + esc(u.grammar.tip) + '</p><button class="btn wide" data-act="close" data-focus>知道了</button>'); },
     setBookMix: t => { S.book.mix = +t.dataset.m; save(); settingsSheet(); },
+    setGate: t => {
+      const on = t.dataset.m === '1';
+      if (!on && S.settings.gate !== false && !parentOk('关学习锁')) return;
+      S.settings.gate = on; if (!on) dayLog().gateOff = 1;
+      save(); settingsSheet();
+    },
+    goAdventure: () => goHome('mon'),
+    report: () => { closeModal(); reportSheet(); },
+    gateTalk: () => { S.homeTab = 'talk'; save(); renderHome(); window.scrollTo(0, 0); },
     setCtl: t => { S.settings.ctl = t.dataset.m; save(); if (window.EchoWorld && EchoWorld.ctlMode) EchoWorld.ctlMode(); settingsSheet(); },
     setOrient: t => { S.settings.orient = t.dataset.m; save(); applyOrient(); settingsSheet(); },
     start: t => { closeModal(); startLevel(num(t, 'w'), num(t, 'l')); },
@@ -1800,7 +1837,7 @@
     const api = {
       get S() { return S; }, W, WX, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit, curIdx, revRight, revAddFree,
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
-      qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML, aiTip,
+      qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML, aiTip, gate, gateCard, gateBlock, dayLog, parentOk,
       reduced, dayStr,
     };
     Object.assign(ACT, MonsterGame.init(api), window.EchoWorld ? EchoWorld.init(api, MonsterGame) : {}, window.EchoTalk ? EchoTalk.init(api) : {}, {
@@ -1816,13 +1853,147 @@
     return false;
   };
 
+  // ---------- 每天的学习记录（周报）----------
+  function dayLog(d) {
+    d = d || dayStr();
+    if (!S.log) S.log = {};
+    if (!S.log[d]) {
+      S.log[d] = { min: 0, learn: 0, play: 0 };
+      const ks = Object.keys(S.log).sort();
+      while (ks.length > 45) delete S.log[ks.shift()];   // 只留最近一个多月
+    }
+    return S.log[d];
+  }
+  // 玩的时间：页面在前台、最近 1 分钟内碰过屏幕才算。做题、复习、对话动画、和岛民聊天算「学习」，冒险和对战算「冒险」，
+  // 首页上翻菜单（图鉴、队伍、商店、设置、周报）两边都不算，只算进总时间
+  let lastInput = Date.now();
+  ['pointerdown', 'pointermove', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { lastInput = Date.now(); }, { passive: true, capture: true }));
+  // 手机日期被往回调（想骗学习锁）：记下见过的最晚日期，比它早就算改过
+  function trackDay() {
+    const t = dayStr();
+    if (!S.maxDay || t > S.maxDay) S.maxDay = t;
+    else if (t < S.maxDay) dayLog(S.maxDay).clockBack = 1;
+  }
+  setInterval(() => {
+    if (!S) return;
+    trackDay();
+    const t = dayStr();
+    if (RT.day && RT.day !== t && !$('#home').hidden) renderHome();   // 过了半夜：学习锁、今日复习换成新的一天
+    RT.day = t;
+    if (document.hidden || Date.now() - lastInput > 60000) return;
+    const L = dayLog(), dt = 0.25, tk = !!document.getElementById('tk-ov');
+    const learn = tk || RT.scr === 'play' || RT.scr === 'result' || RT.scr === 'theater', play = !tk && (RT.scr === 'world' || RT.scr === 'battle');
+    L.min = +(L.min + dt).toFixed(2);
+    if (learn) L.learn = +((L.learn || 0) + dt).toFixed(2); else if (play) L.play = +((L.play || 0) + dt).toFixed(2);
+    if (S.settings.gate === false) L.gateOff = 1;
+    if (Math.round(L.min * 4) % 4 === 0) save();   // 每分钟存一次
+  }, 15000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S && !$('#home').hidden) renderHome(); });
+
+  // ---------- 学习锁：先完成今天的复习和一次英语聊天，再去怪兽冒险 ----------
+  // 复习：今天没有要复习的，或者今天认真做完过一轮复习（答对一半以上）
+  // 聊天：和岛民聊天完成了目标；或者今天认真聊过（两次 / 合计 3 分钟）；或者今天连不上、时长用完、打分失败；没网、没开通 AI 时先免了
+  // 一天里一旦打开就一直开着（冒险里答错一题不会又锁上）；手机日期被往回调时不开
+  function gate() {
+    const today = dayStr(), on = S.settings.gate !== false, L = dayLog();
+    const back = !!(S.maxDay && today < S.maxDay);
+    const due = dueList().length, revDone = due === 0 || (L.revSess || 0) > 0;
+    const chatOn = !!(window.EchoTalk && EchoTalk.relayUrl()), offline = navigator.onLine === false;
+    const t0 = new Date(today.replace(/-/g, '/')).getTime(), tl = ((S.talk && S.talk.log) || []).filter(r => r.t >= t0);
+    const chatDone = Object.keys((S.talk && S.talk.days) || {}).some(k => k.endsWith(':' + today));
+    const tried = tl.length >= 2 || tl.reduce((a, r) => a + (r.sec || 0), 0) >= 180;
+    const chatFail = !!L.chatFail;
+    const chatOk = chatDone || tried || chatFail || !chatOn || offline;
+    const open = !on || (!back && (!!L.gateOpen || (revDone && chatOk)));
+    if (on && open && !back && !L.gateOpen) L.gateOpen = 1;
+    if (on && !chatOn && window.ECHO_APP) L.noChat = 1;
+    return { on, back, due, revDone, chatOn, offline, chatDone, tried, chatFail, chatOk, open, steps: (revDone ? 0 : 1) + (chatOk ? 0 : 1) };
+  }
+  function gateCard() {
+    const g = gate();
+    if (!g.on) return '';
+    const L = dayLog();
+    const row = (ok, txt, act, btn) => '<div class="gate-row' + (ok ? ' ok' : '') + '">' + (ok ? '<span>✅</span>' : '<i class="todo"></i>') + '<b>' + txt + '</b>' + (ok || !act ? '' : '<button class="btn small" data-act="' + act + '">' + btn + '</button>') + '</div>';
+    const revTxt = g.revDone ? ((L.revSess || 0) ? '每日复习 · 今天做完一轮了' : '每日复习（今天没有要复习的）') : '做一轮每日复习（' + Math.min(g.due, REV_MAX) + ' 题）';
+    const chatTxt = g.chatDone ? '和岛民用英语聊过了' : g.tried ? '和岛民认真聊过了' : g.chatFail ? '和岛民聊天（今天连不上，先跳过）'
+      : !g.chatOn ? '和岛民聊天（聊天还没开通，先跳过）' : g.offline ? '和岛民聊天（现在没网，今天先跳过）' : '和岛民用英语聊一次，完成小目标';
+    const done = (g.revDone ? 1 : 0) + (g.chatOk ? 1 : 0);
+    return '<section class="gate-card' + (g.open ? ' open' : '') + '"><h3>' + (g.back ? '📅 手机日期好像被改过了' : g.open ? '🎉 今天的学习完成了，出发冒险吧！' : '📚 冒险前的 2 个小任务（完成 ' + done + '/2）') + '</h3>' +
+      (g.back ? '<p class="tip">把手机改回「自动设置日期和时间」再来。</p>' : '') +
+      row(g.revDone, revTxt, 'review', '去复习') + row(g.chatOk, chatTxt, 'gateTalk', '去聊天') +
+      '<button class="link" data-act="report">📊 看这周的学习周报</button></section>';
+  }
+  function gateBlock() {
+    const g = gate();
+    toast(g.back ? '手机日期好像被改过了，改回自动时间再来' : !g.revDone ? '先把今天的每日复习做完，再去冒险' : '先用英语和岛民聊一次（完成小目标），就能去冒险了');
+    const c = $('.gate-card');
+    if (c) { c.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' }); c.classList.remove('nudge'); void c.offsetWidth; c.classList.add('nudge'); }
+  }
+  // 家长密码：关学习锁、改 AI 密钥时要输（第一次用时让家长设一个）
+  function parentOk(why) {
+    if (!S.settings.pin) {
+      const p = prompt('家长：先设一个 4 位数字密码（关学习锁、改 AI 密钥时要用，别告诉孩子）');
+      if (p === null) return false;
+      if (!/^\d{4}$/.test(p.trim())) { toast('要 4 位数字'); return false; }
+      S.settings.pin = p.trim(); save(); toast('家长密码设好了'); return true;
+    }
+    const v = prompt('请家长输入 4 位密码' + (why ? '（' + why + '）' : ''));
+    if (v === null) return false;
+    if (v.trim() !== S.settings.pin) { toast('密码不对'); return false; }
+    return true;
+  }
+
+  // ---------- 学习周报（孩子截图发给家长）----------
+  function revText(e) {
+    if (e.k === 'free') return [e.en, e.zh];
+    const w = WX[e.w], it = w && (e.k === 'word' ? w.words[e.i] : e.k === 'sent' ? w.sents[e.i] : w.dlgs[e.i]);
+    if (!it) return ['', ''];
+    return e.k === 'dlg' ? ['问：' + it[0] + ' 答：' + it[1], ''] : [it[0], it[1]];
+  }
+  function reportSheet() {
+    const days = range(7).map(k => { const d = new Date(); d.setDate(d.getDate() - 6 + k); return dayStr(d); });
+    const L = days.map(d => (S.log && S.log[d]) || {});
+    const sum = k => L.reduce((a, x) => a + (x[k] || 0), 0);
+    const first = Object.keys(S.log || {}).sort()[0] || days[6];
+    const maxMin = Math.max(20, ...L.map(x => x.min || 0));
+    const wk = ['日', '一', '二', '三', '四', '五', '六'];
+    const bars = days.map((d, k) => {
+      const x = L[k], lh = (x.learn || 0) / maxMin * 100, ph = (x.play || 0) / maxMin * 100, other = Math.max(0, (x.min || 0) - (x.learn || 0) - (x.play || 0)) / maxMin * 100, dt = new Date(d.replace(/-/g, '/'));
+      const mark = (x.gateOpen ? '✅' : '') + (x.gateOff ? '🔓' : '') + (x.clockBack ? '⏰' : '');
+      return '<div class="rp-day"><em>' + (mark || '&nbsp;') + '</em><div class="rp-bar"><i class="o" style="height:' + other + '%"></i><i class="p" style="height:' + ph + '%"></i><i class="l" style="height:' + lh + '%"></i></div><b>' + (d < first ? '–' : Math.round(x.min || 0)) + '</b><small>' + (k === 6 ? '今天' : '周' + wk[dt.getDay()]) + '</small></div>';
+    }).join('');
+    const t0 = new Date(days[0].replace(/-/g, '/')).getTime();
+    const chats = ((S.talk && S.talk.log) || []).filter(r => r.t >= t0);
+    const rated = chats.filter(r => r.eval), avg = rated.length ? (rated.reduce((a, r) => a + r.eval.stars, 0) / rated.length).toFixed(1) : '';
+    const chatMin = Math.round(chats.reduce((a, r) => a + (r.sec || 0), 0) / 60);
+    const tips = []; chats.forEach(r => (r.eval && r.eval.tips || []).forEach(t => { if (tips.length < 3 && !tips.some(x => x.better === t.better)) tips.push(t); }));
+    const items = Object.values(S.rev.items), mastered = items.filter(e => !e.due).length;
+    const top = items.filter(e => e.x > 1 && e.due).sort((a, b) => b.x - a.x).slice(0, 4).map(e => { const [en, zh] = revText(e); return en ? '<li><b>' + esc(en) + '</b> <small>' + esc(zh) + ' · 错 ' + e.x + ' 次</small></li>' : ''; }).join('');
+    const cu = curUnit(), cwi = cu ? NB + curIdx() : -1, ustars = cu ? range(7).reduce((a, l) => a + (S.stars[cwi + '-' + l] || 0), 0) : 0;
+    const name = S.player && S.player.name;
+    const offDays = L.filter(x => x.gateOff).length, backDays = L.filter(x => x.clockBack).length, doneDays = L.filter(x => x.gateOpen).length;
+    const flags = [offDays ? '⚠️ ' + offDays + ' 天关过学习锁' : '', backDays ? '⏰ 手机日期被改过' : '', window.ECHO_APP && !(window.EchoTalk && EchoTalk.relayUrl()) ? '⚠️ AI 聊天没开通' : ''].filter(Boolean).join(' · ');
+    const tile = (n, t) => '<div class="rp-tile"><b>' + n + '</b><small>' + t + '</small></div>';
+    openModal('<div class="report"><h2>📊 ' + (name ? esc(name) + ' 的' : '我的') + '学习周报</h2>' +
+      '<p class="rp-sub">' + days[0].slice(5).replace('-', '/') + ' – ' + days[6].slice(5).replace('-', '/') + ' · ✅ 完成学习 ' + doneDays + ' 天 · 连续打卡 ' + S.streak + ' 天' + (first > days[0] ? '（' + first.slice(5).replace('-', '/') + ' 开始记录）' : '') + '</p>' +
+      (flags ? '<p class="rp-warn">' + flags + '</p>' : '') +
+      '<div class="rp-chart">' + bars + '</div><p class="rp-legend">每天几分钟：<i class="l"></i>学习 ' + Math.round(sum('learn')) + ' <i class="p"></i>冒险 ' + Math.round(sum('play')) + ' <i class="o"></i>翻菜单</p>' +
+      '<div class="rp-tiles">' + tile(Math.max(0, sum('levels') - sum('revSess')), '完成关卡') + tile(sum('spoken'), '开口说对') + tile(sum('review'), '复习答对') +
+      tile(chats.length, 'AI 聊天 ' + chatMin + ' 分钟' + (avg ? ' · ' + avg + '★' : '')) + tile(sum('fresh'), '新学的词句') + tile(mastered, '累计掌握') + '</div>' +
+      (cu ? '<p class="rp-line">📗 正在学 <b>' + esc(cu.bshort + ' Unit ' + cu.n + ' ' + cu.en) + '</b> · ★ ' + ustars + '/21 · 这周答错 ' + sum('wrongs') + ' 次（都进了复习）</p>' : '') +
+      '<div class="rp-more">' +
+      (top ? '<h3>最容易错的（累计）</h3><ul class="rp-list">' + top + '</ul>' : '') +
+      (tips.length ? '<h3>聊天里老师改过的句子</h3><ul class="rp-list">' + tips.map(t => '<li><s>' + esc(t.said) + '</s> → <b>' + esc(t.better) + '</b></li>').join('') + '</ul>' : '') +
+      '</div><div class="rp-end"><span>📸 截个图发给家长吧！</span><button class="btn small ghost" data-act="close">关闭</button></div></div>');
+  }
+
   // 安卓 APK：竖屏 / 横屏 / 跟着手机转（原生那边记住，下次打开直接用）
   function applyOrient() {
     try { if (window.EchoNative && EchoNative.setOrientation) EchoNative.setOrientation(S.settings.orient || 'portrait'); } catch (e) { /* 忽略 */ }
   }
 
   // 测试用：课本出题来源、每日复习
-  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), get S() { return S; } };
+  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), get S() { return S; } };
 
   // ---------- 启动 ----------
   function start(data) {
@@ -1830,6 +2001,7 @@
     revMigrate();
     if (S.book.cur && S.book.at < 0) { S.book.at = S.book.cur - 1; delete S.book.cur; }
     applyOrient();
+    trackDay();
     if (window.MonsterGame) MonsterGame.migrate();
     // 链接带 ?quiet：不方便说话时，所有口语任务都改成按按钮（等同设置里的「录音自评」）
     if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast('🔇 不用说话模式：要说话的地方都变成按钮了'), 800); }

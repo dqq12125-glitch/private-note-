@@ -118,12 +118,12 @@ const server = http.createServer((req, res) => {
         (r.eval && r.eval.tips.length ? '<div class="t">建议：' + r.eval.tips.map(t => esc(t.said) + ' → ' + esc(t.better) + '（' + esc(t.zh) + '）').join('；') + '</div>' : '') + '</div>').join('') : '<p>这一天没有对话。</p>');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);
   }
-  if (req.method === 'OPTIONS' && (u.pathname === '/asr' || u.pathname === '/tip')) {   // 跨域预检（GitHub Pages 上的网页版连家里的中转服务）
+  if (req.method === 'OPTIONS' && (u.pathname === '/asr' || u.pathname === '/tip' || u.pathname === '/tts')) {   // 跨域预检（GitHub Pages 上的网页版连家里的中转服务）
     let ok = false; try { ok = !!req.headers.origin && okOrigin(req.headers.origin); } catch (e) {}
     res.writeHead(ok ? 204 : 403, ok ? { 'Access-Control-Allow-Origin': req.headers.origin, 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400' } : {});
     return res.end();
   }
-  if (req.method === 'POST' && (u.pathname === '/asr' || u.pathname === '/tip')) return cloudHelp(u, req, res);
+  if (req.method === 'POST' && (u.pathname === '/asr' || u.pathname === '/tip' || u.pathname === '/tts')) return cloudHelp(u, req, res);
   if (SERVE_GAME && (req.method === 'GET' || req.method === 'HEAD')) return serveGame(u, req, res);
   res.writeHead(404); res.end();
 });
@@ -151,6 +151,16 @@ function cloudHelp(u, req, res) {
         if (typeof j.audio !== 'string' || j.audio.length < 1000) return bad(400, 'audio');
         const r = await call({ model: 'qwen3-asr-flash', stream: false, asr_options: { language: 'en', enable_itn: false }, messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + j.audio } }] }] });
         res.writeHead(200, cors); return res.end(JSON.stringify({ text: String((r.choices && r.choices[0].message.content) || '').trim() }));
+      }
+      if (u.pathname === '/tts') {   // 网页版：没有提前配音的句子现场合成
+        const text = clean(j.text, 300); if (!text) return bad(400, 'text');
+        const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+        try {
+          const r = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'qwen3-tts-flash', input: { text, voice: j.g === 'm' ? 'Ethan' : 'Cherry', language_type: 'English' } }), signal: ctl.signal });
+          const o = await r.json(), url = o.output && o.output.audio && o.output.audio.url;
+          res.writeHead(url ? 200 : 502, cors); return res.end(JSON.stringify({ url: url || '' }));
+        } finally { clearTimeout(tm); }
       }
       const target = clean(j.target, 200), heard = clean(j.heard, 200);
       if (!target || !heard) return bad(400, 'text');

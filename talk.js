@@ -280,7 +280,7 @@
   // ---------- 聊完的评价 + 金币 + 存记录 ----------
   function showEval(c, m) {
     const esc = G.esc, T = state(), ev = m.eval, npc = c.npc;
-    T.log.unshift({ t: Date.now(), npc: npc.id, nm: npc.id === 'dyn' ? npc.name : undefined, turns: c.turns.slice(0, 40), eval: ev });
+    T.log.unshift({ t: Date.now(), npc: npc.id, nm: npc.id === 'dyn' ? npc.name : undefined, turns: c.turns.slice(0, 40), eval: ev, sec: m.sec || 0 });
     T.log = T.log.slice(0, 30);
     let coins = 0;
     if (ev) {
@@ -292,6 +292,8 @@
       if (ev.done && G.qProg) G.qProg('talk', 1);   // 每日任务「和岛民聊天，完成 1 个目标」
       for (const k of Object.keys(T.days)) if (!k.endsWith(G.dayStr())) delete T.days[k];
     }
+    // 学习锁：这次没连上 / 时长用完 / 打分失败，今天的聊天这一项就免了（不能让孩子卡一整天）
+    if (G.dayLog) { const L = G.dayLog(); if (!ev && (c.err || !c.turns.some(t => t.who === 'you'))) L.chatFail = 1; L.chats = (L.chats || 0) + 1; }
     // 老师给的「更好的说法」进每日复习：明天跟读、排句子
     if (ev && ev.tips && G.revAddFree) ev.tips.forEach(t => G.revAddFree(t.better, t.zh));
     G.save(); if (G.renderTop) G.renderTop();
@@ -303,6 +305,7 @@
         (coins ? '<p class="tk-coin">🪙 +' + coins + ' 金币</p>' : '')
         : c.err && !c.turns.some(t => t.who === 'you') ? '<b>⚠️ 没连上</b><p>' + esc(c.err) + '</p><p>' + (/401|403|Unauthorized|InvalidApiKey/i.test(c.err) ? '密钥不对：请家长在「设置 → AI 聊天和口语打分」里重新填。' : '检查一下网络，过一会儿再试。') + '</p>'
         : '<b>聊完啦！</b><p>这次没拿到老师的评价（可能是说得太少或网络问题）。</p>') +
+      (G.gate && G.gate().on && G.gate().open ? '<p class="tk-coin">🔓 今天的学习任务完成了，可以去怪兽冒险！</p>' : '') +
       '<p class="tk-time">这次聊了 ' + m.sec + ' 秒 · 今天还能聊 ' + Math.floor(m.left / 60) + ' 分钟</p>' +
       '<div class="tk-btns"><button class="btn" data-act="talk_again" data-npc="' + npc.id + '">再聊一次</button><button class="btn ghost" data-act="talk_close">返回</button></div></div>';
     if (ev && ev.done && G.confetti) G.confetti(80);
@@ -403,6 +406,26 @@
     TIPS[k] = tip;
     return tip;
   }
+  // 朗读没有提前配音的句子：阿里云语音合成，返回音频地址（同一句话这次打开游戏里只合成一次）
+  const TTSC = {};
+  async function cloudTTS(text, g) {
+    const k = (g || 'f') + '|' + text;
+    if (TTSC[k]) return TTSC[k];
+    let url = '';
+    try {
+      if (direct()) {
+        const body = { model: 'qwen3-tts-flash', input: { text: String(text).slice(0, 300), voice: g === 'm' ? 'Ethan' : 'Cherry', language_type: 'English' } };
+        const r = await nativePost('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', JSON.stringify(body), 6000);
+        if (r.ok) url = JSON.parse(r.text).output.audio.url;
+      } else if (relayHttp()) {
+        const r = await relayPost('/tts', { text, g }, 6000);
+        if (r.ok) url = JSON.parse(r.text).url;
+      }
+    } catch (e) { url = ''; }
+    url = String(url || '').replace(/^http:/, 'https:');
+    if (url) TTSC[k] = url;
+    return url;
+  }
   async function listenOnce(o) {
     o = o || {};
     if (!cloudSR()) return { text: '', err: 'service-not-allowed' };
@@ -452,6 +475,7 @@
 
   function configure() {
     if (window.EchoNative) {   // 安卓 APK：家长在这台手机上填一次百炼密钥（只存在这台手机里），直连阿里云
+      if (G.parentOk && !G.parentOk('改 AI 密钥')) return;
       const k = prompt('家长设置：阿里云百炼 API Key（只存在这台手机里，用来和岛民聊天）\n已经设置过的话，留空就是不改；填 clear 删除', '');
       if (k === null) return;
       if (k.trim() === 'clear') EchoNative.setKey('');
@@ -490,5 +514,5 @@
       talk_log: () => showLog(),
     };
   }
-  window.EchoTalk = { init, homeHTML, open, openPerson, relayUrl, cloudSR, listenOnce, aiTip, stopListen: () => SR.stop && SR.stop() };
+  window.EchoTalk = { init, homeHTML, open, openPerson, relayUrl, cloudSR, listenOnce, aiTip, cloudTTS, stopListen: () => SR.stop && SR.stop() };
 })();

@@ -28,7 +28,7 @@ async function open(o) {
       const flags = { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:expshare': 1 };
       Object.entries(s.flags).forEach(([k, v]) => { flags[k.includes(':') ? k : 's:' + k] = v; });
       await p.evaluate(([s, flags]) => localStorage.setItem('echo-island-v1', JSON.stringify({
-        seenIntro: true, coins: 500, settings: { tts: 'online', mode: 'self', gfx: s.gfx || '2d', sfx: false }, player: { gender: s.gender || 'girl', name: 'Coco' },
+        seenIntro: true, coins: 500, settings: { tts: 'online', mode: 'self', gfx: s.gfx || '2d', sfx: false, gate: false }, player: { gender: s.gender || 'girl', name: 'Coco' },
         mon: { v: 2, box: s.team.map(([sp, lv], i) => ({ uid: 'u' + i, sp, lv, xp: 0 })), team: s.team.map((_, i) => 'u' + i), dex: {}, balls: 10, potions: 10, bag: s.bag, badges: s.badges },
         world: { v: 3, started: true, map: s.map, x: s.x, y: s.y, dir: 'up', arrive: s.arrive || 'door:C', visited: s.visited, flags, daily: {} },
       })), [s, flags]);

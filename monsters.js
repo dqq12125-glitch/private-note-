@@ -173,6 +173,7 @@
   // 从哪一只进化来的：一直往回找到第一阶段
   const baseOf = id => { let x = SPECIES[id]; while (x.from && SPECIES[x.from]) x = SPECIES[x.from]; return x.id; };
   let B3 = null;   // 3D 战斗画面（battle3d.js）
+  let RO = null;   // 盯着战场大小的 ResizeObserver
   // 会动的 3D 模型（assets/mon3d）：出场前先下载，最多等 2.5 秒，没下完就先用程序拼的模型
   const prep = sps => window.Mon3D && Mon3D.preload ? Promise.race([Mon3D.preload(sps).catch(() => {}), sleep(2500)]) : Promise.resolve();
   const teamSps = () => M().team.map(byUid).filter(m => m && !m.egg).map(spOf);
@@ -231,21 +232,25 @@
         '<button class="btn sun wide world-go" data-act="wEnter">🌅 开始冒险</button></section>';
     }
     const L = lead(), s = SPECIES[L.sp], st = stats(L);
-    let h = '<section class="mon-card lead" style="--tc:' + TYPES[s.type].color + '"><div class="lead-mon">' + svgMon(L) + '</div><div class="lead-info">' +
+    // 学习锁：锁着时两个小任务和锁着的按钮放在最上面，一眼就看到；开了就放在怪兽卡片下面
+    const g = E.gate ? E.gate() : { open: true }, lock = E.gateCard ? E.gateCard() : '';
+    const lockedBtn = '<button class="btn wide world-go locked" data-act="wEnter">🔒 ' + (g.back ? '手机日期被改过，先改回来' : '还差 ' + (g.steps || 1) + ' 步就能去冒险') + '</button>';
+    let h = g.open ? '' : lock + lockedBtn;
+    h += '<section class="mon-card lead" style="--tc:' + TYPES[s.type].color + '"><div class="lead-mon">' + svgMon(L) + '</div><div class="lead-info">' +
       '<div class="lead-name"><b>' + (L.shiny ? '✨' : '') + E.esc(nm(L)) + '</b><span>' + (L.nick ? s.en + ' · ' : '') + s.zh + '</span> ' + heartsHTML(L) + '</div>' +
       '<div class="chips">' + chips(L.sp) + '<span class="lvchip">Lv ' + L.lv + '</span></div>' +
       '<div class="xpbar"><i style="width:' + (L.xp / xpNeed(L.lv) * 100) + '%"></i></div>' +
       '<small>HP ' + st.hp + ' · 攻击 ' + st.atk + ((s.evo || []).find(e => e.lv) ? ' · Lv ' + s.evo.find(e => e.lv).lv + ' 会进化' : '') + '</small></div>' +
       '<div class="lead-btns"><button class="btn small ghost" data-act="mTeam">🐾 我的怪兽 ' + m.box.length + '</button><button class="btn small ghost" data-act="mDex">📖 图鉴 ' + caughtN() + '/' + ORDER.length + '</button><button class="btn small sun" data-act="mBalls">🔮 回声球 ' + m.balls + '</button></div></section>';
     const ws = E.S.world || {}, place = window.EchoWorld && EchoWorld.placeLabel ? EchoWorld.placeLabel() : null;
-    h += '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? '继续冒险' + (place ? ' · ' + place.name : '') : '出发去冒险！') + '</button>';
+    if (g.open) h += lock + '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? '继续冒险' + (place ? ' · ' + place.name : '') : '出发去冒险！') + '</button>';
     h += '<p class="tip">走进草丛会遇到野生怪兽，路上的训练师看到你就会来挑战。<br>打败每个小镇的道馆馆主拿到徽章，守卫才会让你去下一个小镇。</p>';
     const visited = Object.keys(ws.visited || {}).map(Number).sort((a, b) => a - b);
     if (visited.length > 1) {
       h += '<section class="mon-card fly"><h3>✈️ 飞回去过的小镇</h3><div class="fly-list">' + visited.map(z =>
         '<button class="btn small ghost" data-act="wFly" data-z="' + z + '">' + E.W[z].icon + ' ' + E.W[z].name + (m.badges[z] ? ' 🏅' : '') + '</button>').join('') + '</div></section>';
     }
-    h += '<p class="tip">🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · <button class="link" data-act="mBag">🎒 背包</button> · 在「📚 闯关练习」每通关一关送 1 个回声球，三星送 2 个。</p>';
+    h += '<p class="tip">🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · <button class="link" data-act="mBag">🎒 背包</button> · <button class="link" data-act="report">📊 学习周报</button> · 在「📚 闯关练习」每通关一关送 1 个回声球，三星送 2 个。</p>';
     return h;
   }
 
@@ -381,6 +386,7 @@
     return true;
   }
   function stopBattle() {
+    if (RO) { RO.disconnect(); RO = null; }
     if (B3) { B3.destroy(); B3 = null; }
     if (!B) return;
     B.over = true;
@@ -422,6 +428,8 @@
       '</div><div class="b-msg" id="b-msg"></div><div class="b-panel" id="b-panel"></div>';
     if (B3) {
       const ar = $('b-arena'); ar.classList.add('is3d'); B3.mount(ar);
+      // 战场是弹性高度（下面的面板变高变矮时跟着变）：尺寸一变就让 3D 画面重新算
+      if (window.ResizeObserver) { if (RO) RO.disconnect(); RO = new ResizeObserver(() => { if (B3 && ar.isConnected) { try { B3.resize(); } catch (e) { /* 忽略 */ } } }); RO.observe(ar); }
       B.rig3 = B.rig3 || {};
       if (B.enter === 'both' || B.enter === 'foe') { B3.setMon('foe', spOf(f), true); B.rig3.foe = !!(Mon3D.isLoaded && Mon3D.isLoaded(spOf(f))); }
       if (B.enter === 'both' || B.enter === 'me') { B3.setMon('me', spOf(m), true); B.rig3.me = !!(Mon3D.isLoaded && Mon3D.isLoaded(spOf(m))); }
@@ -659,10 +667,11 @@
       const sc = t.opts.map(o => E.bestScore(o.t, res.alts));
       let bi = 0; sc.forEach((s, k) => { if (s.score > sc[bi].score) bi = k; });
       $('b-heard').textContent = '我听到：“' + sc[bi].heard + '”';
-      if (t.opts[bi].c && sc[bi].score >= 45) { markOpts(bi); finishTask(sc[bi].score, true); }
-      else if (!t.opts[bi].c && sc[bi].score >= 60) { markOpts(t.opts.findIndex(o => o.c), bi); finishTask(0, true, '说成了错误的回答'); }
-      else if (B.tries < 1) { B.tries++; $('b-hint').textContent = '没对上任何一个回答，再说一次（最后一次机会）'; }
-      else finishTask(0, true);
+      const ci = t.opts.findIndex(o => o.c);
+      if (t.opts[bi].c && sc[bi].score >= 45) { markOpts(bi); reveal(sc[bi].score, '', () => finishTask(sc[bi].score, true)); }
+      else if (!t.opts[bi].c && sc[bi].score >= 60) { markOpts(ci, bi); reveal(0, t.target, () => finishTask(0, true, '说成了错误的回答')); }
+      else if (B.tries < 1) { B.tries++; B.hinted = true; $('b-hint').textContent = '没对上任何一个回答，再说一次（最后一次机会，这次不能暴击了）'; }
+      else { markOpts(ci); reveal(0, t.target, () => finishTask(0, true)); }
       return;
     }
     const r = E.bestScore(t.target, res.alts);
@@ -673,8 +682,25 @@
       if (say.classList.contains('mask')) { say.classList.remove('mask'); say.innerHTML = E.wordsHTML(t.target); }
       say.querySelectorAll('.w').forEach((w, k) => { w.classList.toggle('ok', !!r.marks[k]); w.classList.toggle('miss', !r.marks[k]); });
     }
-    if (r.score < 30 && B.tries < 1) { B.tries++; $('b-hint').textContent = r.score + ' 分，没念准，再试一次（最后一次机会）'; return; }
-    finishTask(r.score, true);
+    // 第二次机会：答案已经亮出来了（单词题还会念一遍），跟着念对了也只算普通命中，不能暴击
+    if (r.score < 30 && B.tries < 1) {
+      B.tries++; B.hinted = true;
+      $('b-hint').textContent = r.score + ' 分，没念准，再试一次（最后一次机会' + (B.mv && !B.mv.sup && t.kind !== 'catch' ? '，这次不能暴击了' : '') + '）';
+      if (t.kind === 'word') E.say(t.target);
+      return;
+    }
+    reveal(r.score, t.target, () => finishTask(r.score, true));
+  }
+  // 出招前先停一下：亮出答案（念到的词绿、没念到的红），没念好的再放一遍标准读音——
+  // 不然面板马上换成战斗画面，孩子看不到正确答案，像是「技能直接放了」
+  async function reveal(score, target, done) {
+    const b = B, t = B.task, h = $('b-hint'), t0 = Date.now();
+    B.turn = 'show';
+    document.querySelectorAll('#b-panel [data-act=bHint], #b-panel [data-act=bBack]').forEach(x => { x.style.visibility = 'hidden'; });
+    if (h) h.textContent = score >= 85 ? '念得很准！' : '听一下正确的读法 👂';
+    if (score < 85 && target) { await Promise.race([E.say(target), sleep(5000)]); await sleep(400); }
+    await sleep(Math.max(0, (score >= 85 ? 700 : 1500) - (Date.now() - t0)));
+    if (live(b) && B.task === t && B.turn === 'show') done();
   }
   function markOpts(ri, wi) {
     document.querySelectorAll('#b-panel .opt').forEach((b, k) => b.classList.add(k === ri ? 'right' : k === wi ? 'wrong' : 'dim'));
@@ -698,7 +724,10 @@
   function onRate(v) {
     if (!B || B.turn !== 'task') return;
     if (B.task.kind === 'ult' && !B.task.picked) return;
-    if (B.task.kind === 'word') { const s = $('b-say'); if (s) { s.classList.remove('mask'); s.innerHTML = E.wordsHTML(B.task.target); } }
+    if (B.task.kind === 'word') {
+      const s = $('b-say'); if (s) { s.classList.remove('mask'); s.innerHTML = E.wordsHTML(B.task.target); }
+      if (v < 2) { reveal(0, B.task.target, () => finishTask([20, 65, 88][v], false)); return; }   // 没念好：先看答案、听一遍
+    }
     finishTask([20, 65, 88][v], false);
   }
   function finishTask(score, measured, why) {
@@ -1789,6 +1818,7 @@
     homeHTML,
     stop: () => { writeBack(); stopBattle(); },
     battle: startBattle,
+    _b: () => B,   // 测试用：当前战斗
     trainerFoes,
     healAll,
     anyAlive,

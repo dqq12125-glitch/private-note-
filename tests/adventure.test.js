@@ -20,7 +20,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.goto(PAGE);
   // 从开场剧情已经看完的存档开始（开场剧情由 story.test.js 测）
   await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({
-    seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: '2d', sfx: false }, player: { gender: 'boy', name: 'Tom' },
+    seenIntro: true, settings: { tts: 'online', mode: 'self', gfx: '2d', sfx: false, gate: false }, player: { gender: 'boy', name: 'Tom' },
     mon: { v: 2, box: [{ uid: 'm1', sp: 'bubbly', lv: 5, xp: 0 }], team: ['m1'], dex: { bubbly: 'caught' } },
     world: { v: 2, started: true, map: 't0', x: 11, y: 9, dir: 'up', flags: { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:ch1': 1 } },
   })));

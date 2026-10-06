@@ -212,13 +212,27 @@
     E.save();
   }
 
+  // ---------- 路上的对手：进地图时就站在路上（远远就能看见），走近了「!」一下再走过来，不会凭空冒出来 ----------
+  function rivalStand(C, id, x, y) {
+    if (C.npc(n => n.id === id)) return;
+    const R = C.rivalInfo();
+    C.spawn({ id, look: R.look, name: R.name, g: R.g, x, y, face: 'down' });
+  }
+  // 走到主角面前：先沿自己那一列（路）上下走，再横着对齐
+  async function approach(C, r) {
+    const pl = C.pl;
+    await C.alert(r);
+    const ty = r.y < pl.y ? pl.y - 1 : pl.y + 1;
+    if (r.y !== ty) await C.walk(r, ty > r.y ? 'down' : 'up', Math.abs(ty - r.y), 220);
+    if (r.x !== pl.x) await C.walk(r, r.x < pl.x ? 'right' : 'left', Math.abs(pl.x - r.x), 220);
+    C.faceEach(r);
+  }
+
   // ---------- 1 号路：第一次遇到对手 ----------
   async function rival1(C) {
     const E = C.E, MG = C.MG, R = C.rivalInfo(), pl = C.pl;
-    const r = C.spawn({ look: R.look, name: R.name, g: R.g, x: pl.x, y: pl.y - 5, face: 'down' });
-    await C.alert(r);
-    await C.walk(r, 'down', 4, 170);
-    C.faceEach(r);
+    const r = C.npc(n => n.id === 'rival1') || C.spawn({ id: 'rival1', look: R.look, name: R.name, g: R.g, x: pl.x, y: pl.y - 5, face: 'down' });
+    await approach(C, r);
     const say = (en, zh, x) => Object.assign({ who: R.name, look: R.look, g: R.g, en, zh }, x || {});
     await C.talk([
       say('Hi! You must be {name}! Mom told me about you.', '嗨！你就是 {name} 吧！妈妈跟我说过你。'),
@@ -520,7 +534,7 @@
   // ---------- 对外 ----------
   window.EchoStory = {
     isle(z, hooks) { ISLES[z] = hooks; },
-    lib: { P, prof, mom, nar, HUSH, CH, rival1, sayer, me, speak, ask, hushFight, rivalFight, rivalTeam, restoreCrystal, echodrakeWakes, legendMeet, leagueBattle, hallOfFame, chFlag },
+    lib: { P, prof, mom, nar, HUSH, CH, rival1, rivalStand, approach, sayer, me, speak, ask, hushFight, rivalFight, rivalTeam, restoreCrystal, echodrakeWakes, legendMeet, leagueBattle, hallOfFame, chFlag },
     enter(C, how) {
       const id = C.map.id, has = C.MG.leadSpecies();
       // 老存档：已经有怪兽，开场就算看过了；还没起名字的补问一次

@@ -1164,10 +1164,8 @@
   // ---------- 3 号路：对手第二次对战 ----------
   async function rival2(C) {
     const R = C.rivalInfo(), pl = C.pl, S = L.sayer(R.name, R.look, R.g);
-    const r = C.spawn({ look: R.look, name: R.name, g: R.g, x: pl.x, y: pl.y - 5, face: 'down' });
-    await C.alert(r);
-    await C.walk(r, 'down', 4, 160);
-    C.faceEach(r);
+    const r = C.npc(n => n.id === 'rival2') || C.spawn({ id: 'rival2', look: R.look, name: R.name, g: R.g, x: pl.x, y: pl.y - 5, face: 'down' });
+    await L.approach(C, r);
     await C.talk([
       S('{name}! Wait for me!', '{name}！等等我！'),
       S('I called my mom and dad this morning. They say hi!', '我今天早上给爸爸妈妈打了电话，他们向你问好！'),
@@ -1188,11 +1186,13 @@
       const id = C.map.id;
       if (id === 't2') return C.flag('f2call') ? () => note2(C) : () => momCall(C);
       if (id === 'i2G') return () => gym2Enter(C);
+      // 3 号路：对手站在花田中间的小路上等你
+      if (id === 'r2' && !C.flag('rival2') && !C.npc(n => n.id === 'rival2')) return () => L.rivalStand(C, 'rival2', 12, 20);
       return null;
     },
     step(C) {
       const pl = C.pl;
-      if (C.map.id === 'r2' && !C.flag('rival2') && C.MG.anyAlive() && pl.x >= 10 && pl.x <= 13 && pl.y >= 19 && pl.y <= 27) return () => rival2(C);
+      if (C.map.id === 'r2' && !C.flag('rival2') && C.MG.anyAlive() && pl.x >= 10 && pl.x <= 13 && pl.y >= 21 && pl.y <= 27) return () => rival2(C);
       return null;
     },
     talk(C, n) {

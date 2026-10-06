@@ -1681,8 +1681,9 @@
 
   // ---------- 对外 ----------
   const actions = {
-    wEnter: () => enter(0, 'resume'),
-    wFly: t => enter(+t.dataset.z, 'fly'),
+    // 学习锁没开：不让进（第一次开始冒险、还没有怪兽的时候不锁）
+    wEnter: () => { if (E.gate && (E.S.mon && E.S.mon.box || []).length && !E.gate().open) { E.gateBlock(); return; } enter(0, 'resume'); },
+    wFly: t => { if (E.gate && (E.S.mon && E.S.mon.box || []).length && !E.gate().open) { E.gateBlock(); return; } enter(+t.dataset.z, 'fly'); },
     wExit: () => { E.closeModal(); E.goHome('mon'); },
     wA: () => overlay ? overlay('A') : interact(),
     wChat: () => { if (!overlay && !dlg && !busy && chatNpc) { chatNpc.face = faceTo(chatNpc, PL); chatWith(chatNpc); } },

@@ -772,17 +772,20 @@
     enter(C) {
       const id = C.map.id;
       if (id === 'c0' && !C.flag('leg:rockgiant') && !C.npc(n => n.mon === 'rockgiant')) return () => { C.spawn({ mon: 'rockgiant', role: 'legend', x: 21, y: 3, face: 'down' }); };
+      // 1 号路：对手站在小路上等你（从南边一进来就看得见）
+      if (id === 'r0' && C.flag('starter') && !C.flag('rival1') && !C.npc(n => n.id === 'rival1')) return () => L.rivalStand(C, 'rival1', 12, 24);
       return null;
     },
     step(C) {
       const m = C.map, pl = C.pl;
-      // 1 号路中间：第一次遇到对手
-      if (m.id === 'r0' && C.flag('starter') && !C.flag('rival1') && C.MG.anyAlive() && (pl.x === 11 || pl.x === 12) && pl.y >= 29 && pl.y <= 31) return () => L.rival1(C);
+      // 1 号路中间：第一次遇到对手（她站在第 24 行的小路上，走过来好几步前就看得见；走进 25–29 行，不管走哪一列都会被她看见）
+      if (m.id === 'r0' && C.flag('starter') && !C.flag('rival1') && C.MG.anyAlive() && pl.y >= 25 && pl.y <= 29) return () => L.rival1(C);
       return null;
     },
     talk(C, n) {
       const id = C.map.id;
       if (id === 'r0h' && n.id === 'rest') return () => restHouse(C, n);
+      if (id === 'r0' && n.id === 'rival1') return () => C.MG.anyAlive() ? L.rival1(C) : C.talk([{ who: n.name, look: n.look, g: n.g, en: 'Your monsters are tired. Heal them first, then come back!', zh: '你的怪兽都累了。先去给它们恢复体力，再回来吧！' }]);
       if (id === 'c0' && n.id === 'orion') return () => orionCave(C, n);
       if (n.role === 'legend') return () => L.legendMeet(C, n);
       return null;
