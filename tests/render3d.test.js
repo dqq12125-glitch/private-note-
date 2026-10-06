@@ -56,7 +56,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   check(await p.evaluate(() => EchoWorld._debug().R.kind) === '3d', '切回自动（3D）');
   // 自动画质：软件渲染很慢，量完帧率应该降档
   // 巡游时触发的剧情对话先点完（对话开着时不量帧率）
-  for (let i = 0; i < 40 && await p.evaluate(() => !!EchoWorld._debug().dlg); i++) { if (await p.$('#w-dlg [data-act=wSkip]')) await p.click('#w-dlg [data-act=wSkip]').catch(() => {}); else if (await p.$('#w-dlg [data-act=wPick]')) await p.click('#w-dlg [data-act=wPick]').catch(() => {}); else await p.click('#world [data-act=wA].ba').catch(() => {}); await p.waitForTimeout(200); }
+  for (let i = 0; i < 40 && await p.evaluate(() => !!EchoWorld._debug().dlg); i++) { if (await p.$('#w-dlg [data-act=wSkip]')) await p.click('#w-dlg [data-act=wSkip]').catch(() => {}); else if (await p.$('#w-dlg [data-act=wPick]')) await p.click('#w-dlg [data-act=wPick]').catch(() => {}); else await p.evaluate(() => document.querySelector('#world [data-act=wA].ba').click()).catch(() => {}); await p.waitForTimeout(200); }
   await p.waitForTimeout(9000);
   const tier = await p.evaluate(() => ({ tier: EchoWorld._debug().R.tier, auto: JSON.parse(localStorage.getItem('echo-island-v1')).settings.gfxAuto, perf: EchoWorld._debug().perf, busy: EchoWorld._debug().busy, dlg: !!EchoWorld._debug().dlg, map: EchoWorld._debug().M.id, pg: (d => d && d.pages[d.i] && (d.pages[d.i].en + '|' + d.pages[d.i].kind))(EchoWorld._debug().dlg), gfx: JSON.parse(localStorage.getItem('echo-island-v1')).settings.gfx }));
   check(tier.auto && tier.auto !== 'mid', '慢设备上自动降档 ' + JSON.stringify(tier));

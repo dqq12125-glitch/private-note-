@@ -28,7 +28,9 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.click('[data-act=wEnter]');
   await p.waitForTimeout(1500);
   const dbg = () => p.evaluate(() => { const d = EchoWorld._debug(); return { map: d.M.id, x: d.PL.x, y: d.PL.y, dir: d.PL.dir, dlg: !!d.dlg, busy: d.busy }; });
-  const A = async () => { for (let i = 0; i < 40; i++) { const t = await p.evaluate(() => { const d = EchoWorld._debug().dlg; return !!(d && d.typing); }); if (!t) break; await p.waitForTimeout(100); } await p.click('#world [data-act=wA].ba'); await p.waitForTimeout(250); };
+  const A = async () => { for (let i = 0; i < 40; i++) { const t = await p.evaluate(() => { const d = EchoWorld._debug().dlg; return !!(d && d.typing); }); if (!t) break; await p.waitForTimeout(100); } await pressA(); await p.waitForTimeout(250); };
+  // 按 A：对话框、过场出来时屏幕上的 A 键会藏起来（点对话框就是 A），这里直接触发 A 键
+  const pressA = () => p.evaluate(() => document.querySelector('#world [data-act=wA].ba').click());
   const step = async (key, n = 1) => { for (let i = 0; i < n; i++) { await p.keyboard.down(key); await p.waitForTimeout(40); await p.keyboard.up(key); await p.waitForTimeout(300); } };
   const tp = (x, y, dir) => p.evaluate(([x, y, dir]) => { const d = EchoWorld._debug(); d.PL.x = d.PL.fx = x; d.PL.y = d.PL.fy = y; d.PL.dir = dir || d.PL.dir; d.FL.x = d.FL.fx = x; d.FL.y = d.FL.fy = y + 1; }, [x, y, dir]);
   const waitMap = async id => { for (let i = 0; i < 30; i++) { const s = await dbg(); if (s.map === id && !s.busy) return true; await p.waitForTimeout(100); } return false; };

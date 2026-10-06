@@ -26,7 +26,8 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
     return p.evaluate(() => { const e = document.querySelector('#w-dlg:not([hidden]) .d-en'); return e ? e.textContent : ''; });
   };
   const typed = async () => { for (let i = 0; i < 50; i++) { const t = await p.evaluate(() => { const d = EchoWorld._debug().dlg; return !!(d && d.typing); }); if (!t) return; await p.waitForTimeout(80); } };
-  const A = async () => { await typed(); await p.click('#world [data-act=wA].ba'); await p.waitForTimeout(260); };
+  // 按 A：对话框、过场出来时屏幕上的 A 键会藏起来（点对话框就是 A），这里直接触发 A 键
+  const A = async () => { await typed(); await p.evaluate(() => document.querySelector('#world [data-act=wA].ba').click()); await p.waitForTimeout(260); };
   // 一直按 A，直到出现 sel（选项、输入框、说话按钮……）
   const until = async (sel, max = 20) => { for (let i = 0; i < max; i++) { if (await p.$(sel)) return true; await A(); } return !!(await p.$(sel)); };
   const store = () => p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')));

@@ -357,12 +357,12 @@
       body += '<div class="d-task"><div class="say-text" id="w-say">' + E.wordsHTML(pg.target) + '</div>' +
         (sr ? '<button class="mic" id="w-mic" data-act="wMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="w-hint">点麦克风，大声说出来</div><div class="heard" id="w-heard"></div>'
           : '<div class="mic-hint" id="w-hint">大声说出来，说完点「我说完了」</div><button class="btn leaf" data-act="wSelfDone">🎤 我说完了</button>') +
-        '<button class="link" data-act="wSkip">先跳过</button></div>';
+        '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>先跳过</button></div>';
     } else if (pg.kind === 'answer') {
       body += '<div class="d-task">' + (pg.pic ? '<div class="say-emoji">' + pg.pic + '</div>' : '') + '<div class="opts list">' + pg.opts.map((o, k) => '<button class="opt en" data-act="wOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>' +
         (sr ? '<small class="tip">选一句正确的回答，<b>大声说出来</b>（点选项可以先听）</small><button class="mic" id="w-mic" data-act="wMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="w-hint"></div><div class="heard" id="w-heard"></div>'
           : '<small class="tip" id="w-hint">点出正确的回答，再大声说一遍</small>') +
-        '<button class="link" data-act="wSkip">先跳过</button></div>';
+        '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>先跳过</button></div>';
     } else if (pg.kind === 'choice') {
       body += '<div class="d-task"><div class="d-choice">' + pg.opts.map((o, k) => '<button class="btn ' + (o.cls || 'ghost') + '" data-act="wPick" data-i="' + k + '">' + o.html + '</button>').join('') + '</div></div>';
     } else if (pg.kind === 'custom') body += '<div class="d-task" id="w-custom">' + pg.html + '</div>';
@@ -371,6 +371,7 @@
     if (pg.kind === 'custom' && pg.mount) pg.mount($('w-custom'), extra => { if (page() !== pg) return; insertPages(extra); pg.kind = null; nextPage(); });
     box.classList.toggle('task', !!pg.kind);
     box.hidden = false;
+    box.scrollTop = 0;
     if (typing) {
       // 英文一个字一个字打出来，按 A 可以直接显示全部
       let i = 0;
@@ -448,16 +449,17 @@
     if (pg.kind === 'speak') {
       const r = E.bestScore(pg.target, res.alts);
       $('w-heard').textContent = '我听到：“' + r.heard + '”';
+      if (r.score < 90 && E.aiTip) E.aiTip(pg.target, r.heard, $('w-heard'));
       document.querySelectorAll('#w-say .w').forEach((w, k) => { w.classList.toggle('ok', !!r.marks[k]); w.classList.toggle('miss', !r.marks[k]); });
       if (r.score >= 55) { $('w-hint').innerHTML = '<b>' + r.score + ' 分</b> 说得好！'; setTimeout(() => { if (page() === pg) passTask(r.score); }, 700); }
-      else { d.tries++; $('w-hint').textContent = r.score + ' 分，红色的词再读准一点' + (d.tries >= 2 ? '，也可以先跳过' : ''); }
+      else { d.tries++; $('w-hint').textContent = r.score + ' 分，红色的词再读准一点' + (d.tries >= 3 ? '，实在不行可以先跳过' : ''); if (d.tries >= 3) { const sk = $('w-skip'); if (sk) sk.hidden = false; } }
     } else {
       const sc = pg.opts.map(o => E.bestScore(o.t, res.alts));
       let bi = 0; sc.forEach((s, k) => { if (s.score > sc[bi].score) bi = k; });
       $('w-heard').textContent = '我听到：“' + sc[bi].heard + '”';
       if (pg.opts[bi].c && sc[bi].score >= 45) { markOpts(bi); setTimeout(() => { if (page() === pg) passTask(sc[bi].score); }, 700); }
       else if (!pg.opts[bi].c && sc[bi].score >= 60) { markOpts(pg.opts.findIndex(o => o.c), bi); setTimeout(() => { if (page() === pg) failTask(); }, 900); }
-      else { d.tries++; $('w-hint').textContent = '没对上任何一个回答，再说一次' + (d.tries >= 2 ? '，也可以先跳过' : ''); }
+      else { d.tries++; $('w-hint').textContent = '没对上任何一个回答，再说一次' + (d.tries >= 3 ? '，实在不行可以先跳过' : ''); if (d.tries >= 3) { const sk = $('w-skip'); if (sk) sk.hidden = false; } }
     }
   }
   function markOpts(ri, wi) { document.querySelectorAll('#w-dlg .opt').forEach((b, k) => b.classList.add(k === ri ? 'right' : k === wi ? 'wrong' : 'dim')); }
@@ -471,6 +473,9 @@
       markOpts(i);
       E.say(pg.opts[i].t);
       $('w-hint').innerHTML = '选对了！大声说一遍，然后点 <button class="btn small leaf" data-act="wSelfDone">🎤 我说完了</button>';
+      // 对话框放不下时（横屏、长句子），让刚出来的「我说完了」露出来
+      const box = $('w-dlg'), hr = $('w-hint').getBoundingClientRect(), br = box.getBoundingClientRect();
+      if (hr.bottom > br.bottom - 6) box.scrollTop += hr.bottom - br.bottom + 12;
     } else { markOpts(pg.opts.findIndex(o => o.c), i); setTimeout(() => { if (page() === pg) failTask(); }, 900); }
   }
 
@@ -1000,6 +1005,12 @@
   }
   // ---------- 和面前的人用英语自由聊天（talk.js + AI 语音）：原来的剧情对话不动，另加一个按钮 ----------
   let chatNpc = null;
+  // 操作方式：joy 摇杆（默认）/ pad 方向键（设置里改）
+  function ctlMode() {
+    const w = $('world'); if (!w) return;
+    const m = E.S.settings.ctl === 'pad' ? 'pad' : 'joy';
+    w.classList.toggle('ctl-joy', m === 'joy'); w.classList.toggle('ctl-pad', m === 'pad');
+  }
   function chatBtn(n) {
     if (n === chatNpc) return;
     chatNpc = n;
@@ -1229,8 +1240,9 @@
     function resize() {
       const dpr = window.devicePixelRatio || 1;
       VW = view.clientWidth; VH = view.clientHeight;
-      const cols = m && m.kind === 'inside' ? Math.min(m.W, 11) : 9;
-      T = Math.max(28, Math.floor(VW / cols));
+      const inside = m && m.kind === 'inside', cols = inside ? Math.min(m.W, 11) : 9;
+      // 竖屏按宽度放 9 格；横屏按高度放 9 行（屋里整间放得下），不然格子太大、看不到周围
+      T = Math.max(28, Math.floor(VW > VH ? (inside ? Math.min(VW / cols, VH / (m.H + 1)) : VH / 9) : VW / cols));
       cv.width = VW * dpr; cv.height = VH * dpr;
       cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1559,10 +1571,72 @@
       '<div class="w-hud"><button class="x" data-act="wExit" aria-label="回首页">✕</button><div class="w-zone"><b id="w-zname"></b><small id="w-zsub"></small></div>' +
       '<span class="chip" id="w-badges"></span><span class="chip" id="w-balls"></span><button class="w-bike" id="w-bike" data-act="wBike" aria-label="骑车" hidden>🚲</button><button class="w-menu" data-act="wMenu" aria-label="菜单">☰</button></div>' +
       '<div class="w-view" id="w-view"><div class="w-note" id="w-note" hidden></div><div class="w-scene" id="w-scene" hidden></div><div class="w-banner" id="w-banner" hidden></div><div class="w-wipe" id="w-wipe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="w-dlg" id="w-dlg" data-act="wA" hidden></div></div>' +
-      '<div class="w-ctrl"><div class="dpad" id="w-dpad">' +
+      // 操作：浮在画面上——左边摇杆（手指按哪里就从哪里推），右边 A / B / 英语聊天（像手机上的动作游戏）；设置里可以换回方向键
+      '<div class="w-ctrl" id="w-ctrl"><div class="joy-zone" id="w-joy"><div class="joy-base"><i class="joy-knob"></i></div></div><div class="dpad" id="w-dpad">' +
       ['up', 'left', 'right', 'down'].map(d => '<button class="dp dp-' + d + '" data-dir="' + d + '" aria-label="' + { up: '上', left: '左', right: '右', down: '下' }[d] + '">' + { up: '▲', left: '◀', right: '▶', down: '▼' }[d] + '</button>').join('') +
-      '</div><div class="ab"><button class="bb" data-act="wB">B<small>菜单</small></button><button class="ba" data-act="wA">A<small>对话</small></button></div>' +
-      '<button class="w-chat" id="w-chat" data-act="wChat" hidden>🗣️<small>英语聊天</small></button></div>';
+      '</div><div class="ab"><button class="w-chat" id="w-chat" data-act="wChat" hidden>🗣️<small>英语聊天</small></button><button class="bb" data-act="wB">B<small>菜单</small></button><button class="ba" data-act="wA">A<small>对话</small></button></div></div>';
+    ctlMode();
+    // 摇杆：按下的地方就是摇杆中心，往哪边推得多就往哪边走（格子地图只有上下左右），松手就停
+    const jz = $('w-joy'), jb = jz.querySelector('.joy-base'), jk = jz.querySelector('.joy-knob');
+    const J = { id: null, x: 0, y: 0, dir: null };
+    jz.addEventListener('pointerdown', e => {
+      if (J.id !== null) return;
+      e.preventDefault(); J.id = e.pointerId; J.dir = null;
+      try { jz.setPointerCapture(e.pointerId); } catch (er) { /* 忽略 */ }
+      const r = jz.getBoundingClientRect(); J.x = e.clientX; J.y = e.clientY;
+      jb.style.left = (e.clientX - r.left) + 'px'; jb.style.top = (e.clientY - r.top) + 'px'; jb.classList.add('on');
+    });
+    jz.addEventListener('pointermove', e => {
+      if (e.pointerId !== J.id) return;
+      let dx = e.clientX - J.x, dy = e.clientY - J.y; const d = Math.hypot(dx, dy), R = 46;
+      if (d > R) { dx *= R / d; dy *= R / d; }
+      jk.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+      // 死区 14px；已经在走的方向要明显偏过去才换（斜着推的时候不来回抖）
+      let dir = null;
+      if (d >= 14) {
+        const h = Math.abs(dx) > Math.abs(dy) * (J.dir === 'up' || J.dir === 'down' ? 1.25 : J.dir ? .8 : 1);
+        dir = h ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+      }
+      if (dir === J.dir) return;
+      J.dir = dir;
+      if (overlay) { if (dir) overlay(dir); return; }
+      held = dir; if (dir) tryMove(dir);
+    });
+    const jEnd = e => {
+      if (e.pointerId !== J.id) return;
+      J.id = null; J.dir = null; held = null;
+      jb.classList.remove('on'); jb.style.left = ''; jb.style.top = ''; jk.style.transform = '';
+    };
+    jz.addEventListener('pointerup', jEnd);
+    jz.addEventListener('pointercancel', jEnd);
+    jz.addEventListener('lostpointercapture', jEnd);   // 走着走着弹出对话框（操作藏起来了），手指抬起时也要放开摇杆
+    jz.addEventListener('contextmenu', e => e.preventDefault());
+    // 对话框里的输入框（起名字）：弹出软键盘后屏幕只剩一小条，把输入框滚到对话框里看得见的地方
+    const dlgBox = $('w-dlg');
+    dlgBox.addEventListener('focusin', e => {
+      if (e.target.tagName !== 'INPUT') return;
+      setTimeout(() => {
+        const r = e.target.getBoundingClientRect(), b = dlgBox.getBoundingClientRect();
+        if (r.bottom > b.bottom - 4) dlgBox.scrollTop += r.bottom - b.bottom + 12;
+        else if (r.top < b.top + 4) dlgBox.scrollTop -= b.top - r.top + 12;
+      }, 300);
+    });
+    // 左手按着摇杆时右手点 A / B / 英语聊天：这是「第二根手指」，浏览器不给它发 click，这里自己补一个；
+    // 万一浏览器又发了真的 click，0.5 秒内同一个按钮的就不算，免得按一下触发两次
+    const ab = $('w-ctrl').querySelector('.ab');
+    let synth = false, fired = null;
+    ab.addEventListener('pointerup', e => {
+      if (e.isPrimary) return;
+      const b = e.target.closest('button[data-act]');
+      if (!b || b.hidden || !ab.contains(b)) return;
+      fired = { b, t: performance.now() };
+      synth = true; try { b.click(); } finally { synth = false; }
+    });
+    ab.addEventListener('click', e => {
+      if (synth || !fired) return;
+      if (e.target.closest('button') === fired.b && performance.now() - fired.t < 500) { e.stopPropagation(); e.preventDefault(); }
+      fired = null;
+    }, true);
     const dp = $('w-dpad');
     const down = e => { const b = e.target.closest('[data-dir]'); if (!b) return; e.preventDefault(); if (overlay) { overlay(b.dataset.dir); return; } held = b.dataset.dir; b.classList.add('on'); tryMove(held); };
     const up = () => { held = null; dp.querySelectorAll('.on').forEach(b => b.classList.remove('on')); };
@@ -1600,7 +1674,7 @@
       '<button class="btn wide" data-act="close">继续冒险</button>');
   }
   function helpSheet() {
-    E.openModal('<h2>怎么玩</h2><p>◀▲▼▶ 走路，<b>A</b> 和面前的人说话、看告示牌、进门；<b>B</b> 打开菜单。电脑上可以用方向键 / WASD、空格键。</p>' +
+    E.openModal('<h2>怎么玩</h2><p>' + (E.S.settings.ctl === 'pad' ? '◀▲▼▶ 左下角方向键走路' : '🕹️ 左半边屏幕按住拖动走路（设置里可以换成方向键）') + '，<b>A</b> 和面前的人说话、看告示牌、进门；<b>B</b> 打开菜单。电脑上可以用方向键 / WASD、空格键。</p>' +
       '<p>🛤️ 小镇北边是道路，走进深色草丛会遇到野生怪兽。<br>🧑‍🎤 训练师看到你就会过来挑战。<br>⤵️ 台阶只能往下跳。<br>🕳️ 有的路旁边有洞穴，里面怪兽更强。<br>🏥 怪兽中心：找护士恢复体力，用电脑换队伍（最多 6 只）。<br>🏪 商店：买回声球、药水等道具。<br>🏟️ 道馆：打败馆主拿徽章，守卫就会让你去下一段路。<br>🌟 野外技能：拿到徽章后，对着小树、裂开的岩石、大石头、水按 A，大声说出指令就能用（菜单 → 野外技能）。<br>🎣 有钓竿就能对着水钓鱼；🚲 有自行车就点右上角的车骑上。<br>✨ 地上有些道具藏起来了，对着它按 A 才找得到。<br>💖 转身面对跟着你的怪兽按 A，每天用英语和它说一句话，它会越来越喜欢你。<br>🥚 温馨家庭岛的养育屋可以寄养怪兽、领蛋；蛋放在队伍里走路就会孵出来。</p>' +
       '<button class="btn wide" data-act="close">知道了</button>');
   }
@@ -1663,6 +1737,7 @@
     setGfx: () => { if (!M || !$('w-view')) return; ensureRenderer(); R.load(M, api3d); resize(); },
     // 现在用哪一档画质（自动档按设备和量出来的帧率；战斗画面也按这个）
     gfxTier: () => gfxTier(),
+    ctlMode: () => ctlMode(),
     placeLabel: () => { const ws = E.S.world; if (!ws.started || !ws.map || !window.EchoMaps) return null; const m = EchoMaps.get(ws.map); return m ? placeName(m) : null; },
     _debug: () => ({ M, PL, FL, dlg, busy, R, perf, goMap: (id, how) => goMap(id, how) }),
     _art: ART,

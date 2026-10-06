@@ -38,8 +38,10 @@
 - 秘传技能（仿绿宝石）：剧情里的人送秘传学习器（`hm_cut` 等重要物品）+ 要够徽章才能在野外用：闪光 2、居合斩 3、碎岩 4、怪力 6、冲浪 8、飞空 9、潜水 10、攀瀑 12（在本岛拿到，打赢本岛道馆才能用，正好卡住去下一座岛的路）。
 - 剧情脚本写法：钩子返回一个 async 函数，用 world.js 提供的 `SC`（`talk` 对话、`spawn/walk/remove` 临时人物、`battle`、`scene()` 全屏画面、`setOverlay` 接管按键、`flag/set` 剧情进度、`openGate/closeGate` 机关门、`teleport`、`note` 提示条、`filter` 画面滤镜、`over/setOver/refresh` 机关地板）。台词里 `{name}` `{rival}` 会换成主角和对手的名字。完整故事线在 `STORY.md`，各岛的写法和 `C` 接口全表在 `ISLES.md`。
 - 渲染器接口：`load(map)`、`resize()`、`draw(now, V)`、`destroy()`；`V` 由 `world.js` 的 `view()` 每帧给出（主角/跟随怪兽/人物/道具/提示的位置）。2D 和 3D 共用的画法（人物、地面）在 `EchoWorld._art`。
-- 屏幕切换用 `show(id)`：home / play / result / theater / battle / world。
-- 口语打分：`speakMode()` 返回 `'sr'`（浏览器语音识别）或 `'self'`（自评）；`scoreSpeech()` 做 0–100 打分。
+- 屏幕切换用 `show(id)`：home / play / result / theater / battle / world。切换时给 body 加 `scr-<画面>` 类，横屏排版靠它。
+- **操作和横屏**（2026-10-06 家长要求「横屏选项」「摇杆和 AB 融进游戏里，像王者荣耀」）：大地图画面铺满全屏，HUD 半透明浮在顶上；操作浮在画面上——左半边按哪里摇杆就出在哪里（`world.js` ensureDom 里的 `#w-joy`，格子地图只取上下左右、带死区和防抖），右下角大 A、左边 B、上面「英语聊天」排成弧形；对话框/过场出来时操作自动藏起（CSS `:has()`）。设置「冒险里的操作」可换回方向键（`S.settings.ctl` = joy / pad，`EchoWorld.ctlMode()`）。横屏：设置「屏幕方向」竖屏 / 横屏 / 跟着手机转（`S.settings.orient`，APK 里 `EchoNative.setOrientation`，原生记住下次直接用）；浏览器里横过手机也会套横屏排版。横屏样式都在 style.css 末尾的 `@media (orientation: landscape) and (max-height: 600px)` 里（对战左战场右招式、题目四个选项一行、弹窗变宽分栏……），竖屏不受影响。
+- 口语打分（家长 2026-10-06：**打分要 AI 来打、默认开口、必须开口说**）：`speakMode()` 返回 `'sr'` 或 `'self'`。APK 里一律 `'sr'`：录一句（`EchoTalk.listenOnce`，说完停顿自动结束）交给阿里云 qwen3-asr-flash **不带答案地听写**，再和目标句子逐词比对打分（`scoreSpeech()`，0–100，没读准的词标红）；低于 90 分时 `aiTip()` 把「目标句子 + 听到的话」交给 qwen-plus 给一句中文点评（哪个词读错、怎么读对）。试过让 Qwen-Omni 直接听录音打分——它会被目标句子带偏（读错的句子也给 85、把 potion 听成目标里的 lotion），所以不用。开口模式下没有「跳过这题」：练习说三次不行记进每日复习；大地图的说话任务说三次不行才出现「先跳过」；没网时提示联网后再说，不会退回自评。网页版走中转服务的 `/asr`、`/tip`（要家庭口令），连不上才用浏览器识别 / 录音自评；`录音自评` 只留给 `?quiet` 测试链接和测试脚本（tests 里都设 `mode: 'self'`）。
+- 字体在 `assets/fonts`（Baloo 2、Nunito，SIL OFL），不连 Google。
 - 调试入口：`EchoWorld._debug()` 可以拿到当前地图、玩家位置、渲染器，`goMap(id, how)` 直接传送（测试里用）。
 
 ## 怪兽 3D 资源

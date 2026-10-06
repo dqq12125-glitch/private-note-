@@ -241,6 +241,11 @@
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => mic.addEventListener(t, up));
     c.key = e => { if (e.code === 'Space' && document.activeElement !== $('#tk-in')) { e.preventDefault(); if (e.type === 'keydown' && !e.repeat) down(e); if (e.type === 'keyup') up(); } };
     document.addEventListener('keydown', c.key); document.addEventListener('keyup', c.key);
+    // 打字时弹出软键盘：输入框留在看得见的地方（横屏时屏幕只剩一小条）
+    const toBottom = () => { const i = $('#tk-in'), b = $('#tk-log'); if (b) b.scrollTop = b.scrollHeight; if (i) i.scrollIntoView({ block: 'nearest' }); };
+    $('#tk-in').addEventListener('focus', () => setTimeout(toBottom, 300));
+    c.resize = () => { if (document.activeElement === $('#tk-in')) toBottom(); };   // 键盘弹出来、屏幕变矮：最新的一句留在看得见的地方
+    window.addEventListener('resize', c.resize);
     $('#tk-type').addEventListener('submit', e => {
       e.preventDefault();
       const inp = $('#tk-in'), t = inp.value.trim(); if (!t) return;
@@ -266,6 +271,7 @@
     const c = C; C = null;
     try { c.ws && c.ws.close(); } catch (e) {}
     if (c.key) { document.removeEventListener('keydown', c.key); document.removeEventListener('keyup', c.key); }
+    if (c.resize) window.removeEventListener('resize', c.resize);
     stopPlayback(); micClose();
     const ov = $('#tk-ov'); if (ov) ov.remove();
     if (G.renderHome && !$('#home').hidden) G.renderHome();
@@ -370,9 +376,36 @@
     for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
     return btoa(s);
   }
+  // 网页版：中转服务（server/relay.js 的 /asr、/tip）替 APK 的原生桥去连阿里云
+  const relayHttp = () => { const u = relayUrl(); return u && u !== 'direct:' ? u.replace(/^ws/, 'http') : ''; };
+  const cloudSR = () => direct() || !!relayHttp();
+  async function relayPost(path, body, ms) {
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms || 15000);
+    try {
+      const code = LS('echo-talk-code');
+      const r = await fetch(relayHttp() + path + (code ? '?code=' + encodeURIComponent(code) : ''), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal });
+      return { ok: r.ok, text: await r.text() };
+    } catch (e) { return { ok: false, text: e.message }; } finally { clearTimeout(tm); }
+  }
+  // AI 老师点评：目标句子 + 识别出来的话 → 一句中文，指出最主要的差别、怎么读对
+  const TIPS = {};
+  async function aiTip(target, heard) {
+    const k = target + '|' + heard;
+    if (TIPS[k] !== undefined) return TIPS[k];
+    const sys = '你是一位耐心的初中英语发音老师。学生要大声说的英文是：「' + target + '」。语音识别听到学生说的是：「' + heard + '」。用一句简体中文（不超过 28 个字）具体指出最主要的问题（哪个词读错、漏读或读成了别的词，可能是哪个音没发好），并告诉他怎么读对。如果听到的和目标几乎不是同一句话（大部分词都对不上），就只说「你读的好像是另一句话，先点喇叭听一遍原句再读」。不要表扬、不要客套，只输出这一句话。';
+    const body = { model: 'qwen-plus', temperature: 0.2, max_tokens: 80, messages: [{ role: 'system', content: sys }, { role: 'user', content: '请点评。' }] };
+    let tip = '';
+    try {
+      if (direct()) { const r = await nativePost('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', JSON.stringify(body), 10000); if (r.ok) tip = JSON.parse(r.text).choices[0].message.content; }
+      else if (relayHttp()) { const r = await relayPost('/tip', { target, heard }, 10000); if (r.ok) tip = JSON.parse(r.text).tip; }
+    } catch (e) { tip = ''; }
+    tip = String(tip || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+    TIPS[k] = tip;
+    return tip;
+  }
   async function listenOnce(o) {
     o = o || {};
-    if (!direct()) return { text: '', err: 'service-not-allowed' };
+    if (!cloudSR()) return { text: '', err: 'service-not-allowed' };
     if (C) return { text: '', err: 'busy' };   // 正在和岛民聊天，麦克风被占着
     let stream, ctx;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
@@ -394,9 +427,14 @@
         if (o.onState) o.onState('🎧 识别中……');
         const body = { model: 'qwen3-asr-flash', stream: false, asr_options: { language: 'en', enable_itn: false },
           messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + wav16(chunks, len, rate) } }] }] };
-        const r = await nativePost('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', JSON.stringify(body), 12000);
-        let text = '';
-        try { text = String(JSON.parse(r.text).choices[0].message.content || '').trim(); } catch (e) {}
+        let text = '', r;
+        if (direct()) {
+          r = await nativePost('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', JSON.stringify(body), 12000);
+          try { text = String(JSON.parse(r.text).choices[0].message.content || '').trim(); } catch (e) {}
+        } else {
+          r = await relayPost('/asr', { audio: body.messages[0].content[0].input_audio.data.split(',')[1] }, 12000);
+          try { text = String(JSON.parse(r.text).text || '').trim(); } catch (e) {}
+        }
         resolve(r.ok ? { text, err: text ? null : 'no-speech' } : { text: '', err: 'network' });
       };
       SR.stop = () => finish('user');
@@ -452,5 +490,5 @@
       talk_log: () => showLog(),
     };
   }
-  window.EchoTalk = { init, homeHTML, open, openPerson, relayUrl, cloudSR: direct, listenOnce, stopListen: () => SR.stop && SR.stop() };
+  window.EchoTalk = { init, homeHTML, open, openPerson, relayUrl, cloudSR, listenOnce, aiTip, stopListen: () => SR.stop && SR.stop() };
 })();

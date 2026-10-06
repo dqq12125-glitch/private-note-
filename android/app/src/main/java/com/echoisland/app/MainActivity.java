@@ -57,6 +57,7 @@ public class MainActivity extends Activity {
         super.onCreate(saved);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         prefs = getSharedPreferences("echo", MODE_PRIVATE);
+        applyOrientation(prefs.getString("orient", "portrait"));   // 上次在游戏设置里选的屏幕方向
         if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true);   // 调试包：电脑上能用 Chrome 开发者工具看网页
         web = new WebView(this);
         web.setBackgroundColor(Color.parseColor("#12304a"));
@@ -119,6 +120,13 @@ public class MainActivity extends Activity {
         if (saved != null) web.restoreState(saved); else web.loadUrl(HOME);
     }
 
+    // 屏幕方向：portrait 竖屏 / landscape 横屏（两个横向都行）/ auto 跟着手机转（尊重系统的「锁定旋转」）
+    private void applyOrientation(String m) {
+        setRequestedOrientation("landscape".equals(m) ? android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                : "auto".equals(m) ? android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+                : android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+    }
+
     // 密钥：手机上「设置服务」填的优先，没有就用打包时 KEY_FILE 里的
     private String key() {
         String k = prefs.getString("key", "");
@@ -135,6 +143,11 @@ public class MainActivity extends Activity {
     private class Native {
         @JavascriptInterface public boolean hasKey() { return !key().isEmpty(); }
         @JavascriptInterface public void setKey(String k) { prefs.edit().putString("key", k == null ? "" : k.trim()).apply(); }
+        @JavascriptInterface public void setOrientation(String m) {
+            final String v = "landscape".equals(m) || "auto".equals(m) ? m : "portrait";
+            prefs.edit().putString("orient", v).apply();
+            runOnUiThread(() -> applyOrientation(v));
+        }
         @JavascriptInterface public void wsOpen(final int id, String url) {
             if (url == null || !url.startsWith("wss://dashscope.aliyuncs.com/")) { cb(id, "error", "bad url"); return; }
             Request r = new Request.Builder().url(url).header("Authorization", "Bearer " + key()).build();

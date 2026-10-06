@@ -407,6 +407,8 @@
       '<div class="hp-foot">' + (extra || '') + '<div class="chips">' + chips(mon.sp) + '<span class="st-chip" id="b-' + id + 'st"></span><span class="stg" id="b-' + id + 'stg"></span></div></div>' +
       (bottom || '') + '</div>';
   }
+  // 转屏（竖屏 ⇄ 横屏）后战斗画面跟着重新算大小
+  window.addEventListener('resize', () => { if (B && B3 && document.getElementById('b-arena')) { try { B3.resize(); } catch (e) { /* 忽略 */ } } });
   function renderBattle() {
     const w = E.W[B.z], f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
     $('battle').innerHTML =
@@ -466,6 +468,8 @@
       if (g) g.style.width = (p * 100) + '%';   // 浅色的那截晚一点才缩（CSS 里有延迟）
     };
     bar('b-foe', fh, fmax); bar('b-my', mh, mmax);
+    // 战斗中升级：名牌上的等级跟着变
+    [['me', m], ['foe', f]].forEach(([side, mon]) => { const lv = document.querySelector('#b-arena .hpcard.' + side + ' .hp-lv'); if (lv) lv.innerHTML = '<small>Lv</small>' + mon.lv; });
     const n = $('b-myhpn'); if (n) n.textContent = Math.round(mh) + ' / ' + mmax;
     const en = $('b-energy'); if (en) en.innerHTML = [0, 1, 2].map(k => '<span class="' + (k < B.energy ? 'on' : 'off') + '">' + TICON.spark + '</span>').join('');
     [['me', 'b-myst', 'b-mystg'], ['foe', 'b-foest', 'b-foestg']].forEach(([side, sid, gid]) => {
@@ -553,7 +557,8 @@
       const mon = byUid(u), s = SPECIES[mon.sp], hp = Math.max(0, Math.round(B.hp[u]));
       return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>Lv ' + mon.lv + '</small><div class="chips">' + chips(mon.sp) + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + STATUS[mon.st].zh + '</span>' : '') + '</div><small>体力 ' + hp + ' / ' + stats(mon).hp + '</small></div><div class="mrow-b"><button class="btn small sun" data-act="bSwitchTo" data-k="' + k + '"' + (hp > 0 ? '' : ' disabled') + '>就决定是你了</button></div></div>';
     }).join('');
-    E.openModal('<h2>🔄 换哪只上场？</h2><p>换怪兽会用掉这一回合。</p>' + rows + '<button class="btn ghost wide" data-act="close">返回</button>');
+    // pick-grid：竖屏不起作用（照常一行一只），横屏排成三列小卡片，点整张卡片就换上场
+    E.openModal('<h2>🔄 换哪只上场？</h2><p>换怪兽会用掉这一回合。</p><div class="pick-grid">' + rows + '</div><button class="btn ghost wide" data-act="close">返回</button>');
   }
   function doSwitch(k) {
     if (!B || B.turn !== 'me' || k === B.ti || !(B.hp[B.team[k]] > 0)) return;
@@ -625,10 +630,11 @@
       body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="听示范">' + E.SPK + '</button></div>';
     }
     const rate = '<div class="rate"><button class="btn coral" data-act="bRate" data-v="0">😅 没念好</button><button class="btn sun" data-act="bRate" data-v="1">🙂 还行</button><button class="btn leaf" data-act="bRate" data-v="2">😎 很准</button></div>';
-    panel('<div class="task"><div class="task-h">' + head + '</div>' + body +
+    // 话筒 / 提示 / 打分按钮放在一起（task-foot）：横屏时贴在面板底部，题目再长也看得见
+    panel('<div class="task"><div class="task-h">' + head + '</div>' + body + '<div class="task-foot">' +
       (sr ? '<button class="mic" id="b-mic" data-act="bMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="b-hint">点麦克风，大声念出来</div><div class="heard" id="b-heard"></div>'
         : '<div class="mic-hint" id="b-hint">' + (t.kind === 'ult' ? '先点出正确的回答' : '大声念出来，然后诚实地给自己打分') + '</div><div id="b-rate"' + (t.kind === 'ult' ? ' hidden' : '') + '>' + rate + '</div>') +
-      (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">换个技能</button>') + '</div>');
+      '</div>' + (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">换个技能</button>') + '</div>');
     if (t.kind !== 'wake') msg(t.kind === 'catch' ? '<b>' + SPECIES[foe().sp].en + '</b> 已经很虚弱了，快收服它！' : B.mv && B.mv.sup ? '念得清楚，辅助招式才会成功！' : '念得越准，伤害越高；念得特别准会<b>暴击</b>！');
     if (t.kind === 'ult') E.say(t.prompt, undefined, 'm');
   }
@@ -661,6 +667,7 @@
     }
     const r = E.bestScore(t.target, res.alts);
     $('b-heard').textContent = '我听到：“' + r.heard + '”';
+    if (r.score < 90 && E.aiTip) E.aiTip(t.target, r.heard, $('b-heard'));
     const say = $('b-say');
     if (say) {
       if (say.classList.contains('mask')) { say.classList.remove('mask'); say.innerHTML = E.wordsHTML(t.target); }
@@ -1363,6 +1370,8 @@
       '<div class="nm-grid">' + pool.map(n => '<button class="btn ghost nm" data-act="mNickPick" data-n="' + n + '">' + n + '</button>').join('') + '</div>' +
       '<div class="nm-own"><input id="nick-in" maxlength="10" placeholder="自己输入英文名" autocomplete="off" autocapitalize="words" spellcheck="false"><button class="btn sun" data-act="mNickOwn">好了</button></div><small class="tip" id="nick-tip">只能用英文字母，最多 10 个</small>' +
       '<div class="row"><button class="btn ghost" data-act="mNickSkip">' + (mon.nick ? '不改了' : '就叫 ' + s.en) + '</button>' + (mon.nick ? '<button class="btn ghost" data-act="mNickClear">用回原名 ' + s.en + '</button>' : '') + '</div>', { locked: true });
+    // 弹出软键盘以后（横屏时屏幕只剩一小条），输入框要留在看得见的地方
+    const inp = $('nick-in'); if (inp) inp.addEventListener('focus', () => setTimeout(() => { if (inp.isConnected) inp.scrollIntoView({ block: 'center' }); }, 300));
   }
   function nickSay(name) {
     if (!nickCtx) return;

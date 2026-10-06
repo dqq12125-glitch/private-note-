@@ -95,7 +95,7 @@
       v: 1, xp: 0, coins: 50, stars: {}, streak: 0, lastDay: '', freeze: 0,
       quests: { day: '', list: [], chest: false }, wrong: {}, pets: ['🐣'], pet: '🐣', ach: {},
       stats: { levels: 0, spoken: 0, perfect: 0, maxCombo: 0, listen: 0, reviewed: 0, threeStars: 0, bosses: 0, flawless: 0, roleplay: 0 }, scenes: {},
-      settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false, gfx: 'auto', gfxAuto: '' }, seenIntro: false,
+      settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false, gfx: 'auto', gfxAuto: '', ctl: 'joy', orient: 'portrait' }, seenIntro: false,
       homeTab: 'mon', mon: window.MonsterGame ? MonsterGame.fresh() : { box: [], team: [], dex: {}, badges: {}, balls: 5 },
       world: window.EchoWorld ? EchoWorld.fresh() : {},
       player: { gender: '', name: '' },
@@ -311,20 +311,32 @@
   const canRecord = () => !RT.noRec && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
   // 安卓 APK：WebView 里没有能用的浏览器语音识别 → 有阿里云密钥就录一句交给阿里云识别（talk.js listenOnce），连不上两次就改回录音自评
   const cloudSR = () => !!(window.EchoTalk && EchoTalk.cloudSR && EchoTalk.cloudSR()) && !RT.cloudBroken;
+  // 口语默认「开口 + AI 打分」：APK 一律开口（没网就提示联网后再说，不会改成自评）；
+  // 网页版连得上中转服务就用阿里云识别，否则用浏览器自带的识别，都没有才退回录音自评。「录音自评」只留给 ?quiet 测试链接
   function speakMode() {
     if (S.settings.mode === 'self') return 'self';
-    if (cloudSR()) return 'sr';
-    if (!SRC || RT.srBroken || window.ECHO_APP) return 'self';
+    if (cloudSR() || window.ECHO_APP) return 'sr';
+    if (!SRC || RT.srBroken) return 'self';
     return 'sr';
+  }
+  // AI 老师点评：没说好（低于 90 分）时，把目标句子和听到的话交给 AI，给一句中文建议，接在「我听到」后面
+  function aiTip(target, heard, el) {
+    if (!heard || !el || !window.EchoTalk || !EchoTalk.aiTip) return;
+    EchoTalk.aiTip(target, heard).then(tip => { if (tip && el.isConnected && !el.querySelector('.ai-tip')) el.insertAdjacentHTML('beforeend', '<span class="ai-tip">💡 ' + esc(tip) + '</span>'); });
   }
   function recognize(onInterim) {
     if (cloudSR()) {
       RT.listening = true;
       return EchoTalk.listenOnce({ onState: onInterim }).then(r => {
         RT.listening = false;
-        if (r.err === 'network') { RT.cloudFails = (RT.cloudFails || 0) + 1; if (RT.cloudFails >= 2) { RT.cloudBroken = true; toast('网络不好，口语先改成录音自评'); } }
-        else if (r.err === 'not-allowed' || r.err === 'audio-capture') RT.cloudBroken = true;   // 没给麦克风权限：改录音自评（调用的地方会提示）
-        else if (!r.err) RT.cloudFails = 0;
+        if (r.err === 'network') {
+          RT.cloudFails = (RT.cloudFails || 0) + 1;
+          if (window.ECHO_APP) toast('📶 网络不好，没法打分：连上网再说一次');   // APK 必须开口，不改自评
+          else if (RT.cloudFails >= 2) { RT.cloudBroken = true; toast('连不上 AI 打分，先用浏览器的识别 / 录音自评'); }
+        } else if (r.err === 'not-allowed' || r.err === 'audio-capture') {
+          if (window.ECHO_APP) { toast('🎤 要允许回声岛用麦克风才能开口：在弹出的提示里点「允许」'); return { alts: [], err: 'no-speech' }; }
+          RT.cloudBroken = true;
+        } else if (!r.err) RT.cloudFails = 0;
         return { alts: r.text ? [r.text] : [], err: r.err === 'network' || r.err === 'busy' ? 'no-speech' : r.err };
       });
     }
@@ -639,8 +651,13 @@
     setTimeout(() => t.remove(), 3000);
   }
   function openModal(html, opts) {
-    $('#sheet').innerHTML = html;
+    // 新打开的弹窗从顶上开始看（上一个弹窗滚到哪里不要带过来，比如菜单 → 背包）；
+    // 同一个弹窗重画（设置里点选项、商店买东西，标题没变）保持原来滚到的位置
+    const sh = $('#sheet'), wasHidden = $('#modal').hidden, h2 = () => { const e = sh.querySelector('h2'); return e ? e.textContent : ''; };
+    const before = wasHidden ? null : h2();
+    sh.innerHTML = html;
     $('#modal').hidden = false;
+    if (wasHidden || before !== h2()) sh.scrollTop = 0;
     RT.modalLocked = !!(opts && opts.locked);
     const f = $('#sheet [data-focus]') || $('#sheet button:not([disabled])');
     if (f) setTimeout(() => f.focus({ preventScroll: true }), 50);
@@ -796,7 +813,7 @@
   // 样品美术（?art=blender / gemini）加载完之后，首页的怪兽卡片重画一次
   window.addEventListener('mon3d-ready', () => { if (!$('#home').hidden) renderHome(); });
   function show(id) {
-    ['home', 'play', 'result', 'theater', 'battle', 'world'].forEach(s => { $('#' + s).hidden = s !== id; });
+    ['home', 'play', 'result', 'theater', 'battle', 'world'].forEach(s => { $('#' + s).hidden = s !== id; document.body.classList.toggle('scr-' + s, s === id); });
     $('#topbar').hidden = id === 'play' || id === 'theater' || id === 'battle' || id === 'world';
     document.body.classList.toggle('in-world', id === 'world');
     window.scrollTo(0, 0);
@@ -856,6 +873,7 @@
       $('#p-body').innerHTML = '<div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="hidden-line">' + esc(b.hello) + '</div></div></div>' +
         '<p class="say-zh" style="text-align:center">' + b.name + ' 挡住了去路！听懂它的话，<b>大声说出</b>正确的回答来攻击它。</p>' +
         '<button class="btn sun wide" data-act="bossGo" data-focus>⚔️ 迎战！</button>';
+      $('#p-body').dataset.q = 'intro';
       say(b.hello);
     } else renderQ();
   }
@@ -893,15 +911,18 @@
         '<div class="heard" id="heard"></div><div id="score"></div></div>';
     }
     h += '<div class="self" id="self" hidden></div>';
-    h += '<button class="link" data-act="skip">现在不方便开口？跳过这题</button>';
+    if (mode !== 'sr') h += '<button class="link" data-act="skip">现在不方便开口？跳过这题</button>';   // 开口模式不能跳过：说三次还不行会记进每日复习
     return h;
   }
+  // 口语题分两块：q-main 是题目卡片，q-side 是话筒 / 自评 / 跳过（竖屏照常上下排，横屏左右两栏）
+  const qSide = h => '<div class="q-side">' + h + '</div>';
   function wordsHTML(text) { return text.split(/\s+/).map(w => '<span class="w">' + esc(w) + '</span>').join(' '); }
 
   function renderQ() {
     const q = P.qs[P.idx];
     P.q = q; P.answered = false; P.tries = 0; P.hint = 0; P.lo = []; P.btChoose = false; P.pickedOk = false; P.selfReveal = false;
     hideFb();
+    window.scrollTo(0, 0);   // 上一题往下滚过，新题要从标题开始看
     $('#p-prog').style.width = (P.idx / P.total * 100) + '%';
     let h = '<div class="q-type">' + TYPE_LABEL[q.type] + '</div>';
     const t = q.type;
@@ -914,23 +935,24 @@
       '<div class="lo-ans" id="lo-ans"></div><div class="lo-bank" id="lo-bank">' + q.bank.map(i => '<button class="tile" data-act="tile" data-i="' + i + '">' + esc(q.tokens[i]) + '</button>').join('') + '</div>' +
       '<button class="btn wide" data-act="loCheck" id="lo-check" disabled>检查</button>';
     else if (t === 'sr_w' || t === 'sr_s') h += '<h2 class="q-title">先听，再大声跟读</h2>' +
-      '<div class="say-card">' + (q.em ? '<div class="say-emoji">' + q.em + '</div>' : '') + '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div><div class="say-zh">' + esc(q.zh) + '</div>' +
-      '<div class="say-row"><button class="spk mini" data-act="sayT" aria-label="听原音">' + SPK + '</button><button class="slow" data-act="sayTSlow" aria-label="慢速"><span>🐢</span>慢速</button></div></div>' + micHTML(q);
+      '<div class="q-main"><div class="say-card">' + (q.em ? '<div class="say-emoji">' + q.em + '</div>' : '') + '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div><div class="say-zh">' + esc(q.zh) + '</div>' +
+      '<div class="say-row"><button class="spk mini" data-act="sayT" aria-label="听原音">' + SPK + '</button><button class="slow" data-act="sayTSlow" aria-label="慢速"><span>🐢</span>慢速</button></div></div></div>' + qSide(micHTML(q));
     else if (t === 'sr_d') h += '<h2 class="q-title">听对方说话，然后大声说出你的回答</h2>' +
-      '<div class="bubble-row"><span class="be">🧑‍🏫</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="听对方说">' + SPK + '</button><span>' + esc(q.prompt) + '</span></div></div></div>' +
-      '<div class="say-card"><div class="say-zh">你来说：</div><div class="say-text" id="st">' + wordsHTML(q.target) + '</div><div class="say-row"><button class="spk mini" data-act="sayT" aria-label="听示范">' + SPK + '</button><button class="slow" data-act="sayTSlow"><span>🐢</span>慢速</button></div></div>' + micHTML(q);
+      '<div class="q-main"><div class="bubble-row"><span class="be">🧑‍🏫</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="听对方说">' + SPK + '</button><span>' + esc(q.prompt) + '</span></div></div></div>' +
+      '<div class="say-card"><div class="say-zh">你来说：</div><div class="say-text" id="st">' + wordsHTML(q.target) + '</div><div class="say-row"><button class="spk mini" data-act="sayT" aria-label="听示范">' + SPK + '</button><button class="slow" data-act="sayTSlow"><span>🐢</span>慢速</button></div></div></div>' + qSide(micHTML(q));
     else if (t === 'sp') h += '<h2 class="q-title">看图，用英语说出来</h2>' +
-      '<div class="say-card"><div class="say-emoji">' + q.em + '</div><div class="say-zh">' + esc(q.zh) + '</div><div class="say-text mask" id="st">' + esc(q.target.replace(/[a-z]/gi, '_')) + '</div>' +
-      '<div class="say-row"><button class="btn small ghost" data-act="hint" id="hintbtn">💡 提示</button></div></div>' + micHTML(q);
+      '<div class="q-main"><div class="say-card"><div class="say-emoji">' + q.em + '</div><div class="say-zh">' + esc(q.zh) + '</div><div class="say-text mask" id="st">' + esc(q.target.replace(/[a-z]/gi, '_')) + '</div>' +
+      '<div class="say-row"><button class="btn small ghost" data-act="hint" id="hintbtn">💡 提示</button></div></div></div>' + qSide(micHTML(q));
     else if (t === 'bt') {
       const b = WX[P.wi].boss, sr = speakMode() === 'sr';
-      h += '<div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="再听一遍">' + SPK + '</button><button class="slow" data-act="saySlow"><span>🐢</span>慢速</button></div>' +
+      h += '<div class="q-main"><div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="再听一遍">' + SPK + '</button><button class="slow" data-act="saySlow"><span>🐢</span>慢速</button></div>' +
         '<div class="hidden-line blur" id="hl">' + esc(q.prompt) + '</div><button class="link" data-act="reveal">看原文</button></div></div>' +
-        '<p class="say-zh" style="text-align:center;margin:0">' + (sr ? '选一句正确的回答，<b>大声说出来</b>攻击它！（点选项可以先听一听）' : '先点出正确的回答，再大声说出来攻击它！') + '</p>' +
-        optsHTML(q, 'en', true) + (sr ? micHTML(q) : '<div class="self" id="self" hidden></div>');
+        '<p class="say-zh" style="text-align:center;margin:0">' + (sr ? '选一句正确的回答，<b>大声说出来</b>攻击它！（点选项可以先听一听）' : '先点出正确的回答，再大声说出来攻击它！') + '</p></div>' +
+        optsHTML(q, 'en', true) + qSide(sr ? micHTML(q) : '<div class="self" id="self" hidden></div>');
     }
     $('#p-body').innerHTML = h;
-    if (SPEAK_TYPES.includes(t) && speakMode() === 'self' && !canRecord()) showSelf(false);
+    $('#p-body').dataset.q = t;   // 横屏排版按题型分栏（style.css 横屏那段）
+    if (SPEAK_TYPES.includes(t) && speakMode() === 'self' && !canRecord()) showSelf(false, true);
     if (t !== 'sp') setTimeout(() => { if (P && P.q === q) say(q.audio); }, 380);
   }
 
@@ -943,6 +965,15 @@
     $('#fb-btn').textContent = btn || '继续';
     $('#p-prog').style.width = ((P.idx + 1) / P.total * 100) + '%';
     setTimeout(() => $('#fb-btn').focus({ preventScroll: true }), 60);
+    // 标出对错的选项 / 排好的句子不要被反馈条盖住（横屏时屏幕矮，最常见）：往上滚一点，但别把它滚到顶栏下面
+    setTimeout(() => {
+      const ms = $$('#p-body .opt.right, #p-body .opt.wrong, #lo-ans').map(e => e.getBoundingClientRect()).filter(r => r.height);
+      if (!ms.length || !fb.classList.contains('show')) return;
+      const bot = Math.max(...ms.map(r => r.bottom)), top = Math.min(...ms.map(r => r.top));
+      const limit = window.innerHeight - fb.offsetHeight - 8, head = ($('#play .p-top') || { offsetHeight: 0 }).offsetHeight + 8;
+      const dy = Math.min(bot - limit, top - head);
+      if (bot > limit && dy > 0) window.scrollBy({ top: dy, behavior: reduced ? 'auto' : 'smooth' });
+    }, 40);
   }
   function hideFb() { $('#fb').className = 'fb'; }
 
@@ -1059,6 +1090,7 @@
     const q = P.q;
     const r = bestScore(q.target, alts);
     $('#heard').textContent = '我听到的是：“' + r.heard + '”';
+    if (r.score < 90) aiTip(q.target, r.heard, $('#heard'));
     const st = $('#st');
     if (st && !st.classList.contains('mask')) $$('.w', st).forEach((w, k) => { w.classList.toggle('ok', !!r.marks[k]); w.classList.toggle('miss', !r.marks[k]); });
     const cls = r.score >= 85 ? 'good' : r.score >= 60 ? 'mid' : 'low';
@@ -1130,13 +1162,16 @@
     setMic(true, '正在录音……说完点一下停止');
     RT.recTimer = setTimeout(() => { if (RT.recording) stopListening(); }, 9000);
   }
-  function showSelf(hasRec) {
+  // quiet：刚出题时直接显示（不滚动）；录完音、选对回答之后才出来的，滚到看得见的地方（横屏时常在屏幕下面）
+  function showSelf(hasRec, quiet) {
     const q = P.q, box = $('#self');
     if (!box) return;
     const sp = q.type === 'sp', st = $('#st');
+    const reveal = () => { if (!quiet) setTimeout(() => { if (!box.hidden && box.isConnected) box.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }); }, 30); };
     if (sp && !hasRec && st && st.classList.contains('mask') && !P.selfReveal) {
       box.hidden = false;
       box.innerHTML = '<p>先看图<b>大声说出英文</b>，说完再看答案</p><button class="btn small" data-act="selfReveal">我说完了，看答案</button>';
+      reveal();
       return;
     }
     if (sp && st) { st.classList.remove('mask'); st.innerHTML = wordsHTML(q.target); if (hasRec) say(q.target); }
@@ -1144,6 +1179,7 @@
     box.innerHTML = '<p>' + (q.type === 'bt' ? '现在对着' + WX[P.wi].boss.name + '大声说：<b>' + esc(q.target) + '</b>' : hasRec ? '听听自己的录音，和原音比一比，像不像？' : '大声读 2 遍，然后诚实地给自己打个分') + '</p>' +
       '<div class="say-row">' + (hasRec ? '<button class="btn small ghost" data-act="playMine">▶ 我的录音</button>' : '') + '<button class="btn small ghost" data-act="sayT">🔊 原音</button></div>' +
       '<div class="rate"><button class="btn coral" data-act="rate" data-v="0">😅 再练练</button><button class="btn sun" data-act="rate" data-v="1">🙂 还行</button><button class="btn leaf" data-act="rate" data-v="2">😎 很像</button></div>';
+    reveal();
   }
   function onRate(v) {
     if (!P || P.answered) return;
@@ -1267,11 +1303,12 @@
       else if (isUnit(P.wi) && P.wi + 1 < WX.length) nextBtn = '<button class="btn wide" data-act="go" data-w="' + (P.wi + 1) + '" data-l="0" data-focus>下一单元：' + esc(WX[P.wi + 1].name) + ' →</button>';
     }
     const title = P.review ? '复习完成！' : P.boss ? '打败 ' + w.boss.name + '！' : stars === 3 ? '完美通关！' : '通关！';
+    // r-hero（大图、标题、星星）和 r-body（奖励、数据、按钮）：竖屏照常一列，横屏左右两栏
     $('#result').innerHTML =
-      '<div class="big" style="font-size:64px">' + (P.boss ? w.boss.emoji + '💥' : S.pet) + '</div>' +
+      '<div class="r-hero"><div class="big" style="font-size:64px">' + (P.boss ? w.boss.emoji + '💥' : S.pet) + '</div>' +
       '<h1 class="r-title">' + title + '</h1>' +
       '<p class="r-sub">' + (P.review ? (dueList().length ? '今天还有 ' + dueList().length + ' 题可以复习' : '今天的复习全部完成 ✅') : w.name + ' · ' + r.name) + '</p>' +
-      '<div class="r-stars" id="rstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>' +
+      '<div class="r-stars" id="rstars"><span>⭐</span><span>⭐</span><span>⭐</span></div></div><div class="r-body">' +
       (lucky ? '<div class="lucky">🍀 幸运暴击！金币翻倍</div>' : '') +
       (firstThree ? '<div class="lucky">首次三星奖励 +15 金币</div>' : '') +
       (window.MonsterGame ? '<div class="lucky">🔮 回声球 +' + balls + '（去怪兽冒险收服怪兽）</div>' : '') +
@@ -1279,7 +1316,7 @@
       '<div class="r-stats"><div class="stat xp"><b>+' + xp + '</b><small>经验</small></div><div class="stat cn"><b>+' + coins + '</b><small>金币</small></div><div class="stat cb"><b>' + P.maxCombo + '</b><small>最高连击</small></div></div>' +
       '<p class="r-sub" style="margin:0">答对 ' + P.correct + ' / ' + P.total + (stars < 3 ? ' · ' + (P.lost ? '不丢心、' : '') + '答对 90% 以上可拿三星' : '') + '</p>' +
       '<div class="r-actions">' + nextBtn + '<div class="row" style="display:flex;gap:10px"><button class="btn ghost" style="flex:1" data-act="home">回地图</button>' +
-      (P.review ? '' : '<button class="btn ghost" style="flex:1" data-act="retry">再玩一次</button>') + '</div></div>';
+      (P.review ? '' : '<button class="btn ghost" style="flex:1" data-act="retry">再玩一次</button>') + '</div></div></div>';
     show('result');
     SFX.win();
     confetti(stars === 3 ? 180 : 90);
@@ -1356,14 +1393,14 @@
         '<span class="an">' + esc(c[0]) + (T.mode === 'role' && T.me === k ? ' · 你' : '') + '</span></div>').join('') +
       '<div class="stage-sub" id="th-sub"></div>' +
       '<div class="clap" id="th-clap" hidden><small>第 ' + (T.wi + 1) + ' 集</small><b>' + esc(sc.title) + '</b><span>' + esc(sc.place) + '</span></div></div>' +
-      '<div class="seg th-modes">' + modes.map(([m, n]) => '<button class="' + (T.mode === m ? 'on' : '') + '" data-act="thMode" data-m="' + m + '">' + n + '</button>').join('') + '</div>' +
+      '<div class="th-side"><div class="seg th-modes">' + modes.map(([m, n]) => '<button class="' + (T.mode === m ? 'on' : '') + '" data-act="thMode" data-m="' + m + '">' + n + '</button>').join('') + '</div>' +
       (T.mode === 'role' ? '<div class="seg th-modes"><span class="th-lab">我来演</span>' + sc.cast.map((c, k) => '<button class="' + (T.me === k ? 'on' : '') + '" data-act="thMe" data-i="' + k + '">' + c[1] + ' ' + esc(c[0]) + '</button>').join('') + '</div>' : '') +
       '<div class="th-ctrl"><button class="btn" id="th-play" data-act="thPlay">' + playLabel() + '</button>' +
       '<button class="slow' + (T.slow ? ' on' : '') + '" data-act="thSlow" aria-pressed="' + T.slow + '"><span>🐢</span>慢速</button>' +
       '<button class="slow' + (T.en ? ' on' : '') + '" data-act="thEn" aria-pressed="' + T.en + '"><span>En</span>英文</button>' +
       '<button class="slow' + (T.zh ? ' on' : '') + '" data-act="thZh" aria-pressed="' + T.zh + '"><span>中</span>中文</button></div>' +
       '<p class="th-tip">' + MODE_TIP[T.mode] + '</p>' +
-      '<div id="th-turn"></div><div class="th-log" id="th-log"></div>';
+      '<div id="th-turn"></div><div class="th-log" id="th-log"></div></div>';   // th-side：横屏时放在动画右边，自己上下滚
     renderStage(); renderLog();
     window.scrollTo(0, 0);
   }
@@ -1576,9 +1613,10 @@
       [['auto', '自然配音'], ['device', '本机声音'], ['online', '有道在线']].map(([m, n]) => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + n + '</button>').join('') +
       '</div><small>「自然配音」：固定的句子用提前合成的真人感配音，拼了名字的句子用有道在线或本机声音。选「本机声音」就全部用浏览器自带的朗读。</small></div>' +
       (voices ? '<div class="set"><label for="set-voice">朗读声音</label><select id="set-voice">' + voices + '</select></div>' : '') +
+      (window.ECHO_APP ? '<div class="set"><label>口语打分</label><small>🎤 一律开口说，AI 听写打分（阿里云语音识别），说得不准会给一句中文建议。要联网。</small></div>' :
       '<div class="set"><label>口语打分方式</label><div class="seg">' +
-      [['auto', '自动打分（推荐）'], ['self', '录音自评']].map(([m, n]) => '<button class="' + (st.mode === m ? 'on' : '') + '" data-act="setMode" data-m="' + m + '">' + n + '</button>').join('') +
-      '</div><small>自动打分：浏览器能识别语音就自动打分，不能就换成录音自评。</small></div>' +
+      [['auto', 'AI 打分（推荐）'], ['self', '录音自评']].map(([m, n]) => '<button class="' + (st.mode === m ? 'on' : '') + '" data-act="setMode" data-m="' + m + '">' + n + '</button>').join('') +
+      '</div><small>AI 打分：连得上对话服务就用阿里云语音识别打分，否则用浏览器自带的识别。</small></div>') +
       '<div class="set"><label>冒险画面</label><div class="seg wrap">' +
       [['auto', '自动'], ['high', '精美'], ['mid', '标准'], ['low', '省电'], ['2d', '2D 流畅']].map(([m, n]) => '<button class="' + ((st.gfx || 'auto') === m ? 'on' : '') + '" data-act="setGfx" data-m="' + m + '">' + n + '</button>').join('') +
       '</div><small>' + ((st.gfx || 'auto') === 'auto' ? '自动：好手机先用精美画质，其他先用标准，跑不动会自动降一档' + (st.gfxAuto ? '（现在是「' + ({ high: '精美', mid: '标准', low: '省电', '2d': '2D 流畅' })[st.gfxAuto] + '」）' : '') + '。' : '手机发烫或者卡顿，就选省电或 2D 流畅。') + '</small></div>' +
@@ -1586,6 +1624,12 @@
         [[.6, '多出课本'], [.3, '少量课本'], [0, '只用岛上话题']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + n + '</button>').join('') +
         '</div><small>打怪兽、答村民的题时，有一部分换成课本正在学的单元（' + esc(curUnit().name) + '，在闯关页「📗 课本同步」里改）。</small></div>' : '') +
       (window.EchoNative ? '<div class="set"><label>🗣️ AI 聊天和口语打分</label><div class="say-row"><span>' + (EchoTalk.cloudSR() ? '✅ 已连上阿里云' : '⚠️ 还没设置密钥') + '</span><button class="btn small ghost" data-act="talk_cfg">家长设置密钥</button></div><small>用阿里云百炼的 API Key（只存在这台手机里）。设好以后能和岛民用英语聊天，口语题也会自动打分。</small></div>' : '') +
+      '<div class="set"><label>冒险里的操作</label><div class="seg">' +
+        [['joy', '🕹️ 摇杆'], ['pad', '✚ 方向键']].map(([m, n]) => '<button class="' + ((st.ctl || 'joy') === m ? 'on' : '') + '" data-act="setCtl" data-m="' + m + '">' + n + '</button>').join('') +
+        '</div><small>' + (st.ctl === 'pad' ? '方向键：左下角十字键走路；A / B 在右下角。' : '摇杆：左手按住屏幕左边任意地方推着走；A / B 在右下角。') + '</small></div>' +
+      (window.EchoNative && EchoNative.setOrientation ? '<div class="set"><label>屏幕方向</label><div class="seg">' +
+        [['portrait', '📱 竖屏'], ['landscape', '🎮 横屏'], ['auto', '🔄 跟着手机转']].map(([m, n]) => '<button class="' + ((st.orient || 'portrait') === m ? 'on' : '') + '" data-act="setOrient" data-m="' + m + '">' + n + '</button>').join('') +
+        '</div><small>横屏玩冒险和对战更像掌机；做题、聊天竖着横着都能用。</small></div>' : '') +
       '<div class="set"><label>音效</label><div class="seg"><button class="' + (st.sfx ? 'on' : '') + '" data-act="sfx" data-v="1">开</button><button class="' + (st.sfx ? '' : 'on') + '" data-act="sfx" data-v="0">关</button></div></div>' +
       '<div class="set"><label>家长 / 老师模式</label><div class="seg"><button class="' + (st.unlockAll ? '' : 'on') + '" data-act="unlock" data-v="0">按顺序解锁</button><button class="' + (st.unlockAll ? 'on' : '') + '" data-act="unlock" data-v="1">全部关卡直接开放</button></div><small>想跟着课本进度直接练某个单元时打开。</small></div>' +
       '<div class="set"><label>清空进度</label><button class="btn small coral" data-act="reset" id="resetbtn">清空全部进度</button><small>星星、金币、宠物都会清零，无法恢复。</small></div>' +
@@ -1617,6 +1661,8 @@
     },
     bookGram: t => { const u = WX[num(t, 'w')]; openModal('<div class="big">📐</div><h2>Unit ' + u.n + ' 语法：' + esc(u.grammar.title) + '</h2><p>' + esc(u.grammar.tip) + '</p><button class="btn wide" data-act="close" data-focus>知道了</button>'); },
     setBookMix: t => { S.book.mix = +t.dataset.m; save(); settingsSheet(); },
+    setCtl: t => { S.settings.ctl = t.dataset.m; save(); if (window.EchoWorld && EchoWorld.ctlMode) EchoWorld.ctlMode(); settingsSheet(); },
+    setOrient: t => { S.settings.orient = t.dataset.m; save(); applyOrient(); settingsSheet(); },
     start: t => { closeModal(); startLevel(num(t, 'w'), num(t, 'l')); },
     go: t => { const wi = num(t, 'w'), li = num(t, 'l'); if (!isUnlocked(wi, li)) { goHome(); return; } startLevel(wi, li); },
     close: () => { if ($('#restbtn') && $('#restbtn').disabled) return; closeModal(); },
@@ -1754,7 +1800,7 @@
     const api = {
       get S() { return S; }, W, WX, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit, curIdx, revRight, revAddFree,
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
-      qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML,
+      qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML, aiTip,
       reduced, dayStr,
     };
     Object.assign(ACT, MonsterGame.init(api), window.EchoWorld ? EchoWorld.init(api, MonsterGame) : {}, window.EchoTalk ? EchoTalk.init(api) : {}, {
@@ -1770,6 +1816,11 @@
     return false;
   };
 
+  // 安卓 APK：竖屏 / 横屏 / 跟着手机转（原生那边记住，下次打开直接用）
+  function applyOrient() {
+    try { if (window.EchoNative && EchoNative.setOrientation) EchoNative.setOrientation(S.settings.orient || 'portrait'); } catch (e) { /* 忽略 */ }
+  }
+
   // 测试用：课本出题来源、每日复习
   window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), get S() { return S; } };
 
@@ -1778,6 +1829,7 @@
     S = load(data && data.S);
     revMigrate();
     if (S.book.cur && S.book.at < 0) { S.book.at = S.book.cur - 1; delete S.book.cur; }
+    applyOrient();
     if (window.MonsterGame) MonsterGame.migrate();
     // 链接带 ?quiet：不方便说话时，所有口语任务都改成按按钮（等同设置里的「录音自评」）
     if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast('🔇 不用说话模式：要说话的地方都变成按钮了'), 800); }
@@ -1786,10 +1838,7 @@
     loadVoices();
     if (TTS.ok && 'onvoiceschanged' in speechSynthesis) speechSynthesis.onvoiceschanged = loadVoices;
     setTimeout(() => { loadVoices(); TTS.loaded = true; }, 1500); // 一些安卓浏览器永远返回空列表
-    const fl = document.createElement('link');
-    fl.rel = 'stylesheet';
-    fl.href = 'https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@500;700;800&display=swap';
-    document.head.appendChild(fl);
+    // 字体在 assets/fonts（style.css 的 @font-face），不再连 Google（国内连不上，也让测试不稳）
     show('home');
     renderHome();
     if (!S.seenIntro) setTimeout(introSheet, 300);

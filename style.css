@@ -1,3 +1,12 @@
+/* 字体：Baloo 2、Nunito（SIL OFL，许可证在 assets/fonts/），只带拉丁字符；中文用系统字体 */
+@font-face { font-family: "Baloo 2"; font-style: normal; font-weight: 500; font-display: swap; src: url(assets/fonts/baloo-2-latin-500-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Baloo 2"; font-style: normal; font-weight: 600; font-display: swap; src: url(assets/fonts/baloo-2-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Baloo 2"; font-style: normal; font-weight: 700; font-display: swap; src: url(assets/fonts/baloo-2-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Baloo 2"; font-style: normal; font-weight: 800; font-display: swap; src: url(assets/fonts/baloo-2-latin-800-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 500; font-display: swap; src: url(assets/fonts/nunito-latin-500-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 700; font-display: swap; src: url(assets/fonts/nunito-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 800; font-display: swap; src: url(assets/fonts/nunito-latin-800-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
 /* 回声岛 Echo Island — 单一主题：白天的泻湖 */
 :root {
   color-scheme: light;
@@ -106,6 +115,7 @@ button:disabled { cursor: default; }
 .node.done .n-ico { background: var(--sun); box-shadow: 0 6px 0 var(--sun-d); }
 .node.lock .n-ico { background: var(--locked); box-shadow: 0 6px 0 var(--locked-d); filter: grayscale(.7); }
 .node.cur .n-ico { animation: pulse 1.6s infinite; }
+.node.cur { margin-top: 20px; }   /* 头上的「开始」标签不要盖住上一关的星星 */
 .n-name { font-size: 12px; font-weight: 800; color: var(--ink-2); margin-top: 6px; }
 .n-stars { font-size: 13px; letter-spacing: 1px; color: var(--sun-d); height: 16px; line-height: 16px; }
 .n-stars .off { color: var(--locked); }
@@ -280,6 +290,7 @@ details.pre summary { font-weight: 800; cursor: pointer; }
 .seg { display: flex; gap: 6px; flex-wrap: wrap; }
 .seg button { flex: 1; border: 2px solid var(--line); border-radius: 10px; background: var(--foam); padding: 6px; font-size: 13px; }
 .seg button.on { border-color: var(--lagoon); background: #dff1ef; font-weight: 800; }
+.seg.wrap button { white-space: nowrap; flex: 1 0 auto; }   /* 放不下就整个按钮换行，不要把「流畅」拆成两行 */
 .env { font-size: 12px; color: var(--ink-2); background: var(--card); border-radius: 12px; padding: 10px 12px; line-height: 1.6; }
 
 /* ---------- 提示 ---------- */
@@ -519,7 +530,7 @@ details.pre summary { font-weight: 800; cursor: pointer; }
 .b-timer i { display: block; height: 100%; width: 100%; background: var(--coral); }
 .b-result { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; border-radius: 20px; background: var(--card); box-shadow: 0 4px 0 var(--line); text-align: center; }
 .b-result .big { font-size: 52px; line-height: 1; }
-.b-result b { font-family: var(--f-display); font-size: 24px; }
+.b-result > b { font-family: var(--f-display); font-size: 24px; }
 .b-result p { margin: 0; color: var(--ink-2); line-height: 1.7; font-size: 14px; }
 
 /* ---------- 进化 / 队伍 / 图鉴 ---------- */
@@ -953,3 +964,295 @@ body.in-world { overflow: hidden; }
 .seg.books { margin-top: 8px; }
 .seg.books button { flex: 1 0 15%; padding: 7px 4px; font-weight: 700; }
 .pick-h { margin: 12px 0 4px; font-size: 15px; color: var(--ink-2); }
+
+/* ---------- 大地图：画面铺满整个屏幕，操作浮在画面上（左边摇杆、右边 A/B，像手机上的动作游戏） ---------- */
+#world .w-view { position: absolute; inset: 0; max-width: none; border-radius: 0; }
+#world .w-hud { position: absolute; top: 0; left: 0; right: 0; z-index: 6; max-width: none; padding: calc(env(safe-area-inset-top, 0px) + 6px) calc(env(safe-area-inset-right, 0px) + 12px) 18px calc(env(safe-area-inset-left, 0px) + 12px); background: linear-gradient(rgba(18, 48, 74, .82), rgba(18, 48, 74, .45) 65%, rgba(18, 48, 74, 0)); pointer-events: none; }
+#world .w-hud > * { pointer-events: auto; }
+#world .w-hud .w-zone { pointer-events: none; text-shadow: 0 1px 3px rgba(0, 0, 0, .45); }
+#world .w-ctrl { position: absolute; inset: 0; z-index: 5; max-width: none; padding: 0; pointer-events: none; display: block; }
+/* 对话框、过场画面出来的时候操作先藏起来（点对话框就是 A） */
+#world:has(#w-dlg:not([hidden])) .w-ctrl, #world:has(#w-scene:not([hidden])) .w-ctrl { display: none; }
+#world .w-note { top: calc(env(safe-area-inset-top, 0px) + 60px); }
+#world .w-banner { top: calc(env(safe-area-inset-top, 0px) + 64px); }
+#world .w-dlg { left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); }
+/* 摇杆 */
+.joy-zone { position: absolute; left: 0; bottom: 0; width: 48%; height: 72%; pointer-events: auto; touch-action: none; display: none; }
+#world.ctl-joy .joy-zone { display: block; }
+.joy-base { position: absolute; left: calc(env(safe-area-inset-left, 0px) + 96px); top: calc(100% - 104px - env(safe-area-inset-bottom, 0px)); width: 124px; height: 124px; margin: -62px 0 0 -62px; border-radius: 50%; background: radial-gradient(rgba(255, 255, 255, .08), rgba(255, 255, 255, .22)); border: 3px solid rgba(255, 255, 255, .6); box-shadow: 0 2px 12px rgba(0, 0, 0, .25); opacity: .75; transition: opacity .15s; }
+.joy-base.on { opacity: 1; }
+.joy-knob { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff, #dfe9f0); box-shadow: 0 3px 8px rgba(0, 0, 0, .35); transition: transform .12s ease-out; }
+.joy-base.on .joy-knob { transition: none; }
+/* 方向键（设置里选「方向键」时） */
+#world .dpad { position: absolute; left: calc(env(safe-area-inset-left, 0px) + 18px); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); pointer-events: auto; display: none; }
+#world.ctl-pad .dpad { display: grid; }
+#world .dpad .dp { background: rgba(43, 83, 118, .78); box-shadow: 0 4px 0 rgba(14, 32, 48, .6); }
+/* 右下角：大 A、左边 B、上面英语聊天，排成弧形 */
+#world .ab { position: absolute; right: calc(env(safe-area-inset-right, 0px) + 16px); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); width: 200px; height: 176px; display: block; transform: none; pointer-events: none; }
+#world .ab > button { position: absolute; pointer-events: auto; margin: 0; }
+#world .ab .ba { right: 0; bottom: 0; width: 88px; height: 88px; font-size: 32px; opacity: .93; box-shadow: 0 5px 0 #9e1f1c, 0 6px 16px rgba(0, 0, 0, .3); }
+#world .ab .bb { right: 102px; bottom: 2px; width: 62px; height: 62px; font-size: 22px; opacity: .88; box-shadow: 0 4px 0 #37474f, 0 5px 12px rgba(0, 0, 0, .3); }
+#world .ab .w-chat { right: 4px; bottom: 104px; top: auto; flex-direction: column; gap: 0; padding: 8px 10px; border-radius: 18px; font-size: 22px; line-height: 1; }
+#world .ab .w-chat small { font-size: 11px; margin-top: 2px; }
+#world .ab .w-chat[hidden] { display: none; }
+@media (hover: hover) and (pointer: fine) { .joy-zone { cursor: grab; } }
+
+/* ---------- 排版用的外框：竖屏时不起作用（display: contents，里面的东西照常一列排），横屏时才分栏 ---------- */
+/* q-main / q-side：口语题的题目卡片 / 话筒和自评；pick-grid：换怪兽的列表；r-hero / r-body：结算页左右两块；th-side：对话动画右边的按钮和记录 */
+.q-main, .q-side, .pick-grid, .r-hero, .r-body, .th-side { display: contents; }
+/* 战斗任务的话筒 / 提示 / 打分按钮（竖屏和原来一样排在下面） */
+.task-foot { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+/* 大地图左上角的 ✕：和别的按钮一样够手指点 */
+#world .w-hud .x { min-width: 40px; min-height: 40px; }
+
+/* ---------- 横屏（手机横过来：高度不到 600px 的横向屏幕） ---------- */
+@media (orientation: landscape) and (max-height: 600px) {
+  /* ===== 冒险：画面本来就铺满；摇杆和按钮稍微小一点，对话框不要太宽 ===== */
+  #world .w-dlg { left: 50%; right: auto; width: min(720px, 76%); transform: translateX(-50%); max-height: 62%; }
+  /* 普通对话：「▼」放到右下角，不单独占一行 */
+  #world .w-dlg:not(.task) { padding-bottom: 10px; }
+  #world .w-dlg .d-next { position: absolute; right: 16px; bottom: 8px; }
+  /* 答题、跟读、钓鱼、剧情里的选择：用 HUD 下面的全部高度，排紧一点，按钮不用滚就看得见 */
+  #world .w-dlg.task { max-height: calc(100% - 64px - env(safe-area-inset-top, 0px)); width: min(820px, 88%); padding: 10px 14px; }
+  #world .w-dlg.task .d-face { width: 46px; height: 46px; }
+  #world .w-dlg.task .d-text { min-height: 46px; }
+  #world .d-task { margin-top: 2px; gap: 6px; }
+  #world .d-task .opts.list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  #world .d-task .opts.list .opt { min-height: 50px; padding: 6px 10px; }
+  #world .d-task .opt.en .o-t { font-size: 18px; }
+  #world .w-dlg.task .fish .opt { min-height: 60px; }
+  /* 钓鱼：「再听一遍」放在三个选项右边，不单独占一行 */
+  #world .fish .opts { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; }
+  #world .d-task .d-choice { max-width: 600px; }
+  #world .d-choice .btn { white-space: nowrap; min-height: 52px; padding-inline: 18px; }
+  /* 提示条不要横贯整个屏幕 */
+  #world .w-note { left: 50%; right: auto; transform: translateX(-50%); width: max-content; max-width: min(640px, 70%); }
+  #world .w-hud { padding-bottom: 10px; }
+  /* 摇杆：HUD 下面整个左半边都能按 */
+  #world .joy-zone { top: calc(env(safe-area-inset-top, 0px) + 60px); height: auto; }
+  .joy-base { top: calc(100% - 92px - env(safe-area-inset-bottom, 0px)); left: calc(env(safe-area-inset-left, 0px) + 100px); }
+  #world .ab { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 22px); }
+
+  /* ===== 对战：左边战场、右边说明和招式，整屏不用滚动 ===== */
+  body.scr-battle #battle { position: fixed; inset: 0; z-index: 14; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr); grid-template-rows: auto auto minmax(0, 1fr);
+    column-gap: 12px; padding: 0 max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px)); background: var(--foam); overflow: hidden; }
+  body.scr-battle #battle .p-top { grid-column: 1 / -1; padding-block: 4px; margin: 0; position: static; }
+  body.scr-battle #battle .arena { grid-column: 1; grid-row: 2 / 4; height: auto; min-height: 0; }
+  /* 说明框固定两行高：一行变两行的时候下面的按钮不会跟着跳 */
+  body.scr-battle #battle .b-msg { grid-column: 2; grid-row: 2; margin-top: 0; font-size: 14px; line-height: 1.45; padding: 6px 12px; min-height: 60px; }
+  body.scr-battle #battle .b-panel { grid-column: 2; grid-row: 3; margin-top: 8px; overflow-y: auto; min-height: 0; padding-bottom: 4px; }
+  body.scr-battle #battle .moves { gap: 8px; }
+  body.scr-battle #battle .mv-top b { font-size: 16px; }
+  body.scr-battle #battle .move small { font-size: 11px; }
+  body.scr-battle #battle .b-items .btn { white-space: nowrap; font-size: 14px; padding-inline: 6px; }
+  body.scr-battle #battle .b-items [data-act=bCatch] { flex: 1.5; }
+  /* 英语任务：排紧一点；话筒 / 提示 / 打分按钮（task-foot）贴在面板底部，句子再长也看得见 */
+  body.scr-battle #battle .task { gap: 6px; padding: 10px 12px; }
+  body.scr-battle #battle .task:has(> .task-foot) { padding-bottom: 0; }
+  body.scr-battle #battle .b-panel:has(.task-foot) { padding-bottom: 0; }
+  body.scr-battle #battle .task-h { font-size: 13px; line-height: 1.3; }
+  body.scr-battle #battle .task .say-emoji { font-size: 40px; }
+  body.scr-battle #battle .task .say-text { font-size: 21px; line-height: 1.2; }
+  body.scr-battle #battle .task .say-zh { font-size: 14px; }
+  body.scr-battle #battle .task .link { padding: 2px 8px; }
+  body.scr-battle #battle .task .spk.mini { width: 36px; height: 36px; border-radius: 11px; }
+  body.scr-battle #battle .task .hidden-line { font-size: 16px; }
+  /* 回答、句子意思：一行一个（两列太窄，长句子要折成好几行） */
+  body.scr-battle #battle .task .opts.list { grid-template-columns: 1fr; gap: 6px; }
+  body.scr-battle #battle .task .opts.list .opt { min-height: 0; padding: 6px 12px; font-size: 15px; }
+  body.scr-battle #battle .task .opt.en .o-t { font-size: 16px; line-height: 1.25; }
+  body.scr-battle #battle .task .opts:not(.list) .opt { min-height: 64px; padding: 6px; }
+  body.scr-battle #battle .task .opts:not(.list) .opt .o-e { font-size: 26px; }
+  body.scr-battle #battle .task > [data-act=bBack] { order: 1; }
+  body.scr-battle #battle .task-foot { order: 2; position: sticky; bottom: 0; z-index: 1; width: calc(100% + 24px); margin: 0 -12px; gap: 4px; padding: 6px 12px 8px; border-radius: 0 0 20px 20px; background: var(--card); box-shadow: 0 -10px 10px -10px rgba(9, 30, 45, .35); }
+  body.scr-battle #battle .task-foot .mic { width: 60px; height: 60px; }
+  body.scr-battle #battle .task-foot .mic svg { width: 30px; height: 30px; }
+  body.scr-battle #battle .task-foot .mic-hint { font-size: 12px; min-height: 0; }
+  body.scr-battle #battle .task-foot .heard { font-size: 13px; min-height: 0; }
+  body.scr-battle #battle .rate .btn { padding: 8px 4px; font-size: 14px; }
+  body.scr-battle #battle .b-result { gap: 6px; padding: 12px; }
+  body.scr-battle #battle .b-result .big { font-size: 40px; }
+  body.scr-battle #battle .b-result p { line-height: 1.5; }
+
+  /* ===== 弹窗：放宽、居中、长列表分栏，标题和按钮不用滚很远 ===== */
+  .modal { align-items: center; padding: 8px max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px)); }
+  .sheet { max-width: min(860px, 100%); max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); padding: 14px 18px; gap: 10px; border-radius: 22px; }
+  .sheet h2 { font-size: 22px; }
+  .sheet .big { font-size: 44px; }
+  /* 最后一排按钮（开始闯关、知道了……）贴在弹窗底部：预习列表打开、内容很长时也看得见 */
+  /* （下面多画一截底色，盖住弹窗内边距里滚过去的内容） */
+  .sheet > .row:last-child, .sheet > .btn.wide:last-child { position: sticky; bottom: 0; z-index: 2; }
+  .sheet > .row:last-child { margin-top: -6px; padding-top: 6px; background: var(--foam); box-shadow: 0 -8px 8px -8px rgba(9, 30, 45, .3), 0 14px 0 var(--foam); }
+  .sheet > .btn.wide:last-child { box-shadow: 0 5px 0 var(--lagoon-d), 0 19px 0 8px var(--foam); }
+  .sheet > .btn.wide.ghost:last-child { box-shadow: 0 5px 0 var(--line), 0 19px 0 8px var(--foam); }
+  .sheet > .btn.wide.sun:last-child { box-shadow: 0 5px 0 var(--sun-d), 0 19px 0 8px var(--foam); }
+  /* 怪兽一行一只、道具 / 成就 / 设置一行一条：排成几列 */
+  #sheet:has(> .mrow), #sheet:has(> .ach), #sheet:has(> .set) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+  #sheet:has(> .mrow), #sheet:has(> .ach):not(:has(> .ach button)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #sheet:has(> .mrow) > :not(.mrow), #sheet:has(> .ach) > :not(.ach), #sheet:has(> .set) > :not(.set) { grid-column: 1 / -1; }
+  .set .seg button { min-height: 40px; }
+  .w-menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .grid3 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .dex { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .pre-list { max-height: 34vh; }
+  /* 换怪兽：三列小卡片，整张卡片都能点（里面那个「就决定是你了」按钮铺满卡片、看不见） */
+  .pick-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .pick-grid .mrow { position: relative; grid-template-columns: 48px minmax(0, 1fr); gap: 0 8px; padding: 8px 26px 8px 8px; border: 2px solid var(--sun); }
+  .pick-grid .mrow-i { display: block; }
+  .pick-grid .mrow-i b { font-size: 16px; }
+  .pick-grid .mrow-i .chips { margin: 3px 0 2px; }
+  .pick-grid .mrow-i > small:last-child { display: block; }
+  .pick-grid .mrow-b { display: contents; }
+  .pick-grid .mrow-b .btn { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border-radius: 16px; opacity: 0; }
+  .pick-grid .mrow::after { content: "▶"; position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--sun-d); font-size: 14px; pointer-events: none; }
+  .pick-grid .mrow:has(.btn:disabled) { opacity: .55; border-color: var(--line); }
+  .pick-grid .mrow:has(.btn:disabled)::after { content: none; }
+  .pick-grid .mrow:has(.btn:focus-visible) { outline: 3px solid var(--sun); outline-offset: 2px; }
+  /* 学新招、起名字 */
+  .learn-new { margin: 0; }
+  .learn-old { margin-bottom: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .learn-old .mv-card { padding: 4px 8px; }
+  .sum-pic { width: 72px; }
+  .nm-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .tk-logs { max-height: 50vh; }
+
+  /* ===== 提示：缩小一点，放到右上角（大地图在 HUD 下面），不挡正中间 ===== */
+  .toasts { top: calc(8px + env(safe-area-inset-top, 0px)); left: auto; right: max(12px, env(safe-area-inset-right, 0px)); align-items: flex-end; max-width: min(360px, 42vw); gap: 6px; padding: 0; }
+  .toast { font-size: 13px; padding: 6px 12px; }
+  body.scr-world .toasts { top: calc(56px + env(safe-area-inset-top, 0px)); }
+
+  /* ===== 首页：左边每日任务（跟着滚），右边怪兽冒险 / 闯关 / 聊天 ===== */
+  body.scr-home #app { max-width: 900px; }
+  .topbar { padding-block: 4px; }
+  .me-pet { width: 36px; height: 36px; font-size: 24px; }
+  #home { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); column-gap: 16px; align-items: start; }
+  #home > .tabs { grid-column: 1 / -1; }
+  #home > .quests { grid-column: 1; grid-row: 2 / span 3; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 54px); max-height: calc(100vh - 62px); max-height: calc(100dvh - 62px - env(safe-area-inset-top, 0px)); overflow-y: auto; }
+  #home > :is(#mon-home, #talk-home, #quiz-home, .foot) { grid-column: 2; }
+  .quests { padding: 10px 14px; }
+  .quests .rev-card { padding: 10px 12px; margin-bottom: 8px; }
+  .q-row { padding-block: 4px; }
+  .chest-btn { margin-top: 6px; padding: 8px 12px; }
+  /* 关卡路线横着排，一屏看得到一整个单元 */
+  .world .path { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 38px 16px; padding: 40px 12px 22px; }
+  .world .path .scene-btn { flex: 0 0 100%; margin: -18px 0 0; }
+  .node, .node:active { transform: none; }
+  .node.cur { margin-top: 0; }
+  .n-pet { left: auto; right: -24px; top: -14px; font-size: 24px; }
+
+  /* ===== 做题 ===== */
+  body.scr-play #app, body.scr-result #app, body.scr-theater #app { max-width: 900px; }
+  #play { padding-bottom: 24px; }
+  /* 反馈条出来时底下留出位置，标出对错的选项能滚到它上面 */
+  body.scr-play:has(#fb.show) #play { padding-bottom: 110px; }
+  .p-top { padding-block: 6px; }
+  body.scr-play #app, body.scr-result #app { padding-bottom: 0; }
+  #p-boss { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 50px); z-index: 4; margin-inline: -16px; padding-inline: 16px; background: var(--foam); }
+  .boss-hp { padding: 4px 10px; margin-bottom: 4px; }
+  .boss-hp .be { font-size: 26px; }
+  .combo { min-height: 22px; font-size: 17px; }
+  .p-body { gap: 10px; }
+  .q-title { font-size: 20px; }
+  .q-audio { padding-block: 0; }
+  .spk { width: 72px; height: 72px; border-radius: 22px; }
+  .spk svg { width: 36px; height: 36px; }
+  .slow { width: 54px; height: 54px; }
+  .opts { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .opts.list { grid-template-columns: 1fr 1fr; }
+  .opt { min-height: 72px; padding: 8px 8px; }
+  .opt .o-e { font-size: 30px; }
+  .say-card { padding: 10px 14px; gap: 4px; }
+  .mic { width: 84px; height: 84px; }
+  .mic svg { width: 40px; height: 40px; }
+  .lo-ans { min-height: 52px; padding-block: 6px; }
+  .lo-bank { min-height: 48px; }
+  .tile { padding: 6px 11px; font-size: 18px; }
+  #lo-check { padding-block: 10px; }
+  /* 听力题：喇叭放在标题右边 */
+  #p-body:is([data-q=lw], [data-q=ls], [data-q=lm], [data-q=lr], [data-q=lo]) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; }
+  #p-body:is([data-q=lw], [data-q=ls], [data-q=lm], [data-q=lr], [data-q=lo]) > * { grid-column: 1 / -1; }
+  #p-body:is([data-q=lw], [data-q=ls], [data-q=lm], [data-q=lr], [data-q=lo]) > .q-type { grid-column: 1; grid-row: 1; }
+  #p-body:is([data-q=lw], [data-q=ls], [data-q=lm], [data-q=lr], [data-q=lo]) > .q-title { grid-column: 1; grid-row: 2; }
+  #p-body:is([data-q=lw], [data-q=ls], [data-q=lm], [data-q=lr], [data-q=lo]) > .q-audio { grid-column: 2; grid-row: 1 / 3; }
+  /* 口语题：左边题目卡片，右边话筒、自评、跳过 */
+  .q-main, .q-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  #p-body:is([data-q=sr_w], [data-q=sr_s], [data-q=sr_d], [data-q=sp]) { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; column-gap: 18px; align-items: start; }
+  #p-body:is([data-q=sr_w], [data-q=sr_s], [data-q=sr_d], [data-q=sp]) > * { grid-column: 1; }
+  #p-body:is([data-q=sr_w], [data-q=sr_s], [data-q=sr_d], [data-q=sp]) > .q-side { grid-column: 2; grid-row: 1 / -1; }
+  #play .say-emoji { font-size: 44px; }
+  #play .say-text { font-size: 24px; }
+  #play .mic-wrap { gap: 6px; }
+  #play .mic { width: 72px; height: 72px; }
+  #play .mic svg { width: 34px; height: 34px; }
+  #play .mic-hint, #play .heard { min-height: 0; }
+  #play .self { padding: 10px 12px; gap: 8px; }
+  #play .rate .btn { padding: 8px 4px; }
+  /* BOSS：左边它说的话、下面是话筒 / 自评，右边三个回答 */
+  #p-body[data-q=bt] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; column-gap: 16px; align-items: start; }
+  #p-body[data-q=bt] > * { grid-column: 1 / -1; }
+  #p-body[data-q=bt] > .q-main { grid-column: 1; grid-row: 2; }
+  #p-body[data-q=bt] > .q-side { grid-column: 1; grid-row: 3; }
+  #p-body[data-q=bt] > .opts { grid-column: 2; grid-row: 2 / -1; grid-template-columns: 1fr; gap: 8px; }
+  #p-body[data-q=bt] .opt { min-height: 50px; padding: 6px 12px; }
+  #p-body[data-q=bt] .opt.en .o-t { font-size: 18px; }
+  #p-body[data-q=bt] .q-main > .say-zh { font-size: 14px; }
+  #p-body[data-q=bt] .mic-wrap { flex-direction: row; flex-wrap: wrap; justify-content: center; column-gap: 12px; }
+  #p-body[data-q=bt] .mic-wrap > .heard, #p-body[data-q=bt] .mic-wrap > #score { flex-basis: 100%; }
+  #p-body[data-q=bt] .self { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; }
+  #p-body[data-q=bt] .self p { flex-basis: 100%; }
+  #p-body[data-q=bt] .self .rate { width: auto; flex: 1 1 260px; }
+  #p-body[data-q=bt] .q-side > .link { padding-block: 2px; }
+  #play .bubble-row .be { font-size: 36px; }
+  #play .bubble { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 8px 12px; }
+  /* 反馈条：放宽成一行，矮一点 */
+  .fb-in { max-width: 900px; padding: 8px 16px; flex-wrap: nowrap; }
+  .fb b { font-size: 18px; }
+  .fb #fb-d { font-size: 14px; }
+  .fb .btn { flex: none; padding: 10px 22px; }
+
+  /* ===== 结算页：左边星星，右边奖励和按钮 ===== */
+  body.scr-result #result { min-height: calc(100vh - 52px); min-height: calc(100dvh - 52px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: 28px; padding-block: 8px; }
+  #result .r-hero, #result .r-body { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
+  #result .r-hero .big { font-size: 48px !important; line-height: 1; }
+  .r-title { font-size: 28px; }
+  .r-sub { margin: 0; }
+  .r-stars { font-size: 46px; }
+  .lucky { padding: 4px 12px; font-size: 14px; }
+  .r-actions { flex-direction: row; gap: 10px; }
+  .r-actions .btn { white-space: nowrap; padding-inline: 12px; }
+  .r-actions > .btn.wide { flex: 1.3; }
+  .r-actions > .row { flex: 2; }
+
+  /* ===== 对话动画：左边动画、右边按钮和记录，整屏不用滚 ===== */
+  body.scr-theater #app { padding-bottom: 0; }
+  body.scr-theater #theater { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 14px;
+    height: 100vh; height: 100dvh; padding-bottom: 8px; overflow: hidden; }
+  #theater > .p-top { grid-column: 1 / -1; padding-block: 4px; }
+  #theater > .stage { grid-column: 1; grid-row: 2; height: auto; min-height: 0; }
+  #theater > .th-side { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; padding: 0 2px 6px; }
+  #theater .th-side > .th-modes:first-child { margin-top: 0; }
+  #theater .th-ctrl { margin-top: 10px; }
+  #theater .say-text { font-size: 20px; }
+
+  /* ===== 和岛民聊天：左边人物和目标，右边对话记录和话筒（打字时键盘弹出来，输入框也看得见） ===== */
+  .tk-ov { align-items: stretch; }
+  .tk-box { max-width: 900px; height: 100%; border-radius: 0; display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; column-gap: 14px;
+    padding: 8px max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px)); }
+  .tk-head { grid-column: 1; grid-row: 1; }
+  .tk-goal { grid-column: 1; grid-row: 2 / 5; align-self: start; max-height: 100%; overflow-y: auto; }
+  .tk-log { grid-column: 2; grid-row: 1 / 3; margin: 0; }
+  .tk-status { grid-column: 2; grid-row: 3; }
+  .tk-ctl { grid-column: 2; grid-row: 4; flex-direction: row; align-items: center; }
+  .tk-mic { flex: 1; padding: 10px; font-size: 17px; }
+  .tk-type { flex: 1.2; }
+  /* 聊完的评价：有「更好的说法」就放右边，左边星星、金币和按钮 */
+  .tk-eval { grid-column: 1 / -1; grid-row: 1 / -1; }
+  .tk-eval:has(> .tk-tips) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); grid-template-rows: repeat(7, auto) 1fr; column-gap: 20px; row-gap: 6px; align-content: start; justify-items: center; }
+  .tk-eval:has(> .tk-tips) > * { grid-column: 1; }
+  .tk-eval:has(> .tk-tips) > .tk-tips { grid-column: 2; grid-row: 1 / -1; align-self: start; }
+  .tk-eval img { width: 56px; height: 56px; }
+  .tk-stars { font-size: 26px; }
+}
+
+/* AI 老师点评（说得不准时，接在「我听到」后面） */
+.ai-tip { display: block; margin-top: 4px; padding: 4px 10px; border-radius: 10px; background: #fff6d6; color: #6b4e00; font-size: 14px; font-weight: 700; line-height: 1.4; }

@@ -12,6 +12,7 @@ async function open(o) {
   const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   const p = await (await b.newContext({ viewport: o.viewport || { width: 390, height: 844 } })).newPage();
   p.setDefaultTimeout(6000);
+  p.setDefaultNavigationTimeout(20000);   // 机器忙的时候（3D、模拟器开着）重新载入页面会慢一些
   const errs = [];
   let fails = 0;
   p.on('pageerror', e => { errs.push(e.message); console.log('  [err]', e.message, (e.stack || '').split(/\n/)[1]); });
@@ -43,7 +44,9 @@ async function open(o) {
     async zh() { await t.typed(); return p.evaluate(() => { const e = document.querySelector('#w-dlg:not([hidden]) .d-zh'); return e ? e.textContent : ''; }); },
     // 当前这页对话的原文（包括只听不看的页）
     page: () => p.evaluate(() => { const d = EchoWorld._debug().dlg; const pg = d && d.pages[d.i]; return pg ? { en: pg.en, zh: pg.zh, kind: pg.kind, target: pg.target, opts: pg.opts && pg.opts.map(o => ({ t: o.t, c: !!o.c, html: o.html })) } : null; }),
-    async A() { await t.typed(); await p.click('#world [data-act=wA].ba'); await W(260); },
+    // 按 A：对话框、过场出来时屏幕上的 A 键会藏起来（点对话框就是 A），这里直接触发 A 键
+    // 有弹窗（进化动画、学新招……）时先处理弹窗：真人也是先点掉弹窗才能按 A
+    async A() { await t.typed(); for (let i = 0; i < 40 && await p.isVisible('#modal') && await p.$('#evo-ok, #sheet [data-act=mForget], #sheet [data-act=mLearnGo]'); i++) await t.modal(); await p.evaluate(() => document.querySelector('#world [data-act=wA].ba').click()); await W(260); },
     async key(k, n) { for (let i = 0; i < (n || 1); i++) { await p.keyboard.down(k); await W(40); await p.keyboard.up(k); await W(280); } },
     // 往某个方向走 n 步（等走完）
     async walk(dir, n) { const K = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' }[dir]; for (let i = 0; i < (n || 1); i++) { await p.keyboard.down(K); await W(40); await p.keyboard.up(K); await W(260); for (let k = 0; k < 20 && (await t.dbg()).busy; k++) await W(100); await t.settle(); } },

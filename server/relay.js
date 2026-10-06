@@ -118,9 +118,49 @@ const server = http.createServer((req, res) => {
         (r.eval && r.eval.tips.length ? '<div class="t">建议：' + r.eval.tips.map(t => esc(t.said) + ' → ' + esc(t.better) + '（' + esc(t.zh) + '）').join('；') + '</div>' : '') + '</div>').join('') : '<p>这一天没有对话。</p>');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);
   }
+  if (req.method === 'OPTIONS' && (u.pathname === '/asr' || u.pathname === '/tip')) {   // 跨域预检（GitHub Pages 上的网页版连家里的中转服务）
+    let ok = false; try { ok = !!req.headers.origin && okOrigin(req.headers.origin); } catch (e) {}
+    res.writeHead(ok ? 204 : 403, ok ? { 'Access-Control-Allow-Origin': req.headers.origin, 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400' } : {});
+    return res.end();
+  }
+  if (req.method === 'POST' && (u.pathname === '/asr' || u.pathname === '/tip')) return cloudHelp(u, req, res);
   if (SERVE_GAME && (req.method === 'GET' || req.method === 'HEAD')) return serveGame(u, req, res);
   res.writeHead(404); res.end();
 });
+
+// ---------- 网页版的口语打分：/asr 录音 → 文字（qwen3-asr-flash，不给答案，听到什么写什么），/tip 目标句子 + 听到的 → 一句中文建议 ----------
+// APK 直连阿里云不走这里。要家庭口令；每个 IP 每分钟最多 40 次
+const hits = new Map();
+function cloudHelp(u, req, res) {
+  const cors = { 'Access-Control-Allow-Origin': req.headers.origin && okOrigin(req.headers.origin) ? req.headers.origin : 'null', 'Content-Type': 'application/json' };
+  const bad = (c, m) => { res.writeHead(c, cors); res.end(JSON.stringify({ error: m })); };
+  try { if (req.headers.origin && !okOrigin(req.headers.origin)) return bad(403, 'origin'); } catch (e) { return bad(403, 'origin'); }
+  if (ACCESS_CODE && u.searchParams.get('code') !== ACCESS_CODE) return bad(403, 'code');
+  const ip = req.headers['cf-connecting-ip'] || req.socket.remoteAddress || '?', now = Date.now(), h = (hits.get(ip) || []).filter(t => now - t < 60000);
+  if (h.length >= 40) return bad(429, 'busy'); h.push(now); hits.set(ip, h);
+  let body = '', size = 0;
+  req.on('data', c => { size += c.length; if (size > 3e6) { req.destroy(); return; } body += c; });
+  req.on('end', async () => {
+    let j; try { j = JSON.parse(body); } catch (e) { return bad(400, 'json'); }
+    const call = async b => {
+      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+      try { const r = await fetch(CORE.EVAL_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(b), signal: ctl.signal }); return await r.json(); } finally { clearTimeout(tm); }
+    };
+    try {
+      if (u.pathname === '/asr') {
+        if (typeof j.audio !== 'string' || j.audio.length < 1000) return bad(400, 'audio');
+        const r = await call({ model: 'qwen3-asr-flash', stream: false, asr_options: { language: 'en', enable_itn: false }, messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + j.audio } }] }] });
+        res.writeHead(200, cors); return res.end(JSON.stringify({ text: String((r.choices && r.choices[0].message.content) || '').trim() }));
+      }
+      const target = clean(j.target, 200), heard = clean(j.heard, 200);
+      if (!target || !heard) return bad(400, 'text');
+      const sys = '你是一位耐心的初中英语发音老师。学生要大声说的英文是：「' + target + '」。语音识别听到学生说的是：「' + heard + '」。用一句简体中文（不超过 28 个字）具体指出最主要的问题（哪个词读错、漏读或读成了别的词，可能是哪个音没发好），并告诉他怎么读对。如果听到的和目标几乎不是同一句话（大部分词都对不上），就只说「你读的好像是另一句话，先点喇叭听一遍原句再读」。不要表扬、不要客套，只输出这一句话。';
+      const r = await call({ model: EVAL_MODEL, temperature: 0.2, max_tokens: 80, messages: [{ role: 'system', content: sys }, { role: 'user', content: '请点评。' }] });
+      res.writeHead(200, cors); res.end(JSON.stringify({ tip: String((r.choices && r.choices[0].message.content) || '').trim().slice(0, 60) }));
+    } catch (e) { bad(502, 'upstream'); }
+  });
+}
+const clean = (v, n) => String(v || '').replace(/[^\p{L}\p{N} .,!?'"’:;()-]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
 
 // ---------- 可选：顺便把游戏网页也放出来（家里用 Tailscale 试的时候，一个服务就够）----------
 // SERVE_GAME=1 时从仓库根目录读文件；每次都让浏览器回来确认有没有新版本（no-cache + ETag），改了代码刷新就是新的

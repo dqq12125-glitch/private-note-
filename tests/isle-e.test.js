@@ -20,6 +20,7 @@ const H = require('./helpers');
       if (i && i % 60 === 0) { console.log('  (还在等剧情 ' + i + ') ' + JSON.stringify(s) + ' ' + JSON.stringify(await t.page())); await t.shot('_stuck').catch(() => {}); }
       if (await p.isVisible('#evo-ok')) { await p.click('#evo-ok'); await W(400); continue; }   // 怪兽进化了
       if (await p.isVisible('#battle')) { await t.fight(); continue; }
+      if (await p.isVisible('#modal') && await p.$('#evo-ok, #sheet [data-act=mForget], #sheet [data-act=mLearnGo]')) { await t.modal(); continue; }   // 打完仗弹出来的进化 / 学新招，等它处理完（别的弹窗由测试自己处理）
       if (!s.busy && !s.dlg) return;
       if (!s.dlg) { await W(150); continue; }
       const pg = await t.page();
