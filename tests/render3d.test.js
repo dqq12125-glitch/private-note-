@@ -72,7 +72,10 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.screenshot({ path: out + '/3d-battle-fx.png' });
   await p.waitForTimeout(2500);
   await p.screenshot({ path: out + '/3d-battle.png' });
-  await p.click('[data-act=bFlee]'); await p.click('#sheet [data-act=bEnd]');
+  // 小招可能一下就把 Lv5 的野生怪兽打倒了（战斗自己结束了，没有逃跑按钮）：能逃就逃，有结束按钮就点
+  await p.click('[data-act=bFlee]', { timeout: 3000 }).catch(() => {});
+  const end = await p.waitForSelector('#sheet [data-act=bEnd]', { timeout: 3000 }).catch(() => null);
+  if (end) await end.click();
   await p.waitForTimeout(500);
   check(!(await p.$('canvas.b3d')), '战斗结束后 3D 战斗画面释放了');
   // 图鉴：386 只，翻页

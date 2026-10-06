@@ -1,29 +1,194 @@
 <!doctype html>
+<html lang="zh-CN">
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>技能特效预览</title>
-<style>body { margin: 0; font: 13px sans-serif; } #arena { position: relative; width: 390px; height: 300px; overflow: hidden; } #bar { padding: 6px; display: flex; flex-wrap: wrap; gap: 4px; } button { padding: 4px 8px; }</style>
-<div id="arena"></div>
-<div id="bar"></div>
+<link rel="stylesheet" href="../style.css">
+<style>
+  html, body { height: auto; }
+  body { margin: 0; padding: 10px; background: #eef2f5; color: #223; font: 13px/1.45 system-ui, sans-serif; }
+  .top { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+  #b-arena { width: 390px; height: 300px; border-radius: 18px; flex: none; }
+  .panel { display: flex; flex-direction: column; gap: 8px; min-width: 260px; max-width: 520px; }
+  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .row > b { min-width: 3em; }
+  button { padding: 4px 9px; border: 1px solid #b8c2cc; border-radius: 8px; background: #fff; }
+  button.on { background: #2b3440; color: #fff; border-color: #2b3440; }
+  button:disabled { opacity: .45; }
+  .now { padding: 8px 10px; background: #fff; border-radius: 10px; border: 1px solid #d5dde4; min-height: 3.2em; }
+  .now .nm { font-size: 16px; font-weight: 700; }
+  .now .bad { color: #c0392b; font-weight: 700; }
+  .live { color: #567; font-variant-numeric: tabular-nums; }
+  table { border-collapse: collapse; margin-top: 10px; }
+  td { padding: 3px 4px; vertical-align: middle; }
+  td.ty { font-weight: 700; white-space: nowrap; }
+  td.ty i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  #grid button { min-width: 112px; text-align: left; }
+  #grid button small { color: #789; margin-right: 4px; }
+  #grid button.sup { min-width: 0; }
+  #grid button.cur { outline: 3px solid #f0a020; }
+</style>
+<div class="top">
+  <div id="b-arena" class="arena is3d"></div>
+  <div class="panel">
+    <div class="row"><b>画质</b><span id="qs"><button data-q="high">high 精美</button> <button data-q="mid">mid 标准</button> <button data-q="low">low 省电</button></span></div>
+    <div class="row"><b>出招</b><span id="sides"><button data-s="me">我方打对手</button> <button data-s="foe">对手打我方</button></span></div>
+    <div class="row"><button id="all">▶ 连放全部 51 招</button> <button id="stop" disabled>■ 停</button></div>
+    <div class="now" id="now">点下面的按钮放招（小 / 中 / 大招、辅 = 辅助招式）。<br>网址参数：?q=high|mid|low &amp;side=foe &amp;me=emberpup &amp;foe=bubbly &amp;w=390&amp;h=300</div>
+    <div class="live" id="live"></div>
+  </div>
+</div>
+<table id="grid"></table>
 <script>window.ECHO_BASE = '../';</script>
 <script src="../vendor/three.min.js"></script>
 <script src="../dex.js"></script>
 <script src="../monster3d.js"></script>
 <script src="../battle3d.js"></script>
+<script src="../battle-fx-elements.js"></script>
+<script src="../battle-fx-energy.js"></script>
+<script src="../battle-fx-physical.js"></script>
+<script src="../battle-sfx.js"></script>
 <script>
-// 技能特效预览：点按钮放招；?me=emberpup&foe=songlet 换怪兽
+// 技能特效预览：17 个属性 × 小招 / 中招 / 大招 + 辅助招式；显示招式名、命中时刻、全部淡完的时长、粒子峰值、闪屏次数、显存对象数
+// tools/fx-shots.js 通过 window.FXT 在无头浏览器里放招截图
 const q = new URLSearchParams(location.search);
-const B3 = Battle3D.create(document.getElementById('arena'), {});
-// ?art=3d / blender / gemini 时等外部模型载完再放怪兽
-Mon3D.ready.then(() => {
-  B3.setMon('me', DEX.byId[q.get('me') || 'emberpup']);
-  B3.setMon('foe', DEX.byId[q.get('foe') || 'bubbly']);
-  document.body.dataset.ready = '1';
+const arena = document.getElementById('b-arena');
+if (q.get('w')) arena.style.width = q.get('w') + 'px';
+if (q.get('h')) arena.style.height = q.get('h') + 'px';
+const ME = q.get('me') || 'emberpup', FOE = q.get('foe') || 'bubbly';
+const TIER = ['小招', '中招', '大招'], CAP = Battle3D.CAP;
+let quality = ['high', 'mid', 'low'].includes(q.get('q')) ? q.get('q') : 'high', side = q.get('side') === 'foe' ? 'foe' : 'me', B3 = null, busy = false, stopAll = false;
+const $ = id => document.getElementById(id);
+function make() {
+  if (B3) B3.destroy();
+  B3 = Battle3D.create(arena, { quality, dpr: +q.get('dpr') || 1.5, sfx: () => q.get('sfx') !== '0' });
+  B3.setMon('me', DEX.byId[ME]); B3.setMon('foe', DEX.byId[FOE]);
+  window.B3 = B3;
+  document.querySelectorAll('#qs button').forEach(b => b.classList.toggle('on', b.dataset.q === quality));
+}
+function sides() { document.querySelectorAll('#sides button').forEach(b => b.classList.toggle('on', b.dataset.s === side)); }
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const moveName = (type, tier, sup) => sup ? DEX.TYPES[type].zh + '系辅助招式' : DEX.MOVES[type][tier][0] + ' ' + DEX.MOVES[type][tier][1];
+// kit 新工具的演示
+const DEMO = {
+  energyBeam: k => { k.energyBeam(k.center('me'), k.center('foe'), { col: '#ff5ea8', col2: '#ffd0e8', width: .35, life: 1 }); },
+  lightning: k => { const b = k.center('foe'); k.lightning(b.clone().setY(5), b, { col: '#ffe14d', branches: 3, life: .8 }); k.lightning(k.center('me'), b, { col: '#9be7ff', width: .03, life: .8 }); },
+  flame: k => { const f = k.feet('foe'); for (let i = 0; i < 5; i++) k.flame(f.clone().add(k.V(k.rnd(-.5, .5), 0, k.rnd(-.5, .5))), { size: k.rnd(.6, 1.1), life: 1.2, rise: .3 }); },
+  shockwave: k => { k.shockwave(k.feet('foe').setY(.12), { col: '#ffffff', r1: 2.2, life: .7 }); k.shockwave(k.center('foe'), { col: '#9be7ff', flat: false, r1: 1.4, life: .6 }); },
+  impactStar: k => { k.impactStar(k.center('foe'), { col: '#ffe14d', size: 1.4, life: .5 }); k.impactStar(k.center('me'), { col: '#ff5ea8', size: 1, spikes: 7, life: .5 }); },
+  decal: k => { ['scorch', 'frost', 'crack', 'splash', 'glow'].forEach((kind, i) => k.decal(k.V(-2.2 + i * 1.05, 0, -.35 + i * .12), { kind, r: .5, life: 2 })); },
+  trail: k => { const o = k.orb('#9be7ff', .1); k.trail(() => o.parent && o.position, { col: '#9be7ff', width: .25 }); k.fly(k.center('me'), k.center('foe'), 900, o, null, { arc: .6 }); },
+  aura: k => { k.aura('me', { col: '#ff7a2f', col2: '#ffd54f', life: 1.2 }); k.aura('foe', { col: '#6a4dff', col2: '#ff5ea8', life: 1.2 }); },
+  groundCircle: k => { k.groundCircle('me', { col: '#ffd54f', runes: true, life: 1.4 }); k.groundCircle('foe', { col: '#9be7ff', life: 1.4 }); },
+  light: k => { k.light(k.center('foe'), { col: '#ff7a2f', intensity: 12, life: 1 }); k.glow(k.center('foe'), { col: '#ff7a2f', size: .8, life: 1 }); },
+  particles: k => { const b = k.center('foe'); ['glow', 'star', 'smoke', 'ring'].forEach((tex, i) => k.emit(30, () => ({ pos: b.clone().add(k.V(-1.2 + i * .8, .5, 0)), vel: k.sph(k.rnd(.3, 1)), col: '#ffd54f', size: .4, life: 1.2, tex, spin: 3 }))); },
+  flash: k => { k.flash('#ff2020'); [100, 300, 600, 900].forEach(t => setTimeout(() => k.flash('#ffffff'), t)); },
+  slowmo: k => { k.burst(k.center('foe'), ['#ffffff', '#ffe082'], 120, 5, .5, .8); k.slowmo(.3, 600); k.bloom(2.2, 600); },
+};
+window.FXT = {
+  get B3() { return B3; },
+  // 放一招，命中时 resolve（和 monsters.js 一样接着调 hit）；opt = { support, side }
+  async play(type, tier, opt) {
+    opt = opt || {};
+    const sd = opt.side || side, other = sd === 'me' ? 'foe' : 'me', sup = !!opt.support;
+    B3.fxReset();
+    const mem0 = B3.fxStats().mem, t0 = performance.now();
+    const mv = DEX.MOVES[type][tier];
+    await B3.attack(sd, type, tier, sup, sup ? null : { name: mv[0], zh: mv[1], sp: DEX.byId[sd === 'me' ? ME : FOE] });
+    const impact = performance.now() - t0;
+    if (!sup) B3.hit(other, { crit: tier === 2 });
+    return { impact, t0, mem0 };
+  },
+  // 放一招并等特效全部淡完（最多 8 秒），返回统计
+  async run(type, tier, opt) {
+    opt = opt || {};
+    const r = await FXT.play(type, tier, opt);
+    while (!B3.fxIdle() && performance.now() - r.t0 < 8000) await wait(40);
+    const s = B3.fxStats();
+    return { type, tier, support: !!opt.support, name: moveName(type, tier, opt.support), quality, impact: Math.round(r.impact), total: Math.round(performance.now() - r.t0), peak: s.peak, flashes: s.flashes, flashSkipped: s.flashSkipped, over: s.over, mem0: r.mem0, mem1: s.mem, programs: s.programs };
+  },
+  // 单独演示一个 kit 工具（给设计特效的人看工具本身长什么样）
+  async demo(name) {
+    B3.fxReset();
+    const mem0 = B3.fxStats().mem, t0 = performance.now();
+    DEMO[name](B3.kit);
+    return { impact: 0, t0, mem0 };
+  },
+  async runDemo(name) {
+    const r = await FXT.demo(name);
+    while (!B3.fxIdle() && performance.now() - r.t0 < 8000) await wait(40);
+    const s = B3.fxStats();
+    return { type: 'demo', tier: 0, support: true, name: 'kit.' + name, quality, impact: 0, total: Math.round(performance.now() - r.t0), peak: s.peak, flashes: s.flashes, flashSkipped: s.flashSkipped, over: s.over, mem0: r.mem0, mem1: s.mem, programs: s.programs };
+  },
+  state: () => Object.assign(B3.fxStats(), { idle: B3.fxIdle() }),
+  setQuality(qq) { quality = qq; make(); },
+  setSide(s) { side = s; sides(); },
+};
+function show(r) {
+  const cap = r.support ? 1200 : CAP[r.tier], over = r.impact > cap;
+  $('now').innerHTML = '<div class="nm">' + r.name + '</div>' + (r.type === 'demo' ? '工具演示' : r.support ? '辅助招式' : TIER[r.tier]) + ' · ' + r.quality +
+    ' · 命中 <span class="' + (over ? 'bad' : '') + '">' + r.impact + ' ms</span>（上限 ' + cap + '）· 全部淡完 ' + r.total + ' ms<br>' +
+    '粒子峰值 ' + r.peak + ' · 闪屏 ' + r.flashes + (r.flashSkipped ? '（限频跳过 ' + r.flashSkipped + '）' : '') + (r.over ? ' · <span class="bad">出招超时 ' + r.over + '</span>' : '') +
+    ' · 几何体 ' + r.mem0.geometries + '→' + r.mem1.geometries + ' · 贴图 ' + r.mem0.textures + '→' + r.mem1.textures + ' · 着色器 ' + r.programs;
+}
+async function go(type, tier, sup, btn) {
+  if (busy) return;
+  busy = true;
+  document.querySelectorAll('#grid button.cur').forEach(b => b.classList.remove('cur'));
+  if (btn) btn.classList.add('cur');
+  $('now').innerHTML = '<div class="nm">' + moveName(type, tier, sup) + '</div>放招中……';
+  try { show(await FXT.run(type, tier, { support: sup })); } finally { busy = false; }
+}
+// 按钮：每个属性一行
+const grid = $('grid');
+DEX.ORDER.forEach(t => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td class="ty"><i style="background:' + Battle3D.TYPE_COL[t][0] + '"></i>' + DEX.TYPES[t].zh + '</td>';
+  [0, 1, 2].forEach(k => {
+    const td = document.createElement('td'), b = document.createElement('button');
+    b.innerHTML = '<small>' + '小中大'[k] + '</small>' + DEX.MOVES[t][k][0];
+    b.title = DEX.MOVES[t][k][1]; b.dataset.t = t; b.dataset.k = k;
+    b.onclick = () => go(t, k, false, b);
+    td.appendChild(b); tr.appendChild(td);
+  });
+  const td = document.createElement('td'), b = document.createElement('button');
+  b.className = 'sup'; b.textContent = '辅'; b.title = '辅助招式'; b.onclick = () => go(t, 0, true, b);
+  td.appendChild(b); tr.appendChild(td);
+  grid.appendChild(tr);
 });
-window.B3 = B3;
-const bar = document.getElementById('bar');
-DEX.ORDER.forEach(t => [0, 1, 2].forEach(k => {
-  const b = document.createElement('button'); b.textContent = DEX.TYPES[t].zh + k;
-  b.onclick = async () => { await B3.attack('me', t, k); B3.hit('foe', { crit: k === 2 }); };
-  bar.appendChild(b);
-}));
+{
+  const tr = document.createElement('tr'), td = document.createElement('td');
+  tr.innerHTML = '<td class="ty">工具</td>'; td.colSpan = 4;
+  Object.keys(DEMO).forEach(n => {
+    const b = document.createElement('button'); b.className = 'sup'; b.textContent = n;
+    b.onclick = async () => { if (busy) return; busy = true; try { show(await FXT.runDemo(n)); } finally { busy = false; } };
+    td.appendChild(b); td.appendChild(document.createTextNode(' '));
+  });
+  tr.appendChild(td); grid.appendChild(tr);
+}
+document.querySelectorAll('#qs button').forEach(b => { b.onclick = () => { if (!busy) FXT.setQuality(b.dataset.q); }; });
+document.querySelectorAll('#sides button').forEach(b => { b.onclick = () => FXT.setSide(b.dataset.s); });
+$('all').onclick = async () => {
+  if (busy) return;
+  stopAll = false; $('stop').disabled = false; $('all').disabled = true;
+  for (const t of DEX.ORDER) for (const k of [0, 1, 2]) {
+    if (stopAll) break;
+    await go(t, k, false, document.querySelector('#grid button[data-t="' + t + '"][data-k="' + k + '"]'));
+    await wait(250);
+  }
+  $('stop').disabled = true; $('all').disabled = false;
+};
+$('stop').onclick = () => { stopAll = true; };
+// 实时：帧率、粒子数、特效物件数
+let frames = 0, fpsT = performance.now();
+(function count() { frames++; requestAnimationFrame(count); })();
+setInterval(() => {
+  if (!B3) return;
+  const now = performance.now(), fps = frames * 1000 / (now - fpsT), s = B3.fxStats(); frames = 0; fpsT = now;
+  $('live').textContent = fps.toFixed(0) + ' fps · 粒子 ' + s.parts + ' · 特效物件 ' + s.fx + ' · 点光源 ' + s.lights + ' · 几何体 ' + s.mem.geometries + ' · 贴图 ' + s.mem.textures;
+}, 500);
+sides();
+// ?art=3d / blender / gemini 时等外部模型载完再放怪兽
+Mon3D.ready.then(() => { make(); document.body.dataset.ready = '1'; });
 </script>
+</html>

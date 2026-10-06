@@ -385,7 +385,8 @@
       // 画质和大地图同一档：精美用满屏幕的像素比（最多 3）
       let tier = (E.S.settings.gfx === 'auto' ? E.S.settings.gfxAuto : E.S.settings.gfx) || 'mid';
       try { if (window.EchoWorld && EchoWorld.gfxTier) tier = EchoWorld.gfxTier(); } catch (e) { /* 大地图还没初始化就按设置 */ }
-      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena, opts.rules), shadows: tier !== 'low', dpr: tier === 'high' ? 3 : 1.5 }); } catch (e) { B3 = null; }
+      // quality：特效的粒子上限、点光源、发光后期按画质缩减；sfx：设置里关了音效就不放招式音效
+      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena, opts.rules), shadows: tier !== 'low', dpr: tier === 'high' ? 3 : 1.5, quality: tier, sfx: () => E.S.settings.sfx !== false }); } catch (e) { B3 = null; }
     }
     renderBattle();
     intro(B);
@@ -906,12 +907,14 @@
     arena.appendChild(s);
     setTimeout(() => s.remove(), 1200);
   }
-  async function strike(fromId, toId, type, dmg, labels, tier) {
+  // info = { name, zh, sp }：招式英文名、中文名、出招的物种（3D 战斗的大招过场 / 中招横幅显示）
+  async function strike(fromId, toId, type, dmg, labels, tier, info) {
     if (B3) {
       const from = fromId === 'b-me' ? 'me' : 'foe', to = from === 'me' ? 'foe' : 'me';
-      await B3.attack(from, type, tier || 0);
+      await B3.attack(from, type, tier || 0, false, info);
       if (dmg > 0) {
-        E.SFX.hit();
+        // 受击音效：有战斗合成音效（battle-sfx.js，带儿童安全的滤波和限幅）就用它的「hit」，不再叠一层老的方波 / 锯齿波音效
+        if (window.BattleSFX && BattleSFX.enabled) { if (E.S.settings.sfx !== false) BattleSFX.play(type, 'hit', tier || 0); } else E.SFX.hit();
         B3.hit(to, { crit: labels.includes('暴击！') });
         pop(toId, '-' + dmg, 'dmg');
         labels.forEach((l, k) => setTimeout(() => pop(toId, l, 'lbl'), 250 + k * 250));
@@ -965,7 +968,7 @@
     if (mvo.sup) {
       if (score < 55) { msg('咒语' + (why || '念得不够清楚') + '，<b>' + mv[0] + '</b> 失败了！'); await sleep(1000); return; }
       B.energy = Math.min(3, B.energy + 1);
-      if (B3) await B3.attack('me', mvo.type, 0, true);
+      if (B3) await B3.attack('me', mvo.type, 0, true, { name: mv[0], zh: mv[1], sp: spOf(m) });
       await supEffect('me', 'foe', mvo.sup);
       return;
     }
@@ -974,7 +977,7 @@
     const labels = [];
     if (mult >= 1.3) labels.push('暴击！');
     if (dmg && effLabel(e)) labels.push(effLabel(e));
-    await strike('b-me', 'b-foe', mvo.type, dmg, labels, mvo.tier);
+    await strike('b-me', 'b-foe', mvo.type, dmg, labels, mvo.tier, { name: mv[0], zh: mv[1], sp: spOf(m) });
     if (!live(b)) return;
     addHp('foe', -dmg);
     if (dmg && foe().st === 'frz' && mvo.type === 'fire') { foe().st = null; }
@@ -1066,8 +1069,9 @@
     await sleep(700);
     if (!live(b)) return finish();
     panel('');
+    const fo = foe(), fn = mvName(d.mvo), fi = fo ? { name: fn[0], zh: fn[1], sp: spOf(fo) } : null;   // 给 3D 战斗的招式名和物种
     if (d.mvo.sup) {
-      if (B3) await B3.attack('foe', d.type, 0, true);
+      if (B3) await B3.attack('foe', d.type, 0, true, fi);
       if (!ok) await supEffect('foe', 'me', d.mvo.sup);
       return finish();
     }
@@ -1076,7 +1080,7 @@
     // 很亲的怪兽：本来要倒下了，为了不让你难过坚持住了
     const hold = hearts(me()) >= 4 && B.hp[me().uid] > 1 && dmg >= B.hp[me().uid] && Math.random() < .2;
     if (hold) dmg = B.hp[me().uid] - 1;
-    await strike('b-foe', 'b-me', d.type, dmg, ok ? ['挡住了'] : effLabel(e) ? [effLabel(e)] : [], d.mvo.tier);
+    await strike('b-foe', 'b-me', d.type, dmg, ok ? ['挡住了'] : effLabel(e) ? [effLabel(e)] : [], d.mvo.tier, fi);
     if (!live(b)) return finish();
     addHp('me', -dmg);
     if (hold) { msg('💖 <b>' + nm(me()) + '</b> 为了不让你难过，咬牙坚持住了！'); E.say(nm(me()) + ' held on for you!'); await sleep(1300); }

@@ -23,7 +23,8 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   const panelHas = sel => p.$('#b-panel ' + sel);
   const msg = () => p.textContent('#b-msg');
   const until = async (fn, max = 60) => { for (let i = 0; i < max; i++) { if (await fn()) return true; await W(150); } return false; };
-  const menuUp = () => until(() => panelHas('[data-act=bMove]'));
+  // 开场两句朗读走在线发音（没有配音的句子最长等 4 + 字数 × 0.2 秒，约 9 秒），菜单要等它念完才出来：多等一会儿（最多 21 秒）
+  const menuUp = () => until(() => panelHas('[data-act=bMove]'), 140);
 
   // ---------- 招式按等级来 ----------
   await save(); await p.reload(); await W(400);

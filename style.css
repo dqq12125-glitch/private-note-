@@ -1317,3 +1317,63 @@ body.in-world { overflow: hidden; }
   body.scr-battle #battle .b-msg { flex: none; margin-top: 8px; }
   body.scr-battle #battle .b-panel { flex: 0 1 auto; margin-top: 8px; max-height: 58%; overflow-y: auto; padding-bottom: 2px; }
 }
+
+/* ---------- 3D 战斗：大招过场、中招名字横幅、睡眠的 Z（battle3d.js 建的 DOM；位置、透明度每帧由 JS 驱动，FX_SPEC §4.1） ---------- */
+/* 大招过场：盖在战场上（血条卡片上面）；尺寸都按战场大小算（容器查询单位 cqw / cqh），竖屏横屏都合适。
+   --c1 / --c2 是属性的两个颜色（JS 给），--dk 深色描边、--bd 横幅中段由它们混出来 */
+.b3d-cut { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; container-type: size;
+  --c1: #ffffff; --c2: #ffffff; --dk: color-mix(in srgb, var(--c1) 28%, #0c1124); --bd: color-mix(in srgb, var(--c1) 62%, #0c1124); }
+.b3d-cut .bc-dim { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 75% at 50% 50%, rgba(8, 12, 30, .1), rgba(8, 12, 30, .55)); }
+/* 斜切的横幅：比战场宽，沿着自己的方向滑进来、停住、继续滑出去 */
+.b3d-cut .bc-band { position: absolute; left: -15%; width: 130%; top: 53%; height: 40%; will-change: transform; }
+.b3d-cut .bc-bg { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(90deg, var(--dk) 10%, var(--bd) 48%, var(--c1) 100%);
+  box-shadow: 0 0 0 3px var(--dk), 0 0 22px 4px color-mix(in srgb, var(--c1) 55%, transparent); }
+.b3d-cut.foe .bc-bg { background: linear-gradient(270deg, var(--dk) 10%, var(--bd) 48%, var(--c1) 100%); }
+/* 上下两道亮边 */
+.b3d-cut .bc-bg::before, .b3d-cut .bc-bg::after { content: ""; position: absolute; left: 0; right: 0; height: 4px; z-index: 2; background: linear-gradient(90deg, var(--c1), #ffffff 55%, var(--c2)); }
+.b3d-cut .bc-bg::before { top: 0; }
+.b3d-cut .bc-bg::after { bottom: 0; }
+/* 速度线（JS 画的一张能横向平铺的图，按时间滚动；对方出招时整个翻过来往左跑）、网点 */
+.b3d-cut .bc-lines { position: absolute; inset: 0; background-repeat: repeat; background-size: auto 100%; opacity: .7; }
+.b3d-cut.foe .bc-lines { transform: scaleX(-1); }
+.b3d-cut .bc-dots { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255, 255, 255, .26) 1.3px, transparent 1.9px) 0 0 / 8px 8px;
+  -webkit-mask-image: linear-gradient(90deg, #000 5%, transparent 55%); mask-image: linear-gradient(90deg, #000 5%, transparent 55%); }
+.b3d-cut.foe .bc-dots { -webkit-mask-image: linear-gradient(270deg, #000 5%, transparent 55%); mask-image: linear-gradient(270deg, #000 5%, transparent 55%); }
+/* 横幅外面上下各一道错开的细色条 */
+.b3d-cut .bc-acc { position: absolute; left: 6%; right: 22%; top: -11%; height: 5%; background: var(--c2); box-shadow: 0 0 0 2px var(--dk); }
+.b3d-cut .bc-acc.b { left: 24%; right: 4%; top: auto; bottom: -11%; background: var(--c1); }
+.b3d-cut.foe .bc-acc { left: 22%; right: 6%; }
+.b3d-cut.foe .bc-acc.b { left: 4%; right: 24%; }
+/* 出招怪兽的立绘：站在横幅里、头冒出横幅上沿，转回正的（横幅是斜的）；图标大多朝左，我方的翻过来朝右 */
+.b3d-cut .bc-mon { position: absolute; left: 16%; bottom: -8%; height: 150%; height: min(150%, 44cqw); aspect-ratio: 1; will-change: transform; }
+.b3d-cut.foe .bc-mon { left: auto; right: 16%; }
+.b3d-cut .bc-mon img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; transform: rotate(7deg) scaleX(-1);
+  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 6px 8px rgba(0, 0, 0, .35)); }
+.b3d-cut.foe .bc-mon img { transform: rotate(-7deg); }
+/* 招式名：英文大字（白字、深色描边、属性色光晕，两个词会自动分两行）+ 中文小字胶囊 */
+.b3d-cut .bc-name { position: absolute; left: 48%; right: 13%; top: 50%; display: flex; flex-direction: column; align-items: center; text-align: center; transform: translateY(-50%); will-change: transform, opacity; }
+.b3d-cut.foe .bc-name { left: 13%; right: 48%; }
+.b3d-cut .bc-name b { font-family: var(--f-display); font-weight: 800; font-size: 34px; font-size: min(9.5cqw, 14cqh); line-height: .92; letter-spacing: .01em; color: #fff; text-wrap: balance;
+  -webkit-text-stroke: .09em var(--dk); paint-order: stroke fill; text-shadow: .05em .07em 0 var(--dk), 0 0 .35em color-mix(in srgb, var(--c1) 80%, transparent); }
+.b3d-cut .bc-name small { margin-top: .5em; padding: .15em .8em; border-radius: 99px; background: color-mix(in srgb, var(--dk) 82%, transparent); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--c2) 70%, transparent);
+  color: #fff; font-weight: 800; font-size: 14px; font-size: max(12px, min(3.8cqw, 5.6cqh)); letter-spacing: .14em; white-space: nowrap; }
+.b3d-cut.rm .bc-lines { opacity: .45; }
+/* 中招：右上角的招式名小横幅（英文名在上、中文名在下），不挡战场 */
+.b3d-ban { position: absolute; z-index: 4; top: 10px; right: 12px; max-width: 46%; pointer-events: none; display: flex; flex-direction: column; align-items: flex-end; padding: 4px 14px 5px 18px; overflow: hidden;
+  --c1: #ffffff; --c2: #ffffff; --dk: color-mix(in srgb, var(--c1) 30%, #0c1124);
+  color: #fff; background: linear-gradient(100deg, var(--dk) 20%, color-mix(in srgb, var(--c1) 70%, #0c1124) 75%, var(--c1));
+  border-left: 5px solid var(--c2); border-radius: 4px 12px 4px 12px; box-shadow: 0 3px 0 rgba(0, 0, 0, .2), 0 0 14px color-mix(in srgb, var(--c1) 50%, transparent); will-change: transform, opacity; }
+.b3d-ban > b, .b3d-ban > small { position: relative; transform: skewX(12deg); }
+.b3d-ban b { font: 800 19px/1.05 var(--f-display); white-space: nowrap; -webkit-text-stroke: 3px var(--dk); paint-order: stroke fill; }
+.b3d-ban small { font-size: 11px; font-weight: 800; letter-spacing: .12em; opacity: .92; white-space: nowrap; }
+.b3d-ban .bn-sheen { position: absolute; inset: 0; background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, .5) 50%, transparent 60%) 0 0 / 250% 100% no-repeat; }
+/* 睡着：头上飘起来的 Z */
+.b3d-z { position: absolute; z-index: 3; pointer-events: none; font-family: var(--f-display); font-weight: 800; line-height: 1; color: #eef0ff; -webkit-text-stroke: 3px #3949ab; paint-order: stroke fill; opacity: 0; animation: b3dZ 1.5s ease-out forwards; }
+@keyframes b3dZ { 0% { opacity: 0; transform: translate(-50%, 0) scale(.5) rotate(-12deg); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + 24px), -64px) scale(1.1) rotate(14deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .b3d-z { animation: none !important; opacity: 1; transform: translate(-50%, 0); }   /* 不飘，静静地显示一会儿（JS 到时间删掉） */
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .b3d-cut .bc-band { height: 42%; }
+  .b3d-ban { top: 8px; right: 10px; max-width: 40%; }
+}
