@@ -9,3 +9,6 @@ server/.env
 server/logs/
 server/usage.json
 server/debug/
+
+# 给家长下载的 APK（里面有密钥，不进仓库）
+dl/

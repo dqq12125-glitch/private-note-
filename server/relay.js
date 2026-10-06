@@ -127,7 +127,7 @@ const server = http.createServer((req, res) => {
 const SERVE_GAME = /^(1|true|yes)$/i.test(cfg('SERVE_GAME') || '');
 const GAME_ROOT = path.resolve(__dirname, '..');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json',
-  '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ico': 'image/x-icon' };
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.apk': 'application/vnd.android.package-archive' };
 function serveGame(u, req, res) {
   let rel = decodeURIComponent(u.pathname);
   if (rel.endsWith('/')) rel += 'index.html';
@@ -139,6 +139,16 @@ function serveGame(u, req, res) {
     const etag = '"' + st.size.toString(36) + '-' + Math.floor(st.mtimeMs).toString(36) + '"';
     const head = { 'Content-Type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-cache', ETag: etag };
     if (req.headers['if-none-match'] === etag) { res.writeHead(304, head); return res.end(); }
+    head['Accept-Ranges'] = 'bytes';
+    // 断点续传（下载大文件——比如给家长的 APK——网络断了能接着下）
+    const rg = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (rg && (rg[1] || rg[2])) {
+      let a = rg[1] ? +rg[1] : Math.max(0, st.size - +rg[2]), b = rg[1] && rg[2] ? Math.min(+rg[2], st.size - 1) : st.size - 1;
+      if (a >= st.size || a > b) { res.writeHead(416, { 'Content-Range': 'bytes */' + st.size }); return res.end(); }
+      res.writeHead(206, Object.assign(head, { 'Content-Length': b - a + 1, 'Content-Range': 'bytes ' + a + '-' + b + '/' + st.size }));
+      if (req.method === 'HEAD') return res.end();
+      return fs.createReadStream(file, { start: a, end: b }).pipe(res);
+    }
     res.writeHead(200, Object.assign(head, { 'Content-Length': st.size }));
     if (req.method === 'HEAD') return res.end();
     fs.createReadStream(file).pipe(res);
