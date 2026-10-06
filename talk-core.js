@@ -96,6 +96,15 @@
           if (m.response && m.response.id) { if (seen.has(m.response.id)) { npcText = ''; break; } seen.add(m.response.id); }
           if (npcText.trim()) turns.push({ who: 'npc', text: npcText.trim() });
           o.out({ type: 'npc_done', text: npcText.trim() }); npcText = ''; break;
+        case 'conversation.item.input_audio_transcription.delta': {
+          // 孩子还按着话筒在说：边说边把听到的字发给游戏（text 是定下来的那截，stash 是还没定的；两段合起来是目前听到的全部）
+          const tx = ((m.text || '') + (m.stash || '')).replace(/<[^>]*>/g, '').trim();
+          if (tx && m.item_id && !seen.has(m.item_id)) o.out({ type: 'you_live', text: tx, item: m.item_id });
+          break;
+        }
+        case 'input_audio_buffer.committed':   // 松开话筒：这一段的编号（游戏按编号把字填进对的气泡）
+          if (m.item_id) o.out({ type: 'you_item', item: m.item_id });
+          break;
         case 'conversation.item.input_audio_transcription.completed': {
           // 识别器对杂音会给 <non_speech> 之类的标记，不算孩子说的话
           const tx = (m.transcript || '').replace(/<[^>]*>/g, '').trim();

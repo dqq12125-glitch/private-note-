@@ -918,7 +918,7 @@ body.in-world { overflow: hidden; }
 .tk-b.you.wait { opacity: .6; }
 .tk-status { font-size: 13px; color: var(--ink-2); text-align: center; min-height: 18px; }
 .tk-ctl { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
-.tk-mic { border: 0; border-radius: 18px; padding: 16px; font: inherit; font-size: 19px; font-weight: 800; color: #fff; background: #ff7043; box-shadow: 0 6px 0 #c9502a; touch-action: none; user-select: none; -webkit-user-select: none; }
+.tk-mic { border: 0; border-radius: 18px; padding: 16px; font: inherit; font-size: 19px; font-weight: 800; color: #fff; background: #ff7043; box-shadow: 0 6px 0 #c9502a; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .tk-mic.on { background: #e53935; box-shadow: 0 2px 0 #a52622; transform: translateY(4px); }
 .tk-mic:disabled { background: #bdbdbd; box-shadow: 0 6px 0 #9e9e9e; }
 .tk-type { display: flex; gap: 8px; }

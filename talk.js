@@ -138,9 +138,19 @@
     const box = $('#tk-log'); if (!box) return null;
     const d = document.createElement('div');
     d.className = 'tk-b ' + who; d.textContent = text;
-    box.appendChild(d); box.scrollTop = box.scrollHeight;
+    box.appendChild(d); stick();
     return d;
   }
+  // 最新的话留在看得见的地方（上面的气泡填进一长段字变高了，也要跟着滚到底）
+  function stick() { const box = $('#tk-log'); if (box) box.scrollTop = box.scrollHeight; }
+  // 孩子说的话的气泡：按住话筒就出现，边说边出字，松开后换成整段识别结果。按服务器给的编号对上气泡
+  function youBubble(c, item, take) {
+    let b = item && c.pend.find(x => x._item === item);
+    if (!b && take) { b = take(); if (b && item) b._item = item; }
+    return b || null;
+  }
+  const firstFree = c => () => c.pend.find(x => !x._item) || null;
+  function dropPend(c, b) { c.pend = c.pend.filter(x => x !== b); }
   function status(t) { const s = $('#tk-status'); if (s) s.textContent = t; }
 
   // 大地图上随便一个人：把名字、身份、所在的岛、他说过的话交给中转服务，由服务器拼出人设（安全规则服务器自己加）
@@ -172,7 +182,7 @@
       '<form class="tk-type" id="tk-type"><input id="tk-in" maxlength="200" autocomplete="off" placeholder="或者打字（英文）"><button class="btn">发送</button></form></div></div>';
     document.body.appendChild(ov);
     LAST = npc;
-    C = { npc, ws: null, bubble: null, holding: false, ended: false, t0: Date.now(), turns: [] };
+    C = { npc, ws: null, bubble: null, holding: false, ended: false, t0: Date.now(), turns: [], pend: [], live: null };
     if (window.EchoMusic) EchoMusic.hold(true);   // 聊天时麦克风一直开着：背景音乐静音
     const c = C;
 
@@ -199,17 +209,25 @@
       else if (m.type === 'npc') {
         c.responding = true;
         if (!c.bubble) c.bubble = bubble('npc', '');
-        if (c.bubble) { c.bubble.textContent += m.delta; const b = $('#tk-log'); b.scrollTop = b.scrollHeight; }
+        if (c.bubble) { c.bubble.textContent += m.delta; stick(); }
       } else if (m.type === 'npc_done') {
         c.responding = false; if (m.text) c.turns.push({ who: 'npc', text: m.text }); c.bubble = null;
-        // 识别出的字有时比回答来得晚：占位气泡先留着，等字到了填进去；5 秒还没来（没听清）再删
-        const w = $('#tk-log .tk-b.you.wait'); if (w) setTimeout(() => { if (w.classList.contains('wait')) w.remove(); }, 5000);
+        // 一个字都没听到的气泡（没出声 / 杂音）：等 5 秒，字还没来就删掉（正在按着说的那个不删）
+        const empty = c.pend.filter(b => !b._has && b !== c.live);
+        if (empty.length) setTimeout(() => empty.forEach(b => { if (!b._has && b !== c.live) { b.remove(); dropPend(c, b); } }), 5000);
         status(MIC.ctx ? '按住话筒说英语，说完松开。' : '打字聊天：写好按「发送」。');
+      }
+      else if (m.type === 'you_item') {   // 松开话筒那一段的编号：给还没编号的最早那个气泡
+        youBubble(c, m.item, firstFree(c));
+      }
+      else if (m.type === 'you_live') {   // 边说边出字
+        const b = youBubble(c, m.item, () => (c.live && !c.live._item ? c.live : firstFree(c)()));
+        if (b) { b.textContent = m.text; b._has = true; stick(); }
       }
       else if (m.type === 'you') {
         if (m.item) { c.items = c.items || new Set(); if (c.items.has(m.item)) return; c.items.add(m.item); }
-        const p = $('#tk-log .tk-b.you.wait');
-        if (p) { p.textContent = m.text; p.classList.remove('wait'); } else bubble('you', m.text);
+        const p = youBubble(c, m.item, firstFree(c));
+        if (p) { p.textContent = m.text; p._has = true; p.classList.remove('wait'); dropPend(c, p); stick(); } else bubble('you', m.text);
         c.turns.push({ who: 'you', text: m.text });
       } else if (m.type === 'limit') { status(m.zh); }
       else if (m.type === 'error') { c.err = m.zh; status('⚠️ ' + m.zh); if (m.code === 'code') setTimeout(configure, 600); }
@@ -229,17 +247,21 @@
       if (OUT.ctx && OUT.ctx.state === 'suspended') OUT.ctx.resume();
       MIC.buf = []; MIC.len = 0; MIC.on = true; c.pressAt = Date.now();
       mic.classList.add('on'); mic.textContent = '🔴 正在听……松开发送';
+      // 一按下就出现自己的气泡，说的话边说边冒出来
+      c.live = bubble('you wait', '🎤 …'); c.pend.push(c.live);
     };
     const up = () => {
       if (!c.holding) return;
       c.holding = false; MIC.on = false; flushMic();
       mic.classList.remove('on'); mic.textContent = '🎤 按住说英语';
-      if (Date.now() - c.pressAt < 400) { wsSend({ type: 'commit' }); status('按住久一点再说哦。'); return; }
+      const b = c.live; c.live = null;
+      if (Date.now() - c.pressAt < 400) { wsSend({ type: 'commit' }); if (b) { b.remove(); dropPend(c, b); } status('按住久一点再说哦。'); return; }
       wsSend({ type: 'commit' });
-      bubble('you wait', '……');
+      if (b && !b._has) b.textContent = '……';
       status('岛民在想……');
     };
     mic.addEventListener('pointerdown', down);
+    mic.addEventListener('contextmenu', e => e.preventDefault());   // 安卓长按会弹菜单 / 选字，按住说话时不要
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => mic.addEventListener(t, up));
     c.key = e => { if (e.code === 'Space' && document.activeElement !== $('#tk-in')) { e.preventDefault(); if (e.type === 'keydown' && !e.repeat) down(e); if (e.type === 'keyup') up(); } };
     document.addEventListener('keydown', c.key); document.addEventListener('keyup', c.key);
