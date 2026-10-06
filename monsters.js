@@ -268,7 +268,7 @@
     const m = $('st-mic'); if (!m) return;
     if (E.RT.listening) { E.stopListening(); return; }
     m.classList.add('on'); m.innerHTML = E.STOP; $('st-hint').textContent = '正在听……';
-    const res = await E.recognize();
+    const res = await E.recognize(null, ['I choose you']);
     if (!$('st-mic')) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
     if (res.err && E.FATAL.includes(res.err)) { E.RT.srBroken = true; takeStarter(id); return; }
@@ -347,6 +347,11 @@
   }
 
   // opts：foes 指定对手，trainer {name, emoji} 训练师，onEnd(result) 从大地图进来时战斗结束的回调
+  // 战斗音乐：馆主、冠军赛、神兽最燃；训练师（对手、嘘声团）次之；野生最轻快
+  function battleMusic(kind, foes, opts) {
+    if (kind === 'leader' || opts.rules || foes.some(f => SPECIES[f.sp] && SPECIES[f.sp].legend)) return 'battle_boss';
+    return kind === 'trainer' ? 'battle_trainer' : 'battle_wild';
+  }
   function startBattle(kind, z, opts) {
     opts = opts || {};
     if (!M().box.length) { E.toast('先选一只初始怪兽吧'); return false; }
@@ -374,6 +379,7 @@
     foes.forEach(f => { if (M().dex[f.sp] !== 'caught') M().dex[f.sp] = 'seen'; });
     E.save();
     E.show('battle');
+    E.music(battleMusic(kind, foes, opts));
     // 3D 战斗画面：设置里选了 2D 流畅或者手机不支持就用原来的 2D 画面
     if (window.Battle3D && (E.S.settings.gfx || 'auto') !== '2d' && E.S.settings.gfxAuto !== '2d') {
       // 画质和大地图同一档：精美用满屏幕的像素比（最多 3）
@@ -652,7 +658,7 @@
     const b = B, t = B.task, m = $('b-mic');
     m.classList.add('on'); m.innerHTML = E.STOP;
     $('b-hint').textContent = '正在听……说完会自动停止';
-    const res = await E.recognize(x => { const h = $('b-heard'); if (h) h.textContent = x; });
+    const res = await E.recognize(x => { const h = $('b-heard'); if (h) h.textContent = x; }, t.kind === 'ult' ? t.opts.map(o => o.t) : [t.target]);
     if (!live(b) || b.task !== t) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
     if (res.err && E.FATAL.includes(res.err)) {
@@ -1142,7 +1148,7 @@
     if (E.RT.listening) { E.stopListening(); return; }
     m.classList.add('on'); m.innerHTML = E.STOP; $('lr-hint').textContent = '正在听……';
     const it = (M().pendingLearn || [])[0], line = it ? nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] : '';
-    const res = await E.recognize();
+    const res = await E.recognize(null, [line]);
     if (!$('lr-mic')) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
     if (res.err && E.FATAL.includes(res.err)) { E.RT.srBroken = true; learnDone(k); return; }
@@ -1248,7 +1254,7 @@
       (M().pendingNick = M().pendingNick || []).push(mon.uid);
       M().caught = (M().caught || 0) + 1;
       E.qProg('catch', 1);
-      E.SFX.win(); E.confetti(140);
+      E.jingle('catch', E.SFX.win); E.confetti(140);
       msg('🎉 收服成功！<b>' + sf.en + '</b>（' + sf.zh + '）成为了你的伙伴！');
       E.say('Gotcha! ' + sf.en + ' was caught!');
       E.save();
@@ -1271,14 +1277,14 @@
     B.turn = 'done';
     const m = M(), z = B.z, w = E.W[z];
     const topLv = Math.max(...B.foes.map(f => f.lv));
-    let coins = 8 + topLv * 2;
+    let coins = 8 + topLv * 2, badge = false;
     const lines = [];
     if (B.kind === 'trainer') coins += 6 + topLv;
     if (B.kind === 'leader') {
       const first = !m.badges[z];
       m.badges[z] = 1;
       coins += first ? 40 : 10;
-      if (first) { m.balls += 3; lines.push('🏅 拿到了 ' + w.name + ' 徽章！'); lines.push('🔮 回声球 +3'); lines.push('🐾 等级 ' + (20 + 10 * Object.keys(m.badges).length) + ' 以下的怪兽都会听你的话'); if (z + 1 < E.W.length) lines.push('🏝️ 新区域解锁：' + E.W[z + 1].name); }
+      if (first) { badge = true; m.balls += 3; lines.push('🏅 拿到了 ' + w.name + ' 徽章！'); lines.push('🔮 回声球 +3'); lines.push('🐾 等级 ' + (20 + 10 * Object.keys(m.badges).length) + ' 以下的怪兽都会听你的话'); if (z + 1 < E.W.length) lines.push('🏝️ 新区域解锁：' + E.W[z + 1].name); }
     }
     E.S.coins += coins;
     B.result = caught ? 'caught' : 'win';
@@ -1291,7 +1297,8 @@
     E.qProg('battle', 1);
     const newDay = E.markToday();
     E.save(); E.renderTop();
-    if (!caught) { E.SFX.win(); E.confetti(B.kind === 'leader' ? 200 : 90); }
+    if (!caught) { E.jingle(badge ? 'badge' : 'win', E.SFX.win); E.confetti(B.kind === 'leader' ? 200 : 90); }
+    E.music('victory');   // 号角放完接着放结算画面的音乐
     msg(caught ? (B.toBox ? '队伍已经有 6 只了，新伙伴被送到了电脑箱子里（去怪兽中心的电脑换）。' : '新伙伴已经加入队伍！') : B.kind === 'leader' ? w.boss.name + '：“你太厉害了！这枚徽章是你的了！”' : B.kind === 'trainer' ? B.trainer.name + '：“你真厉害！”' : '胜利！');
     panel('<div class="b-result"><div class="big">' + (caught ? '🔮' : B.kind === 'leader' ? '🏅' : '🏆') + '</div><b>' + (caught ? '收服成功！' : B.kind === 'leader' ? '打败馆主！' : '胜利！') + '</b><p>' + lines.join('<br>') + '</p>' +
       '<div class="say-row">' + (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>继续冒险 ▶</button>'
@@ -1302,6 +1309,7 @@
   function lose() {
     B.turn = 'done'; B.result = 'lose';
     writeBack();
+    E.jingle('lose'); E.music(null);
     msg('你的怪兽们都累倒了……');
     panel('<div class="b-result"><div class="big">💤</div><b>先去怪兽中心休息一下</b><p>怪兽中心能让怪兽恢复体力、治好异常状态。<br>小窍门：多在草丛里打野生怪兽把等级练上去，<br>用<b>属性克制</b>的招式，或者先用辅助招式降低对手的攻击。</p><div class="say-row">' +
       (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>去怪兽中心</button>' : '<button class="btn" data-act="bHome">回基地</button>') + '</div></div>');
@@ -1344,6 +1352,7 @@
     E.openModal('<h2>咦？' + from.en + ' 的样子在变化……</h2><div class="evo-stage"><div class="evo-old">' + svg(mon.sp) + '</div><div class="evo-new">' + svg(toId) + '</div></div>' +
       '<p id="evo-t">' + from.zh + ' 正在进化！</p><button class="btn sun wide" data-act="mEvoOk" id="evo-ok" hidden>太棒了！</button>', { locked: true });
     E.say('What? ' + from.en + ' is evolving!');
+    E.music('evolve');
     mon.sp = toId;
     M().dex[toId] = 'caught';
     M().evolved = (M().evolved || 0) + 1;
@@ -1352,7 +1361,7 @@
       const st = document.querySelector('.evo-stage'); if (st) st.classList.add('done');
       const t = $('evo-t'); if (t) t.innerHTML = '恭喜！<b>' + from.en + '</b> 进化成了 <b>' + to.en + '</b>（' + to.zh + '）！';
       const ok = $('evo-ok'); if (ok) ok.hidden = false;
-      E.SFX.win(); E.confetti(180);
+      E.jingle('levelup', E.SFX.win); E.confetti(180);
       E.say(from.en + ' evolved into ' + to.en + '!');
       E.checkAch();
     }, 2600);
@@ -1433,7 +1442,7 @@
     if (!nickCtx) return;
     if (E.RT.listening) { E.stopListening(); return; }
     const line = 'Your name is ' + nickCtx.name + '!', m = $('nick-mic'); m.classList.add('on');
-    const res = await E.recognize(() => {});
+    const res = await E.recognize(() => {}, [line]);
     m.classList.remove('on');
     if (!res.alts.length) { $('nick-hint').textContent = '没听清，再大声一点'; return; }
     const r = E.bestScore(line, res.alts);
@@ -1474,7 +1483,7 @@
     const c = talkCtx; if (!c) return;
     if (E.RT.listening) { E.stopListening(); return; }
     const m = $('talk-mic'); m.classList.add('on');
-    const res = await E.recognize(() => {});
+    const res = await E.recognize(() => {}, [c.line]);
     m.classList.remove('on');
     if (!res.alts.length) { $('talk-hint').textContent = '没听清，再大声一点'; return; }
     const r = E.bestScore(c.line, res.alts);
@@ -1727,7 +1736,7 @@
     mUseOn: t => useItemOn(t.dataset.id, t.dataset.u),
     bBag: battleBag,
     bUse: t => usePotion(t.dataset.id),
-    mEvoOk: () => { E.closeModal(); E.renderHome(); afterBattleQueue(); },
+    mEvoOk: () => { E.closeModal(); E.renderHome(); E.sceneMusic(); afterBattleQueue(); },
     mSum: t => summarySheet(t.dataset.u),
     mPc: () => pcSheet(),
     mBox: t => pcSheet(+t.dataset.b),

@@ -84,9 +84,10 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.screenshot({ path: out + '/s7-ask.png' });
   await p.keyboard.press('Escape');
   check(!(await p.$('#bg-yes')), 'B 键取消');
-  await p.click('.bg-ball[data-k="0"]');
-  await p.click('.bg-ball[data-k="0"]');
-  await p.click('#bg-yes');
+  // 选中的球一直在摇（无限动画），等「停稳」会偶尔超时：直接点
+  await p.click('.bg-ball[data-k="0"]', { force: true });
+  await p.click('.bg-ball[data-k="0"]', { force: true });
+  await p.click('#bg-yes', { force: true });
   await p.waitForTimeout(1400);
   check(await until('#w-dlg [data-act=wSelfDone]', 3), '对伙伴说 I choose you');
   check(/Emberpup, I choose you!/.test(await p.textContent('#w-dlg .say-text')), '选的是 Emberpup');
@@ -164,4 +165,4 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   console.log(fails ? 'FAIL ' + fails : 'PASS');
   if (fails) process.exitCode = 1;
   await b.close();
-})().catch(e => { console.log('FAIL', e.message.split('\n')[0]); process.exit(1); });
+})().catch(e => { console.log('FAIL', e.message.split('\n').slice(0, 4).join(' / ')); process.exit(1); });

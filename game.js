@@ -95,7 +95,7 @@
       v: 1, xp: 0, coins: 50, stars: {}, streak: 0, lastDay: '', freeze: 0,
       quests: { day: '', list: [], chest: false }, wrong: {}, pets: ['🐣'], pet: '🐣', ach: {},
       stats: { levels: 0, spoken: 0, perfect: 0, maxCombo: 0, listen: 0, reviewed: 0, threeStars: 0, bosses: 0, flawless: 0, roleplay: 0 }, scenes: {},
-      settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false, gfx: 'auto', gfxAuto: '', ctl: 'joy', orient: 'portrait', gate: true }, seenIntro: false,
+      settings: { rate: 0.9, voice: '', mode: 'auto', tts: 'auto', sfx: true, unlockAll: false, gfx: 'auto', gfxAuto: '', ctl: 'joy', orient: 'portrait', gate: true, music: 'mid' }, seenIntro: false,
       log: {},   // 每天的学习记录（周报用）：日期 → { min 玩了几分钟, learn 学习分钟, play 冒险分钟, levels 关卡, spoken 开口说对, review 复习答对, … }
       homeTab: 'mon', mon: window.MonsterGame ? MonsterGame.fresh() : { box: [], team: [], dex: {}, badges: {}, balls: 5 },
       world: window.EchoWorld ? EchoWorld.fresh() : {},
@@ -187,6 +187,26 @@
     hit() { tone(140, 0, .18, 'square', .1); tone(90, .06, .25, 'sawtooth', .08); },
     tap() { tone(700, 0, .05, 'sine', .05); },
   };
+  // ---------- 配乐（music.js 现场合成；这里决定什么时候放哪首） ----------
+  // 设置「音乐」关 / 小 / 中 / 大；大地图和战斗的曲子由 world.js / monsters.js 选，这里管首页和练习
+  const MVOL = { off: 0, low: 0.35, mid: 0.6, high: 0.85 };
+  const MUS = () => window.EchoMusic || null;
+  const musicOn = () => !!MUS() && S.settings.music !== 'off' && MUS().state().enabled;
+  function music(id) { const m = MUS(); if (m && id !== undefined) m.play(id); }
+  // 一次性的小音乐（胜利、收服、恢复……）；音乐关着或者放不了时，用原来的音效 sfx 代替
+  function jingle(id, sfx) {
+    if (musicOn()) return MUS().jingle(id);
+    if (sfx) sfx();
+    return Promise.resolve();
+  }
+  function musicVol() { const m = MUS(); if (m) m.setVolume(MVOL[S.settings.music] != null ? MVOL[S.settings.music] : MVOL.mid); }
+  // 这个画面该放哪首：首页放主题曲，闯关练习 / 复习 / 对话剧场放学习音乐，大地图问 EchoWorld，战斗由 monsters.js 开战时选好
+  function sceneMusic() {
+    const s = RT.scr;
+    if (s === 'world') { const id = window.EchoWorld && EchoWorld.music ? EchoWorld.music() : ''; if (id) music(id); return; }
+    if (s === 'battle') return;
+    music(s === 'home' ? 'title' : 'study');
+  }
   function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* 不支持 */ } }
 
   // ---------- 朗读：优先用手机/浏览器自带英语声音，没有就用有道在线发音 ----------
@@ -257,8 +277,16 @@
     const pr = a.play();
     if (pr && pr.catch) pr.catch(() => { if (!done) toast('点一下 🔊 就能听到发音'); fin(); });
   }
-  // g：对话角色的声音 'f' / 'm'；不传就用默认声音
+  // g：对话角色的声音 'f' / 'm'；不传就用默认声音。朗读的时候把背景音乐压低，读完恢复
+  // 只认最新的一句：新的一句打断旧的时，旧的那句晚一点才结束也不会提前把音乐放回来
+  let duckTok = null;
   function say(text, rate, g) {
+    if (!text) return Promise.resolve();
+    const m = MUS(), tok = {};
+    if (m) { if (!duckTok) m.duck(true); duckTok = tok; }
+    return sayRaw(text, rate, g).then(() => { if (m && duckTok === tok) { duckTok = null; m.duck(false); } });
+  }
+  function sayRaw(text, rate, g) {
     return new Promise(res => {
       if (!text) return res();
       stopListening();
@@ -340,10 +368,19 @@
     if (!heard || !el || !window.EchoTalk || !EchoTalk.aiTip) return;
     EchoTalk.aiTip(target, heard).then(tip => { if (tip && el.isConnected && !el.querySelector('.ai-tip')) el.insertAdjacentHTML('beforeend', '<span class="ai-tip">💡 ' + esc(tip) + '</span>'); });
   }
-  function recognize(onInterim) {
+  // 麦克风在听的时候背景音乐完全静音（不然会被录进去，影响 AI 打分），正在放的朗读也停掉（别让识别听到示范读音）
+  // targets：这道题的答案（可以几个）。实时识别的结果一和答案对上（90 分以上）就立刻结束，不用等孩子停顿——「秒出分」
+  function recognize(onInterim, targets) {
+    const m = MUS(); if (m) m.hold(true);
+    if (TTS.ok) speechSynthesis.cancel();
+    if (RT.audio) RT.audio.pause();
+    return recognizeRaw(onInterim, targets).then(r => { if (m) m.hold(false); return r; });
+  }
+  function recognizeRaw(onInterim, targets) {
     if (cloudSR()) {
       RT.listening = true;
-      return EchoTalk.listenOnce({ onState: onInterim }).then(r => {
+      const tg = (targets || []).filter(Boolean);
+      return EchoTalk.listenOnce({ onState: onInterim, match: tg.length ? t => tg.some(x => bestScore(x, [t]).score >= 90) : null, short: tg.length > 0 && tg.every(x => x.trim().split(/\s+/).length <= 2) }).then(r => {
         RT.listening = false;
         if (r.err === 'network') {
           RT.cloudFails = (RT.cloudFails || 0) + 1;
@@ -838,6 +875,7 @@
     $('#topbar').hidden = id === 'play' || id === 'theater' || id === 'battle' || id === 'world';
     document.body.classList.toggle('in-world', id === 'world');
     window.scrollTo(0, 0);
+    sceneMusic();
   }
   function goHome(tab) {
     if (typeof tab === 'string') S.homeTab = tab;
@@ -1090,7 +1128,7 @@
       setMic(true, '正在听……说完会自动停止');
       $('#heard').textContent = '';
       $('#score').innerHTML = '';
-      const res = await recognize(t => { const h = $('#heard'); if (h) h.textContent = t; });
+      const res = await recognize(t => { const h = $('#heard'); if (h) h.textContent = t; }, [q.target]);
       if (!P || P.q !== q || P.answered) return;
       setMic(false, '');
       if (res.err && FATAL.includes(res.err)) {
@@ -1172,6 +1210,7 @@
     mr.onstop = () => {
       stream.getTracks().forEach(t => t.stop());
       RT.recording = false; RT.mr = null; clearTimeout(RT.recTimer);
+      if (MUS()) MUS().hold(false);
       if (!P || P.q !== q) return;
       if (RT.recUrl) URL.revokeObjectURL(RT.recUrl);
       RT.recUrl = URL.createObjectURL(new Blob(chunks, { type: mr.mimeType || 'audio/webm' }));
@@ -1179,6 +1218,7 @@
       showSelf(true);
     };
     RT.mr = mr; RT.recording = true;
+    if (MUS()) MUS().hold(true);
     mr.start();
     setMic(true, '正在录音……说完点一下停止');
     RT.recTimer = setTimeout(() => { if (RT.recording) stopListening(); }, 9000);
@@ -1517,7 +1557,7 @@
     const turn = T.turn, L = T.sc.lines[T.idx], m = $('#th-mic');
     m.classList.add('on'); m.innerHTML = STOP;
     $('#th-hint').textContent = '正在听……说完会自动停止';
-    const res = await recognize(t => { const h = $('#th-heard'); if (h) h.textContent = t; });
+    const res = await recognize(t => { const h = $('#th-heard'); if (h) h.textContent = t; }, [L[1]]);
     if (!T || T.turn !== turn) return;
     m.classList.remove('on'); m.innerHTML = MIC;
     if (res.err && FATAL.includes(res.err)) {
@@ -1659,6 +1699,7 @@
         [['portrait', '📱 竖屏'], ['landscape', '🎮 横屏'], ['auto', '🔄 跟着手机转']].map(([m, n]) => '<button class="' + ((st.orient || 'portrait') === m ? 'on' : '') + '" data-act="setOrient" data-m="' + m + '">' + n + '</button>').join('') +
         '</div><small>横屏玩冒险和对战更像掌机；做题、聊天竖着横着都能用。</small></div>' : '') +
       '<div class="set"><label>音效</label><div class="seg"><button class="' + (st.sfx ? 'on' : '') + '" data-act="sfx" data-v="1">开</button><button class="' + (st.sfx ? '' : 'on') + '" data-act="sfx" data-v="0">关</button></div></div>' +
+      '<div class="set"><label>音乐</label><div class="seg">' + [['off', '关'], ['low', '小'], ['mid', '中'], ['high', '大']].map(([v, t]) => '<button class="' + ((st.music || 'mid') === v ? 'on' : '') + '" data-act="setMusic" data-v="' + v + '">' + t + '</button>').join('') + '</div></div>' +
       '<div class="set"><label>家长 / 老师模式</label><div class="seg"><button class="' + (st.unlockAll ? '' : 'on') + '" data-act="unlock" data-v="0">按顺序解锁</button><button class="' + (st.unlockAll ? 'on' : '') + '" data-act="unlock" data-v="1">全部关卡直接开放</button></div><small>想跟着课本进度直接练某个单元时打开。</small></div>' +
       '<div class="set"><label>清空进度</label><button class="btn small coral" data-act="reset" id="resetbtn">清空全部进度</button><small>星星、金币、宠物都会清零，无法恢复。</small></div>' +
       '<button class="btn ghost wide" data-act="close">完成</button>');
@@ -1789,6 +1830,7 @@
     setTts: t => { S.settings.tts = t.dataset.m; RT.ttsBroken = false; save(); settingsSheet(); primeTTS(); say('Hello! How are you?'); },
     setGfx: t => { S.settings.gfx = t.dataset.m; if (t.dataset.m === 'auto') S.settings.gfxAuto = ''; save(); settingsSheet(); if (window.EchoWorld) EchoWorld.setGfx(); },
     sfx: t => { S.settings.sfx = t.dataset.v === '1'; save(); settingsSheet(); },
+    setMusic: t => { S.settings.music = t.dataset.v; save(); musicVol(); sceneMusic(); settingsSheet(); },
     unlock: t => { S.settings.unlockAll = t.dataset.v === '1'; save(); settingsSheet(); renderHome(); },
     reset: t => {
       if (!RT.resetArm) { RT.resetArm = true; t.textContent = '再点一次，确定清空'; return; }
@@ -1837,7 +1879,7 @@
     const api = {
       get S() { return S; }, W, WX, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit, curIdx, revRight, revAddFree,
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
-      qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML, aiTip, gate, gateCard, gateBlock, dayLog, parentOk,
+      qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML, aiTip, gate, gateCard, gateBlock, dayLog, parentOk, music, jingle, sceneMusic,
       reduced, dayStr,
     };
     Object.assign(ACT, MonsterGame.init(api), window.EchoWorld ? EchoWorld.init(api, MonsterGame) : {}, window.EchoTalk ? EchoTalk.init(api) : {}, {
@@ -1993,7 +2035,7 @@
   }
 
   // 测试用：课本出题来源、每日复习
-  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), get S() { return S; } };
+  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; } };
 
   // ---------- 启动 ----------
   function start(data) {
@@ -2002,6 +2044,7 @@
     if (S.book.cur && S.book.at < 0) { S.book.at = S.book.cur - 1; delete S.book.cur; }
     applyOrient();
     trackDay();
+    musicVol();
     if (window.MonsterGame) MonsterGame.migrate();
     // 链接带 ?quiet：不方便说话时，所有口语任务都改成按按钮（等同设置里的「录音自评」）
     if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast('🔇 不用说话模式：要说话的地方都变成按钮了'), 800); }

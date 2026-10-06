@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回声岛配乐试听</title>
+<style>
+/* 试听页：和游戏一样的白天泻湖配色、圆角卡片；手机上一列，电脑上几列 */
+@font-face { font-family: "Baloo 2"; font-weight: 700; font-display: swap; src: url(../assets/fonts/baloo-2-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Nunito"; font-weight: 700; font-display: swap; src: url(../assets/fonts/nunito-latin-700-normal.woff2) format("woff2"); }
+:root {
+  color-scheme: light;
+  --ink: #12304a; --ink-2: #4a6478; --ink-3: #7d93a3;
+  --lagoon: #0e7c86; --lagoon-d: #095e66; --sea: #bfe9e3; --foam: #eef8f6; --card: #fff; --line: #d3e6e2;
+  --sun: #ffc53d; --sun-d: #d99a12; --coral: #ff6b57; --coral-d: #d4483a; --leaf: #2cae69; --leaf-d: #1f8650;
+  --f-display: "Baloo 2", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --f-body: "Nunito", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --r: 18px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font: 15px/1.45 var(--f-body); color: var(--ink); background: linear-gradient(180deg, var(--sea) 0, var(--foam) 420px) var(--foam); background-attachment: fixed; min-height: 100vh; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+main { max-width: 1080px; margin: 0 auto; padding: 0 16px 48px; }
+h1 { font: 800 26px/1.1 var(--f-display); margin: 18px 0 2px; }
+.sub { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
+
+/* 顶上的「正在放」 */
+.now { position: sticky; top: 0; z-index: 5; margin: 0 -16px 8px; padding: 10px 16px 12px; background: color-mix(in srgb, var(--sea) 88%, transparent); backdrop-filter: blur(8px); }
+.now-card { background: var(--card); border-radius: var(--r); box-shadow: 0 4px 0 var(--line); padding: 12px 14px; display: grid; gap: 10px; }
+.now-top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.disc { width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 22px; background: var(--foam); box-shadow: inset 0 0 0 3px var(--line); }
+.disc.on { background: var(--sun); box-shadow: inset 0 0 0 3px var(--sun-d); animation: spin 2.4s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .disc.on { animation: none; } }
+.now-txt { flex: 1; min-width: 0; }
+.now-name { font: 700 18px/1.2 var(--f-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-pos { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar { height: 8px; border-radius: 8px; background: var(--foam); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--lagoon); border-radius: 8px; transition: width .1s linear; }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: var(--foam); box-shadow: 0 3px 0 var(--line); font-weight: 700; font-size: 14px; white-space: nowrap; }
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.btn.stop { background: var(--coral); color: #fff; box-shadow: 0 3px 0 var(--coral-d); }
+.btn.tog[aria-pressed="true"] { background: var(--sun); box-shadow: 0 3px 0 var(--sun-d); }
+.vol { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); flex: 1; min-width: 150px; }
+.vol input { flex: 1; accent-color: var(--lagoon); min-width: 80px; }
+.vol output { width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* 曲目 */
+h2 { font: 700 20px/1.2 var(--f-display); margin: 22px 0 10px; display: flex; align-items: baseline; gap: 8px; }
+h2 small { font: 13px var(--f-body); color: var(--ink-3); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 12px; }
+.card { background: var(--card); border-radius: var(--r); box-shadow: 0 4px 0 var(--line); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; border: 3px solid transparent; }
+.card.on { border-color: var(--lagoon); }
+.card.jing { border-color: var(--sun); }
+.c-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.c-title { font: 700 18px/1.15 var(--f-display); }
+.c-zh { color: var(--lagoon-d); font-weight: 700; }
+.c-id { margin-left: auto; font-size: 12px; color: var(--ink-3); font-family: ui-monospace, Consolas, monospace; }
+.c-use { font-size: 13px; color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--foam); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.chip.k { background: #fff3cf; color: #7a5600; }
+.c-act { display: flex; gap: 8px; margin-top: auto; }
+.c-act .play { flex: 1; justify-content: center; background: var(--lagoon); color: #fff; box-shadow: 0 3px 0 var(--lagoon-d); }
+.c-act .play.j { background: var(--sun); color: var(--ink); box-shadow: 0 3px 0 var(--sun-d); }
+.c-act .wav { padding-inline: 12px; }
+.empty { background: var(--card); border-radius: var(--r); box-shadow: 0 4px 0 var(--line); padding: 18px; color: var(--ink-2); }
+.empty code { background: var(--foam); padding: 1px 6px; border-radius: 6px; }
+.note { font-size: 13px; color: var(--coral-d); margin: 6px 0 0; }
+/* 手机：顶上的「正在放」压扁一点，音量单独一行、两个开关并排 */
+@media (max-width: 480px) {
+  h1 { font-size: 22px; }
+  .now { padding-block: 8px; }
+  .now-card { padding: 10px 12px; gap: 8px; }
+  .disc { width: 36px; height: 36px; font-size: 18px; }
+  .now-name { font-size: 16px; }
+  .vol { flex-basis: 100%; }
+  .btn.tog { flex: 1; justify-content: center; padding: 6px 10px; font-size: 13px; }
+}
+</style>
+
+<main>
+  <h1>回声岛配乐试听</h1>
+  <p class="sub">全部是代码现场合成的 GBA 风音乐。点一下页面就能出声；小段音乐会先把背景音乐停一下，放完接着放。</p>
+
+  <div class="now">
+    <div class="now-card">
+      <div class="now-top">
+        <div class="disc" id="disc" aria-hidden="true">♪</div>
+        <div class="now-txt">
+          <div class="now-name" id="now-name">还没放</div>
+          <div class="now-pos" id="now-pos">点下面的曲子开始</div>
+        </div>
+        <button class="btn stop" id="stop" type="button">■ 停</button>
+      </div>
+      <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+      <div class="ctl">
+        <label class="vol">音量 <input type="range" id="vol" min="0" max="100" value="80"> <output id="vol-o">80</output></label>
+        <button class="btn tog" id="duck" type="button" aria-pressed="false">🔉 朗读压低</button>
+        <button class="btn tog" id="hold" type="button" aria-pressed="false">🎤 麦克风静音</button>
+      </div>
+    </div>
+    <p class="note" id="note" hidden></p>
+  </div>
+
+  <div id="list"></div>
+</main>
+
+<script src="../music-core.js"></script>
+<script src="../music-data.js"></script>
+<script src="../music.js"></script>
+<script>
+// 试听页：按 SPEC 的三张表分组，每首一个按钮；顶上显示正在放第几小节
+(function () {
+  'use strict';
+  const M = window.EchoMusic;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const GROUPS = [
+    ['探索', '小镇、道路、海路、室内', ['title', 'town_a', 'town_b', 'town_c', 'town_d', 'route', 'route2', 'sea', 'center']],
+    ['紧张和战斗', '战斗、道馆、洞穴、反派', ['battle_wild', 'battle_trainer', 'battle_boss', 'gym', 'cave', 'hush', 'rival', 'league']],
+    ['学习和小段音乐', '学习背景音乐 + 一次性的小段音乐', ['study', 'evolve', 'victory', 'win', 'catch', 'levelup', 'heal', 'badge', 'item', 'lose']],
+  ];
+  const MODE = { major: '大调', minor: '小调', harmonicMinor: '和声小调', melodicMinor: '旋律小调', dorian: '多利亚', phrygian: '弗里几亚', lydian: '利底亚', mixolydian: '混合利底亚', pentatonic: '五声', minorPentatonic: '小调五声', blues: '布鲁斯', wholeTone: '全音阶', chromatic: '半音阶' };
+  const raw = (window.MUSIC && window.MUSIC.songs) || {};
+  const list = M ? M.songs() : [];
+  const byId = {};
+  list.forEach(s => { byId[s.id] = s; });
+  const fmt = s => (s >= 60 ? Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0') : s.toFixed(1) + ' 秒');
+
+  function card(s) {
+    const r = raw[s.id] || {}, inst = Object.values(r.inst || {}).filter((v, i, a) => a.indexOf(v) === i).join(' · ');
+    const len = s.loop ? '循环 ' + fmt(s.loopSeconds) : '一次性 ' + fmt(s.seconds);
+    return '<article class="card" data-id="' + esc(s.id) + '">' +
+      '<div class="c-head"><span class="c-title">' + esc(s.title) + '</span><span class="c-zh">' + esc(s.zh) + '</span><span class="c-id">' + esc(s.id) + '</span></div>' +
+      '<div class="c-use">' + esc(s.use) + '</div>' +
+      '<div class="chips"><span class="chip k">' + esc(s.key) + ' ' + esc(MODE[s.mode] || s.mode) + '</span><span class="chip">' + s.bpm + ' bpm</span><span class="chip">' + s.meter + '/4 拍</span><span class="chip">' + s.bars + ' 小节</span><span class="chip">' + len + '</span>' +
+      (r.swing ? '<span class="chip">摇摆 ' + r.swing + '</span>' : '') + (r.fx && r.fx.echo ? '<span class="chip">回声 ' + r.fx.echo + '</span>' : '') + '</div>' +
+      (inst ? '<div class="c-use">' + esc(inst) + '</div>' : '') +
+      '<div class="c-act">' + (s.loop
+        ? '<button class="btn play" type="button" data-play="' + esc(s.id) + '">▶ 播放</button>'
+        : '<button class="btn play j" type="button" data-jingle="' + esc(s.id) + '">♪ 放一次</button>') +
+      '<button class="btn wav" type="button" data-wav="' + esc(s.id) + '" title="离线渲染成 WAV 下载">⤓ WAV</button></div></article>';
+  }
+  function draw() {
+    const box = $('#list');
+    if (!M) { box.innerHTML = '<div class="empty">没加载到 <code>music.js</code>。</div>'; return; }
+    if (!list.length) { box.innerHTML = '<div class="empty">还没有曲子：先跑 <code>node tools/music/build.js</code> 生成 <code>music-data.js</code>，再刷新这一页。</div>'; return; }
+    const used = new Set();
+    let html = '';
+    GROUPS.forEach(([name, hint, ids]) => {
+      const ss = ids.filter(id => byId[id]).map(id => byId[id]);
+      ss.forEach(s => used.add(s.id));
+      if (ss.length) html += '<h2>' + name + ' <small>' + hint + ' · ' + ss.length + ' 首</small></h2><div class="grid">' + ss.map(card).join('') + '</div>';
+    });
+    const rest = list.filter(s => !used.has(s.id));
+    if (rest.length) html += '<h2>其他 <small>' + rest.length + ' 首</small></h2><div class="grid">' + rest.map(card).join('') + '</div>';
+    box.innerHTML = html;
+  }
+  draw();
+  if (M && !M.state().enabled) {
+    const n = $('#note');
+    n.hidden = false;
+    n.textContent = navigator.webdriver ? '自动化测试模式：网址加 ?music 才出声。' : '这个浏览器不能合成声音（没有 WebAudio）。';
+  }
+
+  // 16 位 WAV
+  function wav(buf) {
+    const ch = buf.numberOfChannels, n = buf.length, sr = buf.sampleRate, data = new DataView(new ArrayBuffer(44 + n * ch * 2));
+    const str = (o, s) => { for (let i = 0; i < s.length; i++) data.setUint8(o + i, s.charCodeAt(i)); };
+    str(0, 'RIFF'); data.setUint32(4, 36 + n * ch * 2, true); str(8, 'WAVE'); str(12, 'fmt '); data.setUint32(16, 16, true);
+    data.setUint16(20, 1, true); data.setUint16(22, ch, true); data.setUint32(24, sr, true); data.setUint32(28, sr * ch * 2, true);
+    data.setUint16(32, ch * 2, true); data.setUint16(34, 16, true); str(36, 'data'); data.setUint32(40, n * ch * 2, true);
+    const cs = [];
+    for (let c = 0; c < ch; c++) cs.push(buf.getChannelData(c));
+    let o = 44;
+    for (let i = 0; i < n; i++) for (let c = 0; c < ch; c++) { const v = Math.max(-1, Math.min(1, cs[c][i])); data.setInt16(o, v < 0 ? v * 32768 : v * 32767, true); o += 2; }
+    return new Blob([data], { type: 'audio/wav' });
+  }
+
+  let jingleOn = null;
+  document.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !M) return;
+    if (b.dataset.play) M.play(b.dataset.play);
+    else if (b.dataset.jingle) {
+      jingleOn = b.dataset.jingle;
+      M.jingle(b.dataset.jingle).then(() => { if (jingleOn === b.dataset.jingle) jingleOn = null; });
+    } else if (b.dataset.wav) {
+      const id = b.dataset.wav, old = b.textContent;
+      b.disabled = true; b.textContent = '渲染中…';
+      M.render(id).then(buf => {
+        if (!buf) return;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(wav(buf)); a.download = 'echo-' + id + '.wav';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      }).catch(err => alert('渲染失败：' + err.message)).then(() => { b.disabled = false; b.textContent = old; });
+    } else if (b.id === 'stop') M.play(null);
+    else if (b.id === 'duck' || b.id === 'hold') {
+      const on = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', on);
+      M[b.id](on);
+    }
+  });
+  const vol = $('#vol');
+  vol.addEventListener('input', () => { $('#vol-o').textContent = vol.value; if (M) M.setVolume(vol.value / 100); });
+  if (M) M.setVolume(vol.value / 100);
+
+  // 正在放：第几小节 / 共几小节，第几遍
+  function show() {
+    if (!M) return;
+    const st = M.state(), id = st.playing || st.current, s = byId[id];
+    const jing = st.jingle && byId[st.jingle];
+    $('#disc').classList.toggle('on', !!(st.playing || st.jingle) && st.ctx === 'running');
+    $('#now-name').textContent = jing ? '♪ ' + jing.title + ' ' + jing.zh : s ? s.title + ' ' + s.zh : '还没放';
+    let pos;
+    if (st.ctx === 'none') pos = st.enabled ? (id ? '点一下页面就开始放' : '点下面的曲子开始') : '没有声音';
+    else if (jing) pos = '小段音乐 · 放完接着放' + (s ? '「' + s.zh + '」' : '');
+    else if (st.playing) pos = '第 ' + st.bar + ' 小节 / 共 ' + st.bars + (st.pass > 1 ? ' · 第 ' + st.pass + ' 遍' : '') + ' · ' + st.voices + ' 个声音' + (st.ctx !== 'running' ? ' · ' + st.ctx : '');
+    else pos = id ? '准备中…' : '停了';
+    if (st.hold) pos += ' · 静音中'; else if (st.duck) pos += ' · 压低中';
+    $('#now-pos').textContent = pos;
+    $('#prog').style.width = st.playing && s ? Math.min(100, st.beat / (s.bars * s.meter) * 100).toFixed(1) + '%' : '0';
+    document.querySelectorAll('.card').forEach(c => {
+      c.classList.toggle('on', c.dataset.id === st.playing && !st.jingle);
+      c.classList.toggle('jing', c.dataset.id === st.jingle);
+    });
+  }
+  setInterval(show, 100);
+  show();
+})();
+</script>
+</html>

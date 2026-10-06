@@ -207,6 +207,7 @@ const H = require('./helpers');
   await t.tp(14, 4, 'up'); await t.A(); await idle();
   check(await gateOpen(0), '两道题都答对，记忆之门开了');
   await t.walk('up'); await t.walk('up'); await t.walk('up'); await W(600);
+  for (let i = 0; i < 20 && (await t.dbg()).map !== 'd12b'; i++) await W(200);   // 机器忙时换地图慢一点
   s = await t.dbg();
   check(s.map === 'd12b', '到了封印之间 ' + JSON.stringify(s));
   await run(null);

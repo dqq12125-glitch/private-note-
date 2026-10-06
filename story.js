@@ -221,6 +221,7 @@
   // 走到主角面前：先沿自己那一列（路）上下走，再横着对齐
   async function approach(C, r) {
     const pl = C.pl;
+    if (C.E.music) C.E.music('rival');   // 对手的主题曲，开战后换成战斗音乐
     await C.alert(r);
     const ty = r.y < pl.y ? pl.y - 1 : pl.y + 1;
     if (r.y !== ty) await C.walk(r, ty > r.y ? 'down' : 'up', Math.abs(ty - r.y), 220);

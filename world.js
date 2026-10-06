@@ -153,6 +153,17 @@
     hud();
     // 逃生绳回到最后一次待过的户外地图
     if ((M.kind === 'town' || M.kind === 'route') && !PL.surf) ws.lastOut = { map: M.id, x: PL.x, y: PL.y, dir: PL.dir };
+    E.music(mapMusic());
+  }
+  // 这张地图的背景音乐：小镇按岛分 4 首、道路前后两首、冲浪和海底放海的、洞穴（嘘声团基地放反派的）、道馆、室内、冠军之路
+  function mapMusic() {
+    const k = M.kind, z = M.isle != null ? M.isle : M.z, id = M.id;
+    if (/^(v\d|vL|i12L|i12[1-5]$)/.test(id)) return 'league';
+    if (PL.surf || k === 'under' || /^s\d/.test(id)) return 'sea';
+    if (k === 'town') return z <= 4 ? 'town_a' : z <= 7 ? 'town_b' : z <= 10 ? 'town_c' : 'town_d';
+    if (k === 'cave') return M.def && M.def.cave === 'base' ? 'hush' : 'cave';
+    if (k === 'inside') return M.room === 'G' ? 'gym' : 'center';
+    return z <= 5 ? 'route' : 'route2';
   }
   function enter(z, how) {
     E.primeTTS(); E.ac();
@@ -242,7 +253,7 @@
     }
     if (!walkable(nx, ny)) return;
     // 冲浪中走上岸就下来
-    if (PL.surf && !isWater(nx, ny)) { PL.surf = false; E.toast('🏖️ 上岸了'); }
+    if (PL.surf && !isWater(nx, ny)) { PL.surf = false; E.toast('🏖️ 上岸了'); E.music(mapMusic()); }
     step(nx, ny, PL.bike && !PL.surf ? BIKE_MS : STEP_MS, false);
   }
   function step(nx, ny, dur, jump) {
@@ -435,7 +446,7 @@
     const m = $('w-mic'), d = dlg;
     m.classList.add('on'); m.innerHTML = E.STOP;
     $('w-hint').textContent = '正在听……';
-    const res = await E.recognize(x => { const h = $('w-heard'); if (h) h.textContent = x; });
+    const res = await E.recognize(x => { const h = $('w-heard'); if (h) h.textContent = x; }, pg.kind === 'speak' ? [pg.target] : (pg.opts || []).map(o => o.t));
     if (dlg !== d || page() !== pg) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
     if (res.err && E.FATAL.includes(res.err)) {
@@ -584,7 +595,7 @@
     } else if (n.role === 'nurse') {
       talk([
         P('Welcome to the Monster Center!', '欢迎来到怪兽中心！'),
-        P('Let me heal your monsters.', '我来帮你的怪兽恢复体力。', { onShow: () => { MG.healAll(); WS().center = { map: M.id }; E.SFX.win(); E.save(); } }),
+        P('Let me heal your monsters.', '我来帮你的怪兽恢复体力。', { onShow: () => { MG.healAll(); WS().center = { map: M.id }; E.jingle('heal', E.SFX.win); E.save(); } }),
         P('Your monsters are fully healed. Good luck!', '怪兽们都恢复精神了，加油！'),
         P('You can use the computer to change your team.', '旁边的电脑可以把怪兽存进箱子、换队伍。'),
       ]);
@@ -763,7 +774,7 @@
   // 面对水：冲浪或者钓鱼
   function waterMenu(f) {
     const canSurf = skillReady('surf'), rod = MG.itemCount('rod') > 0;
-    const surf = () => useSkill('surf', () => { PL.surf = true; PL.bike = false; step(f.x, f.y, STEP_MS, false); hud(); });
+    const surf = () => useSkill('surf', () => { PL.surf = true; PL.bike = false; step(f.x, f.y, STEP_MS, false); hud(); E.music(mapMusic()); });
     if (canSurf && rod) talk([{ who: '旁白', emo: '🌊', en: 'The water is calm. What do you want to do?', zh: '水面很平静。要做什么？', kind: 'choice', opts: [{ html: '🌊 冲浪', cls: 'sun' }, { html: '🎣 钓鱼' }], pick: i => { setTimeout(i ? fish : surf, 50); return []; } }]);
     else if (canSurf) surf();
     else if (rod) fish();
@@ -911,7 +922,7 @@
     tile: (x, y) => tile(x, y),
     skillReady: k => skillReady(k),
     hasHM: k => hasHM(k),
-    give: (item, n) => { MG.addItem(item, n || 1); E.save(); hud(); const it = MG.ITEMS[item]; E.SFX.win(); E.toast((it ? it.icon + ' ' + it.zh : item) + ' +' + (n || 1), 'gold'); },
+    give: (item, n) => { MG.addItem(item, n || 1); E.save(); hud(); const it = MG.ITEMS[item]; E.jingle('item', E.SFX.win); E.toast((it ? it.icon + ' ' + it.zh : item) + ' +' + (n || 1), 'gold'); },
     badges: () => nBadges(),
     daily: (k, fn) => { if (dailyDone(k)) return false; markDaily(k); fn && fn(); E.save(); return true; },
     flags: () => WS().flags,
@@ -1731,6 +1742,7 @@
   const api3d = { tile: (x, y) => tile(x, y) };
   const ART = { drawPerson, portrait, atlas: PPL.atlas, paintGround, shade, hsh, rr, circ, ell, OUT, LOOKS, monImg, drawItemBall, buildColor: BUILD_COLORS };
   window.EchoWorld = {
+    music: () => (M ? mapMusic() : ''),   // 当前地图的背景音乐（game.js 回到大地图时问）
     init(api, mg) { E = api; MG = mg; EM = window.EchoMaps; EM.setTownCount(E.W.length); MG.setFieldHooks && MG.setFieldHooks(fieldHooks); return actions; },
     fresh: () => ({ started: false, map: 't0', z: 0, x: -1, y: -1, dir: 'up', arrive: null, visited: {}, flags: {}, daily: {}, center: null, introDone: false, repel: 0 }),
     stop: () => { stopLoop(); if (dlg) { clearInterval(dlg.tw); dlg = null; const d = $('w-dlg'); if (d) d.hidden = true; } busy = false; },
@@ -1740,7 +1752,7 @@
     gfxTier: () => gfxTier(),
     ctlMode: () => ctlMode(),
     placeLabel: () => { const ws = E.S.world; if (!ws.started || !ws.map || !window.EchoMaps) return null; const m = EchoMaps.get(ws.map); return m ? placeName(m) : null; },
-    _debug: () => ({ M, PL, FL, dlg, busy, R, perf, goMap: (id, how) => goMap(id, how) }),
+    _debug: () => ({ M, PL, FL, dlg, busy, R, perf, goMap: (id, how) => goMap(id, how), battle: (kind, o) => battle(kind, o || {}) }),
     _art: ART,
   };
 })();

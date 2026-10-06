@@ -206,7 +206,52 @@ function serveGame(u, req, res) {
 }
 
 // ---------- WebSocket：一段对话 ----------
-const wss = new WebSocketServer({ server, path: '/talk', maxPayload: 256 * 1024 });
+// 两个 WebSocket 共用这个端口：/talk 和岛民聊天，/asr-rt 口语题的实时识别
+const wss = new WebSocketServer({ noServer: true, maxPayload: 256 * 1024 });
+const asrWss = new WebSocketServer({ noServer: true, maxPayload: 256 * 1024 });
+server.on('upgrade', (req, socket, head) => {
+  let p = ''; try { p = new URL(req.url, 'http://x').pathname; } catch (e) {}
+  const w = p === '/talk' ? wss : p === '/asr-rt' ? asrWss : null;
+  if (!w) { socket.destroy(); return; }
+  w.handleUpgrade(req, socket, head, ws => w.emit('connection', ws, req));
+});
+
+// ---------- WebSocket：口语题的实时识别（网页版；APK 用原生桥直连） ----------
+// 带着密钥连阿里云 qwen3-asr-flash-realtime，边说边回文字。只转发听写要用的几种消息（设置里只认停顿长度），
+// 一次最多 15 秒、最多 15 秒的声音，同一个地址每分钟最多 40 次（和 /asr 一起算）
+const ASR_RT_URL = CORE.REALTIME_URL + '?model=qwen3-asr-flash-realtime';
+asrWss.on('connection', (cli, req) => {
+  const u = new URL(req.url, 'http://x');
+  const bye = () => { try { cli.close(); } catch (e) {} };
+  try { if (req.headers.origin && !okOrigin(req.headers.origin)) return bye(); } catch (e) { return bye(); }
+  if (ACCESS_CODE && u.searchParams.get('code') !== ACCESS_CODE) return bye();
+  const ip = req.headers['cf-connecting-ip'] || req.socket.remoteAddress || '?', now = Date.now(), h = (hits.get(ip) || []).filter(t => now - t < 60000);
+  if (h.length >= 40) return bye(); h.push(now); hits.set(ip, h);
+  const up = new WebSocket(ASR_RT_URL, { headers: { Authorization: 'Bearer ' + KEY } });
+  const q = []; let bytes = 0;
+  const end = () => { clearTimeout(kill); try { up.close(); } catch (e) {} bye(); };
+  const kill = setTimeout(end, 15000);
+  up.on('open', () => { q.forEach(x => up.send(x)); q.length = 0; });
+  up.on('message', d => { if (cli.readyState === WebSocket.OPEN) cli.send(d.toString()); });
+  up.on('close', end);
+  up.on('error', e => { console.log('asr-rt upstream error', e.message); end(); });
+  cli.on('message', buf => {
+    let m; try { m = JSON.parse(buf); } catch (e) { return; }
+    let out = null;
+    if (m.type === 'session.update') {
+      const td = (m.session && m.session.turn_detection) || {};
+      out = { type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language: 'en' },
+        turn_detection: { type: 'server_vad', threshold: 0.2, silence_duration_ms: Math.max(300, Math.min(1200, +td.silence_duration_ms || 600)) } } };
+    } else if (m.type === 'input_audio_buffer.append' && typeof m.audio === 'string') {
+      bytes += m.audio.length; if (bytes > 700000) return end();   // 15 秒 16kHz PCM 的 base64 ≈ 640KB
+      out = { type: m.type, audio: m.audio };
+    } else if (m.type === 'session.finish') out = { type: m.type };
+    if (!out) return;
+    const x = JSON.stringify(out);
+    if (up.readyState === WebSocket.OPEN) up.send(x); else if (up.readyState === WebSocket.CONNECTING) q.push(x);
+  });
+  cli.on('close', end);
+});
 let live = 0;
 const okOrigin = o => !o || ORIGINS.some(a => a.startsWith('.') ? new URL(o).hostname.endsWith(a) : o === a || o.startsWith(a + ':'));
 

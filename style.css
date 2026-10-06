@@ -50,9 +50,11 @@ button:disabled { cursor: default; }
 
 /* ---------- 顶栏 ---------- */
 .topbar {
-  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  /* 贴着最顶上，手机状态栏 / 挖孔那一截算进自己的上内边距（顶栏背景盖住它）。
+     以前是 top: 安全区——页面在最上面时顶栏会整体往下错开，把下面的标签盖住（APK 全面屏时安全区有 48px） */
+  position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; gap: 8px;
-  padding-block: 10px; margin-inline: -16px; padding-inline: 16px;
+  padding-block: calc(10px + env(safe-area-inset-top, 0px)) 10px; margin-inline: -16px; padding-inline: 16px;
   background: color-mix(in srgb, var(--sea) 86%, transparent);
   backdrop-filter: blur(8px);
 }
@@ -139,7 +141,7 @@ button:disabled { cursor: default; }
 
 /* ---------- 答题页 ---------- */
 #play { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: 150px; }
-.p-top { display: flex; align-items: center; gap: 12px; padding-block: 14px; position: sticky; top: env(safe-area-inset-top, 0px); background: var(--foam); z-index: 5; margin-inline: -16px; padding-inline: 16px; }
+.p-top { display: flex; align-items: center; gap: 12px; padding-block: calc(14px + env(safe-area-inset-top, 0px)) 14px; position: sticky; top: 0; background: var(--foam); z-index: 5; margin-inline: -16px; padding-inline: 16px; }
 .x { border: 0; background: none; font-size: 22px; color: var(--ink-3); padding: 4px 6px; }
 .pbar { flex: 1; height: 16px; background: var(--card); border-radius: 10px; overflow: hidden; box-shadow: inset 0 2px 0 var(--line); }
 .pbar i { display: block; height: 100%; width: 0; background: var(--leaf); border-radius: 10px; transition: width .4s; box-shadow: inset 0 -4px 0 rgba(0,0,0,.1); }
@@ -899,7 +901,7 @@ body.in-world { overflow: hidden; }
 .tk-go { font-size: 24px; }
 .tk-foot { display: flex; gap: 10px; justify-content: center; margin: 14px 0 6px; }
 .tk-ov { position: fixed; inset: 0; z-index: 60; background: rgba(12, 30, 46, .55); display: flex; align-items: flex-end; justify-content: center; }
-.tk-box { width: 100%; max-width: 520px; height: min(100%, 760px); background: var(--bg, #f4fbf9); border-radius: 22px 22px 0 0; display: flex; flex-direction: column; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.tk-box { width: 100%; max-width: 520px; height: min(calc(100% - env(safe-area-inset-top, 0px)), 760px); background: var(--bg, #f4fbf9); border-radius: 22px 22px 0 0; display: flex; flex-direction: column; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); box-sizing: border-box; }
 .tk-head { display: flex; align-items: center; gap: 10px; }
 .tk-head img { width: 54px; height: 54px; border-radius: 50%; transition: transform .15s; }
 .tk-head img.speaking { animation: tk-talk .5s ease-in-out infinite alternate; box-shadow: 0 0 0 4px #7fd8c4; }
@@ -1123,7 +1125,7 @@ body.in-world { overflow: hidden; }
 
   /* ===== 首页：左边每日任务（跟着滚），右边怪兽冒险 / 闯关 / 聊天 ===== */
   body.scr-home #app { max-width: 900px; }
-  .topbar { padding-block: 4px; }
+  .topbar { padding-block: calc(4px + env(safe-area-inset-top, 0px)) 4px; }
   .me-pet { width: 36px; height: 36px; font-size: 24px; }
   #home { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); column-gap: 16px; align-items: start; }
   #home > .tabs { grid-column: 1 / -1; }
@@ -1145,7 +1147,7 @@ body.in-world { overflow: hidden; }
   #play { padding-bottom: 24px; }
   /* 反馈条出来时底下留出位置，标出对错的选项能滚到它上面 */
   body.scr-play:has(#fb.show) #play { padding-bottom: 110px; }
-  .p-top { padding-block: 6px; }
+  .p-top { padding-block: calc(6px + env(safe-area-inset-top, 0px)) 6px; }
   body.scr-play #app, body.scr-result #app { padding-bottom: 0; }
   #p-boss { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 50px); z-index: 4; margin-inline: -16px; padding-inline: 16px; background: var(--foam); }
   .boss-hp { padding: 4px 10px; margin-bottom: 4px; }

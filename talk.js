@@ -156,6 +156,7 @@
   const b64 = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   async function open(id) {
     const npc = typeof id === 'object' ? id : NPCS.byId[id]; if (!npc) return;
+    lmShut();   // 口语题预热的麦克风先关掉，聊天自己开
     const url = relayUrl();
     if (!url) { configure(); return; }
     const esc = G.esc;
@@ -172,6 +173,7 @@
     document.body.appendChild(ov);
     LAST = npc;
     C = { npc, ws: null, bubble: null, holding: false, ended: false, t0: Date.now(), turns: [] };
+    if (window.EchoMusic) EchoMusic.hold(true);   // 聊天时麦克风一直开着：背景音乐静音
     const c = C;
 
     // 麦克风：先要权限；要不到就只能打字
@@ -269,6 +271,7 @@
   function close() {
     if (!C) return;
     const c = C; C = null;
+    if (window.EchoMusic) EchoMusic.hold(false);
     try { c.ws && c.ws.close(); } catch (e) {}
     if (c.key) { document.removeEventListener('keydown', c.key); document.removeEventListener('keyup', c.key); }
     if (c.resize) window.removeEventListener('resize', c.resize);
@@ -426,46 +429,158 @@
     if (url) TTSC[k] = url;
     return url;
   }
+  // ---------- 口语打分的识别：边说边送阿里云实时识别（qwen3-asr-flash-realtime） ----------
+  // 以前：说完停 1.1 秒才算说完 → 整段上传 qwen3-asr-flash → 等结果，说完 2 秒多才出分。现在：
+  // ① 一点话筒就开始录，同时连实时识别，连上之前录到的先存着再补发（开头不丢）；
+  // ② 服务器边听边回文字（stash 是还没定下来的那截），孩子能看到自己说的话一个个冒出来；
+  // ③ 调用方给 o.match(文字)（游戏里是「和答案对上 90 分以上」）：实时结果一对上就立刻结束，不用等停顿；
+  //    对不上就等服务器判断说完（单词停顿 0.4 秒、句子 0.6 秒）。识别本身不知道答案（不带答案地听写），打分还是公正的；
+  // ④ 实时识别连不上 / 断了：用录好的整段走原来的 qwen3-asr-flash。
+  // 麦克风预热：说完不马上关，15 秒内再点话筒直接接着录（打开麦克风要零点几秒，孩子一点就说会丢开头）。
+  const ASR_RT = 'qwen3-asr-flash-realtime';
+  const LM = { stream: null, ctx: null, node: null, rate: 16000, sink: null, t: 0 };
+  const RTA = { fails: 0 };   // 实时识别连续失败几次就先不用了（这次打开游戏）
+  async function lmOpen() {
+    clearTimeout(LM.t);
+    if (LM.stream && LM.stream.active && LM.ctx && LM.ctx.state !== 'closed') {
+      if (LM.ctx.state !== 'running') { try { await LM.ctx.resume(); } catch (e) {} }
+      return LM;
+    }
+    lmShut();
+    let stream, ctx;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+    catch (e) { return { err: 'not-allowed' }; }
+    try {
+      try { ctx = new AudioContext({ sampleRate: 16000 }); } catch (e) { ctx = new AudioContext(); }
+      await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' })));
+    } catch (e) { try { stream.getTracks().forEach(t => t.stop()); } catch (er) {} try { ctx && ctx.close(); } catch (er) {} return { err: 'audio-capture' }; }
+    const node = new AudioWorkletNode(ctx, 'tk-cap');
+    ctx.createMediaStreamSource(stream).connect(node);
+    node.port.onmessage = e => { if (LM.sink) LM.sink(e.data); };
+    Object.assign(LM, { stream, ctx, node, rate: ctx.sampleRate, sink: null });
+    return LM;
+  }
+  function lmRelease() { LM.sink = null; clearTimeout(LM.t); LM.t = setTimeout(lmShut, 15000); }
+  function lmShut() {
+    clearTimeout(LM.t); LM.sink = null;
+    try { if (LM.node) LM.node.port.onmessage = null; } catch (e) {}
+    try { if (LM.stream) LM.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    try { if (LM.ctx) LM.ctx.close(); } catch (e) {}
+    LM.stream = LM.ctx = LM.node = null;
+  }
+  // 切到后台就把麦克风关掉
+  document.addEventListener('visibilitychange', () => { if (document.hidden && !LM.sink) lmShut(); });
+  // 浮点 → 16kHz 16 位 PCM（不是 16k 的设备按比例取样，跨块记住小数位置）
+  function pcm16(f, rate, st) {
+    const k = rate / 16000, n = Math.max(0, Math.ceil((f.length - st.pos) / k)), out = new Int16Array(n);
+    let p = st.pos, i = 0;
+    for (; i < n && p < f.length; i++, p += k) { const v = Math.max(-1, Math.min(1, f[Math.floor(p)])); out[i] = v < 0 ? v * 0x8000 : v * 0x7fff; }
+    st.pos = p - f.length;
+    return i === n ? out : out.subarray(0, i);
+  }
+  function u8b64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
+  // 实时识别的连接：APK 走原生桥（带密钥），网页版走中转服务的 /asr-rt
+  function asrSock(on) {
+    if (direct()) {
+      const id = ++nid, N = window.EchoNative;
+      NWS[id] = on;
+      try { N.wsOpen(id, window.TalkCore.REALTIME_URL + '?model=' + ASR_RT); } catch (e) { setTimeout(() => on('error', e.message), 0); }
+      return { send: s => { try { N.wsSend(id, s); } catch (e) {} }, close: () => { delete NWS[id]; try { N.wsClose(id); } catch (e) {} } };
+    }
+    const url = relayUrl(), code = LS('echo-talk-code');
+    let ws;
+    try { ws = new WebSocket(url + '/asr-rt' + (code ? '?code=' + encodeURIComponent(code) : '')); } catch (e) { setTimeout(() => on('error', e.message), 0); return { send() {}, close() {} }; }
+    ws.onopen = () => on('open'); ws.onmessage = e => on('message', e.data); ws.onclose = () => on('closed'); ws.onerror = () => on('error', '');
+    return { send: s => { if (ws.readyState === 1) ws.send(s); }, close: () => { try { ws.close(); } catch (e) {} } };
+  }
+  // 整段识别（原来的做法；实时识别不行时兜底）
+  async function wholeAsr(chunks, len, rate) {
+    const body = { model: 'qwen3-asr-flash', stream: false, asr_options: { language: 'en', enable_itn: false },
+      messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + wav16(chunks, len, rate) } }] }] };
+    let text = '', r;
+    if (direct()) {
+      r = await nativePost('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', JSON.stringify(body), 12000);
+      try { text = String(JSON.parse(r.text).choices[0].message.content || '').trim(); } catch (e) {}
+    } else {
+      r = await relayPost('/asr', { audio: body.messages[0].content[0].input_audio.data.split(',')[1] }, 12000);
+      try { text = String(JSON.parse(r.text).text || '').trim(); } catch (e) {}
+    }
+    return r.ok ? { text, err: text ? null : 'no-speech' } : { text: '', err: 'network' };
+  }
+  // o.onState(文字)：「🎤 请说……」和边说边出来的文字；o.match(文字) → true 就立刻结束；o.short：单词/短语（停顿等得短一点）
   async function listenOnce(o) {
     o = o || {};
     if (!cloudSR()) return { text: '', err: 'service-not-allowed' };
     if (C) return { text: '', err: 'busy' };   // 正在和岛民聊天，麦克风被占着
-    let stream, ctx;
-    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
-    catch (e) { return { text: '', err: 'not-allowed' }; }
-    try {
-      try { ctx = new AudioContext({ sampleRate: 16000 }); } catch (e) { ctx = new AudioContext(); }
-      await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' })));
-    } catch (e) { try { stream.getTracks().forEach(t => t.stop()); } catch (er) {} return { text: '', err: 'audio-capture' }; }
-    const node = new AudioWorkletNode(ctx, 'tk-cap'), rate = ctx.sampleRate, chunks = [];
-    ctx.createMediaStreamSource(stream).connect(node);
-    let len = 0, voiced = 0, quiet = 0, done = false;
-    const t0 = performance.now();
+    const mic = await lmOpen();
+    if (mic.err) return { text: '', err: mic.err };
+    const rate = mic.rate, chunks = [], st = { pos: 0 }, t0 = performance.now();
+    let len = 0, voiced = 0, quiet = 0, done = false, over = false, ready = false, queue = [], pend = [], pendN = 0, texts = [], cur = '', grace = 0, inSpeech = false;
+    let dead = RTA.fails >= 3;
     return new Promise(resolve => {
+      const full = () => (texts.join(' ') + ' ' + cur).replace(/\s+/g, ' ').trim();
+      const fail = () => { if (dead) return; dead = true; RTA.fails++; };
+      const heard = () => {
+        const t = full(); if (!t) return;
+        if (o.onState) o.onState(t);
+        if (o.match && o.match(t)) finish('match');
+      };
+      const sock = dead ? null : asrSock((type, data) => {
+        if (over) return;
+        if (type === 'open') {
+          sock.send(JSON.stringify({ type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language: 'en' },
+            turn_detection: { type: 'server_vad', threshold: 0.2, silence_duration_ms: o.short ? 400 : 600 } } }));
+          ready = true; queue.forEach(s => sock.send(s)); queue = [];
+        } else if (type === 'message') {
+          let m; try { m = JSON.parse(data); } catch (e) { return; }
+          if (m.type === 'conversation.item.input_audio_transcription.text') { cur = (m.text || '') + (m.stash || ''); heard(); }
+          else if (m.type === 'conversation.item.input_audio_transcription.completed') {
+            RTA.fails = 0; inSpeech = false; texts.push(m.transcript || ''); cur = ''; heard();
+            // 说完一段：稍等一下，孩子没接着说就结束（句子中间停顿了会接着识别下一段）
+            clearTimeout(grace); grace = setTimeout(() => finish('done'), o.short ? 200 : 500);
+          } else if (m.type === 'input_audio_buffer.speech_started') { inSpeech = true; clearTimeout(grace); }
+          else if (m.type === 'error') fail();
+        } else if (type === 'error' || type === 'closed') fail();
+      });
       const finish = async why => {
-        if (done) return; done = true; SR.stop = null; node.port.onmessage = null;
-        try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
-        try { ctx.close(); } catch (e) {}
-        if (voiced < 3 || len < rate * 0.3) return resolve({ text: '', err: why === 'user' ? 'aborted' : 'no-speech' });
-        if (o.onState) o.onState('🎧 识别中……');
-        const body = { model: 'qwen3-asr-flash', stream: false, asr_options: { language: 'en', enable_itn: false },
-          messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + wav16(chunks, len, rate) } }] }] };
-        let text = '', r;
-        if (direct()) {
-          r = await nativePost('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', JSON.stringify(body), 12000);
-          try { text = String(JSON.parse(r.text).choices[0].message.content || '').trim(); } catch (e) {}
-        } else {
-          r = await relayPost('/asr', { audio: body.messages[0].content[0].input_audio.data.split(',')[1] }, 12000);
-          try { text = String(JSON.parse(r.text).text || '').trim(); } catch (e) {}
+        if (done) return; done = true;
+        clearTimeout(grace); SR.stop = null; lmRelease();
+        // 本机先判断说完了，但实时识别还没把这一段认完（刚连上 / 网慢，服务器还压着没处理的声音）：
+        // 最多再等 2.5 秒它的「认完了」——只拿到半句就交卷会被当成说错
+        const settled = () => texts.length && !inSpeech;
+        if (why !== 'match' && why !== 'done' && why !== 'user' && sock && ready && !dead && voiced >= 3 && !settled()) {
+          const t1 = performance.now();
+          await new Promise(r => { const iv = setInterval(() => { if (settled() || dead || performance.now() - t1 > 2500) { clearInterval(iv); r(); } }, 40); });
         }
-        resolve(r.ok ? { text, err: text ? null : 'no-speech' } : { text: '', err: 'network' });
+        over = true; clearTimeout(grace);
+        const partial = !settled() && why !== 'match' && why !== 'user';
+        if (sock) { try { sock.send(JSON.stringify({ type: 'session.finish' })); } catch (e) {} setTimeout(() => sock.close(), 400); }
+        const t = full();
+        if (t && !partial) return resolve({ text: t, err: null, ms: Math.round(performance.now() - t0), how: why });
+        if (voiced < 3 || len < rate * 0.3) return resolve(t ? { text: t, err: null, how: why } : { text: '', err: why === 'user' ? 'aborted' : 'no-speech' });
+        // 实时识别没认完（或者没连上）：录好的整段重新识别；整段也失败就用手上的半句
+        if (o.onState) o.onState('🎧 识别中……');
+        const w = await wholeAsr(chunks, len, rate);
+        resolve(w.text || !t ? Object.assign(w, { how: 'whole' }) : { text: t, err: null, how: 'partial' });
       };
       SR.stop = () => finish('user');
-      node.port.onmessage = e => {
-        const d = e.data; chunks.push(d); len += d.length;
+      mic.sink = d => {
+        if (done) return;
+        chunks.push(d); len += d.length;
+        // 攒够 0.1 秒送一次
+        if (!dead) {
+          pend.push(d); pendN += d.length;
+          if (pendN >= rate * 0.1) {
+            const f = new Float32Array(pendN); let p = 0; pend.forEach(c => { f.set(c, p); p += c.length; });
+            const s = JSON.stringify({ type: 'input_audio_buffer.append', audio: u8b64((x => new Uint8Array(x.buffer, x.byteOffset, x.byteLength))(pcm16(f, rate, st))) });
+            pend = []; pendN = 0;
+            if (ready) sock.send(s); else if (queue.length < 120) queue.push(s);
+          }
+        }
         let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
         const loud = Math.sqrt(sum / d.length) > 0.02, now = performance.now();
-        if (loud) { voiced++; quiet = 0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > 1100) finish('silence'); }
+        // 本机的停顿判断只是保底：实时识别正常时它会先结束；不正常时停 1.1 秒就整段识别
+        if (loud) { voiced++; quiet = 0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > (dead ? 1100 : 1800)) finish('silence'); }
         if (now - t0 > (o.maxMs || 8000)) finish('max');
         else if (voiced < 3 && now - t0 > 5000) finish('silence');
       };

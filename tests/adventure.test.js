@@ -162,7 +162,9 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   for (let i = 0; i < 80 && !met; i++) { await step(i % 2 ? 'ArrowLeft' : 'ArrowRight'); met = await p.isVisible('#battle'); if (!met && (await dbg()).busy) { await p.waitForTimeout(900); met = await p.isVisible('#battle'); } }
   check(met, '草丛里遇到野生怪兽');
   if (met) {
-    await p.waitForTimeout(2600);
+    // 开场动画 + 下载模型：机器忙时会超过 2.6 秒，等菜单真的出来
+    await p.waitForSelector('#b-panel [data-act=bBag]', { state: 'visible', timeout: 15000 }).catch(() => {});
+    await p.waitForTimeout(300);
     await p.screenshot({ path: out + '/w7-wild.png' });
     await p.click('[data-act=bBag]');
     check(await p.isVisible('#sheet [data-act=bUse]'), '战斗里能打开背包');
