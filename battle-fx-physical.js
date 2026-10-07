@@ -1,4 +1,4 @@
-// 回声岛 · 战斗特效库（物理系 + 辅助招式）：一般 normal、格斗 fight、飞行 flying、虫 bug、钢 steel；17 个属性的辅助招式
+// 回声岛 · 战斗特效库（物理系 + 辅助招式）：一般 normal、功夫 fight、飞行 flying、虫 bug、钢 steel；17 个属性的辅助招式
 // 登记到 window.BattleFX.types[type] = { charge?, release, impact?, after?, physical?, ult?, generic? }（规格见 tools/FX_SPEC.md §2–§5）：
 //   release(kit, ctx) 放出招式，**必须在命中那一刻 resolve**（monsters.js 接着出伤害数字、调 hit()）
 //   charge(kit, ctx) 蓄力时加的东西（这里都不返回 Promise，不拖长蓄力）；impact / after 命中后、余韵（后台跑，不挡流程）
@@ -10,9 +10,9 @@
 //
 // 设计（FX_SPEC §5，全部原创）：
 //   一般 normal   小招 Body Bump 全身发白光冲过去一撞 / 中招 Star Rush 金色星光拖尾、跳着弧线冲过去，五角大星 /
-//                 大招 Mega Stomp 原地跺一脚蹲下 → 对手脚下亮出金色落点圈 → 高高跳出画面、地上的影子越来越大 → 拖着金色彗尾砸下来，
+//                 大招 Giant Stomp 原地跺一脚蹲下 → 对手脚下亮出金色落点圈 → 高高跳出画面、地上的影子越来越大 → 拖着金色彗尾砸下来，
 //                 三道地面冲击波 + 大命中星 + 尘土环 + 碎石 + 地裂
-//   格斗 fight    小招 Quick Punch 一步踏进去打出一道橙色拳风 + 收拢的速度线 / 中招 Power Kick 冲过去一个回旋踢，大月牙弧光扫过 /
+//   功夫 fight    小招 Quick Punch 一步踏进去打出一道橙色拳风 + 收拢的速度线 / 中招 Power Kick 冲过去一个回旋踢，大月牙弧光扫过 /
 //                 大招 Hero Combo 冲到跟前连打三拳（三个命中星，对手一晃一晃），后撤运气，最后一记燃烧的重拳
 //   飞行 flying   小招 Wing Slap 两道风刃交叉飞过去划出一个 X，羽毛四散 / 中招 Gust Dive 跳上天裹着风圈俯冲撞下来 /
 //                 大招 Sky Storm 对手脚下卷起一股会扭动的龙卷风（自己的着色器），碎叶羽毛绕着往上转，最后「呼」地炸开
@@ -48,7 +48,7 @@
   const DUST = ['#d9c9a3', '#c8b48a', '#b39d72'];
   // 通用命中（battle3d.js 的 impactFx）只留往外迸的星光，其他自己来：
   //   命中星、冲击波每个属性自己画（两套叠在一起糊成一片白）；点光源自己放（通用的大招 12 再叠上自己的，台面和怪兽被照成一片白）；
-  //   全屏闪自己来（通用的按属性色闪：钢的灰蓝、格斗的橙红被限频器换成发灰的淡色，截图里像画面变暗了一下）；
+  //   全屏闪自己来（通用的按属性色闪：钢的灰蓝、功夫的橙红被限频器换成发灰的淡色，截图里像画面变暗了一下）；
   //   大招放慢自己来：通用的同时把发光后期加到 2，这几个属性的特效都是浅色的，一晕就是一大团白，所以只放慢、不加强发光
   const GEN = { star: false, wave: false, flash: false, slowmo: false, light: false };
   const FLASH = { normal: '#fff4d6', fight: '#fff1e0', flying: '#eef6ff', bug: '#f7ffd0', steel: '#f2f6fb' };
@@ -201,7 +201,7 @@ void main() {
     o = o || {};
     kit.emit(n, () => ({ pos: at.clone(), vel: kit.sph(kit.rnd(.6, 1) * (o.sp || 3.2)), col: pick(cols), size: (o.size || .45) * kit.rnd(.7, 1.3), life: (o.life || .55) * kit.rnd(.8, 1.2), drag: 2.2, grav: o.grav == null ? -1.5 : o.grav, grow: .3, fade: .4, tex: 'star', spin: kit.rnd(-6, 6), cover: o.cover == null ? .25 : o.cover }));
   }
-  // 一颗转着的四角星闪光（金属反光、星光）
+  // 一颗转着的四角星闪烁（金属反光、星光）
   function glint(kit, at, o) {
     o = o || {};
     kit.emit(1, () => ({ pos: at.clone(), vel: o.vel || kit.V(0, 0, 0), col: o.col || '#ffffff', size: o.size || 1, life: o.life || .35, grow: o.grow == null ? .2 : o.grow, fade: .3, tex: 'star', spin: o.spin == null ? 5 : o.spin, cover: o.cover == null ? .2 : o.cover }));
@@ -328,7 +328,7 @@ void main() {
   // 一般 normal：白光冲撞 + 大命中星
   // ======================================================================
   const NW = '#fffaf0', NG = '#ffd54f', NC = '#fff3c4';
-  // 大招 Mega Stomp：（大招特殊动作 leap 先在原地跳起来跺一脚）蹲下蓄力、对手脚下亮出金色落点圈 → 高高跳起 →
+  // 大招 Giant Stomp：（大招特殊动作 leap 先在原地跳起来跺一脚）蹲下蓄力、对手脚下亮出金色落点圈 → 高高跳起 →
   // 影子越来越大 → 拖着白光彗尾砸下来（命中）
   async function megaStomp(kit, ctx) {
     const A = kit.mon(ctx.side), ph = P(ctx), H = 2.5;
@@ -416,7 +416,7 @@ void main() {
   };
 
   // ======================================================================
-  // 格斗 fight：连续的拳风、命中星、最后一记重击
+  // 功夫 fight：连续的拳风、命中星、最后一记重击
   // ======================================================================
   const FO = '#ff7043', FY = '#ffe0b2', FW = '#fff3e0';
   // 拳风：从出招方身前打到 to 的一道粗短光束
@@ -1044,7 +1044,7 @@ void main() {
     dark: {
       col: '#b388ff', col2: '#2a1f33',
       motif(kit, ctx, c, c2, h) {
-        // 黑烟从四周往身上卷 + 几点紫色闪光
+        // 黑烟从四周往身上卷 + 几点紫色闪烁
         const ctr = kit.center(ctx.side);
         kit.emit(22, () => { const a = kit.rnd(0, 6.283), r = kit.rnd(.9, 1.3) * h, p = ctr.clone().add(kit.V(Math.cos(a) * r, kit.rnd(-.5, .4) * h, Math.sin(a) * r)); const t = kit.V(-Math.sin(a), 0, Math.cos(a)); return { pos: p, vel: ctr.clone().sub(p).multiplyScalar(1.1).addScaledVector(t, 1.4), col: pick(['#2a1f33', '#3d2d4a', '#4a3a55']), size: kit.rnd(.55, .85), life: .8, drag: .8, grow: .5, tex: 'smoke', spin: 2, cover: .9 }; });
         spiral(kit, ctx.side, { n: 2, cols: ['#b388ff', '#e1ccff'], tex: 'star', size: .3, spin: 4, r: .6, h0: .2, h1: 1.1, turns: 1.2, ms: 650, life: .3, cover: .3 });

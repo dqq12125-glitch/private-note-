@@ -11,7 +11,7 @@
   "evo": [
    {
     "to": "vinelizard",
-    "lv": 16
+    "lv": 17
    }
   ],
   "hp": 42,
@@ -51,7 +51,7 @@
   "evo": [
    {
     "to": "jungleking",
-    "lv": 36
+    "lv": 35
    }
   ],
   "hp": 56,
@@ -131,7 +131,7 @@
   "evo": [
    {
     "to": "sunrooster",
-    "lv": 16
+    "lv": 17
    }
   ],
   "hp": 40,
@@ -171,7 +171,7 @@
   "evo": [
    {
     "to": "solarknight",
-    "lv": 36
+    "lv": 35
    }
   ],
   "hp": 54,
@@ -208,7 +208,7 @@
   "zh": "烈阳骑士",
   "types": [
    "fire",
-   "fight"
+   "steel"
   ],
   "stage": 3,
   "evo": [],
@@ -237,8 +237,8 @@
    "solar",
    "knight"
   ],
-  "dexEn": "Solarknight fights with fiery kicks. It always protects weak monsters.",
-  "dexZh": "烈阳骑士用火焰踢腿战斗。它总是保护弱小的怪兽。"
+  "dexEn": "Solarknight carries a shiny sun shield. It crows to start every sports day.",
+  "dexZh": "烈阳骑士举着一面亮闪闪的太阳盾，每次运动会都由它打鸣开场。"
  },
  {
   "no": 258,
@@ -252,7 +252,7 @@
   "evo": [
    {
     "to": "brookrunner",
-    "lv": 16
+    "lv": 17
    }
   ],
   "hp": 44,
@@ -292,7 +292,7 @@
   "evo": [
    {
     "to": "canyonguard",
-    "lv": 36
+    "lv": 35
    }
   ],
   "hp": 58,
@@ -329,7 +329,7 @@
   "zh": "峡谷卫士",
   "types": [
    "water",
-   "ground"
+   "rock"
   ],
   "stage": 3,
   "evo": [],
@@ -359,8 +359,8 @@
    "canyon",
    "guard"
   ],
-  "dexEn": "Canyonguard can change the path of a river. It is very strong.",
-  "dexZh": "峡谷卫士能改变河流的方向。它力气非常大。"
+  "dexEn": "Canyonguard builds stone dams in the river. Small fish swim in its quiet pools.",
+  "dexZh": "峡谷卫士在河里垒起石头坝，小鱼在它造的安静水潭里游来游去。"
  },
  {
   "no": 261,

@@ -24,8 +24,8 @@ for (const m of java.matchAll(/@JavascriptInterface\s+public\s+[\w<>]+\s+(\w+)\s
   methods[m[1]] = m[2].trim() ? m[2].split(',').length : 0;
 }
 const want = { hasKey: 0, setKey: 1, setOrientation: 1, wsOpen: 2, wsSend: 2, wsClose: 1, post: 3,
-  version: 0, diag: 0, takeRecovered: 0, hasPin: 0, checkPin: 1, pinStatus: 0, micPermission: 0, openAppSettings: 0,
-  backupWrite: 1, backupList: 0, backupRead: 1, backupPick: 0, shareText: 2, shareFile: 3 };
+  version: 0, diag: 0, takeRecovered: 0, hasPin: 0, checkPin: 1, pinStatus: 0, setPin: 1, micPermission: 0, openAppSettings: 0,
+  backupWrite: 1, backupList: 0, backupRead: 1, backupPick: 0, shareText: 2, shareFile: 3, edition: 0, verUrl: 0, books: 0, storage: 0 };
 for (const [n, c] of Object.entries(want)) check(methods[n] === c, `原生桥有 EchoNative.${n}（${c} 个参数）`);
 check(Object.keys(methods).every(n => n in want), '原生桥没有没登记的方法：' + Object.keys(methods).filter(n => !(n in want)).join(', '));
 
@@ -69,6 +69,21 @@ check(/android:name="\.ShareProvider"[\s\S]*?android:exported="false"[\s\S]*?and
 check(/WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/.test(manifest), '存储权限只在安卓 9 及以下要');
 check(/onRenderProcessGone/.test(java) && /renderGone\(view/.test(java), '渲染进程挂了重建 WebView（onRenderProcessGone）');
 check(/shouldShowRequestPermissionRationale/.test(java) && /ACTION_APPLICATION_DETAILS_SETTINGS/.test(java), '麦克风区分这次拒绝 / 永久拒绝，能跳到设置页');
+// 销售版（-PECHO_EDITION=sales）：不带密钥、不带打包的家长密码、不带中转服务，applicationId 不一样；默认还是家庭版
+check(/def EDITION = \(project\.findProperty\('ECHO_EDITION'\) \?: 'family'\)/.test(gradle) && /def SALES = EDITION == 'sales'/.test(gradle),
+  '版本由 -PECHO_EDITION 决定，默认 family');
+check(/def keyFromFile = \{\s*if \(SALES\) return ''/.test(gradle) && /def pinHash = \{\s*if \(SALES\) return ''/.test(gradle),
+  '销售版不读 KEY_FILE、不读 PARENT_PIN（BuildConfig 里没有密钥和密码哈希）');
+check(/TALK_URL', q\(SALES \? '' :/.test(gradle) && /TALK_CODE', q\(SALES \? '' :/.test(gradle), '销售版不带中转服务的地址和口令');
+check(/VER_URL', q\(SALES \? '' :/.test(gradle) && !/github\.io/.test(fs.readFileSync(path.join(__dirname, '..', 'game.js'), 'utf8')), '检查新版本的地址只打进家庭版（BuildConfig.VER_URL），game.js 里不再写死');
+check(/if \(SALES\) \{\s*if \(bakedKey \|\| pinHash\) throw new GradleException/.test(gradle), '销售版正式包再兜底查一次：有密钥或密码哈希就停下');
+check(/applicationId SALES \? 'com\.echoisland\.english' : 'com\.echoisland\.app'/.test(gradle) && /buildConfigField 'String', 'EDITION', q\(EDITION\)/.test(gradle),
+  '销售版 applicationId 不同（两个版本能同时装），BuildConfig.EDITION');
+check(/allowBackup: SALES \? 'false' : 'true'/.test(gradle) && /android:allowBackup="\$\{allowBackup\}"/.test(manifest), '销售版不让系统把 App 数据自动备份到云上');
+check(/'pages\/\*\*'/.test(gradle), '打包时带上 pages/（隐私说明、同意书、开通教程、开源许可）');
+check(/public boolean setPin\(String p\) \{ return SALES && pin\.set\(p\); \}/.test(java) && /, SALES\);/.test(java),
+  '只有销售版能在手机上设家长密码（PinGuard 的 allowSet = SALES）');
+check(/public String edition\(\) \{ return SALES \? "sales" : "family"; \}/.test(java), 'EchoNative.edition() 告诉网页是哪个版本');
 
 // ---------- 3. 用 JDK 真跑 PinGuard / BackupNames ----------
 const jdks = [process.env.JAVA_HOME, 'D:/Claude/tools/android/jdk-17.0.20.1+1'].filter(Boolean);
@@ -111,6 +126,33 @@ public class Harness {
     wrong(g, 5); boot = 9; wall -= 24L * 3600_000;                       // 重启 + 时钟往回调一天：最多锁 10 分钟
     out("backWait", (g.waitMs() + 999) / 1000);
     out("final", g.statusJson());
+    // 销售版：手机上设的密码（随机盐 + 哈希存在原生）。家庭版（allowSet = false）一律不许设、也不认手机上存的
+    final Map<String, Long> sm = new HashMap<>();
+    final Map<String, String> ss = new HashMap<>();
+    PinGuard.Store st2 = new PinGuard.Store() {
+      public long getLong(String k, long d) { Long v = sm.get(k); return v == null ? d : v; }
+      public void putLongs(String[] ks, long[] vs) { for (int i = 0; i < ks.length; i++) sm.put(ks[i], vs[i]); }
+      public String getStr(String k, String d) { String v = ss.get(k); return v == null ? d : v; }
+      public void putStrs(String[] ks, String[] vs) { for (int i = 0; i < ks.length; i++) ss.put(ks[i], vs[i]); }
+    };
+    PinGuard fam = new PinGuard(salt, "", st2, ck);
+    out("famSet", fam.set("2580") + "," + fam.has() + "," + fam.canSet());
+    PinGuard sg = new PinGuard(salt, "", st2, ck, true);
+    out("sNew", sg.has() + "," + sg.canSet() + "," + sg.check("2580"));
+    out("sBad", sg.set("12a4") + "," + sg.set("123") + "," + sg.set(""));
+    out("sSet", sg.set("2580") + "," + sg.has() + "," + sg.canSet());
+    out("sStored", ss.get("pinHash").equals(PinGuard.sha256Hex(ss.get("pinSalt") + "2580")) + "," + !ss.containsValue("2580") + "," + ss.get("pinSalt").length());
+    String salt1 = ss.get("pinSalt");
+    out("sCheck", sg.check("0000") + "," + sg.check("2580"));
+    out("sChange", sg.canSet() + "," + sg.set("3691") + "," + !ss.get("pinSalt").equals(salt1) + "," + sg.check("2580") + "," + sg.check("3691"));
+    elapsed += 3 * 60_000;
+    out("sLate", sg.canSet() + "," + sg.set("1470"));
+    out("sWrongNoChange", sg.check("3691") + "," + sg.check("1111") + "," + sg.canSet());
+    PinGuard sg2 = new PinGuard(salt, "", st2, ck, true);                   // 重开 App：还认得手机上的密码，但要重新输对才能改
+    out("sReopen", sg2.has() + "," + sg2.canSet() + "," + sg2.check("3691"));
+    out("famIgnores", new PinGuard(salt, "", st2, ck).has() + "," + new PinGuard(salt, hash, st2, ck, true).set("2222"));
+    for (int i = 0; i < 5; i++) sg2.check("0000");
+    out("sLock", sg2.check("3691") + "," + sg2.statusJson());
     // 备份文件名
     out("forDay", BackupNames.forDay("20261007"));
     out("valid", BackupNames.valid("echo-save-20261007.json") + "," + BackupNames.valid("echo-save-20261007 (1).json") + "," +
@@ -161,6 +203,14 @@ public class Harness {
   check(r.rebootWait === '300' && r.rebootAfter === 'false', '重启以后按手机时钟算剩下的时间');
   check(r.backWait === '600', '重启 + 手机时钟往回调：最多锁 10 分钟');
   check(J('final').lockouts === 3, '被锁过几次记着（周报用）');
+  check(r.famSet === 'false,false,false' && r.famIgnores === 'false,false', '家庭版：不能在手机上设密码，也不认手机上存的；打包了密码的不许改');
+  check(r.sNew === 'false,true,false' && r.sBad === 'false,false,false', '销售版刚装好：没有密码、可以设；不是 4 位数字不收');
+  check(r.sSet === 'true,true,false' && /^true,true,\d+$/.test(r.sStored || '') && +r.sStored.split(',')[2] > 40,
+    '销售版设好密码：只存随机盐 + 哈希（没有原文），设完要重新输对才能再改', [r.sSet, r.sStored]);
+  check(r.sCheck === 'false,true' && r.sChange === 'true,true,true,false,true', '输对以后 2 分钟内能改密码（换一个新盐），旧密码不能用了', [r.sCheck, r.sChange]);
+  check(r.sLate === 'false,false' && r.sWrongNoChange === 'true,false,false', '过了 2 分钟、或者刚输错一次，就不能改', [r.sLate, r.sWrongNoChange]);
+  check(r.sReopen === 'true,false,true', '重开 App：手机上的密码还在，要重新输对才能改');
+  check(/^false,\{"has":true,"locked":true,"waitSec":600,/.test(r.sLock || '') && /"canSet":false/.test(r.sLock || ''), '手机上设的密码也是错 5 次锁 10 分钟', r.sLock);
   check(r.forDay === 'echo-save-20261007.json', '备份文件名 echo-save-YYYYMMDD.json');
   check(r.valid === 'true,true,false,false,false', '只认 echo-save-YYYYMMDD(.json / (n).json)，路径和别的名字一律不认');
   check(r.del10 === '3 2 1', '10 份备份删掉最旧的 3 份，留 7 份');
@@ -178,6 +228,11 @@ public class Harness {
   check(st.locked && st.waitSec === 600 && !fake.checkPin('2468'), '假桥：错 5 次锁 10 分钟');
   const t0 = FS.now(); FS.now = () => t0 + 600001;
   check(fake.checkPin('2468'), '假桥：10 分钟后解锁');
+  check(!fake.setPin('1357') && fake.edition() === 'family' && JSON.parse(fake.storage()).free > 0, '假桥：家庭版不能在手机上设密码；edition()、storage()');
+  FS.edition = 'sales'; FS.pin = null; FS.okAt = 0;
+  check(fake.setPin('1357') && !fake.setPin('2468') && fake.checkPin('1357') && fake.setPin('2468') && fake.checkPin('2468') && !fake.checkPin('1357'),
+    '假桥（销售版）：没密码时直接设；有了要先输对才能改');
+  FS.edition = 'family';
   for (let d = 1; d <= 9; d++) { FS.now = () => new Date(2026, 9, d, 12).getTime(); fake.backupWrite('{"day":' + d + '}'); }
   const bl = JSON.parse(fake.backupList());
   check(bl.length === 7 && bl[0].name === 'echo-save-20261009.json' && bl[0].date === '2026-10-09' && fake.backupRead(bl[0].name) === '{"day":9}', '假桥：备份留最新 7 份');

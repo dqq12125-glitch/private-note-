@@ -1,5 +1,5 @@
 // C 组（第 5–7 岛：社团岛、作息岛、生日派对岛）端到端测试
-// 从进岛开始把三座岛的主线剧情各走一遍；三个道馆机关按正确解法走通（也故意错一次）；秘传学习器、守卫、大石头、冲浪、潜水、渡轮
+// 从进岛开始把三座岛的主线剧情各走一遍；三个挑战馆机关按正确解法走通（也故意错一次）；回声贝、守卫、大石头、踏浪、潜海、渡轮
 // 运行：node tests/isle-c.test.js
 const H = require('./helpers');
 
@@ -13,8 +13,8 @@ const ANS = {
 (async () => {
   const t = await H.open();
   const { p, W } = t;
-  // 道馆要先打败课本单元的 BOSS（第 13 个馆主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
-  // 七上全过是霜羽鸟的里程碑，先当作收服过了，免得它半路飞来打断剧情
+  // 挑战馆要先打败课本单元的 BOSS（第 13 个岛主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
+  // 七上全过是发条龟的里程碑（老旗标 leg:frostwing 也算），先当作收服过了，免得它半路飞来打断剧情
   const save0 = t.save;
   t.save = async s => { await save0(s); await p.evaluate(() => { const S = EchoGame.S; for (let i = 0; i < 16; i++) S.stars[(13 + i) + '-6'] = 1; S.world.flags['s:leg:frostwing'] = 1; localStorage.setItem('echo-island-v1', JSON.stringify(S)); }); };
   setTimeout(() => { console.log('FAIL 超时（25 分钟）'); process.exit(1); }, 25 * 60 * 1000).unref();
@@ -83,19 +83,19 @@ const ANS = {
   f = await flags();
   t.check(f['s:c5hush'] === 1, '嘘声团弄坏音响：打败团员');
   t.check(f['s:ch5'] === 1, '清唱 → 全场鼓掌 → 夺回社团水晶（ch5）');
-  // 大力士送怪力
+  // 大力士送大力推
   await t.go('t5', 'door:A'); await idle();
   await talk('name', 'Strongman Max');
-  t.check((await bag()).hm_strength === 1, '大力士送了怪力秘传学习器');
+  t.check((await bag()).hm_strength === 1, '大力士送了大力推回声贝');
   // 5 枚徽章：大石头推不动
   await t.go('r5', 'from:t5'); await idle();
   await t.tp(23, 11, 'right'); await t.A();
   t.check(/6 枚徽章/.test(await dlgText()), '沙丘道：只有 5 枚徽章，大石头推不动（要 6 枚）');
   await t.closeDlg(); await idle();
-  // 道馆：音符地板
+  // 挑战馆：音符地板
   await t.go('i5G', 'mat'); await idle();
   await step('up'); await step('up');
-  t.check(/按顺序踩/.test(await note()), '音符道馆：走到起点，广播放了第 1 段音乐');
+  t.check(/按顺序踩/.test(await note()), '音符挑战馆：走到起点，广播放了第 1 段音乐');
   await step('left'); await step('up');
   t.check(await at() === 'i5G 7,15', '踩错音符（🎸）回到起点：' + await at());
   await step('up'); await step('up');
@@ -168,7 +168,7 @@ const ANS = {
   await talk('tag', 'kai');
   t.check((await flags())['s:kai6'] === 1, '小凯在钟山脚下，和他对战了一场');
   await t.shot('c6-t6');
-  // 道馆：时钟转门
+  // 挑战馆：时钟转门
   await t.go('i6G', 'mat'); await idle();
   await t.tp(10, 10, 'up'); await t.walk('up');
   t.check(await at() === 'i6G 10,10', '转门关着，过不去');
@@ -184,7 +184,7 @@ const ANS = {
   t.check(await gateOpen(4, 6) && !(await gateOpen(10, 9)), '拨对 6:30：门转了（后面的关上，前面的打开）');
   await t.tp(4, 7, 'up'); await step('up', 2);
   await t.tp(8, 5, 'up'); await t.A(); await idle();
-  t.check(await gateOpen(7, 3), '拨对 4:15：通往馆主的门打开');
+  t.check(await gateOpen(7, 3), '拨对 4:15：通往岛主的门打开');
   await t.shot('c6-gym');
   await t.talkTo(n => n.role === 'leader'); await idle(400);
   t.check(await badges() === 7, '打败闹钟公鸡，拿到第 7 枚徽章');
@@ -193,7 +193,7 @@ const ANS = {
   await t.tp(19, 8, 'up'); await step('up', 5);
   t.check((await t.dbg()).map === 'd6a', '7 枚徽章：管理员让开，进了钟山');
   await t.shot('c6-d6a');
-  // 钟山 1F 的怪力谜题（先把下面的石头推开）
+  // 钟山 1F 的大力推谜题（先把下面的石头推开）
   // 洞里会随机遇到野生怪兽打断推石头：没拿到就重新进洞（石头复位）再推一次
   for (let k = 0; k < 3 && !(await flags())['p:d6a:2:1']; k++) {
     if (k) { await t.go('t6', 'from:d6a'); await idle(); await t.go('d6a', 'from:t6'); await idle(); }
@@ -211,10 +211,10 @@ const ANS = {
   f = await flags();
   t.check(f['s:c6rumble'] === 1, '钟山山顶：和欧瑞一起阻止闷雷的静音机器');
   const lion = await p.evaluate(() => EchoWorld._debug().M.npcs.some(n => n.mon === 'flamelion'));
-  t.check(lion, '火山口出现了神兽炎狮');
+  t.check(lion, '火山口出现了神兽醒狮');
   await t.shot('c6-d6b');
   await talk('mon', 'flamelion');
-  t.check((await flags())['s:leg:flamelion'] === 1, '和炎狮对战了');
+  t.check((await flags())['s:leg:flamelion'] === 1, '和醒狮对战了');
 
   // ======================= 第 7 岛 生日派对岛 =======================
   await t.go('r6', 'from:d6b'); await idle();
@@ -237,10 +237,10 @@ const ANS = {
   t.check(f['s:rival3'] === 1, '唱生日祝福后和对手打了第 3 场（rival3）');
   await t.go('t7', 'door:A'); await idle();
   await talk('tag', 'dad');
-  t.check((await bag()).hm_surf === 1 && (await flags())['s:got_surf'] === 1, '爸爸坐船回来，送了冲浪秘传学习器');
-  // 道馆：礼物盒
+  t.check((await bag()).hm_surf === 1 && (await flags())['s:got_surf'] === 1, '爸爸坐船回来，送了踏浪回声贝');
+  // 挑战馆：礼物盒
   await t.go('i7G', 'mat'); await idle();
-  t.check(/找生日礼物盒 0\/3/.test(await note()), '礼物盒道馆：广播念了一个生日');
+  t.check(/找生日礼物盒 0\/3/.test(await note()), '礼物盒挑战馆：广播念了一个生日');
   await t.tp(2, 4, 'down'); await step('down');
   t.check(await over(2, 5) === 'y', '踩错盒子（5 月 15 日）：跳出训练师，打完盒子空了');
   await t.tp(6, 4, 'down'); await step('down');
@@ -251,21 +251,21 @@ const ANS = {
   await t.talkTo(n => n.role === 'leader'); await idle(400);
   t.check(await badges() === 8, '打败河豚派对王，拿到第 8 枚徽章');
 
-  // ======================= 海路、潜水、渡轮 =======================
+  // ======================= 海路、潜海、渡轮 =======================
   // 7 枚徽章时过不了海
   await t.save({ map: 's7', arrive: 'from:t7', badges: { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1 }, team: [['tidalfin', 40], ['flamewolf', 40]], bag: { hm_surf: 1 }, flags: { c7intro: 1, ch7: 1 } });
   await idle();
   await t.tp(3, 16, 'right'); await t.A(); await t.walk('right');
-  t.check(await at() === 's7 3,16' && !(await t.dbg()).surf, '8 号水路：7 枚徽章还不能冲浪，海路过不去');
+  t.check(await at() === 's7 3,16' && !(await t.dbg()).surf, '8 号水路：7 枚徽章还不能踏浪，海路过不去');
   await t.save({ map: 's7', arrive: 'from:t7', badges: { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1 }, team: [['tidalfin', 40], ['flamewolf', 40]], bag: { hm_surf: 1, hm_dive: 1 }, flags: { c7intro: 1, ch7: 1 } });
   await idle();
   await t.tp(3, 16, 'right'); await t.A(); await idle();
-  t.check((await t.dbg()).surf, '8 枚徽章：冲浪下海');
+  t.check((await t.dbg()).surf, '8 枚徽章：踏浪下海');
   await t.shot('c7-s7');
-  // 潜水：深水 → 海底花园 → 浮上来
+  // 潜海：深水 → 海底花园 → 浮上来
   await p.evaluate(() => { const d = EchoWorld._debug(); d.PL.surf = true; });
   await t.tp(30, 27, 'down'); await t.A(); await idle();
-  t.check((await t.dbg()).map === 'u7', '在深水上潜水，到了海底花园');
+  t.check((await t.dbg()).map === 'u7', '在深水上潜海，到了海底花园');
   await t.shot('c7-u7');
   await t.A(); await W(300);
   await t.task(0); await W(900); await idle();

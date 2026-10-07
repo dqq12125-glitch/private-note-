@@ -1,11 +1,11 @@
 # 各岛施工规格（给写 isles/*.js 的人看）
 
-先读 `WORLD.md`（世界设计：13 座岛的地貌、建筑、剧情、道馆机关、秘传技能、配角）和 `CLAUDE.md`（项目约定）。本文件是**怎么写**。
+先读 `WORLD.md`（世界设计：13 座岛的地貌、建筑、剧情、挑战馆机关、回声技能、配角）和 `CLAUDE.md`（项目约定）。本文件是**怎么写**。
 
-- 每组岛一个文件：`isles/a-hello-crayon.js`（0–1）、`isles/b-farm-school-lab.js`（2–4）、`isles/c-circus-clock-party.js`（5–7）、`isles/d-jungle-city-sports.js`（8–10）、`isles/e-snow-ruins-league.js`（11–12 + 冠军之路 + 冠军赛大厅）。
+- 每组岛一个文件：`isles/a-hello-crayon.js`（0–1）、`isles/b-farm-school-lab.js`（2–4）、`isles/c-circus-clock-party.js`（5–7）、`isles/d-jungle-city-sports.js`（8–10）、`isles/e-snow-ruins-league.js`（11–12 + 勇气之路 + 冠军赛大厅）。
 - **只改自己的文件**和自己的测试 `tests/isle-X.test.js`。引擎（maps.js / world.js / world3d.js / story.js / monsters.js / people.js）不要改；缺什么功能写在你的最终报告里，或者在自己文件里用现有接口绕过去。
 - 注释用中文；游戏里每句英文都要配中文。英语按初一水平：短句、常用词，**用这座岛的课本话题**（`window.WORLDS[z]` 的 words / sents / dlgs，见下）。
-- 不能用宝可梦的名字、人物、怪兽；只借鉴玩法。
+- 不能用任何现成游戏 / 动画的名字、人物、怪兽、道具名、招式名、地名（官方中文译名和近义改法都不行）；只借鉴玩法。写完跑 `node tools/check-banned.js`。
 - 文件是普通 `<script>`，写成 `(function () { 'use strict'; ... })();`，加载时 `EchoMaps`、`EchoStory`、`EchoPeople` 已经在了。
 
 ## 1. 地图定义
@@ -30,13 +30,13 @@ EM.define('t2', {
   styles: { A: 'windmill', H2: 'farm' }, // 某一栋房子换个样子（默认按岛）：见第 3 节
   lv: 2,                   // 野生怪兽再高几级（洞穴、迷宫常用）
   hab: 'cave',             // 野生怪兽的栖息地 grass / cave / water（不写：洞穴 cave，其余 grass）
-  dark: true,              // 洞穴默认漆黑要闪光；ice / lava / base / temple 洞穴默认亮
+  dark: true,              // 洞穴默认漆黑要点灯；ice / lava / base / temple 洞穴默认亮
   cave: 'rock',            // 洞穴的样子：rock / ice / lava / base（基地）/ temple（神殿）
   sea: true,               // 海上的路：地图外面画成海，不画树
   room: 'G',               // 室内的配色：C M G H J A L 1–5
   over: [ ... ], paint: { r: '#e53935', 1: { c: '#fff', t: 'Math' } },  // 室内机关地板图层（见第 5 节）
   oneWay: ['t5'],          // 单向出口（对面没有回来的出口也不报错）
-  dungeon: true,           // 能用逃生绳
+  dungeon: true,           // 能用回程绳
   start: [x, y],           // 没有入口信息时站哪里
 });
 ```
@@ -44,11 +44,11 @@ EM.define('t2', {
 ### 地块
 
 ```
-户外：# 边界树  T 树  . 草地  , 草丛(遇怪)  = 小路  ~ 水(冲浪)  D 深水(潜水点)  w 瀑布(攀瀑往上，往下会冲下去)
+户外：# 边界树  T 树  . 草地  , 草丛(遇怪)  = 小路  ~ 水(踏浪)  D 深水(潜海点，水路 2 级)  w 瀑布(水路 3 级往上，往下会冲下去)
       F 花  B 告示牌  o 道具  * 藏起来的道具  S 沙地  R 岩壁  r 石头  L 台阶(只能往下跳)  f 栅栏  Z 地标  I 冰面(一直滑)
-      n 小树(居合斩)  b 裂开的岩石(碎岩)  O 大石头(怪力推)
+      n 小树(开路 1 级)  b 裂开的岩石(开路 2 级)  O 大石头(开路 3 级)
       ^ 北出口  v 南出口  < 西出口  > 东出口（必须在地图边上；连在一起的算一个出口）  K 洞口  % 楼梯/梯子  @ 起点  1–9 人
-      C/c 怪兽中心/门  M/m 商店/门  G/g 道馆/门  H/h J/j A/a 房子/门（同一个字母可以有好几栋，连在一起的算一栋）  E 只能看的房子（没有门）
+      C/c 休息站/门  M/m 商店/门  G/g 挑战馆/门  H/h J/j A/a 房子/门（同一个字母可以有好几栋，连在一起的算一栋）  E 只能看的房子（没有门）
 洞穴：X 岩壁  : 地面(遇怪)  e 出口地垫  （也能用 ~ I % r O b ^ v < >）
 海底：. 沙  , 海草(遇怪)  R 礁石  U 浮上去的光圈
 室内：W 墙  _ 地板  u 地毯  Q 柜台  P 电脑  Y 桌子  k 书架  p 盆栽  d 床  t 电视  Z 雕像  e 门口地垫  | 机关门  % 楼梯  I 冰面
@@ -63,10 +63,10 @@ EM.define('t2', {
 - 每组出口通向 `links` 里的一张图；**对面那张图也必须有通回来的出口**（测试会查）。到了对面就站在「通回来的那组出口」旁边，所以不用写坐标。
 - 地图边上的出口：`n`（`^`）/ `s`（`v`）/ `w`（`<`）/ `e`（`>`）。同一边有好几个出口：写成数组，从左到右 / 从上到下。
 - `K` 洞口（在岩壁上，从下面往上走进去）、`%` 楼梯（踩上去就走）、`e` 地垫（室内、洞穴的出口）、房子的门：按从上到下、从左到右的顺序对应数组。
-- `D` 深水：连在一起的一片算一个潜水点，冲浪到上面按 A，要有「潜水」。`U` 海底光圈：按 A 浮上去。
+- `D` 深水：连在一起的一片算一个潜海点，在水上走到上面按 A，要有「水路 2 级」。`U` 海底光圈：按 A 浮上去。
 - 两张图之间连了两次（比如一条环路两头都通回小镇）：两边都写两次，按顺序配对。
 - 室内地图的门口地垫 `e` 要写 `links: { e: 't2' }`（通回有这扇门的那张图）。用模板的房子（i2C、i2M、i2H、i2J……）不用写。
-- 怪兽中心 `C` 和商店 `M` 用模板就行（不用自己画室内）。道馆 `G` 要自己画（有机关），剧情用的房子自己画，普通民房可以用模板（`H` 模板里是随机村民，`J` 模板里是答题送药水的人）。
+- 休息站 `C` 和商店 `M` 用模板就行（不用自己画室内）。挑战馆 `G` 要自己画（有机关），剧情用的房子自己画，普通民房可以用模板（`H` 模板里是随机村民，`J` 模板里是答题送药水的人）。
 
 ### 各组地图的编号和接口（跨组的出口必须按这张表连）
 
@@ -82,22 +82,24 @@ EM.define('t2', {
 
 ### 主路要被卡住（测试会查）
 
-有 b 枚徽章（打赢了第 0…b-1 岛的馆主）时：**能走到第 b 岛的道馆，但去不了第 b+1 岛**。用下面这些东西卡：
+有 b 枚徽章（打赢了第 0…b-1 岛的岛主）时：**能走到第 b 岛的挑战馆，但去不了第 b+1 岛**。用下面这些东西卡：
 
-| 秘传技能 | 谁送（剧情里） | 几枚徽章能用 | 卡在 |
+回声技能一共**四种**（2026-10-08 按评审改）：开路（1–3 级）、点灯、水路（1–3 级）、乘风。后面几级的回声贝是给已有技能升级；回声贝的 id 还是老的 `hm_*`（存档兼容）。
+
+| 回声技能（第几级） | 谁送（剧情里） | 几枚徽章能用 | 卡在 |
 | --- | --- | --- | --- |
-| 闪光 hm_flash | 回声洞的登山家（A） | 2 | 可选的暗洞 |
-| 居合斩 hm_cut | 家庭岛树医生（B） | 3 | t2 → r2 的小树 `n` |
-| 碎岩 hm_smash | 校园岛矿工（B） | 4 | 碎岩隧道 c3 的岩石 `b` |
-| 怪力 hm_strength | 社团岛大力士（C） | 6 | 沙丘道 r5 的大石头 `O` |
-| 冲浪 hm_surf | 爸爸（C，生日派对岛） | 8 | s7 海路 |
-| 飞空 hm_fly | 小凯（D，动物岛） | 9 | 不卡路 |
-| 潜水 hm_dive | 导师欧瑞（D，规则城） | 10 | s9 → 海底 u9 → s10 → t10 |
-| 攀瀑 hm_falls | 天气岛气象台台长（E） | 12 | r11 的瀑布 `w` |
+| 点灯 hm_flash | 回声洞的登山家（A） | 2 | 可选的暗洞 |
+| 开路 1 级 hm_cut（砍小树） | 家庭岛树医生（B） | 3 | t2 → r2 的小树 `n` |
+| 开路 2 级 hm_smash（敲碎裂石） | 校园岛矿工（B） | 4 | 裂石隧道 c3 的岩石 `b` |
+| 开路 3 级 hm_strength（推大石头） | 社团岛大力士（C） | 6 | 沙丘道 r5 的大石头 `O` |
+| 水路 1 级 hm_surf（在水上走） | 爸爸（C，生日派对岛） | 8 | s7 海路 |
+| 乘风 hm_fly | 小凯（D，动物岛） | 9 | 不卡路 |
+| 水路 2 级 hm_dive（潜到海底） | 导师欧瑞（D，规则城） | 10 | s9 → 海底 u9 → s10 → t10 |
+| 水路 3 级 hm_falls（爬上瀑布） | 天气岛气象台台长（E） | 12 | r11 的瀑布 `w` |
 
-没有秘传技能卡的出口用**守卫**：`{ role: 'guard', badge: 7, name: 'Ranger Tom', look: 'ranger', say: [['The mountain path is closed. Only trainers with seven badges can go.', '山路封了，只有 7 枚徽章的训练师才能过去。']] }`——徽章够了守卫就不见了。守卫要站在窄路上真的挡住（测试会查）。
-需要守卫的地方：t0→r0（1）、t1→f1（2）、t6→d6a 钟山（7）、s8 的海上巡逻（9，站在水上窄道也行）、t10→c10 冰洞（11）、t12→v1 冠军之路（13）。
-- 秘传学习器用人物的 `give` 送：`{ name: 'Tree Doctor', look: 'treedoc', give: { item: 'hm_cut', flag: 'got_cut', say: [[en, zh]...], after: [[en, zh]...] }, say: [[...]] /* 送完以后说的话 */ }`，送过一次就不再送。要剧情做完才出现的人加 `showIf: '旗标'`；剧情做完就消失的人加 `hideIf: '旗标'`（旗标不带 `s:`，就是 `C.set('xxx')` 里的名字）。
+没有回声技能卡的出口用**守卫**：`{ role: 'guard', badge: 7, name: 'Ranger Tom', look: 'ranger', say: [['The mountain path is closed. Only trainers with seven badges can go.', '山路封了，只有 7 枚徽章的训练师才能过去。']] }`——徽章够了守卫就不见了。守卫要站在窄路上真的挡住（测试会查）。
+需要守卫的地方：t0→r0（1）、t1→f1（2）、t6→d6a 钟山（7）、s8 的海上巡逻（9，站在水上窄道也行）、t10→c10 冰洞（11）、t12→v1 勇气之路（13）。
+- 回声贝用人物的 `give` 送：`{ name: 'Tree Doctor', look: 'treedoc', give: { item: 'hm_cut', flag: 'got_cut', say: [[en, zh]...], after: [[en, zh]...] }, say: [[...]] /* 送完以后说的话 */ }`，送过一次就不再送。要剧情做完才出现的人加 `showIf: '旗标'`；剧情做完就消失的人加 `hideIf: '旗标'`（旗标不带 `s:`，就是 `C.set('xxx')` 里的名字）。
 
 ## 2. 人物（npc / people）
 
@@ -105,7 +107,7 @@ EM.define('t2', {
 { role: 'talk', name: 'Farmer Joe', look: 'farmer' 或造型对象, g: 'm'/'f', face: 'down', say: [[en, zh], ...], speak: '要跟读的一句（可省，读完送 10 金币，每天一次）' }
 { role: 'trainer', name: 'Camper Amy', look: 'kidF', g: 'f', face: 'left', sight: 4, under: ',', lines: [[en, zh]], win: [en, zh], after: [[en, zh]], types: ['grass', 'bug'], n: 2, lv: 1 }
       // types：队伍的属性；n：几只；lv：比这里的野生怪兽高几级；也可以 team: [['sprouty', 0], ['bubbly', 1]]（编号, 加几级）
-{ role: 'guard', badge: 7, ... }   { role: 'ferry', ... }   { role: 'nurse' } { role: 'clerk' } { role: 'leader' }（道馆馆主，用 data.js 里的 boss）
+{ role: 'guard', badge: 7, ... }   { role: 'ferry', ... }   { role: 'nurse' } { role: 'clerk' } { role: 'leader' }（岛主，用 data.js 里的 boss）
 { role: 'quiz' }（答题送回声球）  { role: 'gift' }（看图说单词送药水）  { role: 'hiker' }（小贴士）
 { role: 'story', id: 'kai', ... }  // 剧情人物：talk 钩子里按 n.id 接管
 ```
@@ -136,7 +138,7 @@ EM.define('t2', {
 | snow | 雪松 | chalet 雪顶木屋 |
 | ruins | 枯树 | temple 石头神殿 |
 
-某一栋可以用 `styles` 换：上面这些，再加 `lighthouse` 灯塔、`windmill` 风车（会转）、`stadium` 体育场、`std` 普通房子。怪兽中心和商店不管哪座岛都是红顶 / 蓝顶（好认）。
+某一栋可以用 `styles` 换：上面这些，再加 `lighthouse` 灯塔、`windmill` 风车（会转）、`stadium` 体育场、`std` 普通房子。休息站和商店不管哪座岛都是红顶 / 蓝顶（好认）。
 **地貌要靠地图本身画出来**：海岛多沙滩和水，农场多栅栏 `f` 和花田，火山多岩壁和台阶，丛林多树和河，城市多直直的马路 `=` 和栅栏，雪山多冰面 `I` 和岩壁，古迹多石头和雾里的枯树。
 
 ## 4. 剧情（EchoStory.isle）
@@ -144,12 +146,12 @@ EM.define('t2', {
 ```js
 ST.isle(2, {
   enter(C, how) { ... },   // 进这座岛的任何一张图（包括室内）；返回一个 async 函数就播放剧情，返回 null 什么也不做
-  step(C) { ... },         // 每走一步（道馆机关、路上被对手拦住）
+  step(C) { ... },         // 每走一步（挑战馆机关、路上被对手拦住）
   talk(C, n) { ... },      // 和人说话；返回 async 函数就接管，返回 null 用默认对话
   tile(C, f) { ... },      // 对着 Z（雕像/地标）或 | 机关门按 A；f = { x, y, statue|gate }
   hidden(C, n) { ... },    // 返回 true 藏起这个人、false 显示、null 不管（每帧都会调，要快）
   look(C, n) { ... },      // 换掉某个人的名字 / 造型：返回 { name, g, look }
-  busy: ['Our Family Crystal is gone! I cannot battle now.', '我们的家庭水晶不见了！我现在没心思对战。'],  // 剧情没做完时馆主说的话
+  busy: ['Our Family Crystal is gone! I cannot battle now.', '我们的家庭水晶不见了！我现在没心思对战。'],  // 剧情没做完时岛主说的话
 });
 ```
 
@@ -158,7 +160,7 @@ ST.isle(2, {
 | 接口 | 用法 |
 | --- | --- |
 | `C.map` `C.pl` | 当前地图（`id kind z isle W H grid npcs buildings over gates def`）、主角位置 `{x, y, dir}` |
-| `C.flag(k)` `C.set(k)` | 剧情旗标（存档）。约定：**这座岛主线做完 `C.set('ch' + z)`**（`L.restoreCrystal(C, z)` 会帮你设），馆主才接受挑战 |
+| `C.flag(k)` `C.set(k)` | 剧情旗标（存档）。约定：**这座岛主线做完 `C.set('ch' + z)`**（`L.restoreCrystal(C, z)` 会帮你设），岛主才接受挑战 |
 | `await C.talk([页, 页…])` | 对话。页：`{ who, look, g, en, zh }`；任务页 `kind: 'speak', target`（大声说）、`kind: 'answer', opts: [{t, c: true}, {t}]`（听了选回答再说）、`kind: 'choice', opts: [{html}], pick: i => []`（选项）；`hideEn: true` 只听不看英文 |
 | `C.spawn({...})` `C.remove(n)` | 临时人物（离开地图就没了）。`{ look, name, g, x, y, face, role: 'story', id }`；`mon: 'zappy'` 画成怪兽 |
 | `await C.walk(n, 'up', 3, 180)` `await C.walkPlayer('left', 2)` `C.face(n, dir)` `C.facePlayer(dir)` `C.faceEach(n)` `await C.alert(n)` | 走路、转身、头上冒「!」 |
@@ -180,40 +182,40 @@ ST.isle(2, {
 - `L.sayer(who, look, g)` → `S(en, zh, extra)` 生成对话页；`L.me(C)` 主角说话的页；`L.speak(C, target, zh)` 让主角大声说一句；`L.ask(S, en, zh, 对的回答, [错的], extra)` 听了选回答。
 - `await L.hushFight(C, n, 'grunt' | 'gruntF' | 'whisper' | 'rumble' | 'mute', { lines, types, n, lv, win })` 和嘘声团打（n 是地图上那个人，可以 null）。返回 `'win'` 才算赢。
 - `await L.rivalFight(C, k, lv)` 和对手打（k：第几次，2–6；队伍自动克制主角）。
-- `await L.restoreCrystal(C, z)` 夺回水晶的收尾：念这座岛的句子（`L.CH[z].say`）、送 3 个超级球、`C.set('ch' + z)`。
+- `await L.restoreCrystal(C, z)` 夺回水晶的收尾：念这座岛的句子（`L.CH[z].say`）、送 3 个金回声球、`C.set('ch' + z)`。
 - `await L.legendMeet(C, n)` 和地图上的神兽（`C.spawn({ mon: 'mindra', role: 'legend', x, y })`）对战；旗标 `leg:mindra`。在 enter 钩子里：`if (!C.flag('leg:mindra') && !C.npc(n => n.mon === 'mindra')) return () => { C.spawn(...); };`
 - `L.P`（EchoPeople）、`L.prof`、`L.mom`、`L.nar`（旁白页）。
 
 **每座岛的剧情要按 WORLD.md 的「本岛剧情」做成独特的事件**（不要又是「村民求助 → 两个团员挡门 → 念句子」的模板），要让孩子在剧情里**听懂英语、说英语**：听描述找人、问路、按时间表摆书……每个事件至少有一两个 `speak` / `answer` 任务。剧情结束调 `L.restoreCrystal(C, z)`。
 
-配角出场（按 WORLD.md 第四节）：小凯 kai（A 认识、B 校园岛、C 钟山、D 送飞空、E 冠军之路最后对战）、导师欧瑞 orion（A 回声洞、B 天文台、C 钟山山顶、D 送潜水、E 回忆神殿）、爸爸 dad（C 回来送冲浪）、盖尔船长 gale（B/C 渡轮）、妈妈打电话（B t2、C t6、D t10：旁白「📞 Mom is calling!」+ 妈妈的对话页）。
+配角出场（按 WORLD.md 第四节）：小凯 kai（A 认识、B 校园岛、C 钟山、D 送乘风、E 勇气之路最后对战）、导师欧瑞 orion（A 回声洞、B 天文台、C 钟山山顶、D 送潜海、E 回忆神殿）、爸爸 dad（C 回来送踏浪）、盖尔船长 gale（B/C 渡轮）、妈妈打电话（B t2、C t6、D t10：旁白「📞 Mom is calling!」+ 妈妈的对话页）。
 对手 {rival}：B 在 r2（`rival2`）、C 在 t7 生日派对（`rival3`）、D 在 t10 运动会（`rival4`）、E 在 t12（`rival5`，之后一起对付嘘声团）。用 `L.rivalFight`。
-神兽：A 岩石巨人 rockgiant（c0 深处，要碎岩）、B 念灵 mindra（r3m 山顶）、C 炎狮 flamelion（d6b 火山口，剧情后）、D 冰晶巨人 icegiant（c10 深处）、E 钢铁巨人 irongiant（v2）+ 回声龙 echodrake（d12b）。
+神兽（2026-10-08 换了属性和设定，id 不变）：A 苔藓巨人 rockgiant（c0 深处，要开路 2 级）、B 莲花猫 mindra（r3m 山顶）、C 醒狮 flamelion（d6b 火山口，剧情后）、D 冰窖守卫 icegiant（c10 深处）、E 钟楼巨人 irongiant（v2）+ 回声龙 echodrake（d12b）。
 
-## 5. 道馆机关
+## 5. 挑战馆机关
 
-道馆是自己画的室内图（`kind: 'inside', room: 'G'`），馆主 `role: 'leader'` 在最里面，被机关门 `|` 挡着；道馆里再放 2–4 个训练师（`role: 'trainer'`，台词是这座岛的话题）。机关在 `step` / `tile` / `talk` 钩子里写（判断 `C.map.id === 'i2G'`）。
+挑战馆是自己画的室内图（`kind: 'inside', room: 'G'`），岛主 `role: 'leader'` 在最里面，被机关门 `|` 挡着；挑战馆里再放 2–4 个训练师（`role: 'trainer'`，台词是这座岛的话题）。机关在 `step` / `tile` / `talk` 钩子里写（判断 `C.map.id === 'i2G'`）。
 - **彩色地板 / 音符 / 脚印 / 日期**：`over` 图层（和 rows 一样大，`.` 表示没有）+ `paint`（字符 → 颜色，或 `{ c: 颜色, t: '文字', tc: 字的颜色 }`）。`C.over(x, y)` 查主角脚下是什么。
 - 踩错：`C.teleport(起点x, 起点y, 'up')` + 提示；踩对：`C.openGate(i, true)`（`true` 存档记住，下次来直接开着）。
 - 广播用 `hideEn: true` 的对话页（只听不看），`C.note('🎨 现在要踩：<b>🔴</b>')` 提示条。
 - 冰面 `I`：主角会一直滑到撞上东西，`step` 钩子在滑停以后才调。
-- **每个道馆都要真的能解开**（测试里走一遍），解开以后门一直开着（`keep`）；输给馆主回来不用再解。
-- 馆主对话（`role: 'leader'`）引擎已经做好：说 hello、对战、赢了给徽章。剧情没做完（没有 `ch` + z）时馆主不接受挑战（`busy` 那句话）。
+- **每个挑战馆都要真的能解开**（测试里走一遍），解开以后门一直开着（`keep`）；输给岛主回来不用再解。
+- 岛主对话（`role: 'leader'`）引擎已经做好：说 hello、对战、赢了给徽章。剧情没做完（没有 `ch` + z）时岛主不接受挑战（`busy` 那句话）。
 
 ## 6. 数量和难度
 
-- 野生怪兽等级 `2 + 2z`（+ `lv`）。训练师默认比野生高 1 级，`lv` 再加。每条路 3–6 个训练师，道馆 2–4 个。
-- **比绿宝石复杂**：小镇 24–40 宽高，道路 20–40 宽 × 30–70 高，有分岔、环路、只能跳下的台阶近路、要回来用秘传技能才能拿的道具、藏起来的道具 `*`、钓鱼的水塘；迷宫有死胡同和多条路。每张户外图至少 2 个道具、1 个藏起来的道具。
-- 每座岛：小镇（C、M、G + 至少 3 栋房子，1–2 栋剧情建筑）、1–3 条路 / 迷宫、自己画的道馆、剧情里用到的室内。
+- 野生怪兽等级 `2 + 2z`（+ `lv`）。训练师默认比野生高 1 级，`lv` 再加。每条路 3–6 个训练师，挑战馆 2–4 个。
+- **地图要够复杂**：小镇 24–40 宽高，道路 20–40 宽 × 30–70 高，有分岔、环路、只能跳下的台阶近路、要回来用回声技能才能拿的道具、藏起来的道具 `*`、钓鱼的水塘；迷宫有死胡同和多条路。每张户外图至少 2 个道具、1 个藏起来的道具。
+- 每座岛：小镇（C、M、G + 至少 3 栋房子，1–2 栋剧情建筑）、1–3 条路 / 迷宫、自己画的挑战馆、剧情里用到的室内。
 
 ## 7. 测试（交之前必须全过）
 
 1. `ISLES=2,3,4 node tests/maps.test.js`（换成你的岛号）：地块、出口配对、从每个入口都能走到所有东西。
 2. 写 `tests/isle-b.test.js`（用 `tests/helpers.js`，看 `tests/isle-a.test.js` 的写法）：
    - 用存档直接跳到你的岛（`t.save({ map, badges, flags, team, bag })`），**把主线剧情从头走一遍**（`t.idle()` 自动点对话、完成任务、打完战斗），检查旗标；
-   - 每个道馆机关按正确的解法走一遍，门打开，能和馆主对战；踩错一次会回起点；
-   - 秘传学习器能拿到；守卫在徽章不够时挡路；
-   - 截图（2D：`gfx: '2d'`；再用 `gfx: 'mid'` 截 3D 的小镇和道馆），**用 Read 看截图**，确认好看、没有穿帮。
+   - 每个挑战馆机关按正确的解法走一遍，门打开，能和岛主对战；踩错一次会回起点；
+   - 回声贝能拿到；守卫在徽章不够时挡路；
+   - 截图（2D：`gfx: '2d'`；再用 `gfx: 'mid'` 截 3D 的小镇和挑战馆），**用 Read 看截图**，确认好看、没有穿帮。
 3. `node tests/isle-b.test.js` 全过、没有页面报错。
 
 跑测试：`cd /d/Claude/echo-island && node tests/isle-b.test.js`（Windows 的 Git Bash）。Bash 里 heredoc 会把 `\n` 折成换行，写文件用 Write 工具。

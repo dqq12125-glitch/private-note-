@@ -1,4 +1,4 @@
-// 回声岛 · 第 2–4 温馨家庭岛、校园岛、学科岛（地图、剧情、道馆机关）。写法见 ISLES.md
+// 回声岛 · 第 2–4 温馨家庭岛、校园岛、学科岛（地图、剧情、挑战馆机关）。写法见 ISLES.md
 (function () {
   'use strict';
   const EM = window.EchoMaps, ST = window.EchoStory, L = ST.lib;
@@ -97,7 +97,7 @@
     hiddenItems: ['superpotion', 'rope'],
     links: { s: 'r1', n: 'r2', e: ['r2e', 'r2e'] },
     people: [
-      // 养育屋的奶奶（养成系统）：寄养两只怪兽会有蛋，第一次见面送一个蛋
+      // 怪兽幼儿园的奶奶（养成系统）：寄养两只怪兽会有蛋，第一次见面送一个蛋
       { id: 'daycare', role: 'daycare', name: 'Grandma Lin', look: 'granny', g: 'f', x: 28, y: 26, face: 'down' },
       // 走丢的小男孩蒂姆（井边）
       { id: 'tim', x: 15, y: 21, face: 'down', name: 'Tim', g: 'm', look: LK.tim, role: 'story' },
@@ -140,7 +140,7 @@
         say: [['I have a little brother. He is a baby!', '我有一个弟弟，他还是个小宝宝！'], ['Do you have a brother?', '你有兄弟吗？']], speak: 'I have a little brother.' },
     ],
   });
-  // 树医生的小木屋（送居合斩）
+  // 树医生的小木屋（送开路）
   EM.define('i2A', {
     kind: 'inside', z: 2, room: 'A', name: '树医生的小屋', en: "Tree Doctor's Hut", sub: '温馨家庭岛',
     rows: [
@@ -159,16 +159,16 @@
         say: [['I\'m the Tree Doctor. I take care of the trees on this island.', '我是树医生，我照顾这座岛上的树。'], ['Team Hush took the Family Crystal. Everyone is sad.', '嘘声团偷走了家庭水晶，大家都很难过。'], ['Please help little Tim at the well first.', '请先去井边帮帮小蒂姆吧。']] },
       { id: 'doc', x: 6, y: 3, face: 'down', name: 'Tree Doctor', g: 'm', look: 'treedoc', role: 'talk', showIf: 'ch2',
         give: { item: 'hm_cut', flag: 'got_cut',
-          say: [['You saved the Family Crystal! Thank you!', '你夺回了家庭水晶！谢谢你！'], ['Take this. It is the HM for Cut.', '这个送给你，它是「居合斩」的秘传学习器。']],
-          after: [['A small tree blocks the road to Route 3.', '去 3 号路的路口有一棵小树挡着。'], ['With three badges, your monster can cut it.', '有了三枚徽章，你的怪兽就能把它砍掉。'], ['Beat Granny Turtle at the Gym first!', '先去道馆打败海龟奶奶吧！']] },
+          say: [['You saved the Family Crystal! Thank you!', '你夺回了家庭水晶！谢谢你！'], ['Take this. It is the Echo Shell for Clear Way.', '这个送给你，它是「开路」的回声贝。']],
+          after: [['A small tree blocks the road to Route 3.', '去 3 号路的路口有一棵小树挡着。'], ['With three badges, your monster can cut it.', '有了三枚徽章，你的怪兽就能把它砍掉。'], ['Beat Granny Turtle at the Challenge Hall first!', '先去挑战馆打败海龟奶奶吧！']] },
         say: [['Trees are like a family. They grow up together.', '树就像一家人，它们一起长大。'], ['Cut only the small trees on the road, OK?', '只砍路上的小树哦，好吗？']], speak: 'Trees are like a family.' },
     ],
   });
 
-  // 道馆「家族树迷宫」：三间花盆迷宫，按描述找到奶奶、爸爸、妹妹，对应的机关门才开
-  // 机关门从上往下编号：0 通馆主（妹妹），1 通第三间（爸爸），2 通第二间（奶奶）
+  // 挑战馆「家族树迷宫」：三间花盆迷宫，按描述找到奶奶、爸爸、妹妹，对应的机关门才开
+  // 机关门从上往下编号：0 通岛主（妹妹），1 通第三间（爸爸），2 通第二间（奶奶）
   EM.define('i2G', { markKinds: ['statue', 'statue', 'photo', 'photo', 'photo'],
-    kind: 'inside', z: 2, room: 'G', name: '温馨家庭岛道馆', en: 'Family Gym', sub: '家族树迷宫',
+    kind: 'inside', z: 2, room: 'G', name: '温馨家庭岛挑战馆', en: 'Family Hall', sub: '家族树迷宫',
     rows: [
       'WWWWWWWWWWWWWWWWW',
       'WZ_____________ZW',
@@ -400,12 +400,12 @@
     links: { s: 'r2', w: 'r3m', K: 'c3' },
     doors: { A: 'i3A' },
     people: [
-      // 矿工：剧情做完才送碎岩（之前在洞口发愁）
+      // 矿工：剧情做完才送开路 2 级（之前在洞口发愁）
       { id: 'miner0', x: 22, y: 4, face: 'left', name: 'Miner Max', g: 'm', look: 'miner', role: 'talk', hideIf: 'ch3',
         say: [['The tunnel to Subject Island is full of cracked rocks.', '去学科岛的隧道里全是裂开的大石头。'], ['I can\'t work with Team Hush in the school!', '嘘声团在学校里捣乱，我没法干活！']] },
       { id: 'miner', x: 22, y: 4, face: 'left', name: 'Miner Max', g: 'm', look: 'miner', role: 'talk', showIf: 'ch3',
         give: { item: 'hm_smash', flag: 'got_smash',
-          say: [['You saved the school! You are a hero!', '你救了学校！你是个英雄！'], ['Take this. It is the HM for Rock Smash.', '这个送给你，它是「碎岩」的秘传学习器。']],
+          say: [['You saved the school! You are a hero!', '你救了学校！你是个英雄！'], ['Take this Echo Shell. Now Clear Way can break rocks!', '这个回声贝送给你。有了它，「开路」升到 2 级，能敲碎裂石了贝。']],
           after: [['With four badges, your monster can smash cracked rocks.', '有了四枚徽章，你的怪兽就能打碎有裂缝的岩石。'], ['The tunnel is right behind me. Good luck!', '隧道就在我身后。祝你好运！']] },
         say: [['Smash the cracked rocks in the tunnel, and go north!', '打碎隧道里的裂石，一直往北走！']], speak: 'Smash the rock!' },
       { id: 'kai', x: 28, y: 12, face: 'down', name: 'Kai', g: 'm', look: 'kai', role: 'story', hideIf: 'kai3' },
@@ -524,10 +524,10 @@
     ],
   });
 
-  // 道馆「教室换座」：三间教室串起来，每间黑板一道题，答对这间的门开，答错回座位
+  // 挑战馆「教室换座」：三间教室串起来，每间黑板一道题，答对这间的门开，答错回座位
   // 机关门从上往下编号：0 通校长室，1 通第三间，2 通第二间
   EM.define('i3G', { markKinds: ['board', 'board', 'board'],
-    kind: 'inside', z: 3, room: 'G', name: '校园岛道馆', en: 'School Gym', sub: '教室换座',
+    kind: 'inside', z: 3, room: 'G', name: '校园岛挑战馆', en: 'School Hall', sub: '教室换座',
     rows: [
       'WWWWWWWWWWWWWWW',
       'Wk___________kW',
@@ -569,7 +569,7 @@
     ],
   });
 
-  // 山道（可选：陡坡台阶、登山训练师，山顶有念灵）
+  // 山道（可选：陡坡台阶、登山训练师，山顶有莲花猫）
   EM.define('r3m', {
     kind: 'route', z: 3, lv: 2, name: '书山小道', en: 'Book Mountain Path', sub: '校园岛西边',
     rows: [
@@ -627,9 +627,9 @@
     },
   });
 
-  // 碎岩隧道：t3 → r3，主路被两块裂石挡住（碎岩，4 枚徽章）
+  // 裂石隧道：t3 → r3，主路被两块裂石挡住（开路 2 级，4 枚徽章）
   EM.define('c3', {
-    kind: 'cave', cave: 'rock', dark: false, z: 3, lv: 2, name: '碎岩隧道', en: 'Rock Smash Tunnel', sub: '校园岛 → 学科岛',
+    kind: 'cave', cave: 'rock', dark: false, z: 3, lv: 2, name: '裂石隧道', en: 'Crack Tunnel', sub: '校园岛 → 学科岛',
     rows: [
       'XXXXXXXXXXXXXX^^XXXXXXXXXXXXXX',
       'XXXXXXXXXXXXX::::XXXXXXXXXXXXX',
@@ -672,7 +672,7 @@
       1: { role: 'trainer', name: 'Miner Gus', look: 'miner', g: 'm', face: 'down', sight: 3, types: ['rock', 'ground'], n: 2, lv: 1,
         lines: [['I dig here every day. Where is my map?', '我每天都在这里挖。我的地图去哪儿了？']], win: ['My map says: "The exit is north."', '我的地图上写着：“出口在北边。”'], after: [['The exit is north. Keep going!', '出口在北边，继续走！']] },
       2: { role: 'trainer', name: 'Miner Rita', look: 'miner', g: 'f', face: 'left', sight: 3, types: ['rock', 'steel'], n: 2, lv: 1,
-        lines: [['This tunnel goes from the school to the lab!', '这条隧道从学校一直通到实验室！']], win: ['You are strong like a rock!', '你像石头一样坚强！'], after: [['Cracked rocks? Only Rock Smash can break them.', '裂开的岩石？只有碎岩才能打碎它们。']] },
+        lines: [['This tunnel goes from the school to the lab!', '这条隧道从学校一直通到实验室！']], win: ['You are strong like a rock!', '你像石头一样坚强！'], after: [['Cracked rocks? Only Clear Way 2 can open them.', '裂开的岩石？只有「开路 2 级」才能敲碎它们。']] },
       3: { role: 'trainer', name: 'Student Dan', look: 'student', g: 'm', face: 'left', sight: 3, types: ['bug', 'rock'], n: 2, lv: 1,
         lines: [['I\'m on a school trip! Our teacher is lost!', '我在春游！我们老师迷路了！']], win: ['Where is my teacher?', '我的老师在哪儿？'], after: [['My teacher is in the library, I think.', '我觉得我的老师在图书馆。']] },
     },
@@ -718,7 +718,7 @@
       '#TTTTTTTTTTT==TTTTTTTTTTT#',
       '############vv############',
     ],
-    signs: [['Subject Island is just ahead!', '前面就是学科岛了！'], ['Route 4. South: Rock Smash Tunnel.', '4 号路。往南是碎岩隧道。']],
+    signs: [['Subject Island is just ahead!', '前面就是学科岛了！'], ['Route 4. South: Crack Tunnel.', '4 号路。往南是裂石隧道。']],
     items: ['potion', 'thunderstone', 'superball', 'superpotion'],
     hiddenItems: ['revive', 'repel'],
     links: { n: 't4', s: 'c3' },
@@ -797,8 +797,8 @@
         no: [['Ahoy! I\'m Captain Gale.', '你好呀！我是盖尔船长。'], ['My ferry goes to Club Island. But the sea is rough.', '我的渡轮开往社团岛，可是海上风浪很大。'], ['Come back with five badges. Then I can take you!', '等你有了五枚徽章再来，我就带你过去！']] },
       { id: 'nova', x: 19, y: 15, face: 'down', name: 'Assistant Nova', g: 'f', look: LK.nova, role: 'story', showIf: 'f4in', hideIf: 'ch4' },
       // 卫星天线旁的嘘声团（摆好书以后才出现）
-      { id: 'g4a', x: 34, y: 10, face: 'down', name: 'Hush Grunt', g: 'f', look: L.P.LOOKS.gruntF, role: 'story', showIf: 'f4books', hideIf: 'ch4' },
-      { id: 'g4b', x: 35, y: 11, face: 'left', name: 'Hush Grunt', g: 'm', look: L.P.LOOKS.grunt, role: 'story', showIf: 'f4books', hideIf: 'ch4' },
+      { id: 'g4a', x: 34, y: 10, face: 'down', name: 'Hush Crew', g: 'f', look: L.P.LOOKS.gruntF, role: 'story', showIf: 'f4books', hideIf: 'ch4' },
+      { id: 'g4b', x: 35, y: 11, face: 'left', name: 'Hush Crew', g: 'm', look: L.P.LOOKS.grunt, role: 'story', showIf: 'f4books', hideIf: 'ch4' },
       { id: 'sail', x: 12, y: 8, face: 'down', name: 'Sailor Tim', g: 'm', look: LK.sailor, role: 'talk',
         say: [['The ferry goes to Club Island. It takes one hour.', '渡轮开往社团岛，要坐一个小时。'], ['We have geography on the ship every day!', '我们每天在船上上地理课！']], speak: 'Geography is interesting!' },
       { id: 'q4', x: 24, y: 22, face: 'down', role: 'quiz' },
@@ -827,7 +827,7 @@
     people: [
       { id: 'octo', x: 6, y: 3, face: 'down', name: 'Doctor Octo', g: 'm', look: 'octo', role: 'story', hideIf: 'ch4' },
       { id: 'labA', x: 9, y: 6, face: 'left', name: 'Assistant Nova', g: 'f', look: LK.nova, role: 'talk', showIf: 'ch4',
-        say: [['Doctor Octo is waiting for you at the Gym!', '八爪博士在道馆等你！'], ['His favourite subject? All of them!', '他最喜欢哪一科？全都喜欢！']], speak: 'My favourite subject is science.' },
+        say: [['Doctor Octo is waiting for you at the Challenge Hall!', '八爪博士在挑战馆等你！'], ['His favourite subject? All of them!', '他最喜欢哪一科？全都喜欢！']], speak: 'My favourite subject is science.' },
     ],
   });
   // 天文台：导师欧瑞讲传说
@@ -850,8 +850,8 @@
     ],
   });
 
-  // 道馆「课程表开关」：按广播念的课程顺序踩地上的学科开关，踩错全部复位、回起点
-  // 机关门从上往下编号：0 通馆主（第二段），1 通第二段（第一段）
+  // 挑战馆「课程表开关」：按广播念的课程顺序踩地上的学科开关，踩错全部复位、回起点
+  // 机关门从上往下编号：0 通岛主（第二段），1 通第二段（第一段）
   const SUBJ = {
     m: ['Maths', '#ef5350', '数学'], e: ['English', '#42a5f5', '英语'], s: ['Science', '#26a69a', '科学'], u: ['Music', '#ab47bc', '音乐'],
     a: ['Art', '#ff7043', '美术'], p: ['PE', '#8d6e63', '体育'], c: ['Chinese', '#d81b60', '语文'], h: ['History', '#6d4c41', '历史'], g: ['Geography', '#1e88e5', '地理'],
@@ -885,7 +885,7 @@
     '.................',
   ];
   EM.define('i4G', {
-    kind: 'inside', z: 4, room: 'G', name: '学科岛道馆', en: 'Subject Gym', sub: '课程表开关',
+    kind: 'inside', z: 4, room: 'G', name: '学科岛挑战馆', en: 'Subject Hall', sub: '课程表开关',
     rows: [
       'WWWWWWWWWWWWWWWWW',
       'Wk_____________kW',
@@ -916,7 +916,7 @@
     links: { e: 't4' },
     people: [
       { id: 'leader', role: 'leader', x: 8, y: 2, face: 'down', name: 'Doctor Octo', g: 'm', look: 'octo' },
-      { id: 'octoNote', x: 8, y: 2, face: 'down', name: 'Gym Guide', g: 'f', look: 'scientist', role: 'talk', hideIf: 'ch4',
+      { id: 'octoNote', x: 8, y: 2, face: 'down', name: 'Hall Guide', g: 'f', look: 'scientist', role: 'talk', hideIf: 'ch4',
         say: [['Doctor Octo is not here. He is in his lab.', '八爪博士不在，他在自己的实验室里。'], ['Team Hush mixed up all his books!', '嘘声团把他的书全弄乱了！']] },
       { id: 'k1', x: 15, y: 16, face: 'left', name: 'Scientist Ann', g: 'f', look: 'scientist', role: 'trainer', sight: 2, types: ['spark', 'steel'], n: 2, lv: 1,
         lines: [['Science first? Or maths first? Listen to the timetable!', '先上科学？还是先上数学？听课程表！']], win: ['My experiment failed!', '我的实验失败了！'], after: [['When do you have science? We have it every day!', '你们什么时候上科学课？我们天天都上！']] },
@@ -1001,7 +1001,7 @@
   };
   const famLeft = C => Object.keys(FAM2).filter(k => !C.flag(FAM2[k].flag));
   function note2(C) {
-    if (C.flag('ch2')) { C.note(C.E.S.mon.badges[2] ? null : '🌳 树医生在北边路口的小屋；道馆里海龟奶奶在等你'); return; }
+    if (C.flag('ch2')) { C.note(C.E.S.mon.badges[2] ? null : '🌳 树医生在北边路口的小屋；挑战馆里海龟奶奶在等你'); return; }
     if (!C.flag('f2call')) return;
     if (!C.flag('f2tim')) { C.note('😢 井边有个小男孩在哭，去问问他'); return; }
     if (famLeft(C).length) C.note('🔎 帮蒂姆找家人：' + Object.keys(FAM2).map(k => (C.flag(FAM2[k].flag) ? '✅' : '⬜') + FAM2[k].zh).join(' '));
@@ -1068,7 +1068,7 @@
     await C.talk([
       q,
       S('Yes, I am! Where is he? Is he OK?', '是的，就是我！他在哪儿？他还好吗？'),
-      L.ask(S, 'Where is Tim now?', '蒂姆现在在哪儿？', "He's at the well.", ["He's at school.", "He's in the Gym."]),
+      L.ask(S, 'Where is Tim now?', '蒂姆现在在哪儿？', "He's at the well.", ["He's at school.", "He's in the gym."]),
       S('Thank you so much! I\'m going to him now!', '太谢谢你了！我这就去找他！'),
     ]);
     C.set(f.flag);
@@ -1114,7 +1114,7 @@
     note2(C);
   }
 
-  // ---------- 道馆「家族树迷宫」 ----------
+  // ---------- 挑战馆「家族树迷宫」 ----------
   const G2 = {
     gran: { gate: 2, start: [8, 22], en: 'grandma', zh: '奶奶', desc: ['The grandma has white hair and glasses.', '奶奶头发白白的，戴着眼镜。'],
       q: ['What does the grandma look like?', '奶奶长什么样？'], right: 'She has white hair and glasses.', wrong: ['She has brown hair and glasses.', 'She has white hair. No glasses.'] },
@@ -1220,7 +1220,7 @@
   //  第 3 岛 · 校园岛：嘘声团要取消英语课 → 和对手一起在教学楼里问路找线索 → 五班堵住低语
   // ======================================================================
   function note3(C) {
-    if (C.flag('ch3')) { C.note(C.map.id === 't3' && !C.E.S.mon.badges[3] ? '⛏️ 矿工在北边的隧道口；道馆在跑道南边' : null); return; }
+    if (C.flag('ch3')) { C.note(C.map.id === 't3' && !C.E.S.mon.badges[3] ? '⛏️ 矿工在北边的隧道口；挑战馆在跑道南边' : null); return; }
     if (!C.flag('f3in')) return;
     if (C.map.id === 't3') { C.note('🏫 嘘声团在红砖教学楼里（有钟楼的那栋）'); return; }
     C.note(!C.flag('f3lib') ? '📝 找人问一问：图书馆在哪儿？' : !C.flag('f3lab') ? '📚 图书馆在食堂旁边，去问问图书管理员' : !C.flag('f3grunt') ? '🔬 实验室在二楼，音乐教室旁边（走廊尽头有楼梯）'
@@ -1273,7 +1273,7 @@
   function school2(C) {
     note3(C);
     if (!C.flag('f3in') || C.flag('ch3')) return;
-    if (C.flag('f3lab') && !C.flag('f3grunt') && !C.npc(n => n.id === 'g3')) C.spawn({ id: 'g3', look: L.P.LOOKS.grunt, name: 'Hush Grunt', g: 'm', x: 13, y: 2, face: 'down' });
+    if (C.flag('f3lab') && !C.flag('f3grunt') && !C.npc(n => n.id === 'g3')) C.spawn({ id: 'g3', look: L.P.LOOKS.grunt, name: 'Hush Crew', g: 'm', x: 13, y: 2, face: 'down' });
     if (C.flag('f3c5')) spawnWhisper(C);
     else spawnRival(C, 20, 8, 'left');
   }
@@ -1368,7 +1368,7 @@
     ]);
     const r = C.npc(q => q.id === 'rv3');
     if (r) { await C.walk(r, 'down', 2, 150); C.remove(r); }
-    C.note('⛏️ 矿工在北边的隧道口等你；道馆在跑道南边');
+    C.note('⛏️ 矿工在北边的隧道口等你；挑战馆在跑道南边');
   }
   // 小凯来学校看你
   async function kaiTalk(C, n) {
@@ -1383,7 +1383,7 @@
       K('Can we have a small battle? Just a little one...', '我们可以来一场小小的对战吗？就一小场……', { kind: 'choice', opts: [{ html: '⚔️ 好呀 Sure!', cls: 'sun' }, { html: '下次吧 Next time' }], pick: i => { fight = !i; return []; } }),
     ]);
     if (!fight) { await C.talk([K('OK! I\'ll wait here on the playground.', '好！我就在操场这儿等你。')]); return; }
-    const res = await C.battle('trainer', { foes: [C.MG.newMon('seedlet', 9), C.MG.newMon('peeplet', 10)], trainer: { name: 'Kai', img: C.portrait(L.P.LOOKS.kai) }, noWhiteout: true });
+    const res = await C.battle('trainer', { foes: [C.MG.newMon('seedlet', 9), C.MG.newMon('songlet', 10)], trainer: { name: 'Kai', img: C.portrait(L.P.LOOKS.kai) }, noWhiteout: true });
     if (res === 'lose') C.MG.healAll();
     await C.talk([
       res === 'lose' ? K('I... I won? Really? Thank you for the battle!', '我……我赢了？真的吗？谢谢你陪我对战！') : K('Wow, you are so strong! I lost, but I learned a lot.', '哇，你好强！我输了，但是学到了好多。'),
@@ -1394,7 +1394,7 @@
     C.set('kai3');
   }
 
-  // ---------- 道馆「教室换座」 ----------
+  // ---------- 挑战馆「教室换座」 ----------
   const BB3 = {
     '3,20': { gate: 2, seat: [7, 25], intro: [['Classroom 1. Listen to the teacher.', '第一间教室。听老师提问。']],
       q: ['Excuse me, where is the office?', '（听老师的问题，选出合适的回答，再大声说出来）'], right: "It's next to the hall.", wrong: ["You're welcome.", "It's nine o'clock."], x: { hideEn: true } },
@@ -1472,7 +1472,7 @@
   ];
   const ORD = [['first', '第一'], ['second', '第二'], ['third', '第三']];
   function note4(C) {
-    if (C.flag('ch4')) { C.note(!C.E.S.mon.badges[4] && C.map.kind !== 'inside' ? '🐙 八爪博士在道馆等你' : null); return; }
+    if (C.flag('ch4')) { C.note(!C.E.S.mon.badges[4] && C.map.kind !== 'inside' ? '🐙 八爪博士在挑战馆等你' : null); return; }
     if (!C.flag('f4in')) return;
     C.note(!C.flag('f4books') ? '🧪 去八爪博士的实验室（镇子中间的玻璃圆顶）' : '📡 嘘声团在东边的卫星天线旁');
   }
@@ -1558,7 +1558,7 @@
     });
     if (r2 !== 'win') return;
     await L.restoreCrystal(C, 4);
-    await C.talk([nar('Doctor Octo is waiting for you at the Gym!', '八爪博士在道馆等你！')]);
+    await C.talk([nar('Doctor Octo is waiting for you at the Challenge Hall!', '八爪博士在挑战馆等你！')]);
     note4(C);
   }
   // 天文台：导师欧瑞讲寂静之王、回声龙和十三颗水晶
@@ -1583,16 +1583,16 @@
     C.set('orion4');
   }
 
-  // ---------- 道馆「课程表开关」 ----------
+  // ---------- 挑战馆「课程表开关」 ----------
   const SEQ4 = [
     { gate: 1, y0: 13, y1: 22, start: [8, 22], list: ['m', 'e', 's', 'u'], en: 'First maths, then English, then science, then music.', zh: '先数学，再英语，然后科学，最后音乐。',
       q: ['Which subject is first?', '第一门是什么课？'], right: 'Maths is first.', wrong: ['Music is first.', 'Science is first.'] },
     { gate: 0, y0: 5, y1: 11, start: [8, 11], list: ['h', 'g', 'a', 'c'], en: 'First history, then geography, then art, then Chinese.', zh: '先历史，再地理，然后美术，最后语文。',
       q: ['Which subject is last?', '最后一门是什么课？'], right: 'Chinese is last.', wrong: ['History is last.', 'Art is last.'] },
   ];
-  const prog4 = [0, 0];   // 每段已经按对了几个（离开道馆就清零）
+  const prog4 = [0, 0];   // 每段已经按对了几个（离开挑战馆就清零）
   const stage4 = C => SEQ4.findIndex(s => !C.gateOpen(s.gate));
-  const bc = (en, zh, x) => Object.assign({ who: 'Gym Speaker', emo: '📢', en, zh }, x || {});
+  const bc = (en, zh, x) => Object.assign({ who: 'Hall Speaker', emo: '📢', en, zh }, x || {});
   const cast4 = k => { const s = SEQ4[k]; return [bc(s.en, '（仔细听课程表！按顺序踩地上的学科开关）', { hideEn: true }), L.ask(bc, s.q[0], s.q[1], s.right, s.wrong), bc(s.en, s.zh)]; };
   // 某一段的开关恢复原样（done：解开过的段，把要踩的开关都点亮）
   function paintStage(C, k, done) {
@@ -1613,7 +1613,7 @@
     C.refresh();
     const k = stage4(C);
     if (k >= 0) {
-      const pre = C.flag('g4hi') ? [] : [bc('Welcome to the Timetable Gym!', '欢迎来到课程表道馆！'), bc('Listen to the timetable. Step on the subjects in the right order.', '听课程表，按正确的顺序踩地上的学科开关。'), bc('Wrong order? Everything goes back to the start!', '顺序错了？一切从头再来！')];
+      const pre = C.flag('g4hi') ? [] : [bc('Welcome to the Timetable Hall!', '欢迎来到课程表挑战馆！'), bc('Listen to the timetable. Step on the subjects in the right order.', '听课程表，按正确的顺序踩地上的学科开关。'), bc('Wrong order? Everything goes back to the start!', '顺序错了？一切从头再来！')];
       C.set('g4hi');
       await C.talk(pre.concat(cast4(k)));
     }
@@ -1674,7 +1674,7 @@
       }
       return null;
     },
-    // 八爪博士在整理实验室时不在道馆
+    // 八爪博士在整理实验室时不在挑战馆
     hidden(C, n) {
       if (n.role === 'leader' && C.map.id === 'i4G') return !C.flag('ch4') && !C.E.S.mon.badges[4];
       return null;

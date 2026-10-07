@@ -1,5 +1,5 @@
 // 休息一下 Rest Well（heal）
-// 在哪里放：怪兽中心恢复体力（一次性）
+// 在哪里放：休息站恢复体力（一次性）
 // 情绪：温柔的摇篮曲：6/8（meter 3，用八分音符写）长–短、长–短地摇，竖琴分解和弦，没有鼓
 // 结构：2 小节 6/8，126 bpm ≈ 2.9 秒（+ 引擎 1 秒尾音）
 // 和弦：Ab → Bbm | Eb → Ab（I–ii | V–I）
@@ -9,7 +9,7 @@ module.exports = {
   id: 'heal',
   title: 'Rest Well',
   zh: '休息一下',
-  use: '怪兽中心恢复体力',
+  use: '休息站恢复体力',
   bpm: 126,
   meter: 3,
   key: 'Ab', mode: 'major',

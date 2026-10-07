@@ -1,5 +1,5 @@
 // 大地图的几样新规矩（2026-10-07 家长定的改进清单）：
-// #14 目标提示「现在该去哪、做什么」；#10 道馆跟着课本单元 BOSS 开、打通以后馆主重赛、四只学习里程碑神兽、每日宝箱开冒险道具、第一大区图鉴；
+// #14 目标提示「现在该去哪、做什么」；#10 挑战馆跟着课本单元 BOSS 开、打通以后岛主重赛、四只学习里程碑神兽、每日宝箱开冒险道具、第一大区手册；
 // #17 剧情中文（自动 / 点一下才显示 / 总是显示）；#5 在大地图里过了零点要先回去学习；#4「全部关卡直接开放」不再打开大地图（调试用 ?debug）
 // 运行：node tests/world-goals.test.js
 const H = require('./helpers');
@@ -13,7 +13,7 @@ const H = require('./helpers');
   const toasts = () => p.evaluate(() => [...document.querySelectorAll('.toast')].map(e => e.textContent).join(' | '));
   const S = f => p.evaluate(f);
 
-  // ---------- #14 目标提示 + #10 道馆的课本门槛 ----------
+  // ---------- #14 目标提示 + #10 挑战馆的课本门槛 ----------
   await t.save({ map: 't0', x: 14, y: 9 });
   let g = await goal();
   check(/Captain Polly/.test(g) && /七上 Unit 1/.test(g) && /0\/2/.test(g), '你好岛：先过课本 BOSS 才能挑战鹦鹉船长 ' + g);
@@ -29,7 +29,7 @@ const H = require('./helpers');
   check(/📍/.test(hm.obj) && /Captain Polly/.test(hm.obj) && /七上 Unit 1/.test(hm.gym) && /0\/2/.test(hm.gym) && hm.btn && hm.leg === 4, '首页：现在要做、下一枚徽章还差哪个 BOSS、传说的线索 ' + JSON.stringify(hm));
   await t.shot('wg-home-cards');
   await p.click('[data-act=wEnter]'); await W(900);
-  // 馆主不接受挑战
+  // 岛主不接受挑战
   await t.go('i0G', 'from:t0');
   await t.tp(6, 2, 'up'); await t.A(); await t.A();
   check(/Come back after you beat Unit 2!/.test(await t.en()), '鹦鹉船长：Come back after you beat Unit 2!');
@@ -42,14 +42,14 @@ const H = require('./helpers');
   check(need.ok && need.done === 2 && need.unitLabel === '', '过了 2 个单元的 BOSS：门槛满足');
   await t.tp(6, 2, 'up'); await t.A();
   for (let i = 0; i < 10 && !(await p.isVisible('#battle')); i++) { if ((await t.dbg()).dlg) await t.A(); else await W(200); }
-  check(await p.isVisible('#battle'), '课本 BOSS 过了：馆主开打');
+  check(await p.isVisible('#battle'), '课本 BOSS 过了：岛主开打');
   console.log('  leader:', await t.fight());
   await t.idle();
   check((await S(() => EchoGame.S.mon.badges))[0], '拿到你好徽章');
   g = await goal();
   check(/1 号路/.test(g) && /彩色文具岛/.test(g), '拿到徽章后：去 1 号路 → 彩色文具岛 ' + g);
   need = await S(() => EchoWorld.nextGymNeed());
-  check(need.z === 1 && need.need === 3 && need.done === 2 && need.unitLabel === '七上 Unit 3', '第 2 个馆主要 3 个单元 ' + JSON.stringify(need));
+  check(need.z === 1 && need.need === 3 && need.done === 2 && need.unitLabel === '七上 Unit 3', '第 2 个岛主要 3 个单元 ' + JSON.stringify(need));
   // 冒险菜单最上面「📍 现在要做」，点地名下面那行也能打开
   await p.click('#w-goal'); await W(300);
   check(/现在要做/.test(await p.textContent('#modal')), '点 📍 打开冒险菜单，最上面是现在要做');
@@ -109,26 +109,26 @@ const H = require('./helpers');
   await t.idle();
   await p.evaluate(() => { EchoGame.S.settings.storyZh = 'auto'; });
 
-  // ---------- #10 打通以后：馆主重赛（等级 +15、出题换成课本最近学的单元、每天第一次赢送进化石） ----------
+  // ---------- #10 打通以后：岛主重赛（等级 +15、出题换成课本最近学的单元、每天第一次赢送进化曲） ----------
   await t.save({ map: 'i0G', x: 6, y: 2, badges: all, flags: { champion: 1 }, visited: { 0: 1 } });
   check(/英语冠军/.test(await goal()), '打通以后的目标：重赛、传说的线索 ' + await goal());
   const stones0 = await S(() => Object.keys(DEX.STONES).reduce((a, k) => a + MonsterGame.itemCount(k), 0));
   await t.tp(6, 2, 'up'); await t.A();
-  check(/Welcome back, Champion/.test(await t.en()), '馆主：冠军回来了，我变强了');
+  check(/Welcome back, Champion/.test(await t.en()), '岛主：冠军回来了，我变强了');
   for (let i = 0; i < 10 && !(await p.isVisible('#battle')); i++) { if ((await t.dbg()).dlg) await t.A(); else await W(200); }
   const rb = await p.evaluate(() => { const b = MonsterGame._b(); return { n: b.foes.length, lv: b.foes[0].lv, recent: EchoWorld._debug().recentSrc() }; });
-  check(rb.lv >= MonsterGame_zone(0) + 15 && rb.n === 3, '重赛的馆主更强：' + JSON.stringify(rb));
+  check(rb.lv >= MonsterGame_zone(0) + 15 && rb.n === 3, '重赛的岛主更强：' + JSON.stringify(rb));
   check(rb.recent, '重赛时出题换成课本最近学的单元');
   console.log('  rematch:', await t.fight());
   await t.idle();
   check(!(await p.evaluate(() => EchoWorld._debug().recentSrc())), '打完换回原来的出题');
   const stones1 = await S(() => Object.keys(DEX.STONES).reduce((a, k) => a + MonsterGame.itemCount(k), 0));
-  check(stones1 === stones0 + 1, '今天第一次重赛赢了：送一块进化石');
+  check(stones1 === stones0 + 1, '今天第一次重赛赢了：送一首进化曲');
 
-  // ---------- #10 传说的线索：七上 8 个单元 BOSS 全过 → 霜羽鸟飞来 ----------
-  await t.save({ map: 't0', x: 14, y: 9, badges: { 0: 1 }, team: [['tidalfin', 90], ['flamewolf', 90]] });
+  // ---------- #10 传说的线索：七上 8 个单元 BOSS 全过 → 发条龟走来 ----------
+  await t.save({ map: 't0', x: 14, y: 9, badges: { 0: 1 }, team: [['tidalfin', 90], ['blazehound', 90]] });
   let clues = await S(() => EchoWorld.legendClues());
-  check(clues.length === 4 && clues.every(c => !c.done) && clues[0].id === 'frostwing' && clues[0].need === 8, '四只神兽的线索：都还没达成 ' + JSON.stringify(clues.map(c => c.id + ' ' + c.have + '/' + c.need)));
+  check(clues.length === 4 && clues.every(c => !c.done) && clues[0].id === 'book' && clues[0].mon === 'wishstar' && clues[0].need === 8, '四只神兽的线索：都还没达成 ' + JSON.stringify(clues.map(c => c.id + ' ' + c.have + '/' + c.need)));
   // 聊天目标次数按天累加（日志只留 45 天，累加进 world.mile 就不会丢）
   await p.evaluate(() => { const S = EchoGame.S; S.log['2026-01-02'] = { talk: 20, recall: 100 }; S.log['2026-01-03'] = { talk: 5 }; });
   clues = await S(() => EchoWorld.legendClues());
@@ -138,37 +138,43 @@ const H = require('./helpers');
   check(clues[1].have === 25, '日志删掉以后累计数还在');
   await units(8);
   clues = await S(() => EchoWorld.legendClues());
-  check(clues[0].done && clues[0].have === 8, '七上 8 个单元的 BOSS 全过：霜羽鸟达成');
+  check(clues[0].done && clues[0].have === 8, '七上 8 个单元的 BOSS 全过：发条龟达成');
   await t.go('r0', 'from:t0'); await W(1500);
   let heard = '';
   for (let i = 0; i < 20 && !/landed/.test(heard); i++) { const pg = await t.page(); heard += pg ? pg.en + ' ' : ''; if (/landed/.test(heard)) break; if ((await t.dbg()).dlg) await t.A(); else await W(200); }
-  check(/Frostwing/.test(heard) && /calling/.test(heard), '一走到户外，博士打电话：霜羽鸟来了');
-  check((await t.npcs()).some(n => n.mon === 'frostwing'), '霜羽鸟落在主角旁边');
-  await t.typed(); await t.shot('wg-frostwing');
+  check(/Tickturtle/.test(heard) && /calling/.test(heard), '一走到户外，博士打电话：发条龟来了');
+  check((await t.npcs()).some(n => n.mon === 'wishstar'), '发条龟走到主角旁边');
+  await t.typed(); await t.shot('wg-wishstar');
   await t.idle(160);
   const fl = await t.flags();
-  check(fl['s:mlseen:frostwing'] === 1 && (fl['s:mlday:frostwing'] || fl['s:leg:frostwing']), '和霜羽鸟打了一场（打倒了明天再来 / 收服了）');
+  check(fl['s:mlseen:book'] === 1 && (fl['s:mlday:book'] || fl['s:ml:book']), '和发条龟打了一场（打倒了明天再来 / 收服了）');
   await t.go('t0', 'from:r0'); await t.go('r0', 'from:t0'); await W(800);
-  check(!(await t.npcs()).some(n => n.mon === 'frostwing') || fl['s:leg:frostwing'], '同一天不会再飞来');
+  check(!(await t.npcs()).some(n => n.mon === 'wishstar') || fl['s:ml:book'], '同一天不会再飞来');
+  // 老存档：七上里程碑以前收服过（leg:frostwing），就算这个里程碑完成了，不会再飞来
+  await p.evaluate(() => { const f = EchoGame.S.world.flags; delete f['s:ml:book']; delete f['s:mlday:book']; f['s:leg:frostwing'] = 1; });
+  clues = await S(() => EchoWorld.legendClues());
+  check(clues[0].caught, '老存档的 leg:frostwing 也算收服过');
 
-  // ---------- #10 每日宝箱、第一大区图鉴 ----------
+  // ---------- #10 每日宝箱、第一大区手册 ----------
   const bag0 = await S(() => MonsterGame.itemCount(Object.keys(DEX.STONES)[0]));
   const st = await S(() => EchoWorld.chestPrize(0.01));
-  check(st && st.kind === 'stone' && /进化石/.test(st.html) && (await S(() => MonsterGame.itemCount(Object.keys(DEX.STONES)[0]))) === bag0 + 1, '宝箱开出进化石 ' + (st && st.prize));
+  check(st && st.kind === 'stone' && /进化曲/.test(st.html) && (await S(() => MonsterGame.itemCount(Object.keys(DEX.STONES)[0]))) === bag0 + 1, '宝箱开出进化曲 ' + (st && st.prize));
   const box0 = await S(() => EchoGame.S.mon.box.length);
   const eg = await S(() => EchoWorld.chestPrize(0.6));
   check(eg && eg.kind === 'egg' && (await S(() => EchoGame.S.mon.box.length)) === box0 + 1, '宝箱开出怪兽蛋');
   const sh = await S(() => EchoWorld.chestPrize(0.85));
-  check(sh && sh.kind === 'shinyEgg' && (await S(() => EchoGame.S.mon.box.slice(-1)[0])).shiny, '宝箱开出异色蛋（孵出来是异色）');
+  check(sh && sh.kind === 'shinyEgg' && (await S(() => EchoGame.S.mon.box.slice(-1)[0])).shiny, '宝箱开出稀有色蛋（孵出来是稀有色）');
   check((await S(() => EchoWorld.chestPrize(0.95))) === null, '有时开出原来的奖品（金币、宠物）');
   const dr = await S(() => EchoWorld.dexRegion());
-  check(dr.total === 151 && dr.caught >= 0, '第一大区图鉴 151 种（' + dr.caught + ' 种已收服）');
+  const r1 = await S(() => DEX.region1Total);
+  check(dr.total === r1 && dr.total !== 151 && dr.total > 100 && dr.caught >= 0, '第一大区手册 ' + dr.total + ' 种（不是 151；' + dr.caught + ' 种已收服）');
 
   // ---------- #5 在大地图里过了零点：等对话结束再提示回首页 ----------
   await t.save({ map: 't0', x: 14, y: 9, badges: { 0: 1 } });
   await t.talkTo(n => n.name === 'Ms Rosa');
   // 学习锁打开、手机日期被改过（锁住），再假装进来时是昨天
-  await p.evaluate(() => { const S = EchoGame.S; S.settings.gate = true; S.maxDay = '2099-12-31'; EchoWorld._debug().fakeDay('2000-01-01'); });
+  // 冒险时间限制先关掉（晚上 21:30 以后跑测试也不会被「该睡觉啦」先拦下）
+  await p.evaluate(() => { const S = EchoGame.S; S.settings.gate = true; S.settings.limit = Object.assign({}, S.settings.limit || {}, { on: false }); S.maxDay = '2099-12-31'; EchoWorld._debug().fakeDay('2000-01-01'); });
   await W(4500);
   const pg = await t.page();
   check(pg && !/new day/.test(pg.en || ''), '正在说话时不打断（' + (pg && pg.en) + '）');
@@ -192,11 +198,11 @@ const H = require('./helpers');
   await t.save({ map: 't0', x: 14, y: 9 });
   await p.evaluate(() => { EchoGame.S.settings.unlockAll = true; });
   const ua = await S(() => { const d = EchoWorld._debug(); return { b: d.hasBadge(3), cut: d.skillOpen('cut'), gym: EchoWorld.nextGymNeed().ok }; });
-  check(!ua.b && !ua.cut && !ua.gym, '全部关卡直接开放：大地图的徽章、秘传技能、道馆门槛都不跟着开 ' + JSON.stringify(ua));
+  check(!ua.b && !ua.cut && !ua.gym, '全部关卡直接开放：大地图的徽章、回声技能、挑战馆门槛都不跟着开 ' + JSON.stringify(ua));
   await p.goto(H.PAGE + '?debug'); await W(300);
   await t.save({ map: 't0', x: 14, y: 9 });
   const dbg = await S(() => { const d = EchoWorld._debug(); return { on: d.debug, b: d.hasBadge(3), cut: d.skillOpen('cut'), gym: EchoWorld.nextGymNeed().ok }; });
-  check(dbg.on && dbg.b && dbg.cut && dbg.gym, '?debug：徽章、秘传技能、道馆门槛全开 ' + JSON.stringify(dbg));
+  check(dbg.on && dbg.b && dbg.cut && dbg.gym, '?debug：徽章、回声技能、挑战馆门槛全开 ' + JSON.stringify(dbg));
   await t.done();
 })().catch(e => { console.log('FAIL', e.message.split('\n')[0]); process.exit(1); });
 function MonsterGame_zone(z) { return 2 + z * 2; }

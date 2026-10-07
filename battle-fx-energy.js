@@ -1,16 +1,16 @@
-// 回声岛 · 战斗特效库（能量系）：电 spark、超能 psychic、龙 dragon、幽灵 ghost、恶 dark、毒 poison
+// 回声岛 · 战斗特效库（能量系）：电 spark、心灵 psychic、龙 dragon、幽灵 ghost、暗 dark、毒 poison
 // 登记到 window.BattleFX.types[type] = { charge?, release, impact?, after? }（规格见 tools/FX_SPEC.md §2–§6）：
 //   charge(kit, ctx)  蓄力时加的属性特效（不返回 Promise，不挡流程；蓄力时长、周身光、脚下光圈由 battle3d.js 的通用蓄力管）
 //   release(kit, ctx) 放出招式，**必须在命中那一刻 resolve**（monsters.js 接着出伤害数字、调 hit()）
-//   impact / after    命中后属性自己的样子、余韵（后台跑，不挡流程）。通用的命中星 / 闪光 / 放慢由 battle3d.js 的通用命中做，
+//   impact / after    命中后属性自己的样子、余韵（后台跑，不挡流程）。通用的命中星 / 闪烁 / 放慢由 battle3d.js 的通用命中做，
 //                     通用冲击波这几个属性关掉了、自己画属性色的（generic.wave，原因见 groundWave）
 //   ctx = { a 出招点, b 命中点, dir 朝对手的水平方向, side, other, tier 0 小招 / 1 中招 / 2 大招, cols, info, type }；
 //   大招的「招牌镜头」有的从蓄力就开始搭（雷云、黑夜影沼、日食、毒沼），挂在 ctx 上交给 release / after 收尾
 // 三档的样子（一眼分得出）：
 //   电   小：两下电弧直劈过去          中：手前聚电球 → 粗光束 + 缠绕的电弧      大：对手头上聚雷云，三道试探雷 → 巨雷劈下，地面电弧四散
-//   超能 小：意念光点带一串小波纹       中：一圈圈梦境波纹涌过去                  大：对手被托上半空，四周亮起星座连线 → 星座收拢、摔回地面
+//   心灵 小：意念光点带一串小波纹       中：一圈圈梦境波纹涌过去                  大：对手被托上半空，四周亮起星座连线 → 星座收拢、摔回地面
 //   龙   小：一道龙鳞月牙刃飞过去       中：紫粉龙焰喷射，龙焰包住对手            大：龙吼声波 → 龙魂从身后盘旋升起，越过场地螺旋俯冲
-//   幽灵 小：一团摇摇晃晃的鬼火         中：暗影球（黑核 + 紫晕 + 鬼火绕着转）    大：入夜，对手脚下影沼，影子之手从地下伸出抓住它 + 鬼火
+//   幽灵 小：一团摇摇晃晃的鬼火         中：幽灵灯笼（黑核 + 紫晕 + 小火苗绕着转）    大：入夜，对手脚下影沼，影子之手从地下伸出抓住它 + 鬼火
 //   恶   小：黑影一掠，留一道斩痕       中：上下两排獠牙一口咬合                  大：对手头上升起黑色日食，四道斩痕交叉 → 日食砸下、巨大十字斩
 //   毒   小：一颗毒液滴抛过去溅开       中：一串污泥团喷过去，脚下毒水洼          大：对手脚下毒沼冒泡、毒雾旋风 → 毒泡一起爆开
 // 同是紫色系的四个属性靠点缀色分开：龙 = 靛紫 + 粉 + 金，幽灵 = 黑影 + 青色鬼火，恶 = 墨黑 + 白色刀光，毒 = 品紫 + 泡泡 + 一点荧光绿
@@ -106,7 +106,7 @@
     o = o || {};
     kit.emit(n, () => ({ pos: at.clone().add(kit.sph(o.r || .1)), vel: kit.sph(kit.rnd(.4, 1) * sp).add(kit.V(0, o.up || 0, 0)), col: pick(cols), size: size * kit.rnd(.7, 1.3), life: life * kit.rnd(.7, 1.2), grow: o.grow || 1.8, fade: .1, drag: o.drag == null ? 2 : o.drag, grav: o.grav || 0, tex: 'smoke', spin: kit.rnd(-1.5, 1.5), cover: o.cover == null ? .85 : o.cover, alpha: o.alpha }));
   }
-  // 一闪一闪的小星星（超能、龙鳞）：在 getC() 附近 r 范围里，life 秒内一共 n 颗
+  // 一闪一闪的小星星（心灵、龙鳞）：在 getC() 附近 r 范围里，life 秒内一共 n 颗
   function twinkle(kit, getC, r, n, life, cols, o) {
     o = o || {};
     let acc = 0;
@@ -256,7 +256,7 @@
   };
 
   // ======================================================================
-  // 超能 psychic：粉色波纹、星星、托起对手；大招把对手托上半空画出星座再收拢摔下
+  // 心灵 psychic：粉色波纹、星星、托起对手；大招把对手托上半空画出星座再收拢摔下
   // ======================================================================
   // 头顶转的光环（陀螺仪一样斜着转），n 个
   function halos(kit, side, n, life) {
@@ -361,7 +361,7 @@
       const { b, tier: t, other } = ctx, cols = [PS.p, PS.v, PS.l];
       // 自己的命中星：粉色四角星（通用的白色命中星关掉了，大招时它和发光后期叠成一大团白）
       kit.impactStar(b, { col: PS.p, col2: PS.w, size: [.8, 1.05, 1.45][t], spikes: t === 2 ? 8 : 4, life: [.2, .26, .32][t], cover: .6 });
-      // 一圈圈同心光环（超能的招牌）：用实心的细圆环——冲击波方片里面有一层淡光，几层叠起来再被发光后期一晕，会糊成一大团白
+      // 一圈圈同心光环（心灵的招牌）：用实心的细圆环——冲击波方片里面有一层淡光，几层叠起来再被发光后期一晕，会糊成一大团白
       const n = t === 2 ? 3 : 2;
       for (let i = 0; i < n; i++) setTimeout(() => kit.ring(b, cols[i], .15, [.55, .85, 1.2][t] + i * [.3, .4, .45][t], .34 + t * .05, [.03, .035, .045][t], false).lookAt(kit.cam.position), i * 70);
       if (t) kit.shockwave(kit.feet(other).setY(.12), { col: PS.p, col2: PS.v, r0: .3, r1: t === 2 ? 2.3 : 1.5, life: t === 2 ? .5 : .42, thick: .12, cover: .6, opacity: .8 });
@@ -378,7 +378,7 @@
   };
 
   // ======================================================================
-  // 龙 dragon：靛紫 + 粉的龙焰、龙鳞（金粉闪光）、龙魂；大招龙魂盘旋俯冲
+  // 龙 dragon：靛紫 + 粉的龙焰、龙鳞（金粉闪烁）、龙魂；大招龙魂盘旋俯冲
   // ======================================================================
   const moonGeo = kit => kit.geo('en_moon', () => crescentGeo(kit.T3, .5, .17));
   // 龙鳞碎片（压扁的八面体）
@@ -602,7 +602,7 @@
         });
         o.userData.on = false;
       } else if (t === 1) {
-        // Shadow Orb：身前聚起一颗暗影球（黑核 + 紫晕 + 鬼火绕着转），然后飞过去
+        // Ghost Lantern：身前聚起一盏幽灵灯笼（黑核 + 紫晕 + 小火苗绕着转），然后飞过去
         const T3 = kit.T3, at = a.clone().addScaledVector(ctx.dir, .2).add(V(0, .08, 0)), sg = sphG(kit);
         const orb = new T3.Group(), core = new T3.Mesh(sg, kit.glowMat(GH.s, .97)), rim = new T3.Mesh(sg, kit.glowMat(GH.v, .55, false)), hal = new T3.Mesh(sg, kit.glowMat(GH.l, .35, true));
         rim.scale.setScalar(1.22); hal.scale.setScalar(1.55); hal.renderOrder = 1; rim.renderOrder = 2; core.renderOrder = 3;
@@ -612,7 +612,7 @@
         inward(kit, at, .9, 16, .22, [GH.s, GH.d, GH.v], { size: .45, cover: .85 });
         spirits(kit, () => orb.parent && orb.position.clone(), 2, .4, .6, { size: .22, sp: 9 });
         await kit.tween(220, k => { R = .26 * kit.EZ.out(k); });
-        // 身后拖一路黑紫烟（不用拖尾带：它有一道白芯，暗影球后面拖白线不对味）
+        // 身后拖一路黑紫烟（不用拖尾带：它有一道白芯，幽灵灯笼后面拖白线不对味）
         const lp = at.clone();
         await kit.fly(at, b, 290, orb, p => {
           const n = Math.min(5, Math.ceil(p.distanceTo(lp) / (.07 / (QN[kit.q] || 1))));
@@ -676,7 +676,7 @@
   };
 
   // ======================================================================
-  // 恶 dark：墨黑斩痕 + 白色刀光 + 淡紫描边；獠牙；大招黑色日食 + 十字斩
+  // 暗 dark：墨黑斩痕 + 白色刀光 + 淡紫描边；獠牙；大招黑色日食 + 十字斩
   // ======================================================================
   // 斩痕：从左尖到右尖 0..2 的月牙（轴心在左尖，放大 x 就是「划出来」）
   const slashGeo = kit => kit.geo('en_slash', () => crescentGeo(kit.T3, .3, .1).translate(1, -.1, 0));

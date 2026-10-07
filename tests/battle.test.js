@@ -1,4 +1,4 @@
-// 战斗规则测试：速度先后手、异常状态和叫醒、能力升降、升级学新招（忘掉旧招）、换怪兽、学习装置、怪兽详情、
+// 战斗规则测试：速度先后手、异常状态和叫醒、能力升降、升级学新招（忘掉旧招）、换怪兽、共学耳机、怪兽详情、
 // 对战替复习干活（先出到期的题、答对算复习）、按掌握程度撤提示（凭记忆念 / 🔥 不看字念 / 大招先不给选项）
 // 运行：node tests/battle.test.js
 const path = require('path');
@@ -35,7 +35,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   check(st.def > 0 && st.spd > 0, '有防御和速度 ' + JSON.stringify(st));
 
   // ---------- 速度：对手更快就先出手 ----------
-  await p.evaluate(() => MonsterGame.battle('wild', 0, { onEnd() {}, foes: [MonsterGame.newMon('stormwing', 40)] }));
+  await p.evaluate(() => MonsterGame.battle('wild', 0, { onEnd() {}, foes: [MonsterGame.newMon('voltlion', 40)] }));
   await menuUp();
   const n = (await p.$$('[data-act=bMove]')).length;
   check(n === 3, '菜单里 3 个招式（' + n + '）');
@@ -104,7 +104,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await W(300);
   const after = await p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')).mon.box);
   check(after[0].moves[1] === 'fire:1' && after[0].lv === 15, '学会了 Flame Wave，忘掉了第 2 招 ' + JSON.stringify(after[0].moves));
-  check(after[1].xp > 0, '学习装置：没出场的 Bubbly 也拿到了经验（' + after[1].xp + '）');
+  check(after[1].xp > 0, '共学耳机：没出场的 Bubbly 也拿到了经验（' + after[1].xp + '）');
 
   // ---------- 怪兽详情 ----------
   await p.click('#sheet [data-act=close]').catch(() => {});

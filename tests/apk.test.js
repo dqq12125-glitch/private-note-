@@ -190,8 +190,8 @@ function keepFake() {
   await p.click('#st-mic'); await W(300);
   check(/还没有 AI 密钥/.test(await p.textContent('#st-hint')), '选伙伴点话筒：说清楚是没有密钥');
   await p.click('#st-skip'); await W(400);
-  a = await E(() => { const S = window.EchoGame.S, e = S.rev.items['free:emberpup i choose you']; return { box: S.mon.box.length, e }; });
-  check(a.box === 1 && a.e && a.e.owe === 1 && a.e.en === 'Emberpup, I choose you!', '先跳过：伙伴照样选好，这句放进复习（联网后要补说）', a);
+  a = await E(() => { const S = window.EchoGame.S, e = S.rev.items['free:emberpup be my partner']; return { box: S.mon.box.length, e }; });
+  check(a.box === 1 && a.e && a.e.owe === 1 && a.e.en === 'Emberpup, be my partner!', '先跳过：伙伴照样选好，这句放进复习（联网后要补说）', a);
   // 练习：开口题一进来就有「先跳过」
   await closeAll();
   await E(() => window.EchoGame.playQs([['sr_w', 13, 1]])); await W(900);   // 出题 0.38 秒后会自动念一遍（会停掉正在听的话筒）：等它念上再点话筒

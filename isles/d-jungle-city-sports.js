@@ -1,6 +1,6 @@
-// 回声岛 · 第 8–10 动物岛、规则城、运动美食岛（地图、剧情、道馆机关）。写法见 ISLES.md
+// 回声岛 · 第 8–10 动物岛、规则城、运动美食岛（地图、剧情、挑战馆机关）。写法见 ISLES.md
 // 第 8 岛 t8 动物岛 → j8 丛林小径 → h8a / h8b 嘘声团基地；s8 9 号水路（海上巡逻，9 枚徽章）
-// 第 9 岛 t9 规则城（当一天小交警）→ s9 10 号水路 → 潜水 u9 海底隧道 → s10 11 号水路
+// 第 9 岛 t9 规则城（当一天小交警）→ s9 10 号水路 → 潜海 u9 海底隧道 → s10 11 号水路
 // 第 10 岛 t10 运动美食岛（妈妈电话、对手接力赛、嘘声团垃圾食品）→ c10 冰洞（11 枚徽章）→ r10 雪原 → t11
 (function () {
   'use strict';
@@ -28,13 +28,13 @@
     await C.talk([L.ask(S, en, zh, right, wrong, Object.assign({ pass: () => { ok = true; return []; } }, x || {}))]);
     return ok;
   }
-  // 测试用：看道馆机关的状态（红绿灯、脚印路口的答案）
+  // 测试用：看挑战馆机关的状态（红绿灯、脚印路口的答案）
   const DBG = window.EchoIsleD = {};
 
   // =====================================================================
   // 第 8 岛 动物岛 · Animal Friends
   // 巡林员罗莎请你找跑散的怪兽（听描述找对的那只）→ 丛林里看到云朵羊，用英语描述给她听
-  // → 伪装成灌木的团员 → 基地 1F 偷听口令、开机关门 → 2F 打败低语、打开笼子、放走怪兽 → 小凯送飞空
+  // → 伪装成灌木的团员 → 基地 1F 偷听口令、开机关门 → 2F 打败低语、打开笼子、放走怪兽 → 小凯送乘风
   // =====================================================================
   const RANGER = { name: 'Ranger Rosa', g: 'f', look: Object.assign({}, LK.ranger, { style: 'ponytail', hair: '#6d4c41', eye: '#2e6fa0' }) };
   const KAI = { name: 'Kai', g: 'm', look: LK.kai };
@@ -196,10 +196,10 @@
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
     ],
     npc: {
-      1: TR('Hush Grunt', 'grunt', 'm', 'down', 3, GRUNT_TYPES, ['Shh! Animals are noisy. We put them in cages!', '嘘！动物太吵了，我们把它们关进笼子！'], ['Shh... You win.', '嘘……你赢了。'], ['The boss is upstairs. Shh!', '老大在楼上。嘘！']),
-      2: TR('Hush Grunt', 'gruntF', 'f', 'down', 2, GRUNT_TYPES, ['How did you find our base?', '你是怎么找到我们基地的？'], ['Shh... Nobody can pass the locked door anyway!', '嘘……反正没人能通过那扇锁着的门！'], ['Only we know the password. Shh!', '只有我们知道口令。嘘！']),
-      3: TR('Hush Grunt', 'grunt', 'm', 'right', 4, GRUNT_TYPES, ['Quiet, kid! Monsters in cages are quiet monsters.', '安静，小孩！关在笼子里的怪兽才安静。'], ['Shh... not so loud!', '嘘……别那么大声！'], ['I forgot the password again...', '我又把口令忘了……']),
-      4: TR('Hush Grunt', 'gruntF', 'f', 'left', 4, GRUNT_TYPES, ['The storage room is ours! Go away!', '仓库是我们的！走开！'], ['Shh... there is a red button somewhere...', '嘘……某个地方有个红色按钮……'], ['Don\'t push the red button!', '别按那个红色按钮！']),
+      1: TR('Hush Crew', 'grunt', 'm', 'down', 3, GRUNT_TYPES, ['Shh! Animals are noisy. We put them in cages!', '嘘！动物太吵了，我们把它们关进笼子！'], ['Shh... You win.', '嘘……你赢了。'], ['The boss is upstairs. Shh!', '老大在楼上。嘘！']),
+      2: TR('Hush Crew', 'gruntF', 'f', 'down', 2, GRUNT_TYPES, ['How did you find our base?', '你是怎么找到我们基地的？'], ['Shh... Nobody can pass the locked door anyway!', '嘘……反正没人能通过那扇锁着的门！'], ['Only we know the password. Shh!', '只有我们知道口令。嘘！']),
+      3: TR('Hush Crew', 'grunt', 'm', 'right', 4, GRUNT_TYPES, ['Quiet, kid! Monsters in cages are quiet monsters.', '安静，小孩！关在笼子里的怪兽才安静。'], ['Shh... not so loud!', '嘘……别那么大声！'], ['I forgot the password again...', '我又把口令忘了……']),
+      4: TR('Hush Crew', 'gruntF', 'f', 'left', 4, GRUNT_TYPES, ['The storage room is ours! Go away!', '仓库是我们的！走开！'], ['Shh... there is a red button somewhere...', '嘘……某个地方有个红色按钮……'], ['Don\'t push the red button!', '别按那个红色按钮！']),
     },
     marks: [[['A machine with a big red button.', '一台机器，上面有个大大的红色按钮。']]],
     markKinds: ['statue'],
@@ -226,11 +226,11 @@
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
     ],
     npc: {
-      2: TR('Hush Grunt', 'grunt', 'm', 'left', 4, GRUNT_TYPES, ['You got past the password? Impossible!', '你居然过了口令门？不可能！'], ['Shh... Admin Whisper will stop you.', '嘘……低语大人会阻止你的。'], ['Admin Whisper is in the cage room.', '低语大人在关笼子的房间里。']),
+      2: TR('Hush Crew', 'grunt', 'm', 'left', 4, GRUNT_TYPES, ['You got past the password? Impossible!', '你居然过了口令门？不可能！'], ['Shh... Admin Whisper will stop you.', '嘘……低语大人会阻止你的。'], ['Admin Whisper is in the cage room.', '低语大人在关笼子的房间里。']),
     },
     people: [
       { id: 'whisper', role: 'story', name: 'Admin Whisper', look: LK.whisper, g: 'f', x: 13, y: 7, face: 'down', hideIf: 'ch8' },
-      { id: 'cage1', role: 'story', mon: 'peeplet', x: 2, y: 3, face: 'right', hideIf: 'ch8' },
+      { id: 'cage1', role: 'story', mon: 'songlet', x: 2, y: 3, face: 'right', hideIf: 'ch8' },
       { id: 'cage2', role: 'story', mon: 'mossbear', x: 3, y: 7, face: 'right', hideIf: 'ch8' },
       { id: 'cage3', role: 'story', mon: 'junglefrog', x: 27, y: 3, face: 'left', hideIf: 'ch8' },
       { id: 'cage4', role: 'story', mon: 'nightkit', x: 26, y: 7, face: 'left', hideIf: 'ch8' },
@@ -264,7 +264,7 @@
     links: { e: 't8' },
   });
 
-  // 道馆：脚印小路。每个路口广播描述一种动物，跟着它的脚印走；走错传送回路口
+  // 挑战馆：脚印小路。每个路口广播描述一种动物，跟着它的脚印走；走错传送回路口
   const PAW = {
     e: ['🐘', '#d7ccc8', 'elephant', 'It has a long nose and big ears.', '它有长长的鼻子和大大的耳朵。'],
     m: ['🐒', '#ffe0b2', 'monkey', 'It has a long tail. It likes bananas and climbing trees.', '它有长尾巴，喜欢香蕉和爬树。'],
@@ -395,7 +395,7 @@
   });
 
   // ---------- 第 8 岛剧情 ----------
-  const PARK = [['nibbler', 26, 16], ['mossbear', 31, 19], ['peeplet', 27, 20]];
+  const PARK = [['nibbler', 26, 16], ['mossbear', 31, 19], ['songlet', 27, 20]];
   const PARK_WRONG = {
     mossbear: ["This monster is big. It has leaves on its back, but it doesn't have a long tail.", '这只怪兽很大，背上长着叶子，可是没有长尾巴。'],
     peeplet: ["This monster is a bird. It has wings, but it doesn't have a long tail.", '这只怪兽是只鸟，有翅膀，可是没有长尾巴。'],
@@ -463,7 +463,7 @@
       L.speak(C, 'Who are you? Come out!', '大声说：你是谁？出来！'),
       { who: 'A Strange Bush', look: BUSH, g: 'm', en: "Shh! I'm a bush! Bushes can't talk!", zh: '嘘！我是一丛灌木！灌木不会说话！' },
     ]);
-    const res = await L.hushFight(C, n, 'grunt', { types: ['poison', 'grass'], lines: [["Oh no, you found me! I'm a Hush Grunt. Our base is right here!", '糟了，被你发现了！我是嘘声团团员，我们的基地就在这里！']] });
+    const res = await L.hushFight(C, n, 'grunt', { types: ['poison', 'grass'], lines: [["Oh no, you found me! I'm a Hush Crew. Our base is right here!", '糟了，被你发现了！我是嘘声团团员，我们的基地就在这里！']] });
     if (res !== 'win') return;
     C.set('a8bush');
     await C.talk([nar('The grunt ran into the base. There is a cave door behind the bush!', '团员逃进了基地。灌木后面有一扇洞门！')]);
@@ -471,9 +471,9 @@
   // 基地 1F：两个团员在锁着的楼梯间里说口令，被你听到了
   async function overhear(C) {
     C.set('a8over');
-    const a = C.spawn({ id: 'gA', look: LK.grunt, name: 'Hush Grunt', g: 'm', x: 2, y: 2, face: 'right' });
-    const b = C.spawn({ id: 'gB', look: LK.gruntF, name: 'Hush Grunt', g: 'f', x: 4, y: 2, face: 'left' });
-    const A = L.sayer('Hush Grunt', 'grunt', 'm'), B = L.sayer('Hush Grunt', 'gruntF', 'f');
+    const a = C.spawn({ id: 'gA', look: LK.grunt, name: 'Hush Crew', g: 'm', x: 2, y: 2, face: 'right' });
+    const b = C.spawn({ id: 'gB', look: LK.gruntF, name: 'Hush Crew', g: 'f', x: 4, y: 2, face: 'left' });
+    const A = L.sayer('Hush Crew', 'grunt', 'm'), B = L.sayer('Hush Crew', 'gruntF', 'f');
     await C.talk([
       nar('You hear two voices behind the locked door...', '锁着的门后面传来两个人说话的声音……'),
       A("Hey, what's the password for this door again?", '喂，这扇门的口令是什么来着？'),
@@ -521,7 +521,7 @@
     ['cage1', 'cage2', 'cage3', 'cage4'].forEach(id => { const m = C.npc(q => q.id === id); if (m) C.remove(m); });
     await L.restoreCrystal(C, 8);
     await C.talk([
-      nar('The big cage is open, too. Voltlion is looking at you!', '最大的笼子也打开了。雷狮正盯着你！'),
+      nar('The big cage is open, too. Plugmane is looking at you!', '最大的笼子也打开了。插头狮正盯着你！'),
       nar('Kai is waiting for you at the Ranger Station.', '小凯在巡林站等你。'),
     ]);
   }
@@ -546,14 +546,14 @@
     await C.talk([
       kai('{name}! You did it! The monsters are free!', '{name}！你做到了！怪兽们都自由了！'),
       kai('Look! My bird monster can fly now. It flew all the way here!', '你看！我的鸟怪兽会飞了，它一路飞到了这里！'),
-      kai('I want you to have this. It is the Fly HM.', '这个送给你，是「飞空」的秘传学习器。', { onShow: () => { C.give('hm_fly', 1); C.set('got_fly'); } }),
+      kai('I want you to have this. It is the Echo Shell for Sky Ride.', '这个送给你，是「乘风」的回声贝。', { onShow: () => { C.give('hm_fly', 1); C.set('got_fly'); } }),
       kai('With nine badges, a flying monster can fly you to any town you visited.', '有了 9 枚徽章，会飞的怪兽就能带你飞到去过的任何一个镇子。'),
       L.speak(C, "Thank you, Kai! You're a great friend.", '对小凯说：谢谢你，小凯！你是我的好朋友。'),
       kai("Hee hee... I'll get stronger, too. See you, {name}!", '嘿嘿……我也会变得更强的。再见，{name}！'),
     ]);
   }
 
-  // 道馆：脚印小路
+  // 挑战馆：脚印小路
   const G8 = { ans: [0, 0, 0], said: [false, false, false] };
   DBG.g8 = () => ({ ans: G8.ans.map((a, k) => PAWS8[k][a]), cols: PAW_COL, said: G8.said.slice() });
   function g8Reset() { G8.ans = PAWS8.map(() => Math.floor(Math.random() * 3)); G8.said = [false, false, false]; }
@@ -639,7 +639,7 @@
   // =====================================================================
   // 第 9 岛 规则城 · No Rules, No Order
   // 警察局请你当一天小交警：提醒三个不守规矩的人（说英语）→ 听线索找出乔装的团员 → 夺回规则水晶
-  // → 海边的导师欧瑞送潜水，告诉你运动美食岛只能从海底过去
+  // → 海边的导师欧瑞送潜海，告诉你运动美食岛只能从海底过去
   // =====================================================================
   const OFFICER = { name: 'Officer Lee', look: 'police', g: 'm' };
   const lee = L.sayer('Officer Lee', 'police', 'm');
@@ -745,7 +745,7 @@
       { id: 'orion2', role: 'story', name: 'Orion', look: 'orion', g: 'm', x: 32, y: 9, face: 'up', showIf: 'ch9' },
     ],
     signs: [
-      ['Rule City Gym. Leader: Sharky.', '规则城道馆。馆主：鲨鱼纪律官。'],
+      ['Rule City Hall. Isle Master: Sharky.', '规则城挑战馆。岛主：鲨鱼纪律官。'],
       ['Welcome to Rule City! Walk on the zebra crossing.', '欢迎来到规则城！过马路请走斑马线。'],
       ["City rules: Don't throw rubbish. Don't run across the road.", '城市守则：不要乱扔垃圾，不要横穿马路。'],
     ],
@@ -780,7 +780,7 @@
     links: { e: 't9' },
   });
 
-  // 道馆：红绿灯。9 秒一轮：绿灯 5 秒、红灯 4 秒（按时间算，和帧率无关）
+  // 挑战馆：红绿灯。9 秒一轮：绿灯 5 秒、红灯 4 秒（按时间算，和帧率无关）
   const LIGHT_MS = 9000, GREEN_MS = 5000;
   const lightNow = () => { const t = Date.now() % LIGHT_MS; return t < GREEN_MS ? { green: true, left: Math.ceil((GREEN_MS - t) / 1000) } : { green: false, left: Math.ceil((LIGHT_MS - t) / 1000) }; };
   DBG.light = lightNow;
@@ -919,7 +919,7 @@
       4: TR('Swimmer Ivy', 'swimmerF', 'f', 'up', 4, ['water', 'flying'], ['Sports Island is behind the reefs. You can\'t swim there!', '运动美食岛在礁石后面，游不过去的！'], ['Maybe you can go under the sea...', '也许你可以从海底过去……'], ['People say there is a tunnel under the sea.', '听说海底有一条隧道。'], { under: '~' }),
       5: TR('Swimmer Tony', 'swimmer', 'm', 'right', 4, ['water', 'fight'], ['I swim here three times a week!', '我每周来这儿游三次！'], ['I need more practice.', '我还得多练练。'], ['Exercise every day and you will be strong.', '每天锻炼，你就会变强。'], { under: '~' }),
     },
-    signs: [['Route 10. Sports Island is behind the reefs. Only divers can get there.', '10 号水路。运动美食岛在礁石后面，只有会潜水的人才能到达。']],
+    signs: [['Route 10. Sports Island is behind the reefs. Only divers can get there.', '10 号水路。运动美食岛在礁石后面，只有会潜海的人才能到达。']],
     items: ['superpotion', 'icestone', 'revive'],
     hiddenItems: ['fullheal'],
     links: { w: 't9', D: ['u9'] },
@@ -1018,7 +1018,7 @@
     if (left) { await C.talk([radio(OFFICER.name, 'Good job, Junior Officer! ' + left + ' more to go.', '干得好，小交警！还剩 ' + left + ' 个。')]); return; }
     await C.talk([
       radio(OFFICER.name, 'Great job, {name}! Everyone follows the rules again.', '太棒了，{name}！大家又开始守规矩了。'),
-      radio(OFFICER.name, 'But wait... A Hush Grunt is hiding near the fountain. He looks like a normal tourist!', '等等……有个嘘声团团员躲在喷泉旁边，他打扮得像个普通游客！'),
+      radio(OFFICER.name, 'But wait... A Hush Crew is hiding near the fountain. He looks like a normal tourist!', '等等……有个嘘声团团员躲在喷泉旁边，他打扮得像个普通游客！'),
       radio(OFFICER.name, 'Listen to the clues. ' + CLUES, '仔细听线索，找出那个人！'),
       radio(OFFICER.name, CLUES, '再听一遍：他戴着什么？有什么？', { hideEn: true }),
     ]);
@@ -1034,7 +1034,7 @@
     }
     await C.talk([
       nar('Red cap, glasses and a bag... It\'s him!', '红帽子、眼镜、背包……就是他！'),
-      L.speak(C, 'You are a Hush Grunt! Stop!', '大声说：你就是嘘声团团员！站住！'),
+      L.speak(C, 'You are a Hush Crew! Stop!', '大声说：你就是嘘声团团员！站住！'),
       S('Shh! How did you know?!', '嘘！你怎么知道的？！'),
     ]);
     const res = await L.hushFight(C, n, 'grunt', { types: ['dark', 'poison', 'steel'], n: 3, lines: [['Rules are boring! Red lights, green lights... Shh!', '规矩真无聊！红灯、绿灯……嘘！']] });
@@ -1054,7 +1054,7 @@
       ]);
       return;
     }
-    if (C.flag('got_dive')) { await C.talk([orion('Dark blue water means deep water. Surf on it and press A to dive.', '深蓝色的海水就是深水。冲浪到上面，按 A 就能潜下去。'), orion('The road under the sea goes to Sports Island.', '海底的路通往运动美食岛。')]); return; }
+    if (C.flag('got_dive')) { await C.talk([orion('Dark blue water means deep water. Surf on it and press A to dive.', '深蓝色的海水就是深水。踏浪到上面，按 A 就能潜下去。'), orion('The road under the sea goes to Sports Island.', '海底的路通往运动美食岛。')]); return; }
     await C.talk([
       orion('Thank you, {name}. The city has order again. Now I can read the stone.', '谢谢你，{name}。城里又恢复秩序了，我终于能读这块石头了。'),
       orion('It says: "Under the sea there is a road. It goes to the island of sports and food."', '上面写着：“海底有一条路，通往运动与美食之岛。”'),
@@ -1062,8 +1062,8 @@
     const ok = await quiz(C, orion, 'Where does the road under the sea go?', '欧瑞问你：海底的路通往哪里？选出正确的回答，再说出来。', 'It goes to Sports Island.', ['It goes to Animal Island.', 'It goes to the Police Station.']);
     if (!ok) { await C.talk([orion('Listen again: the island of sports and food. That is Sports Island!', '再听一遍：运动与美食之岛——就是运动美食岛！')]); }
     await C.talk([
-      orion('Yes. Sports Island has reefs all around it. Boats and surfers cannot get there.', '没错。运动美食岛四周都是礁石，船和冲浪都过不去。'),
-      orion('You can only go under the sea. Take this. It is the Dive HM.', '只能从海底过去。这个给你，是「潜水」的秘传学习器。', { onShow: () => { C.give('hm_dive', 1); C.set('got_dive'); } }),
+      orion('Yes. Sports Island has reefs all around it. Boats and surfers cannot get there.', '没错。运动美食岛四周都是礁石，船和踏浪都过不去。'),
+      orion('You can only go under the sea. Take this. Now Water Way can dive!', '只能从海底过去。这个回声贝给你，「水路」升到 2 级，能潜下去了。', { onShow: () => { C.give('hm_dive', 1); C.set('got_dive'); } }),
       orion('Win the badge here, and your water monster can dive into deep water.', '赢下这里的徽章，你的水系怪兽就能潜进深水。'),
       orion('Find the dark blue water on Route 10, east of the city. Then dive!', '去城东的 10 号水路找深蓝色的水，潜下去！'),
       L.speak(C, 'Thank you, Orion!', '对欧瑞说：谢谢你，欧瑞！'),
@@ -1086,7 +1086,7 @@
       }
       if (id === 'i9G' && !C.gateOpen(0)) return async () => {
         g9Start(C);
-        await C.talk([nar('Welcome to the Traffic Gym! Cross three roads to reach Sharky.', '欢迎来到红绿灯道馆！穿过三条马路才能见到鲨鱼纪律官。'), nar('Walk on the zebra crossing, and only when the light is green!', '只能走斑马线，而且只有绿灯才能走！')]);
+        await C.talk([nar('Welcome to the Traffic Hall! Cross three roads to reach Sharky.', '欢迎来到红绿灯挑战馆！穿过三条马路才能见到鲨鱼纪律官。'), nar('Walk on the zebra crossing, and only when the light is green!', '只能走斑马线，而且只有绿灯才能走！')]);
       };
       return null;
     },
@@ -1208,14 +1208,14 @@
       4: { role: 'talk', name: 'Grandpa Joe', look: 'grandpa', g: 'm', face: 'down', say: [['These fruit trees are my friends.', '这些果树是我的朋友。'], ['An apple a day keeps the doctor away!', '一天一苹果，医生远离我！']], speak: 'Eat more vegetables and fruit.' },
     },
     people: [
-      { id: 'h10a', role: 'story', name: 'Hush Grunt', look: LK.grunt, g: 'm', x: 28, y: 26, face: 'down', showIf: 'rival4', hideIf: ['ch10', 'a10h1'] },
-      { id: 'h10b', role: 'story', name: 'Hush Grunt', look: LK.gruntF, g: 'f', x: 33, y: 26, face: 'down', showIf: 'rival4', hideIf: ['ch10', 'a10h2'] },
+      { id: 'h10a', role: 'story', name: 'Hush Crew', look: LK.grunt, g: 'm', x: 28, y: 26, face: 'down', showIf: 'rival4', hideIf: ['ch10', 'a10h1'] },
+      { id: 'h10b', role: 'story', name: 'Hush Crew', look: LK.gruntF, g: 'f', x: 33, y: 26, face: 'down', showIf: 'rival4', hideIf: ['ch10', 'a10h2'] },
       { id: 'lazy1', role: 'story', name: 'Sleepy Tom', look: 'student', g: 'm', x: 22, y: 30, face: 'down', showIf: 'rival4', hideIf: 'ch10' },
       { id: 'lazy2', role: 'story', name: 'Sleepy Ann', look: 'studentF', g: 'f', x: 26, y: 31, face: 'left', showIf: 'rival4', hideIf: 'ch10' },
     ],
     signs: [
       ['Welcome to Sports Island! Keep fit, eat well.', '欢迎来到运动美食岛！锻炼身体，好好吃饭。'],
-      ['Sports Island Stadium (Gym). Leader: Coach Seal.', '运动美食岛体育场（道馆）。馆主：海狮教练。'],
+      ['Sports Island Stadium (Challenge Hall). Isle Master: Coach Seal.', '运动美食岛体育场（挑战馆）。岛主：海狮教练。'],
       ['Food Festival! Try our dumplings and noodles.', '美食节！快来尝尝饺子和面条。'],
     ],
     marks: [[['The Sports Day trophy. "Healthy body, happy mind!"', '运动会的奖杯：“身体健康，心情快乐！”']]],
@@ -1225,7 +1225,7 @@
     links: { s: 's10', K: ['c10'] },
   });
 
-  // 道馆：冰面滑行 + 健康食物。滑到停下时脚下是健康食物就收集，是垃圾食品就滑回起点；集齐 3 个门开
+  // 挑战馆：冰面滑行 + 健康食物。滑到停下时脚下是健康食物就收集，是垃圾食品就滑回起点；集齐 3 个门开
   const FOOD = { a: ['🍎', 'apple', true], b: ['🥦', 'broccoli', true], c: ['🍌', 'banana', true], x: ['🍟', 'chips', false], y: ['🍩', 'donut', false], z: ['🍭', 'candy', false], h: ['🍔', 'hamburger', false] };
   EM.define('i10G', {
     kind: 'inside', z: 10, room: 'G',
@@ -1460,7 +1460,7 @@
     C.remove(n);
   }
   async function hush10(C, n) {
-    const g = n.id === 'h10a', S = L.sayer('Hush Grunt', g ? 'grunt' : 'gruntF', g ? 'm' : 'f');
+    const g = n.id === 'h10a', S = L.sayer('Hush Crew', g ? 'grunt' : 'gruntF', g ? 'm' : 'f');
     C.faceEach(n);
     if (g) {
       await C.talk([
@@ -1477,7 +1477,7 @@
     if (res !== 'win') return;
     C.set(g ? 'a10h1' : 'a10h2');
     C.remove(n);
-    if (!(C.flag('a10h1') && C.flag('a10h2'))) { await C.talk([nar('One more Hush Grunt is at the market!', '集市上还有一个嘘声团团员！')]); return; }
+    if (!(C.flag('a10h1') && C.flag('a10h2'))) { await C.talk([nar('One more Hush Crew is at the market!', '集市上还有一个嘘声团团员！')]); return; }
     await L.restoreCrystal(C, 10);
     await C.talk([nar('Everyone stands up and starts to exercise!', '大家都站了起来，开始锻炼身体！')]);
   }

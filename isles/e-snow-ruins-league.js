@@ -1,6 +1,6 @@
-// 回声岛 · 第 11–12 天气岛、回忆岛、冠军之路、英语冠军赛大厅（地图、剧情、道馆机关）。写法见 ISLES.md
-// 地图：t11 天气岛 / d11a d11b 气象塔 / i11W 气象台 / i11G 天气道馆 / r11 12 号路瀑布河
-//       t12 回忆岛 / d12a d12b 回忆神殿 / i12G 回忆道馆 / v1 v2 v3 冠军之路 / vL 冠军高原 / vLC vLM / i12L 冠军赛大厅
+// 回声岛 · 第 11–12 天气岛、回忆岛、勇气之路、英语冠军赛大厅（地图、剧情、挑战馆机关）。写法见 ISLES.md
+// 地图：t11 天气岛 / d11a d11b 气象塔 / i11W 气象台 / i11G 天气挑战馆 / r11 12 号路瀑布河
+//       t12 回忆岛 / d12a d12b 回忆神殿 / i12G 回忆挑战馆 / v1 v2 v3 勇气之路 / vL 冠军高原 / vLC vLM / i12L 冠军赛大厅
 (function () {
   'use strict';
   const EM = window.EchoMaps;
@@ -71,7 +71,7 @@
     hiddenItems: ['revive', 'fullheal', 'superball'],
     people: [
       // 塔门口的嘘声团员：先去气象台问清天气预报，再来打败他
-      { id: 'hush11', role: 'story', x: 30, y: 7, look: 'grunt', name: 'Hush Grunt', g: 'm', face: 'down', hideIf: 'w11door' },
+      { id: 'hush11', role: 'story', x: 30, y: 7, look: 'grunt', name: 'Hush Crew', g: 'm', face: 'down', hideIf: 'w11door' },
       { id: 'kid11', role: 'story', x: 20, y: 18, look: 'kid', name: 'Tim', g: 'm', face: 'left' },
       { id: 'granny11', role: 'story', x: 8, y: 9, look: 'granny', name: 'Granny Snow', g: 'f', face: 'down' },
       { id: 'skier11', role: 'talk', x: 15, y: 22, look: 'skier', name: 'Skier Lily', g: 'f', face: 'left',
@@ -105,9 +105,9 @@
     links: { e: 't11', '%': 'd11b' },
     npc: {},
     people: [
-      { id: 'g1', role: 'trainer', x: 4, y: 12, look: 'grunt', name: 'Hush Grunt', g: 'm', face: 'right', sight: 4, types: ['ice', 'dark'], n: 2, lv: 2,
+      { id: 'g1', role: 'trainer', x: 4, y: 12, look: 'grunt', name: 'Hush Crew', g: 'm', face: 'right', sight: 4, types: ['ice', 'dark'], n: 2, lv: 2,
         lines: [["Shh! Snow is quiet. Quiet is good!", '嘘！雪是安静的，安静就是好！']], win: ["My feet are cold...", '我的脚好冷……'], after: [['The machine is upstairs. But the door is locked!', '机器在楼上。不过楼梯的门是锁着的！']] },
-      { id: 'g2', role: 'trainer', x: 12, y: 2, look: 'gruntF', name: 'Hush Grunt', g: 'f', face: 'left', sight: 6, types: ['ice', 'poison'], n: 2, lv: 2,
+      { id: 'g2', role: 'trainer', x: 12, y: 2, look: 'gruntF', name: 'Hush Crew', g: 'f', face: 'left', sight: 6, types: ['ice', 'poison'], n: 2, lv: 2,
         lines: [["It's snowing, it's snowing! Nobody goes out!", '下雪啦下雪啦！谁都不许出门！']], win: ['Brr... You are strong.', '呜……你好强。'], after: [["The panel asks a weather question. Answer it, and the door opens.", '控制台会问一个天气问题。答对了门就开了。']] },
     ],
   });
@@ -158,7 +158,7 @@
     ],
   });
 
-  // 天气道馆：三个房间，听天气预报按顺序打开开关（晴 → 雨 → 风），每开一个就开一扇门；错了全部复位
+  // 天气挑战馆：三个房间，听天气预报按顺序打开开关（晴 → 雨 → 风），每开一个就开一扇门；错了全部复位
   const G11_ROWS = [
     'WWWWWWWWWWWWWWW',
     'Wk____u1u____kW',
@@ -184,7 +184,7 @@
   // 开关旁边地上的天气牌（over 图层）
   const G11_LABEL = { '2,5': 'S', '12,5': 'W', '3,11': 'R', '11,11': 'N', '3,14': 'C', '11,14': 'U' };
   EM.define('i11G', {
-    kind: 'inside', z: 11, room: 'G', name: '天气道馆', en: 'Weather Gym', sub: '天气岛',
+    kind: 'inside', z: 11, room: 'G', name: '天气挑战馆', en: 'Weather Hall', sub: '天气岛',
     pal: { floor: '#e1ecf4', floor2: '#d2e1ec', wall: '#f4f9fc', trim: '#0277bd', rug: '#4fc3f7', rock: '#9fb3c2' },
     rows: G11_ROWS,
     over: G11_ROWS.map((r, y) => [...r].map((c, x) => G11_LABEL[x + ',' + y] || '.').join('')),
@@ -198,7 +198,7 @@
     },
     people: [
       { id: 'gt1', role: 'trainer', x: 11, y: 17, look: 'weather', name: 'Reporter Rita', g: 'f', face: 'left', sight: 4, types: ['water', 'flying'], n: 2, lv: 1,
-        lines: [["Good evening! Here is the weather. It's windy in the gym!", '晚上好！现在播报天气：道馆里正在刮风！']], win: ['That was a storm of English!', '这真是一场英语风暴！'], after: [['Listen to the radio. The order is important!', '好好听收音机，顺序很重要！']] },
+        lines: [["Good evening! Here is the weather. It's windy in the gym!", '晚上好！现在播报天气：挑战馆里正在刮风！']], win: ['That was a storm of English!', '这真是一场英语风暴！'], after: [['Listen to the radio. The order is important!', '好好听收音机，顺序很重要！']] },
       { id: 'gt2', role: 'trainer', x: 11, y: 12, look: 'swimmer', name: 'Swimmer Joe', g: 'm', face: 'left', sight: 3, types: ['water', 'ice'], n: 2, lv: 2,
         lines: [["It's raining! I love rainy days!", '下雨啦！我最喜欢下雨天！']], win: ['I am all wet now!', '我全身都湿透了！'], after: [['Rainy comes after sunny. Remember?', '晴天后面是雨天，记得吗？']] },
       { id: 'gt3', role: 'trainer', x: 1, y: 9, look: 'skier', name: 'Skier Nora', g: 'f', face: 'right', sight: 4, types: ['ice', 'flying'], n: 3, lv: 2,
@@ -206,7 +206,7 @@
     ],
   });
 
-  // 12 号路 · 瀑布河：南边是雪原，中间一整道岩壁，只有攀瀑才能上去；北边是雾里的石头古迹和高山湖
+  // 12 号路 · 瀑布河：南边是雪原，中间一整道岩壁，只有逆流才能上去；北边是雾里的石头古迹和高山湖
   EM.define('r11', {
     kind: 'route', z: 11, name: '12 号路', en: 'Route 12 · Waterfall River', sub: '天气岛 → 回忆岛', theme: 'snow',
     rows: [
@@ -274,7 +274,7 @@
     links: { n: 't12', s: 't11' },
     signs: [
       ['Memory Island is just north. Can you see the old stones in the fog?', '回忆岛就在北边。看见雾里那些古老的石头了吗？'],
-      ['The Waterfall River. Surf to the waterfall and climb it with Waterfall!', '瀑布河。冲浪到瀑布下面，用「攀瀑」爬上去！'],
+      ['The Waterfall River. Ride to the waterfall and climb it with Water Way 3!', '瀑布河。在水上走到瀑布下面，用「水路 3 级」爬上去！'],
       ["Route 12. It's cold here. Wear a warm coat!", '12 号路。这里很冷，穿上暖和的外套！'],
     ],
     marks: [
@@ -293,7 +293,7 @@
     hiddenItems: ['superball', 'revive', 'fullheal', 'superpotion'],
     npc: {
       1: { role: 'trainer', name: 'Swimmer Kate', look: 'swimmerF', g: 'f', face: 'left', sight: 4, under: '~', types: ['water', 'ice'], n: 2, lv: 1,
-        lines: [["Brr! It's cold, but I love swimming!", '呼……好冷，但是我最爱游泳了！']], win: ['I need a hot drink...', '我得喝杯热饮……'], after: [['Surf to the waterfall. Then climb up!', '冲浪到瀑布下面，然后爬上去！']] },
+        lines: [["Brr! It's cold, but I love swimming!", '呼……好冷，但是我最爱游泳了！']], win: ['I need a hot drink...', '我得喝杯热饮……'], after: [['Surf to the waterfall. Then climb up!', '踏浪到瀑布下面，然后爬上去！']] },
       2: { role: 'trainer', name: 'Hiker Ben', look: 'hiker', g: 'm', face: 'down', sight: 4, types: ['rock', 'ground'], n: 2, lv: 1,
         lines: [['I climbed the waterfall yesterday!', '我昨天爬上了瀑布！']], win: ['You are a strong climber, too!', '你也是个厉害的攀登者！'], after: [['Memory Island is north. It is always foggy there.', '回忆岛在北边，那里总是有雾。']] },
       3: { role: 'trainer', name: 'Ranger Sue', look: 'ranger', g: 'f', face: 'left', sight: 3, types: ['grass', 'ghost'], n: 2, lv: 2,
@@ -354,7 +354,7 @@
     styles: { G: 'temple' },
     signs: [
       ['Memory Island. The Memory Temple is north.', '回忆岛。回忆神殿在北边。'],
-      ['South: Route 12. East: Champion Road.', '往南：12 号路。往东：冠军之路。'],
+      ['South: Route 12. East: Brave Road.', '往南：12 号路。往东：勇气之路。'],
     ],
     marks: [
       ['A stone guard: "I waited here for a thousand years."', '石头守卫：“我在这里等了一千年。”'],
@@ -371,7 +371,7 @@
     hiddenItems: ['moonstone', 'revive'],
     people: [
       { id: 'guard12', role: 'guard', badge: 13, x: 31, y: 16, look: 'guard', name: 'Guard Leo', g: 'm', face: 'left',
-        say: [['This is the Champion Road. Only trainers with thirteen badges can go.', '这里是冠军之路，只有 13 枚徽章的训练师才能通过。'], ['Win the badge of Memory Island first!', '先拿到回忆岛的徽章吧！']] },
+        say: [['This is the Brave Road. Only trainers with thirteen badges can go.', '这里是勇气之路，只有 13 枚徽章的训练师才能通过。'], ['Win the badge of Memory Island first!', '先拿到回忆岛的徽章吧！']] },
       { id: 'orion', role: 'story', x: 18, y: 4, look: 'orion', name: 'Orion', g: 'm', face: 'down', hideIf: 'm12orion' },
       { id: 'orion2', role: 'story', x: 20, y: 5, look: 'orion', name: 'Orion', g: 'm', face: 'left', showIf: 'm12orion', hideIf: 'ch12' },
       { id: 'monk12', role: 'story', x: 27, y: 8, look: 'monk', name: 'Monk Ren', g: 'm', face: 'down' },
@@ -422,11 +422,11 @@
     items: ['superpotion', 'fullheal'],
     hiddenItems: ['revive'],
     people: [
-      { id: 'tg1', role: 'trainer', x: 14, y: 16, look: 'grunt', name: 'Hush Grunt', g: 'm', face: 'down', sight: 3, types: ['dark', 'ghost'], n: 2, lv: 2,
+      { id: 'tg1', role: 'trainer', x: 14, y: 16, look: 'grunt', name: 'Hush Crew', g: 'm', face: 'down', sight: 3, types: ['dark', 'ghost'], n: 2, lv: 2,
         lines: [["Shh! Mr. Mute doesn't want visitors!", '嘘！默先生不想见客人！']], win: ['Shh... that was loud.', '嘘……你也太响了。'], after: [['Read the tablets. The door asks about them.', '读读石板吧。那扇门会问上面的事。']] },
-      { id: 'tg2', role: 'trainer', x: 20, y: 11, look: 'gruntF', name: 'Hush Grunt', g: 'f', face: 'left', sight: 5, types: ['poison', 'dark'], n: 2, lv: 2,
+      { id: 'tg2', role: 'trainer', x: 20, y: 11, look: 'gruntF', name: 'Hush Crew', g: 'f', face: 'left', sight: 5, types: ['poison', 'dark'], n: 2, lv: 2,
         lines: [['I forgot all my words... and I was happy!', '我把话全忘了……我可开心了！']], win: ['Maybe words are not so bad...', '也许说话也没那么糟……'], after: [['I remember a word now: "sorry".', '我现在想起一个词了：“sorry”。']] },
-      { id: 'tg3', role: 'trainer', x: 25, y: 13, look: 'grunt', name: 'Hush Grunt', g: 'm', face: 'up', sight: 4, types: ['dark', 'steel'], n: 3, lv: 2,
+      { id: 'tg3', role: 'trainer', x: 25, y: 13, look: 'grunt', name: 'Hush Crew', g: 'm', face: 'up', sight: 4, types: ['dark', 'steel'], n: 3, lv: 2,
         lines: [["Yesterday I was a quiet boy. Today I'm a quiet man!", '昨天我是个安静的男孩，今天我是个安静的男人！']], win: ["I'm not quiet now. I'm sad!", '我现在不安静了，我难过！'], after: [['Go up. The boss is waiting at the sea door.', '上去吧，老大就在海底之门那里等着。']] },
     ],
   });
@@ -469,7 +469,7 @@
     ],
   });
 
-  // 回忆道馆：翻牌配对（英文 ↔ 中文），配完一组，这组上面的机关墙就消失
+  // 回忆挑战馆：翻牌配对（英文 ↔ 中文），配完一组，这组上面的机关墙就消失
   const G12_ROWS = [
     'WWWWWWWWWWWWW',
     'Wk____1____kW',
@@ -508,7 +508,7 @@
     G12_PAINT['ABCDEFGHIJKL'[c.i]] = { c: '#b9f6ca', t, tc: '#1b5e20' };
   });
   EM.define('i12G', {
-    kind: 'inside', z: 12, room: 'G', name: '回忆道馆', en: 'Memory Gym', sub: '回忆岛',
+    kind: 'inside', z: 12, room: 'G', name: '回忆挑战馆', en: 'Memory Hall', sub: '回忆岛',
     pal: { floor: '#e6dccb', floor2: '#d9ccb6', wall: '#f3ecdf', trim: '#6d4c41', rug: '#8d6e63' },
     rows: G12_ROWS,
     over: G12_ROWS.map((r, y) => [...r].map((c, x) => MEM_CARDS.some(q => q.x === x && q.y === y) ? '?' : '.').join('')),
@@ -526,10 +526,10 @@
   });
 
   // =====================================================================
-  // 冠军之路：入口高地 v1 → 洞窟 1 楼 v2（漆黑，怪力 / 碎岩 / 地下湖）→ 洞窟 2 楼 v3（小凯）→ 冠军高原 vL
+  // 勇气之路：入口高地 v1 → 洞窟 1 楼 v2（漆黑，大力推 / 敲石 / 地下湖）→ 洞窟 2 楼 v3（小凯）→ 冠军高原 vL
   // =====================================================================
   EM.define('v1', {
-    kind: 'route', z: 12, name: '冠军之路', en: 'Champion Road', sub: '回忆岛 → 英语冠军赛', theme: 'clock', lv: 2,
+    kind: 'route', z: 12, name: '勇气之路', en: 'Brave Road', sub: '回忆岛 → 英语冠军赛', theme: 'clock', lv: 2,
     rows: [
       '##############################',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
@@ -555,7 +555,7 @@
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
     ],
     links: { w: 't12', K: 'v2' },
-    signs: [['Champion Road. Only the strongest trainers go this way!', '冠军之路。只有最强的训练师才走这条路！']],
+    signs: [['Brave Road. Only the strongest trainers go this way!', '勇气之路。只有最强的训练师才走这条路！']],
     marks: [
       ['A stone lion. "Speak clearly, and you will win."', '一座石狮子：“说得清楚，你就会赢。”'],
       ['A stone lion. "Thirteen islands, thirteen badges."', '一座石狮子：“十三座岛，十三枚徽章。”'],
@@ -573,9 +573,9 @@
     },
   });
 
-  // 冠军之路洞窟 1 楼：漆黑（要闪光）。南边大厅 → 碎岩 → 怪力推石 → 冲浪过地下湖 → 北边迷宫 → 楼梯
+  // 勇气之路洞窟 1 楼：漆黑（要点灯）。南边大厅 → 敲石 → 大力推石 → 踏浪过地下湖 → 北边迷宫 → 楼梯
   EM.define('v2', {
-    kind: 'cave', cave: 'rock', z: 12, name: '冠军之路 洞窟 1 楼', en: 'Champion Road Cave 1F', sub: '冠军之路', dark: true, dungeon: true, lv: 3,
+    kind: 'cave', cave: 'rock', z: 12, name: '勇气之路 洞窟 1 楼', en: 'Brave Road Cave 1F', sub: '勇气之路', dark: true, dungeon: true, lv: 3,
     rows: [
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -620,7 +620,7 @@
       1: { role: 'trainer', name: 'Black Belt Kenji', look: 'strong', g: 'm', face: 'left', sight: 4, types: ['fight', 'rock'], n: 3, lv: 4,
         lines: [["I get up at five o'clock and train every day!", '我每天五点起床训练！']], win: ['My daily plan needs more English!', '我的作息表里得加点英语了！'], after: [['Smash the cracked rocks. Push the big ones.', '有裂缝的石头打碎，大石头推开。']] },
       2: { role: 'trainer', name: 'Ace Trainer Mona', look: 'swimmerF', g: 'f', face: 'right', sight: 5, types: ['water', 'dragon', 'ice'], n: 3, lv: 4,
-        lines: [["It's dark and cold here. How's the weather outside?", '这里又黑又冷。外面天气怎么样？']], win: ["You're as bright as the sun!", '你像太阳一样耀眼！'], after: [['Surf across the lake. The stairs are in the north.', '冲浪过湖，楼梯在北边。']] },
+        lines: [["It's dark and cold here. How's the weather outside?", '这里又黑又冷。外面天气怎么样？']], win: ["You're as bright as the sun!", '你像太阳一样耀眼！'], after: [['Surf across the lake. The stairs are in the north.', '踏浪过湖，楼梯在北边。']] },
       3: { role: 'trainer', name: 'Psychic Rin', look: 'studentF', g: 'f', face: 'down', sight: 3, types: ['psychic', 'ghost'], n: 3, lv: 4,
         lines: [['I can see your past. You helped many people!', '我能看见你的过去。你帮助过很多人！']], win: ["I didn't see that coming!", '这个我可没算到！'], after: [['A giant made of iron sleeps in the west.', '西边睡着一个铁做的巨人。']] },
       4: { role: 'trainer', name: 'Ace Trainer Owen', look: 'athlete', g: 'm', face: 'down', sight: 1, types: ['steel', 'fire', 'normal'], n: 3, lv: 5,
@@ -628,9 +628,9 @@
     },
   });
 
-  // 冠军之路洞窟 2 楼：有光从北边照进来；出口前小凯在等你
+  // 勇气之路洞窟 2 楼：有光从北边照进来；出口前小凯在等你
   EM.define('v3', {
-    kind: 'cave', cave: 'rock', z: 12, name: '冠军之路 洞窟 2 楼', en: 'Champion Road Cave 2F', sub: '冠军之路', dark: false, dungeon: true, lv: 3,
+    kind: 'cave', cave: 'rock', z: 12, name: '勇气之路 洞窟 2 楼', en: 'Brave Road Cave 2F', sub: '勇气之路', dark: false, dungeon: true, lv: 3,
     rows: [
       'XXXXXXXXXXXXXXXXX^^XXXXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXXXXX::::XXXXXXXXXXXXXXXX',
@@ -673,7 +673,7 @@
     ],
   });
 
-  // 冠军高原：英语冠军赛会场（体育场）、怪兽中心、商店
+  // 冠军高原：英语冠军赛会场（体育场）、休息站、商店
   EM.define('vL', {
     kind: 'route', noGrass: true, z: 12, name: '冠军高原', en: 'Champion Plateau', sub: '英语冠军赛', theme: 'lab',
     rows: [
@@ -700,7 +700,7 @@
     links: { s: 'v3' },
     doors: { A: 'i12L', C: 'vLC', M: 'vLM' },
     styles: { A: 'stadium' },
-    signs: [['The English League. Four masters and the Champion are waiting!', '英语冠军赛。四位大师和冠军在里面等你！']],
+    signs: [['The English Cup. Four masters and the Champion are waiting!', '英语冠军赛。四位擂主和冠军在里面等你！']],
     marks: [
       ['A golden trophy. "Speak, and be heard!"', '一座金奖杯：“开口说，就会被听见！”'],
       ['A golden trophy. "Every word is a step."', '一座金奖杯：“每一个词都是一步。”'],
@@ -709,11 +709,11 @@
     markKinds: ['trophy', 'trophy', 'fountain'],
     people: [
       { id: 'fan12', role: 'talk', x: 20, y: 13, look: 'kid', name: 'Fan Toby', g: 'm', face: 'left',
-        say: [['Wow! You came up the Champion Road! I watched the League on TV last year.', '哇！你是从冠军之路上来的！去年我在电视上看了冠军赛。'], ['The Champion was amazing. I want to be like her one day!', '冠军太厉害了，我以后也想像她一样！']], speak: 'I want to be the Champion!' },
+        say: [['Wow! You came up the Brave Road! I watched the English Cup on TV last year.', '哇！你是从勇气之路上来的！去年我在电视上看了冠军赛。'], ['The Champion was amazing. I want to be like her one day!', '冠军太厉害了，我以后也想像她一样！']], speak: 'I want to be the Champion!' },
     ],
   });
   EM.define('vLC', {
-    kind: 'inside', z: 12, room: 'C', name: '冠军高原 · 怪兽中心', en: 'Monster Center', sub: '冠军高原',
+    kind: 'inside', z: 12, room: 'C', name: '冠军高原 · 休息站', en: 'Rest Stop', sub: '冠军高原',
     rows: ['WWWWWWWWWWW', 'Wk___1___kW', 'W__QQQQQ__W', 'W_________W', 'WP_______pW', 'W__uuuuu__W', 'Wp_uuuuu_YW', 'W____u____W', 'WWWWWeWWWWW'],
     links: { e: 'vL' }, npc: { 1: { role: 'nurse' } },
   });
@@ -723,9 +723,9 @@
     links: { e: 'vL' }, npc: { 1: { role: 'clerk' } },
   });
 
-  // 英语冠军赛大厅：北墙的出口通第一位大师的房间（i121–i125 用老模板）
+  // 英语冠军赛大厅：北墙的出口通第一位擂主的房间（i121–i125 用老模板）
   EM.define('i12L', {
-    kind: 'inside', z: 12, room: 'L', name: '英语冠军赛 · 大厅', en: 'English League', sub: '冠军高原',
+    kind: 'inside', z: 12, room: 'L', name: '英语冠军赛 · 大厅', en: 'English Cup', sub: '冠军高原',
     rows: [
       'WWWWW^WWWWW',
       'W_1_____2_W',
@@ -742,7 +742,7 @@
     npc: {
       1: { role: 'nurse' }, 2: { role: 'clerk' },
       3: { role: 'talk', name: 'Guide Emma', look: 'teacher', g: 'f', face: 'left',
-        say: [['Welcome to the English League!', '欢迎来到英语冠军赛！'], ['Four Masters and the Champion are waiting. Each of them has a special rule.', '四位大师和冠军在等你，每个人都有自己的特别规则。'], ['After you win a room, the next door opens. Your progress is saved.', '赢下一个房间，下一扇门就会打开，进度会保存。'], ['Heal your team here, and buy what you need. Good luck!', '在这里恢复队伍、买好需要的东西。祝你好运！']], speak: 'I am ready for the English League!' },
+        say: [['Welcome to the English Cup!', '欢迎来到英语冠军赛！'], ['Four Masters and the Champion are waiting. Each of them has a special rule.', '四位擂主和冠军在等你，每个人都有自己的特别规则。'], ['After you win a room, the next door opens. Your progress is saved.', '赢下一个房间，下一扇门就会打开，进度会保存。'], ['Heal your team here, and buy what you need. Good luck!', '在这里恢复队伍、买好需要的东西。祝你好运！']], speak: 'I am ready for the English Cup!' },
     },
   });
 
@@ -755,7 +755,7 @@
   const N = (en, zh, x) => Object.assign(nar(en, zh), x || {});   // 旁白（可以带任务）
   const STORM = 'brightness(.9) saturate(.5) contrast(.9) hue-rotate(-8deg)';   // 暴雪：画面灰蓝
   const FOG = 'brightness(1.05) saturate(.55) contrast(.78)';                     // 雾：画面发白
-  // 滤镜换地图时引擎会清掉；但是对战输了被送回怪兽中心不经过换地图，所以走一步时再检查一次
+  // 滤镜换地图时引擎会清掉；但是对战输了被送回休息站不经过换地图，所以走一步时再检查一次
   let filtered = false;
   const setFilter = (C, css) => { C.filter(css); filtered = !!css; };
   const unfilter = C => { if (filtered) setFilter(C, ''); return null; };
@@ -791,7 +791,7 @@
   // =====================================================================
   // 第 11 岛 · 天气岛：Rain or Shine
   // 暴雪不停（村民问天气）→ 气象台斯凯博士：问收音机要天气预报 → 打败塔门口的团员 → 气象塔 1 楼冰面 + 控制台
-  // → 塔顶连打低语、闷雷 → 按预报顺序关掉天气机 → 雪停了、夺回天气水晶 → 台长送攀瀑
+  // → 塔顶连打低语、闷雷 → 按预报顺序关掉天气机 → 雪停了、夺回天气水晶 → 台长送逆流
   // =====================================================================
   const SKYE = L.sayer('Dr. Skye', 'weather', 'f');
   const RADIO = (en, zh, x) => Object.assign({ who: 'Radio', emo: '📻', en, zh }, x || {});
@@ -821,7 +821,7 @@
 
   async function giveFalls(C) {
     await C.talk([
-      SKYE('Please take this. It is the HM Waterfall.', '这个送给你，秘传学习器「攀瀑」。', { onShow: () => { if (!C.flag('got_falls')) { C.give('hm_falls'); C.set('got_falls'); } } }),
+      SKYE('Please take this Echo Shell. Now Water Way can climb waterfalls!', '这个回声贝送给你。「水路」升到 3 级，能爬上瀑布了！', { onShow: () => { if (!C.flag('got_falls')) { C.give('hm_falls'); C.set('got_falls'); } } }),
       SKYE('With twelve badges, a water monster can climb up a waterfall.', '有了 12 枚徽章，水系怪兽就能爬上瀑布。'),
       SKYE('The Waterfall River is north of town. Memory Island is above the waterfall.', '瀑布河就在镇子北边，瀑布上面就是回忆岛。'),
       L.speak(C, 'Thank you, Dr. Skye!', '向斯凯博士道谢'),
@@ -841,7 +841,7 @@
         L.ask(SKYE, 'What did the radio say? What is the order?', '收音机说了什么？选出天气的顺序，再说出来。', 'Sunny, then rainy, then windy.', ['Rainy, then sunny, then windy.', 'Windy, then snowy, then sunny.'],
           { fail: () => [SKYE("Listen again. It's sunny, then rainy, then windy.", '再听一遍：先晴天，再下雨，然后刮风。')] }),
         SKYE('Right! Sunny, then rainy, then windy. Remember the order!', '对！先晴天，再下雨，然后刮风。记住这个顺序！'),
-        SKYE('A Hush Grunt is standing at the tower door. Please be careful!', '塔门口站着一个嘘声团员，千万小心！'),
+        SKYE('A Hush Crew is standing at the tower door. Please be careful!', '塔门口站着一个嘘声团员，千万小心！'),
       ]);
       C.set('w11fc');
       return;
@@ -859,7 +859,7 @@
   }
 
   async function doorGrunt(C, n) {
-    const H = L.sayer('Hush Grunt', 'grunt', 'm');
+    const H = L.sayer('Hush Crew', 'grunt', 'm');
     C.faceEach(n);
     if (!C.flag('w11fc')) {
       await C.talk([
@@ -947,7 +947,7 @@
       nar('The machine stopped. The snow is stopping... The sun is coming out!', '机器停了。雪慢慢停了……太阳出来了！'),
     ]);
     await L.restoreCrystal(C, 11);
-    // 台长跑上来道谢，送攀瀑
+    // 台长跑上来道谢，送逆流
     const s = await approach(C, { look: P.LOOKS.weather, name: 'Dr. Skye', g: 'f' });
     await C.talk([SKYE('{name}! You did it! Look out of the window. The sky is blue!', '{name}！你做到了！看看窗外，天空是蓝的！')]);
     await giveFalls(C);
@@ -959,14 +959,14 @@
     await towerTop(C);
   }
 
-  // ---------- 天气道馆：听广播里的天气预报，按顺序打开开关 ----------
+  // ---------- 天气挑战馆：听广播里的天气预报，按顺序打开开关 ----------
   const G11 = { '12,14': 'sunny', '2,14': 'cloudy', '2,11': 'rainy', '12,11': 'snowy', '1,5': 'sunny', '13,5': 'windy' };
   const G11_GATE = { sunny: 2, rainy: 1, windy: 0 };
   const g11k = C => C.gateOpen(2) ? (C.gateOpen(1) ? (C.gateOpen(0) ? 3 : 2) : 1) : 0;
   const g11note = C => C.note('📻 按天气预报的顺序打开天气开关 · 已打开 <b>' + g11k(C) + '/3</b>（听不清就去问收音机）');
   const broadcast = C => C.talk([
-    { who: 'Gym Radio', emo: '📻', en: 'Ding dong! Here is the weather report for the Weather Gym.', zh: '叮咚！天气道馆的天气预报来了。' },
-    { who: 'Gym Radio', emo: '📻', en: 'Sunny, then rainy, then windy.', zh: '（仔细听！只听不看。点右上角的喇叭可以再听一遍）', hideEn: true },
+    { who: 'Hall Radio', emo: '📻', en: 'Ding dong! Here is the weather report for the Weather Hall.', zh: '叮咚！天气挑战馆的天气预报来了。' },
+    { who: 'Hall Radio', emo: '📻', en: 'Sunny, then rainy, then windy.', zh: '（仔细听！只听不看。点右上角的喇叭可以再听一遍）', hideEn: true },
     nar('Turn on the weather switches in the same order. If you are wrong, everything starts again!', '按同样的顺序打开天气开关。按错了就全部重来！'),
   ]);
   async function g11Switch(C, f) {
@@ -975,7 +975,7 @@
     const w = G11[key];
     if (!w) return;
     const k = g11k(C), SW = (en, zh, x) => Object.assign({ who: 'Weather Switch', emo: WX[w][0], en, zh }, x || {});
-    if (k >= 3) { await C.talk([SW('All the weather lights are on. Go and see the Gym Leader!', '天气灯全亮了，快去见馆主吧！')]); return; }
+    if (k >= 3) { await C.talk([SW('All the weather lights are on. Go and see the Isle Master!', '天气灯全亮了，快去见岛主吧！')]); return; }
     if (G11_GATE[w] != null && C.gateOpen(G11_GATE[w]) && key !== '1,5') { await C.talk([SW('This switch is already on.', '这个开关已经打开了。')]); return; }
     let yes = false;
     await C.talk([SW('This is the ' + WX[w][1].toUpperCase() + ' switch. Turn it on?', '这是「' + WX[w][2] + '」开关（' + WX[w][1] + '）。要打开吗？', {
@@ -986,7 +986,7 @@
       C.openGate(G11_GATE[w], true);
       C.E.SFX.ok(k + 2);
       await C.talk([SW(WX[w][1] + '! The ' + w + ' light is on. A gate opened!', WX[w][2] + '！灯亮了，一扇门打开了！（' + (k + 1) + '/3）')]);
-      if (k + 1 === 3) { C.set('g11solved'); C.note(null); await C.talk([nar('Sunny, then rainy, then windy. The way to the Gym Leader is open!', '晴、雨、风，顺序全对！通往馆主的路打开了！')]); }
+      if (k + 1 === 3) { C.set('g11solved'); C.note(null); await C.talk([nar('Sunny, then rainy, then windy. The way to the Isle Master is open!', '晴、雨、风，顺序全对！通往岛主的路打开了！')]); }
       else g11note(C);
       return;
     }
@@ -1146,7 +1146,7 @@
       L.speak(C, 'I helped the lost boy.', '我帮助了走丢的小男孩。'),
       ORI('I studied old words on many islands.', '我在很多岛上研究过古老的词语。'),
       L.speak(C, 'I learned a lot of English.', '我学会了很多英语。'),
-      nar('Far away, many voices answer. The Gym Leaders, Mom, Professor Echo, Kai...', '远方传来许多声音在回应：各岛的馆主、妈妈、回声博士、小凯……'),
+      nar('Far away, many voices answer. The Isle Masters, Mom, Professor Echo, Kai...', '远方传来许多声音在回应：各岛的岛主、妈妈、回声博士、小凯……'),
       nar('The people of thirteen islands are talking together!', '十三座岛的人们都在一起说话！'),
       ORI('Now, all together!', '现在，大家一起喊！'),
       L.speak(C, 'We remember! Echodrake, wake up!', '大家一起大声喊：我们记得！回声龙，醒来吧！'),
@@ -1174,19 +1174,19 @@
     if (mute) C.remove(mute);
     C.set('ch12');
     C.MG.addItem('superball', 3);
-    C.E.toast('💠 超级球 +3（默先生还回来的谢礼）', 'gold');
+    C.E.toast('💠 金回声球 +3（默先生还回来的谢礼）', 'gold');
     C.E.save();
     await C.walk(d, 'down', 2, 260);
     await C.talk([
-      RS("I'll go to the Champion Road first. See you there. I'll be stronger!", '我先去冠军之路了。那里见，我会变得更强！'),
+      RS("I'll go to the Brave Road first. See you there. I'll be stronger!", '我先去勇气之路了。那里见，我会变得更强！'),
       ORI('Echodrake is looking at you. It wants to test your voice. Talk to it when you are ready.', '回声龙在看着你，它想试试你的声音。准备好了就去和它说话吧。'),
-      ORI('And the Memory Gym is open now. The Memory Dragon is waiting.', '回忆道馆现在也开门了，回忆巨龙在等你。'),
+      ORI('And the Memory Hall is open now. The Memory Dragon is waiting.', '回忆挑战馆现在也开门了，回忆巨龙在等你。'),
     ]);
     await leave(C, r, 'down', 3);
     await leave(C, o, 'down', 3);
   }
 
-  // ---------- 回忆道馆：翻牌配对 ----------
+  // ---------- 回忆挑战馆：翻牌配对 ----------
   let memFirst = null;
   const memChar = (c, up) => (up ? 'ABCDEFGHIJKL' : 'abcdefghijkl')[c.i];
   function memSync(C) { MEM_CARDS.forEach(c => C.setOver(c.x, c.y, C.flag('mem12:' + c.pair) ? memChar(c, true) : '?')); memFirst = null; }
@@ -1211,7 +1211,7 @@
       if (sec.cards.every(([pi]) => C.flag('mem12:' + pi)) && !C.gateOpen(sec.gate)) {
         C.openGate(sec.gate, true);
         await C.talk([nar('Rumble... The stone wall above the cards is gone!', '轰隆隆……这组牌上面的石墙消失了！')]);
-        if (sec.gate === 0) { C.note(null); await C.talk([nar('All the pairs are found! The way to the Gym Leader is open.', '所有的牌都配对了！通往馆主的路打开了。')]); }
+        if (sec.gate === 0) { C.note(null); await C.talk([nar('All the pairs are found! The way to the Isle Master is open.', '所有的牌都配对了！通往岛主的路打开了。')]); }
       }
       return;
     }
@@ -1224,7 +1224,7 @@
     '9,5': ['A stone pillar: "Last weekend we went to the beach. It was fun!"', '石柱：“上周末我们去了海滩，真好玩！”'],
   };
 
-  // ---------- 冠军之路：小凯的最后一战 ----------
+  // ---------- 勇气之路：小凯的最后一战 ----------
   async function kaiBattle(C, k) {
     const K = L.sayer('Kai', 'kai', 'm'), MG = C.MG;
     await C.alert(k);
@@ -1237,7 +1237,7 @@
         { fail: () => [K('You said, "Speak loudly! Your monster will hear you."', '你说：“大声说！你的怪兽会听见的。”')] }),
       K('Yes! "Speak loudly. Your monster will hear you." I never forgot it.', '对！“大声说，你的怪兽会听见的。”我一直都记得。'),
       K('Now I speak loudly every day. My monsters and I got very strong.', '现在我每天都大声说话。我和我的怪兽都变得很强了。'),
-      K('This is our last battle before the League. Please give me everything you have!', '这是冠军赛前我们最后一战。请拿出你全部的本事吧！'),
+      K('This is our last battle before the English Cup. Please give me everything you have!', '这是冠军赛前我们最后一战。请拿出你全部的本事吧！'),
     ]);
     const lv = MG.zoneLv(12) + 6;
     const res = await C.battle('trainer', { foes: MG.teamOf(['grass', 'spark', 'flying', 'psychic', 'water', 'steel'], 6, lv, 'kai-final'), trainer: { name: 'Kai', img: C.portrait(P.LOOKS.kai) }, noWhiteout: true });

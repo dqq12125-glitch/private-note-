@@ -63,6 +63,10 @@
       '.tk-notice li{margin:4px 0}',
       '.tk-badge{display:inline-block;min-width:1.4em;margin-left:4px;border-radius:9px;background:#ff7043;color:#fff;font-size:12px;line-height:1.4em;text-align:center}',
       '.tk-raw{color:var(--ink-3,#7d93a3);font-size:12px;word-break:break-all}',
+      // AI 标识：聊天页顶上的小标签、开头那句提示、首页聊天介绍里的一行
+      '.tk-ai{align-self:flex-start;margin-top:2px;font-size:11px;font-weight:800;color:#4b3d8f;background:#efeaff;border-radius:8px;padding:1px 7px}',
+      '.tk-b.sys{align-self:center;max-width:94%;background:#f3f0ff;color:#4b3d8f;font-size:13px;line-height:1.45;text-align:center;border-radius:12px;padding:6px 10px}',
+      '.tk-ai-line{margin:4px 0 0;font-size:12px;color:var(--ink-3,#7d93a3)}',
       // 横屏：「按住说英语」是最要紧的按钮，不能被工具按钮挤成两行的小按钮；「点这里打字」的链接单独一行放右边
       '@media (orientation: landscape) and (max-height: 600px){.tk-ctl{flex-wrap:wrap}.tk-tools{flex:none}.tk-typenote{flex-basis:100%}.tk-typeopen{flex-basis:100%;text-align:right}.tk-mic{min-width:200px;white-space:nowrap}.tk-ov .tk-goal .tk-words{flex-wrap:wrap;overflow:visible}}',
     ].join('\n');
@@ -189,7 +193,8 @@
       isle.map(n => card(n, false)).join('');
     return '<section class="tk-home">' +
       '<div class="tk-intro"><b>🗣️ 用英语和岛民聊天</b><p>按住话筒说英语，松开就发出去；岛民会用自己的声音回答你。每段聊天有一个小目标，拆成几个小步骤，做到一步就打一个勾，完成了有金币！听不懂就点「💡 帮帮我」或者点岛民的话看中文。</p>' +
-      '<p class="tk-prog' + (t.done ? ' ok' : '') + '">' + progText(t) + (t.done ? ' · 今天的聊天任务完成了' : ' · 用语音说满 ' + NEED + ' 句英语，或者完成一个小目标') + '</p></div>' +
+      '<p class="tk-prog' + (t.done ? ' ok' : '') + '">' + progText(t) + (t.done ? ' · 今天的聊天任务完成了' : ' · 用语音说满 ' + NEED + ' 句英语，或者完成一个小目标') + '</p>' +
+      '<p class="tk-ai-line">🤖 岛民的话和声音由 AI 生成（阿里云通义千问提供）</p></div>' +
       (url ? '' : '<div class="tk-warn">还没连上对话服务。请家长点下面的「设置服务」。</div>') +
       '<div class="tk-list">' + cards + '</div>' +
       '<div class="tk-foot"><button class="btn ghost" data-act="talk_log">📜 聊天记录</button><button class="btn ghost" data-act="talk_cfg">⚙️ 设置服务</button></div>' +
@@ -236,8 +241,9 @@
   }
 
   // ---------- 播放岛民的声音：24kHz PCM 分块排队播；上一句的声音留在内存里，「再听一遍」用 ----------
-  const OUT = { ctx: null, next: 0, srcs: [], cur: [], last: null, el: null, url: '' };
+  const OUT = { ctx: null, next: 0, srcs: [], cur: [], last: null, el: null, url: '', hold: null, notice: null };
   function playChunk(b64) {
+    if (OUT.hold) { OUT.hold.push(b64); return; }   // 开头的 AI 提示还在准备：岛民的声音先排着
     if (!OUT.ctx) OUT.ctx = new (window.AudioContext || window.webkitAudioContext)();
     const ctx = OUT.ctx;
     const bin = atob(b64), n = bin.length >> 1;
@@ -251,7 +257,50 @@
     OUT.srcs.push(src); src.onended = () => { OUT.srcs = OUT.srcs.filter(x => x !== src); talking(); };
     talking();
   }
-  function stopPlayback() { OUT.srcs.forEach(s => { try { s.stop(); } catch (e) {} }); OUT.srcs = []; OUT.next = 0; talking(); }
+  function stopPlayback() {
+    OUT.srcs.forEach(s => { try { s.stop(); } catch (e) {} }); OUT.srcs = []; OUT.next = 0;
+    if (OUT.notice) { try { OUT.notice.stop(); } catch (e) {} OUT.notice = null; }
+    if (OUT.hold) { const q = OUT.hold; OUT.hold = null; q.length = 0; }
+    talking();
+  }
+
+  // ---------- AI 标识（《人工智能生成合成内容标识办法》，2025-09-01 起）：聊天页顶上一直写着，开头再用语音说一句 ----------
+  // 语音提示是打包进去的中文配音 assets/voice/zh/ai-notice.mp3（本机 Kokoro，Apache-2.0，声音 zf_xiaobei；
+  // 合成的就是 AI_SPOKEN 这句话，speed 1.1；Whisper 听写核对过），放在聊天自己的声音通道里，岛民的第一句排在它后面；读不到文件就用阿里云现场合成（中文）
+  const AI_LABEL = 'AI 生成 · 由阿里云通义千问提供';
+  const AI_SPOKEN = '温馨提示：岛民说的话和声音，都由人工智能生成。';
+  const NOTICE_URL = 'assets/voice/zh/ai-notice.mp3';
+  let noticeBuf = null;
+  async function noticeBuffer(ctx) {
+    if (noticeBuf) return noticeBuf;
+    let ab = null;
+    try { if (location.protocol !== 'file:') { const r = await fetch(NOTICE_URL); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
+    if (!ab) {   // 没有打包的配音（网页版没带上）：阿里云合成一句中文
+      try { const u = await cloudTTS(AI_SPOKEN, 'f', 'Chinese'); if (u) { const r = await fetch(u); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
+    }
+    if (!ab) return null;
+    try { noticeBuf = await new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); } catch (e) { noticeBuf = null; }
+    return noticeBuf;
+  }
+  function aiNotice(c) {
+    bubble('sys', '🤖 ' + AI_SPOKEN + '（' + AI_LABEL + '）');
+    countLog('aiNotice');
+    try { if (!OUT.ctx) OUT.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    const ctx = OUT.ctx, q = OUT.hold = [];
+    if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+    const release = () => { if (OUT.hold !== q) return; OUT.hold = null; q.forEach(b => playChunk(b)); };
+    const tm = setTimeout(release, 4000);   // 提示 4 秒还没准备好：不等了，岛民先说
+    noticeBuffer(ctx).then(buf => {
+      clearTimeout(tm);
+      if (OUT.hold !== q || c !== C) return;
+      if (buf) {
+        const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination);
+        const t = Math.max(ctx.currentTime + 0.05, OUT.next); src.start(t); OUT.next = t + buf.duration;
+        OUT.notice = src; src.onended = () => { if (OUT.notice === src) OUT.notice = null; };
+      }
+      release();
+    }, () => { clearTimeout(tm); release(); });
+  }
   const npcSpeaking = () => OUT.srcs.length > 0 || !!(OUT.el && !OUT.el.paused);
   // 岛民说完一句：这一句的声音留着（再听一遍）
   function keepLast() { if (OUT.cur.length) OUT.last = OUT.cur; OUT.cur = []; }
@@ -334,7 +383,8 @@
     const ov = document.createElement('div');
     ov.id = 'tk-ov'; ov.className = 'tk-ov';
     ov.innerHTML = '<div class="tk-box">' +
-      '<div class="tk-head"><img id="tk-face" src="' + face(npc) + '" alt=""><div><b>' + (npc.zh === npc.name ? esc(npc.name) : esc(npc.zh) + ' · ' + esc(npc.name)) + '</b><small>' + esc(npc.topicZh) + '</small><span class="tk-cnt" id="tk-cnt"></span></div>' +
+      '<div class="tk-head"><img id="tk-face" src="' + face(npc) + '" alt=""><div><b>' + (npc.zh === npc.name ? esc(npc.name) : esc(npc.zh) + ' · ' + esc(npc.name)) + '</b><small>' + esc(npc.topicZh) + '</small>' +
+      '<span class="tk-ai" id="tk-ai" title="岛民的话和声音由人工智能生成">' + AI_LABEL + '</span><span class="tk-cnt" id="tk-cnt"></span></div>' +
       '<button class="tk-x" data-act="talk_end" aria-label="结束">结束</button></div>' +
       '<div class="tk-goal"><div class="tk-gt">🎯 ' + (goal.lv ? '<em class="tk-lv">' + goal.lv + '</em> ' : '') + esc(goalZh) + '</div>' +
       (goal.steps.length ? '<ol class="tk-steps" id="tk-steps">' + goal.steps.map((s, k) => '<li data-act="talk_step" data-i="' + k + '"><i>☐</i><span>' + esc(s.zh) + '</span>' + (s.en ? '<small hidden>例：' + esc(s.en) + '</small>' : '') + '</li>').join('') + '</ol>' : '') +
@@ -353,6 +403,7 @@
     const c = C;
     progress();
     OUT.last = null; OUT.cur = [];
+    aiNotice(c);   // AI 标识：开头先用中文说一句「岛民说的话和声音都由人工智能生成」（岛民的声音排在它后面）
 
     // 麦克风：先要权限；要不到就只能打字（打字框直接打开）
     let micOk = false;
@@ -763,6 +814,7 @@
         (voice < 3 ? '<p class="tk-note">这次用语音说的英语句子不到 3 句' + (typed ? '（打字的不算）' : '') + '，目标先不算完成。下次按住话筒说吧！</p>' : '') +
         (steps.length ? '<ul class="tk-steps-r">' + steps.map((s, k) => '<li>' + (ev.steps[k] ? '✅ ' : '⬜ ') + esc(s.zh) + '</li>').join('') + '</ul>' : '') +
         (ev.praise ? '<p>' + esc(ev.praise) + '</p>' : '') +
+        (ev.ai ? '<p class="tk-ai-line">🤖 老师的评语由 AI 生成（阿里云通义千问提供）</p>' : '') +
         (!ev.ai ? '<p class="tk-note">老师这次没来得及写评语，不过这段聊天算数，已经记下来了！</p>' : '') +
         (ev.tips.length ? '<div class="tk-tips"><b>可以这样说更好（明天的每日复习里会再练）：</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
         (coins ? '<p class="tk-coin">🪙 +' + coins + ' 金币</p>' : '');
@@ -778,7 +830,8 @@
   // ---------- 安卓 APK 直连：原生 WebSocket（带密钥）⇄ 阿里云；对外装成和中转服务一样的 WebSocket，聊天界面不用改 ----------
   const NWS = {}; let nid = 0;
   window.__echoNative = (id, type, data) => { const h = NWS[id]; if (h) h(type, data); };
-  const DAILY_SEC = 30 * 60, SESSION_SEC = 8 * 60;   // 和中转服务的默认值一样：每天 30 分钟、每段 8 分钟
+  // 和中转服务的默认值一样：每天 30 分钟、每段 8 分钟。销售版每天 15 分钟（AI 费用是家长自己付的，评估建议每天 10–15 分钟）
+  const DAILY_SEC = (window.DEX && DEX.sales ? 15 : 30) * 60, SESSION_SEC = 8 * 60;
   function usage(add) {
     const day = G.dayStr(); let U = {};
     try { U = JSON.parse(LS('echo-talk-usage') || '{}'); } catch (e) {}
@@ -869,19 +922,20 @@
     TIPS[k] = tip;
     return tip;
   }
-  // 朗读没有提前配音的句子：阿里云语音合成，返回音频地址（同一句话这次打开游戏里只合成一次）
+  // 朗读没有提前配音的句子：阿里云语音合成，返回音频地址（同一句话这次打开游戏里只合成一次）。lang 默认 English（AI 提示用 Chinese）
   const TTSC = {};
-  async function cloudTTS(text, g) {
-    const k = (g || 'f') + '|' + text;
+  async function cloudTTS(text, g, lang) {
+    lang = lang === 'Chinese' ? 'Chinese' : 'English';
+    const k = (g || 'f') + '|' + lang + '|' + text;
     if (TTSC[k]) return TTSC[k];
     let url = '';
     try {
       if (direct()) {
-        const body = { model: 'qwen3-tts-flash', input: { text: String(text).slice(0, 300), voice: g === 'm' ? 'Ethan' : 'Cherry', language_type: 'English' } };
+        const body = { model: 'qwen3-tts-flash', input: { text: String(text).slice(0, 300), voice: g === 'm' ? 'Ethan' : 'Cherry', language_type: lang } };
         const r = await nativePost('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', JSON.stringify(body), 6000);
         if (r.ok) url = JSON.parse(r.text).output.audio.url; else noteAi('tts', r.text);
       } else if (relayHttp()) {
-        const r = await relayPost('/tts', { text, g }, 6000);
+        const r = await relayPost('/tts', lang === 'English' ? { text, g } : { text, g, lang }, 6000);
         if (r.ok) url = JSON.parse(r.text).url; else noteAi('tts', 'HTTP ' + r.status + ' ' + r.text);
       }
     } catch (e) { url = ''; }
@@ -889,6 +943,24 @@
     if (url) TTSC[k] = url;
     return url;
   }
+  // ---------- 家长首次设置向导的「测试」：密钥能不能用 ----------
+  // 先把密钥存进原生（只存在这台手机里，网页拿不回来），再用它发一个最小的请求（qwen-plus，最多回 1 个 token，不到 0.01 元），看阿里云怎么说。
+  // 返回 { ok, why, raw }：why = ok / format 不像密钥 / auth 密钥不对 / quota 欠费或额度用完 / inactive 服务或模型没开通 /
+  // offline 没网 / busy 太忙 / network 别的连不上 / nonative 不在 APK 里；raw 是阿里云的原话（给家长看，里面没有密钥）。密钥本身不打印、不记日志
+  async function keyTest(k) {
+    k = String(k || '').trim();
+    if (!window.EchoNative || typeof EchoNative.setKey !== 'function' || typeof EchoNative.post !== 'function') return { ok: false, why: 'nonative', raw: '' };
+    if (!/^sk-[A-Za-z0-9_-]{16,}$/.test(k)) return { ok: false, why: 'format', raw: '' };
+    try { EchoNative.setKey(k); } catch (e) { return { ok: false, why: 'nonative', raw: '' }; }
+    if (navigator.onLine === false) return { ok: false, why: 'offline', raw: '' };
+    const body = { model: Core().EVAL_MODEL, max_tokens: 1, temperature: 0, messages: [{ role: 'user', content: 'Hi' }] };
+    const r = await nativePost(Core().EVAL_URL, JSON.stringify(body), 12000);
+    if (r.ok) { try { textUse(JSON.parse(r.text)); } catch (e) {} LASTERR = null; return { ok: true, why: 'ok', raw: '' }; }
+    const raw = String(r.text || '').split(k).join('…').slice(0, 200);
+    if (/Unpurchased|NotActivated|not.?activated|not.?opened|Model\.AccessDenied|model_not_found|ModelNotFound|does not exist/i.test(raw)) return { ok: false, why: 'inactive', raw };
+    return { ok: false, why: raw === 'timeout' ? 'network' : errWhy(raw), raw };
+  }
+
   // ---------- 口语打分的识别：边说边送阿里云实时识别（qwen3-asr-flash-realtime） ----------
   // 以前：说完停 1.1 秒才算说完 → 整段上传 qwen3-asr-flash → 等结果，说完 2 秒多才出分。现在：
   // ① 一点话筒就开始录，同时连实时识别，连上之前录到的先存着再补发（开头不丢）；
@@ -1057,6 +1129,8 @@
 
   // ---------- 家长：设置服务地址 / 家庭口令；看记录；须知 ----------
   function configure() {
+    // 销售版：用首次设置向导的那一页（粘贴、「测试」、「怎么开通？」），要家长密码
+    if (window.EchoNative && window.EchoSetup && EchoSetup.sales && EchoSetup.sales()) { if (G.parentOk) G.parentOk('改 AI 密钥', () => EchoSetup.open('key', true)); return; }
     if (window.EchoNative) {   // 安卓 APK：家长在这台手机上填一次百炼密钥（只存在这台手机里），直连阿里云
       if (G.parentOk && !G.parentOk('改 AI 密钥')) return;
       const k = prompt('家长设置：阿里云百炼 API Key（只存在这台手机里，用来和岛民聊天）\n已经设置过的话，留空就是不改；填 clear 删除', '');
@@ -1104,6 +1178,17 @@
     G.openModal('<h2>👪 家长看看</h2><p class="muted">孩子在聊天里说到难过、被欺负、害怕或有危险时，这段聊天会标出来（AI 判断，加上本机查关键词，可能有误报）。岛民会提醒孩子马上告诉家长或老师。</p><div class="tk-logs">' + rows + '</div><button class="btn" data-act="close">关闭</button>');
   }
   function privacySheet() {
+    if (window.EchoSetup && EchoSetup.sales && EchoSetup.sales()) {   // 销售版：没有中转服务，用的是家长自己的阿里云账号
+      G.openModal('<h2>ℹ️ 家长须知：AI 聊天</h2><ul class="tk-notice">' +
+        '<li>岛民的话和声音、口语打分都由<b>人工智能（AI）生成</b>，由<b>阿里云百炼（通义千问）</b>提供。聊天页顶上一直写着「' + AI_LABEL + '」，每段聊天开头会用语音提示一次。</li>' +
+        '<li>聊天、口语打分时，孩子说话的<b>声音和识别出来的文字</b>直接从这台手机发到阿里云，用的是<b>您自己的阿里云账号和密钥</b>（费用也由阿里云直接向您收）。开发者<b>收不到</b>这些声音和文字，也没有服务器存它们。</li>' +
+        '<li>岛民只扮演游戏角色、只聊游戏和日常的话题，不会问真名、学校、住址、电话。孩子认真问「你是真人吗」，岛民会说自己是<b>电脑做的游戏角色</b>。</li>' +
+        '<li>孩子说到难过、被欺负、害怕或有危险时，岛民会认真回应、提醒他马上告诉家长或老师，这段聊天会标出来，家长在「👪 家长看看」里输密码能看全文，周报上也会提示。</li>' +
+        '<li>聊天记录、岛民记住的小事都<b>只存在这台手机里</b>（聊天记录最近 30 段），卸载 App 就全部删掉。每天最多聊 ' + Math.round(DAILY_SEC / 60) + ' 分钟。</li>' +
+        '<li>给主角起名时请用<b>游戏昵称</b>，不要用真名。</li></ul>' +
+        '<div class="tk-btns"><button class="btn ghost small" data-act="suDoc" data-doc="privacy">📄 儿童隐私说明（全文）</button><button class="btn ghost small" data-act="talk_forget">🧹 让岛民忘掉以前聊过的事</button><button class="btn" data-act="close">知道了</button></div>');
+      return;
+    }
     G.openModal('<h2>ℹ️ 家长须知：AI 聊天</h2><ul class="tk-notice">' +
       '<li>和岛民聊天、口语题打分时，孩子说话的<b>声音和识别出来的文字</b>会发到<b>阿里云百炼（通义千问）</b>做语音识别、对话和打分。安卓 APK 直接连阿里云；网页版经过家里的中转服务。</li>' +
       '<li>岛民只扮演游戏角色、只聊游戏和日常的话题，不会问真名、学校、住址、电话。孩子认真问「你是真人吗」，岛民会说自己是<b>电脑做的游戏角色</b>。</li>' +
@@ -1142,7 +1227,7 @@
     };
   }
   window.EchoTalk = {
-    init, homeHTML, open, openPerson, relayUrl, cloudSR, listenOnce, aiTip, cloudTTS, stopListen: () => SR.stop && SR.stop(),
+    init, homeHTML, open, openPerson, relayUrl, cloudSR, listenOnce, aiTip, cloudTTS, keyTest, AI_LABEL, stopListen: () => SR.stop && SR.stop(),
     today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG,
   };
 })();

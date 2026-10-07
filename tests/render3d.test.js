@@ -28,7 +28,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.waitForTimeout(1500);
   const kind = await p.evaluate(() => EchoWorld._debug().R.kind);
   check(kind === '3d', '建出了 3D 渲染器（' + kind + '）');
-  // 每种地图都画一遍：小镇、道路、室内、道馆、漆黑的洞穴、海路、海底、冰洞、火山、基地、雪岛、古迹
+  // 每种地图都画一遍：小镇、道路、室内、挑战馆、漆黑的洞穴、海路、海底、冰洞、火山、基地、雪岛、古迹
   const tour = [['t0', 'start'], ['r0', 'from:t0'], ['i0C', 'mat'], ['i0G', 'mat'], ['i0H', 'mat'], ['c0', 'mat'], ['s7', 'from:t7'], ['u9', 'from:s9'], ['c10', 'from:t10'], ['d6a', 'from:t6'], ['h8a', 'from:j8'], ['t11', 'door:C'], ['t12', 'door:C'], ['t2', 'door:C']];
   for (const [id, how] of tour) {
     await p.evaluate(([id, how]) => EchoWorld._debug().goMap(id, how), [id, how]);
@@ -80,9 +80,9 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   if (end) await end.click();
   await p.waitForTimeout(500);
   check(!(await p.$('canvas.b3d')), '战斗结束后 3D 战斗画面释放了');
-  // 图鉴：386 只，翻页
-  const total = await p.evaluate(() => DEX.total);
-  check(total === 386, '图鉴 386 只');
+  // 手册：总数不算保留的那几只（tests/dex-edition.test.js 细查），翻页
+  const dx = await p.evaluate(() => ({ total: DEX.total, main: DEX.main.length }));
+  check(dx.total === dx.main && dx.total !== 386, '手册 ' + dx.total + ' 只（不是 386）');
   check(!errs.length, '没有报错' + (errs.length ? '：' + errs.slice(0, 3).join(' | ') : ''));
   console.log(fails ? 'FAIL ' + fails : 'PASS');
   if (fails) process.exitCode = 1;

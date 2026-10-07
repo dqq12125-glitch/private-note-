@@ -47,12 +47,12 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   check(await cur('town_a'), '第 0 岛小镇：town_a');
   const go = async (id, how, want, what) => { await p.evaluate(([i, h]) => window.EchoWorld._debug().goMap(i, h), [id, how]); await W(700); check(await cur(want), what + '：' + want + '（' + (await st()).current + '）'); };
   await go('r0', 'south', 'route', '1 号路');
-  await go('i0C', 'door:C', 'center', '怪兽中心');
-  await go('i0G', null, 'gym', '道馆');
+  await go('i0C', 'door:C', 'center', '休息站');
+  await go('i0G', null, 'gym', '挑战馆');
   await go('h8a', null, 'hush', '嘘声团基地');
   await go('s7', null, 'sea', '海路');
   await go('t11', 'door:C', 'town_d', '雪岛小镇');
-  await go('v2', null, 'league', '冠军之路');
+  await go('v2', null, 'league', '勇气之路');
   await go('t0', 'door:C', 'town_a', '回到你好岛');
 
   // ---------- 战斗 ----------
@@ -91,7 +91,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.evaluate(() => { document.querySelector('[data-act=bFlee]') && document.querySelector('[data-act=bFlee]').click(); });
   await p.evaluate(() => MonsterGame.stop());
   await p.evaluate(() => MonsterGame.battle('leader', 0, { onEnd() {} }));
-  check(await cur('battle_boss'), '馆主战：battle_boss');
+  check(await cur('battle_boss'), '岛主战：battle_boss');
   await p.evaluate(() => { MonsterGame.stop(); window.EchoGame.goHome('mon'); });
   check(await cur('title'), '回首页：主题曲');
 

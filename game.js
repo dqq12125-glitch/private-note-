@@ -6,8 +6,8 @@
   'use strict';
 
   const W = window.WORLDS;
-  // 课本同步（book.js）：课本的每个单元和小岛一样有单词/句子/对话，接在 13 座岛后面编号（第 NB 号起），
-  // 闯关、错题本、冒险出题都用 WX[编号]；只有岛屿才有的东西（馆主、徽章、飞空、对话动画）还是用 W
+  // 课本单元（book.js）：课本的每个单元和小岛一样有单词/句子/对话，接在 13 座岛后面编号（第 NB 号起），
+  // 闯关、错题本、冒险出题都用 WX[编号]；只有岛屿才有的东西（岛主、徽章、乘风、对话动画）还是用 W
   const BOOKS = (window.BOOKS && window.BOOKS.list) || [];
   const BK = BOOKS.flatMap((b, bi) => b.units.map(u => Object.assign(u, { book: b.id, bshort: b.short, bi })));   // 所有册的单元排成一列
   const NB = W.length, WX = W.concat(BK);
@@ -84,11 +84,11 @@
     ['rich', '💰', '小富翁', '同时拥有 500 金币', s => s.coins >= 500],
     ['actor', '🎬', '小演员', '完成 5 次对话角色扮演', s => s.stats.roleplay >= 5],
     ['catch1', '🔮', '第一个伙伴', '收服第 1 只野生怪兽', s => (s.mon.caught || 0) >= 1],
-    ['dex8', '📖', '图鉴收集家', '图鉴点亮 8 种怪兽', s => window.MonsterGame && MonsterGame.caughtCount(s) >= 8],
-    ['dexall', '🌈', '怪兽大师', '图鉴点亮第一大区 151 种', s => { const r = window.EchoWorld && EchoWorld.dexRegion ? EchoWorld.dexRegion(s) : null; return !!r && r.total > 0 && r.caught >= r.total; }],
+    ['dex8', '📖', '手册收集家', '手册点亮 8 种怪兽', s => window.MonsterGame && MonsterGame.caughtCount(s) >= 8],
+    ['dexall', '🌈', '怪兽大师', '手册点亮第一大区全部 ' + ((window.DEX && DEX.region1Total) || '') + ' 种', s => { const r = window.EchoWorld && EchoWorld.dexRegion ? EchoWorld.dexRegion(s) : null; return !!r && r.total > 0 && r.caught >= r.total; }],
     ['evo1', '✨', '进化！', '第一次让怪兽进化', s => (s.mon.evolved || 0) >= 1],
-    ['badge5', '🏅', '徽章收集者', '拿到 5 枚馆主徽章', s => Object.keys(s.mon.badges).length >= 5],
-    ['badgeall', '🏆', '冠军训练师', '拿到全部 13 枚馆主徽章', s => Object.keys(s.mon.badges).length >= W.length],
+    ['badge5', '🏅', '徽章收集者', '拿到 5 枚岛主徽章', s => Object.keys(s.mon.badges).length >= 5],
+    ['badgeall', '🏆', '冠军训练师', '拿到全部 13 枚岛主徽章', s => Object.keys(s.mon.badges).length >= W.length],
   ];
 
   // ---------- 存档 ----------
@@ -104,6 +104,7 @@
         push: '',                                 // 日报推送：PushPlus 的 token 或企业微信群机器人的 webhook 地址（空 = 不发）
         pinLock: { n: 0, until: 0, lockouts: 0 },  // 网页版家长密码输错的次数、锁到什么时候、一共被锁过几次（APK 里由原生管）
         verUrl: '',                               // 检查新版本的地址（家长设置里改；空 = 默认的 GitHub Pages 上的 version.json）
+        family: null,                             // 销售版：家长首次设置向导的结果和家庭定制（setup.js 的 EchoSetup，「清空进度」也留着）
       }, seenIntro: false,
       micCheck: '',        // 第一次「麦克风 + 网络 + 密钥」小检查做过了没有（日期；'skip' = 先跳过了）
       upd: {},             // 最近一次查到的新版本：{ code, name, url, notes, at }（只有 APK 查）
@@ -114,7 +115,7 @@
       world: window.EchoWorld ? EchoWorld.fresh() : {},
       player: { gender: '', name: '' },
       talk: { log: [], done: {}, days: {} },   // 和岛民聊天（talk.js）：最近的记录、每个岛民最好几星、今天拿过金币的
-      book: { at: -1, mix: .6, view: 'book', vb: '' },   // 课本同步：正在学的单元（BK 里第几个，-1 = 没选过，按日期猜）、冒险出题里课本占几成、闯关页看课本还是小岛、正在看哪一册
+      book: { at: -1, mix: .6, view: 'book', vb: '' },   // 课本单元：正在学的单元（BK 里第几个，-1 = 没选过，按日期猜）、冒险出题里课本占几成、闯关页看课本还是小岛、正在看哪一册
       rev: { items: {}, v: 0, day: { d: '', n: 0, f: 0 } },   // 每日复习（间隔复习）：见 revWrong / revRight / dueList；day = 今天新进了几条（n）、冒险里算了几次复习（f）
     };
   }
@@ -316,15 +317,16 @@
   }
   function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* 不支持 */ } }
 
-  // ---------- 朗读：优先用手机/浏览器自带英语声音，没有就用有道在线发音 ----------
+  // ---------- 朗读：提前合成的自然配音（打包在 assets/voice）→ 阿里云现场合成（qwen3-tts-flash）→ 浏览器自带的英语声音 ----------
+  // 不再用有道的在线发音接口（评估「必须改」第 7 条：非公开接口，没有商用授权）。APK 的 WebView 没有本机声音：配音和阿里云都不行时就不出声
   const TTS = { voices: [], v: null, ok: 'speechSynthesis' in window, loaded: false };
   const PREF = [/(Aria|Jenny|Ava|Emma|Guy).*(Online|Natural)/i, /Google US English/i, /Samantha/i, /Microsoft (Aria|Jenny|Zira|David)/i, /Google UK English Female/i, /Karen|Daniel|Moira|Tessa/i];
-  // 有道两种口音（type=2 美音 / type=1 英音）正好给对话里的两个角色用
-  // ---------- 自然配音：tools/voice/gen.py 用本机开源模型提前合成的固定句子（assets/voice/{f,m}/<key>.mp3） ----------
-  // 文件名是规范化文本的 FNV-1a 哈希，和 tools/voice/key.js 一样；没合成的句子（拼了名字的）再用有道 / 本机声音
+  // ---------- 自然配音：tools/voice/gen.py 用本机开源模型 Kokoro（Apache-2.0）提前合成的固定句子（assets/voice/{f,m}/<key>.mp3） ----------
+  // 文件名是规范化文本的 FNV-1a 哈希，和 tools/voice/key.js 一样；没合成的句子（拼了名字的）联网时用阿里云现场合成，再不行用本机声音
   const CLIP = { f: new Set(), m: new Set() };
   function clipKey(t) {
-    const s = String(t).replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
+    // 和 tools/voice/key.js 一样：表情符号不念，去掉再算
+    const s = String(t).replace(/[\p{Extended_Pictographic}\u200D\uFE0F]/gu, '').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
     let h = 0x811c9dc5;
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
     return h.toString(36);
@@ -337,7 +339,6 @@
     for (const x of g === 'm' ? ['m', 'f'] : ['f', 'm']) if (CLIP[x].has(k)) return 'assets/voice/' + x + '/' + k + '.mp3';
     return '';
   }
-  const onlineUrl = (text, g) => 'https://dict.youdao.com/dictvoice?type=' + (g === 'm' ? 1 : 2) + '&audio=' + encodeURIComponent(text);
   const FEM = /female|samantha|aria|jenny|ava|emma|zira|karen|moira|tessa|serena|victoria|allison|susan|libby|sonia|natasha|michelle|joanna|salli|kendra|fiona|kate/i;
   const MALE = /\bmale|daniel|david|guy|alex|fred|mark|ryan|aaron|arthur|george|thomas|oliver|christopher|eric|roger|brian|matthew|justin|rishi/i;
   const genderOf = v => !v ? '' : /female/i.test(v.name) ? 'f' : MALE.test(v.name) ? 'm' : FEM.test(v.name) ? 'f' : '';
@@ -355,30 +356,32 @@
     TTS.vf = pool.find(v => genderOf(v) === 'f') || null;
     TTS.vm = pool.find(v => genderOf(v) === 'm') || null;
   }
-  // 自带声音不可用（没有英语声音、合成失败）时改用在线发音
-  function useOnline() {
-    const m = S.settings.tts;
-    if (m === 'online') return true;
-    if (m === 'device') return false;
-    return !TTS.ok || RT.ttsBroken || (TTS.loaded && !TTS.voices.length);
-  }
+  // 能不能用本机（浏览器自带）的英语声音：设置「只用配音」时不用；没有英语声音、合成失败过也不用
+  const deviceOk = () => S.settings.tts !== 'online' && TTS.ok && !RT.ttsBroken && !(TTS.loaded && !TTS.voices.length);
+  // 能不能请阿里云现场合成：设置「本机声音」时不用；要联网、有 AI 连接（APK 有密钥 / 网页版连得上中转服务），连续失败 3 次就这次打开游戏不再试
+  const cloudOk = () => S.settings.tts !== 'device' && navigator.onLine !== false && !!(window.EchoTalk && EchoTalk.cloudTTS && EchoTalk.cloudSR && EchoTalk.cloudSR()) && !RT.cloudTTSBroken;
   function endPlaying() { $$('.spk.playing').forEach(b => b.classList.remove('playing')); }
   function startPlaying() { const main = $('#p-body .spk:not(.mini)'); if (main) main.classList.add('playing'); }
-  function sayOnline(text, rate, res, g, clip) {
+  // 没有能用的声音（没有配音、连不上阿里云、也没有本机声音）：不出声，APK 里第一次提醒一下。
+  // 按句子长短停一小会儿再算「读完」（背景音乐照样压低这一会儿），对话、剧场的节奏和有声音时差不多
+  function silent(res, text) {
+    endPlaying();
+    if (!RT.ttsWarned && window.ECHO_APP) { RT.ttsWarned = true; toast('这句的声音要联网才能听到'); }
+    setTimeout(res, Math.min(1500, 200 + String(text || '').length * 20));
+  }
+  // 放一段音频（配音文件或阿里云合成的地址）；放不出来就 onFail()（没给就不出声）
+  function playUrl(text, rate, res, g, url, onFail) {
     const a = RT.audio || (RT.audio = new Audio());
     let done = false;
-    const fin = () => { if (done) return; done = true; clearTimeout(t); endPlaying(); res(); };
+    const fin = () => { if (done) return; done = true; endPlaying(); res(); };
     const t = setTimeout(fin, 4000 + text.length * 200);
     a.onended = fin;
     a.onerror = () => {
       if (done) return;
-      // 配音文件 / 合成的音频没加载出来：短词改用有道（有道现在只给单词、短语发音，整句会失败）
-      if (clip && text.split(/\s+/).length <= 3) { done = true; clearTimeout(t); sayOnline(text, rate, res, g); return; }
-      if (clip) { if (!RT.ttsWarned) { RT.ttsWarned = true; toast('这句的发音没加载出来，检查一下网络'); } fin(); return; }
-      if ((S.settings.tts || 'auto') === 'auto' && TTS.ok && !RT.ttsBroken) { RT.onlineBroken = true; done = true; clearTimeout(t); say(text, rate, g).then(res); return; }   // 有道不通：这次起改用本机声音
-      if (!RT.ttsWarned) { RT.ttsWarned = true; toast('在线发音没加载出来，检查一下网络'); } fin();
+      done = true; clearTimeout(t);
+      if (onFail) onFail(); else silent(res, text);
     };
-    a.src = clip || onlineUrl(text, g);
+    a.src = url;
     a.playbackRate = (rate || S.settings.rate) < 0.75 ? 0.75 : 1;
     startPlaying();
     const pr = a.play();
@@ -399,46 +402,49 @@
       stopListening();
       if (TTS.ok) speechSynthesis.cancel();
       if (RT.audio) RT.audio.pause();
+      const id = RT.sayId = (RT.sayId || 0) + 1;
       const clip = S.settings.tts === 'device' ? '' : clipUrl(text, g);
-      const id = RT.sayId = (RT.sayId || 0) + 1, noCloud = RT.noCloudOnce; RT.noCloudOnce = false;
-      if (clip) { sayOnline(text, rate, res, g, clip); return; }
-      // 没有提前配音的句子（带名字的台词等）：能连阿里云就现场合成（约 1–2 秒），比有道、本机声音都自然
-      if (!noCloud && S.settings.tts !== 'device' && navigator.onLine !== false && window.EchoTalk && EchoTalk.cloudTTS && EchoTalk.cloudSR && EchoTalk.cloudSR() && !RT.cloudTTSBroken) {
-        EchoTalk.cloudTTS(text, g).then(url => {
-          if (RT.sayId !== id) return res();   // 等合成的时候已经换了别的句子
-          if (url) { sayOnline(text, rate, res, g, url); return; }
-          RT.cloudTTSFails = (RT.cloudTTSFails || 0) + 1; if (RT.cloudTTSFails >= 3) RT.cloudTTSBroken = true;
-          if (text.split(/\s+/).length <= 3) sayOnline(text, rate, res, g);   // 短词：有道
-          else if (TTS.ok && !RT.ttsBroken) { RT.noCloudOnce = true; RT.onlineBroken = true; say(text, rate, g).then(res); }   // 本机声音（这次不再试阿里云）
-          else res();
-        });
-        return;
-      }
+      // 配音文件没加载出来（APK 里不会，网页版断网时可能）：当成没有配音的句子
+      if (clip) { playUrl(text, rate, res, g, clip, () => sayCloud(text, rate, res, g, id)); return; }
+      sayCloud(text, rate, res, g, id);
+    });
+  }
+  // 没有提前配音的句子（带名字的台词等）：能连阿里云就现场合成（约 1–2 秒，同一句只合成一次），不行再用本机声音
+  function sayCloud(text, rate, res, g, id) {
+    if (!cloudOk()) {
       // 自动化测试时记下没有配音的句子（tools/voice/misshook.js 收集，再补合成）
       if (navigator.webdriver && S.settings.tts !== 'device') { try { console.log('[voice-miss]' + JSON.stringify([text, g || ''])); } catch (e) {} }
-      // 没有配音的句子：「自然配音」模式先用有道在线（比浏览器自带的自然），没网才用本机声音
-      if (useOnline() || (S.settings.tts || 'auto') === 'auto' && navigator.onLine !== false && !RT.onlineBroken) { sayOnline(text, rate, res, g); return; }
-      const u = new SpeechSynthesisUtterance(text);
-      const v = g === 'f' ? (TTS.vf || TTS.v) : g === 'm' ? (TTS.vm || TTS.v) : TTS.v;
-      if (v) u.voice = v;
-      u.lang = v ? v.lang : 'en-US';
-      // 找不到对应性别的声音时，用音调区分两个角色
-      if (g && genderOf(v) !== g) u.pitch = g === 'm' ? 0.75 : 1.3;
-      u.rate = rate || S.settings.rate;
-      let done = false;
-      const fin = () => { if (done) return; done = true; endPlaying(); res(); };
-      u.onend = fin;
-      u.onerror = e => {
-        // 被新的朗读打断不算失败；真失败就切到在线发音重读一遍
-        if (!done && e && e.error && !/interrupted|canceled/.test(e.error) && S.settings.tts !== 'device') {
-          RT.ttsBroken = true; done = true; sayOnline(text, rate, res, g); return;
-        }
-        fin();
-      };
-      setTimeout(fin, 1800 + text.length * 150 / u.rate);
-      startPlaying();
-      speechSynthesis.speak(u);
+      sayDevice(text, rate, res, g);
+      return;
+    }
+    EchoTalk.cloudTTS(text, g).then(url => {
+      if (RT.sayId !== id) return res();   // 等合成的时候已经换了别的句子
+      if (url) { RT.cloudTTSFails = 0; playUrl(text, rate, res, g, url, () => sayDevice(text, rate, res, g)); return; }
+      RT.cloudTTSFails = (RT.cloudTTSFails || 0) + 1; if (RT.cloudTTSFails >= 3) RT.cloudTTSBroken = true;
+      sayDevice(text, rate, res, g);
     });
+  }
+  // 本机（浏览器自带）的英语声音；用不了就不出声
+  function sayDevice(text, rate, res, g) {
+    if (!deviceOk()) { silent(res, text); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    const v = g === 'f' ? (TTS.vf || TTS.v) : g === 'm' ? (TTS.vm || TTS.v) : TTS.v;
+    if (v) u.voice = v;
+    u.lang = v ? v.lang : 'en-US';
+    // 找不到对应性别的声音时，用音调区分两个角色
+    if (g && genderOf(v) !== g) u.pitch = g === 'm' ? 0.75 : 1.3;
+    u.rate = rate || S.settings.rate;
+    let done = false;
+    const fin = () => { if (done) return; done = true; endPlaying(); res(); };
+    u.onend = fin;
+    u.onerror = e => {
+      // 被新的朗读打断不算失败；真失败了：这次起不用本机声音
+      if (!done && e && e.error && !/interrupted|canceled/.test(e.error)) { RT.ttsBroken = true; done = true; silent(res, text); return; }
+      fin();
+    };
+    setTimeout(fin, 1800 + text.length * 150 / u.rate);
+    startPlaying();
+    speechSynthesis.speak(u);
   }
   // iOS / 微信要求第一次出声必须在点击里：点击时先“解锁”两种发音方式
   function silentWav() {
@@ -474,7 +480,7 @@
   function aiTip(target, heard, el) {
     if (!heard || !el || !window.EchoTalk || !EchoTalk.aiTip) return;
     try { const L = dayLog(); L.tipN = (L.tipN || 0) + 1; } catch (e) { /* 周报用的计数 */ }
-    EchoTalk.aiTip(target, heard).then(tip => { if (tip && el.isConnected && !el.querySelector('.ai-tip')) el.insertAdjacentHTML('beforeend', '<span class="ai-tip">💡 ' + esc(tip) + '</span>'); });
+    EchoTalk.aiTip(target, heard).then(tip => { if (tip && el.isConnected && !el.querySelector('.ai-tip')) el.insertAdjacentHTML('beforeend', '<span class="ai-tip">💡 ' + esc(tip) + ' <i class="ai-mark" title="AI 生成 · 由阿里云通义千问提供">AI</i></span>'); });   // AI 生成的点评标上「AI」
   }
   // 麦克风在听的时候背景音乐完全静音（不然会被录进去，影响 AI 打分），正在放的朗读也停掉（别让识别听到示范读音）
   // targets：这道题的答案（可以几个）。实时识别的结果一和答案对上（90 分以上，而且最后一个词也说出来了，见 earlyMatch）就立刻结束，不用等孩子停顿——「秒出分」
@@ -1348,7 +1354,7 @@
       return '<div class="q-row ' + (q.claimed ? 'done' : '') + '"><span class="q-name">' + d.t + '</span>' + right + '<span class="q-bar"><i style="width:' + Math.min(100, q.p / d.goal * 100) + '%"></i></span></div>';
     }).join('');
     const opened = S.quests.chest, ready = allDone && !opened;
-    const chest = '<button class="chest-btn ' + (ready ? 'ready' : '') + '" data-act="chest" ' + (ready ? '' : 'disabled') + '><span class="ch">' + (opened ? '📭' : '🎁') + '</span><span><b>' + (opened ? '今天的宝箱已经打开' : ready ? '每日宝箱可以打开了！' : '每日宝箱') + '</b><br><small>' + (opened ? '明天任务会刷新，记得回来' : '领完 3 个任务奖励就能打开，可能开出进化石、怪兽蛋') + '</small></span></button>';
+    const chest = '<button class="chest-btn ' + (ready ? 'ready' : '') + '" data-act="chest" ' + (ready ? '' : 'disabled') + '><span class="ch">' + (opened ? '📭' : '🎁') + '</span><span><b>' + (opened ? '今天的宝箱已经打开' : ready ? '每日宝箱可以打开了！' : '每日宝箱') + '</b><br><small>' + (opened ? '明天任务会刷新，记得回来' : '领完 3 个任务奖励就能打开，可能开出进化曲、怪兽蛋') + '</small></span></button>';
     return revCard() + '<div class="q-head"><h3>今日任务</h3><small>' + hrs + ' 小时后刷新</small></div>' + rows + chest;
   }
   const OFFS = [0, -56, -78, -34, 38, 76, 0];
@@ -1371,23 +1377,35 @@
       (seen && seen.watched ? '✓ 看过了 · 可以再来跟读、角色扮演' : '先看看这个话题的英语对话怎么说 · 第一次看完 +10 金币') + '</small></span><span class="sb-go">▶</span></button>' : '';
     return '<section class="world' + (isUnit(wi) ? ' unit' + (wi - NB === curIdx() ? ' now' : '') : '') + '" id="w' + wi + '" style="--wc:' + w.color + '">' + head + '<div class="path">' + scBtn + nodes + '</div></section>';
   }
-  // ---------- 课本同步 ----------
+  // ---------- 课本单元（适用于沪教版词汇；不叫「同步」，也不说「配套」：评估「必须改」第 6 条） ----------
+  // 销售版只开放买了的那个学年的册（2026-10-08 评审：卖的是「本学年」，下一学年的内容包另买）：
+  // 打包时 -PECHO_BOOKS=hj7a,hj7b 写进原生（EchoNative.books()），没有就是七上、七下。家庭版全部开放
+  const BOOK_OPEN = (() => {
+    if (!(window.DEX && DEX.sales)) return null;
+    let v = ''; try { if (nat('books')) v = String(EchoNative.books() || ''); } catch (e) { v = ''; }
+    const ids = v.split(',').map(x => x.trim()).filter(Boolean);
+    return new Set(ids.length ? ids : ['hj7a', 'hj7b']);
+  })();
+  const bookOpen = id => !BOOK_OPEN || BOOK_OPEN.has(id);
+  const unitOpen = i => !!BK[i] && bookOpen(BK[i].book);
   // 正在学哪个单元：家长/孩子在闯关页选；没选过就按日期猜——七上从 BOOKS.start 那年秋天开始，
   // 秋季学期 9 月到次年 1 月、春季学期 2 月到 8 月，一个学期 8 个单元，一个单元两周多
   function guessIdx() {
     const d = new Date(), y = d.getFullYear(), m = d.getMonth() + 1, start = (window.BOOKS && window.BOOKS.start) || y;
     const sem = Math.max(0, (y - start) * 2 + (m >= 9 ? 0 : m >= 2 ? -1 : -2));
     const b = BOOKS[Math.min(sem, BOOKS.length - 1)];
+    // 猜到的册没开放（销售版过了这个学年）：停在开放的最后一个单元
+    if (!bookOpen(b.id)) { let last = -1; BK.forEach((u, i) => { if (bookOpen(u.book)) last = i; }); return last; }
     const s0 = m >= 9 || m < 2 ? new Date(m >= 9 ? y : y - 1, 8, 1) : new Date(y, 1, 20);
     const n = Math.max(1, Math.min(b.units.length, 1 + Math.floor((d - s0) / 864e5 / 17)));
     return BK.findIndex(u => u.book === b.id && u.n === n);
   }
   function curIdx() {
     if (!BK.length) return -1;
-    return S.book.at >= 0 ? Math.min(S.book.at, BK.length - 1) : guessIdx();
+    return S.book.at >= 0 && unitOpen(Math.min(S.book.at, BK.length - 1)) ? Math.min(S.book.at, BK.length - 1) : guessIdx();
   }
   const curUnit = () => BK[curIdx()] || null;
-  const viewBook = () => { const vb = S.book.vb; return BOOKS.find(b => b.id === vb) || BOOKS[(curUnit() || { bi: 0 }).bi]; };
+  const viewBook = () => { const vb = S.book.vb; return BOOKS.find(b => b.id === vb && bookOpen(b.id)) || BOOKS[(curUnit() || { bi: 0 }).bi]; };
   function unitHead(u, wi, tot) {
     const now = wi - NB === curIdx();
     return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · Unit ' + u.n + (now ? ' · 📍 正在学' : '') + '</div><h2>' + esc(u.en) + ' <small>' + esc(u.zh) + '</small></h2><p class="w-en">' + esc(u.key) + '</p></div>' +
@@ -1407,9 +1425,9 @@
   }
   function bookHTML() {
     const cu = curUnit(), vb = viewBook();
-    const chips = '<div class="seg books">' + BOOKS.map(b => '<button class="' + (b === vb ? 'on' : '') + '" data-act="bookView" data-b="' + b.id + '">' + esc(b.short) + (b.id === cu.book ? ' 📍' : '') + '</button>').join('') + '</div>';
-    return '<div class="book-head"><b>📗 沪教版初中英语 · 课本同步</b>' +
-      '<p>七年级到九年级六册书，单词和短语就是每册书后的单元词汇表；句子和对话按单元的话题和语法新编，和课堂学的配套。</p>' +
+    const chips = '<div class="seg books">' + BOOKS.map(b => '<button class="' + (b === vb ? 'on' : '') + (bookOpen(b.id) ? '' : ' locked') + '" data-act="bookView" data-b="' + b.id + '">' + (bookOpen(b.id) ? '' : '🔒') + esc(b.short) + (b.id === cu.book ? ' 📍' : '') + '</button>').join('') + '</div>';
+    return '<div class="book-head"><b>📗 课本单元 · 适用于沪教版词汇</b>' +
+      '<p>' + (BOOK_OPEN ? '这个学年的课本单元（' + BOOKS.filter(b => bookOpen(b.id)).map(b => esc(b.short)).join('、') + '）' : '七年级到九年级六册书') + '：每个单元要学的单词和短语，加上按单元的话题和语法自己编写的句子和对话（不是课文）。</p>' +
       '<p>正在学：<b>' + esc(cu.bshort) + ' Unit ' + cu.n + ' ' + esc(cu.en) + '</b>' + (S.book.at >= 0 ? '' : '（按日期猜的）') + ' <button class="link" data-act="bookPick">改</button></p>' + chips +
       (vb.old ? '<p class="tip">' + esc(vb.short) + '的新教材还没出版（预计 2027 年春季），现在先用旧版教材的单元，新书出来后会换掉。</p>' : '') + '</div>' +
       BK.map((x, j) => x.book === vb.id ? worldHTML(x, NB + j, bookNode()) : '').join('');
@@ -1429,7 +1447,7 @@
     if (tab === 'talk') { $('#talk-home').innerHTML = EchoTalk.homeHTML(); return; }
     if (tab === 'mon') { $('#mon-home').innerHTML = MonsterGame.homeHTML(); MonsterGame.afterHome(); return; }
     const book = BK.length && S.book.view !== 'isle';
-    const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">📗 课本同步</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">🏝️ 话题小岛</button></div>' : '';
+    const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">📗 课本单元</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">🏝️ 话题小岛</button></div>' : '';
     const cur = currentNode();
     $('#map').innerHTML = seg + (book ? bookHTML() : W.map((w, wi) => worldHTML(w, wi, cur)).join(''));
     if (RT.scrollCur) {
@@ -2274,7 +2292,7 @@
     const r = Math.random();
     let prize, html;
     const unownedChest = CHEST_PETS.filter(p => !S.pets.includes(p[0]));
-    // 先开冒险用的奖品（进化石 / 怪兽蛋 / 异色蛋，world.js 的 chestPrize，评估第 10 条）；没开出来（约一成、或者还没有怪兽）再开原来的宠物 / 金币
+    // 先开冒险用的奖品（进化曲 / 怪兽蛋 / 稀有色蛋，world.js 的 chestPrize，评估第 10 条）；没开出来（约一成、或者还没有怪兽）再开原来的宠物 / 金币
     let wp = null;
     try { wp = window.EchoWorld && EchoWorld.chestPrize ? EchoWorld.chestPrize() : null; } catch (e) { console.error(e); wp = null; }
     if (wp) { prize = wp.prize; html = wp.html; }
@@ -2331,7 +2349,9 @@
       return '<div class="env">✅ 朗读：自然配音（装在手机里，不用联网）<br>' +
         (cloudSR() ? '✅ 口语自动打分：说完一句交给阿里云识别（要联网）' : '⚠️ 口语自动打分：还没有 AI 密钥' + (inSet ? '（见上面）' : '，请家长在「设置 → 🔒 家长设置」里粘贴')) + '</div>';
     }
-    const tts = useOnline() ? '✅ 朗读：有道在线发音（需要联网）' : TTS.voices.length ? '✅ 朗读：本机声音 ' + esc(TTS.v ? TTS.v.name : '') : '✅ 朗读：本机声音（没听到声音就在「设置」里换成在线发音）';
+    const st = S.settings.tts || 'auto';
+    const tts = st === 'device' ? (TTS.voices.length ? '✅ 朗读：本机声音 ' + esc(TTS.v ? TTS.v.name : '') : '⚠️ 朗读：这个浏览器没有英语声音，在「设置」里换成「自然配音」')
+      : '✅ 朗读：自然配音（没有配音的句子联网时用阿里云现场合成' + (st === 'auto' && TTS.voices.length ? '，没网时用本机声音' : '') + '）';
     const wx = /MicroMessenger/i.test(navigator.userAgent) ? '<br>📱 你正在微信里打开：点右上角「···」→「在浏览器打开」，录音和语音识别会更稳定。' : '';
     const sr = SRC && !RT.srBroken ? '✅ 支持语音识别，开口会自动打分' : '⚠️ 语音识别不可用，口语题用「录音 + 自评」';
     return '<div class="env">' + tts + '<br>' + sr + '<br>在中国大陆，电脑上推荐用 <b>Edge 浏览器</b>，手机推荐 <b>iPhone 自带 Safari</b>；Chrome 的语音识别要连 Google 服务器，通常用不了。' + wx + '</div>';
@@ -2347,8 +2367,8 @@
       (speakMode() === 'sr' ? '<div class="set"><label>🩺 麦克风和网络</label><div class="say-row"><button class="btn small ghost" data-act="micCheck">检查一下（说一句 Hello）</button></div></div>' : '') +
       '<div class="set"><label for="set-rate">朗读速度 <span id="rate-v">' + st.rate.toFixed(2) + '</span></label><input type="range" id="set-rate" min="0.6" max="1.1" step="0.05" value="' + st.rate + '"><div class="say-row"><button class="btn small ghost" data-act="testVoice">🔊 试听</button></div></div>' +
       '<div class="set"><label>发音来源</label><div class="seg">' +
-      [['auto', '自然配音'], ['device', '本机声音'], ['online', '有道在线']].map(([m, n]) => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + n + '</button>').join('') +
-      '</div><small>「自然配音」：固定的句子用提前合成的真人感配音，拼了名字的句子用有道在线或本机声音。选「本机声音」就全部用浏览器自带的朗读。</small></div>' +
+      [['auto', '自然配音'], ['device', '本机声音'], ['online', '只用配音']].map(([m, n]) => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + n + '</button>').join('') +
+      '</div><small>「自然配音」：固定的句子用提前合成的真人感配音，拼了名字的句子联网时用阿里云现场合成，没网时用本机声音。「只用配音」不用本机声音。选「本机声音」就全部用浏览器自带的朗读。</small></div>' +
       (voices ? '<div class="set"><label for="set-voice">朗读声音</label><select id="set-voice">' + voices + '</select></div>' : '') +
       (window.ECHO_APP ? '<div class="set"><label>口语打分</label><small>🎤 一律开口说，AI 听写打分（阿里云语音识别），说得不准会给一句中文建议。要联网。</small></div>' :
       '<div class="set"><label>口语打分方式</label><div class="seg">' +
@@ -2366,7 +2386,7 @@
       '<div class="set"><label>音效</label><div class="seg"><button class="' + (st.sfx ? 'on' : '') + '" data-act="sfx" data-v="1">开</button><button class="' + (st.sfx ? '' : 'on') + '" data-act="sfx" data-v="0">关</button></div></div>' +
       '<div class="set"><label>音乐</label><div class="seg">' + [['off', '关'], ['low', '小'], ['mid', '中'], ['high', '大']].map(([v, t]) => '<button class="' + ((st.music || 'mid') === v ? 'on' : '') + '" data-act="setMusic" data-v="' + v + '">' + t + '</button>').join('') + '</div></div>' +
       parentHTML() +
-      '<p class="set-ver">' + esc(verText()) + '</p>' +
+      '<p class="set-ver">' + esc(verText()) + ' · <button class="link" data-act="suDoc" data-doc="licenses">开源许可与致谢</button></p>' +
       '<button class="btn ghost wide" data-act="close">完成</button>');
   }
   // 「🔒 家长设置」：默认收起来；看可以随便看，改要家长密码（parentOk）
@@ -2381,25 +2401,37 @@
       '<small>只算大地图和对战的时间。时间到了不会半路掐断，等这一场战斗或这段对话结束再回首页。多做一轮复习、多完成一个聊天目标、多通关一关新练习（或拿到更多星星），每样 +10 分钟。</small></div>');
     if (BK.length) b.push('<div class="set"><label>冒险里的英语题</label><div class="seg">' +
       [[.6, '多出课本'], [.3, '少量课本'], [0, '只用岛上话题']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + n + '</button>').join('') +
-      '</div><small>打怪兽、答村民的题时，有一部分换成课本正在学的单元（' + esc(curUnit().name) + '，在闯关页「📗 课本同步」里改）。</small></div>');
+      '</div><small>打怪兽、答村民的题时，有一部分换成课本正在学的单元（' + esc(curUnit().name) + '，在闯关页「📗 课本单元」里改）。</small></div>');
     if (window.EchoWorld && EchoWorld.storyZhHTML) b.push(EchoWorld.storyZhHTML());
     if (window.EchoNative) b.push('<div class="set"><label>🗣️ AI 聊天和口语打分</label><div class="say-row"><span class="set-v">' + (cloud ? '✅ 已连上阿里云' : '⚠️ 还没有 AI 密钥') + '</span><button class="btn small ghost" data-act="talk_cfg">' + (cloud ? '换密钥' : '粘贴密钥') + '</button></div>' +
       '<small>' + (cloud ? '用阿里云百炼的 API Key，只存在这台手机里，装新版也不用重填。' : '请家长在这里粘贴 AI 密钥（阿里云百炼的 API Key），只存在这台手机里。设好以后能和岛民用英语聊天，口语题也会自动打分。') + '</small></div>');
     b.push('<div class="set"><label>闯关练习：全部关卡直接开放</label><div class="seg"><button class="' + (st.unlockAll ? '' : 'on') + '" data-act="unlock" data-v="0">按顺序解锁</button><button class="' + (st.unlockAll ? 'on' : '') + '" data-act="unlock" data-v="1">全部直接开放</button></div>' +
-      '<small>只对「📚 闯关练习」有效（想跟着课本直接练某个单元时打开）；冒险里的徽章、守卫、秘传技能不受影响。</small></div>');
+      '<small>只对「📚 闯关练习」有效（想跟着课本直接练某个单元时打开）；冒险里的徽章、守卫、回声技能不受影响。</small></div>');
     b.push('<div class="set"><label>📲 学习日报发到微信</label><div class="say-row"><span class="set-v">' + (pk ? '✅ 每天 20 点以后发（' + (pk === 'wecom' ? '企业微信群机器人' : 'PushPlus') + '）' : '没开（默认不发）') + '</span><button class="btn small ghost" data-act="pushEdit">设置</button></div></div>');
     if (window.EchoTalk) b.push('<div class="set"><label>👪 聊天安全</label><div class="say-row"><button class="btn small ghost" data-act="talk_concerns">看需要注意的聊天' + (nc ? '（' + nc + ' 段）' : '') + '</button><button class="btn small ghost" data-act="talk_privacy">ℹ️ 家长须知</button></div>' +
       '<small>孩子在聊天里说到难过、被欺负、有危险时，那段聊天会标出来，输家长密码能看全文。</small></div>');
-    b.push('<div class="set"><label>🔑 家长密码</label>' + (ps.native
+    b.push('<div class="set"><label>🔑 家长密码</label>' + (ps.native && ps.sales
+      ? '<div class="say-row"><span class="set-v">' + (ps.has ? '已经设好了' : '还没设') + '</span><button class="btn small ghost" data-act="pinChange">' + (ps.has ? '改密码' : '设密码') + '</button></div>' +
+        '<small>首次设置时家长设的 4 位密码（手机里只存加了随机盐的哈希），输错 5 次锁 10 分钟。忘了密码：先「💾 导出存档」（不用密码）→ 在手机设置里清除这个 App 的数据 → 重新走一遍家长设置、设新密码 → 「从备份恢复」，进度就回来了（手机「下载/EchoIsland」里每天也有自动备份）。</small>'
+      : ps.native
       ? '<small>' + (ps.has ? '打包时设好的 4 位密码，输错 5 次锁 10 分钟。要换密码：改 echo.properties 的 PARENT_PIN，重新打包安装（存档不会丢）。' : '⚠️ 这个安装包没有设家长密码，上面这些都改不了。请家长在 echo.properties 里写 PARENT_PIN（4 位数字），重新打包安装。') + '</small>'
       : '<div class="say-row"><span class="set-v">' + (ps.has ? '已经设好了' : '还没设（第一次要用时由家长来设）') + '</span>' + (ps.has ? '<button class="btn small ghost" data-act="pinChange">改密码</button>' : '') + '</div><small>输错 5 次锁 10 分钟。</small>') + '</div>');
+    // 销售版：家庭定制（昵称、形象、伙伴、家人）、设备检查、儿童隐私说明（家长首次设置向导 setup.js 里做过的，这里能改）
+    if (window.EchoSetup && EchoSetup.sales()) {
+      const fm = EchoSetup.members(), F = st.family || {};
+      b.push('<div class="set"><label>👪 家庭定制</label><div class="say-row"><span class="set-v">' + esc((S.player && S.player.name) || F.nick || '（没起名）') + (fm.length ? ' · ' + esc(fm.map(m => m.call).join('、')) : '') + '</span><button class="btn small ghost" data-act="suFamily">改</button></div>' +
+        '<small>孩子的英文昵称和形象、博士包里的 3 只伙伴（开始新冒险时生效）、家里的人。只存在这台手机里。</small></div>');
+      b.push('<div class="set"><label>🩺 设备检查</label><div class="say-row"><span class="set-v">' + (F.device ? (F.device.ok === 'ok' ? '✅ 合格' : F.device.ok === 'warn' ? '⚠️ 能玩' : '❌ 不合格') : '没做过') + '</span><button class="btn small ghost" data-act="suDevice">再检查一次</button></div></div>');
+      b.push('<div class="set"><label>📄 隐私和同意</label><div class="say-row"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">儿童隐私说明</button><button class="btn small ghost" data-act="suDoc" data-doc="consent">监护人同意书</button></div>' +
+        (F.consent && F.consent.at ? '<small>监护人 ' + esc(new Date(F.consent.at).toLocaleDateString('zh-CN')) + ' 同意过（' + esc(F.consent.v || '') + ' 版）。要撤回同意：在上面「AI 聊天和口语打分」里删掉密钥（就不再连 AI），或者卸载 App。</small>' : '') + '</div>');
+    }
     // 存档备份（评估第 7 条）：导出（分享到微信 / 下载成文件）不用密码；从备份恢复要家长密码
     const meta = bakMeta(), nb = BAK.filter(k => parseSave(lsGet(k))).length;
     b.push('<div class="set"><label>💾 存档备份</label><div class="say-row"><button class="btn small ghost" data-act="bakExport">📤 导出存档</button><button class="btn small ghost" data-act="bakRestore">🗂️ 从备份恢复</button></div>' +
       '<small>每天第一次打开时自动备份：这台设备上留 3 份' + (nb ? '（最近一份是 ' + esc(meta.d1 || '以前') + ' 的）' : '') +
       (nat('backupWrite') ? '，手机「下载/EchoIsland」文件夹里留 7 份（卸载 App 也不会删）' : '') + '。「导出存档」可以发到微信里存着，换手机、重装以后用「从备份恢复」。</small></div>');
     b.push('<div class="set"><label>🆕 检查新版本</label><div class="say-row"><span class="set-v">' + esc(verText()) + '</span><button class="btn small ghost" data-act="verEdit">改地址</button></div>' +
-      '<small>' + (myVer() ? '打开游戏时去看一眼有没有新版本（' + esc(S.settings.verUrl || '默认地址') + '），有就在首页提示「请家长更新」。' : '网页版总是最新的，不用检查。') + '</small></div>');
+      '<small>' + (myVer() ? (S.settings.verUrl || VER_URL0 ? '打开 App 时去看一眼有没有新版本（' + esc(S.settings.verUrl || '默认地址') + '），有就在首页提示「请家长更新」。' : '没有填地址：不检查新版本（新版本由帮您安装的人发给您）。') : '网页版总是最新的，不用检查。') + '</small></div>');
     const ne = window.EchoErr ? EchoErr.count(7) : 0;
     b.push('<div class="set"><label>🔧 出错记录</label><div class="say-row"><span class="set-v">最近 7 天 ' + ne + ' 条</span><button class="btn small ghost" data-act="errLog">看看</button></div><small>游戏出错时自动记下最近 50 条，只存在这台设备里。手机上有问题时，可以把它发给帮你装游戏的人。</small></div>');
     b.push('<div class="set"><label>清空进度</label><button class="btn small coral" data-act="reset" id="resetbtn">清空全部进度</button><small>星星、金币、怪兽、复习记录都会清零，无法恢复。要家长密码，还要输入「清空」两个字。</small></div>');
@@ -2414,7 +2446,9 @@
   // ---------- 新版本提示（家长 2026-10-07，评估第 19 条）----------
   // APK 打开时去看一眼 version.json（默认放在 GitHub Pages，家长设置里能改地址），格式 {"code":N,"name":"…","url":"…","notes":"…"}；
   // code 比装着的大（EchoNative.version().code）就在首页挂「有新版本，请家长更新」。网页版总是最新的，不查。查不到（没网、国内打不开）就算了
-  const VER_URL0 = 'https://dqq12125-glitch.github.io/private-note-/version.json';
+  // 默认地址只在家庭版的安装包里（原生 EchoNative.verUrl()，打包时 echo.properties 的 VER_URL）；网页里不写死。
+  // 销售版没有默认地址（不让别人家的手机去连境外的网站；新版本由帮忙安装的人私下发），家长要查就自己填一个
+  const VER_URL0 = (() => { try { return window.DEX && DEX.sales ? '' : nat('verUrl') ? String(EchoNative.verUrl() || '') : ''; } catch (e) { return ''; } })();
   function myVer() { try { if (nat('version')) { const v = JSON.parse(EchoNative.version() || '{}'); if (v && +v.code > 0) return { code: +v.code, name: String(v.name || '') }; } } catch (e) { /* 老版本的原生没有 version() */ } return null; }
   const updNew = () => { const me = myVer(); return !!(me && S.upd && +S.upd.code > me.code); };
   function verCheck() {
@@ -2440,7 +2474,7 @@
       '<div class="row">' + (u.url && nat('shareText') ? '<button class="btn ghost" data-act="updShare">📤 把地址发给家长</button>' : '') + '<button class="btn" data-act="close" data-focus>知道了</button></div>');
   }
   function verSheet() {
-    openModal('<h2>🆕 检查新版本的地址</h2><p>打开游戏时去这个地址看有没有新版本（一个 version.json 文件）。留空就用默认地址：</p><p class="tip ver-url">' + esc(VER_URL0) + '</p>' +
+    openModal('<h2>🆕 检查新版本的地址</h2><p>打开 App 时去这个地址看有没有新版本（一个 version.json 文件）。' + (VER_URL0 ? '留空就用默认地址：</p><p class="tip ver-url">' + esc(VER_URL0) + '</p>' : '留空就不检查。</p>') +
       '<input id="ver-in" class="txt-in" autocomplete="off" spellcheck="false" placeholder="https://…/version.json" value="' + esc(S.settings.verUrl || '') + '">' +
       '<div class="row"><button class="btn ghost" data-act="setBack">返回</button><button class="btn" data-act="verSave">保存</button></div>');
   }
@@ -2450,8 +2484,8 @@
   function exportSave() {
     save();
     const txt = JSON.stringify(S), name = saveName();
-    try { if (nat('shareFile') && EchoNative.shareFile('回声岛存档', name, txt)) { toast('📤 选「微信」发给家长或者「文件传输助手」存起来'); return true; } } catch (e) { /* 换下一种 */ }
-    try { if (nat('shareText') && EchoNative.shareText('回声岛存档', txt)) { toast('📤 选「微信」发给家长存起来'); return true; } } catch (e) { /* 换下一种 */ }
+    try { if (nat('shareFile') && EchoNative.shareFile('回声岛存档（含 AI 生成的聊天文字）', name, txt)) { toast('📤 选「微信」发给家长或者「文件传输助手」存起来'); return true; } } catch (e) { /* 换下一种 */ }
+    try { if (nat('shareText') && EchoNative.shareText('回声岛存档（含 AI 生成的聊天文字）', txt)) { toast('📤 选「微信」发给家长存起来'); return true; } } catch (e) { /* 换下一种 */ }
     // 网页版：下载成一个文件
     try {
       const a = document.createElement('a');
@@ -2529,10 +2563,17 @@
       (rows ? '<div class="say-row"><button class="btn small ghost" data-act="errShare">📤 发给帮忙的人</button><button class="btn small ghost" data-act="errClear">🧹 清空</button></div>' : '') +
       '<button class="btn wide" data-act="setBack">返回</button>');
   }
+  // 家长首次设置做完了（setup.js）：回首页，给孩子看游戏说明（看完接着做「说一句 Hello」的小检查，家长那边测过就不用）
+  function afterSetup() {
+    RT.parentUntil = 0;
+    show('home'); renderHome();
+    if (!S.seenIntro) setTimeout(introSheet, 200);
+    else if (window.ECHO_APP && !S.micCheck && speakMode() === 'sr') setTimeout(checkSheet, 300);
+  }
   function introSheet() {
     openModal('<div class="big">🏝️</div><h2>欢迎来到回声岛！</h2>' +
-      '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用英语念咒语攻击，听懂对手的英语来防御。收服新怪兽、升级进化，打败 13 个区域的馆主拿徽章。</p>' +
-      '<p><b>📚 闯关练习</b>：📗 课本同步（沪教版七年级到九年级，跟着学校的单元走）和 13 座话题小岛。每通关一关送回声球，用来收服怪兽。</p>' +
+      '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用英语念咒语攻击，听懂对手的英语来防御。收服新怪兽、升级进化，打败 13 个区域的岛主拿徽章。</p>' +
+      '<p><b>📚 闯关练习</b>：📗 课本单元（适用于沪教版词汇，跟着学校的单元走）和 13 座话题小岛。每通关一关送回声球，用来收服怪兽。</p>' +
       '<p><b>🗣️ 和岛民聊天</b>：按住话筒，用英语和岛上的人真的聊天；聊完老师打分，说错的句子第二天会出现在 📕 每日复习里。</p>' +
       '<p>🎁 每天 3 个任务，做完开宝箱 · 🔥 每天打一场就算打卡</p>' +
       envHTML() +
@@ -2544,12 +2585,15 @@
   const ACT = {
     level: t => { SFX.tap(); levelSheet(num(t, 'w'), num(t, 'l')); },
     quizView: t => { S.book.view = t.dataset.v; save(); RT.scrollCur = true; renderHome(); },
-    bookAt: t => { const i = num(t, 'i'); S.book.at = i; S.book.vb = BK[i].book; save(); closeModal(); RT.scrollCur = true; renderHome(); toast('📍 现在学 ' + BK[i].bshort + ' Unit ' + BK[i].n + '，冒险里会多出它的题'); },
-    bookView: t => { S.book.vb = t.dataset.b; save(); renderHome(); },
+    bookAt: t => { const i = num(t, 'i'); if (!unitOpen(i)) return; S.book.at = i; S.book.vb = BK[i].book; save(); closeModal(); RT.scrollCur = true; renderHome(); toast('📍 现在学 ' + BK[i].bshort + ' Unit ' + BK[i].n + '，冒险里会多出它的题'); },
+    bookView: t => {
+      if (!bookOpen(t.dataset.b)) { const b = BOOKS.find(x => x.id === t.dataset.b) || {}; openModal('<div class="big">🔒</div><h2>' + esc(b.short || '') + '还没开放</h2><p>这台手机上开放的是这个学年的课本单元。下一学年的单元是另外的内容包，请家长联系帮您安装的人。</p><button class="btn wide" data-act="close" data-focus>知道了</button>'); return; }
+      S.book.vb = t.dataset.b; save(); renderHome();
+    },
     bookPick: () => {
       const ci = curIdx();
       openModal('<h2>📗 课本学到哪个单元了？</h2><p>选好以后，闯关页会标出这个单元；怪兽冒险里的英语题也会多出这个单元的单词和句子。</p>' +
-        BOOKS.map(b => '<h3 class="pick-h">' + esc(b.name) + (b.old ? '（旧版）' : '') + '</h3><div class="fly-list">' +
+        BOOKS.filter(b => bookOpen(b.id)).map(b => '<h3 class="pick-h">' + esc(b.name) + (b.old ? '（旧版）' : '') + '</h3><div class="fly-list">' +
           BK.map((u, i) => u.book !== b.id ? '' : '<button class="btn small ' + (i === ci ? '' : 'ghost') + '" data-act="bookAt" data-i="' + i + '">' + u.icon + ' U' + u.n + ' ' + esc(u.en) + '</button>').join('') + '</div>').join('') +
         '<button class="btn ghost wide" data-act="close">取消</button>');
     },
@@ -2570,7 +2614,12 @@
     pinKey: t => pinKey(t.dataset.k),
     pinDel: () => { if (RT.pin) { RT.pin.buf = RT.pin.buf.slice(0, -1); pinUpd(); } },
     pinClr: () => { if (RT.pin) { RT.pin.buf = ''; pinUpd(); } },
-    pinChange: () => parentOk('改家长密码', () => pinPad('改家长密码', () => { toast('🔑 家长密码改好了'); settingsSheet(); }, 'set1')),
+    // 改家长密码：网页版和销售版的 APK 能改（销售版原生要 2 分钟内刚输对过旧密码，所以这里一律重新输一次）
+    pinChange: () => {
+      RT.parentUntil = 0; RT.pinPass = null;
+      const setNew = () => pinPad('改家长密码', () => { toast('🔑 家长密码改好了'); settingsSheet(); }, 'set1');
+      if (pinState().has) parentOk('改家长密码', setNew); else setNew();
+    },
     // 冒险时间
     limEdit: () => parentOk('改冒险时间', limitSheet),
     limSet: t => {
@@ -2740,6 +2789,7 @@
       lsSet(BAK_META, JSON.stringify(meta));
       const keep = S.settings, weekly = S.weekly, maxDay = S.maxDay;
       S = fresh(); S.settings = keep; S.weekly = weekly; S.maxDay = maxDay; S.seenIntro = true; dayLog().reset = 1;
+      if (window.EchoSetup) EchoSetup.apply(false);   // 销售版：家长设好的昵称、形象、伙伴接着用
       save(); closeModal(); renderHome(); toast('进度已清空');
     },
   };
@@ -2812,7 +2862,14 @@
     Object.assign(ACT, MonsterGame.init(api), window.EchoWorld ? EchoWorld.init(api, MonsterGame) : {}, window.EchoTalk ? EchoTalk.init(api) : {}, {
       tab: t => { S.homeTab = t.dataset.t; save(); renderHome(); window.scrollTo(0, 0); },
     });
-    // 进大地图 / 飞空之前再看一眼冒险时间（学习锁本身由 world.js 查）；断网放行的 30 分钟从第一次进去时开始算
+    // 销售版的家长首次设置向导（setup.js）：Object.create 留着 api 的 S（getter，存档换了也拿到新的）
+    if (window.EchoSetup) {
+      Object.assign(ACT, EchoSetup.init(Object.assign(Object.create(api), {
+        afterSetup, afterEdit: () => { if (!$('#home').hidden) renderHome(); },
+        aiReset: () => { RT.aiBar = null; RT.aiFails = 0; RT.aiOkAt = Date.now(); refreshBars(); },
+      })));
+    }
+    // 进大地图 / 乘风之前再看一眼冒险时间（学习锁本身由 world.js 查）；断网放行的 30 分钟从第一次进去时开始算
     for (const k of ['wEnter', 'wFly']) {
       const f = ACT[k];
       if (f) ACT[k] = (t, e) => { if (advEnterOk()) f(t, e); };
@@ -2835,6 +2892,7 @@
   // 安卓 APK 的返回键（android/MainActivity.java 调用）：关弹窗 → 聊天开着就「结束并评价」（评价出来了再按一次关掉）→ 回首页；
   // 已经在首页就返回 false，APK 退到后台
   window.EchoBack = () => {
+    try { if (window.EchoSetup && EchoSetup.back && EchoSetup.back()) return true; } catch (e) { /* 向导出错就按老办法 */ }
     if (!$('#modal').hidden) {
       if (RT.modalLocked) return true;   // 护眼休息这种锁着的弹窗：返回键跳不过去
       if ($('#modal [data-act=close]')) closeModal();
@@ -2862,7 +2920,7 @@
     return S.log[d];
   }
   // 玩的时间：页面在前台、最近 1 分钟内碰过屏幕才算。做题、复习、对话动画、和岛民聊天算「学习」，冒险和对战算「冒险」，
-  // 首页上翻菜单（图鉴、队伍、商店、设置、周报）两边都不算，只算进总时间
+  // 首页上翻菜单（手册、队伍、商店、设置、周报）两边都不算，只算进总时间
   let lastInput = Date.now();
   ['pointerdown', 'pointermove', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { lastInput = Date.now(); }, { passive: true, capture: true }));
   // 手机日期被往回调（想骗学习锁）：记下见过的最晚日期，比它早就算改过（记在今天，周报上看得到）
@@ -3031,7 +3089,7 @@
     if (S.settings.gate !== false && L.passAt && !L.gateOpen && !L.gateEx && !passLeft(L) && !gate().open) return 'pass';
     return '';
   }
-  // 进大地图 / 飞空之前（包在 world.js 的 wEnter / wFly 外面）：学习锁开着、但时间用完或者太晚了 → 友好提示，不进；
+  // 进大地图 / 乘风之前（包在 world.js 的 wEnter / wFly 外面）：学习锁开着、但时间用完或者太晚了 → 友好提示，不进；
   // 断网放行的 30 分钟从这里开始算。学习锁本身没开的由 world.js 自己拦（gateBlock）
   function advEnterOk() {
     if (!(S.mon && S.mon.box || []).length) return true;
@@ -3109,14 +3167,22 @@
   //     （data-act）再执行一次，这一次 parentOk 返回 true。
   const PIN_TRIES = 5, PIN_LOCK = 10 * 60e3;
   const nativePin = () => { try { return !!(window.EchoNative && typeof EchoNative.hasPin === 'function'); } catch (e) { return false; } };
+  // 销售版的 APK（EchoNative.setPin）：打包时没有密码，家长在首次设置向导里设、在家长设置里改（sales = true）
+  const salesPin = () => !!(window.DEX && DEX.sales) && nat('setPin');
   function pinState() {
     if (nativePin()) {
       let st = {}, has = false;
       try { has = !!EchoNative.hasPin(); st = JSON.parse(EchoNative.pinStatus ? EchoNative.pinStatus() : '{}') || {}; } catch (e) { /* 读不到就当没锁 */ }
-      return { native: true, has, locked: !!st.locked, waitSec: st.waitSec || 0, triesLeft: st.triesLeft != null ? st.triesLeft : PIN_TRIES, lockouts: st.lockouts || 0 };
+      return { native: true, sales: salesPin(), has, locked: !!st.locked, waitSec: st.waitSec || 0, triesLeft: st.triesLeft != null ? st.triesLeft : PIN_TRIES, lockouts: st.lockouts || 0 };
     }
     const lk = S.settings.pinLock || {}, wait = Math.max(0, (lk.until || 0) - Date.now());
-    return { native: false, has: /^\d{4}$/.test(S.settings.pin || ''), locked: wait > 0, waitSec: Math.ceil(wait / 1000), triesLeft: wait > 0 ? 0 : PIN_TRIES - (lk.n || 0), lockouts: lk.lockouts || 0 };
+    return { native: false, sales: false, has: /^\d{4}$/.test(S.settings.pin || ''), locked: wait > 0, waitSec: Math.ceil(wait / 1000), triesLeft: wait > 0 ? 0 : PIN_TRIES - (lk.n || 0), lockouts: lk.lockouts || 0 };
+  }
+  // 存新的家长密码：APK 交给原生（只有销售版能设，存加盐哈希；改密码要刚输对过），网页版存在存档里
+  function pinSave(v) {
+    if (nativePin()) { try { return salesPin() && !!EchoNative.setPin(v); } catch (e) { return false; } }
+    S.settings.pin = v; S.settings.pinLock = { n: 0, until: 0, lockouts: (S.settings.pinLock || {}).lockouts || 0 }; save();
+    return true;
   }
   function parentOk(why, onOk) {
     const now = Date.now();
@@ -3128,6 +3194,7 @@
       return true;
     }
     const st = pinState();
+    if (st.native && !st.has && st.sales) { pinPad(why, onOk, 'set1', !onOk && RT.lastAct && now - RT.lastAct.t < 2000 ? RT.lastAct : null); return false; }   // 销售版还没设密码（向导没做完）：现在设
     if (st.native && !st.has) {
       openModal('<div class="big">🔑</div><h2>还没有家长密码</h2><p>这个安装包打包时没有设家长密码，「' + esc(why || '这个设置') + '」现在改不了。</p>' +
         '<p class="tip">请家长在电脑上的 android/echo.properties 里写 PARENT_PIN（4 位数字），重新打包安装（存档不会丢）。</p><button class="btn wide" data-act="close" data-focus>知道了</button>');
@@ -3173,10 +3240,14 @@
   function pinDone() {
     const p = RT.pin; if (!p || p.buf.length < 4) return;
     const v = p.buf; p.buf = '';
-    if (p.mode === 'set1') { p.first = v; p.mode = 'set2'; p.msg = ''; pinRender(); return; }
+    if (p.mode === 'set1') {
+      // 销售版：太好猜的密码（1111、1234……）不要
+      if (window.DEX && DEX.sales && (/^(\d)\1{3}$/.test(v) || '0123456789'.includes(v) || '9876543210'.includes(v))) { p.msg = '这个密码太好猜了，换一个吧'; pinRender(true); return; }
+      p.first = v; p.mode = 'set2'; p.msg = ''; pinRender(); return;
+    }
     if (p.mode === 'set2') {
       if (v !== p.first) { p.mode = 'set1'; p.first = ''; p.msg = '两次不一样，重新设一次'; pinRender(true); return; }
-      S.settings.pin = v; S.settings.pinLock = { n: 0, until: 0, lockouts: (S.settings.pinLock || {}).lockouts || 0 }; save();
+      if (!pinSave(v)) { RT.pin = null; closeModal(); toast('密码没改成：要先输对旧密码，2 分钟内改完。再点一次「改密码」'); return; }
       toast('🔑 家长密码设好了，别告诉孩子哦');
       pinGrant(p); return;
     }
@@ -3234,8 +3305,10 @@
   // 最近 n 天的日期（最后一天是今天）
   const daysBack = n => range(n).map(k => { const d = new Date(); d.setDate(d.getDate() - (n - 1) + k); return dayStr(d); });
   // AI 花费估算（元）：单价按阿里云百炼的公开价估（会变，只让家长心里有数）。实时聊天（其中音频另算）和文字模型的 token
-  // 只有 APK 直连时数得到（talk.js 记的）；口语识别按秒算（recognize 记的 asrSec）
-  const PRICE = { chatIn: 0.0016, chatAudioIn: 0.025, chatOut: 0.0064, chatAudioOut: 0.05, textIn: 0.0008, textOut: 0.002, asrSec: 0.00022 };   // 元 / 千 token、元 / 秒
+  // 只有 APK 直连时数得到（talk.js 记的）；口语识别按秒算（recognize 记的 asrSec）。
+  // 实时聊天 qwen3.8-omni-flash-realtime 北京区（2026-10-07 在阿里云官网复核）：每百万 token 文本输入 ¥1.5、输出 ¥4.5，音频输入 ¥6、输出 ¥12；
+  // 文字模型（评价、打勾、翻译、点评）qwen-plus 每百万 token 输入 ¥0.8、输出 ¥2
+  const PRICE = { chatIn: 0.0015, chatAudioIn: 0.006, chatOut: 0.0045, chatAudioOut: 0.012, textIn: 0.0008, textOut: 0.002, asrSec: 0.00022 };   // 元 / 千 token、元 / 秒
   function aiCost(sum) {
     const ain = sum('aiChatAudioIn'), aout = sum('aiChatAudioOut');
     return (Math.max(0, sum('aiChatIn') - ain) * PRICE.chatIn + ain * PRICE.chatAudioIn + Math.max(0, sum('aiChatOut') - aout) * PRICE.chatOut + aout * PRICE.chatAudioOut +
@@ -3468,6 +3541,7 @@
     weeklyRoll();
     musicVol();
     if (window.MonsterGame) MonsterGame.migrate();
+    if (window.EchoSetup) EchoSetup.apply(false);   // 销售版：家长设好的形象、伙伴（博士的包）、昵称
     // 链接带 ?quiet：不方便说话时，所有口语任务都改成按按钮（等同设置里的「录音自评」）
     if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast('🔇 不用说话模式：要说话的地方都变成按钮了'), 800); }
     checkStreak();
@@ -3492,7 +3566,9 @@
     if (rs) { dayLog().restore = 1; save(); setTimeout(() => toast('🗂️ 已经从备份恢复：' + rs), 500); }
     // 渲染进程挂了、原生刚重建过 WebView（评估第 15 条）
     try { if (nat('takeRecovered') && EchoNative.takeRecovered()) { if (window.EchoErr) EchoErr.log('app', '画面进程挂了，已经重新打开', 'native'); setTimeout(() => toast('刚才画面出了点问题，已经重新打开了，存档还在'), 600); } } catch (e) { /* 忽略 */ }
-    if (!S.seenIntro) { if (!told) setTimeout(introSheet, 300); }   // 先说存档的事，「知道了」以后再看说明（restoredOk）
+    // 销售版第一次打开：先做家长首次设置（家长密码、AI 密钥、家庭定制、设备检查），做完再给孩子看说明（afterSetup）
+    if (window.EchoSetup && EchoSetup.needed()) setTimeout(() => EchoSetup.open(), 100);
+    else if (!S.seenIntro) { if (!told) setTimeout(introSheet, 300); }   // 先说存档的事，「知道了」以后再看说明（restoredOk）
     // APK 第一次打开（或者从老版本升上来）：做一次「麦克风 + 网络 + 密钥」小检查
     else if (!told && window.ECHO_APP && !S.micCheck && speakMode() === 'sr') setTimeout(() => { if ($('#modal').hidden) checkSheet(); }, 900);
     setTimeout(pushTick, 4000);   // 打开游戏时补发没送到的日报（家长开了推送才会发）

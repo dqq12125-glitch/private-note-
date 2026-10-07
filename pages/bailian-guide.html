@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>回声岛 · 开通阿里云百炼、拿到 API Key</title>
+<style>
+  :root { color-scheme: light; --ink: #12304a; --ink-2: #4a6478; --line: #d3e6e2; --bg: #f5fbfa; --card: #fff; --accent: #0e7c86; --warn: #8a4b00; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.7 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 16px 16px 40px; }
+  h1 { font-size: 22px; margin: 6px 0 2px; } h2 { font-size: 17px; margin: 0 0 4px; }
+  .meta { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
+  .step { display: flex; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 10px 0; }
+  .step .n { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 800; display: grid; place-items: center; }
+  .step p { margin: 4px 0; } ul { padding-left: 1.3em; margin: 4px 0; } li { margin: 3px 0; }
+  .shot { margin: 8px 0 2px; border: 2px dashed var(--line); border-radius: 10px; padding: 8px 10px; background: #fbfefd; font-size: 14px; color: var(--ink-2); }
+  .shot b { color: var(--ink); background: #fff3c4; border-radius: 4px; padding: 0 4px; }
+  .warn { background: #fff8ee; border: 2px solid #ffb74d; border-radius: 14px; padding: 10px 14px; color: var(--warn); margin: 14px 0; }
+  code { background: #eef4f3; border-radius: 6px; padding: 1px 6px; font-size: 14px; word-break: break-all; }
+  .faq h3 { font-size: 16px; margin: 14px 0 2px; }
+</style>
+</head>
+<body>
+<main>
+<h1>开通阿里云百炼、拿到 API Key</h1>
+<p class="meta">大约 15–30 分钟 · 要准备：一部能收短信的手机、支付宝（实名认证用）· 第一次开通时可以请帮您安装的人视频陪着</p>
+
+<div class="step"><span class="n">1</span><div><h2>打开阿里云百炼，注册 / 登录</h2>
+<p>用手机或电脑的浏览器打开 <code>https://bailian.console.aliyun.com</code>（阿里云<b>中国站</b>，不要用国际站 alibabacloud.com，国际站的密钥在回声岛里用不了）。</p>
+<p>没有阿里云账号就用手机号注册一个，有淘宝 / 支付宝账号也可以直接登录。</p></div></div>
+
+<div class="step"><span class="n">2</span><div><h2>个人实名认证</h2>
+<p>按页面提示做「个人实名认证」，选<b>支付宝扫码认证</b>最快，一两分钟就好。不实名认证不能开通百炼。</p></div></div>
+
+<div class="step"><span class="n">3</span><div><h2>开通百炼服务</h2>
+<p>第一次进百炼控制台，页面上会提示开通服务：勾选同意协议，点<b>「开通」</b>（开通不收费，用多少付多少）。</p>
+<div class="shot">看到类似「<b>开通服务</b>」「<b>立即开通</b>」的按钮就点它；已经开通过的就不会再提示。</div>
+<p>新开通的账号一般会送一些免费额度（多少、有效期以阿里云页面为准）。</p></div></div>
+
+<div class="step"><span class="n">4</span><div><h2>充一点钱，设好费用预警</h2>
+<ul>
+<li>在阿里云「<b>费用与成本</b>」（费用中心）里充值，建议先充 <b>20 元</b>。</li>
+<li>设「<b>余额预警</b>」或「<b>预算告警</b>」：余额低于 <b>10 元</b>时发短信提醒您；再设一个<b>每月 40 元</b>的预算，花到八成时提醒。</li>
+<li>正常每天练 15 分钟左右，每月大约 <b>15–21 元</b>（以阿里云账单为准）。回声岛每天的聊天时间有上限，周报里也会估算这周花了多少。</li>
+</ul></div></div>
+
+<div class="step"><span class="n">5</span><div><h2>创建 API Key，复制下来</h2>
+<p>在百炼控制台找到「<b>API-KEY</b>」页面（在左边菜单里，有的版本叫「密钥管理」，也可能在右上角头像下面），点<b>「创建 API-KEY」</b>（或「创建我的 API-KEY」），归属选默认的就行。</p>
+<div class="shot">创建好以后点「<b>复制</b>」：是一长串以 <code>sk-</code> 开头的字母和数字。</div></div></div>
+
+<div class="step"><span class="n">6</span><div><h2>粘贴进回声岛，点「测试」</h2>
+<p>回到回声岛「粘贴您的 AI 密钥」那一页，长按输入框粘贴，点<b>「测试」</b>。看到「✅ 密钥能用」就好了，点「下一步」。</p>
+<p>以后要换密钥：设置 → 🔒 家长设置 → AI 聊天和口语打分（要家长密码）。</p></div></div>
+
+<div class="warn"><b>⚠️ 密钥就像付钱的钥匙</b>
+<ul>
+<li>不要发给任何人（<b>包括帮您安装的人</b>），不要截图发到群里。帮您远程安装的人只需要看着您操作，不需要知道密钥。</li>
+<li>怀疑泄露了：马上在百炼控制台「API-KEY」页面把它删除（作废），再创建一把新的，在回声岛的家长设置里换上。</li>
+</ul></div>
+
+<div class="faq">
+<h3>点「测试」说「密钥不对」</h3><p>多半是没复制完整，或者带了空格。回到百炼控制台重新复制；不行就新建一把。</p>
+<h3>说「欠费或额度用完」</h3><p>到阿里云费用中心充值（几块钱也行），再点「测试」。</p>
+<h3>说「服务或模型没开通」</h3><p>回到第 3 步，在百炼控制台点「开通服务」。</p>
+<h3>说「手机没网」「没连上」</h3><p>检查 Wi-Fi 或流量，过一会儿再试。</p>
+</div>
+</main>
+</body>
+</html>

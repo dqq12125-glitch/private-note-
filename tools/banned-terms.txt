@@ -1,0 +1,164 @@
+# 不能在游戏源码、测试、文档里出现的词（现成游戏 / 动画 IP 的名字、官方译名，和照着改的近义说法）
+# 检查：node tools/check-banned.js（npm test 的第一步）。查哪些文件、跳过哪些，写在 check-banned.js 开头。
+# 写法：每行一个；# 开头是注释；普通一行 = 原样找（区分大小写）；re:/正则/标志 = 用正则找
+# 要加新的道具、招式、地名、技能名之前，先看看这里；要是真的需要用某个普通词（比如「潜水」当动词），换个说法，不要删这一行。
+
+# ---- 系列名、作品名 ----
+宝可梦
+口袋妖怪
+神奇宝贝
+精灵宝可梦
+精灵球
+绿宝石
+皮卡丘
+re:/\bPok[eé]mon\b/i
+re:/\bPok[eé] ?dex\b/i
+re:/\bPok[eé] ?Ball\b/i
+re:/\bPikachu\b/i
+re:/\bEmerald\b/
+
+# ---- 野外技能、技能道具（现在叫「回声技能」「回声贝」） ----
+秘传
+学习器
+居合斩
+闪光
+碎岩
+怪力
+冲浪
+攀瀑
+潜水
+飞空
+re:/\bHMs?\b/
+re:/\bRock Smash\b/
+
+# ---- 球、道具、进化道具 ----
+超级球
+高级球
+大师球
+学习装置
+进化石
+火之石
+水之石
+雷之石
+叶之石
+月之石
+日之石
+冰之石
+好伤药
+厉害伤药
+全满药
+全复药
+活力碎片
+复活草
+万灵药
+解麻药
+解冻药
+解毒药
+灼伤药
+烫伤药
+除虫喷雾
+驱怪喷雾
+离洞绳
+逃生绳
+探宝器
+寻宝器
+神奇糖果
+re:/\b(Super|Great|Ultra|Master) Ball\b/
+re:/\bExp\.? ?Share\b/
+re:/\b(Fire|Water|Thunder|Leaf|Moon|Sun|Ice) Stone\b/
+re:/\b(Super|Hyper|Max) Potion\b/
+re:/\b(Full|Paralyze|Burn|Ice) Heal\b/
+re:/\bFull Restore\b/
+re:/\bRare Candy\b/
+re:/\bEscape Rope\b/
+re:/\bRepel\b/
+re:/\bRevive\b/
+re:/\bAntidote\b/
+re:/\bDowsing Machine\b|\bItemfinder\b/
+
+# ---- 地点、联赛 ----
+冠军之路
+名人堂
+四天王
+四大师
+怪兽中心
+宝可梦中心
+培育屋
+养育屋
+re:/\bHall of Fame\b/i
+re:/\b(Victory|Champion) Road\b/i
+re:/\bElite Four\b/i
+re:/\bPok[eé]mon Center\b|\bMonster Center\b/i
+re:/\bNurse Joy\b/
+
+# ---- 招式、属性、对战里的固定说法 ----
+暗影球
+藤鞭
+飞叶快刀
+吐丝
+铁壁
+超能
+格斗
+效果拔群
+就决定是你了
+re:/\b(Vine Whip|Vine Lash|Shadow Ball|Shadow Orb|Ember Bite|Mega Stomp|Inferno Blast)\b/
+re:/\bI choose you\b/i
+re:/\bGotcha!/
+re:/\bwild\b.{0,40}\bappeared\b/i
+re:/\bsuper effective\b/i
+re:/\bnot very effective\b/i
+
+# ---- 手册（不叫「图鉴」）、稀有色（不叫「异色」） ----
+图鉴
+异色
+
+# ---- 三只冰 / 雷 / 火神鸟（已经改名改设定；英文老名字只在 id 里留着，小写） ----
+急冻鸟
+闪电鸟
+火焰鸟
+霜羽鸟
+雷羽鸟
+焰羽鸟
+re:/\b(Frostwing|Stormwing|Blazewing|Articuno|Zapdos|Moltres)\b/
+
+# ---- 和那套系列一样的数字：手册总数、第一大区 ----
+re:/(386|151)\s*(只|种|號|号)/
+re:/(图鉴|手册)\D{0,3}(386|151)\b/
+
+# ---- 开场博士那段（2026-10-08 评审 P0-A：结构和说法照搬了那套系列的开场白，已经重写） ----
+re:/Hello there! Welcome to the/i
+re:/People call me Professor/i
+re:/This world is (full of|inhabited by) (monsters|creatures)/i
+re:/Are you a boy or a girl\?/i
+re:/tell me (a little )?about yourself/i
+你是男孩还是女孩
+大家都叫我回声博士
+这个世界住着许多怪兽
+
+# ---- 对战、养成里的固定说法（2026-10-08 评审 P0-B，已经改成自己的说法） ----
+re:/\bis evolving!/i
+re:/\bevolved into\b/i
+re:/\bfainted!/i
+re:/\b[A-Z][a-z]+ wants to learn [A-Z]/
+re:/\bThe egg is moving\b/i
+re:/\bheld on (for you|so you)/i
+re:/去吧，(<b>|金?回声球)/
+re:/Go, Echo Ball/i
+re:/野生的.{0,40}出现了/
+样子在变化
+要用什么技能
+re:/1, 2, 3.{0,4}忘掉了/
+为了不让你难过
+
+# ---- 挑战馆、岛主、配角的叫法（2026-10-08 评审 P1-A；建筑叫「挑战馆 Challenge Hall」，主人叫「岛主 Isle Master」） ----
+道馆
+馆主
+re:/\bGym Leaders?\b/i
+re:/\b[A-Z][a-z]+ Gym\b/
+re:/\bthe Gym\b/
+Nurse Amy
+re:/\bGrunts?\b/
+
+# ---- 课本（评估「必须改」第 6 条：只能写「适用于沪教版词汇」，不写「同步」「官方」「配套」「授权」） ----
+课本同步
+官方同步

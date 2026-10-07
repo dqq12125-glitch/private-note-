@@ -1,5 +1,5 @@
-// 端到端测试：课本同步（沪教版七上）和每日复习（间隔复习）
-// - 闯关页默认是「📗 课本同步」，能选正在学的单元，单元的第 1 关能全对通关
+// 端到端测试：课本单元（沪教版七上）和每日复习（间隔复习）
+// - 闯关页默认是「📗 课本单元」，能选正在学的单元，单元的第 1 关能全对通关
 // - 课本新学的题答对 → 明天复习；答错 → 当天复习；复习答对 → 隔天再来
 // - AI 聊天里老师给的更好说法进复习、能出题；老存档的错题本会搬进每日复习
 // - 冒险出题有几成来自正在学的单元；聊天页课本话题排在前面
@@ -28,11 +28,11 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   const W = ms => p.waitForTimeout(ms);
   const S = () => p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')));
 
-  // ---------- 1. 课本同步页 ----------
+  // ---------- 1. 课本单元页 ----------
   await p.goto(PAGE);
   await p.evaluate(() => localStorage.setItem('echo-island-v1', JSON.stringify({ seenIntro: true, homeTab: 'quiz', settings: { tts: 'online', mode: 'self', sfx: false } })));
   await p.reload(); await W(500);
-  check(await p.isVisible('.book-head'), '闯关页默认显示课本同步');
+  check(await p.isVisible('.book-head'), '闯关页默认显示课本单元');
   check(await p.evaluate(() => document.querySelectorAll('.world.unit').length === window.BOOKS.list[0].units.length), '显示正在学这一册的单元');
   await p.click('[data-act=bookPick]'); await W(200);
   await p.click('#modal [data-act=bookAt][data-i="1"]'); await W(400);
@@ -42,6 +42,8 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   for (let k = 0; k < 14; k++) {
     await W(700);
     if (await p.isVisible('#result')) break;
+    // 这题念的是哪个词：从题目里读（以前从有道在线发音的请求地址里看；有道已经不用了）
+    last = await p.evaluate(() => { const P = window.EchoGame.P(); return (P && P.q && P.q.audio) || ''; });
     const info = await p.evaluate(word => {
       const opts = [...document.querySelectorAll('#p-body .opt[data-act=pick] .o-t')].map(e => e.textContent);
       const w = window.BOOKS.list[0].units[1].words.find(x => x[0] === word);

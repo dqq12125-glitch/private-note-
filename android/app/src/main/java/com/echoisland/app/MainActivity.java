@@ -3,6 +3,7 @@ package com.echoisland.app;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -17,6 +18,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StatFs;
 import android.os.SystemClock;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -76,6 +78,8 @@ import okhttp3.WebSocketListener;
 // 原生桥 EchoNative 的每个方法在 android/README.md 里有说明（新加方法要同时改 README 和 tests/fake-native.js，tests/native.test.js 会查）。
 public class MainActivity extends Activity {
     private static final String HOME = "https://appassets.androidplatform.net/assets/www/index.html";
+    // 销售版（-PECHO_EDITION=sales 打的包）：没有打包的密钥和家长密码，家长在首次设置向导里设
+    private static final boolean SALES = "sales".equals(BuildConfig.EDITION);
     private static final String ORIGIN = "https://appassets.androidplatform.net";
     private static final int BG = Color.parseColor("#12304a");
     private static final int REQ_MIC = 7, REQ_STORAGE = 8, REQ_PICK = 9;
@@ -111,6 +115,7 @@ public class MainActivity extends Activity {
         super.onCreate(saved);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         prefs = getSharedPreferences("echo", MODE_PRIVATE);
+        // 家长密码：家庭版用打包时的哈希；销售版（SALES）打包时没有，家长在首次设置向导里设（setPin），哈希和随机盐存在 prefs
         pin = new PinGuard(BuildConfig.PARENT_PIN_SALT, BuildConfig.PARENT_PIN_HASH, new PinGuard.Store() {
             @Override public long getLong(String k, long d) { return prefs.getLong(k, d); }
             @Override public void putLongs(String[] ks, long[] vs) {
@@ -118,11 +123,17 @@ public class MainActivity extends Activity {
                 for (int i = 0; i < ks.length; i++) e.putLong(ks[i], vs[i]);
                 e.commit();
             }
+            @Override public String getStr(String k, String d) { return prefs.getString(k, d); }
+            @Override public void putStrs(String[] ks, String[] vs) {
+                SharedPreferences.Editor e = prefs.edit();
+                for (int i = 0; i < ks.length; i++) e.putString(ks[i], vs[i]);
+                e.commit();
+            }
         }, new PinGuard.Clock() {
             @Override public long wall() { return System.currentTimeMillis(); }
             @Override public long elapsed() { return SystemClock.elapsedRealtime(); }
             @Override public long boot() { return Settings.Global.getInt(getContentResolver(), Settings.Global.BOOT_COUNT, -1); }
-        });
+        }, SALES);
         applyOrientation(prefs.getString("orient", "portrait"));   // 上次在游戏设置里选的屏幕方向
         if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true);   // 调试包：电脑上能用 Chrome 开发者工具看网页
         root = new FrameLayout(this);
@@ -592,6 +603,25 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean hasPin() { return pin.has(); }
         @JavascriptInterface public boolean checkPin(String p) { return pin.check(p); }
         @JavascriptInterface public String pinStatus() { return pin.statusJson(); }
+        // 销售版：设 / 改家长密码（4 位数字）。还没有密码时直接设；已经有了要 2 分钟内刚 checkPin 对过。家庭版一律 false
+        @JavascriptInterface public boolean setPin(String p) { return SALES && pin.set(p); }
+
+        // ---- 版本（家庭版 / 销售版）和设备检查 ----
+        @JavascriptInterface public String edition() { return SALES ? "sales" : "family"; }
+        // 检查新版本的默认地址（打包时 echo.properties 的 VER_URL，只有家庭版有；销售版是空的，新版本由帮忙安装的人私下发）
+        @JavascriptInterface public String verUrl() { return BuildConfig.VER_URL; }
+        // 销售版开放哪几册课本（打包时 -PECHO_BOOKS，逗号分开，比如 hj7a,hj7b）；家庭版是空的 = 全部开放
+        @JavascriptInterface public String books() { return BuildConfig.BOOKS; }
+        // 存储空间和内存（首次设置的设备检查用）：{"free":剩余字节,"total":总字节,"ram":内存字节}
+        @JavascriptInterface public String storage() {
+            try {
+                StatFs fs = new StatFs(getFilesDir().getAbsolutePath());
+                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+                if (am != null) am.getMemoryInfo(mi);
+                return new JSONObject().put("free", fs.getAvailableBytes()).put("total", fs.getTotalBytes()).put("ram", mi.totalMem).toString();
+            } catch (Exception e) { return "{}"; }
+        }
 
         // ---- 麦克风 ----
         @JavascriptInterface public String micPermission() { return micState(); }

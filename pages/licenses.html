@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>回声岛 · 开源许可与致谢</title>
+<style>
+  :root { color-scheme: light; --ink: #12304a; --ink-2: #4a6478; --line: #d3e6e2; --bg: #f5fbfa; --card: #fff; --accent: #0e7c86; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 16px 16px 40px; }
+  h1 { font-size: 22px; margin: 6px 0 10px; } h2 { font-size: 18px; margin: 22px 0 6px; color: var(--accent); }
+  .item { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; margin: 10px 0; }
+  .item b { font-size: 16px; } .lic { display: inline-block; font-size: 12px; font-weight: 800; color: #4b3d8f; background: #efeaff; border-radius: 8px; padding: 0 7px; margin-left: 4px; }
+  .item p { margin: 4px 0; font-size: 14px; color: var(--ink-2); }
+  .en { font-family: system-ui, sans-serif; font-size: 13px; color: var(--ink); background: #f3f6f6; border-radius: 8px; padding: 6px 8px; }
+  a { color: var(--accent); word-break: break-all; }
+</style>
+</head>
+<body>
+<main>
+<h1>开源许可与致谢</h1>
+<p>回声岛用到了下面这些开源软件、字体、模型和服务。谢谢它们的作者！</p>
+
+<h2>声音</h2>
+<div class="item"><b>Kokoro-82M</b><span class="lic">Apache License 2.0</span>
+<p>App 里的英语配音、AI 聊天开头的中文语音提示，是开发者在自己电脑上用开源语音模型 Kokoro（作者 hexgrad）提前合成的声音文件。App 里只有合成好的声音，不包含模型本身。</p>
+<p>项目：<a href="https://huggingface.co/hexgrad/Kokoro-82M">huggingface.co/hexgrad/Kokoro-82M</a> · 许可证全文：<a href="apache-2.0.txt">Apache License 2.0</a></p></div>
+<div class="item"><b>配乐</b><span class="lic">原创</span>
+<p>全部配乐都是为回声岛写的原创曲子，App 运行时用 WebAudio 现场合成，没有使用别人的音乐或音频文件。</p></div>
+
+<h2>字体</h2>
+<div class="item"><b>Baloo 2</b><span class="lic">SIL Open Font License 1.1</span>
+<p class="en">Copyright 2019 The Baloo 2 Project Authors (https://github.com/EkType/Baloo2)</p>
+<p>许可证全文：<a href="../assets/fonts/OFL-baloo-2.txt">OFL-baloo-2.txt</a></p></div>
+<div class="item"><b>Nunito</b><span class="lic">SIL Open Font License 1.1</span>
+<p class="en">Copyright 2014 The Nunito Project Authors (https://github.com/googlefonts/nunito)</p>
+<p>许可证全文：<a href="../assets/fonts/OFL-nunito.txt">OFL-nunito.txt</a></p></div>
+
+<h2>程序库</h2>
+<div class="item"><b>three.js</b>（r186，裁剪版）<span class="lic">MIT License</span>
+<p class="en">Copyright © 2010-2026 three.js authors</p>
+<p>3D 画面。许可证全文：<a href="mit-three.txt">MIT License</a></p></div>
+<div class="item"><b>meshoptimizer（MeshoptDecoder）</b><span class="lic">MIT License</span>
+<p class="en">Copyright (C) 2016-2026, by Arseny Kapoulkine</p>
+<p>解压怪兽 3D 模型。随 three.js 一起打包，许可证条款和上面的 MIT License 相同。</p></div>
+<div class="item"><b>OkHttp、Okio</b>（Square）· <b>Kotlin 标准库</b>（JetBrains）· <b>AndroidX WebKit</b> 等（Google / Android 开源项目）<span class="lic">Apache License 2.0</span>
+<p>安卓 App 的网络连接和网页外壳。许可证全文：<a href="apache-2.0.txt">Apache License 2.0</a></p></div>
+
+<h2>3D 模型</h2>
+<div class="item"><b>Tencent Hunyuan3D-2（腾讯混元 3D 2.0）</b><span class="lic">Tencent Hunyuan 3D 2.0 Community License</span>
+<p>部分怪兽的 3D 模型，是用腾讯混元 3D 2.0 生成以后，再由开发者绑骨骼、做动作、压缩加工的。按该许可证的要求注明：</p>
+<p class="en">Tencent Hunyuan 3D 2.0 is licensed under the Tencent Hunyuan 3D 2.0 Community License Agreement, Copyright © 2025 Tencent. All Rights Reserved. The trademark rights of “Tencent Hunyuan” are owned by Tencent or its affiliate.</p>
+<p>该许可证的授权地区不包括欧盟、英国、韩国。许可证全文（随 App 打包）：<a href="hunyuan3d-2-license.txt">Tencent Hunyuan 3D 2.0 Community License Agreement</a> · 原地址：github.com/Tencent-Hunyuan/Hunyuan3D-2</p></div>
+<div class="item"><b>怪兽和人物</b><span class="lic">原创</span>
+<p>所有怪兽、人物、地图、道具和故事都是为回声岛原创的；部分怪兽原画在制作时用了 AI 图像工具辅助，再由开发者挑选、修改。人物是程序画的。</p></div>
+
+<h2>AI 服务</h2>
+<div class="item"><b>阿里云百炼 · 通义千问</b><span class="lic">云服务（家长自己的账号）</span>
+<p>和岛民英语聊天（通义千问实时语音）、口语打分（语音识别）、老师点评和翻译（文字模型）、没有配音的句子现场合成（语音合成）。这些都是从孩子的手机直接连到阿里云，用家长自己的阿里云账号和密钥。App 里 AI 生成的内容都标着「AI 生成 · 由阿里云通义千问提供」。</p></div>
+</main>
+</body>
+</html>

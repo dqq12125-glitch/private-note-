@@ -241,7 +241,7 @@
       sun.intensity = dark ? .15 : cave ? 1.1 : inside ? 1.2 : under ? 1.0 : 2.1;
       sun.color.set(under ? '#bfefff' : THEME.pal && THEME.pal.fog ? '#e8e4d8' : '#fff1d8');
       lamp.intensity = dark ? 14 : 0;
-      darkLit = null;   // 漆黑洞穴里闪光开没开，draw 里按每帧的状态设灯光
+      darkLit = null;   // 漆黑洞穴里点灯开没开，draw 里按每帧的状态设灯光
       pitch = (inside && room() ? 56 : 52) * Math.PI / 180;
       // 人物
       m.npcs.forEach(n => sprites.push(person(n)));
@@ -482,7 +482,7 @@
     }
 
     // ---------- 房子：每座岛的建筑风格不一样 ----------
-    // 怪兽中心（红顶）和商店（蓝顶）哪座岛都一样，一眼就认得出；道馆和民房按岛上的风格盖
+    // 休息站（红顶）和商店（蓝顶）哪座岛都一样，一眼就认得出；挑战馆和民房按岛上的风格盖
     const WALLTEX = {};
     function wallTex(kind, col) {
       const key = kind + col;
@@ -692,15 +692,20 @@
         const doorTop = (style === 'hut' ? .45 : 0) + .93;
         let signTop = doorTop;
         if (signed) {
-          const label = L === 'C' ? 'CENTER' : L === 'M' ? 'SHOP' : 'GYM';
+          const label = L === 'C' ? 'REST STOP' : L === 'M' ? 'SHOP' : 'GYM';
           // 字用屋顶的颜色；屋顶颜色太浅（雪岛的白屋顶、农场的黄屋顶、实验室的浅蓝圆顶）白底上看不清，就用岛上的点缀色
           const rc = new T3.Color(roofC), ink = rc.r * .2126 + rc.g * .7152 + rc.b * .0722 > .45 ? (P.trim || '#37474f') : roofC;
           const signT = canvasTex(256, 64, g => {
             g.fillStyle = '#ffffff'; A.rr(g, 2, 2, 252, 60, 30); g.fill();
             g.lineWidth = 5; g.strokeStyle = A.shade(ink, .7); g.stroke();
-            g.fillStyle = ink; g.font = '800 46px "Baloo 2", Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+            g.fillStyle = ink; g.font = '800 ' + (label.length > 6 ? 40 : 46) + 'px "Baloo 2", Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
             g.fillText(label, 144, 36, 180);
-            if (L === 'C') { g.fillRect(25, 27, 28, 10); g.fillRect(34, 18, 10, 28); }
+            // 休息站：一颗心 + 两道声波（回声站的记号）
+            if (L === 'C') {
+              g.beginPath(); g.moveTo(22, 45); g.bezierCurveTo(7, 35, 10, 17, 22, 26); g.bezierCurveTo(34, 17, 37, 35, 22, 45); g.fill();
+              g.strokeStyle = ink; g.lineWidth = 4; g.lineCap = 'round';
+              [14, 21].forEach(r => { g.beginPath(); g.arc(27, 32, r, -.6, .6); g.stroke(); });
+            }
             if (L === 'G') { g.fillStyle = '#ffc53d'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 7 : 17; g.lineTo(39 + Math.cos(a) * r, 33 + Math.sin(a) * r); } g.fill(); }
           });
           const sm = new T3.MeshLambertMaterial({ map: signT, transparent: true, emissive: 0x222222 }); sm._own = true;
@@ -711,6 +716,16 @@
           const sg = mesh(new T3.PlaneGeometry(sw, sh), sm, cx, sy, sz, false);
           sg.receiveShadow = false;   // 屋檐的影子不落在招牌上，招牌一直是亮的
           signTop = sy + sh / 2;
+        }
+        // 休息站屋脊上的小钟架：两根柱子 + 横梁，下面挂一只金色的铃铛（回声站的记号）
+        if (L === 'C' && !round) {
+          const top = roofTop - .06;
+          [-.2, .2].forEach(k => box(.05, .46, .05, '#f4efe4', cx + k, top, cz, true));
+          box(.52, .06, .08, A.shade(roofC, .8), cx, top + .44, cz, true);
+          const bell = new T3.LatheGeometry([[0, 0], [.15, 0], [.14, .035], [.1, .09], [.085, .17], [.06, .22], [.025, .245], [0, .25]].map(([x, y]) => new T3.Vector2(x, y)), 14);
+          tint(bell, '#ffc93c'); mesh(bell, vcol, cx, top + .18, cz, true);
+          const cl = new T3.SphereGeometry(.035, 8, 6); tint(cl, '#b8862b'); mesh(cl, vcol, cx, top + .16, cz, false);
+          roofTop = top + .5;
         }
         // 钟楼的钟面：屋檐下面看得到的地方、招牌上面
         if (clock) {
@@ -925,7 +940,7 @@
       } else markMesh(kind, cx, cz);
     }
 
-    // ---------- 野外技能的障碍：小树、裂开的岩石、大石头 ----------
+    // ---------- 回声技能的障碍：小树、裂开的岩石、大石头 ----------
     let obstM = [], bouldM = [], bike = null, ripple = null;
     const sparkS = [];
     function buildObst() {
@@ -1082,7 +1097,7 @@
     }
     let pickTex = null;
     function pickSprite(p) {
-      if (!pickTex) pickTex = canvasTexKeep(64, 64, g => A.drawItemBall(g, 32, 32, 22));
+      if (!pickTex) pickTex = canvasTexKeep(64, 64, g => A.drawPickup(g, 32, 34, 22));
       const o = new T3.Mesh(new T3.PlaneGeometry(.42, .42).translate(0, .21, 0), new T3.MeshLambertMaterial({ map: pickTex, alphaTest: .5, emissive: 0x333333 }));
       o.rotation.x = -pitch * .8;
       own.push(o.geometry, o.material);
@@ -1114,7 +1129,7 @@
         blur0 = (tier === 'high' ? 4.5 : 3.5) * dpr;   // 每帧在 draw 里按横竖屏、室内外再调
       }
     }
-    // 竖屏的小房间（怪兽中心、商店、民房）：整间屋子的宽度都放进画面、在画面里上下居中，镜头不再跟着主角左右移
+    // 竖屏的小房间（休息站、商店、民房）：整间屋子的宽度都放进画面、在画面里上下居中，镜头不再跟着主角左右移
     // （原来只看 8.6 格宽：两边的电脑、书架被切掉，下面却空着一大片黑）。透视下算不出简单的公式，就投影几个角、调几轮
     function fitRoom() {
       // 上下按整间屋子（含墙高）居中；左右让屋里能走的地方（四周墙里面，再带一点墙）刚好放下，最外面的厚墙在近处可以切掉一点
@@ -1156,7 +1171,7 @@
       // 障碍：砍掉 / 碎掉的不画；大石头滑到新位置
       obstM.forEach(o => { o.g.visible = !V.cleared || !V.cleared.has(o.key); });
       V.obst.forEach((b, i) => { const g = bouldM[i]; if (!g) return; g.position.x += (b.x + .5 - g.position.x) * .3; g.position.z += (b.y + .5 - g.position.z) * .3; });
-      // 寻宝器的闪光
+      // 回声探测器让道具一闪一闪
       sparkS.forEach((sp, i) => { const h = V.sparkles[i]; sp.visible = !!h; if (h) { sp.position.set(h.x + .5, .15, h.y + .5); sp.material.opacity = .4 + .6 * (Math.sin(now / 230 + i * 2) + 1) / 2; sp.scale.setScalar(.7 + .5 * (Math.sin(now / 300 + i) + 1) / 2); } });
       // 跟着走的怪兽
       follower.root.visible = V.showF || (V.surf && !!V.lead);
@@ -1222,7 +1237,7 @@
         if (key !== snap) { snap = key; sun.target.position.set(sx, 0, sz - 1); sun.position.set(sx - 7, 16, sz + 6); sun.target.updateMatrixWorld(); renderer.shadowMap.needsUpdate = true; }
       } else { sun.position.set(camT.x - 7, 16, camT.z + 6); sun.target.position.set(camT.x, 0, camT.z); }
       lamp.position.set(V.px + .5, 1.8, V.py + .8);
-      // 漆黑的洞穴：没用闪光只有主角身边一小圈亮；用了闪光整个洞亮起来（中性白光 + 一点太阳），
+      // 漆黑的洞穴：没点灯只有主角身边一小圈亮；点了灯整个洞亮起来（中性白光 + 一点太阳），
       // 主角身上的灯不再那么强（人物纸片也不会被它照得发白，见 sheet）
       if (m.dark && darkLit !== !!V.flash) {
         darkLit = !!V.flash;

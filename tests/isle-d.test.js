@@ -1,13 +1,13 @@
 // D 组（第 8–10 岛：动物岛、规则城、运动美食岛）端到端测试
-// 三座岛的主线剧情各走一遍；三个道馆机关按正确解法走通（也故意错一次）；飞空、潜水学习器；海上巡逻 / 冰洞守卫；潜水到海底再浮上来到运动美食岛
+// 三座岛的主线剧情各走一遍；三个挑战馆机关按正确解法走通（也故意错一次）；乘风、潜海回声贝；海上巡逻 / 冰洞守卫；潜海到海底再浮上来到运动美食岛
 // 运行：node tests/isle-d.test.js
 const H = require('./helpers');
 
 (async () => {
   const t = await H.open();
   const { p, W } = t;
-  // 道馆要先打败课本单元的 BOSS（第 13 个馆主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
-  // 七上全过是霜羽鸟的里程碑，先当作收服过了，免得它半路飞来打断剧情
+  // 挑战馆要先打败课本单元的 BOSS（第 13 个岛主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
+  // 七上全过是发条龟的里程碑（老旗标 leg:frostwing 也算），先当作收服过了，免得它半路飞来打断剧情
   const save0 = t.save;
   t.save = async s => { await save0(s); await p.evaluate(() => { const S = EchoGame.S; for (let i = 0; i < 16; i++) S.stars[(13 + i) + '-6'] = 1; S.world.flags['s:leg:frostwing'] = 1; localStorage.setItem('echo-island-v1', JSON.stringify(S)); }); };
   const flags = () => t.flags();
@@ -111,21 +111,21 @@ const H = require('./helpers');
   await talk('id', 'whisper');
   f = await flags();
   await ck(f['s:ch8'] === 1, '打败干部低语 → 笼子全开、放走怪兽 → 夺回动物水晶（ch8）');
-  await ck(await gateOpen(14, 4), '关雷狮的大笼子也打开了');
+  await ck(await gateOpen(14, 4), '关插头狮的大笼子也打开了');
   await talk('id', 'voltlion');
-  await ck((await flags())['s:leg:voltlion'] === 1, '和神兽雷狮对战（收服或打败）');
+  await ck((await flags())['s:leg:voltlion'] === 1, '和神兽插头狮对战（收服或打败）');
 
-  // 巡林站：小凯送飞空
+  // 巡林站：小凯送乘风
   await t.go('i8A', 'mat'); await idle();
   await talk('id', 'kai2');
-  await ck((await bag()).hm_fly === 1 && (await flags())['s:got_fly'] === 1, '小凯送了飞空秘传学习器');
+  await ck((await bag()).hm_fly === 1 && (await flags())['s:got_fly'] === 1, '小凯送了乘风回声贝');
   await shot('d8-i8A');
 
-  // 道馆：脚印小路
+  // 挑战馆：脚印小路
   await t.go('i8G', 'mat'); await idle();
   await step('up', 2);
   let g8 = await dbgD('g8');
-  await ck(g8.said[0], '脚印道馆：走到第一个路口，广播描述一种动物（只听不看）');
+  await ck(g8.said[0], '脚印挑战馆：走到第一个路口，广播描述一种动物（只听不看）');
   await ck(/路口/.test(await note()), '提示条显示第几个路口');
   const COL = { e: 3, m: 7, g: 11, k: 3, t: 7, p: 11, z: 3, q: 7, l: 11 };
   const ORDER = [['e', 'm', 'g'], ['k', 't', 'p'], ['z', 'q', 'l']];
@@ -141,13 +141,13 @@ const H = require('./helpers');
     await step('up', 4);
     g8 = await dbgD('g8');
   }
-  await ck(await gateOpen(7, 6), '三段脚印都走对：通往馆主的门打开');
+  await ck(await gateOpen(7, 6), '三段脚印都走对：通往岛主的门打开');
   const b0 = await badges();
   await talk('role', 'leader');
   await ck(await badges() === b0 + 1, '打败鳄鱼巡查员，拿到第 9 枚徽章');
   // 解开以后再进来门还开着
   await t.go('t8', 'door:G'); await idle(); await t.go('i8G', 'mat'); await idle();
-  await ck(await gateOpen(7, 6), '再进道馆：门一直开着');
+  await ck(await gateOpen(7, 6), '再进挑战馆：门一直开着');
 
   // ======================= 第 9 岛 规则城 =======================
   await t.go('s8', 'from:t8'); await idle();
@@ -172,22 +172,22 @@ const H = require('./helpers');
   f = await flags();
   await ck(f['s:a9spy'] === 1 && f['s:ch9'] === 1, '找到乔装的团员（红帽子、眼镜、背包）→ 打败他 → 夺回规则水晶（ch9）');
   await talk('id', 'orion2');
-  await ck((await bag()).hm_dive === 1, '导师欧瑞读懂古代文字，送了潜水秘传学习器');
+  await ck((await bag()).hm_dive === 1, '导师欧瑞读懂古代文字，送了潜海回声贝');
   await t.go('i9A', 'mat'); await idle();
   await talk('id', 'officer');
   await shot('d9-i9A');
 
-  // 9 枚徽章：还不能潜水
+  // 9 枚徽章：还不能潜海
   await t.go('s9', 'from:t9'); await idle();
   await t.tp(27, 8, 'down'); await surf(true); await t.A(); await W(300);
-  await ck(/10/.test(await t.zh()), '只有 9 枚徽章：潜水要 10 枚徽章');
+  await ck(/10/.test(await t.zh()), '只有 9 枚徽章：潜海要 10 枚徽章');
   await t.closeDlg();
   await ck((await t.dbg()).map === 's9', '潜不下去，还在 10 号水路');
   await shot('d9-s9');
 
-  // 道馆：红绿灯
+  // 挑战馆：红绿灯
   await t.go('i9G', 'mat'); await idle();
-  await ck(/light/.test(await note()), '红绿灯道馆：提示条显示现在是红灯还是绿灯');
+  await ck(/light/.test(await note()), '红绿灯挑战馆：提示条显示现在是红灯还是绿灯');
   await t.tp(4, 14, 'up'); await step('up');
   await ck(await pos() === 'i9G 4,14', '不走斑马线直接上马路：被吹哨罚回起点');
   await waitLight(false, 2);
@@ -205,14 +205,14 @@ const H = require('./helpers');
   await ck(await badges() === b1 + 1, '打败鲨鱼纪律官，拿到第 10 枚徽章');
   await ck(!(await note()), '离开前红绿灯的提示条已经收起');
 
-  // 潜水：10 号水路 → 海底隧道 → 11 号水路 → 运动美食岛
+  // 潜海：10 号水路 → 海底隧道 → 11 号水路 → 运动美食岛
   await t.go('s9', 'from:t9'); await idle();
   await t.tp(27, 8, 'down'); await surf(true); await t.A(); await idle();
-  await ck((await t.dbg()).map === 'u9', '10 枚徽章 + 潜水：从深水潜到海底隧道');
+  await ck((await t.dbg()).map === 'u9', '10 枚徽章 + 潜海：从深水潜到海底隧道');
   await W(400); await shot('d9-u9');
   await t.tp(36, 21, 'down'); await t.A(); await idle(); await W(500);
   await ck((await t.dbg()).map === 's10', '从另一头的光圈浮上去：11 号水路（礁石环绕）');
-  await ck((await t.dbg()).surf, '浮上来的时候在水上冲浪');
+  await ck((await t.dbg()).surf, '浮上来的时候在水上踏浪');
   await shot('d10-s10');
   await t.tp(14, 1, 'up'); await surf(false); await t.walk('up', 1); await W(500);
 
@@ -236,9 +236,9 @@ const H = require('./helpers');
   await ck((await t.dbg()).y === 6, '10 枚徽章：冰洞前的守卫挡住窄路');
   await t.closeDlg();
 
-  // 道馆：冰面 + 健康食物
+  // 挑战馆：冰面 + 健康食物
   await t.go('i10G', 'mat'); await idle();
-  await ck(/0 \/ 3/.test(await note()), '冰面道馆：提示条显示健康食物 0/3');
+  await ck(/0 \/ 3/.test(await note()), '冰面挑战馆：提示条显示健康食物 0/3');
   await t.tp(7, 13, 'up'); await step('up');
   await ck(await pos() === 'i10G 7,14' && await dbgD('g10') === 0, '滑到甜甜圈（垃圾食品）上：滑回起点');
   await shot('d10-i10G');
@@ -256,7 +256,7 @@ const H = require('./helpers');
   await talk('role', 'leader');
   await ck(await badges() === b2 + 1, '打败海狮教练，拿到第 11 枚徽章');
 
-  // 冰洞：守卫让开，滑冰谜题，神兽冰晶巨人，雪原到天气岛
+  // 冰洞：守卫让开，滑冰谜题，神兽冰窖守卫，雪原到天气岛
   await t.go('t10', 'door:G'); await idle();
   await t.tp(20, 6, 'up'); await t.walk('up', 2); await t.walk('up', 1); await W(500);
   await ck((await t.dbg()).map === 'c10', '11 枚徽章：守卫让开，走进冰洞');
@@ -267,7 +267,7 @@ const H = require('./helpers');
   await ck(await pos() === 'c10 8,7', '往左滑、再往上滑：到了冰洞北边');
   await shot('d10-c10');
   await t.tp(29, 4, 'up'); await talk('id', 'icegiant');
-  await ck((await flags())['s:leg:icegiant'] === 1, '冰洞深处的神兽冰晶巨人');
+  await ck((await flags())['s:leg:icegiant'] === 1, '冰洞深处的神兽冰窖守卫');
   await t.tp(5, 1, 'up'); await t.walk('up', 1); await W(500); await idle();
   await ck((await t.dbg()).map === 'r10', '冰洞北口：雪原');
   await shot('d10-r10');

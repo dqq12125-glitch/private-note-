@@ -33,7 +33,7 @@
     ],
     [
      "patient",
-     "有耐心的",
+     "很有耐心",
      "⏳"
     ],
     [
@@ -68,7 +68,7 @@
     ],
     [
      "support",
-     "支持；鼓励",
+     "支持",
      "💪"
     ],
     [
@@ -153,7 +153,7 @@
     ],
     [
      "heart",
-     "心；内心",
+     "内心",
      "❤️"
     ],
     [
@@ -168,12 +168,12 @@
     ],
     [
      "after school",
-     "放学后",
+     "放了学以后",
      "🎒"
     ],
     [
      "be willing to do something",
-     "愿意做某事",
+     "乐意去做某事",
      "🙋"
     ],
     [
@@ -188,12 +188,12 @@
     ],
     [
      "medium height",
-     "中等身高",
+     "个子不高不矮",
      "📏"
     ],
     [
      "modern dance",
-     "现代舞",
+     "现代舞蹈",
      "💃"
     ],
     [
@@ -218,7 +218,7 @@
     ],
     [
      "cry oneself to sleep",
-     "哭着入睡",
+     "哭到睡着",
      "😪"
     ],
     [
@@ -233,12 +233,12 @@
     ],
     [
      "take somebody's place",
-     "替代某人",
+     "顶替某人",
      "🪑"
     ],
     [
      "come along",
-     "出现",
+     "露面",
      "✨"
     ]
    ],
@@ -431,7 +431,7 @@
     "voice": "Momo",
     "voiceZh": "活泼的女孩"
    },
-   "notes": "I checked the word list against book/unit1.json with a script. It has all 27 words and then all 17 phrases, once each, in book order and with exact spelling. No item is marked understandOnly. The script also confirmed: no repeated Chinese meaning, no repeated emoji, no zh longer than 8 characters, 16 sentences and 12 dialogues.\n\nFixes applied:\n- grammar.tip: now lists which, and gives the two question patterns: wh-word + be + subject, and wh-word + do/does + subject + base verb. The two example patterns come from the book's own short pattern list.\n- watch over: changed to 守护. The two reviewers gave different fixes. I used the 'must' fix (守护 only) instead of 守护；看护, because 看护 would still overlap with 照顾 (take care of) in the pick-the-meaning question.\n- rise is now （太阳）升起 and rise into is now 升入空中. 入 hints at 'into' in 看图说英语, and the two options no longer look the same.\n- sents[2]: the two reviewers suggested different replacements. I chose 'Which class is your best friend in?' over 'What is your new classmate good at?'. It removes the copy of dlgs[5] and also adds a which-sentence. Tiles keep their capital letters (game.js tokens), so 'Which' clearly goes first, and the word order is fixed.\n- sents[3]: now 'I am glad you are my friend.', which removes the copy of dlgs[2] and finally puts glad in a sentence.\n- sents[6]: added 'so much' so that 'best' cannot move to the end.\n- sents[12]: removed 'always', which could also move.\n- dlgs[10]: the reply is now 'The nurse will take care of it.' The game spells the building 'Monster Center' everywhere, so the line avoids the name instead of spelling it a second way. The child also says 'take care of' aloud.\n- dlgs[11]: now a which-question, 'Which subject do you want to improve?' The 'Yes, I want to improve it.' distractor shows the yes/no mistake that the grammar point warns about.\n\nTwo extra changes for the same reasons:\n- sents[4]: removed 'usually'. 'Where do you go after school usually' would also be acceptable English, and the exact-order checker would mark it wrong. This is the same issue as sents[6] and sents[12].\n- dlgs[1]: the reply is now 'He has short dark hair.' (it was 'He is of medium height.'). Otherwise 'dark' was never spoken in any sentence or reply. Medium height is still practised in sents[9] and in Daisy's chat words. The wrong replies, 'He is honest and kind.' (personality) and 'He is good at maths.', are still clearly wrong for a look-like question.\n\nQuestion words now covered:\n- Sentences: who, what, which, where, when, why and how.\n- Dialogues: 11 of the 12 lines are Wh-questions (what, who, where, when, whose, why, which). dlgs[0] and dlgs[1] still test the difference between 'What is he like?' and 'What does he look like?'.\n\nEcho Island appears in sents[12], dlgs[10] and Daisy's persona. Everything else is real school life. The boss Ollie (牵手海獭) and the chat name Daisy are not used anywhere else in the game's JS files (checked with grep).\n\nEmoji: 🪞 appearance (Unicode 13) and 🪑 (Unicode 12) are the newest. If they show as empty boxes on the phone, use 🖼️ for appearance and 🔁 for take somebody's place."
+   "notes": "I checked the word list against book/unit1.json with a script. It has all 27 words and then all 17 phrases, once each, in book order and with exact spelling. No item is marked understandOnly. The script also confirmed: no repeated Chinese meaning, no repeated emoji, no zh longer than 8 characters, 16 sentences and 12 dialogues.\n\nFixes applied:\n- grammar.tip: now lists which, and gives the two question patterns: wh-word + be + subject, and wh-word + do/does + subject + base verb. The two example patterns come from the book's own short pattern list.\n- watch over: changed to 守护. The two reviewers gave different fixes. I used the 'must' fix (守护 only) instead of 守护；看护, because 看护 would still overlap with 照顾 (take care of) in the pick-the-meaning question.\n- rise is now （太阳）升起 and rise into is now 升入空中. 入 hints at 'into' in 看图说英语, and the two options no longer look the same.\n- sents[2]: the two reviewers suggested different replacements. I chose 'Which class is your best friend in?' over 'What is your new classmate good at?'. It removes the copy of dlgs[5] and also adds a which-sentence. Tiles keep their capital letters (game.js tokens), so 'Which' clearly goes first, and the word order is fixed.\n- sents[3]: now 'I am glad you are my friend.', which removes the copy of dlgs[2] and finally puts glad in a sentence.\n- sents[6]: added 'so much' so that 'best' cannot move to the end.\n- sents[12]: removed 'always', which could also move.\n- dlgs[10]: the reply is now 'The nurse will take care of it.' The game spells the building 'Rest Stop' everywhere, so the line avoids the name instead of spelling it a second way. The child also says 'take care of' aloud.\n- dlgs[11]: now a which-question, 'Which subject do you want to improve?' The 'Yes, I want to improve it.' distractor shows the yes/no mistake that the grammar point warns about.\n\nTwo extra changes for the same reasons:\n- sents[4]: removed 'usually'. 'Where do you go after school usually' would also be acceptable English, and the exact-order checker would mark it wrong. This is the same issue as sents[6] and sents[12].\n- dlgs[1]: the reply is now 'He has short dark hair.' (it was 'He is of medium height.'). Otherwise 'dark' was never spoken in any sentence or reply. Medium height is still practised in sents[9] and in Daisy's chat words. The wrong replies, 'He is honest and kind.' (personality) and 'He is good at maths.', are still clearly wrong for a look-like question.\n\nQuestion words now covered:\n- Sentences: who, what, which, where, when, why and how.\n- Dialogues: 11 of the 12 lines are Wh-questions (what, who, where, when, whose, why, which). dlgs[0] and dlgs[1] still test the difference between 'What is he like?' and 'What does he look like?'.\n\nEcho Island appears in sents[12], dlgs[10] and Daisy's persona. Everything else is real school life. The boss Ollie (牵手海獭) and the chat name Daisy are not used anywhere else in the game's JS files (checked with grep).\n\nEmoji: 🪞 appearance (Unicode 13) and 🪑 (Unicode 12) are the newest. If they show as empty boxes on the phone, use 🖼️ for appearance and 🔁 for take somebody's place."
   },
   {
    "n": 2,
@@ -517,7 +517,7 @@
     ],
     [
      "energy",
-     "精力；活力",
+     "精力",
      "⚡"
     ],
     [
@@ -597,7 +597,7 @@
     ],
     [
      "do the dishes",
-     "洗碗",
+     "刷碗",
      "🍽️"
     ],
     [
@@ -617,7 +617,7 @@
     ],
     [
      "daily life",
-     "日常生活",
+     "每天的生活",
      "📅"
     ],
     [
@@ -632,12 +632,12 @@
     ],
     [
      "on foot",
-     "步行",
+     "走路",
      "🚶"
     ],
     [
      "full of energy",
-     "充满活力",
+     "精力十足",
      "🔋"
     ],
     [
@@ -652,7 +652,7 @@
     ],
     [
      "clean up",
-     "打扫干净",
+     "收拾干净",
      "🧹"
     ],
     [
@@ -850,7 +850,7 @@
     "voice": "Evan",
     "voiceZh": "阳光的男孩"
    },
-   "notes": "Final Unit 2 (School life). Checked by script against book/unit2.json: words has all 29 words and 13 phrases (42 items), exactly once each, in book order, with exact spelling. All 42 emoji are different and no two Chinese meanings are the same. There are 16 sents (6 to 9 words each, no repeated word inside a sentence, no commas inside) and 12 dlgs (every correct reply is 10 words or fewer). I also ran the game's own scoring code (norm, scoreSpeech and bestScore copied from game.js) on every boss dialogue. The correct reply beats both wrong replies by at least 15 points, even when the first or second word is dropped. The old dialogue 4 tied 85 to 85 in that test; the new one does not.\n\nFIXES APPLIED\n(1) grammar.tip rewritten (must). It now covers it and singular things as subjects, -s/-es with gets, watches, studies and have to has, does/doesn't followed by the base verb, the frequency adverbs and How often. It is three sentences instead of two because the rule needs that much to be accurate.\n(2) sents[8] is now 'Maths helps me develop the skills to solve problems.' / 数学帮我培养解决问题的能力。 I used the English reviewer's version over the game reviewer's art-club version because it has only one valid order and still uses solve, develop and skill.\n(3) sents[11] is now 'I keep a diary in English.' / 我用英语记日记。 The game reviewer's 'English diary every day' version is also unambiguous, but 'keep a diary' already means doing it regularly, so 'every day' added nothing.\n(4) Third-person sound and spelling coverage. sents[10] is now 'Our school day finishes at half past four.' (/ɪz/). sents[12] is now 'My cousin studies hard at junior high school.' (-ies). I also changed sents[2] to 'Our class has geography twice a week.' / 我们班每周上两次地理课。 This adds has, which neither reviewer covered, and gives an it-type singular subject. The sentences now have /s/ (gets, takes, helps, puts, picks, packs), /z/ (goes, reads, studies, has) and /ɪz/ (finishes). look forward to stays in dlgs[9] and the talk words. daily life is still in the word list and the talk topic.\n(5) teen is now 青少年的（形容词）, the game reviewer's fix. It is 9 characters, one over the ideal 8, but it shows the part of speech so the teen/teenager pair is fair. The 看图说英语 problem is still open: if the child says teen for 🧑 青少年, it scores low. Engine suggestion: add noMix:[['teen','teenager']] and have distract() skip that pair.\n(6) pack is now 打包；装进包里, so it no longer overlaps with clean up = 打扫干净. The sentence translation 收拾好书包 stays because it is the natural Chinese for that sentence.\n(7) dlgs[3] wrong replies are now 'Yes, my mum often cooks.' and 'Yes, they are at home now.'\n(8) The boss is now 🐝 蜜蜂老师 Miss Bee (14 words), because the 🐙 八爪博士 island boss already exists. 🐝 is not used by any of the 13 island bosses in data.js. I could not see the other textbook units' bosses, so check 🐝 against Units 1 and 3 to 8 when merging.\n(9) The Kai label is corrected. Dialogue 5 uses Kai, the player's shy friend from the adventure (STORY.md: 小凯, whom the player helps catch his first monster), not a rival.\n\nFIXES CHANGED OR REJECTED\n(a) 'get ... ready for'. The two reviewers disagree. The English reviewer wants to rename it 'get something ready for'. I rejected that because the schema requires the exact official spelling, and it would no longer match the book list. I kept the official spelling and took the game reviewer's engine fix instead. Action needed in D:/Claude/echo-island/game.js makeQ: for the word types lw, ls and sr_w, set q.audio = it[0].replace(/\\s*(?:\\.\\.\\.|…)\\s*/g, ' ') so the TTS, the Youdao fallback and the clip generator all say 'get ready for'. Spoken scoring already ignores the dots (norm() strips non-letters). Until that patch lands, this one entry still sends '...' to the TTS.\n(b) Talk character. Ruby was dropped as both reviewers asked (it is a Pokémon game-version name, and 'Ruby' is also in world.js TRAINER_NAMES). I did not use the suggested 'Ella': isles/c-circus-clock-party.js already has the trainer 'Early Bird Ella', a schoolgirl who talks about getting up early and going to bed at nine, which is the same topic and would confuse. The new name is Alice (新同学爱丽丝). It appears nowhere in the codebase (I searched all .js and .md files).\n\nOTHER NOTES\nsents[9] 'Our drama club puts on a show every term' could in theory also be built as 'puts a show on'. Because the child hears the audio first and 'puts on a show' is the standard textbook form, I judged the risk low and kept it. Official items not used in any sentence or dialogue (they are still in the word list): corner, teenager, greeting, sincerely, realize, luckily, just, presentation, mood, rocky, get ... ready for, daily life. The three understand-only words (sincerely, presentation, mood) stay in book order. Validation scripts: C:/Users/Frank/AppData/Local/Temp/claude/D--Claude/073ac0e8-fd7f-4d6a-954a-c072b256e3ed/scratchpad/u2/chk.js and sim2.js."
+   "notes": "Final Unit 2 (School life). Checked by script against book/unit2.json: words has all 29 words and 13 phrases (42 items), exactly once each, in book order, with exact spelling. All 42 emoji are different and no two Chinese meanings are the same. There are 16 sents (6 to 9 words each, no repeated word inside a sentence, no commas inside) and 12 dlgs (every correct reply is 10 words or fewer). I also ran the game's own scoring code (norm, scoreSpeech and bestScore copied from game.js) on every boss dialogue. The correct reply beats both wrong replies by at least 15 points, even when the first or second word is dropped. The old dialogue 4 tied 85 to 85 in that test; the new one does not.\n\nFIXES APPLIED\n(1) grammar.tip rewritten (must). It now covers it and singular things as subjects, -s/-es with gets, watches, studies and have to has, does/doesn't followed by the base verb, the frequency adverbs and How often. It is three sentences instead of two because the rule needs that much to be accurate.\n(2) sents[8] is now 'Maths helps me develop the skills to solve problems.' / 数学帮我培养解决问题的能力。 I used the English reviewer's version over the game reviewer's art-club version because it has only one valid order and still uses solve, develop and skill.\n(3) sents[11] is now 'I keep a diary in English.' / 我用英语记日记。 The game reviewer's 'English diary every day' version is also unambiguous, but 'keep a diary' already means doing it regularly, so 'every day' added nothing.\n(4) Third-person sound and spelling coverage. sents[10] is now 'Our school day finishes at half past four.' (/ɪz/). sents[12] is now 'My cousin studies hard at junior high school.' (-ies). I also changed sents[2] to 'Our class has geography twice a week.' / 我们班每周上两次地理课。 This adds has, which neither reviewer covered, and gives an it-type singular subject. The sentences now have /s/ (gets, takes, helps, puts, picks, packs), /z/ (goes, reads, studies, has) and /ɪz/ (finishes). look forward to stays in dlgs[9] and the talk words. daily life is still in the word list and the talk topic.\n(5) teen is now 青少年的（形容词）, the game reviewer's fix. It is 9 characters, one over the ideal 8, but it shows the part of speech so the teen/teenager pair is fair. The 看图说英语 problem is still open: if the child says teen for 🧑 青少年, it scores low. Engine suggestion: add noMix:[['teen','teenager']] and have distract() skip that pair.\n(6) pack is now 打包；装进包里, so it no longer overlaps with clean up = 打扫干净. The sentence translation 收拾好书包 stays because it is the natural Chinese for that sentence.\n(7) dlgs[3] wrong replies are now 'Yes, my mum often cooks.' and 'Yes, they are at home now.'\n(8) The boss is now 🐝 蜜蜂老师 Miss Bee (14 words), because the 🐙 八爪博士 island boss already exists. 🐝 is not used by any of the 13 island bosses in data.js. I could not see the other textbook units' bosses, so check 🐝 against Units 1 and 3 to 8 when merging.\n(9) The Kai label is corrected. Dialogue 5 uses Kai, the player's shy friend from the adventure (STORY.md: 小凯, whom the player helps catch his first monster), not a rival.\n\nFIXES CHANGED OR REJECTED\n(a) 'get ... ready for'. The two reviewers disagree. The English reviewer wants to rename it 'get something ready for'. I rejected that because the schema requires the exact official spelling, and it would no longer match the book list. I kept the official spelling and took the game reviewer's engine fix instead. Action needed in D:/Claude/echo-island/game.js makeQ: for the word types lw, ls and sr_w, set q.audio = it[0].replace(/\\s*(?:\\.\\.\\.|…)\\s*/g, ' ') so the TTS, the Youdao fallback and the clip generator all say 'get ready for'. Spoken scoring already ignores the dots (norm() strips non-letters). Until that patch lands, this one entry still sends '...' to the TTS.\n(b) Talk character. Ruby was dropped as both reviewers asked (it is the name of a well-known game edition, and 'Ruby' is also in world.js TRAINER_NAMES). I did not use the suggested 'Ella': isles/c-circus-clock-party.js already has the trainer 'Early Bird Ella', a schoolgirl who talks about getting up early and going to bed at nine, which is the same topic and would confuse. The new name is Alice (新同学爱丽丝). It appears nowhere in the codebase (I searched all .js and .md files).\n\nOTHER NOTES\nsents[9] 'Our drama club puts on a show every term' could in theory also be built as 'puts a show on'. Because the child hears the audio first and 'puts on a show' is the standard textbook form, I judged the risk low and kept it. Official items not used in any sentence or dialogue (they are still in the word list): corner, teenager, greeting, sincerely, realize, luckily, just, presentation, mood, rocky, get ... ready for, daily life. The three understand-only words (sincerely, presentation, mood) stay in book order. Validation scripts: C:/Users/Frank/AppData/Local/Temp/claude/D--Claude/073ac0e8-fd7f-4d6a-954a-c072b256e3ed/scratchpad/u2/chk.js and sim2.js."
   },
   {
    "n": 3,
@@ -966,7 +966,7 @@
     ],
     [
      "reason",
-     "原因；理由",
+     "原因",
      "❓"
     ],
     [
@@ -1021,27 +1021,27 @@
     ],
     [
      "have picnics",
-     "野餐",
+     "去野餐",
      "🧺"
     ],
     [
      "work one's land",
-     "耕种土地",
+     "种自家的地",
      "🧑‍🌾"
     ],
     [
      "take a trip",
-     "去旅行",
+     "出去旅行",
      "✈️"
     ],
     [
      "solar term",
-     "节气",
+     "二十四节气",
      "🌞"
     ],
     [
      "in fact",
-     "事实上",
+     "其实",
      "✅"
     ],
     [
@@ -1445,7 +1445,7 @@
     ],
     [
      "solution",
-     "解决办法",
+     "解决的办法",
      "💡"
     ],
     [
@@ -1465,17 +1465,17 @@
     ],
     [
      "fact file",
-     "事实档案",
+     "资料卡",
      "🗂️"
     ],
     [
      "be covered by",
-     "被……覆盖",
+     "被……盖住",
      "🏔️"
     ],
     [
      "as far as we know",
-     "据我们所知",
+     "就我们所知",
      "🧠"
     ],
     [
@@ -1495,12 +1495,12 @@
     ],
     [
      "plastic pollution",
-     "塑料污染",
+     "塑料带来的污染",
      "🚯"
     ],
     [
      "cut down",
-     "砍倒",
+     "把树砍倒",
      "🪓"
     ],
     [
@@ -1510,7 +1510,7 @@
     ],
     [
      "blow away",
-     "吹走",
+     "吹跑",
      "🍃"
     ]
    ],
@@ -1729,7 +1729,7 @@
     ],
     [
      "collect",
-     "收集；采集",
+     "收集",
      "🧺"
     ],
     [
@@ -1739,7 +1739,7 @@
     ],
     [
      "kilometre",
-     "千米；公里",
+     "公里",
      "🛣️"
     ],
     [
@@ -1894,7 +1894,7 @@
     ],
     [
      "kilogram",
-     "千克；公斤",
+     "公斤",
      "🏋️"
     ],
     [
@@ -1904,7 +1904,7 @@
     ],
     [
      "space station",
-     "空间站",
+     "太空站",
      "🛰️"
     ],
     [
@@ -1914,12 +1914,12 @@
     ],
     [
      "take photos",
-     "拍照",
+     "拍照片",
      "📸"
     ],
     [
      "get into orbit",
-     "进入轨道",
+     "进到轨道上",
      "🚀"
     ],
     [
@@ -2117,7 +2117,7 @@
     "voice": "Maia",
     "voiceZh": "爱科学的姐姐"
    },
-   "notes": "Unit 5 Off to space (飞向太空), source unit5.json. I checked the words list against the file with a script: all 36 official words and 5 phrases are there exactly once, in book order (41 items), each emoji is a single grapheme, no emoji is used twice, and every Chinese gloss is 8 characters or fewer. There are 16 sents (7 to 10 words each, all Chinese translations different) and 12 dlgs (every correct reply is 10 words or fewer, each has 2 wrong replies).\n\nFIXES APPLIED:\n(1) MUST, boss: Inky the octopus was replaced. The name is close to the Pokémon Inkay and the 🐙 emoji is already used by the boss Doctor Octo (data.js line 106). The new boss is 🐇 月兔船长 'Captain Bun, the moon rabbit'. The moon rabbit is public-domain folklore and links to sents[12] about ancient poems. No boss in data.js uses 🐇, but I could not see the bosses of the other textbook units, so check that none of them also uses 🐇.\n(2) grammar.tip was rewritten. will now covers prediction, intention (意愿) and quick decisions, and be going to also covers things you can see are about to happen. The tip now gives won't and the No answers. The full stop before the Chinese semicolon is gone.\n(3) dlgs[2]: the wrong reply 'I'm going to stay for a week.' became 'I'm going there next month.' (it answers When). Both reviewers asked for this.\n(4) sents[5] became 'You won't need a spacesuit inside the space station.' This adds won't. It is true: astronauts wear normal clothes inside the station.\n(5) introduction is now 引言；序言, the textbook's meaning.\n(6) century emoji is now ⏳ instead of 💯 (Chinese students read 💯 as full marks).\n(7) Engine fix, done in this run: in D:/Claude/echo-island/game.js line 356 I added kilometre(s)→kilometer(s), metre(s)→meter(s) and programme(s)→program(s) to the SPELL map, with a Chinese comment. The edit only adds entries and passes node --check. I did NOT run npm test. neighbour→neighbor was not added because they differ by one letter, which tokEq already accepts.\n\nREVIEWER FIXES I CHANGED, AND WHY:\n- sents[1]: the reviewer suggested 'We are going to leave for the Moon at nine.' That has the same problem the reviewer pointed out: 'leave at nine for the Moon' is also an acceptable order. I used 'We are going to leave for the Space Museum.' / 我们打算出发去太空博物馆。 instead. The subject is a person, there is one destination and no time phrase that can move, and it links to the textbook speaking activity 'A trip to the Space Museum' and to dlgs[0].\n- sents[12]: the reviewer said 'Some ancient poems express a dream of flying to the Moon.' was 10 words, but it is 11. I used 'Some ancient poems express a dream of reaching the Moon.' (10 words) / 一些古诗表达了登上月亮的梦想。\n\nCOVERAGE:\n- 9 sents practise will, won't or be going to (indexes 0, 1, 4, 5, 6, 8, 9, 10, 13). 8 dlgs practise the grammar (0 to 5, 8, 10). Each answer matches the helper verb (Will you / Yes, I will; Are you going to / Yes, I am) or the question word.\n- Wrong replies use the wrong helper verb, the past tense, or answer a different question word.\n- 'do exercise' is no longer in sents. It is still in dlgs[3], dlgs[7] and the talk words.\n- Repeated words inside a sentence: 'the' in sents 3, 10 and 15, and 'of' in sents 11. The repeated tiles are the same word, so there is still only one correct order.\n- These words appear only in the words list: tie, low, facility, pass, chance, introduction, experience, determination, already, neighbour, circle, release, programme. prepare appears only in 'prepare for' (dlgs[3]), experiment only as 'experiments' (dlgs[2]), and island only inside 'Echo Island' (dlgs[0] and [4]).\n- No sentence copies the textbook reading passages. The textbook pattern about tying sleeping bags to the wall was deliberately not reused.\n\nFACTS: the space station is about 400 km up; reaching orbit takes about 10 minutes; people first walked on the Moon last century; you weigh less on the Moon; astronauts wear normal clothes inside the station. No real people or brands are named.\n\nEMOJI JUDGEMENT CALLS the parent may want to change: 🛬 lander, 🌕 surface, ➡️ pass, ✨ thousands of. 🧑‍🚀 and 😮‍💨 are multi-part (ZWJ) emoji that show correctly on modern Android.\n\nThe talk section is unchanged."
+   "notes": "Unit 5 Off to space (飞向太空), source unit5.json. I checked the words list against the file with a script: all 36 official words and 5 phrases are there exactly once, in book order (41 items), each emoji is a single grapheme, no emoji is used twice, and every Chinese gloss is 8 characters or fewer. There are 16 sents (7 to 10 words each, all Chinese translations different) and 12 dlgs (every correct reply is 10 words or fewer, each has 2 wrong replies).\n\nFIXES APPLIED:\n(1) MUST, boss: Inky the octopus was replaced. The name is close to a well-known game monster and the 🐙 emoji is already used by the boss Doctor Octo (data.js line 106). The new boss is 🐇 月兔船长 'Captain Bun, the moon rabbit'. The moon rabbit is public-domain folklore and links to sents[12] about ancient poems. No boss in data.js uses 🐇, but I could not see the bosses of the other textbook units, so check that none of them also uses 🐇.\n(2) grammar.tip was rewritten. will now covers prediction, intention (意愿) and quick decisions, and be going to also covers things you can see are about to happen. The tip now gives won't and the No answers. The full stop before the Chinese semicolon is gone.\n(3) dlgs[2]: the wrong reply 'I'm going to stay for a week.' became 'I'm going there next month.' (it answers When). Both reviewers asked for this.\n(4) sents[5] became 'You won't need a spacesuit inside the space station.' This adds won't. It is true: astronauts wear normal clothes inside the station.\n(5) introduction is now 引言；序言, the textbook's meaning.\n(6) century emoji is now ⏳ instead of 💯 (Chinese students read 💯 as full marks).\n(7) Engine fix, done in this run: in D:/Claude/echo-island/game.js line 356 I added kilometre(s)→kilometer(s), metre(s)→meter(s) and programme(s)→program(s) to the SPELL map, with a Chinese comment. The edit only adds entries and passes node --check. I did NOT run npm test. neighbour→neighbor was not added because they differ by one letter, which tokEq already accepts.\n\nREVIEWER FIXES I CHANGED, AND WHY:\n- sents[1]: the reviewer suggested 'We are going to leave for the Moon at nine.' That has the same problem the reviewer pointed out: 'leave at nine for the Moon' is also an acceptable order. I used 'We are going to leave for the Space Museum.' / 我们打算出发去太空博物馆。 instead. The subject is a person, there is one destination and no time phrase that can move, and it links to the textbook speaking activity 'A trip to the Space Museum' and to dlgs[0].\n- sents[12]: the reviewer said 'Some ancient poems express a dream of flying to the Moon.' was 10 words, but it is 11. I used 'Some ancient poems express a dream of reaching the Moon.' (10 words) / 一些古诗表达了登上月亮的梦想。\n\nCOVERAGE:\n- 9 sents practise will, won't or be going to (indexes 0, 1, 4, 5, 6, 8, 9, 10, 13). 8 dlgs practise the grammar (0 to 5, 8, 10). Each answer matches the helper verb (Will you / Yes, I will; Are you going to / Yes, I am) or the question word.\n- Wrong replies use the wrong helper verb, the past tense, or answer a different question word.\n- 'do exercise' is no longer in sents. It is still in dlgs[3], dlgs[7] and the talk words.\n- Repeated words inside a sentence: 'the' in sents 3, 10 and 15, and 'of' in sents 11. The repeated tiles are the same word, so there is still only one correct order.\n- These words appear only in the words list: tie, low, facility, pass, chance, introduction, experience, determination, already, neighbour, circle, release, programme. prepare appears only in 'prepare for' (dlgs[3]), experiment only as 'experiments' (dlgs[2]), and island only inside 'Echo Island' (dlgs[0] and [4]).\n- No sentence copies the textbook reading passages. The textbook pattern about tying sleeping bags to the wall was deliberately not reused.\n\nFACTS: the space station is about 400 km up; reaching orbit takes about 10 minutes; people first walked on the Moon last century; you weigh less on the Moon; astronauts wear normal clothes inside the station. No real people or brands are named.\n\nEMOJI JUDGEMENT CALLS the parent may want to change: 🛬 lander, 🌕 surface, ➡️ pass, ✨ thousands of. 🧑‍🚀 and 😮‍💨 are multi-part (ZWJ) emoji that show correctly on modern Android.\n\nThe talk section is unchanged."
   },
   {
    "n": 6,
@@ -2273,7 +2273,7 @@
     ],
     [
      "artwork",
-     "艺术作品",
+     "艺术品",
      "🖼️"
     ],
     [
@@ -2283,7 +2283,7 @@
     ],
     [
      "scene",
-     "场面；情景",
+     "场景",
      "🎬"
     ],
     [
@@ -2303,12 +2303,12 @@
     ],
     [
      "tourist spot",
-     "旅游景点",
+     "景点",
      "📸"
     ],
     [
      "light up",
-     "点亮；照亮",
+     "照亮",
      "🌃"
     ],
     [
@@ -2592,7 +2592,7 @@
     ],
     [
      "moment",
-     "片刻；瞬间",
+     "一会儿",
      "⏱️"
     ],
     [
@@ -2617,7 +2617,7 @@
     ],
     [
      "attend",
-     "出席；参加",
+     "参加",
      "🎟️"
     ],
     [
@@ -2627,7 +2627,7 @@
     ],
     [
      "sale",
-     "出售；销售",
+     "出售",
      "🏷️"
     ],
     [
@@ -2682,12 +2682,12 @@
     ],
     [
      "equipment",
-     "设备；器材",
+     "器材",
      "🧰"
     ],
     [
      "clubs fair",
-     "社团招募展",
+     "社团招新会",
      "🎪"
     ],
     [
@@ -2697,7 +2697,7 @@
     ],
     [
      "of course",
-     "当然",
+     "当然啦",
      "👌"
     ],
     [
@@ -2707,12 +2707,12 @@
     ],
     [
      "turn around",
-     "转身",
+     "转过身",
      "🔄"
     ],
     [
      "make a difference",
-     "有作用；有影响",
+     "带来改变",
      "🌱"
     ],
     [
@@ -2722,7 +2722,7 @@
     ],
     [
      "fall off",
-     "掉落",
+     "掉下来",
      "🍂"
     ]
    ],
@@ -2986,7 +2986,7 @@
     ],
     [
      "impossible",
-     "不可能的",
+     "不可能",
      "🚫"
     ],
     [
@@ -3061,7 +3061,7 @@
     ],
     [
      "size",
-     "大小；尺寸",
+     "尺寸",
      "📏"
     ],
     [
@@ -3071,7 +3071,7 @@
     ],
     [
      "produce",
-     "生产；制造",
+     "生产",
      "🏭"
     ],
     [
@@ -3111,12 +3111,12 @@
     ],
     [
      "real",
-     "真的；真正的",
+     "真正的",
      "✅"
     ],
     [
      "add ... to ...",
-     "把……添加到……",
+     "把……加进……",
      "📥"
     ],
     [
@@ -3126,7 +3126,7 @@
     ],
     [
      "a waste of time",
-     "浪费时间",
+     "白白浪费时间",
      "⏳"
     ],
     [
@@ -3136,7 +3136,7 @@
     ],
     [
      "all over the world",
-     "全世界",
+     "世界各地",
      "🌍"
     ]
    ],

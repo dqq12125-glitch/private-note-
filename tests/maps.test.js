@@ -1,7 +1,7 @@
 // 地图检查（不开浏览器）：
 // 1. 每张图：每行一样长、没有未知地块、尺寸不超、出口通向的地图存在而且有通回来的出口、到达点能站人
-// 2. 每张图：有了全部野外技能以后，从每个入口都能走到所有出口 / 人物 / 告示牌 / 道具 / 电脑
-// 3. 整个世界：有 b 枚徽章（和那时能用的秘传技能）时，能走到第 b 岛的道馆，但去不了第 b+1 岛——主路真的被徽章或秘传技能卡住
+// 2. 每张图：有了全部回声技能以后，从每个入口都能走到所有出口 / 人物 / 告示牌 / 道具 / 电脑
+// 3. 整个世界：有 b 枚徽章（和那时能用的回声技能）时，能走到第 b 岛的挑战馆，但去不了第 b+1 岛——主路真的被徽章或回声技能卡住
 // 运行：node tests/maps.test.js
 const fs = require('fs');
 const path = require('path');
@@ -19,8 +19,8 @@ const ONLY = process.env.ISLES ? process.env.ISLES.split(',').map(Number) : null
 const MAPS = ctx.window.EchoMaps;
 const KNOWN = '#T.,=~FBoSRrLf^v<>K@CcMmGgHhJjAaEX:WuQPYkpdtZe_nbOIDw%U|';
 const DIRS = [[0, -1], [0, 1], [-1, 0], [1, 0]];
-// 秘传技能：要几枚徽章才能用
-const HM = { cut: 3, smash: 4, strength: 6, surf: 8, dive: 10, falls: 12 };
+// 回声技能：要几枚徽章才能用
+const SKILL_BADGE = { cut: 3, smash: 4, strength: 6, surf: 8, dive: 10, falls: 12 };
 let fails = 0;
 const bad = (id, msg) => { if (ONLY && id !== '主路' && !ONLY.includes((MAPS.get(id) || {}).isle)) return; fails++; if (fails < 80) console.log('✗', id, msg); };
 
@@ -100,7 +100,7 @@ for (const id of ids) {
     if (m.npcs.some(n => n.x === p.x && n.y === p.y && n.role !== 'guard' && n.role !== 'master' && !n.showIf && !n.hideIf)) bad(id, '到达点上站着人 ' + how);
     const R = reach(m, p, ALL);
     for (const w of m.warps) if (!warpReached(R, m, w)) bad(id, '从 ' + how + ' 走不到出口 ' + m.grid[w.y][w.x] + '→' + w.to + ' @' + w.x + ',' + w.y);
-    for (const d of m.dives.concat(m.surfaces)) if (!has(R, d.x, d.y)) bad(id, '从 ' + how + ' 到不了潜水点/浮上点 @' + d.x + ',' + d.y);
+    for (const d of m.dives.concat(m.surfaces)) if (!has(R, d.x, d.y)) bad(id, '从 ' + how + ' 到不了潜海点/浮上点 @' + d.x + ',' + d.y);
     for (const o of m.picks.concat(m.hidden || [])) if (!has(R, o.x, o.y)) bad(id, '从 ' + how + ' 捡不到道具 @' + o.x + ',' + o.y);
     for (const s of m.signs) if (!near(R, s.x, s.y)) bad(id, '告示牌走不到 @' + s.x + ',' + s.y);
     for (const n of m.npcs) {
@@ -115,7 +115,7 @@ for (const id of ids) {
 
 // ---------- 整个世界的主路 ----------
 function world(b) {
-  const S = { badges: b, surf: b >= HM.surf, cut: b >= HM.cut, smash: b >= HM.smash, strength: b >= HM.strength, dive: b >= HM.dive, falls: b >= HM.falls };
+  const S = { badges: b, surf: b >= SKILL_BADGE.surf, cut: b >= SKILL_BADGE.cut, smash: b >= SKILL_BADGE.smash, strength: b >= SKILL_BADGE.strength, dive: b >= SKILL_BADGE.dive, falls: b >= SKILL_BADGE.falls };
   const seen = new Set(), maps = new Set(), q = [];
   const enter = (id, how) => { const m = MAPS.get(id); if (!m) return; const p = how === 'start' ? m.start : MAPS.arrival(m, how); const k = id + '|' + p.x + ',' + p.y; if (seen.has(k)) return; seen.add(k); q.push([id, p]); };
   enter('t0', 'door:C');
@@ -133,7 +133,7 @@ function world(b) {
 const N = ONLY ? 0 : 13;
 for (let b = 0; b < N; b++) {
   const W = world(b);
-  if (!W.has('i' + b + 'G')) bad('主路', '有 ' + b + ' 枚徽章时走不到第 ' + (b + 1) + ' 岛的道馆');
+  if (!W.has('i' + b + 'G')) bad('主路', '有 ' + b + ' 枚徽章时走不到第 ' + (b + 1) + ' 岛的挑战馆');
   if (b < N - 1 && W.has('t' + (b + 1))) bad('主路', '只有 ' + b + ' 枚徽章就能走到第 ' + (b + 2) + ' 岛（没被卡住）');
   if (b < N - 1 && W.has('i12L')) bad('主路', '只有 ' + b + ' 枚徽章就能进英语冠军赛');
 }

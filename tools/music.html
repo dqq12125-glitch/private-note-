@@ -119,7 +119,7 @@ h2 small { font: 13px var(--f-body); color: var(--ink-3); }
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const GROUPS = [
     ['探索', '小镇、道路、海路、室内', ['title', 'town_a', 'town_b', 'town_c', 'town_d', 'route', 'route2', 'sea', 'center']],
-    ['紧张和战斗', '战斗、道馆、洞穴、反派', ['battle_wild', 'battle_trainer', 'battle_boss', 'gym', 'cave', 'hush', 'rival', 'league']],
+    ['紧张和战斗', '战斗、挑战馆、洞穴、反派', ['battle_wild', 'battle_trainer', 'battle_boss', 'gym', 'cave', 'hush', 'rival', 'league']],
     ['学习和小段音乐', '学习背景音乐 + 一次性的小段音乐', ['study', 'evolve', 'victory', 'win', 'catch', 'levelup', 'heal', 'badge', 'item', 'lose']],
   ];
   const MODE = { major: '大调', minor: '小调', harmonicMinor: '和声小调', melodicMinor: '旋律小调', dorian: '多利亚', phrygian: '弗里几亚', lydian: '利底亚', mixolydian: '混合利底亚', pentatonic: '五声', minorPentatonic: '小调五声', blues: '布鲁斯', wholeTone: '全音阶', chromatic: '半音阶' };

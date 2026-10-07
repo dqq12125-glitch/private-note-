@@ -1,8 +1,8 @@
-// 回声岛 · 第 5–7 社团岛、作息岛、生日派对岛（地图、剧情、道馆机关）。写法见 ISLES.md
-// 地图：t5 社团岛 → r5 沙丘道（怪力大石头）→ t6 作息岛 → d6a 钟山 1F → d6b 钟山山顶（7 枚徽章的守卫）→ r6 7 号路 → t7 生日派对岛 → s7 8 号水路（冲浪）→ t8
-//       s7 的深水 → u7 海底花园（潜水，可选）
-// 剧情：第 5 岛才艺表演（集社团贴纸、清唱）/ 第 6 岛钟楼停了（问起床时间、拨钟）+ 钟山山顶闷雷、炎狮 / 第 7 岛对手的生日派对（生日日历、闷雷抢蛋糕、对手第 3 战、爸爸送冲浪）
-// 道馆：i5G 音符地板 / i6G 时钟转门 / i7G 礼物盒
+// 回声岛 · 第 5–7 社团岛、作息岛、生日派对岛（地图、剧情、挑战馆机关）。写法见 ISLES.md
+// 地图：t5 社团岛 → r5 沙丘道（大力推大石头）→ t6 作息岛 → d6a 钟山 1F → d6b 钟山山顶（7 枚徽章的守卫）→ r6 7 号路 → t7 生日派对岛 → s7 8 号水路（踏浪）→ t8
+//       s7 的深水 → u7 海底花园（潜海，可选）
+// 剧情：第 5 岛才艺表演（集社团贴纸、清唱）/ 第 6 岛钟楼停了（问起床时间、拨钟）+ 钟山山顶闷雷、醒狮 / 第 7 岛对手的生日派对（生日日历、闷雷抢蛋糕、对手第 3 战、爸爸送踏浪）
+// 挑战馆：i5G 音符地板 / i6G 时钟转门 / i7G 礼物盒
 (function () {
   'use strict';
   const EM = window.EchoMaps, ST = window.EchoStory, L = ST.lib, P = window.EchoPeople, LK = P.LOOKS;
@@ -62,7 +62,7 @@
       7: { role: 'talk', name: 'Strongman Max', look: 'strong', g: 'm', face: 'left', showIf: 'ch5',
         give: { item: 'hm_strength', flag: 'got_strength',
           say: [['Hey! I saw your show. You and your friend can really sing!', '嘿！我看了你们的表演，你和你的朋友真能唱！'], ["I can't sing. But I can lift big rocks!", '我不会唱歌，可是我能举起大石头！'], ['Take this. Now your monsters can push rocks, too!', '这个送给你。你的怪兽也能推大石头了！']],
-          after: [['You need six badges to use Strength.', '要有 6 枚徽章才能用「怪力」。'], ['On Dune Road, a big rock is in the way. Push it!', '沙丘道上有块大石头挡路，把它推开吧！']] },
+          after: [['You need six badges to use Clear Way 3.', '要有 6 枚徽章才能用「开路 3 级」。'], ['On Dune Road, a big rock is in the way. Push it!', '沙丘道上有块大石头挡路，把它推开吧！']] },
         say: [['Strong body, strong voice!', '身体棒，声音也要响亮！'], ['Push the rock into a little hole. If it gets stuck, leave the road and come back!', '把石头推进小凹洞里。要是推错卡住了，离开这条路再回来，石头就会回到原位！']], speak: 'I can push big rocks!' },
       8: { role: 'talk', name: 'Chess Club Amy', look: 'studentF', g: 'f', face: 'down', say: [['Join our chess club! We play every Tuesday.', '加入我们的国际象棋社吧！我们每周二下棋。'], ["I can play chess, but I can't dance.", '我会下国际象棋，可是不会跳舞。']], speak: 'Join our chess club!' },
     },
@@ -73,7 +73,7 @@
     links: { e: 'r5' },
   });
 
-  // ---------- r5 沙丘道：沙地、遗迹、绿洲；一格宽的峡谷里有怪力大石头 ----------
+  // ---------- r5 沙丘道：沙地、遗迹、绿洲；一格宽的峡谷里有大力推大石头 ----------
   EM.define('r5', {
     kind: 'route', z: 5, name: '沙丘道', en: 'Dune Road', sub: '社团岛 → 作息岛', theme: 'circus',
     rows: [
@@ -117,7 +117,7 @@
         lines: [['Can you dance? My fire monsters can!', '你会跳舞吗？我的火系怪兽会！']], win: ['You can battle very well!', '你对战真厉害！'], after: [['The big rock is in the canyon. Can your monster push it?', '峡谷里有块大石头。你的怪兽推得动吗？']] },
       4: { role: 'trainer', name: 'Drummer Joe', look: 'athlete', g: 'm', face: 'left', sight: 3, under: ',', team: [['drumpaw', 0], ['thunderdrum', 1]],
         lines: [['Boom, boom! I can play the drums!', '咚咚！我会打鼓！']], win: ['My drums are quiet now...', '我的鼓没声音了……'], after: [["My brother can't play the drums. I can!", '我哥哥不会打鼓，我会！']] },
-      5: { role: 'trainer', name: 'Singer May', look: 'girl', g: 'f', face: 'left', sight: 4, team: [['songlet', 0], ['songwing', 1]],
+      5: { role: 'trainer', name: 'Singer May', look: 'girl', g: 'f', face: 'left', sight: 4, team: [['songlet', 0], ['songhawk', 1]],
         lines: [['La la la! I want to join the music club!', '啦啦啦！我想加入音乐社！']], win: ['Your voice is so clear!', '你的声音好清楚！'], after: [['Clock Island is just to the east.', '往东走就是作息岛了。']] },
       6: { role: 'talk', name: 'Hiker Sandy', look: 'hiker', g: 'm', face: 'up', say: [['A big rock is in the canyon. A strong monster can push it.', '峡谷里有块大石头，力气大的怪兽能推开它。'], ['Push it into the little hole on the wide spot!', '把它推到宽一点的地方那个小凹洞里！'], ['If it gets stuck, go back to Club Island. The rock will go back, too.', '要是卡住了，就先回社团岛，石头也会回到原来的地方。']], speak: 'A strong monster can push it.' },
       7: { role: 'trainer', name: 'Camper Dan', look: 'kid', g: 'm', face: 'down', sight: 3, team: [['cactuskid', 0], ['mudcake', 0]],
@@ -184,7 +184,7 @@
     links: { w: 'r5', K: ['d6a'] },
   });
 
-  // ---------- d6a 钟山 1F：熔岩洞，西、中、东三条路，怪力石头小谜题 ----------
+  // ---------- d6a 钟山 1F：熔岩洞，西、中、东三条路，大力推石头小谜题 ----------
   EM.define('d6a', {
     kind: 'cave', cave: 'lava', z: 6, name: '钟山 1F', en: 'Clock Mountain 1F', sub: '作息岛北边', lv: 2, dungeon: true,
     rows: [
@@ -222,7 +222,7 @@
         lines: [['I get up at five every day to climb this mountain!', '我每天五点起床爬这座山！']], win: ['Time for a break...', '该休息一下了……'], after: [["It's hot in here. Drink water every hour!", '这里很热，每个小时都要喝水！']] },
       2: { role: 'trainer', name: 'Scientist Ash', look: 'scientist', g: 'm', face: 'down', sight: 4, types: ['fire', 'steel'], n: 2,
         lines: [['I check the lava at nine o\'clock every morning.', '我每天早上九点检查岩浆。']], win: ['My notes say: you win!', '我的笔记写着：你赢了！'], after: [['The volcano is getting hotter. Something is wrong at the top!', '火山越来越热了。山顶一定出事了！']] },
-      3: { role: 'trainer', name: 'Night Worker Mo', look: 'miner', g: 'm', face: 'left', sight: 3, team: [['magmaheart', 1], ['gearbeetle', 0]],
+      3: { role: 'trainer', name: 'Night Worker Mo', look: 'miner', g: 'm', face: 'left', sight: 3, team: [['lavalet', 1], ['gearbeetle', 0]],
         lines: [['I work at night and sleep in the day. Good morning... or good night?', '我晚上工作白天睡觉。早上好……还是晚安？']], win: ['Zzz... I need to go to bed.', '呼……我得去睡觉了。'], after: [['I go to bed at eight in the morning!', '我早上八点才睡觉！']] },
       4: { role: 'talk', name: 'Hiker Pat', look: 'hiker', g: 'm', face: 'up', say: [['Two big rocks block a room in the west.', '西边有个小房间被两块大石头挡住了。'], ['Push the lower rock to the side first!', '先把下面那块推到旁边去！']], speak: 'Push the rock to the side.' },
     },
@@ -230,7 +230,7 @@
     links: { e: 't6', '%': ['d6b'] },
   });
 
-  // ---------- d6b 钟山山顶：火山口，闷雷的地热机器；剧情后出现炎狮 ----------
+  // ---------- d6b 钟山山顶：火山口，闷雷的地热机器；剧情后出现醒狮 ----------
   EM.define('d6b', {
     kind: 'route', z: 6, name: '钟山山顶', en: 'Clock Mountain Summit', sub: '作息岛北边', theme: 'clock', lv: 2,
     rows: [
@@ -335,7 +335,7 @@
       3: { role: 'trainer', name: 'Party Kid Nina', look: 'kidF', g: 'f', face: 'right', sight: 3, team: [['cakelet', 0], ['skyballoon', 1]],
         lines: [["I'm late for the party! It's already four o'clock!", '派对我要迟到了！已经四点了！']], win: ['Now I am really late!', '这下真的迟到了！'], after: [['The party is on Party Island, just to the north.', '派对就在北边的生日派对岛。']] },
       4: { role: 'trainer', name: 'Swimmer Kate', look: 'swimmerF', g: 'f', face: 'left', sight: 3, types: ['water'], n: 2,
-        lines: [['I swim at six every morning!', '我每天早上六点游泳！']], win: ['I need to swim more!', '我得多游几圈！'], after: [['With Surf, you can go to the little island.', '学会冲浪，就能去那个小沙洲。']] },
+        lines: [['I swim at six every morning!', '我每天早上六点游泳！']], win: ['I need to swim more!', '我得多游几圈！'], after: [['With Water Way, you can go to the little island.', '学会踏浪，就能去那个小沙洲。']] },
       5: { role: 'trainer', name: 'Baker Bella', look: 'chef', g: 'f', face: 'down', sight: 3, team: [['creamcake', 1]],
         lines: [['I bake cakes from six to eleven every morning!', '我每天早上六点到十一点烤蛋糕！']], win: ['My cake is burning!', '我的蛋糕烤焦了！'], after: [['A birthday cake needs candles!', '生日蛋糕要插蜡烛！']] },
       6: { role: 'trainer', name: 'Fisher Finn', look: 'fisher', g: 'm', face: 'left', sight: 2, types: ['water', 'spark'], n: 2,
@@ -389,7 +389,7 @@
       3: { role: 'story', tag: 'baker7', name: 'Baker Sugar', look: 'chef', g: 'm', face: 'down' },
       4: { role: 'talk', name: 'Balloon Clown', look: 'clown', g: 'm', face: 'down', say: [['Happy birthday... to everyone! Take a balloon!', '祝大家……生日快乐！拿个气球吧！'], ['How old are you? I\'m thirty years old!', '你几岁了？我三十岁啦！']], speak: 'Happy birthday to you!' },
       5: { role: 'story', tag: 'dad', name: 'Dad', look: 'dad', g: 'm', face: 'left', showIf: 'rival3' },
-      6: { role: 'talk', name: 'Fisher Joe', look: 'fisher', g: 'm', face: 'up', say: [['Animal Island is far to the east.', '动物岛在东边很远的地方。'], ['You need to surf across the sea.', '要冲浪才能过海。']], speak: 'Animal Island is to the east.' },
+      6: { role: 'talk', name: 'Fisher Joe', look: 'fisher', g: 'm', face: 'up', say: [['Animal Island is far to the east.', '动物岛在东边很远的地方。'], ['You need to surf across the sea.', '要踏浪才能过海。']], speak: 'Animal Island is to the east.' },
     },
     signs: [['Welcome to Party Island! Every day is somebody\'s birthday!', '欢迎来到生日派对岛！每天都是某个人的生日！'], ['The harbor. East: Sea Route 8.', '港口。往东是 8 号水路。']],
     marks: [['A big balloon. "Happy Birthday!"', '一个大气球，上面写着“生日快乐！”'], ['Balloons for the party!', '派对的气球！'], ['A giant gift box. What is inside?', '一个巨大的礼物盒。里面是什么呢？'], ["Dad's ship, the Sea Star.", '爸爸的船：海星号。']],
@@ -398,7 +398,7 @@
     links: { s: 'r6', e: 's7' },
   });
 
-  // ---------- s7 8 号水路：大片的海、小岛、暗礁、深水（潜水） ----------
+  // ---------- s7 8 号水路：大片的海、小岛、暗礁、深水（潜海） ----------
   EM.define('s7', {
     kind: 'route', z: 7, name: '8 号水路', en: 'Sea Route 8', sub: '生日派对岛 → 动物岛', theme: 'party', sea: true,
     rows: [
@@ -447,7 +447,7 @@
       3: { role: 'trainer', name: 'Swimmer Ben', look: 'swimmer', g: 'm', face: 'left', sight: 1, under: '~', types: ['water', 'spark'], n: 2,
         lines: [['I am thirteen. How old are you?', '我十三岁了。你几岁了？']], win: ['You are strong for your age!', '你这个年纪就这么厉害！'], after: [['Animal Island is just to the east!', '往东就是动物岛了！']] },
       4: { role: 'trainer', name: 'Swimmer Joy', look: 'swimmerF', g: 'f', face: 'up', sight: 1, under: '~', types: ['water', 'poison'], n: 2,
-        lines: [['The water is very deep over there. Can you dive?', '那边的水很深。你会潜水吗？']], win: ['You swim like a fish!', '你游得像条鱼！'], after: [['People say there is a garden under the sea.', '听说海底有一座花园。']] },
+        lines: [['The water is very deep over there. Can you dive?', '那边的水很深。你会潜海吗？']], win: ['You swim like a fish!', '你游得像条鱼！'], after: [['People say there is a garden under the sea.', '听说海底有一座花园。']] },
       5: { role: 'trainer', name: 'Fisher Sam', look: 'fisher', g: 'm', face: 'up', sight: 2, under: ',', types: ['water', 'bug'], n: 3,
         lines: [['I fish here every January. And every May, and every October!', '我每年一月都在这里钓鱼，五月、十月也来！']], win: ['That was a big fish!', '真是条大鱼！'], after: [['My birthday is in October. I want a new rod!', '我的生日在十月，我想要一根新钓竿！']] },
     },
@@ -486,7 +486,7 @@
     ],
     people: [
       { x: 20, y: 5, role: 'trainer', name: 'Diver Dan', look: 'swimmer', g: 'm', face: 'left', sight: 3, types: ['water', 'poison'], n: 3,
-        lines: [['I dive here on my birthday every year. It is on June 1st!', '我每年生日都来这里潜水。我的生日是 6 月 1 日！']], win: ['Bubbles, bubbles!', '咕嘟咕嘟！'], after: [['The coral here is older than my grandpa!', '这里的珊瑚比我爷爷的年纪还大！']] },
+        lines: [['I dive here on my birthday every year. It is on June 1st!', '我每年生日都来这里潜海。我的生日是 6 月 1 日！']], win: ['Bubbles, bubbles!', '咕嘟咕嘟！'], after: [['The coral here is older than my grandpa!', '这里的珊瑚比我爷爷的年纪还大！']] },
     ],
     items: ['superball', 'waterstone'], hiddenItems: ['revive', 'moonstone'],
     links: { U: ['s7'] },
@@ -560,10 +560,10 @@
     links: { e: 't7' },
   });
 
-  // ---------- 道馆 ----------
+  // ---------- 挑战馆 ----------
   // i5G 音符地板：三段，每段听广播里的乐器 / 音符顺序，按顺序踩；踩错回这一段的起点
   EM.define('i5G', { markKinds: ['statue', 'statue', 'speaker', 'speaker', 'speaker'],
-    kind: 'inside', z: 5, room: 'G', name: '社团岛 · 道馆', en: 'Music Gym', sub: '第 6 岛', icon: '🏟️',
+    kind: 'inside', z: 5, room: 'G', name: '社团岛 · 挑战馆', en: 'Music Hall', sub: '第 6 岛', icon: '🏟️',
     rows: [
       'WWWWWWWWWWWWWWW',
       'WZ_____1_____ZW',
@@ -623,7 +623,7 @@
   });
   // i6G 时钟转门：三座钟，听广播报时，把钟拨到对的时间，转门跟着转；拨错了门转回原位
   EM.define('i6G', { markKinds: ['statue', 'statue', 'clock', 'clock', 'clock'],
-    kind: 'inside', z: 6, room: 'G', name: '作息岛 · 道馆', en: 'Clock Gym', sub: '第 7 岛', icon: '🏟️',
+    kind: 'inside', z: 6, room: 'G', name: '作息岛 · 挑战馆', en: 'Clock Hall', sub: '第 7 岛', icon: '🏟️',
     rows: [
       'WWWWWWWWWWWWWWW',
       'WZ_____1_____ZW',
@@ -652,7 +652,7 @@
   });
   // i7G 礼物盒：广播说一个生日，踩写着这个日期的礼物盒；错的盒子里跳出训练师
   EM.define('i7G', { markKinds: ['statue', 'statue', 'speaker', 'speaker'],
-    kind: 'inside', z: 7, room: 'G', name: '生日派对岛 · 道馆', en: 'Party Gym', sub: '第 8 岛', icon: '🏟️',
+    kind: 'inside', z: 7, room: 'G', name: '生日派对岛 · 挑战馆', en: 'Party Hall', sub: '第 8 岛', icon: '🏟️',
     rows: [
       'WWWWWWWWWWWWWWW',
       'WZ_____1_____ZW',
@@ -803,11 +803,11 @@
         B('Music, please!', '音乐，起！'),
       ]);
       C.E.SFX.hit();
-      const g1 = C.spawn({ look: LK.grunt, name: 'Hush Grunt', g: 'm', x: 2, y: 2, face: 'right' });
-      const g2 = C.spawn({ look: LK.gruntF, name: 'Hush Grunt', g: 'f', x: 12, y: 2, face: 'left' });
+      const g1 = C.spawn({ look: LK.grunt, name: 'Hush Crew', g: 'm', x: 2, y: 2, face: 'right' });
+      const g2 = C.spawn({ look: LK.gruntF, name: 'Hush Crew', g: 'f', x: 12, y: 2, face: 'left' });
       await C.talk([nar('BANG! The music stopped. Someone broke the speakers!', '砰！音乐停了，有人把音响弄坏了！', '💥')]);
       await C.alert(g1);
-      const G1 = S('Hush Grunt', 'grunt', 'm'), G2 = S('Hush Grunt', 'gruntF', 'f');
+      const G1 = S('Hush Crew', 'grunt', 'm'), G2 = S('Hush Crew', 'gruntF', 'f');
       await C.talk([
         G1('Shh! No more noise on this island!', '嘘！这座岛上不许再吵了！'),
         G2('And the Club Crystal is ours now! Hee hee!', '社团水晶现在归我们了！嘻嘻！'),
@@ -850,7 +850,7 @@
     return () => C.talk([nar(C.flag('ch5') ? 'The speaker is playing happy music.' : C.flag('c5hush') ? 'The speaker is broken. Nothing comes out.' : 'A big speaker. It is ready for the show.', C.flag('ch5') ? '音响在放欢快的音乐。' : C.flag('c5hush') ? '音响坏了，一点声音都没有。' : '一个大音响，为表演准备好了。', '🔊')]);
   }
 
-  // 道馆：音符地板
+  // 挑战馆：音符地板
   const G5 = [
     { row: 15, band: [13, 14], gate: 12, seq: ['d', 'p'], en: 'Drum, piano!' },
     { row: 11, band: [9, 10], gate: 8, seq: ['g', 'd', 'p'], en: 'Guitar, drum, piano!' },
@@ -862,7 +862,7 @@
   async function cast5(C, s) {
     g5.heard = s; g5.stage = s; g5.k = 0;
     await C.talk([
-      nar(s === 0 ? 'Welcome to the Music Gym! Listen to the speaker, then step on the notes in order.' : 'Here comes the next song!', s === 0 ? '欢迎来到音乐道馆！仔细听广播，再按顺序踩地上的格子。踩错了就回到起点。' : '下一首歌来了！这一首更长。', '🎵'),
+      nar(s === 0 ? 'Welcome to the Music Hall! Listen to the speaker, then step on the notes in order.' : 'Here comes the next song!', s === 0 ? '欢迎来到音乐挑战馆！仔细听广播，再按顺序踩地上的格子。踩错了就回到起点。' : '下一首歌来了！这一首更长。', '🎵'),
       radio(G5[s].en, '（仔细听！一共 ' + G5[s].seq.length + ' 个，按顺序踩）'),
     ]);
     note5(C, s);
@@ -986,8 +986,8 @@
   }
   // 钟楼里：团员 → 钟楼管理员请你去问三个人几点起床
   async function tower6(C) {
-    const k = C.npc(n => n.id === 'keeper'), K = S('Keeper Tock', 'grandpa', 'm'), G = S('Hush Grunt', 'gruntF', 'f');
-    const g = C.spawn({ look: LK.gruntF, name: 'Hush Grunt', g: 'f', x: 5, y: 2, face: 'down' });
+    const k = C.npc(n => n.id === 'keeper'), K = S('Keeper Tock', 'grandpa', 'm'), G = S('Hush Crew', 'gruntF', 'f');
+    const g = C.spawn({ look: LK.gruntF, name: 'Hush Crew', g: 'f', x: 5, y: 2, face: 'down' });
     await C.walkPlayer('up', 3);
     await C.alert(g);
     await C.walk(g, 'down', 2, 160);
@@ -1092,7 +1092,7 @@
     ]);
     C.set('kai6');
   }
-  // 钟山山顶：闷雷的静音机器，导师欧瑞帮你；打赢以后炎狮出现
+  // 钟山山顶：闷雷的静音机器，导师欧瑞帮你；打赢以后醒狮出现
   async function rumble6(C) {
     const pl = C.pl, rb = C.npc(n => n.id === 'rumble6'), O = S('Orion', 'orion', 'm'), R = S('Admin Rumble', 'rumble', 'm');
     const o = C.spawn({ look: LK.orion, name: 'Orion', g: 'm', x: pl.x - 2, y: pl.y + 1, face: 'up', id: 'orion6' });
@@ -1128,7 +1128,8 @@
     const lion = C.spawn({ mon: 'flamelion', role: 'legend', x: 18, y: 14, face: 'down' });
     await C.alert(lion);
     await C.talk([
-      O("It's Flamelion, the lion of fire! It lives deep in this volcano.", '是炎狮，火之狮王！它住在火山深处。'),
+      O("It's Drumlion! It dances to the drums at every festival.", '是醒狮！每个节日它都跟着鼓声跳舞。'),
+      O('The noisy machine woke it up from its nap.', '吵闹的机器把它从午睡里吵醒了。'),
       O('It wants to see your power. Talk to it when you are ready.', '它想看看你的力量。准备好了，就去和它说话。'),
       O('I must go now. The story of Echodrake is not over... See you again!', '我得走了。回声龙的故事还没有结束……后会有期！'),
     ]);
@@ -1136,7 +1137,7 @@
     C.remove(o);
   }
 
-  // 道馆：时钟转门
+  // 挑战馆：时钟转门
   const CLK6 = [{ x: 2, y: 10 }, { x: 12, y: 7 }, { x: 8, y: 4 }];
   const R6 = [
     { en: "It's three o'clock.", v: '3:00', opts: ['9:00', '3:00', '12:15'] },
@@ -1316,12 +1317,12 @@
     await C.walk(r, 'up', 1, 150);
     C.remove(r);
   }
-  // 爸爸：远洋船长，第一次见面，送冲浪
+  // 爸爸：远洋船长，第一次见面，送踏浪
   async function dad7(C, n) {
     const D = S('Dad', 'dad', 'm');
     C.faceEach(n);
     if (C.flag('got_surf')) {
-      await C.talk([D('The sea is big, {name}. Be brave and have fun!', '大海很大，{name}。勇敢一点，玩得开心！'), D('With eight badges, you can surf east to Animal Island.', '有了 8 枚徽章，就能往东冲浪去动物岛。'), L.speak(C, "Let's surf!", '我们去冲浪吧！')]);
+      await C.talk([D('The sea is big, {name}. Be brave and have fun!', '大海很大，{name}。勇敢一点，玩得开心！'), D('With eight badges, you can surf east to Animal Island.', '有了 8 枚徽章，就能往东踏浪去动物岛。'), L.speak(C, "Let's surf!", '我们去踏浪吧！')]);
       return;
     }
     await C.talk([
@@ -1337,15 +1338,15 @@
     C.give('hm_surf', 1);
     C.set('got_surf');
     await C.talk([
-      nar('You got the Surf HM from Dad!', '你从爸爸那里得到了「冲浪」秘传学习器！', '🌊'),
+      nar('You got the Echo Shell for Water Way from Dad!', '你从爸爸那里得到了「水路」回声贝！', '🌊'),
       D('With eight badges, your water monster can carry you on the sea.', '有了 8 枚徽章，你的水系怪兽就能载着你在海上走。'),
       D('Say it with me: "Let\'s surf!"', '跟我一起说：“Let\'s surf!”'),
-      L.speak(C, "Let's surf!", '我们去冲浪吧！'),
+      L.speak(C, "Let's surf!", '我们去踏浪吧！'),
       D('Animal Island is to the east. I will stay here at the harbor for a while. Good luck!', '动物岛在东边。我会在港口待一阵子。加油！'),
     ]);
   }
 
-  // 道馆：礼物盒
+  // 挑战馆：礼物盒
   const BOX7 = { a: 'May 15th', b: 'March 5th', c: 'May 5th', d: 'October 3rd', e: 'January 12th', f: 'June 21st', g: 'October 13th', h: 'May 25th', i: 'January 21st', j: 'October 30th', k: 'March 15th', l: 'January 1st' };
   const R7 = [{ en: 'My birthday is May 5th.', box: 'c' }, { en: 'My birthday is October 13th.', box: 'g' }, { en: 'My birthday is January 21st.', box: 'i' }];
   const g7 = { r: 0 };
@@ -1359,7 +1360,7 @@
   async function cast7(C) {
     const PF = (en, zh) => ({ who: 'Puffy', emo: '🐡', en, zh });
     await C.talk([
-      PF("Welcome to my Birthday Gym! It's party time!", '欢迎来到我的生日道馆！派对时间到！'),
+      PF("Welcome to my Birthday Hall! It's party time!", '欢迎来到我的生日挑战馆！派对时间到！'),
       PF('Listen to my friends. Step on the gift box with their birthday on it!', '听我的朋友说自己的生日，踩上写着那天的礼物盒。开错了会跳出训练师哦！'),
       radio(R7[g7.r].en, '（仔细听：他的生日是几月几日？）'),
     ]);

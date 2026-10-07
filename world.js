@@ -1,4 +1,4 @@
-// 回声岛 · 大地图冒险：小镇、道路、洞穴、房子内部；走路、跳台阶、草丛遇怪、训练师、怪兽中心/电脑、商店、道馆、英语对话
+// 回声岛 · 大地图冒险：小镇、道路、洞穴、房子内部；走路、跳台阶、草丛遇怪、训练师、休息站/电脑、商店、挑战馆、英语对话
 // 画面由渲染器负责：world3d.js 的 2.5D 画面，或者本文件里的 2D「流畅模式」
 (function () {
   'use strict';
@@ -18,7 +18,7 @@
   const $ = id => document.getElementById(id);
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const WS = () => E.S.world;
-  // 调试入口：网址带 ?debug 时，徽章、守卫、秘传技能、道馆的课本门槛都当作已经有了（家长 / 开发者测试用）。
+  // 调试入口：网址带 ?debug 时，徽章、守卫、回声技能、挑战馆的课本门槛都当作已经有了（家长 / 开发者测试用）。
   // 设置里的「全部关卡直接开放」只管闯关练习，不再影响大地图（家长 2026-10-07）
   const DEBUG = typeof location !== 'undefined' && /[?&]debug\b/.test(location.search);
   const hasBadge = z => !!E.S.mon.badges[z] || DEBUG;
@@ -27,7 +27,7 @@
   function migrate() {
     const ws = WS();
     if (ws.v === 2) {
-      // v3：地图全部重做 + 秘传学习器。老存档站在已经不存在的地图上就回到当前小镇的怪兽中心；按徽章数补发学习器
+      // v3：地图全部重做 + 回声贝。老存档站在已经不存在的地图上就回到当前小镇的休息站；按徽章数补发回声贝
       ws.v = 3;
       if (!EM.all().includes(ws.map)) { ws.map = 't' + Math.max(0, Math.min(E.W.length - 1, ws.z || 0)); ws.x = -1; ws.y = -1; ws.arrive = 'door:C'; }
       const nb = Object.keys(E.S.mon.badges).length;
@@ -68,7 +68,7 @@
   const pickKey = p => 'p:' + M.id + ':' + p.x + ':' + p.y;
   const pickAt = (x, y) => M.picks.find(p => p.x === x && p.y === y && !WS().flags[pickKey(p)]);
   const pickType = p => p.item || PICKS[(p.x * 7 + p.y * 3 + M.z) % (M.z < 2 ? 2 : M.z < 4 ? 3 : M.z < 6 ? 4 : M.z < 8 ? 6 : PICKS.length)];
-  // 水边的出口格（出口外面是水）：要冲浪才能走
+  // 水边的出口格（出口外面是水）：要踏浪才能走
   const walkable = (x, y) => (PL.surf ? (isWater(x, y) && tile(x, y) !== 'w') || EM.WALK.includes(tile(x, y)) : EM.WALK.includes(tile(x, y)) && !(M._wet && M._wet.has(x + ',' + y))) && !npcAt(x, y);
   const hiddenKey = h => 'h:' + M.id + ':' + h.x + ':' + h.y;
   const hiddenAt = (x, y) => (M.hidden || []).find(h => h.x === x && h.y === y && !WS().flags[hiddenKey(h)]);
@@ -86,7 +86,7 @@
     if (m.kind === 'town') return { icon: w.icon, name: w.name, en: w.en.replace(/[!?]/g, '') + ' Town', sub: '第 ' + (m.z + 1) + ' 镇' };
     if (m.kind === 'route') return { icon: '🛤️', name: (m.z + 1) + ' 号路', en: 'Route ' + (m.z + 1), sub: w.name + ' → ' + E.W[m.z + 1].name };
     if (m.kind === 'cave') return { icon: '🕳️', name: '回声洞 ' + (EM.caves.indexOf(m.route) + 1), en: 'Echo Cave', sub: (m.route + 1) + ' 号路旁边' };
-    const room = { C: ['🏥', '怪兽中心', 'Monster Center'], M: ['🏪', '商店', 'Shop'], G: ['🏟️', '道馆', 'Gym'], H: ['🏠', '民居', 'House'], J: ['🏠', '民居', 'House'], L: ['🏆', '英语冠军赛会场', 'English League'], 1: ['🏆', '第一位大师', 'Master 1'], 2: ['🏆', '第二位大师', 'Master 2'], 3: ['🏆', '第三位大师', 'Master 3'], 4: ['🏆', '第四位大师', 'Master 4'], 5: ['👑', '冠军的房间', 'Champion'] }[m.room];
+    const room = { C: ['🏥', '休息站', 'Rest Stop'], M: ['🏪', '商店', 'Shop'], G: ['🏟️', '挑战馆', 'Challenge Hall'], H: ['🏠', '民居', 'House'], J: ['🏠', '民居', 'House'], L: ['🏆', '英语冠军赛会场', 'English Cup'], 1: ['🏆', '第一位擂主', 'Master 1'], 2: ['🏆', '第二位擂主', 'Master 2'], 3: ['🏆', '第三位擂主', 'Master 3'], 4: ['🏆', '第四位擂主', 'Master 4'], 5: ['👑', '冠军的房间', 'Champion'] }[m.room];
     return { icon: room[0], name: w.name + ' · ' + room[1], en: room[2], sub: '第 ' + (m.z + 1) + ' 镇' };
   }
 
@@ -107,7 +107,7 @@
     if (n.role === 'talk' && M.kind === 'town' && M.z === 0 && n.id === '1') return { name: 'Professor Echo', g: 'f', look: LOOKS.prof };
     if (n.role === 'quiz') return { name: 'Mr Wise', g: 'm', look: LOOKS.teacher };
     if (n.role === 'trainer') return trainerInfo(n);
-    if (n.role === 'nurse') return { name: 'Nurse Amy', g: 'f', look: LOOKS.nurse };
+    if (n.role === 'nurse') return { name: 'Amy', g: 'f', look: LOOKS.nurse };   // 休息站的站长（角色名 nurse 是老的叫法，只在代码里）
     if (n.role === 'clerk') return { name: 'Clerk Tom', g: 'm', look: LOOKS.clerk };
     if (n.role === 'hiker') return { name: 'Hiker Bob', g: 'm', look: HIKER_LOOK };
     if (n.role === 'leader') { const b = E.W[M.z].boss; return { name: b.name, g: 'm', look: Object.assign({}, LOOKS.leader, { shirt: E.W[M.z].color }), emo: b.emoji }; }
@@ -126,7 +126,7 @@
     const vw = $('w-view');
     if (vw) { vw.querySelectorAll('canvas').forEach(c => { c.style.filter = ''; }); const nt = $('w-note'); if (nt) nt.hidden = true; }
     M.npcs = M.npcs.filter(n => !n.temp);
-    // 每次进地图：砍掉的树、碎掉的石头会长回来，大石头回到原位；怪力、闪光要重新用
+    // 每次进地图：砍掉的树、碎掉的石头会长回来，大石头回到原位；大力推、点灯要重新用
     M._cleared = new Set(); M._bould = (M.boulders || []).map(b => ({ x: b.x, y: b.y, rx: b.x, ry: b.y })); M._strength = false; M._flash = false;
     // 机关门：解开过的（存档里记着）一直开着
     M._open = new Set((M.gates || []).filter(g => WS().flags['gate:' + M.id + ':' + g.i]).map(g => g.x + ',' + g.y));
@@ -154,11 +154,11 @@
     if (R) R.load(M, api3d);
     savePos();
     hud();
-    // 逃生绳回到最后一次待过的户外地图
+    // 回程绳回到最后一次待过的户外地图
     if ((M.kind === 'town' || M.kind === 'route') && !PL.surf) ws.lastOut = { map: M.id, x: PL.x, y: PL.y, dir: PL.dir };
     E.music(mapMusic());
   }
-  // 这张地图的背景音乐：小镇按岛分 4 首、道路前后两首、冲浪和海底放海的、洞穴（嘘声团基地放反派的）、道馆、室内、冠军之路
+  // 这张地图的背景音乐：小镇按岛分 4 首、道路前后两首、踏浪和海底放海的、洞穴（嘘声团基地放反派的）、挑战馆、室内、勇气之路
   function mapMusic() {
     const k = M.kind, z = M.isle != null ? M.isle : M.z, id = M.id;
     if (/^(v\d|vL|i12L|i12[1-5]$)/.test(id)) return 'league';
@@ -248,7 +248,8 @@
     $('w-zname').textContent = p.icon + ' ' + p.name;
     $('w-zsub').textContent = M.kind === 'route' || M.kind === 'cave' || M.kind === 'under' ? '野外 Lv ' + (MG.zoneLv(M.z) + (M.lvBonus || 0)) + '–' + (MG.zoneLv(M.z) + (M.lvBonus || 0) + 2) : p.sub;
     $('w-badges').textContent = '🏅 ' + Object.keys(E.S.mon.badges).length;
-    $('w-balls').textContent = '🔮 ' + E.S.mon.balls;
+    // 回声球个数：前面画一只小海螺（Cartoon.shell，和战斗里扔的是同一个样子）
+    $('w-balls').innerHTML = (window.Cartoon && Cartoon.shell ? '<span style="display:block;width:18px;height:18px">' + Cartoon.shell().replace('<svg ', '<svg width="100%" height="100%" ') + '</span>' : '') + E.S.mon.balls;
     const bk = $('w-bike');
     if (bk) { bk.hidden = !(MG.itemCount('bike') > 0) || M.kind === 'inside' || M.kind === 'under'; bk.classList.toggle('on', !!PL.bike); }
     goalLine();
@@ -272,7 +273,7 @@
     const [dx, dy] = DIRS[dir], nx = PL.x + dx, ny = PL.y + dy, t = tile(nx, ny);
     const w = warpAt(nx, ny);
     if (w && !EM.WALK.includes(t)) { if (dir === 'up') goMap(w.to, w.arrive); return; }   // 门、洞口
-    // 瀑布：冲浪时往上要用「攀瀑」，往下会顺着水冲下去；左右水流太急过不去
+    // 瀑布：踏浪时往上要用「逆流」，往下会顺着水冲下去；左右水流太急过不去
     if (t === 'w') {
       if (!PL.surf) return;
       if (dir === 'down') { step(nx, ny, STEP_MS * .7, false); return; }
@@ -288,14 +289,14 @@
       E.SFX.tap();
       return;
     }
-    // 怪力：推着大石头往前走一格
+    // 大力推：推着大石头往前走一格
     if (t === 'O' && M._strength) {
       const bx = nx + dx, by = ny + dy, b = boulderAt(nx, ny);
       if (b && EM.WALK.includes(tile(bx, by)) && !npcAt(bx, by) && !warpAt(bx, by) && !(bx === FL.x && by === FL.y)) { b.x = bx; b.y = by; E.SFX.tap(); step(nx, ny, STEP_MS * 1.6, false); }
       return;
     }
     if (!walkable(nx, ny)) return;
-    // 冲浪中走上岸就下来
+    // 踏浪中走上岸就下来
     if (PL.surf && !isWater(nx, ny)) { PL.surf = false; E.toast('🏖️ 上岸了'); E.music(mapMusic()); }
     step(nx, ny, PL.bike && !PL.surf ? BIKE_MS : STEP_MS, false);
   }
@@ -304,7 +305,7 @@
     PL.fx = PL.x; PL.fy = PL.y; PL.x = nx; PL.y = ny;
     PL.moving = true; PL.jump = jump; PL.dur = dur; PL.t0 = performance.now();
   }
-  // 攀瀑：一直往上爬到瀑布顶上
+  // 逆流：一直往上爬到瀑布顶上
   async function climbFalls() {
     busy = true;
     E.SFX.hit();
@@ -342,7 +343,7 @@
     if (tr) { trainerSpotted(tr); return; }
     const ev = MG.stepHook && MG.stepHook();
     if (ev && ev.hatch) { hatchScene(ev); return; }
-    if (ws.repel > 0) { ws.repel--; if (!ws.repel) E.toast('🧴 驱怪喷雾的效果消失了'); }
+    if (ws.repel > 0) { ws.repel--; if (!ws.repel) E.toast('🧴 悄悄喷雾的效果消失了'); }
     const rate = slid ? 0 : PL.surf && isWater(PL.x, PL.y) ? .08 : EM.ENCOUNTER[t];
     if (rate && !(ws.repel > 0) && Math.random() < rate && MG.anyAlive()) encounter();
   }
@@ -350,8 +351,8 @@
   function hatchScene(ev) {
     const sp = MG.species(ev.sp), line = 'Hello, ' + sp.en + '! Welcome to the world!';
     talk([
-      { who: '旁白', emo: '🥚', en: 'Oh? The egg is moving!', zh: '咦？蛋在动！' },
-      { who: '旁白', emo: '🐣', en: 'Crack! A baby ' + sp.en + ' came out!', zh: '咔嚓！孵出了一只小 ' + sp.en + '（' + sp.zh + '）！', onShow: () => { const mon = MG.hatch(ev.hatch); E.SFX.win(); E.confetti(140); if (mon && mon.shiny) E.toast('✨ 是异色的！', 'gold'); hud(); } },
+      { who: '旁白', emo: '🥚', en: 'Look! The egg is shaking!', zh: '看！蛋在晃！' },
+      { who: '旁白', emo: '🐣', en: 'Crack! A baby ' + sp.en + ' came out!', zh: '咔嚓！孵出了一只小 ' + sp.en + '（' + sp.zh + '）！', onShow: () => { const mon = MG.hatch(ev.hatch); E.SFX.win(); E.confetti(140); if (mon && mon.shiny) E.toast('✨ 是稀有色的！', 'gold'); hud(); } },
       { who: '{name}', look: playerLook(), g: E.S.player && E.S.player.gender === 'girl' ? 'f' : 'm', en: line, zh: '对刚出生的小怪兽打个招呼：', kind: 'speak', target: line },
     ], () => setTimeout(() => MG.nickSheet(ev.hatch, 'queue'), 200));
   }
@@ -398,7 +399,7 @@
   const page = () => dlg && dlg.pages[dlg.i];
   // 剧情中文（家长 2026-10-07）：S.settings.storyZh = always 总是显示 / tap 点一下才显示 / auto 自动（默认）。
   // 自动：第 1–4 座岛总是显示；从第 5 座岛起，人说的普通台词先只给英文，中文收成「译」按钮。
-  // 一直显示中文的：任务页（说 / 选）、只听不看的页、旁白和机关（没有人物头像的页）、道馆里（机关规则）、标了 zhKeep 的页
+  // 一直显示中文的：任务页（说 / 选）、只听不看的页、旁白和机关（没有人物头像的页）、挑战馆里（机关规则）、标了 zhKeep 的页
   const zhMode = () => { const m = E.S.settings.storyZh; return m === 'always' || m === 'tap' ? m : 'auto'; };
   function zhFolded(pg) {
     const m = zhMode();
@@ -566,7 +567,7 @@
   function aiSkipTask(ok) {
     const pg = page(); if (!pg || !pg.kind) return;
     const right = pg.kind === 'answer' ? (pg.opts.find(o => o.c) || {}).t : pg.target;
-    // 没有编号的句子（剧情台词）：中文取「：」后面那截（像「大声说：我们去冲浪吧！」），不是中文就不要；选回答的页面中文是问题的意思，不用
+    // 没有编号的句子（剧情台词）：中文取「：」后面那截（像「大声说：我们去踏浪吧！」），不是中文就不要；选回答的页面中文是问题的意思，不用
     const zh = pg.kind === 'speak' ? String(pg.zh || '').split('：').pop() : '';
     if (E.revLater) E.revLater(pg.q || (right ? { en: right, zh: /[一-鿿]/.test(zh) ? zh : '' } : null));
     const L = E.dayLog && E.dayLog(); if (L) L.aiSkip = (L.aiSkip || 0) + 1;
@@ -634,7 +635,7 @@
       const here = tile(PL.x, PL.y);
       if (PL.surf && here === 'D') { const d = M.dives.find(q => q.x === PL.x && q.y === PL.y); if (d) useSkill('dive', () => goMap(d.to, d.arrive)); else talk([{ who: '旁白', emo: '🌊', en: 'The sea is very deep here.', zh: '这里的海很深。' }]); return; }
       if (here === 'U') { const u = M.surfaces.find(q => q.x === PL.x && q.y === PL.y); if (u) { talk([{ who: '旁白', emo: '🫧', en: 'Light is shining from above. Swim up?', zh: '上面有光照下来。要浮上去吗？', kind: 'choice', opts: [{ html: '🫧 浮上去 Swim up', cls: 'sun' }, { html: '先不' }], pick: i => { if (!i) setTimeout(() => goMap(u.to, u.arrive), 60); return []; } }]); } return; }
-      if (f && f.falls) talk([{ who: '旁白', emo: '🌊', en: 'It is a big waterfall.', zh: '一道大瀑布。要先冲浪到瀑布下面。' }]);
+      if (f && f.falls) talk([{ who: '旁白', emo: '🌊', en: 'It is a big waterfall.', zh: '一道大瀑布。要先踏浪到瀑布下面。' }]);
       return;
     }
     if (f.n) { f.n.face = faceTo(f.n, PL); if (!story('talk', f.n)) npcTalk(f.n); }
@@ -673,7 +674,7 @@
     const coins = (k, en, zh) => dailyDone(k) ? [P('Good job!', '说得真好！')] : (markDaily(k), E.S.coins += 10, E.renderTop(), [P(en, zh, { onShow: () => { E.SFX.coin(); E.toast('💰 金币 +10', 'gold'); } })]);
     const lines = arr => arr.map(q => Array.isArray(q) ? P(q[0], q[1]) : P(q.en, q.zh, q));
     if (n.give && !WS().flags['g:' + M.id + ':' + n.id]) {
-      // 一次性送东西（秘传学习器、道具）
+      // 一次性送东西（回声贝、道具）
       const it = MG.ITEMS[n.give.item];
       talk(lines(n.give.say || [['Take this!', '这个送给你！']]).concat([
         P('You got ' + (it ? it.en : n.give.item) + '!', '得到了' + (it ? it.zh : n.give.item) + (n.give.n > 1 ? ' ×' + n.give.n : '') + '！', { onShow: () => { WS().flags['g:' + M.id + ':' + n.id] = 1; MG.addItem(n.give.item, n.give.n || 1); if (n.give.flag) WS().flags['s:' + n.give.flag] = 1; E.save(); hud(); E.SFX.win(); E.toast((it ? it.icon + ' ' + it.zh : n.give.item) + ' +' + (n.give.n || 1), 'gold'); } }),
@@ -683,7 +684,7 @@
     if (n.role === 'daycare') {
       const gk = 'g:daygift';
       if (!WS().flags[gk]) {
-        talk([P('Hello, dear! We are the daycare. We look after monsters.', '你好呀，孩子！我们开养育屋，帮大家照顾怪兽。'), P('Leave two monsters with us. If they get along, you may find an egg!', '把两只怪兽寄养在这里。它们相处得好的话，说不定会有蛋哦！'),
+        talk([P('Hello, dear! We are the daycare. We look after monsters.', '你好呀，孩子！我们开怪兽幼儿园，帮大家照顾怪兽。'), P('Leave two monsters with us. If they get along, you may find an egg!', '把两只怪兽寄养在这里。它们相处得好的话，说不定会有蛋哦！'),
           P('Oh! This egg was in our garden this morning. Take it, please!', '哦！今天早上花园里出现了一个蛋，你带走吧！', { onShow: () => { WS().flags[gk] = 1; MG.giveEgg(n.egg || 'moonbunny'); E.save(); E.SFX.win(); E.toast('🥚 得到了一个蛋！放在队伍里走路就会孵出来', 'gold'); } }),
           P('Walk with it, and it will hatch.', '带着它多走走路，它就会孵出来。')], () => MG.daycareSheet());
       } else { E.say('Welcome back!', undefined, 'f'); MG.daycareSheet(); }
@@ -692,7 +693,7 @@
     // 守卫、渡轮不开时说的是「要几枚徽章」这种规则：中文一直显示
     const keep = pgs => pgs.map(q => Object.assign(q, { zhKeep: true }));
     if (n.role === 'guard') {
-      talk(keep(n.say ? lines(n.say) : [P("Stop! You can't go north without this town's badge.", '站住！没有本镇的徽章不能往北走。'), P('Beat the gym leader first!', '先去道馆打败馆主吧！')]));
+      talk(keep(n.say ? lines(n.say) : [P("Stop! You can't go north without this town's badge.", '站住！没有本镇的徽章不能往北走。'), P('Beat the Isle Master first!', '先去挑战馆打败岛主吧！')]));
     } else if (n.role === 'ferry') {
       // 渡轮 / 船：带你去别的岛
       const ok = (n.badge == null || nBadges() >= n.badge) && (!n.need || WS().flags['s:' + n.need]);
@@ -707,9 +708,9 @@
       else trainerTalk(n);
     } else if (n.role === 'nurse') {
       talk([
-        P('Welcome to the Monster Center!', '欢迎来到怪兽中心！'),
-        P('Let me heal your monsters.', '我来帮你的怪兽恢复体力。', { onShow: () => { MG.healAll(); WS().center = { map: M.id }; E.jingle('heal', E.SFX.win); E.save(); } }),
-        P('Your monsters are fully healed. Good luck!', '怪兽们都恢复精神了，加油！'),
+        P('Hi! This is the Rest Stop. Are your monsters tired?', '你好！这里是休息站。你的怪兽累了吗？'),
+        P('Let them take a short nap and drink some warm milk.', '让它们睡个小觉、喝点热牛奶吧。', { onShow: () => { MG.healAll(); WS().center = { map: M.id }; E.jingle('heal', E.SFX.win); E.save(); } }),
+        P('Ding! They are full of energy again. Have fun!', '叮！它们又精神满满啦，去玩吧！'),
         P('You can use the computer to change your team.', '旁边的电脑可以把怪兽存进箱子、换队伍。'),
       ]);
     } else if (n.role === 'clerk') {
@@ -717,14 +718,14 @@
       shopSheet();
     } else if (n.role === 'leader') {
       const b = w.boss, had = !!E.S.mon.badges[z], g = had ? null : gymNeed(z);
-      // 道馆跟着课本进度开：前几个课本单元的 BOSS 关没过，馆主不接受挑战
+      // 挑战馆跟着课本进度开：前几个课本单元的 BOSS 关没过，岛主不接受挑战
       if (g && !g.ok) {
         const miss = g.missing.length > 3 ? g.missing.slice(0, 3).join('、') + ' 等 ' + g.missing.length + ' 个单元' : g.missing.join('、');
         talk([P(b.hello, '我是' + b.name + '！', { emo: b.emoji }),
           P('Come back after you beat Unit ' + g.unitN + '!', '先去「📚 闯关练习」打败课本 ' + miss + ' 的 BOSS 关，再来挑战我！（课本 BOSS ' + g.done + '/' + g.need + '）', { emo: b.emoji, zhKeep: true })]);
         return;
       }
-      // 打通冠军赛以后：馆主重赛，等级 +15，题目换成最近学的课本单元
+      // 打通冠军赛以后：岛主重赛，等级 +15，题目换成最近学的课本单元
       const re = had && !!WS().flags['s:champion'];
       const hi = re ? '冠军回来啦？我也变强了！这次考你最近学的课本单元。' : had ? '又来挑战我了？好，再比一场！' : '我是' + b.name + '！想拿本镇的徽章，就先打败我！';
       talk([P(re ? "Welcome back, Champion! I'm much stronger now!" : b.hello, hi, { emo: b.emoji })], () => battle('leader', {
@@ -732,7 +733,7 @@
         after: res => {
           if (res === 'win' && !had) talk([P('You beat me! Here is my badge.', '你赢了！这枚徽章给你。'), P('The road to the north is open now.', '现在北边的路已经为你打开了！')]);
           else if (res === 'win' && re) {
-            // 每位馆主每天第一次重赛赢了送一块进化石
+            // 每位岛主每天第一次重赛赢了送一首进化曲
             if (dailyDone('rm' + z)) { talk([P('What a battle! Come back tomorrow!', '好精彩的对战！明天再来吧！', { emo: b.emoji })]); return; }
             markDaily('rm' + z);
             const ids = Object.keys((window.DEX && DEX.STONES) || {}), id = ids[(z + new Date().getDate()) % Math.max(1, ids.length)], it = MG.ITEMS[id];
@@ -774,7 +775,7 @@
     } else if (n.role === 'hiker') {
       const tips = [
         ['You can jump down a ledge, but you cannot climb up.', '台阶只能往下跳，不能往上爬哦。'],
-        ['Use a repel, and weak monsters will stay away.', '用驱怪喷雾，草丛里的怪兽就不会来打扰你。'],
+        ['Use a Quiet Spray, and wild monsters will not hear you.', '用悄悄喷雾，草丛里的怪兽就听不见你，不会来打扰你。'],
         ['Caves are dark. The monsters there are stronger.', '洞穴里很黑，里面的怪兽更强。'],
         ['Your team can have six monsters.', '你的队伍最多可以带六只怪兽。'],
       ];
@@ -786,7 +787,7 @@
         P('Monsters on these islands understand English.', '这些岛上的怪兽都听得懂英语。'),
         P('Speak clearly, and your monsters will be strong!', '英语说得越清楚，你的怪兽就越强！'),
         P('Wild monsters live in the tall grass on the road north.', '北边的路上有草丛，里面住着野生怪兽。'),
-        P('Beat the gym leader, and the guard will let you go north.', '打败道馆馆主，守卫就会让你往北走。'),
+        P('Beat the Isle Master, and the guard will let you go north.', '打败岛主，守卫就会让你往北走。'),
         P('Now, can you say this to me?', '现在，你能对我说这句话吗？', {
           kind: 'speak', target: 'Nice to meet you, Professor!',
           pass: () => coins(dk, 'Very good! Here are 10 coins.', '说得很好！送你 10 个金币。'),
@@ -868,8 +869,8 @@
       '<button class="btn ghost wide" data-act="close">Thank you! 谢谢</button>');
   }
 
-  // ---------- 道馆跟着课本进度开（家长 2026-10-07）：第 z 个馆主要先打败前 ceil((z+1)×16/13) 个课本单元的 BOSS 关 ----------
-  // 第 1 个馆主要 2 个单元，第 13 个要 16 个（七上 + 七下），冠军赛大约落在初一下学期末
+  // ---------- 挑战馆跟着课本进度开（家长 2026-10-07）：第 z 个岛主要先打败前 ceil((z+1)×16/13) 个课本单元的 BOSS 关 ----------
+  // 第 1 个岛主要 2 个单元，第 13 个要 16 个（七上 + 七下），冠军赛大约落在初一下学期末
   const unitsFor = z => Math.ceil((z + 1) * 16 / 13);
   function gymNeed(z) {
     const NB = E.W.length, units = (E.WX || []).slice(NB), need = Math.min(unitsFor(z), units.length);
@@ -881,7 +882,7 @@
   }
   // 下一枚要拿的徽章是第几座岛的（13 枚都有了返回 -1）
   const nextGymZ = () => { for (let z = 0; z < E.W.length; z++) if (!E.S.mon.badges[z]) return z; return -1; };
-  // 重赛的馆主：本馆属性，比原来多一只，等级 +15（属性表和 monsters.js 的 GYM 一样）
+  // 重赛的岛主：本馆属性，比原来多一只，等级 +15（属性表和 monsters.js 的 GYM 一样）
   const GYM_TYPES = ['flying', 'rock', 'grass', 'psychic', 'steel', 'spark', 'fire', 'poison', 'ground', 'dark', 'ice', 'water', 'dragon'];
   const rematchFoes = z => MG.teamOf([GYM_TYPES[z % GYM_TYPES.length]], 3 + Math.floor(z / 4), MG.zoneLv(z) + 2 + 15, 'rematch' + z);
   // 重赛出题：全部换成课本最近学的单元（正在学的这一个和前两个）。战斗期间临时换掉 E.src，打完（或回首页）换回来
@@ -899,18 +900,25 @@
     } else if (!on && srcBak) { E.src = srcBak; srcBak = null; }
   }
 
-  // ---------- 野外技能：拿到徽章解锁，队伍里要有合适属性的怪兽，用的时候要对它说英语指令 ----------
-  // 仿绿宝石：秘传学习器（hm）是剧情里的人送的，还要有足够的徽章才能在野外用
+  // ---------- 回声技能：拿到徽章解锁，队伍里要有合适属性的怪兽，用的时候要对它说英语指令 ----------
+  // 回声贝（id 是 hm_*）是剧情里的人送的，还要有足够的徽章才能在野外用；技能名和 monsters.js 的回声贝一致
+  // 一共四种回声技能（GROUPS）：开路、点灯、水路、乘风；开路和水路各有 1–3 级，每一级对应下面的一项（键名是老的，存档兼容）
   const SKILLS = {
-    cut: { zh: '居合斩', en: 'Cut', icon: '🌿', badge: 3, hm: 'hm_cut', types: ['grass', 'bug', 'steel', 'normal', 'fight', 'dark', 'dragon', 'ground'], say: n => n + ', cut the tree!', what: '砍掉挡路的小树', who: '温馨家庭岛的树医生' },
-    flash: { zh: '闪光', en: 'Flash', icon: '💡', badge: 2, hm: 'hm_flash', types: ['spark', 'psychic', 'fire'], say: n => n + ', light up the cave!', what: '照亮漆黑的洞穴', who: '回声洞里的登山家' },
-    smash: { zh: '碎岩', en: 'Rock Smash', icon: '🪨', badge: 4, hm: 'hm_smash', types: ['fight', 'rock', 'ground', 'steel', 'normal', 'dragon'], say: n => n + ', smash the rock!', what: '打碎有裂缝的岩石', who: '校园岛的矿工' },
-    strength: { zh: '怪力', en: 'Strength', icon: '💪', badge: 6, hm: 'hm_strength', types: ['fight', 'rock', 'ground', 'normal', 'steel', 'dragon', 'water'], say: n => n + ', push the rock!', what: '推动大石头', who: '社团岛的大力士' },
-    surf: { zh: '冲浪', en: 'Surf', icon: '🌊', badge: 8, hm: 'hm_surf', types: ['water', 'ice', 'dragon'], say: n => n + ", let's surf!", what: '在水上前进', who: '爸爸（生日派对岛）' },
-    fly: { zh: '飞空', en: 'Fly', icon: '🕊️', badge: 9, hm: 'hm_fly', types: ['flying', 'dragon'], say: n => n + ', fly me there!', what: '飞回去过的小岛', who: '小凯（动物岛）' },
-    dive: { zh: '潜水', en: 'Dive', icon: '🤿', badge: 10, hm: 'hm_dive', types: ['water', 'dragon'], say: n => n + ', dive down!', what: '在深水（深蓝色）上潜到海底', who: '导师欧瑞（规则城）' },
-    falls: { zh: '攀瀑', en: 'Waterfall', icon: '🏞️', badge: 12, hm: 'hm_falls', types: ['water', 'dragon'], say: n => n + ', climb the waterfall!', what: '冲浪时爬上瀑布', who: '天气岛的气象台台长' },
+    cut: { zh: '开路', en: 'Clear Way', icon: '🌿', badge: 3, hm: 'hm_cut', types: ['grass', 'bug', 'steel', 'normal', 'fight', 'dark', 'dragon', 'ground'], say: n => n + ', cut the tree!', what: '砍掉挡路的小树', who: '温馨家庭岛的树医生' },
+    flash: { zh: '点灯', en: 'Light Up', icon: '💡', badge: 2, hm: 'hm_flash', types: ['spark', 'psychic', 'fire'], say: n => n + ', light up the cave!', what: '照亮漆黑的洞穴', who: '回声洞里的登山家' },
+    smash: { zh: '开路 2 级', en: 'Clear Way 2', icon: '🪨', badge: 4, hm: 'hm_smash', types: ['fight', 'rock', 'ground', 'steel', 'normal', 'dragon'], say: n => n + ', smash the rock!', what: '打碎有裂缝的岩石', who: '校园岛的矿工' },
+    strength: { zh: '开路 3 级', en: 'Clear Way 3', icon: '💪', badge: 6, hm: 'hm_strength', types: ['fight', 'rock', 'ground', 'normal', 'steel', 'dragon', 'water'], say: n => n + ', push the rock!', what: '推动大石头', who: '社团岛的大力士' },
+    surf: { zh: '水路', en: 'Water Way', icon: '🌊', badge: 8, hm: 'hm_surf', types: ['water', 'ice', 'dragon'], say: n => n + ", let's surf!", what: '在水上前进', who: '爸爸（生日派对岛）' },
+    fly: { zh: '乘风', en: 'Sky Ride', icon: '🕊️', badge: 9, hm: 'hm_fly', types: ['flying', 'dragon'], say: n => n + ', fly me there!', what: '飞回去过的小岛', who: '小凯（动物岛）' },
+    dive: { zh: '水路 2 级', en: 'Water Way 2', icon: '🤿', badge: 10, hm: 'hm_dive', types: ['water', 'dragon'], say: n => n + ', dive down!', what: '在深水（深蓝色）上潜到海底', who: '导师欧瑞（规则城）' },
+    falls: { zh: '水路 3 级', en: 'Water Way 3', icon: '🏞️', badge: 12, hm: 'hm_falls', types: ['water', 'dragon'], say: n => n + ', climb the waterfall!', what: '在水上时爬上瀑布', who: '天气岛的气象台台长' },
   };
+  const GROUPS = [
+    { zh: '开路', en: 'Clear Way', icon: '🌿', lv: ['cut', 'smash', 'strength'] },
+    { zh: '点灯', en: 'Light Up', icon: '💡', lv: ['flash'] },
+    { zh: '水路', en: 'Water Way', icon: '🌊', lv: ['surf', 'dive', 'falls'] },
+    { zh: '乘风', en: 'Sky Ride', icon: '🕊️', lv: ['fly'] },
+  ];
   const skillMon = k => E.S.mon.team.map(u => E.S.mon.box.find(m => m.uid === u)).filter(m => m && !m.egg).find(m => MG.species(m.sp).types.some(t => SKILLS[k].types.includes(t)));
   const hasHM = k => DEBUG || MG.itemCount(SKILLS[k].hm) > 0;
   const skillOpen = k => DEBUG || (hasHM(k) && nBadges() >= SKILLS[k].badge);
@@ -918,7 +926,7 @@
   // 用技能：说对指令才会生效
   function useSkill(k, then) {
     const S = SKILLS[k], nar = (en, zh) => ({ who: '旁白', emo: S.icon, en, zh });
-    if (!hasHM(k)) { talk([nar('Maybe a monster could help here...', '也许怪兽能帮上忙……（要先拿到「' + S.zh + '」的秘传学习器）')]); return; }
+    if (!hasHM(k)) { talk([nar('Maybe a monster could help here...', '也许怪兽能帮上忙……（要先拿到「' + S.zh + '」的回声贝）')]); return; }
     if (!skillOpen(k)) { talk([nar('You need more badges to use ' + S.en + '.', '要用「' + S.zh + '」' + S.what + '，需要 ' + S.badge + ' 枚徽章。')]); return; }
     const mon = skillMon(k);
     if (!mon) { talk([nar('None of your monsters can use ' + S.en + '.', '队伍里要有' + S.types.map(t => DEX.TYPES[t].zh).join('、') + '系的怪兽，才能用「' + S.zh + '」。')]); return; }
@@ -933,11 +941,11 @@
       useSkill('strength', mon => { M._strength = true; E.toast('💪 ' + MG.species(mon.sp).en + ' 可以推动大石头了！', 'gold'); });
     }
   }
-  // 面对水：冲浪或者钓鱼
+  // 面对水：踏浪或者钓鱼
   function waterMenu(f) {
     const canSurf = skillReady('surf'), rod = MG.itemCount('rod') > 0;
     const surf = () => useSkill('surf', () => { PL.surf = true; PL.bike = false; step(f.x, f.y, STEP_MS, false); hud(); E.music(mapMusic()); });
-    if (canSurf && rod) talk([{ who: '旁白', emo: '🌊', en: 'The water is calm. What do you want to do?', zh: '水面很平静。要做什么？', kind: 'choice', opts: [{ html: '🌊 冲浪', cls: 'sun' }, { html: '🎣 钓鱼' }], pick: i => { setTimeout(i ? fish : surf, 50); return []; } }]);
+    if (canSurf && rod) talk([{ who: '旁白', emo: '🌊', en: 'The water is calm. What do you want to do?', zh: '水面很平静。要做什么？', kind: 'choice', opts: [{ html: '🌊 水路', cls: 'sun' }, { html: '🎣 钓鱼' }], pick: i => { setTimeout(i ? fish : surf, 50); return []; } }]);
     else if (canSurf) surf();
     else if (rod) fish();
   }
@@ -975,7 +983,7 @@
       },
     }], () => { if (hooked && MG.anyAlive()) battle('wild', { hab: 'water', lvBonus: (M.lvBonus || 0) + 1 }); });
   }
-  // 藏起来的道具：对着它按 A 才能找到；有寻宝器会一闪一闪
+  // 藏起来的道具：对着它按 A 才能找到；有回声探测器会一闪一闪
   const HIDDEN_PICKS = ['superpotion', 'superball', 'revive', 'fullheal', 'leafstone', 'firestone', 'waterstone', 'thunderstone', 'moonstone', 'sunstone', 'icestone', 'superball'];
   function foundHidden(h) {
     WS().flags[hiddenKey(h)] = 1;
@@ -985,15 +993,17 @@
     talk([{ who: '旁白', emo: '✨', en: 'You found a hidden ' + it.en + '!', zh: '你发现了藏起来的' + it.zh + '！' }]);
   }
   function skillsSheet() {
-    E.openModal('<h2>🌟 野外技能</h2><p>先从剧情里的人手上拿到秘传学习器，再拿够徽章才能用。队伍里要有合适属性的怪兽，用的时候要大声对它说英语指令。</p>' +
-      Object.entries(SKILLS).map(([k, S]) => {
+    // 四种技能各一行标题，下面列出每一级（开路、水路有 3 级）
+    E.openModal('<h2>🌟 回声技能</h2><p>一共四种回声技能。先从剧情里的人手上拿到回声贝，再拿够徽章才能用；后面拿到的回声贝会让技能升一级。队伍里要有合适属性的怪兽，用的时候要大声对它说英语指令。</p>' +
+      GROUPS.map(G => '<h3 class="pc-h">' + G.icon + ' ' + G.zh + ' ' + G.en + (G.lv.length > 1 ? '<small>（已到 ' + G.lv.filter(hasHM).length + ' / ' + G.lv.length + ' 级）</small>' : '') + '</h3>' + G.lv.map(k => {
+        const S = SKILLS[k];
         const open = skillOpen(k), mon = skillMon(k);
-        if (!hasHM(k)) return '<div class="ach locked"><span class="ae">' + S.icon + '</span><div style="flex:1"><b>' + S.zh + ' ' + S.en + '</b><small>' + S.what + ' · 还没拿到秘传学习器（' + S.who + '）</small></div><span class="lvchip">🔒</span></div>';
+        if (!hasHM(k)) return '<div class="ach locked"><span class="ae">' + S.icon + '</span><div style="flex:1"><b>' + S.zh + ' ' + S.en + '</b><small>' + S.what + ' · 还没拿到回声贝（' + S.who + '）</small></div><span class="lvchip">🔒</span></div>';
         const btn = k === 'flash' ? '<button class="btn small sun" data-act="wUseSkill" data-k="flash"' + (open && mon && M.dark && !M._flash ? '' : ' disabled') + '>用</button>'
           : k === 'fly' ? '<button class="btn small sun" data-act="wUseSkill" data-k="fly"' + (open && mon && M.kind !== 'inside' ? '' : ' disabled') + '>用</button>'
-            : k === 'dive' ? '<small class="tip">冲浪到深水上按 A</small>' : k === 'falls' ? '<small class="tip">冲浪时往瀑布上走</small>' : '<small class="tip">对着障碍按 A</small>';
+            : k === 'dive' ? '<small class="tip">在水上走到深水上按 A</small>' : k === 'falls' ? '<small class="tip">在水上时往瀑布上走</small>' : '<small class="tip">对着障碍按 A</small>';
         return '<div class="ach' + (open ? '' : ' locked') + '"><span class="ae">' + S.icon + '</span><div style="flex:1"><b>' + S.zh + ' ' + S.en + '</b><small>' + S.what + ' · ' + (open ? (mon ? '由 ' + MG.species(mon.sp).en + ' 来用' : '需要 ' + S.types.slice(0, 3).map(t => DEX.TYPES[t].zh).join('/') + ' 系怪兽') : '需要 ' + S.badge + ' 枚徽章') + '</small></div>' + (open ? btn : '<span class="lvchip">🔒</span>') + '</div>';
-      }).join('') + '<button class="btn ghost wide" data-act="close">关闭</button>');
+      }).join('')).join('') + '<button class="btn ghost wide" data-act="close">关闭</button>');
   }
   function flyTo(z) {
     E.closeModal();
@@ -1030,8 +1040,8 @@
     const c = WS().center;
     loadMap(c && c.map && EM.get(c.map) ? c.map : EM.get('i' + M.z + 'C') ? 'i' + M.z + 'C' : 'i0C', 'nurse');
     talk([
-      { who: '旁白', emo: '💤', en: 'Your monsters are tired. You hurried to the Monster Center.', zh: '你的怪兽都累倒了……你赶快跑回了怪兽中心。' },
-      { who: 'Nurse Amy', look: LOOKS.nurse, g: 'f', en: "Your monsters are healed now. Don't give up!", zh: '怪兽们已经恢复了，别灰心，再去试试吧！' },
+      { who: '旁白', emo: '💤', en: 'Your monsters are tired. You hurried to the Rest Stop.', zh: '你的怪兽都累倒了……你赶快跑回了休息站。' },
+      { who: 'Amy', look: LOOKS.nurse, g: 'f', en: "Your monsters are full of energy again. Don't give up!", zh: '怪兽们又精神满满了，别灰心，再去试试吧！' },
     ]);
   }
 
@@ -1069,7 +1079,7 @@
     battle: (kind, o) => new Promise(res => battle(kind, Object.assign({}, o, { fromStory: true, after: r => { busy = true; res(r); } }))),
     scene: () => $('w-scene'),
     setOverlay: fn => { overlay = fn; },
-    // 画面上方的小提示条（道馆机关用：现在要踩什么颜色、红灯绿灯……）
+    // 画面上方的小提示条（挑战馆机关用：现在要踩什么颜色、红灯绿灯……）
     // 整个画面加滤镜（颜色被偷走的岛：grayscale(1)）；换地图会自动清掉
     filter: css => { $('w-view').querySelectorAll('canvas').forEach(c => { c.style.filter = css || ''; }); },
     note: html => { const n = $('w-note'); if (!n) return; if (!html) { n.hidden = true; return; } n.innerHTML = html; n.hidden = false; },
@@ -1088,7 +1098,7 @@
     hasHM: k => hasHM(k),
     give: (item, n) => { MG.addItem(item, n || 1); E.save(); hud(); const it = MG.ITEMS[item]; E.jingle('item', E.SFX.win); E.toast((it ? it.icon + ' ' + it.zh : item) + ' +' + (n || 1), 'gold'); },
     badges: () => nBadges(),
-    // 第 z 个道馆的课本门槛：{ ok, need, done, unitLabel（下一个要打的单元）, target, missing }
+    // 第 z 个挑战馆的课本门槛：{ ok, need, done, unitLabel（下一个要打的单元）, target, missing }
     gymNeed: z => gymNeed(z),
     daily: (k, fn) => { if (dailyDone(k)) return false; markDaily(k); fn && fn(); E.save(); return true; },
     flags: () => WS().flags,
@@ -1213,7 +1223,7 @@
     chatNpc = n;
     const b = $('w-chat'); if (b) b.hidden = !n;
   }
-  const ROLE_EN = { talk: 'a friendly villager', guard: 'the island guard', nurse: 'the nurse at the Monster Center', clerk: 'the shop clerk', trainer: 'a young monster trainer', leader: 'the Gym Leader', quiz: 'the quiz teacher', ferry: 'a ferry captain', hiker: 'a hiker who loves mountains', daycare: 'the owner of the monster daycare', gift: 'a kind villager', story: 'a person you meet on your journey' };
+  const ROLE_EN = { talk: 'a friendly villager', guard: 'the island guard', nurse: 'Amy, who runs the Rest Stop', clerk: 'the shop clerk', trainer: 'a young monster trainer', leader: 'the Isle Master', quiz: 'the quiz teacher', ferry: 'a ferry captain', hiker: 'a hiker who loves mountains', daycare: 'the owner of the monster daycare', gift: 'a kind villager', story: 'a person you meet on your journey' };
   function chatWith(n) {
     if (!n || !window.EchoTalk) return;
     const info = npcLook(n), w = E.W[M.z] || E.W[0];
@@ -1276,7 +1286,7 @@
   const OUT = 'rgba(32,38,50,.78)';
 
   // 地面图层：草地、小路、沙地、水、花、洞穴地面、室内地板。3D 模式下树、房子、草丛、岩石另外用模型
-  // 道馆机关的地板：m.over 图层里的字符 → def.paint 里的颜色和字
+  // 挑战馆机关的地板：m.over 图层里的字符 → def.paint 里的颜色和字
   function paintOver(g, m, T) {
     if (!m.over || !m.def || !m.def.paint) return;
     for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) {
@@ -1402,7 +1412,7 @@
   const VILLAGER_LOOKS = PPL.VILLAGERS, TRAINER_LOOKS = PPL.TRAINERS;
   // 主角的样子跟开场选的男孩 / 女孩走
   const playerLook = () => (E.S.player && E.S.player.gender === 'girl') ? LOOKS.girl : LOOKS.boy;
-  // 怪兽图：Mon3D 的图标（发布的 2D 图标或 3D 截图）；图标索引读完、异色图标转好色时（mon3d-ready）重新取一次地址
+  // 怪兽图：Mon3D 的图标（发布的 2D 图标或 3D 截图）；图标索引读完、稀有色图标转好色时（mon3d-ready）重新取一次地址
   const imgCache = {};
   let imgVer = 0;
   window.addEventListener('mon3d-ready', () => { imgVer++; });
@@ -1417,14 +1427,24 @@
     imgCache[sp.id] = im;
     return im;
   }
-  // 地上的道具球
-  function drawItemBall(g, cx, cy, R) {
-    g.lineWidth = Math.max(1.2, R * .2); g.strokeStyle = OUT;
-    g.fillStyle = '#8e6cef'; circ(g, cx, cy, R); g.fill(); g.stroke();
-    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(cx, cy, R, 0, Math.PI); g.fill();
-    g.beginPath(); g.moveTo(cx - R, cy); g.lineTo(cx + R, cy); g.stroke(); circ(g, cx, cy, R); g.stroke();
-    g.fillStyle = '#ffffff'; circ(g, cx, cy, R * .32); g.fill(); g.stroke();
-    g.fillStyle = 'rgba(255,255,255,.7)'; circ(g, cx - R * .45, cy - R * .45, R * .18); g.fill();
+  // 地上的道具：系着黄丝带的小礼物盒（R 和原来一样是「半径」，盒子大约 2R 宽）
+  function drawPickup(g, cx, cy, R) {
+    const w = R * 1.8, h = R * 1.35, x = cx - w / 2, y = cy - h / 2 + R * .32, lw = Math.max(1.2, R * .16);
+    g.save(); g.lineJoin = 'round'; g.lineCap = 'round'; g.lineWidth = lw; g.strokeStyle = OUT;
+    // 盒身、盒盖
+    g.fillStyle = '#8e6cef'; rr(g, x, y, w, h, R * .16); g.fill(); g.stroke();
+    g.fillStyle = 'rgba(40,20,90,.18)'; g.fillRect(x + lw / 2, y + h * .62, w - lw, h * .38 - lw / 2);
+    g.fillStyle = '#a98bff'; rr(g, x - R * .12, y - R * .34, w + R * .24, R * .46, R * .12); g.fill(); g.stroke();
+    // 丝带：竖着一条
+    g.fillStyle = '#ffd54f'; g.fillRect(cx - R * .16, y - R * .34 + lw / 2, R * .32, h + R * .34 - lw);
+    g.strokeStyle = '#c99a1c'; g.lineWidth = lw * .5; g.strokeRect(cx - R * .16, y - R * .34 + lw / 2, R * .32, h + R * .34 - lw);
+    // 蝴蝶结
+    g.lineWidth = lw * .8; g.strokeStyle = OUT; g.fillStyle = '#ffd54f';
+    [-1, 1].forEach(s => { g.beginPath(); g.moveTo(cx, y - R * .36); g.quadraticCurveTo(cx + s * R * .78, y - R * 1.02, cx + s * R * .62, y - R * .34); g.closePath(); g.fill(); g.stroke(); });
+    circ(g, cx, y - R * .38, R * .16); g.fill(); g.stroke();
+    // 高光
+    g.fillStyle = 'rgba(255,255,255,.55)'; rr(g, x + R * .16, y + R * .14, R * .22, h * .5, R * .1); g.fill();
+    g.restore();
   }
 
   // ---------- 2D 流畅模式 ----------
@@ -1602,8 +1622,15 @@
         for (let k = 1; k < 4; k++) { const yy = y + T * .06 + (rh - T * .06) * k / 4, inset = T * .34 * (1 - k / 4); g.beginPath(); g.moveTo(x + inset, yy); g.lineTo(x + w - inset, yy); g.stroke(); }
       }
       g.lineWidth = lw; g.strokeStyle = OUT;
+      // 休息站屋顶正中挂一只金色的小铃铛（回声站的记号）
+      if (L === 'C') {
+        const bx = x + w / 2, by = y + T * .02;
+        g.fillStyle = '#ffc93c'; g.beginPath(); g.moveTo(bx - T * .2, by + T * .02); g.quadraticCurveTo(bx - T * .16, by - T * .3, bx, by - T * .3); g.quadraticCurveTo(bx + T * .16, by - T * .3, bx + T * .2, by + T * .02); g.closePath(); g.fill(); g.stroke();
+        circ(g, bx, by + T * .06, T * .06); g.fill(); g.stroke();
+        g.fillStyle = 'rgba(255,255,255,.6)'; ell(g, bx - T * .07, by - T * .14, T * .03, T * .07); g.fill();
+      }
       if (!house) {
-        const label = L === 'C' ? 'CENTER' : L === 'M' ? 'SHOP' : 'GYM';
+        const label = L === 'C' ? 'REST STOP' : L === 'M' ? 'SHOP' : 'GYM';
         g.font = '800 ' + Math.round(T * .3) + 'px "Baloo 2", Nunito, "PingFang SC", sans-serif';
         const tw = g.measureText(label).width, pw = tw + T * .5, ph = T * .44, px = x + w / 2 - pw / 2, py = y + rh * .52 - ph / 2;
         g.fillStyle = '#ffffff'; rr(g, px, py, pw, ph, ph / 2); g.fill(); g.strokeStyle = shade(roofC, .7); g.stroke();
@@ -1629,7 +1656,7 @@
       const camY = mh <= VH ? (mh - VH) / 2 : Math.max(0, Math.min(mh - VH, py + T / 2 - VH / 2));
       ctx.fillStyle = m.kind === 'inside' ? '#1a1410' : m.kind === 'cave' ? '#1b1411' : m.kind === 'under' ? '#123c4a' : shade(m.pal.tree, .7); ctx.fillRect(0, 0, VW, VH);
       ctx.drawImage(SC, -camX, -camY, mw, mh);
-      // 水面闪光
+      // 水面一闪一闪
       const x0 = Math.max(0, Math.floor(camX / T)), x1 = Math.min(m.W - 1, Math.ceil((camX + VW) / T));
       const y0 = Math.max(0, Math.floor(camY / T)), y1 = Math.min(m.H - 1, Math.ceil((camY + VH) / T));
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
@@ -1643,7 +1670,7 @@
       V.picks.forEach(p => ents.push({ y: p.y, f: () => {
         const cx = p.x * T - camX + T / 2, cy = p.y * T - camY + T * .55 + Math.sin(now / 320 + p.x) * T * .04;
         ctx.fillStyle = 'rgba(0,0,0,.18)'; ell(ctx, cx, p.y * T - camY + T * .86, T * .16, T * .05); ctx.fill();
-        drawItemBall(ctx, cx, cy, T * .16);
+        drawPickup(ctx, cx, cy, T * .16);
       } }));
       V.npcs.forEach(q => ents.push({ y: q.y, f: () => {
         const sx = q.x * T - camX, sy = q.y * T - camY;
@@ -1651,7 +1678,7 @@
         else person2d(q.look, q.face, 0, sx + T / 2, sy + T * .9);
         if (q.alert) bubble(sx + T / 2, sy - T * .45, '!', '#e53935');
       } }));
-      // 野外技能的障碍：小树、裂开的岩石、大石头
+      // 回声技能的障碍：小树、裂开的岩石、大石头
       obstTiles.forEach(o => { if (!V.cleared || !V.cleared.has(o.x + ',' + o.y)) ents.push({ y: o.y, f: () => obst2d(o.k, o.x * T - camX, o.y * T - camY) }); });
       V.obst.forEach(o => ents.push({ y: o.y, f: () => obst2d('O', o.x * T - camX, o.y * T - camY) }));
       (m.gates || []).forEach(q => { if (!V.open || !V.open.has(q.x + ',' + q.y)) ents.push({ y: q.y, f: () => gate2d(q.x * T - camX, q.y * T - camY) }); });
@@ -1660,7 +1687,7 @@
       ents.push({ y: V.py + .01, f: () => {
         const cx = px - camX + T / 2, fyy = py - camY + T * .9 - V.hop * T;
         if (V.surf) {
-          // 冲浪：坐在自己的怪兽背上
+          // 踏浪：坐在自己的怪兽背上
           ctx.fillStyle = 'rgba(255,255,255,.55)'; ell(ctx, cx, fyy + T * .02, T * .5, T * .16); ctx.fill();
           if (V.lead) { const im = monImg(V.lead); if (im.complete && im.naturalWidth) ctx.drawImage(im, cx - T * .55, fyy - T * .78 + Math.sin(now / 300) * 2, T * 1.1, T * 1.1); }
           person2d(V.plook, V.pdir, 0, cx, fyy - T * .3);
@@ -1669,7 +1696,7 @@
         if (V.bike) { ctx.strokeStyle = '#37474f'; ctx.lineWidth = Math.max(2, T * .06); const side = V.pdir === 'left' || V.pdir === 'right'; [-1, 1].forEach(k => { circ(ctx, cx + (side ? k * T * .24 : 0), fyy - T * .1 + (side ? 0 : k * T * .08), T * .16); ctx.stroke(); }); }
         person2d(V.plook, V.pdir, V.pmoving && !V.bike ? 1 + (Math.floor(now / 85) % 2) : 0, cx, fyy - (V.bike ? T * .12 : 0));
       } });
-      // 寻宝器：藏起来的道具一闪一闪
+      // 回声探测器：藏起来的道具一闪一闪
       V.sparkles.forEach(h => {
         const a = (Math.sin(now / 260 + h.x * 3 + h.y) + 1) / 2;
         ctx.fillStyle = 'rgba(255,245,160,' + (.35 + a * .6).toFixed(2) + ')';
@@ -1752,10 +1779,10 @@
       destroy() { cv.remove(); },
     };
   }
-  // 屋顶颜色：怪兽中心红、商店蓝、道馆用小镇主题色、民居暖色
+  // 屋顶颜色：休息站（回声站）青绿、商店琥珀黄、挑战馆用小镇主题色、民居暖色
   function BUILD_COLORS(L, m) {
-    if (L === 'C') return '#e8514a';
-    if (L === 'M') return '#3d8fe0';
+    if (L === 'C') return '#1fa496';
+    if (L === 'M') return '#f29b2b';
     if (L === 'G') return E.W[m.z].color;
     return ['#8d6e63', '#5c9ead', '#c0785a', '#7e8f4e'][(m.z + (L === 'J' ? 1 : 0)) % 4];
   }
@@ -1869,13 +1896,13 @@
     E.openModal('<h2>冒险菜单</h2>' +
       (o ? '<div class="ach" id="w-goal-full"><span class="ae">📍</span><div style="flex:1"><b>现在要做</b><small>' + E.esc(o.zh) + '</small></div></div>' : '') +
       '<p>🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · 💰 ' + E.S.coins + (WS().repel > 0 ? ' · 🧴 还剩 ' + WS().repel + ' 步' : '') + '</p>' +
-      '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">🐾 我的队伍</button><button class="btn ghost" data-act="mBag">🎒 背包</button><button class="btn ghost" data-act="mDex">📖 图鉴</button><button class="btn ghost" data-act="wSkills">🌟 野外技能</button>' +
+      '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">🐾 我的队伍</button><button class="btn ghost" data-act="mBag">🎒 背包</button><button class="btn ghost" data-act="mDex">📖 手册</button><button class="btn ghost" data-act="wSkills">🌟 回声技能</button>' +
       '<button class="btn ghost" data-act="wHelp">❓ 怎么玩</button><button class="btn ghost" data-act="settings">⚙️ 设置</button><button class="btn ghost" data-act="wExit">🏠 回首页</button></div>' +
       '<button class="btn wide" data-act="close">继续冒险</button>');
   }
   function helpSheet() {
     E.openModal('<h2>怎么玩</h2><p>' + (E.S.settings.ctl === 'pad' ? '◀▲▼▶ 左下角方向键走路' : '🕹️ 左半边屏幕按住拖动走路（设置里可以换成方向键）') + '，<b>A</b> 和面前的人说话、看告示牌、进门；<b>B</b> 打开菜单。电脑上可以用方向键 / WASD、空格键。</p>' +
-      '<p>🛤️ 小镇北边是道路，走进深色草丛会遇到野生怪兽。<br>🧑‍🎤 训练师看到你就会过来挑战。<br>⤵️ 台阶只能往下跳。<br>🕳️ 有的路旁边有洞穴，里面怪兽更强。<br>🏥 怪兽中心：找护士恢复体力，用电脑换队伍（最多 6 只）。<br>🏪 商店：买回声球、药水等道具。<br>🏟️ 道馆：打败馆主拿徽章，守卫就会让你去下一段路。<br>🌟 野外技能：拿到徽章后，对着小树、裂开的岩石、大石头、水按 A，大声说出指令就能用（菜单 → 野外技能）。<br>🎣 有钓竿就能对着水钓鱼；🚲 有自行车就点右上角的车骑上。<br>✨ 地上有些道具藏起来了，对着它按 A 才找得到。<br>💖 转身面对跟着你的怪兽按 A，每天用英语和它说一句话，它会越来越喜欢你。<br>🥚 温馨家庭岛的养育屋可以寄养怪兽、领蛋；蛋放在队伍里走路就会孵出来。</p>' +
+      '<p>🛤️ 小镇北边是道路，走进深色草丛会遇到野生怪兽。<br>🧑‍🎤 训练师看到你就会过来挑战。<br>⤵️ 台阶只能往下跳。<br>🕳️ 有的路旁边有洞穴，里面怪兽更强。<br>🏥 休息站：找护士恢复体力，用电脑换队伍（最多 6 只）。<br>🏪 商店：买回声球、药水等道具。<br>🏟️ 挑战馆：打败岛主拿徽章，守卫就会让你去下一段路。<br>🌟 回声技能：拿到徽章后，对着小树、裂开的岩石、大石头、水按 A，大声说出指令就能用（菜单 → 回声技能）。<br>🎣 有钓竿就能对着水钓鱼；🚲 有自行车就点右上角的车骑上。<br>✨ 地上有些道具藏起来了，对着它按 A 才找得到。<br>💖 转身面对跟着你的怪兽按 A，每天用英语和它说一句话，它会越来越喜欢你。<br>🥚 温馨家庭岛的怪兽幼儿园可以寄养怪兽、领蛋；蛋放在队伍里走路就会孵出来。</p>' +
       '<button class="btn wide" data-act="close">知道了</button>');
   }
 
@@ -1930,7 +1957,7 @@
       shopSheet();
     },
   };
-  // 背包里用道具时，world 负责驱怪喷雾和逃生绳
+  // 背包里用道具时，world 负责悄悄喷雾和回程绳
   const fieldHooks = {
     inWorld: () => running && !!M,
     repel: () => { WS().repel = 100; E.save(); E.toast('🧴 接下来 100 步不会遇到野生怪兽'); },
@@ -1938,7 +1965,7 @@
     rope: () => { E.closeModal(); const o = WS().lastOut; goMap(o.map, o.x != null ? { x: o.x, y: o.y, dir: o.dir || 'down' } : null); },
     bike: () => { E.closeModal(); if (running && M) actions.wBike(); },
   };
-  // ---------- 每日宝箱开出冒险用的东西（家长 2026-10-07：进化石、蛋、异色蛋；emoji 宠物退到次要）----------
+  // ---------- 每日宝箱开出冒险用的东西（家长 2026-10-07：进化曲、蛋、稀有色蛋；emoji 宠物退到次要）----------
   // r：0–1 的随机数（测试时传固定值）。没有怪兽（还没选伙伴）时返回 null，让 game.js 用原来的奖品
   function chestPrize(r) {
     if (!E || !(E.S.mon.box || []).length) return null;
@@ -1948,26 +1975,26 @@
       const ids = Object.keys(D.STONES || {}); if (!ids.length) return null;
       const id = ids[Math.floor(r / .5 * ids.length) % ids.length], it = MG.ITEMS[id];
       MG.addItem(id, 1); E.save();
-      return { prize: it.icon, kind: 'stone', id, html: '<h2>开出进化石：' + it.zh + '！</h2><p>' + E.esc(it.en) + '。在背包里对能进化的怪兽用，它就会进化。</p>' };
+      return { prize: it.icon, kind: 'stone', id, html: '<h2>开出进化曲：' + it.zh + '！</h2><p>' + E.esc(it.en) + '。在背包里放给能进化的怪兽听，它就会进化。</p>' };
     }
     if (r < .9) {
-      // 蛋：第一大区（1–151 号）的幼年怪兽，优先图鉴里还没收服的（初始怪兽也会出，这样 151 种都能集齐）
-      const base = (D.list || []).filter(s => s.no <= 151 && !s.legend && s.stage === 1);
+      // 蛋：第一大区（dex.js 的 inRegion1）的幼年怪兽，优先手册里还没收服的（初始怪兽也会出，这样第一大区都能集齐）
+      const base = (D.list || []).filter(s => D.inRegion1(s) && !s.legend && D.isBase(s));
       if (!base.length) return null;
       const dex = E.S.mon.dex || {}, fresh = base.filter(s => dex[s.id] !== 'caught');
       const pool = fresh.length && Math.random() < .75 ? fresh : base, sp = pool[Math.floor(Math.random() * pool.length)];
       const shiny = r >= .8, egg = MG.giveEgg(sp.id);
-      if (shiny && egg) egg.shiny = true;   // 孵出来就是异色的
+      if (shiny && egg) egg.shiny = true;   // 孵出来就是稀有色的
       E.save();
-      return shiny ? { prize: '🥚✨', kind: 'shinyEgg', id: sp.id, html: '<h2>开出一个闪闪发光的蛋！</h2><p>孵出来的会是<b>异色</b>的怪兽！放在队伍里多走路就会孵出来。</p>' }
+      return shiny ? { prize: '🥚✨', kind: 'shinyEgg', id: sp.id, html: '<h2>开出一个闪闪发光的蛋！</h2><p>孵出来的会是<b>稀有色</b>的怪兽！放在队伍里多走路就会孵出来。</p>' }
         : { prize: '🥚', kind: 'egg', id: sp.id, html: '<h2>开出一个怪兽蛋！</h2><p>里面是谁呢？放在队伍里多走路就会孵出来（队伍满了就在电脑箱子里）。</p>' };
     }
     return null;
   }
-  // 第一大区的图鉴（1–151 号）收服了几种：成就「怪兽大师」用
+  // 第一大区的手册收服了几种：成就「怪兽大师」用（只数有编号的，家庭版的番外不算）
   function dexRegion(s) {
     s = s || (E && E.S);
-    const list = ((window.DEX && DEX.list) || []).filter(q => q.no <= 151), dex = (s && s.mon && s.mon.dex) || {};
+    const list = ((window.DEX && DEX.main) || []).filter(q => DEX.inRegion1(q)), dex = (s && s.mon && s.mon.dex) || {};
     return { caught: list.filter(q => dex[q.id] === 'caught').length, total: list.length };
   }
   // 「剧情中文」设置（给 game.js 的设置页，建议放进「🔒 家长设置」）：按钮由 world 的 wZhMode 处理
@@ -1978,7 +2005,7 @@
       '</div><small>自动：前 4 座岛总是显示中文；从第 5 座岛起，人物说的话先只给英文，听不懂再点「译」（周报里能看到点了几次）。任务说明、机关规则一直有中文。</small></div>';
   }
   const api3d = { tile: (x, y) => tile(x, y) };
-  const ART = { drawPerson, portrait, atlas: PPL.atlas, paintGround, shade, hsh, rr, circ, ell, OUT, LOOKS, monImg, drawItemBall, buildColor: BUILD_COLORS };
+  const ART = { drawPerson, portrait, atlas: PPL.atlas, paintGround, shade, hsh, rr, circ, ell, OUT, LOOKS, monImg, drawPickup, buildColor: BUILD_COLORS };
   window.EchoWorld = {
     music: () => (M ? mapMusic() : ''),   // 当前地图的背景音乐（game.js 回到大地图时问）
     init(api, mg) { E = api; MG = mg; EM = window.EchoMaps; EM.setTownCount(E.W.length); MG.setFieldHooks && MG.setFieldHooks(fieldHooks); return actions; },
@@ -1992,9 +2019,9 @@
     objective: () => (E ? objective() : null),
     // 传说的线索（首页卡片）：[{ id, icon, en, zh, task, have, need, done, caught, back }]
     legendClues: () => { try { return E && window.EchoStory && EchoStory.legendClues ? EchoStory.legendClues(SC) : []; } catch (e) { console.error(e); return []; } },
-    // 每日宝箱：开出进化石 / 蛋 / 异色蛋并放进背包或队伍，返回 { prize: 大图标, html: '<h2>…</h2><p>…</p>', kind, id }；返回 null 时用原来的奖品
+    // 每日宝箱：开出进化曲 / 蛋 / 稀有色蛋并放进背包或队伍，返回 { prize: 大图标, html: '<h2>…</h2><p>…</p>', kind, id }；返回 null 时用原来的奖品
     chestPrize: r => chestPrize(r),
-    // 第一大区图鉴：{ caught, total: 151 }
+    // 第一大区手册：{ caught, total }（total = DEX.region1Total）
     dexRegion: s => dexRegion(s),
     storyZhHTML: () => storyZhHTML(),
     // 设置里改了画质
@@ -2004,7 +2031,7 @@
     ctlMode: () => ctlMode(),
     placeLabel: () => { const ws = E.S.world; if (!ws.started || !ws.map || !window.EchoMaps) return null; const m = EchoMaps.get(ws.map); return m ? placeName(m) : null; },
     _debug: () => ({ M, PL, FL, dlg, busy, R, perf, goMap: (id, how) => goMap(id, how), battle: (kind, o) => battle(kind, o || {}),
-      // 测试用：假装进大地图是在 d 这一天（检查过了零点回首页）；野外技能 / 徽章判断；重赛出题有没有换成课本
+      // 测试用：假装进大地图是在 d 这一天（检查过了零点回首页）；回声技能 / 徽章判断；重赛出题有没有换成课本
       fakeDay: d => { adv.day = d; }, adv, skillOpen: k => skillOpen(k), hasBadge: z => hasBadge(z), recentSrc: () => !!srcBak, debug: DEBUG,
       talk: (pages, done) => talk(pages, done) }),   // 测试用：直接放一段对话（说话任务 / 选回答，tests/apk.test.js）
     _art: ART,

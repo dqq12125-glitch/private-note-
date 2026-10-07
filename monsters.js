@@ -2,11 +2,13 @@
 (function () {
   'use strict';
 
-  // ---------- 怪兽图鉴（数据在 dex.js：386 只、17 种属性、招式、进化石） ----------
+  // ---------- 怪兽手册（数据在 dex.js：全部原创怪兽、17 种属性、招式、进化曲） ----------
   const D = window.DEX;
   const TYPES = D.TYPES;
   const SPECIES = D.byId;
-  const ORDER = D.list.map(s => s.id);
+  // 手册的顺序：有编号的在前（D.main，算总数），家庭版的番外（D.extra，等重画的几只）放最后、不算总数
+  const ORDER = D.main.map(s => s.id).concat(D.extra.map(s => s.id));
+  const COUNTED = new Set(D.main.map(s => s.id));
   const STARTERS = ['emberpup', 'bubbly', 'sprouty'];
   const MOVES = D.MOVES;
   const POWER = [1.0, 1.6, 2.6];
@@ -15,13 +17,13 @@
   const STRONG = {}; D.ORDER.forEach(t => { STRONG[t] = (D.CHART[t].strong || []).slice(); });
   // 属性克制：招式属性打对手（对手可能是双属性）
   const eff = (atkType, defId) => D.eff(atkType, SPECIES[defId].types);
-  const effLabel = e => e > 1 ? '效果拔群！' : e <= .3 ? '几乎没效果' : e < 1 ? '效果一般' : '';
+  const effLabel = e => e > 1 ? '打中弱点！' : e < .4 ? '几乎没用' : e < 1 ? '不太管用' : '';
   // ---------- 招式 ----------
   // 招式编号：攻击招式 "fire:1"（属性:小招0/中招1/大招2），辅助招式 "s:sleep"
   const SUP = {
     roar: { en: 'Big Roar', zh: '大吼', type: 'normal', fx: { foe: { atk: -1 } }, desc: '对手攻击↓' },
-    guard: { en: 'Iron Guard', zh: '铁壁', type: 'steel', fx: { self: { def: 2 } }, desc: '自己防御↑↑' },
-    power: { en: 'Power Up', zh: '蓄力', type: 'fight', fx: { self: { atk: 2 } }, desc: '自己攻击↑↑' },
+    guard: { en: 'Iron Guard', zh: '铁甲护身', type: 'steel', fx: { self: { def: 2 } }, desc: '自己防御↑↑' },
+    power: { en: 'Power Up', zh: '鼓足劲', type: 'fight', fx: { self: { atk: 2 } }, desc: '自己攻击↑↑' },
     speed: { en: 'Speed Up', zh: '加速', type: 'flying', fx: { self: { spd: 2 } }, desc: '自己速度↑↑' },
     chill: { en: 'Cold Wind', zh: '寒风', type: 'ice', fx: { foe: { spd: -2 } }, desc: '对手速度↓↓' },
     spooky: { en: 'Spooky Face', zh: '鬼脸', type: 'ghost', fx: { foe: { def: -2 } }, desc: '对手防御↓↓' },
@@ -61,7 +63,7 @@
   function defaultMoves(sp, lv) { const got = learnset(SPECIES[sp]).filter(([l]) => l <= lv).map(([, id]) => id); return got.filter((id, i) => got.indexOf(id) === i).slice(-4); }
   function ensureMoves(mon) { if (mon && (!mon.moves || !mon.moves.length)) mon.moves = defaultMoves(mon.sp, mon.lv); return mon; }
   const movesOf = mon => ensureMoves(mon).moves.map(parseMove);
-  // 进化：等级到了（lv）或者用了进化石（item）
+  // 进化：等级到了（lv）或者听了进化曲（item）
   const lvEvo = mon => (SPECIES[mon.sp].evo || []).find(e => e.lv && mon.lv >= e.lv);
   const itemEvo = (mon, item) => (SPECIES[mon.sp].evo || []).find(e => e.item === item);
   const CATCH_LINES = ['Come with me!', "Let's be friends!", 'Welcome to my team!', 'You are my new friend!'];
@@ -69,30 +71,32 @@
   // 背包道具。回声球和药水沿用老存档里的 balls / potions，其余放在 bag 里
   const ITEMS = {
     ball: { zh: '回声球', en: 'Echo Ball', icon: '🔮', price: 10, desc: '收服野生怪兽' },
-    superball: { zh: '超级球', en: 'Super Ball', icon: '💠', price: 25, desc: '更容易收服' },
+    superball: { zh: '金回声球', en: 'Gold Echo Ball', icon: '💠', price: 25, desc: '更容易收服' },
     potion: { zh: '药水', en: 'Potion', icon: '🧪', price: 20, desc: '回复 40% 体力', heal: 0.4 },
-    superpotion: { zh: '好伤药', en: 'Super Potion', icon: '💊', price: 40, desc: '回复 80% 体力', heal: 0.8 },
-    revive: { zh: '复活草', en: 'Revive', icon: '🌿', price: 60, desc: '让累倒的怪兽恢复一半体力' },
-    repel: { zh: '驱怪喷雾', en: 'Repel', icon: '🧴', price: 30, desc: '100 步内不遇野生怪兽' },
-    rope: { zh: '逃生绳', en: 'Escape Rope', icon: '🪢', price: 25, desc: '从洞穴里一下回到洞口' },
+    superpotion: { zh: '大瓶药水', en: 'Big Potion', icon: '💊', price: 40, desc: '回复 80% 体力', heal: 0.8 },
+    revive: { zh: '元气果', en: 'Energy Fruit', icon: '🍑', price: 60, desc: '让累倒的怪兽恢复一半体力' },
+    repel: { zh: '悄悄喷雾', en: 'Quiet Spray', icon: '🧴', price: 30, desc: '100 步内野生怪兽听不见你，不会跑出来' },
+    rope: { zh: '回程绳', en: 'Return Rope', icon: '🪢', price: 25, desc: '从洞穴里一下回到洞口' },
   };
   Object.assign(ITEMS, {
-    antidote: { zh: '解毒药', en: 'Antidote', icon: '🟣', price: 15, desc: '治好中毒' },
-    burnheal: { zh: '烫伤药', en: 'Burn Heal', icon: '🧯', price: 20, desc: '治好烧伤' },
-    paraheal: { zh: '解麻药', en: 'Paralyze Heal', icon: '🟡', price: 20, desc: '治好麻痹' },
-    awakening: { zh: '清醒铃', en: 'Awakening', icon: '🔔', price: 20, desc: '叫醒睡着的怪兽' },
-    iceheal: { zh: '解冻药', en: 'Ice Heal', icon: '🔥', price: 20, desc: '治好冰冻' },
-    fullheal: { zh: '万灵药', en: 'Full Heal', icon: '✨', price: 50, desc: '治好所有异常状态' },
-    expshare: { zh: '学习装置', en: 'Exp. Share', icon: '📡', price: 0, desc: '带着它，没出场的怪兽也能分到一半经验', key: true },
+    antidote: { zh: '薄荷茶', en: 'Mint Tea', icon: '🍵', price: 15, desc: '治好中毒' },
+    burnheal: { zh: '冰凉膏', en: 'Cool Gel', icon: '🧯', price: 20, desc: '治好烧伤' },
+    paraheal: { zh: '活力贴', en: 'Move Patch', icon: '🟡', price: 20, desc: '治好麻痹' },
+    awakening: { zh: '闹钟铃', en: 'Alarm Bell', icon: '🔔', price: 20, desc: '叫醒睡着的怪兽' },
+    iceheal: { zh: '暖暖包', en: 'Warm Pack', icon: '🔥', price: 20, desc: '治好冰冻' },
+    fullheal: { zh: '彩虹糖', en: 'Rainbow Candy', icon: '🍬', price: 50, desc: '治好所有异常状态' },
+    expshare: { zh: '共学耳机', en: 'Team Headset', icon: '🎧', price: 0, desc: '戴着它，没出场的怪兽也在旁边听，能分到一半经验', key: true },
     rod: { zh: '钓竿', en: 'Fishing Rod', icon: '🎣', price: 150, desc: '对着水按 A 钓鱼', key: true },
     bike: { zh: '自行车', en: 'Bike', icon: '🚲', price: 300, desc: '骑车走得快一倍（右上角 🚲 按钮）', key: true },
-    dowsing: { zh: '寻宝器', en: 'Dowsing Machine', icon: '📟', price: 200, desc: '藏起来的道具会一闪一闪', key: true },
+    dowsing: { zh: '回声探测器', en: 'Echo Finder', icon: '📟', price: 200, desc: '藏起来的道具会一闪一闪', key: true },
   });
-  Object.entries(D.STONES).forEach(([id, st]) => { ITEMS[id] = { zh: st.zh, en: st.en, icon: st.icon, price: 120, desc: '能让某些怪兽进化', stone: true }; });
-  // 秘传学习器：剧情里的人送的重要物品，有了它再拿够徽章，就能在野外用对应的技能
-  [['cut', '居合斩', 'Cut', '🌿'], ['flash', '闪光', 'Flash', '💡'], ['smash', '碎岩', 'Rock Smash', '🪨'], ['strength', '怪力', 'Strength', '💪'],
-    ['surf', '冲浪', 'Surf', '🌊'], ['fly', '飞空', 'Fly', '🕊️'], ['dive', '潜水', 'Dive', '🤿'], ['falls', '攀瀑', 'Waterfall', '🏞️']].forEach(([k, zh, en, icon]) => {
-    ITEMS['hm_' + k] = { zh: '秘传学习器 · ' + zh, en: 'HM ' + en, icon: '💿', price: 0, desc: '野外技能「' + zh + '」' + icon + '（菜单 → 野外技能）', key: true, hm: true };
+  Object.entries(D.STONES).forEach(([id, st]) => { ITEMS[id] = { zh: st.zh, en: st.en, icon: st.icon, price: 120, desc: '进化曲：放给某些怪兽听，它就会进化', stone: true }; });
+  // 回声贝：剧情里的人送的重要物品，贴在耳边能听见一种回声技能；有了它再拿够徽章，就能在野外用（id 沿用老存档的 hm_*）
+  // 回声技能只有四种（2026-10-08 按评审改）：开路（1–3 级：砍小树 / 敲碎裂石 / 推大石头）、点灯、水路（1–3 级：在水上走 / 潜到海底 / 爬上瀑布）、乘风。
+  // 后面几级的回声贝是给已有技能升级。名字和 world.js 的 SKILLS 一致
+  [['cut', '开路', 'Clear Way', '🌿'], ['flash', '点灯', 'Light Up', '💡'], ['smash', '开路 2 级', 'Clear Way 2', '🪨'], ['strength', '开路 3 级', 'Clear Way 3', '💪'],
+    ['surf', '水路', 'Water Way', '🌊'], ['fly', '乘风', 'Sky Ride', '🕊️'], ['dive', '水路 2 级', 'Water Way 2', '🤿'], ['falls', '水路 3 级', 'Water Way 3', '🏞️']].forEach(([k, zh, en, icon]) => {
+    ITEMS['hm_' + k] = { zh: '回声贝 · ' + zh, en: 'Echo Shell: ' + en, icon: '🐚', price: 0, desc: '回声技能「' + zh + '」' + icon + '（菜单 → 回声技能）', key: true, hm: true };
   });
   ITEMS.ticket = { zh: '船票', en: 'Ferry Ticket', icon: '🎫', price: 0, desc: '坐渡轮去别的岛', key: true };
   const BAG_ORDER = ['expshare', 'hm_cut', 'hm_flash', 'hm_smash', 'hm_strength', 'hm_surf', 'hm_fly', 'hm_dive', 'hm_falls', 'ticket', 'bike', 'rod', 'dowsing','ball', 'superball', 'potion', 'superpotion', 'revive', 'antidote', 'burnheal', 'paraheal', 'awakening', 'iceheal', 'fullheal', 'repel', 'rope'].concat(Object.keys(D.STONES));
@@ -103,16 +107,16 @@
     else if (id === 'potion') m.potions = (m.potions || 0) + n;
     else { m.bag = m.bag || {}; m.bag[id] = Math.max(0, (m.bag[id] || 0) + n); }
   }
-  let FH = null; // 大地图提供的道具效果（驱怪喷雾、逃生绳）
+  let FH = null; // 大地图提供的道具效果（悄悄喷雾、回程绳）
 
-  // 能力值：图鉴给了体力和攻击；防御和速度按身体类型和属性推出来（同一种怪兽永远一样）
+  // 能力值：手册给了体力和攻击；防御和速度按身体类型和属性推出来（同一种怪兽永远一样）
   const BODY_DEF = { golem: 1.35, shell: 1.4, quad: 1.05, dragon: 1.1, serpent: 1, blob: .95, biped: .95, bird: .8, fish: .9, bug: .85, ghost: .9, plant: 1 };
   const BODY_SPD = { bird: 1.35, fish: 1.15, bug: 1.2, serpent: 1.05, quad: 1.15, biped: 1.05, blob: .9, ghost: 1.1, dragon: 1.05, plant: .75, golem: .6, shell: .55 };
   const TYPE_DEF = { steel: .25, rock: .2, ground: .1, bug: -.05, psychic: -.1, flying: -.05 };
   const TYPE_SPD = { spark: .2, flying: .2, psychic: .1, dark: .1, fight: .05, steel: -.15, rock: -.15, ground: -.05 };
   function baseStats(s) {
     if (s._b) return s._b;
-    const h = ((s.no * 2654435761) >>> 0) % 1000 / 1000;
+    const h = (s.sd || 0) / 1000;   // sd：每种怪兽固定的小浮动（tools/build-dex.js 生成）
     const td = s.types.reduce((a, t) => a + (TYPE_DEF[t] || 0), 0), ts = s.types.reduce((a, t) => a + (TYPE_SPD[t] || 0), 0);
     return (s._b = { hp: s.hp, atk: s.atk, def: Math.round(s.atk * (BODY_DEF[s.b] || 1) * (1 + td) * (.9 + h * .2)), spd: Math.round(s.atk * (BODY_SPD[s.b] || 1) * (1 + ts) * (1.1 - h * .2)) });
   }
@@ -141,14 +145,14 @@
   D.ORDER.forEach(t => { const n = parseInt(TYPES[t].color.slice(1), 16), lin = v => { v /= 255; return v <= .04045 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; LIGHT[t] = .2126 * lin(n >> 16) + .7152 * lin((n >> 8) & 255) + .0722 * lin(n & 255) > .32; });
   const chips = id => SPECIES[id].types.map(tchip).join('');
 
-  // ---------- 养成：英文昵称、亲密度、异色、蛋 ----------
-  const SHINY_RATE = 1 / 64;          // 野外遇到异色的机会（给孩子玩，比原作高很多）
+  // ---------- 养成：英文昵称、亲密度、稀有色、蛋 ----------
+  const SHINY_RATE = 1 / 64;          // 野外遇到稀有色的机会（给孩子玩，故意定得高一点）
   const nm = mon => (mon && mon.nick) || SPECIES[mon.sp].en;
   const frOf = mon => mon.fr == null ? 70 : mon.fr;
   const hearts = mon => Math.min(5, Math.floor(frOf(mon) / 51));
   const heartsHTML = mon => '<span class="frh" title="亲密度">' + [0, 1, 2, 3, 4].map(k => k < hearts(mon) ? '♥' : '♡').join('') + '</span>';
   function befriend(mon, n) { if (mon && !mon.egg) mon.fr = Math.max(0, Math.min(255, frOf(mon) + n)); }
-  // 颜色转一个角度（异色用）；灰白的颜色不动
+  // 颜色转一个角度（稀有色用）；灰白的颜色不动
   function hueShift(hex, deg) {
     if (!hex || hex[0] !== '#' || hex.length < 7) return hex;
     const n = parseInt(hex.slice(1, 7), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
@@ -162,7 +166,7 @@
     return '#' + [f(h + 1 / 3), f(h), f(h - 1 / 3)].map(v => Math.round(v * 255).toString(16).padStart(2, '0')).join('');
   }
   const SHINY_SP = {};
-  // 画这只怪兽用的图鉴数据：异色的换一套颜色
+  // 画这只怪兽用的手册数据：稀有色的换一套颜色
   function spOf(mon) {
     const sp = SPECIES[mon.sp];
     if (!mon.shiny) return sp;
@@ -220,7 +224,8 @@
   }
   const byUid = u => M().box.find(m => m.uid === u);
   const lead = () => M().team.map(byUid).find(m => m && !m.egg) || M().box.find(m => !m.egg);
-  const caughtN = () => ORDER.filter(id => M().dex[id] === 'caught').length;
+  // 手册里点亮了几种：只数有编号的（番外不算）
+  const caughtN = () => ORDER.filter(id => COUNTED.has(id) && M().dex[id] === 'caught').length;
 
   // ---------- 基地（首页“怪兽冒险”标签） ----------
   function homeHTML() {
@@ -244,13 +249,13 @@
       '<div class="chips">' + chips(L.sp) + '<span class="lvchip">Lv ' + L.lv + '</span></div>' +
       '<div class="xpbar"><i style="width:' + (L.xp / xpNeed(L.lv) * 100) + '%"></i></div>' +
       '<small>HP ' + st.hp + ' · 攻击 ' + st.atk + ((s.evo || []).find(e => e.lv) ? ' · Lv ' + s.evo.find(e => e.lv).lv + ' 会进化' : '') + '</small></div>' +
-      '<div class="lead-btns"><button class="btn small ghost" data-act="mTeam">🐾 我的怪兽 ' + m.box.length + '</button><button class="btn small ghost" data-act="mDex">📖 图鉴 ' + caughtN() + '/' + ORDER.length + '</button><button class="btn small sun" data-act="mBalls">🔮 回声球 ' + m.balls + '</button></div></section>';
+      '<div class="lead-btns"><button class="btn small ghost" data-act="mTeam">🐾 我的怪兽 ' + m.box.length + '</button><button class="btn small ghost" data-act="mDex">📖 怪兽手册 ' + caughtN() + '/' + D.total + '</button><button class="btn small sun" data-act="mBalls">🔮 回声球 ' + m.balls + '</button></div></section>';
     const place = EW && EW.placeLabel ? EW.placeLabel() : null;
     if (g.open) h += lock + '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? '继续冒险' + (place ? ' · ' + place.name : '') : '出发去冒险！') + '</button>' + objLine;
-    // 下一枚徽章要先打败哪个课本单元的 BOSS（评估第 10 条：道馆跟着课本进度开）
+    // 下一枚徽章要先打败哪个课本单元的 BOSS（评估第 10 条：挑战馆跟着课本进度开）
     const gn = ws.started && EW && EW.nextGymNeed ? safe(() => EW.nextGymNeed()) : null;
     if (gn && !gn.ok && gn.unitLabel) {
-      h += '<section class="mon-card gym-need"><h3>🏅 下一枚徽章（' + esc(gn.island) + '）</h3><p>馆主' + esc(gn.leader) + '要你先学好课本：还差 <b>' + esc(gn.unitLabel) + '</b> 的 BOSS（课本 BOSS ' + gn.done + '/' + gn.need + '）</p>' +
+      h += '<section class="mon-card gym-need"><h3>🏅 下一枚徽章（' + esc(gn.island) + '）</h3><p>岛主' + esc(gn.leader) + '要你先学好课本：还差 <b>' + esc(gn.unitLabel) + '</b> 的 BOSS（课本 BOSS ' + gn.done + '/' + gn.need + '）</p>' +
         '<button class="btn small" data-act="tab" data-t="quiz" style="margin-top:8px">📚 去闯关练习</button></section>';
     }
     // 传说的线索：四只神兽是学习的里程碑
@@ -259,7 +264,7 @@
       h += '<section class="mon-card legends"><h3>✨ 传说的线索</h3><ul style="list-style:none;padding:0;margin:6px 0 0;display:grid;gap:4px;font-size:14px">' + clues.map(c =>
         '<li>' + (c.caught ? '✅' : c.icon) + ' <b>' + esc(c.zh) + '</b>：' + (c.caught ? '已经收服了！' : esc(c.task) + '（' + c.have + '/' + c.need + '）' + (c.done ? ' · 到户外走走，它会来找你！' : '')) + '</li>').join('') + '</ul></section>';
     }
-    h += '<p class="tip">走进草丛会遇到野生怪兽，路上的训练师看到你就会来挑战。<br>打败每个小镇的道馆馆主拿到徽章，守卫才会让你去下一个小镇。馆主会先看你课本学到哪了：要先在「📚 闯关练习」打败对应单元的 BOSS。</p>';
+    h += '<p class="tip">走进草丛会遇到野生怪兽，路上的训练师看到你就会来挑战。<br>打败每个小镇的岛主拿到徽章，守卫才会让你去下一个小镇。岛主会先看你课本学到哪了：要先在「📚 闯关练习」打败对应单元的 BOSS。</p>';
     const visited = Object.keys(ws.visited || {}).map(Number).sort((a, b) => a - b);
     if (visited.length > 1) {
       h += '<section class="mon-card fly"><h3>✈️ 飞回去过的小镇</h3><div class="fly-list">' + visited.map(z =>
@@ -269,25 +274,25 @@
     return h;
   }
 
-  // ---------- 选初始怪兽：大声说 I choose you! ----------
+  // ---------- 选初始怪兽：大声说 be my partner! ----------
   function starterSheet(id) {
     const s = SPECIES[id], sr = E.speakMode() === 'sr';
     E.openModal('<div class="evo-stage">' + svg(id) + '</div><h2>' + s.en + '（' + s.zh + '）</h2>' +
-      '<p>想让它当你的伙伴，就对它大声说：</p><div class="say-text" id="st-say">' + E.wordsHTML(s.en + ', I choose you!') + '</div>' +
+      '<p>想让它当你的伙伴，就对它大声说：</p><div class="say-text" id="st-say">' + E.wordsHTML(s.en + ', be my partner!') + '</div>' +
       (sr ? '<button class="mic" id="st-mic" data-act="mStarterMic" data-sp="' + id + '">' + E.MIC + '</button><div class="mic-hint" id="st-hint">点麦克风，大声说</div>' +
           // AI 打分用不了（没网 / 额度 / 没密钥，评估第 3 条）：可以先跳过，这句放进复习、联网后要补说；说了 3 次还不行也能先跳过
           '<button class="link ai-skip" data-act="mStarterSkip" data-sp="' + id + '" id="st-skip"' + (E.aiDown && E.aiDown() ? '' : ' hidden') + '>' + E.esc(E.SKIP_TXT || '先跳过') + '</button>'
         : '<button class="btn leaf wide" data-act="mStarterGo" data-sp="' + id + '">🎤 我说了！</button>') +
       '<div class="row"><button class="btn ghost" data-act="close">再看看别的</button><button class="btn ghost" data-act="mSayName" data-sp="' + id + '">🔊 听一遍</button></div>');
     starterTries = 0;
-    E.say(s.en + ', I choose you!');
+    E.say(s.en + ', be my partner!');
   }
   let starterTries = 0;
   async function starterMic(id) {
     const m = $('st-mic'); if (!m) return;
     if (E.RT.listening) { E.stopListening(); return; }
     m.classList.add('on'); m.innerHTML = E.STOP; $('st-hint').textContent = '正在听……';
-    const res = await E.recognize(null, ['I choose you']);
+    const res = await E.recognize(null, ['be my partner']);
     if (!$('st-mic')) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
     if (res.err && E.FATAL.includes(res.err)) { E.RT.srBroken = true; takeStarter(id); return; }
@@ -298,14 +303,14 @@
       if (starterTries >= 3 || (E.aiDown && E.aiDown())) skip();
       return;
     }
-    const r = E.bestScore('I choose you', res.alts);
+    const r = E.bestScore('be my partner', res.alts);
     if (r.score >= 40) takeStarter(id);
-    else { starterTries++; $('st-hint').textContent = '再试一次：I choose you!'; if (starterTries >= 3) skip(); }
+    else { starterTries++; $('st-hint').textContent = '再试一次：be my partner!'; if (starterTries >= 3) skip(); }
   }
   // 先跳过：伙伴照样选好，这句放进复习（联网以后要补说）
   function starterSkip(id) {
     E.stopListening();
-    if (E.revLater) E.revLater({ en: SPECIES[id].en + ', I choose you!', zh: SPECIES[id].zh + '，就决定是你了！' });
+    if (E.revLater) E.revLater({ en: SPECIES[id].en + ', be my partner!', zh: SPECIES[id].zh + '，做我的伙伴吧！' });
     const L = E.dayLog && E.dayLog(); if (L) L.aiSkip = (L.aiSkip || 0) + 1;
     takeStarter(id);
   }
@@ -321,8 +326,9 @@
   }
 
   // ---------- 战斗 ----------
-  // 第一大区（初一）用图鉴 1–151 号的怪兽；按出没地点和稀有度抽
-  const REGION1 = D.list.filter(s => s.no <= 151 && !s.legend && !s.starter);
+  // 第一大区（初一）的怪兽（dex.js 的 inRegion1；家庭版的番外也会出）；按出没地点和稀有度抽
+  const REGION1 = D.list.filter(s => s.r === 1 && !s.legend && !s.starter);
+  const isBase = s => D.isBase(s);   // 进化链的第一阶（销售版里上一阶被拿掉的也算）
   const HAB = { grass: ['grass', 'forest', 'town', 'sky'], cave: ['cave', 'mountain', 'ruins', 'night'], water: ['water', 'sea', 'swamp'] };
   const RW = [0, 30, 18, 8, 3, 1];
   const hash = (a, b) => { let h = 2166136261; for (const c of String(a) + '|' + b) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
@@ -331,8 +337,8 @@
   function wildTable(z, hab) {
     const key = z + hab; if (tableCache[key]) return tableCache[key];
     const want = HAB[hab] || HAB.grass;
-    let pool = REGION1.filter(s => s.stage === 1 && (s.habitat || []).some(h => want.includes(h)) && s.rarity <= 2 + Math.floor(z / 3));
-    if (pool.length < 4) pool = REGION1.filter(s => s.stage === 1);
+    let pool = REGION1.filter(s => isBase(s) && (s.habitat || []).some(h => want.includes(h)) && s.rarity <= 2 + Math.floor(z / 3));
+    if (pool.length < 4) pool = REGION1.filter(isBase);
     pool = pool.slice().sort((a, b) => hash(key, a.id) - hash(key, b.id)).slice(0, 6 + (z % 3));
     return (tableCache[key] = pool);
   }
@@ -347,12 +353,12 @@
     if (Math.random() < SHINY_RATE || window.__forceShiny) mon.shiny = true;
     return mon;
   }
-  // 13 个道馆各有主题属性
+  // 13 个挑战馆各有主题属性
   const GYM = ['flying', 'rock', 'grass', 'psychic', 'steel', 'spark', 'fire', 'poison', 'ground', 'dark', 'ice', 'water', 'dragon'];
   function leaderFoes(z) {
     const t = GYM[z % GYM.length], n = 2 + Math.floor(z / 4), lv = zoneLv(z) + 2;
-    let pool = D.list.filter(s => !s.legend && !s.starter && s.stage === 1 && s.types.includes(t) && s.no <= 251);
-    if (!pool.length) pool = REGION1.filter(s => s.stage === 1);
+    let pool = D.list.filter(s => !s.legend && !s.starter && isBase(s) && s.types.includes(t) && s.r <= 2);
+    if (!pool.length) pool = REGION1.filter(isBase);
     pool = pool.slice().sort((a, b) => hash('gym' + z, a.id) - hash('gym' + z, b.id));
     return Array.from({ length: n }, (_, k) => { const l = lv + k; return newMon(grown(pool[k % pool.length].id, l + 1), l); });
   }
@@ -364,14 +370,14 @@
 
   const curHp = mon => { const max = stats(mon).hp; return mon.hp == null ? max : Math.max(0, Math.min(max, mon.hp)); };
   const anyAlive = () => M().team.some(u => { const m = byUid(u); return m && !m.egg && curHp(m) > 0; });
-  // 怪兽中心：体力回满，异常状态全好
+  // 休息站：体力回满，异常状态全好
   function healAll() { M().box.forEach(m => { m.hp = stats(m).hp; m.st = null; }); E.save(); }
   // 训练师的怪兽：按区域和编号固定，等级够了自动是进化形态
   function trainerFoes(z, seed, count, lv) {
     const pool = wildTable(z, 'grass').concat(wildTable(z, 'water'));
     return Array.from({ length: count }, (_, k) => { const sp = pool[(seed * 5 + k * 3) % pool.length], l = lv + k; return newMon(grown(sp.id, l), l); });
   }
-  // 把战斗里的体力写回存档（体力和异常状态会一直保留，到怪兽中心才恢复）
+  // 把战斗里的体力写回存档（体力和异常状态会一直保留，到休息站才恢复）
   function writeBack() {
     if (!B) return;
     B.team.forEach(u => { const m = byUid(u); if (m) m.hp = Math.max(0, Math.min(stats(m).hp, Math.round(B.hp[u]))); });
@@ -379,7 +385,7 @@
   }
 
   // opts：foes 指定对手，trainer {name, emoji} 训练师，onEnd(result) 从大地图进来时战斗结束的回调
-  // 战斗音乐：馆主、冠军赛、神兽最燃；训练师（对手、嘘声团）次之；野生最轻快
+  // 战斗音乐：岛主、冠军赛、神兽最燃；训练师（对手、嘘声团）次之；野生最轻快
   function battleMusic(kind, foes, opts) {
     if (kind === 'leader' || opts.rules || foes.some(f => SPECIES[f.sp] && SPECIES[f.sp].legend)) return 'battle_boss';
     return kind === 'trainer' ? 'battle_trainer' : 'battle_wild';
@@ -387,7 +393,7 @@
   function startBattle(kind, z, opts) {
     opts = opts || {};
     if (!M().box.length) { E.toast('先选一只初始怪兽吧'); return false; }
-    if (!anyAlive()) { E.toast('怪兽们都没力气了，先去怪兽中心休息'); return false; }
+    if (!anyAlive()) { E.toast('怪兽们都没力气了，先去休息站休息'); return false; }
     E.primeTTS(); E.ac();
     stopBattle();
     const team = M().team.filter(u => byUid(u) && !byUid(u).egg);
@@ -441,29 +447,29 @@
     const c = p > .5 ? mix(Y, G, (p - .5) / .15) : p > .25 ? Y : mix(R, Y, (p - .1) / .15);
     return 'hsl(' + c[0].toFixed(0) + ' ' + c[1].toFixed(0) + '% ' + c[2].toFixed(0) + '%)';
   }
-  // 名牌（仿新作的半透明小牌子）：对手在场地左上、自己在右下，都贴着边，不挡怪兽
-  // 名字一行（✨异色 + 名字 + 等级）、血条（掉血时后面留一截浅色慢慢缩）、属性 / 异常状态 / 能力升降一行
-  function plate(side, mon, name, extra, bottom) {
+  // 顶上一整条状态栏（2026-10-08 按评审改）：左边是自己、右边是对手，两边对称；不放「HP」小标签，经验条挪到结算画面
+  // 每一边：名字（✨稀有色）+ 等级、血条（掉血时后面留一截浅色慢慢缩）、属性 / 异常状态 / 能力升降一行
+  function plate(side, mon, name, extra) {
     const mine = side === 'me', max = stats(mon).hp, p = Math.max(0, mine ? B.hp[mon.uid] : B.foeHp) / max, w = (p * 100) + '%';
     const id = mine ? 'my' : 'foe', t0 = SPECIES[mon.sp].types[0];
     return '<div class="hpcard ' + side + (B.enter === 'both' || B.enter === side ? ' enter' : '') + '" style="--tc:' + TYPES[t0].color + '">' +
-      '<div class="hp-top"><b>' + (mon.shiny ? '<span class="shiny" title="异色">✨</span>' : '') + name + '</b><span class="hp-lv"><small>Lv</small>' + mon.lv + '</span></div>' +
-      '<div class="hprow"><span class="hplab">HP</span><div class="hpbar"><span class="hp-ghost" id="b-' + id + 'ghost" style="width:' + w + '"></span><i id="b-' + id + 'hp" style="width:' + w + ';background-color:' + hpColor(p) + '"></i></div></div>' +
-      '<div class="hp-foot">' + (extra || '') + '<div class="chips">' + chips(mon.sp) + '<span class="st-chip" id="b-' + id + 'st"></span><span class="stg" id="b-' + id + 'stg"></span></div></div>' +
-      (bottom || '') + '</div>';
+      '<div class="hp-top"><b>' + (mon.shiny ? '<span class="shiny" title="稀有色">✨</span>' : '') + name + '</b><span class="hp-lv"><small>Lv</small>' + mon.lv + '</span></div>' +
+      '<div class="hpbar" title="体力"><span class="hp-ghost" id="b-' + id + 'ghost" style="width:' + w + '"></span><i id="b-' + id + 'hp" style="width:' + w + ';background-color:' + hpColor(p) + '"></i></div>' +
+      '<div class="hp-foot">' + (extra || '') + '<div class="chips">' + chips(mon.sp) + '<span class="st-chip" id="b-' + id + 'st"></span><span class="stg" id="b-' + id + 'stg"></span></div></div></div>';
   }
   // 转屏（竖屏 ⇄ 横屏）后战斗画面跟着重新算大小
   window.addEventListener('resize', () => { if (B && B3 && document.getElementById('b-arena')) { try { B3.resize(); } catch (e) { /* 忽略 */ } } });
   function renderBattle() {
     const w = E.W[B.z], f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
     $('battle').innerHTML =
-      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.kind === 'wild' ? '野外对战' : B.kind === 'trainer' ? '训练师 ' + B.trainer.name : '道馆馆主 ' + w.boss.name) + '</b><small>第 ' + (B.z + 1) + ' 区 · ' + w.name + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
+      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.kind === 'wild' ? '野外对战' : B.kind === 'trainer' ? '训练师 ' + B.trainer.name : '岛主 ' + w.boss.name) + '</b><small>第 ' + (B.z + 1) + ' 区 · ' + w.name + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
       '<div class="arena" id="b-arena" style="--wc:' + w.color + '">' + arenaBG(B.z) +
-      plate('foe', f, sf.en, (B.kind !== 'wild' ? '<div class="balls" title="对手剩下的怪兽">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '"></span>').join('') + '</div>' : '')) +
-      '<div class="pad foe"></div><div class="mon foe' + (B.enter === 'both' || B.enter === 'foe' ? ' enter' : '') + '" id="b-foe">' + svgMon(f) + '</div>' +
-      '<div class="pad me"></div><div class="mon me' + (B.enter === 'both' || B.enter === 'me' ? ' enter' : '') + '" id="b-me">' + svgMon(m) + '</div>' +
-      plate('me', m, nm(m), '<small class="hpnum" id="b-myhpn"></small>', '<div class="expbar" title="经验"><i id="b-exp" style="width:' + (m.xp / xpNeed(m.lv) * 100) + '%"></i></div>') +
-      (B.kind !== 'wild' ? '<div class="trainer">' + (B.kind === 'trainer' && B.trainer.img ? '<img src="' + B.trainer.img + '" alt="">' : '<span>' + w.boss.emoji + '</span>') + '</div>' : '') +
+      // 2D 画面：两只怪兽侧面对站在同一条地平线上，脚下是属性色的一圈圈水波（3D 画面在 battle3d.js 里同样处理）
+      '<div class="pad me" style="--rc:' + TYPES[sm.types[0]].color + '"></div><div class="mon me' + (B.enter === 'both' || B.enter === 'me' ? ' enter' : '') + '" id="b-me">' + svgMon(m) + '</div>' +
+      '<div class="pad foe" style="--rc:' + TYPES[sf.types[0]].color + '"></div><div class="mon foe' + (B.enter === 'both' || B.enter === 'foe' ? ' enter' : '') + '" id="b-foe">' + svgMon(f) + '</div>' +
+      '<div class="b-hud">' + plate('me', m, nm(m)) +
+      '<span class="b-vs">' + (B.kind !== 'wild' ? '<span class="trainer">' + (B.kind === 'trainer' && B.trainer.img ? '<img src="' + B.trainer.img + '" alt="">' : '<span>' + w.boss.emoji + '</span>') + '</span>' : 'VS') + '</span>' +
+      plate('foe', f, sf.en, (B.kind !== 'wild' ? '<div class="balls" title="对手剩下的怪兽">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '"></span>').join('') + '</div>' : '')) + '</div>' +
       '</div><div class="b-msg" id="b-msg"></div><div class="b-panel" id="b-panel"></div>';
     if (B3) {
       const ar = $('b-arena'); ar.classList.add('is3d'); B3.mount(ar);
@@ -492,7 +498,7 @@
     sports: { sky1: '#6fc3ff', sky2: '#eaf8ff', ground: '#d1ae7b', hill: '#ff7043', pad: '#ffffff', rim: '#1e88e5', backdrop: 'assets/arena/sports.jpg', bdFloor: .70 },
     snow: { sky1: '#a9c9e0', sky2: '#eef6fb', ground: '#dbe5fa', hill: '#cfe3ee', pad: '#ffffff', rim: '#9fc3d6', backdrop: 'assets/arena/snow.jpg', bdFloor: .68 },
     ruins: { sky1: '#9aa6a8', sky2: '#e4e6e0', ground: '#af9a72', hill: '#8f8a80', pad: '#cfc6b3', rim: '#6d8b5a', backdrop: 'assets/arena/ruins.jpg', bdFloor: .71 },
-    // 英语冠军赛（四大师和冠军的对战都带 rules）：体育场
+    // 英语冠军赛（四位擂主和冠军的对战都带 rules）：体育场
     league: { sky1: '#3f6fd8', sky2: '#dfe9ff', ground: '#d2b494', hill: '#5c6bc0', pad: '#ffffff', rim: '#ffca28', backdrop: 'assets/arena/league.jpg', bdFloor: .74 },
   };
   // 场地的 backdrop 是远景画（assets/arena/*.jpg，约 21:9～3:1，下面三成多是空地），没有这张图就用程序画的小山
@@ -533,20 +539,20 @@
     const f = foe(), sf = SPECIES[f.sp], w = E.W[b.z];
     $('b-foe').classList.add('appear');
     if (b.kind === 'wild') {
-      msg((f.shiny ? '✨ 闪闪发光的！' : '') + '野生的 <b>' + sf.en + '</b>（' + sf.zh + '）出现了！');
-      if (f.shiny) { E.SFX.win(); E.toast('✨ 是异色的 ' + sf.en + '！颜色和平常不一样，很少见哦', 'gold'); }
+      msg((f.shiny ? '✨ 闪闪发光的！' : '') + '前面跳出来一只 <b>' + sf.en + '</b>（' + sf.zh + '）！');
+      if (f.shiny) { E.SFX.win(); E.toast('✨ 是稀有色的 ' + sf.en + '！颜色和平常不一样，很少见哦', 'gold'); }
       if (B3) B3.enter('foe', false);
-      await E.say('A wild ' + sf.en + ' appeared!');
+      await E.say('Look out! Here comes ' + sf.en + '!');
     } else {
       const who = b.kind === 'trainer' ? b.trainer.name : w.boss.name;
-      msg(who + '：“我要派出 <b>' + sf.en + '</b>！”');
+      msg(who + '：“<b>' + sf.en + '</b>，该你了！”');
       if (B3) B3.enter('foe', true);
-      await E.say("Let's battle! Go, " + sf.en + '!', undefined, 'm');
+      await E.say("Let's battle! " + sf.en + ', your turn!', undefined, 'm');
     }
     if (!live(b)) return;
-    msg('去吧，<b>' + nm(me()) + '</b>！');
+    msg('<b>' + nm(me()) + '</b>，上场！');
     if (B3) B3.enter('me', true);
-    await E.say('Go, ' + nm(me()) + '!');
+    await E.say(nm(me()) + ', your turn!');
     if (!live(b)) return;
     menu();
   }
@@ -565,7 +571,7 @@
     }
     const canCatch = B.kind === 'wild' && !B.noCatch && B.foeHp <= stats(f).hp * 0.6;
     const others = B.team.some((u, k) => k !== B.ti && B.hp[u] > 0);
-    msg('<b>' + nm(m) + '</b> 要用什么技能？念对英语咒语才能成功！');
+    msg('念对英语，<b>' + nm(m) + '</b> 就出招！');
     panel('<div class="moves">' + movesOf(m).map((mv, i) => {
       const lock = mv.tier === 2 && B.energy < 3, nm = mvName(mv), e = mv.sup ? 1 : eff(mv.type, f.sp);
       const tag = mv.sup ? mv.sup.desc : (e > 1 ? '<em class="mv-eff">克制</em>' : e < 1 ? '不太管用' : TYPES[mv.type].zh);
@@ -603,7 +609,7 @@
     const rows = B.team.map((u, k) => {
       if (k === B.ti) return '';
       const mon = byUid(u), s = SPECIES[mon.sp], hp = Math.max(0, Math.round(B.hp[u]));
-      return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>Lv ' + mon.lv + '</small><div class="chips">' + chips(mon.sp) + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + STATUS[mon.st].zh + '</span>' : '') + '</div><small>体力 ' + hp + ' / ' + stats(mon).hp + '</small></div><div class="mrow-b"><button class="btn small sun" data-act="bSwitchTo" data-k="' + k + '"' + (hp > 0 ? '' : ' disabled') + '>就决定是你了</button></div></div>';
+      return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>Lv ' + mon.lv + '</small><div class="chips">' + chips(mon.sp) + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + STATUS[mon.st].zh + '</span>' : '') + '</div><small>体力 ' + hp + ' / ' + stats(mon).hp + '</small></div><div class="mrow-b"><button class="btn small sun" data-act="bSwitchTo" data-k="' + k + '"' + (hp > 0 ? '' : ' disabled') + '>换它上场</button></div></div>';
     }).join('');
     // pick-grid：竖屏不起作用（照常一行一只），横屏排成三列小卡片，点整张卡片就换上场
     E.openModal('<h2>🔄 换哪只上场？</h2><p>换怪兽会用掉这一回合。</p><div class="pick-grid">' + rows + '</div><button class="btn ghost wide" data-act="close">返回</button>');
@@ -615,17 +621,17 @@
     B.turn = 'busy';
     round(b, Object.assign(async () => {
       const old = SPECIES[me().sp];
-      msg('回来吧，<b>' + old.en + '</b>！');
-      E.say(old.en + ', come back!');
+      msg('<b>' + old.en + '</b>，先休息一下！');
+      E.say(old.en + ', take a rest!');
       await Promise.all([sleep(700), prep([spOf(byUid(B.team[k]))])]);
       B.ti = k; B.used.add(B.team[k]); B.stg.me = newStages(); B.conf.me = 0;
       B.enter = 'me';
       renderBattle();
       const n = SPECIES[me().sp];
-      msg('去吧，<b>' + n.en + '</b>！');
+      msg('<b>' + n.en + '</b>，上场！');
       $('b-me').classList.add('appear');
       if (B3) B3.enter('me', true);
-      await E.say('Go, ' + n.en + '!');
+      await E.say(n.en + ', your turn!');
     }, { priority: true }));
   }
 
@@ -668,7 +674,7 @@
     let pool = [];
     if ((t.kind === 'word' || t.kind === 'sent') && t.d) pool = (t.kind === 'word' ? t.d.words : t.d.sents).map(x => x[0]);
     else if (t.kind === 'catch') pool = CATCH_LINES.slice();
-    else if (t.kind === 'wake') { const n = nm(me()); pool = ['Wake up, ' + n + '!', 'Warm up, ' + n + '!', 'Go, ' + n + '!', 'Come back, ' + n + '!']; }
+    else if (t.kind === 'wake') { const n = nm(me()); pool = ['Wake up, ' + n + '!', 'Warm up, ' + n + '!', n + ', your turn!', n + ', take a rest!']; }
     const others = shuffle([...new Set(pool.filter(x => x && x.toLowerCase() !== t.target.toLowerCase()))]).slice(0, 3);
     return shuffle([{ c: true, t: t.target }].concat(others.map(x => ({ t: x }))));
   }
@@ -689,7 +695,7 @@
     const nb = itemCount('ball'), ns = itemCount('superball');
     if (nb + ns <= 0) { E.toast('回声球用完了！去「闯关练习」通关就能拿到，或者去商店买'); return; }
     if (!ball && nb > 0 && ns > 0) {
-      E.openModal('<h2>用哪种球？</h2><div class="row"><button class="btn sun" data-act="bCatch" data-ball="ball">🔮 回声球 ×' + nb + '</button><button class="btn" data-act="bCatch" data-ball="superball">💠 超级球 ×' + ns + '</button></div><button class="btn ghost wide" data-act="close">返回</button>');
+      E.openModal('<h2>用哪种球？</h2><div class="row"><button class="btn sun" data-act="bCatch" data-ball="ball">🔮 回声球 ×' + nb + '</button><button class="btn" data-act="bCatch" data-ball="superball">💠 金回声球 ×' + ns + '</button></div><button class="btn ghost wide" data-act="close">返回</button>');
       return;
     }
     E.closeModal();
@@ -1069,13 +1075,13 @@
   }
 
   // ---------- 英语冠军赛的特殊规则 ----------
-  // words 单词大师：小招伤害 ×1.5；listen 听力大师：防御只有 8 秒；clear 口语大师：念得很准 ×1.6、一般 ×0.8；talk 对话大师：一上场就有 3 格能量
+  // words 单词擂主：小招伤害 ×1.5；listen 听力擂主：防御只有 8 秒；clear 口语擂主：念得很准 ×1.6、一般 ×0.8；talk 对话擂主：一上场就有 3 格能量
   // rotate：冠军每只怪兽换一种规则
   const RULE_TEXT = {
-    words: '📖 单词大师的规则：你的小招伤害 ×1.5',
-    listen: '👂 听力大师的规则：防御只有 8 秒，要听得快！',
-    clear: '🗣️ 口语大师的规则：念得很准伤害 ×1.6，一般只有 ×0.8',
-    talk: '💬 对话大师的规则：一上场就有 3 格能量，可以直接放大招！',
+    words: '📖 单词擂主的规则：你的小招伤害 ×1.5',
+    listen: '👂 听力擂主的规则：防御只有 8 秒，要听得快！',
+    clear: '🗣️ 口语擂主的规则：念得很准伤害 ×1.6，一般只有 ×0.8',
+    talk: '💬 对话擂主的规则：一上场就有 3 格能量，可以直接放大招！',
   };
   const ruleNow = () => !B || !B.rules ? null : B.rules.rotate ? B.rules.rotate[B.fi % B.rules.rotate.length] : B.rules.kind;
   const rule = k => ruleNow() === k;
@@ -1115,7 +1121,7 @@
     addHp('foe', -dmg);
     if (dmg && foe().st === 'frz' && mvo.type === 'fire') { foe().st = null; }
     updHp();
-    msg(dmg ? (crit ? (blind ? '不看字也念得超准，<b>暴击</b>！' : '发音超准，<b>暴击</b>！') : blind ? '🔥 不看字也念对了，威力 ×1.5！' : mult < 1 ? '咒语有点含糊，只擦伤了它。' : '打中了！') + (e > 1 ? '属性克制，效果拔群！' : e < 1 ? '属性不太对，效果一般。' : '') : '咒语' + (why || '没念准') + '，攻击落空了！');
+    msg(dmg ? (crit ? (blind ? '不看字也念得超准，<b>暴击</b>！' : '发音超准，<b>暴击</b>！') : blind ? '🔥 不看字也念对了，威力 ×1.5！' : mult < 1 ? '咒语有点含糊，只擦伤了它。' : '打中了！') + (e > 1 ? '属性克制，打中弱点！' : e < 1 ? '属性不太对，不太管用。' : '') : '咒语' + (why || '没念准') + '，攻击落空了！');
     await sleep(900);
     if (dmg) await sideEffect('me', 'foe', mvo);
   }
@@ -1143,7 +1149,7 @@
   }
   async function foeAct(b) {
     const f = foe(), sf = SPECIES[f.sp];
-    // 训练师和馆主体力低的时候会用药
+    // 训练师和岛主体力低的时候会用药
     if (B.fpot > 0 && B.foeHp < stats(f).hp * .3 && Math.random() < .7) {
       B.fpot--;
       const v = Math.round(stats(f).hp * .5);
@@ -1211,13 +1217,13 @@
     }
     const { dmg: raw, e } = damage('foe', 'me', d.mvo, [0.8, 1, 1.15][d.mvo.tier] * 1);
     let dmg = Math.max(1, Math.round(raw * (ok ? 0.15 : 1)));
-    // 很亲的怪兽：本来要倒下了，为了不让你难过坚持住了
+    // 很亲的怪兽：本来要倒下了，想着主人又站了起来
     const hold = hearts(me()) >= 4 && B.hp[me().uid] > 1 && dmg >= B.hp[me().uid] && Math.random() < .2;
     if (hold) dmg = B.hp[me().uid] - 1;
     await strike('b-foe', 'b-me', d.type, dmg, ok ? ['挡住了'] : effLabel(e) ? [effLabel(e)] : [], d.mvo.tier, fi);
     if (!live(b)) return finish();
     addHp('me', -dmg);
-    if (hold) { msg('💖 <b>' + nm(me()) + '</b> 为了不让你难过，咬牙坚持住了！'); E.say(nm(me()) + ' held on for you!'); await sleep(1300); }
+    if (hold) { msg('💖 <b>' + nm(me()) + '</b> 想着你，又站了起来！'); E.say(nm(me()) + ' did not give up!'); await sleep(1300); }
     if (me().st === 'frz' && d.type === 'fire') me().st = null;
     updHp();
     await sleep(500);
@@ -1254,10 +1260,10 @@
     const it = q[0], mon = byUid(it.u);
     if (!mon || mon.moves.includes(it.id)) { q.shift(); E.save(); return learnNext(); }
     const s = SPECIES[mon.sp], nm = mvName(parseMove(it.id));
-    E.openModal('<h2>' + s.en + ' 想学新招式！</h2><div class="learn-new">' + moveCard(parseMove(it.id)) + '</div><p>它已经会 4 个招式了。要忘掉哪一个，换成 <b>' + nm[0] + '</b>？</p>' +
+    E.openModal('<h2>' + s.en + ' 能学一个新招式了！</h2><div class="learn-new">' + moveCard(parseMove(it.id)) + '</div><p>它已经会 4 个招式了。要忘掉哪一个，换成 <b>' + nm[0] + '</b>？</p>' +
       '<div class="learn-old">' + mon.moves.map((id, k) => '<button class="btn ghost" data-act="mForget" data-k="' + k + '">' + moveCard(parseMove(id)) + '</button>').join('') + '</div>' +
       '<button class="btn ghost wide" data-act="mForget" data-k="-1">不学了</button>', { locked: true });
-    E.say(s.en + ' wants to learn ' + nm[0] + '.');
+    E.say(s.en + ' can learn ' + nm[0] + ' now!');
     return true;
   }
   function forget(k) {
@@ -1267,7 +1273,7 @@
     if (k < 0) { q.shift(); E.save(); E.closeModal(); E.toast(s.en + ' 没有学 ' + nm[0]); setTimeout(afterBattleQueue, 300); return; }
     const old = mvName(parseMove(mon.moves[k]));
     const line = s.en + ', learn ' + nm[0] + '!', sr = E.speakMode() === 'sr';
-    E.openModal('<h2>1, 2, 3……忘掉了 ' + old[0] + '！</h2><p>现在大声教它新招式：</p><div class="say-text" id="lr-say">' + E.wordsHTML(line) + '</div>' +
+    E.openModal('<h2>好，' + old[0] + ' 换下来了！</h2><p>现在大声教它新招式：</p><div class="say-text" id="lr-say">' + E.wordsHTML(line) + '</div>' +
       (sr ? '<button class="mic" id="lr-mic" data-act="mLearnMic" data-k="' + k + '">' + E.MIC + '</button><div class="mic-hint" id="lr-hint">点麦克风，大声说</div>' : '<button class="btn leaf wide" data-act="mLearnGo" data-k="' + k + '">🎤 我说了！</button>') +
       '<button class="btn ghost wide" data-act="mHearLearn">🔊 听一遍</button>', { locked: true });
     E.say(line);
@@ -1308,8 +1314,8 @@
     const f = foe(), sf = SPECIES[f.sp];
     $('b-foe').classList.add('faint');
     if (B3) B3.faint('foe');
-    msg('<b>' + sf.en + '</b> 倒下了！');
-    E.say(sf.en + ' fainted!');
+    msg('<b>' + sf.en + '</b> 累得不能再战斗了！');
+    E.say(sf.en + ' is too tired to go on.');
     shareXp(10 + f.lv * 8);
     const eb = $('b-exp'), cm = me(); if (eb && cm) eb.style.width = (cm.xp / xpNeed(cm.lv) * 100) + '%';
     E.save();
@@ -1325,15 +1331,15 @@
       B.enter = 'foe';
       renderBattle();
       const n = SPECIES[foe().sp];
-      msg((B.kind === 'trainer' ? B.trainer.name : E.W[B.z].boss.name) + '：“还没完！去吧，<b>' + n.en + '</b>！”');
+      msg((B.kind === 'trainer' ? B.trainer.name : E.W[B.z].boss.name) + '：“还没完！<b>' + n.en + '</b>，该你了！”');
       $('b-foe').classList.add('appear');
       if (B3) B3.enter('foe', true);
-      await E.say('Go, ' + n.en + '!', undefined, 'm');
+      await E.say(n.en + ', your turn!', undefined, 'm');
       if (!live(b)) return;
       menu();
     } else win(b, false);
   }
-  // 经验：出过场的拿全部；带着学习装置的话，队伍里其他怪兽也拿一半
+  // 经验：出过场的拿全部；带着共学耳机的话，队伍里其他怪兽也拿一半
   function shareXp(xp) {
     B.used.forEach(u => { const mm = byUid(u); if (mm && B.hp[u] > 0) gainMonXp(mm, xp); });
     if (itemCount('expshare') > 0 && M().expShareOn !== false) B.team.forEach(u => { if (!B.used.has(u)) { const mm = byUid(u); if (mm && B.hp[u] > 0) gainMonXp(mm, Math.round(xp / 2), true); } });
@@ -1353,10 +1359,10 @@
       B.ti = next; B.used.add(B.team[next]); B.stg.me = newStages(); B.conf.me = 0;
       B.enter = 'me';
       renderBattle();
-      msg('去吧，<b>' + nm(me()) + '</b>！');
+      msg('<b>' + nm(me()) + '</b>，上场！');
       $('b-me').classList.add('appear');
       if (B3) B3.enter('me', true);
-      await E.say('Go, ' + nm(me()) + '!');
+      await E.say(nm(me()) + ', your turn!');
       if (!live(b)) return;
       menu();
     } else lose(b);
@@ -1367,7 +1373,7 @@
     const f = foe(), sf = SPECIES[f.sp], max = stats(f).hp, sup = B.ball === 'superball';
     addItem(sup ? 'superball' : 'ball', -1);
     panel('');
-    msg(sup ? '去吧，超级球！' : '去吧，回声球！');
+    msg(sup ? '扔出金回声球！' : '扔出回声球！');
     const ball = document.createElement('span');
     ball.className = 'proj ball';
     const arena = $('b-arena'), [x1, y1] = center('b-me'), [x2, y2] = center('b-foe');
@@ -1378,10 +1384,12 @@
     if (!live(b)) return 'end';
     $('b-foe').classList.add('caught-in');
     ball.classList.add('wobble');
-    const stBonus = f.st === 'slp' || f.st === 'frz' ? 2 : f.st ? 1.5 : 1;
-    const p = (0.3 + 0.7 * (1 - Math.max(0, B.foeHp) / max)) * (score >= 85 ? 1.25 : score >= 55 ? 1 : 0.5) * (sup ? 1.5 : 1) * (sf.legend ? .35 : 1) * stBonus;
+    // 收服的机会：体力越少越好收、咒语念得越清楚越好收；睡着 / 冻住 ×1.6，别的异常 ×1.3，金回声球 ×1.4，神兽难收
+    const stBonus = f.st === 'slp' || f.st === 'frz' ? 1.6 : f.st ? 1.3 : 1;
+    const p = (0.3 + 0.7 * (1 - Math.max(0, B.foeHp) / max)) * (score >= 85 ? 1.25 : score >= 55 ? 1 : 0.5) * (sup ? 1.4 : 1) * (sf.legend ? .35 : 1) * stBonus;
     const ok = Math.random() < p;
-    for (let k = 0; k < 3; k++) { E.SFX.tap(); if (B3) await B3.wobble(); else await sleep(600); if (!live(b)) return 'end'; if (!ok && k === 1) break; }
+    // 回声球（海螺）里传出两声回声：两声都响完就收服了；不成的话第一声就停
+    for (let k = 0; k < 2; k++) { E.SFX.tap(); if (B3) await B3.wobble(); else await sleep(600); if (!live(b)) return 'end'; if (!ok && k === 0) break; }
     if (ok) {
       ball.classList.remove('wobble'); ball.classList.add('sealed');
       if (B3) B3.sealed();
@@ -1398,7 +1406,7 @@
       E.qProg('catch', 1);
       E.jingle('catch', E.SFX.win); E.confetti(140);
       msg('🎉 收服成功！<b>' + sf.en + '</b>（' + sf.zh + '）成为了你的伙伴！');
-      E.say('Gotcha! ' + sf.en + ' was caught!');
+      E.say('Yes! ' + sf.en + ' is your new friend!');
       E.save();
       await sleep(1200);
       if (!live(b)) return 'end';
@@ -1432,7 +1440,7 @@
     B.result = caught ? 'caught' : 'win';
     writeBack();
     lines.unshift('💰 金币 +' + coins);
-    lines.push('⭐ 出战的怪兽获得经验 +' + (10 + topLv * 8) + (itemCount('expshare') > 0 && m.expShareOn !== false ? '（学习装置：其他队员也分到一半）' : ''));
+    lines.push('⭐ 出战的怪兽获得经验 +' + (10 + topLv * 8) + (itemCount('expshare') > 0 && m.expShareOn !== false ? '（共学耳机：其他队员也分到一半）' : ''));
     E.gainXp(15 + topLv);
     B.used.forEach(u => befriend(byUid(u), B.kind === 'wild' ? 1 : 3));
     m.wins = (m.wins || 0) + 1;
@@ -1441,8 +1449,10 @@
     E.save(); E.renderTop();
     if (!caught) { E.jingle(badge ? 'badge' : 'win', E.SFX.win); E.confetti(B.kind === 'leader' ? 200 : 90); }
     E.music('victory');   // 号角放完接着放结算画面的音乐
-    msg(caught ? (B.toBox ? '队伍已经有 6 只了，新伙伴被送到了电脑箱子里（去怪兽中心的电脑换）。' : '新伙伴已经加入队伍！') : B.kind === 'leader' ? w.boss.name + '：“你太厉害了！这枚徽章是你的了！”' : B.kind === 'trainer' ? B.trainer.name + '：“你真厉害！”' : '胜利！');
-    panel('<div class="b-result"><div class="big">' + (caught ? '🔮' : B.kind === 'leader' ? '🏅' : '🏆') + '</div><b>' + (caught ? '收服成功！' : B.kind === 'leader' ? '打败馆主！' : '胜利！') + '</b><p>' + lines.join('<br>') + '</p>' +
+    msg(caught ? (B.toBox ? '队伍已经有 6 只了，新伙伴被送到了电脑箱子里（去休息站的电脑换）。' : '新伙伴已经加入队伍！') : B.kind === 'leader' ? w.boss.name + '：“你太厉害了！这枚徽章是你的了！”' : B.kind === 'trainer' ? B.trainer.name + '：“你真厉害！”' : '胜利！');
+    // 经验条只在结算画面出现（对战时的状态栏不放）
+    const xm = me(), xpBar = xm ? '<div class="res-exp"><span>' + E.esc(nm(xm)) + ' <small>Lv ' + xm.lv + '</small></span><div class="xpbar" title="经验"><i style="width:' + Math.min(100, xm.xp / xpNeed(xm.lv) * 100) + '%"></i></div></div>' : '';
+    panel('<div class="b-result"><div class="big">' + (caught ? '🔮' : B.kind === 'leader' ? '🏅' : '🏆') + '</div><b>' + (caught ? '收服成功！' : B.kind === 'leader' ? '打败岛主！' : '胜利！') + '</b><p>' + lines.join('<br>') + '</p>' + xpBar +
       '<div class="say-row">' + (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>继续冒险 ▶</button>'
         : (B.kind === 'wild' ? '<button class="btn" data-act="mWild" data-z="' + z + '">⚔️ 再战一场</button>' : '') + '<button class="btn ghost" data-act="bHome">回基地</button>') + '</div></div>');
     if (newDay) setTimeout(() => E.toast('🔥 今日打卡成功！已连续 ' + E.S.streak + ' 天', 'gold'), 900);
@@ -1453,8 +1463,8 @@
     writeBack();
     E.jingle('lose'); E.music(null);
     msg('你的怪兽们都累倒了……');
-    panel('<div class="b-result"><div class="big">💤</div><b>先去怪兽中心休息一下</b><p>怪兽中心能让怪兽恢复体力、治好异常状态。<br>小窍门：多在草丛里打野生怪兽把等级练上去，<br>用<b>属性克制</b>的招式，或者先用辅助招式降低对手的攻击。</p><div class="say-row">' +
-      (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>去怪兽中心</button>' : '<button class="btn" data-act="bHome">回基地</button>') + '</div></div>');
+    panel('<div class="b-result"><div class="big">💤</div><b>先去休息站休息一下</b><p>休息站能让怪兽恢复体力、治好异常状态。<br>小窍门：多在草丛里打野生怪兽把等级练上去，<br>用<b>属性克制</b>的招式，或者先用辅助招式降低对手的攻击。</p><div class="say-row">' +
+      (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>去休息站</button>' : '<button class="btn" data-act="bHome">回基地</button>') + '</div></div>');
   }
   // 战斗里用道具：回复体力或治异常状态，用掉这一回合
   function usePotion(id) {
@@ -1491,9 +1501,9 @@
   function evolveTo(mon, toId) {
     const from = SPECIES[mon.sp], to = SPECIES[toId];
     if (window.Mon3D && Mon3D.preload) Mon3D.preload([toId]);
-    E.openModal('<h2>咦？' + from.en + ' 的样子在变化……</h2><div class="evo-stage"><div class="evo-old">' + svg(mon.sp) + '</div><div class="evo-new">' + svg(toId) + '</div></div>' +
-      '<p id="evo-t">' + from.zh + ' 正在进化！</p><button class="btn sun wide" data-act="mEvoOk" id="evo-ok" hidden>太棒了！</button>', { locked: true });
-    E.say('What? ' + from.en + ' is evolving!');
+    E.openModal('<h2>看！' + from.en + ' 在长大……</h2><div class="evo-stage"><div class="evo-old">' + svg(mon.sp) + '</div><div class="evo-new">' + svg(toId) + '</div></div>' +
+      '<p id="evo-t">' + from.zh + ' 正在长大！</p><button class="btn sun wide" data-act="mEvoOk" id="evo-ok" hidden>太棒了！</button>', { locked: true });
+    E.say('Look! ' + from.en + ' is growing up!');
     E.music('evolve');
     mon.sp = toId;
     M().dex[toId] = 'caught';
@@ -1501,10 +1511,10 @@
     E.save();
     setTimeout(() => {
       const st = document.querySelector('.evo-stage'); if (st) st.classList.add('done');
-      const t = $('evo-t'); if (t) t.innerHTML = '恭喜！<b>' + from.en + '</b> 进化成了 <b>' + to.en + '</b>（' + to.zh + '）！';
+      const t = $('evo-t'); if (t) t.innerHTML = '太棒了！<b>' + from.en + '</b> 长成了 <b>' + to.en + '</b>（' + to.zh + '）！';
       const ok = $('evo-ok'); if (ok) ok.hidden = false;
       E.jingle('levelup', E.SFX.win); E.confetti(180);
-      E.say(from.en + ' evolved into ' + to.en + '!');
+      E.say(from.en + ' has grown up! Say hello to ' + to.en + '!');
       E.checkAch();
     }, 2600);
   }
@@ -1605,7 +1615,7 @@
     const mon = byUid(u); if (!mon || mon.egg) return;
     const today = E.dayStr(), done = (M().talked || {})[u] === today;
     if (done) { E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + nm(mon) + '</h2><p>' + MOOD[hearts(mon)] + '</p><p>亲密度 ' + heartsHTML(mon) + '</p><p class="tip">今天已经聊过了，明天再来和它说说话吧。</p></div></div><button class="btn ghost wide" data-act="' + (then ? 'mTalkBack' : 'close') + '" data-u="' + u + '">好的</button>'); talkCtx = { u, then }; return; }
-    const line = TALKS[(new Date().getDate() + SPECIES[mon.sp].no) % TALKS.length](nm(mon)), sr = E.speakMode() === 'sr';
+    const line = TALKS[(new Date().getDate() + (SPECIES[mon.sp].sd || 0)) % TALKS.length](nm(mon)), sr = E.speakMode() === 'sr';
     talkCtx = { u, then, line };
     E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>和 ' + nm(mon) + ' 说说话</h2><p>每天用英语和它说一句，它会越来越喜欢你。亲密度 ' + heartsHTML(mon) + '</p></div></div>' +
       '<div class="say-text" id="talk-say">' + E.wordsHTML(line) + '</div><button class="spk mini" data-act="mTalkHear" aria-label="听">' + E.SPK + '</button>' +
@@ -1635,8 +1645,8 @@
     if (r.score >= 45) talkDone(); else $('talk-hint').textContent = r.score + ' 分，再清楚一点！';
   }
 
-  // ---------- 养育屋和蛋 ----------
-  // 放两只有相同属性的怪兽在养育屋，走一段路就会有蛋；蛋放在队伍里走路会孵出来
+  // ---------- 怪兽幼儿园和蛋 ----------
+  // 放两只有相同属性的怪兽在怪兽幼儿园，走一段路就会有蛋；蛋放在队伍里走路会孵出来
   const eggSteps = id => 250 + (SPECIES[id].rarity || 1) * 100;
   const eggHint = mon => mon.steps > eggSteps(mon.sp) * .6 ? '它好像还要很久才会孵出来。' : mon.steps > 80 ? '里面有动静了！' : '快孵出来了！它在里面动来动去。';
   function makeEgg(id) { const b = baseOf(id); return { uid: 'e' + Date.now().toString(36) + rnd(1e6).toString(36), sp: b, egg: true, steps: eggSteps(b), lv: 5, xp: 0 }; }
@@ -1649,7 +1659,7 @@
     const pair = d.mons.length === 2 ? (canBreed(d.mons[0], d.mons[1]) ? '<p class="tip">💞 它们俩相处得很好（有相同的属性）。</p>' : '<p class="tip">它们俩不太合得来（没有相同的属性），不会有蛋。</p>') : '';
     const room = d.mons.length < 2, can = M().team.filter(u => byUid(u) && !byUid(u).egg).length > 1;
     const pick = room ? teamMons().filter(x => !x.egg).map(mon => monRow(mon, '<button class="btn small sun" data-act="mDayLeave" data-u="' + mon.uid + '"' + (can ? '' : ' disabled') + '>寄养</button>', true)).join('') : '';
-    E.openModal('<h2>🏡 养育屋</h2><p>把两只怪兽寄养在这里，它们会跟着爷爷奶奶长大（每走 100 步长 1 级）。两只有相同属性的话，过一阵子会发现一个蛋！</p>' +
+    E.openModal('<h2>🏡 怪兽幼儿园</h2><p>把两只怪兽寄养在这里，它们会跟着爷爷奶奶长大（每走 100 步长 1 级）。两只有相同属性的话，过一阵子会发现一个蛋！</p>' +
       (d.egg ? '<div class="ach"><span class="ae">🥚</span><div style="flex:1"><b>发现了一个蛋！</b><small>是它们俩留下的</small></div><button class="btn small sun" data-act="mDayEgg">收下</button></div>' : '') +
       '<h3 class="pc-h">寄养中 ' + d.mons.length + ' / 2</h3>' + (slots || '<p class="tip">还没有寄养的怪兽。</p>') + pair +
       (room ? '<h3 class="pc-h">从队伍里选一只寄养</h3>' + (can ? '' : '<p class="tip">队伍里至少要留一只能战斗的怪兽。</p>') + pick : '') +
@@ -1679,7 +1689,7 @@
     E.SFX.win(); E.toast('🥚 得到了一个蛋！放在队伍里走路就会孵出来', 'gold');
     daycareSheet();
   }
-  // 大地图每走一步调一次：带头的怪兽慢慢变亲、蛋慢慢孵、养育屋慢慢出蛋。返回要孵出来的蛋
+  // 大地图每走一步调一次：带头的怪兽慢慢变亲、蛋慢慢孵、怪兽幼儿园慢慢出蛋。返回要孵出来的蛋
   function stepHook() {
     const m = M();
     m.walk = (m.walk || 0) + 1;
@@ -1689,7 +1699,7 @@
     const egg = m.team.map(byUid).find(x => x && x.egg && --x.steps <= 0);
     return egg ? { hatch: egg.uid, sp: egg.sp } : null;
   }
-  // 孵出来：变成 5 级的小怪兽（有机会是异色），然后起名字
+  // 孵出来：变成 5 级的小怪兽（有机会是稀有色），然后起名字
   function hatch(u) {
     const egg = byUid(u); if (!egg || !egg.egg) return null;
     delete egg.egg; delete egg.steps;
@@ -1700,7 +1710,7 @@
     return egg;
   }
 
-  // ---------- 图鉴：出没地点 ----------
+  // ---------- 怪兽手册：出没地点 ----------
   let HAB_INDEX = null;
   function habitatIndex() {
     if (HAB_INDEX) return HAB_INDEX;
@@ -1727,7 +1737,7 @@
     return '<p class="dex-hab">📍 出没地点：' + txt + '</p>';
   }
 
-  // ---------- 我的怪兽 / 图鉴 / 回声球 ----------
+  // ---------- 我的怪兽 / 怪兽手册 / 回声球 ----------
   // 一只怪兽的信息行，btn 是右边的按钮
   function monRow(mon, btn, inTeam) {
     const s = SPECIES[mon.sp];
@@ -1738,8 +1748,8 @@
   }
   const teamMons = () => M().team.map(byUid).filter(Boolean);
   const boxMons = () => M().box.filter(x => !M().team.includes(x.uid)).sort((a, b) => b.lv - a.lv);
-  // 电脑箱子：8 个箱子，每个 30 只
-  const BOXES = 8, BOX_CAP = 30;
+  // 电脑箱子：10 个箱子，每个 24 只（老存档里一个箱子超过 24 只的照样留着，只是不再往里放）
+  const BOXES = 10, BOX_CAP = 24;
   const inBox = k => M().box.filter(x => !M().team.includes(x.uid) && (x.bx || 0) === k);
   const freeBox = () => { for (let k = 0; k < BOXES; k++) if (inBox(k).length < BOX_CAP) return k; return BOXES - 1; };
   // 新怪兽（收服的、孵出来的、蛋）：队伍没满放队伍，满了放第一个有空位的箱子
@@ -1748,15 +1758,15 @@
     m.box.push(mon);
     if (m.team.length < TEAM_MAX) m.team.push(mon.uid); else mon.bx = freeBox();
   }
-  // 队伍：看状态、换主力。存进箱子 / 从箱子取出要去怪兽中心的电脑
+  // 队伍：看状态、换主力。存进箱子 / 从箱子取出要去休息站的电脑
   function teamSheet() {
     const rows = teamMons().map((mon, k) => monRow(mon, k === 0 ? '<span class="lead-tag">⭐ 主力</span>' : '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '">设为主力</button>', true)).join('');
     const nb = boxMons().length;
     E.openModal('<h2>我的队伍 ' + teamMons().length + ' / ' + TEAM_MAX + '</h2><p>主力先出场，倒下后队友自动接上。</p>' + rows +
-      (nb ? '<p class="tip">💻 电脑箱子里还有 ' + nb + ' 只怪兽，去怪兽中心的电脑可以换进队伍。</p>' : '') +
+      (nb ? '<p class="tip">💻 电脑箱子里还有 ' + nb + ' 只怪兽，去休息站的电脑可以换进队伍。</p>' : '') +
       '<button class="btn ghost wide" data-act="close">关闭</button>');
   }
-  // 怪兽中心的电脑：队伍和箱子互相换
+  // 休息站的电脑：队伍和箱子互相换
   function pcSheet(k) {
     const m = M();
     if (k != null) m.pcBox = Math.max(0, Math.min(BOXES - 1, k));
@@ -1764,11 +1774,11 @@
     const full = m.team.length >= TEAM_MAX, one = m.team.filter(u => byUid(u) && !byUid(u).egg).length <= 1;
     const team = teamMons().map((mon, i) => monRow(mon, (i ? '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '" data-pc="1">设为主力</button>' : '<span class="lead-tag">⭐ 主力</span>') +
       '<button class="btn small ghost" data-act="mBench" data-u="' + mon.uid + '" data-pc="1"' + (one && !mon.egg ? ' disabled' : '') + '>存进箱子</button>', true)).join('');
-    const sorter = { lv: (a, b) => b.lv - a.lv, no: (a, b) => SPECIES[a.sp].no - SPECIES[b.sp].no, name: (a, b) => nm(a).localeCompare(nm(b)) }[sortBy];
+    const sorter = { lv: (a, b) => b.lv - a.lv, no: (a, b) => (SPECIES[a.sp].dexNo || 9999) - (SPECIES[b.sp].dexNo || 9999), name: (a, b) => nm(a).localeCompare(nm(b)) }[sortBy];
     const list = inBox(cur).sort(sorter).map(mon => monRow(mon, '<button class="btn small sun" data-act="mJoin" data-u="' + mon.uid + '" data-pc="1"' + (full ? ' disabled' : '') + '>放进队伍</button><button class="btn small ghost" data-act="mMoveAsk" data-u="' + mon.uid + '">搬到…</button>', false)).join('');
     const tabs = '<div class="pc-tabs">' + Array.from({ length: BOXES }, (_, i) => '<button class="btn small ' + (i === cur ? 'sun' : 'ghost') + '" data-act="mBox" data-b="' + i + '">' + (i + 1) + '<small>' + inBox(i).length + '</small></button>').join('') + '</div>';
     const sorts = '<div class="pc-sort">排序：' + [['lv', '等级'], ['no', '编号'], ['name', '名字']].map(([k2, zh]) => '<button class="link' + (k2 === sortBy ? ' on' : '') + '" data-act="mPcSort" data-k="' + k2 + '">' + zh + '</button>').join(' · ') + '</div>';
-    E.openModal('<h2>💻 怪兽箱子</h2><p>队伍最多 ' + TEAM_MAX + ' 只；8 个箱子，每个放 ' + BOX_CAP + ' 只。' + (full ? '队伍满了，先存一只进箱子再取。' : '') + '</p><h3 class="pc-h">队伍 ' + m.team.length + ' / ' + TEAM_MAX + '</h3>' + team +
+    E.openModal('<h2>💻 怪兽箱子</h2><p>队伍最多 ' + TEAM_MAX + ' 只；' + BOXES + ' 个箱子，每个放 ' + BOX_CAP + ' 只。' + (full ? '队伍满了，先存一只进箱子再取。' : '') + '</p><h3 class="pc-h">队伍 ' + m.team.length + ' / ' + TEAM_MAX + '</h3>' + team +
       '<h3 class="pc-h">箱子 ' + (cur + 1) + ' Box ' + (cur + 1) + '（' + inBox(cur).length + ' / ' + BOX_CAP + '）</h3>' + tabs + sorts + (list || '<p class="tip">这个箱子是空的。</p>') +
       '<button class="btn ghost wide" data-act="close">关闭电脑</button>');
   }
@@ -1777,7 +1787,7 @@
     E.openModal('<h2>把 ' + nm(mon) + ' 搬到哪个箱子？</h2><div class="pc-tabs">' + Array.from({ length: BOXES }, (_, i) => '<button class="btn ' + ((mon.bx || 0) === i ? 'sun' : 'ghost') + '" data-act="mMoveTo" data-u="' + u + '" data-b="' + i + '"' + (inBox(i).length >= BOX_CAP ? ' disabled' : '') + '>箱子 ' + (i + 1) + '<small>' + inBox(i).length + '/' + BOX_CAP + '</small></button>').join('') + '</div><button class="btn ghost wide" data-act="mPc">返回</button>');
   }
 
-  // 背包：在大地图上用回复道具、驱怪喷雾、逃生绳
+  // 背包：在大地图上用回复道具、悄悄喷雾、回程绳
   function bagSheet() {
     const rows = BAG_ORDER.map(id => {
       const it = ITEMS[id], n = itemCount(id);
@@ -1823,17 +1833,17 @@
     E.say(nm(mon) + ' feels better!');
     if (itemCount(id) > 0) useItem(id); else bagSheet();
   }
-  // 图鉴：每页 24 只，点开看详情（英文图鉴 + 中文 + 进化路线）
+  // 怪兽手册：每页 24 只，点开看详情（英文介绍 + 中文 + 进化路线）；家庭版的番外排在最后，不编号
   const DEX_PAGE = 24;
   let dexPage = 0;
   function dexSheet(pg) {
     const m = M(), pages = Math.ceil(ORDER.length / DEX_PAGE);
     if (pg != null) dexPage = Math.max(0, Math.min(pages - 1, pg));
     const ids = ORDER.slice(dexPage * DEX_PAGE, dexPage * DEX_PAGE + DEX_PAGE);
-    const nav = '<div class="dex-nav"><button class="btn small ghost" data-act="mDexPage" data-p="' + (dexPage - 1) + '"' + (dexPage ? '' : ' disabled') + '>◀</button><span>' + (dexPage * DEX_PAGE + 1) + '–' + Math.min(ORDER.length, dexPage * DEX_PAGE + DEX_PAGE) + ' 号</span><button class="btn small ghost" data-act="mDexPage" data-p="' + (dexPage + 1) + '"' + (dexPage < pages - 1 ? '' : ' disabled') + '>▶</button></div>';
-    E.openModal('<h2>怪兽图鉴 ' + caughtN() + ' / ' + ORDER.length + '</h2><p>收服或进化就能点亮，遇到过的会显示影子。点一只看它的图鉴。</p>' + nav + '<div class="dex">' + ids.map(id => {
+    const nav = '<div class="dex-nav"><button class="btn small ghost" data-act="mDexPage" data-p="' + (dexPage - 1) + '"' + (dexPage ? '' : ' disabled') + '>◀</button><span>第 ' + (dexPage + 1) + ' / ' + pages + ' 页</span><button class="btn small ghost" data-act="mDexPage" data-p="' + (dexPage + 1) + '"' + (dexPage < pages - 1 ? '' : ' disabled') + '>▶</button></div>';
+    E.openModal('<h2>怪兽手册 ' + caughtN() + ' / ' + D.total + '</h2><p>收服或进化就能点亮，遇到过的会显示影子。点一只看它的介绍。</p>' + nav + '<div class="dex">' + ids.map(id => {
       const s = SPECIES[id], st = m.dex[id];
-      return '<button class="dex-i ' + (st || 'none') + '" data-act="mDexOne" data-sp="' + id + '"' + (st ? '' : ' disabled') + '><span class="dex-no">' + String(s.no).padStart(3, '0') + ((m.shinyDex || {})[id] ? ' ✨' : '') + '</span><span class="dex-svg">' + (st ? svg(id) : '') + '</span><b>' + (st ? s.en : '???') + '</b><small>' + (st === 'caught' ? s.zh : st ? '见过' : '未发现') + '</small></button>';
+      return '<button class="dex-i ' + (st || 'none') + '" data-act="mDexOne" data-sp="' + id + '"' + (st ? '' : ' disabled') + '><span class="dex-no">' + (s.dexNo ? String(s.dexNo).padStart(3, '0') : '番外') + ((m.shinyDex || {})[id] ? ' ✨' : '') + '</span><span class="dex-svg">' + (st ? svg(id) : '') + '</span><b>' + (st ? s.en : '???') + '</b><small>' + (st === 'caught' ? s.zh : st ? '见过' : '未发现') + '</small></button>';
     }).join('') + '</div>' + nav + '<button class="btn ghost wide" data-act="close">关闭</button>');
   }
   function dexOne(id) {
@@ -1844,16 +1854,16 @@
     const walk = (x, depth) => { chain.push({ x, depth }); (x.evo || []).forEach(e => walk(SPECIES[e.to], depth + 1)); };
     walk(root, 0);
     const how = x => { const f = x.from && (SPECIES[x.from].evo || []).find(e => e.to === x.id); return f ? (f.lv ? 'Lv ' + f.lv : D.STONES[f.item] ? D.STONES[f.item].zh : '') : ''; };
-    E.openModal('<div class="dex-big">' + svg(id) + '</div><h2>No.' + s.no + ' ' + s.en + '（' + (st === 'caught' ? s.zh : '？') + '）</h2><div class="chips" style="justify-content:center">' + chips(id) + (s.legend ? '<span class="lvchip">传说</span>' : '') + '</div>' +
+    E.openModal('<div class="dex-big">' + svg(id) + '</div><h2>' + (s.dexNo ? 'No.' + s.dexNo : '番外') + ' ' + s.en + '（' + (st === 'caught' ? s.zh : '？') + '）</h2><div class="chips" style="justify-content:center">' + chips(id) + (s.legend ? '<span class="lvchip">传说</span>' : '') + '</div>' +
       (st === 'caught' ? '<p class="dex-en">' + esc(s.dexEn) + ' <button class="spk mini" data-act="mSayDex" data-sp="' + id + '" aria-label="听">' + E.SPK + '</button></p><p class="dex-zh">' + esc(s.dexZh) + '</p>' +
-        (s.words && s.words.length ? '<p class="tip">名字里的英语：' + s.words.map(w => '<b>' + esc(w) + '</b>').join(' + ') + '</p>' : '') : '<p class="tip">收服它就能看到完整的图鉴。</p>') +
+        (s.words && s.words.length ? '<p class="tip">名字里的英语：' + s.words.map(w => '<b>' + esc(w) + '</b>').join(' + ') + '</p>' : '') : '<p class="tip">收服它就能看到完整的介绍。</p>') +
       habitatHTML(id) +
       (chain.length > 1 ? '<div class="dex-chain">' + chain.map(c => { const k = M().dex[c.x.id]; return '<span class="dc' + (c.x.id === id ? ' on' : '') + '">' + (c.depth ? '<i>' + how(c.x) + ' →</i>' : '') + '<span class="dc-svg">' + (k ? svg(c.x.id) : '') + '</span><small>' + (k ? c.x.en : '???') + '</small></span>'; }).join('') + '</div>' : '') +
-      '<div class="row"><button class="btn ghost" data-act="mDex">返回图鉴</button><button class="btn ghost" data-act="close">关闭</button></div>');
+      '<div class="row"><button class="btn ghost" data-act="mDex">返回手册</button><button class="btn ghost" data-act="close">关闭</button></div>');
     if (st === 'caught') E.say(s.en);
   }
   function ballSheet() {
-    E.openModal('<div class="big">🔮</div><h2>回声球 × ' + M().balls + '</h2><p>把野生怪兽打虚弱后，扔回声球并念出收服咒语，就能收服它。<br>在「📚 闯关练习」每通关一关送 1 个，三星送 2 个；打败馆主送 3 个。</p>' +
+    E.openModal('<div class="big">🔮</div><h2>回声球 × ' + M().balls + '</h2><p>把野生怪兽打虚弱后，扔回声球并念出收服咒语，就能收服它。<br>在「📚 闯关练习」每通关一关送 1 个，三星送 2 个；打败岛主送 3 个。</p>' +
       '<div class="row"><button class="btn ghost" data-act="close">关闭</button><button class="btn sun" data-act="mBuyBalls"' + (E.S.coins < 30 ? ' disabled' : '') + '>30 金币买 3 个</button></div>');
   }
 
@@ -1946,7 +1956,7 @@
     migrate() {
       const m = M();
       (m.box || []).forEach(ensureMoves);
-      // 箱子里异色怪兽的 2D 图标先转好色（菜单、图鉴、队伍打开时就是异色）
+      // 箱子里稀有色怪兽的 2D 图标先转好色（菜单、手册、队伍打开时就是稀有色）
       if (window.Mon3D && Mon3D.prepIcons) Mon3D.prepIcons((m.box || []).filter(x => x.shiny && !x.egg && SPECIES[x.sp]).map(spOf));
       if (m.v === 2) return;
       m.v = 2;
@@ -1956,10 +1966,10 @@
     },
     setFieldHooks: h => { FH = h; },
     STARTERS, STRONG, grown,
-    // 按属性配一队怪兽（反派、大师、冠军用）：同一个 seed 每次都一样，等级够了就是进化形态
+    // 按属性配一队怪兽（反派、擂主、冠军用）：同一个 seed 每次都一样，等级够了就是进化形态
     teamOf(types, n, lv, seed) {
-      let pool = D.list.filter(s => !s.legend && !s.starter && s.stage === 1 && s.no <= 251 && s.types.some(t => types.includes(t)));
-      if (!pool.length) pool = REGION1.filter(s => s.stage === 1);
+      let pool = D.list.filter(s => !s.legend && !s.starter && isBase(s) && s.r <= 2 && s.types.some(t => types.includes(t)));
+      if (!pool.length) pool = REGION1.filter(isBase);
       pool = pool.slice().sort((a, b) => hash(seed, a.id) - hash(seed, b.id));
       return Array.from({ length: n }, (_, k) => { const l = lv + k; return newMon(grown(pool[k % pool.length].id, l + 2), l); });
     },
@@ -1990,7 +2000,7 @@
     habitats: id => habitatIndex()[id] || [],
     zoneLv,
     afterHome: () => setTimeout(afterBattleQueue, 400),
-    caughtCount: s => ORDER.filter(id => s.mon.dex[id] === 'caught').length,
-    total: ORDER.length,
+    caughtCount: s => ORDER.filter(id => COUNTED.has(id) && s.mon.dex[id] === 'caught').length,
+    total: D.total,
   };
 })();

@@ -7,7 +7,7 @@
 <script src="../monster3d.js"></script>
 <script src="../dex.js"></script>
 <script>
-// 3D 怪兽预览：?list=样例 或 ?from=1&to=60 看图鉴里的怪兽
+// 3D 怪兽预览：?list=样例 或 ?from=1&to=60 看手册里的怪兽
 const SAMPLES = [
   { id: 's1', en: 'Blob', b: 'blob', c: '#4fc3f7', k: '#e1f5fe', e: 'fin', t: 'fin', stage: 1 },
   { id: 's2', en: 'Biped', b: 'biped', c: '#ff8a4c', k: '#ffe0b2', a: '#ffca28', e: 'cat', t: 'flame', stage: 1 },
@@ -28,10 +28,10 @@ const SAMPLES = [
 ];
 const q = new URLSearchParams(location.search), g = document.getElementById('g');
 let list = SAMPLES;
-if (q.get('from') && window.DEX) list = DEX.list.filter(s => s.no >= +q.get('from') && s.no <= +(q.get('to') || q.get('from')));
+if (q.get('from') && window.DEX) list = DEX.list.filter(s => s.dexNo >= +q.get('from') && s.dexNo <= +(q.get('to') || q.get('from')));
 list.forEach(sp => {
   const d = document.createElement('div'); d.className = 'c';
-  d.innerHTML = '<img src="' + Mon3D.snapshot(sp, 260) + '"><b>' + (sp.no ? '#' + sp.no + ' ' : '') + sp.en + (sp.zh ? ' ' + sp.zh : '') + '</b>';
+  d.innerHTML = '<img src="' + Mon3D.snapshot(sp, 260) + '"><b>' + (sp.dexNo ? '#' + sp.dexNo + ' ' : '') + sp.en + (sp.zh ? ' ' + sp.zh : '') + '</b>';
   g.appendChild(d);
 });
 </script>

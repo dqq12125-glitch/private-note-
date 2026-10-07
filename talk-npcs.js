@@ -109,15 +109,15 @@
     },
     {
       id: 'nurse', name: 'Nurse Nina', zh: '护士妮娜', look: 'nurse', voice: 'Tina', voiceZh: '甜美的姐姐',
-      topic: 'At the Monster Center', topicZh: '带怪兽看病',
+      topic: 'At the Rest Stop', topicZh: '带怪兽看病',
       goal: 'Tell the nurse what is wrong with your monster (how it feels, what happened) and ask when it will be better.',
       goalZh: '告诉护士你的怪兽怎么了（哪里不舒服、发生了什么），再问它什么时候能好。',
-      persona: 'You are the gentle nurse at the Monster Center. You take care of hurt and tired monsters. You ask simple questions like a doctor.',
-      opener: 'Hello! Welcome to the Monster Center. Is your monster okay?',
+      persona: 'You are the gentle nurse at the Rest Stop. You take care of hurt and tired monsters. You ask simple questions like a doctor.',
+      opener: 'Hello! Welcome to the Rest Stop. Is your monster okay?',
       words: ['It is tired', 'It hurts', 'its leg', 'It fell', 'It can\'t', 'When', 'better'],
       wordsZh: ['它很累', '它疼', '它的腿', '它摔倒了', '它不能……', '什么时候', '好些了'],
       goals: [
-        { goal: 'Tell Nurse Nina how your monster feels today (hungry, tired or happy), what it did today, and ask her to help it.', goalZh: '告诉护士妮娜你的怪兽今天感觉怎么样（饿了、累了还是很开心）、它今天做了什么，再请她帮帮它。', opener: 'Hello! Welcome to the Monster Center. How is your monster today?',
+        { goal: 'Tell Nurse Nina how your monster feels today (hungry, tired or happy), what it did today, and ask her to help it.', goalZh: '告诉护士妮娜你的怪兽今天感觉怎么样（饿了、累了还是很开心）、它今天做了什么，再请她帮帮它。', opener: 'Hello! Welcome to the Rest Stop. How is your monster today?',
           steps: [['说说它的感觉', 'It is very tired.'], ['说说它今天做了什么', 'It had three battles today.'], ['请护士帮忙', 'Can you help it, please?']] },
         { goal: 'Ask Nurse Nina how to keep monsters healthy: ask two questions, and tell her one thing you do for your monster every day.', goalZh: '问护士妮娜怎样让怪兽保持健康：问两个问题，再告诉她你每天为怪兽做的一件事。', opener: 'Healthy monsters are happy monsters! Do you have any questions?',
           steps: [['问一个问题', 'What should my monster eat?'], ['再问一个问题', 'How long should it sleep?'], ['说说你每天为怪兽做的一件事', 'I give it fresh water every day.']] },
@@ -129,7 +129,7 @@
       topic: 'Go shopping', topicZh: '在商店买东西',
       goal: 'Buy things at the shop: ask the price, say how many you want, and pay.',
       goalZh: '在商店买东西：问价钱、说要几个、然后付钱。',
-      persona: 'You are Sam, a funny and friendly shop clerk at the Echo Shop. Prices: Echo Ball 20 coins, Super Ball 60 coins, Potion 30 coins, Repel 35 coins.',
+      persona: 'You are Sam, a funny and friendly shop clerk at the Echo Shop. Prices: Echo Ball 20 coins, Gold Echo Ball 60 coins, Potion 30 coins, Quiet Spray 35 coins.',
       opener: 'Hi hi! Welcome to the Echo Shop! What can I get for you?',
       words: ['How much is', 'I want', 'three', 'Echo Balls', 'Potion', 'Here you are', 'That\'s all'],
       wordsZh: ['……多少钱', '我想要', '三个', '回声球', '药水', '给你', '就这些'],
@@ -141,7 +141,7 @@
         { steps: [['问价钱', 'How much is an Echo Ball?'], ['说要几个', 'I want three Echo Balls.'], ['付钱', 'Here you are. That\'s all, thank you.']] },
       ],
     },
-    // 课本同步：每个单元一个聊天角色，围绕单元的 Key question 和口语任务聊（unit = 第几单元，book = 哪本书）
+    // 课本单元：每个单元一个聊天角色，围绕单元的 Key question 和口语任务聊（unit = 第几单元，book = 哪本书）
     // BEGIN book units
     {"id":"hj7a-u1","book":"hj7a","bookShort":"七上","unit":1,"name":"Daisy","zh":"新同学黛西","look":"studentF","voice":"Momo","voiceZh":"活泼的女孩","topic":"Describe your best friend","topicZh":"介绍你最好的朋友","goal":"Describe your best friend to Daisy: what he or she looks like, what he or she is like, what he or she is good at, and why you are good friends.","goalZh":"向黛西介绍你最好的朋友：长什么样、性格怎么样、擅长什么，以及你们为什么是好朋友。","persona":"You are Daisy, a cheerful 12-year-old new student at the school on Echo Island. You are making a class presentation about friends and friendship, so you want to hear all about the player's best friend.","opener":"Hi! I'm Daisy, the new girl. Who is your best friend?","words":["of medium height","straight dark hair","honest","patient","caring","is good at","I can count on","because"],"wordsZh":["中等身高","黑色直发","诚实的","有耐心的","体贴的","擅长……","我可以依靠……","因为"],"goals":[{"goal":"Tell Daisy about a good friend: what he or she likes doing, what you often do together, and one thing you like about him or her.","goalZh":"告诉黛西你的一个好朋友：喜欢做什么、你们常一起做什么、你喜欢他/她哪一点。","opener":"Hi! I'm Daisy. What does your good friend like doing?","steps":[["说说朋友喜欢做什么","My friend likes reading comics."],["说说你们常一起做什么","We often play badminton together."],["说一个你喜欢他/她的地方","I like her because she is funny."]]},{"goal":"Daisy is new and wants to make friends. Give her two tips for making friends, then ask her two questions with question words such as what, where, who or why.","goalZh":"黛西刚转学来，想交朋友：给她两个交朋友的建议，再用 what、where、who、why 这样的疑问词问她两个问题。","opener":"I'm new here and I don't know anyone yet. How can I make new friends?","steps":[["给黛西一个交朋友的建议","You can join a club."],["再给她一个建议","Say hello and smile at people."],["用疑问词问她两个问题","What do you like doing? Why did you move here?"]]},{"steps":[["说说好朋友长什么样","She is of medium height with straight dark hair."],["说说好朋友的性格","He is honest and patient."],["说说好朋友擅长什么","She is good at drawing."],["说说你们为什么是好朋友","We are good friends because I can count on her."]]}]},
     {"id":"hj7a-u2","book":"hj7a","bookShort":"七上","unit":2,"name":"Max","zh":"新同学麦克斯","look":"student","voice":"Evan","voiceZh":"阳光的男孩","topic":"My school day","topicZh":"聊聊我的学校生活","goal":"Tell Max about your school day: what time you get up, how you go to school, and your favourite subject and why. Then ask Max one question back, like What about you?","goalZh":"向麦克斯介绍你的上学日：几点起床、怎么去学校、最喜欢哪门课和原因，最后反问他一个问题（比如 What about you?）。","persona":"You are Max, a cheerful 12-year-old boy who just moved to Echo Island and starts junior high school here next week. You feel a little nervous and really want to know what a normal school day is like.","opener":"Hi! I'm Max, the new boy. What time do you get up?","words":["I usually get up at","I go to school on foot","My favourite subject is","because","three times a week","I take part in","I'm looking forward to","What about you?"],"wordsZh":["我通常……起床","我走路上学","我最喜欢的科目是","因为","一周三次","我参加……","我盼望着……","你呢？"],"goals":[{"goal":"Tell Max about your school day: what you usually do at break time, what you often have for lunch, and one after-school activity you like.","goalZh":"告诉麦克斯：课间你常做什么、午饭常吃什么、你喜欢哪个课后活动。","opener":"Hi, I'm Max! What do you usually do at break time?","steps":[["说说课间常做什么","I usually chat with my friends."],["说说午饭常吃什么","I often have rice and vegetables."],["说一个你喜欢的课后活动","I play basketball after school."]]},{"goal":"Max wants to know about your classes and teachers. Tell him how many classes you have a day, what one teacher often does in class (he or she + verb with -s), and how often you have PE.","goalZh":"麦克斯想了解你的课和老师：一天上几节课、一位老师上课常做什么（he / she 后面的动词加 -s）、一周上几次体育课。","opener":"Hi! I'm Max. How many classes do you have every day?","steps":[["说说一天上几节课","We have seven classes a day."],["说说一位老师上课常做什么","Our English teacher often tells funny stories."],["说说一周几次体育课","We have PE three times a week."]]},{"steps":[["说说你几点起床","I usually get up at half past six."],["说说你怎么去学校","I go to school by bus."],["说说最喜欢的科目和原因","My favourite subject is science because it's fun."],["反问麦克斯一个问题","What about you?"]]}]},

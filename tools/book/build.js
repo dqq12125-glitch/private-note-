@@ -1,7 +1,8 @@
-// 把课本同步的内容（tools/book/<册>.json）生成 book.js 和 talk-npcs.js 里的单元聊天角色。
+// 把课本单元的内容（tools/book/<册>.json）生成 book.js 和 talk-npcs.js 里的单元聊天角色。
 // 用法：node tools/book/build.js
-// 每册 json 的来源：单词和短语 = 课本书后「Words and phrases in each unit」（扫描页逐条转写、两人独立转写再核对）；
-// 句子、对话、Boss、聊天角色是按单元话题和语法新写的（子代理写 + 两轮审校），不抄课文。
+// 每册 json 的来源：每个单元要学哪些英文单词和短语 = 课本书后「Words and phrases in each unit」的词条（扫描页逐条转写、两人独立转写再核对）；
+// 中文意思是我们自己写的（游戏里一个词只给一个好懂的意思、不超过 8 个字；2026-10-08 把和课本词汇表释义一字不差的多义项、短语、长释义 251 条重写了，
+// 只剩「吉他」「太阳系」这种只有一种说法的词和标准术语）——不搬课本的释义。句子、对话、Boss、聊天角色是按单元话题和语法新写的（子代理写 + 两轮审校），不抄课文。
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..', '..');
 // 整套初中：按年级、学期排好（顺序不能改，存档里按这个顺序编号）。START = 弟弟上初一那年（秋季学期是七上）
@@ -10,9 +11,9 @@ const SERIES = ['hj7a', 'hj7b', 'hj8a', 'hj8b', 'hj9a', 'hj9b'];
 const J = v => JSON.stringify(v);
 const arr = (rows, ind) => rows.map(r => ind + J(r) + ',').join('\n');
 const books = SERIES.filter(id => fs.existsSync(path.join(__dirname, id + '.json'))).map(id => JSON.parse(fs.readFileSync(path.join(__dirname, id + '.json'), 'utf8')));
-let out = '// 回声岛 — 课本同步：沪教版（上海教育出版社）初中英语，七年级上册到九年级下册\n' +
+let out = '// 回声岛 — 课本单元：沪教版（上海教育出版社）初中英语，七年级上册到九年级下册\n' +
   '// 由 tools/book/build.js 从 tools/book/<册>.json 生成，改内容请改 json 再生成。\n' +
-  '// 单词和短语 = 课本书后的单元词汇表；句子和对话按单元话题、语法新编（不抄课文）。格式和 data.js 的岛一样：\n' +
+  '// 单词和短语 = 课本每个单元要学的词（中文意思自己写，不搬课本释义）；句子和对话按单元话题、语法新编（不抄课文）。格式和 data.js 的岛一样：\n' +
   '// words: [英文, 中文, 图]，sents: [英文, 中文]，dlgs: [对方说, 正确回答, [干扰项, 干扰项]]\n' +
   'window.BOOKS = {\n  start: ' + START + ',   // 七上是哪年秋季学期（按日期猜孩子现在学到哪）\n  list: [\n';
 for (const B of books) {

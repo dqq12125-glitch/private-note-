@@ -1,4 +1,4 @@
-// 开场剧情测试：博士介绍 → 选女孩 → 起名字 → 妈妈 → 出门看到博士被追 → 从包里选伙伴 → 第一场战斗 → 博士道谢 → 1 号路遇到对手
+// 开场剧情测试：渡轮上填小岛通行证（选照片 → 写名字 → 念出来）→ 妈妈 → 出门遇到邻居博士 → 选一个贝壳里的伙伴 → 和博士的啃啃鼠练习赛 → 博士送药水 → 1 号路遇到对手
 // 最后测老存档：已经有怪兽但没名字的，会补问一次名字
 // 运行：node tests/story.test.js
 const path = require('path');
@@ -35,10 +35,12 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   check(await p.isVisible('.new-game [data-act=wEnter]'), '首页显示「新的冒险」');
   await p.click('.new-game [data-act=wEnter]');
   await p.waitForTimeout(900);
-  check(await p.isVisible('#w-scene.intro'), '开场：博士介绍的画面');
+  check(await p.isVisible('#w-scene.intro'), '开场：渡轮上的画面');
+  check(/ferry/.test(await en()) && !/Professor Echo|Welcome to the Echo Islands/.test(await en()), '开场先是渡轮，不是博士的自我介绍：' + await en());
   await typed();
   await p.screenshot({ path: out + '/s1-intro.png' });
-  check(await until('#w-dlg [data-act=wPick]'), '问男孩还是女孩');
+  check(await until('#w-dlg [data-act=wPick]'), '通行证上选照片（男孩 / 女孩）');
+  check(/Which photo is you/.test(await en()), '问的是「哪张照片是你」');
   await p.screenshot({ path: out + '/s2-gender.png' });
   await p.click('#w-dlg [data-act=wPick][data-i="1"]');
   await p.waitForTimeout(400);
@@ -65,11 +67,12 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.waitForTimeout(1600);
   s = await dbg();
   check(s.map === 't0', '出门来到你好岛');
-  check(/Help/.test(await en()), '听到博士喊救命');
-  const chasers = await p.evaluate(() => EchoWorld._debug().M.npcs.filter(n => n.temp).map(n => n.mon || n.name));
-  check(chasers.includes('zappy') && chasers.includes('Professor Echo'), '博士和野生怪兽出现 ' + JSON.stringify(chasers));
-  await p.screenshot({ path: out + '/s5-chase.png' });
-  check(await until('#w-scene.bag'), '打开博士的包（选伙伴画面）');
+  for (let i = 0; i < 30 && !(await dbg()).dlg; i++) await p.waitForTimeout(150);   // 博士走过来再开口
+  check(/new neighbour/.test(await en()), '邻居回声博士走过来打招呼：' + await en());
+  const temps = await p.evaluate(() => EchoWorld._debug().M.npcs.filter(n => n.temp).map(n => n.mon || n.name));
+  check(JSON.stringify(temps) === '["Professor Echo"]', '只有博士，没有追着人跑的野生怪兽 ' + JSON.stringify(temps));
+  await p.screenshot({ path: out + '/s5-prof.png' });
+  check(await until('#w-scene.bag'), '三个贝壳（选伙伴画面）');
   await p.waitForTimeout(500);
   await p.screenshot({ path: out + '/s6-bag.png' });
   const mid = await p.textContent('#bg-prev b');
@@ -80,7 +83,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   const off = await p.evaluate(() => { const h = document.getElementById('bg-hand').getBoundingClientRect(), b = document.querySelector('.bg-ball.on').getBoundingClientRect(); return Math.round((h.left + h.width / 2) - (b.left + b.width / 2)); });
   check(Math.abs(off) < 12, '手指指着选中的球（偏 ' + off + 'px）');
   await p.keyboard.press('Enter');
-  check(/Do you choose Sprouty, the grass monster\?/.test(await p.textContent('#bg-box')), '问要不要选 Sprouty');
+  check(/Sprouty is a grass monster\. Will you take it\?/.test(await p.textContent('#bg-box')), '问要不要选 Sprouty');
   await p.screenshot({ path: out + '/s7-ask.png' });
   await p.keyboard.press('Escape');
   check(!(await p.$('#bg-yes')), 'B 键取消');
@@ -89,11 +92,13 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.click('.bg-ball[data-k="0"]', { force: true });
   await p.click('#bg-yes', { force: true });
   await p.waitForTimeout(1400);
-  check(await until('#w-dlg [data-act=wSelfDone]', 3), '对伙伴说 I choose you');
-  check(/Emberpup, I choose you!/.test(await p.textContent('#w-dlg .say-text')), '选的是 Emberpup');
+  check(await until('#w-dlg [data-act=wSelfDone]', 3), '对伙伴说 be my partner');
+  check(/Emberpup, be my partner!/.test(await p.textContent('#w-dlg .say-text')), '选的是 Emberpup');
   await p.click('#w-dlg [data-act=wSelfDone]');
+  for (let i = 0; i < 10 && !(await p.isVisible('#battle')); i++) await A();
   await p.waitForSelector('#battle:not([hidden])', { timeout: 6000 });
-  check(!(await p.$('[data-act=bCatch]')), '第一场战斗不能收服');
+  check(!(await p.$('[data-act=bCatch]')) && /Professor Echo/.test(await p.textContent('#battle .th-title')), '第一场是和博士的练习赛（不能收服）');
+  check(/Nibbler/.test(await p.textContent('.hpcard.foe b')), '博士派出啃啃鼠');
   const fight = async () => {
     for (let k = 0; k < 200; k++) {
       await p.waitForTimeout(250);
@@ -112,7 +117,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   console.log('  first battle:', await fight());
   await p.click('#b-panel [data-act=bEnd]');
   await p.waitForTimeout(900);
-  check(/Coco/.test(await en()), '博士道谢：' + await en());
+  check(/Coco/.test(await en()), '练习赛以后博士说话：' + await en());
   for (let i = 0; i < 12 && (await dbg()).dlg; i++) await A();
   await p.waitForTimeout(400);
   let st = await store();

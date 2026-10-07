@@ -376,7 +376,8 @@ void main() {
     const scene = new T3.Scene();
     const FOV = 38;
     const cam = new T3.PerspectiveCamera(FOV, 1, .1, 200);
-    const CAM = { pos: V(-2.1, 1.85, 5.6), look: V(.45, .72, -.7) };   // 默认机位：低一点、平一点，远景画露得多
+    // 默认机位（2026-10-08 按评审改）：从侧面正对着两只怪兽，自己在左、对手在右，一样大、一样远；低一点、平一点，远景画露得多
+    const CAM = { pos: V(0, 1.6, 6.9), look: V(0, .78, 0) };
     const hemi = new T3.HemisphereLight(0xeaf6ff, 0x9fcf7a, 1.5);
     const sun = new T3.DirectionalLight(0xfff1d8, 2.2);
     sun.position.set(-3, 7, 4); sun.castShadow = renderer.shadowMap.enabled; sun.shadow.mapSize.set(1024, 1024);
@@ -402,7 +403,7 @@ void main() {
 
     // ---------- 场地 ----------
     const env = new T3.Group(); scene.add(env);
-    const POS = { me: V(-1.15, 0, 1.25), foe: V(1.45, 0, -1.7) };
+    const POS = { me: V(-1.75, 0, 0), foe: V(1.75, 0, 0) };
     const ARENA_C = V((POS.me.x + POS.foe.x) / 2, 0, (POS.me.z + POS.foe.z) / 2);
     // 远景画（theme.backdrop）：像舞台布景一样画在最底层（不参与深度），贴在一圈很远的圆柱内壁上。
     // 竖直方向按默认机位摆：画里的地平线落在画面上方 43% 处、地标顶（画高 15% 处）刚好到画面顶；
@@ -528,13 +529,7 @@ void main() {
         if (top) { const hx = '#' + top.getHexString(); skyTex(hx, hx); }
         scene.fog = null;   // 画自己有空气感；3D 地面远处被画盖住，不用雾
       });
-      // 两个台子
-      ['me', 'foe'].forEach(k => {
-        const pad = new T3.Mesh(new T3.CylinderGeometry(1.15, 1.25, .12, 40), new T3.MeshToonMaterial({ color: t.pad }));
-        pad.position.copy(POS[k]).setY(.02); pad.receiveShadow = true; env.add(pad);
-        const rim = new T3.Mesh(new T3.TorusGeometry(1.2, .05, 6, 40), new T3.MeshBasicMaterial({ color: t.rim }));
-        rim.rotation.x = Math.PI / 2; rim.position.copy(POS[k]).setY(.08); env.add(rim);
-      });
+      // 没有台子：怪兽脚下是它属性颜色的一圈圈水波（setMon 里按怪兽加，见 ripples）
       env.userData.t = t;
     }
 
@@ -542,7 +537,26 @@ void main() {
     const M = { me: null, foe: null };
     // 朝向：在「正对对手」的基础上再转多少。我方平时侧过身来、露出 3/4 正面（图生 3D 的模型背面最难看），
     // 出招时才转过去对着对手，打完再转回来
-    const TURN = { me: -1.85, foe: -.55 }, TURN_ATK = .1;
+    const TURN = { me: -.62, foe: .62 }, TURN_ATK = .1;
+    // 脚下的水波：三圈属性色的细环，一圈圈往外扩、慢慢变淡（每帧在 ripplesStep 里动）
+    const RIP = { me: null, foe: null };
+    function ripples(side, sp) {
+      if (RIP[side]) { scene.remove(RIP[side]); RIP[side].traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material) q.material.dispose(); }); RIP[side] = null; }
+      const T = window.DEX && DEX.TYPES, col = (T && sp && sp.types && T[sp.types[0]] && T[sp.types[0]].color) || '#7aa85a';
+      const g = new T3.Group(); g.position.copy(POS[side]).setY(.025);
+      for (let i = 0; i < 3; i++) {
+        const ring = new T3.Mesh(new T3.TorusGeometry(1, .035, 6, 56).rotateX(Math.PI / 2), new T3.MeshBasicMaterial({ color: col, transparent: true, opacity: .5, depthWrite: false }));
+        ring.userData.k = i / 3; ring.renderOrder = 1; g.add(ring);
+      }
+      RIP[side] = g; scene.add(g);
+    }
+    function ripplesStep(now) {
+      ['me', 'foe'].forEach(side => {
+        const g = RIP[side]; if (!g) return;
+        const m = M[side]; g.visible = !!(m && !m.gone && m.R.root.visible);
+        g.children.forEach(r => { const k = (now / 2400 + r.userData.k) % 1; const s = .45 + k * .85; r.scale.set(s, 1, s); r.material.opacity = .55 * (1 - k) * (k < .12 ? k / .12 : 1); });
+      });
+    }
     function setMon(side, sp, hidden) {
       if (M[side]) { scene.remove(M[side].R.root); Mon3D.dispose(M[side].R); }
       const R = Mon3D.build(sp, { unique: true });
@@ -557,7 +571,7 @@ void main() {
       R.root.position.copy(P);
       const yaw = Math.atan2(other.x - P.x, other.z - P.z);
       R.root.rotation.y = yaw + TURN[side];
-      const k = (side === 'me' ? 1.05 : 1.25) * (sp.legend ? 1.3 : 1) / Math.max(1, R.height * .9);
+      const k = 1.15 * (sp.legend ? 1.3 : 1) / Math.max(1, R.height * .9);
       R.root.scale.multiplyScalar(k);
       R.baseScale = R.root.scale.x;
       scene.add(R.root);
@@ -565,6 +579,7 @@ void main() {
       M[side] = { R, sp, off: V(0, 0, 0), flash: 0, talk: 0, gone: !!hidden, yaw, turn: TURN[side], spin: 0, tintCol: C('#ffffff'), tintV: 0, tinted: false };
       M[side].mats = mats(side);
       R.root.visible = !hidden;
+      ripples(side, sp);
       return M[side];
     }
     const mats = side => { const a = []; M[side].R.root.traverse(o => { if (o.isMesh && o.material && (o.material.isMeshToonMaterial || o.material.userData.sprite)) a.push(o.material); }); return a; };
@@ -647,7 +662,7 @@ void main() {
       return new T3.CanvasTexture(c);
     }
     const atlas = makeAtlas();
-    // 一个粒子池（一次绘制）：每颗粒子带自己的 cover（亮颜色默认 0 = 叠加发光；暗颜色——幽灵、恶系的黑烟——叠加上去看不见，默认 1 = 普通颜色）
+    // 一个粒子池（一次绘制）：每颗粒子带自己的 cover（亮颜色默认 0 = 叠加发光；暗颜色——幽灵、暗系的黑烟——叠加上去看不见，默认 1 = 普通颜色）
     const pUni = { uTex: { value: atlas }, uScale: { value: 300 } };
     const PP = (() => {
       const g = new T3.BufferGeometry();
@@ -1202,7 +1217,7 @@ void main() {
       return s;
     }
 
-    // ---------- 运镜（仿新世代对战：开场横扫、放招过肩、命中推近、倒下慢推） ----------
+    // ---------- 运镜（开场横扫、放招过肩、命中推近、倒下慢推） ----------
     // 镜头的目标用函数给出，怪兽动了镜头也跟着；拍完一定回到默认机位（CAM），screenPos 按默认机位算
     const cur = { pos: CAM.pos.clone(), look: CAM.look.clone(), fov: FOV };   // 当前机位（不含呼吸和震动）
     let shot = null, punch = null, camTimer = 0, introDone = false, camF = 1;
@@ -1222,21 +1237,13 @@ void main() {
     function camPunch(at, amt, ms) { if (CINE) punch = { at, amt, t0: performance.now(), ms: ms || 480 }; }
     const lerpV = (a, b, k) => a.clone().lerp(b, k);
     const monH = side => { const m = M[side]; return m ? m.R.height * m.R.root.scale.x / m.R.size : 1; };
-    // 放招前：站在出招方身后（过肩），看着对手
+    // 放招前：镜头移到出招方的斜前方（还是从观众这一侧看，不转到怪兽背后），看着对手
     function shotShoulder(side) {
       return () => {
         const other = side === 'me' ? 'foe' : 'me', a = center(side), b = center(other);
-        const d = b.clone().sub(a).setY(0).normalize(), r = V(-d.z, 0, d.x), h = monH(side);
-        if (side === 'me') {
-          // 我方：从右后方低一点看过去，自己在左下、对手在画面中间偏右
-          const back = (1.9 + h * .8) * camF;
-          const pos = a.clone().addScaledVector(d, -back).addScaledVector(r, 1.35 * camF).setY(Math.max(1.3, h * 1.25));
-          return { pos, look: lerpV(a, b, .62).setY(b.y * .8 + .2) };
-        }
-        // 对方：从它身后高处往下看我方（远景画在背后，抬高机位让画面里不露出没画的那一侧）
-        const back = (2.4 + h * .6) * camF;
-        const pos = a.clone().addScaledVector(d, -back).addScaledVector(r, 1.3 * camF).setY(Math.max(3.3, h * 2.2));
-        return { pos, look: lerpV(a, b, .68).setY(.3) };
+        const d = b.clone().sub(a).setY(0).normalize(), h = monH(side), front = V(0, 0, 1);
+        const pos = a.clone().addScaledVector(d, -(.9 + h * .4) * camF).addScaledVector(front, (3.4 + h * .6) * camF).setY(Math.max(1.25, h * 1.15));
+        return { pos, look: lerpV(a, b, .62).setY(b.y * .8 + .2) };
       };
     }
     // 招式飞出去：从默认机位稍微推向挨打的一方
@@ -1246,7 +1253,7 @@ void main() {
       return () => {
         const other = side === 'me' ? 'foe' : 'me', a = center(side), b = center(other);
         const d = b.clone().sub(a).setY(0).normalize(), r = V(-d.z, 0, d.x), h = monH(side);
-        const dist = (1.2 + h * 1.05) * (side === 'me' ? 1 : 1.4) * camF;   // 对方本来就画得大一些；竖屏再拉远一点
+        const dist = (1.2 + h * 1.05) * camF;   // 竖屏再拉远一点
         const pos = a.clone().addScaledVector(d, dist * .8).addScaledVector(r, dist * (side === 'me' ? .55 : -.55)).setY(Math.max(.42, h * .4));
         return { pos, look: a.clone().setY(h * .6), fov: 40 };
       };
@@ -1416,7 +1423,8 @@ void main() {
       stats.move = { type, tier, support: !!support, t0: performance.now(), impact: 0 };
       if (support) { await supportMove(ctx, R); stats.move.impact = performance.now() - stats.move.t0; return; }
       const def = R.types[type] && R.types[type].release ? R.types[type] : null;
-      const st = { turn0: TURN[side], turned: side === 'me', tok: (m.turnTok = (m.turnTok || 0) + 1), rigAtk: false, lifted: false };
+      // 两边平时都侧过一点身子朝着观众，出招时转过去正对对手
+      const st = { turn0: TURN[side], turned: true, tok: (m.turnTok = (m.turnTok || 0) + 1), rigAtk: false, lifted: false };
       if (tier === 2) prepCut(ctx);          // 过场立绘先开始加载
       else if (tier === 1) banner(ctx);      // 中招：右上角的招式名小横幅（不挡流程）
       const charged = phaseCharge(ctx, def, st, R);
@@ -1574,7 +1582,7 @@ void main() {
       if (live()) { m.spin = 0; m.R.root.scale.setScalar(bs); }
       ctx.a.copy(center(side)).addScaledVector(dir, .3);
     }
-    // 通用命中：动画式命中星、冲击波（中招、大招脚下一圈，大招再加一圈面向镜头的）、往外迸的星光、临时点光源、属性色闪光（中招淡、大招强；限频）；
+    // 通用命中：动画式命中星、冲击波（中招、大招脚下一圈，大招再加一圈面向镜头的）、往外迸的星光、临时点光源、属性色闪烁（中招淡、大招强；限频）；
     // 大招再放慢一下 + 发光后期加强 + 震一下。每一项都能用登记时的 generic 关掉
     function impactFx(ctx, def) {
       const { b, tier: t, cols, other } = ctx, no = k => noGen(def, k);
@@ -1613,7 +1621,7 @@ void main() {
       const u = speedTex(); if (u) CUT.lines.style.backgroundImage = 'url(' + u + ')';
       return el;
     }
-    // 立绘：发布的 2D 图标（assets/mon2d/<id>.webp）；异色的、?art=proc 的、图标读不到的用 Mon3D.snapshot（异色图标 / 3D 截图）
+    // 立绘：发布的 2D 图标（assets/mon2d/<id>.webp）；稀有色的、?art=proc 的、图标读不到的用 Mon3D.snapshot（稀有色图标 / 3D 截图）
     function prepCut(ctx) {
       cutDom();
       const sp = (ctx.info && ctx.info.sp) || M[ctx.side].sp, img = CUT.img;
@@ -1818,44 +1826,99 @@ void main() {
       emit(22, () => ({ pos: p.clone().add(V(rnd(-.5, .5), h * rnd(1.1, 1.5), rnd(-.4, .4))), vel: V(0, -rnd(.4, .8), 0), col: Math.random() < .5 ? '#ffffff' : '#b9ffd6', size: rnd(.14, .24), life: rnd(.8, 1.1), tex: 'star', spin: rnd(-2, 2), fade: .4 }));
       aura(side, { col: '#7dffb0', col2: '#ffffff', life: .9, strength: .6 });
     }
-    // 扔球收服：wobbles 次摇晃；ok 为 true 就收服成功
-    const ballMesh = () => { const g = new T3.Group(); const top = new T3.Mesh(new T3.SphereGeometry(.16, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), new T3.MeshToonMaterial({ color: '#8e6cef' })); const bot = new T3.Mesh(new T3.SphereGeometry(.16, 16, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), new T3.MeshToonMaterial({ color: '#ffffff' })); const band = new T3.Mesh(new T3.TorusGeometry(.16, .018, 6, 24), new T3.MeshToonMaterial({ color: '#2b2b3a' })); band.rotation.x = Math.PI / 2; const btn = new T3.Mesh(new T3.SphereGeometry(.045, 10, 8), new T3.MeshToonMaterial({ color: '#ffffff' })); btn.position.z = .15; g.add(top, bot, band, btn); return g; };
+    // ---------- 扔回声球收服 ----------
+    // 回声球是一只尖顶朝上的螺旋海螺：开口朝镜头，开口里含着一颗发光的回声珠（2D 图标是 Cartoon.shell，颜色一致）。
+    // 外层 ball 的原点在壳底：落地贴地、摇晃时以壳底为支点；里层 body 的原点在壳的中间：飞的时候绕自己翻滚
+    // 轮廓（半径, 高）：圆底、肩膀最宽，往上三圈一圈比一圈小（圈和圈之间往里收一道缝），最后是尖顶
+    const SHELL_H = .47, SHELL_MID = .21;
+    const SHELL_PROF = [[0, 0], [.08, .008], [.135, .04], [.165, .09], [.172, .14], [.162, .182], [.134, .207], [.12, .215], [.127, .232], [.121, .258], [.098, .279], [.084, .286], [.089, .301], [.081, .326], [.06, .343], [.05, .349], [.053, .363], [.042, .39], [.024, .425], [0, SHELL_H]];
+    const SHELL_SEAM = [.212, .284, .347];   // 圈和圈之间的缝（缝上压一道浅色的棱）
+    // 颜色以 cartoon.js 的 Cartoon.SHELL 为准；单独打开（tools/fx.html 没载 cartoon.js）时用这里的一份
+    const SHELL_COL = (window.Cartoon && Cartoon.SHELL) || {
+      ball: { body: '#9b7cf2', rib: '#d3c2ff', lip: '#fff1dc', inner: '#f6b7c9', pearl: '#f3ecff', glow: '#b388ff' },
+      gold: { body: '#f5b82e', rib: '#ffe59a', lip: '#fff6dc', inner: '#ffb48a', pearl: '#d9fdff', glow: '#26c6da' },
+    };
+    function shellMesh(gold) {
+      const c = SHELL_COL[gold ? 'gold' : 'ball'];
+      const g = new T3.Group(), body = new T3.Group();
+      body.position.y = SHELL_MID; g.add(body);
+      const toon = col => new T3.MeshToonMaterial({ color: col, side: T3.DoubleSide });
+      const put = (geo, mat, x, y, z) => { const o = new T3.Mesh(geo, mat); o.position.set(x || 0, (y || 0) - SHELL_MID, z || 0); o.castShadow = true; body.add(o); return o; };
+      // 壳身
+      put(new T3.LatheGeometry(SHELL_PROF.map(([x, y]) => new T3.Vector2(x, y)), 24), toon(c.body));
+      // 每道缝上一圈浅色的棱，稍微斜一点，看起来是一圈圈盘上去的
+      const rAt = y => { for (let i = 1; i < SHELL_PROF.length; i++) { const [x0, y0] = SHELL_PROF[i - 1], [x1, y1] = SHELL_PROF[i]; if (y1 >= y) return x0 + (x1 - x0) * (y - y0) / ((y1 - y0) || 1); } return 0; };
+      SHELL_SEAM.forEach((y, i) => { const r = rAt(y) + .006; const o = put(new T3.TorusGeometry(r, .012 - i * .002, 5, 28), toon(c.rib), 0, y, 0); o.rotation.order = 'YXZ'; o.rotation.set(Math.PI / 2 + .1, .4 + i * 2.1, 0); });
+      // 肩膀上一圈小疙瘩（正面留给开口）
+      for (let k = 0; k < 5; k++) {
+        const a = .95 + k * (Math.PI * 2 - 1.9) / 4, d = V(Math.sin(a), .6, Math.cos(a)).normalize();
+        put(new T3.ConeGeometry(.026, .07, 6), toon(c.rib), Math.sin(a) * .158, .178, Math.cos(a) * .158).quaternion.setFromUnitVectors(V(0, 1, 0), d);
+      }
+      // 开口（+z）：奶油色的唇边、粉色的里面、发光的回声珠
+      const lip = put(new T3.TorusGeometry(.082, .022, 6, 22), toon(c.lip), .03, .125, .15); lip.scale.set(1, 1.22, 1); lip.rotation.set(-.15, .22, -.22);
+      const inner = put(new T3.SphereGeometry(.084, 14, 10), toon(c.inner), .03, .125, .146); inner.scale.set(.95, 1.18, .3); inner.rotation.set(-.15, .22, -.22);
+      const pearl = put(new T3.SphereGeometry(.046, 14, 10), new T3.MeshBasicMaterial({ color: c.pearl }), .034, .118, .17);
+      pearl.castShadow = false; pearl.layers.enable(1);   // 发光后期里亮一点
+      g.userData.body = body; g.userData.col = c;
+      return g;
+    }
     let ball = null;
     const dropBall = () => { if (ball) { ball.removeFromParent(); releaseObj(ball); ball = null; } };
+    // 壳的中间（开口、珠子差不多在这个高度）
+    const ballMid = () => ball.position.clone().add(V(0, SHELL_MID, 0));
+    // 回声：从壳里一圈圈往外扩的声波（面向镜头的圆环）；n 圈，每圈隔 gap 毫秒
+    function echoRings(at, col, n, r1, gap) {
+      for (let i = 0; i < n; i++) setTimeout(() => { if (alive) shockwave(at.clone(), { col, col2: '#ffffff', flat: false, r0: .12, r1: r1 * (1 + i * .25), life: .42, thick: .045, push: .2, opacity: .85 }); }, i * gap);
+    }
+    // 开口朝镜头（只转水平方向）
+    const faceCam = o => { o.rotation.set(0, Math.atan2(cam.position.x - o.position.x, cam.position.z - o.position.z), 0); };
     async function catchThrow(sup) {
       const m = M.foe;
       dropBall();
-      ball = ballMesh(); ball.userData.keep = true; if (sup) ball.children[0].material.color.set('#26c6da');
-      const a = center('me'), b = center('foe'), bl = ball, tc = sup ? '#26c6da' : '#b388ff';
-      const tr = trail(() => (bl.parent ? bl.position : null), { col: '#ffffff', col2: tc, width: .14, life: .22, max: 1.5 });   // 球飞过去的拖尾
-      await fly(a, b.clone().add(V(0, .2, 0)), 520, ball, null, { spin: [0, 0, -14] });
+      ball = shellMesh(sup); ball.userData.keep = true;
+      const a = center('me'), b = center('foe'), bl = ball, body = ball.userData.body, tc = ball.userData.col.glow;
+      const tr = trail(() => (bl.parent ? bl.position.clone().add(V(0, SHELL_MID, 0)) : null), { col: '#ffffff', col2: tc, width: .14, life: .22, max: 1.5 });   // 回声球飞过去的拖尾
+      // 飞的时候壳绕着自己翻滚（里层转，外层只管位置）
+      await fly(a.clone().setY(a.y - SHELL_MID), b.clone().setY(b.y - SHELL_MID + .2), 520, ball, (p, k) => { body.rotation.set(-k * 7, k * 11, 0); });
       tr.stop();
       if (ball !== bl) return;
-      scene.add(ball); ball.position.copy(b).add(V(0, .2, 0)); ball.rotation.set(0, 0, 0);
+      scene.add(ball); ball.position.copy(b).setY(b.y - SHELL_MID + .2); body.rotation.set(0, 0, 0); faceCam(ball);
       flash('#ffffff', 250);
-      // 怪兽化成光被吸进球里
-      const bp = ball.position.clone();
+      // 怪兽化成光，被吸进开口里的珠子
+      const bp = ballMid();
       emit(34, () => { const p0 = center('foe').add(sph(rnd(.2, .6))), lf = rnd(.24, .34); return { pos: p0, vel: bp.clone().sub(p0).multiplyScalar(1 / lf), col: Math.random() < .5 ? '#ffffff' : tc, size: rnd(.12, .22), life: lf, grow: .3 }; });
       glow(bp, { col: '#e6dcff', size: .9, life: .45 });
+      echoRings(bp, tc, 2, .7, 140);
       const s = m.R.baseScale;
       await tween(320, k => { m.R.root.scale.setScalar(s * (1 - k)); });
       m.R.root.visible = false;
-      await tween(300, k => { if (ball) ball.position.y = b.y + .2 - k * (b.y + .05); });
-      if (ball) ball.position.y = .16;
+      // 落到地上，再轻轻弹一下
+      const y0 = ball ? ball.position.y : 0;
+      await tween(240, k => { if (ball) ball.position.y = y0 * (1 - k * k); });
+      await tween(200, k => { if (ball) { ball.position.y = Math.sin(k * Math.PI) * .07; ball.rotation.z = Math.sin(k * Math.PI) * .12; } });
+      if (ball) { ball.position.y = .005; ball.rotation.z = 0; }
     }
-    async function wobble() { await tween(520, k => { if (ball) ball.rotation.z = Math.sin(k * Math.PI * 2) * .5; }); }
+    // 传出一声回声：海螺不摇晃，而是轻轻鼓起来一下、亮一下，从开口冒出一圈声波（monsters.js 一共传两声）
+    async function wobble() {
+      if (ball) echoRings(ballMid(), ball.userData.col.glow, 1, .6, 0);
+      const s0 = ball ? ball.scale.x : 1;
+      await tween(560, k => { if (ball) ball.scale.setScalar(s0 * (1 + Math.sin(k * Math.PI) * .18)); });
+      if (ball) ball.scale.setScalar(s0);
+    }
     async function sealed() {
       if (!ball) return;
-      const p = ball.position.clone();
+      const p = ballMid(), bl = ball;
       burst(p, ['#ffe082', '#ffffff'], 30, 2.5, .4, .7); ring(p, '#ffe082', .1, 1, .5);
       impactStar(p, { col: '#fff6c8', col2: '#ffc53d', size: .9, life: .4, spikes: 8 });
-      shockwave(p.clone().setY(.1), { col: '#ffe082', col2: '#ffffff', r1: 1.2, life: .5 });
+      shockwave(ball.position.clone().setY(.1), { col: '#ffe082', col2: '#ffffff', r1: 1.2, life: .5 });
+      echoRings(p, ball.userData.col.glow, 3, .9, 110);   // 收好了：三圈回声
       emit(14, () => ({ pos: p.clone(), vel: sph(rnd(1, 2)).setY(rnd(1, 2.2)), col: Math.random() < .5 ? '#ffe082' : '#ffffff', size: rnd(.14, .24), life: rnd(.6, .9), grav: -2, tex: 'star', spin: rnd(-4, 4) }));
-      await sleep(300);
+      // 壳高兴地跳一下
+      await tween(300, k => { if (ball === bl) ball.position.y = .005 + Math.sin(k * Math.PI) * .12; });
     }
     async function breakOut() {
       const m = M.foe; flash('#ffffff', 250);
-      if (ball) { const p = ball.position.clone(); burst(p, ['#ffffff', '#b388ff'], 34, 3, .45, .5); shockwave(p.clone().setY(.1), { col: '#ffffff', col2: '#b388ff', r1: 1.5, life: .4 }); impactStar(p, { col: '#ffffff', col2: '#b388ff', size: .8, life: .25 }); }
+      if (ball) { const p = ballMid(), tc = ball.userData.col.glow; burst(p, ['#ffffff', tc], 34, 3, .45, .5); shockwave(ball.position.clone().setY(.1), { col: '#ffffff', col2: tc, r1: 1.5, life: .4 }); impactStar(p, { col: '#ffffff', col2: tc, size: .8, life: .25 }); echoRings(p, tc, 2, .8, 90); }
       dropBall();
       m.R.root.visible = true;
       await tween(300, k => { m.R.root.scale.setScalar(m.R.baseScale * k); });
@@ -1894,6 +1957,7 @@ void main() {
         }
       });
       env.children.forEach(o => { if (o.userData.drift) { o.position.x += o.userData.drift * dtR; if (o.position.x > 14) o.position.x = -14; } });
+      ripplesStep(now);
       pUni.uScale.value = host.clientHeight * renderer.getPixelRatio() * 1.3;   // 粒子大小按实际像素算（高像素比的手机上不会变小）
       stepParticles(dt);
       stepFx(dt);
@@ -1928,9 +1992,9 @@ void main() {
       renderer.setSize(w, h, false);
       canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
       cam.aspect = w / h;
-      // 竖屏把镜头拉远一点，两只怪兽都在画面里
-      const f = w / h < 1 ? 1 + (1 - w / h) * .9 : 1;
-      CAM.pos.set(-2.1 * f, 1.85 + (f - 1) * 1.1, 5.6 * f);
+      // 画面窄（竖屏）就把镜头拉远：左右两只怪兽（x = ±1.75，再留出身子和一点边）都要在画面里
+      const f = Math.max(1, 2.55 / (Math.tan(FOV / 2 * Math.PI / 180) * (w / h)) / 6.9);
+      CAM.pos.set(0, 1.6 + (f - 1) * .9, 6.9 * f);
       if (f !== camF) { camF = f; placeBackdrop(); }
       cam.updateProjectionMatrix();
       pUni.uScale.value = h * renderer.getPixelRatio() * 1.3;
@@ -1949,7 +2013,7 @@ void main() {
     function mount(el) { host = el; el.prepend(canvas); resize(); }
     function destroy() {
       alive = false; cancelAnimationFrame(raf); clearTimeout(camTimer); envTok++;
-      ['me', 'foe'].forEach(s => { if (M[s]) { scene.remove(M[s].R.root); Mon3D.dispose(M[s].R); } });
+      ['me', 'foe'].forEach(s => { if (M[s]) { scene.remove(M[s].R.root); Mon3D.dispose(M[s].R); } if (RIP[s]) { scene.remove(RIP[s]); RIP[s].traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material) q.material.dispose(); }); RIP[s] = null; } });
       fx.splice(0).forEach(f => { f.done = true; f.obj.removeFromParent(); releaseObj(f.obj); });
       anim.splice(0).forEach(a => a.res());   // 还在等的动画都当完成了（别让放招一直卡着）
       dropBall();

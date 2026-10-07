@@ -9,6 +9,8 @@
 //   onWsOpen(id, url, cb) / onPost(id, url, body, cb)：自己接管连接（cb(id, 类型, 数据) 回给网页）、
 //   micAfterSettings（openAppSettings() 回来以后麦克风变成什么）、picked（backupPick() 选到的 {ok, name, text}）、
 //   now()（时钟，测锁定时间时可以换掉）；记录：backups、shared（分享过的）、settingsOpened、calls（调用过的方法名）。
+//   销售版：edition（'family' 默认 / 'sales'）、storage（{free, total, ram} 字节，设备检查用）、diagExtra（并进 diag() 的字段，比如 {sdk: 25}）；
+//   销售版装好时没有家长密码：install 时传 pin: null，向导里 setPin 设好。setPin 和原生一样：还没有密码直接设，有了要 2 分钟内刚输对过。
 function installFakeEchoNative(opts) {
   opts = opts || {};
   const W = typeof window !== 'undefined' ? window : globalThis;
@@ -22,6 +24,13 @@ function installFakeEchoNative(opts) {
     picked: opts.picked || null,
     version: opts.version || { code: 321, name: '20261007-fake000' },
     recovered: !!opts.recovered,
+    edition: opts.edition === 'sales' ? 'sales' : 'family',
+    // 检查新版本的默认地址：家庭版打包时写进去，销售版没有；销售版开放的课本册（空 = 七上、七下）
+    books: opts.books || '',
+    verUrl: opts.verUrl !== undefined ? opts.verUrl : opts.edition === 'sales' ? '' : 'https://dqq12125-glitch.github.io/private-note-/version.json',
+    storage: opts.storage || { free: 8e9, total: 128e9, ram: 12e9 },
+    diagExtra: opts.diagExtra || null,
+    okAt: 0,              // 最近一次输对密码的时间（setPin 改密码要 2 分钟内输对过）
     orient: 'portrait',
     fails: 0, lockUntil: 0, lockouts: 0, lastLock: 0,
     backups: {},          // 名字 → { text, time }
@@ -36,6 +45,8 @@ function installFakeEchoNative(opts) {
   const sorted = () => Object.keys(S.backups).filter(n => NAME.test(n))
     .sort((a, b) => b.match(NAME)[1].localeCompare(a.match(NAME)[1]) || S.backups[b].time - S.backups[a].time);
   const waitMs = () => Math.max(0, Math.min(LOCK_MS, S.lockUntil - S.now()));
+  // 销售版才能在手机上设密码：还没有就能设，有了要 2 分钟内刚输对过
+  const canSet = () => S.edition === 'sales' && (!S.pin || (S.okAt > 0 && S.now() - S.okAt <= 2 * 60 * 1000));
   // 连接失败的样子和原生一样：WebSocket 回 'error' + 'HTTP 401 …'，HTTPS 回 'fail' + 阿里云的错误 JSON
   const failWs = id => cb(id, 'error', !S.key ? 'HTTP 401 no key' : S.net === 'badkey' ? 'HTTP 401 Unauthorized'
     : S.net === 'quota' ? 'HTTP 429 Too Many Requests' : 'Unable to resolve host "dashscope.aliyuncs.com"');
@@ -64,22 +75,33 @@ function installFakeEchoNative(opts) {
       failPost(id);
     },
     version() { log('version'); return JSON.stringify(S.version); },
-    diag() { log('diag'); return JSON.stringify({ renderGone: 0, lastGone: 0, lastCrash: false, sdk: 35, android: '15', webview: 'fake', debug: true }); },
+    diag() { log('diag'); return JSON.stringify(Object.assign({ renderGone: 0, lastGone: 0, lastCrash: false, sdk: 35, android: '15', webview: 'fake', debug: true }, S.diagExtra || {})); },
     takeRecovered() { log('takeRecovered'); const r = S.recovered; S.recovered = false; return r; },
     hasPin() { log('hasPin'); return !!S.pin; },
     checkPin(p) {
       log('checkPin');
       p = p == null ? '' : String(p).trim();
       if (!S.pin || !p || waitMs() > 0) return false;
-      if (p === String(S.pin)) { S.fails = 0; return true; }
+      if (p === String(S.pin)) { S.fails = 0; S.okAt = S.now(); return true; }
       if (++S.fails >= TRIES) { S.fails = 0; S.lockUntil = S.now() + LOCK_MS; S.lockouts++; S.lastLock = S.now(); }
       return false;
     },
     pinStatus() {
       log('pinStatus');
       const w = waitMs();
-      return JSON.stringify({ has: !!S.pin, locked: w > 0, waitSec: Math.ceil(w / 1000), triesLeft: w > 0 ? 0 : TRIES - S.fails, lockouts: S.lockouts, lastLock: S.lastLock });
+      return JSON.stringify({ has: !!S.pin, locked: w > 0, waitSec: Math.ceil(w / 1000), triesLeft: w > 0 ? 0 : TRIES - S.fails, lockouts: S.lockouts, lastLock: S.lastLock, canSet: canSet() });
     },
+    setPin(p) {
+      log('setPin');
+      p = p == null ? '' : String(p).trim();
+      if (!/^[0-9]{4}$/.test(p) || !canSet()) return false;
+      S.pin = p; S.fails = 0; S.lockUntil = 0; S.okAt = 0;
+      return true;
+    },
+    edition() { log('edition'); return S.edition; },
+    verUrl() { log('verUrl'); return S.verUrl; },
+    books() { log('books'); return S.books; },
+    storage() { log('storage'); return JSON.stringify(S.storage || {}); },
     micPermission() { log('micPermission'); return S.mic; },
     openAppSettings() {
       log('openAppSettings');

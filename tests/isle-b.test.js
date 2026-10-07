@@ -1,13 +1,13 @@
 // B 组（第 2–4 岛：温馨家庭岛、校园岛、学科岛）端到端测试：
-// 三座岛的主线剧情各走一遍、三个道馆机关按正确解法走通（再故意错一次看会不会回起点）、秘传学习器、卡点、渡轮；最后截图（2D + 3D）
+// 三座岛的主线剧情各走一遍、三个挑战馆机关按正确解法走通（再故意错一次看会不会回起点）、回声贝、卡点、渡轮；最后截图（2D + 3D）
 // 运行：node tests/isle-b.test.js
 const H = require('./helpers');
 
 (async () => {
   const t = await H.open();
   const { p, W, check } = t;
-  // 道馆要先打败课本单元的 BOSS（第 13 个馆主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
-  // 七上全过是霜羽鸟的里程碑，先当作收服过了，免得它半路飞来打断剧情
+  // 挑战馆要先打败课本单元的 BOSS（第 13 个岛主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
+  // 七上全过是发条龟的里程碑（老旗标 leg:frostwing 也算），先当作收服过了，免得它半路飞来打断剧情
   const save0 = t.save;
   t.save = async s => { await save0(s); await p.evaluate(() => { const S = EchoGame.S; for (let i = 0; i < 16; i++) S.stars[(13 + i) + '-6'] = 1; S.world.flags['s:leg:frostwing'] = 1; localStorage.setItem('echo-island-v1', JSON.stringify(S)); }); };
   const flags = () => t.flags();
@@ -20,7 +20,7 @@ const H = require('./helpers');
   const talk = async id => { const ok = await t.talkTo(new Function('n', 'return n.id === ' + JSON.stringify(id))); await t.idle(200); return ok; };
   const at = async (x, y) => { const s = await t.dbg(); return s.x === x && s.y === y; };
   // 走一步（用方向键，会触发 step 钩子）
-  // 存档后喷上驱怪喷雾，走路时不会遇到野生怪兽（测试不依赖随机）
+  // 存档后喷上悄悄喷雾，走路时不会遇到野生怪兽（测试不依赖随机）
   const save = async (o, who) => { who = who || t; await who.save(o); await who.p.evaluate(() => { const S = JSON.parse(localStorage.getItem('echo-island-v1')); S.world.repel = 99999; localStorage.setItem('echo-island-v1', JSON.stringify(S)); }); await who.p.reload(); await who.W(400); await who.p.click('[data-act=wEnter]'); await who.W(900); };
   const stepTo = async (x, y, dir) => { await t.tp(x, y, dir); await W(120); await t.walk(dir, 1); await t.idle(); };
 
@@ -56,16 +56,16 @@ const H = require('./helpers');
   await talk('crow');
   f = await flags();
   check(f['s:ch2'], '打败稻草人（嘘声团员），夺回家庭水晶 s:ch2');
-  // 居合斩卡点：没有学习器、徽章不够时小树砍不掉
+  // 开路卡点：没有回声贝、徽章不够时小树砍不掉
   await t.tp(17, 3, 'up'); await t.A(); await t.closeDlg(); await t.walk('up', 1);
-  check(await at(17, 3) && (await tileAt(17, 2)) === 'n', '没有居合斩：北边路口的小树挡住去 3 号路');
+  check(await at(17, 3) && (await tileAt(17, 2)) === 'n', '没有开路：北边路口的小树挡住去 3 号路');
   await t.go('i2A', 'from:t2');
   await talk('doc');
-  check((await bag()).hm_cut > 0 && (await flags())['s:got_cut'], '树医生送了居合斩学习器');
-  // 道馆：家族树迷宫
+  check((await bag()).hm_cut > 0 && (await flags())['s:got_cut'], '树医生送了开路回声贝');
+  // 挑战馆：家族树迷宫
   await t.go('i2G', 'from:t2');
   await t.idle();
-  check((await flags())['s:g2hi'] && /家族树/.test(await noteText()), '进道馆：广播描述要找的人，提示条显示家族树');
+  check((await flags())['s:g2hi'] && /家族树/.test(await noteText()), '进挑战馆：广播描述要找的人，提示条显示家族树');
   await t.shot('b-i2G-maze');
   await talk('g1b');
   check(await at(8, 22) && !(await gateOpen(2)), '找错人（没戴眼镜的奶奶）被送回第一间的起点');
@@ -78,17 +78,17 @@ const H = require('./helpers');
   await talk('g3b');
   check(await at(4, 10) && !(await gateOpen(0)), '找错人（马尾的姐姐）被送回第三间的起点');
   await talk('g3');
-  check(await gateOpen(0), '找对妹妹（两条小辫子、粉裙子）→ 通馆主的门开');
+  check(await gateOpen(0), '找对妹妹（两条小辫子、粉裙子）→ 通岛主的门开');
   await talk('leader');
   check((await badges()) === 3, '打败海龟奶奶，拿到第 3 枚徽章');
-  // 再进一次道馆，门一直开着
+  // 再进一次挑战馆，门一直开着
   await t.go('t2', 'door:G'); await t.go('i2G', 'from:t2'); await t.idle();
   check(await gateOpen(0) && await gateOpen(1) && await gateOpen(2), '解开过的机关门再来时还开着');
   // 砍树去 3 号路
   await t.go('t2', { x: 17, y: 3, dir: 'up' }); await t.idle();
   await t.A(); await t.idle();
   await t.walk('up', 3); await t.idle();
-  check((await t.dbg()).map === 'r2', '用居合斩砍掉小树，走到 3 号路');
+  check((await t.dbg()).map === 'r2', '用开路砍掉小树，走到 3 号路');
   await t.shot('b-r2');
   await t.tp(11, 29, 'up'); await t.walk('up', 2); await t.idle();
   check((await flags())['s:rival2'], '3 号路中间对手跑过来，第二次对战 s:rival2');
@@ -120,17 +120,17 @@ const H = require('./helpers');
   check((await flags())['s:ch3'], '五班堵住干部低语，夺回校园水晶 s:ch3');
   await t.go('t3', { x: 22, y: 5, dir: 'up' }); await t.idle();
   await talk('miner');
-  check((await bag()).hm_smash > 0, '矿工送了碎岩学习器');
-  // 碎岩卡点：3 枚徽章不能碎岩
+  check((await bag()).hm_smash > 0, '矿工送了敲石回声贝');
+  // 敲石卡点：3 枚徽章不能敲石
   await t.go('c3', 'from:t3'); await t.idle();
   await t.tp(14, 17, 'up'); await t.A(); await t.closeDlg(); await t.walk('up', 1);
   check(await at(14, 17) && (await tileAt(14, 16)) === 'b', '只有 3 枚徽章：隧道里的裂石挡住主路');
-  // 山道：剧情做完，山顶出现念灵
+  // 山道：剧情做完，山顶出现莲花猫
   await t.go('r3m', 'from:t3'); await t.idle();
-  check(await p.evaluate(() => EchoWorld._debug().M.npcs.some(n => n.mon === 'mindra')), '山道山顶出现神兽念灵');
-  // 道馆：教室换座
+  check(await p.evaluate(() => EchoWorld._debug().M.npcs.some(n => n.mon === 'mindra')), '山道山顶出现神兽莲花猫');
+  // 挑战馆：教室换座
   await t.go('i3G', 'from:t3'); await t.idle();
-  check((await flags())['s:g3hi'], '进道馆：猫头鹰校长讲规则');
+  check((await flags())['s:g3hi'], '进挑战馆：猫头鹰校长讲规则');
   await t.shot('b-i3G');
   // 故意答错一次
   await t.tp(3, 21, 'up'); await t.A();
@@ -150,11 +150,11 @@ const H = require('./helpers');
   check(await gateOpen(0), '第三间黑板（几楼）答对 → 校长室的门开');
   await talk('leader');
   check((await badges()) === 4, '打败猫头鹰校长，拿到第 4 枚徽章');
-  // 碎岩穿过隧道
+  // 敲石穿过隧道
   await t.go('c3', 'from:t3'); await t.idle();
   await t.tp(14, 17, 'up'); await t.A(); await t.idle(); await t.walk('up', 2);
   await t.A(); await t.idle(); await t.walk('up', 3);
-  check((await t.dbg()).y <= 13, '用碎岩打碎两块裂石，穿过隧道');
+  check((await t.dbg()).y <= 13, '用敲石打碎两块裂石，穿过隧道');
   await t.shot('b-c3');
   await t.go('r3', 'from:c3'); await t.idle();
   await t.shot('b-r3');
@@ -198,9 +198,9 @@ const H = require('./helpers');
   await talk('orion');
   check((await flags())['s:orion4'] && (await bag()).superpotion >= sp0 + 2, '天文台：导师欧瑞讲寂静之王和回声龙的传说，送了药');
   await t.shot('b-i4A2');
-  // 道馆：课程表开关
+  // 挑战馆：课程表开关
   await t.go('i4G', 'from:t4'); await t.idle();
-  check((await flags())['s:g4hi'] && /课程表/.test(await noteText()), '进道馆：广播念课程表');
+  check((await flags())['s:g4hi'] && /课程表/.test(await noteText()), '进挑战馆：广播念课程表');
   await t.shot('b-i4G');
   await stepTo(6, 15, 'up');   // 第一个就踩错（英语）
   check(await at(8, 22) && (await p.evaluate(() => EchoWorld._debug().M.over[14][2])) === 'm', '踩错顺序：开关复位，回到起点');

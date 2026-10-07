@@ -1,18 +1,18 @@
-// 第 0–1 岛：你好岛道馆（问候之门）、1 号路对手、回声洞（欧瑞、闪光）、彩色文具岛（颜色被偷、涂鸦森林、小凯、彩色地板道馆）
+// 第 0–1 岛：你好岛挑战馆（问候之门）、1 号路对手、回声洞（欧瑞、点灯）、彩色文具岛（颜色被偷、涂鸦森林、小凯、彩色地板挑战馆）
 // 运行：node tests/isle-a.test.js
 const H = require('./helpers');
 (async () => {
   const t = await H.open();
   const { p, W, check } = t;
-  // 道馆要先打败课本单元的 BOSS（第 13 个馆主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
-  // 七上全过是霜羽鸟的里程碑，先当作收服过了，免得它半路飞来打断剧情
+  // 挑战馆要先打败课本单元的 BOSS（第 13 个岛主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
+  // 七上全过是发条龟的里程碑（老旗标 leg:frostwing 也算），先当作收服过了，免得它半路飞来打断剧情
   const save0 = t.save;
   t.save = async s => { await save0(s); await p.evaluate(() => { const S = EchoGame.S; for (let i = 0; i < 16; i++) S.stars[(13 + i) + '-6'] = 1; S.world.flags['s:leg:frostwing'] = 1; localStorage.setItem('echo-island-v1', JSON.stringify(S)); }); };
   const gateOpen = (x, y) => p.evaluate(([x, y]) => EchoWorld._debug().M.tile ? null : null, [x, y]).then(() => p.evaluate(([x, y]) => { const d = EchoWorld._debug(); return !!(d.M._open && d.M._open.has(x + ',' + y)); }, [x, y]));
   // 走一步；路上被训练师看到就把对战打完
   const step = async (dir, n) => { for (let i = 0; i < (n || 1); i++) { await t.walk(dir); await t.idle(); } };
 
-  // ---------- 你好岛道馆：问候之门 ----------
+  // ---------- 你好岛挑战馆：问候之门 ----------
   await t.save({ map: 't0', x: 14, y: 9, team: [['tidalfin', 40], ['flamewolf', 40]] });
   await t.shot('a01-t0');
   let s = await t.dbg();
@@ -21,7 +21,7 @@ const H = require('./helpers');
   await t.tp(14, 3, 'up'); await t.walk('up');
   check((await t.dbg()).y === 3, '守卫挡住北边（没有徽章）');
   await t.go('i0G', 'from:t0');
-  check((await t.dbg()).map === 'i0G', '进了你好岛道馆');
+  check((await t.dbg()).map === 'i0G', '进了你好岛挑战馆');
   await t.shot('a02-gym0');
   // 第一道门（早上）：答对开门
   await t.tp(9, 13, 'up'); await t.A(); await t.closeDlg();
@@ -46,7 +46,7 @@ const H = require('./helpers');
   check(badges[0], '打赢鹦鹉船长，拿到第 1 枚徽章');
   // 门记住了：出去再进来还开着
   await t.go('t0', 'from:i0G'); await t.go('i0G', 'from:t0');
-  check(await gateOpen(6, 4), '再进道馆，门还开着');
+  check(await gateOpen(6, 4), '再进挑战馆，门还开着');
 
   // ---------- 1 号路：对手 ----------
   await t.save({ map: 't0', x: 14, y: 9, badges: { 0: 1 }, flags: { rival1: 0 }, team: [['tidalfin', 40]] });
@@ -69,7 +69,7 @@ const H = require('./helpers');
   check((await t.dbg()).map === 'c0', '进了回声洞');
   await t.talkTo(n => n.id === 'flashman'); await t.idle();
   const bag = await p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')).mon.bag);
-  check(bag.hm_flash === 1, '登山家送了闪光的秘传学习器');
+  check(bag.hm_flash === 1, '登山家送了点灯的回声贝');
   await t.talkTo(n => n.id === 'orion'); await t.idle();
   check((await t.flags())['s:z0orion'] === 1, '在回声洞认识了导师欧瑞');
   await t.shot('a05-c0');
@@ -107,7 +107,7 @@ const H = require('./helpers');
   check((await t.flags())['s:z1thanks'] === 1, '画家道谢');
   await t.shot('a08-t1');
 
-  // ---------- 彩色文具岛道馆：彩色地板 ----------
+  // ---------- 彩色文具岛挑战馆：彩色地板 ----------
   await t.go('i1G', 'from:t1'); await W(800);
   pg = await t.page();
   check(pg && pg.kind === 'answer' && pg.en === 'Walk on red!', '广播：Walk on red!（只听不看）');
@@ -129,7 +129,7 @@ const H = require('./helpers');
   s = await t.dbg();
   await step('left', s.x - 4);
   for (const d of ['up', 'up', 'left', 'left', 'up', 'up']) await step(d);
-  check(await gateOpen(6, 3), '黄色这段走完，通往馆主的门开了');
+  check(await gateOpen(6, 3), '黄色这段走完，通往岛主的门开了');
   await step('right', 4); await step('up', 2);
   await t.A(); await t.idle();
   const b2 = (await p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')).mon.badges));

@@ -159,7 +159,9 @@
       flame: '<path d="M0 0 Q26 -4 24 -34 Q16 -20 10 -26 Q12 -40 2 -50 Q-2 -30 -8 -22 Q-12 -10 0 0 Z" fill="#ff7043"/><path d="M2 -5 Q16 -8 14 -24 Q8 -16 4 -20 Q2 -12 2 -5 Z" fill="#ffca28"/>',
       fin: '<path d="M-2 0 L24 -20 Q18 0 24 20 Z" fill="' + dk + '"/>',
       leaf: '<path d="M-2 0 Q16 -32 40 -22 Q26 -2 -2 0 Z" fill="#66bb6a"/><path d="M2 -2 Q18 -14 34 -20" stroke="#388e3c" stroke-width="2" fill="none"/>',
-      bolt: '<path d="M-2 0 L14 -10 L8 -14 L26 -32 L14 -16 L20 -12 Z" fill="#ffca28" stroke="#e6a800" stroke-width="2" stroke-linejoin="round"/>',
+      // 电系：卷卷的电线尾巴，末端一只小灯泡
+      bolt: '<path d="M-2 0 Q10 -2 9 -11 Q8 -18 2 -15 Q-3 -12 5 -21 Q11 -27 17 -25" stroke="' + dk + '" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
+        '<rect x="14" y="-27" width="7" height="6" rx="1.5" fill="#90a4ae" transform="rotate(-35 17.5 -24)"/><circle cx="22" cy="-31" r="7.5" fill="#fff59d" stroke="#e6a800" stroke-width="2"/><path d="M20 -31 Q22 -34 24 -31" stroke="#e6a800" stroke-width="1.5" fill="none"/>',
     };
     if (tails[sp.tail]) back += '<g class="m-tail" style="transform-origin:' + bx + 'px ' + by + 'px"><g transform="translate(' + bx + ' ' + by + ')">' + tails[sp.tail] + '</g></g>';
     if (sp.extra === 'wings') {
@@ -213,5 +215,32 @@
     const url = window.Mon3D ? Mon3D.snapshot(sp, 256) : '';
     return url ? '<img class="mon-svg mon-img" alt="" src="' + url + '">' : monsterSVG(legacy(sp));
   }
-  window.Cartoon = { actor: actorSVG, set: setSVG, has: name => !!CHARS[name], monster, monster2d: sp => monsterSVG(sp && sp.b ? legacy(sp) : sp) };
+  // ---------- 回声球：一只尖顶朝上的螺旋海螺，开口里含着一颗发光的回声珠 ----------
+  // o = { gold（金回声球：金壳 + 青色的珠子）, waves（开口右边画两道声波，大图标用；小图标别画） }
+  // 3D 版在 battle3d.js 的 shellMesh，样子和颜色要一致
+  const SHELL = {
+    ball: { body: '#9b7cf2', dark: '#7656d8', rib: '#d3c2ff', lip: '#fff1dc', inner: '#f6b7c9', pearl: '#f3ecff', glow: '#b388ff' },
+    gold: { body: '#f5b82e', dark: '#cf8d10', rib: '#ffe59a', lip: '#fff6dc', inner: '#ffb48a', pearl: '#d9fdff', glow: '#26c6da' },
+  };
+  function shellSVG(o) {
+    o = o || {};
+    const c = SHELL[o.gold ? 'gold' : 'ball'], ol = ' stroke="#2b2b3a" stroke-width="3" stroke-linejoin="round"';
+    const rib = d => '<path d="' + d + '" fill="none" stroke="' + c.rib + '" stroke-width="2.6" stroke-linecap="round"/>';
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="31" cy="59" rx="19" ry="4" fill="rgba(0,0,0,.2)"/>' +
+      // 尖顶 → 上面两圈 → 最大的一圈（每圈上沿一道浅色的棱，斜着画，看起来是螺旋）
+      '<path d="M28 15 Q31 2 33.5 2 Q36 3 38 15 Z" fill="' + c.body + '"' + ol + '/>' +
+      '<ellipse cx="33" cy="17" rx="9" ry="5.6" transform="rotate(-8 33 17)" fill="' + c.body + '"' + ol + '/>' + rib('M26 15.5 Q33 11 40 14') +
+      '<ellipse cx="32" cy="27" rx="15" ry="8" transform="rotate(-8 32 27)" fill="' + c.body + '"' + ol + '/>' + rib('M20 25 Q32 18 45 22') +
+      '<path d="M11 41 Q11 28 31 28 Q52 28 52 42 Q52 58 31 58 Q11 58 11 41 Z" fill="' + c.body + '"' + ol + '/>' +
+      '<path d="M14 47 Q20 56 31 56 Q38 56 42 54" fill="none" stroke="' + c.dark + '" stroke-width="3" stroke-linecap="round" opacity=".55"/>' + rib('M15 36 Q30 27 49 34') +
+      // 开口（奶油色的唇边、粉色的里面、发光的珠子）
+      '<ellipse cx="40" cy="44" rx="9.5" ry="11" transform="rotate(-14 40 44)" fill="' + c.lip + '"' + ol + '/>' +
+      '<ellipse cx="40.6" cy="45" rx="6" ry="7.6" transform="rotate(-14 40.6 45)" fill="' + c.inner + '"/>' +
+      '<circle cx="41" cy="46.5" r="6.4" fill="' + c.glow + '" opacity=".45"/><circle cx="41" cy="46.5" r="4" fill="' + c.pearl + '" stroke="' + c.glow + '" stroke-width="1.4"/><circle cx="39.6" cy="45" r="1.3" fill="#fff"/>' +
+      // 高光
+      '<ellipse cx="21" cy="37" rx="4.5" ry="2.4" transform="rotate(-28 21 37)" fill="rgba(255,255,255,.55)"/>' +
+      (o.waves ? '<path d="M54.5 39 Q57.5 45 54.5 51 M58.5 35 Q63 45 58.5 55" fill="none" stroke="' + c.glow + '" stroke-width="2.4" stroke-linecap="round"/>' : '') +
+      '</svg>';
+  }
+  window.Cartoon = { actor: actorSVG, set: setSVG, has: name => !!CHARS[name], monster, monster2d: sp => monsterSVG(sp && sp.b ? legacy(sp) : sp), shell: shellSVG, SHELL };
 })();

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 联网：AI 聊天、有道在线发音兜底；麦克风：和岛民用英语说话、跟读 -->
+    <!-- 联网：AI 聊天、口语打分、没有配音的句子现场合成（都只连阿里云）；麦克风：和岛民用英语说话、跟读 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
@@ -14,7 +14,7 @@
         android:theme="@style/EchoTheme"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
-        android:allowBackup="true">
+        android:allowBackup="${allowBackup}">
         <activity
             android:name=".MainActivity"
             android:exported="true"

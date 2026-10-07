@@ -4,11 +4,11 @@
   'use strict';
 
   // ---------- 地块 ----------
-  // 户外：# 边界树  T 树  . 草地  , 草丛(遇怪)  = 小路  ~ 水(冲浪)  D 深水(可以潜水)  w 瀑布(攀瀑往上)  F 花  B 告示牌  o 道具  * 藏起来的道具
+  // 户外：# 边界树  T 树  . 草地  , 草丛(遇怪)  = 小路  ~ 水(踏浪)  D 深水(可以潜海)  w 瀑布(逆流往上)  F 花  B 告示牌  o 道具  * 藏起来的道具
   //       S 沙地  R 岩壁  r 石头  L 台阶(只能往下跳)  f 栅栏  Z 地标(雕像、钟、图腾……按 A 看)  I 冰面(会一直滑)
-  //       野外技能障碍：n 小树(居合斩)  b 裂开的岩石(碎岩)  O 大石头(怪力推)
+  //       回声技能障碍：n 小树(开路)  b 裂开的岩石(敲石)  O 大石头(大力推)
   //       出口：^ 北  v 南  < 西  > 东（在地图边上，连在一起的算一个出口）  K 洞口  % 楼梯/梯子  @ 起点  1-9 人物
-  //       建筑：C/c 怪兽中心/门  M/m 商店  G/g 道馆  H/h、J/j、A/a 民房或剧情建筑（同一个字母可以有好几栋）  E 只能看不能进的房子
+  //       建筑：C/c 休息站/门  M/m 商店  G/g 挑战馆  H/h、J/j、A/a 民房或剧情建筑（同一个字母可以有好几栋）  E 只能看不能进的房子
   // 洞穴：X 岩壁  : 洞穴地面(遇怪)  e 出口地垫
   // 海底：. 沙  , 海草(遇怪)  R 礁石  U 浮上去的光圈
   // 室内：W 墙  _ 地板  u 地毯  Q 柜台  P 电脑  Y 桌子  k 书架  p 盆栽  d 床  t 电视  Z 雕像  e 门口地垫  | 机关门(解开机关才打开)
@@ -202,15 +202,15 @@
   };
   INSIDE.J = { rows: INSIDE.H.rows.map(r => [...r].reverse().join('')), npc: { 1: { role: 'gift' } } };
   INSIDE.A = { rows: INSIDE.H.rows, npc: { 1: { role: 'talk' } } };
-  // 英语冠军赛会场：大厅 L → 四位大师 1–4 → 冠军 5，一间通一间
+  // 英语冠军赛会场：大厅 L → 四位擂主 1–4 → 冠军 5，一间通一间
   INSIDE.L = { rows: ['WWWWW^WWWWW', 'W_1_____2_W', 'WQQQ___QQQW', 'W_________W', 'Wp_______pW', 'W___uuu___W', 'W_________W', 'WWWWWeWWWWW'], npc: { 1: { role: 'nurse' }, 2: { role: 'clerk' } } };
   const MASTER_ROOM = ['WWWW^WWWW', 'W___1___W', 'WZ_____ZW', 'W_uuuuu_W', 'W_u___u_W', 'W_uuuuu_W', 'W_______W', 'WWWWeWWWW'];
   ['1', '2', '3', '4'].forEach(k => { INSIDE[k] = { rows: MASTER_ROOM, npc: { 1: { role: 'master' } } }; });
   INSIDE['5'] = { rows: ['WWWWWWWWW', 'WZ__1__ZW', 'W_______W', 'W_uuuuu_W', 'W_u___u_W', 'W_uuuuu_W', 'W_______W', 'WWWWeWWWW'], npc: { 1: { role: 'champion' } } };
   const LEAGUE = ['L', '1', '2', '3', '4', '5'];
   const INDOOR = {
-    C: { floor: '#fbe9e7', floor2: '#f6d6d1', wall: '#fff3e8', trim: '#e8514a', rug: '#ff8a80' },
-    M: { floor: '#e3f2fd', floor2: '#cfe6fb', wall: '#f5fbff', trim: '#3d8fe0', rug: '#64b5f6' },
+    C: { floor: '#e6f5f2', floor2: '#d3ece7', wall: '#f4fbf9', trim: '#1fa496', rug: '#7fd3c8' },   // 休息站：和屋顶一样的青绿
+    M: { floor: '#fff4e2', floor2: '#fbe6c6', wall: '#fffaf1', trim: '#f29b2b', rug: '#ffcc80' },   // 商店：琥珀黄
     G: { floor: '#efe6d6', floor2: '#e2d6c1', wall: '#fbf1de', trim: '#8a6a4a', rug: '#ffca28' },
     H: { floor: '#e8c9a0', floor2: '#dcb98b', wall: '#fff6e6', trim: '#a0724a', rug: '#ef9a9a' },
   };
@@ -291,7 +291,7 @@
   }
 
   // ---------- 出入口 ----------
-  // 每张地图的出口分成一组组（地图边上连在一起的出口格、洞口、门、楼梯、地垫、潜水点），每组通向一张地图。
+  // 每张地图的出口分成一组组（地图边上连在一起的出口格、洞口、门、楼梯、地垫、潜海点），每组通向一张地图。
   // 走进一组出口，到了对面地图就站在「通回来的那一组」旁边（from:来的地图@第几组:偏移）
   function pick(v, i) { return Array.isArray(v) ? v[i] : i === 0 ? v : undefined; }
   function link(m, L, doors) {

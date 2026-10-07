@@ -587,7 +587,7 @@
   "no": 25,
   "id": "zappy",
   "en": "Zappy",
-  "zh": "电电鼠",
+  "zh": "亮亮仓鼠",
   "types": [
    "spark"
   ],
@@ -595,15 +595,15 @@
   "evo": [
    {
     "to": "voltmouse",
-    "item": "thunderstone"
+    "lv": 18
    }
   ],
   "hp": 34,
   "atk": 12,
   "b": "quad",
-  "c": "#ffd54f",
-  "k": "#fff8e1",
-  "a": "#ff8f00",
+  "c": "#7fcab0",
+  "k": "#fff3dc",
+  "a": "#ffd54f",
   "e": "round",
   "t": "bolt",
   "w": "none",
@@ -622,14 +622,14 @@
    "zap",
    "-y"
   ],
-  "dexEn": "Zappy runs fast in the grass. Small sparks jump from its fur.",
-  "dexZh": "电电鼠在草丛里跑得飞快，毛里会跳出小火花。"
+  "dexEn": "Zappy keeps a tiny light bulb on its tail. It stuffs seeds into its cheeks.",
+  "dexZh": "亮亮仓鼠的尾巴上挂着一个小灯泡，它爱把种子塞满两个腮帮子。"
  },
  {
   "no": 26,
   "id": "voltmouse",
-  "en": "Voltmouse",
-  "zh": "伏特鼠",
+  "en": "Bulbster",
+  "zh": "大灯仓鼠",
   "types": [
    "spark"
   ],
@@ -638,16 +638,16 @@
   "hp": 48,
   "atk": 17,
   "b": "quad",
-  "c": "#ffb300",
-  "k": "#fff3c4",
-  "a": "#fff176",
-  "e": "cat",
+  "c": "#4fae95",
+  "k": "#fff3dc",
+  "a": "#ffd54f",
+  "e": "round",
   "t": "bolt",
   "w": "none",
   "p": "stripes",
   "m": "grin",
   "x": [
-   "mane"
+   "whiskers"
   ],
   "sz": 1,
   "habitat": [
@@ -656,11 +656,12 @@
   ],
   "rarity": 2,
   "words": [
-   "volt",
-   "mouse"
+   "bulb",
+   "-ster"
   ],
-  "dexEn": "Voltmouse has a bright yellow mane. It lights up dark rooms.",
-  "dexZh": "伏特鼠有一圈亮黄色的鬃毛，能照亮黑黑的房间。"
+  "dexEn": "Bulbster wears a fluffy white collar. Its bulb tail lights up dark rooms.",
+  "dexZh": "大灯仓鼠围着一圈毛茸茸的白领子，灯泡尾巴能照亮黑黑的房间。",
+  "keepId": true
  },
  {
   "no": 27,

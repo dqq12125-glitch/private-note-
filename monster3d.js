@@ -148,7 +148,7 @@
   }
   // 会动的模型（默认）：Gemini 画的图 → Hunyuan3D 生成带贴图的模型 → Blender 绑骨骼、做动作（art/mon3d/*.glb 母版；tools/mon3d/gen.py、tools/blender/monrig.py）
   // → tools/mon3d/publish.js 压缩成 assets/mon3d/*.glb 随网页发布。?art=3d 是老的样品模式，直接读 art/mon3d 里那 10 只
-  // 异色：贴图颜色转 150°（和 monsters.js 的 spOf 一样），用和 CSS hue-rotate 同一个矩阵，这样 3D 模型和 2D 图标颜色一致
+  // 稀有色：贴图颜色转 150°（和 monsters.js 的 spOf 一样），用和 CSS hue-rotate 同一个矩阵，这样 3D 模型和 2D 图标颜色一致
   const SHINY_DEG = 150;
   const isShiny = sp => !!(sp && (sp.shiny || /_shiny$/.test(String(sp.id || ''))));
   function shinyPatch(m) {
@@ -181,7 +181,7 @@
     const shiny = isShiny(sp);
     meshes.forEach(o => {
       o.material = new T3.MeshToonMaterial({ map: o.material.map, gradientMap: grad });  // 每只一份材质，受击闪白、倒下变透明互不影响
-      o.material.userData.own = true;    // 已经是这一只自己的材质（battle3d 不用再 clone，clone 会丢掉异色的 onBeforeCompile）
+      o.material.userData.own = true;    // 已经是这一只自己的材质（battle3d 不用再 clone，clone 会丢掉稀有色的 onBeforeCompile）
       if (shiny) shinyPatch(o.material);
       o.frustumCulled = false;
       if (o.isSkinnedMesh) {
@@ -295,19 +295,19 @@
       }, undefined, () => { delete LOADING[id]; HAS3D.delete(id); res(null); });   // 下载失败：这一局都用程序模型
     }));
   }
-  // 把这些怪兽（图鉴条目或 id）的模型下载好；返回 Promise，全部下完（或失败）时完成
+  // 把这些怪兽（手册条目或 id）的模型下载好；返回 Promise，全部下完（或失败）时完成
   function preload(list) {
     if (!PUB) return Promise.resolve();
     const ids = [...new Set((list || []).filter(Boolean).map(x => typeof x === 'string' ? x.replace(/_shiny$/, '') : baseId(x)))];
-    prepIcons(list);   // 异色的 2D 图标顺便准备好
+    prepIcons(list);   // 稀有色的 2D 图标顺便准备好
     return idxP.then(() => Promise.all(ids.filter(id => HAS3D.has(id)).map(loadRig))).then(() => undefined);
   }
-  // 异色怪兽的 2D 图标要先读图再转色（异步）；提前准备好，打开菜单时就已经是异色的颜色
+  // 稀有色怪兽的 2D 图标要先读图再转色（异步）；提前准备好，打开菜单时就已经是稀有色的颜色
   function prepIcons(list) {
     if (!PUB) return;
     idxP.then(() => (list || []).forEach(x => { if (x && typeof x === 'object' && isShiny(x) && HAS2D.has(baseId(x))) shinyIcon(baseId(x)); }));
   }
-  // 2D 图标做成贴图（纸片用）。图还没读好时纸片先藏起来（没图的贴图会画成黑块），读好再显示；异色的没转好色先用原色
+  // 2D 图标做成贴图（纸片用）。图还没读好时纸片先藏起来（没图的贴图会画成黑块），读好再显示；稀有色的没转好色先用原色
   const ICON_TEX = {};
   function iconTex(sp) {
     const id = baseId(sp), su = isShiny(sp) ? shinyIcon(id) : '';
@@ -617,7 +617,7 @@
     R.root.traverse(o => { if (o.geometry) o.geometry.dispose(); });
   }
 
-  // ---------- 截图：给菜单、图鉴、2D 画面用 ----------
+  // ---------- 截图：给菜单、手册、2D 画面用 ----------
   let snapR = null, snapScene = null, snapCam = null;
   const snapCache = {};
   function snapshot(sp, size, opts) {
@@ -625,7 +625,7 @@
     const key = sp.id + ':' + size + (opts && opts.proc ? ':p' : '') + (opts && opts.ry != null ? ':r' + opts.ry : '');
     if (snapCache[key]) return snapCache[key];
     if (!(opts && opts.proc) && EXT[baseId(sp)] && EXT[baseId(sp)].img) return (snapCache[key] = GEM_URL(baseId(sp)));
-    // 有发布的 2D 图标就直接用图标（异色的先用原色图标顶着，转好色再换）
+    // 有发布的 2D 图标就直接用图标（稀有色的先用原色图标顶着，转好色再换）
     if (PUB && !(opts && (opts.proc || opts.ry != null)) && HAS2D.has(baseId(sp))) {
       if (!isShiny(sp)) return (snapCache[key] = icon2d(baseId(sp)));
       const u = shinyIcon(baseId(sp));
@@ -657,7 +657,7 @@
   }
   // 2D 图标（assets/mon2d/<id>.webp，publish.js 做的 256×256 透明图）
   const icon2d = id => assetUrl('assets/mon2d/' + id + '.webp');
-  // 异色图标：把图标读进来，逐像素转色相（和 3D 模型的 shinyPatch 同一个矩阵），存成 dataURL；还没转好返回 ''
+  // 稀有色图标：把图标读进来，逐像素转色相（和 3D 模型的 shinyPatch 同一个矩阵），存成 dataURL；还没转好返回 ''
   const SHINY_ICON = {};
   function shinyIcon(id) {
     const c = SHINY_ICON[id];

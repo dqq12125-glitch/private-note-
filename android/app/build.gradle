@@ -10,29 +10,42 @@ def cfgFile = project.hasProperty('echoProps') ? file(project.property('echoProp
 if (cfgFile.exists()) cfgFile.withInputStream { cfg.load(it) }
 def q = { String s -> '"' + (s ?: '').replace('\\', '\\\\').replace('"', '\\"') + '"' }
 
-// 百炼密钥：家长 2026-10-07 定的——密钥照旧打进 APK。echo.properties 的 KEY_FILE 指向一个写着
+// 两个版本（2026-10-07）：家庭版 family（默认，弟弟用：密钥和家长密码照旧打进 APK）；
+// 销售版 sales（试卖给别的家庭）：-PECHO_EDITION=sales 打包。销售版**一律不带**你的密钥、不带打包的家长密码、不带中转服务地址和口令——
+// 家长第一次打开时在向导里设密码（原生存加盐哈希）、粘贴自己的百炼密钥。applicationId 不一样，两个版本能装在同一台手机上
+def EDITION = (project.findProperty('ECHO_EDITION') ?: 'family').toString().trim().toLowerCase()
+if (!(EDITION in ['family', 'sales'])) throw new GradleException('ECHO_EDITION must be family or sales (got: ' + EDITION + ')')
+def SALES = EDITION == 'sales'
+logger.lifecycle('ECHO_EDITION: ' + EDITION + (SALES ? ' (no key, no baked parent PIN, no relay - the parent sets them up on the phone)' : ''))
+
+// 百炼密钥：家长 2026-10-07 定的——家庭版密钥照旧打进 APK。echo.properties 的 KEY_FILE 指向一个写着
 // DASHSCOPE_API_KEY=... 的文件（游戏专用的那把，不和别的项目共用），这里读出来写进 BuildConfig.DASHSCOPE_KEY。
-// 手机「设置 → AI」里粘贴的密钥优先（存在 SharedPreferences，装新版不用重填）；两个都没有时游戏提示「没有密钥」
+// 手机「设置 → AI」里粘贴的密钥优先（存在 SharedPreferences，装新版不用重填）；两个都没有时游戏提示「没有密钥」。
+// 销售版：根本不读 KEY_FILE
 def keyFromFile = {
+    if (SALES) return ''
     def f = cfg.getProperty('KEY_FILE')
     if (!f || !new File(f).exists()) return ''
     def line = new File(f).readLines().find { it.trim().startsWith('DASHSCOPE_API_KEY') }
     return line ? line.substring(line.indexOf('=') + 1).trim().replaceAll(/^["']|["']$/, '') : ''
 }
 def bakedKey = keyFromFile()
-if (bakedKey) logger.lifecycle('KEY_FILE: the DashScope key from KEY_FILE goes into BuildConfig (parent decision 2026-10-07; a key pasted on the phone takes priority).')
+if (SALES) logger.lifecycle('KEY_FILE: skipped (sales edition - each family pastes its own key in the setup wizard).')
+else if (bakedKey) logger.lifecycle('KEY_FILE: the DashScope key from KEY_FILE goes into BuildConfig (parent decision 2026-10-07; a key pasted on the phone takes priority).')
 else logger.warn('WARNING: KEY_FILE is empty or has no DASHSCOPE_API_KEY line - the parent must paste the key on the phone (设置 → AI).')
 
 // 家长密码：echo.properties 的 PARENT_PIN（4 位数字）。APK 里只放「盐 + 密码」的 SHA-256（BuildConfig.PARENT_PIN_HASH），
-// 原文不进 APK，这里也不打印。手机上由 PinGuard.java 用同一个盐算哈希来比对
+// 原文不进 APK，这里也不打印。手机上由 PinGuard.java 用同一个盐算哈希来比对。
+// 销售版：不读 PARENT_PIN（哈希留空），家长在首次设置向导里设，原生用每台手机自己的随机盐存哈希（EchoNative.setPin）
 def PIN_SALT = 'echo-island-parent-pin-v1:'
 def pinHash = {
+    if (SALES) return ''
     def p = (cfg.getProperty('PARENT_PIN') ?: '').trim()
     if (!p) return ''
     if (!(p ==~ /\d{4}/)) throw new GradleException('echo.properties: PARENT_PIN must be exactly 4 digits (value not shown).')
     return java.security.MessageDigest.getInstance('SHA-256').digest((PIN_SALT + p).getBytes('UTF-8')).encodeHex().toString()
 }()
-if (!pinHash) logger.warn('WARNING: PARENT_PIN is not set in echo.properties - parent-only settings will be locked in the APK.')
+if (!pinHash && !SALES) logger.warn('WARNING: PARENT_PIN is not set in echo.properties - parent-only settings will be locked in the APK.')
 
 // 版本号：versionCode = git 提交数（只增不减，覆盖安装才装得上），versionName = 打包日期-短哈希（有没提交的改动加 +）。
 // 只读 git（--no-optional-locks：不碰 .git/index.lock，别的进程同时提交也不打架）；没有 git 时退回 echo.properties 的 VERSION_CODE（默认 1）
@@ -46,12 +59,14 @@ def gitOut = { List<String> args ->
         return ''
     }
 }
-def gitCount = gitOut(['rev-list', '--count', 'HEAD'])
-def gitHash = gitOut(['rev-parse', '--short=7', 'HEAD'])
+// -PECHO_VERSION_CODE=n：直接用这个版本号，完全不调用 git（在别人的工作副本里、或者不想碰 git 的时候打包用；号码要比装着的大）
+def fixedCode = (project.findProperty('ECHO_VERSION_CODE') ?: '').toString().trim()
+def gitCount = fixedCode ==~ /\d+/ ? fixedCode : gitOut(['rev-list', '--count', 'HEAD'])
+def gitHash = fixedCode ==~ /\d+/ ? '' : gitOut(['rev-parse', '--short=7', 'HEAD'])
 def gitDirty = gitHash ? gitOut(['status', '--porcelain', '--untracked-files=no']) : ''
 def fallbackCode = cfg.getProperty('VERSION_CODE', '1').trim()
 def vCode = gitCount ==~ /\d+/ ? gitCount.toInteger() : (fallbackCode ==~ /\d+/ ? fallbackCode.toInteger() : 1)
-def vName = new Date().format('yyyyMMdd') + '-' + (gitHash ?: 'nogit') + (gitDirty ? '+' : '')
+def vName = new Date().format('yyyyMMdd') + '-' + (gitHash ?: (fixedCode ==~ /\d+/ ? 'v' + fixedCode : 'nogit')) + (gitDirty ? '+' : '') + (SALES ? '-s' : '')
 if (!(gitCount ==~ /\d+/)) logger.warn("WARNING: git not available - versionCode falls back to ${vCode}")
 
 // 正式签名：STORE_FILE 和 STORE_PASSWORD 都填了、签名文件也在
@@ -63,16 +78,25 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'com.echoisland.app'
+        // 销售版换一个 applicationId：和家庭版是两个 App（同一台手机能都装，销售版也不会把弟弟的家庭版覆盖掉）
+        applicationId SALES ? 'com.echoisland.english' : 'com.echoisland.app'
         minSdk 26
         targetSdk 35
         versionCode vCode
         versionName vName
-        buildConfigField 'String', 'TALK_URL', q(cfg.getProperty('TALK_URL'))
-        buildConfigField 'String', 'TALK_CODE', q(cfg.getProperty('TALK_CODE'))
+        buildConfigField 'String', 'EDITION', q(EDITION)
+        // 销售版不带中转服务（你不替别的家庭跑服务器、不留聊天记录）
+        buildConfigField 'String', 'TALK_URL', q(SALES ? '' : cfg.getProperty('TALK_URL'))
+        buildConfigField 'String', 'TALK_CODE', q(SALES ? '' : cfg.getProperty('TALK_CODE'))
+        // 检查新版本的默认地址：只打进家庭版（网页里不再写死，销售版的安装包里没有这个地址）
+        // 销售版只开放买了的学年的课本（卖的是「本学年」，下一学年另买内容包）：-PECHO_BOOKS=hj7a,hj7b，不写就是七上、七下。家庭版全部开放
+        buildConfigField 'String', 'BOOKS', q(SALES ? (project.findProperty('ECHO_BOOKS') ?: 'hj7a,hj7b').toString().trim() : '')
+        buildConfigField 'String', 'VER_URL', q(SALES ? '' : cfg.getProperty('VER_URL', 'https://dqq12125-glitch.github.io/private-note-/version.json'))
         buildConfigField 'String', 'DASHSCOPE_KEY', q(bakedKey)
         buildConfigField 'String', 'PARENT_PIN_SALT', q(PIN_SALT)
         buildConfigField 'String', 'PARENT_PIN_HASH', q(pinHash)
+        // 销售版不让系统把 App 数据（里面有家长的密钥、孩子的存档）自动备份到云上
+        manifestPlaceholders = [allowBackup: SALES ? 'false' : 'true']
     }
 
     signingConfigs {
@@ -109,23 +133,45 @@ dependencies {
 }
 
 // 打正式包前的检查：签名、家长密码。任何一项不对就停下（不打出一个装不上的包）。
-// 密钥不在这里拦：按家长决定 KEY_FILE 的密钥照旧打进 APK，没配也能打（家长在手机上粘贴）
+// 密钥不在这里拦：按家长决定家庭版 KEY_FILE 的密钥照旧打进 APK，没配也能打（家长在手机上粘贴）。
+// 销售版反过来：BuildConfig 里不许有密钥和家长密码（上面已经清空，这里再兜一次底）
 tasks.register('checkReleaseConfig') {
     doLast {
         if (!hasSigning) throw new GradleException('Release build needs the release keystore: set STORE_FILE / STORE_PASSWORD in android/echo.properties ' +
                 '(file must exist). No debug-signing fallback any more - a debug-signed APK cannot update the installed app without uninstalling (save lost).')
-        if (!pinHash) throw new GradleException('Release build needs PARENT_PIN (4 digits) in android/echo.properties.')
+        if (SALES) {
+            if (bakedKey || pinHash) throw new GradleException('Sales edition must not contain a DashScope key or a baked parent PIN.')
+        } else if (!pinHash) throw new GradleException('Release build needs PARENT_PIN (4 digits) in android/echo.properties.')
     }
 }
 tasks.configureEach { t -> if (t.name == 'preReleaseBuild') t.dependsOn 'checkReleaseConfig' }
 
 // 把游戏网页复制进 APK 的 assets/www（只拿运行时要的文件）
 def webRoot = rootProject.file('..')
+// 销售版（2026-10-08 评审 P0-G）：撞脸待重画的保留怪兽（tools/mon3d/lookalike.txt，和 dex.js 的 RESERVED 一致）连美术带记录都不打包：
+// 不复制它们的 assets/mon2d/<id>.webp、assets/mon3d/<id>.glb；dex.js 和两个 index.json 换成 tools/build-dex.js --sales 生成的
+// （没有保留怪兽的记录、进化链已经接好）。生成前会核对 dex.js 是最新的，不是就停下
+def salesDir = file("$buildDir/generated/sales-web")
+def reservedIds = SALES ? rootProject.file('../tools/mon3d/lookalike.txt').readLines('UTF-8')
+        .collect { it.trim() }.findAll { it && !it.startsWith('#') }
+        .collectMany { it.split(/\s+/)[0].split('/').toList() }.findAll { it ==~ /[a-z]+/ } : []
+if (SALES) logger.lifecycle('Sales edition: leaving out ' + reservedIds.size() + ' reserved monsters (art files + dex records).')
+tasks.register('salesWeb', Exec) {
+    onlyIf { SALES }
+    workingDir webRoot
+    commandLine 'node', 'tools/build-dex.js', '--sales=' + salesDir.absolutePath
+}
 tasks.register('copyWeb', Sync) {
+    if (SALES) dependsOn 'salesWeb'
     from(webRoot) {
-        include 'index.html', '*.js', 'style.css', 'assets/**', 'vendor/**', 'isles/**'
+        include 'index.html', '*.js', 'style.css', 'assets/**', 'vendor/**', 'isles/**', 'pages/**'
         exclude 'android/**', 'server/**', 'tools/**', 'tests/**', 'art/**', 'node_modules/**', 'package*.json'
+        if (SALES) {
+            exclude 'dex.js', 'assets/mon3d/index.json', 'assets/mon2d/index.json'
+            reservedIds.each { id -> exclude "assets/mon3d/${id}.glb", "assets/mon2d/${id}.webp", "assets/mon3d/${id}_*", "assets/mon2d/${id}_*" }
+        }
     }
+    if (SALES) from(salesDir) { include 'dex.js', 'assets/mon3d/index.json', 'assets/mon2d/index.json' }
     into "$buildDir/generated/web/www"
 }
 preBuild.dependsOn 'copyWeb'

@@ -1,4 +1,4 @@
-// 端到端测试：选初始怪兽 → 第 1 镇（博士）→ 怪兽中心（护士、电脑）→ 商店 → 守卫 → 拿徽章 → 1 号路（台阶、训练师、草丛）→ 第 2 镇
+// 端到端测试：选初始怪兽 → 第 1 镇（博士）→ 休息站（护士、电脑）→ 商店 → 守卫 → 拿徽章 → 1 号路（台阶、训练师、草丛）→ 第 2 镇
 // 用 2D 流畅模式跑（快、不依赖显卡）；3D 画面由 render3d.test.js 检查
 // 运行：npm test（需要先 npm install && npx playwright install chromium）
 const path = require('path');
@@ -51,15 +51,15 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   check(/10 个金币/.test(await p.textContent('#w-dlg .d-zh')), '博士的口语任务给金币');
   await closeDlg();
 
-  // ---------- 怪兽中心：进门、护士、电脑 ----------
+  // ---------- 休息站：进门、护士、电脑 ----------
   const door = await p.evaluate(() => EchoWorld._debug().M.buildings.C.door);
   await tp(door.x, door.y + 1, 'up');
   await step('ArrowUp');
-  check(await waitMap('i0C'), '进入怪兽中心');
+  check(await waitMap('i0C'), '进入休息站');
   await p.waitForTimeout(300);
   await step('ArrowUp', 4);
   await A(); await typed();
-  check(/Monster Center/.test(await p.textContent('#w-dlg .d-en')), '和护士说话');
+  check(/Rest Stop/.test(await p.textContent('#w-dlg .d-en')), '和护士说话');
   await closeDlg();
   await p.screenshot({ path: out + '/w3-center.png' });
   await step('ArrowLeft', 3); await step('ArrowDown'); await step('ArrowLeft');
@@ -69,9 +69,9 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.click('#sheet [data-act=close]');
   await tp(5, 7, 'down');
   await step('ArrowDown');
-  check(await waitMap('t0'), '从怪兽中心出来回到小镇');
+  check(await waitMap('t0'), '从休息站出来回到小镇');
   s = await dbg();
-  check(s.x === door.x && s.y === door.y + 1, '站在怪兽中心门口');
+  check(s.x === door.x && s.y === door.y + 1, '站在休息站门口');
 
   // ---------- 商店 ----------
   const shop = await p.evaluate(() => EchoWorld._debug().M.buildings.M.door);
@@ -208,7 +208,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.click('[data-act=wEnter]'); await p.waitForTimeout(700);
   s = await dbg();
   const st2 = await p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')));
-  check(s.map === 't2' && st2.world.v === 3, '老存档：回到第 3 镇怪兽中心门口 ' + JSON.stringify(s));
+  check(s.map === 't2' && st2.world.v === 3, '老存档：回到第 3 镇休息站门口 ' + JSON.stringify(s));
   check(st2.mon.team.length === 4 && Object.keys(st2.mon.badges).length === 2, '老存档：怪兽和徽章都在，队伍补到 4 只');
   check(!errs.length, '迁移后没有报错' + (errs.length ? '：' + errs.join(' | ') : ''));
   console.log(fails ? 'FAIL ' + fails : 'PASS');

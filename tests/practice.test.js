@@ -21,6 +21,8 @@ const launch = () => chromium.launch(process.env.CHROMIUM_PATH ? { executablePat
   for (let k = 0; k < 14; k++) {
     await p.waitForTimeout(800);
     if (await p.isVisible('#result')) { console.log('RESULT'); break; }
+    // 这题念的是哪个词：从题目里读（以前从有道在线发音的请求地址里看；有道已经不用了，见 game.js 的朗读）
+    last = await p.evaluate(() => { const P = window.EchoGame.P(); return (P && P.q && P.q.audio) || ''; });
     const info = await p.evaluate(word => {
       const opts = [...document.querySelectorAll('#p-body .opt[data-act=pick] .o-t')].map(e => e.textContent);
       const w = window.WORLDS[0].words.find(x => x[0] === word);

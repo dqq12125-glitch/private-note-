@@ -333,10 +333,10 @@ const base = o => Object.assign({ seenIntro: true, homeTab: 'mon', player: { gen
   check(await E(() => window.__push.length) === 0, '还没到 20 点：不发今天的（昨天没开游戏也不补）');
   await E(() => { window.EchoGame.S.settings.push = ''; window.EchoGame.T.setNow(0); });
 
-  // ---------- 每日宝箱：先开冒险奖品（world.js 的 chestPrize：进化石 / 蛋 / 异色蛋）----------
-  await E(() => { const S = window.EchoGame.S; S.quests.list.forEach(q => { q.claimed = true; }); S.quests.chest = false; window.__cp = 0; EchoWorld.chestPrize = () => (window.__cp++, { prize: '💎', kind: 'stone', id: 'x', html: '<h2>开出进化石：测试石！</h2>' }); window.EchoGame.goHome('mon'); });
+  // ---------- 每日宝箱：先开冒险奖品（world.js 的 chestPrize：进化曲 / 蛋 / 稀有色蛋）----------
+  await E(() => { const S = window.EchoGame.S; S.quests.list.forEach(q => { q.claimed = true; }); S.quests.chest = false; window.__cp = 0; EchoWorld.chestPrize = () => (window.__cp++, { prize: '💎', kind: 'stone', id: 'x', html: '<h2>开出进化曲：测试石！</h2>' }); window.EchoGame.goHome('mon'); });
   await tap('#quests [data-act=chest]'); await W(1800);   // 宝箱一直在晃（不「稳定」），直接点
-  check(/开出进化石：测试石/.test(await sheet()) && await E(() => window.__cp) === 1, '每日宝箱先开冒险奖品（进化石 / 蛋）');
+  check(/开出进化曲：测试石/.test(await sheet()) && await E(() => window.__cp) === 1, '每日宝箱先开冒险奖品（进化曲 / 蛋）');
   await p.click('#chestok').catch(() => {});
 
   check(!errs.length, '网页版没有报错', errs.slice(0, 3));

@@ -11,7 +11,7 @@
   "evo": [
    {
     "to": "bloomtail",
-    "lv": 16
+    "lv": 14
    }
   ],
   "hp": 42,
@@ -52,7 +52,7 @@
   "evo": [
    {
     "to": "groveguard",
-    "lv": 36
+    "lv": 32
    }
   ],
   "hp": 56,
@@ -131,7 +131,7 @@
   "evo": [
    {
     "to": "blazehound",
-    "lv": 16
+    "lv": 14
    }
   ],
   "hp": 38,
@@ -172,7 +172,7 @@
   "evo": [
    {
     "to": "flamewolf",
-    "lv": 36
+    "lv": 32
    }
   ],
   "hp": 52,
@@ -252,7 +252,7 @@
   "evo": [
    {
     "to": "tidalfin",
-    "lv": 16
+    "lv": 14
    }
   ],
   "hp": 46,
@@ -293,7 +293,7 @@
   "evo": [
    {
     "to": "waveking",
-    "lv": 36
+    "lv": 32
    }
   ],
   "hp": 62,
@@ -362,11 +362,11 @@
  {
   "no": 144,
   "id": "frostwing",
-  "en": "Frostwing",
-  "zh": "霜羽鸟",
+  "en": "Snowhoot",
+  "zh": "雪咕咕",
   "types": [
    "ice",
-   "flying"
+   "psychic"
   ],
   "stage": 1,
   "evo": [],
@@ -393,19 +393,20 @@
   "rarity": 5,
   "legend": true,
   "words": [
-   "frost",
-   "wing"
+   "snow",
+   "hoot"
   ],
-  "dexEn": "Frostwing flies over snowy mountains. Snow falls where it flies.",
-  "dexZh": "霜羽鸟在雪山上空飞翔，它飞过的地方会下雪。"
+  "dexEn": "Snowhoot sleeps in a snow cave all winter. It hoots softly when snow falls.",
+  "dexZh": "雪咕咕整个冬天都睡在雪洞里，下雪的时候会轻轻地咕咕叫。",
+  "keepId": true
  },
  {
   "no": 145,
   "id": "stormwing",
-  "en": "Stormwing",
-  "zh": "雷羽鸟",
+  "en": "Raincrane",
+  "zh": "雨鹤",
   "types": [
-   "spark",
+   "water",
    "flying"
   ],
   "stage": 1,
@@ -431,20 +432,21 @@
   "rarity": 5,
   "legend": true,
   "words": [
-   "storm",
-   "wing"
+   "rain",
+   "crane"
   ],
-  "dexEn": "Stormwing lives in thunder clouds. Its wings make lightning.",
-  "dexZh": "雷羽鸟住在雷雨云里，它扇动翅膀就会打闪电。"
+  "dexEn": "Raincrane dances in the rain. The cloud on its head tells the weather.",
+  "dexZh": "雨鹤喜欢在雨里跳舞，它头上的云朵能预报天气。",
+  "keepId": true
  },
  {
   "no": 146,
   "id": "blazewing",
-  "en": "Blazewing",
-  "zh": "焰羽鸟",
+  "en": "Sunfan",
+  "zh": "日扇雀",
   "types": [
    "fire",
-   "flying"
+   "normal"
   ],
   "stage": 1,
   "evo": [],
@@ -471,19 +473,21 @@
   "rarity": 5,
   "legend": true,
   "words": [
-   "blaze",
-   "wing"
+   "sun",
+   "fan"
   ],
-  "dexEn": "Blazewing sleeps in a volcano. Its feathers glow at night.",
-  "dexZh": "焰羽鸟睡在火山里，它的羽毛在夜里会发光。"
+  "dexEn": "Sunfan opens its round tail like a fan. It loves warm, sunny mornings.",
+  "dexZh": "日扇雀会像扇子一样打开圆圆的尾巴，它最喜欢暖洋洋的早晨。",
+  "keepId": true
  },
  {
   "no": 150,
   "id": "mindra",
-  "en": "Mindra",
-  "zh": "念灵",
+  "en": "Lotuscat",
+  "zh": "莲花猫",
   "types": [
-   "psychic"
+   "grass",
+   "flying"
   ],
   "stage": 1,
   "evo": [],
@@ -513,8 +517,9 @@
    "mind",
    "-ra"
   ],
-  "dexEn": "Mindra can hear your thoughts. It speaks every language.",
-  "dexZh": "念灵能听见你心里的想法，它会说所有的语言。"
+  "dexEn": "Lotuscat naps on a soft cloud above the lotus pond. It floats wherever the wind goes.",
+  "dexZh": "莲花猫躺在荷花池上空的软云朵里睡午觉，风吹到哪儿，它就飘到哪儿。",
+  "keepId": true
  },
  {
   "no": 151,
@@ -522,7 +527,8 @@
   "en": "Lullaby",
   "zh": "摇篮灵",
   "types": [
-   "psychic"
+   "normal",
+   "flying"
   ],
   "stage": 1,
   "evo": [],
@@ -551,16 +557,17 @@
   "words": [
    "lullaby"
   ],
-  "dexEn": "Lullaby sings children to sleep. Few people have seen it awake.",
-  "dexZh": "摇篮灵会唱歌哄孩子们睡觉。很少有人见过它醒着的样子。"
+  "dexEn": "Lullaby jumps over the moon every night. Count its jumps, and you fall asleep.",
+  "dexZh": "摇篮灵每天夜里从月亮上跳过去。数着它跳了几下，你就睡着了。"
  },
  {
   "no": 243,
   "id": "voltlion",
-  "en": "Voltlion",
-  "zh": "雷狮",
+  "en": "Plugmane",
+  "zh": "插头狮",
   "types": [
-   "spark"
+   "spark",
+   "steel"
   ],
   "stage": 1,
   "evo": [],
@@ -590,16 +597,18 @@
    "volt",
    "lion"
   ],
-  "dexEn": "Voltlion runs as fast as lightning. It never stays in one place.",
-  "dexZh": "雷狮跑得像闪电一样快，从不在一个地方停留。"
+  "dexEn": "Plugmane lives next to the city power station. Its plug tail lights up the street lamps.",
+  "dexZh": "插头狮住在城市的发电站旁边，它用插头尾巴把路灯点亮。",
+  "keepId": true
  },
  {
   "no": 244,
   "id": "flamelion",
-  "en": "Flamelion",
-  "zh": "炎狮",
+  "en": "Drumlion",
+  "zh": "醒狮",
   "types": [
-   "fire"
+   "fire",
+   "fight"
   ],
   "stage": 1,
   "evo": [],
@@ -629,16 +638,18 @@
    "flame",
    "lion"
   ],
-  "dexEn": "Flamelion was born in a volcano. Its roar makes the ground shake.",
-  "dexZh": "炎狮在火山里出生，它一吼大地都会摇晃。"
+  "dexEn": "Drumlion dances to loud drums at every festival. Its happy roar wakes up the whole town.",
+  "dexZh": "醒狮在每个节日里跟着鼓声跳舞，它开心地一吼，全镇都醒了。",
+  "keepId": true
  },
  {
   "no": 245,
   "id": "springlion",
-  "en": "Springlion",
-  "zh": "泉狮",
+  "en": "Foamlion",
+  "zh": "泡泡狮",
   "types": [
-   "water"
+   "water",
+   "normal"
   ],
   "stage": 1,
   "evo": [],
@@ -667,8 +678,9 @@
    "spring",
    "lion"
   ],
-  "dexEn": "Springlion makes dirty water clean. It walks on rivers.",
-  "dexZh": "泉狮能把脏水变干净，它可以在河面上行走。"
+  "dexEn": "Foamlion loves bubble baths. Its soft mane is made of foam.",
+  "dexZh": "泡泡狮最爱泡泡浴，它软软的鬃毛是泡沫做的。",
+  "keepId": true
  },
  {
   "no": 249,
@@ -676,7 +688,7 @@
   "en": "Tidewing",
   "zh": "潮翼",
   "types": [
-   "psychic",
+   "water",
    "flying"
   ],
   "stage": 1,
@@ -706,17 +718,17 @@
    "tide",
    "wing"
   ],
-  "dexEn": "Tidewing sleeps at the bottom of the sea. It wakes up in a storm.",
-  "dexZh": "潮翼睡在海底，暴风雨来的时候才会醒。"
+  "dexEn": "Tidewing glides low over the waves. Tired seabirds rest on its wide back.",
+  "dexZh": "潮翼贴着海浪滑翔，飞累的海鸟会停在它宽宽的背上休息。"
  },
  {
   "no": 250,
   "id": "rainbowing",
-  "en": "Rainbowing",
-  "zh": "虹翼",
+  "en": "Moodplume",
+  "zh": "心情孔雀",
   "types": [
-   "fire",
-   "flying"
+   "normal",
+   "psychic"
   ],
   "stage": 1,
   "evo": [],
@@ -745,17 +757,18 @@
    "rainbow",
    "wing"
   ],
-  "dexEn": "A rainbow follows Rainbowing. It brings good luck.",
-  "dexZh": "虹翼飞过的地方会出现彩虹，它会带来好运。"
+  "dexEn": "Moodplume changes the color of its tail with its mood. Pink means it is happy.",
+  "dexZh": "心情孔雀的尾巴会跟着心情变颜色，变成粉红色就是它很开心。",
+  "keepId": true
  },
  {
   "no": 251,
   "id": "timesprout",
-  "en": "Timesprout",
-  "zh": "时之芽",
+  "en": "Daysprout",
+  "zh": "日日芽",
   "types": [
-   "psychic",
-   "grass"
+   "grass",
+   "ground"
   ],
   "stage": 1,
   "evo": [],
@@ -784,15 +797,17 @@
    "time",
    "sprout"
   ],
-  "dexEn": "Timesprout travels through time. Old trees remember its song.",
-  "dexZh": "时之芽可以穿越时间，古老的大树还记得它的歌。"
+  "dexEn": "Daysprout grows a new leaf on every day you practice. The sand inside it keeps the count.",
+  "dexZh": "你每练习一天，日日芽就长出一片新叶子。它身体里的沙子帮你记着天数。",
+  "keepId": true
  },
  {
   "no": 377,
   "id": "rockgiant",
-  "en": "Rockgiant",
-  "zh": "岩石巨人",
+  "en": "Mossgiant",
+  "zh": "苔藓巨人",
   "types": [
+   "grass",
    "rock"
   ],
   "stage": 1,
@@ -824,16 +839,18 @@
    "rock",
    "giant"
   ],
-  "dexEn": "Rockgiant sleeps deep in a cave. It is older than the islands.",
-  "dexZh": "岩石巨人睡在洞穴深处，它比这些岛还要古老。"
+  "dexEn": "Mossgiant keeps a warm amber stone in its chest. Flowers grow where it sleeps.",
+  "dexZh": "苔藓巨人胸口有一块暖暖的琥珀，它睡过的地方会开满鲜花。",
+  "keepId": true
  },
  {
   "no": 378,
   "id": "icegiant",
-  "en": "Icegiant",
-  "zh": "冰晶巨人",
+  "en": "Frostkeeper",
+  "zh": "冰窖守卫",
   "types": [
-   "ice"
+   "ice",
+   "water"
   ],
   "stage": 1,
   "evo": [],
@@ -864,16 +881,18 @@
    "ice",
    "giant"
   ],
-  "dexEn": "Icegiant is made of ice that never melts. It loves cold nights.",
-  "dexZh": "冰晶巨人由永远不会融化的冰做成，它喜欢寒冷的夜晚。"
+  "dexEn": "Frostkeeper keeps the snow town's food cold all summer. Kids visit it for ice cream.",
+  "dexZh": "冰窖守卫整个夏天都帮雪镇把食物冰着，孩子们常去找它要冰激凌。",
+  "keepId": true
  },
  {
   "no": 379,
   "id": "irongiant",
-  "en": "Irongiant",
-  "zh": "钢铁巨人",
+  "en": "Bellgiant",
+  "zh": "钟楼巨人",
   "types": [
-   "steel"
+   "steel",
+   "normal"
   ],
   "stage": 1,
   "evo": [],
@@ -903,8 +922,9 @@
    "iron",
    "giant"
   ],
-  "dexEn": "Irongiant is harder than any metal. It guards an old door.",
-  "dexZh": "钢铁巨人比任何金属都硬，它守护着一扇古老的门。"
+  "dexEn": "Bellgiant rings the hour for the old village. Knock on its chest to say hello.",
+  "dexZh": "钟楼巨人每到整点就为老村子报时。敲敲它胸口的门环，跟它打个招呼吧。",
+  "keepId": true
  },
  {
   "no": 380,
@@ -912,8 +932,8 @@
   "en": "Skysong",
   "zh": "天歌",
   "types": [
-   "dragon",
-   "psychic"
+   "flying",
+   "water"
   ],
   "stage": 1,
   "evo": [],
@@ -941,8 +961,8 @@
    "sky",
    "song"
   ],
-  "dexEn": "Skysong sings with the wind. Its song can calm a storm.",
-  "dexZh": "天歌和风一起唱歌，它的歌声能让暴风雨平静下来。"
+  "dexEn": "Skysong is a long ribbon of cloud. When it sings, a soft rain falls.",
+  "dexZh": "天歌像一条长长的云丝带，它一唱歌，天上就下起小雨。"
  },
  {
   "no": 381,
@@ -950,8 +970,8 @@
   "en": "Skyecho",
   "zh": "天响",
   "types": [
-   "dragon",
-   "psychic"
+   "normal",
+   "flying"
   ],
   "stage": 1,
   "evo": [],
@@ -979,16 +999,17 @@
    "sky",
    "echo"
   ],
-  "dexEn": "Skyecho repeats every word it hears. It flies faster than a jet.",
-  "dexZh": "天响会重复它听到的每一个词，它飞得比喷气机还快。"
+  "dexEn": "Skyecho repeats every word it hears. Say something kind, and it tells the whole sky.",
+  "dexZh": "天响会重复它听到的每一个词。说一句好听的话，它就讲给整片天空听。"
  },
  {
   "no": 382,
   "id": "tidewhale",
-  "en": "Tidewhale",
-  "zh": "潮语鲸",
+  "en": "Reefwhale",
+  "zh": "珊瑚鲸",
   "types": [
-   "water"
+   "water",
+   "rock"
   ],
   "stage": 1,
   "evo": [],
@@ -1018,8 +1039,9 @@
    "tide",
    "whale"
   ],
-  "dexEn": "Tidewhale can copy any sound. The sea listens to its voice.",
-  "dexZh": "潮语鲸能模仿任何声音，大海都听从它的声音。"
+  "dexEn": "Reefwhale carries a coral reef on its back. Little fish live there.",
+  "dexZh": "珊瑚鲸背上驮着一片珊瑚礁，小鱼们就住在那里。",
+  "keepId": true
  },
  {
   "no": 383,
@@ -1068,7 +1090,7 @@
   "zh": "回声龙",
   "types": [
    "dragon",
-   "flying"
+   "normal"
   ],
   "stage": 1,
   "evo": [],
@@ -1098,17 +1120,17 @@
    "echo",
    "drake"
   ],
-  "dexEn": "Echodrake wakes up when many people speak together. It protects the islands.",
-  "dexZh": "当很多人一起说话时，回声龙就会醒来。它守护着这些岛屿。"
+  "dexEn": "Echodrake is made of echoes. It keeps the kind words people say.",
+  "dexZh": "回声龙是由回声变成的，它把人们说过的好话都收藏起来。"
  },
  {
   "no": 385,
   "id": "wishstar",
-  "en": "Wishstar",
-  "zh": "愿望星",
+  "en": "Tickturtle",
+  "zh": "发条龟",
   "types": [
    "steel",
-   "psychic"
+   "ground"
   ],
   "stage": 1,
   "evo": [],
@@ -1138,8 +1160,9 @@
    "wish",
    "star"
   ],
-  "dexEn": "Wishstar wakes up once in a thousand years. Make a wish!",
-  "dexZh": "愿望星一千年才醒来一次。快许个愿吧！"
+  "dexEn": "Tickturtle turns its key once for every lesson you finish. Finish a whole book, and it wakes up.",
+  "dexZh": "你每学完一课，发条龟背上的钥匙就转一圈。学完一整本书，它就醒过来了。",
+  "keepId": true
  },
  {
   "no": 386,
@@ -1147,7 +1170,8 @@
   "en": "Starcore",
   "zh": "星核",
   "types": [
-   "psychic"
+   "rock",
+   "spark"
   ],
   "stage": 1,
   "evo": [],
@@ -1177,7 +1201,7 @@
    "star",
    "core"
   ],
-  "dexEn": "Starcore came from a falling star. It changes its shape.",
-  "dexZh": "星核来自一颗流星，它可以改变自己的形状。"
+  "dexEn": "Starcore is a crystal that drinks sunlight all day. At night it glows like a lamp.",
+  "dexZh": "星核是一块整天吸收阳光的水晶，到了晚上它会像灯一样发光。"
  }
 ]

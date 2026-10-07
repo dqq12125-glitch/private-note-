@@ -1,12 +1,12 @@
-// 第 11–12 岛 + 冠军之路：天气岛（暴雪、气象台、气象塔冰面、塔顶天气机、攀瀑）、天气开关道馆、12 号路瀑布、
-// 回忆岛（对手、欧瑞、记忆之门、默先生、回声龙）、回忆牌道馆、守卫、冠军之路（钢铁巨人、小凯）、冠军高原、冠军赛大厅
+// 第 11–12 岛 + 勇气之路：天气岛（暴雪、气象台、气象塔冰面、塔顶天气机、逆流）、天气开关挑战馆、12 号路瀑布、
+// 回忆岛（对手、欧瑞、记忆之门、默先生、回声龙）、回忆牌挑战馆、守卫、勇气之路（钟楼巨人、小凯）、冠军高原、冠军赛大厅
 // 运行：node tests/isle-e.test.js
 const H = require('./helpers');
 (async () => {
   const t = await H.open();
   const { p, W, check } = t;
-  // 道馆要先打败课本单元的 BOSS（第 13 个馆主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
-  // 七上全过是霜羽鸟的里程碑，先当作收服过了，免得它半路飞来打断剧情
+  // 挑战馆要先打败课本单元的 BOSS（第 13 个岛主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
+  // 七上全过是发条龟的里程碑（老旗标 leg:frostwing 也算），先当作收服过了，免得它半路飞来打断剧情
   const save0 = t.save;
   t.save = async s => { await save0(s); await p.evaluate(() => { const S = EchoGame.S; for (let i = 0; i < 16; i++) S.stars[(13 + i) + '-6'] = 1; S.world.flags['s:leg:frostwing'] = 1; localStorage.setItem('echo-island-v1', JSON.stringify(S)); }); };
   const B = n => { const b = {}; for (let i = 0; i < n; i++) b[i] = 1; return b; };
@@ -118,7 +118,7 @@ const H = require('./helpers');
   check(f['s:w11wh'] === 1 && f['s:w11rb'] === 1, '打败干部低语和闷雷');
   check(machineSeen === 4, '天气机：按错一次从头来，再按 晴 → 雨 → 风（按了 ' + machineSeen + ' 次按钮）');
   check(f['s:ch11'] === 1, '雪停了，夺回天气水晶（s:ch11）');
-  check(f['s:got_falls'] === 1 && (await p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')).mon.bag.hm_falls)) >= 1, '气象台台长送了攀瀑');
+  check(f['s:got_falls'] === 1 && (await p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')).mon.bag.hm_falls)) >= 1, '气象台台长送了逆流');
 
   // 12 号路：只有 11 枚徽章时爬不上瀑布
   await t.go('r11', 'from:t11');
@@ -129,13 +129,13 @@ const H = require('./helpers');
   check(/too strong|more badges/.test(await t.en()), '11 枚徽章：爬不上瀑布 ' + await t.en());
   await idle();
 
-  // 天气道馆：先按错一次（多云），全部复位回起点；再按 晴 → 雨 → 风
+  // 天气挑战馆：先按错一次（多云），全部复位回起点；再按 晴 → 雨 → 风
   await t.go('i11G', 'from:t11');
-  check((await t.dbg()).map === 'i11G', '进了天气道馆');
+  check((await t.dbg()).map === 'i11G', '进了天气挑战馆');
   let heardGym = false;
   for (let i = 0; i < 12 && (await t.dbg()).dlg; i++) { const pg = await t.page(); if (pg && /Sunny, then rainy, then windy/.test(pg.en || '')) heardGym = true; await t.A(); }
   await idle();
-  check(heardGym, '道馆广播天气预报（只听不看）');
+  check(heardGym, '挑战馆广播天气预报（只听不看）');
   check(await p.isVisible('#w-note'), '上方提示条：已打开 0/3');
   await shot('e06-i11G-2d');
   await t.tp(3, 14, 'left'); await t.A(); await idle();
@@ -158,21 +158,21 @@ const H = require('./helpers');
   check((await flags())['s:g11solved'] === 1, '天气开关全部按对');
   await step('down'); await step('left', 4); await step('up'); await step('up'); await step('up');
   s = await t.dbg();
-  check(s.y === 2, '滑冰回到中间，穿过第三扇门走到馆主面前 ' + JSON.stringify(s));
+  check(s.y === 2, '滑冰回到中间，穿过第三扇门走到岛主面前 ' + JSON.stringify(s));
   // 出去再进来，门还开着
   await t.go('t11', 'from:i11G'); await t.go('i11G', 'from:t11'); await idle();
-  check(await gateOpen(0) && await gateOpen(2), '再进道馆，门还开着');
+  check(await gateOpen(0) && await gateOpen(2), '再进挑战馆，门还开着');
   await t.tp(7, 2, 'up'); await t.A(); await idle();
   let bg = await p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')).mon.badges);
   check(bg[11], '打赢天气鲸，拿到第 12 枚徽章');
 
-  // 12 枚徽章 + 攀瀑：爬上瀑布
+  // 12 枚徽章 + 逆流：爬上瀑布
   await t.go('r11', 'from:t11');
   await t.tp(13, 28, 'up');
   await p.evaluate(() => { EchoWorld._debug().PL.surf = true; });
   await t.walk('up'); await idle(); await W(1500);
   s = await t.dbg();
-  check(s.y <= 22 && s.surf, '用攀瀑爬上了瀑布 ' + JSON.stringify(s));
+  check(s.y <= 22 && s.surf, '用逆流爬上了瀑布 ' + JSON.stringify(s));
   await shot('e07-r11-falls');
 
   // =====================================================================
@@ -186,10 +186,10 @@ const H = require('./helpers');
   f = await flags();
   check(f['s:rival5'] === 1, '对手 {rival} 在回忆岛和你比了第五场');
   await shot('e08-t12-2d');
-  // 守卫：12 枚徽章过不去冠军之路
+  // 守卫：12 枚徽章过不去勇气之路
   await t.tp(29, 16, 'right'); await t.walk('right'); await t.walk('right');
   s = await t.dbg();
-  check(s.x === 30 && s.map === 't12', '守卫挡住冠军之路（12 枚徽章）' + JSON.stringify(s));
+  check(s.x === 30 && s.map === 't12', '守卫挡住勇气之路（12 枚徽章）' + JSON.stringify(s));
   await idle();
   // 神殿门口的欧瑞
   await t.talkTo(n => n.id === 'orion');
@@ -225,7 +225,7 @@ const H = require('./helpers');
   f = await flags();
   check(f['s:leg:echodrake'] === 1, '和回声龙对战（打倒或收服）');
 
-  // 回忆道馆：先翻错一对（翻回去），再把三组都配对
+  // 回忆挑战馆：先翻错一对（翻回去），再把三组都配对
   await t.go('i12G', 'from:t12'); await idle();
   check(await p.isVisible('#w-note'), '上方提示条：踩牌配对');
   await shot('e11-i12G-2d');
@@ -242,39 +242,39 @@ const H = require('./helpers');
   await flip(4, 10, 'up'); await flip(10, 10, 'up'); await flip(2, 10, 'up'); await flip(8, 10, 'up');
   check(await gateOpen(1), '第二组配好，第二道墙消失');
   await flip(2, 6, 'down'); await flip(10, 6, 'down'); await flip(4, 6, 'down'); await flip(8, 6, 'down');
-  check(await gateOpen(0), '第三组配好，通往馆主的墙消失');
+  check(await gateOpen(0), '第三组配好，通往岛主的墙消失');
   await t.go('t12', 'from:i12G'); await t.go('i12G', 'from:t12'); await idle();
-  check(await over(8, 6) === 'K' && await gateOpen(0), '再进道馆，配好的牌和门都还在');
+  check(await over(8, 6) === 'K' && await gateOpen(0), '再进挑战馆，配好的牌和门都还在');
   await t.tp(6, 2, 'up'); await t.A(); await idle();
   bg = await p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')).mon.badges);
   check(bg[12], '打赢回忆巨龙，拿到第 13 枚徽章');
 
   // =====================================================================
-  // 冠军之路 → 冠军高原 → 冠军赛大厅
+  // 勇气之路 → 冠军高原 → 冠军赛大厅
   // =====================================================================
   await t.go('t12', 'from:i12G');
   await t.tp(29, 16, 'right'); await t.walk('right'); await t.walk('right');
   check((await t.dbg()).x === 31, '13 枚徽章：守卫让开了');
   await t.go('v1', 'from:t12');
-  check((await t.dbg()).map === 'v1', '到了冠军之路入口');
+  check((await t.dbg()).map === 'v1', '到了勇气之路入口');
   await shot('e13-v1');
   await t.go('v2', 'from:v1');
   s = await t.dbg();
-  check(s.map === 'v2', '进了冠军之路洞窟（漆黑）');
-  check(await p.evaluate(() => EchoWorld._debug().M.dark), '洞窟是黑的，要用闪光');
+  check(s.map === 'v2', '进了勇气之路洞窟（漆黑）');
+  check(await p.evaluate(() => EchoWorld._debug().M.dark), '洞窟是黑的，要点灯');
   const ig = await npc(n => n.mon === 'irongiant');
-  check(!!ig, '洞窟深处有钢铁巨人 ' + JSON.stringify(ig));
+  check(!!ig, '洞窟深处有钟楼巨人 ' + JSON.stringify(ig));
   await shot('e14-v2-dark');
-  // 怪力：推开挡路的大石头
+  // 大力推：推开挡路的大石头
   await t.tp(18, 28, 'up'); await t.A(); await idle();
   await step('up', 3);
   s = await t.dbg();
-  check(s.y === 25, '碎岩打碎了挡路的岩石 ' + JSON.stringify(s));
+  check(s.y === 25, '敲石打碎了挡路的岩石 ' + JSON.stringify(s));
   await t.A(); await idle();
   await step('up', 2);
   s = await t.dbg();
   const bo = await p.evaluate(() => EchoWorld._debug().M._bould.map(b => b.x + ',' + b.y));
-  check(s.y === 23 && bo.includes('18,22'), '怪力推着大石头往北走 ' + JSON.stringify(s) + ' ' + bo);
+  check(s.y === 23 && bo.includes('18,22'), '大力推着大石头往北走 ' + JSON.stringify(s) + ' ' + bo);
   await t.go('v3', 'from:v2');
   check((await t.dbg()).map === 'v3', '上了洞窟 2 楼');
   await t.tp(17, 8, 'up');
@@ -291,12 +291,12 @@ const H = require('./helpers');
   check((await t.dbg()).map === 'i12L', '进了英语冠军赛大厅');
   await shot('e17-i12L');
   await t.tp(5, 1, 'up'); await t.walk('up'); await W(600);
-  check((await t.dbg()).map === 'i121', '大厅北边通第一位大师的房间');
+  check((await t.dbg()).map === 'i121', '大厅北边通第一位擂主的房间');
   await t.go('i12L', 'from:i121');
   await t.go('vL', 'from:i12L');
   await t.go('vLC', 'from:vL'); await t.talkTo(n => n.role === 'nurse'); await idle();
   await t.go('vL', 'from:vLC');
-  check((await t.dbg()).map === 'vL', '冠军高原的怪兽中心出来还在高原上');
+  check((await t.dbg()).map === 'vL', '冠军高原的休息站出来还在高原上');
 
   // =====================================================================
   // 3D 截图

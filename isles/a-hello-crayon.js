@@ -1,5 +1,5 @@
 // 回声岛 · 第 0–1 岛：你好岛（海边小村）、彩色文具岛（糖果色小镇 + 涂鸦森林）
-// 地图、剧情、道馆机关。写法见 ISLES.md
+// 地图、剧情、挑战馆机关。写法见 ISLES.md
 (function () {
   'use strict';
   const EM = window.EchoMaps, ST = window.EchoStory, L = ST.lib, P = window.EchoPeople;
@@ -49,7 +49,7 @@
     rescueLoop: [[9, 9], [10, 9], [11, 9], [12, 9], [12, 10], [12, 11], [11, 11], [10, 11], [9, 11], [9, 10]],
     npc: {
       1: { role: 'talk' },   // 回声博士（world.js / story.js 认 t0 的 1 号）
-      2: { role: 'guard', badge: 1, name: 'Guard Hugo', look: 'guard', say: [['Hello! I am the island guard. You need the Hello Badge to go north.', '你好！我是岛上的守卫。要有「你好徽章」才能往北走。'], ['Visit the Gym and beat Captain Polly first!', '先去道馆打败鹦鹉船长吧！']] },
+      2: { role: 'guard', badge: 1, name: 'Guard Hugo', look: 'guard', say: [['Hello! I am the island guard. You need the Hello Badge to go north.', '你好！我是岛上的守卫。要有「你好徽章」才能往北走。'], ['Visit the Challenge Hall and beat Captain Polly first!', '先去挑战馆打败鹦鹉船长吧！']] },
       3: { role: 'quiz' },
       4: { role: 'talk', name: 'Ms Rosa', look: 'granny', g: 'f', say: [['Good morning, dear! Nice to meet you!', '早上好，孩子！很高兴认识你！'], ['On this island, we always say hello.', '在这座岛上，我们见面总要打招呼。']], speak: 'Nice to meet you, too!' },
       5: { role: 'talk', name: 'Mr Costa', look: 'grandpa', say: [['Hello! How are you?', '你好！你好吗？'], ['I am fine, thank you. And you?', '我很好，谢谢。你呢？']], speak: "I'm fine, thank you." },
@@ -171,7 +171,7 @@
     },
   });
 
-  // 回声洞：漆黑的洞穴，墙上刻着古老的字；深处被裂开的岩石封住，里面睡着岩石巨人
+  // 回声洞：漆黑的洞穴，墙上刻着古老的字；深处被裂开的岩石封住，里面睡着苔藓巨人
   EM.define('c0', {
     kind: 'cave', z: 0, cave: 'rock', dark: true, dungeon: true, lv: 2, name: '回声洞', en: 'Echo Cave', sub: '海边悬崖',
     rows: [
@@ -213,7 +213,7 @@
     people: [
       { id: 'orion', role: 'story', name: 'Orion', look: 'orion', x: 11, y: 14, face: 'left' },
       { id: 'flashman', name: 'Hiker Max', look: 'miner', x: 17, y: 18, face: 'down',
-        give: { item: 'hm_flash', say: [['Hello there! This cave is very dark.', '你好呀！这个洞里非常黑。'], ['Take this. It is an HM. It teaches a monster Flash.', '这个给你。它是秘传学习器，能教怪兽「闪光」。'], ['With two badges, a spark, psychic or fire monster can light up the cave!', '有两枚徽章，电系、超能系或火系的怪兽就能照亮洞穴！']], after: [['Say "light up the cave!" to your monster.', '对你的怪兽说「light up the cave!」']] },
+        give: { item: 'hm_flash', say: [['Hello there! This cave is very dark.', '你好呀！这个洞里非常黑。'], ['Take this. It is an Echo Shell. It teaches a monster Light Up.', '这个给你。它是回声贝，能教怪兽「点灯」。'], ['With two badges, a spark, mind or fire monster can light up the cave!', '有两枚徽章，电系、心灵系或火系的怪兽就能照亮洞穴！']], after: [['Say "light up the cave!" to your monster.', '对你的怪兽说「light up the cave!」']] },
         say: [['Say "light up the cave!" to your monster.', '对你的怪兽说「light up the cave!」']] },
     ],
   });
@@ -240,10 +240,10 @@
     },
   });
 
-  // ---------- 道馆：问候之门（鹦鹉船长） ----------
+  // ---------- 挑战馆：问候之门（鹦鹉船长） ----------
   // 三道门各有一只鹦鹉守着；看窗外的天色（早上 / 下午 / 晚上），对它说对问候语门才开
   EM.define('i0G', {
-    kind: 'inside', z: 0, room: 'G', name: '你好岛道馆', en: 'Hello Gym', sub: '馆主：鹦鹉船长',
+    kind: 'inside', z: 0, room: 'G', name: '你好岛挑战馆', en: 'Hello Hall', sub: '岛主：鹦鹉船长',
     rows: [
       'WWWWWWWWWWWWW',
       'Wk____1____kW',
@@ -448,7 +448,7 @@
     hiddenItems: ['thunderstone'],
     npc: {
       1: { role: 'trainer', name: 'Bug Kid Tony', look: 'kid', face: 'down', sight: 3, under: ',', types: ['bug'], n: 2, lines: [['My bug is black and yellow. Cool, right?', '我的虫子是黑黄相间的。酷吧？']], win: ['Black and yellow... and beaten!', '黑黄相间的……被打败了！'] },
-      2: { role: 'guard', badge: 2, name: 'Ranger Mo', look: 'ranger', say: [['Stop, please! The road north goes to Route 2.', '请停一下！往北是 2 号路。'], ['Only trainers with two badges can go. Beat the Crayon Gym first!', '只有两枚徽章的训练师才能过去。先去打赢彩色文具岛的道馆吧！']] },
+      2: { role: 'guard', badge: 2, name: 'Ranger Mo', look: 'ranger', say: [['Stop, please! The road north goes to Route 2.', '请停一下！往北是 2 号路。'], ['Only trainers with two badges can go. Beat the Crayon Hall first!', '只有两枚徽章的训练师才能过去。先去打赢彩色文具岛的挑战馆吧！']] },
       3: { role: 'trainer', name: 'Painter Sue', look: 'chef', g: 'f', face: 'left', sight: 2, types: ['normal', 'grass'], n: 2, lines: [['I lost my brushes! Are they blue?', '我的画笔丢了！是蓝色的吗？']], win: ['Oh, my brushes are in my bag!', '哦，画笔在我包里！'] },
       4: { role: 'trainer', name: 'Camper Rob', look: 'hiker', face: 'up', sight: 3, under: ',', types: ['grass', 'bug'], n: 2, lines: [['Is this your eraser? I found it here!', '这是你的橡皮吗？我在这儿捡到的！']], win: ['I will give it to the lost and found.', '我把它交给失物招领处。'] },
     },
@@ -520,10 +520,10 @@
     },
   });
 
-  // ---------- 道馆：彩色地板（彩虹蟹） ----------
+  // ---------- 挑战馆：彩色地板（彩虹蟹） ----------
   // 听广播：这一段只能踩什么颜色。踩错颜色就回到这一段的起点；走到这一段的尽头，前面的门就开了
   EM.define('i1G', {
-    kind: 'inside', z: 1, room: 'G', name: '彩色文具岛道馆', en: 'Crayon Gym', sub: '馆主：彩虹蟹',
+    kind: 'inside', z: 1, room: 'G', name: '彩色文具岛挑战馆', en: 'Crayon Hall', sub: '岛主：彩虹蟹',
     rows: [
       'WWWWWWWWWWWWW',
       'Wp____1____pW',
@@ -628,14 +628,14 @@
   // 涂鸦森林：团员一看见你就往北跑
   async function woodsChase(C) {
     const pl = C.pl;
-    const g = C.spawn({ look: P.LOOKS.grunt, name: 'Hush Grunt', x: pl.x, y: pl.y - 4, face: 'down' });
+    const g = C.spawn({ look: P.LOOKS.grunt, name: 'Hush Crew', x: pl.x, y: pl.y - 4, face: 'down' });
     await C.alert(g);
-    await C.talk([{ who: 'Hush Grunt', look: P.LOOKS.grunt, en: "Shh! You can't catch me!", zh: '嘘！你抓不到我的！' }]);
+    await C.talk([{ who: 'Hush Crew', look: P.LOOKS.grunt, en: "Shh! You can't catch me!", zh: '嘘！你抓不到我的！' }]);
     await C.walk(g, 'up', 3, 120);
     C.remove(g);
     C.set('z1chase');
   }
-  // 小凯：腼腆的男孩想要第一只怪兽（仿绿宝石的小光）
+  // 小凯：腼腆的男孩想要第一只怪兽
   async function kaiCatch(C) {
     const E = C.E, MG = C.MG, pl = C.pl;
     const k = C.spawn({ look: P.LOOKS.kai, name: 'Kai', x: pl.x, y: pl.y + 3, face: 'up', id: 'kai' });
@@ -654,7 +654,7 @@
     await C.talk([
       K('Oh! A monster! What do I say? What do I say?', '啊！一只怪兽！我该说什么？该说什么？'),
       L.speak(C, 'You can do it, Kai! Say it loudly!', '给小凯打气：大声说出来！'),
-      K('O-okay! Go, Echo Ball!', '好、好的！去吧，回声球！', { onShow: () => { E.SFX.hit(); } }),
+      K('O-okay! Echo Ball, fly!', '好、好的！回声球，飞吧！', { onShow: () => { E.SFX.hit(); } }),
     ]);
     C.remove(wild);
     E.SFX.win(); E.toast('🔮 小凯收服了 Owlet！', 'gold');
@@ -686,7 +686,7 @@
     C.set('z1h' + n.k);
     C.remove(n);
     if (!C.flag('z1h0') || !C.flag('z1h1')) { await C.talk([{ who: '旁白', emo: '💬', en: 'The other one still has the crystal!', zh: '水晶还在另一个团员手上！' }]); return; }
-    await C.talk([{ who: 'Hush Grunt', look: P.LOOKS.gruntF, g: 'f', en: 'Shh... Fine! Take your noisy crystal!', zh: '嘘……好吧！拿走你们吵死人的水晶！' }]);
+    await C.talk([{ who: 'Hush Crew', look: P.LOOKS.gruntF, g: 'f', en: 'Shh... Fine! Take your noisy crystal!', zh: '嘘……好吧！拿走你们吵死人的水晶！' }]);
     await L.restoreCrystal(C, 1);
     await C.talk([{ who: '旁白', emo: '🌈', en: 'Colours are coming back to Crayon Island!', zh: '颜色回到彩色文具岛了！快回镇上看看吧！' }]);
   }
@@ -698,7 +698,7 @@
         painter('Look! My house is pink again! The sky is blue! Thank you, {name}!', '你看！我的房子又是粉色的了！天空是蓝色的！谢谢你，{name}！'),
         painter('Can you say it with me? "Red, yellow, blue and green!"', '和我一起说：「红、黄、蓝、绿！」'),
         L.speak(C, 'Red, yellow, blue and green!', '一起大声说！'),
-        painter('Take these. Now go and see the Rainbow Crab at the Gym!', '这些送给你。现在去道馆找彩虹蟹吧！', { onShow: () => C.give('superpotion', 2) }),
+        painter('Take these. Now go and see the Rainbow Crab at the Challenge Hall!', '这些送给你。现在去挑战馆找彩虹蟹吧！', { onShow: () => C.give('superpotion', 2) }),
       ]);
       C.set('z1thanks');
       return;
@@ -724,7 +724,7 @@
       await C.talk([
         U('So you are {name}! Kai told me about you.', '你就是 {name} 吧！小凯跟我说起过你。'),
         U('Kai is shy. But today he spoke loudly! Thank you.', '小凯很害羞，可今天他大声说话了！谢谢你。'),
-        U('Here, take these Super Balls.', '这些超级球送给你。', { onShow: () => C.give('superball', 3) }),
+        U('Here, take these Gold Echo Balls.', '这些金回声球送给你。', { onShow: () => C.give('superball', 3) }),
       ]);
       C.set('z1uncle');
       return;
@@ -747,7 +747,7 @@
       G('Goodbye, dear! Come back anytime.', '再见，孩子！随时回来。'),
     ]);
   }
-  // 回声洞里的导师欧瑞（仿绿宝石的大吾）
+  // 回声洞里的导师欧瑞
   async function orionCave(C, n) {
     C.faceEach(n);
     if (!C.flag('z0orion')) {

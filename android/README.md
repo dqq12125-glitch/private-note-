@@ -3,7 +3,7 @@
 一个全屏 WebView 壳：游戏网页（`index.html`、各个 `.js`、`assets/` 里的怪兽模型和配音）在打包时整个复制进 APK，
 用 `https://appassets.androidplatform.net/assets/www/index.html` 这个虚拟安全地址打开，所以：
 
-- **离线能玩**：冒险、闯关、课本同步、每日复习都不用联网（有道在线发音只在没有配音的句子上兜底）。
+- **离线能玩**：冒险、闯关、课本单元、每日复习都不用联网（没有提前配音的句子联网时用阿里云 qwen3-tts-flash 现场合成；不再用有道）。
 - **麦克风能用**：第一次开口时弹系统权限框（`RECORD_AUDIO`），WebView 里 `getUserMedia` 自动放行；被永久拒绝时网页可以用 `micPermission()` 看出来，`openAppSettings()` 跳到系统设置。
 - **AI 聊天和口语打分要联网**：原生桥带着百炼密钥直连 `dashscope.aliyuncs.com`（只许连这一个域名），网页拿不到密钥本身。
 - 返回键交给游戏处理（`window.EchoBack`：关弹窗 → 关聊天 → 回首页），首页再按就退到后台。
@@ -22,7 +22,36 @@ ANDROID_HOME=D:/Claude/tools/android/sdk D:/Claude/tools/android/gradle-8.10.2/b
 # 输出 app/build/outputs/apk/release/app-release.apk（约 300MB，要 15–30 分钟）
 ```
 
-`echo.properties` 和签名文件（`*.jks`）不进仓库。打正式包（release）前 `checkReleaseConfig` 会检查，不对就**报错停下**：
+`echo.properties` 和签名文件（`*.jks`）不进仓库。
+
+### 两个版本：家庭版 / 销售版（2026-10-07）
+
+| | 家庭版 `family`（默认，弟弟用） | 销售版 `sales`（试卖给别的家庭） |
+| --- | --- | --- |
+| 怎么打 | `gradle assembleRelease` | `gradle assembleRelease -PECHO_EDITION=sales`（也可以设环境变量 `ORG_GRADLE_PROJECT_ECHO_EDITION=sales`） |
+| applicationId | `com.echoisland.app` | `com.echoisland.english`（两个是不同的 App，能装在同一台手机上，销售版不会覆盖弟弟的家庭版） |
+| 百炼密钥 | `KEY_FILE` 的打进 `BuildConfig.DASHSCOPE_KEY` | **不读 KEY_FILE**，`DASHSCOPE_KEY` 是空的；家长在首次设置向导里粘贴自己的密钥（`setKey`，只存在这台手机） |
+| 家长密码 | `PARENT_PIN` 的加盐哈希打进 APK，不能在手机上改 | **不读 PARENT_PIN**，哈希是空的；家长在首次设置向导里设（`setPin`：每台手机一个随机盐 + SHA-256，存在原生，原文不存） |
+| 中转服务 | `TALK_URL` / `TALK_CODE` | 一律空的（不替别的家庭跑服务器、不留聊天记录） |
+| 系统自动备份 | `allowBackup=true` | `allowBackup=false`（App 数据里有家长的密钥和孩子的存档，不让系统传到云上） |
+| 版本名 | `20261007-1a2b3c4` | 末尾加 `-s`：`20261007-1a2b3c4-s` |
+| 网页里 | `EchoNative.edition()` = `family` | `EchoNative.edition()` = `sales`：怪兽手册不带撞脸的保留怪兽（`dex.js`）、第一次打开走「家长首次设置」向导（`setup.js`） |
+| 保留怪兽（`tools/mon3d/lookalike.txt`） | 照旧打包（番外） | **连美术带记录都不打包**：`copyWeb` 先跑 `node tools/build-dex.js --sales=build/generated/sales-web`，换上没有保留怪兽记录的 `dex.js` 和两个 `index.json`，不复制 `assets/mon2d/<id>.webp`、`assets/mon3d/<id>.glb`（要先把 dex.js 生成成最新的，不然停下） |
+| 课本 | 全部开放 | 只开放 `-PECHO_BOOKS`（默认 `hj7a,hj7b` 七上、七下；`EchoNative.books()`），别的册 🔒 |
+| 检查新版本的默认地址 | `echo.properties` 的 `VER_URL`（不写就用原来的 GitHub Pages 地址；`EchoNative.verUrl()`） | 没有（新版本私下发） |
+| 版本号 | `versionCode` = git 提交数 | 同左；`-PECHO_VERSION_CODE=n` 两个版本都能用：直接用这个号、完全不调用 git |
+
+版本只由 `-PECHO_EDITION` 决定（不写就是 family），不看 `echo.properties`——同一份 `echo.properties` 两个版本都能用（销售版不读里面的 `KEY_FILE` / `PARENT_PIN` / `TALK_*`，签名照用）。
+销售版的 `checkReleaseConfig` 反过来查：`BuildConfig` 里有密钥或家长密码哈希就**报错停下**。打完自己再核对一遍（不要把值打印出来）：
+
+```bash
+# 解出 classes*.dex，数一数 sk- 开头的密钥、64 位十六进制（密码哈希的样子）有几处：销售版都应该是 0（只数个数，不打印内容）
+mkdir -p /tmp/echo-s && cd /tmp/echo-s && unzip -o -q .../app-release.apk 'classes*.dex'
+cat classes*.dex | grep -a -o -E 'sk-[A-Za-z0-9]{20,}' | wc -l       # 0
+cat classes*.dex | grep -a -o -E '[0-9a-f]{64}' | wc -l              # 0（家庭版是 1：那就是家长密码的哈希）
+```
+
+打完销售版以后照常 `gradle assembleRelease`（不带参数）就是家庭版。打正式包（release）前 `checkReleaseConfig` 会检查，不对就**报错停下**：
 
 - **正式签名**：`STORE_FILE` / `STORE_PASSWORD` 没填或签名文件找不到 → 停下。以前会悄悄改用调试签名，那样的包装不上去（签名不同），只能卸载重装，存档就丢了。签名文件和 `echo.properties` 要另外备份两处（网盘 + U 盘）。
 - **家长密码**：没有 `PARENT_PIN`（4 位数字）→ 停下。
@@ -41,6 +70,7 @@ APK 被转发出去密钥就跟着出去了：APK 只发给自家人；发现泄
 打包时从 `echo.properties` 的 `PARENT_PIN` 读，**只把「盐 + 密码」的 SHA-256 写进 APK**（`BuildConfig.PARENT_PIN_HASH`，盐是 `BuildConfig.PARENT_PIN_SALT`），原文不进 APK，构建也不打印它。
 手机上 `PinGuard.java` 用同一个盐算哈希比对；连续输错 5 次锁 10 分钟，次数和锁定时间存在原生，同一次开机里改手机时钟解不开。
 APK 里没有家长密码时 `hasPin()` 是 false、`checkPin()` 一律 false——不再「谁先点谁来设」。改密码 = 改 `echo.properties` 重新打包。
+销售版不一样：打包时没有密码，第一次打开时家长在向导里设（`setPin`），之后在「设置 → 🔒 家长设置」里输对旧密码就能改；忘了密码只能清除 App 数据（存档会丢，先「导出存档」）。
 （4 位数字的哈希挡得住孩子，挡不住会反编译的人；它防的是「随手点开」，不是黑客。）
 
 ### 版本号
@@ -72,6 +102,10 @@ APK 里没有家长密码时 `hasPin()` 是 false、`checkPin()` 一律 false—
 | `version()` → JSON | `{"code":321,"name":"20261007-1a2b3c4"}`（versionCode / versionName） |
 | `diag()` → JSON | `{"renderGone":0,"lastGone":0,"lastCrash":false,"sdk":35,"android":"15","webview":"131.0…","debug":false,"micLastDeny":{…}}`：渲染进程挂过几次、最近一次的时间（毫秒）和是不是崩溃（false = 被系统收回内存），系统和 WebView 版本，最近一次麦克风被拒的情况（`ms` 多久回来、`before`/`after` 系统还肯不肯再问、`blocked` 判成了永久拒绝）。周报诊断行用 |
 | `takeRecovered()` → boolean | 渲染进程挂了、原生刚重建过 WebView 时，**第一次**调用返回 true（之后 false）。网页启动时问一下，可以提示孩子「刚才画面出了点问题，已经重新打开了，存档还在」 |
+| `edition()` → 字符串 | `family` 家庭版 / `sales` 销售版（打包时的 `-PECHO_EDITION`）。`dex.js` 第一个看它 |
+| `books()` → 字符串 | 销售版开放哪几册课本（逗号分开的册 id，打包时 `-PECHO_BOOKS=hj7a,hj7b`，不写就是七上、七下）；家庭版是空的 = 全部开放。`game.js` 的课本单元页只开放这几册，别的册显示 🔒「下一学年的内容包」 |
+| `verUrl()` → 字符串 | 检查新版本的默认地址（`version.json`）：家庭版是 `echo.properties` 的 `VER_URL`（没写就用原来的 GitHub Pages 地址），**销售版是空的**（不连境外网站，新版本私下发）。网页里不再写死这个地址；家长设置里填的地址优先 |
+| `storage()` → JSON | `{"free":12345678901,"total":128000000000,"ram":12000000000}`：App 所在分区剩余 / 总共多少字节、手机内存多少字节。首次设置的设备检查用（剩余空间要 ≥1GB） |
 
 **家长密码**
 
@@ -79,7 +113,8 @@ APK 里没有家长密码时 `hasPin()` 是 false、`checkPin()` 一律 false—
 | --- | --- |
 | `hasPin()` → boolean | 打包时设了家长密码。false 时家长功能一律拒绝，提示「请家长先设密码」 |
 | `checkPin(pin)` → boolean | 对不对。锁着的时候、没设密码、空字符串一律 false（空的不算一次）；对了清零错的次数 |
-| `pinStatus()` → JSON | `{"has":true,"locked":false,"waitSec":0,"triesLeft":5,"lockouts":0,"lastLock":0}`：是不是锁着、还要等几秒、还能试几次、一共被锁过几次、最近一次被锁的时间（毫秒）。`checkPin` 返回 false 后看它，分清「密码不对」和「锁着」；`lockouts` 进周报 |
+| `pinStatus()` → JSON | `{"has":true,"locked":false,"waitSec":0,"triesLeft":5,"lockouts":0,"lastLock":0,"canSet":false}`：是不是锁着、还要等几秒、还能试几次、一共被锁过几次、最近一次被锁的时间（毫秒）、现在能不能 `setPin`。`checkPin` 返回 false 后看它，分清「密码不对」和「锁着」；`lockouts` 进周报 |
+| `setPin(pin)` → boolean | **只有销售版**：设 / 改家长密码（必须 4 位数字）。还没有密码时直接设（首次设置向导）；已经有了，要**同一次开机里 2 分钟内刚 `checkPin` 对过**才能改（网页先过家长密码再调）。每次换一个新的随机盐，只存「盐 + 密码」的 SHA-256。家庭版（打包时带了密码）一律 false |
 
 **麦克风**
 

@@ -214,9 +214,17 @@
       g.beginPath(); g.arc(0, HY - 2.5, 13.6, Math.PI, 0); g.closePath(); P(hc);
       rr(g, -14, HY - 3.6, 28, 3, 1.5); P(shade(hc, .75));
       if (!back) { circ(g, side ? 4 : 0, HY - 9.5, 2.8); P('#ffc53d', 1); }
-    } else if (H === 'nurse') {
-      rr(g, -6.5, HY - 18.5, 13, 7, 2.2); P('#ffffff');
-      g.fillStyle = '#e53935'; g.fillRect(-1, HY - 17.5, 2, 5); g.fillRect(-2.5, HY - 16, 5, 2);
+    } else if (H === 'headset') {
+      // 耳机：头顶一道弧 + 耳罩 + 伸到嘴边的小话筒（休息站的站员）
+      const band = () => { g.beginPath(); g.arc(side ? .6 : 0, HY - 1, 14, Math.PI * 1.06, Math.PI * 1.94); };
+      g.lineCap = 'round';
+      band(); g.strokeStyle = shade(hc, .5); g.lineWidth = 3.6; g.stroke();
+      band(); g.strokeStyle = hc; g.lineWidth = 2; g.stroke();
+      const cup = x => { rr(g, x - 2.7, HY - 3, 5.4, 8, 2.5); P(hc); circ(g, x, HY + 1, 1.2); g.fillStyle = shade(hc, 1.3); g.fill(); };
+      const mic = (x0, x1) => { g.beginPath(); g.moveTo(x0, HY + 4); g.quadraticCurveTo(x0 - (x0 - x1) * .2, HY + 9, x1, HY + 8.2); g.strokeStyle = shade(hc, .5); g.lineWidth = 1.5; g.stroke(); circ(g, x1, HY + 8.2, 1.6); P(L.micC || '#ffd54f', 1); };
+      if (front) { cup(-13.1); cup(13.1); mic(13.1, 5.4); }
+      else if (side) { cup(-1.4); mic(-1.4, 8.4); }
+      else { cup(-13.1); cup(13.1); }
     } else if (H === 'chef') {
       rr(g, -8.5, HY - 15, 17, 6, 1.5); P('#ffffff');
       g.beginPath(); g.arc(-5, HY - 18, 5.4, 0, Math.PI * 2); g.arc(5, HY - 18, 5.4, 0, Math.PI * 2); g.arc(0, HY - 21.5, 6, 0, Math.PI * 2); P('#ffffff');
@@ -284,10 +292,12 @@
     mia: { skin: '#ffe3cc', hair: '#2f2a3a', style: 'pigtails', eye: '#6a3fa0', hat: 'band', hatC: '#ffca28', shirt: '#9575cd', shirt2: '#ffffff', bottom: '#ffb74d', skirt: true, shoes: '#7e57c2', bag: '#4fc3f7' },
     mom: { skin: '#ffdcc2', hair: '#6b3f2a', style: 'bob', eye: '#5a3a26', shirt: '#f4a261', apron: '#ffffff', bottom: '#8d6e9e', skirt: true, shoes: '#6d4c41' },
     prof: { skin: '#ffe0c8', hair: '#8b6f5c', style: 'bun', eye: '#4a6a3a', shirt: '#8e6cef', coat: '#ffffff', bottom: '#455a64', skirt: true, glasses: true, shoes: '#5d4037' },
-    nurse: { skin: '#ffdcc2', hair: '#e57373', style: 'long', eye: '#6b3a3a', hat: 'nurse', shirt: '#f8bbd0', shirt2: '#ffffff', bottom: '#f48fb1', skirt: true, shoes: '#ffffff' },
+    // 休息站（回声站）的站员：青绿色马甲 + 耳机话筒，胸前一枚金色小徽章
+    nurse: { skin: '#ffdcc2', hair: '#3b2c35', style: 'bob', eye: '#2e5f5a', hat: 'headset', hatC: '#1f9e93', shirt: '#ffffff', jacket: '#2bb3a3', bottom: '#2f4858', shoes: '#f4f1ea', logo: '#ffd54f' },
     guard: { skin: '#f1c7a0', hair: '#2b2b2b', style: 'short', eye: '#3a2a20', hat: 'helmet', hatC: '#1e3a8a', shirt: '#1e40af', bottom: '#1e293b', shoes: '#111827' },
     teacher: { skin: '#f5d0b0', hair: '#5d4037', style: 'short', eye: '#3a2a20', shirt: '#2cae69', shirt2: '#ffffff', bottom: '#34495e', glasses: true },
-    clerk: { skin: '#ffdcc2', hair: '#1b1b1b', style: 'short', eye: '#3a2a20', hat: 'cap', hatC: '#3d8fe0', shirt: '#ffffff', jacket: '#3d8fe0', bottom: '#2f3a57' },
+    // 商店店员：琥珀黄的帽子和围裙（和商店的屋顶一个颜色）
+    clerk: { skin: '#ffdcc2', hair: '#1b1b1b', style: 'short', eye: '#3a2a20', hat: 'cap', hatC: '#f29b2b', shirt: '#fff8ec', apron: '#f29b2b', bottom: '#5d4037' },
     leader: { skin: '#f1c7a0', hair: '#3e2723', style: 'spiky', eye: '#3a2a20', shirt: '#e53935', coat: '#263238', bottom: '#212121' },
     hiker: { skin: '#e8b88f', hair: '#5d4037', style: 'short', eye: '#3a2a20', hat: 'straw', shirt: '#8d6e63', bottom: '#4e342e', bag: '#ff8f00' },
     grunt: { skin: '#f1d0b8', hair: '#4a4a55', style: 'short', eye: '#3a3a4a', hat: 'cap', hatC: '#5a5f6e', hatLogo: '#cfd4dc', shirt: '#cfd4dc', jacket: '#5a5f6e', bottom: '#3a3f4b', shoes: '#22252c' },
