@@ -177,13 +177,16 @@ const clean = (v, n) => String(v || '').replace(/[^\p{L}\p{N} .,!?'"’:;()-]/gu
 const SERVE_GAME = /^(1|true|yes)$/i.test(cfg('SERVE_GAME') || '');
 const GAME_ROOT = path.resolve(__dirname, '..');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json',
-  '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.apk': 'application/vnd.android.package-archive' };
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.apk': 'application/vnd.android.package-archive', '.woff2': 'font/woff2' };
 function serveGame(u, req, res) {
   let rel = decodeURIComponent(u.pathname);
   if (rel.endsWith('/')) rel += 'index.html';
   const file = path.resolve(GAME_ROOT, '.' + rel);
-  // 只放游戏文件：不许跳出仓库，不许读 server/、tools/、art/、node_modules、隐藏文件
-  if (!file.startsWith(GAME_ROOT + path.sep) || /[\\/](server|tools|art|node_modules|tests)[\\/]|[\\/]\./.test(file.slice(GAME_ROOT.length))) { res.writeHead(404); return res.end(); }
+  // 只放白名单里的游戏文件：根目录的 .html/.js/.css，和 assets/ vendor/ isles/ dl/ 下面的文件。
+  // （以前是黑名单：android/ 里的签名密码、打包时生成的带密钥的 BuildConfig、文档等都会被隧道放到外网上）
+  const relN = file.slice(GAME_ROOT.length).split(path.sep).join('/');
+  const allowed = /^\/[\w.-]+\.(html|js|css)$/.test(relN) || /^\/(assets|vendor|isles|dl)\/[\w./-]+$/.test(relN);
+  if (!file.startsWith(GAME_ROOT + path.sep) || !allowed || /\/\./.test(relN)) { res.writeHead(404); return res.end(); }
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) { res.writeHead(404); return res.end(); }
     const etag = '"' + st.size.toString(36) + '-' + Math.floor(st.mtimeMs).toString(36) + '"';
