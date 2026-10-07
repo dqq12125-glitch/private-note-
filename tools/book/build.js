@@ -32,10 +32,30 @@ out += '  ],\n};\n';
 fs.writeFileSync(path.join(ROOT, 'book.js'), out);
 
 // 单元聊天角色：写进 talk-npcs.js 里 BEGIN/END 标记之间（游戏和中转服务、APK 直连共用那份文件）
+// 聊天目标（家长 2026-10-07：目标拆成小步骤实时打勾、每个单元 3 个目标轮换、目标词带中文）在 tools/book/talk-goals.json，按角色 id：
+//   { wordsZh: [和 words 一一对应的中文], steps: [[中文, 示范英文], …]（单元 json 里那个目标 = 「挑战」）,
+//     more: [简单, 中等]（每个 { goal, goalZh, opener, steps }） }
+// 生成的 goals = [简单, 中等, 挑战]，挑战那个只有 steps（目标、开场白用角色本身的 goal / goalZh / opener）
+const TGF = path.join(__dirname, 'talk-goals.json');
+const TG = fs.existsSync(TGF) ? JSON.parse(fs.readFileSync(TGF, 'utf8')) : {};
+const bad = [];
+const okSteps = (id, s) => {
+  if (!Array.isArray(s) || s.length < 2 || s.length > 4 || s.some(x => !Array.isArray(x) || x.length !== 2 || !x[0] || !x[1])) bad.push(id + ' 的 steps 要 2–4 步，每步 [中文, 示范英文]');
+};
 const npcs = books.flatMap(B => B.units.map(u => {
-  const t = u.talk;
-  return '    ' + J({ id: B.id + '-u' + u.n, book: B.id, bookShort: B.short, unit: u.n, name: t.name, zh: t.zh, look: t.look, voice: t.voice, voiceZh: t.voiceZh, topic: t.topic, topicZh: t.topicZh, goal: t.goal, goalZh: t.goalZh, persona: t.persona, opener: t.opener, words: t.words }) + ',';
+  const t = u.talk, id = B.id + '-u' + u.n, x = TG[id];
+  const o = { id, book: B.id, bookShort: B.short, unit: u.n, name: t.name, zh: t.zh, look: t.look, voice: t.voice, voiceZh: t.voiceZh, topic: t.topic, topicZh: t.topicZh, goal: t.goal, goalZh: t.goalZh, persona: t.persona, opener: t.opener, words: t.words };
+  if (x) {
+    if (!Array.isArray(x.wordsZh) || x.wordsZh.length !== t.words.length) bad.push(id + ' 的 wordsZh 要和 words 一样多（' + t.words.length + ' 个）');
+    okSteps(id, x.steps);
+    (x.more || []).forEach((g, k) => { if (!g.goal || !g.goalZh || !g.opener) bad.push(id + ' 的 more[' + k + '] 缺 goal / goalZh / opener'); okSteps(id + ' more[' + k + ']', g.steps); });
+    o.wordsZh = x.wordsZh;
+    o.goals = (x.more || []).map(g => ({ goal: g.goal, goalZh: g.goalZh, opener: g.opener, steps: g.steps })).concat([{ steps: x.steps }]);
+  } else bad.push(id + ' 在 talk-goals.json 里没有聊天目标');
+  return '    ' + J(o) + ',';
 })).join('\n');
+for (const k of Object.keys(TG)) if (!books.some(B => B.units.some(u => B.id + '-u' + u.n === k))) bad.push('talk-goals.json 里的 ' + k + ' 不是任何单元');
+if (bad.length) { console.error('聊天目标有问题：\n- ' + bad.join('\n- ')); process.exit(1); }
 const tp = path.join(ROOT, 'talk-npcs.js');
 let tn = fs.readFileSync(tp, 'utf8');
 const a = '    // BEGIN book units', b = '    // END book units';

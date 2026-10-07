@@ -2,7 +2,8 @@
 // 孩子的浏览器 ⇄ 这里（WebSocket）⇄ 阿里云百炼 Qwen-Omni 实时语音（WebSocket，带密钥）
 // - 密钥只在这里：环境变量 DASHSCOPE_API_KEY，或 KEY_FILE 指向一个写着 DASHSCOPE_API_KEY=... 的文件（默认 server/.env）
 // - 人设、音色、安全规则都由服务器按 npc id 从 ../talk-npcs.js 读，孩子的手机只能选 npc、送声音/文字
-// - 每台设备每天有时长上限，每段对话有时长上限；对话记录写到 server/logs/日期.jsonl，家长看 /logs
+// - 每台设备每天有时长上限，每段对话有时长上限；对话记录写到 server/logs/日期.jsonl，家长看 /logs（只留 90 天，LOG_DAYS 可改）
+// - 网页版的口语打分和聊天小工具也走这里：/asr 识别、/tip 点评、/tts 合成、/zh 翻译岛民的话、/steps 聊天小步骤打勾
 // 启动：cd server && npm install && node relay.js   （默认端口 8787；PORT 可改）
 'use strict';
 const http = require('http');
@@ -40,7 +41,7 @@ const ORIGINS = (cfg('ALLOWED_ORIGINS') || 'http://localhost,http://127.0.0.1,ht
 if (!KEY) { console.error('没有找到 DASHSCOPE_API_KEY（环境变量或 KEY_FILE / server/.env）'); process.exit(1); }
 
 // ---------- 用量（每台设备每天的秒数），存盘防重启清零 ----------
-const USAGE_FILE = path.join(__dirname, 'usage.json');
+const USAGE_FILE = cfg('USAGE_FILE') ? path.resolve(cfg('USAGE_FILE')) : path.join(__dirname, 'usage.json');
 let usage = {};
 try { usage = JSON.parse(fs.readFileSync(USAGE_FILE, 'utf8')); } catch (e) {}
 const today = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Shanghai' });
@@ -54,15 +55,28 @@ function addUsage(dev, sec) {
 }
 
 // ---------- 对话记录 ----------
-const LOG_DIR = path.join(__dirname, 'logs');
+// 只留最近 LOG_DAYS 天（默认 90 天，家长 2026-10-07 定）：启动时和以后每 6 小时删一次更早的
+const LOG_DIR = cfg('LOG_DIR') ? path.resolve(cfg('LOG_DIR')) : path.join(__dirname, 'logs');
+const LOG_DAYS = Math.max(1, +(cfg('LOG_DAYS') || 90));
 fs.mkdirSync(LOG_DIR, { recursive: true });
 function writeLog(rec) {
   try { fs.appendFileSync(path.join(LOG_DIR, today() + '.jsonl'), JSON.stringify(rec) + '\n'); } catch (e) {}
 }
+function pruneLogs() {
+  const cut = new Date(Date.now() - LOG_DAYS * 86400000).toLocaleDateString('sv-SE', { timeZone: 'Asia/Shanghai' });
+  try {
+    for (const f of fs.readdirSync(LOG_DIR)) if (/^\d{4}-\d\d-\d\d\.jsonl$/.test(f) && f.slice(0, 10) < cut) fs.unlinkSync(path.join(LOG_DIR, f));
+  } catch (e) {}
+  // 调试录音（DEBUG_AUDIO=1 才会录）是孩子的声音：只留 7 天
+  try {
+    for (const f of fs.readdirSync(DEBUG_DIR)) if (/\.wav$/.test(f) && Date.now() - fs.statSync(path.join(DEBUG_DIR, f)).mtimeMs > 7 * 86400000) fs.unlinkSync(path.join(DEBUG_DIR, f));
+  } catch (e) {}
+}
 
 // ---------- 调试：DEBUG_AUDIO=1 时把孩子每次说的话存成 wav（server/debug/），查「识别出来的字和说的不一样」用 ----------
 const DEBUG_AUDIO = /^(1|true|yes)$/i.test(cfg('DEBUG_AUDIO') || '');
-const DEBUG_DIR = path.join(__dirname, 'debug');
+const DEBUG_DIR = cfg('DEBUG_DIR') ? path.resolve(cfg('DEBUG_DIR')) : path.join(__dirname, 'debug');
+pruneLogs(); setInterval(pruneLogs, 6 * 3600 * 1000).unref();
 function saveWav(chunks, dev, npc) {
   try {
     fs.mkdirSync(DEBUG_DIR, { recursive: true });
@@ -81,9 +95,9 @@ function personNpc(p) {
   try { d = JSON.parse(Buffer.from(String(p || ''), 'base64url').toString('utf8')); } catch (e) { return null; }
   return CORE.personNpc(d);
 }
-async function evaluate(npc, turns) {
-  // 聊完后让文字模型给个温和的评价（中文），失败就不给
-  const body = CORE.evalBody(npc, turns);
+async function evaluate(npc, turns, o) {
+  // 聊完后让文字模型给个温和的评价（中文），失败就不给（talk-core 的 session 再按小步骤和「开口说了几句」定完成没有）
+  const body = CORE.evalBody(npc, turns, o);
   if (!body) return null;
   body.model = EVAL_MODEL;
   try {
@@ -111,25 +125,29 @@ const server = http.createServer((req, res) => {
     try { rows = fs.readFileSync(path.join(LOG_DIR, d + '.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l)); } catch (e) {}
     const days = fs.readdirSync(LOG_DIR).filter(f => f.endsWith('.jsonl')).map(f => f.slice(0, 10)).sort().reverse();
     const html = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>回声岛对话记录</title>' +
-      '<style>body{font:15px/1.6 system-ui,sans-serif;margin:16px;max-width:760px}h2{margin:18px 0 4px}.t{color:#666;font-size:13px}.you{color:#1565c0}.npc{color:#2e7d32}.card{border:1px solid #ddd;border-radius:10px;padding:10px 14px;margin:10px 0}</style>' +
+      '<style>body{font:15px/1.6 system-ui,sans-serif;margin:16px;max-width:760px}h2{margin:18px 0 4px}.t{color:#666;font-size:13px}.you{color:#1565c0}.npc{color:#2e7d32}.card{border:1px solid #ddd;border-radius:10px;padding:10px 14px;margin:10px 0}.card.flag{border:2px solid #f0a020;background:#fffaf0}.warn{color:#8a4b00;font-weight:700}</style>' +
       '<h1>回声岛 · AI 对话记录</h1><p>' + days.map(x => x === d ? '<b>' + x + '</b>' : '<a href="?date=' + x + (ADMIN_TOKEN ? '&token=' + encodeURIComponent(ADMIN_TOKEN) : '') + '">' + x + '</a>').join(' · ') + '</p>' +
-      (rows.length ? rows.map(r => '<div class="card"><h2>' + esc(r.npcZh || r.npc) + '</h2><div class="t">' + esc(r.start) + ' · ' + Math.round(r.sec) + ' 秒 · 设备 ' + esc(r.dev) + (r.eval ? ' · ' + '★'.repeat(r.eval.stars) + (r.eval.done ? ' · 完成目标' : '') : '') + '</div>' +
-        r.turns.map(t => '<div class="' + t.who + '">' + (t.who === 'you' ? '孩子：' : esc(r.npcName) + '：') + esc(t.text) + '</div>').join('') +
+      (rows.length ? rows.map(r => '<div class="card' + (r.concern ? ' flag' : '') + '"><h2>' + (r.concern ? '⚠️ ' : '') + esc(r.npcZh || r.npc) + '</h2><div class="t">' + esc(r.start) + ' · ' + Math.round(r.sec) + ' 秒 · 设备 ' + esc(r.dev) + (r.goal != null ? ' · 目标 ' + (r.goal + 1) : '') +
+        (r.eval ? ' · ' + '★'.repeat(r.eval.stars) + (r.eval.done ? ' · 完成目标' : '') + (r.eval.voice != null ? ' · 开口 ' + r.eval.voice + ' 句' : '') : '') + '</div>' +
+        (r.concern ? '<div class="warn">需要家长看看：' + esc((r.eval && r.eval.concernWhy) || '孩子说到了难过或不安全的事') + '</div>' : '') +
+        r.turns.map(t => '<div class="' + t.who + '">' + (t.who === 'you' ? (t.typed ? '孩子（打字）：' : '孩子：') : esc(r.npcName) + '：') + esc(t.text) + '</div>').join('') +
         (r.eval && r.eval.tips.length ? '<div class="t">建议：' + r.eval.tips.map(t => esc(t.said) + ' → ' + esc(t.better) + '（' + esc(t.zh) + '）').join('；') + '</div>' : '') + '</div>').join('') : '<p>这一天没有对话。</p>');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);
   }
-  if (req.method === 'OPTIONS' && (u.pathname === '/asr' || u.pathname === '/tip' || u.pathname === '/tts')) {   // 跨域预检（GitHub Pages 上的网页版连家里的中转服务）
+  const helpPath = /^\/(asr|tip|tts|zh|steps)$/.test(u.pathname);
+  if (req.method === 'OPTIONS' && helpPath) {   // 跨域预检（GitHub Pages 上的网页版连家里的中转服务）
     let ok = false; try { ok = !!req.headers.origin && okOrigin(req.headers.origin); } catch (e) {}
     res.writeHead(ok ? 204 : 403, ok ? { 'Access-Control-Allow-Origin': req.headers.origin, 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400' } : {});
     return res.end();
   }
-  if (req.method === 'POST' && (u.pathname === '/asr' || u.pathname === '/tip' || u.pathname === '/tts')) return cloudHelp(u, req, res);
+  if (req.method === 'POST' && helpPath) return cloudHelp(u, req, res);
   if (SERVE_GAME && (req.method === 'GET' || req.method === 'HEAD')) return serveGame(u, req, res);
   res.writeHead(404); res.end();
 });
 
 // ---------- 网页版的口语打分：/asr 录音 → 文字（qwen3-asr-flash，不给答案，听到什么写什么），/tip 目标句子 + 听到的 → 一句中文建议 ----------
-// APK 直连阿里云不走这里。要家庭口令；每个 IP 每分钟最多 40 次
+// 聊天小工具：/zh 岛民的一句话 → 中文；/steps 聊到现在 → 哪几个小步骤做到了（提示词都在服务器这边按 talk-core 拼，孩子的话包在 <transcript> 里）
+// APK 直连阿里云不走这里。要家庭口令；每个 IP 每分钟最多 40 次。阿里云报错（密钥不对、欠费、额度用完）时把错误代码带回去（up），游戏好告诉家长原因
 const hits = new Map();
 function cloudHelp(u, req, res) {
   const cors = { 'Access-Control-Allow-Origin': req.headers.origin && okOrigin(req.headers.origin) ? req.headers.origin : 'null', 'Content-Type': 'application/json' };
@@ -142,11 +160,32 @@ function cloudHelp(u, req, res) {
   req.on('data', c => { size += c.length; if (size > 3e6) { req.destroy(); return; } body += c; });
   req.on('end', async () => {
     let j; try { j = JSON.parse(body); } catch (e) { return bad(400, 'json'); }
-    const call = async b => {
+    const call = async (b, url) => {
       const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
-      try { const r = await fetch(CORE.EVAL_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(b), signal: ctl.signal }); return await r.json(); } finally { clearTimeout(tm); }
+      try {
+        const r = await fetch(url || CORE.EVAL_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(b), signal: ctl.signal });
+        const o = await r.json();
+        if (!r.ok || o.error || (o.code && !o.choices)) { const e = new Error('upstream'); e.up = String((o.error && (o.error.code || o.error.type)) || o.code || r.status).slice(0, 40); throw e; }
+        return o;
+      } finally { clearTimeout(tm); }
     };
     try {
+      if (u.pathname === '/zh') {   // 点岛民的话看中文
+        const body = CORE.zhBody(clean(j.text, 400)); if (!body) return bad(400, 'text');
+        body.model = EVAL_MODEL;
+        const r = await call(body, EVAL_URL);
+        res.writeHead(200, cors); return res.end(JSON.stringify({ zh: CORE.parseZh(r) }));
+      }
+      if (u.pathname === '/steps') {   // 聊天中实时打勾
+        const npc = j.npc === 'dyn' ? CORE.personNpc({ name: j.nm }) : NPCS.byId[j.npc];
+        if (!npc) return bad(400, 'npc');
+        const turns = (Array.isArray(j.turns) ? j.turns : []).slice(-30).map(t => ({ who: t && t.who === 'you' ? 'you' : 'npc', text: clean(t && t.text, 300), typed: !!(t && t.typed) })).filter(t => t.text);
+        const g = CORE.goalOf(npc, j.g), body = CORE.stepsBody(npc, g.i, turns);
+        if (!body) { res.writeHead(200, cors); return res.end(JSON.stringify({ done: [] })); }
+        body.model = EVAL_MODEL;
+        const r = await call(body, EVAL_URL);
+        res.writeHead(200, cors); return res.end(JSON.stringify({ done: CORE.parseSteps(r, g.steps.length) }));
+      }
       if (u.pathname === '/asr') {
         if (typeof j.audio !== 'string' || j.audio.length < 1000) return bad(400, 'audio');
         const r = await call({ model: 'qwen3-asr-flash', stream: false, asr_options: { language: 'en', enable_itn: false }, messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + j.audio } }] }] });
@@ -159,15 +198,15 @@ function cloudHelp(u, req, res) {
           const r = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ model: 'qwen3-tts-flash', input: { text, voice: j.g === 'm' ? 'Ethan' : 'Cherry', language_type: 'English' } }), signal: ctl.signal });
           const o = await r.json(), url = o.output && o.output.audio && o.output.audio.url;
-          res.writeHead(url ? 200 : 502, cors); return res.end(JSON.stringify({ url: url || '' }));
+          res.writeHead(url ? 200 : 502, cors); return res.end(JSON.stringify(url ? { url } : { url: '', error: 'upstream', up: String(o.code || r.status).slice(0, 40) }));
         } finally { clearTimeout(tm); }
       }
       const target = clean(j.target, 200), heard = clean(j.heard, 200);
       if (!target || !heard) return bad(400, 'text');
-      const sys = '你是一位耐心的初中英语发音老师。学生要大声说的英文是：「' + target + '」。语音识别听到学生说的是：「' + heard + '」。用一句简体中文（不超过 28 个字）具体指出最主要的问题（哪个词读错、漏读或读成了别的词，可能是哪个音没发好），并告诉他怎么读对。如果听到的和目标几乎不是同一句话（大部分词都对不上），就只说「你读的好像是另一句话，先点喇叭听一遍原句再读」。不要表扬、不要客套，只输出这一句话。';
+      const sys = '你是一位耐心的初中英语发音老师。学生要大声说的英文是：「' + target + '」。语音识别听到学生说的是：「' + heard + '」。用一句简体中文（不超过 28 个字）指出最主要的问题：只说漏读了哪个词、多读了哪个词、或者把哪个词说成了哪个词，并告诉他正确的说法；不要猜是哪个音没发好。如果听到的和目标几乎不是同一句话（大部分词都对不上），就只说「你读的好像是另一句话，先点喇叭听一遍原句再读」。不要表扬、不要客套，只输出这一句话。';
       const r = await call({ model: EVAL_MODEL, temperature: 0.2, max_tokens: 80, messages: [{ role: 'system', content: sys }, { role: 'user', content: '请点评。' }] });
       res.writeHead(200, cors); res.end(JSON.stringify({ tip: String((r.choices && r.choices[0].message.content) || '').trim().slice(0, 60) }));
-    } catch (e) { bad(502, 'upstream'); }
+    } catch (e) { res.writeHead(502, cors); res.end(JSON.stringify({ error: 'upstream', up: e.up || '' })); }
   });
 }
 const clean = (v, n) => String(v || '').replace(/[^\p{L}\p{N} .,!?'"’:;()-]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
@@ -268,6 +307,10 @@ wss.on('connection', (cli, req) => {
   if (!npc) return fail('没有这个岛民', 'npc');
   const dev = (u.searchParams.get('dev') || 'unknown').replace(/[^\w-]/g, '').slice(0, 40) || 'unknown';
   const player = (u.searchParams.get('name') || '').replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16);
+  const goal = Math.max(0, Math.min(9, parseInt(u.searchParams.get('g'), 10) || 0));   // 这次聊第几个目标（轮换）
+  // 岛民记得的上次聊过的小事（孩子手机上存的）：talk-core 的 memOf 再筛一遍，只留游戏里的小事、限长去符号
+  let memory = null;
+  try { memory = CORE.memOf(JSON.parse(Buffer.from(String(u.searchParams.get('m') || ''), 'base64url').toString('utf8'))); } catch (e) { memory = null; }
   const left = DAILY_MIN * 60 - usedSec(dev);
   if (left < 20) return fail('今天的聊天时间用完了，明天再来吧！', 'daily');
   if (live >= MAX_LIVE) return fail('对话服务有点忙，过一会儿再试', 'busy');
@@ -278,14 +321,14 @@ wss.on('connection', (cli, req) => {
   let rec = [];
   const up = new WebSocket(UPSTREAM, { headers: { Authorization: 'Bearer ' + KEY } });
   const S = CORE.session({
-    npc, player, limitSec, leftSec: left,
+    npc, player, limitSec, leftSec: left, goal, memory,
     up: m => { if (up.readyState === WebSocket.OPEN) up.send(JSON.stringify(m)); },
     out: send,
     evaluate,
-    onEnd: ({ turns, sec, eval: ev }) => {
+    onEnd: ({ turns, sec, eval: ev, goal: gi }) => {
       try { up.close(); } catch (e) {}
       addUsage(dev, sec); live--;
-      writeLog({ start, dev, npc: npc.id, npcName: npc.name, npcZh: npc.zh, sec, turns, eval: ev });
+      writeLog({ start, dev, npc: npc.id, npcName: npc.name, npcZh: npc.zh, goal: gi, sec, turns, eval: ev, concern: !!(ev ? ev.concern : CORE.worried(turns)) });
       setTimeout(() => { try { cli.close(); } catch (e) {} }, 300);
     },
     log: DEBUG_AUDIO ? (...a) => console.log(...a) : null,

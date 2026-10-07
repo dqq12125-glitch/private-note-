@@ -63,6 +63,8 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   // 3D 战斗：出场、放招特效、截图
   await p.evaluate(() => { EchoWorld.stop(); MonsterGame.battle('wild', 0, { onEnd() {}, hab: 'grass' }); });
   await p.waitForTimeout(3500);
+  // 开场两句朗读走在线发音（网络慢时一句最长等好几秒），招式菜单要等它念完才出来：最多再等 18 秒
+  for (let i = 0; i < 120 && !(await p.$('#b-panel [data-act=bMove]')); i++) await p.waitForTimeout(150);
   check(await p.$('#b-arena.is3d canvas.b3d') !== null, '3D 战斗画面');
   const nMoves = (await p.$$('[data-act=bMove]')).length;
   check(nMoves >= 2 && nMoves <= 4, '招式按钮 ' + nMoves + ' 个（按等级学会的）');

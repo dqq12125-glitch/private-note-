@@ -1,0 +1,462 @@
+{
+  "hj7a-u1": {
+    "wordsZh": ["中等身高", "黑色直发", "诚实的", "有耐心的", "体贴的", "擅长……", "我可以依靠……", "因为"],
+    "steps": [["说说好朋友长什么样", "She is of medium height with straight dark hair."], ["说说好朋友的性格", "He is honest and patient."], ["说说好朋友擅长什么", "She is good at drawing."], ["说说你们为什么是好朋友", "We are good friends because I can count on her."]],
+    "more": [
+      { "goal": "Tell Daisy about a good friend: what he or she likes doing, what you often do together, and one thing you like about him or her.", "goalZh": "告诉黛西你的一个好朋友：喜欢做什么、你们常一起做什么、你喜欢他/她哪一点。", "opener": "Hi! I'm Daisy. What does your good friend like doing?",
+        "steps": [["说说朋友喜欢做什么", "My friend likes reading comics."], ["说说你们常一起做什么", "We often play badminton together."], ["说一个你喜欢他/她的地方", "I like her because she is funny."]] },
+      { "goal": "Daisy is new and wants to make friends. Give her two tips for making friends, then ask her two questions with question words such as what, where, who or why.", "goalZh": "黛西刚转学来，想交朋友：给她两个交朋友的建议，再用 what、where、who、why 这样的疑问词问她两个问题。", "opener": "I'm new here and I don't know anyone yet. How can I make new friends?",
+        "steps": [["给黛西一个交朋友的建议", "You can join a club."], ["再给她一个建议", "Say hello and smile at people."], ["用疑问词问她两个问题", "What do you like doing? Why did you move here?"]] }
+    ]
+  },
+  "hj7a-u2": {
+    "wordsZh": ["我通常……起床", "我走路上学", "我最喜欢的科目是", "因为", "一周三次", "我参加……", "我盼望着……", "你呢？"],
+    "steps": [["说说你几点起床", "I usually get up at half past six."], ["说说你怎么去学校", "I go to school by bus."], ["说说最喜欢的科目和原因", "My favourite subject is science because it's fun."], ["反问麦克斯一个问题", "What about you?"]],
+    "more": [
+      { "goal": "Tell Max about your school day: what you usually do at break time, what you often have for lunch, and one after-school activity you like.", "goalZh": "告诉麦克斯：课间你常做什么、午饭常吃什么、你喜欢哪个课后活动。", "opener": "Hi, I'm Max! What do you usually do at break time?",
+        "steps": [["说说课间常做什么", "I usually chat with my friends."], ["说说午饭常吃什么", "I often have rice and vegetables."], ["说一个你喜欢的课后活动", "I play basketball after school."]] },
+      { "goal": "Max wants to know about your classes and teachers. Tell him how many classes you have a day, what one teacher often does in class (he or she + verb with -s), and how often you have PE.", "goalZh": "麦克斯想了解你的课和老师：一天上几节课、一位老师上课常做什么（he / she 后面的动词加 -s）、一周上几次体育课。", "opener": "Hi! I'm Max. How many classes do you have every day?",
+        "steps": [["说说一天上几节课", "We have seven classes a day."], ["说说一位老师上课常做什么", "Our English teacher often tells funny stories."], ["说说一周几次体育课", "We have PE three times a week."]] }
+    ]
+  },
+  "hj7a-u3": {
+    "wordsZh": ["我最喜欢秋天", "天气变凉", "……很有趣", "去野餐", "树叶变黄", "新鲜空气", "一个原因是", "因为"],
+    "steps": [["说出你最喜欢的季节", "I like autumn best."], ["说说那时天气怎么样", "The weather gets cool and sunny."], ["说一件那个季节喜欢做的事", "It is fun to have picnics."], ["说一个喜欢它的理由", "One reason is the leaves turn yellow and red."]],
+    "more": [
+      { "goal": "Tell Maple what the weather is like today, what clothes you wear on a day like this, and one thing you like to do on this kind of day.", "goalZh": "告诉小枫今天天气怎么样、这样的天气你穿什么衣服、这样的天气你喜欢做什么。", "opener": "Hi, I'm Maple! What's the weather like today?",
+        "steps": [["说说今天天气怎么样", "It's sunny and warm today."], ["说说这样的天气穿什么", "I wear a T-shirt and shorts."], ["说说这样的天气喜欢做什么", "I like to fly a kite."]] },
+      { "goal": "Maple does not like winter. Use at least two adjectives to describe winter, tell her two fun things to do in winter, and try to change her mind.", "goalZh": "小枫不喜欢冬天：用至少两个形容词描述冬天，告诉她冬天能做的两件好玩的事，劝她喜欢上冬天。", "opener": "Brrr! I don't like winter. It's so cold. Do you like winter?",
+        "steps": [["用形容词描述冬天", "Winter is cold but beautiful."], ["说一件冬天好玩的事", "We can make a snowman."], ["再说一件，劝她喜欢冬天", "Hot pot tastes great in winter!"]] }
+    ]
+  },
+  "hj7a-u4": {
+    "wordsZh": ["塑料太多了", "树不多", "塑料污染", "砍伐", "种树", "捡起", "而且", "保护地球"],
+    "steps": [["用 There is / There are 说一个问题", "There is too much plastic in the sea."], ["再说一个问题", "There aren't many trees in my city."], ["提出一个保护地球的办法", "We can plant trees."], ["再提出一个办法", "What's more, we can pick up rubbish."]],
+    "more": [
+      { "goal": "Use 'There is / There are' to tell Ray what there is in a park you like: name at least two things (for example trees, a lake, birds or flowers), and say one thing you like about the park.", "goalZh": "用 There is / There are 告诉阿雷你喜欢的公园里有什么：至少说出两样（比如树、湖、鸟、花），再说一个你喜欢它的地方。", "opener": "Hello! I'm Ranger Ray. Is there a park you like? What is there in it?",
+        "steps": [["用 There is / There are 说公园里有什么", "There is a small lake in the park."], ["再说一样东西", "There are lots of trees and birds."], ["说一个你喜欢它的地方", "I like it because the air is fresh."]] },
+      { "goal": "Ray is planning a beach clean-up day. Ask him at least one question with How many or Is there / Are there, tell him what you can bring, and say why picking up rubbish helps sea animals.", "goalZh": "阿雷要组织海滩捡垃圾日：用 How many 或 Is there / Are there 问他至少一个问题，说说你能带什么，再说说捡垃圾为什么能帮助海洋动物。", "opener": "Hi! I'm Ranger Ray. This Saturday we have a beach clean-up day. Can you help?",
+        "steps": [["用 How many 或 Is there 问阿雷一个问题", "How many people are there?"], ["说说你能带什么", "I can bring some bags and gloves."], ["说说捡垃圾怎样帮助海洋动物", "Sea animals can't eat plastic, so we pick it up."]] }
+    ]
+  },
+  "hj7a-u5": {
+    "wordsZh": ["我打算……", "我将会……", "穿上宇航服", "做运动", "拍地球的照片", "做一些实验", "空间站", "我迫不及待想……"],
+    "steps": [["说说你会怎样准备", "I'm going to do exercise every day."], ["说一件在太空要做的事", "I will do some experiments."], ["再说一件在太空要做的事", "I'm going to take photos of the Earth."], ["说说你会看到什么", "I will see the stars and the moon."]],
+    "more": [
+      { "goal": "Tell Stella three things you are going to pack for a trip to space, and why you need one of them.", "goalZh": "告诉史黛拉去太空旅行你打算带的三样东西，再说说为什么需要其中一样。", "opener": "Hi, I'm Stella! What are you going to take on a trip to space?",
+        "steps": [["说出一样要带的东西", "I'm going to take a camera."], ["再说两样要带的东西", "I will take some books and my favourite snacks."], ["说说为什么需要其中一样", "I need the camera to take photos of the Earth."]] },
+      { "goal": "Talk with Stella about life on the space station: use will or won't to guess how astronauts sleep, eat or do exercise there, and say one thing you think will be hard.", "goalZh": "和史黛拉聊聊空间站上的生活：用 will 或 won't 猜猜宇航员怎么睡觉、吃饭、锻炼，再说一件你觉得会很难的事。", "opener": "Hi, I'm Stella! How do you think astronauts sleep in space?",
+        "steps": [["猜猜宇航员怎么睡觉或吃饭", "They will sleep in sleeping bags."], ["用 will / won't 再猜一件事", "They won't walk. They will float."], ["说一件你觉得会很难的事", "It will be hard to drink water."]] }
+    ]
+  },
+  "hj7a-u6": {
+    "wordsZh": ["旅游景点", "在……的中心", "在……对面", "它以……出名", "如果你去……", "你会爱上……", "历史遗址", "东西方的融合"],
+    "steps": [["说出一座城市和两个景点", "I like Shanghai. You can visit the Bund and Yu Garden."], ["说说一个景点在哪里", "The Bund is in the centre of Shanghai."], ["说说它以什么出名", "It is famous for its old buildings."], ["用 if 给小花一个建议", "If you visit at night, you will love the lights."]],
+    "more": [
+      { "goal": "Recommend one tasty food from a Chinese city to Hana: say what it is, where she can eat it, and give her one if-sentence, for example 'If you like noodles, you will love it.'", "goalZh": "向小花推荐一座中国城市的一样好吃的：它是什么、在哪里能吃到，再用 if 说一句，比如 If you like noodles, you will love it.", "opener": "Hi! I'm Hana. I love trying new food. What should I eat in China?",
+        "steps": [["推荐一样好吃的", "You should try Beijing duck."], ["说说在哪里能吃到", "You can eat it in a restaurant in the old town."], ["用 if 说一句推荐", "If you like meat, you will love it."]] },
+      { "goal": "Hana is lost at the train station. Tell her how to get to a tourist spot (use words like go straight, turn left, next to or across from), and give her one tip with an if-sentence, for example 'If you take the subway, it will be faster.'", "goalZh": "小花在火车站迷路了：告诉她怎么去一个旅游景点（用上 go straight、turn left、next to、across from 等），再用 if 给她一条建议，比如 If you take the subway, it will be faster.", "opener": "Excuse me! I'm Hana. I'm at the train station. How can I get to the museum?",
+        "steps": [["告诉她怎么走", "Go straight and turn left at the bank."], ["说说景点在什么旁边或对面", "The museum is across from the park."], ["用 if 给她一条建议", "If you take the subway, it will be faster."]] }
+    ]
+  },
+  "hj7a-u7": {
+    "wordsZh": ["社团招募展", "我去了……", "我加入了……", "太棒了", "课外活动", "……的成员", "报名", "我迫不及待想……"],
+    "steps": [["用过去式说你做了什么课外活动", "I played table tennis after school."], ["说说是什么时候", "I did it last Friday."], ["说说感觉怎么样", "It was fantastic."], ["说说想加入哪个社团、为什么", "I want to join the Art Club because I like drawing."]],
+    "more": [
+      { "goal": "Use the past tense to tell Jack what you did last weekend: where you went, what you did, and how it was.", "goalZh": "用过去式告诉杰克你上周末做了什么：去了哪里、做了什么、感觉怎么样。", "opener": "Hi, I'm Jack! What did you do last weekend?",
+        "steps": [["说说上周末去了哪里", "I went to the park."], ["说说做了什么", "I played football with my friends."], ["说说感觉怎么样", "It was great fun."]] },
+      { "goal": "Jack's Rocket Club made a water rocket last week. Ask him at least two questions about it in the past tense (for example What did you use? Did it fly high?), then tell him one thing you made or learned last term.", "goalZh": "杰克的火箭社上周做了一个水火箭：用过去式问他至少两个问题（比如 What did you use? Did it fly high?），再告诉他上学期你做过或学会的一样东西。", "opener": "Guess what! Our Rocket Club made a water rocket last week!",
+        "steps": [["用过去式问杰克一个问题", "What did you use?"], ["再问一个问题", "Did it fly high?"], ["说说上学期你做过或学会的东西", "I learned to play the guitar last term."]] }
+    ]
+  },
+  "hj7a-u8": {
+    "wordsZh": ["我收集贴纸", "我的收藏", "我大约有五十个", "把零花钱花在……上", "来自世界各地", "这是我的，不是你的", "浪费时间", "因为它很有趣"],
+    "steps": [["说说你收藏（或想收藏）什么", "I collect stickers."], ["说说大概有多少", "I've got about fifty."], ["说一个喜欢收藏的理由", "I like collecting because it's fun."], ["用一次 my / mine / yours", "This sticker is mine, not yours."]],
+    "more": [
+      { "goal": "Ask Grandpa Joe about his collection: ask at least two questions (for example What do you collect? Where are they from?), and say which one you like best.", "goalZh": "问问乔爷爷的收藏：至少问两个问题（比如 What do you collect? Where are they from?），再说说你最喜欢哪一件。", "opener": "Hello there! I'm Grandpa Joe. Would you like to see my collection?",
+        "steps": [["问乔爷爷一个问题", "What do you collect?"], ["再问一个问题", "Where are they from?"], ["说说你最喜欢哪一件", "I like the blue shell best."]] },
+      { "goal": "Some people say collecting is a waste of time and money. Tell Grandpa Joe what you think and give two reasons, using at least one of these words: me, him, her, them, mine or yours.", "goalZh": "有人说收藏浪费时间和钱：告诉乔爷爷你的看法、给两个理由，并且至少用一个 me / him / her / them / mine / yours。", "opener": "Some people say collecting is a waste of time. What do you think?",
+        "steps": [["说说你的看法", "I think collecting is fun."], ["给出第一个理由", "It helps me learn about the world."], ["给出第二个理由，用上 me / them / mine 等", "My friends and I swap cards. I like them a lot."]] }
+    ]
+  },
+  "hj7b-u1": {
+    "wordsZh": ["最重要的人", "对我很重要", "给我好建议", "鼓励我", "对……很严格", "开朗的", "过去常常", "从不放弃"],
+    "steps": [["说说那个重要的人是谁", "My mum is the most important person in my life."], ["说说他/她的性格", "She is cheerful and kind."], ["说说他/她做什么", "She is a nurse. She helps sick people."], ["说说为什么对你很重要", "She is important to me because she encourages me."]],
+    "more": [
+      { "goal": "Tell Grandma Hazel about a helpful person you see every day (for example a guard, a cleaner or a shop owner): who the person is, what he or she does every day, and how he or she helps people.", "goalZh": "告诉黑兹尔奶奶一位你每天都能见到的热心人（比如门卫、保洁员、小店老板）：是谁、他/她每天做什么、怎样帮助大家。", "opener": "Hello, dear! Who is a helpful person you see every day?",
+        "steps": [["说说这个人是谁", "The man is the guard at the gate."], ["说说他/她每天做什么", "He opens the gate every morning."], ["说说他/她怎样帮助大家", "He helps the children cross the road."]] },
+      { "goal": "Grandma Hazel is making a photo album called People Around Us. Describe a photo of someone you love: who is in it, where you were, and one happy memory with that person.", "goalZh": "黑兹尔奶奶在做相册《身边的人》：描述一张你爱的人的照片——照片里是谁、你们当时在哪里、和这个人的一段开心回忆。", "opener": "Hello, dear! Do you have a photo of someone you love? Who is in it?",
+        "steps": [["说说照片里是谁", "It's my grandpa."], ["说说你们当时在哪里", "We were at the beach."], ["说一段开心的回忆", "He taught me to swim. It was fun."]] }
+    ]
+  },
+  "hj7b-u2": {
+    "wordsZh": ["我想去……", "它位于……", "它以……闻名", "去观光", "去远足", "但是它很远", "所以我想……", "我们打算坐火车"],
+    "steps": [["说出目的地和所在国家", "I'd like to go to Paris. It lies in France."], ["用 and / but / so 说一个它很棒的理由", "It's famous for art, so I want to visit museums."], ["再说一个理由", "The food is great, and the city is beautiful."], ["说说你打算怎么去", "We're going to take a plane."]],
+    "more": [
+      { "goal": "Tell Felix which country you would like to visit and three things you would like to do there.", "goalZh": "告诉费利克斯你想去哪个国家，以及在那里想做的三件事。", "opener": "Hello! I'm Felix, the travel guide. Which country would you like to visit?",
+        "steps": [["说出想去的国家", "I'd like to visit Japan."], ["说一件想在那里做的事", "I'd like to see the mountains."], ["再说两件想做的事", "I want to eat sushi and go shopping."]] },
+      { "goal": "Felix's family can go to the beach or to the mountains. Talk about each place using and, but or so, then choose one for him.", "goalZh": "费利克斯一家可以去海边，也可以去山里：用 and、but 或 so 说说两个地方的好处和缺点，再帮他选一个。", "opener": "Hi! My family can go to the beach or the mountains. Which one is better?",
+        "steps": [["说说海边怎么样", "The beach is fun, but it's very hot."], ["说说山里怎么样", "The mountains are cool, and the air is fresh."], ["用 so 帮他选一个", "I like hiking, so I choose the mountains."]] }
+    ]
+  },
+  "hj7b-u3": {
+    "wordsZh": ["首先", "给我们氧气", "吸收温室气体", "用木头做家具", "纸的两面都用", "借书而不买书", "例如", "我们正在种树"],
+    "steps": [["说一个我们需要树的理由", "To begin with, trees give us oxygen."], ["再说一个理由", "They take in greenhouse gases."], ["说两个保护树木的办法", "We can use both sides of the paper and borrow books."], ["用现在进行时说一件人们最近在为树做的事", "We are planting trees in the park this month."]],
+    "more": [
+      { "goal": "It is Tree Planting Day. Use the present continuous to tell Doctor Fern what three people are doing right now (for example digging, watering or carrying young trees).", "goalZh": "今天是植树节：用现在进行时告诉芬恩博士三个人现在正在做什么（比如挖坑、浇水、搬小树）。", "opener": "Look! Everyone is busy today. What is that boy doing?",
+        "steps": [["说说一个人正在做什么", "The boy is digging a hole."], ["再说一个人正在做什么", "The girl is watering the tree."], ["说说第三个人正在做什么", "The teacher is carrying a young tree."]] },
+      { "goal": "Doctor Fern asks what things in your classroom or home are made of wood. Name at least three, and say one way to save paper at school.", "goalZh": "芬恩博士问你教室里或家里哪些东西是木头做的：至少说出三样，再说一个在学校节约用纸的办法。", "opener": "Hello! Wood is everywhere. What things in your classroom are made of wood?",
+        "steps": [["说出一样木头做的东西", "My desk is made of wood."], ["再说两样", "The door and the bookshelf are wooden too."], ["说一个节约用纸的办法", "We can use both sides of the paper."]] }
+    ]
+  },
+  "hj7b-u4": {
+    "wordsZh": ["导盲犬", "带盲人去……", "它睡在……下面", "在……旁边", "给我们鸡蛋", "看家", "独自", "动物很重要，因为"],
+    "steps": [["说说这种动物长什么样", "My cat is small and white."], ["用 under / next to / behind 说它睡在哪里", "It sleeps under my bed."], ["说说它怎样帮助人们", "Dogs can guard the house."], ["说一个动物对我们重要的理由", "Animals are important because they are our friends."]],
+    "more": [
+      { "goal": "Doctor Amy's little cat is hiding in the clinic. Help her look: guess at least three places using under, behind, next to or on (for example 'Is it under the table?').", "goalZh": "艾米医生的小猫藏在诊所里了：帮她找一找，用 under、behind、next to、on 至少猜三个地方（比如 Is it under the table?）。", "opener": "Oh no! My little cat is hiding somewhere. Can you help me find it?",
+        "steps": [["猜一个地方", "Is it under the table?"], ["再猜一个地方", "Maybe it's behind the door."], ["再猜一个", "Look! It's next to the box."]] },
+      { "goal": "Talk with Doctor Amy about looking after a pet by yourself: say two things you can do for a pet by yourself (use myself), and one thing a pet can do by itself (use itself).", "goalZh": "和艾米医生聊聊自己照顾宠物：说两件你自己能为宠物做的事（用上 myself），再说一件宠物自己能做的事（用上 itself）。", "opener": "Hello! Can you look after a pet by yourself?",
+        "steps": [["用 myself 说一件你自己能做的事", "I can feed my dog by myself."], ["再说一件", "I clean its bowl myself."], ["用 itself 说一件宠物自己能做的事", "My cat can wash itself."]] }
+    ]
+  },
+  "hj7b-u5": {
+    "wordsZh": ["多少水", "很多水", "一点水", "一杯水", "洗个快速的淋浴", "修好水龙头", "确保", "饮用水"],
+    "steps": [["说出家里用水的三种方式", "We use water to cook, wash clothes and clean the floor."], ["用 a lot of / a little / a glass of 说用了多少", "I drink six glasses of water every day."], ["给一条节水建议", "Take a short shower."], ["再给一条节水建议", "Fix the tap when it drips."]],
+    "more": [
+      { "goal": "Tell Aunt Wendy what you drink in a day: how many glasses of water, one other drink you like, and whether it is healthy.", "goalZh": "告诉温迪阿姨你一天喝什么：喝几杯水、还喜欢哪种饮料、它健不健康。", "opener": "Hi, I'm Aunt Wendy from the waterworks. How many glasses of water do you drink a day?",
+        "steps": [["说说一天喝几杯水", "I drink five glasses of water a day."], ["说说还喜欢哪种饮料", "I also like milk."], ["说说它健不健康", "Milk is healthy, but cola isn't."]] },
+      { "goal": "Aunt Wendy is checking water use at your school. Ask her two questions with How much or How many, and tell her one place at school where people waste water.", "goalZh": "温迪阿姨来学校检查用水：用 How much 或 How many 问她两个问题，再告诉她学校里哪个地方有人浪费水。", "opener": "Hello! I'm checking water use at your school today. Any questions for me?",
+        "steps": [["用 How much 或 How many 问一个问题", "How much water does our school use?"], ["再问一个问题", "How many taps are there?"], ["说说学校哪里有人浪费水", "Some students don't turn off the taps in the toilets."]] }
+    ]
+  },
+  "hj7b-u6": {
+    "wordsZh": ["我用电来……", "电器", "你绝对不能……", "用湿手", "你可以省电", "关灯", "节能灯泡", "空调"],
+    "steps": [["说说你每天用电做的一件事", "I use electricity to charge my tablet."], ["再说一件", "I use it to watch TV."], ["用 must / must not 说一条安全用电规则", "You must not touch plugs with wet hands."], ["用 can 说一条省电的办法", "You can save electricity by switching off the lights."]],
+    "more": [
+      { "goal": "Tell Nora about three electrical appliances in your home and what you use each one for.", "goalZh": "告诉诺拉你家里的三样电器，以及每样用来做什么。", "opener": "Hi, I'm Nora! What electrical appliances do you have at home?",
+        "steps": [["说一样电器和它的用处", "We have a fridge. It keeps food cold."], ["再说一样", "The washing machine washes our clothes."], ["再说一样", "I use the computer to do homework."]] },
+      { "goal": "Imagine there is no electricity for a whole day. Tell Nora two things you cannot do and one thing you can do instead, and ask her one polite question with May I.", "goalZh": "想象停电一整天：告诉诺拉两件你做不了的事、一件你可以改做的事，再用 May I ... 礼貌地问她一个问题。", "opener": "Oh no, there is no electricity today! What can't you do?",
+        "steps": [["说一件停电时做不了的事", "I can't watch TV."], ["再说一件", "I can't use the computer."], ["说一件可以改做的事，再用 May I 问一句", "I can read a book. May I borrow your torch?"]] }
+    ]
+  },
+  "hj7b-u7": {
+    "wordsZh": ["我的榜样是", "我敬仰……", "因为", "为……作出了巨大贡献", "她把自己献给了……", "多么勇敢的人啊", "他多么努力啊", "我想成为像……一样的人"],
+    "steps": [["说说你的榜样是谁", "My role model is Yuan Longping."], ["说说他/她做了什么", "He made a great contribution to growing rice."], ["说说你为什么敬仰他/她", "I look up to him because he never gave up."], ["说一句感叹句", "What a great scientist he is!"]],
+    "more": [
+      { "goal": "Tell Vera about a hard-working person you see every day (for example a teacher, a doctor or a cleaner): who the person is, what he or she does, and one exclamation about him or her, such as 'How hard she works!'", "goalZh": "告诉薇拉一位你每天都能见到的努力工作的人（比如老师、医生、保洁员）：是谁、他/她做什么，再说一句感叹句，比如 How hard she works!", "opener": "Hi, I'm Vera from Echo Island TV. Who is a hard-working person you know?",
+        "steps": [["说说这个人是谁", "Our school cleaner is very hard-working."], ["说说他/她做什么", "She cleans the classrooms every day."], ["说一句感叹句", "How hard she works!"]] },
+      { "goal": "Vera wants tips for students who want to be like their role models. Give her three tips using imperatives, such as 'Read every day.' or 'Don't give up.'", "goalZh": "薇拉想给同学们一些向榜样学习的建议：用祈使句给她三条建议，比如 Read every day. 或 Don't give up.", "opener": "Hi, I'm Vera! How can students be more like their role models?",
+        "steps": [["用祈使句给一条建议", "Work hard every day."], ["再给一条建议", "Help other people."], ["用 Don't 说一条", "Don't give up."]] }
+    ]
+  },
+  "hj7b-u8": {
+    "wordsZh": ["我最喜欢的爱好", "我开始对……感兴趣", "当我……的时候", "我过去常常……", "我梦想成为……", "我的梦想职业", "把兴趣变成职业", "实现"],
+    "steps": [["说说你最喜欢的爱好", "My favourite hobby is drawing."], ["说说什么时候开始的", "I became interested in it when I was eight."], ["说说你的梦想职业", "I dream of being a designer."], ["说说爱好怎样帮你实现梦想", "Drawing every day can help my dream come true."]],
+    "more": [
+      { "goal": "Use 'used to' to tell Marina one thing you used to do when you were little, say what you do now instead, and which one you like more.", "goalZh": "用 used to 告诉玛丽娜你小时候常做的一件事，说说你现在做什么，你更喜欢哪一个。", "opener": "Hi, I'm Marina! What did you use to do when you were little?",
+        "steps": [["用 used to 说小时候常做的事", "I used to watch cartoons every day."], ["说说现在做什么", "Now I read books."], ["说说你更喜欢哪一个", "I like reading more now."]] },
+      { "goal": "Marina wants to know about your day. Tell her what you do before school, after school and when you get home, using before, after and when.", "goalZh": "玛丽娜想了解你的一天：用 before、after 和 when 说说你上学前、放学后、到家时做什么。", "opener": "Hi! I'm Marina. What do you do before you go to school?",
+        "steps": [["用 before 说一件事", "Before I go to school, I have breakfast."], ["用 after 说一件事", "After school, I play basketball."], ["用 when 说一件事", "When I get home, I do my homework."]] }
+    ]
+  },
+  "hj8a-u1": {
+    "wordsZh": ["我最钦佩的人是", "非常有才华", "聪明又有艺术天赋", "出生于……", "擅长……", "在……中起重要作用", "关于……的有趣的事", "因为"],
+    "steps": [["说说你钦佩的人是谁", "The person I admire most is Lang Lang."], ["说说他/她擅长什么", "He is very talented. He is good at playing the piano."], ["说一两件他/她生平的事", "He started playing the piano at three."], ["说说你为什么钦佩他/她", "I admire him because he works very hard."]],
+    "more": [
+      { "goal": "Mrs Reed wants a fun fact for her encyclopaedia. Tell her about one animal you know something interesting about: what it is, where it lives, and one interesting fact.", "goalZh": "里德太太想要一条有趣的百科小知识：介绍一种你了解的动物——它是什么、住在哪里，再说一个关于它的有趣的事实。", "opener": "Hello! I'm Mrs Reed. Do you know something interesting about an animal?",
+        "steps": [["说出一种动物", "Let me tell you about pandas."], ["说说它住在哪里", "They live in the mountains in Sichuan."], ["说一个有趣的事实", "They eat bamboo for about twelve hours a day!"]] },
+      { "goal": "Mrs Reed is looking for information. Ask her at least two questions with some, any or something (for example 'Are there any books about space?'), and tell her where you look things up when you want to learn something.", "goalZh": "里德太太在查资料：用 some、any 或 something 问她至少两个问题（比如 Are there any books about space?），再告诉她你想学东西时会去哪里查。", "opener": "Hello! I'm Mrs Reed. What do you do when you want to find something out?",
+        "steps": [["用 any 问一个问题", "Are there any books about space?"], ["用 some 或 something 再问一个问题", "Is there something interesting about dinosaurs?"], ["说说你会去哪里查", "I look things up online or in the library."]] }
+    ]
+  },
+  "hj8a-u2": {
+    "wordsZh": ["我……起床", "六点半", "它的价格是", "元", "在三楼", "在十月一日", "我的幸运数字是", "你呢？"],
+    "steps": [["说说你几点起床", "I get up at half past six."], ["说说喜欢的零食多少钱", "My favourite snack costs five yuan."], ["说说教室在几楼", "Our classroom is on the third floor."], ["用序数词说一个节日的日期", "National Day is on the first of October."]],
+    "more": [
+      { "goal": "Tell Penny your lucky number and why you like it, and ask her what her lucky number is.", "goalZh": "告诉彭妮阿姨你的幸运数字和喜欢它的原因，再问问她的幸运数字是几。", "opener": "Hello! I'm Penny. Do you have a lucky number?",
+        "steps": [["说出你的幸运数字", "My lucky number is eight."], ["说说为什么喜欢它", "I like it because it sounds lucky in Chinese."], ["问她的幸运数字", "What's your lucky number?"]] },
+      { "goal": "Penny's shop is having a sale. Buy three things: ask the price of each, say how many you want, and work out the total.", "goalZh": "彭妮阿姨的小店在打折：买三样东西——问每样多少钱、说要几个，再算出一共多少钱。", "opener": "Welcome to my shop! Everything is on sale today. What would you like?",
+        "steps": [["问一样东西多少钱", "How much is the notebook?"], ["说要几个", "I'd like three notebooks, please."], ["算出一共多少钱", "So that's twenty-four yuan in total."]] }
+    ]
+  },
+  "hj8a-u3": {
+    "wordsZh": ["最有用的应用", "比……更快", "更方便", "移动支付", "发消息", "当面见朋友", "拿我妈妈来说", "我认为我们应该"],
+    "steps": [["说出你最有用的应用", "The most useful app is a dictionary app."], ["用比较级说一件比过去更方便的事", "Mobile payment is more convenient than cash."], ["再说说它为什么有用", "It helps me learn new words faster."], ["教梅奶奶一条用好手机的规矩", "I think we should not use phones at dinner."]],
+    "more": [
+      { "goal": "Teach Grandma Mei how to send a voice message to her family, step by step: tell her at least three steps using first, next and then.", "goalZh": "一步步教梅奶奶给家人发语音消息：用 first、next、then 至少说三步。", "opener": "Hello! I'm Grandma Mei. How do I send a voice message to my grandson?",
+        "steps": [["说第一步", "First, open the chat app."], ["说下一步", "Next, hold the voice button and speak."], ["说最后一步", "Then let go, and the message is sent."]] },
+      { "goal": "Grandma Mei asks you to compare life then and now. Compare two things using comparatives (for example 'A phone call is faster than a letter'), and say which way you like better.", "goalZh": "梅奶奶请你比较过去和现在：用比较级比较两件事（比如 A phone call is faster than a letter），再说你更喜欢哪一种。", "opener": "When I was young, we wrote letters. Is a phone call better than a letter?",
+        "steps": [["用比较级比较一件事", "A phone call is faster than a letter."], ["再比较一件事", "Online shopping is more convenient than going to shops."], ["说说你更喜欢哪一种、为什么", "But I like letters better because they are special."]] }
+    ]
+  },
+  "hj8a-u4": {
+    "wordsZh": ["我认为最好的发明是", "它比……好", "没有……快", "我个人认为", "毫无疑问", "例如", "它帮助人们……", "我的发明能……"],
+    "steps": [["说出一项你觉得了不起的发明", "I think the best invention is the bike."], ["说说它能帮人们做什么", "It helps people travel without polluting the air."], ["用 better than 或 not as ... as 和老办法比较", "Cycling is better than walking for long trips."], ["说说你自己的发明能做什么", "My invention can clean my room by itself."]],
+    "more": [
+      { "goal": "Tell Doctor Wren about one great invention you use every day: what it is, what it does, and what problem we would have without it ('Without it, we can't ...').", "goalZh": "告诉雷恩博士一样你每天都用、很了不起的发明：它是什么、能做什么，再用 Without it, we can't ... 说说没有它会有什么麻烦。", "opener": "Hi! I'm Doctor Wren. What great invention do you use every day?",
+        "steps": [["说出一样每天用的发明", "I use a fridge every day."], ["说说它能做什么", "It keeps our food fresh."], ["说说没有它会怎样", "Without it, we can't keep milk for days."]] },
+      { "goal": "Help Doctor Wren choose the most useful and the least useful thing for a school trip: a phone, a map or a camera. Use better, the best, worse or the worst at least twice.", "goalZh": "帮雷恩博士从手机、地图、相机里选出春游最有用和最没用的东西：至少用两次 better、the best、worse 或 the worst。", "opener": "For our school trip, which is the best to take: a phone, a map or a camera?",
+        "steps": [["选出最有用的一样", "I think the phone is the best."], ["和另一样比较", "A map is better than a camera for finding the way."], ["说出最没用的一样", "The camera is the worst because the phone can take photos too."]] }
+    ]
+  },
+  "hj8a-u5": {
+    "wordsZh": ["你试过……吗", "我从来没有……", "我已经……了", "寄宿家庭", "感到宾至如归", "更独立", "应对文化冲击", "交外国朋友"],
+    "steps": [["用现在完成时说一件你做过的事", "I have already learnt tai chi."], ["说一件你从没做过的事", "I have never seen Beijing opera."], ["说一个交流之旅的好处", "You can become more independent."], ["再说一个好处", "You can make foreign friends."]],
+    "more": [
+      { "goal": "Talk about Chinese food with Grandma Hilda: name two dishes you have eaten (I have eaten / I have tried ...), and ask her 'Have you ever tried ...?' about one of them.", "goalZh": "和希尔达奶奶聊中国菜：用 I have eaten / I have tried 说出两道你吃过的菜，再用 Have you ever tried ...? 问她吃没吃过其中一道。", "opener": "Hello, dear! I love Chinese food. What dishes have you eaten?",
+        "steps": [["说出一道你吃过的菜", "I have eaten dumplings many times."], ["再说一道", "I have also tried hot pot."], ["用 Have you ever tried 问她", "Have you ever tried hot pot?"]] },
+      { "goal": "An exchange student is coming to stay with Grandma Hilda. Give her two ways to help the student feel at home, and one thing the student can do if he or she feels homesick.", "goalZh": "有个交换生要来希尔达奶奶家住：给她两个让这个学生有家的感觉的办法，再说一件学生想家时可以做的事。", "opener": "A new exchange student is coming to my home next week. How can I help her feel at home?",
+        "steps": [["说一个让她有家的感觉的办法", "You can cook some food from her country."], ["再说一个办法", "Take her to visit the town."], ["说说想家时可以做什么", "If she feels homesick, she can call her family."]] }
+    ]
+  },
+  "hj8a-u6": {
+    "wordsZh": ["你读过……吗", "假装回家", "藏在木马里", "在午夜", "取得了巨大胜利", "向敌人借箭", "成功做成……", "我们可以学会……"],
+    "steps": [["说出想表演的古代故事", "I'd like to act out the Trojan Horse."], ["用一般过去时讲故事里的一件事", "The Greeks pretended to go home."], ["再讲一件事", "Some soldiers hid inside the horse."], ["选一个角色，再说出故事教给我们的智慧", "I want to play a soldier. We can learn to use our heads."]],
+    "more": [
+      { "goal": "Tell Mr Hart about a story you have read: say 'I have read ...', who the main character is, and one thing he or she did (in the simple past).", "goalZh": "告诉哈特老师一个你读过的故事：用 I have read ... 说出故事名，说说主角是谁，再用一般过去时说他/她做的一件事。", "opener": "Hello! I'm Mr Hart, the drama teacher. What's a good story you have read?",
+        "steps": [["用 I have read 说出一个故事", "I have read Journey to the West."], ["说说主角是谁", "The main character is the Monkey King."], ["用过去式说主角做的一件事", "He fought many monsters."]] },
+      { "goal": "Mr Hart asks: Have you ever acted in a play or sung on a stage? Answer with the present perfect, then use the simple past to say when it was and how you felt.", "goalZh": "哈特老师问你演过戏、上过台吗：先用现在完成时回答，再用一般过去时说说是什么时候、你当时感觉怎么样。", "opener": "Have you ever acted in a play or sung on a stage?",
+        "steps": [["用现在完成时回答", "Yes, I have acted in a play."], ["用一般过去时说是什么时候", "I did it at the New Year party last year."], ["说说当时的感觉", "I was nervous, but it was fun."]] }
+    ]
+  },
+  "hj8a-u7": {
+    "wordsZh": ["我用单词卡", "我定期重复", "在语境中学单词", "把单词和图像联系起来", "如果不复习，我就会忘", "除非我练习，否则会忘", "我特别注意……", "最后但同样重要的是"],
+    "steps": [["说一个你记单词的方法", "I use flash cards."], ["说说它为什么有用", "It helps because I can review anywhere."], ["再说一个方法", "I link the word to an image."], ["说一句带 if 或 unless 的句子", "Unless I repeat a word, I forget it."]],
+    "more": [
+      { "goal": "Doctor Maya gives you a memory test. Tell her three things you remember from yesterday: what you ate, what you did and what you talked about with a friend.", "goalZh": "玛雅博士给你做个记忆小测试：告诉她你记得的昨天的三件事——吃了什么、做了什么、和朋友聊了什么。", "opener": "Let's do a memory test! What did you eat for dinner yesterday?",
+        "steps": [["说说昨天吃了什么", "I ate noodles for dinner yesterday."], ["说说昨天做了什么", "I played chess after school."], ["说说昨天和朋友聊了什么", "I talked with my friend about a game."]] },
+      { "goal": "Doctor Maya wants tips for students before a test. Give her three tips using if or unless, for example 'If you sleep well, you remember more.'", "goalZh": "玛雅博士想要考前小贴士：用 if 或 unless 给她三条建议，比如 If you sleep well, you remember more.", "opener": "Many students feel stressed before tests. What tips do you have?",
+        "steps": [["用 if 给一条建议", "If you sleep well, you remember more."], ["再给一条建议", "If you feel stressed, take a short walk."], ["用 unless 说一句", "Unless you review, you will forget."]] }
+    ]
+  },
+  "hj8a-u8": {
+    "wordsZh": ["……的好选择", "照顾", "每天遛它", "自由奔跑", "待在室内", "忠诚的", "比……更快地", "总之"],
+    "steps": [["说说你心目中的完美宠物", "My perfect pet is a rabbit."], ["说说为什么适合你家", "It's a good choice for a small flat because it's quiet."], ["说说你会怎样照顾它", "I will feed it carefully every day."], ["说一个人们养宠物的理由", "People keep pets because pets make them happy."]],
+    "more": [
+      { "goal": "Describe how a pet you know moves and acts, using at least two adverbs (for example quickly, slowly, quietly or happily).", "goalZh": "用至少两个副词（比如 quickly、slowly、quietly、happily）描述一只你认识的宠物怎样走路、玩耍。", "opener": "Hello! I'm Doctor Mabel. Tell me about a pet you know. How does it move?",
+        "steps": [["说出是什么宠物", "My neighbour has a little dog."], ["用一个副词描述它", "It runs very quickly."], ["再用一个副词", "It sleeps quietly in the sun."]] },
+      { "goal": "Compare two pets for Doctor Mabel's booklet, for example a cat and a dog. Use a comparative adverb such as 'faster than' or 'more quietly than' at least once, and say which one you would choose.", "goalZh": "为梅布尔医生的小册子比较两种宠物（比如猫和狗）：至少用一次 faster than 或 more quietly than 这样的副词比较级，再说你会选哪一种。", "opener": "Cats or dogs? Which do you think is a better pet?",
+        "steps": [["说说其中一种宠物的特点", "Dogs are faithful and friendly."], ["用副词比较级比较两种宠物", "Dogs run faster than cats, but cats move more quietly."], ["说说你会选哪一种、为什么", "I would choose a dog because I like walking."]] }
+    ]
+  },
+  "hj8b-u1": {
+    "wordsZh": ["我想……", "我打算……", "在我的空闲时间", "看望老人", "为……筹钱", "为了……", "帮助有需要的人", "……很重要"],
+    "steps": [["说说你想做的志愿活动", "I'd like to visit elderly people."], ["说说什么时候有空去做", "I can go on Saturday mornings in my spare time."], ["说说为什么要做", "I want to help those in need."], ["用 to 或 in order to 说明目的", "I will sell old books in order to raise money for children."]],
+    "more": [
+      { "goal": "Tell Ben two ways you help other people at home or at school, using the infinitive (for example 'I help my grandma to cook'), and say how helping makes you feel.", "goalZh": "告诉本你在家里或学校帮助别人的两种方式，用上不定式（比如 I help my grandma to cook），再说说帮助别人让你有什么感受。", "opener": "Hi! I'm Ben. How do you help other people at home or at school?",
+        "steps": [["说一种在家帮忙的方式", "I help my grandma to clean the room."], ["说一种在学校帮忙的方式", "I help my classmates to learn English."], ["说说帮助别人的感受", "It makes me happy to help others."]] },
+      { "goal": "Ben's volunteer team needs a poster. Give the activity a name, say what volunteers will do, and give one reason with 'It is important to ...'.", "goalZh": "本的志愿队要做一张海报：给活动起个名字，说说志愿者要做什么，再用 It is important to ... 说一个理由。", "opener": "We need a poster for Helping Hands Week. Can you help me plan it?",
+        "steps": [["给活动起个名字", "Let's call it Clean Park Day."], ["说说志愿者要做什么", "Volunteers will pick up rubbish in the park."], ["用 It is important to 说一个理由", "It is important to keep our park clean."]] }
+    ]
+  },
+  "hj8b-u2": {
+    "wordsZh": ["为什么不和……有眼神交流呢", "向……微笑怎么样", "抬起头", "站直", "别抱着双臂", "用手来表示", "你会给……留下好印象", "肢体语言意味着"],
+    "steps": [["用 Why not 给一条建议", "Why not make eye contact with the students?"], ["用 How about 给一条建议", "How about smiling at them?"], ["再给一条建议", "Stand up straight and don't cross your arms."], ["说说肢体语言对你意味着什么", "Body language means a lot. It shows how we feel."]],
+    "more": [
+      { "goal": "Play a guessing game with Coral: she says an action (for example 'I nod my head') and you say what it means. Explain at least three actions, such as nodding, waving or shrugging.", "goalZh": "和科拉尔玩猜一猜：她说一个动作（比如 I nod my head），你说出它的意思。至少说对三个动作。", "opener": "Let's play a game! I nod my head. What does it mean?",
+        "steps": [["说出一个动作的意思", "Nodding means yes."], ["再说出一个动作的意思", "Waving means hello or goodbye."], ["说出第三个动作的意思", "Shrugging means I don't know."]] },
+      { "goal": "Use -ed adjectives to tell Coral how you feel in two situations (for example 'I feel bored when ...' or 'I am excited about ...'), and how your body language shows it.", "goalZh": "用 -ed 形容词告诉科拉尔你在两种情况下的感受（比如 I feel bored when ...、I am excited about ...），再说说你的肢体语言会怎样表现出来。", "opener": "Hi, I'm Coral. When do you feel excited?",
+        "steps": [["用 -ed 形容词说一种感受", "I feel excited before a football match."], ["再说一种感受", "I feel bored when the film is too long."], ["说说肢体语言怎样表现", "When I'm bored, I keep looking at the clock."]] }
+    ]
+  },
+  "hj8b-u3": {
+    "wordsZh": ["连环漫画", "它叫……", "主角是……", "主题是……", "对话气泡", "小心！", "当心！", "谢天谢地"],
+    "steps": [["给漫画起个标题", "It is called The Brave Cat."], ["介绍主角", "The hero is a little cat with a red hat."], ["说出主题和故事里发生了什么", "The theme is friendship. The cat saves a bird."], ["给对话气泡写一句警告语", "Watch out!"]],
+    "more": [
+      { "goal": "Tell Iris about your favourite cartoon or comic: what it is called, who the main character is, and why you like it.", "goalZh": "告诉艾瑞丝你最喜欢的动画或漫画：叫什么名字、主角是谁、你为什么喜欢它。", "opener": "Hi! I'm Iris, a comic artist. What's your favourite cartoon?",
+        "steps": [["说出最喜欢的动画或漫画", "My favourite cartoon is called Big Head Son."], ["说说主角是谁", "The main character is a clever boy."], ["说说为什么喜欢它", "I like it because it is funny."]] },
+      { "goal": "Talk with Iris about comics and cartoons. Use the passive voice (is / are + done) at least twice, for example 'Comics are drawn by artists' or 'This cartoon is loved by many children', and say what comics bring to our lives.", "goalZh": "和艾瑞丝聊漫画和动画：至少用两次被动语态（is / are + 过去分词），比如 Comics are drawn by artists. / This cartoon is loved by many children.，再说说漫画给我们的生活带来了什么。", "opener": "Do you know how cartoons are made?",
+        "steps": [["用被动语态说一句", "Cartoons are drawn by artists."], ["再用被动语态说一句", "This cartoon is loved by many children."], ["说说漫画给我们带来了什么", "Comics make us laugh and relax."]] }
+    ]
+  },
+  "hj8b-u4": {
+    "wordsZh": ["我最喜欢的艺术品是", "它是……画的", "它被制作于", "……年前", "杰作", "细节", "每当我看着它", "我喜欢它，因为"],
+    "steps": [["说说那件艺术品是什么", "My favourite artwork is a painting of horses."], ["用被动语态说是谁创作的", "It was painted by Xu Beihong."], ["说说什么时候创作的", "It was made about eighty years ago."], ["说说你为什么喜欢它", "I like it because the horses look so strong."]],
+    "more": [
+      { "goal": "Tell Granny Hua about something handmade in your home (for example a paper-cut, a knitted scarf or a clay cup): what it is, who it was made by, and how you feel when you look at it.", "goalZh": "告诉花奶奶你家里一件手工做的东西（比如剪纸、织的围巾、陶杯）：是什么、是谁做的、你看着它有什么感觉。", "opener": "Hello, dear! Do you have anything handmade at home?",
+        "steps": [["说说是什么手工作品", "We have a red paper-cut on the window."], ["用被动语态说是谁做的", "It was made by my grandma."], ["说说看着它的感觉", "Whenever I look at it, I feel warm."]] },
+      { "goal": "Granny Hua is planning a school art show next month. Use 'will be + done' at least twice to say how the show will be prepared (for example 'The paper-cuts will be shown in the hall'), and say one thing you would like to make.", "goalZh": "花奶奶要办下个月的学校艺术展：至少用两次 will be + 过去分词说说展览会怎样准备（比如 The paper-cuts will be shown in the hall.），再说一件你想做的作品。", "opener": "Next month we will have an art show at your school. How should we prepare it?",
+        "steps": [["用 will be + 过去分词说一句", "The paper-cuts will be shown in the hall."], ["再说一句", "The posters will be made by students."], ["说说你想做什么作品", "I would like to make a paper lantern."]] }
+    ]
+  },
+  "hj8b-u5": {
+    "wordsZh": ["濒危动物", "……很重要", "我们应该……", "违法的", "自然保护区", "足够强壮去……", "失去家园", "寻找"],
+    "steps": [["说出一种濒危动物", "The red-crowned crane is in danger."], ["说说它面临危险的一个原因", "They are losing their homes."], ["用 It is important to 提一个保护办法", "It is important to build nature reserves."], ["用 We ought to 再提一个办法", "We ought to keep rivers clean."]],
+    "more": [
+      { "goal": "Do Mira's animal quiz: answer her questions about one animal in danger (where it lives and what it eats), then ask her one question back.", "goalZh": "做米拉的动物小测验：回答她关于一种濒危动物的问题（住在哪里、吃什么），再反问她一个问题。", "opener": "Quiz time! Where do giant pandas live?",
+        "steps": [["回答它住在哪里", "Giant pandas live in the mountains."], ["回答它吃什么", "They mainly eat bamboo."], ["反问米拉一个问题", "How many pandas are there now?"]] },
+      { "goal": "Mira asks what young people can do for animals in danger. Give two ideas using 'It is ... for us to ...' or 'old enough / big enough to ...', and say why we should protect them.", "goalZh": "米拉问年轻人能为濒危动物做什么：用 It is ... for us to ... 或 old enough / big enough to ... 说两个办法，再说说为什么要保护它们。", "opener": "You are young, but you can help animals too! What can you do?",
+        "steps": [["用 It is ... for us to ... 说一个办法", "It is easy for us to save paper."], ["用 enough to 再说一个办法", "We are old enough to join a volunteer team."], ["说说为什么要保护它们", "Animals are our friends, and nature needs them."]] }
+    ]
+  },
+  "hj8b-u6": {
+    "wordsZh": ["英语周", "拼字比赛", "寻宝游戏", "在舞台上表演", "我们应该……", "我们最好……", "我认为", "因为很有趣"],
+    "steps": [["推荐一个活动", "I think we should have a spelling bee."], ["说说它为什么有趣或有用", "It is useful because we learn new words."], ["再推荐一个活动并说原因", "A treasure hunt is fun because we read English clues."], ["用 should 或 had better 提一条建议", "We had better start planning early."]],
+    "more": [
+      { "goal": "Tell Miss Rose how you learn English outside class: name two things you do (for example watching cartoons or singing songs) and say which one helps you most.", "goalZh": "告诉罗丝老师你课外怎样学英语：说出你做的两件事（比如看动画、唱英文歌），再说哪一个最有帮助。", "opener": "Hello! I'm Miss Rose. How do you learn English outside class?",
+        "steps": [["说一件课外学英语的事", "I watch English cartoons."], ["再说一件", "I sing English songs."], ["说说哪一个最有帮助", "Singing helps me most because I remember the words."]] },
+      { "goal": "A new student is too shy to speak English. Give Miss Rose three pieces of advice for him, using should, shouldn't or had better.", "goalZh": "有个新同学不敢说英语：用 should、shouldn't 或 had better 给罗丝老师三条给他的建议。", "opener": "A new student is too shy to speak English in class. What should he do?",
+        "steps": [["用 should 给一条建议", "He should practise with a friend first."], ["用 shouldn't 给一条建议", "He shouldn't worry about mistakes."], ["用 had better 给一条建议", "He had better speak a little every day."]] }
+    ]
+  },
+  "hj8b-u7": {
+    "wordsZh": ["中国已经建成了……", "空间站", "起飞", "运送补给", "用肉眼", "很可能……", "我当时正在看……", "在某个时候"],
+    "steps": [["说一件中国在太空探索上做过的事", "China has built a space station."], ["再说一件", "China has sent a rover to Mars."], ["说说人类将来能不能住在火星上", "It's probable that people will live on Mars."], ["说说为什么", "Because we are building better rockets."]],
+    "more": [
+      { "goal": "Grandpa Wei asks what you were doing when a rocket took off. Use the past continuous to say what you were doing, where you were, and how you felt.", "goalZh": "魏爷爷问你火箭发射的时候你正在做什么：用过去进行时说说你当时正在做什么、在哪里、有什么感觉。", "opener": "Last year a rocket took off. What were you doing at that time?",
+        "steps": [["用过去进行时说你当时在做什么", "I was watching TV with my family."], ["说说你当时在哪里", "I was at home in the living room."], ["说说当时的感觉", "I felt so excited and proud."]] },
+      { "goal": "Grandpa Wei worked at a launch centre. Ask him at least two questions about his work (for example 'What were you doing when the rocket took off?'), and tell him what job in space exploration you would like.", "goalZh": "魏爷爷以前在发射中心工作：问他至少两个关于工作的问题（比如 What were you doing when the rocket took off?），再告诉他你想做太空探索里的什么工作。", "opener": "I worked at a launch centre for thirty years. Do you have any questions for me?",
+        "steps": [["问魏爷爷一个问题", "What were you doing when the rocket took off?"], ["再问一个问题", "Was it hard to build a rocket?"], ["说说你想做的太空工作", "I'd like to be an astronaut one day."]] }
+    ]
+  },
+  "hj8b-u8": {
+    "wordsZh": ["在紧急情况下", "我同意你的看法", "我不同意你的看法", "因为它很有用", "因为可能会下雨", "因为天会黑", "一顶帐篷和一个手电筒", "没有必要"],
+    "steps": [["选出一样要带的东西并说理由", "I'd take a tent because it might rain."], ["再选一样并说理由", "I'd take a torch since it gets dark."], ["再选一样并说理由", "We need water as we can't live without it."], ["对诺兰的一个提议说同意或不同意", "I disagree with you. A camera is unnecessary."]],
+    "more": [
+      { "goal": "Pack a bag for a one-day hike with Captain Nolan: name three things to take, and give a reason for one of them using because.", "goalZh": "和诺兰队长一起为一天的远足收拾背包：说出三样要带的东西，再用 because 说出其中一样的理由。", "opener": "Hi! Tomorrow we go hiking. What should we put in the bag?",
+        "steps": [["说出一样要带的东西", "We should take some water."], ["再说两样", "Let's take a map and some snacks."], ["用 because 说一个理由", "We need a map because we might get lost."]] },
+      { "goal": "Captain Nolan is imagining an unknown planet far away. Tell him one thing you think is there and one thing that is not, and give a reason for each with because, as or since.", "goalZh": "诺兰队长在想象远方的一个未知星球：说说你觉得那里有什么、没有什么，各用 because、as 或 since 说出理由。", "opener": "Imagine an unknown planet far away. What do you think is there?",
+        "steps": [["说说你觉得那里有什么", "I think there are strange plants there."], ["用 because / as / since 说理由", "Because the planet has some water."], ["说说那里没有什么，并说理由", "There are no people since it is too cold."]] }
+    ]
+  },
+  "hj9a-u1": {
+    "wordsZh": ["杰出的", "我确信……", "我很自豪……", "我认为……是……", "为……而奋斗", "对……产生了巨大影响", "历史上的里程碑", "依我看"],
+    "steps": [["说说这位伟人是谁", "I'd like to talk about Tu Youyou."], ["说说他/她为社会做了什么", "She found a medicine for malaria."], ["说说这件事的影响", "It had a great impact on people's health."], ["用 I'm sure that 或 I consider 说出你的评价", "I consider her a great scientist."]],
+    "more": [
+      { "goal": "Tell Grant about one great person you learned about in a story or a lesson: who he or she was, one thing he or she did, and one adjective that describes him or her.", "goalZh": "告诉格兰特一位你在故事或课上认识的伟人：他/她是谁、做过的一件事，再用一个形容词形容他/她。", "opener": "Hello! I'm Grant, the museum guide. Which great person did you learn about recently?",
+        "steps": [["说出这位伟人是谁", "I learned about Zheng He."], ["说说他/她做过的一件事", "He sailed to many countries."], ["用一个形容词形容他/她", "He was very brave."]] },
+      { "goal": "Grant asks how you feel about great people from China. Use at least two 'adjective + that' sentences, such as 'I'm proud that ...', 'I'm surprised that ...' or 'I'm sure that ...', and say what you want to learn from them.", "goalZh": "格兰特问你对中国伟人的感受：至少用两个「形容词 + that」的句子，比如 I'm proud that ...、I'm surprised that ...、I'm sure that ...，再说说你想向他们学什么。", "opener": "China has many great people. How do you feel about them?",
+        "steps": [["用 I'm proud that 说一句", "I'm proud that Chinese scientists built a space station."], ["用另一个形容词 + that 说一句", "I'm surprised that Zheng He sailed so far long ago."], ["说说你想向他们学什么", "I want to learn their hard-working spirit."]] }
+    ]
+  },
+  "hj9a-u2": {
+    "wordsZh": ["多棒的主意啊！", "太神奇了！", "我简直不敢相信。", "它解决了……的问题", "它改变了我们……的方式", "总体上", "把想法表达清楚", "避雷针"],
+    "steps": [["说出一个伟大的想法或发明", "I admire the idea of paper."], ["说说是谁想出来的或它从哪里来", "It came from ancient China."], ["说说它解决了什么问题、怎样改变了生活", "It changed the way we keep records."], ["对奥托讲的事实用感叹句回应", "How amazing!"]],
+    "more": [
+      { "goal": "Tell Otto about a small idea that makes life easier at home or at school (for example a schoolbag with wheels): what it is and how it helps. Then react to Otto's idea with an exclamation.", "goalZh": "告诉奥托一个让家里或学校生活更方便的小点子（比如带轮子的书包）：它是什么、怎么帮到你，再用感叹句回应奥托的点子。", "opener": "Hello! I'm Otto. Tell me about a small idea that makes life easier!",
+        "steps": [["说出一个小点子", "A schoolbag with wheels is a great idea."], ["说说它怎么帮到你", "It helps me carry heavy books."], ["用感叹句回应奥托", "What a clever idea!"]] },
+      { "goal": "Otto wants you to invent something for a problem at your school. Describe your idea in a statement, ask Otto a question about it, and give an instruction (an imperative) for using it.", "goalZh": "奥托想让你为学校里的一个问题想个发明：用陈述句介绍你的点子，用疑问句问奥托一个问题，再用祈使句说说怎么用它。", "opener": "Let's invent something for your school! What problem should we solve?",
+        "steps": [["用陈述句说出你的发明", "My invention is a desk that cleans itself."], ["用疑问句问奥托一个问题", "Do you think it will work?"], ["用祈使句说怎么用它", "Press the green button to start it."]] }
+    ]
+  },
+  "hj9a-u3": {
+    "wordsZh": ["每年春节我们都……", "家庭传统", "它让我感到……", "它尝起来很美味", "增进我们的家庭感情", "记忆犹新", "请再说一遍？", "你能再说一遍吗？"],
+    "steps": [["说说什么时候做这个传统", "Every Spring Festival, we make dumplings."], ["说说全家一起做什么", "We cook together and watch the gala."], ["用系动词说说它让你有什么感受", "It makes me feel warm and happy."], ["说说为什么重要", "It strengthens our family bond."]],
+    "more": [
+      { "goal": "Tell Miss Bell about a special family meal: when you have it, what food you eat, and use a linking verb such as taste, smell or look to describe the food.", "goalZh": "告诉贝尔老师一顿特别的家庭聚餐：什么时候吃、吃什么，再用 taste、smell 或 look 这样的系动词描述食物。", "opener": "Hello, I'm Miss Bell. Does your family have a special meal together?",
+        "steps": [["说说什么时候有这顿饭", "We have a big dinner on New Year's Eve."], ["说说吃什么", "We eat fish, dumplings and rice cakes."], ["用 taste / smell / look 描述食物", "The fish smells good and tastes delicious."]] },
+      { "goal": "Miss Bell's class is making a survey. Ask her two questions about family traditions in her home country, and tell her one new tradition you would like to start in your family.", "goalZh": "贝尔老师班上在做调查：问她两个关于她家乡的家庭传统的问题，再告诉她你想在家里开始的一个新传统。", "opener": "In my home country, we have many family traditions. What would you like to know?",
+        "steps": [["问贝尔老师一个问题", "What do you do on Christmas Day?"], ["再问一个问题", "Do you give presents to each other?"], ["说说你想开始的新传统", "I'd like to have a family movie night every week."]] }
+    ]
+  },
+  "hj9a-u4": {
+    "wordsZh": ["你应该……", "你为什么不……", "很大的压力", "沉迷于……", "专注于……", "和……闹翻", "管理你的时间", "找你信任的人聊聊"],
+    "steps": [["说一个青少年常见的烦恼", "Many students have a lot of pressure from homework."], ["说说你的应对办法", "I make a plan and do a little every day."], ["用 You should 给 Ethan 一条建议", "You should put your phone away when you study."], ["用 Why don't you 再给一条建议", "Why don't you say sorry to your friend?"]],
+    "more": [
+      { "goal": "Help Aunt Clara answer a letter from a reader who can never get up on time in the morning. Give two pieces of advice with You should or Why don't you, and say how it will help.", "goalZh": "帮知心阿姨克拉拉回一封读者来信：这个读者早上总起不来。用 You should 或 Why don't you 给两条建议，再说说这样做有什么好处。", "opener": "Hi! A reader can never get up on time in the morning. What should he do?",
+        "steps": [["用 You should 给一条建议", "You should go to bed earlier."], ["用 Why don't you 给一条建议", "Why don't you put your alarm clock far away?"], ["说说这样做的好处", "Then you will feel more awake."]] },
+      { "goal": "A reader has fallen out with her best friend. Tell Aunt Clara how the reader might feel (use feel or look + adjective), and give two ideas to make up with the friend.", "goalZh": "一位读者和好朋友闹翻了：说说她可能有什么感受（用 feel / look + 形容词），再给两个和好的办法。", "opener": "This week a reader fell out with her best friend. How do you think she feels?",
+        "steps": [["用 feel / look + 形容词说说她的感受", "She must feel sad and lonely."], ["给一个和好的办法", "She should talk to her friend face to face."], ["再给一个办法", "Why doesn't she write a card to say sorry?"]] }
+    ]
+  },
+  "hj9a-u5": {
+    "wordsZh": ["在我的空闲时间", "和朋友出去玩", "玩桌游", "去滑雪板滑雪", "一周一次", "虽然", "即使；尽管", "你能告诉我……吗"],
+    "steps": [["说出两项你常做的休闲活动", "In my free time, I play board games and go running."], ["说说多久做一次、为什么喜欢", "I play board games once a week because it's relaxing."], ["用 although 或 even though 说一句", "I go running even though it is cold."], ["礼貌地反问肖恩一个问题", "Could you tell me what you do in your free time?"]],
+    "more": [
+      { "goal": "Tell Sean how you relaxed last weekend: two things you did, and which one you enjoyed more and why.", "goalZh": "告诉肖恩你上个周末是怎么放松的：做了哪两件事、更喜欢哪一件、为什么。", "opener": "Hi, I'm Sean, a TV director. How did you relax last weekend?",
+        "steps": [["说一件上周末做的放松的事", "I watched a film with my family."], ["再说一件", "I went cycling in the park."], ["说说更喜欢哪一件、为什么", "I enjoyed cycling more because it was sunny."]] },
+      { "goal": "Sean thinks teenagers spend too much time on their phones. Agree or disagree, give two reasons, and use although at least once (for example 'Although phones are fun, ...').", "goalZh": "肖恩觉得青少年花在手机上的时间太多了：说说你同不同意，给两个理由，至少用一次 although（比如 Although phones are fun, ...）。", "opener": "I think teenagers spend too much time on their phones. Do you agree?",
+        "steps": [["说说你同不同意", "I agree with you."], ["给一个理由", "Many students play games for hours."], ["用 although 说一句", "Although phones are fun, we should do sports too."]] }
+    ]
+  },
+  "hj9a-u6": {
+    "wordsZh": ["均衡的饮食", "我宁愿吃……", "水煮蔬菜", "油炸食品", "碳酸饮料", "奶制品", "我认为……", "它对……有好处"],
+    "steps": [["选一种主食", "I'd like rice as the staple food."], ["选一道蔬菜和一种饮料", "Let's have boiled vegetables and milk."], ["说说你更想吃什么", "I'd rather have fish than fried chicken."], ["解释为什么健康", "I think that it's a balanced diet, so it's good for our health."]],
+    "more": [
+      { "goal": "Tell Mandy what you had for breakfast today, and use 'I think that ...' to say whether it was healthy and why.", "goalZh": "告诉曼迪你今天早饭吃了什么，再用 I think that ... 说说你觉得健不健康、为什么。", "opener": "Good morning! I'm Mandy, the school cook. What did you have for breakfast today?",
+        "steps": [["说说今天早饭吃了什么", "I had an egg, some bread and milk."], ["用 I think that 说说健不健康", "I think that it was healthy."], ["说说为什么", "Because eggs and milk are good for us."]] },
+      { "goal": "Mandy wants to make the canteen better. Ask her two questions with 'Do you know ...?' or 'Could you tell me ...?' (for example 'Could you tell me what's for lunch tomorrow?'), and tell her one food the canteen should have.", "goalZh": "曼迪想把食堂办得更好：用 Do you know ...? 或 Could you tell me ...? 问她两个问题（比如 Could you tell me what's for lunch tomorrow?），再告诉她食堂应该有的一种食物。", "opener": "I want to make the canteen better. Do you have any questions or ideas?",
+        "steps": [["用 Could you tell me 问一个问题", "Could you tell me what's for lunch tomorrow?"], ["用 Do you know 再问一个问题", "Do you know how many students eat here?"], ["说说食堂应该有的一种食物", "I think that the canteen should have more fruit."]] }
+    ]
+  },
+  "hj9a-u7": {
+    "wordsZh": ["一个讨厌辛苦工作的男孩", "一个让我发笑的故事", "充满幽默", "我喜欢的那类故事", "大声朗读它", "好主意", "独幕剧", "一位……的作家"],
+    "steps": [["说出马克·吐温故事里的一个人物", "I like Tom Sawyer."], ["用 who / that / which 描述这个人物", "He is a boy who hates hard work."], ["用定语从句再说一句", "He has a friend who is called Huck."], ["说一个欣赏马克·吐温作品的理由", "His stories are full of humour."]],
+    "more": [
+      { "goal": "Tell Miss Page about any book you like: what it is called, what kind of book it is, and one sentence with who, that or which, for example 'It's a book that makes me laugh.'", "goalZh": "告诉佩姬老师一本你喜欢的书（什么书都行）：书名、是哪一类书，再用 who、that 或 which 说一句，比如 It's a book that makes me laugh.", "opener": "Hello! I'm Miss Page, the school librarian. What's a book you love?",
+        "steps": [["说出书名", "I love Charlotte's Web."], ["说说是哪一类书", "It's a story about animals."], ["用 who / that / which 说一句", "It's a book that makes me cry and laugh."]] },
+      { "goal": "Help Miss Page plan the school play: choose a funny scene from a Mark Twain story, describe two characters using who or that, and say what kind of student should play the main character.", "goalZh": "帮佩姬老师策划校园剧：选一个马克·吐温故事里好笑的场景，用 who 或 that 描述两个人物，再说说什么样的同学适合演主角。", "opener": "We will act out a funny scene from a Mark Twain story. Which scene should we choose?",
+        "steps": [["选一个场景", "Let's act out the scene where Tom paints the fence."], ["用 who / that 描述两个人物", "Tom is a boy who is clever. Ben is a boy who loves apples."], ["说说什么样的同学适合演主角", "A student who is funny should play Tom."]] }
+    ]
+  },
+  "hj9a-u8": {
+    "wordsZh": ["我最特别的礼物是", "它是……送的礼物", "它是手工做的", "它对我意义重大", "我为……感到自豪", "我感谢……", "它充满了爱", "把它传下去"],
+    "steps": [["说说最特别的礼物是什么", "My most special gift is a hand-knitted scarf."], ["说说是谁送的", "It was a gift from my grandma."], ["说说为什么对你意义重大", "It means a lot to me because she made it herself."], ["用 proud of 或 thankful for 说一句", "I am thankful for her love."]],
+    "more": [
+      { "goal": "Help Grandma Dot choose a birthday gift for her thirteen-year-old granddaughter: suggest two gifts, and say which one you think is better and why.", "goalZh": "帮多特奶奶给她 13 岁的孙女挑生日礼物：推荐两样礼物，再说说你觉得哪样更好、为什么。", "opener": "My granddaughter's birthday is coming. She is thirteen. What gift should I buy?",
+        "steps": [["推荐一样礼物", "How about a nice notebook?"], ["再推荐一样", "A handmade bracelet is also a good idea."], ["说说哪样更好、为什么", "I think the bracelet is better because it is full of love."]] },
+      { "goal": "Tell Grandma Dot about a time you made a gift for someone or helped someone: who it was for, what you did, and how the person felt. Use one chunk such as 'thankful for', 'proud of' or 'pay for'.", "goalZh": "告诉多特奶奶你给别人做过礼物或帮过别人的一次经历：是给谁的、你做了什么、对方有什么感受，并用上 thankful for、proud of 或 pay for 这样的搭配。", "opener": "Have you ever made a gift for someone you love?",
+        "steps": [["说说是给谁的", "I made a card for my mum on Mother's Day."], ["说说你做了什么", "I drew flowers and wrote a poem on it."], ["用固定搭配说说对方的感受", "She was thankful for it, and I was proud of myself."]] }
+    ]
+  },
+  "hj9b-u1": {
+    "wordsZh": ["从……起航", "航行到……", "开辟了新航线", "被称为……", "导致了……的发现", "如此勇敢以至于……", "勇敢到足以……", "请再说一遍好吗？"],
+    "steps": [["说说这位探险家是谁", "I'd like to talk about Zheng He."], ["说说他/她什么时候去了哪里", "He set sail from China about six hundred years ago."], ["说说这次旅行带来了什么", "His voyages opened up new routes."], ["用 so ... that / too ... to / enough to 说一句", "He was brave enough to sail across the ocean."]],
+    "more": [
+      { "goal": "Tell Captain Zhou about an adventure you would like to have (for example climbing a mountain or sailing to an island): where you would go, what you would take, and why.", "goalZh": "告诉周船长你想去的一次探险（比如爬山、航行到一座小岛）：去哪里、带什么、为什么想去。", "opener": "Hello! I'm Captain Zhou. If you could go on an adventure, where would you go?",
+        "steps": [["说说想去哪里探险", "I'd like to sail to a small island."], ["说说要带什么", "I'd take a map, a compass and some food."], ["说说为什么想去", "I want to see wild animals there."]] },
+      { "goal": "Captain Zhou tells you about a storm at sea. React to her story using 'so ... that' or 'too ... to' at least twice, and ask her one question about how the sailors stayed safe.", "goalZh": "周船长给你讲她在海上遇到风暴的故事：至少用两次 so ... that 或 too ... to 来回应，再问她一个水手们怎样保证安全的问题。", "opener": "Once, there was a terrible storm at sea. The waves were huge! Can you imagine?",
+        "steps": [["用 so ... that 说一句", "The waves were so big that the ship shook."], ["用 too ... to 说一句", "It was too dangerous to go outside."], ["问她一个问题", "How did the sailors stay safe?"]] }
+    ]
+  },
+  "hj9b-u2": {
+    "wordsZh": ["文化冲击", "习惯于……", "脱鞋", "校服", "放烟花", "以便你能……", "在你的空闲时间", "在某种程度上"],
+    "steps": [["说一处中国和美国不一样的地方", "In China, many people take off their shoes at home."], ["再说一处不一样的地方", "We wear school uniforms every day."], ["用 so that 给欧文一条建议", "Learn some Chinese so that you can order food."], ["用 so that 再给一条建议", "Make Chinese friends so that you won't feel lonely."]],
+    "more": [
+      { "goal": "Teach Owen how to use chopsticks: give him at least three simple steps or tips.", "goalZh": "教欧文怎样用筷子：至少给他三个简单的步骤或小提示。", "opener": "Hi! I'm Owen. I can't use chopsticks. Can you teach me?",
+        "steps": [["说第一步", "First, hold one chopstick like a pen."], ["说下一步", "Next, put the other one under it."], ["说最后一步或一个小提示", "Then move only the top one. Practise slowly!"]] },
+      { "goal": "Owen wants to learn about a Chinese festival. Tell him one festival, what people do at that time, and give him one tip with so that, for example 'Buy mooncakes early so that you can try different kinds.'", "goalZh": "欧文想了解一个中国节日：告诉他是什么节日、大家那时候做什么，再用 so that 给他一条建议，比如 Buy mooncakes early so that you can try different kinds.", "opener": "I want to learn about Chinese festivals. Which one should I know first?",
+        "steps": [["说出一个中国节日", "The Mid-Autumn Festival is very important."], ["说说大家那时候做什么", "People eat mooncakes and look at the moon."], ["用 so that 给他一条建议", "Buy mooncakes early so that you can try different kinds."]] }
+    ]
+  },
+  "hj9b-u3": {
+    "wordsZh": ["我担心……", "我关注……", "和以前不一样了", "和……不同", "由于……", "导致……", "采取行动", "产生影响；起作用"],
+    "steps": [["说出城市的一个环境问题", "There is too much traffic in my city."], ["说说你为什么担心", "I'm worried about the dirty air."], ["用 the same as / different from 比较现在和过去", "The river is different from before. It is cleaner now."], ["提出一个大家可以采取的行动", "We can take the bus to make a difference."]],
+    "more": [
+      { "goal": "Tell Willow three things you do to protect the environment in your daily life.", "goalZh": "告诉薇洛你在日常生活中保护环境的三件事。", "opener": "Hi! I'm Willow. What do you do to protect the environment every day?",
+        "steps": [["说一件你做的环保的事", "I sort the rubbish at home."], ["再说一件", "I bring my own bottle to school."], ["再说一件", "I turn off the lights when I leave a room."]] },
+      { "goal": "Compare a clean place and a dirty place you have seen (for example a beach, a river or a street). Use 'the same as', 'different from' or 'like' at least twice, and say what caused the problem.", "goalZh": "比较你见过的一个干净的地方和一个脏的地方（比如海滩、河、街道）：至少用两次 the same as、different from 或 like，再说说是什么造成了脏乱。", "opener": "Some places are clean and some are dirty. Have you seen a dirty place?",
+        "steps": [["说出你见过的一个脏乱的地方", "I saw a dirty river once."], ["用 different from / the same as / like 比较两次", "It is different from the river in the park. That one looks like a mirror."], ["说说是什么造成了脏乱", "People threw rubbish into it."]] }
+    ]
+  },
+  "hj9b-u4": {
+    "wordsZh": ["救生包", "……很重要", "……是个好主意", "瓶装水", "手电筒", "急救箱", "保持冷静", "和家人待在一起"],
+    "steps": [["说出两样要放进救生包的东西和理由", "We need bottled water because we can't live without water."], ["再说两样东西和理由", "A torch and a first aid kit are useful in the dark."], ["用 It is important to 说一句", "It is important to stay calm."], ["说出地震或台风时该做的一件事", "In an earthquake, get under a strong table."]],
+    "more": [
+      { "goal": "Tell Tess what the weather is like during a typhoon, and two things your family does to get ready for it.", "goalZh": "告诉苔丝台风来的时候天气是什么样，以及你家为台风做准备的两件事。", "opener": "Hi, I'm Tess from the rescue team. Have you ever seen a typhoon?",
+        "steps": [["说说台风时天气怎么样", "It is very windy and it rains heavily."], ["说一件你家做的准备", "We close all the windows."], ["再说一件", "We buy food and bottled water."]] },
+      { "goal": "Tess is making safety rules for a school fire drill. Give three rules using 'It is important to ...', 'It is a good idea to ...' or 'It is dangerous to ...'.", "goalZh": "苔丝在为学校的消防演练定安全规则：用 It is important to ...、It is a good idea to ... 或 It is dangerous to ... 给出三条规则。", "opener": "We will have a fire drill at your school. What are the most important rules?",
+        "steps": [["用 It is important to 说一条规则", "It is important to stay calm."], ["用 It is a good idea to 说一条", "It is a good idea to cover your nose with a wet towel."], ["用 It is dangerous to 说一条", "It is dangerous to take the lift."]] }
+    ]
+  },
+  "hj9b-u5": {
+    "wordsZh": ["我最喜欢的运动", "我已经练了……", "参加比赛", "保持平衡", "说实话", "我迫不及待想……", "应对压力", "增强"],
+    "steps": [["说出你最喜欢的运动", "My favourite sport is table tennis."], ["用现在完成时说练了多久", "I have played it for three years."], ["说说什么时候在哪里练", "I play it at the sports centre on Sundays."], ["说说它对你有什么帮助", "It helps me deal with stress."]],
+    "more": [
+      { "goal": "Tell Coach Martin about a sports match you watched or played: what sport it was, when it was, and what happened.", "goalZh": "告诉马丁教练一场你看过或参加过的比赛：是什么运动、什么时候、发生了什么。", "opener": "Hi, I'm Coach Martin. Did you watch or play any match recently?",
+        "steps": [["说说是什么运动的比赛", "I watched a basketball match."], ["说说是什么时候", "It was last Saturday."], ["说说发生了什么", "Our team won in the last minute!"]] },
+      { "goal": "Coach Martin is writing a guidebook. Tell him about a sports event at your school (for example a sports day): when it is held, what events there are, and what you will do next time. Use at least one passive sentence.", "goalZh": "马丁教练在写指南：介绍你学校的一项体育活动（比如运动会）——什么时候举行、有哪些项目、下次你打算做什么，并且至少用一句被动语态。", "opener": "Does your school have a sports day? Tell me about it!",
+        "steps": [["用被动语态说说活动什么时候举行", "Our sports day is held every October."], ["说说有哪些项目", "There are running races, high jump and a tug of war."], ["用将来时说说下次你打算做什么", "Next time I will enter the long jump."]] }
+    ]
+  },
+  "hj9b-u6": {
+    "wordsZh": ["规律的锻炼", "保护我的视力", "应对压力", "我确信……", "我担心……", "让我振作起来", "往好的方面看", "平衡的生活"],
+    "steps": [["说说多久锻炼一次、睡多久", "I exercise three times a week and sleep nine hours."], ["说说怎样保护视力", "I look into the distance after reading."], ["说说有压力时怎样应对", "When I feel stressed, I talk to my friends."], ["说说情绪低落时怎样让自己振作", "Music always cheers me up."]],
+    "more": [
+      { "goal": "Tell Nurse Lucy about your sleep: what time you go to bed, what time you get up, and one thing you do to sleep well.", "goalZh": "告诉校医露西你的睡眠：几点睡觉、几点起床、为了睡好你会做的一件事。", "opener": "Hello! I'm Nurse Lucy. What time do you usually go to bed?",
+        "steps": [["说说几点睡觉", "I usually go to bed at ten o'clock."], ["说说几点起床", "I get up at half past six."], ["说一件为了睡好你会做的事", "I don't use my phone before bed."]] },
+      { "goal": "Nurse Lucy asks about a healthy, balanced life. Use 'I'm sure that ...' and 'I'm worried that ...' to talk about one good habit you have and one habit you want to change, and say how you will change it.", "goalZh": "露西和你聊健康平衡的生活：用 I'm sure that ... 和 I'm worried that ... 说说你的一个好习惯和一个想改掉的习惯，再说说打算怎么改。", "opener": "Everyone has good habits and bad habits. What's a good habit you have?",
+        "steps": [["用 I'm sure that 说一个好习惯", "I'm sure that eating breakfast is a good habit."], ["用 I'm worried that 说一个想改的习惯", "I'm worried that I play games too much."], ["说说你打算怎么改", "I will play only on weekends."]] }
+    ]
+  }
+}

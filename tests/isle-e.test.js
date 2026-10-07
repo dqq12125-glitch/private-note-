@@ -5,6 +5,10 @@ const H = require('./helpers');
 (async () => {
   const t = await H.open();
   const { p, W, check } = t;
+  // 道馆要先打败课本单元的 BOSS（第 13 个馆主要 16 个单元，见 world.js 的 gymNeed）：测试存档都当作打过了；
+  // 七上全过是霜羽鸟的里程碑，先当作收服过了，免得它半路飞来打断剧情
+  const save0 = t.save;
+  t.save = async s => { await save0(s); await p.evaluate(() => { const S = EchoGame.S; for (let i = 0; i < 16; i++) S.stars[(13 + i) + '-6'] = 1; S.world.flags['s:leg:frostwing'] = 1; localStorage.setItem('echo-island-v1', JSON.stringify(S)); }); };
   const B = n => { const b = {}; for (let i = 0; i < n; i++) b[i] = 1; return b; };
   const BAG = { hm_surf: 1, hm_strength: 1, hm_smash: 1, hm_flash: 1, hm_cut: 1 };
   const flags = () => t.flags();

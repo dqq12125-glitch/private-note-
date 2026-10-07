@@ -1,4 +1,5 @@
-// 战斗规则测试：速度先后手、异常状态和叫醒、能力升降、升级学新招（忘掉旧招）、换怪兽、学习装置、怪兽详情
+// 战斗规则测试：速度先后手、异常状态和叫醒、能力升降、升级学新招（忘掉旧招）、换怪兽、学习装置、怪兽详情、
+// 对战替复习干活（先出到期的题、答对算复习）、按掌握程度撤提示（凭记忆念 / 🔥 不看字念 / 大招先不给选项）
 // 运行：node tests/battle.test.js
 const path = require('path');
 const { chromium } = require('playwright');
@@ -113,6 +114,58 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await W(300);
   const sum = await p.textContent('#sheet');
   check(/防御 DEF/.test(sum) && /速度 SPD/.test(sum) && /Flame Wave/.test(sum), '怪兽详情：能力值和招式');
+  await p.click('#sheet [data-act=close]').catch(() => {});
+
+  // ---------- 对战替复习干活：先出今天到期的题；掌握了的凭记忆念（🔥 伤害 ×1.5）；答对算一次复习 ----------
+  // 下面的存档都给 1 枚徽章：Lv 30 的怪兽一定听话（没有徽章时三成概率「在发呆」，测试会随机失败）
+  const ymd = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  await save({ book: { at: 0, mix: 0, view: 'book' }, rev: { v: 1, items: { 'sent:0:3': { k: 'sent', w: 0, i: 3, b: 5, due: '2000-01-01', x: 0 } } },
+    mon: { v: 2, box: [{ uid: 'a', sp: 'emberpup', lv: 30, xp: 0, moves: ['fire:0', 'fire:1', 'fire:2'] }], team: ['a'], dex: {}, balls: 5, potions: 3, bag: {}, badges: { 0: 1 } } });
+  await p.reload(); await W(400);
+  await p.evaluate(() => MonsterGame.battle('wild', 0, { onEnd() {}, foes: [MonsterGame.newMon('twigling', 2)] }));
+  await menuUp();
+  await p.click('[data-act=bMove][data-i="1"]');
+  let bt = await p.evaluate(() => { const B = MonsterGame._b(), s = document.querySelector('#b-say'); return { q: B.task.q, blind: B.blind, mask: s && s.classList.contains('mask'), say: s && s.textContent, head: document.querySelector('#b-panel .task-h').textContent, zh: document.querySelector('#b-panel').textContent.includes(B.task.zh) }; });
+  check(bt.q.w === 0 && bt.q.i === 3, '对战先出今天到期的复习题', bt.q);
+  check(bt.mask && !/[a-z]/i.test(bt.say) && bt.zh && /凭记忆/.test(bt.head) && bt.blind, '掌握了的句子：只给中文，凭记忆念（🔥 不看字）', bt);
+  await p.screenshot({ path: path.join(__dirname, 'screenshots', 'battle-recall.png') });
+  await p.click('[data-act=bRate][data-v="2"]');
+  check(await until(async () => /不看字/.test(await msg())), '不看字念对：伤害 ×1.5', await msg());
+  const e3 = await p.evaluate(() => window.EchoGame.S.rev.items['sent:0:3']);
+  check(e3.b === 6 && e3.due === ymd(30), '对战里答对到期的题：算一次复习，升一格', e3);
+  await p.evaluate(() => { document.querySelector('[data-act=bFlee]').click(); });
+  await p.click('#sheet [data-act=bEnd]').catch(() => {});
+
+  // 没进复习本的句子：照着念，可以自己选「🔥 不看字念」
+  await save({ book: { at: 0, mix: 0, view: 'book' }, mon: { v: 2, box: [{ uid: 'a', sp: 'emberpup', lv: 30, xp: 0, moves: ['fire:0', 'fire:1', 'fire:2'] }], team: ['a'], dex: {}, balls: 5, potions: 3, bag: {}, badges: { 0: 1 } } });
+  await p.reload(); await W(400);
+  await p.evaluate(() => MonsterGame.battle('wild', 0, { onEnd() {}, foes: [MonsterGame.newMon('twigling', 2)] }));
+  await menuUp();
+  await p.click('[data-act=bMove][data-i="1"]');
+  const plain = await p.evaluate(() => { const s = document.querySelector('#b-say'); return { mask: s.classList.contains('mask'), blindBtn: !!document.querySelector('#b-panel [data-act=bBlind]') }; });
+  await p.click('#b-panel [data-act=bBlind]');
+  const blind = await p.evaluate(() => ({ mask: document.querySelector('#b-say').classList.contains('mask'), blind: MonsterGame._b().blind }));
+  check(!plain.mask && plain.blindBtn && blind.mask && blind.blind, '新句子照着念；点「🔥 不看字念」就把字藏起来', { plain, blind });
+  await p.evaluate(() => { document.querySelector('[data-act=bFlee]').click(); });
+  await p.click('#sheet [data-act=bEnd]').catch(() => {});
+
+  // 大招：掌握了的对话先只播问题（AI 打分时），说错一次才亮出选项，亮出来就不能暴击
+  await save({ book: { at: 0, mix: 0, view: 'book' }, settings: { tts: 'online', mode: 'auto', gfx: '2d', sfx: false }, rev: { v: 1, items: { 'dlg:0:1': { k: 'dlg', w: 0, i: 1, b: 3, due: '2000-01-01', x: 0 } } },
+    mon: { v: 2, box: [{ uid: 'a', sp: 'emberpup', lv: 30, xp: 0, moves: ['fire:0', 'fire:1', 'fire:2'] }], team: ['a'], dex: {}, balls: 5, potions: 3, bag: {}, badges: { 0: 1 } } });
+  await p.reload(); await W(400);
+  await p.evaluate(() => {
+    EchoTalk.cloudSR = () => true; EchoTalk.aiTip = async () => '';
+    EchoTalk.listenOnce = async () => ({ text: 'banana pancake', err: null });   // 假的识别：说了句不相干的
+  });
+  await p.evaluate(() => MonsterGame.battle('wild', 0, { onEnd() {}, foes: [MonsterGame.newMon('twigling', 2)], rules: { kind: 'talk' } }));
+  await menuUp();
+  await p.click('[data-act=bMove][data-i="2"]');
+  const ult = await p.evaluate(() => ({ q: MonsterGame._b().task.q, hidden: document.querySelector('#b-opts').hidden, show: !!document.querySelector('#b-show') }));
+  check(ult.q.i === 1 && ult.hidden && ult.show, '大招：掌握了的对话先不给选项', ult);
+  await p.click('#b-mic');
+  check(await until(() => p.evaluate(() => !document.querySelector('#b-opts').hidden && MonsterGame._b().hinted)), '凭记忆没说对：亮出选项，这次不能暴击');
+  await p.evaluate(() => { document.querySelector('[data-act=bFlee]').click(); });
+  await p.click('#sheet [data-act=bEnd]').catch(() => {});
   check(!errs.length, '没有报错' + (errs.length ? '：' + errs.slice(0, 3).join(' | ') : ''));
   console.log(fails ? 'FAIL ' + fails : 'PASS');
   if (fails) process.exitCode = 1;

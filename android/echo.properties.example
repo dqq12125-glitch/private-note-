@@ -1,13 +1,25 @@
-# 复制成 echo.properties（不进仓库）再打包。
-# 直连阿里云（推荐，不用服务器）：KEY_FILE 指向一个写着 DASHSCOPE_API_KEY=sk-... 的文件，密钥会打进 APK。
-# 不填也行：装好以后在手机上「和岛民聊天 → ⚙️ 设置服务」里输入密钥（只存在那台手机里）。
-# 请用单独给游戏建的百炼 API Key，并在阿里云里设好花费上限。
-KEY_FILE=
+# 复制成 echo.properties（不进仓库）再打包。这个文件里有签名密码和家长密码，不要发给别人、不要放到网上。
+
+# 百炼密钥（家长 2026-10-07 定的：照旧打进 APK）：KEY_FILE 指向一个写着 DASHSCOPE_API_KEY=sk-... 的文件，
+# 打包时读出来写进 BuildConfig。用游戏专用的那把（单独业务空间、只开游戏用到的模型、设好费用预警），不和别的项目共用。
+# 手机「设置 → AI」里粘贴的密钥优先；KEY_FILE 留空也能打包，那就要家长在手机上粘贴一次。
+# APK 被转发出去密钥就跟着出去了：APK 只发给自家人，发现泄露就去百炼控制台作废、换新的再打包。
+KEY_FILE=D:/Claude/tools/echo-relay/game-key.env
+
 # 或者用中转服务（server/relay.js）：地址和家庭口令
 TALK_URL=
 TALK_CODE=
-# 签名（release 包用；不填就用 debug 签名）。签名文件要备份：丢了就不能覆盖安装升级，只能卸载重装（存档会丢）
+
+# 家长密码（4 位数字）：关学习锁、家长设置、恢复存档都要输。APK 里只放它加盐后的哈希，原文不进 APK。
+# 正式包（release）必须填。连续输错 5 次锁 10 分钟。
+PARENT_PIN=
+
+# 正式签名（release 包必须有，找不到就报错停下，不再改用调试签名）。
+# 签名文件和这个文件都要另外备份两处（网盘 + U 盘）：丢了就不能覆盖安装升级，只能卸载重装（存档会丢）
 STORE_FILE=D:/Claude/tools/echo-relay/echo-release.jks
 STORE_PASSWORD=
 KEY_ALIAS=echo
 KEY_PASSWORD=
+
+# 版本号默认用 git 提交数；从没有 git 的源码包打包时才用这个（要比手机上装的那版大，不然装不上）
+# VERSION_CODE=

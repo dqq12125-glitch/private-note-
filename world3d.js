@@ -3,10 +3,10 @@
 (function () {
   'use strict';
 
-  // dpr 是上限（实际取 min(设备像素比, dpr)）：精美档在 3 倍屏的手机上按 3 倍画，不再放大发糊
+  // dpr 是上限（实际取 min(设备像素比, dpr)）：精美档最多按 2 倍画（家长 2026-10-07，评估第 15 条：3 倍屏按 3 倍画太烫，看起来也差不多）
   // tex：地面贴图每格多少像素（整张贴图最长边不超过 4096，见 load）；cell：人物图集每帧多少像素
   const TIERS = {
-    high: { dpr: 3, shadow: 2048, soft: true, post: true, taps: 16, tex: 64, cell: 160 },
+    high: { dpr: 2, shadow: 2048, soft: true, post: true, taps: 16, tex: 64, cell: 160 },
     mid: { dpr: 1.5, shadow: 1024, soft: false, post: true, taps: 10, tex: 32, cell: 96 },
     low: { dpr: 1, shadow: 0, soft: false, post: false, taps: 0, tex: 24, cell: 64 },
   };
@@ -25,6 +25,12 @@
     } catch (e) { return null; }
     if (!renderer.getContext()) return null;
     view.prepend(canvas);
+    // 画面丢了（webglcontextlost：切去微信再回来、系统收回显存）：先不画（three.js 自己也停）；
+    // glState()：'ok' / 'lost' 刚丢 / 'restored' 恢复了 / 'dead' 2.5 秒还没恢复——后两种由 world.js 整个重建（评估第 15 条）
+    const gl = { lost: 0, restored: false };
+    canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); gl.lost = performance.now(); gl.restored = false; }, false);
+    canvas.addEventListener('webglcontextrestored', () => { gl.restored = true; }, false);
+    const glState = () => (!gl.lost ? 'ok' : gl.restored ? 'restored' : performance.now() - gl.lost > 2500 ? 'dead' : 'lost');
     renderer.shadowMap.enabled = !!Q.shadow;
     renderer.shadowMap.type = Q.soft ? T3.PCFSoftShadowMap : T3.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;
@@ -1131,6 +1137,7 @@
     }
     const tmp = new T3.Vector3();
     function draw(now, V) {
+      if (gl.lost) return;   // 画面丢了：等 world.js 重建
       const dt = lastT ? Math.min(.1, (now - lastT) / 1000) : .016; lastT = now;
       U.uTime.value = now / 1000;
       renderer.info.reset();
@@ -1252,7 +1259,7 @@
       try { renderer.forceContextLoss(); } catch (e) { /* 忽略 */ }
       canvas.remove();
     }
-    return { kind: '3d', load, resize, draw, destroy, info: () => renderer.info };
+    return { kind: '3d', load, resize, draw, destroy, glState, info: () => renderer.info };
   }
 
   window.EchoWorld3D = { create };

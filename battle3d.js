@@ -340,13 +340,39 @@ void main() {
     opts = opts || {};
     const Q = QUAL[opts.quality] ? opts.quality : 'mid', QS = QUAL[Q];
     let raf = 0, last = 0, alive = true, nextDraw = 0, fxNow = 0, monT = 0, warmed = false;
-    const canvas = document.createElement('canvas');
+    let canvas = document.createElement('canvas');   // 画面丢了重建时会换一张（见 glRebuild）
     canvas.className = 'b3d';
     let renderer;
     try { renderer = new T3.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'default' }); } catch (e) { return null; }
     if (!renderer.getContext()) return null;
     renderer.shadowMap.enabled = opts.shadows !== false;
     renderer.shadowMap.type = T3.PCFShadowMap;
+    // ---------- 画面丢了（webglcontextlost：切去微信再回来、系统收回显存）：不留黑屏（评估第 15 条）----------
+    // 丢了先不画；恢复了（three.js 自己重建 GPU 资源）就重画影子、重新预编译特效；2.5 秒还没恢复，换一张新画布、新的 WebGL 接着画——
+    // 场景、怪兽、特效都是 CPU 这边的对象，换一个渲染器照样能画，战斗不用重来
+    const GL = { lost: 0, n: 0 };
+    const glLog = m => { try { if (window.EchoErr) EchoErr.log('gl', m, 'battle3d'); } catch (e) { /* 忽略 */ } };
+    function glWatch(c) {
+      c.addEventListener('webglcontextlost', e => { e.preventDefault(); if (c === canvas && alive) { GL.lost = performance.now(); GL.n++; glLog('对战 3D 画面丢了'); } }, false);   // destroy() 自己释放的不算
+      c.addEventListener('webglcontextrestored', () => { if (c !== canvas) return; GL.lost = 0; warmed = false; renderer.shadowMap.needsUpdate = true; try { resize(); } catch (e) { /* 忽略 */ } }, false);
+    }
+    glWatch(canvas);
+    function glRebuild() {
+      const nc = document.createElement('canvas');
+      nc.className = 'b3d';
+      let nr = null;
+      try { nr = new T3.WebGLRenderer({ canvas: nc, antialias: true, alpha: false, powerPreference: 'default' }); } catch (e) { nr = null; }
+      if (!nr || !nr.getContext()) { GL.lost = performance.now(); return false; }   // 还是建不出来：过 2.5 秒再试
+      nr.shadowMap.enabled = renderer.shadowMap.enabled; nr.shadowMap.type = renderer.shadowMap.type;
+      const old = renderer, oc = canvas;
+      renderer = nr; canvas = nc; glWatch(nc);
+      try { old.dispose(); } catch (e) { /* 丢了的画面释放不干净也没关系 */ }
+      if (oc.parentNode) oc.replaceWith(nc);
+      GL.lost = 0; warmed = false;
+      try { resize(); } catch (e) { /* 忽略 */ }
+      glLog('对战 3D 画面已重建');
+      return true;
+    }
     const scene = new T3.Scene();
     const FOV = 38;
     const cam = new T3.PerspectiveCamera(FOV, 1, .1, 200);
@@ -1841,6 +1867,8 @@ void main() {
     function frame(now) {
       if (!alive) return;
       raf = requestAnimationFrame(frame);
+      // 画面丢了：等它恢复；2.5 秒还没恢复就换一个新的渲染器（glRebuild）
+      if (GL.lost) { if (now - GL.lost > 2500 && !document.hidden) glRebuild(); if (GL.lost) return; }
       // 每秒最多画 60 次（120Hz 的屏幕不用画两倍，省电不烫手）；动画都按时间算，不受影响
       if (now < nextDraw - 2) return;
       nextDraw = Math.max(nextDraw + 1000 / 60, now + 1000 / 60 - 6);
@@ -1962,6 +1990,7 @@ void main() {
       fxReset: () => { stats.peak = pCount; stats.flashes = stats.flashSkipped = stats.over = 0; },
       fxIdle: () => !fx.length && !pCount && !FL.on && !anim.length && !CUT.run && !CUT.banRun,
       get canvas() { return canvas; }, get camBusy() { return !!(shot || punch); },
+      glInfo: () => ({ lost: !!GL.lost, n: GL.n }),   // 画面丢过几次、现在是不是丢着（测试 / 诊断用）
     };
   }
 

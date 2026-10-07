@@ -1301,11 +1301,67 @@ body.in-world { overflow: hidden; }
 .rp-list small { color: var(--ink-3); }
 .rp-list s { color: var(--coral-d); }
 .rp-end { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; color: var(--ink-3); font-size: 13px; }
+/* 2026-10-07：能力一行（和上周比 ↑↓）、柱子上的标记、冒险超过学习 3 倍标黄、AI 花费和诊断、需要家长看看的聊天 */
+.rp-sub b { color: var(--ink); }
+.rp-legend { line-height: 1.5; }
+.rp-ab { margin: 0 0 6px; padding: 6px 10px; border-radius: 12px; background: #e8f4ff; font-size: 13px; line-height: 1.5; }
+.rp-ab i { font-style: normal; font-weight: 800; margin-left: 1px; }
+.rp-ab i.up { color: var(--leaf-d); }
+.rp-ab i.dn { color: var(--coral-d); }
+.rp-ab i.eq { color: var(--ink-3); }
+.rp-day b.warn { color: #b45309; background: #fff3c4; border-radius: 6px; padding: 0 3px; }
+.rp-concern { padding: 4px 8px; border-radius: 10px; background: #fff3e0; }
+.rp-diag { margin: 8px 0 0; color: var(--ink-3); font-size: 11.5px; line-height: 1.5; }
 @media (orientation: landscape) and (max-height: 600px) {
   .report { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; }
-  .report > h2, .report > .rp-sub, .report > .rp-end { grid-column: 1 / -1; }
-  .report > .rp-warn, .report > .rp-chart, .report > .rp-legend, .report > .rp-tiles, .report > .rp-line { grid-column: 1; }
-  .report > .rp-more { grid-column: 2; grid-row: 3 / span 5; align-self: start; }   /* 左边 4–5 行（有没有警告那一行） */
+  .report > h2, .report > .rp-sub, .report > .rp-end, .report > .rp-diag { grid-column: 1 / -1; }
+  .report > .rp-warn, .report > .rp-chart, .report > .rp-legend, .report > .rp-ab, .report > .rp-tiles, .report > .rp-line { grid-column: 1; }
+  .report > .rp-more { grid-column: 2; grid-row: 3 / span 10; align-self: start; }   /* 左边一列有几行都行（没有行间距，多出来的行是空的） */
+}
+
+/* ---------- 学习锁卡片：开口进度、还能冒险几分钟；断网临时放行 ---------- */
+.gate-card.pass { background: #eef3ff; box-shadow: 0 4px 0 #cdd9f3; }
+.gate-row b em { font-style: normal; color: var(--lagoon-d); font-weight: 800; }
+.gate-time { margin: 6px 0 0; padding-top: 6px; border-top: 1px dashed rgba(0, 0, 0, .1); font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.gate-time b { color: var(--lagoon-d); font-size: 16px; }
+.gate-time.over { color: #b45309; }
+
+/* ---------- 设置：我的设置 + 收起来的「🔒 家长设置」 ---------- */
+.set-h { margin: 2px 0 -4px; font-size: 15px; color: var(--ink-2); }
+details.parent { background: #fff7e0; border-radius: 16px; padding: 10px 12px; box-shadow: 0 3px 0 #f1dca0; }
+details.parent > summary { font-weight: 800; font-size: 16px; cursor: pointer; padding: 4px 0; }
+details.parent[open] > summary { margin-bottom: 10px; }
+.parent-in { display: flex; flex-direction: column; gap: 10px; }
+.set-v { flex: 1; min-width: 0; font-size: 14px; }
+.set-ver { margin: 0; text-align: center; color: var(--ink-3); font-size: 12px; }
+.txt-in { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); }
+.txt-in:focus { outline: none; border-color: var(--lagoon); }
+.push-how { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 14px; line-height: 1.55; }
+.push-how li { margin: 3px 0; }
+
+/* ---------- 家长密码：自己画的数字键盘，输入显示 ● ---------- */
+.pin { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.pin-ico { font-size: 40px; line-height: 1; }
+.pin .pin-why { font-weight: 700; color: var(--ink); }
+.pin .pin-t { font-size: 14px; }
+.pin-dots { display: flex; gap: 16px; font-size: 26px; line-height: 1; color: var(--locked-d); margin: 4px 0 0; }
+.pin-dots i { font-style: normal; }
+.pin-dots i.on { color: var(--lagoon); }
+.pin-dots.shake { animation: nudge .45s ease-in-out; }
+.pin .pin-msg { min-height: 21px; color: var(--coral-d); font-size: 14px; font-weight: 700; }
+.pin-pad { display: grid; grid-template-columns: repeat(3, minmax(64px, 84px)); gap: 10px; justify-content: center; }
+.pin-k { height: 56px; border: 0; border-radius: 16px; background: var(--card); box-shadow: 0 4px 0 var(--line); font-family: var(--f-display); font-size: 26px; font-weight: 700; color: var(--ink); }
+.pin-k.fn { font-family: var(--f-body); font-size: 16px; color: var(--ink-2); }
+.pin-k:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 var(--line); }
+.pin-k:disabled { opacity: .4; }
+@media (orientation: landscape) and (max-height: 600px) {
+  /* 横屏：左边说明和 ●●●●，右边键盘；家长设置里的条目也排两列 */
+  .pin { display: grid; grid-template-columns: 1fr auto; column-gap: 20px; align-items: center; justify-items: center; }
+  .pin > :not(.pin-pad) { grid-column: 1; }
+  .pin-pad { grid-column: 2; grid-row: 1 / span 6; grid-template-columns: repeat(3, 64px); gap: 8px; }
+  .pin-k { height: 46px; font-size: 22px; }
+  .pin-ico { font-size: 30px; }
+  .parent-in { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ---------- 对战（竖屏 / 大屏）：整屏不滚动——上面标题、中间战场尽量大、下面说明和招式贴底 ---------- */
@@ -1377,3 +1433,45 @@ body.in-world { overflow: hidden; }
   .b3d-cut .bc-band { height: 42%; }
   .b3d-ban { top: 8px; right: 10px; max-width: 40%; }
 }
+
+/* ---------- AI 用不了 / 有新版本：首页最上面的提示条（game.js homeBars，评估第 3、19 条） ---------- */
+#home-bars { display: flex; flex-direction: column; gap: 8px; margin: 2px 0 10px; }
+#home-bars[hidden] { display: none; }
+@media (orientation: landscape) and (max-height: 600px) {
+  #home > #home-bars { grid-column: 2; margin: 0 0 8px; }   /* 横屏：右栏最上面（左栏是每日任务） */
+}
+.ai-bar, .upd-bar { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; border-radius: 14px; padding: 10px 14px; text-align: left; font: inherit; font-size: 14px; font-weight: 800; line-height: 1.4; cursor: pointer; }
+.ai-bar { background: #d93a2b; color: #fff; box-shadow: 0 4px 0 #a5281c; }
+.upd-bar { background: #2f6fd6; color: #fff; box-shadow: 0 4px 0 #1f4f9e; }
+.ai-bar em, .upd-bar em { margin-left: auto; flex: none; font-style: normal; font-size: 12px; padding: 3px 10px; border-radius: 99px; background: rgba(255, 255, 255, .22); }
+.ai-bar:active, .upd-bar:active { transform: translateY(2px); box-shadow: none; }
+/* 设置页最上面：APK 里还没有 AI 密钥 */
+.set-warn { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 14px; background: #ffe9e6; box-shadow: 0 3px 0 #f4b9b0; color: #8f1f13; }
+.set-warn b { font-size: 16px; }
+.set-warn small { color: #8f1f13; font-size: 12.5px; line-height: 1.5; }
+.set-warn .btn { align-self: flex-start; }
+/* 「先跳过（已放进复习，联网后要补说）」：比普通的小链接醒目一点 */
+.link.ai-skip { color: #b4381f; font-weight: 800; font-size: 14px; }
+.link.ai-skip[hidden] { display: none; }
+
+/* ---------- 第一次打开的「麦克风 + 网络 + 密钥」小检查 ---------- */
+.chk { list-style: none; margin: 4px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.chk li { padding: 8px 12px; border-radius: 12px; background: var(--card); box-shadow: 0 2px 0 var(--line); font-weight: 700; font-size: 14px; }
+.chk li.chk-ok { background: #e6f7ee; box-shadow: 0 2px 0 #b9e6cc; }
+.chk li.chk-bad { background: #ffe9e6; box-shadow: 0 2px 0 #f4b9b0; color: #8f1f13; }
+.chk li.chk-quiet { background: #fff4d6; box-shadow: 0 2px 0 #f1dca0; color: #8a5a00; }
+.chk-say { font-family: var(--f-display); font-size: 22px; color: var(--lagoon-d); }
+
+/* ---------- 存档备份、出错记录、新版本地址 ---------- */
+.bak-list { display: flex; flex-direction: column; gap: 4px; max-height: 46vh; overflow-y: auto; }
+.bak-item { flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; background: var(--card); box-shadow: 0 2px 0 var(--line); padding: 8px 12px; }
+.bak-item b { font-family: var(--f-body); font-size: 15px; font-weight: 800; }
+label.bak-file { display: block; text-align: center; cursor: pointer; }
+.err-list { margin: 0; padding-left: 18px; max-height: 50vh; overflow-y: auto; font-size: 12.5px; line-height: 1.45; color: var(--ink-2); word-break: break-word; }
+.err-list li { margin: 4px 0; }
+.err-list small { display: block; color: var(--ink-3); }
+.err-list i { color: var(--ink-3); font-style: normal; }
+.ver-url { word-break: break-all; font-size: 13px; }
+
+/* ---------- 对战：AI 用不了时的听音选招 ---------- */
+.b-listen { margin-top: 6px; }

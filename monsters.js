@@ -221,7 +221,6 @@
   const byUid = u => M().box.find(m => m.uid === u);
   const lead = () => M().team.map(byUid).find(m => m && !m.egg) || M().box.find(m => !m.egg);
   const caughtN = () => ORDER.filter(id => M().dex[id] === 'caught').length;
-  const zoneOpen = z => z === 0 || !!M().badges[z - 1] || E.S.settings.unlockAll;
 
   // ---------- 基地（首页“怪兽冒险”标签） ----------
   function homeHTML() {
@@ -235,16 +234,32 @@
     // 学习锁：锁着时两个小任务和锁着的按钮放在最上面，一眼就看到；开了就放在怪兽卡片下面
     const g = E.gate ? E.gate() : { open: true }, lock = E.gateCard ? E.gateCard() : '';
     const lockedBtn = '<button class="btn wide world-go locked" data-act="wEnter">🔒 ' + (g.back ? '手机日期被改过，先改回来' : '还差 ' + (g.steps || 1) + ' 步就能去冒险') + '</button>';
-    let h = g.open ? '' : lock + lockedBtn;
+    // 现在该去哪、做什么（评估第 14 条）：冒险按钮下面一行小字
+    const ws = E.S.world || {}, EW = window.EchoWorld, safe = f => { try { return f(); } catch (e) { return null; } };
+    const obj = ws.started && EW && EW.objective ? safe(() => EW.objective()) : null;
+    const objLine = obj && obj.zh ? '<p class="tip obj" style="margin-top:-4px">📍 ' + esc(obj.zh) + '</p>' : '';
+    let h = g.open ? '' : lock + lockedBtn + objLine;
     h += '<section class="mon-card lead" style="--tc:' + TYPES[s.type].color + '"><div class="lead-mon">' + svgMon(L) + '</div><div class="lead-info">' +
       '<div class="lead-name"><b>' + (L.shiny ? '✨' : '') + E.esc(nm(L)) + '</b><span>' + (L.nick ? s.en + ' · ' : '') + s.zh + '</span> ' + heartsHTML(L) + '</div>' +
       '<div class="chips">' + chips(L.sp) + '<span class="lvchip">Lv ' + L.lv + '</span></div>' +
       '<div class="xpbar"><i style="width:' + (L.xp / xpNeed(L.lv) * 100) + '%"></i></div>' +
       '<small>HP ' + st.hp + ' · 攻击 ' + st.atk + ((s.evo || []).find(e => e.lv) ? ' · Lv ' + s.evo.find(e => e.lv).lv + ' 会进化' : '') + '</small></div>' +
       '<div class="lead-btns"><button class="btn small ghost" data-act="mTeam">🐾 我的怪兽 ' + m.box.length + '</button><button class="btn small ghost" data-act="mDex">📖 图鉴 ' + caughtN() + '/' + ORDER.length + '</button><button class="btn small sun" data-act="mBalls">🔮 回声球 ' + m.balls + '</button></div></section>';
-    const ws = E.S.world || {}, place = window.EchoWorld && EchoWorld.placeLabel ? EchoWorld.placeLabel() : null;
-    if (g.open) h += lock + '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? '继续冒险' + (place ? ' · ' + place.name : '') : '出发去冒险！') + '</button>';
-    h += '<p class="tip">走进草丛会遇到野生怪兽，路上的训练师看到你就会来挑战。<br>打败每个小镇的道馆馆主拿到徽章，守卫才会让你去下一个小镇。</p>';
+    const place = EW && EW.placeLabel ? EW.placeLabel() : null;
+    if (g.open) h += lock + '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? '继续冒险' + (place ? ' · ' + place.name : '') : '出发去冒险！') + '</button>' + objLine;
+    // 下一枚徽章要先打败哪个课本单元的 BOSS（评估第 10 条：道馆跟着课本进度开）
+    const gn = ws.started && EW && EW.nextGymNeed ? safe(() => EW.nextGymNeed()) : null;
+    if (gn && !gn.ok && gn.unitLabel) {
+      h += '<section class="mon-card gym-need"><h3>🏅 下一枚徽章（' + esc(gn.island) + '）</h3><p>馆主' + esc(gn.leader) + '要你先学好课本：还差 <b>' + esc(gn.unitLabel) + '</b> 的 BOSS（课本 BOSS ' + gn.done + '/' + gn.need + '）</p>' +
+        '<button class="btn small" data-act="tab" data-t="quiz" style="margin-top:8px">📚 去闯关练习</button></section>';
+    }
+    // 传说的线索：四只神兽是学习的里程碑
+    const clues = ws.started && EW && EW.legendClues ? safe(() => EW.legendClues()) || [] : [];
+    if (clues.length) {
+      h += '<section class="mon-card legends"><h3>✨ 传说的线索</h3><ul style="list-style:none;padding:0;margin:6px 0 0;display:grid;gap:4px;font-size:14px">' + clues.map(c =>
+        '<li>' + (c.caught ? '✅' : c.icon) + ' <b>' + esc(c.zh) + '</b>：' + (c.caught ? '已经收服了！' : esc(c.task) + '（' + c.have + '/' + c.need + '）' + (c.done ? ' · 到户外走走，它会来找你！' : '')) + '</li>').join('') + '</ul></section>';
+    }
+    h += '<p class="tip">走进草丛会遇到野生怪兽，路上的训练师看到你就会来挑战。<br>打败每个小镇的道馆馆主拿到徽章，守卫才会让你去下一个小镇。馆主会先看你课本学到哪了：要先在「📚 闯关练习」打败对应单元的 BOSS。</p>';
     const visited = Object.keys(ws.visited || {}).map(Number).sort((a, b) => a - b);
     if (visited.length > 1) {
       h += '<section class="mon-card fly"><h3>✈️ 飞回去过的小镇</h3><div class="fly-list">' + visited.map(z =>
@@ -259,11 +274,15 @@
     const s = SPECIES[id], sr = E.speakMode() === 'sr';
     E.openModal('<div class="evo-stage">' + svg(id) + '</div><h2>' + s.en + '（' + s.zh + '）</h2>' +
       '<p>想让它当你的伙伴，就对它大声说：</p><div class="say-text" id="st-say">' + E.wordsHTML(s.en + ', I choose you!') + '</div>' +
-      (sr ? '<button class="mic" id="st-mic" data-act="mStarterMic" data-sp="' + id + '">' + E.MIC + '</button><div class="mic-hint" id="st-hint">点麦克风，大声说</div>'
+      (sr ? '<button class="mic" id="st-mic" data-act="mStarterMic" data-sp="' + id + '">' + E.MIC + '</button><div class="mic-hint" id="st-hint">点麦克风，大声说</div>' +
+          // AI 打分用不了（没网 / 额度 / 没密钥，评估第 3 条）：可以先跳过，这句放进复习、联网后要补说；说了 3 次还不行也能先跳过
+          '<button class="link ai-skip" data-act="mStarterSkip" data-sp="' + id + '" id="st-skip"' + (E.aiDown && E.aiDown() ? '' : ' hidden') + '>' + E.esc(E.SKIP_TXT || '先跳过') + '</button>'
         : '<button class="btn leaf wide" data-act="mStarterGo" data-sp="' + id + '">🎤 我说了！</button>') +
       '<div class="row"><button class="btn ghost" data-act="close">再看看别的</button><button class="btn ghost" data-act="mSayName" data-sp="' + id + '">🔊 听一遍</button></div>');
+    starterTries = 0;
     E.say(s.en + ', I choose you!');
   }
+  let starterTries = 0;
   async function starterMic(id) {
     const m = $('st-mic'); if (!m) return;
     if (E.RT.listening) { E.stopListening(); return; }
@@ -272,10 +291,23 @@
     if (!$('st-mic')) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
     if (res.err && E.FATAL.includes(res.err)) { E.RT.srBroken = true; takeStarter(id); return; }
-    if (!res.alts.length) { $('st-hint').textContent = '没听清，再大声一点'; return; }
+    const skip = () => { const sk = $('st-skip'); if (sk) sk.hidden = false; };
+    if (!res.alts.length) {
+      if (res.fail === 'unheard' || !E.failHint) starterTries++;
+      $('st-hint').textContent = E.failHint ? E.failHint(res) : '没听清，再大声一点';
+      if (starterTries >= 3 || (E.aiDown && E.aiDown())) skip();
+      return;
+    }
     const r = E.bestScore('I choose you', res.alts);
     if (r.score >= 40) takeStarter(id);
-    else $('st-hint').textContent = '再试一次：I choose you!';
+    else { starterTries++; $('st-hint').textContent = '再试一次：I choose you!'; if (starterTries >= 3) skip(); }
+  }
+  // 先跳过：伙伴照样选好，这句放进复习（联网以后要补说）
+  function starterSkip(id) {
+    E.stopListening();
+    if (E.revLater) E.revLater({ en: SPECIES[id].en + ', I choose you!', zh: SPECIES[id].zh + '，就决定是你了！' });
+    const L = E.dayLog && E.dayLog(); if (L) L.aiSkip = (L.aiSkip || 0) + 1;
+    takeStarter(id);
   }
   function takeStarter(id) {
     const m = M();
@@ -364,7 +396,7 @@
     foes.forEach(ensureMoves);
     const ti = team.findIndex(u => curHp(byUid(u)) > 0);
     B = {
-      kind, z, foes, fi: 0, team, ti, hp: {}, energy: 0, fen: 0, turn: 'intro', over: false, used: new Set([team[ti]]), task: null, tries: 0,
+      kind, z, foes, fi: 0, team, ti, hp: {}, energy: 0, fen: 0, turn: 'intro', over: false, used: new Set([team[ti]]), task: null, tries: 0, usedQ: new Set(),   // usedQ：这一场出过的英语题（不重复）
       onEnd: opts.onEnd, trainer: opts.trainer, result: '', noCatch: !!opts.noCatch,
       stg: { me: newStages(), foe: newStages() }, conf: { me: 0, foe: 0 },
       fpot: kind === 'leader' ? 2 : kind === 'trainer' ? 1 : 0,
@@ -382,11 +414,11 @@
     E.music(battleMusic(kind, foes, opts));
     // 3D 战斗画面：设置里选了 2D 流畅或者手机不支持就用原来的 2D 画面
     if (window.Battle3D && (E.S.settings.gfx || 'auto') !== '2d' && E.S.settings.gfxAuto !== '2d') {
-      // 画质和大地图同一档：精美用满屏幕的像素比（最多 3）
+      // 画质和大地图同一档：精美最多按 2 倍像素比画（评估第 15 条：3 倍太烫）
       let tier = (E.S.settings.gfx === 'auto' ? E.S.settings.gfxAuto : E.S.settings.gfx) || 'mid';
       try { if (window.EchoWorld && EchoWorld.gfxTier) tier = EchoWorld.gfxTier(); } catch (e) { /* 大地图还没初始化就按设置 */ }
       // quality：特效的粒子上限、点光源、发光后期按画质缩减；sfx：设置里关了音效就不放招式音效
-      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena, opts.rules), shadows: tier !== 'low', dpr: tier === 'high' ? 3 : 1.5, quality: tier, sfx: () => E.S.settings.sfx !== false }); } catch (e) { B3 = null; }
+      try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena, opts.rules), shadows: tier !== 'low', dpr: tier === 'high' ? 2 : 1.5, quality: tier, sfx: () => E.S.settings.sfx !== false }); } catch (e) { B3 = null; }
     }
     renderBattle();
     intro(B);
@@ -549,6 +581,7 @@
     const m = me(), sm = SPECIES[m.sp], slp = m.st === 'slp';
     B.turn = 'task'; B.tries = 0; B.hinted = false;
     B.task = { kind: 'wake', target: (slp ? 'Wake up, ' : 'Warm up, ') + nm(m) + '!', zh: slp ? '快醒醒！' : '快暖和起来！' };
+    listenIfDown(B.task);
     taskPanel();
     msg('<b>' + nm(m) + '</b> ' + (slp ? '睡着了💤' : '被冻住了🧊') + '！大声喊它，念得越准越容易' + (slp ? '叫醒' : '化开') + '。');
   }
@@ -596,18 +629,61 @@
     }, { priority: true }));
   }
 
+  // 这一题出什么：先挑今天到期的复习题（同一场不重复），再挑课本正在学的单元里没学过的，最后随机（game.js 的 revPick）
+  // kind：'word' / 'sent' / 'dlg'；返回 { q: 存进复习本的题, it: 题目内容, d: 挑干扰项用的小岛 / 单元 }
+  function pickQ(kind) {
+    if (E.revPick) return E.revPick(kind, B.z, B.usedQ);
+    const sr = E.src ? E.src(B.z) : { w: B.z, d: E.W[B.z] }, L = kind === 'word' ? sr.d.words : kind === 'sent' ? sr.d.sents : sr.d.dlgs, k = rnd(L.length);
+    return { q: { kind, w: sr.w, i: k }, it: L[k], d: sr.d };
+  }
   // 技能任务：说单词 / 念句子 / 对话大招 / 辅助招式 / 收服咒语 / 叫醒
+  // 句子和大招按这道题的掌握程度撤提示（E.fadeOf：0 看着念、1 只给首字母、2 凭记忆说）；
+  // blind：不看字念（掌握了自动是，或者自己点「🔥 不看字念」），中招念对伤害 ×1.5
   function onMove(i) {
     if (!B || B.turn !== 'me') return;
     const mv = movesOf(me())[i];
     if (!mv || (mv.tier === 2 && B.energy < 3)) return;
-    const sr = E.src ? E.src(B.z) : { w: B.z, d: E.W[B.z] }, Wz = sr.d;   // 有几成换成课本正在学的单元
-    B.mv = mv; B.move = mv.tier; B.tries = 0; B.hinted = false; B.turn = 'task';
-    if (mv.tier === 0 && !mv.sup) { const k = rnd(Wz.words.length), it = Wz.words[k]; B.task = { kind: 'word', q: { kind: 'word', w: sr.w, i: k }, target: it[0], zh: it[1], em: it[2] }; }
-    else if (mv.tier === 1 || mv.sup) { const k = rnd(Wz.sents.length), it = Wz.sents[k]; B.task = { kind: 'sent', q: { kind: 'sent', w: sr.w, i: k }, target: it[0], zh: it[1] }; }
-    else { const k = rnd(Wz.dlgs.length), it = Wz.dlgs[k]; B.task = { kind: 'ult', q: { kind: 'dlg', w: sr.w, i: k }, prompt: it[0], target: it[1], opts: shuffle([{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))]) }; }
+    B.mv = mv; B.move = mv.tier; B.tries = 0; B.hinted = false; B.blind = false; B.turn = 'task';
+    if (mv.tier === 0 && !mv.sup) { const p = pickQ('word'), it = p.it; B.task = { kind: 'word', q: p.q, d: p.d, target: it[0], zh: it[1], em: it[2] }; }
+    else if (mv.tier === 1 || mv.sup) { const p = pickQ('sent'), it = p.it; B.task = { kind: 'sent', q: p.q, d: p.d, target: it[0], zh: it[1] }; }
+    else { const p = pickQ('dlg'), it = p.it; B.task = { kind: 'ult', q: p.q, prompt: it[0], target: it[1], opts: shuffle([{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))]) }; }
+    const t = B.task;
+    t.fade = t.kind === 'word' ? 2 : E.fadeOf ? Math.min(2, E.fadeOf(t.q)) : 0;
+    if (t.kind === 'sent' && t.fade >= 2 && canBlind()) B.blind = true;
+    // 大招：掌握了以后先只播问题，凭记忆回答；说错一次（或者自己点「看选项」）才亮出选项，亮出来就不能暴击（只在 AI 打分时，自评要点选项）
+    t.hid = t.kind === 'ult' && t.fade >= 1 && E.speakMode() === 'sr';
+    listenIfDown(t);
     taskPanel();
   }
+  // ---------- AI 打分用不了时：这一回合改成听音选招（家长 2026-10-07，评估第 3 条）----------
+  // 没网 / 额度用完 / 没密钥（E.aiDown）：放一遍读音（大招放对手的问题），从 4 个里点出听到的那句（大招点出正确的回答）。
+  // 点对了照常出招，但不能暴击（算带提示）；点错了这一招落空。复习本里不升格
+  function listenIfDown(t) {
+    if (E.speakMode() !== 'sr' || !(E.aiDown && E.aiDown())) return false;
+    t.listen = true; B.blind = false; B.hinted = true;
+    t.lopts = t.kind === 'ult' ? t.opts : listenOpts(t);
+    return true;
+  }
+  function listenOpts(t) {
+    let pool = [];
+    if ((t.kind === 'word' || t.kind === 'sent') && t.d) pool = (t.kind === 'word' ? t.d.words : t.d.sents).map(x => x[0]);
+    else if (t.kind === 'catch') pool = CATCH_LINES.slice();
+    else if (t.kind === 'wake') { const n = nm(me()); pool = ['Wake up, ' + n + '!', 'Warm up, ' + n + '!', 'Go, ' + n + '!', 'Come back, ' + n + '!']; }
+    const others = shuffle([...new Set(pool.filter(x => x && x.toLowerCase() !== t.target.toLowerCase()))]).slice(0, 3);
+    return shuffle([{ c: true, t: t.target }].concat(others.map(x => ({ t: x }))));
+  }
+  function listenPick(i) {
+    if (!B || B.turn !== 'task' || !B.task || !B.task.listen) return;
+    const t = B.task, o = t.lopts[i]; if (!o) return;
+    const ci = t.lopts.findIndex(x => x.c);
+    document.querySelectorAll('#b-panel .opt').forEach((b, k) => b.classList.add(k === ci ? 'right' : k === i ? 'wrong' : 'dim'));
+    const L = E.dayLog && E.dayLog(); if (L) L.aiListen = (L.aiListen || 0) + 1;
+    if (o.c) reveal(70, '', () => finishTask(70, false));
+    else reveal(0, t.target, () => finishTask(0, false, '没听出来'));
+    const h = $('b-hint'); if (h) h.textContent = o.c ? '👂 听对了！（这回合不能暴击）' : '没听出来，听一下正确的 👂';
+  }
+  // 「🔥 不看字念」只给攻击的中招（辅助招式没有伤害）
+  const canBlind = () => !!(B && B.mv && !B.mv.sup && B.mv.tier === 1);
   function onCatch(ball) {
     if (!B || B.turn !== 'me' || B.kind !== 'wild') return;
     const nb = itemCount('ball'), ns = itemCount('superball');
@@ -620,23 +696,42 @@
     B.ball = ball || (nb > 0 ? 'ball' : 'superball');
     B.turn = 'task'; B.tries = 0; B.hinted = false;
     B.task = { kind: 'catch', target: pick(CATCH_LINES) };
+    listenIfDown(B.task);
     taskPanel();
   }
   function taskPanel() {
     const t = B.task, sr = E.speakMode() === 'sr', mv = B.mv ? mvName(B.mv) : ['', ''], esc = E.esc;
     let head, body = '';
+    if (t.listen) {   // AI 打分用不了：听音选招（不能暴击）
+      const ult = t.kind === 'ult';
+      head = '📶 AI 打分暂时用不了：' + (ult ? '听对手的问题，点出正确的回答' : '听一听，点出你听到的' + (t.kind === 'word' ? '词' : '咒语')) + (B.mv && !B.mv.sup && t.kind !== 'catch' && t.kind !== 'wake' ? '，发动 <b>' + mv[0] + '</b>（这回合不能暴击）' : '');
+      body = (t.em ? '<div class="say-emoji">' + t.em + '</div>' : '') +
+        '<div class="say-row"><button class="spk mini" data-act="' + (ult ? 'bHearQ' : 'bHear') + '" aria-label="再听一遍">' + E.SPK + '</button><span class="say-zh">' + (ult ? '再听一遍问题' : '再听一遍') + '</span></div>' +
+        '<div class="opts list b-listen">' + t.lopts.map((o, k) => '<button class="opt en" data-act="bLOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>';
+      panel('<div class="task"><div class="task-h">' + head + '</div>' + body + '<div class="task-foot"><div class="mic-hint" id="b-hint">联网以后这一句要在复习里补说</div></div>' +
+        (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">换个技能</button>') + '</div>');
+      if (t.kind !== 'wake') msg(t.kind === 'catch' ? '<b>' + SPECIES[foe().sp].en + '</b> 已经很虚弱了，听准收服咒语！' : '听准了才能打中！');
+      if (ult) E.say(t.prompt, undefined, 'm'); else E.say(t.target, 0.9);
+      return;
+    }
     if (t.kind === 'word') {
       head = '🗣 说出图上的英文，发动 <b>' + mv[0] + '</b>';
       body = '<div class="say-emoji">' + t.em + '</div><div class="say-zh">' + esc(t.zh) + '</div><div class="say-text mask" id="b-say">' + esc(t.target.replace(/[a-z]/gi, '_')) + '</div>' +
         '<button class="link" data-act="bHint">💡 听一下答案（这次就不能暴击了）</button>';
     } else if (t.kind === 'sent') {
-      head = '📜 大声念出咒语，发动 <b>' + mv[0] + '</b>';
-      body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-zh">' + esc(t.zh) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="听示范">' + E.SPK + '</button></div>';
+      const lv = B.hinted ? 0 : B.blind ? 2 : t.fade || 0;
+      const blindBtn = canBlind() && !B.blind && !B.hinted ? '<button class="link" data-act="bBlind">🔥 不看字念（念对伤害 ×1.5）</button>' : '';
+      head = (lv >= 2 ? '🧠 凭记忆念出咒语' : lv === 1 ? '📜 看首字母，念出咒语' : '📜 大声念出咒语') + '，发动 <b>' + mv[0] + '</b>' + (B.blind ? ' · 🔥 念对伤害 ×1.5' : '');
+      body = lv
+        ? '<div class="say-zh">' + esc(t.zh) + '</div><div class="say-text mask" id="b-say">' + esc(E.cueText(t.target, lv)) + '</div>' + blindBtn +
+          '<button class="link" data-act="bHint">💡 看一下答案（这次就不能暴击了）</button>'
+        : '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-zh">' + esc(t.zh) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="听示范">' + E.SPK + '</button></div>' + blindBtn;
     } else if (t.kind === 'ult') {
-      head = '💬 大招 <b>' + mv[0] + '</b>：听懂对手的问题，' + (sr ? '大声说出正确回答！' : '先选出正确回答，再大声说出来！');
+      const hid = t.hid && sr && !t.shown;   // 自评模式要点选项：不藏
+      head = '💬 大招 <b>' + mv[0] + '</b>：听懂对手的问题，' + (hid ? '凭记忆大声回答！' : sr ? '大声说出正确回答！' : '先选出正确回答，再大声说出来！');
       body = '<div class="say-row"><button class="spk mini" data-act="bHearQ" aria-label="再听一遍">' + E.SPK + '</button><span class="hidden-line blur" id="b-q">' + esc(t.prompt) + '</span></div>' +
-        '<div class="opts list">' + t.opts.map((o, k) => '<button class="opt en" data-act="bOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>' +
-        (sr ? '<small class="tip">点选项可以先听一听</small>' : '');
+        '<div class="opts list" id="b-opts"' + (hid ? ' hidden' : '') + '>' + t.opts.map((o, k) => '<button class="opt en" data-act="bOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>' +
+        (hid ? '<button class="link" data-act="bShowOpts" id="b-show">👀 看看可以怎么回答（这次就不能暴击了）</button>' : sr ? '<small class="tip">点选项可以先听一听</small>' : '');
     } else if (t.kind === 'wake') {
       head = '📣 大声喊它！';
       body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-zh">' + esc(t.zh) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="听示范">' + E.SPK + '</button></div>';
@@ -669,7 +764,19 @@
       taskPanel();
       return;
     }
-    if (!res.alts.length) { $('b-hint').textContent = '没听清，靠近一点、大声一点再试一次'; return; }
+    if (!res.alts.length) {
+      // 没听清算一次尝试：第 3 次还没听清，这一招就落空（不卡在这一回合）
+      if (res.fail === 'unheard' || !E.failHint) {
+        t.miss = (t.miss || 0) + 1;
+        if (t.miss >= 3) { reveal(0, t.target, () => finishTask(0, true, '没听清')); return; }
+        $('b-hint').textContent = (E.failHint ? E.failHint(res) : '没听清，靠近一点、大声一点再试一次') + '（第 ' + (t.miss + 1) + '/3 次）';
+        return;
+      }
+      // 没网 / 额度 / 没密钥：连着用不了就把这一回合改成听音选招
+      if (listenIfDown(t)) { taskPanel(); E.toast('📶 AI 打分暂时用不了：这回合听一听、点出来'); return; }
+      const h = E.failHint(res); if (h) $('b-hint').textContent = h;
+      return;
+    }
     if (t.kind === 'ult') {
       const sc = t.opts.map(o => E.bestScore(o.t, res.alts));
       let bi = 0; sc.forEach((s, k) => { if (s.score > sc[bi].score) bi = k; });
@@ -677,7 +784,11 @@
       const ci = t.opts.findIndex(o => o.c);
       if (t.opts[bi].c && sc[bi].score >= 45) { markOpts(bi); reveal(sc[bi].score, '', () => finishTask(sc[bi].score, true)); }
       else if (!t.opts[bi].c && sc[bi].score >= 60) { markOpts(ci, bi); reveal(0, t.target, () => finishTask(0, true, '说成了错误的回答')); }
-      else if (B.tries < 1) { B.tries++; B.hinted = true; $('b-hint').textContent = '没对上任何一个回答，再说一次（最后一次机会，这次不能暴击了）'; }
+      else if (B.tries < 1) {
+        B.tries++; B.hinted = true;
+        const was = showOpts(true);   // 凭记忆没说对：亮出选项再给一次机会
+        $('b-hint').textContent = was ? '没对上。看看这几个回答，把对的那句大声说出来（最后一次机会，这次不能暴击了）' : '没对上任何一个回答，再说一次（最后一次机会，这次不能暴击了）';
+      }
       else { markOpts(ci); reveal(0, t.target, () => finishTask(0, true)); }
       return;
     }
@@ -703,15 +814,25 @@
   async function reveal(score, target, done) {
     const b = B, t = B.task, h = $('b-hint'), t0 = Date.now();
     B.turn = 'show';
-    document.querySelectorAll('#b-panel [data-act=bHint], #b-panel [data-act=bBack]').forEach(x => { x.style.visibility = 'hidden'; });
+    document.querySelectorAll('#b-panel [data-act=bHint], #b-panel [data-act=bBack], #b-panel [data-act=bBlind], #b-panel [data-act=bShowOpts]').forEach(x => { x.style.visibility = 'hidden'; });
     if (h) h.textContent = score >= 85 ? '念得很准！' : '听一下正确的读法 👂';
     if (score < 85 && target) { await Promise.race([E.say(target), sleep(5000)]); await sleep(400); }
     await sleep(Math.max(0, (score >= 85 ? 700 : 1500) - (Date.now() - t0)));
     if (live(b) && B.task === t && B.turn === 'show') done();
   }
   function markOpts(ri, wi) {
+    showOpts(false);
     document.querySelectorAll('#b-panel .opt').forEach((b, k) => b.classList.add(k === ri ? 'right' : k === wi ? 'wrong' : 'dim'));
     const q = $('b-q'); if (q) q.classList.remove('blur');
+  }
+  // 大招的选项亮出来；early：还没答完就亮出来了（算看了答案）。返回 true 表示原来是藏着的
+  function showOpts(early) {
+    const o = $('b-opts'), s = $('b-show');
+    if (s) s.remove();
+    if (!o || !o.hidden) return false;
+    o.hidden = false;
+    if (early && B && B.task) B.task.shown = true;
+    return true;
   }
   function onOpt(i) {
     if (!B || B.turn !== 'task' || B.task.kind !== 'ult') return;
@@ -731,8 +852,9 @@
   function onRate(v) {
     if (!B || B.turn !== 'task') return;
     if (B.task.kind === 'ult' && !B.task.picked) return;
-    if (B.task.kind === 'word') {
-      const s = $('b-say'); if (s) { s.classList.remove('mask'); s.innerHTML = E.wordsHTML(B.task.target); }
+    const s = $('b-say');
+    if (B.task.kind === 'word' || (s && s.classList.contains('mask'))) {   // 看图说、凭记忆念的：先亮出答案
+      if (s) { s.classList.remove('mask'); s.innerHTML = E.wordsHTML(B.task.target); }
       if (v < 2) { reveal(0, B.task.target, () => finishTask([20, 65, 88][v], false)); return; }   // 没念好：先看答案、听一遍
     }
     finishTask([20, 65, 88][v], false);
@@ -740,11 +862,16 @@
   function finishTask(score, measured, why) {
     const t = B.task, b = B;
     B.turn = 'busy';
-    if (score >= 55) {
+    if (t.listen) { if (t.q && E.revLater) E.revLater(t.q); }   // 听音选的回合（AI 用不了）：没开口，不算「开口说对」；这题欠着，联网后复习里要说
+    else if (score >= 55) {
       E.S.stats.spoken++; E.qProg('spoken', 1);
-      if (measured && score >= 85) { E.S.stats.perfect++; E.qProg('perfect', 1); }
-      if (t.q && E.revRight) E.revRight(t.q);   // 课本新学的内容答对了：排进明天的复习
-    } else if (t.q) E.addWrong(t.q);
+      if (measured && score >= 85 && !B.hinted) { E.S.stats.perfect++; E.qProg('perfect', 1); }
+      // 复习本：今天到期的算一次复习、课本新学的排进明天；带着提示（第二次机会、看了答案）答对的不升格
+      if (t.q && E.revRight) E.revRight(t.q, false, !!B.hinted);
+      // 不看字说对（凭记忆说出来的）：周报「不看字说对了几句」和神兽里程碑只数句子（recall）；单词小招另记 recallW
+      const memory = !B.hinted && (t.kind === 'word' || B.blind || (t.kind === 'sent' && t.fade >= 2) || (t.kind === 'ult' && t.hid && !t.shown));
+      if (measured && memory && t.q && E.dayLog) { const L = E.dayLog(), rk = t.kind === 'word' ? 'recallW' : 'recall'; L[rk] = (L[rk] || 0) + 1; }
+    } else if (t.q) (E.revMiss || E.addWrong)(t.q);   // 对战里没念准：复习本里只降一格
     if (t.kind === 'catch') round(b, Object.assign(() => resolveCatch(score, b), { priority: true }));
     else if (t.kind === 'wake') round(b, () => resolveWake(score, b));
     else round(b, () => myAttack(score, why, b));
@@ -960,6 +1087,11 @@
     let mult = score >= 85 ? 1.3 : score >= 55 ? 1 : score >= 30 ? 0.6 : 0;
     if (rule('clear')) mult = score >= 85 ? 1.6 : score >= 55 ? 0.8 : score >= 30 ? 0.4 : 0;
     if (B.hinted) mult = Math.min(mult, 1);
+    // 暴击：念得很准（每个词都对，打分最多 84 分就不会到 85）而且没看提示
+    const crit = score >= 85 && !B.hinted && !mvo.sup;
+    // 🔥 不看字念：中招念对伤害 ×1.5（念不好就按普通的算，不额外扣）
+    const blind = B.blind && !B.hinted && score >= 55 && !mvo.sup;
+    if (blind) mult *= 1.5;
     if (rule('words') && mvo.tier === 0 && !mvo.sup) mult *= 1.5;
     mult *= hearts(m) >= 5 ? 1.1 : hearts(m) >= 3 ? 1.05 : 1;
     panel('');
@@ -975,14 +1107,15 @@
     const { dmg, e } = damage('me', 'foe', mvo, mult);
     if (mvo.tier === 2) B.energy = 0; else if (mult) B.energy = Math.min(3, B.energy + 1);
     const labels = [];
-    if (mult >= 1.3) labels.push('暴击！');
+    if (crit && dmg) labels.push('暴击！');
+    if (blind && dmg) labels.push('🔥 凭记忆');
     if (dmg && effLabel(e)) labels.push(effLabel(e));
     await strike('b-me', 'b-foe', mvo.type, dmg, labels, mvo.tier, { name: mv[0], zh: mv[1], sp: spOf(m) });
     if (!live(b)) return;
     addHp('foe', -dmg);
     if (dmg && foe().st === 'frz' && mvo.type === 'fire') { foe().st = null; }
     updHp();
-    msg(dmg ? (mult >= 1.3 ? '发音超准，<b>暴击</b>！' : mult < 1 ? '咒语有点含糊，只擦伤了它。' : '打中了！') + (e > 1 ? '属性克制，效果拔群！' : e < 1 ? '属性不太对，效果一般。' : '') : '咒语' + (why || '没念准') + '，攻击落空了！');
+    msg(dmg ? (crit ? (blind ? '不看字也念得超准，<b>暴击</b>！' : '发音超准，<b>暴击</b>！') : blind ? '🔥 不看字也念对了，威力 ×1.5！' : mult < 1 ? '咒语有点含糊，只擦伤了它。' : '打中了！') + (e > 1 ? '属性克制，效果拔群！' : e < 1 ? '属性不太对，效果一般。' : '') : '咒语' + (why || '没念准') + '，攻击落空了！');
     await sleep(900);
     if (dmg) await sideEffect('me', 'foe', mvo);
   }
@@ -1029,16 +1162,17 @@
   }
   async function foeTurn(b, mvo) {
     B.turn = 'foe';
-    const sr = E.src ? E.src(B.z) : { w: B.z, d: E.W[B.z] }, f = foe(), sf = SPECIES[f.sp], Wz = sr.d, mv = mvo.tier === 0 && !mvo.sup ? 0 : 1, esc = E.esc;
+    const f = foe(), sf = SPECIES[f.sp], mv = mvo.tier === 0 && !mvo.sup ? 0 : 1, esc = E.esc;
     let d;
+    // 听力防御也先出今天到期的复习题（pickQ），干扰项从同一个小岛 / 单元里挑
     if (mv === 0) {
-      const k = rnd(Wz.words.length), it = Wz.words[k];
-      const others = shuffle(Wz.words.filter((x, j) => j !== k && x[1] !== it[1])).slice(0, 2);
-      d = { q: { kind: 'word', w: sr.w, i: k }, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, e: it[2], t: it[1] }, ...others.map(o => ({ e: o[2], t: o[1] }))]) };
+      const p = pickQ('word'), it = p.it;
+      const others = shuffle(p.d.words.filter(x => x !== it && x[1] !== it[1])).slice(0, 2);
+      d = { q: p.q, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, e: it[2], t: it[1] }, ...others.map(o => ({ e: o[2], t: o[1] }))]) };
     } else {
-      const k = rnd(Wz.sents.length), it = Wz.sents[k];
-      const others = shuffle(Wz.sents.filter((x, j) => j !== k)).slice(0, 2);
-      d = { q: { kind: 'sent', w: sr.w, i: k }, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, t: it[1] }, ...others.map(o => ({ t: o[1] }))]) };
+      const p = pickQ('sent'), it = p.it;
+      const others = shuffle(p.d.sents.filter(x => x[0] !== it[0] && x[1] !== it[1])).slice(0, 2);
+      d = { q: p.q, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, t: it[1] }, ...others.map(o => ({ t: o[1] }))]) };
     }
     d.mv = mv; d.mvo = mvo; d.type = mvo.type; B.def = d;
     const nm = mvName(mvo);
@@ -1064,7 +1198,7 @@
     document.querySelectorAll('#b-panel .opt').forEach((btn, k) => btn.classList.add(d.opts[k].c ? 'right' : k === i ? 'wrong' : 'dim'));
     const bar = $('b-timer'); if (bar) { bar.style.transition = 'none'; }
     if (ok) { B.energy = Math.min(3, B.energy + 1); E.S.stats.listen++; E.qProg('listen', 1); E.SFX.ok(2); if (E.revRight) E.revRight(d.q); }
-    else { E.addWrong(d.q); E.SFX.bad(); }
+    else { (E.revMiss || E.addWrong)(d.q); E.SFX.bad(); }   // 没听懂：复习本里只降一格
     msg(ok ? '🛡️ <b>防住了！</b>' + (d.mvo.sup ? '它的招式没有效果。' : '只受到一点点伤害。') : (i < 0 ? '⏰ 来不及了！' : '没听懂……') + '它念的是：<b>' + E.esc(d.ans) + '</b>');
     await sleep(700);
     if (!live(b)) return finish();
@@ -1156,7 +1290,11 @@
     if (!$('lr-mic')) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
     if (res.err && E.FATAL.includes(res.err)) { E.RT.srBroken = true; learnDone(k); return; }
-    if (!res.alts.length) { $('lr-hint').textContent = '没听清，再大声一点'; return; }
+    if (!res.alts.length) {
+      // AI 打分用不了（没网 / 额度 / 没密钥）：招式先学会，不卡在这里
+      if (res.fail !== 'unheard' && E.aiDown && E.aiDown()) { E.toast('📶 AI 打分暂时用不了，先学会这一招'); learnDone(k); return; }
+      $('lr-hint').textContent = E.failHint ? E.failHint(res) : '没听清，再大声一点'; return;
+    }
     if (E.bestScore(line, res.alts).score >= 45) learnDone(k); else $('lr-hint').textContent = '再清楚一点，再说一次！';
   }
   // 战斗结束后依次处理：学新招 → 进化
@@ -1448,7 +1586,10 @@
     const line = 'Your name is ' + nickCtx.name + '!', m = $('nick-mic'); m.classList.add('on');
     const res = await E.recognize(() => {}, [line]);
     m.classList.remove('on');
-    if (!res.alts.length) { $('nick-hint').textContent = '没听清，再大声一点'; return; }
+    if (!res.alts.length) {
+      if (res.fail !== 'unheard' && E.aiDown && E.aiDown()) { E.toast('📶 AI 打分暂时用不了，名字先起好了'); nickDone(true); return; }
+      $('nick-hint').textContent = E.failHint ? E.failHint(res) : '没听清，再大声一点'; return;
+    }
     const r = E.bestScore(line, res.alts);
     if (r.score >= 45) nickDone(true); else $('nick-hint').textContent = r.score + ' 分，再清楚一点！';
   }
@@ -1489,7 +1630,7 @@
     const m = $('talk-mic'); m.classList.add('on');
     const res = await E.recognize(() => {}, [c.line]);
     m.classList.remove('on');
-    if (!res.alts.length) { $('talk-hint').textContent = '没听清，再大声一点'; return; }
+    if (!res.alts.length) { $('talk-hint').textContent = E.failHint ? E.failHint(res) : '没听清，再大声一点'; return; }
     const r = E.bestScore(c.line, res.alts);
     if (r.score >= 45) talkDone(); else $('talk-hint').textContent = r.score + ' 分，再清楚一点！';
   }
@@ -1722,6 +1863,7 @@
     mStarter: t => starterSheet(t.dataset.sp),
     mStarterMic: t => starterMic(t.dataset.sp),
     mStarterGo: t => takeStarter(t.dataset.sp),
+    mStarterSkip: t => starterSkip(t.dataset.sp),
     mSayName: t => E.say(SPECIES[t.dataset.sp].en),
     mWild: t => startBattle('wild', num(t, 'z')),
     mLeader: t => startBattle('leader', num(t, 'z')),
@@ -1776,8 +1918,13 @@
     bCatch: t => onCatch(t && t.dataset && t.dataset.ball),
     bMic: onMic,
     bOpt: t => onOpt(num(t, 'i')),
+    bLOpt: t => listenPick(num(t, 'i')),
     bRate: t => onRate(num(t, 'v')),
-    bHint: () => { if (!B || B.turn !== 'task') return; B.hinted = true; const s = $('b-say'); if (s) { s.classList.remove('mask'); s.innerHTML = E.wordsHTML(B.task.target); } E.say(B.task.target); },
+    bHint: () => { if (!B || B.turn !== 'task') return; B.hinted = true; const s = $('b-say'); if (s) { s.classList.remove('mask'); s.innerHTML = E.wordsHTML(B.task.target); } const bl = document.querySelector('#b-panel [data-act=bBlind]'); if (bl) bl.remove(); E.say(B.task.target); },
+    // 🔥 不看字念：把咒语藏起来，念对伤害 ×1.5、可以暴击
+    bBlind: () => { if (!B || B.turn !== 'task' || !B.task || B.task.kind !== 'sent' || !canBlind() || B.hinted) return; B.blind = true; taskPanel(); },
+    // 大招：自己先看选项（这次就不能暴击了）
+    bShowOpts: () => { if (!B || B.turn !== 'task' || !B.task || B.task.kind !== 'ult') return; B.hinted = true; showOpts(true); },
     bHear: () => B && B.task && E.say(B.task.target, 0.8),
     bHearQ: () => B && B.task && E.say(B.task.prompt, undefined, 'm'),
     bBack: () => { if (B && B.turn === 'task') { E.stopListening(); menu(); } },
@@ -1832,6 +1979,7 @@
     stop: () => { writeBack(); stopBattle(); },
     battle: startBattle,
     _b: () => B,   // 测试用：当前战斗
+    _b3: () => B3,   // 测试用：3D 战斗画面（画面丢了能不能重建，tests/apk.test.js）
     trainerFoes,
     healAll,
     anyAlive,

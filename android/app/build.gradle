@@ -4,18 +4,59 @@ plugins {
     id 'com.android.application'
 }
 
+// 打包配置 android/echo.properties（不进仓库）。-PechoProps=别的文件 可以换一份（测试「没签名就停下」时用）
 def cfg = new Properties()
-def cfgFile = rootProject.file('echo.properties')
+def cfgFile = project.hasProperty('echoProps') ? file(project.property('echoProps')) : rootProject.file('echo.properties')
 if (cfgFile.exists()) cfgFile.withInputStream { cfg.load(it) }
 def q = { String s -> '"' + (s ?: '').replace('\\', '\\\\').replace('"', '\\"') + '"' }
 
-// 直连阿里云用的百炼密钥：KEY_FILE 指向一个写着 DASHSCOPE_API_KEY=... 的文件（不进仓库）。不填就在手机上「设置服务」里输入
+// 百炼密钥：家长 2026-10-07 定的——密钥照旧打进 APK。echo.properties 的 KEY_FILE 指向一个写着
+// DASHSCOPE_API_KEY=... 的文件（游戏专用的那把，不和别的项目共用），这里读出来写进 BuildConfig.DASHSCOPE_KEY。
+// 手机「设置 → AI」里粘贴的密钥优先（存在 SharedPreferences，装新版不用重填）；两个都没有时游戏提示「没有密钥」
 def keyFromFile = {
     def f = cfg.getProperty('KEY_FILE')
     if (!f || !new File(f).exists()) return ''
     def line = new File(f).readLines().find { it.trim().startsWith('DASHSCOPE_API_KEY') }
     return line ? line.substring(line.indexOf('=') + 1).trim().replaceAll(/^["']|["']$/, '') : ''
 }
+def bakedKey = keyFromFile()
+if (bakedKey) logger.lifecycle('KEY_FILE: the DashScope key from KEY_FILE goes into BuildConfig (parent decision 2026-10-07; a key pasted on the phone takes priority).')
+else logger.warn('WARNING: KEY_FILE is empty or has no DASHSCOPE_API_KEY line - the parent must paste the key on the phone (设置 → AI).')
+
+// 家长密码：echo.properties 的 PARENT_PIN（4 位数字）。APK 里只放「盐 + 密码」的 SHA-256（BuildConfig.PARENT_PIN_HASH），
+// 原文不进 APK，这里也不打印。手机上由 PinGuard.java 用同一个盐算哈希来比对
+def PIN_SALT = 'echo-island-parent-pin-v1:'
+def pinHash = {
+    def p = (cfg.getProperty('PARENT_PIN') ?: '').trim()
+    if (!p) return ''
+    if (!(p ==~ /\d{4}/)) throw new GradleException('echo.properties: PARENT_PIN must be exactly 4 digits (value not shown).')
+    return java.security.MessageDigest.getInstance('SHA-256').digest((PIN_SALT + p).getBytes('UTF-8')).encodeHex().toString()
+}()
+if (!pinHash) logger.warn('WARNING: PARENT_PIN is not set in echo.properties - parent-only settings will be locked in the APK.')
+
+// 版本号：versionCode = git 提交数（只增不减，覆盖安装才装得上），versionName = 打包日期-短哈希（有没提交的改动加 +）。
+// 只读 git（--no-optional-locks：不碰 .git/index.lock，别的进程同时提交也不打架）；没有 git 时退回 echo.properties 的 VERSION_CODE（默认 1）
+def gitOut = { List<String> args ->
+    try {
+        def out = new StringBuilder(), err = new StringBuilder()
+        def p = (['git', '--no-optional-locks', '-C', rootProject.file('..').absolutePath] + args).execute()
+        p.waitForProcessOutput(out, err)
+        return p.exitValue() == 0 ? out.toString().trim() : ''
+    } catch (Exception ignored) {
+        return ''
+    }
+}
+def gitCount = gitOut(['rev-list', '--count', 'HEAD'])
+def gitHash = gitOut(['rev-parse', '--short=7', 'HEAD'])
+def gitDirty = gitHash ? gitOut(['status', '--porcelain', '--untracked-files=no']) : ''
+def fallbackCode = cfg.getProperty('VERSION_CODE', '1').trim()
+def vCode = gitCount ==~ /\d+/ ? gitCount.toInteger() : (fallbackCode ==~ /\d+/ ? fallbackCode.toInteger() : 1)
+def vName = new Date().format('yyyyMMdd') + '-' + (gitHash ?: 'nogit') + (gitDirty ? '+' : '')
+if (!(gitCount ==~ /\d+/)) logger.warn("WARNING: git not available - versionCode falls back to ${vCode}")
+
+// 正式签名：STORE_FILE 和 STORE_PASSWORD 都填了、签名文件也在
+def storePath = cfg.getProperty('STORE_FILE')
+def hasSigning = storePath && cfg.getProperty('STORE_PASSWORD') && file(storePath).exists()
 
 android {
     namespace 'com.echoisland.app'
@@ -25,17 +66,19 @@ android {
         applicationId 'com.echoisland.app'
         minSdk 26
         targetSdk 35
-        versionCode 1
-        versionName '1.0'
+        versionCode vCode
+        versionName vName
         buildConfigField 'String', 'TALK_URL', q(cfg.getProperty('TALK_URL'))
         buildConfigField 'String', 'TALK_CODE', q(cfg.getProperty('TALK_CODE'))
-        buildConfigField 'String', 'DASHSCOPE_KEY', q(keyFromFile())
+        buildConfigField 'String', 'DASHSCOPE_KEY', q(bakedKey)
+        buildConfigField 'String', 'PARENT_PIN_SALT', q(PIN_SALT)
+        buildConfigField 'String', 'PARENT_PIN_HASH', q(pinHash)
     }
 
     signingConfigs {
         release {
-            if (cfg.getProperty('STORE_FILE') && cfg.getProperty('STORE_PASSWORD')) {
-                storeFile file(cfg.getProperty('STORE_FILE'))
+            if (hasSigning) {
+                storeFile file(storePath)
                 storePassword cfg.getProperty('STORE_PASSWORD')
                 keyAlias cfg.getProperty('KEY_ALIAS', 'echo')
                 keyPassword cfg.getProperty('KEY_PASSWORD', cfg.getProperty('STORE_PASSWORD'))
@@ -45,7 +88,9 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.release.storeFile ? signingConfigs.release : signingConfigs.debug
+            // 只用正式签名。找不到就让 checkReleaseConfig 报错停下，不再悄悄改用调试签名
+            // （调试签名的包装不上去，只能卸载重装，存档会丢）
+            if (hasSigning) signingConfig signingConfigs.release
         }
     }
     buildFeatures { buildConfig true }
@@ -62,6 +107,17 @@ dependencies {
     implementation 'androidx.webkit:webkit:1.12.1'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'   // 直连阿里云：带密钥的 WebSocket / HTTPS
 }
+
+// 打正式包前的检查：签名、家长密码。任何一项不对就停下（不打出一个装不上的包）。
+// 密钥不在这里拦：按家长决定 KEY_FILE 的密钥照旧打进 APK，没配也能打（家长在手机上粘贴）
+tasks.register('checkReleaseConfig') {
+    doLast {
+        if (!hasSigning) throw new GradleException('Release build needs the release keystore: set STORE_FILE / STORE_PASSWORD in android/echo.properties ' +
+                '(file must exist). No debug-signing fallback any more - a debug-signed APK cannot update the installed app without uninstalling (save lost).')
+        if (!pinHash) throw new GradleException('Release build needs PARENT_PIN (4 digits) in android/echo.properties.')
+    }
+}
+tasks.configureEach { t -> if (t.name == 'preReleaseBuild') t.dependsOn 'checkReleaseConfig' }
 
 // 把游戏网页复制进 APK 的 assets/www（只拿运行时要的文件）
 def webRoot = rootProject.file('..')

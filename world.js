@@ -18,7 +18,10 @@
   const $ = id => document.getElementById(id);
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const WS = () => E.S.world;
-  const hasBadge = z => !!E.S.mon.badges[z] || E.S.settings.unlockAll;
+  // 调试入口：网址带 ?debug 时，徽章、守卫、秘传技能、道馆的课本门槛都当作已经有了（家长 / 开发者测试用）。
+  // 设置里的「全部关卡直接开放」只管闯关练习，不再影响大地图（家长 2026-10-07）
+  const DEBUG = typeof location !== 'undefined' && /[?&]debug\b/.test(location.search);
+  const hasBadge = z => !!E.S.mon.badges[z] || DEBUG;
 
   // ---------- 存档迁移：旧版只有 13 个小镇，没有道路和房子 ----------
   function migrate() {
@@ -58,7 +61,7 @@
   const WATER = '~Dw';
   const isWater = (x, y) => WATER.includes(tile(x, y)) || (M._wet && M._wet.has(x + ',' + y));
   const nBadges = () => Object.keys(E.S.mon.badges).length;
-  const guardGone = n => n.badge != null ? nBadges() >= n.badge || E.S.settings.unlockAll : hasBadge(M.z);
+  const guardGone = n => n.badge != null ? nBadges() >= n.badge || DEBUG : hasBadge(M.z);
   const flagOK = n => (!n.showIf || [].concat(n.showIf).every(k => WS().flags['s:' + k])) && (!n.hideIf || ![].concat(n.hideIf).some(k => WS().flags['s:' + k]));
   const npcVisible = n => !(n.role === 'guard' && guardGone(n)) && flagOK(n) && !(window.EchoStory && EchoStory.hidden(SC, n));
   const npcAt = (x, y) => M.npcs.find(n => n.x === x && n.y === y && npcVisible(n));
@@ -176,6 +179,7 @@
     ensureRenderer();
     // 还没有怪兽：新游戏，从开场剧情开始（在自己家里醒来）
     const fresh = !E.S.mon.box.length;
+    adv.on = true; adv.day = E.dayStr ? E.dayStr() : ''; adv.gated = !fresh; adv.want = '';
     if (fresh) {
       Object.keys(ws.flags).forEach(k => { if (k.startsWith('s:')) delete ws.flags[k]; });
       loadMap('i0H', { x: 6, y: 2, dir: 'down' });
@@ -188,7 +192,34 @@
     startLoop();
     if (!fresh) banner();
     story('enter', 'begin');
+    // 地名横幅收起以后，弹 3 秒「现在要做什么」（隔一天回来也知道主线该去哪）
+    if (!fresh) setTimeout(() => { if (!running || !adv.on) return; const o = objective(); if (o) E.toast('📍 现在要做：' + o.zh); }, 2700);
   }
+
+  // ---------- 学习锁：人在大地图里过了零点（或者切回前台时学习锁是关着的），等当前的对话 / 战斗结束，提示回首页先学习 ----------
+  // gated：进来时是过了学习锁的（新游戏第一次进来不锁，那一次只在过了零点时才赶回去）
+  const adv = { on: false, day: '', gated: false, want: '' };
+  const gateShut = () => !!(E && E.gate && E.S.settings.gate !== false && (E.S.mon.box || []).length && !E.gate().open);
+  function kickCheck(front) {
+    if (!adv.on || adv.want || !E) return;
+    const t = E.dayStr ? E.dayStr() : '', nd = !!adv.day && !!t && t !== adv.day;
+    if (nd) adv.day = t;
+    if ((nd || (front && adv.gated)) && gateShut()) adv.want = nd ? 'day' : 'gate';
+  }
+  function kickTry() {
+    if (!adv.want || !adv.on || !running || dlg || busy || overlay || PL.moving || !$('modal').hidden) return;
+    const day = adv.want === 'day';
+    adv.want = '';
+    held = null;
+    talk([{ who: '旁白', emo: '🌅', en: day ? "It's a new day! Let's study first." : "Let's study first!", zh: day ? '新的一天！先完成今天的小任务' : '先完成今天的小任务，再来冒险吧', zhKeep: true }], () => {
+      adv.on = false;
+      E.closeModal();
+      E.goHome('mon');
+      E.toast(day ? '🌅 新的一天！先完成今天的小任务' : '📚 先完成今天的小任务，再来冒险吧');
+    });
+  }
+  setInterval(() => { kickCheck(false); kickTry(); }, 2000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { kickCheck(true); kickTry(); } });
   async function goMap(id, how) {
     busy = true;
     held = null;
@@ -220,6 +251,18 @@
     $('w-balls').textContent = '🔮 ' + E.S.mon.balls;
     const bk = $('w-bike');
     if (bk) { bk.hidden = !(MG.itemCount('bike') > 0) || M.kind === 'inside' || M.kind === 'under'; bk.classList.toggle('on', !!PL.bike); }
+    goalLine();
+  }
+  // ---------- 现在该去哪、做什么（目标在 story.js 的 objective()，按剧情进度和徽章数算）----------
+  function objective() {
+    try { return window.EchoStory && EchoStory.objective ? EchoStory.objective(SC) : null; } catch (e) { console.error(e); return null; }
+  }
+  // 地图左上角地名下面的一行「📍 …」，点一下打开冒险菜单看完整的目标
+  function goalLine() {
+    const g = $('w-goal'); if (!g) return;
+    const o = objective();
+    g.hidden = !o;
+    g.textContent = o ? '📍 ' + o.zh : '';
   }
 
   // ---------- 移动 ----------
@@ -353,25 +396,54 @@
     dlg = { pages, i: 0, onDone, tries: 0 }; showPage();
   }
   const page = () => dlg && dlg.pages[dlg.i];
+  // 剧情中文（家长 2026-10-07）：S.settings.storyZh = always 总是显示 / tap 点一下才显示 / auto 自动（默认）。
+  // 自动：第 1–4 座岛总是显示；从第 5 座岛起，人说的普通台词先只给英文，中文收成「译」按钮。
+  // 一直显示中文的：任务页（说 / 选）、只听不看的页、旁白和机关（没有人物头像的页）、道馆里（机关规则）、标了 zhKeep 的页
+  const zhMode = () => { const m = E.S.settings.storyZh; return m === 'always' || m === 'tap' ? m : 'auto'; };
+  function zhFolded(pg) {
+    const m = zhMode();
+    if (m === 'always' || !pg.zh || !pg.en || pg.kind || pg.hideEn || pg.zhKeep || !pg.look) return false;
+    if (M && M.kind === 'inside' && M.room === 'G') return false;
+    if (m === 'tap') return true;
+    return (M ? (M.isle != null ? M.isle : M.z) : 0) >= 4;
+  }
+  function showZh() {
+    const pg = page(), b = $('d-zh');
+    if (!pg || !b || b.tagName !== 'BUTTON') return;
+    finishType();
+    b.outerHTML = '<div class="d-zh" id="d-zh">' + E.esc(pg.zh) + '</div>';
+    const L = E.dayLog && E.dayLog();
+    if (L) L.zhTaps = (L.zhTaps || 0) + 1;
+    E.save();
+  }
   function showPage() {
     const pg = page(), box = $('w-dlg');
     if (!pg) { closeDlg(); return; }
     dlg.tries = 0; dlg.picked = false;
     const sr = E.speakMode() === 'sr', esc = E.esc, typing = !pg.kind && !!pg.en && !pg.hideEn;
+    // AI 打分用不了（没网 / 额度 / 没密钥，game.js 的 aiDown，评估第 3 条）：说话任务给「先跳过（已放进复习，联网后要补说）」，
+    // 选回答的任务改成直接点出正确的回答（还是要听懂）
+    const down = sr && (pg.kind === 'speak' || pg.kind === 'answer') && !!(E.aiDown && E.aiDown());
+    dlg.aiTap = down && pg.kind === 'answer';
+    const aiSkip = '<button class="link ai-skip" data-act="wAiSkip" id="w-aiskip"' + (down && pg.kind === 'speak' ? '' : ' hidden') + '>' + E.esc(E.SKIP_TXT || '先跳过') + '</button>';
     clearInterval(dlg.tw);
     const face = pg.look ? '<img class="d-face" src="' + portrait(pg.look) + '" alt="">' : '<span class="d-face emo">' + (pg.emo || '💬') + '</span>';
     let body = '<div class="d-name">' + esc(pg.who || '') + '</div><button class="spk mini d-hear" data-act="wHear" aria-label="再听一遍">' + E.SPK + '</button>' +
       '<div class="d-row">' + face + '<div class="d-text">' +
       (pg.en ? '<div class="d-en' + (pg.hideEn ? ' hid' : '') + '" id="d-en">' + (pg.hideEn ? '🔊 仔细听！（点右上角的喇叭再听一遍）' : typing ? '' : esc(pg.en)) + '</div>' : '') +
-      (pg.zh ? '<div class="d-zh' + (typing ? ' wait' : '') + '" id="d-zh">' + esc(pg.zh) + '</div>' : '') + '</div></div>';
+      (!pg.zh ? '' : zhFolded(pg)
+        // 中文先收起来：点「译」才显示（每点一次记进当天的学习记录，周报里能看到越来越少）
+        ? '<button class="d-zh' + (typing ? ' wait' : '') + '" id="d-zh" data-act="wZh" aria-label="看中文" style="display:block;margin:4px 0 0 auto;padding:2px 14px;border:2px solid #1f8a9e;border-radius:999px;background:#e8f7f9;color:#16707f;font:inherit;font-size:15px;font-weight:800;cursor:pointer">译</button>'
+        : '<div class="d-zh' + (typing ? ' wait' : '') + '" id="d-zh">' + esc(pg.zh) + '</div>') + '</div></div>';
     if (pg.kind === 'speak') {
       body += '<div class="d-task"><div class="say-text" id="w-say">' + E.wordsHTML(pg.target) + '</div>' +
-        (sr ? '<button class="mic" id="w-mic" data-act="wMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="w-hint">点麦克风，大声说出来</div><div class="heard" id="w-heard"></div>'
+        (sr ? '<button class="mic" id="w-mic" data-act="wMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="w-hint">' + (down ? '📶 AI 打分暂时用不了：可以先跳过，联网以后在复习里补说' : '点麦克风，大声说出来') + '</div><div class="heard" id="w-heard"></div>'
           : '<div class="mic-hint" id="w-hint">大声说出来，说完点「我说完了」</div><button class="btn leaf" data-act="wSelfDone">🎤 我说完了</button>') +
-        '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>先跳过</button></div>';
+        '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>先跳过</button>' + (sr ? aiSkip : '') + '</div>';
     } else if (pg.kind === 'answer') {
       body += '<div class="d-task">' + (pg.pic ? '<div class="say-emoji">' + pg.pic + '</div>' : '') + '<div class="opts list">' + pg.opts.map((o, k) => '<button class="opt en" data-act="wOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>' +
-        (sr ? '<small class="tip">选一句正确的回答，<b>大声说出来</b>（点选项可以先听）</small><button class="mic" id="w-mic" data-act="wMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="w-hint"></div><div class="heard" id="w-heard"></div>'
+        (dlg.aiTap ? '<small class="tip" id="w-hint">📶 AI 打分暂时用不了：<b>直接点出正确的回答</b>（这句已放进复习，联网后要补说）</small>'
+          : sr ? '<small class="tip">选一句正确的回答，<b>大声说出来</b>（点选项可以先听）</small><button class="mic" id="w-mic" data-act="wMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="w-hint"></div><div class="heard" id="w-heard"></div>'
           : '<small class="tip" id="w-hint">点出正确的回答，再大声说一遍</small>') +
         '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>先跳过</button></div>';
     } else if (pg.kind === 'choice') {
@@ -456,7 +528,22 @@
       showPage();
       return;
     }
-    if (!res.alts.length) { $('w-hint').textContent = '没听清，大声一点再试一次'; return; }
+    if (!res.alts.length) {
+      // 没听清算一次尝试（3 次以后可以先跳过）；没网 / 额度 / 没密钥说清原因，AI 连着用不了（aiDown）就给「先跳过」/ 改成点选
+      const h = $('w-hint'), msg = E.failHint ? E.failHint(res) : '没听清，大声一点再试一次';
+      if (res.fail === 'unheard' || !E.failHint) {
+        d.tries++;
+        h.textContent = msg + (d.tries >= 3 ? '，实在不行可以先跳过' : '');
+        if (d.tries >= 3) { const sk = $('w-skip'); if (sk) sk.hidden = false; }
+        return;
+      }
+      if (msg) h.textContent = msg;
+      if (E.aiDown && E.aiDown()) {
+        if (pg.kind === 'speak') { const sk = $('w-aiskip'); if (sk) sk.hidden = false; }
+        else { dlg.aiTap = true; h.innerHTML = '📶 AI 打分暂时用不了：<b>直接点出正确的回答</b>（这句已放进复习，联网后要补说）'; const mc = $('w-mic'); if (mc) mc.style.display = 'none'; }
+      }
+      return;
+    }
     if (pg.kind === 'speak') {
       const r = E.bestScore(pg.target, res.alts);
       $('w-heard').textContent = '我听到：“' + r.heard + '”';
@@ -474,9 +561,33 @@
     }
   }
   function markOpts(ri, wi) { document.querySelectorAll('#w-dlg .opt').forEach((b, k) => b.classList.add(k === ri ? 'right' : k === wi ? 'wrong' : 'dim')); }
+  // AI 打分用不了时的出路（评估第 3 条）：这句放进复习（联网后要补说），剧情照常往下走（说话任务算「先跳过」，选回答的按点对没点对算）
+  // ok：false = 点错了（按答错算）；不给 = 先跳过
+  function aiSkipTask(ok) {
+    const pg = page(); if (!pg || !pg.kind) return;
+    const right = pg.kind === 'answer' ? (pg.opts.find(o => o.c) || {}).t : pg.target;
+    // 没有编号的句子（剧情台词）：中文取「：」后面那截（像「大声说：我们去冲浪吧！」），不是中文就不要；选回答的页面中文是问题的意思，不用
+    const zh = pg.kind === 'speak' ? String(pg.zh || '').split('：').pop() : '';
+    if (E.revLater) E.revLater(pg.q || (right ? { en: right, zh: /[一-鿿]/.test(zh) ? zh : '' } : null));
+    const L = E.dayLog && E.dayLog(); if (L) L.aiSkip = (L.aiSkip || 0) + 1;
+    if (ok === false) { failTask(); return; }
+    insertPages(pg.pass ? pg.pass(0) : null);
+    E.save();
+    pg.kind = null;
+    nextPage();
+  }
   function onOpt(i) {
     const pg = page();
     if (!pg || pg.kind !== 'answer') return;
+    if (dlg.aiTap) {   // AI 用不了：直接点出正确的回答
+      if (dlg.picked) return;
+      dlg.picked = true;
+      const ok = !!pg.opts[i].c;
+      markOpts(ok ? i : pg.opts.findIndex(o => o.c), ok ? undefined : i);
+      if (ok) E.say(pg.opts[i].t);
+      setTimeout(() => { if (page() === pg) aiSkipTask(ok ? undefined : false); }, ok ? 900 : 1000);
+      return;
+    }
     if (E.speakMode() === 'sr') { E.say(pg.opts[i].t); return; }
     if (dlg.picked) return;
     dlg.picked = true;
@@ -578,12 +689,14 @@
       } else { E.say('Welcome back!', undefined, 'f'); MG.daycareSheet(); }
       return;
     }
+    // 守卫、渡轮不开时说的是「要几枚徽章」这种规则：中文一直显示
+    const keep = pgs => pgs.map(q => Object.assign(q, { zhKeep: true }));
     if (n.role === 'guard') {
-      talk(n.say ? lines(n.say) : [P("Stop! You can't go north without this town's badge.", '站住！没有本镇的徽章不能往北走。'), P('Beat the gym leader first!', '先去道馆打败馆主吧！')]);
+      talk(keep(n.say ? lines(n.say) : [P("Stop! You can't go north without this town's badge.", '站住！没有本镇的徽章不能往北走。'), P('Beat the gym leader first!', '先去道馆打败馆主吧！')]));
     } else if (n.role === 'ferry') {
       // 渡轮 / 船：带你去别的岛
       const ok = (n.badge == null || nBadges() >= n.badge) && (!n.need || WS().flags['s:' + n.need]);
-      if (!ok) { talk(lines(n.no || [['Sorry, the boat is not ready yet.', '抱歉，船还不能开。']])); return; }
+      if (!ok) { talk(keep(lines(n.no || [['Sorry, the boat is not ready yet.', '抱歉，船还不能开。']]))); return; }
       talk(lines(n.say || [['All aboard! Do you want to go?', '上船啦！要出发吗？']]).concat([P(n.ask || 'Where do you want to go?', '要坐船去' + (n.toName || '对面的岛') + '吗？', { kind: 'choice', opts: [{ html: '⛴️ ' + (n.toName || '出发') + ' Let\'s go!', cls: 'sun' }, { html: '先不 Not now' }], pick: i => { if (!i) setTimeout(() => sail(n), 80); return []; } })]));
     } else if (n.say && n.role !== 'trainer') {
       const pg = lines(n.say);
@@ -603,10 +716,28 @@
       E.say('Welcome! What would you like?', undefined, 'm');
       shopSheet();
     } else if (n.role === 'leader') {
-      const b = w.boss, had = !!E.S.mon.badges[z];
-      talk([P(b.hello, had ? '又来挑战我了？好，再比一场！' : '我是' + b.name + '！想拿本镇的徽章，就先打败我！', { emo: b.emoji })], () => battle('leader', {
+      const b = w.boss, had = !!E.S.mon.badges[z], g = had ? null : gymNeed(z);
+      // 道馆跟着课本进度开：前几个课本单元的 BOSS 关没过，馆主不接受挑战
+      if (g && !g.ok) {
+        const miss = g.missing.length > 3 ? g.missing.slice(0, 3).join('、') + ' 等 ' + g.missing.length + ' 个单元' : g.missing.join('、');
+        talk([P(b.hello, '我是' + b.name + '！', { emo: b.emoji }),
+          P('Come back after you beat Unit ' + g.unitN + '!', '先去「📚 闯关练习」打败课本 ' + miss + ' 的 BOSS 关，再来挑战我！（课本 BOSS ' + g.done + '/' + g.need + '）', { emo: b.emoji, zhKeep: true })]);
+        return;
+      }
+      // 打通冠军赛以后：馆主重赛，等级 +15，题目换成最近学的课本单元
+      const re = had && !!WS().flags['s:champion'];
+      const hi = re ? '冠军回来啦？我也变强了！这次考你最近学的课本单元。' : had ? '又来挑战我了？好，再比一场！' : '我是' + b.name + '！想拿本镇的徽章，就先打败我！';
+      talk([P(re ? "Welcome back, Champion! I'm much stronger now!" : b.hello, hi, { emo: b.emoji })], () => battle('leader', {
+        foes: re ? rematchFoes(z) : undefined, recent: re,
         after: res => {
           if (res === 'win' && !had) talk([P('You beat me! Here is my badge.', '你赢了！这枚徽章给你。'), P('The road to the north is open now.', '现在北边的路已经为你打开了！')]);
+          else if (res === 'win' && re) {
+            // 每位馆主每天第一次重赛赢了送一块进化石
+            if (dailyDone('rm' + z)) { talk([P('What a battle! Come back tomorrow!', '好精彩的对战！明天再来吧！', { emo: b.emoji })]); return; }
+            markDaily('rm' + z);
+            const ids = Object.keys((window.DEX && DEX.STONES) || {}), id = ids[(z + new Date().getDate()) % Math.max(1, ids.length)], it = MG.ITEMS[id];
+            talk([P('You are a true Champion! Take this.', '你真是名副其实的冠军！这个送给你。', { emo: b.emoji, onShow: () => { if (it) { MG.addItem(id, 1); E.save(); E.jingle('item', E.SFX.win); E.toast(it.icon + ' ' + it.zh + ' +1', 'gold'); } } })]);
+          }
         },
       }));
     } else if (n.role === 'quiz') {
@@ -737,6 +868,37 @@
       '<button class="btn ghost wide" data-act="close">Thank you! 谢谢</button>');
   }
 
+  // ---------- 道馆跟着课本进度开（家长 2026-10-07）：第 z 个馆主要先打败前 ceil((z+1)×16/13) 个课本单元的 BOSS 关 ----------
+  // 第 1 个馆主要 2 个单元，第 13 个要 16 个（七上 + 七下），冠军赛大约落在初一下学期末
+  const unitsFor = z => Math.ceil((z + 1) * 16 / 13);
+  function gymNeed(z) {
+    const NB = E.W.length, units = (E.WX || []).slice(NB), need = Math.min(unitsFor(z), units.length);
+    const lab = i => { const u = units[i]; return u ? (u.bshort ? u.bshort + ' ' : '') + 'Unit ' + u.n : ''; };
+    const miss = [];
+    for (let i = 0; i < need; i++) if (!((E.S.stars || {})[(NB + i) + '-6'] > 0)) miss.push(i);
+    const ok = DEBUG || !miss.length;
+    return { z, need, done: need - miss.length, ok, unitLabel: ok ? '' : lab(miss[0]), target: need ? lab(need - 1) : '', unitN: need ? units[need - 1].n : 0, missing: ok ? [] : miss.map(lab) };
+  }
+  // 下一枚要拿的徽章是第几座岛的（13 枚都有了返回 -1）
+  const nextGymZ = () => { for (let z = 0; z < E.W.length; z++) if (!E.S.mon.badges[z]) return z; return -1; };
+  // 重赛的馆主：本馆属性，比原来多一只，等级 +15（属性表和 monsters.js 的 GYM 一样）
+  const GYM_TYPES = ['flying', 'rock', 'grass', 'psychic', 'steel', 'spark', 'fire', 'poison', 'ground', 'dark', 'ice', 'water', 'dragon'];
+  const rematchFoes = z => MG.teamOf([GYM_TYPES[z % GYM_TYPES.length]], 3 + Math.floor(z / 4), MG.zoneLv(z) + 2 + 15, 'rematch' + z);
+  // 重赛出题：全部换成课本最近学的单元（正在学的这一个和前两个）。战斗期间临时换掉 E.src，打完（或回首页）换回来
+  let srcBak = null;
+  function useRecentSrc(on) {
+    if (on && !srcBak && E.src) {
+      srcBak = E.src;
+      const orig = srcBak;
+      E.src = z => {
+        const cur = E.curIdx ? E.curIdx() : -1, NB = E.W.length;
+        if (cur < 0 || !E.WX || !E.WX[NB + cur]) return orig(z);
+        const i = Math.max(0, cur - Math.floor(Math.random() * Math.min(cur + 1, 3)));
+        return { w: NB + i, d: E.WX[NB + i] };
+      };
+    } else if (!on && srcBak) { E.src = srcBak; srcBak = null; }
+  }
+
   // ---------- 野外技能：拿到徽章解锁，队伍里要有合适属性的怪兽，用的时候要对它说英语指令 ----------
   // 仿绿宝石：秘传学习器（hm）是剧情里的人送的，还要有足够的徽章才能在野外用
   const SKILLS = {
@@ -750,8 +912,8 @@
     falls: { zh: '攀瀑', en: 'Waterfall', icon: '🏞️', badge: 12, hm: 'hm_falls', types: ['water', 'dragon'], say: n => n + ', climb the waterfall!', what: '冲浪时爬上瀑布', who: '天气岛的气象台台长' },
   };
   const skillMon = k => E.S.mon.team.map(u => E.S.mon.box.find(m => m.uid === u)).filter(m => m && !m.egg).find(m => MG.species(m.sp).types.some(t => SKILLS[k].types.includes(t)));
-  const hasHM = k => E.S.settings.unlockAll || MG.itemCount(SKILLS[k].hm) > 0;
-  const skillOpen = k => E.S.settings.unlockAll || (hasHM(k) && nBadges() >= SKILLS[k].badge);
+  const hasHM = k => DEBUG || MG.itemCount(SKILLS[k].hm) > 0;
+  const skillOpen = k => DEBUG || (hasHM(k) && nBadges() >= SKILLS[k].badge);
   const skillReady = k => skillOpen(k) && !!skillMon(k);
   // 用技能：说对指令才会生效
   function useSkill(k, then) {
@@ -847,9 +1009,11 @@
     E.SFX.hit();
     await sleep(820);
     stopLoop();
+    useRecentSrc(!!o.recent);
     const ok = MG.battle(kind, M.z, {
       foes: o.foes, trainer: o.trainer, lvBonus: o.lvBonus, noCatch: o.noCatch, hab: o.hab || M.hab || (M.kind === 'cave' ? 'cave' : 'grass'), arena: M.arena || M.theme, rules: o.rules,
       onEnd: res => {
+        useRecentSrc(false);
         E.show('world');
         wp.classList.remove('on');
         resize(); hud();
@@ -859,7 +1023,7 @@
         else if (o.after) o.after(res);
       },
     });
-    if (!ok) { wp.classList.remove('on'); startLoop(); busy = false; if (o.after) o.after('none'); }
+    if (!ok) { useRecentSrc(false); wp.classList.remove('on'); startLoop(); busy = false; if (o.after) o.after('none'); }
   }
   function whiteout() {
     MG.healAll();
@@ -924,6 +1088,8 @@
     hasHM: k => hasHM(k),
     give: (item, n) => { MG.addItem(item, n || 1); E.save(); hud(); const it = MG.ITEMS[item]; E.jingle('item', E.SFX.win); E.toast((it ? it.icon + ' ' + it.zh : item) + ' +' + (n || 1), 'gold'); },
     badges: () => nBadges(),
+    // 第 z 个道馆的课本门槛：{ ok, need, done, unitLabel（下一个要打的单元）, target, missing }
+    gymNeed: z => gymNeed(z),
     daily: (k, fn) => { if (dailyDone(k)) return false; markDaily(k); fn && fn(); E.save(); return true; },
     flags: () => WS().flags,
     say: (t, g) => E.say(t, undefined, g),
@@ -967,13 +1133,16 @@
     R.tier = R.kind === '2d' ? '2d' : tier;
     perf.n = 0; perf.sum = 0; perf.t0 = 0;
   }
-  // 自动画质：进地图后量 3 秒帧率，太慢就降一档
-  // 超过 250ms 的帧（页面在后台、被系统限流、正在切地图）不算；有效帧太少就过一会儿重新量
-  const perf = { n: 0, sum: 0, t0: 0 };
+  // 自动画质：进地图后量 3 秒帧率，太慢就降一档；之后每 30 秒再量一次（玩久了手机发烫降频，也能降下来，评估第 15 条）
+  // 量的那几秒不按「站着不动 30 帧」限速（见 frame）。超过 250ms 的帧（页面在后台、被系统限流、正在切地图）不算；有效帧太少就过一会儿重新量
+  const perf = { n: 0, sum: 0, t0: 0, on: true, checks: 0 };
+  const TUNE_EVERY = 30000;
   function autoTune(now, dt) {
     const st = E.S.settings;
     if ((st.gfx || 'auto') !== 'auto' || !R || R.kind === '2d' || busy || dlg || document.hidden) return;
-    if (!perf.t0) { perf.t0 = now; return; }
+    if (!perf.t0) { perf.t0 = now; perf.on = true; return; }
+    if (now < perf.t0) { perf.on = false; return; }   // 还没到下一次量的时候
+    perf.on = true;
     // 偶尔一帧很慢（切到后台、切地图）不算；可是一直很慢（连续 12 帧都超过 250ms）就是设备太慢
     if (dt > 250) { perf.slow = (perf.slow || 0) + 1; if (perf.slow < 12 || now - perf.t0 < 1200) return; perf.n = 20; perf.sum = 20 * dt; perf.slow = 0; }
     else { perf.slow = 0; if (now - perf.t0 < 1200) return; }
@@ -981,7 +1150,7 @@
     if (perf.n < 150 && now - perf.t0 < 4500) return;
     if (perf.n < 20) { perf.n = 0; perf.sum = 0; perf.t0 = now; return; }
     const avg = perf.sum / perf.n;
-    perf.n = 0; perf.sum = 0; perf.t0 = now + 1e9;
+    perf.n = 0; perf.sum = 0; perf.t0 = now + TUNE_EVERY; perf.on = false; perf.checks++; perf.last = Math.round(avg);
     // 精美 > 20ms（不到 50 帧）降到标准；标准 > 24ms（不到 42 帧）降到省电；省电 > 45ms（不到 22 帧）才换 2D
     const cur = R.tier, next = cur === 'high' ? (avg > 20 ? 'mid' : null) : cur === 'mid' ? (avg > 24 ? 'low' : null) : (avg > 45 ? '2d' : null);
     if (!next) { st.gfxAuto = cur; E.save(); return; }
@@ -990,6 +1159,16 @@
     if (next === '2d') E.toast('这台手机跑 3D 有点吃力，已切换成流畅模式（可以在设置里改）');
   }
   function resize() { if (R) R.resize(); }
+  // 3D 画面丢了以后整个重建（换一张新画布、新的 WebGL）；建不出 3D 就退回 2D 流畅模式（ensureRenderer 会提示）
+  function rebuildGL(why) {
+    const L = E.dayLog && E.dayLog(); if (L) L.glLost = (L.glLost || 0) + 1;
+    if (window.EchoErr) EchoErr.log('gl', '大地图 3D 画面丢了（' + why + '），已重建', 'world3d');
+    try { R.destroy(); } catch (e) { /* 丢了的画面释放不干净也没关系 */ }
+    R = null;
+    ensureRenderer();
+    try { R.load(M, api3d); } catch (e) { if (window.EchoErr) EchoErr.log('gl', '重建后载入地图出错：' + e.message, 'world3d'); }
+    resize();
+  }
   let nextDraw = 0;
   function startLoop() { if (running) return; running = true; lastNow = 0; nextDraw = 0; raf = requestAnimationFrame(frame); }
   function stopLoop() { running = false; cancelAnimationFrame(raf); held = null; }
@@ -1003,12 +1182,19 @@
       if (!n.nextTurn) n.nextTurn = now + 1500 + Math.random() * 3000;
       if (now > n.nextTurn && !dlg) { n.face = ['up', 'down', 'left', 'right', 'down'][Math.floor(Math.random() * 5)]; n.nextTurn = now + 2000 + Math.random() * 3500; }
     });
-    // 精美画质每秒最多画 60 次：120Hz 的屏幕每秒画 120 次只会更烫更费电，看不出区别。
-    // 走路、动画都按时间算，上面的走路判定每一帧照样跑，只是不重画
-    if (R.tier === 'high') {
-      if (now < nextDraw - 2) { raf = requestAnimationFrame(frame); return; }
-      nextDraw = Math.max(nextDraw + 1000 / 60, now + 1000 / 60 - 6);
+    // 3D 画面丢了（webglcontextlost：切去微信再回来、系统收回显存）：先不画；恢复了、或者 2.5 秒还没恢复，就整个重建，不留黑屏（评估第 15 条）
+    if (R.glState) {
+      const gs = R.glState();
+      if (gs === 'lost') { raf = requestAnimationFrame(frame); return; }
+      if (gs !== 'ok') rebuildGL(gs);
     }
+    // 所有画质每秒最多画 60 次：120Hz 的屏幕每秒画 120 次只会更烫更费电，看不出区别；
+    // 主角站着不动（没在走、没按方向、没在演剧情）时每秒 30 次（评估第 15 条）。自动画质正在量帧率的那几秒照常 60 次。
+    // 走路、动画都按时间算，上面的走路判定每一帧照样跑，只是不重画
+    const tuning = perf.on && (E.S.settings.gfx || 'auto') === 'auto' && R.kind !== '2d';
+    const gap = 1000 / (!PL.moving && !held && !busy && !tuning ? 30 : 60);
+    if (now < nextDraw - 2) { raf = requestAnimationFrame(frame); return; }
+    nextDraw = Math.max(nextDraw + gap, now + gap - 6);
     const dt = lastNow ? now - lastNow : 16; lastNow = now;
     R.draw(now, view(now));
     autoTune(now, dt);
@@ -1579,7 +1765,8 @@
     if ($('w-view')) return;
     const sec = $('world');
     sec.innerHTML =
-      '<div class="w-hud"><button class="x" data-act="wExit" aria-label="回首页">✕</button><div class="w-zone"><b id="w-zname"></b><small id="w-zsub"></small></div>' +
+      '<div class="w-hud"><button class="x" data-act="wExit" aria-label="回首页">✕</button><div class="w-zone"><b id="w-zname"></b><small id="w-zsub"></small>' +
+      '<button id="w-goal" data-act="wGoal" aria-label="现在要做什么" style="display:block;max-width:100%;margin-top:1px;padding:0;border:0;background:none;color:#ffe08a;font:inherit;font-size:12px;font-weight:800;line-height:1.3;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;pointer-events:auto;text-shadow:0 1px 3px rgba(0,0,0,.55)" hidden></button></div>' +
       '<span class="chip" id="w-badges"></span><span class="chip" id="w-balls"></span><button class="w-bike" id="w-bike" data-act="wBike" aria-label="骑车" hidden>🚲</button><button class="w-menu" data-act="wMenu" aria-label="菜单">☰</button></div>' +
       '<div class="w-view" id="w-view"><div class="w-note" id="w-note" hidden></div><div class="w-scene" id="w-scene" hidden></div><div class="w-banner" id="w-banner" hidden></div><div class="w-wipe" id="w-wipe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="w-dlg" id="w-dlg" data-act="wA" hidden></div></div>' +
       // 操作：浮在画面上——左边摇杆（手指按哪里就从哪里推），右边 A / B / 英语聊天（像手机上的动作游戏）；设置里可以换回方向键
@@ -1678,8 +1865,10 @@
     menuSheet();
   }
   function menuSheet() {
-    const m = E.S.mon;
-    E.openModal('<h2>冒险菜单</h2><p>🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · 💰 ' + E.S.coins + (WS().repel > 0 ? ' · 🧴 还剩 ' + WS().repel + ' 步' : '') + '</p>' +
+    const m = E.S.mon, o = objective();
+    E.openModal('<h2>冒险菜单</h2>' +
+      (o ? '<div class="ach" id="w-goal-full"><span class="ae">📍</span><div style="flex:1"><b>现在要做</b><small>' + E.esc(o.zh) + '</small></div></div>' : '') +
+      '<p>🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · 💰 ' + E.S.coins + (WS().repel > 0 ? ' · 🧴 还剩 ' + WS().repel + ' 步' : '') + '</p>' +
       '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">🐾 我的队伍</button><button class="btn ghost" data-act="mBag">🎒 背包</button><button class="btn ghost" data-act="mDex">📖 图鉴</button><button class="btn ghost" data-act="wSkills">🌟 野外技能</button>' +
       '<button class="btn ghost" data-act="wHelp">❓ 怎么玩</button><button class="btn ghost" data-act="settings">⚙️ 设置</button><button class="btn ghost" data-act="wExit">🏠 回首页</button></div>' +
       '<button class="btn wide" data-act="close">继续冒险</button>');
@@ -1701,6 +1890,15 @@
     wB: () => overlay ? overlay('B') : bButton(),
     wPick: t => { const pg = page(); if (!pg || pg.kind !== 'choice') return; const extra = pg.pick(+t.dataset.i); insertPages(extra); pg.kind = null; nextPage(); },
     wMenu: () => menuSheet(),
+    wGoal: () => { if (!dlg && !overlay) menuSheet(); },
+    wZh: () => showZh(),
+    // 剧情中文的设置按钮（EchoWorld.storyZhHTML() 给设置页用）：就地换高亮，不用重画整个设置页
+    wZhMode: t => {
+      const v = t.dataset.m;
+      if (!['always', 'tap', 'auto'].includes(v)) return;
+      E.S.settings.storyZh = v; E.save(); E.SFX.tap();
+      const seg = t.closest('.seg'); if (seg) seg.querySelectorAll('[data-act=wZhMode]').forEach(b => b.classList.toggle('on', b === t));
+    },
     wHelp: () => helpSheet(),
     wSkills: () => skillsSheet(),
     wBike: () => { if (M.kind === 'inside' || M.kind === 'under' || PL.surf) return; PL.bike = !PL.bike; E.SFX.tap(); E.toast(PL.bike ? '🚲 骑上自行车了' : '🚶 下车走路'); hud(); },
@@ -1718,6 +1916,7 @@
     wMic: () => dlgMic(),
     wSelfDone: () => { const pg = page(); if (pg && pg.kind) passTask(70); },
     wSkip: () => { const pg = page(); if (pg && pg.kind) failTask(); },
+    wAiSkip: () => { const pg = page(); if (pg && pg.kind) { E.stopListening(); aiSkipTask(); } },
     wOpt: t => onOpt(+t.dataset.i),
     wBuy: t => {
       const [id, n] = shopStock()[+t.dataset.i] || [], it = MG.ITEMS[id];
@@ -1739,20 +1938,75 @@
     rope: () => { E.closeModal(); const o = WS().lastOut; goMap(o.map, o.x != null ? { x: o.x, y: o.y, dir: o.dir || 'down' } : null); },
     bike: () => { E.closeModal(); if (running && M) actions.wBike(); },
   };
+  // ---------- 每日宝箱开出冒险用的东西（家长 2026-10-07：进化石、蛋、异色蛋；emoji 宠物退到次要）----------
+  // r：0–1 的随机数（测试时传固定值）。没有怪兽（还没选伙伴）时返回 null，让 game.js 用原来的奖品
+  function chestPrize(r) {
+    if (!E || !(E.S.mon.box || []).length) return null;
+    r = r == null ? Math.random() : r;
+    const D = window.DEX || {};
+    if (r < .5) {
+      const ids = Object.keys(D.STONES || {}); if (!ids.length) return null;
+      const id = ids[Math.floor(r / .5 * ids.length) % ids.length], it = MG.ITEMS[id];
+      MG.addItem(id, 1); E.save();
+      return { prize: it.icon, kind: 'stone', id, html: '<h2>开出进化石：' + it.zh + '！</h2><p>' + E.esc(it.en) + '。在背包里对能进化的怪兽用，它就会进化。</p>' };
+    }
+    if (r < .9) {
+      // 蛋：第一大区（1–151 号）的幼年怪兽，优先图鉴里还没收服的（初始怪兽也会出，这样 151 种都能集齐）
+      const base = (D.list || []).filter(s => s.no <= 151 && !s.legend && s.stage === 1);
+      if (!base.length) return null;
+      const dex = E.S.mon.dex || {}, fresh = base.filter(s => dex[s.id] !== 'caught');
+      const pool = fresh.length && Math.random() < .75 ? fresh : base, sp = pool[Math.floor(Math.random() * pool.length)];
+      const shiny = r >= .8, egg = MG.giveEgg(sp.id);
+      if (shiny && egg) egg.shiny = true;   // 孵出来就是异色的
+      E.save();
+      return shiny ? { prize: '🥚✨', kind: 'shinyEgg', id: sp.id, html: '<h2>开出一个闪闪发光的蛋！</h2><p>孵出来的会是<b>异色</b>的怪兽！放在队伍里多走路就会孵出来。</p>' }
+        : { prize: '🥚', kind: 'egg', id: sp.id, html: '<h2>开出一个怪兽蛋！</h2><p>里面是谁呢？放在队伍里多走路就会孵出来（队伍满了就在电脑箱子里）。</p>' };
+    }
+    return null;
+  }
+  // 第一大区的图鉴（1–151 号）收服了几种：成就「怪兽大师」用
+  function dexRegion(s) {
+    s = s || (E && E.S);
+    const list = ((window.DEX && DEX.list) || []).filter(q => q.no <= 151), dex = (s && s.mon && s.mon.dex) || {};
+    return { caught: list.filter(q => dex[q.id] === 'caught').length, total: list.length };
+  }
+  // 「剧情中文」设置（给 game.js 的设置页，建议放进「🔒 家长设置」）：按钮由 world 的 wZhMode 处理
+  function storyZhHTML() {
+    const cur = E ? zhMode() : 'auto';
+    return '<div class="set"><label>📖 剧情中文</label><div class="seg">' +
+      [['auto', '自动'], ['tap', '点一下才显示'], ['always', '总是显示']].map(([m, n]) => '<button class="' + (cur === m ? 'on' : '') + '" data-act="wZhMode" data-m="' + m + '">' + n + '</button>').join('') +
+      '</div><small>自动：前 4 座岛总是显示中文；从第 5 座岛起，人物说的话先只给英文，听不懂再点「译」（周报里能看到点了几次）。任务说明、机关规则一直有中文。</small></div>';
+  }
   const api3d = { tile: (x, y) => tile(x, y) };
   const ART = { drawPerson, portrait, atlas: PPL.atlas, paintGround, shade, hsh, rr, circ, ell, OUT, LOOKS, monImg, drawItemBall, buildColor: BUILD_COLORS };
   window.EchoWorld = {
     music: () => (M ? mapMusic() : ''),   // 当前地图的背景音乐（game.js 回到大地图时问）
     init(api, mg) { E = api; MG = mg; EM = window.EchoMaps; EM.setTownCount(E.W.length); MG.setFieldHooks && MG.setFieldHooks(fieldHooks); return actions; },
-    fresh: () => ({ started: false, map: 't0', z: 0, x: -1, y: -1, dir: 'up', arrive: null, visited: {}, flags: {}, daily: {}, center: null, introDone: false, repel: 0 }),
-    stop: () => { stopLoop(); if (dlg) { clearInterval(dlg.tw); dlg = null; const d = $('w-dlg'); if (d) d.hidden = true; } busy = false; },
+    // mile：学习里程碑（传说的线索）累计的数，见 story.js 的 mile()
+    fresh: () => ({ started: false, map: 't0', z: 0, x: -1, y: -1, dir: 'up', arrive: null, visited: {}, flags: {}, daily: {}, center: null, introDone: false, repel: 0, mile: { upto: '', talk: 0, recall: 0, streak: 0 } }),
+    stop: () => { stopLoop(); useRecentSrc(false); adv.on = false; adv.want = ''; if (dlg) { clearInterval(dlg.tw); dlg = null; const d = $('w-dlg'); if (d) d.hidden = true; } busy = false; },
+    // ---- 给首页 / 设置 / 宝箱 / 成就用的接口（game.js、monsters.js 调用）----
+    // 下一枚徽章要过哪些课本 BOSS：{ z, island, leader, ok, need, done, unitLabel（下一个要打的单元，比如「七上 Unit 3」，ok 时为空）, target（最后一个要过的单元）, missing[] }；13 枚都有了返回 null
+    nextGymNeed: () => { if (!E) return null; const z = nextGymZ(); if (z < 0) return null; const g = gymNeed(z); return Object.assign(g, { island: E.W[z].name, leader: E.W[z].boss.name }); },
+    // 现在该去哪、做什么：{ zh, z }（首页「继续冒险」下面的小字用）
+    objective: () => (E ? objective() : null),
+    // 传说的线索（首页卡片）：[{ id, icon, en, zh, task, have, need, done, caught, back }]
+    legendClues: () => { try { return E && window.EchoStory && EchoStory.legendClues ? EchoStory.legendClues(SC) : []; } catch (e) { console.error(e); return []; } },
+    // 每日宝箱：开出进化石 / 蛋 / 异色蛋并放进背包或队伍，返回 { prize: 大图标, html: '<h2>…</h2><p>…</p>', kind, id }；返回 null 时用原来的奖品
+    chestPrize: r => chestPrize(r),
+    // 第一大区图鉴：{ caught, total: 151 }
+    dexRegion: s => dexRegion(s),
+    storyZhHTML: () => storyZhHTML(),
     // 设置里改了画质
     setGfx: () => { if (!M || !$('w-view')) return; ensureRenderer(); R.load(M, api3d); resize(); },
     // 现在用哪一档画质（自动档按设备和量出来的帧率；战斗画面也按这个）
     gfxTier: () => gfxTier(),
     ctlMode: () => ctlMode(),
     placeLabel: () => { const ws = E.S.world; if (!ws.started || !ws.map || !window.EchoMaps) return null; const m = EchoMaps.get(ws.map); return m ? placeName(m) : null; },
-    _debug: () => ({ M, PL, FL, dlg, busy, R, perf, goMap: (id, how) => goMap(id, how), battle: (kind, o) => battle(kind, o || {}) }),
+    _debug: () => ({ M, PL, FL, dlg, busy, R, perf, goMap: (id, how) => goMap(id, how), battle: (kind, o) => battle(kind, o || {}),
+      // 测试用：假装进大地图是在 d 这一天（检查过了零点回首页）；野外技能 / 徽章判断；重赛出题有没有换成课本
+      fakeDay: d => { adv.day = d; }, adv, skillOpen: k => skillOpen(k), hasBadge: z => hasBadge(z), recentSrc: () => !!srcBak, debug: DEBUG,
+      talk: (pages, done) => talk(pages, done) }),   // 测试用：直接放一段对话（说话任务 / 选回答，tests/apk.test.js）
     _art: ART,
   };
 })();

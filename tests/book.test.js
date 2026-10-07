@@ -3,6 +3,7 @@
 // - 课本新学的题答对 → 明天复习；答错 → 当天复习；复习答对 → 隔天再来
 // - AI 聊天里老师给的更好说法进复习、能出题；老存档的错题本会搬进每日复习
 // - 冒险出题有几成来自正在学的单元；聊天页课本话题排在前面
+// - 秒出分：少说最后一个词时不能提前结束（复习排期、打分、撤提示的细节在 tests/review.test.js）
 // 运行：node tests/book.test.js
 const path = require('path');
 const fs = require('fs');
@@ -145,29 +146,28 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   // 打开以后当天一直开着：冒险里又答错一题也不会再锁上
   g = await p.evaluate(() => { const S = window.EchoGame.S; S.rev.items['word:13:1'] = { k: 'word', w: 13, i: 1, b: 0, due: '2000-01-01', x: 1 }; window.EchoGame.dayLog().revSess = 0; return window.EchoGame.gate(); });
   check(g.open, '当天打开过就一直开着（又答错一题也不锁）', g);
-  // 聊天连不上：今天聊天这一项免了
+  // 聊天连上以后服务器出错：只临时放行 30 分钟（不写 gateOpen；细节在 tests/gate.test.js）
   g = await p.evaluate(() => { const S = window.EchoGame.S, L = window.EchoGame.dayLog(); delete L.gateOpen; L.revSess = 1; S.talk.days = {}; L.chatFail = 1; return window.EchoGame.gate(); });
-  check(g.open && g.chatFail, '聊天连不上时这一项免了', g);
+  check(g.open && g.chatFail && g.pass && !(await p.evaluate(() => window.EchoGame.dayLog().gateOpen)), '聊天连不上：临时放行（不算做完）', g);
   // 手机日期往回调：锁着
   g = await p.evaluate(() => { const S = window.EchoGame.S; S.maxDay = '2099-01-01'; return window.EchoGame.gate(); });
   check(!g.open && g.back, '手机日期被往回调：锁着', g);
   await p.evaluate(() => { window.EchoGame.S.maxDay = ''; });
-  // 关学习锁要家长密码：第一次设 1234，再关一次输错不行
-  const answers = ['1234', '0000'];
-  p.on('dialog', d => d.accept(answers.shift() || ''));
+  // 关学习锁要家长密码（网页版第一次由家长设；自己画的数字键盘），再关一次输错不行
+  const pin = async digits => { for (const d of digits) await p.click('#sheet [data-act=pinKey][data-k="' + d + '"]'); await W(300); };
+  const setGate = m => p.evaluate(m => { window.EchoGame.closeModal(); window.EchoGame.T.settings(); document.querySelector('#sheet [data-act=setGate][data-m="' + m + '"]').click(); }, m);
   await p.evaluate(() => { const S = window.EchoGame.S; S.settings.gate = true; S.settings.pin = ''; });
-  await p.evaluate(() => document.querySelector('[data-act=settings]') ? document.querySelector('[data-act=settings]').click() : null);
-  await p.evaluate(() => { const b = document.querySelector('#sheet [data-act=setGate][data-m="0"]'); if (b) b.click(); });
-  await W(300);
+  await setGate('0'); await W(200);
+  check(await p.isVisible('#pin-pad'), '关学习锁：弹出家长密码键盘');
+  await pin('1234'); await pin('1234');
   let st = await p.evaluate(() => ({ gate: window.EchoGame.S.settings.gate, pin: window.EchoGame.S.settings.pin, off: !!window.EchoGame.dayLog().gateOff }));
-  check(st.gate === false && st.pin === '1234' && st.off, '第一次关学习锁：设好家长密码，当天记下「关过」', st);
-  await p.evaluate(() => { const b = document.querySelector('#sheet [data-act=setGate][data-m="1"]'); if (b) b.click(); });
-  await W(200);
-  await p.evaluate(() => { const b = document.querySelector('#sheet [data-act=setGate][data-m="0"]'); if (b) b.click(); });
-  await W(300);
+  check(st.gate === false && st.pin === '1234' && st.off, '第一次关学习锁：家长设好密码，当天记下「关过」', st);
+  await setGate('1'); await W(200);
+  await setGate('0'); await W(200);
+  await pin('0000');
   st = await p.evaluate(() => ({ gate: window.EchoGame.S.settings.gate }));
   check(st.gate === true, '密码输错关不了学习锁', st);
-  await p.evaluate(() => { const S = window.EchoGame.S; S.talk.days = {}; S.settings.gate = false; });
+  await p.evaluate(() => { const S = window.EchoGame.S; window.EchoGame.closeModal(); S.talk.days = {}; S.settings.gate = false; });
   check(await p.evaluate(() => window.EchoGame.gate().open), '家长把学习锁关了也能进');
 
   // ---------- 8. 学习周报 ----------
@@ -181,6 +181,23 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   const rp = await p.textContent('#sheet .report').catch(() => '');
   check(/学习周报/.test(rp) && /25/.test(rp) && /I go to school/.test(rp) && /开口说对/.test(rp), '周报：时间、开口次数、聊天里改过的句子', rp.slice(0, 80));
   await p.screenshot({ path: path.join(out, 'book-report.png') });
+
+  // ---------- 9. 秒出分：少说最后一个词时不能提前结束（评估第 8 条）----------
+  await p.evaluate(() => window.EchoGame.closeModal());
+  const early = await p.evaluate(async () => {
+    const S = window.EchoGame.S, u = window.BOOKS.list[0].units[0], long = u.sents.slice().sort((a, b) => b[0].length - a[0].length)[0][0];
+    const cut = long.replace(/\s*\S+$/, '');   // 少说最后一个词
+    S.settings.mode = 'auto';
+    EchoTalk.cloudSR = () => true;
+    let how = '';
+    // 假的边说边识别：一个词一个词地冒出来，game.js 的 match 一对上就结束
+    EchoTalk.listenOnce = async o => { const ws = (window.__say || '').split(' '); for (let k = 1; k <= ws.length; k++) { const t = ws.slice(0, k).join(' '); if (o.match && o.match(t)) { how = 'match@' + k; return { text: t, err: null }; } } how = 'done'; return { text: ws.join(' '), err: null }; };
+    window.__say = cut; await window.EchoGame.speech.recognize(null, [long]); const a = how;
+    window.__say = long; await window.EchoGame.speech.recognize(null, [long]); const b = how;
+    S.settings.mode = 'self';
+    return { long, n: long.split(' ').length, cutScore: window.EchoGame.speech.scoreSpeech(long, cut).score, a, b };
+  });
+  check(early.a === 'done' && early.b === 'match@' + early.n && early.cutScore < 90, '少说最后一个词不会秒出分，说全了才秒出分', early);
 
   check(!errs.length, '没有报错', errs.slice(0, 3));
   console.log(fails ? 'FAIL ' + fails : 'PASS');
