@@ -378,6 +378,7 @@ void main() {
     const cam = new T3.PerspectiveCamera(FOV, 1, .1, 200);
     // 默认机位（2026-10-08 按评审改）：从侧面正对着两只怪兽，自己在左、对手在右，一样大、一样远；低一点、平一点，远景画露得多
     const CAM = { pos: V(0, 1.6, 6.9), look: V(0, .78, 0) };
+    const CAMK = Object.assign({ raise: .9, lift: 3.5 }, window.__CAMK || {});   // 竖屏机位系数（调试时用 window.__CAMK 覆盖）
     const hemi = new T3.HemisphereLight(0xeaf6ff, 0x9fcf7a, 1.5);
     const sun = new T3.DirectionalLight(0xfff1d8, 2.2);
     sun.position.set(-3, 7, 4); sun.castShadow = renderer.shadowMap.enabled; sun.shadow.mapSize.set(1024, 1024);
@@ -405,6 +406,24 @@ void main() {
     const env = new T3.Group(); scene.add(env);
     const POS = { me: V(-1.75, 0, 0), foe: V(1.75, 0, 0) };
     const ARENA_C = V((POS.me.x + POS.foe.x) / 2, 0, (POS.me.z + POS.foe.z) / 2);
+    // 竖屏（画面窄高）：两只怪兽一前一后错开站——我方近、偏左下，对手远、偏右上（都还是侧身对着对方），
+    // 把竖着的空间用上，镜头不用拉那么远；横屏还是左右一条线。resize 时按画面比例切换
+    let tallLayout = false;
+    // 朝向：总是侧身朝左右（我方朝右、对手朝左），再由 TURN 往镜头这边转一点露出 3/4 正脸。
+    // 竖屏错开站时也不按「面朝对手」算——那样我方会背对镜头（就成了别家游戏那种背影构图）
+    const yawOf = side => side === 'me' ? Math.PI / 2 : -Math.PI / 2;
+    function setLayout(tall) {
+      if (tall === tallLayout) return false;
+      tallLayout = tall;
+      if (tall) { POS.me.set(-1.1, 0, .85); POS.foe.set(1.1, 0, -.95); } else { POS.me.set(-1.75, 0, 0); POS.foe.set(1.75, 0, 0); }
+      ARENA_C.set((POS.me.x + POS.foe.x) / 2, 0, (POS.me.z + POS.foe.z) / 2);
+      ['me', 'foe'].forEach(sd => {
+        const m = M[sd];
+        if (m) m.yaw = yawOf(sd);
+        if (RIP[sd]) RIP[sd].position.copy(POS[sd]).setY(.025);
+      });
+      return true;
+    }
     // 远景画（theme.backdrop）：像舞台布景一样画在最底层（不参与深度），贴在一圈很远的圆柱内壁上。
     // 竖直方向按默认机位摆：画里的地平线落在画面上方 43% 处、地标顶（画高 15% 处）刚好到画面顶；
     // 横向一张画占 90°，左右镜像接成一整圈（镜头转到哪儿都有画）。画的下半截是平地，往下淡出，露出同色的 3D 地面
@@ -567,9 +586,9 @@ void main() {
         if (o.material && o.material.userData.sprite) o.castShadow = false;
         else o.layers.enable(2);   // 发光后期里当遮挡（怪兽身后的光被挡住）
       });
-      const P = POS[side], other = POS[side === 'me' ? 'foe' : 'me'];
+      const P = POS[side];
       R.root.position.copy(P);
-      const yaw = Math.atan2(other.x - P.x, other.z - P.z);
+      const yaw = yawOf(side);
       R.root.rotation.y = yaw + TURN[side];
       const k = 1.15 * (sp.legend ? 1.3 : 1) / Math.max(1, R.height * .9);
       R.root.scale.multiplyScalar(k);
@@ -1992,10 +2011,13 @@ void main() {
       renderer.setSize(w, h, false);
       canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
       cam.aspect = w / h;
-      // 画面窄（竖屏）就把镜头拉远：左右两只怪兽（x = ±1.75，再留出身子和一点边）都要在画面里
-      const f = Math.max(1, 2.55 / (Math.tan(FOV / 2 * Math.PI / 180) * (w / h)) / 6.9);
-      CAM.pos.set(0, 1.6 + (f - 1) * .9, 6.9 * f);
-      if (f !== camF) { camF = f; placeBackdrop(); }
+      const relaid = setLayout(w / h < 1);
+      // 画面窄就把镜头拉远：左右两只怪兽（横排 x = ±1.75、竖屏错开 x = ±1.0，再留出身子和一点边）都要在画面里
+      const f = Math.max(1, (tallLayout ? 1.95 : 2.55) / (Math.tan(FOV / 2 * Math.PI / 180) * (w / h)) / 6.9);
+      // 竖屏（f>1）：镜头少抬高、注视点往上提——地平线往下走，多露远景、少拍镜头前的空沙地（RAISE / LIFT 两个系数）
+      CAM.pos.set(0, 1.6 + (f - 1) * CAMK.raise, 6.9 * f);
+      CAM.look.set(0, .78 + (f - 1) * CAMK.lift, 0);
+      if (f !== camF || relaid) { camF = f; placeBackdrop(); }
       cam.updateProjectionMatrix();
       pUni.uScale.value = h * renderer.getPixelRatio() * 1.3;
       bloomSize();
