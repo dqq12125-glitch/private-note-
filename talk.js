@@ -677,7 +677,7 @@
     stopPlayback(); stopReplay(); MIC.on = false; c.holding = false;
     ['#tk-mic', '#tk-help', '#tk-re', '#tk-slow'].forEach(s => { const b = $(s); if (b) b.disabled = true; });
     if (c.ws && c.ws.readyState === 1) {
-      status('聊得不错！老师正在看你们的对话……');
+      status('聊得不错！正在给这段对话写评语……');
       wsSend({ type: 'end', steps: c.ticks });
       // 老师太慢：先把这段存下来、照样算（晚到的评价还会补上）
       c.evalTimer = setTimeout(() => { if (!c.done) finishWith(c, null, null, null, 'timeout'); }, CFG.evalWait);
@@ -814,12 +814,12 @@
         (voice < 3 ? '<p class="tk-note">这次用语音说的英语句子不到 3 句' + (typed ? '（打字的不算）' : '') + '，目标先不算完成。下次按住话筒说吧！</p>' : '') +
         (steps.length ? '<ul class="tk-steps-r">' + steps.map((s, k) => '<li>' + (ev.steps[k] ? '✅ ' : '⬜ ') + esc(s.zh) + '</li>').join('') + '</ul>' : '') +
         (ev.praise ? '<p>' + esc(ev.praise) + '</p>' : '') +
-        (ev.ai ? '<p class="tk-ai-line">🤖 老师的评语由 AI 生成（阿里云通义千问提供）</p>' : '') +
-        (!ev.ai ? '<p class="tk-note">老师这次没来得及写评语，不过这段聊天算数，已经记下来了！</p>' : '') +
+        (ev.ai ? '<p class="tk-ai-line">🤖 评语由 AI 生成（阿里云通义千问提供）</p>' : '') +
+        (!ev.ai ? '<p class="tk-note">这次没来得及写评语，不过这段聊天算数，已经记下来了！</p>' : '') +
         (ev.tips.length ? '<div class="tk-tips"><b>可以这样说更好（明天的每日复习里会再练）：</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
         (coins ? '<p class="tk-coin">🪙 +' + coins + ' 金币</p>' : '');
     } else {
-      body = '<b>聊完啦！这段聊天算数 👍</b><p>老师这次没来得及看完（可能是网络慢），不过你开口说的句子已经记下来了。</p>';
+      body = '<b>聊完啦！这段聊天算数 👍</b><p>这次评语没来得及写完（可能是网络慢），不过你开口说的句子已经记下来了。</p>';
     }
     if (ev && ev.concern) body += '<p class="tk-note">💛 如果你遇到了难过或者不安全的事，记得马上告诉爸爸妈妈或者老师。</p>';
     box.innerHTML = '<div class="tk-eval"><img src="' + face(c.npc) + '" alt="">' + body + progLine() + gateLine() +

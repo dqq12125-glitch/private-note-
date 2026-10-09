@@ -2574,7 +2574,7 @@
     openModal('<div class="big">🏝️</div><h2>欢迎来到回声岛！</h2>' +
       '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用英语念咒语攻击，听懂对手的英语来防御。收服新怪兽、升级进化，打败 13 个区域的岛主拿徽章。</p>' +
       '<p><b>📚 闯关练习</b>：📗 课本单元（适用于沪教版词汇，跟着学校的单元走）和 13 座话题小岛。每通关一关送回声球，用来收服怪兽。</p>' +
-      '<p><b>🗣️ 和岛民聊天</b>：按住话筒，用英语和岛上的人真的聊天；聊完老师打分，说错的句子第二天会出现在 📕 每日复习里。</p>' +
+      '<p><b>🗣️ 和岛民聊天</b>：按住话筒，用英语和岛上的人真的聊天；聊完 AI 写评语，说错的句子第二天会出现在 📕 每日复习里。</p>' +
       '<p>🎁 每天 3 个任务，做完开宝箱 · 🔥 每天打一场就算打卡</p>' +
       envHTML() +
       '<div class="row"><button class="btn ghost" data-act="testVoice">🔊 试试声音</button><button class="btn" data-act="introGo" data-focus>出发！</button></div>', { locked: true });
@@ -2743,7 +2743,7 @@
       const list = wrongs.map(e => { const [en, zh] = txt(e); return '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + esc(en) + '</b><span>' + esc(zh) + (e.x > 1 ? ' · 错过 ' + e.x + ' 次' : '') + '</span></button>'; }).join('');
       const mastered = all.filter(e => !e.due).length, waiting = all.filter(e => e.due && e.due > dayStr()).length;
       openModal('<div class="big">📕</div><h2>每日复习</h2>' +
-        '<p>' + (r.n ? '今天要复习 <b>' + r.n + '</b> 题：' + [r.wrong ? r.wrong + ' 道错题' : '', r.old ? r.old + ' 道学过的' : '', r.chat ? r.chat + ' 句 AI 聊天里老师教的说法' : ''].filter(Boolean).join('、') + '。' : '今天的复习做完了！') +
+        '<p>' + (r.n ? '今天要复习 <b>' + r.n + '</b> 题：' + [r.wrong ? r.wrong + ' 道错题' : '', r.old ? r.old + ' 道学过的' : '', r.chat ? r.chat + ' 句 AI 聊天里学到的更好说法' : ''].filter(Boolean).join('、') + '。' : '今天的复习做完了！') +
         '答错的题当天就复习；复习答对一次，隔 1、2、4、7、15、30 天再考一次，都对了就算掌握。冒险里答对今天到期的题也算复习。</p>' +
         '<p class="tip">⏳ 以后会回来的 ' + waiting + ' 题 · 🏅 已经掌握 ' + mastered + ' 题</p>' +
         (list ? '<details class="pre"><summary>📖 错题本（点一句就能听）</summary><div class="pre-list">' + list + '</div></details>' : '') +
@@ -3403,7 +3403,7 @@
       (cu ? '<p class="rp-line">📗 正在学 <b>' + esc(cu.bshort + ' Unit ' + cu.n + ' ' + cu.en) + '</b> · ★ ' + ustars + '/21 · 这周答错 ' + sum('wrongs') + ' 次（都进了复习）</p>' : '') +
       '<div class="rp-more">' +
       (top ? '<h3>最容易错的（累计）</h3><ul class="rp-list">' + top + '</ul>' : '') +
-      (tips.length ? '<h3>聊天里老师改过的句子</h3><ul class="rp-list">' + tips.map(t => '<li><s>' + esc(t.said) + '</s> → <b>' + esc(t.better) + '</b></li>').join('') + '</ul>' : '') +
+      (tips.length ? '<h3>聊天里 AI 改过的句子</h3><ul class="rp-list">' + tips.map(t => '<li><s>' + esc(t.said) + '</s> → <b>' + esc(t.better) + '</b></li>').join('') + '</ul>' : '') +
       histLine +
       '</div><p class="rp-diag">💰 本周 AI 花费约 ¥' + costTxt + (window.ECHO_APP ? '' : '（网页版的聊天费用记在中转服务那边）') + ' · 🔧 ' + esc(diagLine(W0)) + '</p>' +
       '<div class="rp-end"><span>📸 截个图发给家长吧！</span><button class="btn small ghost" data-act="close">关闭</button></div></div>');
