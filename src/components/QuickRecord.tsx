@@ -189,7 +189,7 @@ export function QuickRecordModal() {
       width="max-w-xl"
       footer={
         <>
-          <span className="mr-auto self-center text-xs text-slate-400">
+          <span className="mr-auto hidden self-center text-xs text-slate-400 sm:inline">
             <span className="kbd">Enter</span> 保存 · <span className="kbd">Shift</span>+<span className="kbd">Enter</span> 换行 ·{' '}
             <span className="kbd">Esc</span> 关闭
           </span>
