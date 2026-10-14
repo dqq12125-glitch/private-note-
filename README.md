@@ -9,6 +9,18 @@
 
 ---
 
+## 〇、最省事：已经托管在 claude.ai 上（不用 Supabase / Vercel）
+
+网站已经发布成你 claude.ai 账号下的一个私有页面：https://claude.ai/artifact/PPkEdbfQ6zHHeaveFHhtwx
+
+- **登录**：用你的 claude.ai 账号，不用另外注册。电脑浏览器、手机浏览器或 Claude App 里登录同一个账号就能打开。
+- **数据**：存在这个页面自带的云端数据库里（最多 25,000 条记录，够用很多年），电脑和手机看到的是同一份。
+- **谁能看到**：只有你。以后想和同事一起用，在页面的「分享」菜单里把同事设为「编辑者」即可；只给「查看」权限的人看不到任何数据。
+- **和自建网站的区别**：导出 Excel / JSON 会先弹一个确认框；进度报告不能直接打印，改为「下载报告」，用浏览器打开后再打印或存 PDF。
+- **更新**：改完代码后运行 `npm run build:artifact`，把生成的 `dist-artifact/student-tracker.html` 重新发布到同一个链接（让 Claude 发布即可），数据不会丢。
+
+下面第一到第三步是另一种方式：自己用 Supabase + Vercel 部署。两种方式的数据可以通过「设置 / 导出」里的 JSON 备份互相搬。
+
 ## 一、先在本地试一试（5 分钟）
 
 需要先装 [Node.js](https://nodejs.org/)（20 或以上）。
@@ -125,7 +137,8 @@ offer 状态改成「已接受」或「放弃」后，这条 offer 的 DDL 提�
 npm run dev        # 开发服务器
 npm test           # 单元测试（日期、导入解析、提醒规则、业务操作）
 npm run typecheck  # 类型检查
-npm run build      # 打包到 dist/
+npm run build      # 打包到 dist/（自己部署用）
+npm run build:artifact  # 打包成一个文件 dist-artifact/student-tracker.html（托管到 claude.ai 用）
 node scripts/make-sample-xlsx.mjs   # 重新生成测试用的假 Excel
 ```
 
@@ -135,7 +148,7 @@ node scripts/make-sample-xlsx.mjs   # 重新生成测试用的假 Excel
 src/
   lib/          类型、日期工具（悉尼时区）、常量、提醒引擎、搜索、导出
   importer/     Excel 导入：历史进度按日期拆分、日期/offer 提及识别、字段清理
-  data/         数据层：store（乐观更新 + 写入队列）、业务操作、本地/Supabase 存储、示例数据
+  data/         数据层：store（乐观更新 + 写入队列）、业务操作、本地 / Supabase / claude.ai 三种存储、示例数据
   components/   界面组件：外壳、学生详情各模块、快速记录、通用 UI
   pages/        页面：首页、巡检、学生列表、详情、所有动态、未来几个月、导入、确认清单、设置、报告、登录
 supabase/schema.sql   数据库结构和安全规则

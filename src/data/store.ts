@@ -15,7 +15,7 @@ export interface Toast {
 export interface AppState extends DBState {
   phase: 'boot' | 'loading' | 'ready' | 'error'
   loadError: string | null
-  mode: 'local' | 'supabase'
+  mode: 'local' | 'supabase' | 'artifact'
   userEmail: string | null
   today: string
   sync: { pending: number; error: string | null }
@@ -55,7 +55,8 @@ let reloadAfterFlush = false
 /** 写入失败的原因是不是「再试也没用」（数据库拒绝，例如学生已被删除、权限不足） */
 function isPermanent(e: unknown): boolean {
   const code = (e as { code?: string })?.code ?? ''
-  return /^(22|23|42|PGRST)/.test(code)
+  // Supabase/Postgres 的数据错误、权限错误；claude.ai 数据库的参数错误、容量已满
+  return /^(22|23|42|PGRST)/.test(code) || ['invalid_argument', 'quota_exceeded', 'transform_error'].includes(code)
 }
 const MAX_PERMANENT_ATTEMPTS = 3
 

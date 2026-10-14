@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft, Download, Printer } from 'lucide-react'
 import { EVENT_ICON, VISA_STEPS, cycleLabel } from '../lib/constants'
 import { fmtDate, fmtDateTime, nowIso } from '../lib/dates'
 import { appSub, sortEventsDesc } from '../lib/reminders'
@@ -8,6 +8,21 @@ import { fmtMoney } from '../data/actions'
 import { useStudentInfo } from '../data/hooks'
 import { useStore } from '../data/store'
 import { Button } from '../components/ui'
+import { saveFile, TARGET } from '../lib/platform'
+import { toast } from '../data/store'
+
+/** 把报告存成一个独立的 HTML 文件（托管在 claude.ai 时不能直接打印，用浏览器打开这个文件再打印） */
+async function downloadReport(name: string, date: string) {
+  const sheet = document.getElementById('report-sheet')
+  if (!sheet) return
+  const css = [...document.querySelectorAll('style')].map((s) => s.textContent ?? '').join('\n')
+  const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${name} 进度报告 ${date}</title><style>${css}</style></head><body style="background:#f1f5f9"><p class="no-print" style="max-width:800px;margin:16px auto;font:13px system-ui;color:#64748b">按 Ctrl+P（Mac 按 ⌘+P）打印，或在打印窗口里选「另存为 PDF」。</p>${sheet.outerHTML}</body></html>`
+  try {
+    await saveFile(`${name}_进度报告_${date.replace(/\//g, '-')}.html`, html)
+  } catch (e) {
+    toast(`保存失败：${e instanceof Error ? e.message : e}`, { tone: 'error' })
+  }
+}
 
 /** 进度报告：一页打印版，浏览器「打印 → 另存为 PDF」即可 */
 export function ReportPage() {
@@ -34,11 +49,17 @@ export function ReportPage() {
         <label className="inline-flex items-center gap-1.5 text-[13px]">
           <input type="checkbox" checked={withPayments} onChange={(e) => setWithPayments(e.target.checked)} /> 包含收费
         </label>
-        <Button variant="primary" onClick={() => window.print()}>
-          <Printer size={15} /> 打印 / 另存为 PDF
-        </Button>
+        {TARGET === 'artifact' ? (
+          <Button variant="primary" onClick={() => downloadReport(s.name, fmtDate(today))}>
+            <Download size={15} /> 下载报告（打开后可打印 / 存 PDF）
+          </Button>
+        ) : (
+          <Button variant="primary" onClick={() => window.print()}>
+            <Printer size={15} /> 打印 / 另存为 PDF
+          </Button>
+        )}
       </div>
-      <div className="mx-auto max-w-[800px] bg-white p-10 shadow-sm print:max-w-none print:p-0 print:shadow-none">
+      <div id="report-sheet" className="mx-auto max-w-[800px] bg-white p-10 shadow-sm print:max-w-none print:p-0 print:shadow-none">
         <div className="flex items-end justify-between border-b-2 border-slate-800 pb-3">
           <div>
             <div className="text-2xl font-bold">{s.name}{s.english_name && <span className="ml-2 text-lg font-normal text-slate-500">{s.english_name}</span>}</div>

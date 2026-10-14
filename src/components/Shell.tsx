@@ -23,6 +23,7 @@ import { supabase } from '../data/supabase'
 import { StatusTag, useOpenStudent } from './bits'
 import { StudentDetail } from './detail/StudentDetail'
 import { QuickRecordModal } from './QuickRecord'
+import { ConfirmHost } from './confirm'
 import { Toasts, cx, useEscape, isComposing } from './ui'
 
 function NavItem({ to, icon, label, badge, end, onClick }: { to: string; icon: React.ReactNode; label: string; badge?: number; end?: boolean; onClick?: () => void }) {
@@ -63,7 +64,9 @@ function SyncStatus() {
       ) : (
         <div>✓ 已保存</div>
       )}
-      {mode === 'local' ? (
+      {mode === 'artifact' ? (
+        <div title="数据存在 claude.ai 上这个页面自带的云端数据库，只有你（和你设为编辑者的人）能看到">☁️ 云端 · claude.ai</div>
+      ) : mode === 'local' ? (
         <div className="text-amber-600" title="没有配置 Supabase：数据只存在这个浏览器里，记得定期导出备份">
           本地模式 · 数据只在本浏览器
         </div>
@@ -204,7 +207,7 @@ function SearchPalette() {
             <button
               key={h.info.s.id}
               type="button"
-              onMouseEnter={() => setIdx(i)}
+              onMouseMove={() => idx !== i && setIdx(i)}
               onClick={() => go(h.info.s.id)}
               className={cx('flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left', i === idx && 'bg-brand-50')}
             >
@@ -263,6 +266,7 @@ export function Shell() {
     return (
       <>
         <Outlet />
+        <ConfirmHost />
         <Toasts />
       </>
     )
@@ -308,6 +312,7 @@ export function Shell() {
       </button>
       <QuickRecordModal />
       <SearchPalette />
+      <ConfirmHost />
       <Toasts />
     </div>
   )

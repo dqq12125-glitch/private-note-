@@ -6,6 +6,7 @@ import type { Task } from '../../lib/types'
 import { addTask, completeTask, deleteTask, postponeTask, reopenTask, updateTask } from '../../data/actions'
 import { useStore } from '../../data/store'
 import { Button, DateField, DaysLeft, MenuItem, Popover, QUICK_OFFSETS, cx, offsetDate, isComposing } from '../ui'
+import { confirmDialog } from '../confirm'
 
 export function PostponeMenu({
   onPick,
@@ -146,7 +147,7 @@ function TaskRow({ t }: { t: Task }) {
           size="xs"
           variant="ghost"
           title="删除"
-          onClick={() => window.confirm(`删除待办「${t.content}」？`) && deleteTask(t.id)}
+          onClick={async () => (await confirmDialog({ title: `删除待办「${t.content}」？`, confirmText: '删除', danger: true })) && deleteTask(t.id)}
         >
           <Trash2 size={13} />
         </Button>

@@ -20,6 +20,7 @@ import {
 } from '../../data/actions'
 import { useStore } from '../../data/store'
 import { Button, DateField, InlineText, MenuItem, Popover, cx, isComposing } from '../ui'
+import { confirmDialog } from '../confirm'
 
 /** 剩余天数标签：签证到期按 60/30/7 天变色，其他关键日期 7 天内变红 */
 export function ExpiryPill({ days, visa = true }: { days: number; visa?: boolean }) {
@@ -68,7 +69,7 @@ function VisaCard({ v }: { v: Visa }) {
           size="xs"
           variant="ghost"
           title="删除这条签证"
-          onClick={() => window.confirm('删除这条签证记录？（时间线里的历史会保留）') && deleteVisa(v.id)}
+          onClick={async () => (await confirmDialog({ title: '删除这条签证记录？', message: '时间线里的历史会保留。', confirmText: '删除', danger: true })) && deleteVisa(v.id)}
         >
           <Trash2 size={13} />
         </Button>
@@ -241,7 +242,7 @@ export function KeyDates({ info }: { info: StudentInfo }) {
                 size="xs"
                 variant="ghost"
                 className="opacity-0 group-hover:opacity-100"
-                onClick={() => window.confirm(`删除关键日期「${k.kind} ${fmtDate(k.date)}」？`) && deleteKeyDate(k.id)}
+                onClick={async () => (await confirmDialog({ title: `删除关键日期「${k.kind} ${fmtDate(k.date)}」？`, confirmText: '删除', danger: true })) && deleteKeyDate(k.id)}
               >
                 <Trash2 size={13} />
               </Button>
@@ -322,7 +323,7 @@ export function Payments({ info }: { info: StudentInfo }) {
                   <button
                     type="button"
                     className="text-slate-300 opacity-0 group-hover:opacity-100 hover:text-rose-500"
-                    onClick={() => window.confirm(`删除收费记录「${p.item}」？`) && deletePayment(p.id)}
+                    onClick={async () => (await confirmDialog({ title: `删除收费记录「${p.item || '未命名'}」？`, message: '时间线里会记一条删除记录。', confirmText: '删除', danger: true })) && deletePayment(p.id)}
                   >
                     <Trash2 size={13} />
                   </button>

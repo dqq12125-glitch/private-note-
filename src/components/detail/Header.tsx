@@ -23,6 +23,7 @@ import {
 } from '../../data/actions'
 import { useStore } from '../../data/store'
 import { Button, Chips, DateField, Field, InlineText, MenuItem, Modal, Popover, Segmented, cx } from '../ui'
+import { confirmDialog } from '../confirm'
 
 export function DormantDialog({
   open,
@@ -181,12 +182,16 @@ export function StudentHeader({ info, compact }: { info: StudentInfo; compact?: 
                 )}
                 <MenuItem
                   danger
-                  onClick={() => {
+                  onClick={async () => {
                     close()
-                    const ok = window.prompt(
-                      `删除「${s.name}」会连同所有记录一起删除，无法恢复。\n确定要删除的话，请输入学生姓名：`,
-                    )
-                    if (ok === s.name) deleteStudent(s.id)
+                    const ok = await confirmDialog({
+                      title: `删除学生「${s.name}」？`,
+                      message: '会连同这个学生的申请、签证、待办、收费和整条时间线一起删除，无法恢复。',
+                      confirmText: '删除学生',
+                      danger: true,
+                      requireText: s.name,
+                    })
+                    if (ok) deleteStudent(s.id)
                   }}
                 >
                   <Trash2 size={14} /> 删除学生

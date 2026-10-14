@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Clock, Megaphone } from 'lucide-react'
 import { addDays, diffDays, fmtAgo, fmtDate, fmtDaysLeft, fmtShort } from '../lib/dates'
 import { todayQueue, type StudentInfo } from '../lib/reminders'
@@ -307,6 +307,8 @@ export function InspectPage() {
   const infos = useInfos()
   const map = useInfoMap()
   const today = useStore((s) => s.today)
+  const [params] = useSearchParams()
+  const panelOpen = params.has('s')
   const [, force] = useState(0)
 
   // 生成/更新今天的队列
@@ -344,7 +346,7 @@ export function InspectPage() {
       if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') return
       if (e.metaKey || e.ctrlKey || e.altKey) return
       const st = useStore.getState()
-      if (st.quick.open || st.palette || new URLSearchParams(window.location.hash.split('?')[1]).get('s')) return
+      if (st.quick.open || st.palette || panelOpen) return
       if (e.key === 'ArrowRight') {
         e.preventDefault()
         next()

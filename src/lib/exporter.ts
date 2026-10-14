@@ -1,21 +1,11 @@
 // 导出全部数据：Excel（每类数据一个工作表）和 JSON（完整备份，可以再导入恢复）
 import { fmtDate, fmtDateTime, todayStr } from './dates'
+import { saveFile } from './platform'
 import type { DBState } from './types'
 
-function download(blob: Blob, name: string) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = name
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 2000)
-}
-
-export function exportJson(db: DBState) {
+export async function exportJson(db: DBState) {
   const data = { app: 'student-tracker', version: 1, exported_at: new Date().toISOString(), ...db }
-  download(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }), `学生跟进备份_${fmtDate(todayStr()).replace(/\//g, '-')}.json`)
+  await saveFile(`学生跟进备份_${fmtDate(todayStr()).replace(/\//g, '-')}.json`, JSON.stringify(data, null, 2))
 }
 
 type Cell = string | number | null
@@ -83,5 +73,5 @@ export async function exportExcel(db: DBState) {
   ]
   for (const s of sheets) s.stickyRowsCount = 1
   const blob = await writeExcelFile(sheets as any).toBlob()
-  download(blob, `学生跟进导出_${fmtDate(todayStr()).replace(/\//g, '-')}.xlsx`)
+  await saveFile(`学生跟进导出_${fmtDate(todayStr()).replace(/\//g, '-')}.xlsx`, blob)
 }

@@ -8,7 +8,7 @@ export type Op =
   | { op: 'reset' }
 
 export interface Adapter {
-  kind: 'local' | 'supabase'
+  kind: 'local' | 'supabase' | 'artifact'
   loadAll(): Promise<DBState>
   apply(op: Op): Promise<void>
 }

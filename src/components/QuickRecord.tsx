@@ -98,7 +98,7 @@ export function StudentPicker({
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => choose(i)}
-              onMouseEnter={() => setIdx(n)}
+              onMouseMove={() => idx !== n && setIdx(n)}
               className={cx('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px]', n === idx && 'bg-brand-50')}
             >
               <span className="font-medium text-slate-900">{i.s.name}</span>

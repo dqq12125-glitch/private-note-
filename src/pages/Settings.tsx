@@ -5,6 +5,7 @@ import { loadDemo, restoreBackup } from '../data/actions'
 import { resetAllData, saveSettings, toast, useStore } from '../data/store'
 import { supabaseConfigured } from '../data/supabase'
 import { Button, Field, isComposing } from '../components/ui'
+import { confirmDialog } from '../components/confirm'
 
 export function DemoButton({ size = 'md' }: { size?: 'md' | 'lg' }) {
   return (
@@ -117,7 +118,15 @@ export function SettingsPage() {
           >
             <Download size={15} /> 导出 Excel
           </Button>
-          <Button onClick={() => exportJson(db())}>
+          <Button
+            onClick={async () => {
+              try {
+                await exportJson(db())
+              } catch (e) {
+                toast(`导出失败：${e instanceof Error ? e.message : e}`, { tone: 'error' })
+              }
+            }}
+          >
             <FileJson size={15} /> 导出 JSON 备份
           </Button>
           <Button onClick={() => fileRef.current?.click()}>
@@ -135,7 +144,12 @@ export function SettingsPage() {
               try {
                 const data = JSON.parse(await f.text())
                 if (!Array.isArray(data.students)) throw new Error('不是本系统导出的备份文件')
-                if (!window.confirm(`备份里有 ${data.students.length} 个学生。恢复会和现有数据合并（同一条记录用备份里的覆盖）。继续？`)) return
+                const ok = await confirmDialog({
+                  title: '从备份恢复？',
+                  message: `备份里有 ${data.students.length} 个学生。恢复会和现有数据合并（同一条记录用备份里的覆盖）。`,
+                  confirmText: '恢复',
+                })
+                if (!ok) return
                 const n = restoreBackup(data)
                 toast(`已恢复 ${n} 条数据`)
               } catch (err) {
@@ -151,7 +165,12 @@ export function SettingsPage() {
 
       <div className="card space-y-3 p-5">
         <h2 className="text-[15px] font-semibold">数据存在哪里</h2>
-        {mode === 'supabase' ? (
+        {mode === 'artifact' ? (
+          <p className="text-[13px] text-slate-600">
+            ☁️ 托管在 claude.ai：数据保存在这个页面自带的云端数据库里。电脑和手机登录同一个 claude.ai 账号打开这个页面就能看到。
+            只有你（和你在分享菜单里设为「编辑者」的同事）能读写，其他人即使拿到链接也看不到数据。
+          </p>
+        ) : mode === 'supabase' ? (
           <p className="text-[13px] text-slate-600">☁️ 云端模式：数据保存在 Supabase，电脑和手机登录同一个账号就能看到。</p>
         ) : (
           <p className="text-[13px] text-amber-700">
@@ -160,12 +179,18 @@ export function SettingsPage() {
           </p>
         )}
         <div className="flex flex-wrap gap-2">
-          <DemoButton />
+          {counts.students === 0 && <DemoButton />}
           <Button
             variant="danger"
-            onClick={() => {
-              const t = window.prompt('这会删除所有学生和记录，无法恢复。建议先导出 JSON 备份。\n确定的话请输入「清空」：')
-              if (t === '清空') {
+            onClick={async () => {
+              const ok = await confirmDialog({
+                title: '清空所有数据？',
+                message: '这会删除所有学生和记录，无法恢复。建议先导出 JSON 备份。',
+                confirmText: '清空',
+                danger: true,
+                requireText: '清空',
+              })
+              if (ok) {
                 resetAllData()
                 toast('已清空所有数据')
               }

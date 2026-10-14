@@ -17,6 +17,7 @@ import {
 } from '../../data/actions'
 import { useStore } from '../../data/store'
 import { Button, DateField, DaysLeft, Field, MenuItem, Modal, Popover, cx } from '../ui'
+import { confirmDialog } from '../confirm'
 
 export function AppStatusTag({ status }: { status: AppStatus }) {
   return <span className={cx('tag', APP_STATUS_STYLE[status])}>{status}</span>
@@ -206,8 +207,14 @@ export function AppFormModal({
             <Button
               variant="danger"
               className="mr-auto"
-              onClick={() => {
-                if (window.confirm(`删除「${appLabel(app)}」这条申请？（时间线里的历史记录会保留）`)) {
+              onClick={async () => {
+                const ok = await confirmDialog({
+                  title: `删除「${appLabel(app)}」这条申请？`,
+                  message: '时间线里的历史记录会保留。',
+                  confirmText: '删除',
+                  danger: true,
+                })
+                if (ok) {
                   deleteApplication(app.id)
                   onClose()
                 }
