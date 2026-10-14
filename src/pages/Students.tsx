@@ -9,7 +9,7 @@ import { createStudent } from '../data/actions'
 import { useInfos } from '../data/hooks'
 import { useStore } from '../data/store'
 import { AssigneeTag, BallTag, StatusTag, StudentLink, useOpenStudent } from '../components/bits'
-import { Button, DaysLeft, Modal, Field, cx } from '../components/ui'
+import { Button, DaysLeft, Modal, Field, cx, isComposing } from '../components/ui'
 
 type SortKey = 'name' | 'assignee' | 'business' | 'status' | 'ball' | 'next' | 'ddl' | 'follow' | 'stale'
 
@@ -76,7 +76,7 @@ function NewStudentDialog({ onClose }: { onClose: () => void }) {
     >
       <div className="space-y-3">
         <Field label="姓名">
-          <input autoFocus className="input" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && save()} />
+          <input autoFocus className="input" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !isComposing(e) && save()} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="负责人">

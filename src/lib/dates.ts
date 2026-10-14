@@ -167,9 +167,13 @@ export function fmtAgo(n: number | null): string {
  * DD/MM/YYYY、DD/MM/YY、DD/MM（年份取离今天最近的）、DD.MM.YYYY、DD-MM-YYYY、YYYY-MM-DD、DDMMYYYY
  */
 export function parseUserDate(input: string, today: string = todayStr()): string | null {
-  const s = input.trim().replace(/[年月]/g, '/').replace(/[日号]/g, '')
-  if (!s) return null
-  let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/)
+  const raw = input.trim()
+  if (!raw) return null
+  // 中文写法：2026年3月5日 / 3月5日 / 3月5号（这里是「月在前」，不能当成 DD/MM）
+  let m = raw.match(/^(?:(\d{4})\s*年\s*)?(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]?$/)
+  if (m) return m[1] ? makeDate(+m[1], +m[2], +m[3]) : nearestYear(+m[2], +m[3], today)
+  const s = raw
+  m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/)
   if (m) return makeDate(+m[1], +m[2], +m[3])
   m = s.match(/^(\d{1,2})[\s/.\-](\d{1,2})[\s/.\-](\d{2}|\d{4})$/)
   if (m) {

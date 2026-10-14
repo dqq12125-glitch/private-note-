@@ -66,3 +66,14 @@ describe('splitHistory', () => {
     expect(splitHistory(null)).toEqual([])
   })
 })
+
+describe('splitHistory mid-sentence dates', () => {
+  it('does not split on a space-separated date when the line did not start with one', () => {
+    const r = splitHistory('学生 09/07/2026 交了押金')
+    expect(r).toEqual([{ date: null, text: '学生 09/07/2026 交了押金' }])
+  })
+  it('does not turn a future plan into a record', () => {
+    const r = splitHistory('09/07/2026 递交UQ申请，学生说 20/12/2026 交材料', '2026-10-14')
+    expect(r).toEqual([{ date: '2026-07-09', text: '递交UQ申请，学生说 20/12/2026 交材料' }])
+  })
+})

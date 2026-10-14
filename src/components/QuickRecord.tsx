@@ -9,7 +9,7 @@ import { useInfos, useStudentInfo } from '../data/hooks'
 import { toast, useStore } from '../data/store'
 import { BallTag, StatusTag, useOpenStudent } from './bits'
 import { isEnterSave } from './detail/Timeline'
-import { Button, DateField, Modal, RemindPicker, Segmented, TextArea, cx } from './ui'
+import { Button, DateField, Modal, RemindPicker, Segmented, TextArea, cx, isComposing } from './ui'
 
 export function StudentPicker({
   value,
@@ -77,7 +77,7 @@ export function StudentPicker({
           setOpen(true)
         }}
         onKeyDown={(e) => {
-          if (e.nativeEvent.isComposing) return
+          if (isComposing(e)) return
           if (e.key === 'ArrowDown') {
             e.preventDefault()
             setIdx((i) => Math.min(i + 1, list.length - 1))

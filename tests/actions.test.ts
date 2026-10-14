@@ -164,6 +164,23 @@ describe('dormancy', () => {
   })
 })
 
+describe('review fixes', () => {
+  it('reminding the student about a TBC offer pushes the TBC reminder 3 days out', () => {
+    const s = createStudent({ name: '卯' })
+    const a = addApplication(s.id, { school: 'UQ', status: 'Con offer', offer_ddl_tbc: true })
+    useStore.setState({ today: addDays(today, 3) })
+    remindApp(a.id)
+    expect(S().applications.find((x) => x.id === a.id)!.tbc_remind_on).toBe(addDays(today, 6))
+  })
+  it('a future last handled date is replaced when the student is handled', () => {
+    const s = createStudent({ name: '辰', last_handled_date: addDays(today, 60), next_follow_date: addDays(today, 74) })
+    checkStudent(s.id)
+    const st = S().students.find((x) => x.id === s.id)!
+    expect(st.last_handled_date).toBe(today)
+    expect(st.next_follow_date).toBe(addDays(today, 14))
+  })
+})
+
 describe('persistence', () => {
   it('sends every change to the adapter', async () => {
     const s = createStudent({ name: '寅' })

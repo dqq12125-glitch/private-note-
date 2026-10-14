@@ -32,16 +32,23 @@ const BEFORE_SEPARATOR = /[。；;！!？?，,、:：]\s*$/
 const BEFORE_DEADLINE_WORD = /(截止|到期|ddl|前|于|在|是|为|到|至|by|before|due|until|on)\s*$/i
 const AFTER_LINE_END = /^\s*[。；;，,.!！)）\]】]*\s*$/
 
-/** 这个日期是不是一条记录的开头（而不是句子里提到的日期） */
-export function isBoundary(line: string, m: DateMatch): boolean {
+/**
+ * 这个日期是不是一条记录的开头（而不是句子里提到的日期）。
+ * @param hasPrev 这一行前面已经有一条记录开头了（「09/07/2026 递交 20/07/2026 补材料」这种一行多条的写法）
+ * @param today 句子中间提到的未来日期是计划，不是记录日期
+ */
+export function isBoundary(line: string, m: DateMatch, hasPrev = false, today?: string): boolean {
   const before = line.slice(0, m.index)
   const after = line.slice(m.end)
   if (AFTER_MENTION.test(after)) return false
   if (BEFORE_LIST_MARK.test(before)) return true
+  // 下面都是写在行中间的日期：未来的日期当作「提到的计划」，不拆
+  if (today && m.date > today) return false
   if (BEFORE_SEPARATOR.test(before)) return true
   if (/[（(【\[]\s*$/.test(before) && /^\s*[）)】\]]/.test(after)) return true
   if (AFTER_LINE_END.test(after) && before.trim()) return !BEFORE_DEADLINE_WORD.test(before)
-  if (/\s$/.test(before) && !BEFORE_DEADLINE_WORD.test(before)) return true
+  // 只用空格隔开的日期：只有这一行开头已经是日期时才算新记录（否则是「学生 09/07/2026 交了押金」这种句子）
+  if (hasPrev && /\s$/.test(before) && !BEFORE_DEADLINE_WORD.test(before)) return true
   return false
 }
 
@@ -69,8 +76,9 @@ export function normalizeText(s: unknown): string {
 }
 
 /** 拆分一行 */
-function splitLine(line: string): HistoryEntry[] {
-  const bounds = findFullDates(line).filter((m) => isBoundary(line, m))
+function splitLine(line: string, today?: string): HistoryEntry[] {
+  const bounds: DateMatch[] = []
+  for (const m of findFullDates(line)) if (isBoundary(line, m, bounds.length > 0, today)) bounds.push(m)
   if (!bounds.length) return [{ date: null, text: clean(line) }]
 
   const rawPrefix = line.slice(0, bounds[0].index)
@@ -104,14 +112,14 @@ function splitLine(line: string): HistoryEntry[] {
  * - 没有日期的行 → 日期不明（date = null）
  * - 上一条以冒号结尾、或日期单独占一行时，下面没日期的行算作上一条的续行
  */
-export function splitHistory(raw: unknown): HistoryEntry[] {
+export function splitHistory(raw: unknown, today?: string): HistoryEntry[] {
   const text = normalizeText(raw)
   if (!text) return []
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
   const out: HistoryEntry[] = []
   let continuing = false
   for (const line of lines) {
-    const parts = splitLine(line)
+    const parts = splitLine(line, today)
     const prev = out[out.length - 1]
     if (parts.length === 1 && parts[0].date === null && prev) {
       const isList = LIST_MARK.test(line)

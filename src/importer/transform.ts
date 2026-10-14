@@ -180,7 +180,8 @@ export function mapStatus(raw: string, hasHistory: boolean): StudentStatus {
   const s = raw.trim()
   if (!s) return hasHistory ? '进行中' : '未开始'
   if (/暂停|不跟进|不用管|放弃|停止/.test(s)) return '暂停不跟进'
-  if (/未开始|待开始|没开始/.test(s)) return '未开始'
+  if (/未开始|待开始|没开始|还没开始/.test(s)) return '未开始'
+  if (/(未|没|还没|尚未|待)(完成|结束|结案|办完)/.test(s)) return '进行中'
   if (/完成|结束|结案|已办完/.test(s)) return '已完成'
   return '进行中'
 }
@@ -246,7 +247,7 @@ export function buildImportPlan(rows: RawRow[], opts: PlanOptions): ImportPlan {
     if (assignee && assignee !== raw.assignee.trim()) notes.push(`负责人「${raw.assignee.trim()}」→「${assignee}」`)
     if (!assignee) notes.push('负责人为空 → 未分配')
 
-    const entries = splitHistory(raw.history)
+    const entries = splitHistory(raw.history, opts.today)
     const status = mapStatus(raw.status, entries.length > 0)
     const business = mapBusiness(raw.business)
     if (raw.business.trim() && raw.business.trim() !== '其他' && business === '其他') notes.push(`业务分类「${raw.business.trim()}」没认出来，先算「其他」`)
@@ -259,7 +260,8 @@ export function buildImportPlan(rows: RawRow[], opts: PlanOptions): ImportPlan {
     const createdAt = stamp()
 
     // 时间线
-    const known = entries.map((e) => e.date).filter((d): d is string => !!d)
+    // 最后处理日期不能晚于今天（历史进度里万一有未来的日期）
+    const known = entries.map((e) => e.date).filter((d): d is string => !!d && d <= opts.today)
     const lastDate = maxDate(...known)
     const events: TimelineEvent[] = []
     let prevKnown: string | null = null

@@ -40,17 +40,36 @@ export const useStore = create<AppState>(() => ({
 // ───────────────────────── 写入队列 ─────────────────────────
 // 界面先更新（乐观更新），再按顺序写到存储里；失败会自动重试，排队中的操作会存到 localStorage，刷新后继续。
 
-const QUEUE_KEY = 'pending-ops-v1'
+// 排队中的写入按账号分开存，换账号登录时不会把别人的修改写进来
+let queueKey = 'pending-ops-v1:local'
 let adapter: Adapter | null = null
 let queue: Op[] = []
 let running = false
 let retryTimer: ReturnType<typeof setTimeout> | null = null
 let attempt = 0
+/** 每次有新修改就 +1，用来判断重新加载期间有没有新修改 */
+let mutationSeq = 0
+/** 启动时有没写完的修改：写完后重新加载一次 */
+let reloadAfterFlush = false
+
+/** 写入失败的原因是不是「再试也没用」（数据库拒绝，例如学生已被删除、权限不足） */
+function isPermanent(e: unknown): boolean {
+  const code = (e as { code?: string })?.code ?? ''
+  return /^(22|23|42|PGRST)/.test(code)
+}
+const MAX_PERMANENT_ATTEMPTS = 3
+
+function describeOp(op: Op): string {
+  if (op.op === 'insert') return `新增 ${op.table}`
+  if (op.op === 'update') return `修改 ${op.table}`
+  if (op.op === 'remove') return `删除 ${op.table}`
+  return op.op
+}
 
 function saveQueue() {
   try {
-    if (queue.length) localStorage.setItem(QUEUE_KEY, JSON.stringify(queue))
-    else localStorage.removeItem(QUEUE_KEY)
+    if (queue.length) localStorage.setItem(queueKey, JSON.stringify(queue))
+    else localStorage.removeItem(queueKey)
   } catch {
     /* localStorage 不可用时忽略 */
   }
@@ -58,7 +77,7 @@ function saveQueue() {
 
 function loadQueue(): Op[] {
   try {
-    const raw = localStorage.getItem(QUEUE_KEY)
+    const raw = localStorage.getItem(queueKey)
     return raw ? (JSON.parse(raw) as Op[]) : []
   } catch {
     return []
@@ -83,12 +102,29 @@ async function pump() {
       } catch (e) {
         attempt++
         const msg = e instanceof Error ? e.message : String(e)
+        if (isPermanent(e) && attempt >= MAX_PERMANENT_ATTEMPTS) {
+          // 数据库明确拒绝（比如这个学生已经在别的设备上删掉了）：跳过这一条，别挡住后面的修改
+          const dropped = queue.shift()!
+          attempt = 0
+          saveQueue()
+          console.error('写入被拒绝，已跳过', dropped, e)
+          toast(`有一条修改没能保存（${describeOp(dropped)}：${msg}），已跳过。可以刷新页面看看最新数据。`, {
+            tone: 'error',
+            ttl: 12000,
+          })
+          setSync(null)
+          continue
+        }
         setSync(msg)
         const delay = Math.min(30000, 1000 * 2 ** Math.min(attempt, 5))
         if (retryTimer) clearTimeout(retryTimer)
         retryTimer = setTimeout(() => void pump(), delay)
         return
       }
+    }
+    if (reloadAfterFlush) {
+      reloadAfterFlush = false
+      void reloadData()
     }
   } finally {
     running = false
@@ -101,6 +137,7 @@ export function retrySync() {
 }
 
 export function enqueue(op: Op) {
+  mutationSeq++
   queue.push(op)
   saveQueue()
   setSync(useStore.getState().sync.error)
@@ -111,18 +148,17 @@ export function hasPendingWrites() {
   return queue.length > 0
 }
 
-export async function initData(a: Adapter, userEmail: string | null) {
+export async function initData(a: Adapter, userEmail: string | null, userId: string | null = null) {
+  endSession()
   adapter = a
+  queueKey = `pending-ops-v1:${userId ?? 'local'}`
   useStore.setState({ phase: 'loading', mode: a.kind, userEmail, loadError: null })
-  // 先把上次没写完的操作写完
+  // 先试着把上次没写完的操作写完；写不完也照样加载，后台继续重试
   queue = loadQueue()
   setSync(null)
   if (queue.length) {
     await pump()
-    if (queue.length) {
-      useStore.setState({ phase: 'error', loadError: `有 ${queue.length} 条修改还没保存成功：${useStore.getState().sync.error ?? ''}` })
-      return
-    }
+    if (queue.length) reloadAfterFlush = true
   }
   try {
     const db = await a.loadAll()
@@ -132,11 +168,26 @@ export async function initData(a: Adapter, userEmail: string | null) {
   }
 }
 
+/** 退出登录：停止写入，清空内存里的队列（没写完的修改留在本机，下次这个账号登录时继续写） */
+export function endSession() {
+  if (retryTimer) clearTimeout(retryTimer)
+  retryTimer = null
+  adapter = null
+  queue = []
+  attempt = 0
+  reloadAfterFlush = false
+  setSync(null)
+}
+
 /** 重新从存储读一遍（例如手机上改过，电脑切回来时） */
 export async function reloadData() {
-  if (!adapter || queue.length) return
+  if (!adapter || adapter.kind === 'local' || queue.length) return
+  const seq = mutationSeq
+  const a = adapter
   try {
-    const db = await adapter.loadAll()
+    const db = await a.loadAll()
+    // 加载期间有新修改，或者已经换了账号：丢掉这次的结果，免得覆盖新修改
+    if (seq !== mutationSeq || queue.length || adapter !== a) return
     useStore.setState({ ...db, today: todayStr() })
   } catch {
     /* 忽略，下次再试 */

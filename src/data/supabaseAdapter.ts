@@ -58,7 +58,7 @@ export function createSupabaseAdapter(sb: SupabaseClient): Adapter {
       return db
     },
     async apply(op: Op) {
-      let error: { message: string } | null = null
+      let error: { message: string; code?: string } | null = null
       switch (op.op) {
         case 'insert': {
           // 分批写入，避免一次请求太大
@@ -88,7 +88,7 @@ export function createSupabaseAdapter(sb: SupabaseClient): Adapter {
           ;({ error } = await sb.rpc('reset_all_data'))
           break
       }
-      if (error) throw new Error(error.message)
+      if (error) throw Object.assign(new Error(error.message), { code: error.code })
     },
   }
 }

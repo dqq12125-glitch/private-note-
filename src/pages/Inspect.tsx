@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Clock, Megaphone } from 'lucide-react'
 import { addDays, diffDays, fmtAgo, fmtDate, fmtDaysLeft, fmtShort } from '../lib/dates'
 import { todayQueue, type StudentInfo } from '../lib/reminders'
-import { addNote, checkStudent, completeTask, endDormancy, remindApp, snoozeStudent } from '../data/actions'
+import { addNote, checkStudent, completeTask, endDormancy, remindApp, setOfferDdl, snoozeStudent, snoozeTbc } from '../data/actions'
 import { useInfoMap, useInfos } from '../data/hooks'
 import { useStore } from '../data/store'
 import { BallTag, EventMini, StatusTag, StudentLink } from '../components/bits'
@@ -66,6 +66,38 @@ function SnoozeButton({ onPick }: { onPick: (d: string) => void }) {
         )
       }
     </Popover>
+  )
+}
+
+function TbcActions({ appId }: { appId: string }) {
+  const [fill, setFill] = useState(false)
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <DaysLeft days={null} tbc />
+      {fill ? (
+        <DateField
+          value={null}
+          autoFocus
+          size="sm"
+          className="w-36"
+          onChange={(d) => {
+            if (d) {
+              setOfferDdl(appId, d)
+              setFill(false)
+            }
+          }}
+        />
+      ) : (
+        <>
+          <Button size="xs" variant="soft" onClick={() => setFill(true)}>
+            补上 DDL
+          </Button>
+          <Button size="xs" variant="ghost" onClick={() => snoozeTbc(appId)}>
+            3 天后再提醒
+          </Button>
+        </>
+      )}
+    </span>
   )
 }
 
@@ -154,7 +186,7 @@ function Card({ info, onNext, skipped }: { info: StudentInfo; onNext: () => void
               <div className="flex flex-wrap items-center gap-2 text-[14px]">
                 <span className="font-medium">{nearestOffer.title.replace(' 待确认', '')}</span>
                 {nearestOffer.kind === 'offer_tbc' ? (
-                  <DaysLeft days={null} tbc />
+                  <TbcActions appId={nearestOffer.ref.id} />
                 ) : (
                   <>
                     <span className="tabular-nums">{fmtDate(nearestOffer.date)}</span>

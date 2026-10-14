@@ -19,7 +19,7 @@ import {
   updateVisa,
 } from '../../data/actions'
 import { useStore } from '../../data/store'
-import { Button, DateField, InlineText, MenuItem, Popover, cx } from '../ui'
+import { Button, DateField, InlineText, MenuItem, Popover, cx, isComposing } from '../ui'
 
 /** 剩余天数标签：签证到期按 60/30/7 天变色，其他关键日期 7 天内变红 */
 export function ExpiryPill({ days, visa = true }: { days: number; visa?: boolean }) {
@@ -261,7 +261,7 @@ export function KeyDates({ info }: { info: StudentInfo }) {
           placeholder="说明（可选）"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && add()}
+          onKeyDown={(e) => e.key === 'Enter' && !isComposing(e) && add()}
         />
         <Button size="sm" variant="primary" disabled={!date} onClick={add}>
           添加

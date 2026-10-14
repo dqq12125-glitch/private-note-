@@ -6,7 +6,7 @@ import {
   VISA_STEPS,
 } from '../lib/constants'
 import { addDays, fmtDate, fmtDaysLeft, maxDate, minDate, nowIso } from '../lib/dates'
-import { appDeadlines, appLabel, appSub, keyDateDeadline, visaDeadlines } from '../lib/reminders'
+import { appDeadlines, appLabel, appSub, isOfferTbc, keyDateDeadline, visaDeadlines } from '../lib/reminders'
 import type {
   Application,
   AppStatus,
@@ -76,10 +76,12 @@ function touchStudent(id: string, date: string, remindOn: string | null, checked
   if (!s) return
   const t = today()
   const d = minDate(date, t)!
-  const handled = maxDate(s.last_handled_date, d)!
+  // 之前的「最后处理日期」如果在未来（数据有误），就不算数
+  const prev = s.last_handled_date && s.last_handled_date <= t ? s.last_handled_date : null
+  const handled = maxDate(prev, d)!
   const patch: Partial<Student> = { last_handled_date: handled }
   if (remindOn) patch.next_follow_date = remindOn
-  else if (!s.last_handled_date || d >= s.last_handled_date) patch.next_follow_date = addDays(handled, s.follow_cycle_days)
+  else if (!prev || d >= prev) patch.next_follow_date = addDays(handled, s.follow_cycle_days)
   if (checked) patch.last_checked_date = t
   if (s.dormant_until && s.dormant_until <= t) {
     patch.dormant_until = null
@@ -401,7 +403,10 @@ export function remindApp(id: string) {
       ? `${appLabel(app)} offer（DDL 待确认）`
       : `${d.title}（${fmtDate(d.date)}，${fmtDaysLeft(d.daysLeft)}）`,
   )
-  patchRow('applications', id, { last_reminded_on: today() })
+  const patch: Partial<Application> = { last_reminded_on: today() }
+  // DDL 还待确认的：问过学生也算处理了这一轮，3 天后再提醒补 DDL
+  if (isOfferTbc(app)) patch.tbc_remind_on = addDays(today(), TBC_REMIND_EVERY)
+  patchRow('applications', id, patch)
   appendEvent(app.student_id, {
     kind: 'reminded',
     content: `已提醒学生 ${parts.length ? parts.join('；') : `${appLabel(app)} offer`}`,

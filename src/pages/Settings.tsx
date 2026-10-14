@@ -4,7 +4,7 @@ import { exportExcel, exportJson } from '../lib/exporter'
 import { loadDemo, restoreBackup } from '../data/actions'
 import { resetAllData, saveSettings, toast, useStore } from '../data/store'
 import { supabaseConfigured } from '../data/supabase'
-import { Button, Field } from '../components/ui'
+import { Button, Field, isComposing } from '../components/ui'
 
 export function DemoButton({ size = 'md' }: { size?: 'md' | 'lg' }) {
   return (
@@ -44,7 +44,7 @@ function ListEditor({ label, items, onChange, placeholder }: { label: string; it
           placeholder={placeholder}
           value={v}
           onChange={(e) => setV(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && add()}
+          onKeyDown={(e) => e.key === 'Enter' && !isComposing(e) && add()}
         />
         <Button size="sm" onClick={add} disabled={!v.trim()}>
           <Plus size={13} /> 添加

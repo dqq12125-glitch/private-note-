@@ -23,7 +23,7 @@ import { supabase } from '../data/supabase'
 import { StatusTag, useOpenStudent } from './bits'
 import { StudentDetail } from './detail/StudentDetail'
 import { QuickRecordModal } from './QuickRecord'
-import { Toasts, cx, useEscape } from './ui'
+import { Toasts, cx, useEscape, isComposing } from './ui'
 
 function NavItem({ to, icon, label, badge, end, onClick }: { to: string; icon: React.ReactNode; label: string; badge?: number; end?: boolean; onClick?: () => void }) {
   return (
@@ -185,7 +185,7 @@ function SearchPalette() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
-              if (e.nativeEvent.isComposing) return
+              if (isComposing(e)) return
               if (e.key === 'ArrowDown') {
                 e.preventDefault()
                 setIdx((i) => Math.min(i + 1, hits.length - 1))

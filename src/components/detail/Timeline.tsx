@@ -6,10 +6,10 @@ import { sortEventsDesc, type StudentInfo } from '../../lib/reminders'
 import type { TimelineEvent } from '../../lib/types'
 import { addNote, editEvent, toggleMilestone } from '../../data/actions'
 import { useStore } from '../../data/store'
-import { Button, DateField, Popover, RemindPicker, Segmented, TextArea, cx } from '../ui'
+import { Button, DateField, Popover, RemindPicker, Segmented, TextArea, cx, isComposing } from '../ui'
 
 export function isEnterSave(e: React.KeyboardEvent) {
-  return e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229
+  return e.key === 'Enter' && !e.shiftKey && !isComposing(e) && e.keyCode !== 229
 }
 
 export function Composer({ studentId, autoFocus, compact }: { studentId: string; autoFocus?: boolean; compact?: boolean }) {

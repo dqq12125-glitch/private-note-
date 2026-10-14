@@ -49,3 +49,11 @@ describe('dates', () => {
     expect(nextOccurrence(2, 1, '2026-10-14', 31)).toBe('2027-02-01')
   })
 })
+
+describe('parseUserDate with Chinese month-day', () => {
+  it('reads 月 as month, not day', () => {
+    expect(parseUserDate('3月5日', '2026-10-14')).toBe('2027-03-05')
+    expect(parseUserDate('12月25日', '2026-10-14')).toBe('2026-12-25')
+    expect(parseUserDate('2027年3月5号', '2026-10-14')).toBe('2027-03-05')
+  })
+})

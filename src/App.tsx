@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { createLocalAdapter } from './data/localAdapter'
 import { createSupabaseAdapter } from './data/supabaseAdapter'
-import { hasPendingWrites, initData, reloadData, useStore } from './data/store'
+import { endSession, hasPendingWrites, initData, reloadData, useStore } from './data/store'
 import { supabase } from './data/supabase'
 import { emptyDB } from './data/adapter'
 import { Shell } from './components/Shell'
@@ -45,11 +45,13 @@ function useBoot(): 'checking' | 'signed-out' | 'ready' {
         if (userRef.current !== session.user.id) {
           userRef.current = session.user.id
           const email = session.user.email ?? null
+          const uid = session.user.id
           // 不要在回调里直接调用 supabase（官方建议），放到下一个事件循环
-          setTimeout(() => void initData(createSupabaseAdapter(sb), email), 0)
+          setTimeout(() => void initData(createSupabaseAdapter(sb), email, uid), 0)
         }
       } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
         userRef.current = null
+        endSession()
         setAuth('signed-out')
         useStore.setState({ ...emptyDB(useStore.getState().settings), phase: 'boot' })
       }

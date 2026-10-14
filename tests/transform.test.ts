@@ -107,3 +107,20 @@ describe('buildImportPlan', () => {
     expect(plan.students[1].duplicateOf).toBe('old')
   })
 })
+
+describe('import edge cases', () => {
+  it('treats negated status as in progress', () => {
+    expect(mapStatus('未完成', true)).toBe('进行中')
+    expect(mapStatus('还没完成', true)).toBe('进行中')
+  })
+  it('never sets last handled date in the future', () => {
+    const rows = extractRows([
+      ['学生姓名', '状态', '完整详情/历史进度'],
+      ['甲', '进行中', '09/07/2026 递交\n20/12/2026 交材料'],
+    ])!.rows
+    let n = 0
+    const p = buildImportPlan(rows, { today: '2026-10-14', now: '2026-10-14T00:00:00Z', newId: () => `x${++n}`, existing: new Map() })
+    expect(p.students[0].student.last_handled_date).toBe('2026-07-09')
+    expect(p.students[0].student.next_follow_date).toBe('2026-07-23')
+  })
+})

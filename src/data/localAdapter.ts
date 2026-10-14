@@ -14,6 +14,8 @@ export function createLocalAdapter(): Adapter {
   return {
     kind: 'local',
     async loadAll() {
+      // 已经加载过就用内存里的（内存里的总是最新的），避免读到旧数据再覆盖回去
+      if (db) return structuredClone(db)
       const saved = (await get(KEY, store)) as DBState | undefined
       db = emptyDB({ ...DEFAULT_SETTINGS })
       if (saved) {

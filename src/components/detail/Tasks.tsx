@@ -5,7 +5,7 @@ import type { StudentInfo } from '../../lib/reminders'
 import type { Task } from '../../lib/types'
 import { addTask, completeTask, deleteTask, postponeTask, reopenTask, updateTask } from '../../data/actions'
 import { useStore } from '../../data/store'
-import { Button, DateField, DaysLeft, MenuItem, Popover, QUICK_OFFSETS, cx, offsetDate } from '../ui'
+import { Button, DateField, DaysLeft, MenuItem, Popover, QUICK_OFFSETS, cx, offsetDate, isComposing } from '../ui'
 
 export function PostponeMenu({
   onPick,
@@ -95,7 +95,7 @@ function TaskRow({ t }: { t: Task }) {
               if (content.trim() && content !== t.content) updateTask(t.id, { content: content.trim() })
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.nativeEvent.isComposing) (e.target as HTMLInputElement).blur()
+              if (e.key === 'Enter' && !isComposing(e)) (e.target as HTMLInputElement).blur()
             }}
           />
         ) : (
@@ -177,7 +177,7 @@ export function AddTaskForm({ studentId, onDone }: { studentId: string; onDone?:
         value={content}
         onChange={(e) => setContent(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+          if (e.key === 'Enter' && !isComposing(e)) {
             e.preventDefault()
             submit()
           }

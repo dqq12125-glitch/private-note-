@@ -20,6 +20,12 @@ export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(' ')
 }
 
+/** 中文输入法正在选字（Safari 选字时 isComposing 是 false，但 keyCode 是 229） */
+export function isComposing(e: { nativeEvent?: KeyboardEvent; isComposing?: boolean; keyCode?: number }): boolean {
+  const n = (e.nativeEvent ?? e) as KeyboardEvent
+  return !!n.isComposing || n.keyCode === 229
+}
+
 // ───────────────────────── 按钮 ─────────────────────────
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'soft'
@@ -131,7 +137,7 @@ export function InlineText({
       onChange={(e) => setV(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' && !e.nativeEvent.isComposing) (e.target as HTMLInputElement).blur()
+        if (e.key === 'Enter' && !isComposing(e)) (e.target as HTMLInputElement).blur()
         if (e.key === 'Escape') {
           setV(value)
           e.stopPropagation()
@@ -278,10 +284,12 @@ export function Popover({
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node
       if (floating.current?.contains(t) || anchor.current?.contains(t)) return
+      // 弹出层里的日期选择器是单独挂在 body 上的，点它不算点外面
+      if ((t as Element).closest?.('[data-floating-layer]')) return
       setOpen(false)
     }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !isComposing(e)) {
         e.stopPropagation()
         setOpen(false)
       }
@@ -303,6 +311,7 @@ export function Popover({
           <div
             ref={floating}
             style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999, maxHeight: pos?.maxH }}
+            data-floating-layer=""
             className={cx(
               'animate-pop-in fixed z-[70] overflow-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg',
               className,
@@ -496,6 +505,7 @@ export function DateField({
         createPortal(
           <div
             ref={floating}
+            data-floating-layer=""
             style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
             className="animate-pop-in fixed z-[80] rounded-lg border border-slate-200 bg-white shadow-lg"
           >
@@ -607,7 +617,7 @@ export function DaysLeft({
 const escStack: (() => void)[] = []
 if (typeof window !== 'undefined')
   window.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape' || !escStack.length || e.defaultPrevented) return
+    if (e.key !== 'Escape' || !escStack.length || e.defaultPrevented || isComposing(e)) return
     e.preventDefault()
     escStack[escStack.length - 1]()
   })
