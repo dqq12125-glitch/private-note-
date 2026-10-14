@@ -8,6 +8,7 @@ import { useInfoMap, useInfos } from '../data/hooks'
 import { useStore } from '../data/store'
 import { BallTag, EventMini, StatusTag, StudentLink } from '../components/bits'
 import { AckButton } from '../components/deadline'
+import { OverdueOfferPrompt } from '../components/detail/Applications'
 import { isEnterSave } from '../components/detail/Timeline'
 import { Button, DateField, DaysLeft, MenuItem, Popover, RemindPicker, TextArea, cx } from '../components/ui'
 
@@ -161,6 +162,13 @@ function Card({ info, onNext, skipped }: { info: StudentInfo; onNext: () => void
                   </>
                 )}
               </div>
+              {offerApps
+                .filter((a) => a.offer_ddl && !a.offer_ddl_tbc && a.offer_ddl < today)
+                .map((a) => (
+                  <div key={a.id} className="mt-2">
+                    <OverdueOfferPrompt app={a} />
+                  </div>
+                ))}
             </div>
           )}
           {otherDue.length > 0 && (

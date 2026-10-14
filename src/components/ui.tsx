@@ -131,7 +131,7 @@ export function InlineText({
       onChange={(e) => setV(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+        if (e.key === 'Enter' && !e.nativeEvent.isComposing) (e.target as HTMLInputElement).blur()
         if (e.key === 'Escape') {
           setV(value)
           e.stopPropagation()
@@ -666,7 +666,7 @@ export function Modal({
 export function Toasts() {
   const toasts = useStore((s) => s.toasts)
   return (
-    <div className="pointer-events-none fixed bottom-20 left-1/2 z-[90] flex w-[min(92vw,520px)] -translate-x-1/2 flex-col gap-2 md:bottom-6">
+    <div className="no-print pointer-events-none fixed bottom-20 left-1/2 z-[90] flex w-[min(92vw,520px)] -translate-x-1/2 flex-col gap-2 md:bottom-6">
       {toasts.map((t) => (
         <div
           key={t.id}

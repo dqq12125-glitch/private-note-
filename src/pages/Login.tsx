@@ -3,6 +3,7 @@ import { supabase } from '../data/supabase'
 import { Button, Field } from '../components/ui'
 
 function zhError(msg: string): string {
+  if (/failed to fetch|network/i.test(msg)) return '连不上服务器，请检查网络（或 Supabase 地址是否填对）'
   if (/invalid login credentials/i.test(msg)) return '邮箱或密码不对'
   if (/email not confirmed/i.test(msg)) return '邮箱还没验证，请先点邮件里的确认链接'
   if (/rate limit/i.test(msg)) return '操作太频繁，请稍后再试'

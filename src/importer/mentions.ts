@@ -1,5 +1,5 @@
 // 从备注里找出「提到具体日期或期限的句子」和「提到 offer 的句子」，生成导入确认清单。
-import { diffDays, makeDate, nextOccurrence } from '../lib/dates'
+import { addDays, addMonths, diffDays, makeDate, nextOccurrence } from '../lib/dates'
 import type { AppStatus, KeyDateKind } from '../lib/types'
 import { findFullDates } from './history'
 
@@ -61,8 +61,8 @@ export function findDateMentions(text: string, base: string, today: string): Dat
   const push = (clause: string, index: number, date: string | null, approx: boolean) => {
     if (!date) return
     // 已经过去的日期不需要再提醒；按月估计的，整个月过去了才算过去
-    const cutoff = approx ? diffDays(date, today) + 27 : diffDays(date, today)
-    if (cutoff < -7) return
+    const last = approx ? addDays(addMonths(`${date.slice(0, 7)}-01`, 1), -1) : date
+    if (diffDays(last, today) < -7) return
     const sentence = narrow(clause, index)
     const key = `${sentence}|${date}`
     if (seen.has(key)) return
