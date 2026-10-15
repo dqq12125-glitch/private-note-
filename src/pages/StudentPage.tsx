@@ -9,7 +9,8 @@ export function StudentPage() {
       <Link to="/students" className="mb-3 inline-flex items-center gap-1 text-[13px] text-slate-500 hover:text-slate-800">
         <ArrowLeft size={14} /> 学生列表
       </Link>
-      <StudentDetail id={id!} />
+      {/* 换学生时整页重新加载，没保存的草稿不会带到别的学生 */}
+      <StudentDetail key={id} id={id!} />
     </div>
   )
 }

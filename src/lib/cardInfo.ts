@@ -65,7 +65,8 @@ export interface CardInfo {
   followDueDays: number | null
   /** 休眠已经结束，还没恢复跟进 */
   dormancyEnded: boolean
-  lastEvent: { text: string; full: string; ago: string } | null
+  /** 最近一条记录；date 是发生日期（日期不明时为 null），用来做提示 */
+  lastEvent: { text: string; full: string; ago: string; date: string | null } | null
   /** 组内排序：越小越靠前 */
   sortKey: [number, number, number, number]
 }
@@ -96,9 +97,10 @@ export function appPills(apps: Application[]): AppPill[] {
 }
 
 export function visaTrack(v: Visa): VisaTrack {
-  // 当前步骤 = 最后一个已完成步骤的下一步；已获批就没有当前步骤
-  const lastDone = VISA_STEPS.findLastIndex((s) => !!v[s.key])
-  const firstOpen = v.granted_on || lastDone + 1 >= VISA_STEPS.length ? -1 : lastDone + 1
+  // 当前步骤 = 最后一个已完成的主线节点（已付款 / 已递交）之后第一个没完成的步骤。
+  // 体检可以提前做，不能让它把「当前」推到已获批；已获批就没有当前步骤
+  const lastMilestone = VISA_STEPS.findLastIndex((s) => s.milestone && !!v[s.key])
+  const firstOpen = v.granted_on ? -1 : VISA_STEPS.findIndex((s, i) => i > lastMilestone && !v[s.key])
   return {
     id: v.id,
     type: v.visa_type,
@@ -208,8 +210,8 @@ export function deadlineBadges(info: StudentInfo): DeadlineBadge[] {
         d.date &&
         d.daysLeft !== null &&
         (BADGE_KINDS.has(d.kind) || (d.kind === 'keydate' && BADGE_KEYDATES.has(d.title))) &&
-        // 已经过去的开学/Orientation 不再显示；签证到期过了、还没确认提醒（30 天内）仍然显示
-        !(d.kind === 'keydate' && d.daysLeft < 0 && !(d.title === '签证到期' && d.reminderDue && d.daysLeft >= -30)) &&
+        // 已经过去的开学/Orientation 不再显示；签证到期过了、还没确认提醒的仍然显示（和首页一致）
+        !(d.kind === 'keydate' && d.daysLeft < 0 && !(d.title === '签证到期' && d.reminderDue)) &&
         // 签证到期、开学这类日期只看未来 60 天（和首页一致）；offer/付款/补材料截止不限
         !((d.kind === 'visa_expiry' || d.kind === 'keydate') && d.daysLeft > KEYDATE_HORIZON),
     )
@@ -267,20 +269,15 @@ export function computeCard(info: StudentInfo, today: string): CardInfo {
     ? {
         full: last.content,
         text: [...oneLine].length > 40 ? `${[...oneLine].slice(0, 40).join('')}…` : oneLine,
-        ago: last.date_unknown
-          ? '日期不明'
-          : last.occurred_on > today
-            ? `${fmtDate(last.occurred_on)}（未来日期）`
-            : fmtAgo(diffDays(today, last.occurred_on)),
+        ago: last.date_unknown ? '日期不明' : last.occurred_on > today ? '未来日期' : fmtAgo(diffDays(today, last.occurred_on)),
+        date: last.date_unknown ? null : last.occurred_on,
       }
     : null
   // 休眠刚结束的只显示「休眠已结束」，不再重复显示「跟进到期」
-  const followDueDays =
-    !closed && info.followDue && !info.dormancyEnded && s.next_follow_date ? diffDays(today, s.next_follow_date) : null
+  const followDueDays = !closed && info.followDue && !info.dormancyEnded && s.next_follow_date ? diffDays(today, s.next_follow_date) : null
 
   // 组内排序：已逾期 > DDL 越近 > 跟进超期越久 > 高优先级
-  const followOverdue =
-    info.active && s.next_follow_date && s.next_follow_date < today ? diffDays(today, s.next_follow_date) : 0
+  const followOverdue = info.active && s.next_follow_date && s.next_follow_date < today ? diffDays(today, s.next_follow_date) : 0
   const sortKey: CardInfo['sortKey'] = [
     overdueTasks > 0 || overdueDeadline ? 0 : 1,
     nearest?.daysLeft ?? 9999,
@@ -296,7 +293,10 @@ export function computeCard(info: StudentInfo, today: string): CardInfo {
     apps: appPills(info.apps),
     // 正在办的签证排前面（最近有变化的在前），和「当前状态一句话」挑的是同一个
     visas: [...info.visas]
-      .sort((a, b) => Number(!!a.granted_on) - Number(!!b.granted_on) || (a.updated_at < b.updated_at ? 1 : a.updated_at > b.updated_at ? -1 : 0))
+      .sort(
+        (a, b) =>
+          Number(!!a.granted_on) - Number(!!b.granted_on) || (a.updated_at < b.updated_at ? 1 : a.updated_at > b.updated_at ? -1 : 0),
+      )
       .map(visaTrack),
     deadline: nearest,
     moreDeadlines: badges.slice(1),

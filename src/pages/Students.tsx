@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, LayoutGrid, List, Plus, Search, X } from 'lucide-react'
 import { BALLS, BUSINESS_TYPES, STUDENT_STATUSES, UNASSIGNED } from '../lib/constants'
-import { fmtShort } from '../lib/dates'
+import { fmtDate, fmtShort } from '../lib/dates'
 import { compareCards, computeCard, LANES, type CardInfo, type Lane } from '../lib/cardInfo'
 import type { StudentInfo } from '../lib/reminders'
 import { searchStudents } from '../lib/search'
@@ -10,7 +10,18 @@ import { createStudent } from '../data/actions'
 import { useInfos } from '../data/hooks'
 import { useStore } from '../data/store'
 import { StudentLink, useOpenStudent } from '../components/bits'
-import { AppPills, Avatar, Badge, BAR_CLASS, CardActions, HealthDot, StudentCard, TONE_CLASS } from '../components/StudentCard'
+import {
+  AppPills,
+  Avatar,
+  Badge,
+  BAR_CLASS,
+  CardActions,
+  DueText,
+  HealthDot,
+  StaleText,
+  StudentCard,
+  TONE_CLASS,
+} from '../components/StudentCard'
 import { Button, Field, MenuItem, Modal, Popover, cx, isComposing } from '../components/ui'
 import { DemoButton } from './Settings'
 
@@ -157,7 +168,8 @@ function ChipGroup({
   onChange: (v: string) => void
 }) {
   return (
-    <div role="group" aria-label={label} className="flex shrink-0 items-center gap-1">
+    // 电脑上一组太长（负责人很多）时组内换行，不把整页撑出横向滚动
+    <div role="group" aria-label={label} className="flex shrink-0 items-center gap-1 md:max-w-full md:flex-wrap md:gap-y-2">
       <span className="shrink-0 pr-0.5 text-[11px] font-medium text-slate-400">{label}</span>
       {options.map((o) => {
         const on = value === o.key
@@ -244,7 +256,7 @@ function CompactTable({
       <table className="w-full min-w-[980px] table-fixed border-separate border-spacing-0 text-[13px]">
         <thead>
           <tr>
-            <Th k="name" className="w-[14%] rounded-tl-xl pl-4">
+            <Th k="name" className="w-[13%] rounded-tl-xl pl-4">
               姓名
             </Th>
             <Th k="next" className="w-[25%]">
@@ -257,7 +269,7 @@ function CompactTable({
             <Th k="follow" className="w-[8%] !px-2">
               下次跟进
             </Th>
-            <Th k="stale" className="w-[7%] !px-2">
+            <Th k="stale" className="w-[8%] !px-2">
               最近动态
             </Th>
             <Th k="assignee" className="w-[10%] rounded-tr-xl !px-2">
@@ -284,7 +296,7 @@ function CompactTable({
                     <span className="tag shrink-0 bg-rose-500 px-1.5 text-[10px] text-on-accent ring-rose-500">高</span>
                   )}
                   {/* 位置不够时先压缩英文名，中文名尽量完整 */}
-                  {info.s.english_name && <span className="min-w-0 shrink-[999] truncate text-xs text-slate-400">{info.s.english_name}</span>}
+                  {info.s.english_name && <span className="min-w-0 flex-1 truncate text-xs text-slate-400">{info.s.english_name}</span>}
                 </span>
               </td>
               <td className="border-b border-slate-100 px-3 py-2">
@@ -293,6 +305,11 @@ function CompactTable({
                   <span className="truncate text-slate-800" title={card.headline}>
                     {card.headline}
                   </span>
+                  {card.headlineFrom === 'task' && info.nextTask?.due_date && (
+                    <span className="-ml-1.5 shrink-0">
+                      <DueText date={info.nextTask.due_date} />
+                    </span>
+                  )}
                 </div>
               </td>
               <td className="border-b border-slate-100 px-3 py-2">
@@ -332,11 +349,15 @@ function CompactTable({
               <td className="border-b border-slate-100 px-2 py-2 text-xs whitespace-nowrap tabular-nums">
                 <FollowCell info={info} card={card} />
               </td>
-              <td className="border-b border-slate-100 px-2 py-2 text-xs whitespace-nowrap text-slate-500">
-                <span className="inline-flex items-center gap-1.5">
+              <td className="overflow-hidden border-b border-slate-100 px-2 py-1.5 text-xs whitespace-nowrap text-slate-500">
+                <span className="flex min-w-0 items-center gap-1.5" title={card.lastEvent?.date ? fmtDate(card.lastEvent.date) : undefined}>
                   <HealthDot info={info} />
-                  {card.lastEvent?.ago ?? '—'}
+                  <span className="min-w-0 truncate">{card.lastEvent?.ago ?? '—'}</span>
                 </span>
+                {/* 超期用文字再说一遍，不只靠圆点颜色 */}
+                <div className="pl-3.5">
+                  <StaleText info={info} bare />
+                </div>
               </td>
               <td className="relative border-b border-slate-100 py-1.5 pr-2 pl-2">
                 <div className="flex min-w-0 items-center gap-1.5">
@@ -374,8 +395,13 @@ export function StudentsPage() {
     dir: 1,
   })
   const [view, setViewState] = useState<'cards' | 'compact'>(loadView)
-  // 用户手动展开/折叠过的组记在这里；没动过的按默认（已完成默认折叠，搜索时结果少就自动展开）
+  // 用户手动展开/折叠过的组记在这里；没动过的按默认（已完成默认折叠）
   const [userCollapsed, setUserCollapsed] = useState<Partial<Record<Lane, boolean>>>({})
+  // 搜索/筛选结果不多的组自动展开；这时手动折叠只对这一次搜索有效，换关键词或筛选就重新展开
+  const [searchCollapsed, setSearchCollapsed] = useState<{ key: string; lanes: Partial<Record<Lane, boolean>> }>({
+    key: '',
+    lanes: {},
+  })
   const [creating, setCreating] = useState(false)
   const setView = (v: 'cards' | 'compact') => {
     setViewState(v)
@@ -411,6 +437,8 @@ export function StudentsPage() {
   )
 
   const filtering = !!(q.trim() || fAssignee || fStatus || fBusiness || fPriority)
+  const filterKey = [q.trim(), fAssignee, fStatus, fBusiness, fPriority].join('\n')
+  const searchLanes = searchCollapsed.key === filterKey ? searchCollapsed.lanes : {}
   const clearAll = () => {
     setQ('')
     setFAssignee('')
@@ -444,7 +472,8 @@ export function StudentsPage() {
     )
 
   return (
-    <div className="mx-auto max-w-[1800px] p-4 md:p-6">
+    // 底部多留一些空白，最后一张卡片的按钮不会被右下角的 ➕ 挡住
+    <div className="mx-auto max-w-[1800px] p-4 pb-24 md:p-6 md:pb-24">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <h1 className="mr-1 text-xl font-bold text-slate-900">学生列表</h1>
         <span className="text-[13px] text-slate-400 tabular-nums">
@@ -458,7 +487,7 @@ export function StudentsPage() {
                 onClick={toggle}
                 className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full bg-white px-2.5 text-[13px] whitespace-nowrap text-slate-600 ring-1 ring-slate-200 ring-inset hover:bg-slate-50"
               >
-                <span className="hidden text-[11px] font-medium text-slate-400 sm:inline">排序</span>
+                <span className="sr-only text-[11px] font-medium text-slate-400 sm:not-sr-only">排序</span>
                 {SORTS.find((s) => s.key === sort.key)?.label}
                 {sort.dir === -1 && <ArrowDown size={12} />}
                 <ChevronDown size={13} className="text-slate-400" />
@@ -549,7 +578,7 @@ export function StudentsPage() {
       )}
 
       {/* 手机上左右滑动；电脑上自动换行，全部筛选都看得到 */}
-      <div className="-mx-4 mb-4 flex items-center gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:gap-y-2 md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden">
+      <div className="-mx-4 mb-4 flex items-center gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:gap-x-5 md:gap-y-2 md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden">
         <ChipGroup
           label="负责人"
           value={fAssignee}
@@ -567,7 +596,7 @@ export function StudentsPage() {
             },
           ]}
         />
-        <span aria-hidden className="h-5 w-px shrink-0 bg-slate-200" />
+        <span aria-hidden className="h-5 w-px shrink-0 bg-slate-200 md:hidden" />
         <ChipGroup
           label="状态"
           value={fStatus}
@@ -578,7 +607,7 @@ export function StudentsPage() {
             count: count((r) => r.info.s.status === s),
           }))}
         />
-        <span aria-hidden className="h-5 w-px shrink-0 bg-slate-200" />
+        <span aria-hidden className="h-5 w-px shrink-0 bg-slate-200 md:hidden" />
         <ChipGroup
           label="业务"
           value={fBusiness}
@@ -589,7 +618,7 @@ export function StudentsPage() {
             count: count((r) => r.info.s.business_type === b),
           }))}
         />
-        <span aria-hidden className="h-5 w-px shrink-0 bg-slate-200" />
+        <span aria-hidden className="h-5 w-px shrink-0 bg-slate-200 md:hidden" />
         <ChipGroup
           label="优先级"
           value={fPriority}
@@ -627,17 +656,17 @@ export function StudentsPage() {
         <div className="space-y-5">
           {lanes.map((lane) => {
             if (!lane.rows.length) return null
-            const isCollapsed = userCollapsed[lane.key] ?? (lane.collapsed && !(filtering && lane.rows.length <= 10))
+            const auto = filtering && lane.rows.length <= 10
+            const isCollapsed = auto ? (searchLanes[lane.key] ?? false) : (userCollapsed[lane.key] ?? lane.collapsed)
             return (
               <section key={lane.key} aria-label={lane.label} className="@container">
                 <button
                   type="button"
                   aria-expanded={!isCollapsed}
                   onClick={() =>
-                    setUserCollapsed((c) => ({
-                      ...c,
-                      [lane.key]: !isCollapsed,
-                    }))
+                    auto
+                      ? setSearchCollapsed({ key: filterKey, lanes: { ...searchLanes, [lane.key]: !isCollapsed } })
+                      : setUserCollapsed((c) => ({ ...c, [lane.key]: !isCollapsed }))
                   }
                   className="mb-2 flex w-full items-center gap-2 text-left"
                 >

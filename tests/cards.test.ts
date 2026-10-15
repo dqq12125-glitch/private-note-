@@ -213,8 +213,19 @@ describe('review fixes', () => {
     expect(pastStart.card.deadline).toBeNull()
     const expired = cardWith('周杰', (d, sid) => d.key_dates.push(keydate(sid, 'k1', '签证到期', addDays(today, -3))))
     expect(expired.card.deadline).toMatchObject({ text: '签证到期 · 已过 3 天', tone: 'red' })
+    // 过期很久但还没确认提醒的签证到期：和首页一样继续显示
     const longAgo = cardWith('周杰', (d, sid) => d.key_dates.push(keydate(sid, 'k1', '签证到期', addDays(today, -45))))
-    expect(longAgo.card.deadline).toBeNull()
+    expect(longAgo.card.deadline).toMatchObject({ text: '签证到期 · 已过 45 天', tone: 'red' })
+    // 点过「已提醒」就不再显示
+    const acked = cardWith('周杰', (d, sid) => d.key_dates.push({ ...keydate(sid, 'k1', '签证到期', addDays(today, -45)), ack_on: today }))
+    expect(acked.card.deadline).toBeNull()
+  })
+  it('does not let an early medical push the current visa step to 已获批', () => {
+    const cur = (over: Partial<Visa>) => visaTrack(visa('x', 'v', over)).steps.find((s) => s.current)?.label
+    expect(cur({ medical_on: '2026-10-01' })).toBe('材料齐全')
+    expect(cur({ materials_on: '2026-10-01', medical_on: '2026-10-05' })).toBe('已付款')
+    expect(cur({ paid_on: '2026-10-01', medical_on: '2026-10-05' })).toBe('已递交')
+    expect(cur({ materials_on: '2026-10-01', paid_on: '2026-10-02', submitted_on: '2026-10-03', medical_on: '2026-10-04' })).toBe('已获批')
   })
   it('splits the badge into a truncatable label and an always-visible countdown', () => {
     expect(byName('王小明').card.deadline).toMatchObject({ label: 'UQ 接 offer DDL', when: '剩 2 天' })
@@ -237,6 +248,11 @@ describe('review fixes', () => {
       })
     })
     expect(card.lastEvent?.full).not.toBe('未来的记录')
+    // 只有未来日期的记录时，用一个短标签（放得进紧凑列表的窄列）
+    const onlyFuture = cardWith('周杰', (d, sid) => {
+      d.events = d.events.map((e) => (e.student_id === sid ? { ...e, occurred_on: addDays(today, 30), date_unknown: false } : e))
+    })
+    expect(onlyFuture.card.lastEvent?.ago).toBe('未来日期')
   })
   it('explains why a follow-up-due student is in 需要我处理', () => {
     expect(byName('张伟').card.followDueDays).toBeGreaterThanOrEqual(0)

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Check, ChevronDown, PenLine } from 'lucide-react'
 import { BALLS, STUDENT_STATUSES, cycleLabel } from '../lib/constants'
-import { fmtAgo, fmtDate } from '../lib/dates'
+import { diffDays, fmtAgo, fmtDate, fmtShort } from '../lib/dates'
 import {
   avatarHue,
   avatarText,
@@ -62,7 +62,12 @@ const BALL_CLASS: Record<Ball, string> = {
   签证局: 'bg-violet-50 text-violet-700 ring-violet-200',
 }
 
-const STALE_CLASS = { ok: 'bg-emerald-500', warn: 'bg-amber-400', bad: 'bg-rose-500' } as const
+const STALE_CLASS = { ok: 'bg-emerald-500', warn: 'bg-amber-400', bad: 'bg-rose-500', off: 'bg-slate-300' } as const
+
+/** 已完成 / 暂停 / 休眠中的学生不需要跟进：圆点灰色，不提示超期 */
+function staleLevel(info: StudentInfo): keyof typeof STALE_CLASS {
+  return info.active && !info.isDormant ? info.stale : 'off'
+}
 
 export function AppPills({ pills, max, wrap }: { pills: AppPill[]; max?: number; wrap?: boolean }) {
   const shown = max ? pills.slice(0, max) : pills
@@ -86,7 +91,13 @@ export function AppPills({ pills, max, wrap }: { pills: AppPill[]; max?: number;
         </span>
       ))}
       {rest > 0 && (
-        <span className="tag bg-slate-100 text-slate-500 ring-slate-200" title={pills.slice(shown.length).map((p) => `${p.school}：${p.status}`).join('\n')}>
+        <span
+          className="tag bg-slate-100 text-slate-500 ring-slate-200"
+          title={pills
+            .slice(shown.length)
+            .map((p) => `${p.school}：${p.status}`)
+            .join('\n')}
+        >
           +{rest}
         </span>
       )}
@@ -104,20 +115,19 @@ export function VisaDots({ track, labels }: { track: VisaTrack; labels?: boolean
       className={cx('flex min-w-0 gap-2', labels ? 'flex-col items-stretch' : 'items-center')}
       title={track.steps.map((s) => `${s.done ? '✓' : '○'} ${s.label}${s.date ? `（${fmtDate(s.date)}）` : ''}`).join('\n')}
     >
-      <div className={cx('flex min-w-0 items-center gap-2', !labels && '@max-[17rem]:gap-1.5')}>
+      {/* 卡片窄时「→ 下一步」换到下一行，不被挤成省略号 */}
+      <div className={cx('flex min-w-0 items-center gap-2', !labels && 'flex-wrap gap-y-1 @max-[17rem]:gap-x-1.5')}>
         <span className="tag shrink-0 bg-violet-50 font-semibold text-violet-700 ring-violet-200">{track.type} 签证</span>
         <div className="flex items-center" aria-label={`签证进度 ${doneCount}/5，${summary}`}>
           {track.steps.map((s, i) => (
             <span key={s.key} className="flex items-center">
-              {i > 0 && <span className={cx('h-0.5', labels ? 'w-5' : 'w-2.5 @max-[17rem]:w-1', s.done ? 'bg-emerald-400' : 'bg-slate-200')} />}
+              {i > 0 && (
+                <span className={cx('h-0.5', labels ? 'w-5' : 'w-2.5 @max-[17rem]:w-1', s.done ? 'bg-emerald-400' : 'bg-slate-200')} />
+              )}
               <span
                 className={cx(
                   'block rounded-full',
-                  s.done
-                    ? 'h-2.5 w-2.5 bg-emerald-500'
-                    : s.current
-                      ? 'h-3 w-3 bg-white ring-2 ring-brand-500'
-                      : 'h-2.5 w-2.5 bg-slate-200',
+                  s.done ? 'h-2.5 w-2.5 bg-emerald-500' : s.current ? 'h-3 w-3 bg-white ring-2 ring-brand-500' : 'h-2.5 w-2.5 bg-slate-200',
                 )}
               />
             </span>
@@ -142,7 +152,10 @@ export function VisaDots({ track, labels }: { track: VisaTrack; labels?: boolean
 /** 截止日徽章：学校名太长时只截断前面的名称，「剩 N 天 / 已过 N 天」始终完整显示 */
 export function Badge({ b, wrap }: { b: DeadlineBadge; wrap?: boolean }) {
   return (
-    <span title={b.title} className={cx('tag max-w-full min-w-0 font-medium tabular-nums', wrap && 'whitespace-normal', TONE_CLASS[b.tone])}>
+    <span
+      title={b.title}
+      className={cx('tag max-w-full min-w-0 font-medium tabular-nums', wrap && 'rounded-xl whitespace-normal', TONE_CLASS[b.tone])}
+    >
       <span aria-hidden className="shrink-0">
         {b.tone === 'red' ? '⏰' : b.tone === 'orange' ? '⏳' : '📅'}
       </span>
@@ -170,18 +183,46 @@ export function Avatar({ assignee, size = 'sm' }: { assignee: string | null; siz
 
 export function HealthDot({ info }: { info: StudentInfo }) {
   const cycle = cycleLabel(info.s.follow_cycle_days)
+  const level = staleLevel(info)
   const text =
-    info.stale === 'ok' ? `跟进周期（${cycle}）内` : info.stale === 'warn' ? `超过跟进周期（${cycle}）` : `超过跟进周期（${cycle}）2 倍`
+    level === 'off'
+      ? `${info.isDormant ? '休眠中' : info.s.status}，不需要跟进`
+      : level === 'ok'
+        ? `跟进周期（${cycle}）内`
+        : level === 'warn'
+          ? `超过跟进周期（${cycle}）`
+          : `超过跟进周期（${cycle}）2 倍`
   const label = `距上次更新 ${fmtAgo(info.daysSinceUpdate)}，${text}`
-  return <span role="img" aria-label={label} title={label} className={cx('inline-block h-2 w-2 shrink-0 rounded-full', STALE_CLASS[info.stale])} />
+  return (
+    <span role="img" aria-label={label} title={label} className={cx('inline-block h-2 w-2 shrink-0 rounded-full', STALE_CLASS[level])} />
+  )
 }
 
 /** 跟进超期的文字提示（不只靠圆点颜色） */
-export function StaleText({ info }: { info: StudentInfo }) {
-  if (info.stale === 'ok') return null
+export function StaleText({ info, bare }: { info: StudentInfo; bare?: boolean }) {
+  const level = staleLevel(info)
+  if (level === 'ok' || level === 'off') return null
   return (
-    <span className={cx('shrink-0 font-medium', info.stale === 'bad' ? 'text-rose-600' : 'text-amber-700')}>
-      · {info.stale === 'bad' ? '超期 2 倍' : '超期'}
+    <span className={cx('shrink-0 font-medium', level === 'bad' ? 'text-rose-600' : 'text-amber-700')}>
+      {bare ? '' : '· '}
+      {level === 'bad' ? '超期 2 倍' : '超期'}
+    </span>
+  )
+}
+
+/** 「现在的状态」是待办时，显示这件事的截止日（排序「下一步到期」用的就是它） */
+export function DueText({ date }: { date: string }) {
+  const today = useStore((s) => s.today)
+  const d = diffDays(date, today)
+  return (
+    <span
+      title={`截止 ${fmtDate(date)}`}
+      className={cx(
+        'ml-1.5 inline-block text-xs font-medium whitespace-nowrap tabular-nums',
+        d < 0 ? 'text-rose-600' : d === 0 ? 'text-orange-700' : 'text-slate-400',
+      )}
+    >
+      {d < 0 ? `逾期 ${-d} 天` : d === 0 ? '今天' : d === 1 ? '明天' : `${fmtShort(date, today)} 截止`}
     </span>
   )
 }
@@ -204,12 +245,17 @@ export function CardActions({
   const checkedToday = info.s.last_checked_date === today
   const cls = cx(
     'inline-flex items-center gap-1 rounded-md font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-brand-500',
-    iconOnly ? 'h-7 w-7 justify-center' : size === 'md' ? 'h-8 px-3 text-sm' : 'h-7 px-2 text-xs @max-[19rem]:min-w-7 @max-[19rem]:justify-center @max-[19rem]:px-1.5',
+    iconOnly
+      ? 'h-7 w-7 justify-center'
+      : size === 'md'
+        ? 'h-8 px-3 text-sm'
+        : 'h-7 px-2 text-xs @max-[19rem]:min-w-7 @max-[19rem]:justify-center @max-[19rem]:px-1.5',
   )
   return (
     <div className="flex shrink-0 items-center gap-1">
       <button
         type="button"
+        title="记一笔：快速记录这个学生的进展"
         className={cx(cls, 'bg-brand-50 text-brand-700 hover:bg-brand-100')}
         onClick={(e) => {
           e.stopPropagation()
@@ -222,7 +268,10 @@ export function CardActions({
         type="button"
         disabled={checkedToday}
         title={checkedToday ? '今天已经检查过' : '已检查没变化：刷新最后检查日期，跟进周期从今天重新算'}
-        className={cx(cls, checkedToday ? 'cursor-default text-emerald-600' : 'text-slate-600 ring-1 ring-slate-200 ring-inset hover:bg-slate-100')}
+        className={cx(
+          cls,
+          checkedToday ? 'cursor-default text-emerald-600' : 'text-slate-600 ring-1 ring-slate-200 ring-inset hover:bg-slate-100',
+        )}
         onClick={(e) => {
           e.stopPropagation()
           checkStudent(info.s.id)
@@ -234,12 +283,11 @@ export function CardActions({
   )
 }
 
-function Tags({ info, big }: { info: StudentInfo; big?: boolean }) {
+function Tags({ info }: { info: StudentInfo }) {
   return (
     <div className="flex shrink-0 items-center gap-1">
       {info.s.priority === '高' && <span className="tag bg-rose-500 font-semibold text-on-accent ring-rose-500">高</span>}
-      {/* 卡片太窄时（平板两列）先藏业务类型，把位置留给姓名 */}
-      <span className={cx('tag bg-white text-slate-500 ring-slate-200', !big && '@max-[17rem]:hidden')}>{info.s.business_type}</span>
+      <span className="tag bg-white text-slate-500 ring-slate-200">{info.s.business_type}</span>
     </div>
   )
 }
@@ -247,12 +295,12 @@ function Tags({ info, big }: { info: StudentInfo; big?: boolean }) {
 function DormantLine({ info, full }: { info: StudentInfo; full?: boolean }) {
   if (!info.isDormant) return null
   return (
-    <div className={cx('flex min-w-0 items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600', full && 'flex-wrap')}>
+    <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
       <span className="shrink-0">
         💤 休眠到 <b className="font-semibold tabular-nums">{fmtDate(info.s.dormant_until)}</b>
       </span>
       {info.s.dormant_reason && (
-        <span className={full ? 'min-w-0 break-words' : 'truncate'} title={info.s.dormant_reason}>
+        <span className={cx('min-w-0 break-words', !full && 'line-clamp-2')} title={info.s.dormant_reason}>
           · {info.s.dormant_reason}
         </span>
       )}
@@ -262,8 +310,8 @@ function DormantLine({ info, full }: { info: StudentInfo; full?: boolean }) {
 
 function Alerts({ card, all }: { card: CardInfo; all?: boolean }) {
   const items: ReactNode[] = []
-  if (card.deadline) items.push(<Badge key="d" b={card.deadline} />)
-  if (all) card.moreDeadlines.forEach((b, i) => items.push(<Badge key={`m${i}`} b={b} />))
+  if (card.deadline) items.push(<Badge key="d" b={card.deadline} wrap={all} />)
+  if (all) card.moreDeadlines.forEach((b, i) => items.push(<Badge key={`m${i}`} b={b} wrap />))
   if (card.tbcCount)
     items.push(
       <span key="t" className={cx('tag font-medium', TONE_CLASS.yellow)} title="接 offer 的截止日还不知道，记得补上">
@@ -310,8 +358,9 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
       <span aria-hidden title={BAR_TITLE[card.bar]} className={cx('absolute inset-y-0 left-0 w-1.5', BAR_CLASS[card.bar])} />
       <div className="flex min-w-0 flex-1 flex-col gap-2.5 p-3.5 pl-3">
         {/* 第 1 行：身份 */}
-        <div className="flex min-w-0 items-start gap-2">
-          <div className="min-w-0 flex-1 leading-tight">
+        {/* 卡片窄时标签换到姓名下面，不藏起来 */}
+        <div className="flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1">
+          <div className="min-w-0 flex-[1_1_6rem] leading-tight">
             <StudentLink id={s.id} className="text-[17px] font-semibold" />
             {s.english_name && <span className="ml-1.5 text-xs text-slate-400">{s.english_name}</span>}
           </div>
@@ -321,6 +370,7 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
         <div className="flex min-w-0 items-start gap-2">
           <p className="line-clamp-2 min-w-0 flex-1 text-[15px] leading-snug font-medium text-slate-800" title={card.headline}>
             {card.headline}
+            {card.headlineFrom === 'task' && info.nextTask?.due_date && <DueText date={info.nextTask.due_date} />}
           </p>
           {card.lane !== 'closed' && (
             <span className={cx('tag mt-0.5 shrink-0', BALL_CLASS[s.ball])}>
@@ -339,7 +389,13 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
                   <VisaDots track={card.visas[0]} />
                 </div>
                 {card.visas.length > 1 && (
-                  <span className="tag shrink-0 bg-slate-100 text-slate-500 ring-slate-200" title={card.visas.slice(1).map((v) => `${v.type} 签证`).join('、')}>
+                  <span
+                    className="tag shrink-0 bg-slate-100 text-slate-500 ring-slate-200"
+                    title={card.visas
+                      .slice(1)
+                      .map((v) => `${v.type} 签证`)
+                      .join('、')}
+                  >
                     +{card.visas.length - 1}
                   </span>
                 )}
@@ -358,7 +414,9 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
               <span className="min-w-0 truncate" title={card.lastEvent.full}>
                 {card.lastEvent.text}
               </span>
-              <span className="shrink-0 text-slate-400">· {card.lastEvent.ago}</span>
+              <span className="shrink-0 text-slate-400" title={card.lastEvent.date ? fmtDate(card.lastEvent.date) : undefined}>
+                · {card.lastEvent.ago}
+              </span>
               <StaleText info={info} />
             </>
           ) : (
@@ -369,7 +427,10 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
       {/* 第 6 行：负责人 + 快捷按钮 */}
       <div className="flex min-w-0 items-center gap-2 border-t border-slate-100 py-2 pr-2.5 pl-3">
         <Avatar assignee={s.assignee} />
-        <span className={cx('min-w-[3rem] flex-1 truncate text-xs', s.assignee ? 'text-slate-600' : 'text-amber-700')} title={s.assignee ?? '未分配'}>
+        <span
+          className={cx('min-w-[3rem] flex-1 truncate text-xs', s.assignee ? 'text-slate-600' : 'text-amber-700')}
+          title={s.assignee ?? '未分配'}
+        >
           {s.assignee ?? '未分配'}
         </span>
         <CardActions info={info} adaptive />
@@ -431,7 +492,10 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
   const s = info.s
   return (
     <section
-      className={cx('relative overflow-hidden rounded-2xl border border-slate-200 bg-white pl-2 shadow-xs', card.bar === 'muted' && 'opacity-80')}
+      className={cx(
+        'relative overflow-hidden rounded-2xl border border-slate-200 bg-white pl-2 shadow-xs',
+        card.bar === 'muted' && 'opacity-80',
+      )}
     >
       <span aria-hidden title={BAR_TITLE[card.bar]} className={cx('absolute inset-y-0 left-0 w-2', BAR_CLASS[card.bar])} />
       <div className="flex flex-col gap-3.5 p-4 md:p-5">
@@ -442,11 +506,14 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
               {s.english_name && <span className="ml-2 text-base font-normal text-slate-400">{s.english_name}</span>}
             </h1>
           </div>
-          <Tags info={info} big />
+          <Tags info={info} />
           {actions && <div className="flex items-center gap-1.5">{actions}</div>}
         </div>
         <div className="flex flex-wrap items-start gap-2">
-          <p className="min-w-0 flex-1 basis-64 text-lg leading-snug font-semibold text-slate-800">{card.headline}</p>
+          <p className="min-w-0 flex-1 basis-64 text-lg leading-snug font-semibold text-slate-800">
+            {card.headline}
+            {card.headlineFrom === 'task' && info.nextTask?.due_date && <DueText date={info.nextTask.due_date} />}
+          </p>
           <div className="flex items-center gap-1">
             <ChangeMenu
               value={s.ball}
@@ -460,7 +527,13 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
                 </>
               }
             />
-            <ChangeMenu value={s.status} options={STUDENT_STATUSES} onPick={(v) => setStudentStatus(s.id, v)} className={STATUS_CLASS[s.status]} label={s.status} />
+            <ChangeMenu
+              value={s.status}
+              options={STUDENT_STATUSES}
+              onPick={(v) => setStudentStatus(s.id, v)}
+              className={STATUS_CLASS[s.status]}
+              label={s.status}
+            />
           </div>
         </div>
         {(card.apps.length > 0 || card.visas.length > 0) && (

@@ -226,13 +226,23 @@ export function Field({ label, children, hint }: { label: ReactNode; children: R
 
 // ───────────────────────── 浮层定位 ─────────────────────────
 
-export function useFloating(anchor: RefObject<HTMLElement | null>, open: boolean, placement: 'bottom' | 'right' = 'bottom') {
+export function useFloating(
+  anchor: RefObject<HTMLElement | null>,
+  open: boolean,
+  placement: 'bottom' | 'right' = 'bottom',
+  /** 触发按钮被隐藏时（比如所在的框被折叠）调用，用来关掉弹出层 */
+  onHidden?: () => void,
+) {
   const [pos, setPos] = useState<{ top: number; left: number; maxH: number } | null>(null)
   const floating = useRef<HTMLDivElement | null>(null)
   const update = useCallback(() => {
     const a = anchor.current
     const f = floating.current
     if (!a) return
+    if (!a.getClientRects().length) {
+      onHidden?.()
+      return
+    }
     const r = a.getBoundingClientRect()
     const fw = f?.offsetWidth ?? 280
     const fh = f?.offsetHeight ?? 300
@@ -250,19 +260,23 @@ export function useFloating(anchor: RefObject<HTMLElement | null>, open: boolean
       if (top + fh > vh - 8 && r.top - fh - 4 > 8) top = r.top - fh - 4
     }
     setPos({ top, left, maxH: vh - 16 })
-  }, [anchor, placement])
+  }, [anchor, placement, onHidden])
   useLayoutEffect(() => {
     if (!open) return
     update()
     const raf = requestAnimationFrame(update)
     window.addEventListener('resize', update)
     window.addEventListener('scroll', update, true)
+    // 触发按钮大小变化或被隐藏时也重新定位（隐藏了就关掉）
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update)
+    if (anchor.current) ro?.observe(anchor.current)
     return () => {
       cancelAnimationFrame(raf)
+      ro?.disconnect()
       window.removeEventListener('resize', update)
       window.removeEventListener('scroll', update, true)
     }
-  }, [open, update])
+  }, [open, update, anchor])
   return { floating, pos }
 }
 
@@ -278,7 +292,8 @@ export function Popover({
 }) {
   const [open, setOpen] = useState(false)
   const anchor = useRef<HTMLSpanElement | null>(null)
-  const { floating, pos } = useFloating(anchor, open)
+  const close = useCallback(() => setOpen(false), [])
+  const { floating, pos } = useFloating(anchor, open, 'bottom', close)
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent) => {
@@ -428,7 +443,8 @@ export function DateField({
   const [bad, setBad] = useState(false)
   const [open, setOpen] = useState(false)
   const anchor = useRef<HTMLDivElement | null>(null)
-  const { floating, pos } = useFloating(anchor, open)
+  const close = useCallback(() => setOpen(false), [])
+  const { floating, pos } = useFloating(anchor, open, 'bottom', close)
   useEffect(() => {
     setText(fmtDate(value))
     setBad(false)
