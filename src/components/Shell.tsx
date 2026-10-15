@@ -42,7 +42,7 @@ function NavItem({ to, icon, label, badge, end, onClick }: { to: string; icon: R
       {icon}
       <span className="flex-1">{label}</span>
       {!!badge && (
-        <span className="rounded-full bg-rose-500 px-1.5 text-[11px] leading-[18px] font-semibold text-white tabular-nums">{badge}</span>
+        <span className="rounded-full bg-rose-500 px-1.5 text-[11px] leading-[18px] font-semibold text-on-accent tabular-nums">{badge}</span>
       )}
     </NavLink>
   )
@@ -179,7 +179,7 @@ function SearchPalette() {
     openStudent(id)
   }
   return (
-    <div className="fixed inset-0 z-[65] flex items-start justify-center bg-slate-900/30 p-3 pt-[12vh]" onMouseDown={close}>
+    <div className="fixed inset-0 z-[65] flex items-start justify-center bg-scrim p-3 pt-[12vh]" onMouseDown={close}>
       <div className="animate-pop-in w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 border-b border-slate-100 px-3">
           <Search size={17} className="text-slate-400" />
@@ -277,7 +277,7 @@ export function Shell() {
       </aside>
       {drawer && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-slate-900/30" onClick={() => setDrawer(false)} />
+          <div className="absolute inset-0 bg-scrim" onClick={() => setDrawer(false)} />
           <div className="animate-slide-in absolute inset-y-0 left-0 w-64 bg-white shadow-xl">
             <Sidebar onNavigate={() => setDrawer(false)} />
           </div>
@@ -306,7 +306,7 @@ export function Shell() {
           const sid = new URLSearchParams(location.search).get('s') ?? location.pathname.match(/^\/students\/([^/]+)$/)?.[1] ?? null
           useStore.setState({ quick: { open: true, studentId: sid } })
         }}
-        className="fixed right-5 bottom-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-600/30 transition-transform hover:scale-105 hover:bg-brand-700"
+        className="fixed right-5 bottom-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-on-accent shadow-lg shadow-brand-600/30 transition-transform hover:scale-105 hover:bg-accent-hover"
       >
         <Plus size={28} />
       </button>

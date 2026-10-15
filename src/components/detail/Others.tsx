@@ -19,7 +19,7 @@ import {
   updateVisa,
 } from '../../data/actions'
 import { useStore } from '../../data/store'
-import { Button, DateField, InlineText, MenuItem, Popover, cx, isComposing } from '../ui'
+import { Box, Button, DateField, InlineText, MenuItem, Popover, cx, isComposing } from '../ui'
 import { confirmDialog } from '../confirm'
 
 /** 剩余天数标签：签证到期按 60/30/7 天变色，其他关键日期 7 天内变红 */
@@ -91,7 +91,7 @@ function VisaCard({ v }: { v: Visa }) {
                     <button
                       type="button"
                       onClick={toggle}
-                      className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm hover:bg-emerald-600"
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-on-accent shadow-sm hover:bg-emerald-600"
                     >
                       <Check size={14} strokeWidth={3} />
                     </button>
@@ -162,11 +162,12 @@ export function Visas({ info }: { info: StudentInfo }) {
   const [type, setType] = useState('500')
   const [adding, setAdding] = useState(false)
   return (
-    <div className="card p-4">
-      <div className="mb-2 flex items-center gap-2">
-        <h3 className="text-[15px] font-semibold text-slate-900">🛂 签证</h3>
-        <div className="flex-1" />
-        {adding ? (
+    <Box
+      icon="🛂"
+      title="签证"
+      count={info.visas.length}
+      right={
+        adding ? (
           <span className="inline-flex items-center gap-1.5">
             <select className="input input-sm w-auto" value={type} onChange={(e) => setType(e.target.value)}>
               {VISA_TYPES.map((t) => (
@@ -191,8 +192,9 @@ export function Visas({ info }: { info: StudentInfo }) {
           <Button size="sm" onClick={() => setAdding(true)}>
             <Plus size={14} /> 添加签证
           </Button>
-        )}
-      </div>
+        )
+      }
+    >
       <div className="space-y-2">
         {info.visas.map((v) => (
           <VisaCard key={v.id} v={v} />
@@ -201,7 +203,7 @@ export function Visas({ info }: { info: StudentInfo }) {
           <div className="py-1 text-[13px] text-slate-400">每一步点一下打勾，会自动记日期并写入时间线。</div>
         )}
       </div>
-    </div>
+    </Box>
   )
 }
 
@@ -217,11 +219,8 @@ export function KeyDates({ info }: { info: StudentInfo }) {
     setNote('')
   }
   return (
-    <div className="card p-4">
-      <div className="mb-2 flex items-center gap-2">
-        <h3 className="text-[15px] font-semibold text-slate-900">📅 关键日期</h3>
-        <span className="text-xs text-slate-400">offer 相关截止日在「申请学校」里</span>
-      </div>
+    <Box icon="📅" title="关键日期" count={info.keyDates.length}>
+      <div className="mb-1 text-xs text-slate-400">offer 相关的截止日在「申请学校」里</div>
       <div className="space-y-1">
         {info.keyDates.map((k) => {
           const d = keyDateDeadline(k, today)
@@ -268,7 +267,7 @@ export function KeyDates({ info }: { info: StudentInfo }) {
           添加
         </Button>
       </div>
-    </div>
+    </Box>
   )
 }
 
@@ -300,16 +299,18 @@ export function Payments({ info }: { info: StudentInfo }) {
     setDate(today)
   }
   return (
-    <div className="card p-4">
-      <div className="mb-2 flex items-center gap-2">
-        <h3 className="text-[15px] font-semibold text-slate-900">💰 收费</h3>
-        <div className="flex-1" />
-        {[...totals].map(([c, t]) => (
-          <span key={c} className="text-xs text-slate-500">
-            合计 <b className="text-slate-800">{fmtMoney(t, c)}</b>
-          </span>
-        ))}
-      </div>
+    <Box
+      icon="💰"
+      title="收费"
+      count={list.length}
+      unit="笔"
+      defaultOpen={false}
+      right={[...totals].map(([c, t]) => (
+        <span key={c} className="text-xs text-slate-500">
+          合计 <b className="text-slate-800">{fmtMoney(t, c)}</b>
+        </span>
+      ))}
+    >
       {list.length > 0 && (
         <table className="mb-2 w-full text-[13px]">
           <tbody>
@@ -353,7 +354,7 @@ export function Payments({ info }: { info: StudentInfo }) {
           记一笔收费
         </Button>
       </div>
-    </div>
+    </Box>
   )
 }
 

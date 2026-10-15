@@ -222,9 +222,6 @@ export function Timeline({ info, compact }: { info: StudentInfo; compact?: boole
     <div className="flex flex-col gap-3">
       <Composer studentId={info.s.id} compact={compact} />
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-[15px] font-semibold text-slate-900">时间线</h3>
-        <span className="text-xs text-slate-400">{info.events.length} 条</span>
-        <div className="flex-1" />
         <Segmented options={['全部记录', '只看里程碑'] as const} value={mode} onChange={setMode} size="xs" />
         <Button size="xs" variant="ghost" onClick={() => setDesc((v) => !v)} title="切换排序">
           <ArrowDownUp size={12} /> {desc ? '新→旧' : '旧→新'}

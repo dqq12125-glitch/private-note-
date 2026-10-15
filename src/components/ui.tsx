@@ -30,7 +30,7 @@ export function isComposing(e: { nativeEvent?: KeyboardEvent; isComposing?: bool
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'soft'
 const VARIANT: Record<Variant, string> = {
-  primary: 'bg-brand-600 text-white hover:bg-brand-700 shadow-xs disabled:bg-brand-300',
+  primary: 'bg-brand-600 text-on-accent hover:bg-accent-hover shadow-xs disabled:bg-brand-300',
   secondary: 'bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 shadow-xs',
   ghost: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
   danger: 'bg-white text-rose-600 ring-1 ring-inset ring-rose-200 hover:bg-rose-50',
@@ -203,7 +203,7 @@ export function Chips({
           className={cx(
             'rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset transition-colors',
             value === o.key
-              ? 'bg-brand-600 text-white ring-brand-600'
+              ? 'bg-brand-600 text-on-accent ring-brand-600'
               : 'bg-white text-slate-600 ring-slate-300 hover:bg-slate-50',
           )}
         >
@@ -381,7 +381,7 @@ export function Calendar({ value, onPick, today }: { value: string | null; onPic
               className={cx(
                 'm-0.5 rounded-md py-1',
                 d === value
-                  ? 'bg-brand-600 font-semibold text-white'
+                  ? 'bg-brand-600 font-semibold text-on-accent'
                   : d === today
                     ? 'font-semibold text-brand-600 ring-1 ring-brand-300 ring-inset hover:bg-brand-50'
                     : inMonth
@@ -654,7 +654,7 @@ export function Modal({
   useEscape(onClose, open)
   if (!open) return null
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-slate-900/30 p-3 pt-[8vh] backdrop-blur-[1px]">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-scrim p-3 pt-[8vh] backdrop-blur-[1px]">
       <div className="fixed inset-0" onMouseDown={onClose} />
       <div className={cx('animate-pop-in relative w-full rounded-xl bg-white shadow-2xl', width)}>
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
@@ -682,7 +682,7 @@ export function Toasts() {
           key={t.id}
           className={cx(
             'animate-pop-in pointer-events-auto flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm shadow-lg',
-            t.tone === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white',
+            t.tone === 'error' ? 'bg-rose-600 text-on-accent' : 'bg-inverse text-on-inverse',
           )}
         >
           <span className="flex-1">{t.text}</span>
@@ -698,7 +698,7 @@ export function Toasts() {
               {t.action.label}
             </button>
           )}
-          <button type="button" className="text-white/60 hover:text-white" onClick={() => dismissToast(t.id)}>
+          <button type="button" className="opacity-60 hover:opacity-100" onClick={() => dismissToast(t.id)}>
             <X size={14} />
           </button>
         </div>
@@ -721,5 +721,52 @@ export function SectionTitle({ children, right, count }: { children: ReactNode; 
       <div className="flex-1" />
       {right}
     </div>
+  )
+}
+
+/** 详情页里的一个框：标题 + 数量，可以折叠 */
+export function Box({
+  title,
+  icon,
+  count,
+  unit,
+  defaultOpen = true,
+  right,
+  accent,
+  children,
+}: {
+  title: string
+  icon?: ReactNode
+  count?: number
+  unit?: string
+  defaultOpen?: boolean
+  right?: ReactNode
+  accent?: string
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <section className={cx('card min-w-0', accent)}>
+      <div className="flex min-h-12 flex-wrap items-center gap-2 px-4 py-2">
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className="-ml-1 flex min-w-0 flex-1 items-center gap-1.5 rounded-md py-1 pl-1 text-left focus-visible:outline-2 focus-visible:outline-brand-500"
+        >
+          <ChevronRight size={16} className={cx('shrink-0 text-slate-400 transition-transform', open && 'rotate-90')} />
+          {icon && <span aria-hidden>{icon}</span>}
+          <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
+          {count !== undefined && (
+            <span className="rounded-full bg-slate-100 px-2 text-xs font-semibold text-slate-500 tabular-nums">
+              {count}
+              {unit && <span className="font-normal"> {unit}</span>}
+            </span>
+          )}
+        </button>
+        {open && right}
+      </div>
+      {open && <div className="px-4 pb-4">{children}</div>}
+    </section>
   )
 }

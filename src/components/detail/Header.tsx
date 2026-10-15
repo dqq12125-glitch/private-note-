@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FileText, Moon, MoreHorizontal, PenLine, Star, Trash2 } from 'lucide-react'
+import { FileText, Moon, MoreHorizontal, Star, Trash2 } from 'lucide-react'
 import {
   BALLS,
   BUSINESS_TYPES,
@@ -22,7 +22,7 @@ import {
   updateStudent,
 } from '../../data/actions'
 import { useStore } from '../../data/store'
-import { Button, Chips, DateField, Field, InlineText, MenuItem, Modal, Popover, Segmented, cx } from '../ui'
+import { Box, Button, Chips, DateField, Field, InlineText, MenuItem, Modal, Popover, Segmented, cx } from '../ui'
 import { confirmDialog } from '../confirm'
 
 export function DormantDialog({
@@ -99,124 +99,129 @@ export function DormantDialog({
   )
 }
 
-export function StudentHeader({ info, compact }: { info: StudentInfo; compact?: boolean }) {
+/** 概要卡片右上角：导出进度报告 + 更多（删除学生） */
+export function StudentMoreActions({ info, compact }: { info: StudentInfo; compact?: boolean }) {
+  const s = info.s
+  const navigate = useNavigate()
+  return (
+    <>
+      {!compact && (
+        <Link to={`/students/${s.id}/report`}>
+          <Button size="sm">
+            <FileText size={14} /> 导出进度报告
+          </Button>
+        </Link>
+      )}
+      <Popover
+        trigger={({ toggle }) => (
+          <Button size="sm" variant="ghost" onClick={toggle} title="更多">
+            <MoreHorizontal size={16} />
+          </Button>
+        )}
+      >
+        {(close) => (
+          <>
+            {compact && (
+              <MenuItem
+                onClick={() => {
+                  close()
+                  navigate(`/students/${s.id}/report`)
+                }}
+              >
+                <FileText size={14} /> 导出进度报告
+              </MenuItem>
+            )}
+            <MenuItem
+              danger
+              onClick={async () => {
+                close()
+                const ok = await confirmDialog({
+                  title: `删除学生「${s.name}」？`,
+                  message: '会连同这个学生的申请、签证、待办、收费和整条时间线一起删除，无法恢复。',
+                  confirmText: '删除学生',
+                  danger: true,
+                  requireText: s.name,
+                })
+                if (ok) deleteStudent(s.id)
+              }}
+            >
+              <Trash2 size={14} /> 删除学生
+            </MenuItem>
+          </>
+        )}
+      </Popover>
+    </>
+  )
+}
+
+/** 休眠已经结束：提醒恢复跟进 */
+export function DormancyEndedBanner({ info }: { info: StudentInfo }) {
+  const s = info.s
+  const [dormantOpen, setDormantOpen] = useState(false)
+  if (!info.dormancyEnded) return null
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-[13px] text-amber-900 ring-1 ring-amber-200">
+      ⏰ 休眠已于 {fmtDate(s.dormant_until)} 结束
+      {s.dormant_reason && <span>（当初原因：{s.dormant_reason}）</span>}
+      <div className="flex-1" />
+      <Button size="xs" variant="primary" onClick={() => endDormancy(s.id)}>
+        恢复跟进
+      </Button>
+      <Button size="xs" onClick={() => setDormantOpen(true)}>
+        继续休眠…
+      </Button>
+      {dormantOpen && (
+        <DormantDialog open onClose={() => setDormantOpen(false)} studentId={s.id} initialUntil={null} initialReason={s.dormant_reason} />
+      )}
+    </div>
+  )
+}
+
+/** 基本信息：姓名、负责人、业务类型、跟进周期、休眠、背景备注等（都可以直接改） */
+export function BasicInfo({ info }: { info: StudentInfo }) {
   const s = info.s
   const assignees = useStore((st) => st.settings.assignees)
   const today = useStore((st) => st.today)
-  const navigate = useNavigate()
   const [dormantOpen, setDormantOpen] = useState(false)
   const [customCycle, setCustomCycle] = useState(!FOLLOW_CYCLES.some((c) => c.days === s.follow_cycle_days))
-  const openQuick = () => useStore.setState({ quick: { open: true, studentId: s.id } })
   const cycleKey = customCycle ? 'custom' : String(s.follow_cycle_days)
   const assigneeOptions = s.assignee && !assignees.includes(s.assignee) ? [...assignees, s.assignee] : assignees
 
   return (
-    <div className="card p-4">
-      <div className="flex flex-wrap items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1">
-            <InlineText
-              value={s.name}
-              autoWidth
-              onSave={(v) => v && updateStudent(s.id, { name: v })}
-              className="max-w-[16rem] !px-1 text-xl font-bold text-slate-900"
-            />
-            <InlineText
-              value={s.english_name ?? ''}
-              autoWidth
-              placeholder="英文名"
-              onSave={(v) => updateStudent(s.id, { english_name: v || null })}
-              className="max-w-[12rem] !px-1 text-sm text-slate-500"
-            />
-            <button
-              type="button"
-              title="优先级：点一下切换 高/普通"
-              onClick={() => updateStudent(s.id, { priority: s.priority === '高' ? '普通' : '高' })}
-              className={cx(
-                'tag cursor-pointer',
-                s.priority === '高'
-                  ? 'bg-rose-50 text-rose-600 ring-rose-200'
-                  : 'bg-white text-slate-400 ring-slate-200 hover:text-slate-600',
-              )}
-            >
-              <Star size={12} className={s.priority === '高' ? 'fill-rose-500 text-rose-500' : ''} />
-              {s.priority === '高' ? '高优先级' : '普通'}
-            </button>
-          </div>
-          <div className="mt-1 px-1 text-xs text-slate-500">
-            上次更新 <b className="font-medium text-slate-700">{fmtAgo(info.daysSinceUpdate)}</b>
-            {info.lastUpdate && `（${fmtDate(info.lastUpdate)}）`} · 最后检查{' '}
-            {s.last_checked_date ? fmtDate(s.last_checked_date) : '—'}
-            {s.import_meta && <> · Excel 第 {s.import_meta.row} 行导入</>}
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Button variant="primary" size="sm" onClick={openQuick}>
-            <PenLine size={14} /> 记一笔
-          </Button>
-          {!compact && (
-            <Link to={`/students/${s.id}/report`}>
-              <Button size="sm">
-                <FileText size={14} /> 导出进度报告
-              </Button>
-            </Link>
+    <Box icon="🧾" title="基本信息">
+      <div className="flex flex-wrap items-center gap-1">
+        <InlineText
+          value={s.name}
+          autoWidth
+          onSave={(v) => v && updateStudent(s.id, { name: v })}
+          className="max-w-[16rem] !px-1 text-lg font-semibold text-slate-900"
+        />
+        <InlineText
+          value={s.english_name ?? ''}
+          autoWidth
+          placeholder="英文名"
+          onSave={(v) => updateStudent(s.id, { english_name: v || null })}
+          className="max-w-[12rem] !px-1 text-sm text-slate-500"
+        />
+        <button
+          type="button"
+          title="优先级：点一下切换 高/普通"
+          onClick={() => updateStudent(s.id, { priority: s.priority === '高' ? '普通' : '高' })}
+          className={cx(
+            'tag cursor-pointer',
+            s.priority === '高' ? 'bg-rose-50 text-rose-600 ring-rose-200' : 'bg-white text-slate-400 ring-slate-200 hover:text-slate-600',
           )}
-          <Popover
-            trigger={({ toggle }) => (
-              <Button size="sm" variant="ghost" onClick={toggle} title="更多">
-                <MoreHorizontal size={16} />
-              </Button>
-            )}
-          >
-            {(close) => (
-              <>
-                {compact && (
-                  <MenuItem
-                    onClick={() => {
-                      close()
-                      navigate(`/students/${s.id}/report`)
-                    }}
-                  >
-                    <FileText size={14} /> 导出进度报告
-                  </MenuItem>
-                )}
-                <MenuItem
-                  danger
-                  onClick={async () => {
-                    close()
-                    const ok = await confirmDialog({
-                      title: `删除学生「${s.name}」？`,
-                      message: '会连同这个学生的申请、签证、待办、收费和整条时间线一起删除，无法恢复。',
-                      confirmText: '删除学生',
-                      danger: true,
-                      requireText: s.name,
-                    })
-                    if (ok) deleteStudent(s.id)
-                  }}
-                >
-                  <Trash2 size={14} /> 删除学生
-                </MenuItem>
-              </>
-            )}
-          </Popover>
-        </div>
+        >
+          <Star size={12} className={s.priority === '高' ? 'fill-rose-500 text-rose-500' : ''} />
+          {s.priority === '高' ? '高优先级' : '普通'}
+        </button>
       </div>
-
-      {info.dormancyEnded && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[13px] text-amber-900 ring-1 ring-amber-200">
-          ⏰ 休眠已于 {fmtDate(s.dormant_until)} 结束
-          {s.dormant_reason && <span>（当初原因：{s.dormant_reason}）</span>}
-          <div className="flex-1" />
-          <Button size="xs" variant="primary" onClick={() => endDormancy(s.id)}>
-            恢复跟进
-          </Button>
-          <Button size="xs" onClick={() => setDormantOpen(true)}>
-            继续休眠…
-          </Button>
-        </div>
-      )}
-
-      <div className="mt-4 grid gap-x-6 gap-y-3 @xl:grid-cols-2">
+      <div className="mt-1 px-1 text-xs text-slate-500">
+        上次更新 <b className="font-medium text-slate-700">{fmtAgo(info.daysSinceUpdate)}</b>
+        {info.lastUpdate && `（${fmtDate(info.lastUpdate)}）`} · 最后检查 {s.last_checked_date ? fmtDate(s.last_checked_date) : '—'}
+        {s.import_meta && <> · Excel 第 {s.import_meta.row} 行导入</>}
+      </div>
+      <div className="mt-3 grid gap-x-6 gap-y-3 @xl:grid-cols-2">
         <Field label="状态">
           <Segmented options={STUDENT_STATUSES} value={s.status} onChange={(v) => setStudentStatus(s.id, v)} />
         </Field>
@@ -368,6 +373,6 @@ export function StudentHeader({ info, compact }: { info: StudentInfo; compact?: 
           initialReason={s.dormant_reason}
         />
       )}
-    </div>
+    </Box>
   )
 }

@@ -4,7 +4,9 @@ import { exportExcel, exportJson } from '../lib/exporter'
 import { loadDemo, restoreBackup } from '../data/actions'
 import { resetAllData, saveSettings, toast, useStore } from '../data/store'
 import { supabaseConfigured } from '../data/supabase'
-import { Button, Field, isComposing } from '../components/ui'
+import { Button, Field, Segmented, isComposing } from '../components/ui'
+import { TARGET } from '../lib/platform'
+import { applyThemePref, loadThemePref, type ThemePref } from '../lib/theme'
 import { confirmDialog } from '../components/confirm'
 
 export function DemoButton({ size = 'md' }: { size?: 'md' | 'lg' }) {
@@ -61,6 +63,8 @@ export function SettingsPage() {
   const counts = { students: useStore((s) => s.students.length), events: useStore((s) => s.events.length) }
   const fileRef = useRef<HTMLInputElement | null>(null)
   const [recorder, setRecorder] = useState(settings.recorder_name)
+  const [theme, setTheme] = useState<ThemePref>(loadThemePref)
+  const THEMES: Record<ThemePref, string> = { system: '跟随系统', light: '浅色', dark: '深色' }
   const [busy, setBusy] = useState(false)
 
   const db = () => {
@@ -92,6 +96,19 @@ export function SettingsPage() {
             onBlur={() => recorder.trim() && recorder !== settings.recorder_name && saveSettings({ recorder_name: recorder.trim() })}
           />
         </Field>
+        {TARGET === 'web' && (
+          <Field label="外观">
+            <Segmented
+              options={['system', 'light', 'dark'] as const}
+              value={theme}
+              renderLabel={(t) => THEMES[t]}
+              onChange={(t) => {
+                setTheme(t)
+                applyThemePref(t)
+              }}
+            />
+          </Field>
+        )}
         <ListEditor label="负责人（可增删）" items={settings.assignees} onChange={(assignees) => saveSettings({ assignees })} placeholder="例如 team 3" />
         <ListEditor label="待办「交给谁」的常用人" items={settings.handlers} onChange={(handlers) => saveSettings({ handlers })} placeholder="例如 Maggie" />
       </div>

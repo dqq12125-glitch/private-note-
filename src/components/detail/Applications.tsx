@@ -16,7 +16,7 @@ import {
   updateApplication,
 } from '../../data/actions'
 import { useStore } from '../../data/store'
-import { Button, DateField, DaysLeft, Field, MenuItem, Modal, Popover, cx } from '../ui'
+import { Box, Button, DateField, DaysLeft, Field, MenuItem, Modal, Popover, cx } from '../ui'
 import { confirmDialog } from '../confirm'
 
 export function AppStatusTag({ status }: { status: AppStatus }) {
@@ -510,15 +510,17 @@ export function AppRow({ app, studentId }: { app: Application; studentId: string
 export function Applications({ info }: { info: StudentInfo }) {
   const [adding, setAdding] = useState(false)
   return (
-    <div className="card p-4">
-      <div className="mb-2 flex items-center gap-2">
-        <h3 className="text-[15px] font-semibold text-slate-900">🏫 申请学校</h3>
-        <span className="text-xs text-slate-400">{info.apps.length} 所</span>
-        <div className="flex-1" />
+    <Box
+      icon="🏫"
+      title="申请学校"
+      count={info.apps.length}
+      unit="所"
+      right={
         <Button size="sm" onClick={() => setAdding(true)}>
           <Plus size={14} /> 添加申请
         </Button>
-      </div>
+      }
+    >
       <div className="space-y-2">
         {info.apps.map((a) => (
           <AppRow key={a.id} app={a} studentId={info.s.id} />
@@ -530,6 +532,6 @@ export function Applications({ info }: { info: StudentInfo }) {
         )}
       </div>
       {adding && <AppFormModal studentId={info.s.id} onClose={() => setAdding(false)} />}
-    </div>
+    </Box>
   )
 }

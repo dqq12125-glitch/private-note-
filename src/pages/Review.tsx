@@ -177,11 +177,11 @@ export function ReviewPage() {
             onClick={() => setTab(t.key)}
             className={cx(
               'rounded-lg px-3 py-1.5 text-[13px] font-medium',
-              tab === t.key ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50',
+              tab === t.key ? 'bg-inverse text-on-inverse' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50',
             )}
           >
             {t.label}
-            <span className={cx('ml-1.5 rounded-full px-1.5 text-xs', counts[t.key] ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-500')}>
+            <span className={cx('ml-1.5 rounded-full px-1.5 text-xs', counts[t.key] ? 'bg-rose-500 text-on-accent' : 'bg-slate-200 text-slate-500')}>
               {counts[t.key]}
             </span>
           </button>

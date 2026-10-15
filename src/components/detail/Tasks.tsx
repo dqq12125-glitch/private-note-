@@ -5,7 +5,7 @@ import type { StudentInfo } from '../../lib/reminders'
 import type { Task } from '../../lib/types'
 import { addTask, completeTask, deleteTask, postponeTask, reopenTask, updateTask } from '../../data/actions'
 import { useStore } from '../../data/store'
-import { Button, DateField, DaysLeft, MenuItem, Popover, QUICK_OFFSETS, cx, offsetDate, isComposing } from '../ui'
+import { Box, Button, DateField, DaysLeft, MenuItem, Popover, QUICK_OFFSETS, cx, offsetDate, isComposing } from '../ui'
 import { confirmDialog } from '../confirm'
 
 export function PostponeMenu({
@@ -195,7 +195,7 @@ export function AddTaskForm({ studentId, onDone }: { studentId: string; onDone?:
               onClick={() => setDue(due === d ? null : d)}
               className={cx(
                 'rounded-full px-2 py-0.5 text-xs ring-1 ring-inset',
-                due === d ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-slate-600 ring-slate-300',
+                due === d ? 'bg-brand-600 text-on-accent ring-brand-600' : 'bg-white text-slate-600 ring-slate-300',
               )}
             >
               {o.label === '明天' ? '明天' : o.label.replace('后', '')}
@@ -231,11 +231,7 @@ export function NextSteps({ info }: { info: StudentInfo }) {
     .filter((t) => t.student_id === info.s.id && t.done_on)
     .sort((a, b) => ((a.done_on ?? '') < (b.done_on ?? '') ? 1 : -1))
   return (
-    <div className="card border-l-4 border-l-amber-400 p-4">
-      <div className="mb-2 flex items-center gap-2">
-        <h3 className="text-[15px] font-semibold text-slate-900">👉 下一步</h3>
-        <span className="text-xs text-slate-400">{info.openTasks.length} 件待办</span>
-      </div>
+    <Box icon="👉" title="下一步 · 待办" count={info.openTasks.length} unit="件" accent="border-l-4 border-l-amber-400">
       <div className="space-y-0.5">
         {info.openTasks.map((t) => (
           <TaskRow key={t.id} t={t} />
@@ -268,6 +264,6 @@ export function NextSteps({ info }: { info: StudentInfo }) {
           )}
         </div>
       )}
-    </div>
+    </Box>
   )
 }

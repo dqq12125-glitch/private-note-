@@ -113,7 +113,7 @@ export function CalendarPage() {
             }
             className={cx(
               'rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset',
-              hidden.has(f.key) ? 'bg-white text-slate-400 ring-slate-200 line-through' : 'bg-slate-800 text-white ring-slate-800',
+              hidden.has(f.key) ? 'bg-white text-slate-400 ring-slate-200 line-through' : 'bg-inverse text-on-inverse ring-inverse',
             )}
           >
             {f.label}
