@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "build:artifact": "tsc -b && vite build --mode artifact && node scripts/inline-artifact.mjs"
+    "build:artifact": "tsc -b && vite build --mode artifact && node scripts/inline-artifact.mjs",
+    "build:offline": "tsc -b && vite build --mode standalone && node scripts/inline-artifact.mjs dist-standalone"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
