@@ -47,7 +47,7 @@ export function StudentPicker({
         <div className="flex-1" />
         <button
           type="button"
-          className="text-xs text-brand-600 hover:underline"
+          className="text-xs text-brand-700 hover:underline"
           onClick={() => {
             onChange(null)
             setTimeout(() => inputRef.current?.focus(), 0)
@@ -228,7 +228,7 @@ export function QuickRecordModal() {
         </div>
         <RemindPicker value={remind} onChange={setRemind} label="设提醒（可选）" />
         <div>
-          <button type="button" className="text-xs text-brand-600 hover:underline" onClick={() => setMore((v) => !v)}>
+          <button type="button" className="text-xs text-brand-700 hover:underline" onClick={() => setMore((v) => !v)}>
             {more ? '收起' : '顺手改状态 / 球在谁那 ▾'}
           </button>
           {more && info && (

@@ -1,5 +1,5 @@
 // 学生卡片要显示的内容：全部由现有数据推算出来（只用于显示，不改任何数据）。
-import { VISA_STEPS } from './constants'
+import { KEYDATE_HORIZON, VISA_STEPS } from './constants'
 import { diffDays, fmtAgo, fmtDate, fmtDaysLeft } from './dates'
 import { appLabel, isOfferPending, isOfferTbc, sortApps, type Deadline, type StudentInfo } from './reminders'
 import type { Application, AppStatus, Visa } from './types'
@@ -20,6 +20,10 @@ export type Bar = 'red' | 'orange' | 'blue' | 'gray' | 'green' | 'muted'
 export type Tone = 'red' | 'orange' | 'yellow' | 'neutral'
 
 export interface DeadlineBadge {
+  /** 例如「UQ 接 offer DDL」 */
+  label: string
+  /** 例如「剩 5 天」「已过 2 天」 */
+  when: string
   text: string
   tone: Tone
   daysLeft: number | null
@@ -57,6 +61,10 @@ export interface CardInfo {
   moreDeadlines: DeadlineBadge[]
   tbcCount: number
   overdueTasks: number
+  /** 跟进已到期几天（0 = 今天该跟进）；没到期为 null */
+  followDueDays: number | null
+  /** 休眠已经结束，还没恢复跟进 */
+  dormancyEnded: boolean
   lastEvent: { text: string; full: string; ago: string } | null
   /** 组内排序：越小越靠前 */
   sortKey: [number, number, number, number]
@@ -88,7 +96,9 @@ export function appPills(apps: Application[]): AppPill[] {
 }
 
 export function visaTrack(v: Visa): VisaTrack {
-  const firstOpen = VISA_STEPS.findIndex((s) => !v[s.key])
+  // 当前步骤 = 最后一个已完成步骤的下一步；已获批就没有当前步骤
+  const lastDone = VISA_STEPS.findLastIndex((s) => !!v[s.key])
+  const firstOpen = v.granted_on || lastDone + 1 >= VISA_STEPS.length ? -1 : lastDone + 1
   return {
     id: v.id,
     type: v.visa_type,
@@ -137,10 +147,7 @@ function latestStamp(rows: { updated_at: string }[]): string {
 /** 当前状态一句话：未完成的第一条待办 > 申请/签证最新状态 > 学生状态 */
 export function headlineOf(info: StudentInfo, today: string): { text: string; from: CardInfo['headlineFrom'] } {
   const s = info.s
-  if (s.status === '已完成' || s.status === '暂停不跟进') {
-    const extra = progressSentence(info)
-    return { text: extra ? `${s.status} · ${extra.text}` : s.status, from: 'status' }
-  }
+  if (s.status === '已完成' || s.status === '暂停不跟进') return { text: s.status, from: 'status' }
   if (info.nextTask) return { text: info.nextTask.content, from: 'task' }
   const p = progressSentence(info)
   if (p) return p
@@ -201,13 +208,17 @@ export function deadlineBadges(info: StudentInfo): DeadlineBadge[] {
         d.date &&
         d.daysLeft !== null &&
         (BADGE_KINDS.has(d.kind) || (d.kind === 'keydate' && BADGE_KEYDATES.has(d.title))) &&
-        // 已经过去的开学/Orientation 不再显示；签证到期过了仍然提醒
-        !(d.kind === 'keydate' && d.title !== '签证到期' && d.daysLeft < 0),
+        // 已经过去的开学/Orientation 不再显示；签证到期过了、还没确认提醒（30 天内）仍然显示
+        !(d.kind === 'keydate' && d.daysLeft < 0 && !(d.title === '签证到期' && d.reminderDue && d.daysLeft >= -30)) &&
+        // 签证到期、开学这类日期只看未来 60 天（和首页一致）；offer/付款/补材料截止不限
+        !((d.kind === 'visa_expiry' || d.kind === 'keydate') && d.daysLeft > KEYDATE_HORIZON),
     )
     .sort((a, b) => a.daysLeft! - b.daysLeft!)
     .map((d) => {
       const label = badgeLabel(d, info)
       return {
+        label,
+        when: fmtDaysLeft(d.daysLeft),
         text: `${label} · ${fmtDaysLeft(d.daysLeft)}`,
         tone: badgeTone(d.daysLeft!),
         daysLeft: d.daysLeft,
@@ -232,9 +243,11 @@ export function laneOf(info: StudentInfo, today: string): Lane {
 export function computeCard(info: StudentInfo, today: string): CardInfo {
   const s = info.s
   const lane = laneOf(info, today)
-  const badges = deadlineBadges(info)
-  const overdueTasks = info.openTasks.filter((t) => t.due_date && t.due_date < today).length
-  const tbcCount = info.apps.filter(isOfferTbc).length
+  // 已完成/暂停的学生不再提醒截止日（和首页一致）
+  const closed = lane === 'closed'
+  const badges = closed ? [] : deadlineBadges(info)
+  const overdueTasks = closed ? 0 : info.openTasks.filter((t) => t.due_date && t.due_date < today).length
+  const tbcCount = closed ? 0 : info.apps.filter(isOfferTbc).length
   const nearest = badges[0] ?? null
   const overdueDeadline = badges.some((b) => b.daysLeft !== null && b.daysLeft < 0)
   const urgentNow = overdueTasks > 0 || overdueDeadline || (nearest?.daysLeft ?? 99) <= 3
@@ -247,14 +260,23 @@ export function computeCard(info: StudentInfo, today: string): CardInfo {
   else bar = 'blue'
 
   const head = headlineOf(info, today)
-  const last = info.recentEvents[0]
+  // 最近动态：不算「已检查无变化」，也不算发生日期写在未来的记录
+  const last = info.events.find((e) => e.kind !== 'checked' && e.occurred_on <= today) ?? info.recentEvents[0]
+  const oneLine = last ? last.content.replace(/\s+/g, ' ') : ''
   const lastEvent = last
     ? {
         full: last.content,
-        text: [...last.content.replace(/\s+/g, ' ')].length > 40 ? `${[...last.content.replace(/\s+/g, ' ')].slice(0, 40).join('')}…` : last.content.replace(/\s+/g, ' '),
-        ago: last.date_unknown ? '日期不明' : fmtAgo(diffDays(today, last.occurred_on)),
+        text: [...oneLine].length > 40 ? `${[...oneLine].slice(0, 40).join('')}…` : oneLine,
+        ago: last.date_unknown
+          ? '日期不明'
+          : last.occurred_on > today
+            ? `${fmtDate(last.occurred_on)}（未来日期）`
+            : fmtAgo(diffDays(today, last.occurred_on)),
       }
     : null
+  // 休眠刚结束的只显示「休眠已结束」，不再重复显示「跟进到期」
+  const followDueDays =
+    !closed && info.followDue && !info.dormancyEnded && s.next_follow_date ? diffDays(today, s.next_follow_date) : null
 
   // 组内排序：已逾期 > DDL 越近 > 跟进超期越久 > 高优先级
   const followOverdue =
@@ -272,25 +294,36 @@ export function computeCard(info: StudentInfo, today: string): CardInfo {
     headline: head.text,
     headlineFrom: head.from,
     apps: appPills(info.apps),
-    visas: info.visas.map(visaTrack),
+    // 正在办的签证排前面（最近有变化的在前），和「当前状态一句话」挑的是同一个
+    visas: [...info.visas]
+      .sort((a, b) => Number(!!a.granted_on) - Number(!!b.granted_on) || (a.updated_at < b.updated_at ? 1 : a.updated_at > b.updated_at ? -1 : 0))
+      .map(visaTrack),
     deadline: nearest,
     moreDeadlines: badges.slice(1),
     tbcCount,
     overdueTasks,
+    followDueDays,
+    dormancyEnded: !closed && info.dormancyEnded,
     lastEvent,
     sortKey,
   }
 }
 
 export function compareCards(a: { card: CardInfo; info: StudentInfo }, b: { card: CardInfo; info: StudentInfo }): number {
-  if (a.card.lane === 'dormant' && b.card.lane === 'dormant')
-    return (a.info.s.dormant_until ?? '') < (b.info.s.dormant_until ?? '') ? -1 : 1
+  const byName = () => a.info.s.name.localeCompare(b.info.s.name, 'zh-CN')
+  if (a.card.lane === 'dormant' && b.card.lane === 'dormant') {
+    const da = a.info.s.dormant_until ?? ''
+    const db = b.info.s.dormant_until ?? ''
+    return da !== db ? (da < db ? -1 : 1) : byName()
+  }
   if (a.card.lane === 'closed' && b.card.lane === 'closed') {
     if (a.info.s.status !== b.info.s.status) return a.info.s.status === '已完成' ? -1 : 1
-    return (b.info.lastUpdate ?? '') < (a.info.lastUpdate ?? '') ? -1 : 1
+    const ua = a.info.lastUpdate ?? ''
+    const ub = b.info.lastUpdate ?? ''
+    return ua !== ub ? (ub < ua ? -1 : 1) : byName()
   }
   for (let i = 0; i < 4; i++) if (a.card.sortKey[i] !== b.card.sortKey[i]) return a.card.sortKey[i] - b.card.sortKey[i]
-  return a.info.s.name.localeCompare(b.info.s.name, 'zh-CN')
+  return byName()
 }
 
 /** 负责人头像上的字 */

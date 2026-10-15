@@ -48,7 +48,7 @@ const PILL_CLASS: Record<PillTone, string> = {
   red: 'bg-rose-50 text-rose-600 ring-rose-200',
 }
 
-const TONE_CLASS: Record<Tone, string> = {
+export const TONE_CLASS: Record<Tone, string> = {
   red: 'bg-rose-50 text-rose-700 ring-rose-200',
   orange: 'bg-orange-50 text-orange-700 ring-orange-200',
   yellow: 'bg-amber-50 text-amber-800 ring-amber-200',
@@ -64,7 +64,7 @@ const BALL_CLASS: Record<Ball, string> = {
 
 const STALE_CLASS = { ok: 'bg-emerald-500', warn: 'bg-amber-400', bad: 'bg-rose-500' } as const
 
-export function AppPills({ pills, max }: { pills: AppPill[]; max?: number }) {
+export function AppPills({ pills, max, wrap }: { pills: AppPill[]; max?: number; wrap?: boolean }) {
   const shown = max ? pills.slice(0, max) : pills
   const rest = pills.length - shown.length
   return (
@@ -73,9 +73,14 @@ export function AppPills({ pills, max }: { pills: AppPill[]; max?: number }) {
         <span
           key={p.id}
           title={`${p.school}：${p.status}`}
-          className={cx('tag max-w-full min-w-0 font-medium', PILL_CLASS[p.tone], p.struck && 'line-through decoration-1')}
+          className={cx(
+            'tag max-w-full min-w-0 font-medium',
+            wrap && 'rounded-xl whitespace-normal',
+            PILL_CLASS[p.tone],
+            p.struck && 'line-through decoration-1',
+          )}
         >
-          <span className="truncate">{p.school}</span>
+          <span className={wrap ? 'min-w-0 break-words' : 'truncate'}>{p.school}</span>
           <span className="shrink-0 opacity-50">·</span>
           <span className="shrink-0">{p.status}</span>
         </span>
@@ -99,12 +104,12 @@ export function VisaDots({ track, labels }: { track: VisaTrack; labels?: boolean
       className={cx('flex min-w-0 gap-2', labels ? 'flex-col items-stretch' : 'items-center')}
       title={track.steps.map((s) => `${s.done ? '✓' : '○'} ${s.label}${s.date ? `（${fmtDate(s.date)}）` : ''}`).join('\n')}
     >
-      <div className="flex min-w-0 items-center gap-2">
+      <div className={cx('flex min-w-0 items-center gap-2', !labels && '@max-[17rem]:gap-1.5')}>
         <span className="tag shrink-0 bg-violet-50 font-semibold text-violet-700 ring-violet-200">{track.type} 签证</span>
         <div className="flex items-center" aria-label={`签证进度 ${doneCount}/5，${summary}`}>
           {track.steps.map((s, i) => (
             <span key={s.key} className="flex items-center">
-              {i > 0 && <span className={cx('h-0.5', labels ? 'w-5' : 'w-2.5', s.done ? 'bg-emerald-400' : 'bg-slate-200')} />}
+              {i > 0 && <span className={cx('h-0.5', labels ? 'w-5' : 'w-2.5 @max-[17rem]:w-1', s.done ? 'bg-emerald-400' : 'bg-slate-200')} />}
               <span
                 className={cx(
                   'block rounded-full',
@@ -134,10 +139,15 @@ export function VisaDots({ track, labels }: { track: VisaTrack; labels?: boolean
   )
 }
 
-export function Badge({ b }: { b: DeadlineBadge }) {
+/** 截止日徽章：学校名太长时只截断前面的名称，「剩 N 天 / 已过 N 天」始终完整显示 */
+export function Badge({ b, wrap }: { b: DeadlineBadge; wrap?: boolean }) {
   return (
-    <span title={b.title} className={cx('tag font-medium tabular-nums', TONE_CLASS[b.tone])}>
-      {b.tone === 'red' ? '⏰' : b.tone === 'orange' ? '⏳' : '📅'} {b.text}
+    <span title={b.title} className={cx('tag max-w-full min-w-0 font-medium tabular-nums', wrap && 'whitespace-normal', TONE_CLASS[b.tone])}>
+      <span aria-hidden className="shrink-0">
+        {b.tone === 'red' ? '⏰' : b.tone === 'orange' ? '⏳' : '📅'}
+      </span>
+      <span className={wrap ? 'min-w-0 break-words' : 'min-w-0 truncate'}>{b.label}</span>
+      <span className="shrink-0">· {b.when}</span>
     </span>
   )
 }
@@ -162,16 +172,39 @@ export function HealthDot({ info }: { info: StudentInfo }) {
   const cycle = cycleLabel(info.s.follow_cycle_days)
   const text =
     info.stale === 'ok' ? `跟进周期（${cycle}）内` : info.stale === 'warn' ? `超过跟进周期（${cycle}）` : `超过跟进周期（${cycle}）2 倍`
-  return <span title={`距上次更新 ${fmtAgo(info.daysSinceUpdate)}，${text}`} className={cx('inline-block h-2 w-2 shrink-0 rounded-full', STALE_CLASS[info.stale])} />
+  const label = `距上次更新 ${fmtAgo(info.daysSinceUpdate)}，${text}`
+  return <span role="img" aria-label={label} title={label} className={cx('inline-block h-2 w-2 shrink-0 rounded-full', STALE_CLASS[info.stale])} />
+}
+
+/** 跟进超期的文字提示（不只靠圆点颜色） */
+export function StaleText({ info }: { info: StudentInfo }) {
+  if (info.stale === 'ok') return null
+  return (
+    <span className={cx('shrink-0 font-medium', info.stale === 'bad' ? 'text-rose-600' : 'text-amber-700')}>
+      · {info.stale === 'bad' ? '超期 2 倍' : '超期'}
+    </span>
+  )
 }
 
 /** 「记一笔」「已检查没变化」两个按钮（点了直接生效，不打开详情） */
-export function CardActions({ info, size = 'sm', iconOnly }: { info: StudentInfo; size?: 'sm' | 'md'; iconOnly?: boolean }) {
+export function CardActions({
+  info,
+  size = 'sm',
+  iconOnly,
+  adaptive,
+}: {
+  info: StudentInfo
+  size?: 'sm' | 'md'
+  iconOnly?: boolean
+  /** 卡片很窄时（平板两列）按钮只显示图标，把位置留给负责人名字 */
+  adaptive?: boolean
+}) {
+  const labelCls = iconOnly ? 'sr-only' : adaptive ? '@max-[19rem]:sr-only' : undefined
   const today = useStore((s) => s.today)
   const checkedToday = info.s.last_checked_date === today
   const cls = cx(
     'inline-flex items-center gap-1 rounded-md font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-brand-500',
-    iconOnly ? 'h-7 w-7 justify-center' : size === 'md' ? 'h-8 px-3 text-sm' : 'h-7 px-2 text-xs',
+    iconOnly ? 'h-7 w-7 justify-center' : size === 'md' ? 'h-8 px-3 text-sm' : 'h-7 px-2 text-xs @max-[19rem]:min-w-7 @max-[19rem]:justify-center @max-[19rem]:px-1.5',
   )
   return (
     <div className="flex shrink-0 items-center gap-1">
@@ -183,7 +216,7 @@ export function CardActions({ info, size = 'sm', iconOnly }: { info: StudentInfo
           useStore.setState({ quick: { open: true, studentId: info.s.id } })
         }}
       >
-        <PenLine size={13} /> {iconOnly ? <span className="sr-only">记一笔</span> : '记一笔'}
+        <PenLine size={13} /> <span className={labelCls}>记一笔</span>
       </button>
       <button
         type="button"
@@ -195,8 +228,7 @@ export function CardActions({ info, size = 'sm', iconOnly }: { info: StudentInfo
           checkStudent(info.s.id)
         }}
       >
-        <Check size={13} />{' '}
-        {iconOnly ? <span className="sr-only">{checkedToday ? '今天已检查' : '已检查没变化'}</span> : checkedToday ? '今天已检查' : '已检查没变化'}
+        <Check size={13} /> <span className={labelCls}>{checkedToday ? '今天已检查' : '已检查没变化'}</span>
       </button>
     </div>
   )
@@ -206,17 +238,24 @@ function Tags({ info, big }: { info: StudentInfo; big?: boolean }) {
   return (
     <div className="flex shrink-0 items-center gap-1">
       {info.s.priority === '高' && <span className="tag bg-rose-500 font-semibold text-on-accent ring-rose-500">高</span>}
-      <span className={cx('tag bg-white text-slate-500 ring-slate-200', !big && 'hidden min-[360px]:inline-flex')}>{info.s.business_type}</span>
+      {/* 卡片太窄时（平板两列）先藏业务类型，把位置留给姓名 */}
+      <span className={cx('tag bg-white text-slate-500 ring-slate-200', !big && '@max-[17rem]:hidden')}>{info.s.business_type}</span>
     </div>
   )
 }
 
-function DormantLine({ info }: { info: StudentInfo }) {
+function DormantLine({ info, full }: { info: StudentInfo; full?: boolean }) {
   if (!info.isDormant) return null
   return (
-    <div className="flex min-w-0 items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
-      <span>💤 休眠到 <b className="font-semibold tabular-nums">{fmtDate(info.s.dormant_until)}</b></span>
-      {info.s.dormant_reason && <span className="truncate">· {info.s.dormant_reason}</span>}
+    <div className={cx('flex min-w-0 items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600', full && 'flex-wrap')}>
+      <span className="shrink-0">
+        💤 休眠到 <b className="font-semibold tabular-nums">{fmtDate(info.s.dormant_until)}</b>
+      </span>
+      {info.s.dormant_reason && (
+        <span className={full ? 'min-w-0 break-words' : 'truncate'} title={info.s.dormant_reason}>
+          · {info.s.dormant_reason}
+        </span>
+      )}
     </div>
   )
 }
@@ -237,6 +276,18 @@ function Alerts({ card, all }: { card: CardInfo; all?: boolean }) {
         ⚠️ 待办逾期 {card.overdueTasks} 件
       </span>,
     )
+  if (card.followDueDays !== null)
+    items.push(
+      <span key="f" className={cx('tag font-medium', TONE_CLASS.orange)} title="下次跟进日期已到">
+        🔁 {card.followDueDays === 0 ? '今天该跟进' : `跟进到期 · 已过 ${card.followDueDays} 天`}
+      </span>,
+    )
+  if (card.dormancyEnded)
+    items.push(
+      <span key="z" className={cx('tag font-medium', TONE_CLASS.orange)}>
+        💤 休眠已结束，该恢复跟进
+      </span>,
+    )
   if (!items.length) return null
   return <div className="flex flex-wrap gap-1">{items}</div>
 }
@@ -247,20 +298,12 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
   const open = useOpenStudent()
   const s = info.s
   return (
+    // 整张卡片点了打开详情；键盘用户用姓名按钮打开（卡片里不再嵌套按钮语义）
     <article
-      role="button"
-      tabIndex={0}
-      aria-label={`${s.name}：${card.headline}`}
       onClick={() => open(s.id)}
-      onKeyDown={(e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
-          e.preventDefault()
-          open(s.id)
-        }
-      }}
       className={cx(
-        'group relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border bg-white pl-1.5 shadow-xs transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
-        selected ? 'border-brand-300 ring-2 ring-brand-200' : 'border-slate-200',
+        'group relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border bg-white pl-1.5 shadow-xs transition-[box-shadow,border-color] @container hover:shadow-md has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-300',
+        selected ? 'border-brand-300 ring-2 ring-brand-200' : 'border-slate-200 hover:border-slate-300',
         card.bar === 'muted' && 'opacity-60 hover:opacity-90',
       )}
     >
@@ -279,18 +322,29 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
           <p className="line-clamp-2 min-w-0 flex-1 text-[15px] leading-snug font-medium text-slate-800" title={card.headline}>
             {card.headline}
           </p>
-          <span className={cx('tag mt-0.5 shrink-0', BALL_CLASS[s.ball])}>
-            <span className="font-normal opacity-60">球在</span>
-            {s.ball}
-          </span>
+          {card.lane !== 'closed' && (
+            <span className={cx('tag mt-0.5 shrink-0', BALL_CLASS[s.ball])}>
+              <span className="font-normal opacity-60">球在</span>
+              {s.ball}
+            </span>
+          )}
         </div>
         {/* 第 3 行：进度 */}
         {(card.apps.length > 0 || card.visas.length > 0) && (
           <div className="flex min-w-0 flex-col gap-1.5">
             {card.apps.length > 0 && <AppPills pills={card.apps} max={3} />}
-            {card.visas.slice(0, 1).map((v) => (
-              <VisaDots key={v.id} track={v} />
-            ))}
+            {card.visas[0] && (
+              <div className="flex min-w-0 items-center gap-1.5">
+                <div className="min-w-0 flex-1">
+                  <VisaDots track={card.visas[0]} />
+                </div>
+                {card.visas.length > 1 && (
+                  <span className="tag shrink-0 bg-slate-100 text-slate-500 ring-slate-200" title={card.visas.slice(1).map((v) => `${v.type} 签证`).join('、')}>
+                    +{card.visas.length - 1}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )}
         {/* 第 4 行：倒计时 / 休眠 */}
@@ -305,6 +359,7 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
                 {card.lastEvent.text}
               </span>
               <span className="shrink-0 text-slate-400">· {card.lastEvent.ago}</span>
+              <StaleText info={info} />
             </>
           ) : (
             <span className="text-slate-400">还没有记录</span>
@@ -314,10 +369,10 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
       {/* 第 6 行：负责人 + 快捷按钮 */}
       <div className="flex min-w-0 items-center gap-2 border-t border-slate-100 py-2 pr-2.5 pl-3">
         <Avatar assignee={s.assignee} />
-        <span className={cx('min-w-0 flex-1 truncate text-xs', s.assignee ? 'text-slate-600' : 'text-amber-700')}>
+        <span className={cx('min-w-[3rem] flex-1 truncate text-xs', s.assignee ? 'text-slate-600' : 'text-amber-700')} title={s.assignee ?? '未分配'}>
           {s.assignee ?? '未分配'}
         </span>
-        <CardActions info={info} />
+        <CardActions info={info} adaptive />
       </div>
     </article>
   )
@@ -381,7 +436,7 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
       <span aria-hidden title={BAR_TITLE[card.bar]} className={cx('absolute inset-y-0 left-0 w-2', BAR_CLASS[card.bar])} />
       <div className="flex flex-col gap-3.5 p-4 md:p-5">
         <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 grow basis-48">
             <h1 className="text-2xl leading-tight font-bold text-slate-900">
               {s.name}
               {s.english_name && <span className="ml-2 text-base font-normal text-slate-400">{s.english_name}</span>}
@@ -410,7 +465,7 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
         </div>
         {(card.apps.length > 0 || card.visas.length > 0) && (
           <div className="flex flex-col gap-3">
-            {card.apps.length > 0 && <AppPills pills={card.apps} />}
+            {card.apps.length > 0 && <AppPills pills={card.apps} wrap />}
             {card.visas.map((v) => (
               <div key={v.id} className="max-w-md">
                 <VisaDots track={v} labels />
@@ -418,7 +473,7 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
             ))}
           </div>
         )}
-        <DormantLine info={info} />
+        <DormantLine info={info} full />
         <Alerts card={card} all />
         <div className="flex min-w-0 items-start gap-2 text-[13px] text-slate-600">
           <span className="mt-1.5">
@@ -427,7 +482,7 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
           {card.lastEvent ? (
             <p className="min-w-0 flex-1">
               <span className="whitespace-pre-wrap">{card.lastEvent.full}</span>
-              <span className="ml-1.5 text-slate-400">· {card.lastEvent.ago}</span>
+              <span className="ml-1.5 text-slate-400">· {card.lastEvent.ago}</span> <StaleText info={info} />
             </p>
           ) : (
             <span className="text-slate-400">还没有记录</span>

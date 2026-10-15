@@ -131,7 +131,7 @@ export function ImportPage() {
         <div className="font-medium text-slate-800">{parsed ? parsed.fileName : '点这里选择 Excel 文件，或拖进来'}</div>
         <div className="text-xs text-slate-400">支持 .xlsx。只是预览，确认后才会真正导入。</div>
         <input type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => void onFile(e.target.files?.[0])} />
-        {loading && <div className="text-[13px] text-brand-600">正在读取…</div>}
+        {loading && <div className="text-[13px] text-brand-700">正在读取…</div>}
       </label>
       {error && <div className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-[13px] text-rose-700">{error}</div>}
 
@@ -224,7 +224,7 @@ export function ImportPage() {
                         <td className="px-3 py-2">
                           <button
                             type="button"
-                            className="inline-flex items-center gap-0.5 text-brand-600 hover:underline"
+                            className="inline-flex items-center gap-0.5 text-brand-700 hover:underline"
                             onClick={() =>
                               setExpanded((s) => {
                                 const n = new Set(s)

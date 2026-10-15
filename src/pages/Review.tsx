@@ -211,7 +211,7 @@ export function ReviewPage() {
                   {r.status !== 'pending' && (
                     <>
                       <span className="text-xs text-slate-400">{r.status === 'done' ? '已处理' : '已忽略'}</span>
-                      <button type="button" className="text-xs text-brand-600 hover:underline" onClick={() => resolveReview(r.id, 'pending')}>
+                      <button type="button" className="text-xs text-brand-700 hover:underline" onClick={() => resolveReview(r.id, 'pending')}>
                         撤销
                       </button>
                     </>

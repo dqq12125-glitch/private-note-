@@ -16,7 +16,7 @@ async function downloadReport(name: string, date: string) {
   const sheet = document.getElementById('report-sheet')
   if (!sheet) return
   const css = [...document.querySelectorAll('style')].map((s) => s.textContent ?? '').join('\n')
-  const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${name} 进度报告 ${date}</title><style>${css}</style></head><body style="background:#f1f5f9"><p class="no-print" style="max-width:800px;margin:16px auto;font:13px system-ui;color:#64748b">按 Ctrl+P（Mac 按 ⌘+P）打印，或在打印窗口里选「另存为 PDF」。</p>${sheet.outerHTML}</body></html>`
+  const html = `<!doctype html><html lang="zh-CN" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${name} 进度报告 ${date}</title><style>${css}</style></head><body style="background:#f1f5f9"><p class="no-print" style="max-width:800px;margin:16px auto;font:13px system-ui;color:#64748b">按 Ctrl+P（Mac 按 ⌘+P）打印，或在打印窗口里选「另存为 PDF」。</p>${sheet.outerHTML}</body></html>`
   try {
     await saveFile(`${name}_进度报告_${date.replace(/\//g, '-')}.html`, html)
   } catch (e) {

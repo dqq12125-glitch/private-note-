@@ -157,9 +157,9 @@
   --color-brand-100: color-mix(in oklab, #6366f1 26%, #141d2f);
   --color-brand-200: color-mix(in oklab, #6366f1 38%, #141d2f);
   --color-brand-300: color-mix(in oklab, #6366f1 55%, #141d2f);
-  --color-brand-600: #6366f1;
+  --color-brand-600: #4f46e5;
   --color-brand-700: #a5b4fc;
-  --color-accent-hover: #7c7ff7;
+  --color-accent-hover: #6366f1;
   --color-inverse: #e2e7ef;
   --color-on-inverse: #0b1220;
   --color-scrim: rgb(0 0 0 / 0.55);
@@ -323,9 +323,9 @@
   --color-brand-100: color-mix(in oklab, #6366f1 26%, #141d2f);
   --color-brand-200: color-mix(in oklab, #6366f1 38%, #141d2f);
   --color-brand-300: color-mix(in oklab, #6366f1 55%, #141d2f);
-  --color-brand-600: #6366f1;
+  --color-brand-600: #4f46e5;
   --color-brand-700: #a5b4fc;
-  --color-accent-hover: #7c7ff7;
+  --color-accent-hover: #6366f1;
   --color-inverse: #e2e7ef;
   --color-on-inverse: #0b1220;
   --color-scrim: rgb(0 0 0 / 0.55);

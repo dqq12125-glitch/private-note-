@@ -305,7 +305,7 @@ export function Payments({ info }: { info: StudentInfo }) {
       count={list.length}
       unit="笔"
       defaultOpen={false}
-      right={[...totals].map(([c, t]) => (
+      summary={[...totals].map(([c, t]) => (
         <span key={c} className="text-xs text-slate-500">
           合计 <b className="text-slate-800">{fmtMoney(t, c)}</b>
         </span>

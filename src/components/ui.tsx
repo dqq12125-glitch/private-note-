@@ -383,7 +383,7 @@ export function Calendar({ value, onPick, today }: { value: string | null; onPic
                 d === value
                   ? 'bg-brand-600 font-semibold text-on-accent'
                   : d === today
-                    ? 'font-semibold text-brand-600 ring-1 ring-brand-300 ring-inset hover:bg-brand-50'
+                    ? 'font-semibold text-brand-700 ring-1 ring-brand-300 ring-inset hover:bg-brand-50'
                     : inMonth
                       ? 'text-slate-700 hover:bg-slate-100'
                       : 'text-slate-300 hover:bg-slate-50',
@@ -395,7 +395,7 @@ export function Calendar({ value, onPick, today }: { value: string | null; onPic
         })}
       </div>
       <div className="mt-1 flex justify-between border-t border-slate-100 pt-2">
-        <button type="button" className="text-xs text-brand-600 hover:underline" onClick={() => onPick(today)}>
+        <button type="button" className="text-xs text-brand-700 hover:underline" onClick={() => onPick(today)}>
           今天
         </button>
         <span className="text-xs text-slate-400">也可以直接输入 20/11 或 20/11/2026</span>
@@ -731,6 +731,7 @@ export function Box({
   count,
   unit,
   defaultOpen = true,
+  summary,
   right,
   accent,
   children,
@@ -740,6 +741,9 @@ export function Box({
   count?: number
   unit?: string
   defaultOpen?: boolean
+  /** 折叠时也显示的摘要（比如收费合计） */
+  summary?: ReactNode
+  /** 展开时才显示的操作按钮 */
   right?: ReactNode
   accent?: string
   children: ReactNode
@@ -764,9 +768,13 @@ export function Box({
             </span>
           )}
         </button>
+        {summary && <div className="flex flex-wrap items-center gap-2">{summary}</div>}
         {open && right}
       </div>
-      {open && <div className="px-4 pb-4">{children}</div>}
+      {/* 折叠时只是隐藏，不卸载：正在写的记录不会丢 */}
+      <div hidden={!open} className="px-4 pb-4">
+        {children}
+      </div>
     </section>
   )
 }

@@ -389,7 +389,7 @@ export function InspectPage() {
           <div className="text-4xl">☕️</div>
           <div className="mt-3 text-lg font-semibold">今天没有需要巡检的学生</div>
           <p className="mt-1 text-[13px] text-slate-500">下次跟进日期到了、有到期待办、offer DDL 14 天内、休眠结束的学生会出现在这里。</p>
-          <Link to="/" className="mt-4 inline-block text-brand-600 hover:underline">
+          <Link to="/" className="mt-4 inline-block text-brand-700 hover:underline">
             回首页
           </Link>
         </div>

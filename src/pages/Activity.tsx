@@ -93,7 +93,7 @@ export function ActivityPage() {
             <DateField value={to} onChange={setTo} size="sm" className="w-36" />
           </span>
         )}
-        <button type="button" className={cx('text-xs', !range ? 'text-brand-600' : 'text-slate-400 hover:text-slate-600')} onClick={() => { setRange(null); setFrom(from ?? addDays(today, -6)); setTo(to ?? today) }}>
+        <button type="button" className={cx('text-xs', !range ? 'text-brand-700' : 'text-slate-400 hover:text-slate-600')} onClick={() => { setRange(null); setFrom(from ?? addDays(today, -6)); setTo(to ?? today) }}>
           自定义日期
         </button>
         <select className="input input-sm w-auto" value={assignee} onChange={(e) => setAssignee(e.target.value)}>

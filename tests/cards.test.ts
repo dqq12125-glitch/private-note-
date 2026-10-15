@@ -3,7 +3,7 @@ import { DEFAULT_SETTINGS } from '../src/lib/constants'
 import { addDays } from '../src/lib/dates'
 import { compareCards, computeCard, headlineOf, laneOf, pillTone, visaTrack, avatarText } from '../src/lib/cardInfo'
 import { computeStudentInfos } from '../src/lib/reminders'
-import type { DBState } from '../src/lib/types'
+import type { DBState, KeyDate, Visa } from '../src/lib/types'
 import { buildDemo } from '../src/data/demo'
 
 const today = '2026-10-15'
@@ -116,5 +116,141 @@ describe('pills, visa steps and avatars', () => {
     const i = byName('李华').info
     expect(laneOf({ ...i, followDue: true }, today)).toBe('mine')
     expect(addDays(today, 0)).toBe(today)
+  })
+})
+
+// ───────── 代码审查后补的回归测试 ─────────
+
+/** 在示例数据上改一点东西，重新算某个学生的卡片 */
+function cardWith(name: string, change: (d: DBState, sid: string) => void) {
+  const d: DBState = structuredClone(db)
+  const sid = d.students.find((s) => s.name === `示例·${name}`)!.id
+  change(d, sid)
+  const info = computeStudentInfos(d, today).find((i) => i.s.id === sid)!
+  return { info, card: computeCard(info, today) }
+}
+const stamp = `${today}T00:00:00.000Z`
+const visa = (sid: string, id: string, over: Partial<Visa>): Visa => ({
+  id,
+  student_id: sid,
+  visa_type: '500',
+  materials_on: null,
+  paid_on: null,
+  submitted_on: null,
+  medical_on: null,
+  granted_on: null,
+  expiry_date: null,
+  expiry_ack_on: null,
+  note: '',
+  created_at: stamp,
+  updated_at: stamp,
+  ...over,
+})
+const keydate = (sid: string, id: string, kind: KeyDate['kind'], date: string): KeyDate => ({
+  id,
+  student_id: sid,
+  kind,
+  date,
+  note: '',
+  ack_on: null,
+  created_at: stamp,
+  updated_at: stamp,
+})
+
+describe('review fixes', () => {
+  it('shows the visa in progress first, not an old granted one', () => {
+    const { card } = cardWith('周杰', (d, sid) => {
+      d.visas.push(visa(sid, 'old', { visa_type: '500', granted_on: '2024-01-10', updated_at: '2024-01-10T00:00:00.000Z' }))
+      d.visas.push(visa(sid, 'new', { visa_type: '485', materials_on: '2026-10-01', updated_at: '2026-10-01T00:00:00.000Z' }))
+    })
+    expect(card.visas.map((v) => v.type)).toEqual(['485', '500'])
+    expect(card.visas[0].steps.find((s) => s.current)?.label).toBe('已付款')
+  })
+  it('has no current step once a visa is granted, even if a step was skipped', () => {
+    const t = visaTrack(visa('x', 'v', { materials_on: '2026-01-01', submitted_on: '2026-02-01', granted_on: '2026-03-01' }))
+    expect(t.granted).toBe(true)
+    expect(t.steps.some((s) => s.current)).toBe(false)
+  })
+  it('current step follows the last done step (skipped steps stay hollow)', () => {
+    const t = visaTrack(visa('x', 'v', { materials_on: '2026-01-01', submitted_on: '2026-02-01' }))
+    expect(t.steps.map((s) => [s.done, s.current])).toEqual([
+      [true, false],
+      [false, false],
+      [true, false],
+      [false, true],
+      [false, false],
+    ])
+  })
+  it('does not show deadlines, TBC or overdue chips for finished or paused students', () => {
+    for (const [name, status] of [
+      ['赵敏', '已完成'],
+      ['孙丽', '暂停不跟进'],
+    ]) {
+      const { card } = cardWith(name, (d, sid) => {
+        d.tasks.push({
+          id: 't-old',
+          student_id: sid,
+          content: '旧待办',
+          due_date: '2026-09-01',
+          handler: null,
+          done_on: null,
+          created_at: stamp,
+          updated_at: stamp,
+        })
+      })
+      expect(card.deadline).toBeNull()
+      expect(card.tbcCount).toBe(0)
+      expect(card.overdueTasks).toBe(0)
+      expect(card.headline).toBe(status)
+    }
+  })
+  it('only shows key dates within 60 days, and drops past ones except a recent visa expiry', () => {
+    const far = cardWith('周杰', (d, sid) => d.key_dates.push(keydate(sid, 'k1', '开学', addDays(today, 90))))
+    expect(far.card.deadline).toBeNull()
+    const near = cardWith('周杰', (d, sid) => d.key_dates.push(keydate(sid, 'k1', '开学', addDays(today, 20))))
+    expect(near.card.deadline?.text).toBe('开学 · 剩 20 天')
+    const pastStart = cardWith('周杰', (d, sid) => d.key_dates.push(keydate(sid, 'k1', '开学', addDays(today, -3))))
+    expect(pastStart.card.deadline).toBeNull()
+    const expired = cardWith('周杰', (d, sid) => d.key_dates.push(keydate(sid, 'k1', '签证到期', addDays(today, -3))))
+    expect(expired.card.deadline).toMatchObject({ text: '签证到期 · 已过 3 天', tone: 'red' })
+    const longAgo = cardWith('周杰', (d, sid) => d.key_dates.push(keydate(sid, 'k1', '签证到期', addDays(today, -45))))
+    expect(longAgo.card.deadline).toBeNull()
+  })
+  it('splits the badge into a truncatable label and an always-visible countdown', () => {
+    expect(byName('王小明').card.deadline).toMatchObject({ label: 'UQ 接 offer DDL', when: '剩 2 天' })
+  })
+  it('ignores future-dated timeline entries for the last activity', () => {
+    const { card } = cardWith('周杰', (d, sid) => {
+      d.events.push({
+        id: 'future',
+        student_id: sid,
+        kind: 'note',
+        occurred_on: addDays(today, 5),
+        date_unknown: false,
+        content: '未来的记录',
+        recorder: null,
+        milestone: false,
+        edit_history: [],
+        edited_at: null,
+        source: null,
+        created_at: stamp,
+      })
+    })
+    expect(card.lastEvent?.full).not.toBe('未来的记录')
+  })
+  it('explains why a follow-up-due student is in 需要我处理', () => {
+    expect(byName('张伟').card.followDueDays).toBeGreaterThanOrEqual(0)
+    expect(byName('陈静').card.dormancyEnded).toBe(true)
+    expect(byName('陈静').card.followDueDays).toBeNull() // 只显示「休眠已结束」，不重复
+    expect(byName('李华').card.followDueDays).toBeNull()
+    expect(byName('赵敏').card.followDueDays).toBeNull()
+  })
+  it('sorts consistently whichever way the comparison runs', () => {
+    for (const a of cards)
+      for (const b of cards) {
+        if (a === b) continue
+        expect(Math.sign(compareCards(a, b))).toBe(-Math.sign(compareCards(b, a)))
+        expect(compareCards(a, b)).not.toBe(0)
+      }
   })
 })

@@ -95,11 +95,11 @@ export function LoginPage() {
             </button>
           )}
           {mode === 'signup' ? (
-            <button type="button" className="text-brand-600 hover:underline" onClick={() => setMode('login')}>
+            <button type="button" className="text-brand-700 hover:underline" onClick={() => setMode('login')}>
               已有账号，去登录
             </button>
           ) : (
-            <button type="button" className="text-brand-600 hover:underline" onClick={() => setMode('signup')}>
+            <button type="button" className="text-brand-700 hover:underline" onClick={() => setMode('signup')}>
               第一次用？注册
             </button>
           )}
