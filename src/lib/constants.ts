@@ -111,9 +111,10 @@ export const STATUS_STYLE: Record<StudentStatus, string> = {
   暂停不跟进: 'bg-zinc-100 text-zinc-500 ring-zinc-200',
 }
 
+// 和学生卡片的色条一致：球在我们 = 橙（该我动），在别人那 = 蓝 / 紫
 export const BALL_STYLE: Record<Ball, string> = {
-  我们: 'bg-indigo-50 text-indigo-700 ring-indigo-200',
-  学生: 'bg-amber-50 text-amber-700 ring-amber-200',
+  我们: 'bg-orange-50 text-orange-700 ring-orange-200',
+  学生: 'bg-sky-50 text-sky-700 ring-sky-200',
   学校: 'bg-sky-50 text-sky-700 ring-sky-200',
   签证局: 'bg-violet-50 text-violet-700 ring-violet-200',
 }

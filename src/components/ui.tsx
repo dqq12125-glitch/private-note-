@@ -267,9 +267,10 @@ export function useFloating(
     const raf = requestAnimationFrame(update)
     window.addEventListener('resize', update)
     window.addEventListener('scroll', update, true)
-    // 触发按钮大小变化或被隐藏时也重新定位（隐藏了就关掉）
+    // 触发按钮或弹出层自己大小变化时重新定位（触发按钮被隐藏了就关掉）
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update)
     if (anchor.current) ro?.observe(anchor.current)
+    if (floating.current) ro?.observe(floating.current)
     return () => {
       cancelAnimationFrame(raf)
       ro?.disconnect()

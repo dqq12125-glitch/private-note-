@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Check, ChevronDown, PenLine } from 'lucide-react'
-import { BALLS, STUDENT_STATUSES, cycleLabel } from '../lib/constants'
+import { BALL_STYLE, BALLS, STUDENT_STATUSES, cycleLabel } from '../lib/constants'
 import { diffDays, fmtAgo, fmtDate, fmtShort } from '../lib/dates'
 import {
   avatarHue,
@@ -14,7 +14,7 @@ import {
   type VisaTrack,
 } from '../lib/cardInfo'
 import type { StudentInfo } from '../lib/reminders'
-import type { Ball, StudentStatus } from '../lib/types'
+import type { StudentStatus } from '../lib/types'
 import { checkStudent, setBall, setStudentStatus } from '../data/actions'
 import { useStore } from '../data/store'
 import { StudentLink, useOpenStudent } from './bits'
@@ -53,13 +53,6 @@ export const TONE_CLASS: Record<Tone, string> = {
   orange: 'bg-orange-50 text-orange-700 ring-orange-200',
   yellow: 'bg-amber-50 text-amber-800 ring-amber-200',
   neutral: 'bg-slate-100 text-slate-600 ring-slate-200',
-}
-
-const BALL_CLASS: Record<Ball, string> = {
-  我们: 'bg-orange-50 text-orange-700 ring-orange-200',
-  学生: 'bg-sky-50 text-sky-700 ring-sky-200',
-  学校: 'bg-sky-50 text-sky-700 ring-sky-200',
-  签证局: 'bg-violet-50 text-violet-700 ring-violet-200',
 }
 
 const STALE_CLASS = { ok: 'bg-emerald-500', warn: 'bg-amber-400', bad: 'bg-rose-500', off: 'bg-slate-300' } as const
@@ -368,12 +361,26 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
         </div>
         {/* 第 2 行：现在的状态一句话 */}
         <div className="flex min-w-0 items-start gap-2">
-          <p className="line-clamp-2 min-w-0 flex-1 text-[15px] leading-snug font-medium text-slate-800" title={card.headline}>
-            {card.headline}
-            {card.headlineFrom === 'task' && info.nextTask?.due_date && <DueText date={info.nextTask.due_date} />}
-          </p>
+          <div className="min-w-0 flex-1">
+            <p
+              className="line-clamp-2 text-[15px] leading-snug font-medium text-slate-800"
+              title={
+                card.headlineFrom === 'task' && info.nextTask?.due_date
+                  ? `${card.headline}（截止 ${fmtDate(info.nextTask.due_date)}）`
+                  : card.headline
+              }
+            >
+              {card.headline}
+            </p>
+            {/* 截止日单独一行，标题很长时也不会被截掉 */}
+            {card.headlineFrom === 'task' && info.nextTask?.due_date && (
+              <div className="-ml-1.5 leading-tight">
+                <DueText date={info.nextTask.due_date} />
+              </div>
+            )}
+          </div>
           {card.lane !== 'closed' && (
-            <span className={cx('tag mt-0.5 shrink-0', BALL_CLASS[s.ball])}>
+            <span className={cx('tag mt-0.5 shrink-0', BALL_STYLE[s.ball])}>
               <span className="font-normal opacity-60">球在</span>
               {s.ball}
             </span>
@@ -519,7 +526,7 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
               value={s.ball}
               options={BALLS}
               onPick={(b) => setBall(s.id, b)}
-              className={BALL_CLASS[s.ball]}
+              className={BALL_STYLE[s.ball]}
               label={
                 <>
                   <span className="font-normal opacity-60">球在</span>

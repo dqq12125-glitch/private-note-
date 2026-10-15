@@ -195,7 +195,7 @@ function ChipGroup({
   )
 }
 
-/** 紧凑列表「下次跟进」：到期标橙/红；休眠显示休眠到哪天 */
+/** 紧凑列表「下次跟进」：到期标橙（和卡片一致）；休眠显示休眠到哪天 */
 function FollowCell({ info, card }: { info: StudentInfo; card: CardInfo }) {
   const today = useStore((s) => s.today)
   const s = info.s
@@ -215,7 +215,7 @@ function FollowCell({ info, card }: { info: StudentInfo; card: CardInfo }) {
   if (card.followDueDays !== null)
     return (
       <span
-        className={cx('font-medium', card.followDueDays > 0 ? 'text-rose-600' : 'text-orange-700')}
+        className="font-medium text-orange-700"
         title={card.followDueDays === 0 ? '今天该跟进' : `跟进到期，已过 ${card.followDueDays} 天`}
       >
         🔁 {card.followDueDays === 0 ? '今天' : fmtShort(s.next_follow_date, today)}
@@ -295,9 +295,9 @@ function CompactTable({
                   {info.s.priority === '高' && (
                     <span className="tag shrink-0 bg-rose-500 px-1.5 text-[10px] text-on-accent ring-rose-500">高</span>
                   )}
-                  {/* 位置不够时先压缩英文名，中文名尽量完整 */}
-                  {info.s.english_name && <span className="min-w-0 flex-1 truncate text-xs text-slate-400">{info.s.english_name}</span>}
                 </span>
+                {/* 英文名放第二行，不跟中文名抢位置 */}
+                {info.s.english_name && <div className="truncate text-[11px] leading-tight text-slate-400">{info.s.english_name}</div>}
               </td>
               <td className="border-b border-slate-100 px-3 py-2">
                 <div className="flex min-w-0 items-center gap-1.5">
@@ -438,6 +438,8 @@ export function StudentsPage() {
 
   const filtering = !!(q.trim() || fAssignee || fStatus || fBusiness || fPriority)
   const filterKey = [q.trim(), fAssignee, fStatus, fBusiness, fPriority].join('\n')
+  // 换了关键词或筛选就丢掉上一次搜索里的手动折叠，以后再搜同一个词也会重新展开
+  if (searchCollapsed.key && searchCollapsed.key !== filterKey) setSearchCollapsed({ key: '', lanes: {} })
   const searchLanes = searchCollapsed.key === filterKey ? searchCollapsed.lanes : {}
   const clearAll = () => {
     setQ('')

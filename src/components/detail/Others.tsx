@@ -130,7 +130,16 @@ function VisaCard({ v }: { v: Visa }) {
                 />
               )}
               <div className={cx('mt-1 text-xs', date ? 'font-medium text-slate-800' : 'text-slate-500')}>{step.label}</div>
-              <div className="text-[11px] text-slate-400 tabular-nums">{date ? fmtDate(date) : ''}</div>
+              {/* 手机上一格放不下完整日期时，在年份前换行 */}
+              <div className="text-[11px] text-slate-400 tabular-nums">
+                {date && (
+                  <>
+                    {fmtDate(date).slice(0, 6)}
+                    <wbr />
+                    {fmtDate(date).slice(6)}
+                  </>
+                )}
+              </div>
             </div>
           )
         })}
