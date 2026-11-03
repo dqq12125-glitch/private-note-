@@ -69,6 +69,65 @@ export function PostponeMenu({
   )
 }
 
+/** 改「交给谁」：点标签（或鼠标移上去出现的「交给…」）弹出输入框 */
+function HandlerEdit({ t }: { t: Task }) {
+  const handlers = useStore((s) => s.settings.handlers)
+  const [v, setV] = useState(t.handler ?? '')
+  return (
+    <Popover
+      trigger={({ toggle }) => (
+        <button
+          type="button"
+          onClick={() => {
+            setV(t.handler ?? '')
+            toggle()
+          }}
+          title="改交给谁"
+          className={cx(
+            'tag',
+            t.handler
+              ? 'bg-violet-50 text-violet-700 ring-violet-200 hover:bg-violet-100'
+              : 'bg-transparent text-slate-400 opacity-0 ring-transparent group-hover:opacity-100 hover:text-slate-600 focus-visible:opacity-100',
+          )}
+        >
+          {t.handler ? `交给 ${t.handler}` : '交给…'}
+        </button>
+      )}
+    >
+      {(close) => {
+        const save = () => {
+          const h = v.trim() || null
+          if (h !== t.handler) updateTask(t.id, { handler: h })
+          close()
+        }
+        return (
+          <div className="flex items-center gap-1 p-1">
+            <input
+              autoFocus
+              className="input input-sm w-40"
+              placeholder="交给谁（留空 = 自己）"
+              list={`handlers-${t.id}`}
+              value={v}
+              onChange={(e) => setV(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !isComposing(e)) save()
+              }}
+            />
+            <datalist id={`handlers-${t.id}`}>
+              {handlers.map((h) => (
+                <option key={h} value={h} />
+              ))}
+            </datalist>
+            <Button size="xs" variant="primary" onClick={save}>
+              保存
+            </Button>
+          </div>
+        )
+      }}
+    </Popover>
+  )
+}
+
 function TaskRow({ t }: { t: Task }) {
   const today = useStore((s) => s.today)
   const [editing, setEditing] = useState(false)
@@ -117,7 +176,7 @@ function TaskRow({ t }: { t: Task }) {
           ) : (
             <span className="text-slate-400">没有截止日</span>
           )}
-          {t.handler && <span className="tag bg-violet-50 text-violet-700 ring-violet-200">交给 {t.handler}</span>}
+          <HandlerEdit t={t} />
         </div>
       </div>
       <div className="flex items-center opacity-60 group-hover:opacity-100">

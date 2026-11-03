@@ -103,6 +103,7 @@ export function DormantDialog({
 export function StudentMoreActions({ info, compact }: { info: StudentInfo; compact?: boolean }) {
   const s = info.s
   const navigate = useNavigate()
+  const [dormantOpen, setDormantOpen] = useState(false)
   return (
     <>
       {!compact && (
@@ -131,6 +132,25 @@ export function StudentMoreActions({ info, compact }: { info: StudentInfo; compa
                 <FileText size={14} /> 导出进度报告
               </MenuItem>
             )}
+            {info.isDormant ? (
+              <MenuItem
+                onClick={() => {
+                  close()
+                  endDormancy(s.id)
+                }}
+              >
+                <Moon size={14} /> 结束休眠，恢复跟进
+              </MenuItem>
+            ) : (
+              <MenuItem
+                onClick={() => {
+                  close()
+                  setDormantOpen(true)
+                }}
+              >
+                <Moon size={14} /> 休眠到某天…
+              </MenuItem>
+            )}
             <MenuItem
               danger
               onClick={async () => {
@@ -150,6 +170,9 @@ export function StudentMoreActions({ info, compact }: { info: StudentInfo; compa
           </>
         )}
       </Popover>
+      {dormantOpen && (
+        <DormantDialog open onClose={() => setDormantOpen(false)} studentId={s.id} initialUntil={null} initialReason={s.dormant_reason} />
+      )}
     </>
   )
 }
@@ -188,7 +211,12 @@ export function BasicInfo({ info }: { info: StudentInfo }) {
   const assigneeOptions = s.assignee && !assignees.includes(s.assignee) ? [...assignees, s.assignee] : assignees
 
   return (
-    <Box icon="🧾" title="基本信息">
+    <Box
+      icon="🧾"
+      title="基本信息"
+      defaultOpen={false}
+      summary={<span className="text-xs text-slate-400">点开修改资料、推荐人、联系人、跟进周期、休眠</span>}
+    >
       <div className="flex flex-wrap items-center gap-1">
         <InlineText
           value={s.name}

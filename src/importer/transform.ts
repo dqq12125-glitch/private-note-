@@ -349,8 +349,9 @@ export function buildImportPlan(rows: RawRow[], opts: PlanOptions): ImportPlan {
       // a) 提到日期或期限的句子
       const base = lastDate ?? opts.today
       const seen = new Set<string>()
-      const addMentions = (text: string, b: string, from: string) => {
-        for (const m of findDateMentions(text, b, opts.today)) {
+      // 背景备注和最近一条记录里的日期就算已经过了也列出来（可能还没办完）；更早的记录只列还没过的
+      const addMentions = (text: string, b: string, from: string, keepPast = false) => {
+        for (const m of findDateMentions(text, b, opts.today, keepPast)) {
           const k = `${m.sentence}|${m.date}`
           if (seen.has(k)) continue
           seen.add(k)
@@ -363,8 +364,12 @@ export function buildImportPlan(rows: RawRow[], opts: PlanOptions): ImportPlan {
           })
         }
       }
-      addMentions(background, base, '背景备注')
-      for (const e of events) addMentions(e.content, e.occurred_on, `${fmtDate(e.occurred_on)} 的记录`)
+      addMentions(background, base, '背景备注', true)
+      const latest = events.reduce<TimelineEvent | null>(
+        (best, e) => (!e.date_unknown && (!best || e.occurred_on >= best.occurred_on) ? e : best),
+        null,
+      )
+      for (const e of events) addMentions(e.content, e.occurred_on, `${fmtDate(e.occurred_on)} 的记录`, e === latest)
 
       // b) 提到 offer
       const offerTexts = [background, ...events.map((e) => e.content)]

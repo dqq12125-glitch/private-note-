@@ -457,8 +457,19 @@ export function DateField({
       if (floating.current?.contains(t) || anchor.current?.contains(t)) return
       setOpen(false)
     }
+    // 日历开着时按 Esc 只关日历，不关外面的弹窗或面板（不然正在写的内容会丢）
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isComposing(e)) {
+        e.stopPropagation()
+        setOpen(false)
+      }
+    }
     document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey, true)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey, true)
+    }
   }, [open, floating])
   const commit = () => {
     if (!text.trim()) {

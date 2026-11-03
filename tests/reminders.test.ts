@@ -222,3 +222,15 @@ describe('taskBucket', () => {
     expect(taskBucket(null, today, we)).toBe('nodate')
   })
 })
+describe('last update (spec audit)', () => {
+  it('ignores imported records whose date is unknown', () => {
+    const infos = computeStudentInfos(
+      db({
+        students: [student()],
+        events: [ev({ occurred_on: today, date_unknown: true, source: 'import' }), ev({ occurred_on: '2026-09-01' })],
+      }),
+      today,
+    )
+    expect(infos[0].lastUpdate).toBe('2026-09-01')
+  })
+})

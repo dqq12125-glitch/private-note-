@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, LayoutGrid, List, Plus, Search, X } from 'lucide-react'
 import { BALLS, BUSINESS_TYPES, STUDENT_STATUSES, UNASSIGNED } from '../lib/constants'
@@ -9,7 +9,7 @@ import { searchStudents } from '../lib/search'
 import { createStudent } from '../data/actions'
 import { useInfos } from '../data/hooks'
 import { useStore } from '../data/store'
-import { StudentLink, useOpenStudent } from '../components/bits'
+import { StatusTag, StudentLink, useOpenStudent } from '../components/bits'
 import {
   AppPills,
   Avatar,
@@ -75,6 +75,13 @@ function sortRows(rows: Row[], key: SortKey, dir: 1 | -1): Row[] {
     const c = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb), 'zh-CN')
     return (c || compareCards(a, b)) * dir
   })
+}
+
+// 离开列表时记下滚动位置；从全屏详情回到列表时恢复（列表和详情页共用一个滚动区域）
+let savedListTop = 0
+let restoreListTop = false
+export function returnToListLater() {
+  restoreListTop = true
 }
 
 // 记住「卡片 / 紧凑」的选择（只存在这个浏览器里）
@@ -252,7 +259,8 @@ function CompactTable({
     </th>
   )
   return (
-    <div className="card overflow-x-auto md:overflow-visible">
+    // 窗口窄于表格时在卡片里左右滚动（不撑出整页横向滚动）；够宽时表头随页面滚动固定在顶部
+    <div className="card overflow-x-auto xl:overflow-visible">
       <table className="w-full min-w-[980px] table-fixed border-separate border-spacing-0 text-[13px]">
         <thead>
           <tr>
@@ -301,6 +309,11 @@ function CompactTable({
               </td>
               <td className="border-b border-slate-100 px-3 py-2">
                 <div className="flex min-w-0 items-center gap-1.5">
+                  {info.s.status === '未开始' && (
+                    <span className="shrink-0">
+                      <StatusTag status="未开始" />
+                    </span>
+                  )}
                   <span className="shrink-0 text-xs text-slate-400">球在{info.s.ball}</span>
                   <span className="truncate text-slate-800" title={card.headline}>
                     {card.headline}
@@ -407,6 +420,15 @@ export function StudentsPage() {
     setViewState(v)
     saveView(v)
   }
+
+  useLayoutEffect(() => {
+    const main = document.getElementById('main-scroll')
+    if (main && restoreListTop) main.scrollTop = savedListTop
+    restoreListTop = false
+    return () => {
+      if (main) savedListTop = main.scrollTop
+    }
+  }, [])
 
   const rows: Row[] = useMemo(() => infos.map((info) => ({ info, card: computeCard(info, today) })), [infos, today])
 

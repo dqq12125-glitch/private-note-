@@ -19,8 +19,12 @@ import {
   setDormant,
   setOfferDdl,
   setStudentStatus,
+  setBall,
   toggleVisaStep,
   addVisa,
+  addPayment,
+  updatePayment,
+  remindStudent,
 } from '../src/data/actions'
 
 const ops: Op[] = []
@@ -187,5 +191,54 @@ describe('persistence', () => {
     addNote(s.id, 'x')
     await new Promise((r) => setTimeout(r, 10))
     expect(ops.map((o) => o.op)).toEqual(['insert', 'insert', 'update'])
+  })
+})
+
+describe('spec audit fixes', () => {
+  it('writing a note also refreshes the last check date', () => {
+    const s = createStudent({ name: '审甲' })
+    addNote(s.id, '发了邮件')
+    expect(S().students[0].last_checked_date).toBe(today)
+  })
+  it('a reminder without text counts as handled and sets the next follow-up', () => {
+    const s = createStudent({ name: '审乙', follow_cycle_days: 14 })
+    addNote(s.id, '', { remindOn: addDays(today, 30) })
+    const ev = eventsOf(s.id)
+    expect(ev).toHaveLength(1)
+    expect(ev[0].kind).toBe('checked')
+    expect(S().students[0].next_follow_date).toBe(addDays(today, 30))
+    const info = computeStudentInfos(S() as DBState, today)[0]
+    expect(info.handledToday).toBe(true)
+    expect(info.lastUpdate).toBeNull()
+  })
+  it('check and remind keep a chosen next reminder date', () => {
+    const s = createStudent({ name: '审丙', follow_cycle_days: 7 })
+    checkStudent(s.id, addDays(today, 30))
+    expect(S().students[0].next_follow_date).toBe(addDays(today, 30))
+    remindStudent(s.id, '交体检', addDays(today, 10))
+    expect(S().students[0].next_follow_date).toBe(addDays(today, 10))
+    expect(eventsOf(s.id).find((e) => e.kind === 'reminded')?.content).toBe('已提醒学生：交体检')
+  })
+  it('editing a record to blank text is refused', () => {
+    const s = createStudent({ name: '审丁' })
+    addNote(s.id, '原文')
+    const ev = eventsOf(s.id)[0]
+    editEvent(ev.id, { content: '   ' })
+    expect(eventsOf(s.id)[0]).toMatchObject({ content: '原文', edited_at: null })
+  })
+  it('stage suggestions change the follow-up cycle automatically', () => {
+    const s = createStudent({ name: '审戊', follow_cycle_days: 30 })
+    setBall(s.id, '学生')
+    expect(S().students[0].follow_cycle_days).toBe(7)
+    const app = addApplication(s.id, { school: 'UQ', status: '未递交' })
+    changeAppStatus(app.id, '已递交')
+    expect(S().students[0].follow_cycle_days).toBe(14)
+  })
+  it('editing a payment is logged in the timeline', () => {
+    const s = createStudent({ name: '审己' })
+    const p = addPayment(s.id, { item: '服务费', amount: 1000, currency: 'AUD' })
+    updatePayment(p.id, { amount: 1200 })
+    expect(S().payments[0].amount).toBe(1200)
+    expect(eventsOf(s.id).some((e) => e.content.startsWith('修改了收费记录：服务费'))).toBe(true)
   })
 })

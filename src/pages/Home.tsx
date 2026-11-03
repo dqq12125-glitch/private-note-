@@ -39,7 +39,10 @@ function OfferRow({ d }: { d: Deadline }) {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="w-5 text-center">{DOT[u]}</span>
         <StudentLink id={d.student_id} className="min-w-[4.5rem]" />
-        <span className="min-w-0 flex-1 truncate text-[13px] text-slate-600">
+        <span
+          className="line-clamp-2 min-w-0 flex-1 basis-40 text-[13px] text-slate-600"
+          title={[app.school, d.sub, app.status].filter(Boolean).join(' · ')}
+        >
           <b className="font-semibold text-slate-800">{app.school}</b>
           {d.sub && <span className="text-slate-500"> · {d.sub}</span>}
           <span className="ml-1 text-xs text-slate-400">{app.status}</span>

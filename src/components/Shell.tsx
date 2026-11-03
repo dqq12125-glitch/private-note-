@@ -242,11 +242,14 @@ function useHotkeys() {
       if (st.quick.open || st.palette) return
       if (e.key === 'n' || e.key === 'N') {
         e.preventDefault()
-        const sid = new URLSearchParams(location.search).get('s') ?? location.pathname.match(/^\/students\/([^/]+)$/)?.[1] ?? null
+        // 详情面板、全屏详情或进度报告页：默认选中这个学生
+        const sid = new URLSearchParams(location.search).get('s') ?? location.pathname.match(/^\/students\/([^/]+)/)?.[1] ?? null
         useStore.setState({ quick: { open: true, studentId: sid } })
       } else if (e.key === '/') {
         e.preventDefault()
-        const listSearch = document.getElementById('list-search') as HTMLInputElement | null
+        // 学生列表页聚焦列表搜索框；详情面板开着时列表被挡住了，改用全局搜索
+        const panelOpen = new URLSearchParams(location.search).has('s')
+        const listSearch = panelOpen ? null : (document.getElementById('list-search') as HTMLInputElement | null)
         if (listSearch) listSearch.focus()
         else useStore.setState({ palette: true })
       }
@@ -262,10 +265,25 @@ export function Shell() {
   useHotkeys()
   useEffect(() => setDrawer(false), [location.pathname])
   const isReport = location.pathname.endsWith('/report')
+  const sidFromUrl = () =>
+    new URLSearchParams(location.search).get('s') ?? location.pathname.match(/^\/students\/([^/]+)/)?.[1] ?? null
+  const fab = (
+    <button
+      type="button"
+      title="快速记录（N）"
+      onClick={() => useStore.setState({ quick: { open: true, studentId: sidFromUrl() } })}
+      className="no-print fixed right-5 bottom-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-on-accent shadow-lg shadow-brand-600/30 transition-transform hover:scale-105 hover:bg-accent-hover"
+    >
+      <Plus size={28} />
+    </button>
+  )
   if (isReport)
     return (
       <>
         <Outlet />
+        {/* 进度报告页也能快速记录（打印时不显示） */}
+        {fab}
+        <QuickRecordModal />
         <ConfirmHost />
         <Toasts />
       </>
@@ -299,17 +317,7 @@ export function Shell() {
         </main>
       </div>
       <StudentPanel />
-      <button
-        type="button"
-        title="快速记录（N）"
-        onClick={() => {
-          const sid = new URLSearchParams(location.search).get('s') ?? location.pathname.match(/^\/students\/([^/]+)$/)?.[1] ?? null
-          useStore.setState({ quick: { open: true, studentId: sid } })
-        }}
-        className="fixed right-5 bottom-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-on-accent shadow-lg shadow-brand-600/30 transition-transform hover:scale-105 hover:bg-accent-hover"
-      >
-        <Plus size={28} />
-      </button>
+      {fab}
       <QuickRecordModal />
       <SearchPalette />
       <ConfirmHost />

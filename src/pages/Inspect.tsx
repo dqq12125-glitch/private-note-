@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Clock, Megaphone } from 'lucide-react'
 import { addDays, diffDays, fmtAgo, fmtDate, fmtDaysLeft, fmtShort } from '../lib/dates'
 import { todayQueue, type StudentInfo } from '../lib/reminders'
-import { addNote, checkStudent, completeTask, endDormancy, remindApp, setOfferDdl, snoozeStudent, snoozeTbc } from '../data/actions'
+import { addNote, checkStudent, completeTask, endDormancy, remindApp, remindStudent, setOfferDdl, snoozeStudent, snoozeTbc } from '../data/actions'
 import { useInfoMap, useInfos } from '../data/hooks'
 import { useStore } from '../data/store'
 import { BallTag, EventMini, StatusTag, StudentLink } from '../components/bits'
@@ -101,18 +101,32 @@ function TbcActions({ appId }: { appId: string }) {
   )
 }
 
-function Card({ info, onNext, skipped }: { info: StudentInfo; onNext: () => void; skipped: boolean }) {
+function Card({
+  info,
+  onNext,
+  skipped,
+  remindRef,
+}: {
+  info: StudentInfo
+  onNext: () => void
+  skipped: boolean
+  /** 让页面上的快捷键 C 也能用到这里选的「下次提醒」 */
+  remindRef: MutableRefObject<string | null>
+}) {
   const today = useStore((s) => s.today)
   const [text, setText] = useState('')
   const [remind, setRemind] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
+  const [saved, setSaved] = useState<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const s = info.s
   useEffect(() => {
     setText('')
     setRemind(null)
-    setSaved(false)
+    setSaved(null)
   }, [s.id])
+  useEffect(() => {
+    remindRef.current = remind
+  }, [remind, remindRef])
   const offerApps = info.apps.filter((a) => info.deadlines.some((d) => d.ref.id === a.id && (d.kind === 'offer' || d.kind === 'offer_tbc')))
   const nearestOffer = info.deadlines
     .filter((d) => d.kind === 'offer' || d.kind === 'offer_tbc')
@@ -123,9 +137,9 @@ function Card({ info, onNext, skipped }: { info: StudentInfo; onNext: () => void
   const save = () => {
     if (!text.trim() && !remind) return
     addNote(s.id, text, { remindOn: remind })
+    setSaved(remind ? `✓ 已记录，下次提醒 ${fmtDate(remind)}` : '✓ 已记录，跟进周期从今天重新算')
     setText('')
     setRemind(null)
-    setSaved(true)
   }
   return (
     <div className="card overflow-hidden">
@@ -251,7 +265,7 @@ function Card({ info, onNext, skipped }: { info: StudentInfo; onNext: () => void
           minRows={1}
           onChange={(e) => {
             setText(e.target.value)
-            setSaved(false)
+            setSaved(null)
           }}
           onKeyDown={(e) => {
             if (isEnterSave(e)) {
@@ -265,14 +279,14 @@ function Card({ info, onNext, skipped }: { info: StudentInfo; onNext: () => void
         <div className="mt-2">
           <RemindPicker value={remind} onChange={setRemind} label="设下次提醒" />
         </div>
-        {saved && <div className="mt-2 text-[13px] text-emerald-600">✓ 已记录，跟进周期从今天重新算</div>}
+        {saved && <div className="mt-2 text-[13px] text-emerald-600">{saved}</div>}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button variant="primary" onClick={save} disabled={!text.trim() && !remind}>
             保存记录
           </Button>
           <Button
             onClick={() => {
-              checkStudent(s.id)
+              checkStudent(s.id, remind)
               onNext()
             }}
             title="快捷键 C"
@@ -281,11 +295,24 @@ function Card({ info, onNext, skipped }: { info: StudentInfo; onNext: () => void
           </Button>
           {offerApps.length > 0 &&
             offerApps.map((a) => (
-              <Button key={a.id} variant="soft" onClick={() => remindApp(a.id)}>
+              <Button key={a.id} variant="soft" onClick={() => remindApp(a.id, remind)}>
                 <Megaphone size={14} /> 已提醒学生{offerApps.length > 1 ? `（${a.school}）` : ''}
                 {a.last_reminded_on === today && ' ✓'}
               </Button>
             ))}
+          {offerApps.length === 0 && (
+            <Button
+              variant="soft"
+              title={info.nextTask ? `记一条「已提醒学生：${info.nextTask.content}」` : '记一条「已提醒学生」'}
+              onClick={() => {
+                remindStudent(s.id, info.nextTask?.content ?? null, remind)
+                setSaved(remind ? `✓ 已记「已提醒学生」，下次提醒 ${fmtDate(remind)}` : '✓ 已记「已提醒学生」')
+                setRemind(null)
+              }}
+            >
+              <Megaphone size={14} /> 已提醒学生
+            </Button>
+          )}
           <SnoozeButton
             onPick={(d) => {
               snoozeStudent(s.id, d)
@@ -310,6 +337,7 @@ export function InspectPage() {
   const [params] = useSearchParams()
   const panelOpen = params.has('s')
   const [, force] = useState(0)
+  const remindRef = useRef<string | null>(null)
 
   // 生成/更新今天的队列
   const { pending } = useMemo(() => todayQueue(infos), [infos])
@@ -355,7 +383,7 @@ export function InspectPage() {
         prev()
       } else if ((e.key === 'c' || e.key === 'C') && current) {
         e.preventDefault()
-        checkStudent(current.s.id)
+        checkStudent(current.s.id, remindRef.current)
         next()
       }
     }
@@ -428,7 +456,7 @@ export function InspectPage() {
               </div>
             )}
             {current ? (
-              <Card info={current} onNext={next} skipped={snapshot.skipped.includes(current.s.id)} />
+              <Card info={current} onNext={next} skipped={snapshot.skipped.includes(current.s.id)} remindRef={remindRef} />
             ) : (
               !allDone && <div className="card p-8 text-center text-slate-400">已经到最后了</div>
             )}

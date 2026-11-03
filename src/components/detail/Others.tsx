@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Check, Megaphone, Plus, Trash2 } from 'lucide-react'
+import { Check, Megaphone, Pencil, Plus, Trash2 } from 'lucide-react'
 import { CURRENCIES, KEYDATE_ICON, KEYDATE_KINDS, VISA_STEPS, VISA_TYPES } from '../../lib/constants'
 import { fmtDate, fmtDaysLeft } from '../../lib/dates'
 import { keyDateDeadline, visaDeadlines, type StudentInfo } from '../../lib/reminders'
-import type { KeyDateKind, Visa } from '../../lib/types'
+import type { KeyDateKind, Payment, Visa } from '../../lib/types'
 import {
   ackKeyDate,
   ackVisaExpiry,
@@ -16,6 +16,7 @@ import {
   fmtMoney,
   toggleVisaStep,
   updateKeyDate,
+  updatePayment,
   updateVisa,
 } from '../../data/actions'
 import { useStore } from '../../data/store'
@@ -237,7 +238,16 @@ export function KeyDates({ info }: { info: StudentInfo }) {
           return (
             <div key={k.id} className={cx('group flex flex-wrap items-center gap-2 rounded-md px-1.5 py-1 hover:bg-slate-50', past && 'opacity-55')}>
               <span>{KEYDATE_ICON[k.kind]}</span>
-              <span className="w-24 text-[13px] font-medium">{k.kind}</span>
+              <select
+                className="input input-sm w-28 font-medium"
+                aria-label="关键日期类型"
+                value={k.kind}
+                onChange={(e) => updateKeyDate(k.id, { kind: e.target.value as KeyDateKind })}
+              >
+                {KEYDATE_KINDS.map((kd) => (
+                  <option key={kd}>{kd}</option>
+                ))}
+              </select>
               <DateField value={k.date} clearable={false} onChange={(v) => v && updateKeyDate(k.id, { date: v })} size="sm" className="w-36" />
               {(!past || k.kind === '签证到期') && <ExpiryPill days={d.daysLeft!} visa={k.kind === '签证到期'} />}
               <InlineText value={k.note} placeholder="说明" onSave={(t) => updateKeyDate(k.id, { note: t })} className="!w-auto min-w-[8rem] flex-1 text-[13px]" />
@@ -291,21 +301,32 @@ export function Payments({ info }: { info: StudentInfo }) {
   const [currency, setCurrency] = useState('AUD')
   const [date, setDate] = useState<string | null>(today)
   const [note, setNote] = useState('')
+  // 正在修改的那一笔（下面的表单同时用来新增和修改）
+  const [editing, setEditing] = useState<string | null>(null)
   const totals = new Map<string, number>()
   for (const p of list) if (p.amount) totals.set(p.currency, (totals.get(p.currency) ?? 0) + p.amount)
-  const add = () => {
-    if (!item.trim() && !amount) return
-    addPayment(info.s.id, {
-      item: item.trim(),
-      amount: amount ? Number(amount) : null,
-      currency,
-      paid_on: date,
-      note: note.trim(),
-    })
+  const reset = () => {
+    setEditing(null)
     setItem('')
     setAmount('')
+    setCurrency('AUD')
     setNote('')
     setDate(today)
+  }
+  const startEdit = (p: Payment) => {
+    setEditing(p.id)
+    setItem(p.item)
+    setAmount(p.amount === null ? '' : String(p.amount))
+    setCurrency(p.currency)
+    setDate(p.paid_on)
+    setNote(p.note)
+  }
+  const add = () => {
+    if (!item.trim() && !amount) return
+    const input = { item: item.trim(), amount: amount ? Number(amount) : null, currency, paid_on: date, note: note.trim() }
+    if (editing) updatePayment(editing, input)
+    else addPayment(info.s.id, input)
+    reset()
   }
   return (
     <Box
@@ -329,10 +350,19 @@ export function Payments({ info }: { info: StudentInfo }) {
                 <td className="py-1.5 pr-2 font-medium">{p.item || '—'}</td>
                 <td className="py-1.5 pr-2 text-right tabular-nums">{fmtMoney(p.amount, p.currency)}</td>
                 <td className="py-1.5 pr-2 text-slate-500">{p.note}</td>
-                <td className="w-8 py-1.5 text-right">
+                <td className="w-14 py-1.5 text-right whitespace-nowrap">
                   <button
                     type="button"
-                    className="text-slate-300 opacity-0 group-hover:opacity-100 hover:text-rose-500"
+                    title="修改"
+                    className="mr-1.5 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-slate-600 focus-visible:opacity-100"
+                    onClick={() => startEdit(p)}
+                  >
+                    <Pencil size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    title="删除"
+                    className="text-slate-300 opacity-0 group-hover:opacity-100 hover:text-rose-500 focus-visible:opacity-100"
                     onClick={async () => (await confirmDialog({ title: `删除收费记录「${p.item || '未命名'}」？`, message: '时间线里会记一条删除记录。', confirmText: '删除', danger: true })) && deletePayment(p.id)}
                   >
                     <Trash2 size={13} />
@@ -343,7 +373,13 @@ export function Payments({ info }: { info: StudentInfo }) {
           </tbody>
         </table>
       )}
-      <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-dashed border-slate-300 p-2">
+      <div
+        className={cx(
+          'flex flex-wrap items-center gap-1.5 rounded-lg border border-dashed p-2',
+          editing ? 'border-brand-300 bg-brand-50/40' : 'border-slate-300',
+        )}
+      >
+        {editing && <div className="w-full text-xs font-medium text-brand-700">修改这笔收费</div>}
         <input className="input input-sm w-32" placeholder="项目，如服务费" value={item} onChange={(e) => setItem(e.target.value)} />
         <input
           className="input input-sm w-24"
@@ -360,8 +396,13 @@ export function Payments({ info }: { info: StudentInfo }) {
         <DateField value={date} onChange={setDate} size="sm" className="w-36" />
         <input className="input input-sm min-w-[6rem] flex-1" placeholder="备注" value={note} onChange={(e) => setNote(e.target.value)} />
         <Button size="sm" variant="primary" onClick={add} disabled={!item.trim() && !amount}>
-          记一笔收费
+          {editing ? '保存修改' : '记一笔收费'}
         </Button>
+        {editing && (
+          <Button size="sm" onClick={reset}>
+            取消
+          </Button>
+        )}
       </div>
     </Box>
   )

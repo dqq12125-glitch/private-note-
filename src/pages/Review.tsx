@@ -18,6 +18,7 @@ const TABS = [
 type TabKey = (typeof TABS)[number]['key']
 
 function DateMentionItem({ r }: { r: ReviewItem }) {
+  const today = useStore((s) => s.today)
   const [target, setTarget] = useState<'待办' | '关键日期'>(r.suggestion.target === 'keydate' ? '关键日期' : '待办')
   const [kind, setKind] = useState<KeyDateKind>(r.suggestion.keydate_kind ?? '其他')
   const [date, setDate] = useState<string | null>(r.suggestion.date ?? null)
@@ -45,6 +46,9 @@ function DateMentionItem({ r }: { r: ReviewItem }) {
         )}
         <DateField value={date} onChange={setDate} size="sm" className="w-36" />
         {r.suggestion.approx && <span className="text-xs text-amber-600">原文只写了月份，日期是估的</span>}
+        {date && date < today && (
+          <span className="text-xs font-medium text-rose-600">这个日期已经过了，确认一下是不是已经办完（办完了就点「不用，忽略」）</span>
+        )}
       </div>
       <input className="input input-sm" value={content} onChange={(e) => setContent(e.target.value)} placeholder={target === '待办' ? '待办内容' : '说明'} />
       <div className="flex gap-2">

@@ -22,12 +22,12 @@ export function StudentDetail({ id, compact }: { id: string; compact?: boolean }
         <DormancyEndedBanner info={info} />
         <div className="grid gap-4 @4xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
           <div className="min-w-0 space-y-4">
+            <BasicInfo info={info} />
             <NextSteps info={info} />
             <Applications info={info} />
             <Visas info={info} />
             <KeyDates info={info} />
             <Payments info={info} />
-            <BasicInfo info={info} />
           </div>
           <div className="min-w-0">
             <Box icon="🕘" title="时间线" count={info.events.length} unit="条">

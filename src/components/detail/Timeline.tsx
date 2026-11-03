@@ -140,6 +140,8 @@ export function EventRow({ e, showStudent }: { e: TimelineEvent; showStudent?: R
               <Button
                 size="xs"
                 variant="primary"
+                disabled={!content.trim()}
+                title={content.trim() ? undefined : '内容不能为空（时间线只能追加不能删除）'}
                 onClick={() => {
                   if (content.trim() !== e.content || date !== e.occurred_on || e.date_unknown)
                     editEvent(e.id, { content: content.trim(), occurred_on: date ?? e.occurred_on })

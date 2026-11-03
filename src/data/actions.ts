@@ -66,12 +66,12 @@ export function appendEvent(studentId: string, o: AppendOpts): TimelineEvent {
     created_at: nowIso(),
   }
   insertRows('events', [ev])
-  if (o.touch !== false) touchStudent(studentId, ev.occurred_on, o.remindOn ?? null, o.kind === 'checked')
+  if (o.touch !== false) touchStudent(studentId, ev.occurred_on, o.remindOn ?? null)
   return ev
 }
 
 /** 处理过学生：更新最后处理日期、重算下次跟进日期、休眠到期的自动结束休眠 */
-function touchStudent(id: string, date: string, remindOn: string | null, checked: boolean) {
+function touchStudent(id: string, date: string, remindOn: string | null) {
   const s = findStudent(id)
   if (!s) return
   const t = today()
@@ -82,7 +82,8 @@ function touchStudent(id: string, date: string, remindOn: string | null, checked
   const patch: Partial<Student> = { last_handled_date: handled }
   if (remindOn) patch.next_follow_date = remindOn
   else if (!prev || d >= prev) patch.next_follow_date = addDays(handled, s.follow_cycle_days)
-  if (checked) patch.last_checked_date = t
+  // 写记录、提醒学生、完成待办都说明今天看过这个学生，「最后检查」一起刷新（「最后更新」只算真正的记录）
+  patch.last_checked_date = t
   if (s.dormant_until && s.dormant_until <= t) {
     patch.dormant_until = null
     patch.dormant_reason = null
@@ -123,13 +124,17 @@ export function addNote(
       milestone: o.milestone,
       remindOn: o.remindOn,
     })
-  else if (o.remindOn) patchRow('students', studentId, { next_follow_date: o.remindOn })
+  // 只设了下次提醒、没写内容：记成一条很淡的「已检查」，今天也算处理过
+  else if (o.remindOn)
+    appendEvent(studentId, { kind: 'checked', content: `已检查，下次提醒 ${fmtDate(o.remindOn)}`, remindOn: o.remindOn })
 }
 
 export function editEvent(id: string, patch: { content?: string; occurred_on?: string }) {
   const ev = S().events.find((e) => e.id === id)
   if (!ev) return
-  const content = patch.content ?? ev.content
+  // 时间线只能追加不能删除：不允许把内容改成空的
+  if (patch.content !== undefined && !patch.content.trim()) return
+  const content = patch.content?.trim() ?? ev.content
   const occurred_on = patch.occurred_on ?? ev.occurred_on
   const now = nowIso()
   patchRow('events', id, {
@@ -149,8 +154,17 @@ export function toggleMilestone(id: string) {
   if (ev) patchRow('events', id, { milestone: !ev.milestone })
 }
 
-export function checkStudent(studentId: string) {
-  appendEvent(studentId, { kind: 'checked', content: '已检查，没有变化' })
+export function checkStudent(studentId: string, remindOn: string | null = null) {
+  appendEvent(studentId, {
+    kind: 'checked',
+    content: `已检查，没有变化${remindOn ? `，下次提醒 ${fmtDate(remindOn)}` : ''}`,
+    remindOn,
+  })
+}
+
+/** 没有 offer 的学生也可以记「已提醒学生」（比如提醒交材料、去体检） */
+export function remindStudent(studentId: string, about: string | null, remindOn: string | null = null) {
+  appendEvent(studentId, { kind: 'reminded', content: `已提醒学生${about ? `：${about}` : ''}`, remindOn })
 }
 
 // ───────────────────────── 学生 ─────────────────────────
@@ -257,13 +271,15 @@ export function endDormancy(id: string) {
   })
 }
 
-/** 第 7 节：按阶段建议跟进周期（不自动改，弹个提示让我点「应用」） */
+/** 第 7 节：按阶段自动改跟进周期，提示里可以「撤销」，之后也可以随时手动改 */
 export function suggestCycle(studentId: string, days: number, reason: string) {
   const s = findStudent(studentId)
   if (!s || s.follow_cycle_days === days) return
-  toast(`💡 ${reason} → 建议跟进周期 ${cycleLabel(days)}`, {
+  const prev = { follow_cycle_days: s.follow_cycle_days, next_follow_date: s.next_follow_date }
+  setCycle(studentId, days)
+  toast(`💡 ${reason} → 跟进周期改成 ${cycleLabel(days)}（原来 ${cycleLabel(prev.follow_cycle_days)}）`, {
     tone: 'info',
-    action: { label: '应用', run: () => setCycle(studentId, days) },
+    action: { label: '撤销', run: () => patchRow('students', studentId, prev) },
   })
 }
 
@@ -395,7 +411,7 @@ export function snoozeTbc(id: string) {
 }
 
 /** 「已提醒学生」：记一条时间线，并记下提醒日期（这一轮的提醒就消掉了） */
-export function remindApp(id: string) {
+export function remindApp(id: string, remindOn: string | null = null) {
   const app = findApp(id)
   if (!app) return
   const parts = appDeadlines(app, today()).map((d) =>
@@ -410,6 +426,7 @@ export function remindApp(id: string) {
   appendEvent(app.student_id, {
     kind: 'reminded',
     content: `已提醒学生 ${parts.length ? parts.join('；') : `${appLabel(app)} offer`}`,
+    remindOn,
   })
 }
 
@@ -628,7 +645,14 @@ export function addPayment(studentId: string, input: Partial<Payment>): Payment 
 }
 
 export function updatePayment(id: string, patch: Partial<Payment>) {
+  const p = S().payments.find((x) => x.id === id)
+  if (!p) return
   patchRow('payments', id, patch)
+  const next = { ...p, ...patch }
+  const before = `${p.item} ${fmtMoney(p.amount, p.currency)}${p.paid_on ? `（${fmtDate(p.paid_on)}）` : ''}`
+  const after = `${next.item} ${fmtMoney(next.amount, next.currency)}${next.paid_on ? `（${fmtDate(next.paid_on)}）` : ''}`
+  if (before !== after || p.note !== next.note)
+    appendEvent(p.student_id, { kind: 'payment', content: `修改了收费记录：${before} → ${after}`, touch: false })
 }
 
 export function deletePayment(id: string) {

@@ -45,3 +45,12 @@ describe('findOfferMentions', () => {
     expect(r[0].schools[0].school).toBe('昆士兰大学')
   })
 })
+
+describe('past dates in the background note (spec audit)', () => {
+  it('keeps a past date when asked, so it can be confirmed as done', () => {
+    expect(findDateMentions('9.30号补成绩单', '2026-08-20', today)).toEqual([])
+    const r = findDateMentions('9.30号补成绩单', '2026-08-20', today, true)
+    expect(r).toHaveLength(1)
+    expect(r[0].date).toBe('2026-09-30')
+  })
+})

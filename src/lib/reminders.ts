@@ -330,8 +330,8 @@ export function computeStudentInfos(db: DBState, today: string): StudentInfo[] {
 
     const active = s.status === '未开始' || s.status === '进行中'
     const realEvents = events.filter((e) => e.kind !== 'checked')
-    // 发生日期写在未来的记录（比如补记时填错）不算「最后更新」
-    const lastUpdate = realEvents.find((e) => e.occurred_on <= today)?.occurred_on ?? null
+    // 发生日期写在未来的记录（比如补记时填错）和导入时日期不明的记录不算「最后更新」
+    const lastUpdate = realEvents.find((e) => !e.date_unknown && e.occurred_on <= today)?.occurred_on ?? null
     const sinceBase = lastUpdate ?? isoToDate(s.created_at)
     const daysSinceUpdate = diffDays(today, sinceBase)
     const cycle = Math.max(1, s.follow_cycle_days || 14)

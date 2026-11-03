@@ -53,16 +53,16 @@ function scoreLike(clause: string, index: number): boolean {
 /**
  * 找出句子里提到的日期。
  * @param base 这段文字写下时的日期，用来推断没写年份的日期
- * @param today 今天；已经过去一周以上的日期不再列出
+ * @param today 今天；已经过去一周以上的日期不再列出（keepPast 时照样列出，让我确认是不是已经办完）
  */
-export function findDateMentions(text: string, base: string, today: string): DateMention[] {
+export function findDateMentions(text: string, base: string, today: string, keepPast = false): DateMention[] {
   const out: DateMention[] = []
   const seen = new Set<string>()
   const push = (clause: string, index: number, date: string | null, approx: boolean) => {
     if (!date) return
     // 已经过去的日期不需要再提醒；按月估计的，整个月过去了才算过去
     const last = approx ? addDays(addMonths(`${date.slice(0, 7)}-01`, 1), -1) : date
-    if (diffDays(last, today) < -7) return
+    if (!keepPast && diffDays(last, today) < -7) return
     const sentence = narrow(clause, index)
     const key = `${sentence}|${date}`
     if (seen.has(key)) return

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Check, ChevronDown, PenLine } from 'lucide-react'
-import { BALL_STYLE, BALLS, STUDENT_STATUSES, cycleLabel } from '../lib/constants'
+import { BALL_STYLE, BALLS, FOLLOW_CYCLES, STATUS_STYLE, STUDENT_STATUSES, cycleLabel } from '../lib/constants'
 import { diffDays, fmtAgo, fmtDate, fmtShort } from '../lib/dates'
 import {
   avatarHue,
@@ -14,10 +14,9 @@ import {
   type VisaTrack,
 } from '../lib/cardInfo'
 import type { StudentInfo } from '../lib/reminders'
-import type { StudentStatus } from '../lib/types'
-import { checkStudent, setBall, setStudentStatus } from '../data/actions'
+import { checkStudent, setBall, setCycle, setStudentStatus } from '../data/actions'
 import { useStore } from '../data/store'
-import { StudentLink, useOpenStudent } from './bits'
+import { StatusTag, StudentLink, useOpenStudent } from './bits'
 import { MenuItem, Popover, cx } from './ui'
 
 // ───────────────────────── 小零件 ─────────────────────────
@@ -276,9 +275,10 @@ export function CardActions({
   )
 }
 
-function Tags({ info }: { info: StudentInfo }) {
+function Tags({ info, status }: { info: StudentInfo; status?: boolean }) {
   return (
     <div className="flex shrink-0 items-center gap-1">
+      {status && <StatusTag status={info.s.status} />}
       {info.s.priority === '高' && <span className="tag bg-rose-500 font-semibold text-on-accent ring-rose-500">高</span>}
       <span className="tag bg-white text-slate-500 ring-slate-200">{info.s.business_type}</span>
     </div>
@@ -357,7 +357,8 @@ export function StudentCard({ info, card, selected }: { info: StudentInfo; card:
             <StudentLink id={s.id} className="text-[17px] font-semibold" />
             {s.english_name && <span className="ml-1.5 text-xs text-slate-400">{s.english_name}</span>}
           </div>
-          <Tags info={info} />
+          {/* 状态标签：「进行中」是大多数不用标，已完成 / 暂停在自己的分组里，所以只标「未开始」 */}
+          <Tags info={info} status={info.s.status === '未开始'} />
         </div>
         {/* 第 2 行：现在的状态一句话 */}
         <div className="flex min-w-0 items-start gap-2">
@@ -488,12 +489,6 @@ function ChangeMenu<T extends string>({
   )
 }
 
-const STATUS_CLASS: Record<StudentStatus, string> = {
-  未开始: 'bg-slate-100 text-slate-600 ring-slate-200',
-  进行中: 'bg-blue-50 text-blue-700 ring-blue-200',
-  已完成: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  暂停不跟进: 'bg-zinc-100 text-zinc-500 ring-zinc-200',
-}
 
 export function StudentSummary({ info, card, actions }: { info: StudentInfo; card: CardInfo; actions?: ReactNode }) {
   const s = info.s
@@ -538,7 +533,7 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
               value={s.status}
               options={STUDENT_STATUSES}
               onPick={(v) => setStudentStatus(s.id, v)}
-              className={STATUS_CLASS[s.status]}
+              className={STATUS_STYLE[s.status]}
               label={s.status}
             />
           </div>
@@ -555,6 +550,29 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
         )}
         <DormantLine info={info} full />
         <Alerts card={card} all />
+        {(s.referrer || s.contact || s.background) && (
+          <div className="space-y-1 text-[13px] text-slate-600">
+            {(s.referrer || s.contact) && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {s.referrer && (
+                  <span>
+                    <span className="text-slate-400">推荐人</span> {s.referrer}
+                  </span>
+                )}
+                {s.contact && (
+                  <span>
+                    <span className="text-slate-400">联系人</span> {s.contact}
+                  </span>
+                )}
+              </div>
+            )}
+            {s.background && (
+              <p className="line-clamp-2 whitespace-pre-wrap text-slate-500" title={s.background}>
+                <span className="text-slate-400">背景</span> {s.background}
+              </p>
+            )}
+          </div>
+        )}
         <div className="flex min-w-0 items-start gap-2 text-[13px] text-slate-600">
           <span className="mt-1.5">
             <HealthDot info={info} />
@@ -573,7 +591,30 @@ export function StudentSummary({ info, card, actions }: { info: StudentInfo; car
           <div className="min-w-[9rem] flex-1 text-[13px] leading-tight">
             <div className={s.assignee ? 'font-medium text-slate-700' : 'font-medium text-amber-700'}>{s.assignee ?? '未分配'}</div>
             <div className="text-xs text-slate-400">
-              跟进周期 {cycleLabel(s.follow_cycle_days)}
+              跟进周期{' '}
+              <Popover
+                trigger={({ toggle }) => (
+                  <button type="button" onClick={toggle} className="inline-flex items-center text-slate-600 hover:text-slate-900 hover:underline">
+                    {cycleLabel(s.follow_cycle_days)}
+                    <ChevronDown size={11} className="opacity-50" />
+                  </button>
+                )}
+              >
+                {(close) =>
+                  FOLLOW_CYCLES.map((c) => (
+                    <MenuItem
+                      key={c.days}
+                      onClick={() => {
+                        close()
+                        setCycle(s.id, c.days)
+                      }}
+                    >
+                      {c.label}
+                      {c.days === s.follow_cycle_days && <span className="ml-auto pl-4 text-xs text-slate-400">当前</span>}
+                    </MenuItem>
+                  ))
+                }
+              </Popover>
               {info.active && s.next_follow_date && !info.isDormant && <> · 下次跟进 {fmtDate(s.next_follow_date)}</>}
             </div>
           </div>
