@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { HashRouter, MemoryRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { createLocalAdapter } from './data/localAdapter'
 import { createArtifactAdapter } from './data/artifactAdapter'
-import { claudeRuntime, TARGET } from './lib/platform'
+import { ARTIFACT_URL, claudeRuntime, inViewer, TARGET } from './lib/platform'
 import { createSupabaseAdapter } from './data/supabaseAdapter'
 import { endSession, hasPendingWrites, initData, reloadData, useStore } from './data/store'
 import { supabase } from './data/supabase'
@@ -35,13 +35,16 @@ function Loading({ text = '正在加载…' }: { text?: string }) {
 async function bootArtifact() {
   // 托管在 claude.ai：登录由 claude.ai 负责，数据存在这个页面自带的云端数据库
   useStore.setState({ phase: 'loading', mode: 'artifact' })
-  const db = await claudeRuntime()?.use('db').catch(() => null)
+  const runtime = claudeRuntime()
+  const db = await runtime?.use('db').catch(() => null)
   if (!db) {
-    useStore.setState({
-      phase: 'error',
-      mode: 'artifact',
-      loadError: '连不上云端数据。请登录 claude.ai 后，从 claude.ai 里打开这个页面。',
-    })
+    // 说清楚是哪种情况，不同情况的解决办法不一样
+    const loadError = !runtime
+      ? '你打开的是云端版网页的一个副本（比如下载下来的文件），它不能读写云端数据。请点下面的按钮回到 claude.ai 上的网站。想在电脑上离线试用，请打开离线版 student-tracker-offline.html。'
+      : !inViewer()
+        ? '这个页面要在 claude.ai 里打开才能读写数据，单独在新的浏览器标签页里打开不行。请点下面的按钮回到 claude.ai 上的网站。'
+        : '连不上云端数据库。请确认已经登录 claude.ai（和建这个网站的是同一个账号），然后点「重新加载」。'
+    useStore.setState({ phase: 'error', mode: 'artifact', loadError })
     return
   }
   await initData(createArtifactAdapter(db), null, 'artifact')
@@ -120,7 +123,9 @@ export default function App() {
 
   if (boot === 'checking') return <Loading />
   if (boot === 'signed-out') return <LoginPage />
-  if (phase === 'error')
+  if (phase === 'error') {
+    // 云端版在 claude.ai 外面打开（下载的文件、单独的标签页）：给一个回到 claude.ai 的按钮
+    const outsideViewer = TARGET === 'artifact' && !!ARTIFACT_URL && (!claudeRuntime() || !inViewer())
     return (
       <div className="flex h-full items-center justify-center p-6">
         <div className="card max-w-md p-6 text-center">
@@ -130,12 +135,21 @@ export default function App() {
           {TARGET === 'web' && (
             <div className="mt-2 text-xs text-slate-400">如果是第一次用 Supabase，请确认已经在 SQL Editor 里运行过 supabase/schema.sql。</div>
           )}
-          <Button className="mt-4" variant="primary" onClick={() => window.location.reload()}>
-            重新加载
-          </Button>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {/* 在 claude.ai 外面打开的：最重要的是回到 claude.ai 上的网站 */}
+            {outsideViewer && (
+              <Button variant="primary" onClick={() => (window.location.href = ARTIFACT_URL!)}>
+                去 claude.ai 打开
+              </Button>
+            )}
+            <Button variant={outsideViewer ? 'secondary' : 'primary'} onClick={() => window.location.reload()}>
+              重新加载
+            </Button>
+          </div>
         </div>
       </div>
     )
+  }
   if (phase !== 'ready') return <Loading />
 
   // 托管在 claude.ai 时网址的 # 部分不归页面管，用内存路由

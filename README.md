@@ -18,6 +18,7 @@
 - **谁能看到**：只有你。以后想和同事一起用，在页面的「分享」菜单里把同事设为「编辑者」即可；只给「查看」权限的人看不到任何数据。
 - **和自建网站的区别**：导出 Excel / JSON 会先弹一个确认框；进度报告不能直接打印，改为「下载报告」，用浏览器打开后再打印或存 PDF。
 - **更新**：改完代码后运行 `npm run build:artifact`，把生成的 `dist-artifact/student-tracker.html` 重新发布到同一个链接（让 Claude 发布即可），数据不会丢。
+- **注意**：`student-tracker.html` 只能在上面这个 claude.ai 链接里用。直接双击打开下载下来的文件、或者把页面单独在新标签页里打开，都会显示「数据加载失败」（页面上会说明原因，并有按钮回到 claude.ai）。想在电脑上离线试用，请用 `npm run build:offline` 生成的 `student-tracker-offline.html`。
 
 下面第一到第三步是另一种方式：自己用 Supabase + Vercel 部署。两种方式的数据可以通过「设置 / 导出」里的 JSON 备份互相搬。
 
