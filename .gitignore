@@ -1,5 +1,11 @@
 node_modules/
 tests/screenshots/
+tests/logs/
+
+# 性能测量的结果、JVM 崩溃记录
+tools/perf/out/
+tools/mon3d/_vdiff/
+hs_err_pid*.log
 
 # 美术样品（生成的模型和图片，还没定用哪种）
 art/
