@@ -420,6 +420,7 @@ void main() {
     return h;
   }
   // 水龙卷的筒子（底 .55、顶 1，往上越来越宽，开口）；水花皇冠（顶上一圈尖）
+  GEO.torus = k => k.geo('el:torus', () => new k.T3.TorusGeometry(1, .06, 6, 40));   // 雪环
   GEO.spout = k => k.geo('el:spout', () => new k.T3.CylinderGeometry(1, .4, 1, 20, 6, true).translate(0, .5, 0));
   GEO.crown = k => k.geo('el:crown', () => {
     const g = new k.T3.CylinderGeometry(1, .45, 1, 24, 3, true), p = g.attributes.position;
@@ -857,7 +858,7 @@ void main() {
       spin.add(m); sh.push({ m, an });
     }
     // 一圈白色的雪环（看得出是个转动的圆盘）
-    const halo = new T3.Mesh(kit.geo('el:torus', () => new T3.TorusGeometry(1, .06, 6, 40)), kit.glowMat('#e6fbff', .55));
+    const halo = new T3.Mesh(GEO.torus(kit), kit.glowMat('#e6fbff', .55));
     halo.rotation.x = PI / 2; spin.add(halo);
     const st = { R: .45, w: 14, s: .24, rot: 0 }, wp = V(0, 0, 0), sr = rate(kit, 260);
     G.position.copy(a);
@@ -1255,4 +1256,12 @@ void main() {
       dust(kit, kit.feet(ctx.other), 3 + ctx.tier * 4, { r: .8, speed: .3, up: .3, size: 1.2, life: 1.4, cover: .45, cols: ROCKDUST });
     },
   };
+
+  // ======================= 开场预热（battle3d.js 的 warm，FX_SPEC §7.1） =======================
+  // 战斗一开场，battle3d.js 把这些小步骤摊到很多帧里做完：一步建一个共用几何体（kit.geo 缓存），最后一步把水的着色器编译好——
+  // 以前都是第一次用到的那一帧现做（几何体几毫秒到二十几毫秒，着色器 60 毫秒以上，都按手机速度算），放招时卡一下
+  const WARM = BFX.warm = BFX.warm || [];
+  Object.keys(GEO).forEach(n => WARM.push(n === 'rock' ? kit => { for (let i = 0; i < 3; i++) GEO.rock(kit, i); } : kit => { GEO[n](kit); }));
+  // 水的材质：拿一个出来编译（noGlow：水不进发光后期，那一份程序不用编），马上标成没在用
+  WARM.push(kit => { const m = waterMat(kit, {}); m.userData.busy = false; const o = new kit.T3.Mesh(GEO.wave(kit), m); o.userData.noGlow = true; return o; });
 })();

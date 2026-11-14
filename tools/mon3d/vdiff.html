@@ -1,0 +1,228 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>怪兽模型对比（发布版 A / 候选 B）</title>
+<style>body { margin: 8px; background: #2b3440; color: #dfe8ee; font: 12px sans-serif; } canvas { background: #b5e399; margin: 2px; }</style>
+<div id="info">由 tools/mon3d/vdiff.js 驱动（window.VD）。</div>
+<script>window.ECHO_BASE = '/';</script>
+<script src="/vendor/three.min.js"></script>
+<script src="/monster3d.js"></script>
+<script>
+// 怪兽模型对比：同一只怪兽的两份文件（服务器把 <id>~a.glb 指到参照目录、<id>~b.glb 指到候选目录），
+// 用游戏自己的 monster3d.js 搭材质（卡通明暗 + 描边 + 稀有色），灯光和机位照 battle3d.js 的战斗画面，
+// 同一个姿势、同一个角度各画一张，算轮廓重合度（IoU）和模糊后的像素差
+(function () {
+  'use strict';
+  const T3 = window.THREE;
+  const q = new URLSearchParams(location.search);
+  const SIZE = +q.get('size') || 480;
+  const BG = [181, 227, 153];   // 战斗场地的底色（半透明边缘按它合成再比）
+  const cv = document.createElement('canvas');
+  const renderer = new T3.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(1); renderer.setSize(SIZE, SIZE, false);
+  renderer.setClearColor(0x000000, 0);
+  const gl = renderer.getContext();
+  const scene = new T3.Scene();
+  // 和 battle3d.js 一样的灯
+  const hemi = new T3.HemisphereLight(0xeaf6ff, 0x9fcf7a, 1.5);
+  const sun = new T3.DirectionalLight(0xfff1d8, 2.2); sun.position.set(-3, 7, 4);
+  scene.add(hemi, sun);
+  const cam = new T3.PerspectiveCamera(38, 1, .05, 100);
+
+  // 角度：战斗里我方（朝右、侧过一点身子朝观众）、对手（朝左）、斜前方（出招运镜时看到的）
+  const ANG = { me: Math.PI / 2 - .62, foe: -Math.PI / 2 + .62, front: .35 };
+  // 姿势：[动作, 播到几成]
+  const POSE = { idle: ['idle', .25], attack: ['attack', .5], faint: ['faint', .55], walk: ['walk', .3], hit: ['hit', .5] };
+  const VIEWS = [['me', 'idle'], ['foe', 'idle'], ['front', 'idle'], ['me', 'attack'], ['foe', 'attack'], ['front', 'attack'], ['me', 'faint'], ['foe', 'faint'], ['front', 'faint'], ['me', 'walk'], ['foe', 'hit']];
+
+  function setPose(R, name, frac) {
+    if (!R.mixer) return;
+    R.mixer.stopAllAction();
+    const a = R.acts[name]; if (!a) return;
+    a.reset(); a.setLoop(T3.LoopRepeat, Infinity); a.clampWhenFinished = false; a.setEffectiveWeight(1); a.setEffectiveTimeScale(1); a.play();
+    a.time = a.getClip().duration * frac;
+    R.mixer.update(0);
+  }
+  // 机位照参照模型（A）摆好这个姿势以后的实际大小定（出招会往前扑、倒下会躺平），B 用同一个机位
+  const bsz = new T3.Vector3(), bc = new T3.Vector3();   // 裁剪过的 three.js 没导出 Box3，用 SkinnedMesh 自己算出来的那个
+  function frame(R, ang, pose) {
+    setPose(R, POSE[pose][0], POSE[pose][1]);
+    R.root.rotation.y = ANG[ang];
+    scene.add(R.root); R.root.updateMatrixWorld(true);
+    let box = null;
+    R.root.traverse(o => { if (o.isSkinnedMesh && !o.material.isMeshBasicMaterial) { o.skeleton.update(); o.computeBoundingBox(); const b = o.boundingBox.clone().applyMatrix4(o.matrixWorld); if (box) box.union(b); else box = b; } });
+    scene.remove(R.root);
+    box.getSize(bsz); box.getCenter(bc);
+    // 镜头顺着 z 看：画面上横向占 bsz.x、竖向占 bsz.y；靠近镜头的那半边会显得大一点，按厚度留点边
+    const r = .5 * Math.max(bsz.y, bsz.x) * 1.14 + bsz.z * .07;
+    const dist = r / Math.tan(19 * Math.PI / 180);
+    // 战斗机位：比怪兽高一点、稍稍往下看
+    cam.position.set(bc.x, bc.y + dist * .119, bc.z + dist);
+    cam.lookAt(bc);
+    cam.updateProjectionMatrix();
+  }
+  function shot(R, ang, pose) {
+    setPose(R, POSE[pose][0], POSE[pose][1]);
+    R.root.rotation.y = ANG[ang];
+    scene.add(R.root);
+    renderer.render(scene, cam);
+    const px = new Uint8Array(SIZE * SIZE * 4);
+    gl.readPixels(0, 0, SIZE, SIZE, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    scene.remove(R.root);
+    return px;
+  }
+  // 合成到底色上（readPixels 出来是预乘过透明度的），返回 Float32 的 RGB 和 0/1 的轮廓
+  function comp(px) {
+    const n = SIZE * SIZE, rgb = new Float32Array(n * 3), mask = new Uint8Array(n);
+    for (let i = 0; i < n; i++) {
+      const a = px[i * 4 + 3] / 255;
+      rgb[i * 3] = px[i * 4] + (1 - a) * BG[0]; rgb[i * 3 + 1] = px[i * 4 + 1] + (1 - a) * BG[1]; rgb[i * 3 + 2] = px[i * 4 + 2] + (1 - a) * BG[2];
+      mask[i] = a > .5 ? 1 : 0;
+    }
+    return { rgb, mask };
+  }
+  // 5×5 均值模糊（横竖各一遍）：一两个像素的线条挪动、抖动抹掉——战斗里怪兽最大也就这么大，人眼分不出；
+  // 剩下的是成片的差别（颜色变了、花纹糊了、轮廓缺一块、炸出尖刺）
+  function blur(rgb) {
+    const W = SIZE, tmp = new Float32Array(rgb.length), out = new Float32Array(rgb.length), R = 2;
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+      const x0 = Math.max(0, x - R), x1 = Math.min(W - 1, x + R), k = x1 - x0 + 1, o = (y * W + x) * 3;
+      let r = 0, g = 0, b = 0;
+      for (let xx = x0; xx <= x1; xx++) { const i = (y * W + xx) * 3; r += rgb[i]; g += rgb[i + 1]; b += rgb[i + 2]; }
+      tmp[o] = r / k; tmp[o + 1] = g / k; tmp[o + 2] = b / k;
+    }
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+      const y0 = Math.max(0, y - R), y1 = Math.min(W - 1, y + R), k = y1 - y0 + 1, o = (y * W + x) * 3;
+      let r = 0, g = 0, b = 0;
+      for (let yy = y0; yy <= y1; yy++) { const i = (yy * W + x) * 3; r += tmp[i]; g += tmp[i + 1]; b += tmp[i + 2]; }
+      out[o] = r / k; out[o + 1] = g / k; out[o + 2] = b / k;
+    }
+    return out;
+  }
+  function luma(rgb) { const n = SIZE * SIZE, o = new Float32Array(n); for (let i = 0; i < n; i++) o[i] = .299 * rgb[i * 3] + .587 * rgb[i * 3 + 1] + .114 * rgb[i * 3 + 2]; return o; }
+  // 亮度的 SSIM：8×8 窗口、隔 4 个像素一格，只算碰到怪兽的窗口
+  function ssim(la, lb, mask) {
+    const W = SIZE, C1 = 6.5025, C2 = 58.5225; let sum = 0, cnt = 0, worst = 1;
+    for (let y = 0; y + 8 <= W; y += 4) for (let x = 0; x + 8 <= W; x += 4) {
+      let ma = 0, mb = 0, any = 0;
+      for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) { const p = (y + j) * W + x + i; ma += la[p]; mb += lb[p]; any += mask[p]; }
+      if (!any) continue;
+      ma /= 64; mb /= 64;
+      let va = 0, vb = 0, cab = 0;
+      for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) { const p = (y + j) * W + x + i, da = la[p] - ma, db = lb[p] - mb; va += da * da; vb += db * db; cab += da * db; }
+      va /= 63; vb /= 63; cab /= 63;
+      const s = ((2 * ma * mb + C1) * (2 * cab + C2)) / ((ma * ma + mb * mb + C1) * (va + vb + C2));
+      sum += s; cnt++; if (s < worst) worst = s;
+    }
+    return { mean: cnt ? sum / cnt : 1, worst };
+  }
+  function metrics(pa, pb) {
+    const A = comp(pa), B = comp(pb), n = SIZE * SIZE, W = SIZE;
+    let inter = 0, uni = 0;
+    for (let i = 0; i < n; i++) { const a = A.mask[i], b = B.mask[i]; if (a & b) inter++; if (a | b) uni++; }
+    const ba = blur(A.rgb), bb = blur(B.rgb);
+    const d = new Float32Array(n); let sum = 0; const vals = [];
+    for (let i = 0; i < n; i++) {
+      if (!(A.mask[i] | B.mask[i])) continue;
+      const v = Math.max(Math.abs(ba[i * 3] - bb[i * 3]), Math.abs(ba[i * 3 + 1] - bb[i * 3 + 1]), Math.abs(ba[i * 3 + 2] - bb[i * 3 + 2]));
+      d[i] = v; sum += v; vals.push(v);
+    }
+    vals.sort((x, y) => x - y);
+    // 最差的 16×16 小块（局部的问题：尖刺、花纹滑动、接缝）
+    let blk = 0, bx = 0, by = 0;
+    for (let y = 0; y + 16 <= W; y += 8) for (let x = 0; x + 16 <= W; x += 8) {
+      let s = 0; for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) s += d[(y + j) * W + x + i];
+      s /= 256; if (s > blk) { blk = s; bx = x; by = y; }
+    }
+    const ss = ssim(luma(A.rgb), luma(B.rgb), A.mask.map((v, i) => v | B.mask[i]));
+    const r3 = v => Math.round(v * 1000) / 1000;
+    return { iou: r3(uni ? inter / uni : 1), mad: r3(uni ? sum / uni : 0), p99: r3(vals.length ? vals[Math.floor((vals.length - 1) * .99)] : 0), blk: r3(blk), bx, by: W - 16 - by, ssim: r3(ss.mean), ssimMin: r3(ss.worst), d };
+  }
+
+  const KEEP = {};   // id → { views: [{ ang, pose, pa, pb, m }] }，留着出对比图
+  // 比一只：返回每个角度/姿势的指标。shiny = true 时用稀有色（检查转色相的 shader 还能用）
+  async function compare(id, opts) {
+    opts = opts || {};
+    await Mon3D.ready;
+    const sa = { id: id + '~a' + (opts.shiny ? '_shiny' : ''), stage: 2 }, sb = { id: id + '~b' + (opts.shiny ? '_shiny' : ''), stage: 2 };
+    await Mon3D.preload([sa, sb]);
+    if (!Mon3D.isLoaded(sa) || !Mon3D.isLoaded(sb)) return { id, err: '模型没读到' };
+    const RA = Mon3D.build(sa), RB = Mon3D.build(sb);
+    if (!RA.rig || !RB.rig) return { id, err: '不是蒙皮模型' };
+    const info = R => { let tris = 0, verts = 0, bones = 0; R.root.traverse(o => { if (o.isSkinnedMesh && !o.material.isMeshBasicMaterial) { tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; verts += o.geometry.attributes.position.count; bones = o.skeleton.bones.length; } }); return { tris, verts, bones, clips: Object.keys(R.acts).sort().join(','), tracks: Object.values(R.acts).reduce((s, a) => s + a.getClip().tracks.length, 0), dur: Object.keys(R.acts).sort().map(k => +R.acts[k].getClip().duration.toFixed(3)) }; };
+    const out = { id, a: info(RA), b: info(RB), views: [] };
+    const keep = KEEP[id] = { views: [] };
+    for (const [ang, pose] of (opts.views || VIEWS)) {
+      frame(RA, ang, pose);
+      const pa = shot(RA, ang, pose), pb = shot(RB, ang, pose);
+      const m = metrics(pa, pb);
+      keep.views.push({ ang, pose, pa, pb, d: m.d, m });
+      delete m.d;
+      out.views.push(Object.assign({ ang, pose }, m));
+    }
+    Mon3D.dispose(RA); Mon3D.dispose(RB);
+    return out;
+  }
+  // 把 readPixels 的像素（从下往上）画到画布上
+  function put(g, px, x0, y0, bg) {
+    const im = g.createImageData(SIZE, SIZE), o = im.data;
+    for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
+      const s = ((SIZE - 1 - y) * SIZE + x) * 4, t = (y * SIZE + x) * 4, a = px[s + 3] / 255;
+      o[t] = px[s] + (1 - a) * bg[0]; o[t + 1] = px[s + 1] + (1 - a) * bg[1]; o[t + 2] = px[s + 2] + (1 - a) * bg[2]; o[t + 3] = 255;
+    }
+    g.putImageData(im, x0, y0);
+  }
+  // 一只怪兽的对比图：每行 = 参照 A | 候选 B | 差别（放大 6 倍的热力图），挑差别最大的几行；返回 PNG 的 dataURL
+  function sheet(id, rows, pick) {
+    const k = KEEP[id]; if (!k) return '';
+    let vs = k.views.slice();
+    if (pick) vs = vs.filter(v => pick.includes(v.ang + ':' + v.pose));
+    else { vs.sort((a, b) => b.m.blk - a.m.blk); vs = vs.slice(0, rows || 3); }
+    const c = document.createElement('canvas'); c.width = SIZE * 3; c.height = SIZE * vs.length;
+    const g = c.getContext('2d');
+    vs.forEach((v, r) => {
+      put(g, v.pa, 0, r * SIZE, BG); put(g, v.pb, SIZE, r * SIZE, BG);
+      const im = g.createImageData(SIZE, SIZE), o = im.data;
+      for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) { const s = (SIZE - 1 - y) * SIZE + x, t = (y * SIZE + x) * 4, e = Math.min(255, v.d[s] * 6); o[t] = e; o[t + 1] = e > 128 ? (e - 128) * 2 : 0; o[t + 2] = 40; o[t + 3] = 255; }
+      g.putImageData(im, SIZE * 2, r * SIZE);
+      g.strokeStyle = '#fff'; g.lineWidth = 1; g.strokeRect(SIZE * 2 + v.m.bx + .5, r * SIZE + v.m.by + .5, 16, 16);
+      g.fillStyle = '#000'; g.fillRect(0, r * SIZE, SIZE * 3, 15);
+      g.fillStyle = '#fff'; g.font = '11px sans-serif';
+      g.fillText(id + '  ' + v.ang + '/' + v.pose + '   A 参照 | B 候选 | 差×6   IoU ' + v.m.iou + '  平均差 ' + v.m.mad + '  p99 ' + v.m.p99 + '  最差小块 ' + v.m.blk + '  SSIM ' + v.m.ssim + ' (最低 ' + v.m.ssimMin + ')', 4, r * SIZE + 11);
+    });
+    return c.toDataURL('image/png');
+  }
+  // 放大看：把最差小块周围 120×120 放大 4 倍，A | B 并排
+  function zoom(id, key) {
+    const k = KEEP[id]; if (!k) return '';
+    const v = key ? k.views.find(x => x.ang + ':' + x.pose === key) : k.views.slice().sort((a, b) => b.m.blk - a.m.blk)[0];
+    const full = document.createElement('canvas'); full.width = SIZE * 2; full.height = SIZE; const fg = full.getContext('2d');
+    put(fg, v.pa, 0, 0, BG); put(fg, v.pb, SIZE, 0, BG);
+    const R = 120, x0 = Math.max(0, Math.min(SIZE - R, v.m.bx + 8 - R / 2)), y0 = Math.max(0, Math.min(SIZE - R, v.m.by + 8 - R / 2));
+    const c = document.createElement('canvas'); c.width = R * 4 * 2 + 8; c.height = R * 4; const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+    g.drawImage(full, x0, y0, R, R, 0, 0, R * 4, R * 4); g.drawImage(full, SIZE + x0, y0, R, R, R * 4 + 8, 0, R * 4, R * 4);
+    return c.toDataURL('image/png');
+  }
+  const forget = id => { delete KEEP[id]; };
+
+  // 加载时间：从开始下载到画出第一帧（毫秒）。which = 'a' / 'b'
+  async function loadTime(id, which) {
+    await Mon3D.ready;
+    const sp = { id: id + '~' + which, stage: 2 };
+    const t0 = performance.now();
+    await Mon3D.preload([sp]);
+    const t1 = performance.now();
+    if (!Mon3D.isLoaded(sp)) return null;
+    const R = Mon3D.build(sp);
+    // 固定机位（不量包围盒，那是 CPU 活，不该算进加载时间）
+    cam.position.set(0, .6 + 3.2 * .119, 3.2); cam.lookAt(0, .55, 0); cam.updateProjectionMatrix();
+    R.root.rotation.y = ANG.me; scene.add(R.root);
+    renderer.render(scene, cam);
+    const one = new Uint8Array(4); gl.readPixels(SIZE >> 1, SIZE >> 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, one);   // 等显卡真的画完
+    const t2 = performance.now();
+    scene.remove(R.root); Mon3D.dispose(R);
+    return { load: t1 - t0, first: t2 - t1, total: t2 - t0 };
+  }
+  window.VD = { compare, sheet, zoom, forget, loadTime, SIZE, VIEWS };
+  document.body.appendChild(cv);
+})();
+</script>

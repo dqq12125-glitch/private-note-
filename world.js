@@ -116,10 +116,12 @@
   }
 
   // ---------- 进入 / 切换地图 ----------
-  function savePos() {
+  // 记下主角在哪。走一步只记位置（E.savePos：很小的一条，不把整份存档重写一遍——存档大了以后那样会一步一卡）；
+  // 整份存档等停下来、开战、回首页、切后台时再存（game.js 的 flushWalk）。full：换地图这种少见的时候当场整份存
+  function savePos(full) {
     const ws = WS();
     ws.map = M.id; ws.z = M.z; ws.x = PL.x; ws.y = PL.y; ws.dir = PL.dir; ws.arrive = null;
-    E.save();
+    if (full || !E.savePos) E.save(); else E.savePos();
   }
   function loadMap(id, how) {
     M = EM.get(id) || EM.get('t0');
@@ -152,10 +154,10 @@
     FL.x = FL.fx = ok ? bx : p.x;
     FL.y = FL.fy = ok ? by : p.y;
     if (R) R.load(M, api3d);
-    savePos();
-    hud();
-    // 回程绳回到最后一次待过的户外地图
+    // 回程绳回到最后一次待过的户外地图（先记好，下面整份存的时候一起存上）
     if ((M.kind === 'town' || M.kind === 'route') && !PL.surf) ws.lastOut = { map: M.id, x: PL.x, y: PL.y, dir: PL.dir };
+    savePos(true);
+    hud();
     E.music(mapMusic());
   }
   // 这张地图的背景音乐：小镇按岛分 4 首、道路前后两首、踏浪和海底放海的、洞穴（嘘声团基地放反派的）、挑战馆、室内、勇气之路
@@ -301,6 +303,7 @@
     step(nx, ny, PL.bike && !PL.surf ? BIKE_MS : STEP_MS, false);
   }
   function step(nx, ny, dur, jump) {
+    if (E.walkTouch) E.walkTouch();   // 还在走：整份存档等真的停下来再存（game.js 的 savePos）
     FL.fx = FL.x; FL.fy = FL.y; FL.x = PL.x; FL.y = PL.y;
     PL.fx = PL.x; PL.fy = PL.y; PL.x = nx; PL.y = ny;
     PL.moving = true; PL.jump = jump; PL.dur = dur; PL.t0 = performance.now();
@@ -1015,6 +1018,7 @@
   async function battle(kind, o) {
     busy = true;
     held = null;
+    // （走路攒下的位置、步数不用在这里另存：MG.battle 一开战就整份存一次；万一没打成，离开大地图时 game.js 的 show() 也会存）
     const wp = $('w-wipe'); wp.classList.remove('on'); void wp.offsetWidth; wp.classList.add('on');
     E.SFX.hit();
     await sleep(820);

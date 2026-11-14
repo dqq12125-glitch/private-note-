@@ -86,6 +86,11 @@
   }
   // 共用的单位球（和 battle3d.js 的 orb 用的是同一份：同一个名字、同样的形状）
   const sphG = kit => kit.geo('sph14', () => new kit.T3.SphereGeometry(1, 14, 10));
+  // 这几个属性自己的共用几何体（都登记进开场预热，见文件最后）：心灵的光环、暗的日食边、夜之牙、暗的碎片
+  const haloGeo = kit => kit.geo('en_halo', () => new kit.T3.TorusGeometry(1, .045, 6, 48));
+  const rimGeo = kit => kit.geo('en_rim', () => new kit.T3.TorusGeometry(1, .07, 6, 48));
+  const fangGeo = kit => kit.geo('en_fang', () => new kit.T3.ConeGeometry(.085, .36, 6));
+  const shardGeo = kit => kit.geo('en_shard', () => new kit.T3.OctahedronGeometry(.06, 0).scale(.6, 1.6, .6));
 
   // ---------- 粒子小配方 ----------
   // 从四周吸进 at（蓄力）：半径 r、n 颗、life 秒内到
@@ -260,7 +265,7 @@
   // ======================================================================
   // 头顶转的光环（陀螺仪一样斜着转），n 个
   function halos(kit, side, n, life) {
-    const T3 = kit.T3, g = kit.geo('en_halo', () => new T3.TorusGeometry(1, .045, 6, 48)), m = kit.mon(side);
+    const T3 = kit.T3, g = haloGeo(kit), m = kit.mon(side);
     if (!m) return;
     for (let i = 0; i < n; i++) {
       const r = new T3.Mesh(g, kit.glowMat(i % 2 ? PS.v : PS.p, .9, false)), tilt = .35 + i * .45, sp = (i % 2 ? -1 : 1) * (4 + i * 1.5), ph = Math.random() * 6.28;
@@ -713,7 +718,7 @@
   }
   // 黑色日食（大招，蓄力时就开始升起）：对手头上一个黑盘 + 白色亮边 + 淡紫日冕；返回 { pos, end(), drop(to, ms) }
   function eclipse(kit, ctx) {
-    const T3 = kit.T3, b = kit.center(ctx.other), hb = hOf(kit, ctx.other), sg = sphG(kit), rimG = kit.geo('en_rim', () => new T3.TorusGeometry(1, .07, 6, 48));
+    const T3 = kit.T3, b = kit.center(ctx.other), hb = hOf(kit, ctx.other), sg = sphG(kit), rimG = rimGeo(kit);
     const P = kit.V(b.x, b.y + Math.max(1.25, hb * .95) + .35, b.z), R = .42;
     const grp = new T3.Group(), cor = new T3.Mesh(sg, kit.glowMat(DK.l, .55, false)), disc = new T3.Mesh(sg, kit.glowMat(DK.b, 1)), rim = new T3.Mesh(rimG, kit.glowMat('#ffffff', .95, true));
     cor.scale.setScalar(1.28); cor.renderOrder = 2; disc.renderOrder = 3; rim.renderOrder = 4;
@@ -739,7 +744,7 @@
   }
   // 獠牙：上排 4 颗往下、下排 3 颗往上，面向镜头；返回 { open 张开的进度, snap 合上的进度 }（0–1，外面改）
   function fangs(kit, at, size, life) {
-    const T3 = kit.T3, cone = kit.geo('en_fang', () => new T3.ConeGeometry(.085, .36, 6)), moon = moonGeo(kit);
+    const T3 = kit.T3, cone = fangGeo(kit), moon = moonGeo(kit);
     const grp = new T3.Group(), up = new T3.Group(), lo = new T3.Group(), st = { open: 0, snap: 0 };
     // 牙用不受光的纯色（受光的话被地面的绿光一照会发绿）
     const tooth = (g, x, y, rz, s) => { const m = new T3.Mesh(cone, kit.glowMat('#fbf8ff', 1, false)); m.position.set(x, y, 0); m.rotation.z = rz; m.scale.setScalar(s); m.renderOrder = 2; g.add(m); return m; };
@@ -821,7 +826,7 @@
       puff(kit, b, [DK.b, DK.k], [6, 12, 26][t], 1.4 + t * .6, .4 + t * .12, .4 + t * .1, { cover: .9 });
       kit.emit([8, 14, 26][t], () => ({ pos: b.clone().add(kit.sph(.2)), vel: kit.sph(kit.rnd(1.5, 3 + t)), col: pick([DK.l, '#ffffff', DK.l]), size: kit.rnd(.14, .26), life: kit.rnd(.25, .45), drag: 2, tex: 'star', spin: kit.rnd(-10, 10), cover: .35 }));
       if (t >= 1) {
-        kit.chunks(() => kit.geo('en_shard', () => new kit.T3.OctahedronGeometry(.06, 0).scale(.6, 1.6, .6)), DK.b, qn(kit, t === 2 ? 10 : 6), b, .2, .8);
+        kit.chunks(() => shardGeo(kit), DK.b, qn(kit, t === 2 ? 10 : 6), b, .2, .8);
       }
     },
     after(kit, ctx) {
@@ -961,4 +966,7 @@
       kit.sleep(200).then(() => bubbles(kit, f, .6, [4, 8, 14][t], 1, { up: .7 }));
     },
   };
+
+  // ---------- 开场预热（battle3d.js 的 warm，FX_SPEC §7.1）：共用几何体先建好（一步一个），放招的那一帧不用现算 ----------
+  (BFX.warm = BFX.warm || []).push(...[haloGeo, rimGeo, fangGeo, shardGeo, moonGeo, scaleGeo, slashGeo].map(g => kit => { g(kit); }));
 })();

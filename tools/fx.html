@@ -34,7 +34,7 @@
     <div class="row"><b>画质</b><span id="qs"><button data-q="high">high 精美</button> <button data-q="mid">mid 标准</button> <button data-q="low">low 省电</button></span></div>
     <div class="row"><b>出招</b><span id="sides"><button data-s="me">我方打对手</button> <button data-s="foe">对手打我方</button></span></div>
     <div class="row"><button id="all">▶ 连放全部 51 招</button> <button id="stop" disabled>■ 停</button></div>
-    <div class="now" id="now">点下面的按钮放招（小 / 中 / 大招、辅 = 辅助招式）。<br>网址参数：?q=high|mid|low &amp;side=foe &amp;me=emberpup &amp;foe=bubbly &amp;w=390&amp;h=300</div>
+    <div class="now" id="now">点下面的按钮放招（小 / 中 / 大招、辅 = 辅助招式）。<br>网址参数：?q=high|mid|low &amp;side=foe &amp;me=emberpup &amp;foe=bubbly &amp;w=390&amp;h=300 &amp;rig=1（用发布的会动的模型，和游戏里一样）</div>
     <div class="live" id="live"></div>
   </div>
 </div>
@@ -185,10 +185,15 @@ let frames = 0, fpsT = performance.now();
 setInterval(() => {
   if (!B3) return;
   const now = performance.now(), fps = frames * 1000 / (now - fpsT), s = B3.fxStats(); frames = 0; fpsT = now;
-  $('live').textContent = fps.toFixed(0) + ' fps · 粒子 ' + s.parts + ' · 特效物件 ' + s.fx + ' · 点光源 ' + s.lights + ' · 几何体 ' + s.mem.geometries + ' · 贴图 ' + s.mem.textures;
+  // 「画 30 / 60」：战斗画面现在按每秒几帧画（没有东西在动时 30，一放招回到 60）；前面的 fps 是浏览器的刷新率
+  $('live').textContent = fps.toFixed(0) + ' fps · 画 ' + s.pace + ' 帧/秒' + (s.warm ? ' · 预热中' : '') + ' · 粒子 ' + s.parts + ' · 特效物件 ' + s.fx + ' · 点光源 ' + s.lights + ' · 几何体 ' + s.mem.geometries + ' · 贴图 ' + s.mem.textures + ' · 着色器 ' + s.programs;
 }, 500);
 sides();
-// ?art=3d / blender / gemini 时等外部模型载完再放怪兽
-Mon3D.ready.then(() => { make(); document.body.dataset.ready = '1'; });
+// ?art=3d / blender / gemini 时等外部模型载完再放怪兽。
+// ?rig=1：先把两只怪兽发布的模型（assets/mon3d，会动的）下载好再开始，和游戏里一样（monsters.js 的 prep）；
+// 不加的话（走 http 打开时）放的是程序拼的模型——模型在后台下载，但这一页不会换上。file:// 读不了模型，总是程序模型
+Mon3D.ready
+  .then(() => (q.get('rig') === '1' && Mon3D.preload ? Promise.race([Mon3D.preload([DEX.byId[ME], DEX.byId[FOE]]).catch(() => {}), wait(5000)]) : null))
+  .then(() => { make(); document.body.dataset.ready = '1'; });
 </script>
 </html>

@@ -216,7 +216,7 @@ const clean = (v, n) => String(v || '').replace(/[^\p{L}\p{N} .,!?'"’:;()-]/gu
 const SERVE_GAME = /^(1|true|yes)$/i.test(cfg('SERVE_GAME') || '');
 const GAME_ROOT = path.resolve(__dirname, '..');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json',
-  '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.apk': 'application/vnd.android.package-archive', '.woff2': 'font/woff2' };
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.apk': 'application/vnd.android.package-archive', '.woff2': 'font/woff2' };
 function serveGame(u, req, res) {
   let rel = decodeURIComponent(u.pathname);
   if (rel.endsWith('/')) rel += 'index.html';

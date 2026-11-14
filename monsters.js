@@ -182,13 +182,14 @@
   const prep = sps => window.Mon3D && Mon3D.preload ? Promise.race([Mon3D.preload(sps).catch(() => {}), sleep(2500)]) : Promise.resolve();
   const teamSps = () => M().team.map(byUid).filter(m => m && !m.egg).map(spOf);
   function preloadTeam() { if (window.Mon3D && Mon3D.preload) Mon3D.preload(teamSps()); }
-  // 3D 战斗里换上刚下载好的模型（出场前调用，这时候怪兽还藏着）
+  // 3D 战斗里换上刚下载好的模型（出场前调用，这时候怪兽还藏着）。
+  // B.rig3[side]：true 放的是会动的模型；false 放的是程序拼的 / 纸片；没有 = 开战时模型还在下载，先没放（见 renderBattle），这里补上
   function upgrade3D() {
     if (!B3 || !B || !window.Mon3D || !Mon3D.isLoaded) return;
     B.rig3 = B.rig3 || {};
     [['me', me()], ['foe', foe()]].forEach(([side, mon]) => {
       const sp = spOf(mon);
-      if (!B.rig3[side] && Mon3D.hasModel(sp) && Mon3D.isLoaded(sp)) { B3.setMon(side, sp, true); B.rig3[side] = true; }
+      if (B.rig3[side] === undefined || (!B.rig3[side] && Mon3D.hasModel(sp) && Mon3D.isLoaded(sp))) { B3.setMon(side, sp, true); B.rig3[side] = !!Mon3D.isLoaded(sp); }
     });
   }
   // 战斗背景：天空、云、远山、草地（雪地小镇换成白色）
@@ -425,7 +426,7 @@
       try { if (window.EchoWorld && EchoWorld.gfxTier) tier = EchoWorld.gfxTier(); } catch (e) { /* 大地图还没初始化就按设置 */ }
       // quality：特效的粒子上限、点光源、发光后期按画质缩减；sfx：设置里关了音效就不放招式音效
       try { B3 = Battle3D.create(document.createElement('div'), { theme: arenaTheme(z, opts.hab, opts.arena, opts.rules), shadows: tier !== 'low', dpr: tier === 'high' ? 2 : 1.5, quality: tier, sfx: () => E.S.settings.sfx !== false }); } catch (e) { B3 = null; }
-    }
+    } else if (window.Battle3D && Battle3D.release) Battle3D.release();   // 这一场用 2D 流畅画面：上一场留着没用的 3D 画面彻底释放（见 battle3d.js 的 park）
     renderBattle();
     intro(B);
     return true;
@@ -476,8 +477,12 @@
       // 战场是弹性高度（下面的面板变高变矮时跟着变）：尺寸一变就让 3D 画面重新算
       if (window.ResizeObserver) { if (RO) RO.disconnect(); RO = new ResizeObserver(() => { if (B3 && ar.isConnected) { try { B3.resize(); } catch (e) { /* 忽略 */ } } }); RO.observe(ar); }
       B.rig3 = B.rig3 || {};
-      if (B.enter === 'both' || B.enter === 'foe') { B3.setMon('foe', spOf(f), true); B.rig3.foe = !!(Mon3D.isLoaded && Mon3D.isLoaded(spOf(f))); }
-      if (B.enter === 'both' || B.enter === 'me') { B3.setMon('me', spOf(m), true); B.rig3.me = !!(Mon3D.isLoaded && Mon3D.isLoaded(spOf(m))); }
+      // 刚开战、这只怪兽会动的模型还在下载（intro 里最多等 2.5 秒）：先不放程序拼的替身，等 upgrade3D() 再放——
+      // 替身多半用不上，白建一遍、白编译一遍它的着色器，正好挤在开场最忙的那一秒
+      const later = sp => B.turn === 'intro' && !!B.pre && !!(Mon3D.hasModel && Mon3D.isLoaded && Mon3D.hasModel(sp) && !Mon3D.isLoaded(sp));
+      const put = (side, sp) => { if (later(sp)) { delete B.rig3[side]; return; } B3.setMon(side, sp, true); B.rig3[side] = !!(Mon3D.isLoaded && Mon3D.isLoaded(sp)); };
+      if (B.enter === 'both' || B.enter === 'foe') put('foe', spOf(f));
+      if (B.enter === 'both' || B.enter === 'me') put('me', spOf(m));
     }
     B.enter = '';
     updHp();

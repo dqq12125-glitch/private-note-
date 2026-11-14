@@ -1081,4 +1081,10 @@ void main() {
     await kit.sleep(280);
   }
   ['normal', 'fire', 'water', 'grass', 'spark', 'ice', 'fight', 'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel'].forEach(t => { S[t] = powerUp; });
+
+  // ---------- 开场预热（battle3d.js 的 warm，FX_SPEC §7.1）----------
+  // 共用几何体先建好（一步一个），龙卷风的着色器先编译（noGlow：风柱不进发光后期，那一份程序不用编）：放招的那一帧不用现做
+  const WARM = BFX.warm = BFX.warm || [];
+  Object.keys(G).forEach(n => WARM.push(kit => { G[n](kit); }));
+  WARM.push(kit => { const m = funnelMat(kit); m.userData.busy = false; const o = new kit.T3.Mesh(funnelGeo(kit), m); o.userData.noGlow = true; return o; });
 })();

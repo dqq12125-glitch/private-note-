@@ -18,7 +18,7 @@ const out = path.join(__dirname, 'screenshots');
 fs.mkdirSync(out, { recursive: true });
 const ROOT = path.join(__dirname, '..');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.webp': 'image/webp',
-  '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.txt': 'text/plain; charset=utf-8' };
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.txt': 'text/plain; charset=utf-8' };
 function serve() {
   const srv = http.createServer((req, res) => {
     const u = decodeURIComponent(req.url.split('?')[0]), f = path.normalize(path.join(ROOT, u === '/' ? 'index.html' : u));
@@ -276,11 +276,11 @@ function fakeMic() {
   await E(() => window.EchoTalk.open('lily')); await W(600);
   const tk = await E(() => ({ label: (document.querySelector('#tk-ai') || {}).textContent, sys: (document.querySelector('#tk-log .tk-b.sys') || {}).textContent, n: window.EchoGame.dayLog().aiNotice }));
   check(tk.label === 'AI 生成 · 由阿里云通义千问提供', '聊天页顶上：「AI 生成 · 由阿里云通义千问提供」', tk);
-  check(/人工智能生成/.test(tk.sys || '') && tk.n >= 1, '聊天开头：一句 AI 提示（同时用语音说，打包的中文配音 assets/voice/zh/ai-notice.mp3）', tk);
-  check(fs.existsSync(path.join(ROOT, 'assets/voice/zh/ai-notice.mp3')), 'AI 提示的中文配音打包在 assets/voice/zh/');
+  check(/人工智能生成/.test(tk.sys || '') && tk.n >= 1, '聊天开头：一句 AI 提示（同时用语音说，打包的中文配音 assets/voice/zh/ai-notice.ogg）', tk);
+  check(fs.existsSync(path.join(ROOT, 'assets/voice/zh/ai-notice.ogg')), 'AI 提示的中文配音打包在 assets/voice/zh/');
   await E(() => { const x = document.querySelector('[data-act=talk_end]'); if (x) x.click(); }); await W(300);
   await E(() => { if (document.querySelector('#tk-ov')) window.EchoTalk.endIfOpen(); document.querySelectorAll('#tk-ov').forEach(e => e.remove()); });
-  await route({ 'qwen3-tts-flash': { type: 'ok', data: { output: { audio: { url: HOST + '/assets/voice/zh/ai-notice.mp3' } } } } });
+  await route({ 'qwen3-tts-flash': { type: 'ok', data: { output: { audio: { url: HOST + '/assets/voice/zh/ai-notice.ogg' } } } } });
   await E(() => window.EchoGame.say('Hello Kevin, welcome back to the island!'));
   check(await E(() => window.__posts.some(x => x.model === 'qwen3-tts-flash')), '没有配音的句子：用阿里云 qwen3-tts-flash 现场合成');
   check(!outside.some(u => /youdao/i.test(u)) && !/youdao|dictvoice/i.test(fs.readFileSync(path.join(ROOT, 'game.js'), 'utf8').replace(/\/\/[^\n]*/g, '')), '不再连有道（dictvoice）', outside.filter(u => /youdao/.test(u)));

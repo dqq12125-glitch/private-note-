@@ -315,31 +315,64 @@ void main() {
   #include <colorspace_fragment>
 }`;
   const BLOOM_BASE = .32;   // 放招时发光后期的基础强度（kit.bloom 临时加强）
-  // 大招过场横幅里的速度线（横向能平铺的一张图，所有战斗共用，只画一次）：长短粗细不一的光痕，头亮尾淡
-  let SPEED_URL = null;
-  function speedTex() {
-    if (SPEED_URL != null) return SPEED_URL;
+  // 大招过场横幅里的速度线（横向能平铺的一张图，所有战斗共用，只画一次）：长短粗细不一的光痕，头亮尾淡。
+  // speedTex(cb)：做好了调 cb(地址)（做不出来给 ''）。画完用 toBlob 在后台线程编码成 PNG——以前第一次放大招时同步 toDataURL，
+  // 那一帧要多花十几毫秒（手机上更久）；现在开战预热时就做好（见 create 里的 warm）
+  let SPEED_URL = null, SPEED_WAIT = null;
+  function speedTex(cb) {
+    if (SPEED_URL != null) { cb(SPEED_URL); return; }
+    if (SPEED_WAIT) { SPEED_WAIT.push(cb); return; }
+    SPEED_WAIT = [cb];
+    const done = u => {
+      if (SPEED_URL != null) return;
+      SPEED_URL = u || '';
+      const w = SPEED_WAIT; SPEED_WAIT = null;
+      w.forEach(f => { try { f(SPEED_URL); } catch (e) { /* 忽略 */ } });
+    };
+    let c = null;
+    try { c = speedDraw(); } catch (e) { done(''); return; }
     try {
-      const W = 512, H = 128, c = document.createElement('canvas'); c.width = W; c.height = H;
-      const g = c.getContext('2d');
-      let sd = 11; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // 固定的随机数，每次画得一样
-      for (let i = 0; i < 44; i++) {
-        const y = 4 + r() * (H - 8), len = 50 + r() * 230, x0 = r() * W, th = .6 + r() * 2.4, al = .22 + r() * .6;
-        [x0, x0 - W].forEach(x => {   // 超出右边的部分从左边再画一次：横向接得上
-          const gr = g.createLinearGradient(x, 0, x + len, 0);
-          gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.75, 'rgba(255,255,255,' + al.toFixed(2) + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)');
-          g.fillStyle = gr; g.beginPath(); g.ellipse(x + len / 2, y, len / 2, th, 0, 0, Math.PI * 2); g.fill();
-        });
+      if (c.toBlob && window.URL && URL.createObjectURL) {
+        c.toBlob(b => { try { done(b ? URL.createObjectURL(b) : c.toDataURL('image/png')); } catch (e) { done(''); } }, 'image/png');
+        return;
       }
-      SPEED_URL = c.toDataURL('image/png');
-    } catch (e) { SPEED_URL = ''; }
-    return SPEED_URL;
+    } catch (e) { /* 不支持就同步编码 */ }
+    try { done(c.toDataURL('image/png')); } catch (e) { done(''); }
   }
+  function speedDraw() {
+    const W = 512, H = 128, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d', { willReadFrequently: true });   // 画布留在内存里：编码时不用先找显卡把像素要回来
+    let sd = 11; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // 固定的随机数，每次画得一样
+    for (let i = 0; i < 44; i++) {
+      const y = 4 + r() * (H - 8), len = 50 + r() * 230, x0 = r() * W, th = .6 + r() * 2.4, al = .22 + r() * .6;
+      [x0, x0 - W].forEach(x => {   // 超出右边的部分从左边再画一次：横向接得上
+        const gr = g.createLinearGradient(x, 0, x + len, 0);
+        gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.75, 'rgba(255,255,255,' + al.toFixed(2) + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = gr; g.beginPath(); g.ellipse(x + len / 2, y, len / 2, th, 0, 0, Math.PI * 2); g.fill();
+      });
+    }
+    return c;
+  }
+
+  // 上一场战斗用完留下来的 3D 画面（见 create 开头和里面的 park / revive / kill）；留着不用的时候挂在一个空壳上，不抓着上一场战斗的 DOM
+  let PARKED = null;
+  const PARK_HOST = document.createElement('div');
 
   function create(host, opts) {
     opts = opts || {};
     const Q = QUAL[opts.quality] ? opts.quality : 'mid', QS = QUAL[Q];
-    let raf = 0, last = 0, alive = true, nextDraw = 0, fxNow = 0, monT = 0, warmed = false;
+    // 画面留着接着用（2026-11-15）：一场战斗 destroy() 以后，渲染器、画布、材质池、编译好的着色器、共用几何体都还留着（park），
+    // 下一场画质一样就直接接手（revive）——不用新建 WebGL、不用重新编译着色器，开战不卡；也不会每打一场就漏一份：
+    // 以前每场新建一个渲染器，three.js 挂在共用材质 / 模型上的 dispose 监听把旧渲染器、旧画布、连同整个旧战斗画面的 DOM 一直抓着不放
+    // （30 场：页面节点 476 → 3347、监听 84 → 208、JS 内存 9 → 26MB）。画质不一样（很少见）才把留着的那个彻底释放（kill）、另建一个
+    const KEY = Q + (opts.shadows !== false ? '+s' : '');
+    if (PARKED) { const p = PARKED; PARKED = null; const a = p.key === KEY ? p.revive(host, opts) : null; if (a) return a; p.kill(); }
+    // drawAt 上一次画的时刻、wasAct 上一帧是不是「有东西在动」（见 active）、hostH 战场现在多高（0 = 没显示出来）、beat 没显示时只走逻辑的慢定时器
+    // sized 上一次 resize 用的尺寸（没变就不重设画布：重设会把画面清空一帧）
+    let raf = 0, last = 0, alive = true, nextDraw = 0, fxNow = 0, monT = 0, warmed = false, drawAt = 0, wasAct = true, hostH = 0, beat = 0, sized = '';
+    // 这一场战斗里的等待（真实时间）：destroy 时全部当到点了——还在跑的放招流程马上走完，不会拖到下一场战斗里去
+    const naps = new Set();
+    const sleep = ms => new Promise(res => { if (!alive) { res(); return; } const n = { t: 0, res }; n.t = setTimeout(() => { naps.delete(n); res(); }, ms); naps.add(n); });
     let canvas = document.createElement('canvas');   // 画面丢了重建时会换一张（见 glRebuild）
     canvas.className = 'b3d';
     let renderer;
@@ -347,16 +380,45 @@ void main() {
     if (!renderer.getContext()) return null;
     renderer.shadowMap.enabled = opts.shadows !== false;
     renderer.shadowMap.type = T3.PCFShadowMap;
+    // 贴图各向异性过滤的上限：现在就问显卡。等远景画载完再问，正赶上显卡在编译着色器，这一句要白等几十毫秒
+    let ANISO = 1;
+    try { ANISO = Math.min(4, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 1); } catch (e) { /* 忽略 */ }
     // ---------- 画面丢了（webglcontextlost：切去微信再回来、系统收回显存）：不留黑屏（评估第 15 条）----------
     // 丢了先不画；恢复了（three.js 自己重建 GPU 资源）就重画影子、重新预编译特效；2.5 秒还没恢复，换一张新画布、新的 WebGL 接着画——
     // 场景、怪兽、特效都是 CPU 这边的对象，换一个渲染器照样能画，战斗不用重来
     const GL = { lost: 0, n: 0 };
     const glLog = m => { try { if (window.EchoErr) EchoErr.log('gl', m, 'battle3d'); } catch (e) { /* 忽略 */ } };
+    const WATCH = new Map();   // 画布 → 挂在它上面的两个监听（换画布、彻底释放时要摘掉：不然旧画布抓着整个战斗画面不放）
     function glWatch(c) {
-      c.addEventListener('webglcontextlost', e => { e.preventDefault(); if (c === canvas && alive) { GL.lost = performance.now(); GL.n++; glLog('对战 3D 画面丢了'); } }, false);   // destroy() 自己释放的不算
-      c.addEventListener('webglcontextrestored', () => { if (c !== canvas) return; GL.lost = 0; warmed = false; renderer.shadowMap.needsUpdate = true; try { resize(); } catch (e) { /* 忽略 */ } }, false);
+      const lost = e => { e.preventDefault(); if (c === canvas && alive) { GL.lost = performance.now(); GL.n++; glLog('对战 3D 画面丢了'); } };   // 留着没在用时丢的不算（revive 时会查）
+      const back = () => { if (c !== canvas) return; GL.lost = 0; warmed = false; pinned = 0; sized = ''; renderer.shadowMap.needsUpdate = true; try { resize(); } catch (e) { /* 忽略 */ } };
+      c.addEventListener('webglcontextlost', lost, false);
+      c.addEventListener('webglcontextrestored', back, false);
+      WATCH.set(c, [lost, back]);
+    }
+    function glUnwatch(c) {
+      const w = WATCH.get(c); if (!w) return;
+      c.removeEventListener('webglcontextlost', w[0], false); c.removeEventListener('webglcontextrestored', w[1], false);
+      WATCH.delete(c);
     }
     glWatch(canvas);
+    // 后台编译着色器：显卡支持并行编译（KHR_parallel_shader_compile）才用 compileAsync，返回「编译好了」的 Promise；
+    // 不支持的就只把程序建出来（第一次用到时才真的编译），返回 null
+    const compileA = (obj, c, sc) => {
+      let par = false;
+      try { par = !!renderer.compileAsync && renderer.extensions.has('KHR_parallel_shader_compile'); } catch (e) { /* 忽略 */ }
+      if (par) return renderer.compileAsync(obj, c, sc);
+      renderer.compile(obj, c, sc);
+      return null;
+    };
+    // 编译过的着色器程序都钉住（引用数 +1）：three.js 默认在最后一个用它的材质释放时把程序删掉，而怪兽、场地的材质每场战斗都换新的——
+    // 钉住以后下一场直接用，不用重新编译。每帧画完看一眼有没有新程序（见 step）
+    let pinned = 0;
+    function pinPrograms() {
+      const ps = renderer.info.programs || [];
+      for (let i = 0; i < ps.length; i++) if (!ps[i].b3pin) { ps[i].b3pin = true; ps[i].usedTimes++; }
+      pinned = ps.length;
+    }
     function glRebuild() {
       const nc = document.createElement('canvas');
       nc.className = 'b3d';
@@ -366,9 +428,10 @@ void main() {
       nr.shadowMap.enabled = renderer.shadowMap.enabled; nr.shadowMap.type = renderer.shadowMap.type;
       const old = renderer, oc = canvas;
       renderer = nr; canvas = nc; glWatch(nc);
+      glUnwatch(oc);
       try { old.dispose(); } catch (e) { /* 丢了的画面释放不干净也没关系 */ }
       if (oc.parentNode) oc.replaceWith(nc);
-      GL.lost = 0; warmed = false;
+      GL.lost = 0; warmed = false; pinned = 0; sized = '';
       try { resize(); } catch (e) { /* 忽略 */ }
       glLog('对战 3D 画面已重建');
       return true;
@@ -387,8 +450,9 @@ void main() {
     hemi.layers.enableAll(); sun.layers.enableAll();
     scene.add(hemi, sun);
     // 减少动态效果（系统设置）时只用默认机位；减少动态效果或关了运镜：不运镜、不放慢、不闪屏（FX_SPEC §6）
-    const RM = opts.reduced != null ? !!opts.reduced : !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-    const CINE = opts.cinematic !== false && !RM;
+    let RM = false, CINE = true;
+    const readOpts = () => { RM = opts.reduced != null ? !!opts.reduced : !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); CINE = opts.cinematic !== false && !RM; };
+    readOpts();   // 每场战斗开头读一遍（revive 也读）
     const EZ = {
       io: k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2,
       out: k => 1 - Math.pow(1 - k, 3),
@@ -400,10 +464,12 @@ void main() {
     const lum = c => c.r * .3 + c.g * .59 + c.b * .11;   // 线性颜色的亮度
     const DIM = .09;
     // 统计（给 tools/fx.html、tools/fx-shots.js 看）：同时最多多少粒子、闪屏次数、被限频跳过的闪屏、出招超时
-    const stats = { peak: 0, flashes: 0, flashSkipped: 0, over: 0, move: null };
+    const stats = { peak: 0, flashes: 0, flashSkipped: 0, over: 0, move: null, drawn: 0 };   // drawn：一共画了多少帧
 
     // ---------- 场地 ----------
     const env = new T3.Group(); scene.add(env);
+    env.userData.noFx = true;   // 发光后期换材质时不用进去找（见 swapOn）
+    let drifters = [];          // 会飘的云（每帧挪一点）
     const POS = { me: V(-1.75, 0, 0), foe: V(1.75, 0, 0) };
     const ARENA_C = V((POS.me.x + POS.foe.x) / 2, 0, (POS.me.z + POS.foe.z) / 2);
     // 竖屏（画面窄高）：两只怪兽一前一后错开站——我方近、偏左下，对手远、偏右上（都还是侧身对着对方），
@@ -422,6 +488,7 @@ void main() {
         if (m) m.yaw = yawOf(sd);
         if (RIP[sd]) RIP[sd].position.copy(POS[sd]).setY(.025);
       });
+      kick();
       return true;
     }
     // 远景画（theme.backdrop）：像舞台布景一样画在最底层（不参与深度），贴在一圈很远的圆柱内壁上。
@@ -431,28 +498,50 @@ void main() {
     const bdFail = {};   // 载不到的图记住，同一张不再反复请求
     let envTok = 0, bdCur = null;
     const assetUrl = u => /^(https?:|data:|blob:|\/|\.\.?\/)/.test(u) ? u : (window.ECHO_BASE || '') + u;
-    function loadImg(url, ok) {
-      // file:// 打开时浏览器不让把本地图片当贴图用（跨域），就用程序画的背景
-      if (!url || bdFail[url] || (location.protocol === 'file:' && !/^(data:|blob:)/.test(url))) return;
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => ok(img);
-      img.onerror = () => { bdFail[url] = 1; };
-      img.src = url;
+    // file:// 打开时浏览器不让把本地图片当贴图用（跨域），就用程序画的背景
+    const canLoad = url => !!url && !bdFail[url] && !(location.protocol === 'file:' && !/^(data:|blob:)/.test(url));
+    // 载一张图。能行的话走 fetch → createImageBitmap：浏览器在后台线程把图解码成位图，主线程不用停下来等
+    // （直接用 <img> 的话，第一次用到它的那一帧在主线程上解码：一张远景画取颜色解一次、传给显卡又解一次，各要几十毫秒）。
+    // 位图要自己先上下翻好——three.js 贴图的 flipY 对位图不起作用，见 imgTex。不行（老浏览器、fetch 失败）就退回 <img>
+    function loadImg(url, ok, fail) {
+      if (!canLoad(url)) return;
+      const viaImg = () => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => ok(img);
+        img.onerror = () => { bdFail[url] = 1; if (fail) fail(); };
+        img.src = url;
+      };
+      if (!window.createImageBitmap || !window.fetch) { viaImg(); return; }
+      fetch(url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+        .then(b => createImageBitmap(b, { imageOrientation: 'flipY', premultiplyAlpha: 'none' }))
+        .then(ok, viaImg);
     }
-    const imgTex = img => { const tx = new T3.Texture(img); tx.colorSpace = T3.SRGBColorSpace; tx.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 1); tx.needsUpdate = true; return tx; };
-    // 取画里一块区域的平均颜色（u0..u1、v0..v1 是 0–1 的比例，v 从上往下）
-    function avgColor(img, u0, u1, v0, v1) {
+    const isBitmap = x => typeof ImageBitmap !== 'undefined' && x instanceof ImageBitmap;
+    // 位图（loadImg 给的）已经自己上下翻好了，贴图就不用再翻
+    const imgTex = img => { const tx = new T3.Texture(img); tx.colorSpace = T3.SRGBColorSpace; tx.anisotropy = ANISO; if (isBitmap(img)) tx.flipY = false; tx.needsUpdate = true; return tx; };
+    // 释放贴图；位图占的内存也马上还掉
+    const dropTex = tx => { if (!tx) return; const im = tx.image; tx.dispose(); if (isBitmap(im)) { try { im.close(); } catch (e) { /* 忽略 */ } } };
+    // 把画缩成 64×64、读出像素（一张画只缩一次，后面取几块的平均色都用这一份；以前每取一块就缩一次）
+    function imgPixels(img) {
       try {
         const c = document.createElement('canvas'); c.width = 64; c.height = 64;
-        const g = c.getContext('2d'); g.drawImage(img, 0, 0, 64, 64);
-        const d = g.getImageData(Math.floor(u0 * 64), Math.floor(v0 * 64), Math.max(1, Math.round((u1 - u0) * 64)), Math.max(1, Math.round((v1 - v0) * 64))).data;
-        let r = 0, gg = 0, b = 0; for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; }
-        const n = d.length / 4; return new T3.Color().setRGB(r / n / 255, gg / n / 255, b / n / 255, T3.SRGBColorSpace);
+        const g = c.getContext('2d', { willReadFrequently: true });
+        if (isBitmap(img)) { g.translate(0, 64); g.scale(1, -1); }   // 位图是上下翻过的，翻回来再读
+        g.drawImage(img, 0, 0, 64, 64);
+        return g.getImageData(0, 0, 64, 64).data;
       } catch (e) { return null; }
     }
+    // 取画里一块区域的平均颜色（u0..u1、v0..v1 是 0–1 的比例，v 从上往下）；px = imgPixels(画)
+    function avgColor(px, u0, u1, v0, v1) {
+      if (!px) return null;
+      const x0 = Math.floor(u0 * 64), y0 = Math.floor(v0 * 64), w = Math.max(1, Math.round((u1 - u0) * 64)), h = Math.max(1, Math.round((v1 - v0) * 64));
+      let r = 0, gg = 0, b = 0;
+      for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) { if (x < 0 || y < 0 || x > 63 || y > 63) continue; const i = (y * 64 + x) * 4; r += px[i]; gg += px[i + 1]; b += px[i + 2]; }
+      const n = w * h; return new T3.Color().setRGB(r / n / 255, gg / n / 255, b / n / 255, T3.SRGBColorSpace);
+    }
     // 按默认机位算圆柱的高低和大小（CAM 变了要重算）
-    function backdropMesh(tx, hz, lm, fv) {
+    function backdropGeo(hz, lm, fv) {
       const dir = CAM.look.clone().sub(CAM.pos).normalize(), pitch = Math.asin(dir.y);
       const hd = V(dir.x, 0, dir.z).normalize(), a0 = Math.atan2(hd.x, hd.z);
       // 从默认机位水平往前，到圆柱的距离
@@ -484,26 +573,40 @@ void main() {
       geo.setAttribute('uv', new T3.Float32BufferAttribute(uv, 2));
       geo.setAttribute('color', new T3.Float32BufferAttribute(col, 4));
       geo.setIndex(idx);
-      // 放在不透明队列里、紧跟地面画：不测深度；混合用 5 = CustomBlending（默认参数就是 SrcAlpha / OneMinusSrcAlpha），
-      // 这样 3D 地面在它下面、台子和怪兽在它上面
+      return geo;
+    }
+    // 远景画的材质：放在不透明队列里、紧跟地面画，不测深度；混合用 5 = CustomBlending（默认参数就是 SrcAlpha / OneMinusSrcAlpha），
+    // 这样 3D 地面在它下面、台子和怪兽在它上面
+    function backdropMat(tx) {
       const mat = new T3.MeshBasicMaterial({ map: tx, vertexColors: true, depthTest: false, depthWrite: false, fog: false, side: T3.DoubleSide });
       mat.blending = 5;
-      const mesh = new T3.Mesh(geo, mat);
+      return mat;
+    }
+    // bd = { tx, mat, mesh, fv, hz, lm }
+    function backdropObj(bd) {
+      const mesh = new T3.Mesh(backdropGeo(bd.hz, bd.lm, bd.fv), bd.mat);
       mesh.renderOrder = -1; mesh.frustumCulled = false; mesh.userData.backdrop = true;
       return mesh;
     }
     function placeBackdrop() {
       if (!bdCur) return;
-      if (bdCur.mesh) { env.remove(bdCur.mesh); bdCur.mesh.geometry.dispose(); bdCur.mesh.material.dispose(); }
-      bdCur.mesh = backdropMesh(bdCur.tx, bdCur.hz, bdCur.lm, bdCur.fv);
-      env.add(bdCur.mesh);
+      if (!bdCur.mesh) bdCur.mesh = backdropObj(bdCur);
+      else { bdCur.mesh.geometry.dispose(); bdCur.mesh.geometry = backdropGeo(bdCur.hz, bdCur.lm, bdCur.fv); }   // 机位变了：只换几何体，材质（连同编译好的着色器）留着
+      if (bdCur.mesh.parent !== env) env.add(bdCur.mesh);
+      kick();
     }
     // 朝上的 3D 地面被半球光 + 太阳照着，颜色会偏一点（实测线性空间里约 ×0.96 / ×0.95 / ×0.87），反过来除掉，和画里的平地一个颜色
     const GROUND_L = [.964, .947, .865];
+    // 把场地清掉（换场地、战斗结束）：远景画、地面、小山和云、天空的贴图都释放
+    function clearEnv() {
+      envTok++;
+      if (bdCur) { if (bdCur.mesh && !bdCur.mesh.parent) { bdCur.mesh.geometry.dispose(); bdCur.mat.dispose(); } dropTex(bdCur.tx); bdCur = null; }
+      while (env.children.length) { const o = env.children.pop(); o.traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material) { dropTex(q.material.map); q.material.dispose(); } }); }
+      drifters = [];
+    }
     function setEnv(theme) {
-      const tok = ++envTok;
-      if (bdCur) { bdCur.tx.dispose(); bdCur = null; }
-      while (env.children.length) { const o = env.children.pop(); o.traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material) { if (q.material.map) q.material.map.dispose(); q.material.dispose(); } }); }
+      clearEnv();
+      const tok = envTok;
       const t = Object.assign({ sky1: '#7fc8f8', sky2: '#e8f7ff', ground: '#8fd16a', hill: '#6fbf5a', pad: '#c8e6a0', rim: '#7aa85a' }, theme || {});
       const skyTex = (c1, c2) => {
         const sky = document.createElement('canvas'); sky.width = 4; sky.height = 256;
@@ -513,7 +616,12 @@ void main() {
         const st = new T3.CanvasTexture(sky); st.colorSpace = T3.SRGBColorSpace; scene.background = st;
       };
       skyTex(t.sky1, t.sky2);
-      scene.fog = new T3.Fog(t.sky2, 14, 34);
+      // 有远景画的场地不要雾（画自己有空气感；3D 地面远处被画盖住）。以前先开着雾、等画载完再关：雾一开一关，场景里带雾的材质（地面、怪兽、水波）
+      // 全要换一套着色器程序——开场画一出来就卡一下，预热时编译好的特效程序也白编了（之后新建的材质又得现编译）。
+      // 现在一开始就按「会不会有远景画」定好；画载不到（很少见）再把雾加回来，预热重做一遍
+      const bdUrl = t.backdrop ? assetUrl(t.backdrop) : '', hadFog = !!scene.fog;
+      scene.fog = canLoad(bdUrl) ? null : new T3.Fog(t.sky2, 14, 34);
+      if (warmed && hadFog !== !!scene.fog) warmed = false;
       const gMat = new T3.MeshLambertMaterial({ color: t.ground });
       const ground = new T3.Mesh(new T3.PlaneGeometry(160, 160).rotateX(-Math.PI / 2), gMat);
       ground.receiveShadow = true; ground.renderOrder = -2; env.add(ground);
@@ -522,32 +630,54 @@ void main() {
         if (tok !== envTok) return;
         const tx = imgTex(img); tx.wrapS = tx.wrapT = T3.RepeatWrapping; tx.repeat.set(t.groundRepeat || 14, t.groundRepeat || 14);
         gMat.map = tx; gMat.color.set('#ffffff'); gMat.needsUpdate = true;
+        kick();
       });
-      // 远处的小山和云（有远景画时藏起来）
-      const proc = [];
+      // 远处的小山和云（有远景画时藏起来）。小山按颜色并成两个网格，每朵云的三个球并成一个（五朵云共用一份几何体和材质）：
+      // 以前 7 座山 + 15 个球是 22 个网格、22 个材质，每帧多画 22 次；现在 7 次，画出来一样
+      const proc = [], hills = [[], []];
       for (let i = 0; i < 7; i++) {
-        const h = new T3.Mesh(new T3.SphereGeometry(3 + (i % 3), 16, 10), new T3.MeshLambertMaterial({ color: i % 2 ? t.hill : new T3.Color(t.hill).offsetHSL(0, 0, .06) }));
-        h.scale.set(1.4, .55, 1); h.position.set(-12 + i * 4.5, -.4, -14 - (i % 2) * 3); env.add(h); proc.push(h);
+        const g = new T3.SphereGeometry(3 + (i % 3), 16, 10);
+        g.applyMatrix4(new T3.Matrix4().compose(V(-12 + i * 4.5, -.4, -14 - (i % 2) * 3), new T3.Quaternion(), V(1.4, .55, 1)));
+        hills[i % 2].push(g);
       }
+      hills.forEach((gs, k) => {
+        const h = new T3.Mesh(T3.mergeGeometries(gs), new T3.MeshLambertMaterial({ color: k ? t.hill : new T3.Color(t.hill).offsetHSL(0, 0, .06) }));
+        gs.forEach(g => g.dispose());
+        env.add(h); proc.push(h);
+      });
+      const cloudG = T3.mergeGeometries([[0, 0, .8], [.8, .1, .6], [-.7, .05, .55]].map(([x, y, r]) => new T3.SphereGeometry(r, 12, 8).translate(x, y, 0)));
+      const cloudM = new T3.MeshBasicMaterial({ color: '#ffffff' });
       for (let i = 0; i < 5; i++) {
-        const cl = new T3.Group();
-        [[0, 0, .8], [.8, .1, .6], [-.7, .05, .55]].forEach(([x, y, r]) => { const s = new T3.Mesh(new T3.SphereGeometry(r, 12, 8), new T3.MeshBasicMaterial({ color: '#ffffff' })); s.position.set(x, y, 0); cl.add(s); });
+        const cl = new T3.Mesh(cloudG, cloudM);
         cl.position.set(-9 + i * 5, 6 + (i % 2), -18); cl.userData.drift = .2 + i * .05; env.add(cl); proc.push(cl);
       }
-      if (t.backdrop) loadImg(assetUrl(t.backdrop), img => {
-        if (tok !== envTok) return;   // 已经换了场地
+      drifters = proc.filter(o => o.userData.drift);
+      kick();
+      if (t.backdrop) loadImg(bdUrl, img => {
+        if (tok !== envTok || !alive) { if (isBitmap(img)) img.close(); return; }   // 已经换了场地
         // bdFloor：画里空地从多高开始（0–1，从上往下量）；地平线默认在它上面一点
-        const fv = t.bdFloor || BD.FLOOR;
-        bdCur = { tx: imgTex(img), fv, hz: t.horizon || fv - .06, lm: t.landmark || BD.LM };
-        placeBackdrop();
-        proc.forEach(o => { o.visible = false; });
-        // 3D 地面：用画里平地那一块的平均色（theme.floor 可以强行指定）；天空：画最上面一条的颜色，镜头抬高时接得上
-        const gc = t.floor ? new T3.Color(t.floor) : avgColor(img, .3, .7, fv + .05, Math.min(.98, fv + .22));
-        if (gc && !t.groundTex) gMat.color.setRGB(gc.r / GROUND_L[0], gc.g / GROUND_L[1], gc.b / GROUND_L[2]);
-        const top = avgColor(img, .2, .8, 0, .04);
-        if (top) { const hx = '#' + top.getHexString(); skyTex(hx, hx); }
-        scene.fog = null;   // 画自己有空气感；3D 地面远处被画盖住，不用雾
-      });
+        const fv = t.bdFloor || BD.FLOOR, tx = imgTex(img), px = imgPixels(img);
+        const bd = { tx, mat: backdropMat(tx), mesh: null, fv, hz: t.horizon || fv - .06, lm: t.landmark || BD.LM };
+        const show = () => {
+          if (tok !== envTok || !alive) { if (bd.mesh) bd.mesh.geometry.dispose(); bd.mat.dispose(); dropTex(tx); return; }
+          bdCur = bd;
+          placeBackdrop();
+          proc.forEach(o => { o.visible = false; });
+          // 3D 地面：用画里平地那一块的平均色（theme.floor 可以强行指定）；天空：画最上面一条的颜色，镜头抬高时接得上
+          const gc = t.floor ? new T3.Color(t.floor) : avgColor(px, .3, .7, fv + .05, Math.min(.98, fv + .22));
+          if (gc && !t.groundTex) gMat.color.setRGB(gc.r / GROUND_L[0], gc.g / GROUND_L[1], gc.b / GROUND_L[2]);
+          const top = avgColor(px, .2, .8, 0, .04);
+          if (top) { const hx = '#' + top.getHexString(); skyTex(hx, hx); }
+        };
+        // 画先传给显卡、它的着色器在后台编译好（最多等 0.8 秒），再换上去：不然画一出来的那一帧要停下来等这两样（手机速度 200 毫秒上下）
+        try {
+          renderer.initTexture(tx);
+          bd.mesh = backdropObj(bd);
+          const p = compileA(bd.mesh, cam, scene);
+          if (p) { Promise.race([p, sleep(800)]).then(show, show); return; }
+        } catch (e) { /* 不行就直接换上 */ }
+        show();
+      }, () => { if (tok === envTok && !scene.fog) { scene.fog = new T3.Fog(t.sky2, 14, 34); warmed = false; kick(); } });
       // 没有台子：怪兽脚下是它属性颜色的一圈圈水波（setMon 里按怪兽加，见 ripples）
       env.userData.t = t;
     }
@@ -563,6 +693,7 @@ void main() {
       if (RIP[side]) { scene.remove(RIP[side]); RIP[side].traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material) q.material.dispose(); }); RIP[side] = null; }
       const T = window.DEX && DEX.TYPES, col = (T && sp && sp.types && T[sp.types[0]] && T[sp.types[0]].color) || '#7aa85a';
       const g = new T3.Group(); g.position.copy(POS[side]).setY(.025);
+      g.userData.noFx = true;
       for (let i = 0; i < 3; i++) {
         const ring = new T3.Mesh(new T3.TorusGeometry(1, .035, 6, 56).rotateX(Math.PI / 2), new T3.MeshBasicMaterial({ color: col, transparent: true, opacity: .5, depthWrite: false }));
         ring.userData.k = i / 3; ring.renderOrder = 1; g.add(ring);
@@ -570,22 +701,38 @@ void main() {
       RIP[side] = g; scene.add(g);
     }
     function ripplesStep(now) {
-      ['me', 'foe'].forEach(side => {
-        const g = RIP[side]; if (!g) return;
+      for (let i = 0; i < 2; i++) {
+        const side = SIDES[i], g = RIP[side]; if (!g) continue;
         const m = M[side]; g.visible = !!(m && !m.gone && m.R.root.visible);
-        g.children.forEach(r => { const k = (now / 2400 + r.userData.k) % 1; const s = .45 + k * .85; r.scale.set(s, 1, s); r.material.opacity = .55 * (1 - k) * (k < .12 ? k / .12 : 1); });
-      });
+        if (!g.visible) continue;
+        const rs = g.children;
+        for (let j = 0; j < rs.length; j++) { const r = rs[j], k = (now / 2400 + r.userData.k) % 1, s = .45 + k * .85; r.scale.set(s, 1, s); r.material.opacity = .55 * (1 - k) * (k < .12 ? k / .12 : 1); }
+      }
     }
     function setMon(side, sp, hidden) {
-      if (M[side]) { scene.remove(M[side].R.root); Mon3D.dispose(M[side].R); }
-      const R = Mon3D.build(sp, { unique: true });
+      if (!alive) return null;   // 战斗已经结束了（晚到的调用）
+      if (M[side]) dropMon(M[side]);
+      const R = Mon3D.build(sp, { unique: true }), occ = [];
       R.root.traverse(o => {
         if (!o.isMesh) return;
         o.castShadow = true;
         if (o.material && o.material.isMeshToonMaterial && !o.material.userData.own) o.material = o.material.clone();
-        if (o.material && o.material.userData.sprite) o.castShadow = false;
-        else o.layers.enable(2);   // 发光后期里当遮挡（怪兽身后的光被挡住）
+        const mt = o.material;
+        // 会动的模型：three.js 第一次画蒙皮网格时，要把每个顶点按骨骼算一遍来求包围球（只用来给物件排先后），出场那一帧白花十几到几十毫秒；
+        // 直接用模型自己（绑骨骼时的姿势）的包围球
+        if (o.isSkinnedMesh && o.boundingSphere === null && o.geometry) { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); o.boundingSphere = o.geometry.boundingSphere.clone(); }
+        if (mt && mt.userData.sprite) o.castShadow = false;
+        // 描边（只画背面的那一层）：和身子是同一个形状、同一副骨架——阴影贴图、发光后期的遮挡里它画出来和身子完全重合
+        // （那两遍不用描边自己的着色器，不会往外推），所以不投影子、也不当遮挡：每帧少画一半的怪兽网格，画面一样
+        else if (mt && mt.side === T3.BackSide) o.castShadow = false;
+        else {
+          o.layers.enable(2); occ.push(o);   // 发光后期里当遮挡（怪兽身后的光被挡住）
+          // 贴在脸上的眼睛、嘴（带透明度裁剪的贴图）：影子落在头的影子里面，看不出来；让它投影子的话，three.js 要给每张贴图单独配一个
+          // 深度材质，嘴第一次张开（第一次放招）的那一帧还得现编译一个着色器
+          if (mt && mt.map && mt.alphaTest > 0) o.castShadow = false;
+        }
       });
+      R.root.userData.noFx = true;
       const P = POS[side];
       R.root.position.copy(P);
       const yaw = yawOf(side);
@@ -595,13 +742,102 @@ void main() {
       R.baseScale = R.root.scale.x;
       scene.add(R.root);
       // tintCol / tintV：kit.aura 给怪兽身上加的属性色（自发光），每帧和受击闪白一起算；spin：大招特殊动作的原地转身（弧度，叠加在朝向上）
-      M[side] = { R, sp, off: V(0, 0, 0), flash: 0, talk: 0, gone: !!hidden, yaw, turn: TURN[side], spin: 0, tintCol: C('#ffffff'), tintV: 0, tinted: false };
+      // occ：发光后期里要换成黑色材质当遮挡的网格（见 swapOn）
+      M[side] = { R, sp, off: V(0, 0, 0), flash: 0, talk: 0, gone: !!hidden, yaw, turn: TURN[side], spin: 0, tintCol: C('#ffffff'), tintV: 0, tinted: false, occ };
       M[side].mats = mats(side);
       R.root.visible = !hidden;
       ripples(side, sp);
+      // 它的着色器现在就开始在后台编译；还藏着的（等 enter() 出场的）编译完再缩得很小预画几帧——enter() 等这些做完才让它出来。
+      // 没有编译出新程序（上一只同类的、上一场战斗已经编译过）就不用等、不用预画；另一只刚开始编译同一批程序的，跟着它一起等
+      const mm = M[side], n0 = (renderer.info.programs || []).length, comp = monCompile(mm), fresh = (renderer.info.programs || []).length > n0;
+      if (hidden && fresh) {
+        const p = Promise.race([comp || Promise.resolve(), sleep(MON_WAIT)]).then(() => monPredraw(mm)).catch(e => warn('预画怪兽出错', e)).then(() => { if (PREP === p) PREP = null; });
+        mm.ready = PREP = p;
+      } else if (hidden && PREP) mm.ready = PREP;
+      kick();
       return M[side];
     }
     const mats = side => { const a = []; M[side].R.root.traverse(o => { if (o.isMesh && o.material && (o.material.isMeshToonMaterial || o.material.userData.sprite)) a.push(o.material); }); return a; };
+    // 把一只怪兽从场景里拿掉、释放。会动的模型每一只有自己的骨骼贴图（Mon3D.dispose 不管它），也在这里释放——
+    // 渲染器现在一直留着，不释放的话每换一只怪兽就在显存里多留一张
+    function dropMon(m) {
+      scene.remove(m.R.root);
+      m.R.root.traverse(o => { if (o.isSkinnedMesh && o.skeleton && o.skeleton.dispose) o.skeleton.dispose(); });
+      Mon3D.dispose(m.R);
+    }
+    // ---------- 怪兽自己的着色器：出场之前让显卡在后台编译 ----------
+    // 一种怪兽模型第一次出现要好几个新程序：它自己的材质（会动的模型是蒙皮 + 贴图的卡通材质和描边）、投影子用的深度材质、高画质发光后期里当遮挡的黑色材质。
+    // 以前是它出场、第一次被画到的那一帧现编译——整个画面停 0.3–0.5 秒（手机速度），正好是怪兽蹦出来的那一下。
+    // 现在 setMon 时（怪兽还藏着）就用 compileAsync 开始编译（显卡驱动在后台线程做），enter() 等它编译完（最多 MON_WAIT 毫秒）再让怪兽出来：
+    // 这段时间镜头照常走，不卡。程序按参数共用：同一类模型的第二只（比如双方都是会动的模型）不用再编译，一帧都不用等
+    const MON_WAIT = 700, DEPTHW = {};   // DEPTHW：和 three.js 画影子用的深度材质参数一样的几份，只用来预编译
+    let PREP = null;                     // 正在给某只怪兽编译 + 预画的那个 Promise（同时换上来的另一只跟着等）
+    let RT1 = null, noTex = null;        // 预编译时用的 1×1 离屏缓冲、占位贴图（只为了让参数对得上，不会真的画）
+    // 「替身」：照着网格 o 造一个只换了材质的影子对象交给 compileAsync（不动真的网格，也不带它的子物件）
+    const standIn = (o, mat) => { const p = Object.create(o); p.material = mat; p.traverse = function (f) { f(this); }; p.traverseVisible = p.traverse; return p; };
+    function monCompile(m) {
+      if (GL.lost) return null;
+      const root = m.R.root, vis = root.visible, jobs = [], seen = {};
+      try {
+        root.visible = true;
+        jobs.push(compileA(root, cam, scene));   // 画到屏幕上的那一份
+        if (!RT1) { RT1 = new T3.WebGLRenderTarget(1, 1); noTex = new T3.Texture(); }
+        renderer.setRenderTarget(BL ? BL.a : RT1);
+        try {
+          // 高画质：发光后期里当遮挡的黑色材质（画进离屏缓冲的那一份）
+          if (BL) m.occ.forEach(o => { const k = o.isSkinnedMesh ? 'os' : 'om'; if (!seen[k]) { seen[k] = 1; jobs.push(compileA(standIn(o, o.isSkinnedMesh ? BL.occS : BL.occ), cam, scene)); } });
+          // 投影子的深度材质：画进阴影贴图（离屏缓冲、没有雾、正面的材质画背面）
+          if (renderer.shadowMap.enabled) {
+            const fog = scene.fog; scene.fog = null;
+            try {
+              m.occ.forEach(o => {
+                const mt = o.material;
+                if (!o.castShadow || !mt) return;
+                const k = (o.isSkinnedMesh ? 'ds' : 'dm') + (mt.map ? 'u' + (mt.map.channel || 0) : '') + mt.side;
+                if (seen[k]) return;
+                seen[k] = 1;
+                let d = DEPTHW[k];
+                if (!d) { d = DEPTHW[k] = new T3.MeshDepthMaterial(); d.map = mt.map ? noTex : null; if (mt.map) noTex.channel = mt.map.channel || 0; d.side = mt.side === T3.FrontSide ? T3.BackSide : mt.side === T3.BackSide ? T3.FrontSide : T3.DoubleSide; }
+                jobs.push(compileA(standIn(o, d), cam, scene));
+              });
+            } finally { scene.fog = fog; }
+          }
+        } finally { renderer.setRenderTarget(null); }
+      } catch (e) { warn('预编译怪兽的着色器出错', e); }
+      root.visible = vis;
+      return Promise.all(jobs).then(() => {}, () => {});
+    }
+    // 着色器编译好了还不算完：显卡驱动「第一次真的用它画」时还要再做一部分工作，一帧里接连第一次用好几个着色器，主线程就得停下来等
+    // （会动的模型出场那一帧约 150 毫秒，手机速度）；隔一帧用一个就不用等。所以怪兽出场前把它缩成千分之一大小（看不见）真的画几帧：
+    // 按材质种类一帧亮出一组 → 再让它投影子（深度材质）→ 高画质再跑一帧发光后期（黑色遮挡材质）。做完恢复原样、接着藏好
+    async function monPredraw(m) {
+      const root = m.R.root, meshes = [];
+      root.traverse(o => { if (o.isMesh) meshes.push(o); });
+      if (!alive || !m.gone || root.visible || !meshes.length || (M.me !== m && M.foe !== m)) return;
+      const vis = meshes.map(o => o.visible), cast = meshes.map(o => o.castShadow), groups = [], byKey = {};
+      const live = () => alive && m.gone && (M.me === m || M.foe === m);
+      meshes.forEach((o, i) => {
+        if (!vis[i]) return;
+        const mt = o.material || {}, k = [mt.type, mt.side, !!mt.map, !!mt.transparent, mt.alphaTest > 0, !!o.isSkinnedMesh].join('|');
+        if (!byKey[k]) groups.push(byKey[k] = []);
+        byKey[k].push(o);
+      });
+      try {
+        root.scale.setScalar(m.R.baseScale * .001);
+        meshes.forEach(o => { o.visible = false; o.castShadow = false; });
+        root.visible = true;
+        for (let i = 0; i < groups.length && i < 8 && live(); i++) { groups[i].forEach(o => { o.visible = true; }); await drawn(2); }
+        if (live()) { meshes.forEach((o, i) => { o.visible = vis[i]; o.castShadow = cast[i]; }); await drawn(2); }
+        if (live() && BL) { preBloom = 1; await drawn(1); }
+      } finally {
+        meshes.forEach((o, i) => { o.visible = vis[i]; o.castShadow = cast[i]; });
+        if (m.gone) { root.visible = false; root.scale.setScalar(m.R.baseScale); }
+      }
+    }
+    // 等画完 n 帧（画面没显示出来时按逻辑走了几步算，不会一直等下去）；destroy 时都当等到了
+    const DR = [];
+    const drawn = n => new Promise(res => { DR.push({ n, res }); });
+    let preBloom = 0;   // 接下来这一帧强制跑一遍发光后期（monPredraw 用）
 
     // ---------- 共用的几何体和材质：特效反复用同一份，不每次 new（FX_SPEC §3、§7） ----------
     // geo(key, make)：按名字缓存的几何体（userData.shared，特效到期不释放，destroy 时才释放）
@@ -617,6 +853,33 @@ void main() {
       return m;
     }
     function poolPut(m) { const p = MP[m.userData.pool]; if (p && !m.userData.free) { m.userData.free = true; p.free.push(m); } }
+    // 发光后期用的「替身材质」（只有高画质有发光后期）：three.js 的着色器程序按「画到屏幕（sRGB）还是画进离屏缓冲（线性）」分两份，
+    // 同一个材质一帧里先画到屏幕、再画进发光后期的缓冲，每换一次都要重新找一遍程序（拼一张一百多项的参数表 + 一长串缓存键）——
+    // 特效一多，这是每帧最大的一笔开销。所以特效材质各配一个替身，只在画发光后期那一遍时换上（swapOn / swapOff）：
+    // 着色器材质的替身和原件共用同一份 uniforms（不用同步）；内置材质（池子里的发光 / 卡通材质）每帧抄一下颜色、透明度。
+    // 别的材质（比如回声球上的珠子）没有替身，照旧让 three.js 自己换程序
+    const TW = new WeakMap(), TWINS = [];
+    function twinOf(m) {
+      let t = TW.get(m);
+      if (t === undefined) {
+        t = null;
+        if (m.isShaderMaterial) t = new T3.ShaderMaterial({ uniforms: m.uniforms, vertexShader: m.vertexShader, fragmentShader: m.fragmentShader });
+        else if (m.userData.pool && m.isMeshBasicMaterial) t = new T3.MeshBasicMaterial();
+        else if (m.userData.pool && m.isMeshToonMaterial) t = new T3.MeshToonMaterial();
+        if (t) {
+          t.transparent = m.transparent; t.side = m.side; t.forceSinglePass = m.forceSinglePass; t.premultipliedAlpha = m.premultipliedAlpha;
+          t.polygonOffset = m.polygonOffset; t.polygonOffsetFactor = m.polygonOffsetFactor; t.polygonOffsetUnits = m.polygonOffsetUnits;
+          TWINS.push(t);
+        }
+        TW.set(m, t);
+      }
+      if (!t) return null;
+      if (!m.isShaderMaterial) { t.color.copy(m.color); if (t.emissive) t.emissive.copy(m.emissive); }
+      t.opacity = m.opacity; t.blending = m.blending; t.depthTest = m.depthTest; t.depthWrite = m.depthWrite; t.visible = m.visible;
+      return t;
+    }
+    // 原件被释放时把替身也释放掉（池子里的材质不会走到这里，它们的替身留到 destroy）
+    function dropTwin(m) { const t = TW.get(m); if (t) { t.dispose(); const i = TWINS.indexOf(t); if (i >= 0) TWINS.splice(i, 1); } TW.delete(m); }
     // 发光材质（add：叠加混合，越叠越亮；暗颜色叠加看不见，还用普通混合）
     function glowMat(col, op, add) {
       const m = poolGet('basic', () => new T3.MeshBasicMaterial({ transparent: true, depthWrite: false }));
@@ -628,7 +891,8 @@ void main() {
     function toonMat(col, o) {
       o = o || {};
       const dbl = o.side === T3.DoubleSide, tr = !!o.transparent || o.opacity != null;
-      const m = poolGet('toon' + (tr ? 't' : '') + (dbl ? 'd' : ''), () => new T3.MeshToonMaterial({ transparent: tr, side: dbl ? T3.DoubleSide : T3.FrontSide }));
+      // forceSinglePass：双面的透明材质一遍画完（见 FXMAT 的说明）。双面的卡通材质只用在平的薄片上（叶子、花瓣、羽毛），一遍画和两遍画出来一样
+      const m = poolGet('toon' + (tr ? 't' : '') + (dbl ? 'd' : ''), () => new T3.MeshToonMaterial({ transparent: tr, side: dbl ? T3.DoubleSide : T3.FrontSide, forceSinglePass: true }));
       m.color.set(col == null ? '#ffffff' : col); m.opacity = o.opacity == null ? 1 : o.opacity; m.emissive.set(o.emissive || '#000000');
       return m;
     }
@@ -644,7 +908,7 @@ void main() {
         const g = o.geometry;
         if (g && !g.userData.shared) { if (g.userData.rib) ribPut(g); else g.dispose(); }
         const ms = o.material;
-        if (ms) (Array.isArray(ms) ? ms : [ms]).forEach(m => { if (m.userData.pool) poolPut(m); else m.dispose(); });
+        if (ms) (Array.isArray(ms) ? ms : [ms]).forEach(m => { if (m.userData.pool) poolPut(m); else { m.dispose(); dropTwin(m); } });
         if (o.children.length) o.children.slice().forEach(walk);
       };
       walk(obj);
@@ -689,6 +953,9 @@ void main() {
       [['position', P.pos, 3], ['color', P.col, 3], ['size', P.size, 1], ['alpha', P.alpha, 1], ['tex', P.tex, 1], ['rot', P.rot, 1], ['cover', P.cover, 1]].forEach(([k, arr, n]) => g.setAttribute(k, new T3.BufferAttribute(arr, n)));
       P.mat = new T3.ShaderMaterial({ uniforms: pUni, vertexShader: P_VS, fragmentShader: P_FS, transparent: true, depthWrite: false, blending: T3.NormalBlending, premultipliedAlpha: true });
       const pts = new T3.Points(g, P.mat); pts.frustumCulled = false; pts.layers.enable(1); scene.add(pts);
+      // 没有粒子的时候整个不画（省掉每帧给它找程序、绑缓冲的开销）；warm：预热时空画几帧，把着色器「第一次使用」的开销先付掉
+      pts.visible = false; P.pts = pts; P.warm = 0;
+      P.attrs = ['position', 'color', 'size', 'alpha', 'tex', 'rot', 'cover'].map(k => g.attributes[k]);
       return P;
     })();
     let pCount = 0;
@@ -697,6 +964,7 @@ void main() {
     //      cover（0 叠加发光 … 1 普通颜色；不写按颜色深浅）, blend（老写法：'add' = cover 0，'normal' = cover 1）, alpha }
     // n 按画质自动缩减（高 1 / 中 .7 / 低 .45），总数到上限就不再加
     function emit(n, fn) {
+      if (!alive) return;
       n = n > 0 ? Math.max(1, Math.round(n * QS.pmul)) : 0;
       for (let i = 0; i < n && pCount < MAXP; i++) {
         const p = fn(i); if (!p) continue;
@@ -719,6 +987,19 @@ void main() {
       const n = parts.length;
       pCount = n;
       if (n > stats.peak) stats.peak = n;
+      if (P.warm > 0) P.warm--;
+      P.pts.visible = n > 0 || P.warm > 0;
+      if (!n && P.warm > 0) {
+        // 预热：真的画一颗看不见的粒子（全透明、在地面下面）。一颗都不画的话显卡驱动不会真的为它编译，第一次有粒子的那一帧显卡还是要停一下
+        if (!P.dummy) {
+          P.dummy = true;
+          P.pos[0] = 0; P.pos[1] = -5; P.pos[2] = 0; P.size[0] = .01; P.alpha[0] = 0; P.tex[0] = 0; P.rot[0] = 0; P.cover[0] = 0;
+          P.geo.setDrawRange(0, 1);
+          for (let i = 0; i < P.attrs.length; i++) { const a = P.attrs[i]; a.clearUpdateRanges(); a.addUpdateRange(0, a.itemSize); a.needsUpdate = true; }
+        }
+        return;
+      }
+      if (P.dummy) { P.dummy = false; if (!n) P.geo.setDrawRange(0, 0); }
       if (!n && !P.n) return;
       for (let i = 0; i < n; i++) {
         const p = parts[i], k = p.t / p.life, i3 = i * 3, fd = Math.min(.99, p.fade || 0);
@@ -730,8 +1011,8 @@ void main() {
       }
       P.n = n;
       P.geo.setDrawRange(0, n);
-      const at = P.geo.attributes;
-      at.position.needsUpdate = at.color.needsUpdate = at.size.needsUpdate = at.alpha.needsUpdate = at.tex.needsUpdate = at.rot.needsUpdate = at.cover.needsUpdate = true;
+      // 只把用到的那一段传给显卡（缓冲是按粒子上限开的：高画质 2000 颗，平时只有几十到几百颗）
+      if (n) for (let i = 0; i < P.attrs.length; i++) { const a = P.attrs[i]; a.clearUpdateRanges(); a.addUpdateRange(0, n * a.itemSize); a.needsUpdate = true; }
     }
     // 一团粒子炸开 / 从脚下往上飘
     function burst(at, cols, n, speed, size, life, grav) {
@@ -745,6 +1026,7 @@ void main() {
     // addFx(obj, life 秒, update(obj, k 0–1, dt), end)：到期自动移走、释放；update 返回 true 表示提前结束
     const fx = [];
     function addFxE(obj, life, update, end) {
+      if (!alive) { obj.removeFromParent(); releaseObj(obj); return { obj, t: 0, life: 1, update: null, end: null, done: true }; }   // 战斗已经结束了：不放进场景，材质还回池子
       fxLayer(obj);
       if (!obj.parent) scene.add(obj);
       const f = { obj, t: 0, life: Math.max(.001, life || .5), update, end };
@@ -815,7 +1097,9 @@ void main() {
     const UT = { value: 0 };   // 特效着色器公用的时间（秒，跟着 slowmo 放慢）
     // cover（见 NOISE 后面 fxOut 的说明）：给了就用；暗颜色用 .9（叠加看不见）；否则用这个工具自己的默认值
     const coverOf = (o, col, def) => o && o.cover != null ? o.cover : lum(col) < DIM ? .9 : def;
-    const FXMAT = { transparent: true, depthWrite: false, side: T3.DoubleSide, blending: T3.NormalBlending, premultipliedAlpha: true };
+    // forceSinglePass：正反两面一遍画完。three.js 默认把「双面 + 透明」的材质拆成背面、正面画两遍，每一遍还把材质标成「改过了」重新找一次着色器程序
+    // （一个特效物件一帧 2 次绘制 + 2 次找程序，高画质发光后期再翻一倍）。这里的方片、光束、带子都只有一层（没有前后两面叠在一起），一遍画出来完全一样
+    const FXMAT = { transparent: true, depthWrite: false, side: T3.DoubleSide, blending: T3.NormalBlending, premultipliedAlpha: true, forceSinglePass: true };
     function quadMat(kind) {
       const m = poolGet('q:' + kind, () => {
         const mt = new T3.ShaderMaterial(Object.assign({
@@ -898,12 +1182,13 @@ void main() {
       const at = g.attributes; at.position.needsUpdate = at.aUv.needsUpdate = at.aI.needsUpdate = true; g.index.needsUpdate = true;
     }
 
+    const beamGeo = () => geo('beamq', () => new T3.PlaneGeometry(1, 1, 1, 24).translate(0, .5, 0));
     // 着色器光束 a → b：{ col, col2, width, life, taper（两头收细的长度比例）, noise（滚动噪声强弱）, grow（伸出去用的时间比例）, opacity }
     // 返回网格；要跟着动就改 mesh.material.uniforms.uA / uB；要随时改粗细就设 mesh.userData.wk（粗细的倍数，默认 1）
     function energyBeam(a, b, o) {
       o = o || {};
       const width = o.width || .3, life = o.life || .6, grow = o.grow == null ? .16 : o.grow;
-      const m = new T3.Mesh(geo('beamq', () => new T3.PlaneGeometry(1, 1, 1, 24).translate(0, .5, 0)), beamMat());
+      const m = new T3.Mesh(beamGeo(), beamMat());
       m.frustumCulled = false;
       const u = m.material.uniforms;
       u.uA.value.copy(a); u.uB.value.copy(b); u.uLen.value = a.distanceTo(b);
@@ -1117,7 +1402,7 @@ void main() {
     for (let i = 0; i < QS.lights; i++) { const L = new T3.PointLight(0xffffff, 0, 5, 2); L.layers.enableAll(); L.userData.fx = { t: 0, life: 0, i0: 0 }; scene.add(L); LIGHTS.push(L); }
     // { col, intensity, dist, life }；没有灯（中低画质）返回 null
     function light(at, o) {
-      if (!LIGHTS.length) return null;
+      if (!LIGHTS.length || !alive) return null;
       o = o || {};
       let L = LIGHTS[0];
       for (const x of LIGHTS) { const f = x.userData.fx, g = L.userData.fx; if (!f.life) { L = x; break; } if (f.life - f.t < g.life - g.t) L = x; }
@@ -1141,14 +1426,14 @@ void main() {
     function flash(col, o) {
       if (typeof o === 'number') o = { ms: o };
       o = o || {};
-      if (RM || !CINE) { stats.flashSkipped++; return false; }
+      if (RM || !CINE || !alive) { stats.flashSkipped++; return false; }
       const now = performance.now(), ts = FL.times;
       while (ts.length && now - ts[0] >= 1000) ts.shift();
       if (ts.length >= 3 || (ts.length && now - ts[ts.length - 1] < 250)) { stats.flashSkipped++; bloom(1.8, 260); return false; }
       ts.push(now); stats.flashes++;
       fc.set(col || '#ffffff'); fc.getHSL(fhsl, T3.SRGBColorSpace);
       if (fhsl.s > .45 && (fhsl.h < .07 || fhsl.h > .93)) fc.setHSL(fhsl.h, .35, Math.max(fhsl.l, .82), T3.SRGBColorSpace);
-      if (!FL.el) { FL.el = document.createElement('div'); FL.el.className = 'b3d-flash'; }
+      if (!FL.el) { FL.el = document.createElement('div'); FL.el.className = 'b3d-flash'; FL.el.style.willChange = 'opacity'; }   // 自己一层：淡出时只改透明度，不重画
       if (FL.el.parentNode !== host) host.appendChild(FL.el);
       FL.el.style.transition = 'none'; FL.el.style.background = '#' + fc.getHexString(T3.SRGBColorSpace);
       FL.peak = Math.min(.55, o.strength == null ? .45 : o.strength); FL.ms = o.ms || 300; FL.t0 = now; FL.on = true;
@@ -1181,8 +1466,15 @@ void main() {
     let BB = null;
     function bloom(s, ms) { if (!BL) return; BB = { s: s == null ? 1.6 : s, t0: performance.now(), ms: ms || 400 }; }
     // 音效：phase = 'charge' | 'launch' | 'impact' | 'cutin' | 'crit'；音效关着（opts.sfx() === false）就什么都不做
+    // 合成一个音效要现搭几十个 WebAudio 节点（手机速度十几到二十几毫秒）。出招、命中都是在画一帧的当中调到这里的，
+    // 所以不当场搭，排到这一帧之后马上做（setTimeout 0）：声音晚出来几毫秒（听不出来），这一帧的画面不被它拖长
     function sfx(type, phase, tier) {
-      try { if (opts.sfx && opts.sfx() === false) return; const S = window.BattleSFX; if (S && S.play) S.play(type, phase, tier || 0); } catch (e) { /* 音效出错不影响画面 */ }
+      try {
+        if (opts.sfx && opts.sfx() === false) return;
+        const S = window.BattleSFX;
+        if (!S || !S.play) return;
+        setTimeout(() => { try { if (alive) S.play(type, phase, tier || 0); } catch (e) { /* 音效出错不影响画面 */ } }, 0);
+      } catch (e) { /* 音效出错不影响画面 */ }
     }
 
     // ---------- 发光后期（bloom-lite，只有高画质、只在有特效时开） ----------
@@ -1196,6 +1488,7 @@ void main() {
       B.blur = new T3.ShaderMaterial({ uniforms: { tSrc: { value: null }, uDir: { value: new T3.Vector2() }, uThr: { value: 0 } }, vertexShader: POST_VS, fragmentShader: BLUR_FS, depthTest: false, depthWrite: false });
       B.comp = new T3.ShaderMaterial({ uniforms: { tA: { value: B.a.texture }, tB: { value: B.d.texture }, uS: { value: 1 } }, vertexShader: POST_VS, fragmentShader: COMP_FS, transparent: true, blending: T3.AdditiveBlending, depthTest: false, depthWrite: false });
       B.occ = new T3.MeshBasicMaterial({ color: 0x000000 });
+      B.occS = new T3.MeshBasicMaterial({ color: 0x000000 });   // 会动的（蒙皮）模型另用一个：同一个材质在蒙皮 / 不蒙皮的网格之间来回换，每换一次都要重新找程序
       B.quad = new T3.Mesh(new T3.PlaneGeometry(2, 2), B.blur); B.quad.frustumCulled = false; B.scene.add(B.quad);
       return B;
     }
@@ -1208,24 +1501,51 @@ void main() {
       BL.w = w; BL.h = h; BL.a.setSize(w, h); BL.b.setSize(w, h);
       BL.c.setSize(Math.max(2, w >> 1), Math.max(2, h >> 1)); BL.d.setSize(Math.max(2, w >> 1), Math.max(2, h >> 1));
     }
+    // 画「只有特效」那一遍时临时换掉的材质：[网格, 原来的材质, 网格, 原来的材质, …]
+    const SWAP = [];
+    // 换上：怪兽 → 黑色材质（当遮挡）；特效 → 替身材质（见 twinOf）。画完 swapOff 换回来
+    function swapOn() {
+      for (let i = 0; i < 2; i++) {
+        const m = M[SIDES[i]];
+        if (!m || !m.R.root.visible) continue;
+        for (let j = 0; j < m.occ.length; j++) { const o = m.occ[j]; SWAP.push(o, o.material); o.material = o.isSkinnedMesh ? BL.occS : BL.occ; }
+      }
+      const kids = scene.children;
+      for (let i = 0; i < kids.length; i++) if (!kids[i].userData.noFx) swapWalk(kids[i]);
+    }
+    function swapWalk(o) {
+      if (!o.visible) return;
+      const m = o.material;
+      if (m && (o.layers.mask & 2) && !Array.isArray(m)) { const t = twinOf(m); if (t) { SWAP.push(o, m); o.material = t; } }
+      const c = o.children;
+      for (let i = 0; i < c.length; i++) swapWalk(c[i]);
+    }
+    function swapOff() { for (let i = 0; i < SWAP.length; i += 2) SWAP[i].material = SWAP[i + 1]; SWAP.length = 0; }
+    const blurPass = (src, dx, dy, dst, thr) => { const B = BL, u = B.blur.uniforms; B.quad.material = B.blur; u.tSrc.value = src.texture; u.uDir.value.set(dx, dy); u.uThr.value = thr; renderer.setRenderTarget(dst); renderer.render(B.scene, B.cam); };
     function bloomPass(str) {
       const r = renderer, B = BL;
-      const auto = r.autoClear, sAuto = r.shadowMap.autoUpdate, bg = scene.background, mask = cam.layers.mask, sc = pUni.uScale.value;
+      const auto = r.autoClear, sAuto = r.shadowMap.autoUpdate, bg = scene.background, mask = cam.layers.mask, sc = pUni.uScale.value, mwa = scene.matrixWorldAutoUpdate;
       r.getClearColor(tmpC); const ca = r.getClearAlpha();
       r.autoClear = false; r.shadowMap.autoUpdate = false; scene.background = null;
-      r.setClearColor(0x000000, 1);
-      r.setRenderTarget(B.a); r.clear(true, true, false);
-      cam.layers.set(2); scene.overrideMaterial = B.occ; r.render(scene, cam);   // 怪兽：黑色遮挡
-      scene.overrideMaterial = null; cam.layers.set(1);
-      renderer.getDrawingBufferSize(tmpV2); pUni.uScale.value = sc * B.h / Math.max(1, tmpV2.y);
-      r.render(scene, cam);   // 只有特效
-      cam.layers.mask = mask; pUni.uScale.value = sc; scene.background = bg;
-      const pass = (src, dx, dy, dst, thr) => { B.quad.material = B.blur; const u = B.blur.uniforms; u.tSrc.value = src.texture; u.uDir.value.set(dx, dy); u.uThr.value = thr; r.setRenderTarget(dst); r.render(B.scene, B.cam); };
-      pass(B.a, 1.2 / B.w, 0, B.b, .3); pass(B.b, 0, 1.2 / B.h, B.a, 0);              // 半分辨率：提亮 + 模糊
-      pass(B.a, 2.4 / B.w, 0, B.c, 0); pass(B.c, 0, 2.4 / B.c.height, B.d, 0);        // 四分之一：更宽的光晕
-      r.setRenderTarget(null);
-      B.quad.material = B.comp; B.comp.uniforms.uS.value = str; r.render(B.scene, B.cam);
-      r.setClearColor(tmpC, ca); r.autoClear = auto; r.shadowMap.autoUpdate = sAuto;
+      scene.matrixWorldAutoUpdate = false;   // 各物件的位置画正常画面时刚算过，不用把整个场景再算一遍
+      try {
+        r.setClearColor(0x000000, 1);
+        r.setRenderTarget(B.a); r.clear(true, true, false);
+        // 一遍画完第 2 层（怪兽，换成黑色材质当遮挡：不透明的先画、写深度）和第 1 层（特效，换成替身材质）。
+        // 以前分两遍画（先用 overrideMaterial 画怪兽，再画特效），每多画一遍就多遍历一次场景、多更新一次骨骼
+        cam.layers.mask = 6;
+        r.getDrawingBufferSize(tmpV2); pUni.uScale.value = sc * B.h / Math.max(1, tmpV2.y);
+        swapOn();
+        try { r.render(scene, cam); } finally { swapOff(); cam.layers.mask = mask; pUni.uScale.value = sc; scene.background = bg; scene.matrixWorldAutoUpdate = mwa; }
+        blurPass(B.a, 1.2 / B.w, 0, B.b, .3); blurPass(B.b, 0, 1.2 / B.h, B.a, 0);              // 半分辨率：提亮 + 模糊
+        blurPass(B.a, 2.4 / B.w, 0, B.c, 0); blurPass(B.c, 0, 2.4 / B.c.height, B.d, 0);        // 四分之一：更宽的光晕
+        r.setRenderTarget(null);
+        B.quad.material = B.comp; B.comp.uniforms.uS.value = str; r.render(B.scene, B.cam);
+      } finally {
+        // 出了错也要把渲染器的状态还原（不然后面的正常画面不清屏、画到离屏缓冲里去）
+        r.setRenderTarget(null); cam.layers.mask = mask; pUni.uScale.value = sc; scene.background = bg; scene.matrixWorldAutoUpdate = mwa;
+        r.setClearColor(tmpC, ca); r.autoClear = auto; r.shadowMap.autoUpdate = sAuto;
+      }
     }
     function bloomStr() {
       let s = BLOOM_BASE;
@@ -1287,6 +1607,7 @@ void main() {
       cur.look.copy(lerpV(ARENA_C, POS.foe, .55)).setY(.45);
       camTo(HOME, ms || 1600, EZ.io, true);
     }
+    const CS = { pos: V(0, 0, 0), look: V(0, 0, 0), fov: FOV }, CSD = V(0, 0, 0);   // camStep 的结果和临时量（每帧复用，不新建）
     function camStep(now) {
       if (shot) {
         const k = Math.min(1, (now - shot.t0) / shot.ms), e = shot.ez(k), b = shot.to();
@@ -1301,15 +1622,16 @@ void main() {
         cur.fov = shot.a.fov + ((b.fov || FOV) - shot.a.fov) * e;   // 可以顺便变焦
         if (k >= 1 && shot.to === HOME) shot = null;
       } else { cur.pos.copy(CAM.pos); cur.look.copy(CAM.look); cur.fov = FOV; }
-      const pos = cur.pos.clone(), look = cur.look.clone();
+      const pos = CS.pos.copy(cur.pos), look = CS.look.copy(cur.look);
       if (punch) {
         const k = Math.min(1, (now - punch.t0) / punch.ms), env = k < .16 ? EZ.out(k / .16) : 1 - EZ.sine((k - .16) / .84);
-        const at = punch.at(), d = at.clone().sub(pos), len = d.length();
+        const at = punch.at(), d = CSD.copy(at).sub(pos), len = d.length();
         pos.addScaledVector(d.normalize(), Math.min(punch.amt, len * .3) * env);
         look.lerp(at, .2 * env);
         if (k >= 1) punch = null;
       }
-      return { pos, look, fov: cur.fov };
+      CS.fov = cur.fov;
+      return CS;
     }
 
     // ---------- 动画（按特效时间走，slowmo 时一起放慢） ----------
@@ -1371,7 +1693,7 @@ void main() {
 
     // ---------- kit：交给特效库的工具箱（FX_SPEC §3，名字定了别改） ----------
     const kit = {
-      T3, scene, cam, q: Q, qs: QS, RM, CINE, TYPE_COL, EZ,
+      T3, scene, cam, q: Q, qs: QS, RM, CINE, TYPE_COL, EZ,   // RM / CINE 每场战斗开头更新（revive）
       V, rnd, sph, C, sleep, tween,
       center, feet, mon, anim: playAnim,
       emit, burst, rise, addFx,
@@ -1383,11 +1705,13 @@ void main() {
 
     // ---------- 对外：出场 / 放招 / 受击 / 倒下 / 扔球 ----------
     async function enter(side, fromBall) {
-      const m = M[side]; if (!m) return;
-      m.gone = false; m.R.root.visible = true;
-      if (Mon3D.play) Mon3D.play(m.R, 'idle');
+      const m = M[side]; if (!m || !alive) return;
       if (!introDone) intro();
       else if (!shot) { camTo(shotToward(side, .16, .45), 450, EZ.out); camHome(750, 700); }
+      // 它的着色器还在后台编译、预画（见 monCompile / monPredraw）：等做完再出来（编译最多等 MON_WAIT 毫秒，预画几帧）；镜头照常走，画面不卡
+      if (m.ready) { const r = m.ready; m.ready = null; await r; if (!alive || M[side] !== m) return; }
+      m.gone = false; m.R.root.visible = true;
+      if (Mon3D.play) Mon3D.play(m.R, 'idle');
       const s = m.R.baseScale;
       if (fromBall) {
         // 从球里出来：一道往上冲的光柱 + 脚下一圈冲击波 + 迸出来的星光
@@ -1403,11 +1727,14 @@ void main() {
       await tween(420, k => { const e = 1 - Math.pow(1 - k, 3); m.R.root.scale.setScalar(s * (e + Math.sin(k * Math.PI) * .15)); });
     }
     // 等一个 Promise，最多等 ms 毫秒（超时、出错都当它完成了，战斗不会卡住）
+    // （战斗结束时还在等的也当完成了：和 sleep 一样登记在 naps 里，park 时一起放行）
     const guard = (p, ms, what) => new Promise(res => {
+      if (!alive) { res(); return; }
       let done = false;
-      const fin = () => { if (!done) { done = true; res(); } };
-      const tm = setTimeout(() => { if (!done) { stats.over++; warn(what + ' 超过 ' + ms + 'ms，当它完成了'); } fin(); }, ms);
-      Promise.resolve(p).then(() => { clearTimeout(tm); fin(); }, e => { clearTimeout(tm); warn(what + ' 出错', e); fin(); });
+      const n = { t: 0, res: () => { if (!done) { done = true; naps.delete(n); res(); } } }, fin = n.res;
+      n.t = setTimeout(() => { if (!done) { stats.over++; warn(what + ' 超过 ' + ms + 'ms，当它完成了'); } fin(); }, ms);
+      naps.add(n);
+      Promise.resolve(p).then(() => { clearTimeout(n.t); fin(); }, e => { clearTimeout(n.t); warn(what + ' 出错', e); fin(); });
     });
     const callSafe = (fn, what) => { try { return fn(); } catch (e) { warn(what + ' 出错', e); return null; } };
     const bg = (fn, what) => { const r = callSafe(fn, what); if (r && r.catch) r.catch(e => warn(what + ' 出错', e)); };
@@ -1431,7 +1758,7 @@ void main() {
     // → 命中 phaseImpact、余韵 phaseAfter（都在后台，不挡流程）。每一段：内置的通用环节 → BattleFX.common（有登记的话）→ 这个属性登记的
     async function attack(side, type, tier, support, info) {
       const other = side === 'me' ? 'foe' : 'me', m = M[side], o = M[other];
-      if (!m || !o) return;
+      if (!m || !o || !alive) return;
       tier = Math.max(0, Math.min(2, tier | 0));
       m.spin = 0;   // 上一招的特殊动作被打断时留下的转身
       const R = BFX(), cols = TYPE_COL[type] || TYPE_COL.normal;
@@ -1439,8 +1766,8 @@ void main() {
       // ctx：a 出招点（大招特殊动作做完会挪到怪兽当时的位置）、b 命中点（辅助招式两个都是自己的中心）、dir 朝对手的水平方向
       const ctx = { a: support ? a : a.clone().addScaledVector(dir, .3), b, dir, side, other, tier, cols, info: info || null, type, support: !!support };
       moveShakes = 0;
-      stats.move = { type, tier, support: !!support, t0: performance.now(), impact: 0 };
-      if (support) { await supportMove(ctx, R); stats.move.impact = performance.now() - stats.move.t0; return; }
+      const mv = stats.move = { type, tier, support: !!support, t0: performance.now(), impact: 0 };
+      if (support) { await supportMove(ctx, R); mv.impact = performance.now() - mv.t0; return; }
       const def = R.types[type] && R.types[type].release ? R.types[type] : null;
       // 两边平时都侧过一点身子朝着观众，出招时转过去正对对手
       const st = { turn0: TURN[side], turned: true, tok: (m.turnTok = (m.turnTok || 0) + 1), rigAtk: false, lifted: false };
@@ -1451,7 +1778,8 @@ void main() {
       else { await charged; await phaseCutin(ctx, def, R); }
       await phaseLunge(ctx, def, st);
       await phaseRelease(ctx, def);
-      stats.move.impact = performance.now() - stats.move.t0;
+      mv.impact = performance.now() - mv.t0;
+      if (!alive) return;   // 放到一半战斗结束了
       phaseImpact(ctx, def, R);
       phaseAfter(ctx, def, R);
       camHome(650, tier === 2 ? 420 : 260);   // 命中后稍停一下再回默认机位（hit 会再推一下）
@@ -1628,21 +1956,43 @@ void main() {
     // 中招：右上角一条小横幅（约 .9 s，不挡战场）。都按 performance.now() 每帧驱动（不用 CSS 动画：假时钟截图对得上，切到后台回来也不乱）；
     // 减少动态效果 / 关了运镜时只淡入淡出。样式在 style.css 的「3D 战斗：大招过场」一节
     const CUT_IN = 220, CUT_HOLD = 600, CUT_OUT = 200, BAN_IN = 160, BAN_HOLD = 580, BAN_OUT = 160;
-    const CUT = { el: null, run: null, sp: '', ban: null, banRun: null, zs: [] };
+    const CUT = { el: null, run: null, sp: '', ban: null, banRun: null, zs: [], tile: 0, ro: null };
+    const setText = (el, s) => { if (el.textContent !== s) el.textContent = s; };   // 字没变就不碰（碰了要重新排版）
     function cutDom() {
       if (CUT.el) return CUT.el;
       const el = document.createElement('div');
-      el.className = 'b3d-cut'; el.style.display = 'none'; el.setAttribute('aria-hidden', 'true');
-      el.innerHTML = '<div class="bc-dim"></div><div class="bc-band"><i class="bc-acc"></i><i class="bc-acc b"></i><div class="bc-bg"><i class="bc-lines"></i><i class="bc-dots"></i></div>' +
+      // 建好以后一直留在战场里、排好版，平时只是 visibility: hidden（不画）。以前用 display: none ⇄ 显示：每次冲进来的那一帧都要把整棵子树
+      // 重新算样式、重新排版（手机速度 40–50 毫秒；第一次还要找字体，更久）
+      el.className = 'b3d-cut'; el.style.visibility = 'hidden'; el.setAttribute('aria-hidden', 'true');
+      el.innerHTML = '<div class="bc-dim"></div><div class="bc-band"><i class="bc-acc"></i><i class="bc-acc b"></i><div class="bc-bg"><i class="bc-lines"><i class="bc-run"></i></i><i class="bc-dots"></i></div>' +
         '<div class="bc-mon"><img alt="" decoding="async"></div><div class="bc-name"><b></b><small></small></div></div>';
       const q = s => el.querySelector(s);
-      Object.assign(CUT, { el, dim: q('.bc-dim'), band: q('.bc-band'), lines: q('.bc-lines'), monEl: q('.bc-mon'), img: q('.bc-mon img'), name: q('.bc-name'), nb: q('.bc-name b'), ns: q('.bc-name small') });
-      const u = speedTex(); if (u) CUT.lines.style.backgroundImage = 'url(' + u + ')';
+      Object.assign(CUT, { el, dim: q('.bc-dim'), band: q('.bc-band'), lines: q('.bc-lines'), sl: q('.bc-run'), monEl: q('.bc-mon'), img: q('.bc-mon img'), name: q('.bc-name'), nb: q('.bc-name b'), ns: q('.bc-name small') });
+      // 速度线单独一层（.bc-lines 里面再套一个，比横幅往左多伸出一张图的宽度，见 cutTile）：滚动只改 transform，由合成器平移。
+      // 以前每帧改 background-position，整条横幅（渐变、网点、光晕）每帧都要重画
+      const ls = CUT.sl.style;
+      ls.position = 'absolute'; ls.top = ls.bottom = ls.left = '0'; ls.width = '100%'; ls.backgroundRepeat = 'repeat'; ls.backgroundSize = 'auto 100%'; ls.willChange = 'transform';
+      CUT.dim.style.willChange = 'opacity';
+      speedTex(u => { if (u) ls.backgroundImage = 'url(' + u + ')'; });
+      if (window.ResizeObserver) { CUT.ro = new ResizeObserver(es => { cutTile(es[0].contentRect.height); }); CUT.ro.observe(CUT.lines); }
       return el;
     }
-    // 立绘：发布的 2D 图标（assets/mon2d/<id>.webp）；稀有色的、?art=proc 的、图标读不到的用 Mon3D.snapshot（稀有色图标 / 3D 截图）
+    // 速度线那张图是 512×128，按横幅的高铺开，一张的宽 = 高 × 4；滚动的那一层往左多伸出一张的宽度，往右滚的时候左边不会露出空白
+    function cutTile(h) {
+      const w = h * 4;
+      if (!(w > 0) || Math.abs(w - CUT.tile) < .01) return;
+      CUT.tile = w;
+      CUT.sl.style.left = (-w).toFixed(2) + 'px'; CUT.sl.style.width = 'calc(100% + ' + w.toFixed(2) + 'px)';
+    }
+    // 放大招一开始（过场冲进来之前 0.4 秒）就把过场准备好——这时候它还藏着：朝向、颜色、招式名先填上（排版在这一帧做，
+    // 不挤在冲进来的那一帧）；立绘：发布的 2D 图标（assets/mon2d/<id>.webp）；稀有色的、?art=proc 的、图标读不到的用 Mon3D.snapshot（稀有色图标 / 3D 截图）
     function prepCut(ctx) {
-      cutDom();
+      const el = cutDom(), info = ctx.info, nm = (info && info.name) || '', zh = (nm && info.zh) || '', cls = 'b3d-cut ' + ctx.side + (CINE ? '' : ' rm');
+      if (el.parentNode !== host) host.appendChild(el);
+      if (el.className !== cls) el.className = cls;
+      el.style.setProperty('--c1', ctx.cols[0]); el.style.setProperty('--c2', ctx.cols[1]);
+      setText(CUT.nb, nm); setText(CUT.ns, zh);
+      CUT.name.style.display = nm ? '' : 'none'; CUT.ns.style.display = zh ? '' : 'none';
       const sp = (ctx.info && ctx.info.sp) || M[ctx.side].sp, img = CUT.img;
       if (!sp || CUT.sp === sp.id) return;
       CUT.sp = sp.id;
@@ -1655,14 +2005,10 @@ void main() {
     }
     function showCut(ctx) {
       const el = cutDom();
-      if (el.parentNode !== host) host.appendChild(el);
       prepCut(ctx);
-      const info = ctx.info, nm = info && info.name;
-      el.className = 'b3d-cut ' + ctx.side + (CINE ? '' : ' rm');
-      el.style.setProperty('--c1', ctx.cols[0]); el.style.setProperty('--c2', ctx.cols[1]);
-      CUT.nb.textContent = nm || ''; CUT.ns.textContent = (nm && info.zh) || '';
-      CUT.name.style.display = nm ? '' : 'none'; CUT.ns.style.display = nm && info.zh ? '' : 'none';
-      el.style.display = '';
+      if (!CUT.tile) cutTile(CUT.lines.clientHeight);   // 还没量过横幅多高（没有 ResizeObserver 的老浏览器）：现在量
+      CUT.sl.style.transform = 'translateX(0px)';
+      el.style.visibility = '';
       CUT.run = { t0: performance.now(), s: ctx.side === 'me' ? 1 : -1, fade: !CINE };
       stepCut();
     }
@@ -1670,7 +2016,7 @@ void main() {
       const r = CUT.run;
       if (!r) return;
       const t = performance.now() - r.t0, s = r.s;
-      if (t >= CUT_IN + CUT_HOLD + CUT_OUT) { CUT.el.style.display = 'none'; CUT.run = null; return; }
+      if (t >= CUT_IN + CUT_HOLD + CUT_OUT) { CUT.el.style.visibility = 'hidden'; CUT.run = null; return; }
       // bx 横幅沿自己的方向滑（% 横幅宽）、mx 立绘再错开一点（视差）、nx / ns / nop 招式名的位置、大小、透明度、dim 压暗、op 整体透明度（只淡入淡出时用）
       let bx = 0, mx = 0, nx = 0, ns = 1, nop = 1, dim = 1, op = 1;
       if (t < CUT_IN) {
@@ -1691,23 +2037,27 @@ void main() {
       CUT.monEl.style.transform = 'translateX(' + (mx * s).toFixed(2) + '%)';
       CUT.name.style.transform = 'translate(' + (nx * s).toFixed(2) + '%, -50%) scale(' + ns.toFixed(3) + ')';
       CUT.name.style.opacity = nop.toFixed(3);
-      if (!r.fade) CUT.lines.style.backgroundPosition = (t * 1.6 % 4096).toFixed(1) + 'px 0';
+      if (!r.fade && CUT.tile) CUT.sl.style.transform = 'translateX(' + (t * 1.6 % CUT.tile).toFixed(1) + 'px)';
     }
     // 中招：右上角的招式名小横幅（英文名 + 中文名），从右边滑进来、扫一道高光、淡出；不挡流程
+    function banDom() {
+      if (!CUT.ban) {
+        const el = document.createElement('div');
+        // 和大招过场一样：建好以后留在战场里，平时 visibility: hidden
+        el.className = 'b3d-ban'; el.style.visibility = 'hidden'; el.setAttribute('aria-hidden', 'true'); el.innerHTML = '<i class="bn-sheen"></i><b></b><small></small>';
+        CUT.ban = el;
+      }
+      return CUT.ban;
+    }
     function banner(ctx) {
       const info = ctx.info;
       if (!info || !info.name) return;
-      if (!CUT.ban) {
-        const el = document.createElement('div');
-        el.className = 'b3d-ban'; el.setAttribute('aria-hidden', 'true'); el.innerHTML = '<i class="bn-sheen"></i><b></b><small></small>';
-        CUT.ban = el;
-      }
-      const el = CUT.ban;
+      const el = banDom();
       if (el.parentNode !== host) host.appendChild(el);
       el.style.setProperty('--c1', ctx.cols[0]); el.style.setProperty('--c2', ctx.cols[1]);
-      el.querySelector('b').textContent = info.name;
-      const zh = el.querySelector('small'); zh.textContent = info.zh || ''; zh.style.display = info.zh ? '' : 'none';
-      el.style.display = '';
+      setText(el.querySelector('b'), info.name);
+      const zh = el.querySelector('small'); setText(zh, info.zh || ''); zh.style.display = info.zh ? '' : 'none';
+      el.style.visibility = '';
       CUT.banRun = { t0: performance.now(), fade: !CINE };
       stepBan();
     }
@@ -1715,7 +2065,7 @@ void main() {
       const r = CUT.banRun, el = CUT.ban;
       if (!r) return;
       const t = performance.now() - r.t0;
-      if (t >= BAN_IN + BAN_HOLD + BAN_OUT) { el.style.display = 'none'; CUT.banRun = null; return; }
+      if (t >= BAN_IN + BAN_HOLD + BAN_OUT) { el.style.visibility = 'hidden'; CUT.banRun = null; return; }
       let x = 0, op = 1;
       if (t < BAN_IN) { const k = t / BAN_IN; x = r.fade ? 0 : 115 * (1 - EZ.out(k)); op = r.fade ? k : Math.min(1, k * 2); }
       else if (t > BAN_IN + BAN_HOLD) { const k = (t - BAN_IN - BAN_HOLD) / BAN_OUT; x = r.fade ? 0 : -8 * k; op = 1 - k; }
@@ -1857,6 +2207,17 @@ void main() {
       ball: { body: '#9b7cf2', rib: '#d3c2ff', lip: '#fff1dc', inner: '#f6b7c9', pearl: '#f3ecff', glow: '#b388ff' },
       gold: { body: '#f5b82e', rib: '#ffe59a', lip: '#fff6dc', inner: '#ffb48a', pearl: '#d9fdff', glow: '#26c6da' },
     };
+    // 壳的几何体按名字缓存（kit.geo）：开场预热时建好（shellGeo），扔球的那一帧不用现算；用完不释放，下次接着用
+    const shellR = y => { for (let i = 1; i < SHELL_PROF.length; i++) { const [x0, y0] = SHELL_PROF[i - 1], [x1, y1] = SHELL_PROF[i]; if (y1 >= y) return x0 + (x1 - x0) * (y - y0) / ((y1 - y0) || 1); } return 0; };
+    const SHG = {
+      body: () => geo('shell:body', () => new T3.LatheGeometry(SHELL_PROF.map(([x, y]) => new T3.Vector2(x, y)), 24)),
+      seam: i => geo('shell:seam' + i, () => new T3.TorusGeometry(shellR(SHELL_SEAM[i]) + .006, .012 - i * .002, 5, 28)),
+      knob: () => geo('shell:knob', () => new T3.ConeGeometry(.026, .07, 6)),
+      lip: () => geo('shell:lip', () => new T3.TorusGeometry(.082, .022, 6, 22)),
+      inner: () => geo('shell:inner', () => new T3.SphereGeometry(.084, 14, 10)),
+      pearl: () => geo('shell:pearl', () => new T3.SphereGeometry(.046, 14, 10)),
+    };
+    function shellGeo() { SHG.body(); SHELL_SEAM.forEach((y, i) => SHG.seam(i)); SHG.knob(); SHG.lip(); SHG.inner(); SHG.pearl(); }
     function shellMesh(gold) {
       const c = SHELL_COL[gold ? 'gold' : 'ball'];
       const g = new T3.Group(), body = new T3.Group();
@@ -1864,19 +2225,18 @@ void main() {
       const toon = col => new T3.MeshToonMaterial({ color: col, side: T3.DoubleSide });
       const put = (geo, mat, x, y, z) => { const o = new T3.Mesh(geo, mat); o.position.set(x || 0, (y || 0) - SHELL_MID, z || 0); o.castShadow = true; body.add(o); return o; };
       // 壳身
-      put(new T3.LatheGeometry(SHELL_PROF.map(([x, y]) => new T3.Vector2(x, y)), 24), toon(c.body));
+      put(SHG.body(), toon(c.body));
       // 每道缝上一圈浅色的棱，稍微斜一点，看起来是一圈圈盘上去的
-      const rAt = y => { for (let i = 1; i < SHELL_PROF.length; i++) { const [x0, y0] = SHELL_PROF[i - 1], [x1, y1] = SHELL_PROF[i]; if (y1 >= y) return x0 + (x1 - x0) * (y - y0) / ((y1 - y0) || 1); } return 0; };
-      SHELL_SEAM.forEach((y, i) => { const r = rAt(y) + .006; const o = put(new T3.TorusGeometry(r, .012 - i * .002, 5, 28), toon(c.rib), 0, y, 0); o.rotation.order = 'YXZ'; o.rotation.set(Math.PI / 2 + .1, .4 + i * 2.1, 0); });
+      SHELL_SEAM.forEach((y, i) => { const o = put(SHG.seam(i), toon(c.rib), 0, y, 0); o.rotation.order = 'YXZ'; o.rotation.set(Math.PI / 2 + .1, .4 + i * 2.1, 0); });
       // 肩膀上一圈小疙瘩（正面留给开口）
       for (let k = 0; k < 5; k++) {
         const a = .95 + k * (Math.PI * 2 - 1.9) / 4, d = V(Math.sin(a), .6, Math.cos(a)).normalize();
-        put(new T3.ConeGeometry(.026, .07, 6), toon(c.rib), Math.sin(a) * .158, .178, Math.cos(a) * .158).quaternion.setFromUnitVectors(V(0, 1, 0), d);
+        put(SHG.knob(), toon(c.rib), Math.sin(a) * .158, .178, Math.cos(a) * .158).quaternion.setFromUnitVectors(V(0, 1, 0), d);
       }
       // 开口（+z）：奶油色的唇边、粉色的里面、发光的回声珠
-      const lip = put(new T3.TorusGeometry(.082, .022, 6, 22), toon(c.lip), .03, .125, .15); lip.scale.set(1, 1.22, 1); lip.rotation.set(-.15, .22, -.22);
-      const inner = put(new T3.SphereGeometry(.084, 14, 10), toon(c.inner), .03, .125, .146); inner.scale.set(.95, 1.18, .3); inner.rotation.set(-.15, .22, -.22);
-      const pearl = put(new T3.SphereGeometry(.046, 14, 10), new T3.MeshBasicMaterial({ color: c.pearl }), .034, .118, .17);
+      const lip = put(SHG.lip(), toon(c.lip), .03, .125, .15); lip.scale.set(1, 1.22, 1); lip.rotation.set(-.15, .22, -.22);
+      const inner = put(SHG.inner(), toon(c.inner), .03, .125, .146); inner.scale.set(.95, 1.18, .3); inner.rotation.set(-.15, .22, -.22);
+      const pearl = put(SHG.pearl(), new T3.MeshBasicMaterial({ color: c.pearl }), .034, .118, .17);
       pearl.castShadow = false; pearl.layers.enable(1);   // 发光后期里亮一点
       g.userData.body = body; g.userData.col = c;
       return g;
@@ -1945,15 +2305,61 @@ void main() {
     function removeBall() { dropBall(); }
 
     // ---------- 每帧 ----------
-    const camJit = V(0, 0, 0);
+    const camJit = V(0, 0, 0), SIDES = ['me', 'foe'], F60 = 1000 / 60, F30 = 1000 / 30;
+    const AST = { talk: false };   // 传给 Mon3D.animate 的状态（每帧复用同一个）
+    // 现在有没有「要按每秒 60 帧画」的东西在动：特效、粒子、补间动画（出场 / 扑击 / 受击 / 倒下 / 扔球）、运镜、震动、闪屏、大招过场、中招横幅、
+    // 放慢、发光后期加强、点光源、受击泛白 / 属性色、怪兽在张嘴或者做待机以外的动作（出招 / 受击 / 倒下）、开场预热还没做完。
+    // 都没有 = 只剩怪兽的待机动作、脚下的水波、镜头很慢的呼吸（全按时间算，不按帧数）——等孩子读题、开口的那段时间。
+    // 只剩地面贴花在慢慢淡出也不算（几秒才淡完）
+    function active() {
+      if (fx.length > decals.length || pCount || anim.length || shot || punch || shakeAmt > 0 || FL.on || CUT.run || CUT.banRun || SM || BB || WARM.on || DR.length) return true;
+      for (let i = 0; i < LIGHTS.length; i++) if (LIGHTS[i].userData.fx.life) return true;
+      for (let i = 0; i < 2; i++) {
+        const m = M[SIDES[i]];
+        if (m && (m.flash > 0 || m.tintV > 0 || m.tinted || m.talk || (!m.gone && m.R.mixer && m.R.cur && m.R.cur !== 'idle'))) return true;
+      }
+      return false;
+    }
+    // 战斗画面有没有显示出来：画布在页面上、战场有高度（整个战斗画面被藏起来时高度是 0）
+    const shown = () => canvas.isConnected && hostH > 0;
+    function wake() { if (alive && !raf && !document.hidden) raf = requestAnimationFrame(frame); }
+    // 马上重画一次（换了怪兽、换了场地、尺寸变了），不等「没东西在动时每秒 30 帧」的下一拍
+    function kick() { nextDraw = 0; wake(); }
+    function beatStop() { if (beat) { clearInterval(beat); beat = 0; } }
+    // 画面没显示出来的时候：不画，也不占着 requestAnimationFrame；但补间动画、特效的寿命还得往前走（monsters.js 在等 attack() 返回，
+    // 不能卡住），用这个每秒 10 次的定时器只走逻辑。一显示出来就回到正常的循环
+    function heartbeat() {
+      if (!alive) { beatStop(); return; }
+      if (document.hidden) return;
+      if (!hostRO) hostH = host.clientHeight || 0;
+      if (shown()) { beatStop(); kick(); return; }
+      if (!GL.lost) step(performance.now(), false);
+    }
+    // 页面切到后台（切去微信、锁屏）：循环整个停下，回来再接着跑（回来的第一帧不补这段时间）
+    const onVis = () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else { last = 0; kick(); } };
+    document.addEventListener('visibilitychange', onVis);
     function frame(now) {
-      if (!alive) return;
+      raf = 0;
+      if (!alive || document.hidden) return;
       raf = requestAnimationFrame(frame);
       // 画面丢了：等它恢复；2.5 秒还没恢复就换一个新的渲染器（glRebuild）
-      if (GL.lost) { if (now - GL.lost > 2500 && !document.hidden) glRebuild(); if (GL.lost) return; }
-      // 每秒最多画 60 次（120Hz 的屏幕不用画两倍，省电不烫手）；动画都按时间算，不受影响
+      if (GL.lost) { if (now - GL.lost > 2500) glRebuild(); if (GL.lost) return; }
+      if (!hostRO) hostH = host.clientHeight || 0;   // 老浏览器没有 ResizeObserver：每帧自己量
+      if (!shown()) { cancelAnimationFrame(raf); raf = 0; if (!beat) beat = setInterval(heartbeat, 100); return; }
+      if (beat) beatStop();
+      // 每秒最多画 60 次（120Hz 的屏幕不用画两倍，省电不烫手）；没有东西在动（见 active）时每秒 30 次——一场战斗大部分时间都在等孩子读题、开口，
+      // 这时候只有待机动作和水波，30 帧看不出区别，手机少干一半的活。一有东西开始动，下一帧就回到 60。动画都按时间算，不受影响
+      const act = active();
+      if (act && !wasAct) nextDraw = Math.min(nextDraw, drawAt + F60);
+      wasAct = act;
       if (now < nextDraw - 2) return;
-      nextDraw = Math.max(nextDraw + 1000 / 60, now + 1000 / 60 - 6);
+      const gap = act ? F60 : F30;
+      nextDraw = Math.max(nextDraw + gap, now + gap - 6);
+      drawAt = now;
+      step(now, true);
+    }
+    // 走一步：draw = false 时只走逻辑（补间、粒子、特效寿命），不动镜头、不画
+    function step(now, draw) {
       const rdt = last ? Math.min(250, now - last) : 16; last = now;
       const ts = timeScale();
       fxNow += rdt * ts;   // 特效时间（毫秒）：slowmo 时走得慢
@@ -1961,30 +2367,31 @@ void main() {
       monT += dt; UT.value += dt;
       const t = now / 1000;
       stepAnim();
-      ['me', 'foe'].forEach(side => {
-        const m = M[side]; if (!m) return;
-        Mon3D.animate(m.R, monT + (side === 'me' ? 0 : 1.3), { talk: m.talk ? Math.floor(t * 8) % 2 === 0 : false });
+      for (let i = 0; i < 2; i++) {
+        const side = SIDES[i], m = M[side]; if (!m) continue;
+        AST.talk = m.talk ? Math.floor(t * 8) % 2 === 0 : false;
+        Mon3D.animate(m.R, monT + (i ? 1.3 : 0), AST);
         m.R.root.position.copy(POS[side]).add(m.off);
         m.R.root.rotation.y = m.yaw + m.turn + m.spin;
         // 受击泛白 + kit.aura 的属性色。泛白是一次平滑淡出（不一亮一暗地闪：以前约 11Hz 的频闪对光敏的孩子不安全，FX_SPEC §6），
         // 最亮也到不了纯白（.55，减少动态效果时 .3）；hit() 给 1.6（约 .6 秒淡完），异常状态给 .6（淡一点、短一点）
         if (m.flash > 0 || m.tintV > 0 || m.tinted) {
           m.flash = Math.max(0, m.flash - dt * 2.6);
-          const e = (RM ? .3 : .55) * Math.pow(Math.min(1, m.flash / 1.6), 2), tv = m.tintV || 0, tc = m.tintCol;
+          const e = (RM ? .3 : .55) * Math.pow(Math.min(1, m.flash / 1.6), 2), tv = m.tintV || 0, tc = m.tintCol, ms = m.mats;
           m.tinted = e > 0 || tv > 0;
-          m.mats.forEach(q => { if (q.emissive) q.emissive.setRGB(e + tc.r * tv, e + tc.g * tv, e + tc.b * tv); else q.color.setRGB(1 + e * 1.5 + tc.r * tv * 2, 1 + e * 1.5 + tc.g * tv * 2, 1 + e * 1.5 + tc.b * tv * 2); });
+          for (let j = 0; j < ms.length; j++) { const q = ms[j]; if (q.emissive) q.emissive.setRGB(e + tc.r * tv, e + tc.g * tv, e + tc.b * tv); else q.color.setRGB(1 + e * 1.5 + tc.r * tv * 2, 1 + e * 1.5 + tc.g * tv * 2, 1 + e * 1.5 + tc.b * tv * 2); }
         }
-      });
-      env.children.forEach(o => { if (o.userData.drift) { o.position.x += o.userData.drift * dtR; if (o.position.x > 14) o.position.x = -14; } });
-      ripplesStep(now);
-      pUni.uScale.value = host.clientHeight * renderer.getPixelRatio() * 1.3;   // 粒子大小按实际像素算（高像素比的手机上不会变小）
+      }
+      for (let i = 0; i < drifters.length; i++) { const o = drifters[i]; o.position.x += o.userData.drift * dtR; if (o.position.x > 14) o.position.x = -14; }
       stepParticles(dt);
       stepFx(dt);
       stepLights(dt);
       stepFlash();
       stepCut(); stepBan();   // 大招过场、中招横幅（DOM）
-      // 镜头：轻轻呼吸 + 震动
       shakeAmt = Math.max(0, shakeAmt - dtR * 1.2);
+      if (!draw) { drawnTick(); return; }
+      ripplesStep(now);
+      // 镜头：轻轻呼吸 + 震动
       const cs = camStep(now);
       const drift = RM ? 0 : 1;   // 平时很慢地晃（减少动态效果时不晃）
       cam.position.copy(cs.pos);
@@ -1993,8 +2400,16 @@ void main() {
       cam.lookAt(cs.look);
       if (Math.abs(cam.fov - cs.fov) > .01) { cam.fov = cs.fov; cam.updateProjectionMatrix(); }
       renderer.render(scene, cam);
-      if (!warmed) { warmed = true; warm(); }   // 第一帧画完（阴影贴图有了）再预编译特效着色器
-      if (BL && (pCount || BB || glowLive())) { try { bloomPass(bloomStr()); } catch (e) { warn('发光后期出错', e); } }
+      stats.drawn++;
+      if ((renderer.info.programs || []).length !== pinned) pinPrograms();
+      if (!warmed) { warmed = true; warmStart(); }   // 第一帧画完（阴影贴图有了）开始预热
+      if (BL && (pCount || BB || glowLive() || preBloom > 0 || (WARM.cur && WARM.cur.stage === 1))) { try { bloomPass(bloomStr()); } catch (e) { warn('发光后期出错', e); } }
+      if (preBloom > 0) preBloom--;
+      if (WARM.q) warmTick();
+      drawnTick();
+    }
+    function drawnTick() {
+      for (let i = DR.length - 1; i >= 0; i--) if (--DR[i].n <= 0) DR.splice(i, 1)[0].res();
     }
     // 还有没有要发光的特效（在第 1 层、看得见、画得出东西的）：贴花、实心的碎块、只当计时器的空物件不算——
     // 只剩它们的时候不开发光后期（半分辨率重画 + 4 次模糊，高画质 DPR 3 的手机上很费电）
@@ -2006,10 +2421,15 @@ void main() {
       return false;
     }
     function resize() {
-      const w = host.clientWidth || 1, h = host.clientHeight || 1;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, opts.dpr || 1.5));
-      renderer.setSize(w, h, false);
-      canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+      const w = host.clientWidth || 1, h = host.clientHeight || 1, pr = Math.min(window.devicePixelRatio || 1, opts.dpr || 1.5), key = w + 'x' + h + '@' + pr;
+      hostH = host.clientHeight || 0;
+      // 尺寸没变就不重设画布（重设会把画面清空；战场下面的面板变高变矮时 ResizeObserver 会连着叫好几次）
+      if (key !== sized) {
+        sized = key;
+        renderer.setPixelRatio(pr);
+        renderer.setSize(w, h, false);
+        canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+      }
       cam.aspect = w / h;
       const relaid = setLayout(w / h < 1);
       // 画面窄就把镜头拉远：左右两只怪兽（横排 x = ±1.75、竖屏错开 x = ±1.0，再留出身子和一点边）都要在画面里
@@ -2019,8 +2439,9 @@ void main() {
       CAM.look.set(0, .78 + (f - 1) * CAMK.lift, 0);
       if (f !== camF || relaid) { camF = f; placeBackdrop(); }
       cam.updateProjectionMatrix();
-      pUni.uScale.value = h * renderer.getPixelRatio() * 1.3;
+      pUni.uScale.value = h * renderer.getPixelRatio() * 1.3;   // 粒子大小按实际像素算（高像素比的手机上不会变小）
       bloomSize();
+      kick();
     }
     // 怪兽在画面上的位置（给伤害数字、提示用），相对 host 左上角
     function screenPos(side) {
@@ -2032,53 +2453,211 @@ void main() {
       return [(p.x + 1) / 2 * host.clientWidth, (1 - p.y) / 2 * host.clientHeight];
     }
     const homeCam = new T3.PerspectiveCamera(38, 1, .1, 80);
-    function mount(el) { host = el; el.prepend(canvas); resize(); }
-    function destroy() {
-      alive = false; cancelAnimationFrame(raf); clearTimeout(camTimer); envTok++;
-      ['me', 'foe'].forEach(s => { if (M[s]) { scene.remove(M[s].R.root); Mon3D.dispose(M[s].R); } if (RIP[s]) { scene.remove(RIP[s]); RIP[s].traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material) q.material.dispose(); }); RIP[s] = null; } });
-      fx.splice(0).forEach(f => { f.done = true; f.obj.removeFromParent(); releaseObj(f.obj); });
+    // 战场的大小自己盯着（变了就 resize；整个战斗画面被藏起来 / 再显示出来也是从这里知道的，见 shown）
+    const hostRO = window.ResizeObserver ? new ResizeObserver(() => { if (alive) { try { resize(); } catch (e) { /* 忽略 */ } } }) : null;
+    function mount(el) {
+      host = el; el.prepend(canvas);
+      if (hostRO) { hostRO.disconnect(); hostRO.observe(el); }
+      [CUT.el, CUT.ban, FL.el].forEach(d => { if (d && d.parentNode !== el) el.appendChild(d); });   // 已经建好的过场、横幅、闪屏（上一场战斗留下的也算）跟着搬过去
+      resize();
+    }
+    // destroy()：这一场战斗结束。怪兽、特效、场地、挂在战场里的 DOM 都清掉，循环停下；渲染器和它名下的东西（画布、材质池、着色器、
+    // 共用几何体、发光后期的缓冲）留着、缩到最小，下一场 create() 接着用（见 create 开头的说明）
+    function park() {
+      if (!alive) return;
+      alive = false; cancelAnimationFrame(raf); raf = 0; beatStop(); clearTimeout(camTimer);
+      document.removeEventListener('visibilitychange', onVis);
+      if (hostRO) hostRO.disconnect();
+      WARM.tok++; warmClear(); WARM.on = false;
+      if (WARM.q) { WARM.q = null; warmed = false; }   // 预热没做完：下一场从头再排一遍（已经编译好的很快就过）
+      DR.splice(0).forEach(d => d.res());
+      Array.from(naps).forEach(n => { clearTimeout(n.t); n.res(); }); naps.clear();
+      SIDES.forEach(s => { if (M[s]) dropMon(M[s]); if (RIP[s]) { scene.remove(RIP[s]); RIP[s].traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material) q.material.dispose(); }); RIP[s] = null; } });
+      // 特效物件：结束回调照样调（特效库在里面把自己的材质标成「没在用」、放行等着它的 Promise）
+      fx.splice(0).forEach(f => { f.done = true; f.obj.removeFromParent(); if (f.end) { try { f.end(); } catch (e) { /* 忽略 */ } } releaseObj(f.obj); });
+      decals.length = 0;
       anim.splice(0).forEach(a => a.res());   // 还在等的动画都当完成了（别让放招一直卡着）
       dropBall();
+      PP.parts.length = 0; pCount = 0; PP.n = 0; PP.geo.setDrawRange(0, 0); PP.pts.visible = false; PP.warm = 0;
+      // 场景里只留常驻的（灯、场地的空壳、粒子）：还在飞的弹道（fly 里的物件不归 addFx 管）之类全部拿掉、释放，不留到下一场
+      scene.children.slice().forEach(o => { if (o !== env && o !== PP.pts && !o.isLight) { scene.remove(o); releaseObj(o); } });
+      clearEnv();
+      if (scene.background && scene.background.dispose) scene.background.dispose();
+      scene.background = null;
+      canvas.remove(); if (FL.el) FL.el.remove();
+      if (CUT.el) CUT.el.remove(); if (CUT.ban) CUT.ban.remove(); CUT.zs.splice(0).forEach(z => z.remove()); CUT.run = CUT.banRun = null; FL.on = false;
+      host = PARK_HOST;
+      // 占显存的大块缩到最小：画布、发光后期的缓冲、阴影贴图（下一场 resize 时按新战场的大小重建）
+      try {
+        renderer.setSize(1, 1, false); sized = '';
+        if (BL) [BL.a, BL.b, BL.c, BL.d].forEach(rt => rt.setSize(2, 2));
+        if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+      } catch (e) { /* 忽略 */ }
+      if (PARKED && PARKED !== SELF) PARKED.kill();   // 同时只留一个
+      PARKED = SELF;
+    }
+    // 接手上一场留下来的画面：这一场的状态全部从头来。画面丢了（留着的时候系统收回了显存）就不要了，返回 null 让 create 新建
+    function revive(h, o) {
+      try {
+        const gl = renderer.getContext();
+        if (alive || !gl || gl.isContextLost()) return null;
+        opts = o || {}; readOpts(); kit.RM = RM; kit.CINE = CINE;
+        alive = true; raf = 0; last = 0; nextDraw = 0; drawAt = 0; wasAct = true; monT = 0; UT.value = 0; GL.lost = 0;
+        M.me = M.foe = null; PREP = null; decals.length = 0;
+        LIGHTS.forEach(L => { L.intensity = 0; L.userData.fx.life = 0; });
+        FL.on = false; FL.times.length = 0; shakeAmt = 0; moveShakes = 0; SM = null; BB = null; preBloom = 0;
+        shot = null; punch = null; introDone = false; cur.pos.copy(CAM.pos); cur.look.copy(CAM.look); cur.fov = FOV;
+        CUT.run = CUT.banRun = null; CUT.sp = '';
+        Object.assign(stats, { peak: 0, flashes: 0, flashSkipped: 0, over: 0, move: null, drawn: 0 });
+        WARM.on = !warmed;
+        document.addEventListener('visibilitychange', onVis);
+        setEnv(opts.theme);
+        mount(h);
+        wake();
+        return api;
+      } catch (e) { warn('接着用上一场的 3D 画面出错，重新建', e); return null; }
+    }
+    // 彻底释放（画质换了、留着的画面丢了）：显存全部还掉，挂在画布上的监听摘掉
+    function kill() {
+      if (alive) park();
+      if (PARKED === SELF) PARKED = null;
       PP.geo.dispose(); PP.mat.dispose();
       atlas.dispose();
       Object.keys(GEO).forEach(k => GEO[k].dispose());
       Object.keys(MP).forEach(k => MP[k].all.forEach(m => m.dispose()));
+      TWINS.splice(0).forEach(t => t.dispose());
+      Object.keys(DEPTHW).forEach(k => { DEPTHW[k].dispose(); delete DEPTHW[k]; });
+      if (RT1) { RT1.dispose(); noTex.dispose(); }
       ribAll.forEach(g => g.dispose());
-      if (BL) { [BL.a, BL.b, BL.c, BL.d].forEach(rt => rt.dispose()); BL.quad.geometry.dispose(); BL.blur.dispose(); BL.comp.dispose(); BL.occ.dispose(); }
+      if (BL) { [BL.a, BL.b, BL.c, BL.d].forEach(rt => rt.dispose()); BL.quad.geometry.dispose(); BL.blur.dispose(); BL.comp.dispose(); BL.occ.dispose(); BL.occS.dispose(); }
+      if (CUT.ro) { CUT.ro.disconnect(); CUT.ro = null; }
+      glUnwatch(canvas);
       renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) { /* 忽略 */ }
-      canvas.remove(); if (FL.el) FL.el.remove();
-      if (CUT.el) CUT.el.remove(); if (CUT.ban) CUT.ban.remove(); CUT.zs.splice(0).forEach(z => z.remove()); CUT.run = CUT.banRun = null;
+      canvas.remove();
     }
-    // 预先编译特效着色器（每种拿一个材质编译完还回池子，第一次放招不卡）；高画质再空跑一遍发光后期，把画到半分辨率缓冲用的那一套也编译好
-    function warm() {
+    // ---------- 预热（FX_SPEC §7.1）：开场那几秒里，把放招要用的东西摊到很多帧里准备好，第一次放招就不卡 ----------
+    // 以前只在第一帧画完后一口气编译几种着色器（那一帧卡一下），而且漏了不少。漏掉的都是第一次用到时现做，那一帧要 60–170 毫秒（手机速度）：
+    //   双面的卡通材质（叶子、花瓣、羽毛）、特效库自己的着色器（水、龙卷风）、按名字缓存的几何体、大招过场的 DOM（第一次排版 + 字体）和速度线贴图、音效的噪音表。
+    // 现在排成一串小步骤（WARM.q），每帧只做几毫秒：
+    //   返回物件的步骤 → renderer.compileAsync 编译它的着色器（显卡驱动在后台线程编译，不占主线程；高画质再对着发光后期的离屏缓冲、用替身材质编译一份）
+    //                   → 编译好了，缩得很小真的画一帧，高画质再画一帧让它进发光后期（着色器「第一次真的用」时显卡还要再做一部分工作，
+    //                     一帧里只让一个新程序第一次上场，主线程就不用停下来等，见 monPredraw 的说明）→ 收走；
+    //   不返回东西的步骤 → 只是把东西建好（几何体、DOM、音效）。
+    // 特效库用 BattleFX.warm.push(kit => 物件 / 物件数组 / 不返回) 登记自己的步骤（自己的着色器材质、kit.geo 的几何体）。
+    // 预热期间 WARM.on = true（画面按每秒 60 帧走，早点做完，一般不到 1 秒）；中途开始放招也没关系：还没准备好的照旧现做
+    // q 还没做的步骤、wait 在等编译的物件数、ready 编译好了等着画的、cur 正在画的那一个 { o, stage 0 只进正常画面 / 1 也进发光后期, glow }
+    const WARM = { on: true, q: null, wait: 0, ready: [], cur: null, tok: 0 };
+    function warmClear() { WARM.ready.splice(0).forEach(warmDrop); if (WARM.cur) { warmDrop(WARM.cur.o); WARM.cur = null; } }
+    const WARM_MS = 4;   // 每帧最多花多少毫秒起新的步骤
+    function warmStart() {
+      const q = [], sphG = () => geo('sph14', () => new T3.SphereGeometry(1, 14, 10)), mesh = (g, m) => new T3.Mesh(g, m);
+      WARM.tok++;
+      warmClear();
+      // 先做出场要用的（冲击波、光束、粒子、柔光、命中星），再做别的
+      const first = ['shock', 'glow', 'star'];
+      first.forEach(k => q.push(() => quad(k, true)));
+      q.push(() => mesh(beamGeo(), beamMat()));
+      q.push(() => PP.pts);
+      Object.keys(QUAD_FS).forEach(k => { if (!first.includes(k)) q.push(() => quad(k, true)); });
+      // 带子：写一小段亮度为 0 的进去（一个三角形都不画的话，显卡驱动不会真的为它编译）
+      q.push(() => { const g = ribGet(), st = { v: 0, ix: 0 }; ribLine(g, st, [0, 0, 0, 0, .5, 0], 2, .5, .5, 0, 0); ribDone(g, st); return mesh(g, ribMat('#ffffff', '#ffffff', 8)); });
+      q.push(() => mesh(sphG(), glowMat('#ffffff')));
+      [null, { transparent: true }, { side: T3.DoubleSide }, { transparent: true, side: T3.DoubleSide }].forEach(o => q.push(() => mesh(sphG(), toonMat('#ffffff', o))));
+      if (BL) q.push(bloomWarm);
+      q.push(cutWarm, sfxWarm, shellGeo);
+      (BFX().warm || []).forEach(fn => q.push(() => fn(kit)));
+      WARM.q = q; WARM.on = true;
+    }
+    // 每帧画完以后调：正在画的那一个往下走一步（进发光后期 / 收走）→ 没有在画的就从编译好的里拿一个放进场景（下一帧画）→ 起新的步骤
+    function warmTick() {
+      const c = WARM.cur;
+      if (c && c.stage === 0 && c.glow) { c.stage = 1; if (c.o === PP.pts) { PP.pts.layers.enable(1); PP.warm = 2; } else fxLayer(c.o); }
+      else if (c) { warmDrop(c.o); WARM.cur = null; }
+      if (!WARM.cur && WARM.ready.length) {
+        const o = WARM.ready.shift(), glow = !!BL && !o.userData.noGlow;
+        if (o === PP.pts) { if (glow && !pCount) PP.pts.layers.disable(1); PP.warm = 2; } else scene.add(o);   // 正好有粒子在飞就不动它的层（不然这一帧粒子不发光）
+        WARM.cur = { o, stage: 0, glow };
+      }
+      const t0 = performance.now();
+      while (WARM.q.length && WARM.wait < 4 && performance.now() - t0 < WARM_MS) {
+        let r = null;
+        try { r = WARM.q.shift()(); } catch (e) { warn('预热出错', e); }
+        if (r) (Array.isArray(r) ? r : [r]).forEach(warmCompile);
+      }
+      if (!WARM.q.length && !WARM.wait && !WARM.ready.length && !WARM.cur) { WARM.q = null; WARM.on = false; }
+    }
+    function warmDrop(o) { if (o === PP.pts) { PP.pts.layers.enable(1); PP.warm = 0; return; } o.removeFromParent(); releaseObj(o); }
+    // 编译一个物件的着色器；编译好了进 WARM.ready。userData.noGlow：这个物件不进发光后期（特效库里的水、龙卷风），那一份程序不用编
+    function warmCompile(o) {
+      if (!o || !o.isObject3D) return;
+      const tok = WARM.tok, own = o !== PP.pts, jobs = [], glow = !!BL && !o.userData.noGlow;
+      if (own) { o.scale.setScalar(.001); o.position.y = -3; }   // 缩得很小、放到地面下面：画的时候看不见
+      o.traverse(q => { q.frustumCulled = false; });
+      WARM.wait++;
+      const fin = () => { WARM.wait--; if (alive && tok === WARM.tok) WARM.ready.push(o); else if (own) releaseObj(o); };
+      const comp = x => compileA(x, cam, scene);
       try {
-        const g = new T3.Group(), s = geo('sph14', () => new T3.SphereGeometry(1, 14, 10));
-        Object.keys(QUAD_FS).forEach(k => g.add(quad(k, true)));
-        g.add(new T3.Mesh(geo('beamq', () => new T3.PlaneGeometry(1, 1, 1, 24).translate(0, .5, 0)), beamMat()));
-        g.add(new T3.Mesh(ribGet(), ribMat('#ffffff', '#ffffff', 8)));
-        g.add(new T3.Mesh(s, glowMat('#ffffff')), new T3.Mesh(s, toonMat('#ffffff')), new T3.Mesh(s, toonMat('#ffffff', { transparent: true })));
-        g.children.forEach(o => { o.scale.setScalar(.001); o.frustumCulled = false; });
-        fxLayer(g); scene.add(g);
-        renderer.compile(g, cam, scene);
-        if (BL) bloomPass(0);
-        scene.remove(g);
-        releaseObj(g);
+        jobs.push(comp(o));
+        if (glow) {
+          // 发光后期那一份：对着离屏缓冲、换成替身材质再编译（用 standIn，不动物件本身）
+          renderer.setRenderTarget(BL.a);
+          try { o.traverse(q => { const t = q.material && !Array.isArray(q.material) ? twinOf(q.material) : null; if (t) jobs.push(comp(standIn(q, t))); }); } finally { renderer.setRenderTarget(null); }
+        }
       } catch (e) { warn('预编译特效着色器出错', e); }
+      Promise.all(jobs).then(fin, fin);
+    }
+    // 大招过场、中招横幅的 DOM 先建好放进战场、排好版（藏着）：第一次排版和载入字体都在这时候做；速度线贴图在后台编码
+    // 发光后期自己的两个着色器（模糊：画进离屏缓冲；叠加：画到屏幕）在后台编译。当遮挡用的黑色材质跟着怪兽编译（monCompile）
+    function bloomWarm() {
+      const B = BL, comp = () => { const p = compileA(B.scene, B.cam); if (p && p.catch) p.catch(() => {}); };
+      try {
+        B.quad.material = B.blur; renderer.setRenderTarget(B.b);
+        try { comp(); } finally { renderer.setRenderTarget(null); }
+        B.quad.material = B.comp; comp();
+      } catch (e) { warn('预编译发光后期的着色器出错', e); }
+    }
+    function cutWarm() {
+      if (!host || !host.isConnected) return;
+      const el = cutDom();
+      if (el.parentNode !== host) host.appendChild(el);
+      const bn = banDom();
+      if (bn.parentNode !== host) host.appendChild(bn);
+      if (CUT.run || CUT.banRun || CUT.pre) return;
+      // 再让浏览器真的把它们画几帧（透明度 0.004，看不见）：这些样式（描边的字、模糊阴影、渐变、立绘的白边滤镜）第一次显示时，
+      // 合成器要现编译自己的着色器，那一帧会晚出来 0.1 秒左右（主线程不忙，是显卡那边在等）；先画过一遍就不会了。画完藏回去
+      CUT.pre = true;
+      if (!CUT.nb.textContent) { CUT.nb.textContent = 'Echo'; CUT.ns.textContent = '回声'; }
+      const b = bn.querySelector('b'), sm = bn.querySelector('small');
+      if (!b.textContent) { b.textContent = 'Echo'; sm.textContent = '回声'; }
+      if (!CUT.img.getAttribute('src')) CUT.img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';   // 1×1 透明图：让立绘的滤镜也跑一遍
+      el.style.opacity = bn.style.opacity = '0.004';
+      el.style.visibility = bn.style.visibility = '';
+      drawn(4).then(() => { if (!CUT.run) el.style.visibility = 'hidden'; if (!CUT.banRun) bn.style.visibility = 'hidden'; });
+    }
+    // 音效：AudioContext、噪音表、波形表先建好（设置里关了音效就不建），第一招的蓄力声不用现做
+    function sfxWarm() {
+      try { if (opts.sfx && opts.sfx() === false) return; const S = window.BattleSFX; if (S && S.warm) S.warm(); } catch (e) { /* 音效出错不影响画面 */ }
     }
     setEnv(opts.theme);
     mount(host);
-    raf = requestAnimationFrame(frame);
-    return {
-      intro, setEnv, setMon, enter, attack, hit, faint, heal, status, buff, catchThrow, wobble, sealed, breakOut, removeBall, screenPos, mount, resize, destroy,
+    wake();
+    const api = {
+      intro, setEnv, setMon, enter, attack, hit, faint, heal, status, buff, catchThrow, wobble, sealed, breakOut, removeBall, screenPos, mount, resize, destroy: park,
       kit, quality: Q,
       // 调试 / 工具用：粒子数和峰值、特效物件数、闪屏次数、显存对象数、着色器程序数
-      fxStats: () => ({ parts: pCount, peak: stats.peak, fx: fx.length, anim: anim.length, flashes: stats.flashes, flashSkipped: stats.flashSkipped, over: stats.over, lights: LIGHTS.filter(L => L.userData.fx.life).length, move: stats.move, mem: Object.assign({}, renderer.info.memory), programs: renderer.info.programs ? renderer.info.programs.length : 0 }),
+      // warm：开场预热还没做完；pace：现在每秒画几帧（没东西在动时 30，否则 60）；drawn：一共画了多少帧
+      fxStats: () => ({ parts: pCount, peak: stats.peak, fx: fx.length, anim: anim.length, flashes: stats.flashes, flashSkipped: stats.flashSkipped, over: stats.over, lights: LIGHTS.filter(L => L.userData.fx.life).length, move: stats.move, mem: Object.assign({}, renderer.info.memory), programs: renderer.info.programs ? renderer.info.programs.length : 0, warm: WARM.on, pace: wasAct ? 60 : 30, drawn: stats.drawn }),
+      // 着色器程序清单（查「哪一招现编译了哪个程序」用）：[名字, 用的次数, 缓存键的长度和校验]
+      glPrograms: () => (renderer.info.programs || []).map(p => { let h = 0; const k = String(p.cacheKey || ''); for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) | 0; return [p.name, p.usedTimes, k.length + ':' + (h >>> 0).toString(36), k]; }),
       fxReset: () => { stats.peak = pCount; stats.flashes = stats.flashSkipped = stats.over = 0; },
       fxIdle: () => !fx.length && !pCount && !FL.on && !anim.length && !CUT.run && !CUT.banRun,
       get canvas() { return canvas; }, get camBusy() { return !!(shot || punch); },
       glInfo: () => ({ lost: !!GL.lost, n: GL.n }),   // 画面丢过几次、现在是不是丢着（测试 / 诊断用）
     };
+    const SELF = { key: KEY, revive, kill, api };
+    return api;
   }
 
-  window.Battle3D = { create, TYPE_COL, QUAL, CAP };
+  // release()：把留着没在用的那个 3D 画面彻底释放（平时不用调；换成 2D 流畅模式、测试里要看显存有没有还干净时用）
+  window.Battle3D = { create, TYPE_COL, QUAL, CAP, release() { if (PARKED) { const p = PARKED; PARKED = null; p.kill(); } }, get parked() { return !!PARKED; } };
 })();

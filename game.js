@@ -116,7 +116,7 @@
       player: { gender: '', name: '' },
       talk: { log: [], done: {}, days: {} },   // 和岛民聊天（talk.js）：最近的记录、每个岛民最好几星、今天拿过金币的
       book: { at: -1, mix: .6, view: 'book', vb: '' },   // 课本单元：正在学的单元（BK 里第几个，-1 = 没选过，按日期猜）、冒险出题里课本占几成、闯关页看课本还是小岛、正在看哪一册
-      rev: { items: {}, v: 0, day: { d: '', n: 0, f: 0 } },   // 每日复习（间隔复习）：见 revWrong / revRight / dueList；day = 今天新进了几条（n）、冒险里算了几次复习（f）
+      rev: { items: {}, v: 0, day: { d: '', n: 0, f: 0 }, gone: 0 },   // 每日复习（间隔复习）：见 revWrong / revRight / dueList；day = 今天新进了几条（n）、冒险里算了几次复习（f）；gone = 掌握以后删掉的聊天句子有几条（revTrim）
     };
   }
   function merge(base, o) {
@@ -134,21 +134,98 @@
   // ③ APK：每天第一次保存时往手机「下载/EchoIsland/」写一份（EchoNative.backupWrite：原生只留最近 7 份，卸载 App 也不删），
   //    切到后台时隔 1 小时以上再写一次（同一天覆盖同一份）。
   // 设置里「导出存档」（分享到微信 / 网页版下载成文件）、「从备份恢复」（要家长密码）见 exportSave / restoreSheet。
-  const BAK = [1, 2, 3].map(n => KEY + '-bak' + n), BAK_META = KEY + '-bakmeta', BAD = KEY + '-bad', PRE = KEY + '-pre';
+  //
+  // 存档越玩越大（2026-11-15 量过：玩 1 年约 37 万字、3 年约 110 万字，localStorage 一共只有约 524 万字）：
+  // ④ 备份压着存（lzPack，约六分之一）：本机 3 份、「恢复前 / 清空前」那份、坏档那份，超过 PACK_MIN 字的都压；读的时候 parseSave / bakGet 自动解开。
+  //    小存档（测试用的）还是原样的 JSON。导出的文件、手机「下载/EchoIsland」里的也一直是原样的 JSON；
+  // ⑤ 存档大了以后走路不重写整份存档：每走一步只往 KEY-pos 写一条很小的位置记录（savePos），停下来 1 秒、换地图、开战、回首页、切到后台时
+  //    才把整份存档存一次（flushWalk）。下次打开时 KEY-pos 要是比存档新（上次没来得及整份存就被关掉了），就用它的位置（load 里的 posApply）；
+  // ⑥ 快满之前先说（storeCheck）：用到 80% 首页挂一条请家长导出，不等到存不进去。
+  const BAK = [1, 2, 3].map(n => KEY + '-bak' + n), BAK_META = KEY + '-bakmeta', BAD = KEY + '-bad', PRE = KEY + '-pre', POS = KEY + '-pos';
+  const LS_QUOTA = 5 * 1024 * 1024;   // 浏览器 / WebView 给一个网站的 localStorage：键 + 值约 10MB，中文一个字占 2 字节 → 约 524 万字
+  const PACK_MIN = 20000;             // 这么多字以上的备份才压
   const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
-  // 读得出来、是一个存档对象 → 对象；写了一半、乱码、不是对象 → null
+  const lsDel = k => { try { localStorage.removeItem(k); } catch (e) { /* 忽略 */ } };
+  // 读得出来、是一个存档对象 → 对象；写了一半、乱码、不是对象 → null（压过的备份先解开）
   function parseSave(txt) {
     if (!txt || typeof txt !== 'string') return null;
+    txt = lzUnpack(txt);
+    if (!txt) return null;
     try { const o = JSON.parse(txt); return o && typeof o === 'object' && !Array.isArray(o) ? o : null; } catch (e) { return null; }
+  }
+  // ---------- 备份压着存（存档大了以后，几份备份原样放会把 localStorage 撑满）----------
+  // LZW：存档文字先转成 UTF-8 字节，重复出现的片段换成 9–16 位的编号，再每 15 位装进一个字（都落在 0x20–0x801F，没有代理对）。
+  // 格式：'LZ1:' + 原文字数 + ':' + UTF-8 字节数 + ':' + 字节的校验和（都是 36 进制）+ ':' + 压好的字。JSON 存档能压到原来的六分之一上下。
+  // 压完马上解一次对一遍（lzPack 里），对不上就不压、原样存——备份宁可大一点，不能读不回来。
+  const LZ_TAG = 'LZ1:', LZ_MAX = 65536, LZ_HS = 1 << 18;
+  const lzBits = n => { let w = 9; while ((1 << w) < n) w++; return w; };
+  const lzSum = u8 => { let h = 0x811c9dc5; for (let i = 0; i < u8.length; i++) h = Math.imul(h ^ u8[i], 16777619); return (h >>> 0).toString(36); };
+  function lzPack(str) {
+    if (typeof str !== 'string' || !str || typeof TextEncoder !== 'function') return str;
+    try {
+      const src = new TextEncoder().encode(str), n = src.length;
+      const hk = new Int32Array(LZ_HS).fill(-1), hv = new Uint16Array(LZ_HS), out = new Uint16Array(Math.ceil(n * 16 / 15) + 8);
+      let o = 0, buf = 0, nb = 0, next = 258, width = 9, w = src[0];
+      const put = code => { buf = (buf << width) | code; nb += width; while (nb >= 15) { nb -= 15; out[o++] = ((buf >>> nb) & 0x7fff) + 32; } buf &= (1 << nb) - 1; };
+      for (let i = 1; i < n; i++) {
+        const c = src[i], key = (w << 8) | c;
+        let h = (Math.imul(key, 0x9E3779B1) >>> 14) & (LZ_HS - 1), hit = -1;
+        while (hk[h] !== -1) { if (hk[h] === key) { hit = hv[h]; break; } h = (h + 1) & (LZ_HS - 1); }
+        if (hit >= 0) { w = hit; continue; }
+        put(w);
+        if (next < LZ_MAX) { hk[h] = key; hv[h] = next++; width = lzBits(next); }
+        else { put(256); hk.fill(-1); next = 258; width = 9; }   // 字典满了：发一个「清空」，从头再攒
+        w = c;
+      }
+      put(w);
+      if (nb) out[o++] = ((buf << (15 - nb)) & 0x7fff) + 32;
+      let s = ''; for (let i = 0; i < o; i += 8192) s += String.fromCharCode.apply(null, out.subarray(i, Math.min(o, i + 8192)));
+      const packed = LZ_TAG + str.length.toString(36) + ':' + n.toString(36) + ':' + lzSum(src) + ':' + s;
+      return packed.length < str.length && lzUnpack(packed) === str ? packed : str;
+    } catch (e) { return str; }
+  }
+  // 解不开（不是这个格式、被截断、对不上字数）返回 null；没压过的原样返回
+  function lzUnpack(txt) {
+    if (typeof txt !== 'string' || txt.slice(0, LZ_TAG.length) !== LZ_TAG) return txt;
+    try {
+      const a = txt.indexOf(':', LZ_TAG.length), b = txt.indexOf(':', a + 1), c = txt.indexOf(':', b + 1);
+      const chars = parseInt(txt.slice(LZ_TAG.length, a), 36), n = parseInt(txt.slice(a + 1, b), 36);
+      if (a < 0 || b < 0 || c < 0 || !(n > 0) || n > 64 * 1024 * 1024) return null;
+      const out = new Uint8Array(n), pre = new Uint16Array(LZ_MAX), suf = new Uint8Array(LZ_MAX), stack = new Uint8Array(LZ_MAX);
+      let p = c + 1, buf = 0, nb = 0, o = 0, next = 258, prev = -1, first = 0;
+      const end = txt.length;
+      while (o < n) {
+        const width = lzBits(Math.min(next + 1, LZ_MAX));
+        while (nb < width) { if (p >= end) return null; buf = (buf << 15) | ((txt.charCodeAt(p++) - 32) & 0x7fff); nb += 15; }
+        nb -= width;
+        const code = (buf >>> nb) & ((1 << width) - 1); buf &= (1 << nb) - 1;
+        if (code === 256) { next = 258; prev = -1; continue; }
+        if (code === 257 || code > next || (code === next && prev < 0)) return null;
+        let cur = code, sp = 0;
+        if (code === next) { stack[sp++] = first; cur = prev; }   // 这一条还没建好（它就是「上一条 + 上一条的第一个字节」）
+        while (cur >= 258) { stack[sp++] = suf[cur]; cur = pre[cur]; }
+        first = cur; stack[sp++] = cur;
+        if (o + sp > n) return null;
+        while (sp) out[o++] = stack[--sp];
+        if (prev >= 0 && next < LZ_MAX) { pre[next] = prev; suf[next] = first; next++; }
+        prev = code;
+      }
+      if (lzSum(out) !== txt.slice(b + 1, c)) return null;
+      const s = new TextDecoder('utf-8').decode(out);
+      return s.length === chars ? s : null;
+    } catch (e) { return null; }
   }
   const bakMeta = () => { try { return JSON.parse(lsGet(BAK_META) || '{}') || {}; } catch (e) { return {}; } };
   const nat = f => { try { return window.EchoNative && typeof EchoNative[f] === 'function'; } catch (e) { return false; } };
-  // 最近一份读得出来的备份：{ o 存档, txt, label 哪里的哪天的 }；先看本机的 3 份，再看手机「下载/EchoIsland」里的
+  // 往备份的键里放的：够大的压着放（已经压过的不动）；bakGet 读回原文（没有、解不开 → ''）
+  const packBig = t => (t && t.length >= PACK_MIN && t.slice(0, LZ_TAG.length) !== LZ_TAG ? lzPack(t) : t);
+  const bakGet = k => lzUnpack(lsGet(k) || '') || '';
+  // 最近一份读得出来的备份：{ o 存档, txt 原文, label 哪里的哪天的 }；先看本机的 3 份，再看手机「下载/EchoIsland」里的
   function bestBackup() {
     const meta = bakMeta();
     for (let i = 0; i < BAK.length; i++) {
-      const txt = lsGet(BAK[i]), o = parseSave(txt);
+      const txt = bakGet(BAK[i]), o = parseSave(txt);
       if (o) return { o, txt, label: '这台设备上 ' + (meta['d' + (i + 1)] || '以前') + ' 的备份' };
     }
     if (nat('backupList') && nat('backupRead')) {
@@ -161,36 +238,84 @@
     }
     return null;
   }
+  // 位置记录（KEY-pos）是照着某一份整存档记的：n = 那份存档的字数，b = 那份存档里的位置，p = 后来走到的位置，
+  // c = 跟着走路变的几个数（walkCount：喷雾还剩几步、一共走了几步、幼儿园的步数、队伍里的蛋还要走几步）。
+  // 打开游戏时现在的存档和它对得上（字数一样、位置一样）才用；对不上（存档被换过、从备份恢复过）就扔掉
+  const posOf = w => (w ? [w.map, w.x, w.y, w.dir] : null);
+  function walkCount(s) {
+    const w = s.world || {}, m = s.mon || {}, eggs = {};
+    (m.team || []).forEach(u => { const x = (m.box || []).find(q => q && q.uid === u); if (x && x.egg && typeof x.steps === 'number') eggs[u] = x.steps; });
+    return [w.repel | 0, m.walk | 0, m.day && typeof m.day.steps === 'number' ? m.day.steps : -1, eggs];
+  }
+  function walkCountApply(s, c) {
+    if (!Array.isArray(c)) return;
+    const w = s.world, m = s.mon || {};
+    if (typeof c[0] === 'number' && c[0] >= 0) w.repel = c[0];
+    if (typeof c[1] === 'number' && c[1] >= (m.walk | 0)) m.walk = c[1];
+    if (m.day && typeof c[2] === 'number' && c[2] >= (m.day.steps | 0)) m.day.steps = c[2];
+    if (c[3] && typeof c[3] === 'object') (m.box || []).forEach(x => { const n = x && x.egg ? c[3][x.uid] : undefined; if (typeof n === 'number' && n > 0 && n < x.steps) x.steps = n; });   // 蛋只会越走越少；到 0 那一步孵出来时已经整份存过了
+  }
+  function posApply(s, raw) {
+    const t = lsGet(POS), w = s.world;
+    RT.posBase = posOf(w); RT.posKey = false;
+    if (!t) return;
+    let r = null;
+    try { r = JSON.parse(t); } catch (e) { /* 坏了就不要 */ }
+    const p = r && r.p;
+    if (w && Array.isArray(p) && r.n === raw.length && String(r.b) === String(RT.posBase) && typeof p[0] === 'string' && p[2] >= 0 && p[3] >= 0) {
+      w.map = p[0]; w.z = p[1] | 0; w.x = p[2] | 0; w.y = p[3] | 0; w.arrive = null;
+      if (/^(up|down|left|right)$/.test(p[4])) w.dir = p[4];
+      walkCountApply(s, r.c);
+      RT.posKey = true; RT.walkDirty = true;   // 存档里还是原来的位置：下一次整份存的时候带上
+    } else lsDel(POS);
+  }
   function load(fallback) {
     const raw = lsGet(KEY);
+    RT.lastTxt = raw || '';
     if (raw) {
       const o = parseSave(raw);
-      if (o) return merge(fresh(), o);
+      if (o) { const s = merge(fresh(), o); posApply(s, raw); return s; }
       // 存档坏了：原样另存一份（不覆盖、能抢救），再用最近一份好的备份
       RT.badSave = true;
-      const b = bestBackup();
-      if (!lsSet(BAD, raw)) {   // 地方不够：腾掉最老的一份备份再存（要是正好要用它，b 里已经拿到了）
-        try { localStorage.removeItem(BAK[2]); } catch (e) { /* 忽略 */ }
-        if (!lsSet(BAD, raw)) RT.noSave = true;   // 连另存的地方都没有：这次先不保存，免得把坏档盖掉
+      lsDel(POS);   // 位置记录是跟着坏掉的那份的
+      const b = bestBackup(), keep = packBig(raw);
+      if (!lsSet(BAD, keep)) {   // 地方不够：腾掉最老的一份备份再存（要是正好要用它，b 里已经拿到了）
+        lsDel(BAK[2]);
+        if (!lsSet(BAD, keep)) RT.noSave = true;   // 连另存的地方都没有：这次先不保存，免得把坏档盖掉
       }
+      { const meta = bakMeta(); meta.bad = dayStr(); lsSet(BAK_META, JSON.stringify(meta)); }   // 哪天坏的（空间紧的时候，一个月前的坏档先删）
       if (window.EchoErr) EchoErr.log('app', '存档读不出来（' + raw.length + ' 字）', 'load');
       RT.restored = b ? b.label : 'none';
-      if (b) { if (!RT.noSave) lsSet(KEY, b.txt); return merge(fresh(), b.o); }
-      return fresh();
+      let s = fresh();
+      if (b) { if (!RT.noSave && lsSet(KEY, b.txt)) RT.lastTxt = b.txt; s = merge(s, b.o); }
+      RT.posBase = posOf(s.world);
+      return s;
     }
-    if (fallback) return merge(fresh(), fallback);
-    return fresh();
+    lsDel(POS);
+    const s = fallback ? merge(fresh(), fallback) : fresh();
+    RT.posBase = posOf(s.world);
+    return s;
   }
+  // 整份存档存进去了：记下存的是哪一份（lastTxt）、里面的位置；位置记录用不着了
+  function saved(txt) {
+    RT.lastTxt = txt; RT.posBase = posOf(S.world); RT.walkDirty = false;
+    if (RT.walkTm) { clearTimeout(RT.walkTm); RT.walkTm = 0; }
+    if (RT.posKey) { RT.posKey = false; lsDel(POS); }
+  }
+  // 整份存档：JSON.stringify + localStorage.setItem，当场写完（收服、徽章、复习、聊天、买东西……都走这里，一调用就存好了）。
+  // 存档大了以后这一下不便宜（3 年的存档约 97 万字，在慢 4 倍的 CPU 上 50–110 毫秒），所以走路不走这里，见 savePos
   function save() {
     if (RT.noSave) return;
     let txt;
     try { txt = JSON.stringify(S); } catch (e) { if (window.EchoErr) EchoErr.log('app', '存档写不出来：' + e.message, 'save'); return; }
     const d = dayStr();
     if (RT.bakDay !== d) { RT.bakDay = d; dailyBackup(d, txt); }
-    if (lsSet(KEY, txt)) return;
+    if (lsSet(KEY, txt)) { saved(txt); return; }
     // 存不下（空间满了）：先扔掉最老的一份备份再试
-    try { localStorage.removeItem(BAK[2]); } catch (e) { /* 忽略 */ }
-    if (!lsSet(KEY, txt) && !RT.saveWarned) {
+    lsDel(BAK[2]);
+    if (lsSet(KEY, txt)) { saved(txt); setTimeout(storeCheck, 0); return; }
+    setTimeout(storeCheck, 0);
+    if (!RT.saveWarned) {
       RT.saveWarned = true;
       if (window.EchoErr) EchoErr.log('app', '存档存不进去（空间满了？）', 'save');
       // 第一次存不进去就说一声（只说一次）：不然孩子每次玩的进度都悄悄丢了
@@ -208,13 +333,14 @@
       const cur = lsGet(KEY);
       if (parseSave(cur)) {   // 坏的不往备份里放
         const v1 = lsGet(BAK[0]), v2 = lsGet(BAK[1]);
-        if (v2) lsSet(BAK[2], v2);
-        if (v1) lsSet(BAK[1], v1);
-        lsSet(BAK[0], cur);
+        if (v2) lsSet(BAK[2], packBig(v2));
+        if (v1) lsSet(BAK[1], packBig(v1));
+        lsSet(BAK[0], packBig(cur));   // 大存档压着放（约六分之一），不然 3 份备份就把 localStorage 占掉一大半
         meta.d3 = meta.d2; meta.d2 = meta.d1; meta.d1 = meta.day || '以前';   // 上一份存档最后是哪天存的
       }
       meta.day = d;
       lsSet(BAK_META, JSON.stringify(meta));
+      setTimeout(storeCheck, 1500);   // 备份换过了：看一眼空间还够不够
     }
     nativeBackup(txt);
   }
@@ -223,13 +349,91 @@
     try { if (EchoNative.backupWrite(txt || JSON.stringify(S))) RT.natBakAt = Date.now(); } catch (e) { /* 写不了就算了，本机还有 3 份 */ }
   }
 
+  // ---------- 走路只记位置（存档大了以后，每走一步就整份存一次会一步一卡）----------
+  // world.js 每走一步调 savePos()：S.world 里的 map / x / y / dir 它已经改好了。
+  // 存档还小（不到 WALK_FULL_MAX 字，整份存一次只要几毫秒）：照老办法每一步都整份存——最简单，localStorage 里永远是最新的。
+  // 存档大了：这里只往 KEY-pos 写一条一百来个字的记录（位置 + 喷雾还剩几步、走了几步、蛋还要走几步），存档再大也不费事，
+  // 被杀掉也不丢位置。整份存档等下面这些时候：
+  //   停下来 1 秒（WALK_FOLD_MS）· 换地图 · 开战前 / 离开大地图（show）· 切到后台、页面关掉、被系统冻住 · 返回键退出 ·
+  //   任何一次 save()（对话、捡东西、剧情……，还有下面记学习时间的定时器每分钟那一次）
+  const WALK_FOLD_MS = 1000, WALK_FULL_MAX = 60000;
+  function savePos() {
+    if (RT.noSave || !S) return;
+    if (RT.lastTxt.length < (RT.walkFull != null ? RT.walkFull : WALK_FULL_MAX)) { save(); return; }   // RT.walkFull：测试用，0 = 小存档也只记位置
+    const w = S.world;
+    RT.walkDirty = true;
+    if (lsSet(POS, JSON.stringify({ n: RT.lastTxt.length, b: RT.posBase, p: [w.map, w.z, w.x, w.y, w.dir], c: walkCount(S) }))) RT.posKey = true;
+    clearTimeout(RT.walkTm);
+    RT.walkTm = setTimeout(() => { RT.walkTm = 0; flushWalk(true); }, WALK_FOLD_MS);
+  }
+  // 又迈出一步（world.js 的 step()）：还在走，「停下来 1 秒」重新算——别在走到半路的时候整份存（那一下会掉帧）
+  function walkTouch() {
+    if (!RT.walkTm) return;
+    clearTimeout(RT.walkTm);
+    RT.walkTm = setTimeout(() => { RT.walkTm = 0; flushWalk(true); }, WALK_FOLD_MS);
+  }
+  // 把走路攒下的整份存一次；没攒着就什么都不做。返回存了没有。
+  // soft = 顺手存的（停下来、切后台、定时）：这时候 localStorage 里的存档要是已经不是游戏上次写的那份
+  // （另一个标签页写过、测试脚本换过存档正要重新打开），就不去盖它
+  function flushWalk(soft) {
+    if (!RT.walkDirty || RT.noSave || !S) return false;
+    if (soft && (lsGet(KEY) || '') !== RT.lastTxt) return false;
+    save();
+    return !RT.walkDirty;
+  }
+
+  // ---------- 存档空间：快满之前先说 ----------
+  // localStorage 里一共用了多少字（键 + 值）。配额按最坏的算（中文一个字占 2 字节，约 524 万字）
+  function lsUsage() {
+    let n = 0;
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); n += k.length + (localStorage.getItem(k) || '').length; } } catch (e) { /* 读不了就当没有 */ }
+    return n;
+  }
+  const lsQuota = () => RT.lsQuota || LS_QUOTA;   // 测试里可以把配额改小
+  // 每天换完备份、打开游戏、存不进去的时候看一眼：
+  //   60% 以上：没压的备份压一下；一个月以前的坏档、「恢复前 / 清空前」那份删掉；
+  //   90% 以上：最老的两份备份和坏档也删（最近一份备份、手机「下载/EchoIsland」里的都还在）；
+  //   还在 80% 以上：首页挂一条「存档空间快满了」，请家长导出存档（homeBars / storeInfo）
+  function storeCheck() {
+    if (!S) return null;
+    const q = lsQuota(), meta = bakMeta(), old = d => !d || dayDiff(String(d), dayStr()) > 30;
+    let used = lsUsage();
+    if (used > q * .6) {
+      [BAD, PRE].concat(BAK).forEach(k => { const v = lsGet(k); if (v) { const pk = packBig(v); if (pk !== v) lsSet(k, pk); } });
+      if (lsGet(BAD) && old(meta.bad)) lsDel(BAD);
+      if (lsGet(PRE) && old(meta.pre)) lsDel(PRE);
+      used = lsUsage();
+    }
+    if (used > q * .9) {
+      [BAK[2], BAK[1], BAD].forEach(lsDel);
+      used = lsUsage();
+      if (window.EchoErr && !RT.storeCut) { RT.storeCut = true; EchoErr.log('app', '存档空间快满了，删掉了较早的两份备份', 'store'); }
+    }
+    RT.store = { used, quota: q, pct: Math.round(used / q * 100), warn: used > q * .8 };
+    if (RT.store.warn && !RT.storeLogged) { RT.storeLogged = true; if (window.EchoErr) EchoErr.log('app', '存档空间快满了：已用 ' + RT.store.pct + '%（' + used + ' 字）', 'store'); }
+    refreshBars();
+    return RT.store;
+  }
+  function storeInfo() {
+    const st = storeCheck();
+    if (!st || !st.warn) return;
+    openModal('<div class="big">💾</div><h2>存档空间快满了</h2>' +
+      '<p>手机给游戏放存档的地方已经用了 <b>' + st.pct + '%</b>。现在还能正常存；满了以后，新的进度就存不进去了。</p>' +
+      '<p class="tip">请家长：先在「设置 → 🔒 家长设置 → 💾 存档备份」里点「导出存档」，发到微信里存一份；再把这条提示告诉帮你装游戏的人。</p>' +
+      '<div class="row"><button class="btn ghost" data-act="parentSet">🔒 家长设置</button><button class="btn" data-act="close" data-focus>知道了</button></div>');
+  }
+
   let S = fresh();
   const RT = { srBroken: false, noRec: false, rec: null, mr: null, recUrl: '', listening: false, recording: false, lastRest: Date.now(), resetArm: false, scrollCur: true,
     pin: null, pinPass: null, parentUntil: 0, parentOpen: false, lastAct: null, advStop: '', battleEnd: 0, fakeNow: 0, fakeAt: 0, pushTry: 0,
     // AI 打分用不了（aiNote）：aiFails 连着失败几次、aiFailAt 最近一次、aiBar 首页红条 { cls, why, at }、aiOkAt 最近一次成功
     aiFails: 0, aiFailAt: 0, aiBar: null, aiOkAt: 0,
     // 存档：badSave 读到坏档、restored 用了哪份备份（'none' = 一份好的都没有）、noSave 这次不保存、bakDay 今天轮换过备份没有、natBakAt 最近往手机写备份的时间
-    badSave: false, restored: '', noSave: false, bakDay: '', natBakAt: 0 };
+    badSave: false, restored: '', noSave: false, bakDay: '', natBakAt: 0,
+    // 走路只记位置（savePos / flushWalk）：lastTxt 游戏上次写进（或读出）localStorage 的那份存档原文、posBase 那份存档里的位置、
+    // posKey 现在有没有 KEY-pos、walkDirty 走了路还没整份存、walkTm 停下来 1 秒后整份存的定时器；
+    // store 最近一次量的存档空间 { used, quota, pct, warn }、lsQuota 测试用的假配额
+    lastTxt: '', posBase: null, posKey: false, walkDirty: false, walkTm: 0, walkFull: null, store: null, lsQuota: 0 };
   let P = null; // 当前关卡
 
   // ---------- 日期 / 连续打卡 ----------
@@ -321,7 +525,7 @@
   // 不再用有道的在线发音接口（评估「必须改」第 7 条：非公开接口，没有商用授权）。APK 的 WebView 没有本机声音：配音和阿里云都不行时就不出声
   const TTS = { voices: [], v: null, ok: 'speechSynthesis' in window, loaded: false };
   const PREF = [/(Aria|Jenny|Ava|Emma|Guy).*(Online|Natural)/i, /Google US English/i, /Samantha/i, /Microsoft (Aria|Jenny|Zira|David)/i, /Google UK English Female/i, /Karen|Daniel|Moira|Tessa/i];
-  // ---------- 自然配音：tools/voice/gen.py 用本机开源模型 Kokoro（Apache-2.0）提前合成的固定句子（assets/voice/{f,m}/<key>.mp3） ----------
+  // ---------- 自然配音：tools/voice/gen.py 用本机开源模型 Kokoro（Apache-2.0）提前合成的固定句子（assets/voice/{f,m}/<key>.ogg，Opus） ----------
   // 文件名是规范化文本的 FNV-1a 哈希，和 tools/voice/key.js 一样；没合成的句子（拼了名字的）联网时用阿里云现场合成，再不行用本机声音
   const CLIP = { f: new Set(), m: new Set() };
   function clipKey(t) {
@@ -331,12 +535,14 @@
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
     return h.toString(36);
   }
+  // 配音是 Opus/Ogg：老 iOS Safari 放不了，就当没有打包配音（走阿里云 → 本机声音）
+  const OGG_OK = (() => { try { return !!new Audio().canPlayType('audio/ogg; codecs="opus"'); } catch (e) { return false; } })();
   try {
-    if (location.protocol !== 'file:') fetch('assets/voice/index.json').then(r => (r.ok ? r.json() : null)).then(j => { if (j) { CLIP.f = new Set(j.f || []); CLIP.m = new Set(j.m || []); } }).catch(() => {});
+    if (OGG_OK && location.protocol !== 'file:') fetch('assets/voice/index.json').then(r => (r.ok ? r.json() : null)).then(j => { if (j) { CLIP.f = new Set(j.f || []); CLIP.m = new Set(j.m || []); } }).catch(() => {});
   } catch (e) { /* file:// 打开时读不了，就不用配音 */ }
   function clipUrl(text, g) {
     const k = clipKey(text);
-    for (const x of g === 'm' ? ['m', 'f'] : ['f', 'm']) if (CLIP[x].has(k)) return 'assets/voice/' + x + '/' + k + '.mp3';
+    for (const x of g === 'm' ? ['m', 'f'] : ['f', 'm']) if (CLIP[x].has(k)) return 'assets/voice/' + x + '/' + k + '.ogg';
     return '';
   }
   const FEM = /female|samantha|aria|jenny|ava|emma|zira|karen|moira|tessa|serena|victoria|allison|susan|libby|sonia|natasha|michelle|joanna|salli|kendra|fiona|kate/i;
@@ -637,10 +843,12 @@
     const tabs = $('#tabs'); if (!tabs) return;
     let box = $('#home-bars');
     if (!box) { box = document.createElement('div'); box.id = 'home-bars'; tabs.parentNode.insertBefore(box, tabs.nextSibling); }
-    const st = aiBarState(), up = updNew();
+    const st = aiBarState(), up = updNew(), full = RT.store && RT.store.warn ? RT.store : null;
     box.innerHTML = (st ? '<button class="ai-bar" data-act="aiBarInfo" data-cls="' + st.cls + '">' + esc(barText(st)) + '<em>怎么办？</em></button>' : '') +
+      // 存档空间快满了（storeCheck）：还存得进去的时候就说，请家长导出
+      (full ? '<button class="ai-bar" data-act="storeInfo" data-cls="store">💾 存档空间快满了（已用 ' + full.pct + '%），请告诉家长<em>怎么办？</em></button>' : '') +
       (up ? '<button class="upd-bar" data-act="updInfo">🆕 有新版本' + (S.upd.name ? '（' + esc(S.upd.name) + '）' : '') + '，请家长更新<em>看看</em></button>' : '');
-    box.hidden = !st && !up;
+    box.hidden = !st && !up && !full;
   }
   function refreshBars() { try { if (!$('#home').hidden) homeBars(); } catch (e) { /* 还没启动 */ } }
   function aiBarInfo() {
@@ -1141,13 +1349,27 @@
     revTrim(); save();
   }
   // 复习本最多留 REV_MAX 条还没掌握的。已经掌握的不删（周报「累计掌握」）；
-  // 真的超了，先删只见过一次、从没错过的（刚进来、投入最少的），再删最早进来的
+  // 真的超了，先删只见过一次、从没错过的（刚进来、投入最少的），再删最早进来的。
+  // 例外：AI 聊天里改过的句子（free）没有个数上限——课本的题一共就三千多条，聊天句子每天都在加，掌握了以后不会再出题，
+  // 留着只是让存档越来越大（量过：三年能攒两千多条、五十多万字）。所以掌握了的聊天句子只留最近的 REV_FREE_KEEP 条，
+  // 更早的删掉、只在 S.rev.gone 里记个数（「累计掌握」照样算上它们，revMastered）
+  const REV_FREE_KEEP = 200;
   function revTrim() {
-    const act = Object.keys(S.rev.items).filter(k => S.rev.items[k].due);
-    if (act.length <= REV_MAX) return;
-    act.sort((a, b) => { const A = S.rev.items[a], B = S.rev.items[b]; return ((A.x || 0) > 0) - ((B.x || 0) > 0) || (A.b || 0) - (B.b || 0) || (B.c || '').localeCompare(A.c || ''); });
-    for (const k of act.slice(0, act.length - REV_MAX)) delete S.rev.items[k];
+    const ks = Object.keys(S.rev.items), act = ks.filter(k => S.rev.items[k].due);
+    if (act.length > REV_MAX) {
+      act.sort((a, b) => { const A = S.rev.items[a], B = S.rev.items[b]; return ((A.x || 0) > 0) - ((B.x || 0) > 0) || (A.b || 0) - (B.b || 0) || (B.c || '').localeCompare(A.c || ''); });
+      for (const k of act.slice(0, act.length - REV_MAX)) delete S.rev.items[k];
+    }
+    const old = ks.filter(k => { const e = S.rev.items[k]; return e && e.k === 'free' && !e.due; });
+    if (old.length > REV_FREE_KEEP + 50) {   // 多出 50 条才理一次，不用每次都排序
+      old.sort((a, b) => { const A = S.rev.items[a], B = S.rev.items[b]; return (A.seen || A.c || '').localeCompare(B.seen || B.c || ''); });   // 最早掌握的在前
+      const cut = old.slice(0, old.length - REV_FREE_KEEP);
+      for (const k of cut) delete S.rev.items[k];
+      S.rev.gone = (S.rev.gone || 0) + cut.length;
+    }
   }
+  // 一共掌握了多少条（周报、复习页的「累计掌握」）：复习本里掌握了的 + 掌握以后删掉的聊天句子
+  const revMastered = () => Object.values(S.rev.items).filter(e => !e.due).length + (S.rev.gone || 0);
   function dueList() {   // 今天该复习的：谁逾期最久谁先来（同一天到期的，格子低的、错得多的先来）
     const today = dayStr();
     for (const [k, e] of Object.entries(S.rev.items)) if (!revItemOk(e)) delete S.rev.items[k];
@@ -1460,6 +1682,7 @@
   window.addEventListener('mon3d-ready', () => { if (!$('#home').hidden) renderHome(); });
   function show(id) {
     if (RT.scr === 'battle' && id === 'world') { RT.battleEnd = Date.now(); setTimeout(advTick, 600); }   // 刚打完一场（护眼提醒、时间到了都等这个时候）
+    if (RT.scr === 'world' && id !== 'world') flushWalk();   // 离开大地图（开战、回首页）：走路攒下的先整份存好
     RT.scr = id;
     ['home', 'play', 'result', 'theater', 'battle', 'world'].forEach(s => { $('#' + s).hidden = s !== id; document.body.classList.toggle('scr-' + s, s === id); });
     $('#topbar').hidden = id === 'play' || id === 'theater' || id === 'battle' || id === 'world';
@@ -2426,10 +2649,12 @@
         (F.consent && F.consent.at ? '<small>监护人 ' + esc(new Date(F.consent.at).toLocaleDateString('zh-CN')) + ' 同意过（' + esc(F.consent.v || '') + ' 版）。要撤回同意：在上面「AI 聊天和口语打分」里删掉密钥（就不再连 AI），或者卸载 App。</small>' : '') + '</div>');
     }
     // 存档备份（评估第 7 条）：导出（分享到微信 / 下载成文件）不用密码；从备份恢复要家长密码
-    const meta = bakMeta(), nb = BAK.filter(k => parseSave(lsGet(k))).length;
+    // （有没有备份只看在不在，不一份份解开来读：存档大了以后，设置页每点一下都重画，读三份备份要一两百毫秒）
+    const meta = bakMeta(), nb = BAK.filter(k => lsGet(k)).length;
     b.push('<div class="set"><label>💾 存档备份</label><div class="say-row"><button class="btn small ghost" data-act="bakExport">📤 导出存档</button><button class="btn small ghost" data-act="bakRestore">🗂️ 从备份恢复</button></div>' +
       '<small>每天第一次打开时自动备份：这台设备上留 3 份' + (nb ? '（最近一份是 ' + esc(meta.d1 || '以前') + ' 的）' : '') +
-      (nat('backupWrite') ? '，手机「下载/EchoIsland」文件夹里留 7 份（卸载 App 也不会删）' : '') + '。「导出存档」可以发到微信里存着，换手机、重装以后用「从备份恢复」。</small></div>');
+      (nat('backupWrite') ? '，手机「下载/EchoIsland」文件夹里留 7 份（卸载 App 也不会删）' : '') + '。「导出存档」可以发到微信里存着，换手机、重装以后用「从备份恢复」。' +
+      '存档空间已用 ' + ((RT.store || storeCheck() || { pct: 0 }).pct) + '%。</small></div>');
     b.push('<div class="set"><label>🆕 检查新版本</label><div class="say-row"><span class="set-v">' + esc(verText()) + '</span><button class="btn small ghost" data-act="verEdit">改地址</button></div>' +
       '<small>' + (myVer() ? (S.settings.verUrl || VER_URL0 ? '打开 App 时去看一眼有没有新版本（' + esc(S.settings.verUrl || '默认地址') + '），有就在首页提示「请家长更新」。' : '没有填地址：不检查新版本（新版本由帮您安装的人发给您）。') : '网页版总是最新的，不用检查。') + '</small></div>');
     const ne = window.EchoErr ? EchoErr.count(7) : 0;
@@ -2514,8 +2739,8 @@
       '<button class="btn ghost wide" data-act="setBack">返回</button>');
   }
   function bakText(src, k) {
-    if (src === 'l') return lsGet(BAK[+k]);
-    if (src === 'p') return lsGet(PRE);
+    if (src === 'l') return bakGet(BAK[+k]);
+    if (src === 'p') return bakGet(PRE);
     if (src === 'n' && nat('backupRead')) { try { return EchoNative.backupRead(k); } catch (e) { return ''; } }
     return '';
   }
@@ -2531,10 +2756,12 @@
     const o = parseSave(txt);
     if (!o) { toast('这个文件不是回声岛的存档，或者已经坏了'); return false; }
     save();
-    const meta = bakMeta(); meta.pre = dayStr(); delete meta.preWhy;
-    if (!lsSet(PRE, JSON.stringify(S))) { try { localStorage.removeItem(BAK[2]); } catch (e) { /* 忽略 */ } lsSet(PRE, JSON.stringify(S)); }
+    txt = lzUnpack(txt);   // 存档本身一直是原样的 JSON（压着存的只有备份）
+    const meta = bakMeta(), cur = packBig(JSON.stringify(S)); meta.pre = dayStr(); delete meta.preWhy;
+    if (!lsSet(PRE, cur)) { lsDel(BAK[2]); lsSet(PRE, cur); }
     lsSet(BAK_META, JSON.stringify(meta));
     if (!lsSet(KEY, txt)) { toast('存不进去（这台设备的空间满了？）'); return false; }
+    lsDel(POS);   // 位置记录是跟着换掉的那份存档的
     RT.noSave = true;   // 马上重新打开：别让现在的进度又存回去
     try { sessionStorage.setItem('echo-restored', label || '备份'); } catch (e) { /* 忽略 */ }
     closeModal();
@@ -2652,6 +2879,7 @@
     restoredOk: () => { closeModal(); if (!S.seenIntro) introSheet(); },
     // AI 打分用不了（评估第 3 条）
     aiBarInfo: () => aiBarInfo(),
+    storeInfo: () => storeInfo(),
     parentSet: () => { RT.parentOpen = true; settingsSheet(); setTimeout(() => { const d = $('#set-parent'); if (d) d.scrollIntoView({ block: 'start' }); }, 60); },
     micFix: () => { try { if (nat('openAppSettings')) EchoNative.openAppSettings(); } catch (e) { /* 忽略 */ } toast('在「权限 → 麦克风」里选「允许」，再回到游戏'); },
     micCheck: () => checkSheet(),
@@ -2741,7 +2969,7 @@
       const wrongs = all.filter(e => e.x > 0 && e.due).sort((a, b) => b.x - a.x).slice(0, 30);
       const txt = e => e.k === 'free' ? [e.en, e.zh] : (() => { const w = WX[e.w], it = e.k === 'word' ? w.words[e.i] : e.k === 'sent' ? w.sents[e.i] : w.dlgs[e.i]; return e.k === 'dlg' ? [it[0] + ' → ' + it[1], ''] : [it[0], it[1]]; })();
       const list = wrongs.map(e => { const [en, zh] = txt(e); return '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + esc(en) + '</b><span>' + esc(zh) + (e.x > 1 ? ' · 错过 ' + e.x + ' 次' : '') + '</span></button>'; }).join('');
-      const mastered = all.filter(e => !e.due).length, waiting = all.filter(e => e.due && e.due > dayStr()).length;
+      const mastered = revMastered(), waiting = all.filter(e => e.due && e.due > dayStr()).length;
       openModal('<div class="big">📕</div><h2>每日复习</h2>' +
         '<p>' + (r.n ? '今天要复习 <b>' + r.n + '</b> 题：' + [r.wrong ? r.wrong + ' 道错题' : '', r.old ? r.old + ' 道学过的' : '', r.chat ? r.chat + ' 句 AI 聊天里学到的更好说法' : ''].filter(Boolean).join('、') + '。' : '今天的复习做完了！') +
         '答错的题当天就复习；复习答对一次，隔 1、2、4、7、15、30 天再考一次，都对了就算掌握。冒险里答对今天到期的题也算复习。</p>' +
@@ -2784,8 +3012,8 @@
       if (!i || i.value.trim() !== '清空') { toast('要输入「清空」两个字才会清空'); return; }
       // 设置和每周的记录（家长看的）留着；今天的记录上标一笔「清空过进度」
       // 清空前先另存一份（和「从备份恢复」之前一样存在 PRE），清错了还能找回来
-      const meta = bakMeta(); meta.pre = dayStr(); meta.preWhy = 'reset';
-      if (!lsSet(PRE, JSON.stringify(S))) { try { localStorage.removeItem(BAK[2]); } catch (e) { /* 忽略 */ } lsSet(PRE, JSON.stringify(S)); }
+      const meta = bakMeta(), cur = packBig(JSON.stringify(S)); meta.pre = dayStr(); meta.preWhy = 'reset';
+      if (!lsSet(PRE, cur)) { lsDel(BAK[2]); lsSet(PRE, cur); }
       lsSet(BAK_META, JSON.stringify(meta));
       const keep = S.settings, weekly = S.weekly, maxDay = S.maxDay;
       S = fresh(); S.settings = keep; S.weekly = weekly; S.maxDay = maxDay; S.seenIntro = true; dayLog().reset = 1;
@@ -2853,6 +3081,8 @@
     const api = {
       get S() { return S; }, W, WX, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit, curIdx, revRight, revAddFree, revMiss, revPick, fadeOf, cueText,
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
+      // savePos：大地图走了一步，只记位置（不整份存）；flush：走路攒下的现在就整份存（开战前这种要紧的时候）
+      savePos, flush: () => flushWalk(), walkTouch,
       qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML, aiTip, gate, gateCard, gateBlock, dayLog, parentOk, music, jingle, sceneMusic,
       reduced, dayStr,
       // AI 打分用不了时（评估第 3 条）：aiDown() 现在该不该给「先跳过 / 听音选」；failHint(res) 没听到时的一行提示；
@@ -2901,6 +3131,7 @@
     try { if (window.EchoTalk && EchoTalk.endIfOpen && EchoTalk.endIfOpen()) return true; } catch (e) { /* 聊天出错就按老办法关 */ }
     const tk = $('#tk-ov'); if (tk && ACT.talk_close) { ACT.talk_close(); return true; }
     if ($('#home').hidden) { goHome(); return true; }
+    flushWalk(true);   // 已经在首页：APK 接着就退到后台了
     return false;
   };
 
@@ -3357,7 +3588,7 @@
     const rated = chats.filter(r => r.eval), avg = rated.length ? (rated.reduce((a, r) => a + r.eval.stars, 0) / rated.length).toFixed(1) : '';
     const chatMin = Math.round(chats.reduce((a, r) => a + (r.sec || 0), 0) / 60);
     const tips = []; chats.forEach(r => (r.eval && r.eval.tips || []).forEach(t => { if (tips.length < 3 && !tips.some(x => x.better === t.better)) tips.push(t); }));
-    const items = Object.values(S.rev.items), mastered = items.filter(e => !e.due).length;
+    const items = Object.values(S.rev.items), mastered = revMastered();
     const top = items.filter(e => e.x > 1 && e.due).sort((a, b) => b.x - a.x).slice(0, 4).map(e => { const [en, zh] = revText(e); return en ? '<li><b>' + esc(en) + '</b> <small>' + esc(zh) + ' · 错 ' + e.x + ' 次</small></li>' : ''; }).join('');
     const cu = curUnit(), cwi = cu ? NB + curIdx() : -1, ustars = cu ? range(7).reduce((a, l) => a + (S.stars[cwi + '-' + l] || 0), 0) : 0;
     const name = S.player && S.player.name;
@@ -3432,7 +3663,7 @@
       const row = weekRow(ws);
       if (logDays[0] > ws) row.part = 1;
       if (ws < cur) { row.fin = 1; if (old && old.m != null) row.m = old.m; }
-      else row.m = Object.values(S.rev.items).filter(e => !e.due).length;
+      else row.m = revMastered();
       if (old) S.weekly[i] = row; else S.weekly.push(row);
     }
     S.weekly.sort((a, b) => a.w.localeCompare(b.w));
@@ -3507,7 +3738,9 @@
   }
 
   // 测试用：课本出题来源、每日复习
-  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; } };
+  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
+    // 走路只记位置、整份存档晚一点才存（见 savePos）：测试 / 工具要直接读 localStorage 里的位置、步数之前，先 flush() 一下
+    flush: () => flushWalk() };
   // 测试用：打分（tests/review.test.js）、复习排期引擎、直接出指定的题（[题型, 编号, 第几条] 的列表）
   Object.assign(window.EchoGame, {
     speech: { scoreSpeech, bestScore, earlyMatch, recognize: (on, tg) => recognize(on, tg) },
@@ -3527,6 +3760,8 @@
     A: {
       down: () => aiDown(), noKey: () => aiNoKey(), bar: () => aiBarState(), note: (c, w) => aiNote(c, w), failOf: r => failOf(r), hint: r => failHint(r),
       check: () => checkSheet(), later: q => revLater(q), save: () => save(), bakMeta: () => bakMeta(), best: () => bestBackup(), exportSave: () => exportSave(),
+      // 存档空间和备份的压缩（tests/apk.test.js）：usage 用了多少字、storeCheck 看一眼空间、pack / unpack 备份的压缩、bakGet 读一份备份的原文
+      usage: () => lsUsage(), storeCheck: () => storeCheck(), pack: t => lzPack(t), unpack: t => lzUnpack(t), bakGet: k => bakGet(k),
       verCheck: () => verCheck(), myVer: () => myVer(), updNew: () => updNew(), homeBars: () => homeBars(), settings: () => { RT.parentOpen = true; settingsSheet(); },
     },
   });
@@ -3535,6 +3770,7 @@
   function start(data) {
     S = load(data && data.S);
     revMigrate();
+    revTrim();   // 老存档里攒了很多掌握了的聊天句子：打开时理一次
     if (S.book.cur && S.book.at < 0) { S.book.at = S.book.cur - 1; delete S.book.cur; }
     applyOrient();
     trackDay();
@@ -3571,9 +3807,19 @@
     else if (!S.seenIntro) { if (!told) setTimeout(introSheet, 300); }   // 先说存档的事，「知道了」以后再看说明（restoredOk）
     // APK 第一次打开（或者从老版本升上来）：做一次「麦克风 + 网络 + 密钥」小检查
     else if (!told && window.ECHO_APP && !S.micCheck && speakMode() === 'sr') setTimeout(() => { if ($('#modal').hidden) checkSheet(); }, 900);
+    setTimeout(storeCheck, 2500); // 存档空间还够不够（快满了首页挂一条）
     setTimeout(pushTick, 4000);   // 打开游戏时补发没送到的日报（家长开了推送才会发）
     setTimeout(verCheck, 3000);   // 有没有新版本（只有 APK 查）
   }
+  // 切到后台 / 页面要关了 / 被系统冻住：走路攒下的整份存好（后台的 App 随时可能被系统杀掉）
+  const onHide = () => {
+    if (S) flushWalk(true);
+    // 音效用的 AudioContext 也挂起：不然切到后台它还一直占着手机的声音输出（配乐、战斗音效那两个早就这样做了）；下一次出声时 ac() 会自己恢复
+    try { if (AC && AC.state === 'running' && document.hidden) { const q = AC.suspend(); if (q && q.catch) q.catch(() => {}); } } catch (e) { /* 忽略 */ }
+  };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) onHide(); });
+  window.addEventListener('pagehide', onHide);
+  document.addEventListener('freeze', onHide);
   // 切到后台：隔 1 小时以上再往手机「下载/EchoIsland」写一份今天的备份（同一天覆盖同一份）
   // （只写手机里的备份，不另外存 localStorage：别把外面刚改过的存档盖掉）
   document.addEventListener('visibilitychange', () => { if (document.hidden && S && !RT.noSave && RT.bakDay && nat('backupWrite') && Date.now() - RT.natBakAt > 60 * 60e3) nativeBackup(); });

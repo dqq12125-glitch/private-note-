@@ -37,6 +37,9 @@ async function open(o) {
     },
     dbg: () => p.evaluate(() => { const d = EchoWorld._debug(); return { map: d.M.id, x: d.PL.x, y: d.PL.y, dir: d.PL.dir, dlg: !!d.dlg, busy: d.busy, surf: !!d.PL.surf }; }),
     flags: () => p.evaluate(() => JSON.parse(localStorage.getItem('echo-island-v1')).world.flags),
+    // 存档大了以后（6 万字以上）走路只记位置，整份存档要等停下来 1 秒（game.js 的 savePos / flushWalk）。
+    // 测试用的小存档还是每一步都整份存，平时不用管；用大存档测、又要直接读 localStorage 里的位置 / 步数时，先 flush() 让游戏整份存一次
+    flush: () => p.evaluate(() => !!(window.EchoGame && EchoGame.flush && EchoGame.flush())),
     async go(id, how) { await p.evaluate(([id, how]) => EchoWorld._debug().goMap(id, how), [id, how]); await W(500); },
     tp: (x, y, dir) => p.evaluate(([x, y, dir]) => { const d = EchoWorld._debug(); d.PL.x = d.PL.fx = x; d.PL.y = d.PL.fy = y; d.PL.dir = dir || d.PL.dir; d.PL.moving = false; d.FL.x = d.FL.fx = x; d.FL.y = d.FL.fy = y; }, [x, y, dir]),
     async typed() { for (let i = 0; i < 50; i++) { const ty = await p.evaluate(() => { const d = EchoWorld._debug().dlg; return !!(d && d.typing); }); if (!ty) return; await W(80); } },

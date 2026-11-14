@@ -265,16 +265,17 @@
   }
 
   // ---------- AI 标识（《人工智能生成合成内容标识办法》，2025-09-01 起）：聊天页顶上一直写着，开头再用语音说一句 ----------
-  // 语音提示是打包进去的中文配音 assets/voice/zh/ai-notice.mp3（本机 Kokoro，Apache-2.0，声音 zf_xiaobei；
+  // 语音提示是打包进去的中文配音 assets/voice/zh/ai-notice.ogg（Opus；本机 Kokoro，Apache-2.0，声音 zf_xiaobei；
   // 合成的就是 AI_SPOKEN 这句话，speed 1.1；Whisper 听写核对过），放在聊天自己的声音通道里，岛民的第一句排在它后面；读不到文件就用阿里云现场合成（中文）
   const AI_LABEL = 'AI 生成 · 由阿里云通义千问提供';
   const AI_SPOKEN = '温馨提示：岛民说的话和声音，都由人工智能生成。';
-  const NOTICE_URL = 'assets/voice/zh/ai-notice.mp3';
+  const NOTICE_URL = 'assets/voice/zh/ai-notice.ogg';
+  const OGG_OK = (() => { try { return !!new Audio().canPlayType('audio/ogg; codecs="opus"'); } catch (e) { return false; } })();   // 老 iOS Safari 解不了 Opus：当没有打包的提示，走下面的阿里云合成
   let noticeBuf = null;
   async function noticeBuffer(ctx) {
     if (noticeBuf) return noticeBuf;
     let ab = null;
-    try { if (location.protocol !== 'file:') { const r = await fetch(NOTICE_URL); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
+    try { if (OGG_OK && location.protocol !== 'file:') { const r = await fetch(NOTICE_URL); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
     if (!ab) {   // 没有打包的配音（网页版没带上）：阿里云合成一句中文
       try { const u = await cloudTTS(AI_SPOKEN, 'f', 'Chinese'); if (u) { const r = await fetch(u); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
     }
@@ -773,9 +774,18 @@
     G.save(); if (G.renderTop) G.renderTop();
     return { ev, coins: coins || (newGoal ? 0 : rec.coins || 0), newGoal, rec };
   }
-  // 最近 30 段；有安全标记、家长还没看过的多留着（最多再留 10 段）
+  // 最近 30 段；有安全标记、家长还没看过的多留着（最多再留 10 段）。
+  // 再按字数封顶（LOG_CHARS）：一段最多 40 句、一句最长几百字，40 段最坏能到四五十万字，整份存档每存一次都要带着它。
+  // 超了就从最早的删起；最近 10 段、家长还没看过的安全标记不删
+  const LOG_CHARS = 150000;
   function trimLog(T) {
     T.log = T.log.slice(0, 30).concat(T.log.slice(30).filter(r => r.concern && !r.seen).slice(0, 10));
+    const len = T.log.map(r => JSON.stringify(r).length);
+    let n = len.reduce((a, b) => a + b, 0);
+    for (let i = T.log.length - 1; i >= 10 && n > LOG_CHARS; i--) {
+      if (T.log[i].concern && !T.log[i].seen) continue;
+      n -= len[i]; T.log.splice(i, 1);
+    }
   }
   // 岛民记住这次聊到的游戏里的小事（只存在这台手机里）和老师改过的一句，下次开场提起
   function remember(mk, ev) {

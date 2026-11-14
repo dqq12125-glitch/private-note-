@@ -32,7 +32,7 @@
     canvas.addEventListener('webglcontextrestored', () => { gl.restored = true; }, false);
     const glState = () => (!gl.lost ? 'ok' : gl.restored ? 'restored' : performance.now() - gl.lost > 2500 ? 'dead' : 'lost');
     renderer.shadowMap.enabled = !!Q.shadow;
-    renderer.shadowMap.type = Q.soft ? T3.PCFSoftShadowMap : T3.PCFShadowMap;
+    renderer.shadowMap.type = T3.PCFShadowMap;   // three r186 起没有 PCFSoftShadowMap 了（要了也是退回这个，还每次打一行警告）；软硬靠 shadow.radius
     renderer.shadowMap.autoUpdate = false;
     renderer.toneMapping = T3.NoToneMapping;
     renderer.info.autoReset = false;
@@ -201,7 +201,7 @@
       if (world) { scene.remove(world); world.traverse(o => { if (o.material && o.material._own) o.material.dispose(); }); }
       own.forEach(o => o.dispose && o.dispose());
       own = [];
-      sprites.forEach(s => { if (s.mesh) { s.mesh.geometry.dispose(); s.mesh.material.dispose(); if (s.mesh.material.userData.tex) s.mesh.material.userData.tex.dispose(); } if (s.alert) { s.alert.geometry.dispose(); s.alert.material.dispose(); } });
+      sprites.forEach(s => { if (s.mesh) { s.mesh.geometry.dispose(); s.mesh.material.dispose(); if (s.mesh.material.userData.tex) s.mesh.material.userData.tex.dispose(); } if (s.alert) { s.alert.geometry.dispose(); if (s.alert.material.map) s.alert.material.map.dispose(); s.alert.material.dispose(); } });   // 「!」气泡的贴图也要放掉（material.dispose 不管贴图，以前每进一次有训练师的地图漏一张）
       sprites.length = 0; pickSprites = []; BLD.length = 0;
       spinners.length = 0; glows.length = 0; gateM = [];
       for (const k in WALLTEX) delete WALLTEX[k];
@@ -432,8 +432,12 @@
 
     // ---------- 岩壁、石头、台阶、洞口、洞穴墙 ----------
     // 石头侧面的贴图：一层层的岩石纹理
+    // 按颜色只建一次、一直留着（destroy 时才放）：这种贴图挂在 6 个面一组的材质上，three 的阴影那一遍会留着上一张地图的那张，
+    // 每换一次地图就放掉重建的话，放掉的那张会被阴影那一遍再传一次显卡、之后没人管（每进一次有岩壁的地图漏一张）。颜色只有每座岛的那几种，留着不占地方
+    const ROCKTEX = {};
     function rockTex(col) {
-      return canvasTex(64, 64, g => {
+      if (ROCKTEX[col]) return ROCKTEX[col];
+      const t = canvasTexKeep(64, 64, g => {
         g.fillStyle = col; g.fillRect(0, 0, 64, 64);
         for (let k = 0; k < 7; k++) {
           const y = 4 + k * 9 + (k % 2) * 2;
@@ -441,6 +445,8 @@
           for (let x = (k % 2) * 9; x < 64; x += 14 + ((k * 5) % 7)) { g.fillStyle = A.shade(col, k % 3 ? 1.1 : .9); A.rr(g, x + 1, y, 11, 6, 3); g.fill(); }
         }
       });
+      t.anisotropy = 4;
+      return (ROCKTEX[col] = t);
     }
     function rockMats(side, top) {
       const sm = new T3.MeshLambertMaterial({ map: rockTex(side) }), tm = new T3.MeshLambertMaterial({ color: top });
@@ -1267,6 +1273,7 @@
       clear();
       scene.remove(world);
       Object.values(atlasCache).forEach(t => t.dispose());
+      Object.values(ROCKTEX).forEach(t => t.dispose());
       [vcol, vcolFlat, grassMat, leafMat, trunkMat, blobMat].forEach(x => x.dispose());
       shadowTex.dispose(); blobGeo.dispose();
       if (rt) rt.dispose();

@@ -122,8 +122,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    // 配音 mp3、怪兽模型 glb、图片本来就是压缩过的，不再压一遍（读得快）
-    androidResources { noCompress += ['mp3', 'glb', 'webp', 'jpg', 'png', 'json'] }
+    // 配音 ogg（Opus）、mp3、怪兽模型 glb、图片本来就是压缩过的，不再压一遍（读得快）
+    androidResources { noCompress += ['mp3', 'ogg', 'glb', 'webp', 'jpg', 'png', 'json'] }
     sourceSets { main { assets.srcDirs += "$buildDir/generated/web" } }
 }
 

@@ -61,6 +61,8 @@ if (!opt.leak) {
   // 停住时钟：之后只有我们往前拨，时间才会走
   await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 50);
   await page.clock.runFor(300);   // 先画几帧
+  // 等开场预热做完（battle3d.js 的 warm：着色器在后台编译、几何体分帧建好），不然第一招的显存 / 着色器数字里混着预热的
+  for (let i = 0; i < 400 && await page.evaluate(() => !!FXT.state().warm); i++) await page.clock.runFor(50);
   const arena = await page.$('#b-arena');
 
   // 放一招：每 step 毫秒截一张（shots 为 false 时不截，泄漏检查用），直到特效全部淡完（最多 9 秒）
