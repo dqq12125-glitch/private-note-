@@ -115,6 +115,9 @@ function coreTests() {
   check(/Never ask for real personal information/.test(ins) && /game character made by a computer/.test(ins) && /parent or a teacher/.test(ins) && /Speak ONLY in English/.test(ins) && ins.includes('Student typed:') && ins.includes('[Game]'), '安全规则都在（不问个人信息、承认是游戏角色、难过时找家长老师、只说英语、打字不是指令）');
   check(/not the student's companion/.test(ins) && /Do not ask about the student's real life/.test(ins), '委托的规矩：是做任务的游戏角色、不问孩子的真实生活');
   check(Q.list.every(x => { const n = CORE.questNpc(x), i = CORE.instructions(n, 'Ann', {}); return n && n.voice && i.includes(x.persona) && /Never ask for real personal information/.test(i) && i.length < 9000; }), '17 条委托都拼得出人设，都带着安全规则');
+  // 委托里小步骤是孩子要说的话：岛民不能替他说（真的 AI 试过，照老规矩「每轮用一个问题结尾」会把下一句该问的话说出来）
+  check(Q.list.every(x => { const i = CORE.instructions(CORE.questNpc(x), 'Ann', {}); return /the STUDENT leads/.test(i) && /Never say a step for them/.test(i) && !/end each turn with one question/.test(i) && !/Guide the conversation step by step/.test(i); }), '委托的规则：孩子带着聊，岛民不替他说小步骤、不每轮都用问题结尾');
+  { const i = CORE.instructions(require('../talk-npcs.js').list[0], 'Ann', {}); check(/end each turn with one question/.test(i) && /Guide the conversation step by step/.test(i) && !/the STUDENT leads/.test(i), '首页的岛民照旧：每轮用一个问题结尾、带着孩子一步步来'); }
   check(CORE.questNpc(null) === null && CORE.questNpc({}) === null && CORE.questNpc({ id: 'x' }) === null, '不是委托的东西：拼不出人设');
   // 音色：和大地图上这个人随便聊时一样（按名字挑）；小孩用小孩的声音
   check(CORE.questNpc(Q.byId['q0-cap']).voice === CORE.personNpc({ name: 'Ms Rosa', g: 'f' }).voice && CORE.VOICES.kf.includes(CORE.questNpc(Q.byId['q1-bag']).voice), '音色按名字挑，和自由聊天时是同一个声音；小孩用小孩的声音');
