@@ -370,6 +370,31 @@
     };
     return open(npc);
   }
+  // 大地图上的支线委托（quests.js，world.js 调）：只把委托的 id 交给中转服务，人设、目标、小步骤由服务器按 id 从 quests.js 里读；
+  // APK 直连时本机按同一份拼（talk-core 的 questNpc）。界面上的目标、步骤、词卡也读那一份。
+  // onResult({ done, stars, said })：这段聊天有了结果就告诉大地图——关掉界面时说一次；评语在后台才到的，到了再说一次（以后一次为准）
+  function openQuest(qid, look, onResult) {
+    const q = window.QUESTS && Object.prototype.hasOwnProperty.call(QUESTS.byId, qid) ? QUESTS.byId[qid] : null;
+    if (!q) return;
+    return open({
+      id: 'dyn', quest: q.id, name: q.who, zh: q.who, lookObj: look, voiceZh: '',
+      topicZh: '📋 委托 · ' + q.zh, topic: q.en, goalZh: q.goalZh,
+      words: q.words.map(w => w[0]), wordsZh: q.words.map(w => w[1]), onResult,
+    });
+  }
+  function result(c) {
+    const f = c.npc && c.npc.onResult; if (typeof f !== 'function') return;
+    const ev = c.rec && c.rec.eval;
+    try { f({ done: !!(c.rec && c.rec.goal), stars: ev ? ev.stars : 0, said: c.turns.some(t => t.who === 'you') }); } catch (e) { console.error(e); }
+  }
+  // 现在能不能开聊（大地图上的委托先问一下）：能聊返回 ''；肯定聊不了就返回给孩子看的一句话（和聊天界面里连不上时说的一样）：
+  // 没开通、手机说没网、今天的聊天时间用完了。密钥不对 / 额度用完由 game.js 的 chatKeyBad 判断，那一句用 errText('auth' / 'quota') 取
+  function blocked() {
+    if (!relayUrl()) return 'AI 聊天还没开通，请告诉家长';
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return ERR_ZH.offline;
+    try { if (G && G.S && (G.dayLog().chatDaily || (direct() && DAILY_SEC - usage() < 20))) return kidErr('daily'); } catch (e) { /* 读不到就让他试 */ }
+    return '';
+  }
   const b64 = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   async function open(id) {
     const npc = typeof id === 'object' ? id : NPCS.byId[id]; if (!npc) return;
@@ -378,8 +403,8 @@
     const url = relayUrl();
     if (!url) { configure(); return; }
     const esc = G.esc, core = Core(), T = state();
-    // 地图上的人：目标、步骤按 talk-core 的临时人设（和服务器拼的一样）
-    const base = npc.desc ? core.personNpc(npc.desc) : npc, mk = memKey(npc), goal = core.goalOf(base, T.n[mk] || 0);
+    // 地图上的人：目标、步骤按 talk-core 的临时人设（和服务器拼的一样）；委托按 quests.js 里那一条
+    const base = npc.quest ? core.questNpc(QUESTS.byId[npc.quest]) : npc.desc ? core.personNpc(npc.desc) : npc, mk = memKey(npc), goal = core.goalOf(base, T.n[mk] || 0);
     const goalZh = goal.goalZh || npc.goalZh || '', zh = npc.wordsZh || [], mem = T.mem[mk] || null;
     const ov = document.createElement('div');
     ov.id = 'tk-ov'; ov.className = 'tk-ov';
@@ -423,6 +448,7 @@
 
     const q = new URLSearchParams({ npc: npc.id, dev: devId(), name: (G.S.player && G.S.player.name) || '', g: String(goal.i) });
     if (npc.desc) { const d = npc.desc; q.set('p', b64(JSON.stringify({ name: d.name, g: d.g, kid: !!d.kid, role: d.role, island: d.island, place: d.place, lines: d.lines, words: d.words }))); }
+    if (npc.quest) q.set('quest', npc.quest);   // 委托：只发 id
     if (mem) q.set('m', b64(JSON.stringify({ facts: mem.facts || [], better: mem.better || '' })));
     const code = LS('echo-talk-code'); if (code) q.set('code', code);
     let ws;
@@ -437,6 +463,7 @@
         c.ready = true;
         // 今天聊天连上过（学习锁据此判断「Wi-Fi 连着但上不了网」：连上过就不算没网）
         { const L = G.dayLog(); if (!L.chatConn) { L.chatConn = 1; G.save(); } }
+        if (LASTERR && LASTERR.where === 'chat') LASTERR = null;   // 这次连上了：以前「聊天连不上」的原因（密钥 / 额度 / 没网）作废，委托和学习锁不再拿它说事
         status(micOk ? readyText() : '打字聊天：写好按「发送」。');
         const mic = $('#tk-mic'); if (mic && micOk) mic.disabled = false;
         const h = $('#tk-help'); if (h) h.disabled = false;
@@ -600,7 +627,7 @@
         return core.parseSteps(j, n);
       }
       if (relayHttp()) {
-        const r = await relayPost('/steps', { npc: c.npc.id, nm: c.npc.id === 'dyn' ? c.npc.name : undefined, g: c.goal.i, turns: turns.map(t => ({ who: t.who, text: t.text, typed: !!t.typed })) }, 12000);
+        const r = await relayPost('/steps', { npc: c.npc.id, nm: c.npc.id === 'dyn' ? c.npc.name : undefined, q: c.npc.quest || undefined, g: c.goal.i, turns: turns.map(t => ({ who: t.who, text: t.text, typed: !!t.typed })) }, 12000);
         if (!r.ok) { noteAi('steps', 'HTTP ' + r.status + ' ' + r.text); return []; }
         return (JSON.parse(r.text).done || []).map(x => x | 0).filter(x => x >= 0 && x < n);
       }
@@ -700,6 +727,7 @@
     stopPlayback(); stopReplay(); micClose();
     const ov = $('#tk-ov'); if (ov) ov.remove();
     if (G.renderHome && !$('#home').hidden) G.renderHome();
+    if (!c.bg && !c.again) result(c);   // 委托：告诉大地图结果（评语还没到的等到了再说；点「再试一次」接着聊的先不说）
   }
   function failDay(c) { const L = G.dayLog(); L.chatFail = 1; L.chatFailWhy = c.errCode || 'closed'; G.save(); }
   // 没连上的原因记进今天的日志（学习锁、首页红条用）
@@ -729,6 +757,7 @@
       if (r.newGoal) G.toast('🎯 和 ' + c.npc.name + ' 的聊天目标完成了！' + (r.coins ? '+' + r.coins + ' 金币' : ''));
       try { c.ws && c.ws.close(); } catch (e) {}
       if (G.renderHome && !$('#home').hidden) G.renderHome();
+      result(c);
       return;
     }
     if (!first && how === 'eval') try { c.ws && c.ws.close(); } catch (e) {}
@@ -740,7 +769,7 @@
     let rec = c.rec, coins = 0, newGoal = false;
     if (!rec) {
       rec = c.rec = {
-        t: c.t0, npc: npc.id, nm: npc.id === 'dyn' ? npc.name : undefined, g: c.goal.i,
+        t: c.t0, npc: npc.id, nm: npc.id === 'dyn' ? npc.name : undefined, q: npc.quest || undefined, g: c.goal.i,
         turns: c.turns.slice(0, 40).map(t => t.typed ? { who: t.who, text: t.text, typed: 1 } : { who: t.who, text: t.text }),
         eval: null, sec: sec != null ? sec : Math.round((Date.now() - c.t0) / 1000), voice: core.voiceLines(c.turns),
       };
@@ -799,6 +828,11 @@
   }
 
   function evalBtns(c) {
+    // 大地图上的委托：完成了回去领奖励；没完成可以马上再试一次，也可以以后再说（委托一直留着）
+    if (c.npc.quest) {
+      return c.rec && c.rec.goal ? '<div class="tk-btns"><button class="btn" data-act="talk_close">🎁 回去领奖励</button></div>'
+        : '<div class="tk-btns"><button class="btn" data-act="talk_again" data-npc="dyn">再试一次</button><button class="btn ghost" data-act="talk_close">以后再说</button></div>';
+    }
     return '<div class="tk-btns"><button class="btn" data-act="talk_again" data-npc="' + c.npc.id + '">再聊一次</button><button class="btn ghost" data-act="talk_close">返回</button></div>';
   }
   function gateLine() { try { return G.gate && G.gate().on && G.gate().open ? '<p class="tk-coin">🔓 今天的学习任务完成了，可以去怪兽冒险！</p>' : ''; } catch (e) { return ''; } }
@@ -827,7 +861,8 @@
         (ev.ai ? '<p class="tk-ai-line">🤖 评语由 AI 生成（阿里云通义千问提供）</p>' : '') +
         (!ev.ai ? '<p class="tk-note">这次没来得及写评语，不过这段聊天算数，已经记下来了！</p>' : '') +
         (ev.tips.length ? '<div class="tk-tips"><b>可以这样说更好（明天的每日复习里会再练）：</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
-        (coins ? '<p class="tk-coin">🪙 +' + coins + ' 金币</p>' : '');
+        (coins ? '<p class="tk-coin">🪙 +' + coins + ' 金币</p>' : '') +
+        (c.npc.quest ? '<p class="tk-coin">' + (ev.done ? '📋 委托完成了！回到冒险里，' + esc(c.npc.name) + ' 有奖励给你' : '📋 委托还没完成：把小步骤都说到，再来试一次') + '</p>' : '');
     } else {
       body = '<b>聊完啦！这段聊天算数 👍</b><p>这次评语没来得及写完（可能是网络慢），不过你开口说的句子已经记下来了。</p>';
     }
@@ -854,7 +889,7 @@
     const sock = { readyState: 0, onmessage: null, onerror: null, onclose: null };
     const toGame = m => { if (sock.onmessage) sock.onmessage({ data: JSON.stringify(m) }); };
     const shut = () => { if (sock.readyState === 3) return; sock.readyState = 3; delete NWS[id]; if (sock.onclose) sock.onclose(); };
-    const npc = npcIn.desc ? C.personNpc(npcIn.desc) : npcIn;
+    const npc = npcIn.quest ? C.questNpc(window.QUESTS && QUESTS.byId[npcIn.quest]) : npcIn.desc ? C.personNpc(npcIn.desc) : npcIn;
     const left = DAILY_SEC - usage();
     if (!npc || left < 20) { setTimeout(() => { toGame({ type: 'error', code: 'daily', zh: npc ? '今天的聊天时间用完了，明天再来吧！' : '没有这个岛民' }); shut(); }, 0); sock.send = () => {}; sock.close = shut; return sock; }
     const S = C.session({
@@ -1213,7 +1248,8 @@
     G = api;
     return {
       talk_open: t => open(t.dataset.npc),
-      talk_again: t => { const id = t.dataset.npc, last = LAST; close(); open(id === 'dyn' ? last : id); },
+      // 委托没完成点「再试一次」：接着聊，先不告诉大地图结果（again）
+      talk_again: t => { const id = t.dataset.npc, last = LAST; if (C && C.npc.quest && !(C.rec && C.rec.goal)) C.again = true; close(); open(id === 'dyn' ? last : id); },
       talk_end: () => end('btn'),
       // 「返回」：评价出来了就关掉；还在聊就「结束并评价」（老版 game.js 的返回键调这个，也不会把这段聊天丢掉）
       talk_close: () => end('back'),
@@ -1237,7 +1273,7 @@
     };
   }
   window.EchoTalk = {
-    init, homeHTML, open, openPerson, relayUrl, cloudSR, listenOnce, aiTip, cloudTTS, keyTest, AI_LABEL, stopListen: () => SR.stop && SR.stop(),
+    init, homeHTML, open, openPerson, openQuest, blocked, errText: why => ERR_ZH[why] || '', relayUrl, cloudSR, listenOnce, aiTip, cloudTTS, keyTest, AI_LABEL, stopListen: () => SR.stop && SR.stop(),
     today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG,
   };
 })();

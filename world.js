@@ -156,6 +156,8 @@
     if (R) R.load(M, api3d);
     // 回程绳回到最后一次待过的户外地图（先记好，下面整份存的时候一起存上）
     if ((M.kind === 'town' || M.kind === 'route') && !PL.surf) ws.lastOut = { map: M.id, x: PL.x, y: PL.y, dir: PL.dir };
+    // 今日目击（sighting.js）：进过的野外地图记下来（跟着下面这次存档一起存）；这张图是今天的目击地点就提示一句
+    if (window.EchoSight) EchoSight.onMap(M);
     savePos(true);
     hud();
     E.music(mapMusic());
@@ -196,6 +198,12 @@
     story('enter', 'begin');
     // 地名横幅收起以后，弹 3 秒「现在要做什么」（隔一天回来也知道主线该去哪）
     if (!fresh) setTimeout(() => { if (!running || !adv.on) return; const o = objective(); if (o) E.toast('📍 现在要做：' + o.zh); }, 2700);
+    // 支线委托：第一次有委托可以接的时候提醒一次（以后看头上的「?」和菜单里的「📋 委托」）
+    if (!fresh && !ws.flags.qtip) setTimeout(() => {
+      if (!running || !adv.on || WS().flags.qtip || !questRows().some(r => r.seen && r.state === 'open')) return;
+      WS().flags.qtip = 1; E.save();
+      E.toast('📋 新玩法「委托」：头上有金色 ? 的人有事请你帮忙——走过去按 A，用英语帮 TA，有稀有奖励！', 'gold');
+    }, 6500);
   }
 
   // ---------- 学习锁：人在大地图里过了零点（或者切回前台时学习锁是关着的），等当前的对话 / 战斗结束，提示回首页先学习 ----------
@@ -348,6 +356,8 @@
     if (ev && ev.hatch) { hatchScene(ev); return; }
     if (ws.repel > 0) { ws.repel--; if (!ws.repel) E.toast('🧴 悄悄喷雾的效果消失了'); }
     const rate = slid ? 0 : PL.surf && isWater(PL.x, PL.y) ? .08 : EM.ENCOUNTER[t];
+    // 今日目击（sighting.js）：在线索说的那张地图、那种地形里走够了步数，那只稀有怪兽一定出来——这一步就不再掷普通的遇怪
+    if (window.EchoSight && EchoSight.onStep({ map: M, hab: rate ? wildHab() : '', surf: !!PL.surf, spray: ws.repel > 0, idle: !dlg && !busy && !overlay })) return;
     if (rate && !(ws.repel > 0) && Math.random() < rate && MG.anyAlive()) encounter();
   }
   // 蛋孵出来了
@@ -641,7 +651,7 @@
       if (f && f.falls) talk([{ who: '旁白', emo: '🌊', en: 'It is a big waterfall.', zh: '一道大瀑布。要先踏浪到瀑布下面。' }]);
       return;
     }
-    if (f.n) { f.n.face = faceTo(f.n, PL); if (!story('talk', f.n)) npcTalk(f.n); }
+    if (f.n) { f.n.face = faceTo(f.n, PL); if (!story('talk', f.n) && !questTalk(f.n)) npcTalk(f.n); }   // 剧情优先，其次是 TA 身上的委托，再是平常的话
     else if (f.s) signTalk(f.s);
     else if (f.follower) { E.SFX.tap(); MG.talkSheet(MG.lead().uid); }
     else if (f.pc) { E.SFX.tap(); E.say('Welcome to the monster box!'); MG.pcSheet(); }
@@ -808,6 +818,156 @@
         }),
       ]);
     }
+  }
+  // ---------- 支线委托（quests.js，家长 2026-11-15：「把 AI 聊天做进冒险里」）----------
+  // 镇上的人有委托：走过去按 A → TA 说完请求 →「🗣️ 用英语帮 TA」→ 和 TA 用英语聊（talk.js 的 openQuest，人设和小步骤按委托 id 读 quests.js）
+  // → 聊天目标完成了，回到地图上 TA 道谢、给奖励。完成的记在 world.flags['q:' + id] = 星数（1–3）。
+  // 委托不挡主线；没完成随时能再来，什么都不丢；AI 聊不了时照样听 TA 说完请求，再用一句话告诉孩子为什么现在做不了。
+  const QL = () => (window.QUESTS && QUESTS.list) || [];
+  const questDone = q => WS().flags['q:' + q.id] | 0;
+  // 这个人身上的委托（人物是跟着地图存的，查一次记在身上）
+  const questOf = n => { if (n._q === undefined) n._q = QL().find(q => q.map === M.id && String(q.npc) === String(n.id)) || null; return n._q; };
+  // 现在还不能接的原因（能接返回 ''）：要先完成另一条委托 / 徽章不够
+  function questLock(q) {
+    const nd = q.need || {}, pre = nd.quest && QUESTS.byId[nd.quest];
+    if (pre && !questDone(pre)) return '先完成委托「' + pre.zh + '」';
+    if (nd.badges && nBadges() < nd.badges && !DEBUG) return '要有 ' + nd.badges + ' 枚徽章（现在 ' + nBadges() + ' 枚）';
+    return '';
+  }
+  const questOpen = q => !!q && !questDone(q) && !questLock(q);
+  // 奖励写成一行字（对话框、委托本、完成时的提示都用）
+  function questReward(q) {
+    const r = q.reward || {}, out = [];
+    if (r.egg) out.push(r.shiny ? '✨🥚 闪闪发光的怪兽蛋' : '🥚 怪兽蛋');
+    (r.items || []).forEach(([id, k]) => { const it = MG.ITEMS[id]; if (it) out.push(it.icon + ' ' + it.zh + (k > 1 ? ' ×' + k : '')); });
+    if (r.coins) out.push('💰 金币 ' + r.coins);
+    return out.join('、');
+  }
+  // AI 聊天现在用不了的原因（能聊返回 null）：zh 是给孩子看的一句话（和聊天界面、首页学习锁说的一样）；
+  // retry：密钥 / 额度这种家长处理完马上就能聊的，给一个「再试一次」
+  function questBlock() {
+    const T = window.EchoTalk;
+    if (!T || !T.openQuest || !T.blocked) return { zh: 'AI 聊天还没开通，请告诉家长' };
+    const b = T.blocked();
+    if (b) return { zh: b.replace(/[。！!]+$/, '') };
+    const kb = E.chatKeyBad ? E.chatKeyBad() : '';
+    if (kb) return { zh: T.errText(kb) || 'AI 现在用不了，请告诉家长', retry: true };
+    return null;
+  }
+  // 完成委托还能不能再换 10 分钟冒险时间（冒险限时开着、今天「多学换时间」还没到上限）
+  const questBonus = () => { const b = E.advBonus ? E.advBonus() : null; return b && b.on ? b : null; };
+  let questBonus0 = 0;            // 开聊前今天已经换了几分钟（聊完比一下，多了就告诉孩子）
+  const questOwe = new Set();     // 做完了、奖励也给了，但感谢的话还没当面说的委托（评语是后来才到的；不存档，丢了也不要紧）
+  const questTold = new Set();    // 这次打开游戏已经说过「现在做不了，因为……」的（委托 id + 原因）：再按 A 就不重复了，说 TA 平常的话
+  // 固定台词写成「英文, 中文」一对（tools/voice/collect.js 按这个样子收去配音）
+  const Q_RETRY = ["That's OK. Come back and try again any time!", '没关系，随时可以再来试一次！'];
+  const Q_LATER = ['Not now. Please come back later.', '这个委托先留着，随时可以回来。'];
+  function questTalk(n) {
+    const q = n.mon ? null : questOf(n);
+    if (!q) return false;
+    const info = npcLook(n), P = (en, zh) => ({ who: info.name, look: info.look, g: info.g, en, zh });
+    if (questDone(q)) {
+      if (questOwe.has(q.id)) { questThanks(n, q); return true; }
+      talk([P(q.bye[0], q.bye[1])], () => npcTalk(n));   // 做完以后：先说一句近况，再接 TA 平常的话
+      return true;
+    }
+    if (questLock(q)) return false;   // 还不能接：TA 只说平常的话（委托本里写着为什么）
+    const why = questBlock(), told = q.id + ':' + (why ? why.zh : '');
+    // AI 聊不了（没开通 / 没网 / 时间用完）：第一次照样听 TA 说完请求、告诉孩子为什么现在做不了；同一个原因再按 A 就是 TA 平常的话
+    // （没有 AI 的孩子照样能和这些人说话、做每天的跟读），等能聊了又回到委托
+    if (why && !why.retry && questTold.has(told)) return false;
+    const pages = q.ask.map(a => P(a[0], a[1]));
+    if (q.note) pages.push({ who: '旁白', emo: '📝', en: q.note[0], zh: q.note[1] });
+    if (why && !why.retry) { questTold.add(told); pages.push({ who: '📋 委托：' + q.zh, emo: '📋', en: Q_LATER[0], zh: why.zh + '。' + Q_LATER[1] }); }
+    else {
+      const bonus = questBonus();
+      pages.push({
+        who: '📋 委托：' + q.zh, emo: '📋', en: q.en,
+        zh: (why ? why.zh + '。' : '') + q.goalZh + ' 🎁 奖励：' + questReward(q) + '。' + (bonus && bonus.bonus < bonus.max ? '⏱️ 完成委托还能多玩 10 分钟。' : ''),
+        // 按钮上的字小一号、不换行：竖屏两个按钮并排时「🗣️ 用英语帮 TA」正好一行
+        kind: 'choice', opts: [{ html: '<span style="font-size:16px;white-space:nowrap">' + (why ? '🔄 再试一次' : '🗣️ 用英语帮 TA') + '</span>', cls: 'sun' }, { html: '<span style="font-size:16px;white-space:nowrap">以后再说</span>' }],
+        pick: i => { if (!i) setTimeout(() => questChat(n, q), 60); return []; },
+      });
+    }
+    talk(pages);
+    return true;
+  }
+  function questChat(n, q) {
+    if (dlg || busy || overlay || !window.EchoTalk || !EchoTalk.openQuest) return;
+    const b = questBonus();
+    questBonus0 = b ? b.bonus : 0;
+    held = null;
+    EchoTalk.openQuest(q.id, npcLook(n).look, r => questResult(n, q, r));
+  }
+  // 聊天有结果了（talk.js 关掉聊天界面时调；评语在后台才到的，到了再调一次）
+  function questResult(n, q, r) {
+    if (!E || !E.S) return;
+    const fresh = !!(r && r.done) && !questDone(q);
+    if (fresh) questGrant(q, Math.max(1, Math.min(3, (r.stars | 0) || 1)));
+    // 人还站在 TA 跟前、手上没别的事：TA 当面说。不然（人已经走开了、在对战、回首页了）只弹一句，感谢的话留到下次找 TA 时说
+    const here = running && adv.on && M && M.id === q.map && !dlg && !busy && !overlay && !PL.moving && $('modal').hidden && !$('world').hidden &&
+      !(window.EchoTalk && EchoTalk.isOpen && EchoTalk.isOpen()) && Math.abs(n.x - PL.x) + Math.abs(n.y - PL.y) <= 2;
+    if (questDone(q)) {
+      if (!questOwe.has(q.id)) return;
+      if (here) questThanks(n, q);
+      else if (fresh) { E.jingle('item', E.SFX.win); E.toast('📋 委托「' + q.zh + '」完成了！奖励：' + questReward(q), 'gold'); }
+      return;
+    }
+    const info = npcLook(n);
+    if (here) talk([{ who: info.name, look: info.look, g: info.g, en: Q_RETRY[0], zh: Q_RETRY[1], zhKeep: true }]);
+    else E.toast('📋 委托「' + q.zh + '」还留着，随时可以再来找 ' + info.name);
+  }
+  // 完成：先把结果和奖励都存好（不等对话框，半路退出也不会丢），再去演道谢
+  function questGrant(q, stars) {
+    const r = q.reward || {}, L = E.dayLog && E.dayLog();
+    WS().flags['q:' + q.id] = stars;
+    if (r.coins) E.S.coins += r.coins;
+    (r.items || []).forEach(([id, k]) => { if (MG.ITEMS[id]) MG.addItem(id, k || 1); });
+    if (r.egg) {
+      // 只送这个版本里有的怪兽（销售版没有保留的那些；tests/quests.test.js 查过都在）。万一没有，换成金回声球
+      const ok = ((window.DEX && DEX.list) || []).some(s => s.id === r.egg), egg = ok ? MG.giveEgg(r.egg) : null;
+      if (egg && r.shiny) egg.shiny = true;
+      if (!egg) MG.addItem('superball', 5);
+    }
+    if (L) L.quests = (L.quests || 0) + 1;   // 今天完成了几条委托（game.js 的 bonusMin：每条换 10 分钟冒险时间）
+    questOwe.add(q.id);
+    E.save(); E.renderTop(); if (running) hud();
+  }
+  function questThanks(n, q) {
+    questOwe.delete(q.id);
+    const info = npcLook(n), P = (en, zh, extra) => Object.assign({ who: info.name, look: info.look, g: info.g, en, zh }, extra || {});
+    const r = q.reward || {}, stars = questDone(q), got = [];
+    if (r.egg) got.push(r.shiny ? P('You got a shining monster egg!', '得到了一个闪闪发光的怪兽蛋！孵出来会是稀有色的，放在队伍里多走路就会孵出来。') : P('You got a monster egg!', '得到了一个怪兽蛋！放在队伍里多走路就会孵出来（队伍满了就在电脑箱子里）。'));
+    (r.items || []).forEach(([id, k]) => { const it = MG.ITEMS[id]; if (it) got.push(P('You got ' + it.en + '!', '得到了' + it.zh + (k > 1 ? ' ×' + k : '') + '！')); });
+    if (!got.length) got.push(P('Here you are!', '给你！'));
+    got.forEach(g => { g.zhKeep = true; });
+    got[0].onShow = () => { E.jingle('item', E.SFX.win); E.toast('📋 委托完成 ' + '★'.repeat(stars) + ' · ' + questReward(q), 'gold'); if (E.confetti) E.confetti(60); };
+    const b = questBonus(), more = b ? b.bonus - questBonus0 : 0;
+    talk(q.thanks.map(a => P(a[0], a[1])).concat(got), () => { if (more > 0) E.toast('⏱️ 完成委托：今天能多冒险 ' + more + ' 分钟'); });
+  }
+  // 委托本（冒险菜单里的「📋 委托」）：去过的岛上的委托——能接的、做完的（几颗星）、还不能接的（为什么）、找谁
+  function questRows() {
+    const vis = WS().visited || {};
+    return QL().map(q => { const stars = questDone(q), lock = stars ? '' : questLock(q); return { q, seen: !!vis[q.z], stars, lock, state: stars ? 'done' : lock ? 'locked' : 'open' }; });
+  }
+  function questSheet() {
+    const esc = E.esc, rows = questRows(), seen = rows.filter(r => r.seen), b = questBonus();
+    const row = r => {
+      const q = r.q, w = E.W[q.z];
+      return '<div class="ach' + (r.state === 'locked' ? ' no' : '') + '" data-q="' + q.id + '" data-st="' + r.state + '"><span class="ae">' + (r.state === 'done' ? '✅' : r.state === 'locked' ? '🔒' : QMARK) + '</span><div style="flex:1;min-width:0">' +
+        '<b>' + esc(q.zh) + (r.stars ? ' <span style="color:#f5a623">' + '★'.repeat(r.stars) + '</span>' : '') + '</b>' +
+        '<small style="display:block">' + w.icon + ' ' + esc(w.name) + ' · 找 ' + esc(q.who) + (M && M.id === q.map ? '（就在这个镇上）' : '（在镇上）') + '</small>' +
+        '<small style="display:block">' + (r.state === 'done' ? '已完成 · ' : r.state === 'locked' ? '🔒 ' + esc(r.lock) + ' · ' : '走过去按 A，用英语帮 TA · ') + '🎁 ' + esc(questReward(q)) + '</small></div></div>';
+    };
+    // 能接的：和地图上头顶的牌子一个样（金色圆牌子上一个「?」）
+    const QMARK = '<i style="display:inline-block;width:30px;height:30px;line-height:28px;border-radius:50%;background:#ffc233;border:2px solid #6d4300;color:#6d4300;font:900 20px/28px \'Baloo 2\',Nunito,sans-serif;font-style:normal">?</i>';
+    const order = { open: 0, locked: 1, done: 2 };
+    E.openModal('<h2>📋 委托</h2><p>岛上的人有事请你帮忙：走到头上有金色 <b style="color:#b36b00">?</b> 的人面前按 A，再用英语和 TA 聊出结果。完成了有稀有道具，有的还送怪兽蛋！' +
+      (b && b.bonus < b.max ? '<br>⏱️ 完成委托还能多玩 10 分钟。' : '') + '</p>' +
+      '<p id="q-count">已完成 ' + rows.filter(r => r.stars).length + ' / ' + rows.length + '</p>' +
+      (seen.length ? seen.slice().sort((a, c) => order[a.state] - order[c.state] || a.q.z - c.q.z).map(row).join('') : '<p>这里还没有委托。</p>') +
+      (rows.length > seen.length ? '<p class="tip">还有 ' + (rows.length - seen.length) + ' 条委托在你没去过的岛上。</p>' : '') +
+      '<button class="btn wide" data-act="wMenu">返回菜单</button>');
   }
   async function sail(n) {
     busy = true;
@@ -1014,7 +1174,9 @@
   }
 
   // ---------- 战斗 ----------
-  function encounter() { battle('wild', { lvBonus: M.lvBonus || 0, hab: PL.surf || M.kind === 'under' ? 'water' : M.hab || (M.kind === 'cave' ? 'cave' : 'grass') }); }
+  // 现在脚下遇到的野生怪兽算哪种栖息地：水上、海底是 water，洞穴是 cave，其余是 grass（地图可以用 hab 另外指定）
+  const wildHab = () => (PL.surf || M.kind === 'under' ? 'water' : M.hab || (M.kind === 'cave' ? 'cave' : 'grass'));
+  function encounter() { battle('wild', { lvBonus: M.lvBonus || 0, hab: wildHab() }); }
   async function battle(kind, o) {
     busy = true;
     held = null;
@@ -1025,7 +1187,7 @@
     stopLoop();
     useRecentSrc(!!o.recent);
     const ok = MG.battle(kind, M.z, {
-      foes: o.foes, trainer: o.trainer, lvBonus: o.lvBonus, noCatch: o.noCatch, hab: o.hab || M.hab || (M.kind === 'cave' ? 'cave' : 'grass'), arena: M.arena || M.theme, rules: o.rules,
+      foes: o.foes, trainer: o.trainer, lvBonus: o.lvBonus, noCatch: o.noCatch, hab: o.hab || M.hab || (M.kind === 'cave' ? 'cave' : 'grass'), arena: M.arena || M.theme, rules: o.rules, tag: o.tag,
       onEnd: res => {
         useRecentSrc(false);
         E.show('world');
@@ -1261,7 +1423,8 @@
       fx: FL.fx + (FL.x - FL.fx) * prog, fy: FL.fy + (FL.y - FL.fy) * prog, fhop: Math.abs(FL.y - FL.fy) + Math.abs(FL.x - FL.fx) > 1 ? Math.sin(prog * Math.PI) * .5 : 0,
       showF: !(FL.x === PL.x && FL.y === PL.y) && !!lead, lead,
       inGrass: !PL.moving && tile(PL.x, PL.y) === ',', fInGrass: !PL.moving && tile(FL.x, FL.y) === ',',
-      npcs: M.npcs.filter(npcVisible).map(n => ({ n, look: n.mon ? null : npcLook(n).look, mon: n.mon ? MG.species(n.mon) : null, x: n.x, y: n.y, face: n.face, alert: n.alert && now - n.alert < 1100 })),
+      // quest：这个人身上有现在能接的委托（头上画一个「?」）
+      npcs: M.npcs.filter(npcVisible).map(n => ({ n, look: n.mon ? null : npcLook(n).look, mon: n.mon ? MG.species(n.mon) : null, x: n.x, y: n.y, face: n.face, alert: n.alert && now - n.alert < 1100, quest: !n.mon && !n.temp && questOpen(questOf(n)) })),
       picks: M.picks.filter(p => !WS().flags[pickKey(p)]),
       hint,
       obst: [...(M._bould || []).map((b, i) => ({ k: 'O', id: 'O' + i, x: b.x, y: b.y }))],
@@ -1681,6 +1844,7 @@
         if (q.mon) monster2d(q.mon, sx, sy - Math.abs(Math.sin(now / 110)) * T * .1);
         else person2d(q.look, q.face, 0, sx + T / 2, sy + T * .9);
         if (q.alert) bubble(sx + T / 2, sy - T * .45, '!', '#e53935');
+        else if (q.quest) questMark(sx + T / 2, sy - T * .8 + Math.sin(now / 260 + q.x) * T * .04);   // 有委托：比「A」提示再高一点，两个不打架
       } }));
       // 回声技能的障碍：小树、裂开的岩石、大石头
       obstTiles.forEach(o => { if (!V.cleared || !V.cleared.has(o.x + ',' + o.y)) ents.push({ y: o.y, f: () => obst2d(o.k, o.x * T - camX, o.y * T - camY) }); });
@@ -1756,6 +1920,13 @@
       ctx.fill();
       ctx.strokeStyle = round ? col : OUT; ctx.lineWidth = round ? 2.5 : 2; ctx.stroke();
       ctx.fillStyle = col; ctx.font = '900 ' + Math.round(T * .28) + 'px "Baloo 2", Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ch, bx, by + 1);
+    }
+    // 委托的记号：金色的圆牌子上一个「?」（和训练师的红色「!」、按 A 的红圈分得开）
+    function questMark(bx, by) {
+      ctx.fillStyle = 'rgba(0,0,0,.2)'; circ(ctx, bx + 1, by + 2, T * .2); ctx.fill();
+      ctx.fillStyle = '#ffc233'; circ(ctx, bx, by, T * .2); ctx.fill();
+      ctx.strokeStyle = '#6d4300'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#6d4300'; ctx.font = '900 ' + Math.round(T * .28) + 'px "Baloo 2", Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', bx, by + 1);
     }
     function monster2d(sp, sx, sy) {
       const im = monImg(sp);
@@ -1877,7 +2048,7 @@
     window.addEventListener('resize', () => { if (running) resize(); });
     const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
     document.addEventListener('keydown', e => {
-      if (!running || !$('modal').hidden || (e.target && e.target.tagName === 'INPUT')) return;
+      if (!running || !$('modal').hidden || (e.target && e.target.tagName === 'INPUT') || $('tk-ov')) return;   // 正在和岛民聊天（空格是按住说话）：不动地图上的人
       if (overlay && (KEYS[e.key] || e.key === ' ' || e.key === 'Enter' || e.key === 'z' || e.key === 'Escape' || e.key === 'x')) {
         e.preventDefault();
         overlay(KEYS[e.key] || (e.key === 'Escape' || e.key === 'x' ? 'B' : 'A'));
@@ -1897,10 +2068,12 @@
   }
   function menuSheet() {
     const m = E.S.mon, o = objective();
+    const qn = questRows().filter(r => r.seen && r.state === 'open').length;   // 去过的岛上现在能接的委托有几条
     E.openModal('<h2>冒险菜单</h2>' +
       (o ? '<div class="ach" id="w-goal-full"><span class="ae">📍</span><div style="flex:1"><b>现在要做</b><small>' + E.esc(o.zh) + '</small></div></div>' : '') +
+      (window.EchoSight ? EchoSight.menuRow() : '') +   // 今日目击（sighting.js）：「现在要做」下面的一行，点开是告示板
       '<p>🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · 💰 ' + E.S.coins + (WS().repel > 0 ? ' · 🧴 还剩 ' + WS().repel + ' 步' : '') + '</p>' +
-      '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">🐾 我的队伍</button><button class="btn ghost" data-act="mBag">🎒 背包</button><button class="btn ghost" data-act="mDex">📖 手册</button><button class="btn ghost" data-act="wSkills">🌟 回声技能</button>' +
+      '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">🐾 我的队伍</button><button class="btn ghost" data-act="mBag">🎒 背包</button><button class="btn ghost" data-act="mDex">📖 手册</button><button class="btn ghost" data-act="wSkills">🌟 回声技能</button><button class="btn ghost" data-act="wQuests">📋 委托' + (qn ? ' <b style="color:#b36b00">' + qn + '</b>' : '') + '</button>' +
       '<button class="btn ghost" data-act="wHelp">❓ 怎么玩</button><button class="btn ghost" data-act="settings">⚙️ 设置</button><button class="btn ghost" data-act="wExit">🏠 回首页</button></div>' +
       '<button class="btn wide" data-act="close">继续冒险</button>');
   }
@@ -1932,6 +2105,7 @@
     },
     wHelp: () => helpSheet(),
     wSkills: () => skillsSheet(),
+    wQuests: () => questSheet(),
     wBike: () => { if (M.kind === 'inside' || M.kind === 'under' || PL.surf) return; PL.bike = !PL.bike; E.SFX.tap(); E.toast(PL.bike ? '🚲 骑上自行车了' : '🚶 下车走路'); hud(); },
     wUseSkill: t => {
       const k = t.dataset.k;
@@ -2012,9 +2186,14 @@
   const ART = { drawPerson, portrait, atlas: PPL.atlas, paintGround, shade, hsh, rr, circ, ell, OUT, LOOKS, monImg, drawPickup, buildColor: BUILD_COLORS };
   window.EchoWorld = {
     music: () => (M ? mapMusic() : ''),   // 当前地图的背景音乐（game.js 回到大地图时问）
-    init(api, mg) { E = api; MG = mg; EM = window.EchoMaps; EM.setTownCount(E.W.length); MG.setFieldHooks && MG.setFieldHooks(fieldHooks); return actions; },
+    init(api, mg) { E = api; MG = mg; EM = window.EchoMaps; EM.setTownCount(E.W.length); MG.setFieldHooks && MG.setFieldHooks(fieldHooks);
+      // 今日目击（sighting.js）：它的按钮并进来；给它几个钩子（开一场野外对战、现在在哪张地图、大地图在不在跑、悄悄喷雾还有没有效）
+      if (window.EchoSight) Object.assign(actions, EchoSight.init(api, mg, { battle: o => battle('wild', o), map: () => M, running: () => running, spray: () => WS().repel > 0 }));
+      return actions; },
     // mile：学习里程碑（传说的线索）累计的数，见 story.js 的 mile()
-    fresh: () => ({ started: false, map: 't0', z: 0, x: -1, y: -1, dir: 'up', arrive: null, visited: {}, flags: {}, daily: {}, center: null, introDone: false, repel: 0, mile: { upto: '', talk: 0, recall: 0, streak: 0 } }),
+    fresh: () => ({ started: false, map: 't0', z: 0, x: -1, y: -1, dir: 'up', arrive: null, visited: {}, flags: {}, daily: {}, center: null, introDone: false, repel: 0, mile: { upto: '', talk: 0, recall: 0, streak: 0 },
+      // 今日目击（sighting.js）：been 进过的野外地图 { 地图 id: 1 }，sight 今天的目标和累计（字段说明在 sighting.js 的 fresh() 上面）
+      been: {}, sight: window.EchoSight ? EchoSight.fresh() : {} }),
     stop: () => { stopLoop(); useRecentSrc(false); adv.on = false; adv.want = ''; if (dlg) { clearInterval(dlg.tw); dlg = null; const d = $('w-dlg'); if (d) d.hidden = true; } busy = false; },
     // ---- 给首页 / 设置 / 宝箱 / 成就用的接口（game.js、monsters.js 调用）----
     // 下一枚徽章要过哪些课本 BOSS：{ z, island, leader, ok, need, done, unitLabel（下一个要打的单元，比如「七上 Unit 3」，ok 时为空）, target（最后一个要过的单元）, missing[] }；13 枚都有了返回 null
@@ -2028,6 +2207,8 @@
     // 第一大区手册：{ caught, total }（total = DEX.region1Total）
     dexRegion: s => dexRegion(s),
     storyZhHTML: () => storyZhHTML(),
+    // 支线委托（quests.js）的进度：[{ id, z, seen 去过那座岛, state: 'open' 能接 / 'locked' 还不能接 / 'done' 做完了, stars, lock 不能接的原因 }]
+    quests: () => (E ? questRows().map(r => ({ id: r.q.id, z: r.q.z, seen: r.seen, state: r.state, stars: r.stars, lock: r.lock })) : []),
     // 设置里改了画质
     setGfx: () => { if (!M || !$('w-view')) return; ensureRenderer(); R.load(M, api3d); resize(); },
     // 现在用哪一档画质（自动档按设备和量出来的帧率；战斗画面也按这个）

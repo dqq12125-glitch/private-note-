@@ -259,6 +259,8 @@
       h += '<section class="mon-card gym-need"><h3>🏅 下一枚徽章（' + esc(gn.island) + '）</h3><p>岛主' + esc(gn.leader) + '要你先学好课本：还差 <b>' + esc(gn.unitLabel) + '</b> 的 BOSS（课本 BOSS ' + gn.done + '/' + gn.need + '）</p>' +
         '<button class="btn small" data-act="tab" data-t="quiz" style="margin-top:8px">📚 去闯关练习</button></section>';
     }
+    // 今日目击（sighting.js）：博士的告示板每天一条英文线索，读懂了去对的地方才遇得到稀有怪兽；收服了就收成一行
+    if (ws.started && window.EchoSight) h += safe(() => EchoSight.homeCard()) || '';
     // 传说的线索：四只神兽是学习的里程碑
     const clues = ws.started && EW && EW.legendClues ? safe(() => EW.legendClues()) || [] : [];
     if (clues.length) {
@@ -408,6 +410,7 @@
       stg: { me: newStages(), foe: newStages() }, conf: { me: 0, foe: 0 },
       fpot: kind === 'leader' ? 2 : kind === 'trainer' ? 1 : 0,
       rules: opts.rules || null,
+      tag: opts.tag || null,   // 特别的野外对战（今日目击，sighting.js）：{ title 顶上的标题, sub 标题下面的小字, msg 开场那句话前面加的一段 }
     };
     if (rule('talk')) B.energy = 3;
     if (B.rules) setTimeout(() => { if (B && B.rules) E.toast(RULE_TEXT[ruleNow()] || '', 'gold'); }, 1500);
@@ -463,7 +466,7 @@
   function renderBattle() {
     const w = E.W[B.z], f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
     $('battle').innerHTML =
-      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.kind === 'wild' ? '野外对战' : B.kind === 'trainer' ? '训练师 ' + B.trainer.name : '岛主 ' + w.boss.name) + '</b><small>第 ' + (B.z + 1) + ' 区 · ' + w.name + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
+      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.tag && B.tag.title ? B.tag.title : B.kind === 'wild' ? '野外对战' : B.kind === 'trainer' ? '训练师 ' + B.trainer.name : '岛主 ' + w.boss.name) + '</b><small>' + (B.tag && B.tag.sub ? E.esc(B.tag.sub) : '第 ' + (B.z + 1) + ' 区 · ' + w.name) + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
       '<div class="arena" id="b-arena" style="--wc:' + w.color + '">' + arenaBG(B.z) +
       // 2D 画面：两只怪兽侧面对站在同一条地平线上，脚下是属性色的一圈圈水波（3D 画面在 battle3d.js 里同样处理）
       '<div class="pad me" style="--rc:' + TYPES[sm.types[0]].color + '"></div><div class="mon me' + (B.enter === 'both' || B.enter === 'me' ? ' enter' : '') + '" id="b-me">' + svgMon(m) + '</div>' +
@@ -544,7 +547,7 @@
     const f = foe(), sf = SPECIES[f.sp], w = E.W[b.z];
     $('b-foe').classList.add('appear');
     if (b.kind === 'wild') {
-      msg((f.shiny ? '✨ 闪闪发光的！' : '') + '前面跳出来一只 <b>' + sf.en + '</b>（' + sf.zh + '）！');
+      msg((b.tag && b.tag.msg ? b.tag.msg : '') + (f.shiny ? '✨ 闪闪发光的！' : '') + '前面跳出来一只 <b>' + sf.en + '</b>（' + sf.zh + '）！');
       if (f.shiny) { E.SFX.win(); E.toast('✨ 是稀有色的 ' + sf.en + '！颜色和平常不一样，很少见哦', 'gold'); }
       if (B3) B3.enter('foe', false);
       await E.say('Look out! Here comes ' + sf.en + '!');
@@ -1738,6 +1741,7 @@
     else if (s.legend) txt = '传说中的怪兽，只在特别的地方出现。';
     else if (s.starter) txt = '回声博士的研究所。';
     else if (s.from && SPECIES[s.from]) { const b = habitatIndex()[baseOf(id)]; txt = '由 <b>' + SPECIES[s.from].en + '</b> 进化而来' + (b && b.length ? '；' + SPECIES[baseOf(id)].en + ' 在 <b>' + E.esc(b[0].name) + '</b> 出没' : '') + '。'; }
+    else if (window.EchoSight && EchoSight.may(id)) txt = '平时在野外很难遇到，偶尔会出现在回声博士告示板的「🔎 今日目击」里。';
     else txt = '在第一年的群岛上还没有发现它。';
     return '<p class="dex-hab">📍 出没地点：' + txt + '</p>';
   }
@@ -2003,6 +2007,7 @@
     lead: () => lead(),
     nm, spOf, hearts, befriend, talkSheet, nickSheet, daycareSheet, stepHook, hatch, giveEgg, makeEgg,
     habitats: id => habitatIndex()[id] || [],
+    wildTable,   // 一个区域某种栖息地平时会出的怪兽（今日目击用它来挑「平时在这里遇不到的」）
     zoneLv,
     afterHome: () => setTimeout(afterBattleQueue, 400),
     caughtCount: s => ORDER.filter(id => COUNTED.has(id) && s.mon.dex[id] === 'caught').length,

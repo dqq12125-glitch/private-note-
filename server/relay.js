@@ -2,6 +2,7 @@
 // 孩子的浏览器 ⇄ 这里（WebSocket）⇄ 阿里云百炼 Qwen-Omni 实时语音（WebSocket，带密钥）
 // - 密钥只在这里：环境变量 DASHSCOPE_API_KEY，或 KEY_FILE 指向一个写着 DASHSCOPE_API_KEY=... 的文件（默认 server/.env）
 // - 人设、音色、安全规则都由服务器按 npc id 从 ../talk-npcs.js 读，孩子的手机只能选 npc、送声音/文字
+// - 大地图上的支线委托也一样：手机只发委托的 id（?quest=），人设、目标、小步骤由服务器从 ../quests.js 读
 // - 每台设备每天有时长上限，每段对话有时长上限；对话记录写到 server/logs/日期.jsonl，家长看 /logs（只留 90 天，LOG_DAYS 可改）
 // - 网页版的口语打分和聊天小工具也走这里：/asr 识别、/tip 点评、/tts 合成、/zh 翻译岛民的话、/steps 聊天小步骤打勾
 // 启动：cd server && npm install && node relay.js   （默认端口 8787；PORT 可改）
@@ -11,6 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const { WebSocketServer, WebSocket } = require('ws');
 const NPCS = require('../talk-npcs.js');
+const QUESTS = require('../quests.js');     // 支线委托：按 id 查，手机发来的人设文字一概不用
 const CORE = require('../talk-core.js');   // 人设、安全规则、事件翻译：和安卓 APK 直连模式共用
 
 // ---------- 配置 ----------
@@ -95,6 +97,11 @@ function personNpc(p) {
   try { d = JSON.parse(Buffer.from(String(p || ''), 'base64url').toString('utf8')); } catch (e) { return null; }
   return CORE.personNpc(d);
 }
+// 支线委托：只认 quests.js 里有的 id（没有这条就当没有这个岛民）
+function questNpc(id) {
+  id = String(id || '');
+  return Object.prototype.hasOwnProperty.call(QUESTS.byId, id) ? CORE.questNpc(QUESTS.byId[id]) : null;
+}
 async function evaluate(npc, turns, o) {
   // 聊完后让文字模型给个温和的评价（中文），失败就不给（talk-core 的 session 再按小步骤和「开口说了几句」定完成没有）
   const body = CORE.evalBody(npc, turns, o);
@@ -177,7 +184,7 @@ function cloudHelp(u, req, res) {
         res.writeHead(200, cors); return res.end(JSON.stringify({ zh: CORE.parseZh(r) }));
       }
       if (u.pathname === '/steps') {   // 聊天中实时打勾
-        const npc = j.npc === 'dyn' ? CORE.personNpc({ name: j.nm }) : NPCS.byId[j.npc];
+        const npc = j.q ? questNpc(j.q) : j.npc === 'dyn' ? CORE.personNpc({ name: j.nm }) : NPCS.byId[j.npc];
         if (!npc) return bad(400, 'npc');
         const turns = (Array.isArray(j.turns) ? j.turns : []).slice(-30).map(t => ({ who: t && t.who === 'you' ? 'you' : 'npc', text: clean(t && t.text, 300), typed: !!(t && t.typed) })).filter(t => t.text);
         const g = CORE.goalOf(npc, j.g), body = CORE.stepsBody(npc, g.i, turns);
@@ -303,7 +310,9 @@ wss.on('connection', (cli, req) => {
   const fail = (zh, code) => { send({ type: 'error', code, zh }); cli.close(); };
   let origin = req.headers.origin; try { if (origin && !okOrigin(origin)) return fail('这个网页不能用对话服务', 'origin'); } catch (e) { return fail('这个网页不能用对话服务', 'origin'); }
   if (ACCESS_CODE && u.searchParams.get('code') !== ACCESS_CODE) return fail('家庭口令不对，请在设置里填好', 'code');
-  const npc = u.searchParams.get('npc') === 'dyn' ? personNpc(u.searchParams.get('p')) : NPCS.byId[u.searchParams.get('npc')];
+  // 带着 quest= 的是支线委托：按 id 从 quests.js 里拼人设，手机一起发来的 npc / p 都不看
+  const npc = u.searchParams.get('quest') ? questNpc(u.searchParams.get('quest'))
+    : u.searchParams.get('npc') === 'dyn' ? personNpc(u.searchParams.get('p')) : NPCS.byId[u.searchParams.get('npc')];
   if (!npc) return fail('没有这个岛民', 'npc');
   const dev = (u.searchParams.get('dev') || 'unknown').replace(/[^\w-]/g, '').slice(0, 40) || 'unknown';
   const player = (u.searchParams.get('name') || '').replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16);

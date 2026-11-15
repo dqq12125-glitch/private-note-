@@ -202,6 +202,7 @@
       own.forEach(o => o.dispose && o.dispose());
       own = [];
       sprites.forEach(s => { if (s.mesh) { s.mesh.geometry.dispose(); s.mesh.material.dispose(); if (s.mesh.material.userData.tex) s.mesh.material.userData.tex.dispose(); } if (s.alert) { s.alert.geometry.dispose(); if (s.alert.material.map) s.alert.material.map.dispose(); s.alert.material.dispose(); } });   // 「!」气泡的贴图也要放掉（material.dispose 不管贴图，以前每进一次有训练师的地图漏一张）
+      sprites.forEach(s => { if (s.quest) { s.quest.geometry.dispose(); if (s.quest.material.map) s.quest.material.map.dispose(); s.quest.material.dispose(); } });   // 委托的「?」牌子也一样
       sprites.length = 0; pickSprites = []; BLD.length = 0;
       spinners.length = 0; glows.length = 0; gateM = [];
       for (const k in WALLTEX) delete WALLTEX[k];
@@ -1084,10 +1085,11 @@
         return v > .02 ? 1 : v < -.02 ? -1 : 0;
       } catch (e) { return 0; }
     }
-    function bubbleSprite(ch, col) {
+    // fill：牌子的底色（默认白色；委托的「?」是金色的，和训练师的红色「!」、按 A 的红圈分得开）
+    function bubbleSprite(ch, col, fill) {
       const t = canvasTexKeep(64, 64, g => {
         g.fillStyle = 'rgba(0,0,0,.2)'; A.circ(g, 33, 35, 24); g.fill();
-        g.fillStyle = '#ffffff'; A.circ(g, 32, 32, 24); g.fill(); g.lineWidth = 5; g.strokeStyle = col; g.stroke();
+        g.fillStyle = fill || '#ffffff'; A.circ(g, 32, 32, 24); g.fill(); g.lineWidth = 5; g.strokeStyle = col; g.stroke();
         g.fillStyle = col; g.font = '900 30px "Baloo 2", Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, 32, 34);
       });
       const o = new T3.Mesh(new T3.PlaneGeometry(.48, .48), new T3.MeshBasicMaterial({ map: t, transparent: true, depthTest: false }));
@@ -1207,6 +1209,9 @@
         s.root.visible = true;
         if (q.alert) { if (!s.alert) { s.alert = bubbleSprite('!', '#e53935'); s.root.add(s.alert); s.alert.position.set(0, 1.55, 0); } s.alert.visible = true; }
         else if (s.alert) s.alert.visible = false;
+        // 这个人有委托：头上一个金色的「?」，轻轻上下浮（比按 A 的提示高一点；「!」出来时先让开）
+        if (q.quest && !q.alert) { if (!s.quest) { s.quest = bubbleSprite('?', '#6d4300', '#ffc233'); s.root.add(s.quest); } s.quest.visible = true; s.quest.position.set(0, 2.05 + Math.sin(now / 260 + q.x) * .05, 0); }
+        else if (s.quest) s.quest.visible = false;
       });
       sprites.forEach(s => { if (!seen.has(s)) s.root.visible = false; });
       // 地上的道具
@@ -1281,7 +1286,8 @@
       try { renderer.forceContextLoss(); } catch (e) { /* 忽略 */ }
       canvas.remove();
     }
-    return { kind: '3d', load, resize, draw, destroy, glState, info: () => renderer.info };
+    // marks：现在画着几块委托的「?」牌子（tests/quests.test.js 用）
+    return { kind: '3d', load, resize, draw, destroy, glState, info: () => renderer.info, marks: () => sprites.filter(s => s.quest && s.quest.visible && s.root.visible).length };
   }
 
   window.EchoWorld3D = { create };

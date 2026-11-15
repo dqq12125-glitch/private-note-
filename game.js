@@ -89,6 +89,9 @@
     ['evo1', '✨', '进化！', '第一次让怪兽进化', s => (s.mon.evolved || 0) >= 1],
     ['badge5', '🏅', '徽章收集者', '拿到 5 枚岛主徽章', s => Object.keys(s.mon.badges).length >= 5],
     ['badgeall', '🏆', '冠军训练师', '拿到全部 13 枚岛主徽章', s => Object.keys(s.mon.badges).length >= W.length],
+    // 今日目击（sighting.js）：按一共收服了几只算，不按连续天数——不逼着天天来
+    ['sight1', '🔎', '好眼力', '读懂英文线索，收服 1 只「今日目击」的怪兽', s => (((s.world || {}).sight || {}).total || 0) >= 1],
+    ['sight7', '🧭', '线索小侦探', '收服 7 只「今日目击」的怪兽', s => (((s.world || {}).sight || {}).total || 0) >= 7],
   ];
 
   // ---------- 存档 ----------
@@ -3088,6 +3091,9 @@
       // AI 打分用不了时（评估第 3 条）：aiDown() 现在该不该给「先跳过 / 听音选」；failHint(res) 没听到时的一行提示；
       // revLater(q 或 {en, zh}) 先跳过的题放进复习、联网后要补说；SKIP_TXT 跳过按钮上的字
       aiDown, failHint, revLater, SKIP_TXT,
+      // 大地图上的支线委托（world.js）：chatKeyBad() 聊天是不是因为密钥 / 额度聊不了（'auth' / 'quota' / ''）；
+      // advBonus() 冒险限时开着没有、今天「多学换时间」换了几分钟、最多几分钟（完成委托算一个聊天目标，也换 10 分钟）
+      chatKeyBad, advBonus: () => { const pi = playInfo(); return { on: pi.on, bonus: pi.bonus, max: pi.c.max || 0 }; },
     };
     Object.assign(ACT, MonsterGame.init(api), window.EchoWorld ? EchoWorld.init(api, MonsterGame) : {}, window.EchoTalk ? EchoTalk.init(api) : {}, {
       tab: t => { S.homeTab = t.dataset.t; save(); renderHome(); window.scrollTo(0, 0); },
@@ -3139,7 +3145,8 @@
   // 学习锁 / 冒险时间 / 家长相关的字段：gateOpen 真的做完了学习任务、gateEx 聊天这一项整天免了（noai / daily）、
   // passAt / passWhy 断网放行开始的时间和原因、gateOff 关过学习锁、clockBack 手机日期被往回调、clockReset 家长从今天重新开始、
   // night 很晚还在冒险、warn5 冒险还剩 5 分钟提醒过、stopped 冒险被叫回首页的原因、pinFail / pinLock 家长密码输错几次 / 被锁几次、
-  // reset 清空过进度、pract 通关的练习关、asrN / asrSec / tipN / aiFail AI 用量和失败、sayN / saySum / spkQ / spk1 / weekN / weekOk 能力指标
+  // reset 清空过进度、pract 通关的练习关、asrN / asrSec / tipN / aiFail AI 用量和失败、sayN / saySum / spkQ / spk1 / weekN / weekOk 能力指标、
+  // quests 今天在大地图上完成了几条支线委托（world.js 记；每条也算进 chatGoals）
   function dayLog(d) {
     d = d || dayStr();
     if (!S.log) S.log = {};
@@ -3289,7 +3296,9 @@
     return f > t ? m >= f || m < t : m >= f && m < t;
   }
   function bonusMin(L, c) {
-    const extra = Math.max(0, (L.revSess || 0) - 1) + Math.max(0, (L.chatGoals || 0) - 1) + (L.pract || 0);
+    // 聊天目标：开学习锁用掉的那一个不算。大地图上的支线委托（L.quests）是进了冒险以后才做的，每条都算多学的——
+    // 就算今天的学习锁是靠「说满 6 句」开的（那时一个目标都没完成），做完第一条委托也照样换 10 分钟
+    const extra = Math.max(0, (L.revSess || 0) - 1) + Math.max(L.quests || 0, (L.chatGoals || 0) - 1) + (L.pract || 0);
     return Math.min(c.max || 0, extra * 10);
   }
   function playInfo() {

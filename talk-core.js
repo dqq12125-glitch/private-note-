@@ -1,6 +1,7 @@
 // 回声岛 AI 对话的核心逻辑（中转服务 server/relay.js 和安卓 APK 的「直连」模式共用）
 // - instructions()：给 Qwen-Omni 的人设 + 安全规则（孩子改不了：中转服务里在服务器上拼；APK 里写死在打包进去的代码里）
 // - personNpc()：大地图上随便一个人 → 临时人设（逐项限长、只留字母标点）
+// - questNpc()：大地图上的支线委托（quests.js 里的一条）→ 人设 + 目标 + 小步骤（全部按委托 id 从 quests.js 里读，手机发来的文字一概不用）
 // - goalOf()：这次聊哪个目标（每个角色几个目标轮换，每个目标拆成 2–4 个小步骤）
 // - evalBody() / parseEval() / judge()：聊完后让文字模型给温和的评价，本机再按小步骤和「开口说了几句」定完成没有
 // - stepsBody() / parseSteps()：聊天中每说一句，便宜地判断哪几步已经做到（界面上实时打勾）
@@ -85,16 +86,20 @@
     ].filter(Boolean).join('\n');
   }
 
+  // 按名字挑一个固定的音色（同一个人每次都是同一个声音）
+  function voiceOf(name, g, kid) {
+    let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const pool = VOICES[(kid ? 'k' : '') + g] || VOICES[g];
+    return pool[h % pool.length];
+  }
   function personNpc(d) {
     if (!d || typeof d !== 'object') return null;
     const name = clean(d.name, 30) || 'Friend', g = d.g === 'f' ? 'f' : 'm', kid = !!d.kid;
     const role = clean(d.role, 60) || 'a friendly villager', island = clean(d.island, 40) || 'Echo Island', place = clean(d.place, 30);
     const lines = (Array.isArray(d.lines) ? d.lines : []).slice(0, 5).map(x => clean(x, 160)).filter(Boolean);
     const words = (Array.isArray(d.words) ? d.words : []).slice(0, 10).map(x => clean(x, 24)).filter(Boolean);
-    let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-    const pool = VOICES[(kid ? 'k' : '') + g] || VOICES[g];
     return {
-      id: 'dyn', name, zh: name, voice: pool[h % pool.length],
+      id: 'dyn', name, zh: name, voice: voiceOf(name, g, kid),
       persona: 'You are ' + name + ', ' + role + ' on ' + island + ' in the Echo Islands. You are ' + (kid ? 'a child' : 'a grown-up') + ', and you are ' + (place || 'outdoors') + ' right now. ' +
         (lines.length ? 'Here are things you have said before, keep the same personality and facts: "' + lines.join('" / "') + '". ' : '') +
         'This island\'s topic is: ' + island.replace(/ Island$/, '') + '.',
@@ -103,6 +108,25 @@
       goals: [{ steps: [['和 TA 打个招呼', 'Hi! Nice to meet you.'], ['问 TA 一个问题', 'What do you like doing here?'], ['回答 TA 的一个问题（说完整的句子）', 'I like this island because it is fun.']] }],
       words: words.length ? words : ['Hello', 'How are you', 'I like', 'What about you'],
       opener: lines[0] || 'Hi there! Nice to meet you!',
+    };
+  }
+
+  // ---------- 支线委托（quests.js）：q 是那份文件里的一条。人设、目标、小步骤、建议用的词全部来自 q——
+  // 中转服务按委托的 id 自己查（孩子的手机只发 id），APK 直连用打包进去的同一份；安全规则照旧由 instructions() 加在后面 ----------
+  const QUEST_RULES = 'This chat is a small game task that you gave the student. Stay on this task and keep to the facts above. ' +
+    'You are a game character with a job to do, not the student\'s companion or best friend. ' +
+    'Do not ask about the student\'s real life (real name, age, family, home or school). ' +
+    'When the student has done all the steps, thank them, say that you have a reward for them, and say goodbye.';
+  function questNpc(q) {
+    if (!q || typeof q !== 'object' || typeof q.id !== 'string' || !Array.isArray(q.steps)) return null;
+    const name = String(q.who || 'Friend'), g = q.g === 'f' ? 'f' : 'm', kid = !!q.kid, words = Array.isArray(q.words) ? q.words : [];
+    return {
+      id: 'quest:' + q.id, quest: q.id, name, zh: name, voice: voiceOf(name, g, kid),
+      persona: 'You are ' + name + ', ' + (q.role || 'a villager') + (/Island$/.test(q.place || 'Island') ? ' on ' : ' in ') + (q.place || 'Echo Island') + ' in the Echo Islands. You are ' + (kid ? 'a child' : 'a grown-up') + '. ' +
+        String(q.persona || '') + ' ' + QUEST_RULES,
+      goal: String(q.goal || ''), goalZh: String(q.goalZh || ''), opener: String(q.opener || ''),
+      goals: [{ steps: q.steps.slice(0, 4) }],
+      words: words.map(w => String(w[0])), wordsZh: words.map(w => String(w[1] || '')),
     };
   }
 
@@ -308,7 +332,7 @@
 
   const api = {
     VOICES, MODEL, REALTIME_URL, EVAL_URL, EVAL_MODEL, VOICE_NEED, GAME_START, GAME_HELP,
-    instructions, personNpc, goalOf, memOf, evalBody, parseEval, judge, stepsBody, parseSteps, zhBody, parseZh, session,
+    instructions, personNpc, questNpc, goalOf, memOf, evalBody, parseEval, judge, stepsBody, parseSteps, zhBody, parseZh, session,
     enWords, isLine, voiceLines, worried,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

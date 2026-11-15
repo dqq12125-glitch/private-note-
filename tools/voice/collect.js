@@ -1,6 +1,8 @@
 // 收集游戏里要朗读的固定英文 → tools/voice/lines.json（给 gen.py 合成配音用）
 //   闯关练习：data.js 的单词、句子、对话、岛主开场白，对话动画的台词（按角色性别）
 //   剧情和岛民台词：各文件里「英文, 中文」成对写的地方（带 {rival} 这类占位符的是运行时拼的，跳过）
+//   支线委托：quests.js 里委托人在对话框里说的固定台词（请求、感谢、做完以后的那一句，按委托人的性别）、旁白、委托的英文名
+//   今日目击：sighting.js 的告示板线索（模板拼得出来的每一句）
 // 用法：node tools/voice/collect.js
 'use strict';
 const fs = require('fs');
@@ -36,6 +38,17 @@ for (const u of ((ctx.window.BOOKS || { list: [] }).list).flatMap(b => b.units))
   u.sents.forEach(x => add(x[0], ['f']));
   u.dlgs.forEach(d => { add(d[0]); add(d[1]); (d[2] || []).forEach(o => add(o)); });
   if (u.boss && u.boss.hello) add(u.boss.hello);
+}
+// 支线委托（quests.js）：委托人在对话框里说的请求、感谢、做完以后的那一句（用 TA 的性别的声音）；旁白和委托的英文名（男女声都配）。
+// 聊天里的话是 AI 现场说的，不在这里
+vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'quests.js'), 'utf8'), ctx);
+for (const q of (ctx.window.QUESTS || { list: [] }).list) {
+  const g = [q.g === 'f' ? 'f' : 'm'];
+  q.ask.forEach(a => add(a[0], g));
+  q.thanks.forEach(a => add(a[0], g));
+  add(q.bye[0], g);
+  if (q.note) add(q.note[0]);
+  add(q.en);
 }
 for (const s of ctx.window.SCENES || []) {
   (s.lines || []).forEach(l => { const c = s.cast[l[0]]; add(l[1], c && c[2] === 'm' ? ['m'] : c && c[2] === 'f' ? ['f'] : null); });
@@ -112,6 +125,21 @@ try {
   }
   const TYPE_EN = { fire: 'fire', water: 'water', grass: 'grass', spark: 'electric' };
   for (const sp of dctx.window.DEX.list) if (sp.starter) add(sp.en + ' is a ' + TYPE_EN[sp.types[0]] + ' monster. Will you take it?', ['f']);
+}
+
+// ---------- 今日目击（sighting.js）：告示板上的三条英文线索，点 🔊 朗读（女声旁白） ----------
+// 线索是按地图、怪兽的数据从模板拼的；EchoSight.lines() 给出模板拼得出来的每一句。家庭版、销售版的怪兽不一样，两个版本各拼一遍
+{
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const isles = [...html.matchAll(/<script src="(isles\/[^"]+)"/g)].map(m => m[1]);
+  let n = 0;
+  for (const ed of ['family', 'sales']) {
+    const sctx = { window: { ECHO_EDITION: ed }, console, setTimeout, clearTimeout };
+    vm.createContext(sctx);
+    for (const f of ['dex.js', 'maps.js', 'people.js', 'story.js', ...isles, 'sighting.js']) vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), sctx, { filename: f });
+    for (const t of sctx.window.EchoSight.lines()) { add(t, ['f']); n++; }
+  }
+  if (!n) throw new Error('今日目击的线索一句都没拼出来（sighting.js 的 lines()）');
 }
 
 // ---------- 不合成「不能出现的词」（tools/banned-terms.txt）：老的漏配音记录里可能还有改名以前的句子 ----------
