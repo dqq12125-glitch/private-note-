@@ -55,8 +55,67 @@
     if (!Array.isArray(F.members)) F.members = [];
     return F;
   }
-  const famOn = () => { if (!sales() || !G) return null; const F = prof(); return F && F.done ? F : null; };
-  const needed = () => sales() && !famOn();
+  // 2026-11-19（给所有人用）：向导第一页先问「谁来用」——F.who = 'kid'（默认：给孩子用，家长来设置，就是原来的六步）/
+  // 'open'（青少年 / 成人自己学：只留 AI 说明和隐私、设备检查、AI 密钥，不设家长密码、不做家庭定制，开场和家庭版一样自己选照片起名字）
+  const doneF = () => { if (!sales() || !G) return null; const F = prof(); return F && F.done ? F : null; };
+  const selfPath = F => !!(F && F.who === 'open');
+  const famOn = () => { const F = doneF(); return F && !selfPath(F) ? F : null; };   // 家庭定制只在「给孩子用」时生效
+  const needed = () => sales() && !doneF();
+  // 新加的字走字表（i18n.js）：向导原来的中文以后一起搬
+  const I18N = window.EchoI18n;
+  const t = (k, p) => (I18N ? I18N.t(k, p) : k), h = (k, p) => (I18N ? I18N.h(k, p) : k);
+  if (I18N) I18N.add({
+    zh: {
+      'su.ui': '界面语言 · Language',
+      'su.who.q': '谁来用这个 App？', 'su.who.kid': '👨‍👩‍👧 给孩子用', 'su.who.open': '🧑 我自己学',
+      'su.who.kid.note': '给孩子用：下面几页请家长来填（同意书、设备检查、家长密码、AI 密钥、家庭定制）。',
+      'su.who.open.note': '青少年 / 成人自己学：不设家长密码，没有学习锁，也不限时。只要看 AI 和隐私说明、检查设备、填 AI 密钥。',
+      'su.open.head': '🧭 首次设置', 'su.open.head.s': '大约 3 分钟', 'su.open.tabs': ['欢迎', '设备检查', 'AI 密钥', '完成'],
+      'su.open.title': '欢迎使用回声岛',
+      'su.open.lead': '回声岛是一个练外语听说的软件：要<b>开口说</b>，才能让怪兽出招、和岛民聊天。下面几页是使用前的设置，设置只存在这台手机里。',
+      'su.open.ai.t': '🤖 关于 AI（人工智能）',
+      'su.open.ai': '和岛民聊天、口语打分、能力检测里的口语部分，是由<b>人工智能</b>完成的，由<b>阿里云通义千问</b>提供。AI 生成的内容在 App 里都标着「AI 生成」，每段聊天开头还有一句语音提示。AI 只扮演 App 里的角色、只聊岛上的事和日常话题，不会问您的真名、单位、住址、电话。',
+      'su.open.pr.t': '🔒 隐私要点',
+      'su.open.pr.1': '存档、昵称、聊天记录<b>只存在这台手机里</b>，开发者收不到。',
+      'su.open.pr.2': '聊天和口语打分时，您说话的<b>声音和识别出来的文字</b>会直接发到阿里云处理，用的是<b>您自己的阿里云账号</b>。开发者收不到，也不跑服务器。',
+      'su.open.pr.3': '不收集真名、照片、住址、电话、生日。起名字时请用<b>昵称</b>；能力检测只记下年龄段。',
+      'su.open.pr.4': '随时可以在设置里删掉 AI 密钥（就不再连 AI）、清空进度，或者卸载 App 删掉全部数据。',
+      'su.open.doc': '📄 隐私说明（全文）',
+      'su.open.consent': '我是使用者本人，已年满 14 周岁，已经读过隐私说明，<b>同意</b>使用 AI 聊天和口语打分（我说话的声音和识别出来的文字会发给阿里云处理）。',
+      'su.open.under': '不满 14 周岁请选上面的「给孩子用」，由家长来设置。不同意的话请不要继续。',
+      'su.open.need': '请先勾选同意（在这一页最下面）',
+      'su.open.done.t': '设置好了！', 'su.open.done.key': '🗝️ AI 密钥：{v}', 'su.open.done.dev': '🩺 设备检查：{v}',
+      'su.key.ok': '测试通过', 'su.key.has': '已粘贴（还没测试通过）', 'su.key.none': '还没有（口语不能自动打分，也不能和岛民聊天）',
+      'su.dev.ok': '合格', 'su.dev.warn': '能用（有一项不太好）', 'su.dev.bad': '不合格', 'su.dev.none': '没做',
+      'su.open.done.p': '接下来选要学的语言，做一个大约 6 分钟的能力检测，然后就可以开始了。以后要改，都在「设置」里。',
+      'su.open.finish': '🎉 开始', 'su.back': '上一步',
+    },
+    en: {
+      'su.ui': 'Language · 界面语言',
+      'su.who.q': 'Who will use this app?', 'su.who.kid': '👨‍👩‍👧 A child', 'su.who.open': '🧑 Me',
+      'su.who.kid.note': 'For a child: a parent fills in the next pages (consent, device check, parent PIN, AI key, family setup). These pages are in Chinese for now.',
+      'su.who.open.note': 'For a teenager or adult learning alone: no parent PIN, no study gate, no time limits. You only read the AI and privacy notes, check the device and enter an AI key.',
+      'su.open.head': '🧭 First-time setup', 'su.open.head.s': 'about 3 minutes', 'su.open.tabs': ['Welcome', 'Device check', 'AI key', 'Done'],
+      'su.open.title': 'Welcome to Echo Island',
+      'su.open.lead': 'Echo Island is an app for practising listening and speaking in a new language: you have to <b>speak aloud</b> for your monsters to move and to chat with the islanders. The next pages set things up. Everything stays on this phone.',
+      'su.open.ai.t': '🤖 About AI',
+      'su.open.ai': 'Chatting with islanders, scoring your speaking and the speaking part of the level check are done by <b>artificial intelligence</b>, provided by <b>Alibaba Cloud Tongyi Qianwen</b>. AI-generated content is labelled in the app, and each chat starts with a short spoken notice. The AI only plays characters in the app and talks about the islands and everyday topics. It will not ask for your real name, workplace, address or phone number.',
+      'su.open.pr.t': '🔒 Privacy in brief',
+      'su.open.pr.1': 'Your save, nickname and chat history are stored <b>only on this phone</b>. The developer cannot see them.',
+      'su.open.pr.2': 'When you chat or your speaking is scored, <b>your voice and the recognised text</b> go straight to Alibaba Cloud, using <b>your own Alibaba Cloud account</b>. The developer does not receive them and runs no server.',
+      'su.open.pr.3': 'No real name, photo, address, phone number or birthday is collected. Please use a <b>nickname</b>. The level check only keeps an age group.',
+      'su.open.pr.4': 'At any time you can delete the AI key in Settings (the app then stops using AI), clear your progress, or uninstall the app to remove everything.',
+      'su.open.doc': '📄 Privacy notice (full text, in Chinese)',
+      'su.open.consent': 'I am the user, I am 14 or older, I have read the privacy notice, and I <b>agree</b> to use AI chat and speech scoring (my voice and the recognised text are sent to Alibaba Cloud for processing).',
+      'su.open.under': 'If you are under 14, choose "A child" above and ask a parent to do the setup. If you do not agree, please do not continue.',
+      'su.open.need': 'Please tick the consent box at the bottom of this page first',
+      'su.open.done.t': 'All set!', 'su.open.done.key': '🗝️ AI key: {v}', 'su.open.done.dev': '🩺 Device check: {v}',
+      'su.key.ok': 'tested and working', 'su.key.has': 'entered (not tested yet)', 'su.key.none': 'none yet (speaking cannot be scored and you cannot chat with islanders)',
+      'su.dev.ok': 'passed', 'su.dev.warn': 'usable (one item is not ideal)', 'su.dev.bad': 'failed', 'su.dev.none': 'not done',
+      'su.open.done.p': 'Next you choose the language to learn and take a level check of about 6 minutes. Then you can start. You can change everything later in Settings.',
+      'su.open.finish': '🎉 Start', 'su.back': 'Back',
+    },
+  });
 
   // ---------- 主角形象：预设部件 ----------
   const SKINS = ['#ffe1c8', '#f1c7a0', '#d9a57b'];
@@ -181,7 +240,9 @@
     const b = $('#su-box'); if (b) b.scrollTop = 0;
     if (step === 'device' && !WZ.dev) deviceCheck();
   }
-  const pages = () => WZ.edit || FLOW;
+  // 「我自己学」那条路：欢迎（AI 说明、隐私、本人同意）→ 设备检查 → AI 密钥 → 完成
+  const FLOW_SELF = ['welcome', 'device', 'key', 'done'];
+  const pages = () => WZ.edit || (selfPath(prof()) ? FLOW_SELF : FLOW);
   function next() {
     const ps = pages(), i = ps.indexOf(WZ.step), why = blocked();
     if (why) { G.toast(why); return; }
@@ -196,7 +257,7 @@
   // 这一页还不能往下走的原因（'' = 可以）
   function blocked() {
     const F = draft();
-    if (WZ.step === 'welcome') return F.consent && F.consent.v === DOC_V ? '' : '请先勾选同意（在这一页最下面）';
+    if (WZ.step === 'welcome') return F.consent && F.consent.v === DOC_V ? '' : selfPath(F) ? t('su.open.need') : '请先勾选同意（在这一页最下面）';
     if (WZ.step === 'pin') return pinHas() ? '' : '请先设好家长密码';
     if (WZ.step === 'nick') { const r = checkNick(($('#su-nick') || {}).value || F.nick); return !r.ok ? r.msg : r.warn && !WZ.nickWarnOk ? '这个昵称像真名，请换一个，或者勾选「这不是孩子的真名」' : ''; }
     if (WZ.step === 'mons') return F.starters.length === 3 ? '' : '请选 3 只伙伴（现在选了 ' + F.starters.length + ' 只）';
@@ -208,14 +269,18 @@
   // 画面
   function render() {
     const box = $('#su-box'); if (!box) return;
-    const F = draft(), n = NUM[WZ.step], ps = pages(), i = ps.indexOf(WZ.step), last = i === ps.length - 1;
-    const tabs = WZ.edit ? '' : '<ol class="su-tabs">' + TABS.map((t, k) => '<li class="' + (k + 1 < n ? 'ok' : k + 1 === n ? 'on' : '') + '"><i>' + '①②③④⑤⑥'[k] + '</i><span>' + t + '</span></li>').join('') + '</ol>';
-    const body = ({ welcome: pWelcome, pin: pPin, key: pKey, nick: pNick, mons: pMons, fam: pFam, device: pDevice, done: pDone })[WZ.step]();
+    const F = draft(), self = !WZ.edit && selfPath(F), ps = pages(), i = ps.indexOf(WZ.step), last = i === ps.length - 1, n = self ? i + 1 : NUM[WZ.step];
+    const tabNames = self ? (I18N && I18N.raw('su.open.tabs')) || [] : TABS;
+    const tabs = WZ.edit ? '' : '<ol class="su-tabs"' + (self ? ' style="grid-template-columns:repeat(' + tabNames.length + ',1fr)"' : '') + '>' + tabNames.map((t, k) => '<li class="' + (k + 1 < n ? 'ok' : k + 1 === n ? 'on' : '') + '"><i>' + '①②③④⑤⑥'[k] + '</i><span>' + t + '</span></li>').join('') + '</ol>';
+    // 第一页最上面（只在第一次走向导时）：界面语言、谁来用
+    const top = !WZ.edit && WZ.step === 'welcome' ? whoBox(F) : '';
+    const body = top + ({ welcome: self ? pWelcomeSelf : pWelcome, pin: pPin, key: pKey, nick: pNick, mons: pMons, fam: pFam, device: pDevice, done: self ? pDoneSelf : pDone })[WZ.step]();
     let nav;
-    if (WZ.step === 'done') nav = '<div class="su-nav"><button class="btn ghost" data-act="suBack">上一步</button><button class="btn sun" data-act="suFinish" data-focus>🎉 把手机交给孩子</button></div>';
+    if (WZ.step === 'done' && self) nav = '<div class="su-nav"><button class="btn ghost" data-act="suBack">' + h('su.back') + '</button><button class="btn sun" data-act="suFinish" data-focus>' + h('su.open.finish') + '</button></div>';
+    else if (WZ.step === 'done') nav = '<div class="su-nav"><button class="btn ghost" data-act="suBack">上一步</button><button class="btn sun" data-act="suFinish" data-focus>🎉 把手机交给孩子</button></div>';
     else if (WZ.edit) nav = '<div class="su-nav"><button class="btn ghost" data-act="' + (i > 0 ? 'suBack' : 'suCancel') + '">' + (i > 0 ? '上一步' : '取消') + '</button><button class="btn" data-act="suNext" id="su-next">' + (last ? '保存' : '下一步') + '</button></div>';
     else nav = '<div class="su-nav">' + (i > 0 ? '<button class="btn ghost" data-act="suBack">上一步</button>' : '<span></span>') + '<button class="btn" data-act="suNext" id="su-next"' + (blocked() && WZ.step !== 'nick' ? ' disabled' : '') + '>下一步</button></div>';
-    box.innerHTML = '<div class="su-head"><b>' + (WZ.edit ? '🔒 家长设置' : '👪 家长首次设置') + '</b><small>' + (WZ.edit ? '' : '这几页请家长来填，大约 5 分钟') + '</small></div>' + tabs +
+    box.innerHTML = '<div class="su-head"><b>' + (WZ.edit ? '🔒 家长设置' : self ? h('su.open.head') : '👪 家长首次设置') + '</b><small>' + (WZ.edit ? '' : self ? h('su.open.head.s') : '这几页请家长来填，大约 5 分钟') + '</small></div>' + tabs +
       '<div class="su-step" data-step="' + WZ.step + '">' + body + '</div>' + nav;
   }
   function onInput(e) {
@@ -228,6 +293,33 @@
     if (t.id === 'su-key') { WZ.key = Object.assign(WZ.key || {}, { res: null }); const r = $('#su-key-res'); if (r) r.innerHTML = ''; }
   }
 
+  // 第一页最上面：界面语言 + 谁来用（默认「给孩子用」= 原来的家长向导，一步不少）
+  function whoBox(F) {
+    const self = selfPath(F), ui = I18N ? I18N.lang() : 'zh';
+    return '<div class="su-who" id="su-who">' +
+      (I18N ? '<b>' + h('su.ui') + '</b><div class="seg">' + I18N.LANGS.map(l => '<button class="' + (l.id === ui ? 'on' : '') + '" data-act="suUi" data-l="' + l.id + '">' + esc(l.name) + '</button>').join('') + '</div>' : '') +
+      '<b>' + h('su.who.q') + '</b><div class="seg">' + [['kid', 'su.who.kid'], ['open', 'su.who.open']].map(([m, k]) => '<button class="' + ((self ? 'open' : 'kid') === m ? 'on' : '') + '" data-act="suWho" data-m="' + m + '">' + h(k) + '</button>').join('') + '</div>' +
+      '<small class="su-small">' + h(self ? 'su.who.open.note' : 'su.who.kid.note') + '</small></div>';
+  }
+  // ① 欢迎（我自己学）：AI 说明、隐私要点、本人同意
+  function pWelcomeSelf() {
+    const F = draft(), on = !!(F.consent && F.consent.v === DOC_V);
+    return '<div class="su-hero">🏝️</div><h2>' + h('su.open.title') + '</h2>' +
+      '<p class="su-lead">' + h('su.open.lead') + '</p>' +
+      '<div class="su-card ai"><b>' + h('su.open.ai.t') + '</b><p>' + h('su.open.ai') + '</p></div>' +
+      '<div class="su-card"><b>' + h('su.open.pr.t') + '</b><ul>' + [1, 2, 3, 4].map(k => '<li>' + h('su.open.pr.' + k) + '</li>').join('') + '</ul></div>' +
+      '<div class="su-links"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">' + h('su.open.doc') + '</button></div>' +
+      '<label class="su-check"><input type="checkbox" id="su-consent" data-act="suConsent"' + (on ? ' checked' : '') + '><span>' + h('su.open.consent') + '</span></label>' +
+      '<p class="su-small">' + h('su.open.under') + '</p>';
+  }
+  // ④ 完成（我自己学）
+  function pDoneSelf() {
+    const F = draft(), dv = F.device;
+    return '<div class="su-hero">🎉</div><h2>' + h('su.open.done.t') + '</h2><ul class="su-sum">' +
+      '<li>' + h('su.open.done.key', { v: t(F.keyOk ? 'su.key.ok' : hasKey() ? 'su.key.has' : 'su.key.none') }) + '</li>' +
+      '<li>' + h('su.open.done.dev', { v: t(!dv ? 'su.dev.none' : dv.ok === 'ok' ? 'su.dev.ok' : dv.ok === 'warn' ? 'su.dev.warn' : 'su.dev.bad') }) + '</li></ul>' +
+      '<p>' + h('su.open.done.p') + '</p>';
+  }
   // ① 欢迎
   function pWelcome() {
     const F = draft(), on = !!(F.consent && F.consent.v === DOC_V);
@@ -463,7 +555,7 @@
         (r.tip ? '<small>' + esc(r.tip) + '</small>' : '') + (r.fix && r.ok === false ? '<button class="btn small" data-act="suMicFix">⚙️ 去打开</button>' : '') + '</div></li>').join('') +
       (d && d.busy ? '<li class="na"><i>⏳</i><div><b>正在检查……</b>' + (rows.length >= 4 ? '<span>手机问「允许使用麦克风吗」时请点「允许」</span>' : '') + '</div></li>' : '') + '</ul>' +
       (v ? '<div class="su-verdict ' + v + '" id="su-verdict">' + (v === 'ok' ? '✅ 这台设备合格，可以放心用' : v === 'warn' ? '⚠️ 能用，但有一项不太好（见上面）' : '❌ 这台设备现在不合格：按上面的提示处理后点「重新检查」；处理不了请把这一页截图发给帮您安装的人（不合格不收费）') + '</div>' +
-        (v !== 'bad' && !WZ.edit ? '<p class="su-small su-pay">合格了：如果还没付款，帮您安装的人这时会把付款链接发给您。付好以后点「下一步」，接着设家长密码和 AI 密钥（这两步请您自己输入，远程协助时先暂停屏幕共享）。</p>' : '') : '') +
+        (v !== 'bad' && !WZ.edit && !selfPath(prof()) ? '<p class="su-small su-pay">合格了：如果还没付款，帮您安装的人这时会把付款链接发给您。付好以后点「下一步」，接着设家长密码和 AI 密钥（这两步请您自己输入，远程协助时先暂停屏幕共享）。</p>' : '') : '') +
       '<button class="btn small ghost" data-act="suDevRun"' + (d && d.busy ? ' disabled' : '') + '>🔄 重新检查</button>';
   }
 
@@ -481,10 +573,11 @@
       '<p>现在把手机交给孩子吧！以后要改，在「设置 → 🔒 家长设置」里（要家长密码）。</p>';
   }
   function finish() {
-    const F = draft();
-    if (!pinHas()) { G.toast('请先设好家长密码'); go('pin'); return; }
+    const F = draft(), self = selfPath(F);
+    if (!self && !pinHas()) { G.toast('请先设好家长密码'); go('pin'); return; }
     if (!(F.consent && F.consent.v === DOC_V)) { go('welcome'); return; }
     F.done = G.dayStr(); F.step = 'done';
+    if (self) G.S.settings.learner = 'open';   // 我自己学：没有学习锁、不限时、不要家长密码（game.js 的 kidMode）
     apply(true);
     // 家长这边测试过密钥、麦克风也能用：孩子不用再做「说一句 Hello」的小检查
     const mic = F.device && (F.device.rows || []).find(r => r.k === 'mic');
@@ -507,6 +600,8 @@
     if (!sales() || !G) return;
     const F = prof(); if (!F) return;
     if (!F.done && !setName) return;
+    // 我自己学：没有家庭定制——主角造型、博士的包都是默认的，名字和样子在开场自己选
+    if (selfPath(F)) { applyLook(null); const M0 = window.MonsterGame; if (M0 && M0.STARTERS && BASE_STARTERS.length) M0.STARTERS.splice(0, M0.STARTERS.length, ...BASE_STARTERS); return; }
     applyLook(F);
     const MG = window.MonsterGame;
     if (MG && MG.STARTERS) {
@@ -636,6 +731,9 @@
       suBack: () => back(),
       suCancel: () => close(),
       suConsent: t => { const F = draft(); F.consent = t.checked ? { at: Date.now(), v: DOC_V } : null; G.save(); const b = $('#su-next'); if (b) b.disabled = !t.checked; },
+      // 第一页：谁来用（换了就要重新勾同意：两条路的同意书说的不是一回事）、界面语言
+      suWho: el => { if (WZ.edit || WZ.step !== 'welcome') return; const F = draft(), m = el.dataset.m === 'open' ? 'open' : 'kid'; if ((F.who || 'kid') === m) return; F.who = m; F.consent = null; G.save(); render(); },
+      suUi: el => { if (G.setUi) G.setUi(el.dataset.l); render(); },
       suDoc: t => openDoc(t.dataset.doc),
       suDocClose: () => closeDoc(),
       suPin: t => pinKey(t.dataset.k),

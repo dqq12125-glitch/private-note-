@@ -3,6 +3,8 @@
 //   · 带开关：第一座小镇和 1 号路用新渲染器画得出来；主角、跟着走的怪兽、人物、道具、提示都贴着地面；委托的「?」、训练师的「!」、按 A 的提示都在；
 //     地形只跟着地图数据走（台阶是真的坎、能走的格子之间没有陡坡、水比岸低）；来回切地图显存不涨；进屋交回老渲染器、出来再换回来；
 //     房子挡在镜头前会淡出去；画面丢了能重建；没有 WebGL2 退回 2D；怪兽模型读不到就用纸片图标；三档画质都能画
+//   · 人物：people3d.js 装着就是 3D 小人（主角、镇上每个人），没装、或者它说这个造型不行，就还是纸片；头上的「?」「!」「A」在头顶上面；
+//     剧情换造型、把人藏起来都跟着变；来回切地图小人不越攒越多；镇上站满人时 draw call 和三角形还在预算里
 // 运行：node tests/look.test.js（自己起一个本机小网站，这样怪兽的模型读得到；无头浏览器用软件渲染，慢，所以大多数检查用标准档）
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
@@ -69,7 +71,7 @@ const SAVE = gfx => ({
   st = await t.st();
   check(st.kind === '3d' && st.look === 'new' && st.using === 'open', '带开关：小镇用新渲染器（' + st.using + '）');
   check(st.calls > 8 && st.tris > 20000, '小镇画出来了 ' + JSON.stringify({ calls: st.calls, tris: st.tris }));
-  check(st.calls < 150 && st.tris < 400000, '标准档 draw call 和三角形没有失控');
+  check(st.calls < 120 && st.tris < 360000, '标准档、镇上站满人：draw call 和三角形在预算里（' + st.calls + ' 次、' + st.tris + ' 个）');
   await t.p.screenshot({ path: out + '/look-t0.png' });
   // 跟着走的怪兽：模型下载好就换上模型（本机小网站读得到）
   await t.tp(14, 14, 'up');
@@ -85,6 +87,24 @@ const SAVE = gfx => ({
     return { bad, people: pr.people.length, picks: pr.picks.length, follower: !!pr.follower };
   });
   check(onGround.bad.length === 0 && onGround.people >= 6 && onGround.follower, '主角、怪兽、' + onGround.people + ' 个人、' + onGround.picks + ' 个道具都贴着地面' + (onGround.bad.length ? '：' + onGround.bad.join(' | ') : ''));
+  // 人物是 3D 小人：主角和镇上每个人都是，没有纸片；活着的小人正好是画着的这些（没有多出来的）
+  check(pr.p3.on && pr.p3.player && pr.p3.people >= 6 && pr.p3.paper === 0 && pr.p3.live === pr.p3.people + 1, '主角和镇上 ' + pr.p3.people + ' 个人都是 3D 小人，没有纸片 ' + JSON.stringify(pr.p3));
+  check(pr.heads.length >= 6 && pr.heads.every(h => h.top > .95 && h.top < 1.7), '每个人的头顶高度像样（' + pr.heads.map(h => h.top.toFixed(2)).join(' ') + '）');
+  // 站到镇子南头往北看（大半个镇子和镇上的人都在画面里）：draw call 和三角形还在预算里
+  await t.tp(12, 19, 'up'); await t.W(900); await t.frames(4); st = await t.st();
+  check(st.calls > 30 && st.calls < 120 && st.tris < 360000, '标准档、整个镇子连人都在画面里：' + st.calls + ' 次 draw call、' + st.tris + ' 个三角形，在预算里');
+  await t.tp(14, 14, 'up'); await t.frames(3);
+  // 剧情换造型 / 把人藏起来：换了造型的还是 3D 小人（旧的收掉了），藏起来的不画，放回来又在
+  {
+    const p0 = pr.p3;
+    await t.E(() => { const d = EchoWorld._debug(), n = d.M.npcs.find(q => q.role === 'talk' && typeof q.look === 'string'); window.__sw = { n, look: n.look, hid: EchoStory.hidden }; n.look = 'hiker'; });
+    await t.frames(3); const p1 = (await t.probe()).p3;
+    await t.E(() => { const w = window.__sw; EchoStory.hidden = (SC, q) => q === w.n || w.hid(SC, q); });
+    await t.frames(3); const p2 = (await t.probe()).p3;
+    await t.E(() => { const w = window.__sw; EchoStory.hidden = w.hid; w.n.look = w.look; });
+    await t.frames(3); const p3 = (await t.probe()).p3;
+    check(p1.people === p0.people && p1.live === p0.live && p2.people === p0.people - 1 && p3.people === p0.people && p3.live === p0.live && p3.paper === 0, '换造型、藏起来、放回来：小人跟着变，没有多出来的 ' + JSON.stringify([p0, p1, p2, p3].map(q => q.people + '/' + q.live)));
+  }
   // 沙滩往海里低下去、码头上的人站在木板上（比水面高）、水比岸低
   const sea = await t.E(() => { const pr = EchoWorld._debug().R.probe(); return { grass: pr.at(14.5, 14.5), sand: pr.at(9.5, 21.5), pier: pr.at(13.5, 23.5), sea: pr.sea, bed: pr.ground(5.5, 24.5) }; });
   check(sea.sand < sea.grass - .1 && sea.sand > sea.sea && sea.pier > sea.sea + .1 && sea.bed < sea.sea - .2, '沙滩比草地低、比水面高；码头在水面上；水底比水面低 ' + JSON.stringify(sea, (k, v) => typeof v === 'number' ? +v.toFixed(2) : v));
@@ -94,17 +114,36 @@ const SAVE = gfx => ({
   pr = await t.probe();
   const hintOk = await t.E(() => { const pr = EchoWorld._debug().R.probe(); return !!pr.hint && Math.abs(pr.hint[0] - 10.5) < .01 && Math.abs(pr.hint[2] - 16.5) < .01 && pr.hint[1] > pr.at(10.5, 16.5) + 1.2; });
   check(hintOk, '面对着人：头顶上有按 A 的提示');
+  // 头上的牌子都在头顶上面一点（3D 小人有高有矮、有帽子，牌子跟着头顶走）
+  const hd = await t.E(() => { const pr = EchoWorld._debug().R.probe(); return { marks: pr.heads.filter(h => h.quest != null).map(h => ({ top: h.top, y: h.quest })), hint: pr.hintTop - pr.at(10.5, 16.5) }; });
+  check(hd.marks.length >= 1 && hd.marks.every(q => q.y > q.top + .25 && q.y < q.top + 1.3) && hd.hint > hd.marks[0].top + .25, '「?」在头顶上面（头顶 ' + hd.marks.map(q => q.top.toFixed(2)).join(' ') + '，牌子 ' + hd.marks.map(q => q.y.toFixed(2)).join(' ') + '），「A」也在头顶上面');
   // 训练师的「!」（直接给一个人挂上，看画不画）
   await t.E(() => { const n = EchoWorld._debug().M.npcs[1]; n.alert = performance.now() + 8000; });
   await t.frames(2);
-  check((await t.probe()).alerts >= 1, '「!」画出来了');
+  pr = await t.probe();
+  check(pr.alerts >= 1 && pr.heads.filter(h => h.alert != null).every(h => h.alert > h.top + .25 && h.alert < h.top + 1.3), '「!」画出来了，在头顶上面');
   // 面朝北和人说话：镜头抬高（不然主角把对面的人挡住）
   await t.W(800); await t.frames(12);
   check((await t.probe()).pitch > .5, '面朝北对着人：镜头抬高了（俯角 ' + Math.round((await t.probe()).pitch * 57.3) + '°）');
+  // 和 3D 小人说话（对话框开着）：镜头绕到主角右后方一点（不然 TA 的脸被主角的头挡住）；说完转回正北
+  await t.E(() => document.querySelector('#world [data-act=wA].ba').click());
+  await t.p.waitForFunction(() => !!EchoWorld._debug().dlg, null, { timeout: 8000 }).catch(() => {});
+  await t.W(900); await t.frames(10);
+  const yaw1 = (await t.probe()).yaw;
+  await t.closeDlg(); await t.W(900); await t.frames(10);
+  const yaw2 = (await t.probe()).yaw;
+  check(yaw1 > .2 && yaw1 < .6 && Math.abs(yaw2) < .05, '说话时镜头绕到旁边（' + Math.round(yaw1 * 57.3) + '°），说完转回正北（' + Math.round(yaw2 * 57.3) + '°）');
   // 镜头：在主角南边上方、朝北看，俯角比老版小得多（看得到地平线）。镜头是慢半拍跟过来的，多等几帧
   await t.tp(14, 14, 'up'); await t.W(1200); await t.frames(16);
   pr = await t.probe();
   check(pr.cam[2] > pr.player[2] + 5 && pr.cam[1] > pr.player[1] + 2.5 && pr.pitch > .15 && pr.pitch < .5, '镜头在主角身后上方，俯角 ' + Math.round(pr.pitch * 57.3) + '°（老版约 50°） ' + JSON.stringify({ cam: pr.cam.map(v => +v.toFixed(1)), player: pr.player.map(v => +v.toFixed(1)) }));
+  // 草按远近分块：近处那几块用细的零件，远处用省的，再远的簇不画
+  const g2 = pr.grass;
+  check(g2.chunks >= 4 && g2.near >= 1 && g2.near < g2.chunks && g2.drawn > 200 && g2.drawn < g2.all, '草分成 ' + g2.chunks + ' 块，近处 ' + g2.near + ' 块用细的；现在画着 ' + g2.drawn + ' / ' + g2.all + ' 簇（远处的没画）');
+  // 地图外面：北口外面是一条山谷，过了垭口落进海里（从镇上能看到海），两边各有一座山
+  const vista = await t.E(() => { const pr = EchoWorld._debug().R.probe(); return { near: pr.outer(14.5, -8), far: pr.outer(14.5, -42), l: pr.outer(5, -12), r: pr.outer(25, -12), sea: pr.sea }; });
+  check(vista.near.val > .6 && vista.near.h > 0 && vista.far.h < vista.sea && vista.l.hill > .6 && vista.r.hill > .6 && vista.l.h > 1.5 && vista.r.h > 1.5, '北口外面是山谷，过了垭口落进海里（' + vista.far.h.toFixed(1) + '），两边是山（' + vista.l.h.toFixed(1) + ' / ' + vista.r.h.toFixed(1) + '）');
+  check(typeof pr.line === 'boolean' && pr.buildMs > 0 && pr.buildMs < 20000, '描边用的深度图试过了（' + (pr.line ? '能用' : '不能用，不描边') + '）；这张地图建了 ' + pr.buildMs + ' 毫秒');
   // 房子挡在镜头和主角中间：淡出去；走开又回来
   await t.tp(14, 3, 'up'); await t.W(900); await t.frames(3);
   const f1 = (await t.probe()).faded;
@@ -154,6 +193,8 @@ const SAVE = gfx => ({
   for (let k = 0; k < 2; k++) { await memOf('t0'); await memOf('r0'); }
   const b0 = await memOf('t0'), b1 = await memOf('r0');
   check(b0.mem <= a0.mem + 2 && b1.mem <= a1.mem + 2 && b1.prog <= a1.prog + 1, '小镇 ⇄ 1 号路来回 3 趟，显存里的东西没有变多 ' + JSON.stringify([a0, a1, b0, b1].map(q => q.mem + '/' + q.prog)));
+  // 来回切了这么多趟：活着的 3D 小人还是只有这张地图上画着的这些，共用的网格没有越攒越多
+  { const q = await t.E(() => ({ p3: EchoWorld._debug().R.probe().p3, st: EchoPeople3D.stats() })); check(q.p3.live === q.p3.people + 1 && q.p3.paper === 0 && q.st.geos <= 48, '来回切地图：小人没有越攒越多 ' + JSON.stringify({ live: q.p3.live, people: q.p3.people, geos: q.st.geos, faces: q.st.faces })); }
   await t.go('t0', 'from:r0');
   const m0 = (await t.st()).mem;
   await t.go('i0C', 'mat'); st = await t.st();
@@ -177,15 +218,33 @@ const SAVE = gfx => ({
   await t.ctx.close();
 
   // ---------- 6. 三档画质；用 localStorage 打开；横屏 ----------
+  const tierTris = {};
   for (const gfx of ['high', 'low']) {
     t = await open(gfx === 'low' ? '' : '?look=new', gfx, { ls: gfx === 'low' ? 'new' : '', vp: gfx === 'low' ? { width: 844, height: 390 } : null });
     await t.frames(2); st = await t.st();
+    tierTris[gfx] = st.tris;
     check(st.using === 'open' && st.calls > 5 && st.tris > 10000, (gfx === 'high' ? '精美档' : '省电档（localStorage 打开、横屏）') + '画得出来 ' + JSON.stringify({ calls: st.calls, tris: st.tris }));
+    { const q = (await t.probe()).p3; check(q.player && q.people >= 6 && q.paper === 0 && st.calls < 140, (gfx === 'high' ? '精美档' : '省电档') + '：人物也是 3D 小人（' + q.people + ' 个），draw call ' + st.calls + ' 次'); }
     if (gfx === 'low') { pr = await t.probe(); check(pr.fov < 50 && pr.cam[2] > pr.player[2] + 4, '横屏：视角窄一些（' + Math.round(pr.fov) + '°），镜头还在身后'); }
     await t.p.screenshot({ path: out + '/look-t0-' + gfx + '.png' });
     check(!t.errs.length, (gfx === 'high' ? '精美档' : '省电档') + '没有报错');
     await t.ctx.close();
   }
+  // 三档要差得开（自动降档才有用）：精美档的三角形是省电档的好几倍，省电档不能太重
+  check(tierTris.high > tierTris.low * 3 && tierTris.low < 200000 && tierTris.high < 1300000, '精美档比省电档细得多（' + tierTris.high + ' / ' + tierTris.low + ' 个三角形）');
+
+  // ---------- 6½. 3D 小人用不了的时候还是纸片：文件没装进来 / 这个造型它说不行 ----------
+  t = await open('?look=new', 'mid', { block: '**/people3d.js' });
+  await t.tp(14, 14, 'up'); await t.frames(3); pr = await t.probe();
+  check(pr.p3.on === false && pr.p3.player === false && pr.p3.people === 0 && pr.p3.paper >= 6 && (await t.st()).marks >= 1, 'people3d.js 没装进来：主角和 ' + pr.p3.paper + ' 个人都是纸片，「?」还在');
+  check(pr.heads.filter(h => h.quest != null).every(h => h.top === 1.2 && h.quest > 1.45), '纸片人头上的牌子还在老地方');
+  check(!t.errs.length, '没有 3D 小人：没有报错');
+  await t.ctx.close();
+  t = await open('?look=new', 'mid', { init: () => { let v; Object.defineProperty(window, 'EchoPeople3D', { configurable: true, get: () => v, set: x => { v = x; if (x) x.has = () => false; } }); } });
+  await t.tp(14, 14, 'up'); await t.frames(3); pr = await t.probe();
+  check(pr.p3.on === true && pr.p3.player === false && pr.p3.people === 0 && pr.p3.paper >= 6 && pr.p3.live === 0, '3D 小人说这个造型不行（has() 是 false）：还是纸片，一个小人也没建');
+  check(!t.errs.length, 'has() 是 false：没有报错');
+  await t.ctx.close();
 
   // ---------- 7. 退路：怪兽模型读不到 → 纸片图标；没有 WebGL2 → 2D ----------
   t = await open('?look=new', 'mid', { block: '**/assets/mon3d/**' });

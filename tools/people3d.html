@@ -1,0 +1,255 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>3D 小人预览</title>
+<style>
+  body { margin: 8px; background: #e9f3ee; font: 13px/1.4 "Nunito", "Microsoft YaHei", sans-serif; color: #23312b; }
+  #bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 8px; }
+  #bar span { display: inline-flex; gap: 3px; align-items: center; }
+  #bar button { font: inherit; padding: 4px 9px; border: 1px solid #9db8ab; border-radius: 7px; background: #fff; cursor: pointer; }
+  #bar button.on { background: #1f8f8c; border-color: #1f8f8c; color: #fff; }
+  #stage { position: relative; display: inline-block; line-height: 0; }
+  #ov { position: absolute; left: 0; top: 0; pointer-events: none; }
+  #info { color: #5a6e64; }
+</style>
+<div id="bar"></div>
+<div id="stage"><canvas id="gl"></canvas><canvas id="ov"></canvas></div>
+<script src="../vendor/three.min.js"></script>
+<script src="../people.js"></script>
+<script src="../people3d.js"></script>
+<script>
+// 3D 小人预览：people.js 里每个造型的 3D 小人（people3d.js）和它的 2D 小人并排放。改了 people3d.js 打开这页看。
+// 平常是会动的：上面一排按钮换朝向、走 / 站、走多快、各种状态、镜头（平视 / 游戏里那样从身后上方看）、描边。游戏镜头里地上有格子，按走路的速度往后退：脚踩在地上不滑就对了。
+// 网址参数：only=boy,girl 只看这几个；size=190 一格多高；cols=8 一行几个；detail=high|low；outline=0 不描边；speed=5.5 走多快（世界单位每秒）；
+//   sheet=front|game|side|turn|walk|states|close 拼成一张不动的图（tools/look/people-shots.js 用它截图）；per / page 分页；
+//   test=1 不放任何小人，只把渲染器和灯光准备好，剩下的由 tests/people3d.test.js 自己来
+(function () {
+  'use strict';
+  const T = THREE, PP = EchoPeople, P3 = EchoPeople3D, Q = new URLSearchParams(location.search);
+  const num = (k, d) => (Q.get(k) != null && isFinite(+Q.get(k)) ? +Q.get(k) : d);
+  const ALL = Object.entries(PP.LOOKS).concat(PP.VILLAGERS.map(v => [v[0], v[2]]), PP.TRAINERS.map((t, i) => ['T' + i, t[1]]));
+  const only = Q.get('only'), sheet = Q.get('sheet') || '', detail = Q.get('detail') || 'high';
+  const TEST = Q.get('test') === '1';
+  let looks = TEST ? [] : ALL.filter(([n]) => !only || only.split(',').includes(n));
+  const per = num('per', 0), page = num('page', 1), paged = sheet !== 'walk' && sheet !== 'states' && sheet !== 'turn';
+  const pages = per && paged ? Math.ceil(looks.length / per) : 1;
+  if (per && paged) looks = looks.slice((page - 1) * per, page * per);
+  const GAME_SPEED = 5.5;   // 游戏里走路：一格 170 毫秒 ≈ 每秒 5.9 格，小人放大到 1.06 倍，所以按小人自己的大小算是每秒 5.5
+
+  // ---------- 渲染器、灯光（和新画风的大地图一样：暖的太阳在镜头左后方，冷的天光，三档明暗） ----------
+  const glc = document.getElementById('gl'), ov = document.getElementById('ov'), og = ov.getContext('2d');
+  const renderer = new T.WebGLRenderer({ canvas: glc, antialias: true, alpha: false, preserveDrawingBuffer: true });
+  renderer.toneMapping = T.NoToneMapping; renderer.autoClear = false; renderer.info.autoReset = false;
+  const scene = new T.Scene();
+  const hemi = new T.HemisphereLight(0xcfe0ff, 0xd9cfae, Math.PI * .56), sun = new T.DirectionalLight(0xfff0d0, Math.PI * .5);
+  sun.position.set(-.35, .68, .64).multiplyScalar(20);
+  scene.add(hemi, sun, sun.target);
+  const camera = new T.PerspectiveCamera(20, 1, .1, 100);
+  // 地面（有格子：细线每 0.25、粗线每 1 个世界单位，走路时按速度往后退）和脚下的圆影子
+  const canvasTex = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d')); const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; return t; };
+  const gridTex = canvasTex(256, 256, g => {
+    g.fillStyle = '#86c964'; g.fillRect(0, 0, 256, 256);
+    g.fillStyle = 'rgba(255,255,255,.2)'; for (let i = 0; i < 4; i++) { g.fillRect(i * 64 - 1, 0, 2, 256); g.fillRect(0, i * 64 - 1, 256, 2); }
+    g.fillStyle = 'rgba(40,90,40,.42)'; g.fillRect(0, 0, 3, 256); g.fillRect(253, 0, 3, 256); g.fillRect(0, 0, 256, 3); g.fillRect(0, 253, 256, 3);
+  });
+  gridTex.wrapS = gridTex.wrapT = T.RepeatWrapping; gridTex.repeat.set(40, 40); gridTex.anisotropy = 8;
+  const ground = new T.Mesh(new T.PlaneGeometry(40, 40).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ map: gridTex }));
+  const blobTex = canvasTex(64, 64, g => { const gr = g.createRadialGradient(32, 32, 2, 32, 32, 31); gr.addColorStop(0, 'rgba(22,40,84,.5)'); gr.addColorStop(.55, 'rgba(22,40,84,.3)'); gr.addColorStop(1, 'rgba(22,40,84,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); });
+  const blob = new T.Mesh(new T.PlaneGeometry(.78, .46).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false }));
+  blob.position.y = .012;
+  // 脚印：脚落地的那一下在地上留一个记号，记号跟着地面走——脚不滑的话，踩着地的那只脚一直压在自己的记号上
+  const markGeo = new T.TorusGeometry(.115, .014, 6, 28).rotateX(Math.PI / 2), markMat = [new T.MeshBasicMaterial({ color: 0xd63a2f }), new T.MeshBasicMaterial({ color: 0x1f5fd0 })];
+  const marks = [0, 1, 2, 3, 4, 5].map(i => { const m = new T.Mesh(markGeo, markMat[i % 2]); m.position.y = .006; m.visible = false; return m; });
+  scene.add(ground, blob, ...marks);
+  // 描边：把网格沿法线鼓大一圈、只画背面（游戏里是后期按深度图描的，这里只是为了看个大概）
+  const hullMat = col => { const m = new T.MeshBasicMaterial({ color: col, side: T.BackSide, vertexColors: true }); m.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  transformed += normalize(normal) * 0.0085;'); }; return m; };
+  const hullBody = hullMat(0x6a6a6a), hullFace = hullMat(0x8a6452);
+
+  const S = { dir: Q.get('dir') || 'down', moving: Q.get('walk') === '1', state: Q.get('state') || '', cam: Q.get('cam') || 'front', outline: Q.get('outline') !== '0', speed: num('speed', GAME_SPEED) };
+  const FACE = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] };   // 朝哪边走（x、z）
+  const views = [];   // 每个 3D 小窗：{ inst, hull, x, y, w, h, cam, dir, yaw 再多转多少度, dist 走了多远, lift 离地多高, prints 脚印 }
+  const sprites = [];   // 每个 2D 小人：{ look, x, y, w, h, dir, frame }
+  const labels = [];
+  function addView(look, x, y, w, h, o) {
+    const inst = P3.create(look, { detail, seed: o.seed });
+    if (!inst) { labels.push({ t: '3D 画不了', x: x + 4, y: y + 14, c: '#c0392b' }); return null; }
+    inst.root.visible = false;
+    scene.add(inst.root);
+    const hb = new T.SkinnedMesh(inst.body.geometry, hullBody); hb.bind(inst.body.skeleton, inst.body.bindMatrix); hb.boundingSphere = inst.body.boundingSphere; inst.pivot.add(hb);
+    const hf = new T.Mesh(inst.face.geometry, hullFace); inst.bones.head.add(hf);
+    const v = Object.assign({ inst, hull: [hb, hf], x, y, w, h, cam: null, dir: null, moving: null, state: null, speed: null, yaw: 0, dist: 0, lift: 0, prints: null }, o);
+    inst.set({ dir: v.dir || S.dir, moving: v.moving != null ? v.moving : S.moving, state: v.state != null ? v.state : S.state, speed: v.speed != null ? v.speed : S.speed, snap: true });
+    if (v.phase != null) inst.set({ phase: v.phase });
+    inst.root.rotation.y = v.yaw * Math.PI / 180;
+    views.push(v);
+    return v;
+  }
+  // 把一个小窗里的小人往前推 sec 秒（拼图用：推到想要的那一帧），地面跟着退；rec：顺便记下脚印
+  const _p = new T.Vector3();
+  function advance(v, sec, rec) {
+    const sp = v.speed != null ? v.speed : S.speed, f = FACE[v.dir || S.dir];
+    for (let t = 0; t < sec - 1e-9; t += 1 / 240) {
+      const dt = Math.min(1 / 240, sec - t);
+      v.inst.tick(dt); v.dist += sp * dt;
+      if (!rec) continue;
+      v.inst.root.updateMatrixWorld(true);
+      ['footL', 'footR'].forEach((n, i) => {
+        v.inst.bones[n].getWorldPosition(_p);
+        const down = _p.y < 2.2 * .025 + .0012, key = 'on' + i;
+        // 记在地面自己的坐标里（小人不动、地面往后退，所以要加上走过的路）
+        if (down && !v[key]) { v.prints.push({ i, x: _p.x + f[0] * v.dist, z: _p.z + f[1] * v.dist }); if (v.prints.length > 6) v.prints.shift(); }
+        v[key] = down;
+      });
+    }
+  }
+
+  // ---------- 排版 ----------
+  const size = num('size', sheet === 'close' ? 380 : 190), VW = Math.round(size * .8), SW = Math.round(size * .56), LH = 16;
+  let cols = num('cols', 0), W = 0, H = 0;
+  if (sheet === 'walk') {
+    const who = looks.filter(([n]) => (only ? true : n === 'boy' || n === 'girl')), dirs = ['up', 'down', 'left', 'right'], N = 8, vw = Math.round(size * .72);
+    let y = 0;
+    // ① 脚滑不滑：从侧面偏上看，三种速度各走一个来回（10 帧，帧和帧之间隔一样久）。地上的格子按这个速度往后退；红 / 蓝点是左 / 右脚落地时留在地上的记号
+    const gw = Math.round(size * 1.02), NG = 10;
+    who.slice(0, 1).forEach(([name, look]) => [1.2, 2.5, GAME_SPEED].forEach(sp => {
+      const g = P3.gait(sp), cyc = 1 / g.f;
+      labels.push({ t: name + ' · 每秒走 ' + sp + ' 个单位（' + (g.d >= .5 ? '走' : '跑：两脚离地占 ' + Math.round((1 - 2 * g.d) * 100) + '%') + '）· 每秒 ' + (g.f * 2).toFixed(1) + ' 步 · 每帧隔 ' + Math.round(cyc / NG * 1000) + ' 毫秒，地面退 ' + (sp * cyc / NG).toFixed(2), x: 4, y: y + 13 });
+      for (let i = 0; i < NG; i++) { const v = addView(look, i * gw, y, gw, size, { cam: 'grid', dir: 'right', moving: true, speed: sp, seed: 0, still: true, prints: [] }); if (v) advance(v, 1.5 + i * cyc / NG, true); }
+      y += size;
+    }));
+    // ② 游戏镜头，游戏里的速度：男孩、女孩 × 四个朝向，一个来回 8 帧；最右边是 2D 的两帧
+    const g = P3.gait(S.speed), cyc = 1 / g.f;
+    who.forEach(([name, look]) => dirs.forEach(dir => {
+      labels.push({ t: name + ' · ' + dir + ' · 每秒 ' + S.speed, x: 4, y: y + 13 });
+      for (let i = 0; i < N; i++) { const v = addView(look, i * vw, y, vw, size, { cam: Q.get('cam') || 'game', dir, moving: true, seed: 0, still: true }); if (v) advance(v, 1 + i * cyc / N); }
+      [1, 2].forEach((fr, k) => sprites.push({ look, x: N * vw + k * SW, y, w: SW, h: size, dir, frame: fr }));
+      y += size;
+    }));
+    W = Math.max(NG * gw, N * vw + 2 * SW); H = y;
+  } else if (sheet === 'states') {
+    // 各种状态：平视看正面、游戏镜头看侧面；下面两排是跳台阶从起跳到落地（phase 0 → 1，离地的高度照 world.js 的算法）
+    const who = looks.filter(([n]) => (only ? true : n === 'boy' || n === 'girl')), sts = [['idle', false, 0], ['walk', true, 2.4], ['run', true, GAME_SPEED], ['bike', true, 9.5], ['surf', false, 0], ['talk', false, 0], ['wave', false, 0]], hops = [0, .12, .28, .45, .62, .8, .93, 1];
+    let y = 0;
+    who.forEach(([name, look]) => {
+      [['front', 'down'], ['game', 'right']].forEach(([cam, dir]) => {
+        sts.forEach(([st, mv, sp], i) => { const v = addView(look, i * VW, y, VW, size, { cam, dir, moving: mv, state: st === 'run' ? 'walk' : st, speed: sp || 2.4, seed: 0, still: true }); if (v) advance(v, .9); labels.push({ t: st + (sp ? ' ' + sp : ''), x: i * VW + 4, y: y + 13 }); });
+        y += size;
+      });
+      [['front', 'right'], ['game', 'down']].forEach(([cam, dir]) => {
+        hops.forEach((ph, i) => { const v = addView(look, i * VW, y, VW, size, { cam, dir, moving: false, state: 'hop', phase: ph, lift: Math.sin(ph * Math.PI) * .55, tall: true, seed: 0, still: true }); if (v) advance(v, .5); labels.push({ t: 'hop ' + ph, x: i * VW + 4, y: y + 13 }); });
+        y += size;
+      });
+    });
+    W = Math.max(sts.length, hops.length) * VW; H = y;
+  } else if (sheet === 'turn') {
+    // 一点点转过去：正脸 → 斜着 → 侧脸（平视），再从游戏镜头看斜着和侧着
+    const who = looks.filter(([n]) => (only ? true : ['boy', 'girl', 'leo', 'mom', 'prof', 'strong'].includes(n))), angs = [['front', 0], ['front', 22.5], ['front', 45], ['front', 67.5], ['front', 90], ['game', 45], ['game', 90]], vw = Math.round(size * .9);
+    who.forEach(([name, look], r) => {
+      angs.forEach(([cam, a], i) => { addView(look, i * vw, r * (size + LH), vw, size, { cam, dir: 'down', yaw: a, still: true }); if (!r) labels.push({ t: (cam === 'game' ? '游戏镜头 ' : '') + a + '°', x: i * vw + 4, y: 13 }); });
+      labels.push({ t: name, x: 4, y: r * (size + LH) + size + 12 });
+    });
+    W = angs.length * vw; H = who.length * (size + LH);
+  } else {
+    // 每个造型一格：若干个 3D 小窗 + 2D 小人
+    const kinds = sheet === 'game' ? [['game', 'up'], ['game', 'right']] : sheet === 'close' ? [['front', 'down'], ['game', 'up'], ['front', 'left'], ['game', 'right']]
+      : sheet === 'side' ? [['front', 'left'], ['front', 'right'], ['game', 'left'], ['game', 'right']] : sheet === 'front' ? [['front', 'down']] : [[null, null]];
+    const sdirs = sheet === 'side' ? ['left', 'right'] : [sheet === 'game' ? 'up' : sheet ? 'down' : null];
+    const cw = kinds.length * VW + sdirs.length * SW + 8;
+    cols = cols || Math.max(1, Math.min(looks.length, Math.floor((sheet ? 2100 : Math.max(600, innerWidth - 24)) / cw)));
+    looks.forEach(([name, look], i) => {
+      const x = (i % cols) * cw, y = Math.floor(i / cols) * (size + LH);
+      kinds.forEach(([cam, dir], k) => addView(look, x + k * VW, y, VW, size, { cam, dir, still: !!sheet }));
+      sdirs.forEach((dir, k) => sprites.push({ look, x: x + kinds.length * VW + k * SW, y, w: SW, h: size, dir }));
+      labels.push({ t: name, x: x + 4, y: y + size + 12, v: views[views.length - 1] });
+    });
+    W = Math.min(looks.length, cols) * cw - 8; H = Math.ceil(looks.length / cols) * (size + LH);
+  }
+  W = Math.max(W, 16); H = Math.max(H, 16);
+  const dpr = window.devicePixelRatio || 1;
+  renderer.setPixelRatio(dpr); renderer.setSize(W, H, false);
+  glc.style.width = ov.style.width = W + 'px'; glc.style.height = ov.style.height = H + 'px';
+  ov.width = Math.round(W * dpr); ov.height = Math.round(H * dpr);
+
+  // ---------- 画 ----------
+  const BG = new T.Color(0x9bd5f0), BGG = new T.Color(0x86c964);
+  function drawGL() {
+    renderer.info.reset();
+    renderer.setScissorTest(false); renderer.setViewport(0, 0, W, H); renderer.setClearColor(0xe9f3ee, 1); renderer.clear();
+    renderer.setScissorTest(true);
+    for (const v of views) {
+      const cam = v.cam || S.cam, land = cam !== 'front', f = FACE[v.dir || S.dir];
+      // 游戏镜头：在小人南边上方、朝北看，视线往下约 24°（镜头俯角 18°，主角在画面中间偏下）；隔得远，所以几乎没有透视
+      if (cam === 'game') { const a = 24 * Math.PI / 180, d = 12; camera.fov = 2 * Math.atan(.88 / d) * 180 / Math.PI; camera.position.set(0, .6 + d * Math.sin(a), d * Math.cos(a)); camera.lookAt(0, .6, 0); }
+      else if (cam === 'grid') { const a = 15 * Math.PI / 180, d = 10; camera.fov = 2 * Math.atan(.8 / d) * 180 / Math.PI; camera.position.set(0, .5 + d * Math.sin(a), d * Math.cos(a)); camera.lookAt(0, .5, 0); }
+      else { camera.fov = 2 * Math.atan(.86 / 9) * 180 / Math.PI; camera.position.set(0, .95, 9); camera.lookAt(0, .68, 0); }
+      if (v.tall) { camera.fov *= 1.42; camera.position.y += .32; camera.lookAt(0, cam === 'front' ? .92 : .86, 0); }   // 跳起来的那几格：取景高一些
+      camera.aspect = v.w / v.h; camera.updateProjectionMatrix();
+      if (v.still) v.inst.bones.lid.scale.setScalar(.001);   // 拼图里不要正好拍到眨眼
+      ground.visible = blob.visible = land;
+      gridTex.offset.set(f[0] * v.dist, -f[1] * v.dist);
+      marks.forEach((m, i) => { const q = v.prints && v.prints[i]; m.visible = !!q; if (q) { m.position.x = q.x - f[0] * v.dist; m.position.z = q.z - f[1] * v.dist; m.material = markMat[q.i]; } });
+      v.hull[0].visible = v.hull[1].visible = S.outline;
+      v.inst.root.visible = true; v.inst.root.position.y = v.lift;
+      renderer.setViewport(v.x, H - v.y - v.h, v.w, v.h); renderer.setScissor(v.x, H - v.y - v.h, v.w, v.h);
+      renderer.setClearColor(land ? BGG : BG, 1); renderer.clear();
+      renderer.render(scene, camera);
+      v.inst.root.visible = false;
+    }
+  }
+  function draw2D(now) {
+    og.setTransform(dpr, 0, 0, dpr, 0, 0); og.clearRect(0, 0, W, H);
+    for (const s of sprites) {
+      og.fillStyle = '#9fd27f'; og.fillRect(s.x, s.y, s.w, s.h);
+      const moving = s.frame ? true : sheet ? false : S.moving, ph = s.frame ? (s.frame === 1 ? Math.PI / 2 : Math.PI * 1.5) : moving ? (Math.floor(now / 85) % 2 ? Math.PI / 2 : Math.PI * 1.5) : 0;
+      // 和 3D 小窗里差不多大：46 个设计单位 ≈ 1.15
+      PP.drawPerson(og, s.x + s.w / 2, s.y + s.h * .93, s.h * .56, s.look, s.dir || S.dir, ph, moving, false);
+    }
+    og.font = '11px Nunito, sans-serif'; og.textBaseline = 'alphabetic';
+    for (const l of labels) { og.fillStyle = l.c || '#23312b'; og.fillText(l.t + (l.v ? '  ' + l.v.inst.tris + '△' : ''), l.x, l.y); }
+  }
+
+  // ---------- 按钮 ----------
+  const bar = document.getElementById('bar');
+  function group(title, key, opts) {
+    const sp = document.createElement('span'); sp.append(title + ' ');
+    opts.forEach(([label, val]) => { const b = document.createElement('button'); b.textContent = label; b.dataset.k = key; b.dataset.v = String(val); b.onclick = () => { S[key] = val; apply(); }; sp.append(b); });
+    bar.append(sp);
+  }
+  function apply() {
+    bar.querySelectorAll('button').forEach(b => b.classList.toggle('on', String(S[b.dataset.k]) === b.dataset.v));
+    views.forEach(v => { if (!v.still) v.inst.set({ dir: v.dir || S.dir, moving: S.moving, state: S.state, speed: S.speed, phase: null }); });
+  }
+  if (!sheet && !TEST) {
+    group('朝向', 'dir', [['↓ 朝镜头', 'down'], ['← 左', 'left'], ['→ 右', 'right'], ['↑ 背对', 'up']]);
+    group('动作', 'moving', [['站着', false], ['走路', true]]);
+    group('每秒走', 'speed', [['1.2 慢走', 1.2], ['2.4', 2.4], [GAME_SPEED + ' 游戏里走路', GAME_SPEED], ['9.5 骑车', 9.5]]);
+    group('状态', 'state', [['平常', ''], ['骑车', 'bike'], ['踏浪', 'surf'], ['跳', 'hop'], ['说话', 'talk'], ['挥手', 'wave']]);
+    group('镜头', 'cam', [['平视', 'front'], ['游戏里（身后上方）', 'game'], ['看脚', 'grid']]);
+    group('描边', 'outline', [['有', true], ['没有', false]]);
+    const info = document.createElement('span'); info.id = 'info'; bar.append(info);
+    const st = P3.stats();
+    info.textContent = looks.length + ' 个造型 · 搭网格平均 ' + (st.ms / Math.max(1, st.built)).toFixed(1) + ' 毫秒 · 精细度 ' + detail + '（网址加 ?detail=low 看省电的）';
+    apply();
+  } else bar.style.display = 'none';
+
+  let last = 0;
+  function frame(now) {
+    const dt = last ? Math.min(.1, (now - last) / 1000) : .016; last = now;
+    // 跳：每 1.1 秒跳一次，0.3 秒从起跳到落地（和 world.js 的 JUMP_MS 一样），离地多高也照它的算法
+    const hop = S.state === 'hop', ph = Math.min(1, (now / 1000 % 1.1) / .3);
+    views.forEach(v => {
+      if (v.still) return;
+      if (hop) v.inst.set({ phase: ph });
+      v.lift = hop ? Math.sin(ph * Math.PI) * .55 : 0;
+      v.inst.tick(dt);
+      if (S.moving && S.state !== 'surf' && !hop) v.dist += S.speed * dt;
+    });
+    drawGL(); draw2D(now);
+    requestAnimationFrame(frame);
+  }
+  if (TEST) ov.style.display = 'none';
+  else if (sheet) { drawGL(); draw2D(0); }
+  else requestAnimationFrame(frame);
+  // 给脚本用的
+  window.P3D = { ready: true, T, renderer, scene, camera, views, looks: ALL, pages, W, H, stats: () => P3.stats(), calls: () => renderer.info.render.calls, redraw: () => { drawGL(); draw2D(0); } };
+})();
+</script>

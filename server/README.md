@@ -33,7 +33,7 @@ KEY_FILE=D:/path/to/.env node relay.js    # 或者把 DASHSCOPE_API_KEY=... 写�
 
 手机上的游戏是 HTTPS（GitHub Pages），所以服务也必须是 `wss://`（有证书的域名），而且在国内能访问：
 
-1. 国内云服务器（例如阿里云轻量应用服务器）装 Node 20+，拷 `server/` 和 `talk-npcs.js`、`talk-core.js`、`quests.js`（保持相对位置：`server/relay.js` 读 `../talk-npcs.js`、`../talk-core.js`、`../quests.js`——大地图上的支线委托也是手机只发 id、人设在服务器这边读）。
+1. 国内云服务器（例如阿里云轻量应用服务器）装 Node 20+，拷 `server/` 和 `talk-npcs.js`、`talk-core.js`、`quests.js`（保持相对位置：`server/relay.js` 读 `../talk-npcs.js`、`../talk-core.js`、`../quests.js`——大地图上的支线委托也是手机只发 id、人设在服务器这边读）。能力检测的口语问答题（`/place`）还要 `placement-data.js`（题库：手机只发题目的 id，评分要点在服务器这边查；没有这个文件时 `/place` 回 400，检测会把口语记成「未测」）。
 2. 设好 `DASHSCOPE_API_KEY`、`ACCESS_CODE`、`ADMIN_TOKEN`，用 pm2 / systemd 常驻。
 3. 用 Caddy 或 Nginx 反向代理到 8787 并自动申请证书（WebSocket 要开 Upgrade）。
 4. 手机上：游戏首页「和岛民聊天」→「设置服务」填 `wss://你的域名`，再填家庭口令。

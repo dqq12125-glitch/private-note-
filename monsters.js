@@ -666,7 +666,10 @@
     if (t.kind === 'sent' && t.fade >= 2 && canBlind()) B.blind = true;
     // 大招：掌握了以后先只播问题，凭记忆回答；说错一次（或者自己点「看选项」）才亮出选项，亮出来就不能暴击（只在 AI 打分时，自评要点选项）
     t.hid = t.kind === 'ult' && t.fade >= 1 && E.speakMode() === 'sr';
-    listenIfDown(t);
+    // 按能力走的入门 / 初级（game.js 的 lvListen，levels.js 的 kinds）：单词、句子的招式有几成换成「听一听、点出来」，点对了照常出招
+    if (!listenIfDown(t) && E.speakMode() === 'sr' && (t.kind === 'word' || t.kind === 'sent') && E.lvListen && E.lvListen()) {
+      t.listen = true; t.lv = true; B.blind = false; B.hinted = true; t.lopts = listenOpts(t);
+    }
     taskPanel();
   }
   // ---------- AI 打分用不了时：这一回合改成听音选招（家长 2026-10-07，评估第 3 条）----------
@@ -718,11 +721,13 @@
     let head, body = '';
     if (t.listen) {   // AI 打分用不了：听音选招（不能暴击）
       const ult = t.kind === 'ult';
-      head = '📶 AI 打分暂时用不了：' + (ult ? '听对手的问题，点出正确的回答' : '听一听，点出你听到的' + (t.kind === 'word' ? '词' : '咒语')) + (B.mv && !B.mv.sup && t.kind !== 'catch' && t.kind !== 'wake' ? '，发动 <b>' + mv[0] + '</b>（这回合不能暴击）' : '');
+      const I = window.EchoI18n;
+      head = t.lv && I ? I.h('place.b.listen.' + t.kind, { mv: mv[0] })   // 按能力换成听音选的回合：不是 AI 出了问题，说法不一样
+        : '📶 AI 打分暂时用不了：' + (ult ? '听对手的问题，点出正确的回答' : '听一听，点出你听到的' + (t.kind === 'word' ? '词' : '咒语')) + (B.mv && !B.mv.sup && t.kind !== 'catch' && t.kind !== 'wake' ? '，发动 <b>' + mv[0] + '</b>（这回合不能暴击）' : '');
       body = (t.em ? '<div class="say-emoji">' + t.em + '</div>' : '') +
         '<div class="say-row"><button class="spk mini" data-act="' + (ult ? 'bHearQ' : 'bHear') + '" aria-label="再听一遍">' + E.SPK + '</button><span class="say-zh">' + (ult ? '再听一遍问题' : '再听一遍') + '</span></div>' +
         '<div class="opts list b-listen">' + t.lopts.map((o, k) => '<button class="opt en" data-act="bLOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>';
-      panel('<div class="task"><div class="task-h">' + head + '</div>' + body + '<div class="task-foot"><div class="mic-hint" id="b-hint">联网以后这一句要在复习里补说</div></div>' +
+      panel('<div class="task"><div class="task-h">' + head + '</div>' + body + '<div class="task-foot"><div class="mic-hint" id="b-hint">' + (t.lv && I ? I.h('place.b.listen.foot') : '联网以后这一句要在复习里补说') + '</div></div>' +
         (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">换个技能</button>') + '</div>');
       if (t.kind !== 'wake') msg(t.kind === 'catch' ? '<b>' + SPECIES[foe().sp].en + '</b> 已经很虚弱了，听准收服咒语！' : '听准了才能打中！');
       if (ult) E.say(t.prompt, undefined, 'm'); else E.say(t.target, 0.9);
@@ -876,7 +881,9 @@
   function finishTask(score, measured, why) {
     const t = B.task, b = B;
     B.turn = 'busy';
-    if (t.listen) { if (t.q && E.revLater) E.revLater(t.q); }   // 听音选的回合（AI 用不了）：没开口，不算「开口说对」；这题欠着，联网后复习里要说
+    // 按能力换成听音选的回合（入门 / 初级，t.lv）：听对了按「带提示答对」记进复习（不升格），听错了降一格；不算开口说对，也不欠着
+    if (t.listen && t.lv) { if (t.q) { if (score >= 55) { if (E.revRight) E.revRight(t.q, false, true); } else (E.revMiss || E.addWrong)(t.q); } }
+    else if (t.listen) { if (t.q && E.revLater) E.revLater(t.q); }   // 听音选的回合（AI 用不了）：没开口，不算「开口说对」；这题欠着，联网后复习里要说
     else if (score >= 55) {
       E.S.stats.spoken++; E.qProg('spoken', 1);
       if (measured && score >= 85 && !B.hinted) { E.S.stats.perfect++; E.qProg('perfect', 1); }

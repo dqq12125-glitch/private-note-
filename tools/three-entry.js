@@ -17,3 +17,5 @@ export { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js
 export { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 // 新画风的大地图（world3d-open.js）：后期描边要读深度图
 export { DepthTexture } from 'three';
+// 3D 小人（people3d.js）：自己搭骨骼、一块蒙皮网格
+export { Bone, Skeleton } from 'three';

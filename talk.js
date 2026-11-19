@@ -143,6 +143,9 @@
     return T;
   }
   const memKey = npc => npc.id === 'dyn' ? 'p-' + npc.name : npc.id;
+  // 按能力走（做过能力检测、课程选了「按能力」）时岛民按第几级说话（game.js 的 chatLevel；没有 = null，一切照旧）；uiNow 界面语言
+  const chatLv = () => { try { const v = G && G.chatLevel ? G.chatLevel() : null; return typeof v === 'number' ? v : null; } catch (e) { return null; } };
+  const uiNow = () => { try { return (G && G.uiLang && G.uiLang()) || 'zh'; } catch (e) { return 'zh'; } };
   function countLog(k, n) { if (!G) return; const L = G.dayLog(); L[k] = (L[k] || 0) + (n || 1); G.save(); }
   // AI 用量记进今天的日志（周报估算花费）：实时聊天 aiChatIn / aiChatOut（其中音频 aiChatAudioIn / aiChatAudioOut）；
   // 文字模型（评价、打勾、翻译、点评）aiTextIn / aiTextOut —— 只有 APK 直连时数得到，网页版的花在中转服务那边
@@ -178,7 +181,7 @@
   function homeHTML() {
     const esc = G.esc, T = state(), url = relayUrl(), core = Core(), t = today(), nc = concerns();
     const card = (n, now) => {
-      const best = T.done[n.id], g = core.goalOf(n, T.n[n.id] || 0);
+      const best = T.done[n.id], g = core.goalOf(n, core.goalIndex ? core.goalIndex(n, T.n[n.id] || 0, chatLv()) : T.n[n.id] || 0);
       return '<button class="tk-card' + (now ? ' now' : '') + '" data-act="talk_open" data-npc="' + n.id + '">' +
         '<img src="' + face(n) + '" alt="">' +
         '<span class="tk-t"><b>' + (n.unit ? '<em>Unit ' + n.unit + (now ? ' · 📍 正在学' : '') + '</em> ' : '') + esc(n.zh) + ' <small>' + esc(n.name) + '</small></b>' +
@@ -404,7 +407,7 @@
     if (!url) { configure(); return; }
     const esc = G.esc, core = Core(), T = state();
     // 地图上的人：目标、步骤按 talk-core 的临时人设（和服务器拼的一样）；委托按 quests.js 里那一条
-    const base = npc.quest ? core.questNpc(QUESTS.byId[npc.quest]) : npc.desc ? core.personNpc(npc.desc) : npc, mk = memKey(npc), goal = core.goalOf(base, T.n[mk] || 0);
+    const base = npc.quest ? core.questNpc(QUESTS.byId[npc.quest]) : npc.desc ? core.personNpc(npc.desc) : npc, mk = memKey(npc), lvl = chatLv(), goal = core.goalOf(base, core.goalIndex ? core.goalIndex(base, T.n[mk] || 0, lvl) : T.n[mk] || 0);   // lvl：按能力走时岛民按第几级说话、挑哪个目标（没有 = null，照旧）
     const goalZh = goal.goalZh || npc.goalZh || '', zh = npc.wordsZh || [], mem = T.mem[mk] || null;
     const ov = document.createElement('div');
     ov.id = 'tk-ov'; ov.className = 'tk-ov';
@@ -424,7 +427,7 @@
       '<small class="tk-typenote" id="tk-typenote" hidden>打字的话不算「开口说」的句数，也不给金币</small></div></div>';
     document.body.appendChild(ov);
     LAST = npc;
-    C = { npc, base, mk, goal, ws: null, bubble: null, holding: false, ready: false, ending: false, done: false, t0: Date.now(), turns: [], pend: [], live: null, ticks: goal.steps.map(() => false) };
+    C = { npc, base, mk, goal, level: lvl, ws: null, bubble: null, holding: false, ready: false, ending: false, done: false, t0: Date.now(), turns: [], pend: [], live: null, ticks: goal.steps.map(() => false) };
     if (window.EchoMusic) EchoMusic.hold(true);   // 聊天时麦克风一直开着：背景音乐静音
     const c = C;
     progress();
@@ -449,10 +452,11 @@
     const q = new URLSearchParams({ npc: npc.id, dev: devId(), name: (G.S.player && G.S.player.name) || '', g: String(goal.i) });
     if (npc.desc) { const d = npc.desc; q.set('p', b64(JSON.stringify({ name: d.name, g: d.g, kid: !!d.kid, role: d.role, island: d.island, place: d.place, lines: d.lines, words: d.words }))); }
     if (npc.quest) q.set('quest', npc.quest);   // 委托：只发 id
+    if (lvl != null) { q.set('lv', String(lvl)); q.set('ui', uiNow()); }   // 能力级别和界面语言：中转服务只认 0–5 和认得的语言代码，那一段「怎么说话」在服务器上拼
     if (mem) q.set('m', b64(JSON.stringify({ facts: mem.facts || [], better: mem.better || '' })));
     const code = LS('echo-talk-code'); if (code) q.set('code', code);
     let ws;
-    if (url === 'direct:') ws = directSocket(npc, (G.S.player && G.S.player.name) || '', goal.i, mem);
+    if (url === 'direct:') ws = directSocket(npc, (G.S.player && G.S.player.name) || '', goal.i, mem, lvl, uiNow());
     else try { ws = new WebSocket(url + '/talk?' + q); } catch (e) { status('服务地址不对：' + url); return; }
     c.ws = ws;
     ws.onmessage = e => {
@@ -588,7 +592,7 @@
   // 今天用语音说的英语句子：≥3 个英文词、不含中文；同一句话一天只算一次。说满 6 句弹一句
   function countLine(text) {
     const core = Core();
-    if (!core.isLine(text)) return false;
+    if (!core.isLine(text, chatLv())) return false;   // 按能力走的入门 / 初级：1 个、2 个英文词就算一句
     const T = state(), d = G.dayStr(), key = String(text).toLowerCase().replace(/[^a-z' ]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
     if (!T.seen || T.seen.d !== d) T.seen = { d, h: [] };
     if (T.seen.h.includes(key)) return false;
@@ -765,13 +769,13 @@
   }
   function settle(c, raw, sec, how) {
     const core = Core(), T = state(), npc = c.npc, L = G.dayLog();
-    const ev = core.judge(c.goal, c.turns, raw, c.ticks);
+    const ev = core.judge(c.goal, c.turns, raw, c.ticks, c.level);
     let rec = c.rec, coins = 0, newGoal = false;
     if (!rec) {
       rec = c.rec = {
         t: c.t0, npc: npc.id, nm: npc.id === 'dyn' ? npc.name : undefined, q: npc.quest || undefined, g: c.goal.i,
         turns: c.turns.slice(0, 40).map(t => t.typed ? { who: t.who, text: t.text, typed: 1 } : { who: t.who, text: t.text }),
-        eval: null, sec: sec != null ? sec : Math.round((Date.now() - c.t0) / 1000), voice: core.voiceLines(c.turns),
+        eval: null, sec: sec != null ? sec : Math.round((Date.now() - c.t0) / 1000), voice: core.voiceLines(c.turns, c.level),
       };
       if (how !== 'eval') rec.late = how;   // 老师没来得及评价（timeout 超时 / lost 断开）
       T.log.unshift(rec); trimLog(T);
@@ -884,7 +888,7 @@
     if (add) { U[day] = (U[day] || 0) + add; LS('echo-talk-usage', JSON.stringify(U)); }
     return U[day] || 0;
   }
-  function directSocket(npcIn, player, gi, mem) {
+  function directSocket(npcIn, player, gi, mem, level, ui) {
     const C = window.TalkCore, N = window.EchoNative, id = ++nid;
     const sock = { readyState: 0, onmessage: null, onerror: null, onclose: null };
     const toGame = m => { if (sock.onmessage) sock.onmessage({ data: JSON.stringify(m) }); };
@@ -893,7 +897,7 @@
     const left = DAILY_SEC - usage();
     if (!npc || left < 20) { setTimeout(() => { toGame({ type: 'error', code: 'daily', zh: npc ? '今天的聊天时间用完了，明天再来吧！' : '没有这个岛民' }); shut(); }, 0); sock.send = () => {}; sock.close = shut; return sock; }
     const S = C.session({
-      npc, player: String(player).replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16), limitSec: Math.min(SESSION_SEC, left), leftSec: left, goal: gi, memory: mem,
+      npc, player: String(player).replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16), limitSec: Math.min(SESSION_SEC, left), leftSec: left, goal: gi, memory: mem, level, ui,
       up: m => { try { N.wsSend(id, JSON.stringify(m)); } catch (e) {} },
       out: toGame,
       evaluate: (n, turns, o) => new Promise(res => {
@@ -966,6 +970,29 @@
     tip = String(tip || '').replace(/\s+/g, ' ').trim().slice(0, 60);
     TIPS[k] = tip;
     return tip;
+  }
+  // 能力检测的口语问答题（placement.js）：把题目、这道题的评分要点、听写出来的话交给文字模型，判 0 / 1 / 2（talk-core 的 placeBody）。
+  // 和上面的点评走同一条路：APK 直连阿里云；网页版走中转服务的 /place——只发题目的 id，题目和评分要点由服务器从 placement-data.js 里查。
+  // 判不了（没网、密钥、超时、回的不是分数）返回 null，由检测那边决定跳过口语（不拿自评顶）
+  async function placeJudge(item, heard, lang) {
+    if (!item || !heard) return null;
+    const core = Core();
+    try {
+      if (direct()) {
+        const body = core.placeBody(item, heard, { lang }); if (!body) return null;
+        const r = await nativePost(core.EVAL_URL, JSON.stringify(body), 12000);
+        if (!r.ok) { noteAi('place', r.text); return null; }
+        const j = JSON.parse(r.text); textUse(j);
+        return core.parsePlace(j);
+      }
+      if (relayHttp()) {
+        const r = await relayPost('/place', { id: item.id, lang: lang || 'en', heard: String(heard).slice(0, 500) }, 12000);
+        if (!r.ok) { noteAi('place', 'HTTP ' + r.status + ' ' + r.text); return null; }
+        const s = JSON.parse(r.text).score;
+        return s === 0 || s === 1 || s === 2 ? { score: s } : null;
+      }
+    } catch (e) { /* 判不了 */ }
+    return null;
   }
   // 朗读没有提前配音的句子：阿里云语音合成，返回音频地址（同一句话这次打开游戏里只合成一次）。lang 默认 English（AI 提示用 Chinese）
   const TTSC = {};
@@ -1113,7 +1140,7 @@
         if (over) return;
         if (type === 'open') {
           sock.send(JSON.stringify({ type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language: 'en' },
-            turn_detection: { type: 'server_vad', threshold: 0.2, silence_duration_ms: o.short ? 400 : 600 } } }));
+            turn_detection: { type: 'server_vad', threshold: 0.2, silence_duration_ms: o.short ? 400 : o.long ? 1000 : 600 } } }));
           ready = true; queue.forEach(s => sock.send(s)); queue = [];
         } else if (type === 'message') {
           let m; try { m = JSON.parse(data); } catch (e) { return; }
@@ -1121,7 +1148,7 @@
           else if (m.type === 'conversation.item.input_audio_transcription.completed') {
             RTA.fails = 0; inSpeech = false; texts.push(m.transcript || ''); cur = ''; heard();
             // 说完一段：稍等一下，孩子没接着说就结束（句子中间停顿了会接着识别下一段）
-            clearTimeout(grace); grace = setTimeout(() => finish('done'), o.short ? 200 : 500);
+            clearTimeout(grace); grace = setTimeout(() => finish('done'), o.short ? 200 : o.long ? 1500 : 500);
           } else if (m.type === 'input_audio_buffer.speech_started') { inSpeech = true; clearTimeout(grace); }
           else if (m.type === 'error') fail(JSON.stringify(m.error || m).slice(0, 200));
         } else if (type === 'error' || type === 'closed') fail(type === 'error' ? String(data || '') : '');
@@ -1164,7 +1191,7 @@
         let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
         const loud = Math.sqrt(sum / d.length) > 0.02, now = performance.now();
         // 本机的停顿判断只是保底：实时识别正常时它会先结束；不正常时停 1.1 秒就整段识别
-        if (loud) { voiced++; quiet = 0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > (dead ? 1100 : 1800)) finish('silence'); }
+        if (loud) { voiced++; quiet = 0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > (o.long ? 2600 : dead ? 1100 : 1800)) finish('silence'); }
         if (now - t0 > (o.maxMs || 8000)) finish('max');
         else if (voiced < 3 && now - t0 > 5000) finish('silence');
       };
@@ -1273,7 +1300,7 @@
     };
   }
   window.EchoTalk = {
-    init, homeHTML, open, openPerson, openQuest, blocked, errText: why => ERR_ZH[why] || '', relayUrl, cloudSR, listenOnce, aiTip, cloudTTS, keyTest, AI_LABEL, stopListen: () => SR.stop && SR.stop(),
+    init, homeHTML, open, openPerson, openQuest, blocked, errText: why => ERR_ZH[why] || '', relayUrl, cloudSR, listenOnce, aiTip, placeJudge, cloudTTS, keyTest, AI_LABEL, stopListen: () => SR.stop && SR.stop(),
     today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG,
   };
 })();

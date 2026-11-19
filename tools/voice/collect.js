@@ -142,6 +142,22 @@ try {
   if (!n) throw new Error('今日目击的线索一句都没拼出来（sighting.js 的 lines()）');
 }
 
+// ---------- 能力检测的题库（placement-data.js，tools/place/build.js 生成）：听力题的每一句（按说话人的性别）、「听一听选意思」的单词（女声） ----------
+// 检测里这些声音走游戏平常的 say()，要提前配好（题目是固定的）。现在的配音模型只会英语：别的语言的题库到时候要另外找合成的办法
+{
+  const f = path.join(ROOT, 'placement-data.js');
+  let n = 0;
+  if (fs.existsSync(f)) {
+    const D = require(f);
+    if (D.en && D.en.tmp) console.log('placement: 现在是临时题库（--dev），正式题库生成以后要重新跑 collect');
+    for (const it of (D.en ? D.en.items : [])) {
+      if (it.skill === 'listen') for (const a of it.audio || []) { add(a.text, [a.g === 'm' ? 'm' : 'f']); n++; }
+      else if (it.skill === 'vocab' && it.mode === 'listen') { add(it.word, ['f']); n++; }
+    }
+  }
+  console.log('placement lines', n);
+}
+
 // ---------- 不合成「不能出现的词」（tools/banned-terms.txt）：老的漏配音记录里可能还有改名以前的句子 ----------
 {
   const T = require('../check-banned.js').terms();

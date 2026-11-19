@@ -21,7 +21,7 @@ const SPOTS = [
   ['t0-beach', '沙滩', 't0', 9, 20, 'up'],
   ['t0-exit', '小镇北口 · 去 1 号路', 't0', 15, 3, 'up'],
   ['r0-south', '1 号路 · 刚出小镇', 'r0', 11, 41, 'up'],
-  ['r0-grass', '1 号路 · 草丛', 'r0', 6, 34, 'up'],
+  ['r0-grass', '1 号路 · 草丛（旁边站着训练师）', 'r0', 6, 26, 'up'],
   ['r0-ledge', '1 号路 · 台阶下面', 'r0', 6, 15, 'up'],
   ['r0-ledge-top', '1 号路 · 台阶上面、池塘边', 'r0', 9, 12, 'down'],
   ['r0-house', '1 号路 · 路边小屋', 'r0', 6, 22, 'up'],
@@ -44,6 +44,8 @@ const SPOTS = [
       for (const [name, , map, x, y, dir, , act] of list) {
         if (map !== cur) { await t.go(map, map === 'r0' ? 'from:t0' : 'door:C'); cur = map; await t.W(3200); }
         await t.tp(x, y, dir);
+        // 镇上的人平时会东张西望（world.js 每隔几秒随机转一下）：拍照时让大家都朝着镜头站好、先别转，不然每次拍出来不一样，还常常只拍到后脑勺
+        await t.p.evaluate(() => { const d = EchoWorld._debug(); d.M.npcs.forEach(n => { n.face = 'down'; n.nextTurn = performance.now() + 120000; }); });
         await t.W(1600);
         await t.closeDlg();
         if (act === 'talk') { await t.p.evaluate(() => document.querySelector('#world [data-act=wA].ba').click()); await t.W(1500); }

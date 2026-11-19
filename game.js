@@ -108,6 +108,10 @@
         pinLock: { n: 0, until: 0, lockouts: 0 },  // 网页版家长密码输错的次数、锁到什么时候、一共被锁过几次（APK 里由原生管）
         verUrl: '',                               // 检查新版本的地址（家长设置里改；空 = 默认的 GitHub Pages 上的 version.json）
         family: null,                             // 销售版：家长首次设置向导的结果和家庭定制（setup.js 的 EchoSetup，「清空进度」也留着）
+        // 2026-11-19（给所有人用）：ui 界面语言（i18n.js，'zh' / 'en'）；learner 谁在学——'kid' 孩子（学习锁、冒险限时、家长密码，老存档都是）/
+        // 'open' 青少年和成人自己学（没有学习锁、不限时、不要家长密码，别的一样）；track 课程怎么排——'book' 按课本（老存档）/ 'level' 按能力检测的级别。
+        // 注意：上面那个 mode 是口语打分方式（auto / self），和「谁在学」没关系
+        ui: 'zh', learner: 'kid', track: 'book',
       }, seenIntro: false,
       micCheck: '',        // 第一次「麦克风 + 网络 + 密钥」小检查做过了没有（日期；'skip' = 先跳过了）
       upd: {},             // 最近一次查到的新版本：{ code, name, url, notes, at }（只有 APK 查）
@@ -120,6 +124,12 @@
       talk: { log: [], done: {}, days: {} },   // 和岛民聊天（talk.js）：最近的记录、每个岛民最好几星、今天拿过金币的
       book: { at: -1, mix: .6, view: 'book', vb: '' },   // 课本单元：正在学的单元（BK 里第几个，-1 = 没选过，按日期猜）、冒险出题里课本占几成、闯关页看课本还是小岛、正在看哪一册
       rev: { items: {}, v: 0, day: { d: '', n: 0, f: 0 }, gone: 0 },   // 每日复习（间隔复习）：见 revWrong / revRight / dueList；day = 今天新进了几条（n）、冒险里算了几次复习（f）；gone = 掌握以后删掉的聊天句子有几条（revTrim）
+      // 能力检测（placement.js）：lang 在学的语言、who 年龄段（child / teen / adult，只存这个，不存生日）、know 自己报的学过多少（0–3）、
+      // auto 最近一次测出来的综合级别（-1 = 没测过）、adj 自己调了几级、lv = auto + adj（现在按第几级安排，-1 = 没定过）、talk 测出来的聊天级别、
+      // cap 综合级别是不是被听说压低过、sk 各项 { e 估计值, lv, n 做了几道 } 或 { skip 没测的原因 }、at 哪天测的、
+      // from 按能力走时从第几个课本单元开始（前面的已免修）、hist 最近 6 次的结果、run 做到一半的那次（暂停）、seen 做过的题（下次先出没做过的）、
+      // skip 哪天说了「以后再测」、card 哪天把首页的卡片关了
+      place: { lang: 'en', who: '', know: -1, lv: -1, auto: -1, adj: 0, talk: -1, cap: 0, sk: {}, at: '', from: -1, hist: [], run: null, seen: [], skip: '', card: '' },
     };
   }
   function merge(base, o) {
@@ -438,6 +448,13 @@
     // store 最近一次量的存档空间 { used, quota, pct, warn }、lsQuota 测试用的假配额
     lastTxt: '', posBase: null, posKey: false, walkDirty: false, walkTm: 0, walkFull: null, store: null, lsQuota: 0 };
   let P = null; // 当前关卡
+  // 2026-11-19（给所有人用）——界面语言：新加的画面上的字从 i18n.js 的字表里取（tr 纯文字；trh 拼进 HTML 用，参数会转义）
+  if (window.EchoI18n) EchoI18n.use(() => (S && S.settings && S.settings.ui) || 'zh');
+  const tr = (k, p) => (window.EchoI18n ? EchoI18n.t(k, p) : k), trh = (k, p) => (window.EchoI18n ? EchoI18n.h(k, p) : k);
+  // 谁在学：'kid' 孩子（老存档、家庭版都是：学习锁、冒险限时、家长密码）/ 'open' 青少年和成人自己学（这三样都没有，别的一样）
+  const kidMode = () => S.settings.learner !== 'open';
+  // 按能力走（做过能力检测、课程选的是「按能力」）时现在是第几级；不是就返回 null，一切照旧。分级和内容对照表在 levels.js
+  const PLV = () => (window.EchoPlace && S.settings.track === 'level' && S.place && S.place.lv >= 0 ? S.place.lv : null);
 
   // ---------- 日期 / 连续打卡 ----------
   const dayStr = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -696,12 +713,13 @@
   // 返回 { alts: 听到的几种说法, err, fail, why }。fail 是没听到时的原因（家长 2026-10-07，评估第 3 条）：
   //   'mic' 麦克风被拒（APK 里顺手弹出说明和「去打开」）、'net' 没网、'key' 密钥不对 / 额度用完 / 太频繁（401/403/429/Arrearage/quota）、
   //   'nokey' APK 里还没有 AI 密钥、'unheard' 真的没听清（没出声、太小声、识别出来是空的，算一次尝试）、'stop' 自己点了停
-  function recognize(onInterim, targets) {
+  // opts（能力检测的口语问答题用）：{ maxMs 最长录多久, long: true 说几句话、句子中间可以停一停 }
+  function recognize(onInterim, targets, opts) {
     const m = MUS(); if (m) m.hold(true);
     if (TTS.ok) speechSynthesis.cancel();
     if (RT.audio) RT.audio.pause();
     const t0 = Date.now(), cloud = cloudSR();
-    return recognizeRaw(onInterim, targets).then(r => { if (m) m.hold(false); if (cloud) logAsr(t0); return r; });
+    return recognizeRaw(onInterim, targets, opts).then(r => { if (m) m.hold(false); if (cloud) logAsr(t0); return r; });
   }
   // 周报的 AI 用量：用阿里云识别了几次、大约几秒（估算花费）。失败的次数和原因在 aiNote 里记
   function logAsr(t0) {
@@ -719,11 +737,12 @@
     if (r.err === 'aborted') return 'stop';
     return 'unheard';
   }
-  function recognizeRaw(onInterim, targets) {
+  function recognizeRaw(onInterim, targets, opts) {
     if (cloudSR()) {
       RT.listening = true;
       const tg = (targets || []).filter(Boolean);
-      return EchoTalk.listenOnce({ onState: onInterim, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => x.trim().split(/\s+/).length <= 2) }).then(r => {
+      return EchoTalk.listenOnce(Object.assign({ onState: onInterim, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => x.trim().split(/\s+/).length <= 2) },
+        opts && opts.maxMs ? { maxMs: opts.maxMs } : null, opts && opts.long ? { long: true } : null)).then(r => {
         RT.listening = false;
         r = r || {};
         const fail = failOf(r);
@@ -1330,6 +1349,7 @@
       return;
     }
     if (q.free || !isUnit(q.w)) return;   // 小岛的题答对了不进复习（和以前一样）
+    if (unitFree(q.w - NB)) return;       // 按能力走：已免修的单元答对了不算「新学的」，不进复习（答错了照样进，见 revWrong）
     // 带提示学到的也占每天新进的名额（不然常点提示的孩子一天能塞进几十条）
     if (!revNewOk()) return;
     if (aided) { const n = revNew(q, k); n.b = 0; n.due = addDays(today, 1); n.x = 0; }   // 带提示学到的：按「弱」进来，明天考
@@ -1437,8 +1457,9 @@
     const e = S.rev.items[revKey(q)];
     if (!e) return 0;
     if (q.free && e.said) return 3;
-    const b = e.due ? (e.b || 0) : GAP.length;
-    const lv = b >= 4 ? 2 : b >= 2 ? 1 : 0;
+    const b = e.due ? (e.b || 0) : GAP.length, pl = PLV();
+    // 按能力走：级别低的多看几次才撤提示，级别高的更早凭记忆说（levels.js 的 kinds；初中级 = 以前的 2 格 / 4 格）
+    const lv = pl != null && window.EchoLevels ? EchoLevels.fade(S.place.lang, pl, b) : b >= 4 ? 2 : b >= 2 ? 1 : 0;
     return lv === 2 && e.k === 'free' && !e.zh ? 1 : lv;   // 没有中文的聊天句子凭记忆说不出来：最多撤到首字母
   }
   // 提示文字：1 = 每个词留首字母（I u____ g__ u_）；2 = 字母全遮住（first：对话的回答留下第一个词）
@@ -1580,7 +1601,9 @@
     }).join('');
     const opened = S.quests.chest, ready = allDone && !opened;
     const chest = '<button class="chest-btn ' + (ready ? 'ready' : '') + '" data-act="chest" ' + (ready ? '' : 'disabled') + '><span class="ch">' + (opened ? '📭' : '🎁') + '</span><span><b>' + (opened ? '今天的宝箱已经打开' : ready ? '每日宝箱可以打开了！' : '每日宝箱') + '</b><br><small>' + (opened ? '明天任务会刷新，记得回来' : '领完 3 个任务奖励就能打开，可能开出进化曲、怪兽蛋') + '</small></span></button>';
-    return revCard() + '<div class="q-head"><h3>今日任务</h3><small>' + hrs + ' 小时后刷新</small></div>' + rows + chest;
+    // 能力检测的卡片（placement.js）：还没测过的存档在这里给一张（不强拉进去）；做到一半的显示「继续」
+    const pc = window.EchoPlace && EchoPlace.homeCard ? EchoPlace.homeCard() : '';
+    return pc + revCard() + '<div class="q-head"><h3>今日任务</h3><small>' + hrs + ' 小时后刷新</small></div>' + rows + chest;
   }
   const OFFS = [0, -56, -78, -34, 38, 76, 0];
   function worldHTML(w, wi, cur) {
@@ -1627,13 +1650,77 @@
   }
   function curIdx() {
     if (!BK.length) return -1;
-    return S.book.at >= 0 && unitOpen(Math.min(S.book.at, BK.length - 1)) ? Math.min(S.book.at, BK.length - 1) : guessIdx();
+    if (PLV() != null) { const i = levelIdx(); if (i >= 0) return i; }
+    return bookIdx();
+  }
+  // 按课本走时正在学的单元（一直以来的算法）：自己选的，没选过按日期猜
+  const bookIdx = () => (S.book.at >= 0 && unitOpen(Math.min(S.book.at, BK.length - 1)) ? Math.min(S.book.at, BK.length - 1) : guessIdx());
+  // ---------- 按能力走（placement.js 的能力检测，levels.js 的内容对照表）----------
+  // 检测完定一个起点单元 S.place.from（前面的「已免修」，照样能练）；「正在学」从 S.book.at 起（检测时 = 起点，自己点「设为正在学」可以改），
+  // 打赢这个单元的 BOSS 关就自动挪到下一个单元（finish() 里）——按课本走是按日期猜，按能力走是学完一个走一个
+  function levelIdx() {
+    const i = Math.max(0, Math.min(S.book.at >= 0 ? S.book.at : S.place.from, BK.length - 1));
+    return unitOpen(i) ? i : -1;
+  }
+  // 这个单元是不是已免修（按能力走时，起点前面的单元）
+  const unitFree = i => PLV() != null && S.place.from > 0 && i >= 0 && i < S.place.from;
+  // 第 lv 级会排到哪个单元（结果页「接下来这样安排」用；不改存档）
+  function placePlan(lv) {
+    if (!window.EchoLevels || !BK.length) return null;
+    const a = EchoLevels.startAt(S.place.lang, lv, BK, unitOpen), u = BK[a.i];
+    return u ? { i: a.i, fit: a.fit, free: a.i, unit: u.bshort + ' Unit ' + u.n + ' · ' + u.en, top: EchoLevels.topLevel(S.place.lang, BK) } : null;
+  }
+  // 按现在的级别把课程排好。why：'test' 刚测完——有进度的老存档不往回挪（按课本已经学到后面的，「正在学」留在那儿，只是前面的标成已免修）；
+  // 'adjust' 自己调了级别、'track' 换回「按能力」：就按这一级的起点来
+  function placeApply(why) {
+    const lv = S.place.lv;
+    if (!(lv >= 0) || S.settings.track !== 'level') return;   // 选了「按课本」的不动（在设置里调级别也不动他正在学的单元）
+    const a = placePlan(lv);
+    if (!a) return;
+    const was = bookIdx(), keep = why === 'test' && window.EchoPlace && EchoPlace.hasProgress() && was > a.i && unitOpen(was);
+    let at = keep ? was : a.i;
+    while (at < BK.length - 1 && unitOpen(at + 1) && (S.stars[(NB + at) + '-6'] || 0) > 0) at++;   // BOSS 已经打过的单元不用再当「正在学」
+    S.place.from = a.i;
+    S.book.at = at;
+    S.book.vb = BK[curIdx()] ? BK[curIdx()].book : BK[a.i].book;
+    RT.scrollCur = true;
+  }
+  // 挑战馆的课本门槛从哪个单元数起、数到哪儿为止（world.js 的 gymNeed）：按课本走是全部单元；按能力走从起点单元数起，只数开放的
+  function unitSpan() {
+    if (PLV() == null || !(S.place.from > 0)) return { from: 0, end: BK.length };
+    let end = S.place.from; while (end < BK.length && unitOpen(end)) end++;
+    return { from: S.place.from, end };
+  }
+  // 换界面语言（设置里、全新开始的语言选择页）
+  function setUi(l) {
+    if (!window.EchoI18n) return;
+    S.settings.ui = EchoI18n.LANGS.some(x => x.id === l) ? l : 'zh';
+    EchoI18n.set(S.settings.ui); save();
+  }
+  // 全新开始时选了「谁在学」（placement.js，只在全新的存档上调）：孩子 → 'kid'；青少年 / 成人 → 'open'。
+  // 这台设备上有家长密码（安装包打包的 / 网页版设过的）就要输对才换成 'open'，没输（关掉了密码键盘）就还是 'kid'——年龄段照样记着；
+  // 家庭版的安装包没打包密码时没法确认，也留在 'kid'。销售版由家长首次设置向导定（setup.js），这里不动
+  function learnerPick(who, cb) {
+    const want = who === 'child' ? 'kid' : 'open', ps = pinState();
+    if (window.DEX && DEX.sales) { cb(); return; }
+    if (want === 'kid' || !kidMode()) { if (want === 'kid' && !kidMode()) { S.settings.learner = 'kid'; save(); } cb(); return; }
+    if (!ps.has) { if (!ps.native) { S.settings.learner = 'open'; save(); } cb(); return; }
+    let done = false, iv = 0;
+    const end = () => { if (done) return; done = true; clearInterval(iv); cb(); };
+    parentOk(tr('place.who.pin'), () => { S.settings.learner = 'open'; RT.parentUntil = 0; save(); closeModal(); end(); });
+    if (!done) iv = setInterval(() => { if ($('#modal').hidden || !RT.pin) end(); }, 200);
+  }
+  // 能力检测的画面关掉了（how：'done' 做完了 / 'later' 以后再测 / 'paused' 做到一半先退出）：重画首页；全新的开始接着看游戏说明
+  function afterPlace() {
+    if (!$('#home').hidden) renderHome();
+    if (!S.seenIntro && $('#modal').hidden) setTimeout(introSheet, 200);
   }
   const curUnit = () => BK[curIdx()] || null;
   const viewBook = () => { const vb = S.book.vb; return BOOKS.find(b => b.id === vb && bookOpen(b.id)) || BOOKS[(curUnit() || { bi: 0 }).bi]; };
   function unitHead(u, wi, tot) {
     const now = wi - NB === curIdx();
-    return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · Unit ' + u.n + (now ? ' · 📍 正在学' : '') + '</div><h2>' + esc(u.en) + ' <small>' + esc(u.zh) + '</small></h2><p class="w-en">' + esc(u.key) + '</p></div>' +
+    const free = unitFree(wi - NB) ? ' <span class="u-free" title="' + trh('place.unit.free.tip') + '">✓ ' + trh('place.unit.free') + '</span>' : '';   // 按能力走：起点前面的单元
+    return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · Unit ' + u.n + (now ? ' · 📍 正在学' : '') + free + '</div><h2>' + esc(u.en) + ' <small>' + esc(u.zh) + '</small></h2><p class="w-en">' + esc(u.key) + '</p></div>' +
       '<span class="w-stars">★ ' + tot + '/21</span></div>' +
       '<div class="u-bar"><button class="link" data-act="bookGram" data-w="' + wi + '">📐 语法：' + esc(u.grammar.title) + '</button>' +
       (unitTalk(u) ? '<button class="btn small sun" data-act="talk_open" data-npc="' + unitTalk(u).id + '">🗣️ 和 ' + esc(unitTalk(u).name) + ' 聊这个单元</button>' : '') +
@@ -2241,6 +2328,8 @@
     S.stats.levels++;
     if (stars === 3) { S.stats.threeStars++; qProg('three', 1); }
     if (P.boss && prev === 0) S.stats.bosses++;
+    // 按能力走：打赢了正在学的这个单元的 BOSS，「正在学」挪到下一个单元（冒险出题、聊天、挑战馆的门槛都跟着走）
+    if (P.boss && !P.review && stars > 0 && PLV() != null && isUnit(P.wi) && P.wi - NB === curIdx() && unitOpen(P.wi - NB + 1)) { S.book.at = P.wi - NB + 1; RT.scrollCur = true; }
     if (P.lost === 0 && P.correct === P.total) S.stats.flawless++;
     S.stats.maxCombo = Math.max(S.stats.maxCombo, P.maxCombo);
     qProg('combo', P.maxCombo, true);
@@ -2301,6 +2390,7 @@
   }
   function restModal() {
     RT.lastRest = Date.now();
+    if (!kidMode()) return;   // 「自己学」不限时，也不强制休息
     openModal('<div class="big">👀</div><h2>护眼时间</h2><p>已经连续练了 30 分钟，真厉害！看看窗外远处 20 秒，喝口水，让眼睛和嗓子歇一歇。</p><button class="btn wide" id="restbtn" data-act="close" disabled>休息中 20</button>', { locked: true });
     let n = 20;
     const t = setInterval(() => {
@@ -2611,6 +2701,12 @@
         '</div><small>横屏玩冒险和对战更像掌机；做题、聊天竖着横着都能用。</small></div>' : '') +
       '<div class="set"><label>音效</label><div class="seg"><button class="' + (st.sfx ? 'on' : '') + '" data-act="sfx" data-v="1">开</button><button class="' + (st.sfx ? '' : 'on') + '" data-act="sfx" data-v="0">关</button></div></div>' +
       '<div class="set"><label>音乐</label><div class="seg">' + [['off', '关'], ['low', '小'], ['mid', '中'], ['high', '大']].map(([v, t]) => '<button class="' + ((st.music || 'mid') === v ? 'on' : '') + '" data-act="setMusic" data-v="' + v + '">' + t + '</button>').join('') + '</div></div>' +
+      // 2026-11-19（给所有人用）：能力检测和分级（placement.js）、界面语言（i18n.js）、谁在学（孩子 / 自己学）
+      (window.EchoPlace ? EchoPlace.settingsRow() : '') +
+      (window.EchoI18n ? '<div class="set" id="set-ui"><label>' + trh('place.set.ui') + '</label><div class="seg">' + EchoI18n.LANGS.map(l => '<button class="' + ((st.ui || 'zh') === l.id ? 'on' : '') + '" data-act="setUi" data-l="' + l.id + '">' + esc(l.name) + '</button>').join('') + '</div>' +
+        (tr('place.lang.partial') ? '<small>' + trh('place.lang.partial') + '</small>' : '') + '</div>' : '') +
+      '<div class="set" id="set-learner"><label>' + trh('place.set.learner') + '</label><div class="seg">' + [['kid', 'place.learner.kid'], ['open', 'place.learner.open']].map(([m, k]) => '<button class="' + ((kidMode() ? 'kid' : 'open') === m ? 'on' : '') + '" data-act="setLearner" data-m="' + m + '">' + trh(k) + '</button>').join('') +
+        '</div><small>' + trh('place.learner.' + (kidMode() ? 'kid' : 'open') + '.note') + '</small></div>' +
       parentHTML() +
       '<p class="set-ver">' + esc(verText()) + ' · <button class="link" data-act="suDoc" data-doc="licenses">开源许可与致谢</button></p>' +
       '<button class="btn ghost wide" data-act="close">完成</button>');
@@ -2619,11 +2715,11 @@
   function parentHTML() {
     const st = S.settings, c = limitCfg(), ps = pinState(), nc = window.EchoTalk && EchoTalk.concerns ? EchoTalk.concerns() : 0;
     const cloud = !!(window.EchoTalk && EchoTalk.cloudSR && EchoTalk.cloudSR()), pk = pushKind(st.push);
-    const b = [];
-    b.push('<div class="set"><label>先学习再冒险</label><div class="seg">' +
+    const b = [], kid = kidMode();   // 「自己学」（青少年 / 成人）：没有学习锁和冒险限时这两行，这一块也不叫「家长设置」、不要密码
+    if (kid) b.push('<div class="set"><label>先学习再冒险</label><div class="seg">' +
       [[true, '🔒 开（推荐）'], [false, '关']].map(([m, n]) => '<button class="' + ((st.gate !== false) === m ? 'on' : '') + '" data-act="setGate" data-m="' + (m ? 1 : 0) + '">' + n + '</button>').join('') +
       '</div><small>开着时，每天先做完每日复习、用英语和岛民聊一聊（用语音说满 6 句，或者完成一个小目标），才能去怪兽冒险。关掉要家长密码，关过的天周报上会标出来；关着时冒险也不限时。</small></div>');
-    b.push('<div class="set"><label>⏱️ 冒险时间</label><div class="say-row"><span class="set-v">' + esc(limText(c)) + '</span><button class="btn small ghost" data-act="limEdit">改</button></div>' +
+    if (kid) b.push('<div class="set"><label>⏱️ 冒险时间</label><div class="say-row"><span class="set-v">' + esc(limText(c)) + '</span><button class="btn small ghost" data-act="limEdit">改</button></div>' +
       '<small>只算大地图和对战的时间。时间到了不会半路掐断，等这一场战斗或这段对话结束再回首页。多做一轮复习、多完成一个聊天目标、多通关一关新练习（或拿到更多星星），每样 +10 分钟。</small></div>');
     if (BK.length) b.push('<div class="set"><label>冒险里的英语题</label><div class="seg">' +
       [[.6, '多出课本'], [.3, '少量课本'], [0, '只用岛上话题']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + n + '</button>').join('') +
@@ -2645,7 +2741,7 @@
     // 销售版：家庭定制（昵称、形象、伙伴、家人）、设备检查、儿童隐私说明（家长首次设置向导 setup.js 里做过的，这里能改）
     if (window.EchoSetup && EchoSetup.sales()) {
       const fm = EchoSetup.members(), F = st.family || {};
-      b.push('<div class="set"><label>👪 家庭定制</label><div class="say-row"><span class="set-v">' + esc((S.player && S.player.name) || F.nick || '（没起名）') + (fm.length ? ' · ' + esc(fm.map(m => m.call).join('、')) : '') + '</span><button class="btn small ghost" data-act="suFamily">改</button></div>' +
+      if (F.who !== 'open') b.push('<div class="set"><label>👪 家庭定制</label><div class="say-row"><span class="set-v">' + esc((S.player && S.player.name) || F.nick || '（没起名）') + (fm.length ? ' · ' + esc(fm.map(m => m.call).join('、')) : '') + '</span><button class="btn small ghost" data-act="suFamily">改</button></div>' +
         '<small>孩子的英文昵称和形象、博士包里的 3 只伙伴（开始新冒险时生效）、家里的人。只存在这台手机里。</small></div>');
       b.push('<div class="set"><label>🩺 设备检查</label><div class="say-row"><span class="set-v">' + (F.device ? (F.device.ok === 'ok' ? '✅ 合格' : F.device.ok === 'warn' ? '⚠️ 能玩' : '❌ 不合格') : '没做过') + '</span><button class="btn small ghost" data-act="suDevice">再检查一次</button></div></div>');
       b.push('<div class="set"><label>📄 隐私和同意</label><div class="say-row"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">儿童隐私说明</button><button class="btn small ghost" data-act="suDoc" data-doc="consent">监护人同意书</button></div>' +
@@ -2663,7 +2759,7 @@
     const ne = window.EchoErr ? EchoErr.count(7) : 0;
     b.push('<div class="set"><label>🔧 出错记录</label><div class="say-row"><span class="set-v">最近 7 天 ' + ne + ' 条</span><button class="btn small ghost" data-act="errLog">看看</button></div><small>游戏出错时自动记下最近 50 条，只存在这台设备里。手机上有问题时，可以把它发给帮你装游戏的人。</small></div>');
     b.push('<div class="set"><label>清空进度</label><button class="btn small coral" data-act="reset" id="resetbtn">清空全部进度</button><small>星星、金币、怪兽、复习记录都会清零，无法恢复。要家长密码，还要输入「清空」两个字。</small></div>');
-    return '<details class="parent" id="set-parent"' + (RT.parentOpen ? ' open' : '') + '><summary>🔒 家长设置</summary><div class="parent-in">' + b.join('') + '</div></details>';
+    return '<details class="parent" id="set-parent"' + (RT.parentOpen ? ' open' : '') + '><summary>' + (kid ? '🔒 家长设置' : trh('place.set.more')) + '</summary><div class="parent-in">' + b.join('') + '</div></details>';
   }
   // 版本号（APK 里原生给：日期 + 短哈希，见 android/README.md）
   function verText() {
@@ -2797,6 +2893,8 @@
   function afterSetup() {
     RT.parentUntil = 0;
     show('home'); renderHome();
+    // 向导第一页选了「我自己学」的大人：全新的开始接着选要学的语言、做能力检测，做完再看说明（afterPlace）。孩子那条路和以前一样
+    if (!kidMode() && window.EchoPlace && EchoPlace.isNew()) { setTimeout(() => EchoPlace.first(), 200); return; }
     if (!S.seenIntro) setTimeout(introSheet, 200);
     else if (window.ECHO_APP && !S.micCheck && speakMode() === 'sr') setTimeout(checkSheet, 300);
   }
@@ -2872,6 +2970,17 @@
       pushSend('回声岛：测试消息', '家长您好！以后每天晚上 8 点以后，会在这里收到孩子当天的学习小结。', v).then(ok => toast(ok ? '📲 发出去了，去微信里看看有没有收到' : '没发出去：检查一下网络和地址'));
     },
     setCtl: t => { S.settings.ctl = t.dataset.m; save(); if (window.EchoWorld && EchoWorld.ctlMode) EchoWorld.ctlMode(); settingsSheet(); },
+    // 界面语言（i18n.js）
+    setUi: t => { if (t.classList.contains('on')) return; setUi(t.dataset.l); settingsSheet(); if (!$('#home').hidden) renderHome(); },
+    // 谁在学：孩子 → 自己学（没有学习锁、不限时、设置不要家长密码）要输家长密码；换回「孩子」不用
+    setLearner: t => {
+      const m = t.dataset.m === 'open' ? 'open' : 'kid';
+      if (m === (kidMode() ? 'kid' : 'open')) return;
+      const go = () => { S.settings.learner = m; RT.parentUntil = 0; save(); toast(tr('place.learner.to.' + m)); settingsSheet(); if (!$('#home').hidden) renderHome(); };
+      // 有家长密码的地方（安装包；网页版设过密码的）要输对才换；网页版从来没设过密码的直接换（没有密码可问）
+      const ps = pinState();
+      if (m === 'open' && (ps.has || ps.native)) parentOk(tr('place.who.pin'), go); else go();
+    },
     setOrient: t => { S.settings.orient = t.dataset.m; save(); applyOrient(); settingsSheet(); },
     start: t => { closeModal(); startLevel(num(t, 'w'), num(t, 'l')); },
     go: t => { const wi = num(t, 'w'), li = num(t, 'l'); if (!isUnlocked(wi, li)) { goHome(); return; } startLevel(wi, li); },
@@ -3072,17 +3181,36 @@
 
   // 冒险里出英语题用哪份内容：按设置有几成换成课本正在学的单元（其中三成复习前面学过的单元），其余用这座岛的话题。
   // 返回 { w: 编号（存进错题本的 q.w）, d: 内容（words/sents/dlgs） }
+  // 按能力走（PLV() 不是 null）：课本占几成按级别来（levels.js 的 mix：级别越高，1 级的小镇话题词出得越少；家长设成「只用岛上话题」的照旧），
+  // 那三成复习只在「起点单元 … 正在学的前一个」里挑——已免修的单元不拿来出题；级别比现有内容高的（起点就是最难的那一册），在开放的最难的 8 个单元里挑
   function src(z) {
-    const mix = S.book.mix, cur = curIdx();
+    const pl = PLV(), cur = curIdx();
+    const mix = pl != null && S.book.mix > 0 && window.EchoLevels ? Math.max(S.book.mix, EchoLevels.profile(S.place.lang, pl).mix) : S.book.mix;
     if (cur < 0 || !(Math.random() < mix)) return { w: z, d: W[z] };
-    const i = cur > 0 && Math.random() < .3 ? cur - 1 - rnd(Math.min(cur, 8)) : cur;   // 三成复习最近学过的 8 个单元（可以是上一册的）
+    if (pl == null) {
+      const i = cur > 0 && Math.random() < .3 ? cur - 1 - rnd(Math.min(cur, 8)) : cur;   // 三成复习最近学过的 8 个单元（可以是上一册的）
+      return { w: NB + i, d: BK[i] };
+    }
+    let i = cur;
+    if (Math.random() < .3) {
+      const from = Math.max(0, S.place.from), top = pl > EchoLevels.topLevel(S.place.lang, BK);
+      const pool = top ? range(BK.length).filter(unitOpen).slice(-8) : range(cur).filter(k => k >= Math.max(from, cur - 8));
+      if (pool.length) i = pick(pool);
+    }
     return { w: NB + i, d: BK[i] };
   }
+  // 按能力走：对战里要开口的招式，这一回合要不要换成「听一听、点出来」（monsters.js 的 listenIfDown 问；0–1 级有几成这样，别的级别不会）
+  const lvListen = () => { const pl = PLV(); return pl != null && !!window.EchoLevels && Math.random() < EchoLevels.profile(S.place.lang, pl).listen; };
 
   // ---------- 怪兽对战模块（monsters.js）用到的工具 ----------
   if (window.MonsterGame) {
     const api = {
       get S() { return S; }, W, WX, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit, curIdx, revRight, revAddFree, revMiss, revPick, fadeOf, cueText,
+      // 2026-11-19 按能力安排（placement.js / levels.js）：unitSpan() 挑战馆的课本门槛从哪个单元数到哪个单元（world.js gymNeed）、
+      // lvListen() 这一回合换不换成听音选（monsters.js）、chatLevel() 岛民按第几级说话（没做检测 / 按课本走 = null）、uiLang() 界面语言（talk.js）、
+      // kidMode() 是不是「孩子」（false = 青少年 / 成人自己学）、stopSay() 停掉正在放的朗读、recognize 的第三个参数见上面
+      unitSpan, lvListen, kidMode, chatLevel: () => (window.EchoPlace ? EchoPlace.chatLevel() : null), uiLang: () => S.settings.ui || 'zh',
+      stopSay: () => { if (TTS.ok) speechSynthesis.cancel(); if (RT.audio) RT.audio.pause(); },
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
       // savePos：大地图走了一步，只记位置（不整份存）；flush：走路攒下的现在就整份存（开战前这种要紧的时候）
       savePos, flush: () => flushWalk(), walkTouch,
@@ -3101,8 +3229,16 @@
     // 销售版的家长首次设置向导（setup.js）：Object.create 留着 api 的 S（getter，存档换了也拿到新的）
     if (window.EchoSetup) {
       Object.assign(ACT, EchoSetup.init(Object.assign(Object.create(api), {
-        afterSetup, afterEdit: () => { if (!$('#home').hidden) renderHome(); },
+        afterSetup, setUi, afterEdit: () => { if (!$('#home').hidden) renderHome(); },
         aiReset: () => { RT.aiBar = null; RT.aiFails = 0; RT.aiOkAt = Date.now(); refreshBars(); },
+      })));
+    }
+    // 能力检测（placement.js）：和向导一样拿一份带 S 的工具
+    if (window.EchoPlace) {
+      Object.assign(ACT, EchoPlace.init(Object.assign(Object.create(api), {
+        placeApply, placePlan, learnerPick, setUi, afterPlace,
+        // 口语问答题：听写出来的话交给文字模型按这道题的评分要点判（talk.js：APK 直连 / 网页版走中转服务的 /place）；判不了返回 null
+        placeJudge: (item, heard, lang) => (window.EchoTalk && EchoTalk.placeJudge ? EchoTalk.placeJudge(item, heard, lang) : Promise.resolve(null)),
       })));
     }
     // 进大地图 / 乘风之前再看一眼冒险时间（学习锁本身由 world.js 查）；断网放行的 30 分钟从第一次进去时开始算
@@ -3129,6 +3265,8 @@
   // 已经在首页就返回 false，APK 退到后台
   window.EchoBack = () => {
     try { if (window.EchoSetup && EchoSetup.back && EchoSetup.back()) return true; } catch (e) { /* 向导出错就按老办法 */ }
+    // 能力检测开着：先关它上面的弹窗（家长密码、麦克风说明），再交给它（做题时 = 暂停）
+    try { if (window.EchoPlace && EchoPlace.isOpen() && $('#modal').hidden && EchoPlace.back()) return true; } catch (e) { /* 出错就按老办法 */ }
     if (!$('#modal').hidden) {
       if (RT.modalLocked) return true;   // 护眼休息这种锁着的弹窗：返回键跳不过去
       if ($('#modal [data-act=close]')) closeModal();
@@ -3217,7 +3355,7 @@
     return '';
   }
   function gate() {
-    const today = dayStr(), on = S.settings.gate !== false, L = dayLog();
+    const today = dayStr(), on = kidMode() && S.settings.gate !== false, L = dayLog();   // 「自己学」没有学习锁
     const back = !!(S.maxDay && today < S.maxDay);
     const due = dueList().length, revDone = due === 0 || (L.revSess || 0) > 0;
     const tk = talkToday(), chatOn = !!(window.EchoTalk && EchoTalk.relayUrl());
@@ -3303,7 +3441,7 @@
   }
   function playInfo() {
     const c = limitCfg(), d = nowD(), L = dayLog(), wkend = d.getDay() === 0 || d.getDay() === 6;
-    const on = S.settings.gate !== false && c.on !== false;
+    const on = kidMode() && S.settings.gate !== false && c.on !== false;   // 「自己学」不限时
     const base = wkend ? c.we : c.wd, bonus = bonusMin(L, c), left = base + bonus - (L.play || 0), night = isNight(d, c);
     return { on, base, bonus, used: Math.round(L.play || 0), left: Math.max(0, Math.ceil(left)), night, over: on && (night || left <= 0), wkend, c };
   }
@@ -3326,7 +3464,7 @@
     if (!(S.mon && S.mon.box || []).length) return '';
     const w = advLimitWhy(); if (w) return w;
     const L = dayLog();
-    if (S.settings.gate !== false && L.passAt && !L.gateOpen && !L.gateEx && !passLeft(L) && !gate().open) return 'pass';
+    if (kidMode() && S.settings.gate !== false && L.passAt && !L.gateOpen && !L.gateEx && !passLeft(L) && !gate().open) return 'pass';
     return '';
   }
   // 进大地图 / 乘风之前（包在 world.js 的 wEnter / wFly 外面）：学习锁开着、但时间用完或者太晚了 → 友好提示，不进；
@@ -3426,6 +3564,8 @@
   }
   function parentOk(why, onOk) {
     const now = Date.now();
+    // 「自己学」（青少年 / 成人）：没有家长这一层，不问密码（从「孩子」换成「自己学」那一下要密码，见 setLearner / learnerPick）
+    if (!kidMode()) { if (onOk) onOk(); return true; }
     // 刚输过密码：只在那个家长弹窗（设置页）还开着时算数——弹窗关了、或者根本没弹窗，就要重新输
     if ((now < RT.parentUntil && !$('#modal').hidden) || (RT.pinPass && RT.pinPass.why === why && now < RT.pinPass.until)) {
       RT.pinPass = null;
@@ -3775,12 +3915,19 @@
     },
   });
 
+  // 测试用（tests/place.test.js）：按能力安排——现在第几级、会排到哪个单元、已免修、挑战馆从哪儿数、撤提示、听音选的比例、谁在学
+  window.EchoGame.lv = {
+    level: () => PLV(), plan: lv => placePlan(lv), apply: why => placeApply(why), free: i => unitFree(i), span: () => unitSpan(), fade: q => fadeOf(q), listen: () => lvListen(),
+    kid: () => kidMode(), learnerPick: (w, cb) => learnerPick(w, cb), bookIdx: () => bookIdx(), units: () => BK.map((u, i) => ({ i, book: u.book, n: u.n, open: unitOpen(i) })),
+  };
+
   // ---------- 启动 ----------
   function start(data) {
     S = load(data && data.S);
     revMigrate();
     revTrim();   // 老存档里攒了很多掌握了的聊天句子：打开时理一次
     if (S.book.cur && S.book.at < 0) { S.book.at = S.book.cur - 1; delete S.book.cur; }
+    if (window.EchoI18n) EchoI18n.set(S.settings.ui || 'zh');   // 界面语言（<html lang> 也跟着换）
     applyOrient();
     trackDay();
     weeklyRoll();
@@ -3813,6 +3960,9 @@
     try { if (nat('takeRecovered') && EchoNative.takeRecovered()) { if (window.EchoErr) EchoErr.log('app', '画面进程挂了，已经重新打开', 'native'); setTimeout(() => toast('刚才画面出了点问题，已经重新打开了，存档还在'), 600); } } catch (e) { /* 忽略 */ }
     // 销售版第一次打开：先做家长首次设置（家长密码、AI 密钥、家庭定制、设备检查），做完再给孩子看说明（afterSetup）
     if (window.EchoSetup && EchoSetup.needed()) setTimeout(() => EchoSetup.open(), 100);
+    // 全新的开始（没有存档、没有进度）：先选语言、做能力检测，做完或者说「以后再测」以后再看游戏说明（afterPlace）。
+    // 有进度的老存档不会走到这里：只在首页给一张卡片（questHTML 里的 EchoPlace.homeCard）
+    else if (!told && window.EchoPlace && EchoPlace.isNew()) setTimeout(() => EchoPlace.first(), 150);
     else if (!S.seenIntro) { if (!told) setTimeout(introSheet, 300); }   // 先说存档的事，「知道了」以后再看说明（restoredOk）
     // APK 第一次打开（或者从老版本升上来）：做一次「麦克风 + 网络 + 密钥」小检查
     else if (!told && window.ECHO_APP && !S.micCheck && speakMode() === 'sr') setTimeout(() => { if ($('#modal').hidden) checkSheet(); }, 900);

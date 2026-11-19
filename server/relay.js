@@ -4,7 +4,9 @@
 // - 人设、音色、安全规则都由服务器按 npc id 从 ../talk-npcs.js 读，孩子的手机只能选 npc、送声音/文字
 // - 大地图上的支线委托也一样：手机只发委托的 id（?quest=），人设、目标、小步骤由服务器从 ../quests.js 读
 // - 每台设备每天有时长上限，每段对话有时长上限；对话记录写到 server/logs/日期.jsonl，家长看 /logs（只留 90 天，LOG_DAYS 可改）
-// - 网页版的口语打分和聊天小工具也走这里：/asr 识别、/tip 点评、/tts 合成、/zh 翻译岛民的话、/steps 聊天小步骤打勾
+// - 网页版的口语打分和聊天小工具也走这里：/asr 识别、/tip 点评、/tts 合成、/zh 翻译岛民的话、/steps 聊天小步骤打勾、
+//   /place 能力检测的口语问答题（按题目 id 从 ../placement-data.js 查评分要点）
+// - 按能力走的学习者：手机在 /talk 上多发 lv（0–5）和 ui（界面语言代码），岛民「这一级怎么说话」由 talk-core 在这里拼
 // 启动：cd server && npm install && node relay.js   （默认端口 8787；PORT 可改）
 'use strict';
 const http = require('http');
@@ -14,6 +16,9 @@ const { WebSocketServer, WebSocket } = require('ws');
 const NPCS = require('../talk-npcs.js');
 const QUESTS = require('../quests.js');     // 支线委托：按 id 查，手机发来的人设文字一概不用
 const CORE = require('../talk-core.js');   // 人设、安全规则、事件翻译：和安卓 APK 直连模式共用
+// 能力检测的题库（placement-data.js，tools/place/build.js 生成）：判口语问答题时按题目 id 查评分要点。没有这个文件就不判（/place 回 400）
+let PLACE = {};
+try { PLACE = require('../placement-data.js'); } catch (e) { PLACE = {}; }
 
 // ---------- 配置 ----------
 function readEnvFile(p) {
@@ -141,7 +146,7 @@ const server = http.createServer((req, res) => {
         (r.eval && r.eval.tips.length ? '<div class="t">建议：' + r.eval.tips.map(t => esc(t.said) + ' → ' + esc(t.better) + '（' + esc(t.zh) + '）').join('；') + '</div>' : '') + '</div>').join('') : '<p>这一天没有对话。</p>');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);
   }
-  const helpPath = /^\/(asr|tip|tts|zh|steps)$/.test(u.pathname);
+  const helpPath = /^\/(asr|tip|tts|zh|steps|place)$/.test(u.pathname);
   if (req.method === 'OPTIONS' && helpPath) {   // 跨域预检（GitHub Pages 上的网页版连家里的中转服务）
     let ok = false; try { ok = !!req.headers.origin && okOrigin(req.headers.origin); } catch (e) {}
     res.writeHead(ok ? 204 : 403, ok ? { 'Access-Control-Allow-Origin': req.headers.origin, 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400' } : {});
@@ -192,6 +197,16 @@ function cloudHelp(u, req, res) {
         body.model = EVAL_MODEL;
         const r = await call(body, EVAL_URL);
         res.writeHead(200, cors); return res.end(JSON.stringify({ done: CORE.parseSteps(r, g.steps.length) }));
+      }
+      if (u.pathname === '/place') {   // 能力检测的口语问答题：手机只发题目的 id 和听写出来的话，题目和评分要点按 id 从题库里查
+        const lang = /^[a-z]{2,3}$/.test(String(j.lang || '')) ? String(j.lang) : 'en';
+        const bank = Object.prototype.hasOwnProperty.call(PLACE, lang) ? PLACE[lang].items : [], id = String(j.id || '');
+        const item = bank.find(x => x.id === id && x.skill === 'speak' && x.kind === 'answer');
+        if (!item) return bad(400, 'item');
+        const body = CORE.placeBody(item, clean(j.heard, 500), { lang }); if (!body) return bad(400, 'text');
+        body.model = EVAL_MODEL;
+        const r = CORE.parsePlace(await call(body, EVAL_URL));
+        res.writeHead(r ? 200 : 502, cors); return res.end(JSON.stringify(r || { error: 'upstream', up: 'score' }));
       }
       if (u.pathname === '/asr') {
         if (typeof j.audio !== 'string' || j.audio.length < 1000) return bad(400, 'audio');
@@ -317,6 +332,10 @@ wss.on('connection', (cli, req) => {
   const dev = (u.searchParams.get('dev') || 'unknown').replace(/[^\w-]/g, '').slice(0, 40) || 'unknown';
   const player = (u.searchParams.get('name') || '').replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16);
   const goal = Math.max(0, Math.min(9, parseInt(u.searchParams.get('g'), 10) || 0));   // 这次聊第几个目标（轮换）
+  // 按能力走的学习者：手机发来能力级别 lv（只认 0–5 的整数）和界面语言 ui（只认 talk-core 里列着的代码），
+  // 「这一级怎么说话」那一段由 talk-core 在这里拼；别的字段一概不看，手机没法自己写规矩。没发 = 老存档，和以前一字不差
+  const lvRaw = u.searchParams.get('lv'), level = lvRaw != null && /^[0-5]$/.test(lvRaw) ? +lvRaw : null;
+  const ui = level != null ? CORE.uiOk(u.searchParams.get('ui') || '') : '';
   // 岛民记得的上次聊过的小事（孩子手机上存的）：talk-core 的 memOf 再筛一遍，只留游戏里的小事、限长去符号
   let memory = null;
   try { memory = CORE.memOf(JSON.parse(Buffer.from(String(u.searchParams.get('m') || ''), 'base64url').toString('utf8'))); } catch (e) { memory = null; }
@@ -330,7 +349,7 @@ wss.on('connection', (cli, req) => {
   let rec = [];
   const up = new WebSocket(UPSTREAM, { headers: { Authorization: 'Bearer ' + KEY } });
   const S = CORE.session({
-    npc, player, limitSec, leftSec: left, goal, memory,
+    npc, player, limitSec, leftSec: left, goal, memory, level, ui,
     up: m => { if (up.readyState === WebSocket.OPEN) up.send(JSON.stringify(m)); },
     out: send,
     evaluate,

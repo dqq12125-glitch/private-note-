@@ -1036,12 +1036,15 @@
   // 第 1 个岛主要 2 个单元，第 13 个要 16 个（七上 + 七下），冠军赛大约落在初一下学期末
   const unitsFor = z => Math.ceil((z + 1) * 16 / 13);
   function gymNeed(z) {
-    const NB = E.W.length, units = (E.WX || []).slice(NB), need = Math.min(unitsFor(z), units.length);
+    // 按能力走的学习者（game.js 的 unitSpan，2026-11-19）：门槛从他的起点单元数起（前面的已免修），只数开放的单元；
+    // 按课本走是 { from: 0, end: 全部单元 }，和以前一样
+    const NB = E.W.length, units = (E.WX || []).slice(NB), sp = E.unitSpan ? E.unitSpan() : { from: 0, end: units.length };
+    const from = Math.max(0, Math.min(sp.from | 0, units.length)), need = Math.max(0, Math.min(unitsFor(z), Math.min(sp.end, units.length) - from));
     const lab = i => { const u = units[i]; return u ? (u.bshort ? u.bshort + ' ' : '') + 'Unit ' + u.n : ''; };
     const miss = [];
-    for (let i = 0; i < need; i++) if (!((E.S.stars || {})[(NB + i) + '-6'] > 0)) miss.push(i);
+    for (let i = from; i < from + need; i++) if (!((E.S.stars || {})[(NB + i) + '-6'] > 0)) miss.push(i);
     const ok = DEBUG || !miss.length;
-    return { z, need, done: need - miss.length, ok, unitLabel: ok ? '' : lab(miss[0]), target: need ? lab(need - 1) : '', unitN: need ? units[need - 1].n : 0, missing: ok ? [] : miss.map(lab) };
+    return { z, need, done: need - miss.length, ok, unitLabel: ok ? '' : lab(miss[0]), target: need ? lab(from + need - 1) : '', unitN: need ? units[from + need - 1].n : 0, missing: ok ? [] : miss.map(lab) };
   }
   // 下一枚要拿的徽章是第几座岛的（13 枚都有了返回 -1）
   const nextGymZ = () => { for (let z = 0; z < E.W.length; z++) if (!E.S.mon.badges[z]) return z; return -1; };
