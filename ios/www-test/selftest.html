@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>原生桥自测</title>
+<!--
+  回声岛 iPhone 版 · 原生桥自测页（只打进调试包：ios/project.yml 的 Release 不带 www-test，原生那边正式包也不认 /__test/ 这个路径）。
+  打开方式：调试包带启动参数 -EchoSelfTest all|mic|share|pick（ios/UITests 就是这样开的），地址是 echoisland://localhost/__test/selftest.html?run=…
+  run=all   ：把 window.EchoNative 的每个方法都调一遍（android/README.md 的 26 个），再看几样 WebKit 的本事（安全来源、Range、配音、类型）。
+              不会真的连 AI：只在「没有密钥」时测连阿里云的两个方法（原生当场回 401，不出网）；有密钥时跳过。
+              会改手机上状态的几样都先看一眼再做：没有密钥才测 setKey（设了再清掉），销售版还没设家长密码才测 setPin，今天还没有备份才测 backupWrite。
+              不自动调 openAppSettings（会离开 App）、backupPick、分享（会弹界面）：这三个由下面的 run=mic / share / pick 和按钮来测。
+  run=mic   ：要一次麦克风（第一次会弹系统的「允许使用麦克风」，UI 测试去点「允许」），记下结果和 micPermission()。
+  run=share ：shareFile 弹分享面板；run=pick：backupPick 弹文件选择器。弹没弹出来由原生的状态行（UI 测试读）判断。
+  结果：window.__echoTestResult = { run, done, pass, fail, warn, skip, items: [{ name, ok, got, note }], mic, ui }
+        ok：true 过了 / false 没过（UI 测试判失败）/ 'warn' 看情况（和模拟器、系统版本有关的，只记下来）/ 'skip' 没测（写着为什么）
+-->
+<style>
+  body { margin: 0; padding: calc(12px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-left, 0px));
+    font: 14px/1.4 -apple-system, "PingFang SC", sans-serif; background: #12304a; color: #fff; }
+  h1 { font-size: 18px; margin: 0 0 6px; }
+  #sum { font-weight: 700; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  button { font: inherit; padding: 10px 14px; border-radius: 10px; border: 0; background: #ffc53d; color: #12304a; font-weight: 700; }
+  ol { padding-left: 22px; }
+  li { margin: 2px 0; word-break: break-all; }
+  .ok { color: #9be7a4; } .bad { color: #ff8a80; } .warn { color: #ffe082; } .skip { color: #b0bec5; }
+</style>
+</head>
+<body>
+<h1>原生桥自测</h1>
+<p id="sum">还在跑……</p>
+<div class="btns">
+  <button id="b-mic" aria-label="selftest-mic">🎤 要麦克风</button>
+  <button id="b-share" aria-label="selftest-share">📤 分享一个文件</button>
+  <button id="b-pick" aria-label="selftest-pick">📂 选一个文件</button>
+  <button id="b-settings" aria-label="selftest-settings">⚙️ 去设置</button>
+</div>
+<ol id="list"></ol>
+<script>
+(function () {
+  'use strict';
+  var run = (new URLSearchParams(location.search).get('run') || 'all').toLowerCase();
+  var R = window.__echoTestResult = { run: run, done: false, pass: 0, fail: 0, warn: 0, skip: 0, items: [], mic: null, ui: {} };
+  var N = window.EchoNative;
+  var list = document.getElementById('list'), sum = document.getElementById('sum');
+
+  // 和 android/README.md、tests/native.test.js 一样的方法表：名字 → [同步 / 异步, 参数个数]
+  var WANT = {
+    hasKey: ['sync', 0], setKey: ['sync', 1], wsOpen: ['async', 2], wsSend: ['async', 2], wsClose: ['async', 1], post: ['async', 3],
+    setOrientation: ['sync', 1], version: ['sync', 0], diag: ['sync', 0], takeRecovered: ['sync', 0], edition: ['sync', 0], books: ['sync', 0],
+    verUrl: ['sync', 0], storage: ['sync', 0], hasPin: ['sync', 0], checkPin: ['sync', 1], pinStatus: ['sync', 0], setPin: ['sync', 1],
+    micPermission: ['sync', 0], openAppSettings: ['sync', 0], backupWrite: ['sync', 1], backupList: ['sync', 0], backupRead: ['sync', 1],
+    backupPick: ['sync', 0], shareText: ['sync', 2], shareFile: ['sync', 3]
+  };
+
+  function show(t) { try { return typeof t === 'string' ? t.slice(0, 140) : JSON.stringify(t).slice(0, 140); } catch (e) { return String(t); } }
+  function add(name, ok, got, note) {
+    var it = { name: name, ok: ok, got: got === undefined ? '' : show(got), note: note || '' };
+    R.items.push(it);
+    if (ok === true) R.pass++; else if (ok === false) R.fail++; else if (ok === 'warn') R.warn++; else R.skip++;
+    var li = document.createElement('li');
+    li.className = ok === true ? 'ok' : ok === false ? 'bad' : ok === 'warn' ? 'warn' : 'skip';
+    li.textContent = (ok === true ? '✓ ' : ok === false ? '✗ ' : ok === 'warn' ? '⚠ ' : '– ') + name + (it.got ? ' → ' + it.got : '') + (it.note ? '（' + it.note + '）' : '');
+    list.appendChild(li);
+    sum.textContent = '过了 ' + R.pass + '，没过 ' + R.fail + '，看情况 ' + R.warn + '，没测 ' + R.skip + (R.done ? '' : ' ……');
+  }
+  function check(name, fn, note) {
+    try { var v = fn(); add(name, !!v.ok, v.got, v.note || note); } catch (e) { add(name, false, 'threw ' + (e && e.message), note); }
+  }
+  function J(s) { try { return JSON.parse(s); } catch (e) { return null; } }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function today() { var d = new Date(); return '' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0'); }
+
+  // 原生的异步回调：window.__echoNative(id, 类型, 数据)
+  var waiters = {}, nextId = 900;
+  window.__echoNative = function (id, type, data) { var w = waiters[id]; if (w) { delete waiters[id]; w({ type: type, data: data }); } };
+  function nativeCall(fn, ms) {
+    var id = ++nextId;
+    return new Promise(function (res) {
+      waiters[id] = res;
+      setTimeout(function () { if (waiters[id]) { delete waiters[id]; res({ type: 'timeout', data: '' }); } }, ms || 4000);
+      try { fn(id); } catch (e) { delete waiters[id]; res({ type: 'threw', data: String(e && e.message) }); }
+    });
+  }
+
+  function finish() {
+    R.done = true;
+    sum.textContent = (R.fail ? '✗ ' : '✓ ') + '过了 ' + R.pass + '，没过 ' + R.fail + '，看情况 ' + R.warn + '，没测 ' + R.skip;
+  }
+
+  // ---------- 一、环境：安全来源、桥在不在、自己的网站回得对不对 ----------
+  async function env() {
+    check('env.secureContext', function () { return { ok: window.isSecureContext === true, got: window.isSecureContext }; }, 'getUserMedia 要安全来源');
+    check('env.flags', function () { return { ok: window.ECHO_APP === 1 && window.ECHO_IOS === 1 && !!N, got: { app: window.ECHO_APP, ios: window.ECHO_IOS, native: !!N } }; });
+    check('env.methods', function () {
+      var bad = Object.keys(WANT).filter(function (k) { return !N || typeof N[k] !== 'function' || N[k].length !== WANT[k][1]; });
+      var extra = N ? Object.keys(N).filter(function (k) { return !(k in WANT); }) : [];
+      return { ok: !bad.length && !extra.length, got: bad.length || extra.length ? { bad: bad, extra: extra } : Object.keys(WANT).length + ' 个都在、参数个数对' };
+    });
+    check('env.kinds', function () {
+      var spec = (window.__echoIOS && window.__echoIOS.spec) || {};
+      var bad = Object.keys(WANT).filter(function (k) { return !spec[k] || spec[k][0] !== WANT[k][0] || spec[k][1].length !== WANT[k][1]; });
+      return { ok: !bad.length, got: bad.length ? bad : '同步 22 个 / 异步 4 个' };
+    });
+    check('env.getUserMedia', function () { return { ok: !!(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function'), got: !!navigator.mediaDevices }; });
+    // 页面换掉 window.prompt 也不影响桥（echo-native.js 先留了一份）
+    check('env.promptSwap', function () {
+      var real = window.prompt, ed;
+      window.prompt = function () { return '"evil"'; };
+      try { ed = N.edition(); } finally { window.prompt = real; }
+      return { ok: ed === 'sales' || ed === 'family', got: ed };
+    });
+    try {
+      var r = await fetch('/assets/voice/index.json');
+      var ct = r.headers.get('content-type') || '', j = r.ok ? await r.json() : null;
+      add('assets.json', r.status === 200 && /application\/json/.test(ct) && !!j && Array.isArray(j.f), { status: r.status, type: ct, clips: j && j.f ? j.f.length : 0 });
+      var clip = j && j.f && j.f[0] ? '/assets/voice/f/' + j.f[0] + '.ogg' : '';
+      R.clip = clip;
+      var rr = await fetch(clip, { headers: { Range: 'bytes=0-15' } });
+      var buf = new Uint8Array(await rr.arrayBuffer());
+      var magic = String.fromCharCode(buf[0], buf[1], buf[2], buf[3]);
+      add('assets.range', rr.status === 206 && /^bytes 0-15\/\d+$/.test(rr.headers.get('content-range') || '') && buf.length === 16 && magic === 'OggS' &&
+        /audio\/ogg/.test(rr.headers.get('content-type') || ''), { status: rr.status, range: rr.headers.get('content-range'), len: buf.length, magic: magic });
+      var mon = await (await fetch('/assets/mon3d/index.json')).json();
+      var g = await fetch('/assets/mon3d/' + mon[0] + '.glb');
+      var gb = new Uint8Array(await g.arrayBuffer());
+      add('assets.glb', g.status === 200 && (g.headers.get('content-type') || '') === 'model/gltf-binary' && String.fromCharCode(gb[0], gb[1], gb[2], gb[3]) === 'glTF', { status: g.status, type: g.headers.get('content-type') });
+      var f = await fetch('/assets/fonts/nunito-latin-500-normal.woff2');
+      add('assets.font', f.status === 200 && (f.headers.get('content-type') || '') === 'font/woff2', { status: f.status, type: f.headers.get('content-type') });
+      var nf = await fetch('/assets/no-such-file.json');
+      add('assets.404', nf.status === 404, nf.status);
+      var esc = await fetch('/../Info.plist').catch(function () { return { status: 'blocked' }; });
+      add('assets.noEscape', esc.status === 404 || esc.status === 'blocked', esc.status);
+    } catch (e) { add('assets', false, 'threw ' + (e && e.message)); }
+  }
+
+  // ---------- 二、和系统版本 / 模拟器有关的（只记下来，不算没过） ----------
+  async function media() {
+    var c = '';
+    try { c = new Audio().canPlayType('audio/ogg; codecs="opus"'); } catch (e) { c = 'threw'; }
+    add('media.canPlayOggOpus', c ? true : 'warn', c || '(空)', 'iOS 18.4 起才放得了 Ogg 里的 Opus；game.js 的 OGG_OK 看的就是它');
+    if (!R.clip) { add('media.audioElement', 'skip', '', '没找到配音文件'); return; }
+    var a = new Audio(R.clip);
+    var got = await new Promise(function (res) {
+      var t = setTimeout(function () { res('timeout ' + a.readyState); }, 8000);
+      a.addEventListener('loadedmetadata', function () { clearTimeout(t); res('loadedmetadata ' + a.duration.toFixed(2) + 's'); });
+      a.addEventListener('error', function () { clearTimeout(t); res('error ' + (a.error && a.error.code)); });
+      a.preload = 'auto'; a.load();
+    });
+    add('media.audioElement', /^loadedmetadata/.test(got) ? true : 'warn', got, '经过自己的地址 + Range 读配音');
+    try {
+      var C = window.AudioContext || window.webkitAudioContext, ctx = new C();
+      var ab = await (await fetch(R.clip)).arrayBuffer();
+      var dec = await new Promise(function (res) {
+        var t = setTimeout(function () { res('timeout'); }, 8000);
+        ctx.decodeAudioData(ab, function (b) { clearTimeout(t); res('ok ' + b.duration.toFixed(2) + 's ' + b.sampleRate + 'Hz'); }, function (e) { clearTimeout(t); res('error ' + (e && e.message)); });
+      });
+      add('media.decodeAudioData', /^ok/.test(dec) ? true : 'warn', dec + ' · ctx ' + ctx.sampleRate + 'Hz ' + ctx.state);
+      ctx.close();
+    } catch (e) { add('media.decodeAudioData', 'warn', 'threw ' + (e && e.message)); }
+    var as = null; try { as = navigator.audioSession ? navigator.audioSession.type : null; } catch (e) { as = 'threw'; }
+    add('media.audioSession', as ? true : 'warn', as || '没有 navigator.audioSession', 'echo-native.js 平时设成 playback（静音键不关声音）');
+    var gl = null; try { gl = document.createElement('canvas').getContext('webgl2'); } catch (e) { gl = null; }
+    add('media.webgl2', gl ? true : 'warn', gl ? gl.getParameter(gl.VERSION) : '没有', '模拟器的 WebGL2 和真机不一样');
+  }
+
+  // ---------- 三、原生桥：同步的方法 ----------
+  async function syncMethods() {
+    var ed = N.edition(), sales = ed === 'sales';
+    check('edition', function () { return { ok: ed === 'sales' || ed === 'family', got: ed }; });
+    check('version', function () { var v = J(N.version()); return { ok: !!v && v.code > 0 && typeof v.name === 'string' && v.name.length > 0, got: v }; });
+    check('diag', function () { var d = J(N.diag()); return { ok: !!d && d.platform === 'ios' && typeof d.ios === 'string' && typeof d.renderGone === 'number', got: d }; });
+    check('books', function () { var b = N.books(); return { ok: typeof b === 'string' && (!sales || b.length > 0), got: b }; });
+    check('verUrl', function () { var u = N.verUrl(); return { ok: typeof u === 'string' && (!sales || u === ''), got: u, note: '销售版一定是空的' }; });
+    check('storage', function () { var s = J(N.storage()); return { ok: !!s && s.free > 0 && s.total > 0 && s.ram > 0, got: s }; });
+    check('takeRecovered', function () { var t = N.takeRecovered(); return { ok: t === false, got: t, note: '刚打开、没出过事是 false' }; });
+    check('micPermission', function () { var m = N.micPermission(); return { ok: ['granted', 'denied', 'blocked'].indexOf(m) >= 0, got: m }; });
+    check('setOrientation', function () { var r = N.setOrientation('portrait'); return { ok: r === undefined, got: r === undefined ? '(没有返回值)' : r }; });
+    check('openAppSettings', function () { return { ok: typeof N.openAppSettings === 'function', got: '在', note: '不自动调（会离开 App），按「去设置」试' }; });
+    check('backupPick', function () { return { ok: typeof N.backupPick === 'function', got: '在', note: '弹文件选择器：run=pick 测' }; });
+    // 密钥：没有密钥时才测（设一个假的、再清掉），不碰家长填好的
+    var had = N.hasKey();
+    check('hasKey', function () { return { ok: typeof had === 'boolean', got: had }; });
+    if (!had) {
+      check('setKey', function () {
+        var r = N.setKey('  selftest-placeholder  '), on = N.hasKey();
+        N.setKey(''); var off = N.hasKey();
+        return { ok: r === undefined && on === true && off === false, got: { set: on, cleared: off } };
+      });
+    } else add('setKey', 'skip', '', '已经有密钥：不碰');
+    // 家长密码
+    var st = J(N.pinStatus());
+    check('pinStatus', function () {
+      var keys = ['has', 'locked', 'waitSec', 'triesLeft', 'lockouts', 'lastLock', 'canSet'];
+      return { ok: !!st && keys.every(function (k) { return k in st; }), got: st };
+    });
+    check('hasPin', function () { var h = N.hasPin(); return { ok: typeof h === 'boolean' && h === !!(st && st.has), got: h }; });
+    check('checkPin(空)', function () {
+      var before = J(N.pinStatus()).triesLeft, r = N.checkPin(''), after = J(N.pinStatus()).triesLeft;
+      return { ok: r === false && before === after, got: { r: r, before: before, after: after }, note: '空的不算一次' };
+    });
+    check('setPin(不是 4 位数字)', function () { var r = N.setPin('12a4'); return { ok: r === false, got: r }; });
+    if (sales && st && !st.has && st.canSet) {
+      check('setPin', function () {
+        var a = N.setPin('2580'), h = N.hasPin(), w = N.checkPin('0000'), left = J(N.pinStatus()).triesLeft, c = N.checkPin('2580'), left2 = J(N.pinStatus()).triesLeft;
+        var change = N.setPin('1357'), old = N.checkPin('2580'), now = N.checkPin('1357');
+        return { ok: a === true && h === true && w === false && left === 4 && c === true && left2 === 5 && change === true && old === false && now === true,
+          got: { set: a, has: h, wrong: w, left: left, right: c, reset: left2, change: change, oldPin: old, newPin: now } };
+      });
+    } else add('setPin', 'skip', sales ? 'already has a PIN' : 'family', sales ? '已经设过家长密码：不碰' : '家庭版不能在手机上设');
+    // 备份：今天还没有备份才测写（别把真的存档备份盖掉）
+    var bl = J(N.backupList());
+    check('backupList', function () { return { ok: Array.isArray(bl), got: bl ? bl.length + ' 份' : bl }; });
+    check('backupWrite(不是存档)', function () { var r = N.backupWrite('not json'); return { ok: r === false, got: r }; });
+    check('backupRead(乱名字)', function () { var r = N.backupRead('../echo-save-20261007.json'); return { ok: r === '', got: r }; });
+    var name = 'echo-save-' + today() + '.json';
+    if (bl && !bl.some(function (b) { return b.name.indexOf('echo-save-' + today()) === 0; })) {
+      check('backupWrite', function () {
+        var w = N.backupWrite('{"selftest":1}'), l = J(N.backupList()) || [], it = l.filter(function (b) { return b.name === name; })[0];
+        var back = N.backupRead(name);
+        return { ok: w === true && !!it && /^\d{4}-\d{2}-\d{2}$/.test(it.date) && it.size === 14 && it.time > 0 && back === '{"selftest":1}', got: { write: w, item: it, read: back } };
+      });
+    } else add('backupWrite', 'skip', '', '今天已经有备份了：不盖掉');
+    check('shareText(空)', function () { var r = N.shareText('t', ''); return { ok: r === false, got: r }; });
+    check('shareFile(坏名字)', function () { var a = N.shareFile('t', '../x.json', '{}'), b = N.shareFile('t', 'x.exe', '{}'); return { ok: a === false && b === false, got: [a, b] }; });
+  }
+
+  // ---------- 四、原生桥：异步的方法（不出网） ----------
+  async function asyncMethods() {
+    var r = await nativeCall(function (id) { return N.wsOpen(id, 'wss://example.com/x'); });
+    add('wsOpen(别的网站)', r.type === 'error' && r.data === 'bad url', r);
+    r = await nativeCall(function (id) { return N.post(id, 'https://example.com/x', '{}'); });
+    add('post(别的网站)', r.type === 'fail' && r.data === 'bad url', r);
+    r = await nativeCall(function (id) { return N.post(id, 'https://dashscope.aliyuncs.com.example.com/x', '{}'); });
+    add('post(长得像的网站)', r.type === 'fail' && r.data === 'bad url', r);
+    if (!N.hasKey()) {
+      r = await nativeCall(function (id) { return N.wsOpen(id, 'wss://dashscope.aliyuncs.com/api-ws/v1/realtime?model=selftest'); });
+      add('wsOpen(没有密钥)', r.type === 'error' && r.data === 'HTTP 401 no key', r, '当场回，不出网');
+      r = await nativeCall(function (id) { return N.post(id, 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', '{}'); });
+      add('post(没有密钥)', r.type === 'fail' && /InvalidApiKey/.test(r.data), r, '当场回，不出网');
+    } else {
+      add('wsOpen(没有密钥)', 'skip', '', '有密钥：不真的连阿里云');
+      add('post(没有密钥)', 'skip', '', '有密钥：不真的连阿里云');
+    }
+    var got = [];
+    var keep = window.__echoNative;
+    window.__echoNative = function (id) { got.push(id); };
+    var threw = '';
+    try { N.wsSend(424242, '{}'); N.wsClose(424242); } catch (e) { threw = String(e && e.message); }
+    await wait(400);
+    window.__echoNative = keep;
+    add('wsSend / wsClose(没开的连接)', !threw && !got.length, threw || '没回调、没出错');
+  }
+
+  // ---------- 五、要点界面的几样（UI 测试按启动参数分开跑，也可以手动按按钮） ----------
+  async function mic() {
+    var out = { before: N.micPermission() };
+    try {
+      var s = await navigator.mediaDevices.getUserMedia({ audio: true });
+      out.ok = true; out.tracks = s.getAudioTracks().length;
+      s.getTracks().forEach(function (t) { t.stop(); });
+    } catch (e) { out.ok = false; out.error = (e && e.name) || String(e); }
+    out.after = N.micPermission();
+    R.mic = out;
+    // 允许了以后 micPermission 一定是 granted；模拟器没有真麦克风时 getUserMedia 可能报 NotFoundError / NotReadableError（只记下来）
+    add('mic.permission', out.after === 'granted' ? true : out.after === 'blocked' ? false : 'warn', out);
+    add('mic.capture', out.ok ? true : 'warn', out.ok ? out.tracks + ' 条声音' : out.error, '模拟器有没有声音输入看云上的 Mac');
+  }
+  function share() { var r = N.shareFile('回声岛自测', 'echo-selftest.json', '{"selftest":1}'); R.ui.share = r; add('shareFile', r === true, r, '弹分享面板'); }
+  function pick() {
+    window.addEventListener('echo-backup-picked', function (e) { R.ui.picked = e.detail; add('echo-backup-picked', !!e.detail && typeof e.detail.ok === 'boolean', e.detail); }, { once: true });
+    var r = N.backupPick(); R.ui.pick = r; add('backupPick', r === true, r, '弹文件选择器');
+  }
+
+  document.getElementById('b-mic').addEventListener('click', function () { mic(); });
+  document.getElementById('b-share').addEventListener('click', share);
+  document.getElementById('b-pick').addEventListener('click', pick);
+  document.getElementById('b-settings').addEventListener('click', function () { add('openAppSettings', N.openAppSettings() === true, '去了「设置」'); });
+
+  (async function () {
+    if (!N) { add('env.native', false, '没有 window.EchoNative'); finish(); return; }
+    try {
+      if (run === 'all') { await env(); await syncMethods(); await asyncMethods(); await media(); }
+      else if (run === 'mic') await mic();
+      else if (run === 'share') share();
+      else if (run === 'pick') pick();
+      else add('run', false, run, '不认识的 run');
+    } catch (e) { add('selftest', false, 'threw ' + (e && e.message)); }
+    finish();
+  })();
+})();
+</script>
+</body>
+</html>

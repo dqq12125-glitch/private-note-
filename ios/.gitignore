@@ -1,0 +1,21 @@
+# 生成出来的东西都不进仓库
+# 打包设置（家庭版的里面有密钥和家长密码的哈希）
+Generated/
+# 复制进来的游戏网页（160MB，由 scripts/copy-web.mjs 生成）
+www/
+# 销售版的 dex.js / index.json（build-dex.js --sales 生成）
+.sales-web/
+# XcodeGen 生成的工程、Xcode 的输出
+*.xcodeproj
+*.xcworkspace
+build/
+DerivedData/
+*.xcresult
+*.ipa
+*.dSYM.zip
+# 自己机器上的打包配置（家长密码、密钥文件在哪）和签名用的文件
+echo.properties
+*.p12
+*.p8
+*.mobileprovision
+*.cer

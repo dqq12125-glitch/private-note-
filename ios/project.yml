@@ -1,0 +1,119 @@
+# 回声岛 iPhone 版的工程定义（XcodeGen）。不手写 .xcodeproj：
+#   node ios/scripts/prepare.mjs      先生成 Generated/（打包设置）和 www/（游戏网页）
+#   cd ios && xcodegen generate       再生成 EchoIsland.xcodeproj（不进仓库）
+# 说明见 ios/README.md
+name: EchoIsland
+
+options:
+  minimumXcodeGenVersion: "2.38.0"
+  bundleIdPrefix: com.example
+  developmentLanguage: zh-Hans
+  createIntermediateGroups: true
+  deploymentTarget:
+    # 18.4 = 第一个能直接播放打包配音（Ogg 里的 Opus）的 iOS（WebKit 的 Safari 18.4 说明）。
+    # 能装 iOS 17 的 iPhone（XS / XR 起）都能升到 18.x，所以没有机型因此被挡在外面；挡住的只有 iPhone 8 / X（最高 iOS 16）和不升级系统的
+    iOS: "18.4"
+
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+settings:
+  base:
+    # Swift 版本钉住：用 Swift 5 的语言模式。Xcode 以后默认换成 Swift 6 的严格并发检查，也不会把这里的警告变成错误
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    SWIFT_APPROACHABLE_CONCURRENCY: NO
+    SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+    GCC_TREAT_WARNINGS_AS_ERRORS: NO
+    TARGETED_DEVICE_FAMILY: "1"
+    SWIFT_EMIT_LOC_STRINGS: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+  configs:
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+
+targets:
+  EchoIsland:
+    type: application
+    platform: iOS
+    sources:
+      - path: App/Sources
+      - path: Generated/BuildConfig.swift
+      - path: App/Resources
+        buildPhase: resources
+      # 游戏网页：整个文件夹原样放进 App（保持目录结构），由 scripts/copy-web.mjs 生成
+      - path: www
+        type: folder
+        buildPhase: resources
+      # 原生桥自测页：只有调试包带（Release 用 EXCLUDED_SOURCE_FILE_NAMES 不放，下面的脚本再兜底删一次；原生那边正式包也不认 /__test/）
+      - path: www-test
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        INFOPLIST_FILE: App/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        PRODUCT_NAME: EchoIsland
+        PRODUCT_MODULE_NAME: EchoIsland
+        PRODUCT_BUNDLE_IDENTIFIER: $(ECHO_BUNDLE_ID)$(ECHO_BUNDLE_SUFFIX)
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+      configs:
+        Release:
+          EXCLUDED_SOURCE_FILE_NAMES: www-test
+    postBuildScripts:
+      - name: 正式包不带原生桥自测页
+        basedOnDependencyAnalysis: false
+        script: |
+          if [ "${CONFIGURATION}" = "Release" ]; then
+            rm -rf "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/www-test"
+          fi
+
+  # 纯逻辑的测试（家长密码的锁定、备份文件名、地址和分段读取、原生桥的入口）：在模拟器里跑
+  EchoIslandTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: EchoIsland
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: $(ECHO_BUNDLE_ID).tests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/EchoIsland.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EchoIsland
+        BUNDLE_LOADER: $(TEST_HOST)
+
+  # 开起来看一眼的测试：打开 App、网页到了首页（或首次设置向导）、竖屏横屏截图、原生桥自测页全过、麦克风弹窗、分享面板和文件选择器弹得出来
+  EchoIslandUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: EchoIsland
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: $(ECHO_BUNDLE_ID).uitests
+        TEST_TARGET_NAME: EchoIsland
+
+schemes:
+  EchoIsland:
+    build:
+      targets:
+        EchoIsland: all
+        EchoIslandTests: [test]
+        EchoIslandUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - EchoIslandTests
+        - EchoIslandUITests
+    archive:
+      config: Release

@@ -1,0 +1,145 @@
+# 回声岛 iPhone 版：在 GitHub 的云上 Mac 里编译、跑测试（这台 Windows 电脑编不了 Swift，这里就是编译器）。
+# 只用 iOS 模拟器，不签名、不上传、不连 AI：打的是销售版（公开发的版本，没有密钥和家长密码）。
+# 每一步分开写，哪一步红了一眼看得出来；不管成没成，完整的编译日志、.xcresult 和截图都上传（Actions 页面最下面的 ios-simulator-results）。
+# 说明见 ios/README.md
+name: iOS simulator
+
+on:
+  push:
+    branches:
+      - 'echo-island/next'
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-simulator.yml'
+      - 'tools/ios/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-simulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    name: Build and test on the iOS Simulator
+    # macos-26（Apple 芯片）：2026-11 上默认 Xcode 26.6，装着 iOS 26.2 / 26.4 / 26.5 的模拟器（runner-images 的 macos-26-arm64-Readme.md）
+    runs-on: macos-26
+    timeout-minutes: 75
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      SIM_DEST: 'platform=iOS Simulator,name=iPhone 17,OS=latest'
+      ECHO_EDITION: sales
+      OUT: ${{ github.workspace }}/ios-ci
+      DERIVED: ${{ github.workspace }}/ios-ci/DerivedData
+    steps:
+      # 浅克隆：仓库连配音、模型约 430MB，只要最新的那一次。构建号数不出提交数时 make-config.mjs 自己退回 1（模拟器包用不到构建号）
+      - name: Check out (shallow)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          lfs: false
+
+      - name: Show the tools
+        run: |
+          mkdir -p "$OUT"
+          sw_vers
+          xcodebuild -version
+          node --version
+          xcrun simctl list runtimes
+          xcrun simctl list devices available | grep -E "iPhone 17( |$)" || true
+
+      # 不用 Xcode 的那些核对（方法表三处对得上、Info.plist、只连阿里云、仓库里没有密钥、白名单和安卓一样、家长密码的哈希）
+      - name: Static checks (tests/ios.test.js)
+        run: node tests/ios.test.js
+
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+          xcodegen --version
+
+      # 生成 ios/Generated（打包设置）和 ios/www（游戏网页，销售版的 dex.js），没有图标时生成图标
+      - name: Prepare web files, build config and icons
+        run: node ios/scripts/prepare.mjs --edition sales
+
+      - name: Generate the Xcode project
+        working-directory: ios
+        run: xcodegen generate --spec project.yml
+
+      # 调试包，给模拟器：不用开发者证书和团队（模拟器只要本机的临时签名）。编译日志完整存一份
+      - name: Build for the iOS Simulator (Debug, no signing identity)
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing \
+            -project ios/EchoIsland.xcodeproj -scheme EchoIsland -configuration Debug \
+            -destination "$SIM_DEST" -destination-timeout 180 \
+            -derivedDataPath "$DERIVED" \
+            DEVELOPMENT_TEAM= \
+            2>&1 | tee "$OUT/build-debug.log" | xcbeautify --renderer github-actions
+
+      - name: Unit tests (PIN lock, backups, asset handler, bridge)
+        run: |
+          set -o pipefail
+          rm -rf "$OUT/unit-tests.xcresult"
+          xcodebuild test-without-building \
+            -project ios/EchoIsland.xcodeproj -scheme EchoIsland -configuration Debug \
+            -destination "$SIM_DEST" -destination-timeout 180 \
+            -derivedDataPath "$DERIVED" \
+            -only-testing:EchoIslandTests \
+            -resultBundlePath "$OUT/unit-tests.xcresult" \
+            2>&1 | tee "$OUT/unit-tests.log" | xcbeautify --renderer github-actions
+
+      # 打开 App 到首页（竖屏、横屏截图）、原生桥自测页、麦克风弹窗、分享面板和文件选择器
+      - name: UI smoke test (home screen, bridge self-test, microphone)
+        run: |
+          set -o pipefail
+          rm -rf "$OUT/ui-tests.xcresult"
+          xcodebuild test-without-building \
+            -project ios/EchoIsland.xcodeproj -scheme EchoIsland -configuration Debug \
+            -destination "$SIM_DEST" -destination-timeout 180 \
+            -derivedDataPath "$DERIVED" \
+            -only-testing:EchoIslandUITests \
+            -resultBundlePath "$OUT/ui-tests.xcresult" \
+            2>&1 | tee "$OUT/ui-tests.log" | xcbeautify --renderer github-actions
+
+      # 正式包的设置（没有 DEBUG、不带自测页）也要编得过：给模拟器、完全不签名
+      - name: Build Release for the iOS Simulator (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project ios/EchoIsland.xcodeproj -scheme EchoIsland -configuration Release \
+            -destination "$SIM_DEST" -destination-timeout 180 \
+            -derivedDataPath "$DERIVED" \
+            CODE_SIGNING_ALLOWED=NO DEVELOPMENT_TEAM= \
+            2>&1 | tee "$OUT/build-release.log" | xcbeautify --renderer github-actions
+          APP="$DERIVED/Build/Products/Release-iphonesimulator/EchoIsland.app"
+          test -f "$APP/www/index.html"
+          test -f "$APP/echo-native.js"
+          test -f "$APP/PrivacyInfo.xcprivacy"
+          if [ -e "$APP/www-test" ]; then echo "::error::The Release app contains the bridge self-test page (www-test)"; exit 1; fi
+          du -sh "$APP" | tee "$OUT/release-app-size.txt"
+
+      - name: Export screenshots and attachments
+        if: always()
+        run: |
+          for r in unit-tests ui-tests; do
+            if [ -d "$OUT/$r.xcresult" ]; then
+              mkdir -p "$OUT/attachments/$r"
+              xcrun xcresulttool export attachments --path "$OUT/$r.xcresult" --output-path "$OUT/attachments/$r" || echo "could not export attachments from $r"
+            fi
+          done
+          ls -R "$OUT/attachments" 2>/dev/null | head -100 || true
+
+      - name: Upload build logs, results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-simulator-results
+          path: |
+            ios-ci/*.log
+            ios-ci/*.txt
+            ios-ci/*.xcresult
+            ios-ci/attachments
+          if-no-files-found: warn
+          retention-days: 14

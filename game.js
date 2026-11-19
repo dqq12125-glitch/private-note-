@@ -156,6 +156,8 @@
   // ⑥ 快满之前先说（storeCheck）：用到 80% 首页挂一条请家长导出，不等到存不进去。
   const BAK = [1, 2, 3].map(n => KEY + '-bak' + n), BAK_META = KEY + '-bakmeta', BAD = KEY + '-bad', PRE = KEY + '-pre', POS = KEY + '-pos';
   const LS_QUOTA = 5 * 1024 * 1024;   // 浏览器 / WebView 给一个网站的 localStorage：键 + 值约 10MB，中文一个字占 2 字节 → 约 524 万字
+  // iPhone（WebKit）只给 5MB：一个值里只要有一个中文字，整个值就按一个字 2 字节算 → 约 262 万字（tools/ios/probe.js 量过）。按一半算，快满的提示才来得及
+  const LS_QUOTA_NOW = window.ECHO_IOS ? LS_QUOTA / 2 : LS_QUOTA;
   const PACK_MIN = 20000;             // 这么多字以上的备份才压
   const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
@@ -402,7 +404,7 @@
     try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); n += k.length + (localStorage.getItem(k) || '').length; } } catch (e) { /* 读不了就当没有 */ }
     return n;
   }
-  const lsQuota = () => RT.lsQuota || LS_QUOTA;   // 测试里可以把配额改小
+  const lsQuota = () => RT.lsQuota || LS_QUOTA_NOW;   // 测试里可以把配额改小
   // 每天换完备份、打开游戏、存不进去的时候看一眼：
   //   60% 以上：没压的备份压一下；一个月以前的坏档、「恢复前 / 清空前」那份删掉；
   //   90% 以上：最老的两份备份和坏档也删（最近一份备份、手机「下载/EchoIsland」里的都还在）；

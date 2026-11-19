@@ -1,0 +1,16 @@
+// 回声岛 iPhone 版的打包设置（进仓库的默认值）。要改的只有这几行；
+// 打包前 ios/scripts/prepare.mjs 会生成 ios/Generated/Echo.xcconfig（不进仓库），里面的同名设置盖掉这里的。
+
+// App 的唯一标识：现在是占位的，正式打包前换成自己在苹果开发者后台登记的（只改这一处，或者设环境变量 ECHO_BUNDLE_ID）
+ECHO_BUNDLE_ID = com.example.echoisland
+// 家庭版在后面加一截（ECHO_EDITION=family 时生成的设置里是 .family），和公开发的版本能装在同一台手机上
+ECHO_BUNDLE_SUFFIX =
+
+// 给人看的版本号（要三段数字，上架 / TestFlight 每次发新版要变大）和构建号（默认 git 提交数，prepare.mjs 填）
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+
+// 苹果开发者团队编号：只有真机 / TestFlight 的签名包要（模拟器包不用）。设环境变量 ECHO_TEAM_ID，prepare.mjs 写进生成的设置
+DEVELOPMENT_TEAM =
+
+#include? "../Generated/Echo.xcconfig"

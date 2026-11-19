@@ -1720,3 +1720,19 @@ body.pl-on { overflow: hidden; }
   .pl-step.res > * { break-inside: avoid; margin-bottom: 8px; }
   .pl-step.res > h2 { margin-bottom: 8px; }
 }
+
+/* ---------- iPhone 版（ios/ 的壳子在 <html> 上加 class="echo-ios"；安卓 APK 和网页版没有这个 class，下面这些都不起作用） ----------
+   网页铺满整个屏幕（viewport-fit=cover）。竖屏的上下前面已经让开了；横屏时左右两边各约 59px 是灵动岛 / 摄像头和圆角、下面约 21px 是底部横条，
+   原来贴着边的首页、做题、能力检测、家长首次设置、反馈条、弹窗和对战最下面一排按钮要让开（tools/ios/safearea.js 量出来的） */
+html.echo-ios [data-act] { cursor: pointer; }   /* iPhone 上只有「看起来能点」的元素才把点击交给 document 上统一接的 ACT */
+html.echo-ios .tk-type input { font-size: 16px; }   /* 小于 16px 的输入框一点就把整页放大 */
+@media (orientation: landscape) and (max-height: 600px) {
+  html.echo-ios body { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  html.echo-ios .su, html.echo-ios .su-doc, html.echo-ios .pl, html.echo-ios .fb { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  html.echo-ios .modal { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+  html.echo-ios .sheet { max-height: calc(100dvh - 8px - max(8px, env(safe-area-inset-bottom, 0px))); }
+  html.echo-ios #home > .quests { max-height: calc(100dvh - 62px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+  html.echo-ios .tk-box { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+  html.echo-ios body.scr-battle #battle { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+  html.echo-ios body.scr-battle #battle .task-foot { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+}
