@@ -1005,6 +1005,18 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
 #world .ab .w-chat small { font-size: 11px; margin-top: 2px; }
 #world .ab .w-chat[hidden] { display: none; }
 @media (hover: hover) and (pointer: fine) { .joy-zone { cursor: grab; } }
+/* 转镜头（新画风的户外地图才有，world.js 给 #world 加 .cam-on）：右半边屏幕接手指的那一层，A / B / 英语聊天排在它上面；
+   镜头不朝正北时右上角亮出指北针——里面那一层（i）跟着镜头转，红尖一直指着北，点一下转回正北 */
+.cam-zone { position: absolute; right: 0; top: 0; bottom: 0; width: 52%; pointer-events: auto; touch-action: none; display: none; }
+#world.cam-on .cam-zone { display: block; }
+.w-compass { position: absolute; right: calc(env(safe-area-inset-right, 0px) + 12px); top: calc(env(safe-area-inset-top, 0px) + 116px); width: 46px; height: 46px; padding: 0; border: 2px solid rgba(255, 255, 255, .8); border-radius: 50%; background: rgba(43, 83, 118, .82); box-shadow: 0 4px 0 rgba(14, 32, 48, .6); pointer-events: auto; touch-action: manipulation; }
+.w-compass[hidden] { display: none; }
+.w-compass:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(14, 32, 48, .6); }
+.w-compass i { position: absolute; inset: 0; display: block; }
+.w-compass i::before, .w-compass i::after { content: ""; position: absolute; left: 50%; margin-left: -6px; border: 6px solid transparent; }
+.w-compass i::before { top: 13px; border-top-width: 0; border-bottom: 9px solid #ff5a4d; }
+.w-compass i::after { top: 22px; border-bottom-width: 0; border-top: 9px solid #e8eef3; }
+.w-compass b { position: absolute; left: 0; right: 0; top: 1px; font: 800 11px/12px var(--f-display); color: #fff; text-align: center; }
 
 /* ---------- 排版用的外框：竖屏时不起作用（display: contents，里面的东西照常一列排），横屏时才分栏 ---------- */
 /* q-main / q-side：口语题的题目卡片 / 话筒和自评；pick-grid：换怪兽的列表；r-hero / r-body：结算页左右两块；th-side：对话动画右边的按钮和记录 */
@@ -1041,6 +1053,7 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   #world .joy-zone { top: calc(env(safe-area-inset-top, 0px) + 60px); height: auto; }
   .joy-base { top: calc(100% - 92px - env(safe-area-inset-bottom, 0px)); left: calc(env(safe-area-inset-left, 0px) + 100px); }
   #world .ab { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 22px); }
+  .w-compass { top: calc(env(safe-area-inset-top, 0px) + 58px); right: calc(env(safe-area-inset-right, 0px) + 16px); }
 
   /* ===== 对战：左边战场、右边说明和招式，整屏不用滚动 ===== */
   body.scr-battle #battle { position: fixed; inset: 0; z-index: 14; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr); grid-template-rows: auto auto minmax(0, 1fr);
@@ -1760,4 +1773,65 @@ html.echo-ios .tk-type input { font-size: 16px; }   /* 小于 16px 的输入框�
   html.echo-ios .tk-box { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
   html.echo-ios body.scr-battle #battle { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
   html.echo-ios body.scr-battle #battle .task-foot { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ---------- 云端模式（公开版）：账号、会员、家长同意、举报（account.js；聊天里的 .tk-min / .tk-rep / .tk-fix / .tk-out 是 talk.js 加的） ---------- */
+body.su-on .modal { z-index: 90; }                       /* 首次设置向导（z 80）上面弹登录页 */
+body:has(#tk-ov) .modal { z-index: 65; }                 /* 聊天界面（z 60）上面弹举报 / 会员 */
+body:has(#tk-ov) .toasts { z-index: 70; }
+.ac { display: flex; flex-direction: column; gap: 10px; }
+.ac h2 { margin: 0; text-align: center; }
+.ac p { margin: 0; line-height: 1.5; }
+.ac .big { font-size: 56px; }
+.ac-form { display: flex; flex-direction: column; gap: 8px; }
+.ac-form .link { align-self: center; }
+.ac-in { font-size: 17px; }
+.ac-in#ac-code { letter-spacing: .35em; text-align: center; font-family: ui-monospace, Consolas, monospace; }
+.ac-msg { min-height: 1.2em; color: var(--coral-d); font-weight: 700; text-align: center; font-size: 14px; }
+.ac-msg:empty { min-height: 0; }
+.ac-small { color: var(--ink-2); font-size: 13px; }
+.ac-legal { color: var(--ink-3); font-size: 12px; text-align: center; }
+.ac-legal .link { font-size: 12px; padding: 2px 4px; }
+.ac-or { text-align: center; color: var(--ink-3); font-size: 13px; }
+.ac-apple { background: #000; color: #fff; box-shadow: 0 5px 0 #444; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.ac-ages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ac-ages .btn { padding-inline: 6px; }
+.ac-plan { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 12px; border-radius: 16px; background: var(--card); box-shadow: 0 3px 0 var(--line); text-align: center; }
+.ac-plan b { font-family: var(--f-display); font-size: 20px; }
+.ac-plan small { color: var(--ink-2); font-size: 13px; }
+.ac-left { text-align: center; font-weight: 700; color: var(--lagoon-d); }
+.ac-left small { font-weight: 400; color: var(--ink-2); }
+.ac-prod { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 16px; background: var(--card); box-shadow: 0 3px 0 var(--line); }
+.ac-prod > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ac-prod b { font-size: 16px; }
+.ac-prod .ac-price { font-weight: 800; color: var(--lagoon-d); }
+.ac-prod small { color: var(--ink-2); font-size: 12px; }
+.ac-prod .ac-trial { color: #1f8650; font-weight: 700; }
+.ac-prod .btn { flex: none; }
+.ac-cur { flex: none; font-size: 13px; font-weight: 800; color: #1f8650; background: #dcf5e6; border-radius: 10px; padding: 4px 10px; }
+.ac-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.ac-auto { font-size: 12px; }
+.ac-info { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.ac-del { align-self: center; color: var(--coral-d); font-size: 13px; }
+.ac-reasons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.ac-reasons .btn.on { background: var(--lagoon); color: #fff; }
+.ac-quote { margin: 0; padding: 8px 12px; border-left: 4px solid var(--line); background: var(--card); border-radius: 10px; font-size: 14px; color: var(--ink-2); max-height: 6.5em; overflow: auto; }
+.ac textarea.ac-in { resize: none; font-size: 15px; }
+.ac-strip { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; padding: 8px 12px; border-radius: 16px; background: #fff8e1; box-shadow: 0 3px 0 #f0dca0; font-weight: 700; font-size: 14px; }
+.ac-strip > span { flex: 1; min-width: 12em; }
+.ac-strip small { font-weight: 400; color: var(--ink-2); }
+/* 聊天：顶上「AI 今天还剩几分钟」、每句 AI 的话后面的举报小旗、被服务器挡住时的按钮、时间用完的一行 */
+.tk-min { align-self: flex-start; margin-top: 2px; font-size: 12px; font-weight: 800; color: #6d4c00; background: #fff3cd; border-radius: 8px; padding: 1px 7px; }
+.tk-min.low { color: #fff; background: var(--coral); }
+.tk-rep { border: 0; background: none; padding: 0 0 0 6px; margin: 0; font: inherit; font-size: 12px; line-height: 1; color: var(--ink-3); opacity: .7; cursor: pointer; vertical-align: baseline; }
+.tk-rep:hover, .tk-rep:focus { opacity: 1; color: var(--coral-d); }
+.tk-fix { display: flex; justify-content: center; padding: 4px 0; }
+.tk-out { color: #8a4b00; font-weight: 700; }
+.tk-rep-eval { align-self: center; color: var(--ink-3); font-size: 12px; }
+html.echo-ios .ac-in { font-size: 16px; }   /* 小于 16px 的输入框一点就把整页放大 */
+@media (orientation: landscape) and (max-height: 600px) {
+  .ac { gap: 8px; }
+  .ac .big { font-size: 36px; }
+  .ac-prod { padding: 6px 10px; }
+  .ac-strip { margin-bottom: 6px; }
 }

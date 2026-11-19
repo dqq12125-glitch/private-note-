@@ -95,6 +95,15 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(IOSN.every(n => SPEC[n] && SPEC[n][0] === IOS_ONLY[n][0] && SPEC[n][1].length === IOS_ONLY[n][1] && N[n].length === IOS_ONLY[n][1] && SPEC[n][1][0] === 'i' && SPEC[n].length === 2),
     'echo-native.js 里 iPhone 才有的：种类、参数个数和 IOS_ONLY 表一样；异步的第一个参数是编号、没有返回值', IOSN.filter(n => !(SPEC[n] && SPEC[n][0] === IOS_ONLY[n][0] && SPEC[n][1].length === IOS_ONLY[n][1])));
   check(same([...(ctx.__echoIOS.iosOnly || [])], IOSN), 'echo-native.js 的 IOS_ONLY 名单（__echoIOS.iosOnly）和这里一样', ctx.__echoIOS.iosOnly);
+  // 假桥（tests/fake-native.js）：platform 'ios' 时有 iPhone 才有的方法（tests/account.test.js 用），参数个数和这张表一样；安卓的没有
+  {
+    const FNk = require('./fake-native');
+    const mk = o => { const c = { console, JSON, Math, Date, Promise, setTimeout, clearTimeout, btoa: s => Buffer.from(s, 'binary').toString('base64') }; c.window = c; vm.createContext(c); vm.runInContext('(' + FNk.install.toString() + ')', c)(o); return c.EchoNative; };
+    const fi = mk({ platform: 'ios' }), fa = mk({});
+    check(IOSN.every(n => typeof fi[n] === 'function' && fi[n].length === IOS_ONLY[n][1]), 'tests/fake-native.js（platform ios）有 iPhone 才有的 ' + IOSN.length + ' 个方法，参数个数和 IOS_ONLY 一样', IOSN.filter(n => !(fi[n] && fi[n].length === IOS_ONLY[n][1])));
+    check(!IOSN.some(n => n in fa), '安卓的假桥里没有 iPhone 才有的方法（网页按 typeof EchoNative.iapProducts 分安卓 / iPhone）');
+    check(JSON.parse(fi.diag()).appleSignIn === true && Array.isArray(JSON.parse(fi.diag()).iapProducts), '假桥 iPhone 的 diag() 多两项：appleSignIn、iapProducts（和 Bridge.swift 一样）');
+  }
   // 真调一遍：同步的走 prompt('__echo_native__:{"m","a"}')，回的 JSON 原样交给网页；异步的走 postMessage、不碰 prompt
   answer = msg => { const o = JSON.parse(msg.slice('__echo_native__:'.length)); return o.m === 'edition' ? '"sales"' : o.m === 'hasPin' ? 'true' : o.m === 'version' ? '"{\\"code\\":5}"' : 'null'; };
   prompts.length = 0;
@@ -313,6 +322,22 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   const off = MC.compute({ edition: 'sales', env: { ECHO_TEAM_ID: 'ABCDE12345', ECHO_APPLE_SIGNIN: '0' } });
   check(off.cfg.appleSignIn === false && !/CODE_SIGN_ENTITLEMENTS/.test(off.xcconfig), 'ECHO_APPLE_SIGNIN=0：签名的包也不带（TestFlight 工作流里苹果不肯给权限时用）');
   check(fs.existsSync(path.join(IOS, 'App', 'EchoIsland.entitlements')), 'CODE_SIGN_ENTITLEMENTS 指的文件在（路径相对 ios/）');
+  // 云端模式（account.js）：ECHO_CLOUD_URL 不是秘密，销售版也能给；BuildConfig.cloudUrl → GameViewController 的启动对象 → window.__ECHO_BOOT.cloudUrl
+  check(auto.cfg.cloudUrl === '' && /static let cloudUrl = ""/.test(auto.swift), '没给 ECHO_CLOUD_URL：cloudUrl 是空的（不是云端模式，和以前一样）');
+  const cl = MC.compute({ edition: 'sales', env: { ECHO_CLOUD_URL: 'https://api.example.com/v1/' } });
+  check(cl.cfg.cloudUrl === 'https://api.example.com' && /static let cloudUrl = "https:\/\/api\.example\.com"/.test(cl.swift) && cl.cfg.dashscopeKey === '' && cl.cfg.talkUrl === '',
+    '销售版可以给 ECHO_CLOUD_URL（不是秘密，不拦），末尾的 / 和 /v1 去掉', cl.cfg.cloudUrl);
+  check(!MC.SECRET_ENV.includes('ECHO_CLOUD_URL'), 'ECHO_CLOUD_URL 不在「只有家庭版能给」的名单里');
+  for (const bad of ['http://api.example.com', 'ftp://x', 'https://x.example/?token=1', 'javascript:alert(1)']) {
+    let t = '';
+    try { MC.compute({ edition: 'sales', env: { ECHO_CLOUD_URL: bad } }); } catch (e) { t = e.message; }
+    check(/ECHO_CLOUD_URL/.test(t), 'ECHO_CLOUD_URL 写错就停下：' + bad, t);
+  }
+  check(MC.compute({ edition: 'sales', env: { ECHO_CLOUD_URL: 'http://localhost:8787' } }).cfg.cloudUrl === 'http://localhost:8787', '本机试的 http://localhost:端口 也认');
+  const gvcSrc = fs.readFileSync(path.join(SRC, 'GameViewController.swift'), 'utf8');
+  check(/"cloudUrl":\s*BuildConfig\.cloudUrl/.test(gvcSrc) && /window\.__ECHO_BOOT=/.test(gvcSrc), 'GameViewController 的启动对象里有 cloudUrl（网页的 account.js 从 window.__ECHO_BOOT 读）');
+  const acSrc = read('account.js');
+  check(/__ECHO_BOOT/.test(acSrc) && /cloudUrl/.test(acSrc), 'account.js 读启动对象里的 cloudUrl');
 
   // ---------- 7. 云上的工作流 ----------
   const wfText = read('.github/workflows/ios-simulator.yml');

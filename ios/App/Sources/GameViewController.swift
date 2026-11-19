@@ -109,7 +109,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
 
     // 页面一开始就执行的脚本：原生告诉网页的几个值 + echo-native.js（EchoNative 那一层）
     private func bootScript() -> String {
-        let boot: [String: Any] = ["talkUrl": BuildConfig.talkUrl, "talkCode": BuildConfig.talkCode]
+        // cloudUrl：公开版服务器（make-config.mjs 的 ECHO_CLOUD_URL）；不是空的 = 云端模式（网页的 account.js 读 window.__ECHO_BOOT.cloudUrl）
+        let boot: [String: Any] = ["talkUrl": BuildConfig.talkUrl, "talkCode": BuildConfig.talkCode, "cloudUrl": BuildConfig.cloudUrl]
         var shim = ""
         if let u = Bundle.main.url(forResource: "echo-native", withExtension: "js"), let s = try? String(contentsOf: u, encoding: .utf8) { shim = s }
         return "window.__ECHO_BOOT=" + Bridge.json(boot) + ";\n" + shim

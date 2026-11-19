@@ -145,6 +145,85 @@ function installFakeEchoNative(opts) {
       return true;
     },
   };
+  // ---------- iPhone 才有的（platform: 'ios'）：订阅（Store.swift）和通过 Apple 登录（AppleSignIn.swift），照 ios/README.md「订阅和登录」的表 ----------
+  // 都是异步的：第一个参数是编号，结果 window.__echoNative(编号, 'ok' / 'fail', JSON 文字)。安卓的假桥里没有它们（tests/native.test.js 按安卓核对）。
+  // 开关（S.iap / S.apple，页面里随时能改）：
+  //   iap.products 两个商品（displayPrice、period……）、iap.canPay、iap.buy（'purchased' 默认 / 'cancelled' / 'pending' / 'fail:<代号>'）、
+  //   iap.bundle、iap.env（交易里的 bundleId / environment）；记录：iap.unfinished（还没 finish 的交易）、iap.finished（finish 过的编号 + 时间）、
+  //   iap.entitlements（现在有效的，iapCurrent / iapRestore 回它）、iap.log（每次调用：方法名 + 时间）。
+  //   交易的 JWS：页面里有 window.__mintJws(payload) 就用它签（测试用 Playwright 的 exposeFunction 接到自己造的 App Store 证书链），没有就是假的字符串。
+  //   S.newTx(商品编号, {kind, revoked, expires, original}) 造一笔交易；S.fireIap(交易) 当成 Transaction.updates 来的（发 echo-iap 事件，也进 unfinished）。
+  //   apple.on（diag().appleSignIn）、apple.result（'ok' / 'cancelled' / 'fail'）、apple.user、apple.state（appleCredentialState 回的）；
+  //   身份令牌：页面里有 window.__appleToken(nonce 原文) 就用它造，没有就是假的。
+  if (S.platform === 'ios') {
+    const P = (opts.iap && opts.iap.prefix) || 'com.echoisland.app.premium.';
+    S.iap = Object.assign({
+      products: [
+        { id: P + 'monthly', kind: 'monthly', title: 'Premium Monthly', description: 'More AI time every day', displayPrice: '$8.99', price: '8.99', currency: 'USD', groupId: 'g1', period: { unit: 'month', value: 1 }, introOffer: null, introEligible: false, trial: false },
+        { id: P + 'yearly', kind: 'yearly', title: 'Premium Yearly', description: 'Best value', displayPrice: '$59.99', price: '59.99', currency: 'USD', groupId: 'g1', period: { unit: 'year', value: 1 }, introOffer: { paymentMode: 'freeTrial', period: { unit: 'week', value: 1 }, periodCount: 1, displayPrice: '$0.00' }, introEligible: true, trial: true },
+      ],
+      canPay: true, buy: 'purchased', bundle: 'com.echoisland.app', env: 'Sandbox',
+      unfinished: [], finished: [], entitlements: [], log: [],
+    }, opts.iap || {});
+    S.apple = Object.assign({ on: true, result: 'ok', user: '001234.fakeappleuser.0001', state: 'authorized' }, opts.apple || {});
+    const ok = (id, o) => cb(id, 'ok', JSON.stringify(o)), fail = (id, e, m) => cb(id, 'fail', JSON.stringify({ error: e, message: m || e }));
+    const ilog = m => { log(m); S.iap.log.push({ m, at: Date.now() }); };
+    let seq = 0;
+    S.newTx = async (productId, o) => {
+      o = o || {};
+      const now = S.now(), DAY = 86400000, tid = String(2000000000000000 + Date.now() % 1e9 * 10 + (++seq));
+      const pay = {
+        transactionId: tid, originalTransactionId: o.original || tid, bundleId: S.iap.bundle, productId, purchaseDate: now, originalPurchaseDate: now,
+        expiresDate: o.expires || now + (/yearly/.test(productId) ? 365 : 30) * DAY, type: 'Auto-Renewable Subscription', inAppOwnershipType: 'PURCHASED', signedDate: now,
+        environment: S.iap.env, appAccountToken: o.token || (S.iap.lastToken || undefined), transactionReason: o.kind === 'renewal' ? 'RENEWAL' : 'PURCHASE', storefront: 'AUS',
+      };
+      if (o.revoked) { pay.revocationDate = now; pay.revocationReason = 0; }
+      const jws = typeof W.__mintJws === 'function' ? await W.__mintJws(pay) : 'fake.' + btoa(JSON.stringify(pay)).replace(/=+$/, '') + '.sig';
+      return { jws, verified: true, transactionId: tid, originalId: pay.originalTransactionId, productId, purchaseDate: now, expires: pay.expiresDate, revoked: o.revoked ? now : null,
+        upgraded: false, appAccountToken: pay.appAccountToken || null, environment: S.iap.env, ownership: 'PURCHASED', kind: o.kind || 'purchase' };
+    };
+    S.fireIap = tx => { S.iap.unfinished.push(tx); emit('echo-iap', tx); };
+    Object.assign(W.EchoNative, {
+      iapProducts(id, ids) { ilog('iapProducts'); ok(id, { products: S.iap.products, missing: [], canPay: S.iap.canPay }); },
+      iapBuy(id, productId, token) {
+        ilog('iapBuy');
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(token || ''))) return fail(id, 'bad-token');
+        const b = S.iap.buy;
+        if (b === 'cancelled' || b === 'pending') return ok(id, { status: b });
+        if (/^fail:/.test(b)) return fail(id, b.slice(5));
+        S.iap.lastToken = String(token).toLowerCase();
+        S.newTx(productId, { token: S.iap.lastToken }).then(tx => {
+          S.iap.unfinished.push(tx);
+          S.iap.entitlements = S.iap.entitlements.filter(x => x.productId !== productId).concat([tx]);
+          const o = Object.assign({}, tx, { status: 'purchased' }); delete o.kind;
+          ok(id, o);
+        });
+      },
+      iapRestore(id) { ilog('iapRestore'); ok(id, { synced: true, entitlements: S.iap.entitlements.filter(x => !x.revoked) }); },
+      iapCurrent(id) { ilog('iapCurrent'); ok(id, { entitlements: S.iap.entitlements.filter(x => !x.revoked) }); },
+      iapPending(id) { ilog('iapPending'); ok(id, { transactions: S.iap.unfinished.map(x => Object.assign({ kind: 'purchase' }, x)) }); },
+      iapFinish(id, transactionId) {
+        ilog('iapFinish');
+        const i = S.iap.unfinished.findIndex(x => x.transactionId === String(transactionId));
+        if (i < 0) return ok(id, { finished: false, transactionId, reason: 'not-unfinished' });
+        S.iap.unfinished.splice(i, 1); S.iap.finished.push({ id: String(transactionId), at: Date.now() });
+        ok(id, { finished: true, transactionId });
+      },
+      iapManage(id) { ilog('iapManage'); setTimeout(() => ok(id, { shown: true }), 20); },
+      appleSignIn(id, nonce) {
+        log('appleSignIn');
+        if (!S.apple.on) return fail(id, 'unavailable', 'Sign in with Apple is not available in this build');
+        if (!/^[\x21-\x7e]{16,256}$/.test(String(nonce || ''))) return fail(id, 'bad-nonce');
+        if (S.apple.result === 'cancelled') return ok(id, { cancelled: true });
+        if (S.apple.result === 'fail') return fail(id, 'failed');
+        Promise.resolve(typeof W.__appleToken === 'function' ? W.__appleToken(String(nonce)) : 'fake.apple.token')
+          .then(tok => ok(id, { identityToken: tok, authorizationCode: 'c' + Date.now().toString(36), user: S.apple.user, realUserStatus: 2 }));
+      },
+      appleCredentialState(id, user) { log('appleCredentialState'); if (!S.apple.on) return fail(id, 'unavailable'); ok(id, { state: S.apple.state }); },
+    });
+    const d0 = W.EchoNative.diag;
+    W.EchoNative.diag = function () { const o = JSON.parse(d0()); o.appleSignIn = !!S.apple.on; o.iapProducts = S.iap.products.map(p => p.id); return JSON.stringify(o); };
+  }
   W.ECHO_APP = 1;
   return S;
 }

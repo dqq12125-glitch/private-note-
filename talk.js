@@ -218,9 +218,14 @@
   } catch (e) {}
   // 从 trycloudflare 隧道打开（游戏和对话服务是同一个地址）：连同一个地址
   const sameHost = () => location.protocol === 'https:' && /\.(ts\.net|trycloudflare\.com)$/.test(location.hostname);
+  // 云端模式（公开版，account.js 的 EchoCloud）：AI 全走 cloud/ 的服务器（API.md），它和中转服务（server/relay.js）同样的路径和消息，
+  // 只是要登录：HTTP 带 Authorization，WebSocket 连上先发 {type:'auth'}；不发家庭口令、设备号。云端模式下不直连阿里云（有密钥也不用）
+  const cloudOn = () => !!(window.EchoCloud && EchoCloud.on);
+  const ACC = () => window.EchoAccount || null;
   // 安卓 APK 里有原生桥（EchoNative）并且存了百炼密钥：直连阿里云，不用中转服务（逻辑在 talk-core.js，和中转服务一样）
-  const direct = () => { try { return !!(window.EchoNative && window.TalkCore && EchoNative.hasKey()); } catch (e) { return false; } };
+  const direct = () => { try { return !cloudOn() && !!(window.EchoNative && window.TalkCore && EchoNative.hasKey()); } catch (e) { return false; } };
   function relayUrl() {
+    if (cloudOn()) return EchoCloud.ws;
     if (direct()) return 'direct:';
     const own = LS('echo-talk-url');
     if (own) return own.replace(/\/+$/, '');
@@ -244,6 +249,11 @@
   function errWhy(t) {
     t = String(t || '');
     if (typeof navigator !== 'undefined' && navigator.onLine === false) return 'offline';
+    // 云端模式：服务器的错误码（API.md §2）。auth → signin 要（重新）登录、consent 要家长同意、quota 今天的免费额度用完了
+    if (cloudOn()) {
+      const m = /"error"\s*:\s*"(auth|quota|consent|rate|provider|unavailable)"/.exec(t);
+      if (m) return { auth: 'signin', quota: 'quota', consent: 'consent', rate: 'busy', provider: 'busy', unavailable: 'network' }[m[1]];
+    }
     if (/"error"\s*:\s*"code"|家庭口令/.test(t)) return 'code';
     if (/Arrearage|AllocationQuota|quota|Insufficient|FreeTierOnly|exceeded your|overdue|欠费|额度/i.test(t)) return 'quota';
     if (/InvalidApiKey|Unauthorized|invalid.{0,3}api.{0,3}key|AccessDenied|HTTP 40[13]\b|"code"\s*:\s*"?40[13]|no key|密钥/i.test(t)) return 'auth';
@@ -256,7 +266,8 @@
   // 给孩子看的出错说明：只说一句他听得懂的话。服务器 / 原生报的原文（HTTP 401、Unable to resolve host……）只给家长看（灰色小字 + 出错记录）
   // 每种原因一句（字表 tk.err.*）。时间用完了也用字表里的那句（中转服务发来的是中文，和这句一字不差）
   const ERR_WHY = ['offline', 'auth', 'quota', 'busy', 'code', 'network'];
-  const errTxt = why => (ERR_WHY.includes(why) ? tx('tk.err.' + why) : '');
+  // 云端模式多两种（signin、consent），quota 说的是「今天的免费 AI 用完了」，不是「请告诉家长」（account.js 的 ac. 字表）
+  const errTxt = why => (why === 'signin' || why === 'consent' ? tx('ac.err.' + why) : why === 'quota' && cloudOn() ? tx('ac.err.quota') : ERR_WHY.includes(why) ? tx('tk.err.' + why) : '');
   const kidErr = why => (why === 'daily' || why === 'limit' ? tx('tk.err.daily') : errTxt(why) || errTxt('network'));
   // 原文记进出错记录（家长设置「🔧 出错记录」），'direct:'（APK 直连）这种内部地址不写
   function errRaw(raw) {
@@ -332,13 +343,14 @@
     const order = units.filter(n => n.unit === cu.n).concat(units.filter(n => n.unit !== cu.n));
     const cards = (units.length ? '<h3 class="tk-h">' + hx('tk.h.book', { b: cu.bshort }) + '</h3>' + order.map(n => card(n, n.unit === cu.n)).join('') + '<h3 class="tk-h">' + hx('tk.h.isle') + '</h3>' : '') +
       isle.map(n => card(n, false)).join('');
-    return '<section class="tk-home">' +
+    const acc = cloudOn() && ACC() ? ACC().strip() : '';   // 云端模式：登录送几分钟 / 今天还剩几分钟 + 会员（account.js）
+    return '<section class="tk-home">' + acc +
       '<div class="tk-intro"><b>' + hx('tk.intro.h') + '</b><p>' + hx('tk.intro.p') + '</p>' +
       '<p class="tk-prog' + (t.done ? ' ok' : '') + '">' + esc(progText(t)) + (t.done ? hx('tk.prog.ok') : hx('tk.prog.need', { n: NEED })) + '</p>' +
       '<p class="tk-ai-line">' + hx('tk.ai.line') + '</p></div>' +
       (url ? '' : '<div class="tk-warn">' + hx('tk.warn') + '</div>') +
       '<div class="tk-list">' + cards + '</div>' +
-      '<div class="tk-foot"><button class="btn ghost" data-act="talk_log">' + hx('tk.foot.log') + '</button><button class="btn ghost" data-act="talk_cfg">' + hx('tk.foot.cfg') + '</button></div>' +
+      '<div class="tk-foot"><button class="btn ghost" data-act="talk_log">' + hx('tk.foot.log') + '</button>' + (acc ? '<button class="btn ghost" data-act="ac_account">' + hx('ac.s.account') + '</button>' : '<button class="btn ghost" data-act="talk_cfg">' + hx('tk.foot.cfg') + '</button>') + '</div>' +
       '<div class="tk-foot"><button class="btn ghost small" data-act="talk_privacy">' + hx('g.set.saf.info') + '</button><button class="btn ghost small" data-act="talk_concerns">' + hx('tk.concern.btn') + (nc ? '<span class="tk-badge">' + nc + '</span>' : '') + '</button></div>' +
       '</section>';
   }
@@ -534,6 +546,8 @@
   function blocked() {
     if (!relayUrl()) return tx('w.q.noai');   // world.js 的字表：「AI 聊天还没开通，请告诉家长」
     if (typeof navigator !== 'undefined' && navigator.onLine === false) return errTxt('offline');
+    // 云端模式：没登录、要家长同意的不拦（open() 会弹登录 / 请家长同意那一页）；只有账号说今天的时间用完了才拦
+    if (cloudOn()) { try { return ACC() && ACC().need('talk') === 'quota' ? tx('ac.err.quota') : ''; } catch (e) { return ''; } }
     try { if (G && G.S && (G.dayLog().chatDaily || (direct() && DAILY_SEC - usage() < 20))) return kidErr('daily'); } catch (e) { /* 读不到就让他试 */ }
     return '';
   }
@@ -544,6 +558,8 @@
     lmShut();   // 口语题预热的麦克风先关掉，聊天自己开
     const url = relayUrl();
     if (!url) { configure(); return; }
+    // 云端模式：没登录 / 年龄段没选 / 孩子还没有家长同意 / 今天的时间用完了 → 先弹那一页（account.js），弄好了再接着开这段聊天
+    if (cloudOn() && ACC() && !ACC().ask('talk', () => open(id))) return;
     const esc = G.esc, core = Core(), T = state();
     // 地图上的人：目标、步骤按 talk-core 的临时人设（和服务器拼的一样）；委托按 quests.js 里那一条
     const base = npc.quest ? core.questNpc(QUESTS.byId[npc.quest]) : npc.desc ? core.personNpc(npc.desc) : npc, mk = memKey(npc), lvl = chatLv(), goal = core.goalOf(base, core.goalIndex ? core.goalIndex(base, T.n[mk] || 0, lvl) : T.n[mk] || 0);   // lvl：按能力走时岛民按第几级说话、挑哪个目标（没有 = null，照旧）
@@ -555,7 +571,8 @@
     ov.id = 'tk-ov'; ov.className = 'tk-ov';
     ov.innerHTML = '<div class="tk-box">' +
       '<div class="tk-head"><img id="tk-face" src="' + face(npc) + '" alt=""><div><b>' + (nz == null ? esc(npc.name) : esc(nz) + ' · ' + esc(npc.name)) + '</b><small>' + esc(top) + '</small>' +
-      '<span class="tk-ai" id="tk-ai" title="' + hx('tk.ai.title') + '">' + esc(aiLabel()) + '</span><span class="tk-cnt" id="tk-cnt"></span></div>' +
+      '<span class="tk-ai" id="tk-ai" title="' + hx('tk.ai.title') + '">' + esc(aiLabel()) + '</span><span class="tk-cnt" id="tk-cnt"></span>' +
+      (cloudOn() ? '<span class="tk-min" id="tk-min" hidden></span>' : '') + '</div>' +
       '<button class="tk-x" data-act="talk_end" aria-label="' + hx('tk.end') + '">' + hx('tk.end') + '</button></div>' +
       '<div class="tk-goal"><div class="tk-gt">🎯 ' + (goal.lv ? '<em class="tk-lv">' + esc(goal.lv) + '</em> ' : '') + esc(goalTx) + '</div>' +
       (goal.steps.length ? '<ol class="tk-steps" id="tk-steps">' + goal.steps.map((s, k) => '<li data-act="talk_step" data-i="' + k + '"><i>☐</i><span>' + esc(stepTxt(s, k)) + '</span>' + (s.en ? '<small hidden>' + hx('tk.eg', { s: s.en }) + '</small>' : '') + '</li>').join('') + '</ol>' : '') +
@@ -600,10 +617,16 @@
     if (lvl != null) q.set('lv', String(lvl));
     if (lvl != null || c.ui !== 'zh') q.set('ui', c.ui);
     if (mem) q.set('m', b64(JSON.stringify({ facts: mem.facts || [], better: mem.better || '' })));
-    const code = LS('echo-talk-code'); if (code) q.set('code', code);
+    const code = LS('echo-talk-code'); if (code && !cloudOn()) q.set('code', code);
+    if (cloudOn()) q.delete('dev');   // 服务器按账号算，不要设备号（API.md §8 的参数表里没有）
     let ws;
     if (url === 'direct:') ws = directSocket(npc, (G.S.player && G.S.player.name) || '', goal.i, mem, lvl, c.ui);
     else try { ws = new WebSocket(url + '/talk?' + q); } catch (e) { status(tx('tk.st.badurl', { url })); return; }
+    // 云端模式：连上先发 {type:'auth', token}（令牌不进网址、日志）；空闲时每 30 秒 ping 一次（API.md §1、§8）
+    if (cloudOn() && url !== 'direct:') {
+      ws.addEventListener('open', () => { try { ws.send(JSON.stringify({ type: 'auth', token: ACC() ? ACC().token() : '' })); } catch (e) { /* 断了 */ } });
+      c.pingT = setInterval(() => { if (ws.readyState === 1) try { ws.send('{"type":"ping"}'); } catch (e) { /* 断了 */ } }, 30000);
+    }
     c.ws = ws;
     ws.onmessage = e => {
       let m; try { m = JSON.parse(e.data); } catch (er) { return; }
@@ -617,6 +640,12 @@
         status(micOk ? readyText() : tx('tk.ready.type'));
         const mic = $('#tk-mic'); if (mic && micOk) mic.disabled = false;
         const h = $('#tk-help'); if (h) h.disabled = false;
+        if (cloudOn() && typeof m.leftSec === 'number') { c.cl = { left: m.leftSec, at: Date.now() }; minTick(c); c.minT = setInterval(() => minTick(c), 1000); }
+      } else if (m.type === 'quota' && m.warn) {   // 云端模式：这段聊天还剩 warnSec（60）秒（why：daily 今天的额度 / session 一段最长的时间）
+        c.cloudWhy = m.why === 'session' ? 'session' : 'daily';
+        const msg = tx(m.why === 'session' ? 'ac.t.warn.s' : 'ac.t.warn', { n: m.leftSec | 0 });
+        G.toast(msg); if (!c.ending) status(msg);
+        const el = $('#tk-min'); if (el) el.classList.add('low');
       } else if (m.type === 'usage') addUse(m);
       else if (m.type === 'audio') { if (c.ending) return; c.responding = true; playChunk(m.data); }   // 点了结束：岛民没说完的半句不再放
       else if (m.type === 'npc') {
@@ -627,6 +656,8 @@
         c.responding = false; if (m.text) c.turns.push({ who: 'npc', text: m.text });
         // 说完的话可以点一下看中文（只有中文界面：英语界面就是在学这门语言，不翻译）
         if (c.bubble && m.text) { c.bubble._text = m.text; if (zhUi()) { c.bubble.dataset.act = 'talk_zh'; c.bubble.classList.add('tap'); c.bubble.title = tx('tk.zh.tap'); } }
+        // 云端模式（公开版）：每句 AI 的话后面一个小「⚑」举报（两家商店都要求 AI 生成的内容能举报）
+        if (cloudOn() && c.bubble && m.text) c.bubble.insertAdjacentHTML('beforeend', '<button type="button" class="tk-rep" data-act="talk_report" data-k="' + (c.turns.length - 1) + '" title="' + hx('ac.t.report') + '" aria-label="' + hx('ac.t.report') + '">⚑</button>');
         c.bubble = null;
         keepLast();
         if (OUT.last) ['#tk-re', '#tk-slow'].forEach(s => { const b = $(s); if (b) b.disabled = false; });
@@ -648,13 +679,14 @@
         if (p) { p.textContent = m.text; p._has = true; p.classList.remove('wait'); dropPend(c, p); stick(); } else bubble('you', m.text);
         c.turns.push({ who: 'you', text: m.text });
         heard(c, m.text);
-      } else if (m.type === 'limit') { status(m.zh); }
+      } else if (m.type === 'limit') { c.limitHit = true; status(m.zh); }
       else if (m.type === 'error') {
         c.err = m.zh; c.errCode = m.code;
         if (c.ready && (m.code === 'upstream' || m.code === 'closed')) c.upErr = true;   // 连上以后服务器出错 / 断开
         c.errWhy = noteErr(c, m);
         if (c.errWhy !== 'daily') errRaw(m.zh);
         status('⚠️ ' + kidErr(c.errWhy)); if (m.code === 'code') setTimeout(configure, 600);
+        if (cloudOn()) cloudErr(c, m);
       }
       else if (m.type === 'eval') { clearTimeout(c.evalTimer); finishWith(c, m.eval, m.sec, m.left, 'eval'); }
     };
@@ -867,6 +899,8 @@
   function close() {
     const c = C; if (!c) return;
     C = null;
+    clearInterval(c.minT); clearInterval(c.pingT);
+    if (cloudOn() && ACC() && c.ready) ACC().refresh();   // 用了几分钟：账号里的「今天还剩」更新
     if (c.ending && !c.done) c.bg = true;   // 老师还在看：连接先留着，评价到了在后台存好（最多等 CFG.evalWait）
     else { try { c.ws && c.ws.close(); } catch (e) {} }
     // 连上过、服务器真出错了，又一句都没能说：今天的聊天这一项免了
@@ -881,10 +915,40 @@
   }
   function failDay(c) { const L = G.dayLog(); L.chatFail = 1; L.chatFailWhy = c.errCode || 'closed'; G.save(); }
   // 没连上的原因记进今天的日志（学习锁、首页红条用）
+  // 云端模式：聊天顶上「AI 今天还剩几分钟」（ready 里服务器给的 leftSec 往下数；不到 2 分钟数秒）
+  function minTick(c) {
+    const el = $('#tk-min');
+    if (!el || c !== C || !c.cl || c.ending || c.done) { clearInterval(c.minT); return; }
+    const s = Math.max(0, Math.round(c.cl.left - (Date.now() - c.cl.at) / 1000));
+    el.hidden = false;
+    el.textContent = s < 120 ? tx('ac.t.secs', { n: s }) : tx('ac.t.left', { n: Math.floor(s / 60) });
+    el.classList.toggle('low', s <= 60);
+  }
+  // 云端模式：还没聊上就被服务器挡了（没登录 / 令牌过期、要家长同意、今天的时间用完了）——状态行下面给一个能解决的按钮
+  function cloudErr(c, m) {
+    const A = ACC(); if (!A) return;
+    if (m.code === 'auth') A.lost();
+    else if (m.code === 'quota') A.noteQuota('talk');
+    else if (m.code === 'consent') A.refresh();
+    const w = m.code === 'auth' ? 'signin' : m.code === 'consent' ? 'consent' : m.code === 'quota' ? 'quota' : '';
+    if (!w || c.ready || c !== C || $('#tk-fix')) return;
+    const s = $('#tk-status');
+    if (s) s.insertAdjacentHTML('afterend', '<div class="tk-fix" id="tk-fix"><button class="btn small sun" data-act="talk_fix" data-w="' + w + '">' + hx(w === 'signin' ? 'ac.btn.signin' : w === 'consent' ? 'ac.btn.consent' : 'ac.btn.member') + '</button></div>');
+  }
+  // 云端模式：今天的免费时间用完了（聊到时间到、或者一开始就没时间了）——评语页 / 空页上的一行 +「会员」
+  function outLine(c, left) {
+    if (!cloudOn()) return '';
+    const out = (c.limitHit && c.cloudWhy === 'daily') || c.errWhy === 'daily' || (left != null && ACC() && left < ACC().MIN_START);
+    return out ? '<p class="tk-out">' + hx('ac.t.out') + '</p><div class="tk-btns"><button class="btn sun small" data-act="ac_member">' + hx('ac.btn.member') + '</button></div>' : '';
+  }
+  // 云端模式的错误码（API.md §8）→ 这边的原因：quota 和中转服务的 daily 一样算「今天的聊天时间用完了」（学习锁照 chatDaily 办）
+  const CLOUD_WHY = { quota: 'daily', auth: 'signin', consent: 'consent', rate: 'busy', provider: 'busy', conflict: 'busy', unavailable: 'network', timeout: 'network', server: 'network', bad_request: 'network', too_large: 'network' };
   function noteErr(c, m) {
-    const why = m.why || (m.code === 'daily' ? 'daily' : m.code === 'code' ? 'code' : m.code === 'busy' ? 'busy' : noteAi('chat', m.zh));
+    const cw = cloudOn() && !m.why ? CLOUD_WHY[m.code] || '' : '';
+    if (cw && cw !== 'daily') LASTERR = { why: cw, where: 'chat', at: Date.now() };
+    const why = m.why || cw || (m.code === 'daily' ? 'daily' : m.code === 'code' ? 'code' : m.code === 'busy' ? 'busy' : noteAi('chat', m.zh));
     const L = G.dayLog();
-    if (m.code === 'daily') L.chatDaily = 1;   // 今天的聊天时长用完了
+    if (m.code === 'daily' || cw === 'daily') L.chatDaily = 1;   // 今天的聊天时长用完了
     if (!c.ready) L.chatErr = why;
     G.save();
     return why;
@@ -903,6 +967,7 @@
     }
     const first = !c.rec, r = settle(c, raw, sec, how);
     c.done = c.ended = true;
+    if (cloudOn() && ACC() && how === 'eval') ACC().refresh();
     if (c !== C) {   // 聊天界面已经关了：在后台存好，弹一句
       if (r.newGoal) G.toast(tx('tk.toast.goal', { name: c.npc.name }) + (r.coins ? tx('tk.coins', { n: r.coins }) : ''));
       try { c.ws && c.ws.close(); } catch (e) {}
@@ -996,7 +1061,7 @@
       (why === 'daily' ? '<b>' + hx('tk.e.daily.h') + '</b><p>' + esc(kidErr(why)) + '</p>'
         : c.err ? '<b>' + hx('tk.e.fail.h') + '</b><p>' + esc(kidErr(why)) + '</p>' + (raw && raw !== kidErr(why) ? '<p class="tk-raw">' + hx('tk.e.raw', { raw }) + '</p>' : '')
         : '<b>' + hx('tk.e.quiet.h') + '</b><p>' + hx('tk.e.quiet.p') + '</p>') +
-      progLine() + (left != null ? '<p class="tk-time">' + hx('tk.left', { n: Math.floor(left / 60) }) + '</p>' : '') + evalBtns(c) + '</div>';
+      progLine() + (left != null ? '<p class="tk-time">' + hx('tk.left', { n: Math.floor(left / 60) }) + '</p>' : '') + outLine(c, left) + evalBtns(c) + '</div>';
   }
   function showEval(c, r, left) {
     const esc = G.esc, ev = r.ev, rec = r.rec, box = $('#tk-ov .tk-box'); if (!box) return;
@@ -1021,7 +1086,9 @@
     }
     if (ev && ev.concern) body += '<p class="tk-note">' + hx('tk.r.concern') + '</p>';
     box.innerHTML = '<div class="tk-eval"><img src="' + face(c.npc) + '" alt="">' + body + progLine() + gateLine() +
-      '<p class="tk-time">' + hx('tk.time', { n: rec.sec }) + (left != null ? ' · ' + hx('tk.left', { n: Math.floor(left / 60) }) : '') + '</p>' + evalBtns(c) + '</div>';
+      '<p class="tk-time">' + hx('tk.time', { n: rec.sec }) + (left != null ? ' · ' + hx('tk.left', { n: Math.floor(left / 60) }) : '') + '</p>' + outLine(c, left) + evalBtns(c) +
+      // 云端模式：评语也是 AI 写的，能举报
+      (cloudOn() && ev && ev.ai ? '<button class="link tk-rep-eval" data-act="talk_report_eval">' + hx('ac.t.report.eval') + '</button>' : '') + '</div>';
     if (ev && ev.done && r.newGoal && G.confetti) G.confetti(80);
   }
 
@@ -1097,6 +1164,8 @@
   const relayHttp = () => { const u = relayUrl(); return u && u !== 'direct:' ? u.replace(/^ws/, 'http') : ''; };
   const cloudSR = () => direct() || !!relayHttp();
   async function relayPost(path, body, ms) {
+    // 云端模式：同样的路径和请求体（/v1/asr、/tip、/tts、/zh、/steps、/place），带登录令牌；没登录不发出去，直接回 401（API.md §8）
+    if (cloudOn()) return ACC() ? ACC().post(path, body, ms || CFG.httpWait) : { ok: false, status: 0, text: 'no account module' };
     const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms || CFG.httpWait);
     try {
       const code = LS('echo-talk-code');
@@ -1245,10 +1314,19 @@
       try { N.wsOpen(id, window.TalkCore.REALTIME_URL + '?model=' + ASR_RT); } catch (e) { setTimeout(() => on('error', e.message), 0); }
       return { send: s => { try { N.wsSend(id, s); } catch (e) {} }, close: () => { delete NWS[id]; try { N.wsClose(id); } catch (e) {} } };
     }
-    const url = relayUrl(), code = LS('echo-talk-code');
+    const url = relayUrl(), code = cloudOn() ? '' : LS('echo-talk-code');
+    // 云端模式：没登录就不连（listenOnce 前面已经挡了，这里兜底）；连上先发 auth，再告诉调用方「连上了」（API.md §8 /v1/asr-rt）
+    const tok = cloudOn() && ACC() ? ACC().token() : '';
+    if (cloudOn() && !tok) { setTimeout(() => on('error', '{"error":"auth"}'), 0); return { send() {}, close() {} }; }
     let ws;
     try { ws = new WebSocket(url + '/asr-rt' + (code ? '?code=' + encodeURIComponent(code) : '')); } catch (e) { setTimeout(() => on('error', e.message), 0); return { send() {}, close() {} }; }
-    ws.onopen = () => on('open'); ws.onmessage = e => on('message', e.data); ws.onclose = () => on('closed'); ws.onerror = () => on('error', '');
+    ws.onopen = () => { if (tok) try { ws.send(JSON.stringify({ type: 'auth', token: tok })); } catch (e) { /* 断了 */ } on('open'); };
+    ws.onmessage = e => {
+      // 云端模式：服务器自己的错误（没登录、额度用完……）和阿里云的事件走同一条连接：认出来交给 noteAi（listenOnce 的 fail 只看阿里云的 error）
+      if (tok) { let m = null; try { m = JSON.parse(e.data); } catch (er) { /* 不是 JSON */ } if (m && m.type === 'error' && m.code && m.status) { if (m.code === 'auth' && ACC()) ACC().lost(); if (m.code === 'quota' && ACC()) ACC().noteQuota('asr'); on('error', JSON.stringify({ error: m.code })); return; } }
+      on('message', e.data);
+    };
+    ws.onclose = () => on('closed'); ws.onerror = () => on('error', '');
     return { send: s => { if (ws.readyState === 1) ws.send(s); }, close: () => { try { ws.close(); } catch (e) {} } };
   }
   // 整段识别（原来的做法；实时识别不行时兜底）
@@ -1270,6 +1348,7 @@
   async function listenOnce(o) {
     o = o || {};
     if (!cloudSR()) return { text: '', err: 'service-not-allowed' };
+    if (cloudOn() && !(ACC() && ACC().signed())) return { text: '', err: 'network', why: noteAi('asr', '{"error":"auth"}') };   // 云端模式没登录：不开麦克风
     if (C) return { text: '', err: 'busy' };   // 正在和岛民聊天，麦克风被占着
     const mic = await lmOpen();
     if (mic.err) return { text: '', err: mic.err, why: mic.why };
@@ -1349,6 +1428,8 @@
 
   // ---------- 家长：设置服务地址 / 家庭口令；看记录；须知 ----------
   function configure() {
+    // 云端模式：没有密钥、服务地址可设，「设置服务」换成账号页（account.js）
+    if (cloudOn()) { if (ACC()) ACC().accountSheet(); return; }
     // 销售版：用首次设置向导的那一页（粘贴、「测试」、「怎么开通？」），要家长密码
     if (window.EchoNative && window.EchoSetup && EchoSetup.sales && EchoSetup.sales()) { if (G.parentOk) G.parentOk(tx('tk.cfg.why'), () => EchoSetup.open('key', true)); return; }
     if (window.EchoNative) {   // 安卓 APK：家长在这台手机上填一次百炼密钥（只存在这台手机里），直连阿里云
@@ -1402,6 +1483,12 @@
     G.openModal('<h2>' + hx('tk.concern.btn') + '</h2><p class="muted">' + hx('tk.concern.p') + '</p><div class="tk-logs">' + rows + '</div><button class="btn" data-act="close">' + hx('g.close') + '</button>');
   }
   function privacySheet() {
+    if (cloudOn()) {   // 云端模式：经过回声岛的服务器，服务器不存聊天记录（举报的那几句存 90 天）
+      G.openModal('<h2>' + hx('tk.pv.h') + '</h2><ul class="tk-notice">' +
+        hx('tk.pv.s1', { l: aiLabel() }) + hx('ac.pv.s2') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('ac.pv.s5') + hx('tk.pv.name') + '</ul>' +
+        '<div class="tk-btns"><button class="btn ghost small" data-act="suDoc" data-doc="privacy">' + hx('tk.pv.doc') + '</button><button class="btn ghost small" data-act="talk_forget">' + hx('tk.pv.forget') + '</button><button class="btn" data-act="close">' + hx('g.ok') + '</button></div>');
+      return;
+    }
     if (window.EchoSetup && EchoSetup.sales && EchoSetup.sales()) {   // 销售版：没有中转服务，用的是家长自己的阿里云账号
       G.openModal('<h2>' + hx('tk.pv.h') + '</h2><ul class="tk-notice">' +
         hx('tk.pv.s1', { l: aiLabel() }) + hx('tk.pv.s2') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('tk.pv.s5', { n: Math.round(DAILY_SEC / 60) }) + hx('tk.pv.name') + '</ul>' +
@@ -1439,10 +1526,30 @@
       talk_forget: () => { state().mem = {}; G.save(); G.toast(tx('tk.forgot')); },
       talk_concerns: () => concernSheet(false),
       talk_ack: t => { const r = state().log.find(x => x.t === +t.dataset.t); if (r) { r.seen = 1; G.save(); } concernSheet(true); },
+      // 云端模式：举报一句 AI 的话（带上它和前面最多 7 句）/ 评语；被服务器挡住时状态行下面的按钮
+      talk_report: t => { const c = C, k = +t.dataset.k; if (!c || !ACC() || !(k >= 0)) return; ACC().reportSheet(repOf(c, c.turns.slice(Math.max(0, k - 7), k + 1))); },
+      talk_report_eval: () => {
+        const c = C, ev = c && c.rec && c.rec.eval; if (!ev || !ACC()) return;
+        const said = [ev.praise].concat((ev.tips || []).map(x => x.better)).filter(Boolean).join(' ');
+        if (said) ACC().reportSheet(repOf(c, c.turns.slice(-7).concat([{ who: 'npc', text: said }])));
+      },
+      talk_fix: t => { const c = C, w = t.dataset.w; if (!c || !ACC()) return; const npc = c.npc; close(); if (w === 'quota') ACC().memberSheet(); else ACC().fix(w, () => open(npc)); },
     };
+  }
+  const repOf = (c, turns) => ({ npc: c.npc.id, quest: c.npc.quest || null, turns: turns.map(x => ({ who: x.who, text: x.text })) });
+  // 原生的异步方法（iPhone 的订阅 / 通过 Apple 登录，account.js 用）：编号和回调表和连阿里云的共用一套（window.__echoNative）。
+  // → Promise<{ type: 'ok' / 'fail' / 'timeout', data: JSON 文字 }>；ms 不给 = 一直等（苹果的确认框）
+  function nativeCall(m, args, ms) {
+    return new Promise(res => {
+      const N = window.EchoNative, id = ++nid;
+      if (!N || typeof N[m] !== 'function') { res({ type: 'fail', data: '{"error":"nonative"}' }); return; }
+      const tm = ms ? setTimeout(() => { delete NWS[id]; res({ type: 'timeout', data: '{"error":"timeout"}' }); }, ms) : 0;
+      NWS[id] = (type, data) => { clearTimeout(tm); delete NWS[id]; res({ type, data: data || '' }); };
+      try { N[m].apply(N, [id].concat(args || [])); } catch (e) { clearTimeout(tm); delete NWS[id]; res({ type: 'fail', data: JSON.stringify({ error: 'nonative', message: String(e && e.message) }) }); }
+    });
   }
   window.EchoTalk = {
     init, homeHTML, open, openPerson, openQuest, blocked, errText: errTxt, relayUrl, cloudSR, listenOnce, aiTip, placeJudge, cloudTTS, keyTest, get AI_LABEL() { return aiLabel(); }, stopListen: () => SR.stop && SR.stop(),
-    today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG,
+    today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG, nativeCall,
   };
 })();

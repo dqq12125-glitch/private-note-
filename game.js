@@ -1962,6 +1962,8 @@
     return 'unheard';
   }
   function recognizeRaw(onInterim, targets, opts) {
+    // 云端模式还没登录：不开麦克风，走「AI 用不了」那条路；第一次碰到时弹一次「登录，每天免费用 AI」（不是报错）
+    if (cloudOn() && S.settings.mode !== 'self' && aiNoKey()) { RT.cloudAsked = true; aiNote('nokey'); if (ACC()) ACC().nudge(); return Promise.resolve({ alts: [], err: 'nokey', fail: 'nokey', why: 'signin' }); }
     if (cloudSR()) {
       RT.listening = true;
       const tg = (targets || []).filter(Boolean);
@@ -2025,7 +2027,10 @@
   // 麦克风被拒：弹窗说明为什么要用麦克风 +「去打开」（EchoNative.micPermission 分清这次拒绝 / 永久拒绝，openAppSettings 跳到系统设置）。
   // 「没听清」算一次尝试（练习 / 剧情 / 战斗各自数）。
   const AI_DOWN_MS = 3 * 60e3;
-  const aiNoKey = () => !!window.ECHO_APP && S.settings.mode !== 'self' && !cloudSR();
+  // 云端模式（公开版，account.js）：没有密钥这回事；「还没登录」就当成没有 AI（先跳过、放进复习），提示的话换成「登录以后……」
+  const cloudOn = () => !!(window.EchoCloud && EchoCloud.on);
+  const ACC = () => window.EchoAccount || null;
+  const aiNoKey = () => cloudOn() ? S.settings.mode !== 'self' && !(ACC() && ACC().signed()) : !!window.ECHO_APP && S.settings.mode !== 'self' && !cloudSR();
   function aiDown() {
     if (speakMode() !== 'sr') return false;
     if (aiNoKey()) return true;
@@ -2054,6 +2059,7 @@
   // 没听到的时候，话筒下面那一行提示（练习 / 剧情 / 战斗 / 对话剧场共用）
   function failHint(res) {
     const f = res && res.fail, w = res && res.why;
+    if (f !== 'mic' && cloudOn() && ACC()) { const c = ACC().failText(f, w); if (c) return c; }   // 云端模式：没登录 / 今天的免费 AI 用完了
     if (f === 'mic') return tr('g.fail.mic');
     if (f === 'nokey') return tr('g.fail.nokey');
     if (f === 'net') return tr('g.fail.net');
@@ -2066,7 +2072,8 @@
   // 首页红条：现在 AI 用不了的原因（没有就返回 null）。口语打分的失败（aiNote）和聊天 / 朗读连不上（EchoTalk.lastErr）都算
   function aiBarState() {
     if (S.settings.mode === 'self' && !window.ECHO_APP) return null;   // 网页版的录音自评（测试也是）不用 AI
-    if (aiNoKey()) return { cls: 'nokey', why: 'nokey' };
+    // 云端模式没登录：没用到 AI 之前不挂红条（不登录本来就能玩）；口语题要 AI 了才挂「还没登录」
+    if (aiNoKey()) return cloudOn() && !RT.cloudAsked ? null : { cls: 'nokey', why: 'nokey' };
     let st = RT.aiBar;
     const le = window.EchoTalk && EchoTalk.lastErr ? EchoTalk.lastErr() : null;
     if (le && le.at > RT.aiOkAt && (!st || le.at > st.at + 1000) && /^(offline|network|auth|quota|busy)$/.test(le.why || ''))
@@ -2078,6 +2085,7 @@
     return st;
   }
   function barText(st) {
+    if (cloudOn() && ACC()) { const c = ACC().barText(st); if (c) return c; }
     if (st.cls === 'nokey') return tr('g.bar.nokey');
     if (st.cls === 'net') return tr('g.bar.net');
     if (st.why === 'quota') return tr('g.bar.quota');
@@ -2101,6 +2109,7 @@
   function aiBarInfo() {
     const st = aiBarState();
     if (!st) { homeBars(); return; }
+    if (cloudOn() && ACC() && ACC().barInfo(st)) return;   // 云端模式：直接给登录 / 会员那一页
     const parent = st.cls === 'nokey' || st.why === 'auth' || st.why === 'code';
     const how = st.cls === 'nokey' ? tr('g.bar.i.nokey')
       : st.cls === 'net' ? tr('g.bar.i.net')
@@ -2145,7 +2154,7 @@
   }
   function checkSheet() {
     const nokey = aiNoKey();
-    RT.chk = { mic: '', net: navigator.onLine === false ? 'bad' : '', key: nokey ? 'bad' : '', keyWhy: nokey ? tr('g.mic.nokey') : '' };
+    RT.chk = { mic: '', net: navigator.onLine === false ? 'bad' : '', key: nokey ? 'bad' : '', keyWhy: nokey ? (cloudOn() ? tr('ac.chk.nokey') : tr('g.mic.nokey')) : '' };
     openModal('<div class="big">🩺</div><h2>' + tr('g.mic.chk.h') + '</h2>' + trh('g.mic.chk.p') +
       '<ul class="chk" id="chk">' + chkRows() + '</ul>' +
       '<div class="mic-wrap"><button class="mic" id="chk-mic" data-act="chkMic" aria-label="' + esc(tr('w.mic.aria')) + '">' + MIC + '</button><div class="mic-hint" id="chk-hint">' + tr('g.mic.chk.hint') + '</div><div class="heard" id="chk-heard"></div></div>' +
@@ -3953,7 +3962,7 @@
   function envHTML(inSet) {   // inSet：在设置页里（上面已经有「请家长粘贴 AI 密钥」的提示）
     if (window.ECHO_APP) {   // 安卓 APK：不用讲浏览器的事
       return '<div class="env">' + tr('g.set.env.app') + '<br>' +
-        (cloudSR() ? tr('g.set.env.sr.ok') : tr('g.set.env.sr.nokey') + (inSet ? tr('g.set.env.see') : tr('g.set.env.paste'))) + '</div>';
+        (cloudOn() && aiNoKey() ? tr('ac.env.signin') : cloudSR() ? tr('g.set.env.sr.ok') : tr('g.set.env.sr.nokey') + (inSet ? tr('g.set.env.see') : tr('g.set.env.paste'))) + '</div>';
     }
     const st = S.settings.tts || 'auto';
     const tts = st === 'device' ? (TTS.voices.length ? trh('g.set.env.dev', { name: TTS.v ? TTS.v.name : '' }) : tr('g.set.env.nodev'))
@@ -3967,7 +3976,8 @@
     const st = S.settings;
     const voices = TTS.voices.map(v => '<option value="' + esc(v.name) + '"' + (TTS.v && TTS.v.name === v.name ? ' selected' : '') + '>' + esc(v.name + ' (' + v.lang + ')') + '</option>').join('');
     // APK 里还没有 AI 密钥：设置页最上面就说清楚（口语没法自动打分，走「先跳过」）
-    const noKey = aiNoKey() ? '<div class="set-warn"><b>' + tr('g.set.nokey.h') + '</b><small>' + tr('g.set.nokey.d') + '</small><button class="btn small" data-act="talk_cfg">' + tr('g.set.ai.paste') + '</button></div>' : '';
+    // 云端模式：没有密钥，最上面是「账号和会员」那一行（account.js），没登录时 envHTML 里说「登录以后才能用」
+    const noKey = cloudOn() ? (ACC() ? ACC().settingsRow() : '') : aiNoKey() ? '<div class="set-warn"><b>' + tr('g.set.nokey.h') + '</b><small>' + tr('g.set.nokey.d') + '</small><button class="btn small" data-act="talk_cfg">' + tr('g.set.ai.paste') + '</button></div>' : '';
     openModal('<h2>' + tr('g.set.h') + '</h2>' + noKey + envHTML(true) +
       '<h3 class="set-h">' + tr('g.set.mine') + '</h3>' +
       (speakMode() === 'sr' ? '<div class="set"><label>' + tr('g.set.mic') + '</label><div class="say-row"><button class="btn small ghost" data-act="micCheck">' + tr('g.set.mic.btn') + '</button></div></div>' : '') +
@@ -4019,7 +4029,7 @@
       [[.6, 'a'], [.3, 'b'], [0, 'c']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + tr('g.set.mix.' + n) + '</button>').join('') +
       '</div><small>' + trh('g.set.mix.d', { unit: unitTxt(curUnit()) }) + '</small></div>');
     if (window.EchoWorld && EchoWorld.storyZhHTML) b.push(EchoWorld.storyZhHTML());
-    if (window.EchoNative) b.push('<div class="set"><label>' + tr('g.set.ai') + '</label><div class="say-row"><span class="set-v">' + tr(cloud ? 'g.set.ai.on' : 'g.set.ai.off') + '</span><button class="btn small ghost" data-act="talk_cfg">' + tr(cloud ? 'g.set.ai.change' : 'g.set.ai.paste') + '</button></div>' +
+    if (window.EchoNative && !cloudOn()) b.push('<div class="set"><label>' + tr('g.set.ai') + '</label><div class="say-row"><span class="set-v">' + tr(cloud ? 'g.set.ai.on' : 'g.set.ai.off') + '</span><button class="btn small ghost" data-act="talk_cfg">' + tr(cloud ? 'g.set.ai.change' : 'g.set.ai.paste') + '</button></div>' +
       '<small>' + tr(cloud ? 'g.set.ai.on.d' : 'g.set.ai.off.d') + '</small></div>');
     b.push('<div class="set"><label>' + tr('g.set.unl') + '</label><div class="seg"><button class="' + (st.unlockAll ? '' : 'on') + '" data-act="unlock" data-v="0">' + tr('g.set.unl.0') + '</button><button class="' + (st.unlockAll ? 'on' : '') + '" data-act="unlock" data-v="1">' + tr('g.set.unl.1') + '</button></div>' +
       '<small>' + tr('g.set.unl.d') + '</small></div>');
@@ -4543,6 +4553,8 @@
         aiReset: () => { RT.aiBar = null; RT.aiFails = 0; RT.aiOkAt = Date.now(); refreshBars(); },
       })));
     }
+    // 云端模式的账号、会员、家长同意、举报、删号（account.js）：不是云端模式时 init 只记下工具，不加按钮
+    if (window.EchoAccount) Object.assign(ACT, EchoAccount.init(Object.assign(Object.create(api), { refreshBars })));
     // 能力检测（placement.js）：和向导一样拿一份带 S 的工具
     if (window.EchoPlace) {
       Object.assign(ACT, EchoPlace.init(Object.assign(Object.create(api), {
@@ -4650,6 +4662,11 @@
   //   - 没网、聊天连上以后服务器真出错了（chatFail，talk.js 只在这种时候记）：只临时放行 30 分钟，不写 gateOpen（周报标 📵）；
   //     30 分钟从第一次进大地图开始算；联网以后回首页 / 进出大地图时重新检查（又要聊天了）
   // 真的做完了（gateOpen）当天就一直开着（冒险里答错一题不会又锁上）；手机日期被往回调时不开
+  // 云端模式（公开版，account.js 的 EchoAccount.gateWhy()，2026-11-20）：AI 要登录账号才能用，规矩是「不能因为没人登录就把孩子关在冒险外面」：
+  //   - 还没登录（nosign）、年龄段没选 / 13 岁以下还在等家长同意（consent）：和「AI 聊天没开通」（noai）一样，聊天这一项整天免（周报 🟡 写原因）；
+  //     家长想让学习锁照样要求聊天，就登录好、同意好（登录了、同意了就和平常一样要聊）。孩子自己退出登录也能这样躲过聊天——周报上看得见是哪一天、什么原因
+  //   - 今天的免费 AI 时间用完了（quota：服务器回 402，或账号里今天剩的不到开聊的 20 秒）：照中转服务的 chatDaily 办——开口说过 3 句以上整天免，不然临时放行 30 分钟
+  //   - 令牌过期（401）= 没登录；不会因为「密钥不对 / 额度用完」卡住（chatKeyBad 在云端模式下不说话）
   const PASS_MIN = 30;
   const passLeft = L => (L.passAt ? Math.max(0, PASS_MIN * 60e3 - (Date.now() - L.passAt)) : PASS_MIN * 60e3);
   function talkToday() {
@@ -4659,6 +4676,7 @@
   // 聊天连不上是因为密钥不对 / 额度用完（不是没网，也不是连上以后出错）：返回 'auth' / 'quota'，没有就是 ''。
   // 这种情况学习锁不自动放行（家长要去处理），只在卡片上说清楚
   function chatKeyBad() {
+    if (cloudOn()) return '';   // 云端模式没有密钥：没登录、额度用完在 gate() 里按 cloudWhy 办
     const st = aiBarState();
     if (st && st.cls === 'key' && (st.why === 'auth' || st.why === 'quota')) return st.why;
     const le = window.EchoTalk && EchoTalk.lastErr ? EchoTalk.lastErr() : null;
@@ -4673,10 +4691,11 @@
     // 没网：手机说没网；或者 Wi-Fi 连着但上不了网（最近 10 分钟 AI 报过「找不到服务器」、今天聊天也没连上过）
     const le = window.EchoTalk && EchoTalk.lastErr ? EchoTalk.lastErr() : null;
     const offline = navigator.onLine === false || (!!le && le.why === 'offline' && Date.now() - le.at < 10 * 60e3 && !L.chatConn);
-    const chatFail = !!L.chatFail, chatDaily = !!L.chatDaily, chatDone = !!tk.done;
+    const cw = cloudOn() && ACC() ? ACC().gateWhy() : '';   // 云端模式：nosign / consent / quota / ''（规矩见上面）
+    const chatFail = !!L.chatFail, chatDaily = !!L.chatDaily || cw === 'quota', chatDone = !!tk.done;
     // 今天的聊天时间用完了：真的开口说过 3 句以上才整天免；一直不说话把时间耗完的，只临时放行 30 分钟
     const dailyFull = chatDaily && (tk.voiceLines || 0) >= 3;
-    const exWhy = chatDone ? '' : !chatOn ? 'noai' : dailyFull ? 'daily' : '';
+    const exWhy = chatDone ? '' : !chatOn ? 'noai' : cw === 'nosign' || cw === 'consent' ? cw : dailyFull ? 'daily' : '';
     const passWhy = chatDone || exWhy ? '' : offline ? 'offline' : chatFail ? 'fail' : chatDaily ? 'daily' : '';
     // 真的做完了就记下（学习锁关着也记：周报的 ✅ 和「学习日」看这个）
     if (!back && revDone && chatDone && !L.gateOpen) L.gateOpen = 1;
@@ -4704,6 +4723,7 @@
     const prog = { a: Math.min(g.voice, g.need), b: g.need };
     const chatTxt = g.chatDone ? (g.goals ? trh('g.gate.chat.goal') : trh('g.gate.chat.said', { n: g.voice }))
       : g.exWhy === 'noai' ? trh('g.gate.chat.noai')
+      : g.exWhy === 'nosign' || g.exWhy === 'consent' ? trh('ac.gate.' + g.exWhy) + ' <button class="link" data-act="' + (g.exWhy === 'nosign' ? 'ac_signin' : 'ac_consent') + '">' + trh(g.exWhy === 'nosign' ? 'ac.btn.signin' : 'ac.btn.consent') + '</button>'
       : g.exWhy === 'daily' ? trh('g.gate.chat.daily')
       : g.pass ? trh('g.gate.chat.pass', { r: tr('g.gate.why.' + (g.passWhy === 'offline' ? 'offline' : g.passWhy === 'daily' ? 'daily' : 'fail')), n: g.passMin })
       : g.keyBad ? trh('g.gate.chat.key', { r: tr('g.gate.key.' + (g.keyBad === 'quota' ? 'quota' : 'auth')) })
@@ -5029,7 +5049,7 @@
   // 每天的标记：✅ 学习任务真做完了 🟡 聊天这一项整天免了 📵 断网放行 🔓 关过学习锁 ⏰ 手机日期被改过 / 家长重设 🌙 很晚还在冒险
   const dayMarks = x => (x.gateOpen ? '✅' : x.gateEx ? '🟡' : '') + (x.passAt ? '📵' : '') + (x.gateOff ? '🔓' : '') + (x.clockBack || x.clockReset ? '⏰' : '') + (x.night ? '🌙' : '');
   // 聊天这一项为什么免了（日志里存的是代码 noai / daily，显示时按界面语言翻）
-  const EX_TXT = { get noai() { return tr('g.rp.ex.noai'); }, get daily() { return tr('g.rp.ex.daily'); } };
+  const EX_TXT = { get noai() { return tr('g.rp.ex.noai'); }, get daily() { return tr('g.rp.ex.daily'); }, get nosign() { return tr('ac.rp.ex.nosign'); }, get consent() { return tr('ac.rp.ex.consent'); } };
   const arrow = (a, b, eps) => (a == null || b == null ? '' : a > b + eps ? '<i class="up">↑</i>' : a < b - eps ? '<i class="dn">↓</i>' : '<i class="eq">→</i>');
   // 诊断一行：AI 失败几次（没网 / 密钥和额度）、聊天连不上几天、程序出错几条（EchoErr）、画面重开过几次（原生 diag）、版本号
   function diagLine(W0) {

@@ -80,6 +80,9 @@ jobs:
       SIM_DEST: 'platform=iOS Simulator,name=iPhone 17,OS=latest'
       EDITION: ${{ inputs.edition || 'sales' }}
       WANT_APPLE_SIGNIN: ${{ inputs.apple_signin || github.event_name == 'push' }}
+      # 公开版服务器（cloud/，2026-11-20 部署在老板的 Cloudflare 账号上）：给了这个地址，App 就是「云端模式」——不问密钥，登录后 AI 走服务器。
+      # 地址不是秘密。只有销售版用；家庭版照旧用打进包里的密钥。以后换成自己的域名改这里
+      ECHO_CLOUD_URL: ${{ (inputs.edition || 'sales') == 'sales' && 'https://echo-island-cloud.dqq12125-study.workers.dev' || '' }}
       OUT: ${{ github.workspace }}/ios-ci
     steps:
       - name: Check out (shallow)

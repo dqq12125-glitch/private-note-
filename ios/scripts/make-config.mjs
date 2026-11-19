@@ -17,6 +17,9 @@
 //   ECHO_IAP_MONTHLY / ECHO_IAP_YEARLY  App Store Connect 里两个订阅的商品编号；不给就是「App 标识 + .premium.monthly / .premium.yearly」
 //   ECHO_APPLE_SIGNIN=1 / 0             这个包带不带「通过 Apple 登录」的权限（App/EchoIsland.entitlements，要签名）。
 //                                       不写：给了 ECHO_TEAM_ID（要签名的包）就带，没给（云上的模拟器包）就不带
+//   ECHO_CLOUD_URL=https://…            公开版服务器（cloud/）的地址（只到域名，不带 /v1）。给了 = 「云端模式」：网页不问密钥，
+//                                       登录账号、每天免费几分钟 AI、买会员（account.js）；不给 = 和以前一样（家长粘贴密钥 / 家庭版打包的密钥）。
+//                                       网址不是秘密，销售版也能给；只认 https://（本机试的 http://localhost、127.0.0.1 也认）
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -46,6 +49,15 @@ export const DEFAULT_BUNDLE_ID = baseBundleId();
 // 商品编号：字母、数字、点、下划线（App Store Connect 的规矩，和 Store.swift 的 okId 一样）
 export const okProductId = id => /^[A-Za-z0-9._]{1,100}$/.test(id);
 export const iapIds = bundle => ({ monthly: bundle + '.premium.monthly', yearly: bundle + '.premium.yearly' });
+// 公开版服务器的地址：https://域名[:端口][/路径]，本机试的 http://localhost / 127.0.0.1 也行；末尾的 / 和 /v1 去掉（API 的路径自己带 /v1/）
+export function cloudUrlOf(v) {
+  let u = String(v || '').trim();
+  if (!u) return '';
+  u = u.replace(/\/+$/, '').replace(/\/v1$/, '');
+  if (!/^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u))
+    throw new Error('ECHO_CLOUD_URL 要写成 https://域名（本机试可以是 http://localhost:端口），不要带查询参数');
+  return u;
+}
 
 // 读 .properties（key=value，# 开头是注释）
 export function readProps(file) {
@@ -145,6 +157,8 @@ export function compute(o) {
   if (siwaRaw && !['1', '0', 'true', 'false', 'yes', 'no', 'on', 'off'].includes(siwaRaw)) throw new Error('ECHO_APPLE_SIGNIN 写 1 或 0');
   const appleSignIn = siwaRaw ? ['1', 'true', 'yes', 'on'].includes(siwaRaw) : !!team;
   if (appleSignIn && !team) warn.push('ECHO_APPLE_SIGNIN 开着但没有 ECHO_TEAM_ID：这个权限要签名，不签名的包装不上 / 编不过');
+  // 云端模式：两个版本都能给（销售版就是公开发、走服务器的那个）；家庭版的配置文件里也可以写 CLOUD_URL
+  const cloudUrl = cloudUrlOf(env.ECHO_CLOUD_URL || (sales ? '' : props.CLOUD_URL) || '');
 
   const cfg = {
     edition,
@@ -164,6 +178,8 @@ export function compute(o) {
     iapMonthly,
     iapYearly,
     appleSignIn,
+    // 公开版服务器（cloud/API.md）：GameViewController 的启动对象里交给网页（account.js 的 EchoCloud）；空 = 不是云端模式
+    cloudUrl,
   };
   // 兜底：销售版里不许有密钥、家长密码、中转服务（和安卓的 checkReleaseConfig 一样）；商品编号要有（公开发的版本靠它收费）
   if (sales && (cfg.dashscopeKey || cfg.parentPinHash || cfg.talkUrl || cfg.talkCode || cfg.verUrl)) throw new Error('Sales edition must not contain a DashScope key, a baked parent PIN, a relay or an update URL.');
@@ -185,7 +201,7 @@ export function compute(o) {
   ].filter(Boolean).join('\n') + '\n';
   return { cfg, swift, xcconfig: xc, warn, summary: 'edition ' + edition + '，版本 ' + name + '（' + code + '）' +
     '，密钥：' + (key ? '有' : '没有') + '，家长密码：' + (hash ? '有（只存哈希）' : '没有') + (sales ? '，课本 ' + cfg.books : '') +
-    '，订阅 ' + iapMonthly + ' / ' + iapYearly + '，通过 Apple 登录：' + (appleSignIn ? '带' : '不带') };
+    '，订阅 ' + iapMonthly + ' / ' + iapYearly + '，通过 Apple 登录：' + (appleSignIn ? '带' : '不带') + '，服务器：' + (cloudUrl || '没有（不是云端模式）') };
 }
 
 function main(argv) {

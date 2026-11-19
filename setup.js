@@ -29,6 +29,7 @@
     privacy: ['su.doc.privacy', 'pages/privacy.html'],
     consent: ['su.doc.consent', 'pages/consent.html'],
     guide: ['su.doc.guide', 'pages/bailian-guide.html'],
+    terms: ['su.doc.terms', 'pages/terms.html'],   // 公开版（云端模式）的使用条款：会员页、登录页、向导第一页链接它（草稿，要老板 / 律师审定）
     licenses: ['su.doc.licenses', 'pages/licenses.html'],
   };
   function openDoc(k) {
@@ -62,6 +63,9 @@
   const selfPath = F => !!(F && F.who === 'open');
   const famOn = () => { const F = doneF(); return F && !selfPath(F) ? F : null; };   // 家庭定制只在「给孩子用」时生效
   const needed = () => sales() && !doneF();
+  // 云端模式（公开版，account.js）：没有「粘贴您的 AI 密钥」和百炼开通指南；那一步（id 还叫 'key'，老存档的 F.step 接得上）换成
+  // 「AI 和账号」：AI 是什么、登录送每天几分钟、现在登录或以后再说。隐私要点里「用您自己的阿里云账号」那两句也换成走服务器的说法
+  const cloud = () => !!(window.EchoCloud && EchoCloud.on && window.EchoAccount);
   // 新加的字走字表（i18n.js）：向导原来的中文以后一起搬
   const I18N = window.EchoI18n;
   const t = (k, p) => (I18N ? I18N.t(k, p) : k), h = (k, p) => (I18N ? I18N.h(k, p) : k);
@@ -91,7 +95,7 @@
       'su.open.done.p': '接下来选要学的语言，做一个大约 6 分钟的能力检测，然后就可以开始了。以后要改，都在「设置」里。',
       'su.open.finish': '🎉 开始', 'su.back': '上一步',
       // ---- 2026-11-19 搬进来的：给孩子用的家长向导（原来写在下面各页里） ----
-      'su.doc.privacy': '儿童隐私说明', 'su.doc.consent': '监护人同意书', 'su.doc.guide': '怎么开通阿里云百炼、拿到 API Key', 'su.doc.licenses': '开源许可与致谢',
+      'su.doc.privacy': '儿童隐私说明', 'su.doc.consent': '监护人同意书', 'su.doc.guide': '怎么开通阿里云百炼、拿到 API Key', 'su.doc.licenses': '开源许可与致谢', 'su.doc.terms': '使用条款',
       'su.close': '关闭', 'su.next': '下一步', 'su.cancel': '取消', 'su.save': '保存', 'su.saved': '✅ 保存好了', 'su.sep': '、',
       'su.tabs': ['欢迎', '设备检查', '家长密码', 'AI 密钥', '家庭定制', '完成'],
       'su.kid.head': '👪 家长首次设置', 'su.kid.head.s': '这几页请家长来填，大约 5 分钟', 'su.edit.head': '🔒 家长设置',
@@ -202,7 +206,7 @@
       'su.dev.ok': 'passed', 'su.dev.warn': 'usable (one item is not ideal)', 'su.dev.bad': 'failed', 'su.dev.none': 'not done',
       'su.open.done.p': 'Next you choose the language to learn and take a level check of about 6 minutes. Then you can start. You can change everything later in Settings.',
       'su.open.finish': '🎉 Start', 'su.back': 'Back',
-      'su.doc.privacy': 'Children\'s privacy notice (in Chinese)', 'su.doc.consent': 'Guardian consent form (in Chinese)', 'su.doc.guide': 'How to set up Alibaba Cloud Bailian and get an API key (in Chinese)', 'su.doc.licenses': 'Open-source licences and thanks',
+      'su.doc.privacy': 'Children\'s privacy notice (in Chinese)', 'su.doc.consent': 'Guardian consent form (in Chinese)', 'su.doc.guide': 'How to set up Alibaba Cloud Bailian and get an API key (in Chinese)', 'su.doc.licenses': 'Open-source licences and thanks', 'su.doc.terms': 'Terms of Use',
       'su.close': 'Close', 'su.next': 'Next', 'su.cancel': 'Cancel', 'su.save': 'Save', 'su.saved': '✅ Saved', 'su.sep': ', ',
       'su.tabs': ['Welcome', 'Device', 'PIN', 'AI key', 'Family', 'Done'],
       'su.kid.head': '👪 First-time setup for parents', 'su.kid.head.s': 'A parent fills in these pages. About 5 minutes', 'su.edit.head': '🔒 Parent Settings',
@@ -444,11 +448,12 @@
   function render() {
     const box = $('#su-box'); if (!box) return;
     const F = draft(), self = !WZ.edit && selfPath(F), ps = pages(), i = ps.indexOf(WZ.step), last = i === ps.length - 1, n = self ? i + 1 : NUM[WZ.step];
-    const tabNames = (I18N && I18N.raw(self ? 'su.open.tabs' : 'su.tabs')) || [];
+    const tabNames = ((I18N && I18N.raw(self ? 'su.open.tabs' : 'su.tabs')) || []).slice();
+    if (cloud()) tabNames[self ? 2 : 3] = t('ac.su.tab');   // 「AI 密钥」那一格
     const tabs = WZ.edit ? '' : '<ol class="su-tabs"' + (self ? ' style="grid-template-columns:repeat(' + tabNames.length + ',1fr)"' : '') + '>' + tabNames.map((nm, k) => '<li class="' + (k + 1 < n ? 'ok' : k + 1 === n ? 'on' : '') + '"><i>' + '①②③④⑤⑥'[k] + '</i><span>' + nm + '</span></li>').join('') + '</ol>';
     // 第一页最上面（只在第一次走向导时）：界面语言、谁来用
     const top = !WZ.edit && WZ.step === 'welcome' ? whoBox(F) : '';
-    const body = top + ({ welcome: self ? pWelcomeSelf : pWelcome, pin: pPin, key: pKey, nick: pNick, mons: pMons, fam: pFam, device: pDevice, done: self ? pDoneSelf : pDone })[WZ.step]();
+    const body = top + ({ welcome: self ? pWelcomeSelf : pWelcome, pin: pPin, key: cloud() ? () => EchoAccount.setupPage(!self) : pKey, nick: pNick, mons: pMons, fam: pFam, device: pDevice, done: self ? pDoneSelf : pDone })[WZ.step]();
     let nav;
     if (WZ.step === 'done' && self) nav = '<div class="su-nav"><button class="btn ghost" data-act="suBack">' + h('su.back') + '</button><button class="btn sun" data-act="suFinish" data-focus>' + h('su.open.finish') + '</button></div>';
     else if (WZ.step === 'done') nav = '<div class="su-nav"><button class="btn ghost" data-act="suBack">' + h('su.back') + '</button><button class="btn sun" data-act="suFinish" data-focus>' + h('su.kid.finish') + '</button></div>';
@@ -478,14 +483,16 @@
       '<b>' + h('su.who.q') + '</b><div class="seg">' + [['kid', 'su.who.kid'], ['open', 'su.who.open']].map(([m, k]) => '<button class="' + ((self ? 'open' : 'kid') === m ? 'on' : '') + '" data-act="suWho" data-m="' + m + '">' + h(k) + '</button>').join('') + '</div>' +
       '<small class="su-small">' + h(self ? 'su.who.open.note' : 'su.who.kid.note') + '</small></div>';
   }
+  // 隐私要点第 2、4 条：云端模式换成「经过回声岛的服务器」「退出登录、删账号」（account.js 的 ac.su.pr.*）
+  const prKey = (who, k) => (cloud() && k === 2 ? 'ac.su.pr.2.' + who : cloud() && k === 4 ? 'ac.su.pr.4' : 'su.' + who + '.pr.' + k);
   // ① 欢迎（我自己学）：AI 说明、隐私要点、本人同意
   function pWelcomeSelf() {
     const F = draft(), on = !!(F.consent && F.consent.v === DOC_V);
     return '<div class="su-hero">🏝️</div><h2>' + h('su.open.title') + '</h2>' +
       '<p class="su-lead">' + h('su.open.lead') + '</p>' +
       '<div class="su-card ai"><b>' + h('su.open.ai.t') + '</b><p>' + h('su.open.ai') + '</p></div>' +
-      '<div class="su-card"><b>' + h('su.open.pr.t') + '</b><ul>' + [1, 2, 3, 4].map(k => '<li>' + h('su.open.pr.' + k) + '</li>').join('') + '</ul></div>' +
-      '<div class="su-links"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">' + h('su.open.doc') + '</button></div>' +
+      '<div class="su-card"><b>' + h('su.open.pr.t') + '</b><ul>' + [1, 2, 3, 4].map(k => '<li>' + h(prKey('open', k)) + '</li>').join('') + '</ul></div>' +
+      '<div class="su-links"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">' + h('su.open.doc') + '</button>' + (cloud() ? '<button class="btn small ghost" data-act="suDoc" data-doc="terms">' + h('ac.m.terms') + '</button>' : '') + '</div>' +
       '<label class="su-check"><input type="checkbox" id="su-consent" data-act="suConsent"' + (on ? ' checked' : '') + '><span>' + h('su.open.consent') + '</span></label>' +
       '<p class="su-small">' + h('su.open.under') + '</p>';
   }
@@ -493,7 +500,7 @@
   function pDoneSelf() {
     const F = draft(), dv = F.device;
     return '<div class="su-hero">🎉</div><h2>' + h('su.open.done.t') + '</h2><ul class="su-sum">' +
-      '<li>' + h('su.open.done.key', { v: t(F.keyOk ? 'su.key.ok' : hasKey() ? 'su.key.has' : 'su.key.none') }) + '</li>' +
+      '<li>' + (cloud() ? EchoAccount.setupSum() : h('su.open.done.key', { v: t(F.keyOk ? 'su.key.ok' : hasKey() ? 'su.key.has' : 'su.key.none') })) + '</li>' +
       '<li>' + h('su.open.done.dev', { v: t(!dv ? 'su.dev.none' : dv.ok === 'ok' ? 'su.dev.ok' : dv.ok === 'warn' ? 'su.dev.warn' : 'su.dev.bad') }) + '</li></ul>' +
       '<p>' + h('su.open.done.p') + '</p>';
   }
@@ -503,10 +510,11 @@
     return '<div class="su-hero">🏝️</div><h2>' + h('su.open.title') + '</h2>' +
       '<p class="su-lead">' + h('su.kid.lead') + '</p>' +
       '<div class="su-card ai"><b>' + h('su.open.ai.t') + '</b><p>' + h('su.kid.ai') + '</p></div>' +
-      '<div class="su-card"><b>' + h('su.open.pr.t') + '</b><ul>' + [1, 2, 3, 4].map(k => '<li>' + h('su.kid.pr.' + k) + '</li>').join('') + '</ul></div>' +
-      '<div class="su-links"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">' + h('su.kid.doc.privacy') + '</button><button class="btn small ghost" data-act="suDoc" data-doc="consent">' + h('su.kid.doc.consent') + '</button></div>' +
+      '<div class="su-card"><b>' + h('su.open.pr.t') + '</b><ul>' + [1, 2, 3, 4].map(k => '<li>' + h(prKey('kid', k)) + '</li>').join('') + '</ul></div>' +
+      '<div class="su-links"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">' + h('su.kid.doc.privacy') + '</button><button class="btn small ghost" data-act="suDoc" data-doc="consent">' + h('su.kid.doc.consent') + '</button>' +
+      (cloud() ? '<button class="btn small ghost" data-act="suDoc" data-doc="terms">' + h('ac.m.terms') + '</button>' : '') + '</div>' +
       '<label class="su-check"><input type="checkbox" id="su-consent" data-act="suConsent"' + (on ? ' checked' : '') + '><span>' + h('su.kid.consent') + '</span></label>' +
-      '<p class="su-small">' + h('su.kid.under') + '</p>';
+      '<p class="su-small">' + h(cloud() ? 'ac.su.kid.under' : 'su.kid.under') + '</p>';
   }
 
   // ② 家长密码
@@ -757,7 +765,7 @@
     const bad = k => '<b class="bad">' + h(k) + '</b>';
     return '<div class="su-hero">🎉</div><h2>' + h('su.open.done.t') + '</h2><ul class="su-sum">' +
       '<li>' + t('su.done.pin', { v: pinHas() ? h('su.done.pin.ok') : bad('su.done.pin.no') }) + '</li>' +
-      '<li>' + t('su.open.done.key', { v: F.keyOk ? h('su.key.ok') : hasKey() ? h('su.key.has') : bad('su.done.key.no') + h('su.done.key.no.s') }) + '</li>' +
+      '<li>' + (cloud() ? EchoAccount.setupSum() : t('su.open.done.key', { v: F.keyOk ? h('su.key.ok') : hasKey() ? h('su.key.has') : bad('su.done.key.no') + h('su.done.key.no.s') })) + '</li>' +
       '<li>' + h('su.done.nick', { v: nick || t('su.done.nick.later') }) + '</li>' +
       '<li>' + t('su.done.mons', { v: F.starters.length === 3 ? F.starters.map(id => esc((D.byId[id] || {}).en || id)).join(t('su.sep')) : h('su.done.mons.def') }) + '</li>' +
       '<li>' + t('su.done.fam', { v: ms.length ? ms.map(m => m.call).join(t('su.sep')) : h('su.done.fam.def') }) + '</li>' +
@@ -773,7 +781,7 @@
     apply(true);
     // 家长这边测试过密钥、麦克风也能用：孩子不用再做「说一句 Hello」的小检查
     const mic = F.device && (F.device.rows || []).find(r => r.k === 'mic');
-    if (F.keyOk && mic && mic.ok) G.S.micCheck = G.dayStr();
+    if ((cloud() ? EchoAccount.signed() : F.keyOk) && mic && mic.ok) G.S.micCheck = G.dayStr();
     G.save();
     close();
     if (G.afterSetup) G.afterSetup();
@@ -950,6 +958,8 @@
       suDevice: () => { G.closeModal(); open('device', true); },
     };
   }
+  // 云端模式：在「AI 和账号」那一页登录好了（account.js 发 echo-account）→ 重画这一页，显示「已登录」
+  window.addEventListener('echo-account', () => { if (isOpen() && WZ.step === 'key') render(); });
   // 安卓返回键：先关文书，再在向导里退一页（第一页不退出：向导必须做完）
   function onBack() {
     if (closeDoc()) return true;
