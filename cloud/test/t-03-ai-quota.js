@@ -24,7 +24,7 @@ export default async function (C) {
   const tts = await A.api('POST', '/v1/tts', { token: tk, body: { text: 'Hello there', g: 'm' } });
   ok(tts.status === 200 && tts.json.url === 'https://dashscope-result.example/audio.wav', '/v1/tts：音频地址（http 换成 https）', tts.json);
   const ttsUp = F.http[F.http.length - 1].body;
-  ok(ttsUp.model === 'qwen3-tts-flash' && ttsUp.input.voice === 'Ethan' && ttsUp.input.language_type === 'English', '/v1/tts：男声 Ethan、英文', ttsUp.input);
+  ok(ttsUp.model === 'qwen3-tts-flash' && ttsUp.input.voice === 'Aiden' && ttsUp.input.language_type === 'English', '/v1/tts：男声 Aiden、英文', ttsUp.input);
   const zh = await A.api('POST', '/v1/zh', { token: tk, body: { text: 'Hello!' } });
   eq([zh.status, zh.json.zh], [200, '你好'], '/v1/zh：翻成中文');
   const st = await A.api('POST', '/v1/steps', { token: tk, body: { npc: 'dyn', nm: 'Mia', g: 0, turns: [{ who: 'npc', text: 'Hi!' }, { who: 'you', text: 'Hello Mia, nice to meet you.' }] } });

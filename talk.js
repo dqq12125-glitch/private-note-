@@ -44,10 +44,10 @@
       'tk.card.now': ' · 📍 正在学', 'tk.card.next': '🎯 下次：{lv}', 'tk.h.book': '📗 课本话题 · {b}', 'tk.h.isle': '🏝️ 岛上的人',
       'tk.intro.h': '🗣️ 用英语和岛民聊天',
       'tk.intro.p': '按住话筒说英语，松开就发出去；岛民会用自己的声音回答你。每段聊天有一个小目标，拆成几个小步骤，做到一步就打一个勾，完成了有金币！听不懂就点「💡 帮帮我」或者点岛民的话看中文。',
-      'tk.ai.line': '🤖 岛民的话和声音由 AI 生成（阿里云通义千问提供）', 'tk.warn': '还没连上对话服务。请家长点下面的「设置服务」。',
+      'tk.ai.line': '🤖 岛民的话和声音由 AI 生成', 'tk.warn': '还没连上对话服务。请家长点下面的「设置服务」。',
       'tk.foot.log': '📜 聊天记录', 'tk.foot.cfg': '⚙️ 设置服务', 'tk.concern.btn': '👪 家长看看',
       // AI 标识
-      'tk.ai.spoken': '温馨提示：岛民说的话和声音，都由人工智能生成。', 'tk.ai.bubble': '🤖 {s}（{l}）', 'tk.ai.title': '岛民的话和声音由人工智能生成',
+      'tk.ai.spoken': '温馨提示：岛民说的话和声音，都由人工智能生成。', 'tk.ai.bubble': '🤖 {s}', 'tk.ai.title': '岛民的话和声音由人工智能生成',
       // 聊天界面
       'tk.ready.mic': '按住话筒说英语，说完松开。点岛民说的话可以看中文。', 'tk.ready.type': '打字聊天：写好按「发送」。',
       'tk.top.free': '自由聊天 · {isle}', 'tk.top.quest': '📋 委托 · {q}', 'tk.end': '结束', 'tk.eg': '例：{s}', 'tk.step': '第 {n} 步', 'tk.st.conn': '正在连接……',
@@ -64,7 +64,7 @@
       'tk.left': '今天还能聊 {n} 分钟', 'tk.time': '这次聊了 {n} 秒',
       'tk.r.all': '🎯 目标完成！每一步都做到了', 'tk.r.most': '🎯 目标完成！（差 1 步也算完成）', 'tk.r.speak': '要开口说才算哦', 'tk.r.near': '还差一点点，下次试试把小步骤都说到',
       'tk.r.few': '这次用语音说的英语句子不到 3 句{typed}，目标先不算完成。下次按住话筒说吧！', 'tk.r.typed': '（打字的不算）',
-      'tk.r.ai': '🤖 评语由 AI 生成（阿里云通义千问提供）', 'tk.r.noai': '这次没来得及写评语，不过这段聊天算数，已经记下来了！', 'tk.r.tips': '可以这样说更好（明天的每日复习里会再练）：',
+      'tk.r.ai': '🤖 评语由 AI 生成', 'tk.r.noai': '这次没来得及写评语，不过这段聊天算数，已经记下来了！', 'tk.r.tips': '可以这样说更好（明天的每日复习里会再练）：',
       'tk.r.coins': '🪙 +{n} 金币', 'tk.r.q.done': '📋 委托完成了！回到冒险里，{name} 有奖励给你', 'tk.r.q.not': '📋 委托还没完成：把小步骤都说到，再来试一次',
       'tk.r.late.h': '聊完啦！这段聊天算数 👍', 'tk.r.late.p': '这次评语没来得及写完（可能是网络慢），不过你开口说的句子已经记下来了。',
       'tk.r.concern': '💛 如果你遇到了难过或者不安全的事，记得马上告诉爸爸妈妈或者老师。',
@@ -79,13 +79,13 @@
       'tk.concern.p': '孩子在聊天里说到难过、被欺负、害怕或有危险时，这段聊天会标出来（AI 判断，加上本机查关键词，可能有误报）。岛民会提醒孩子马上告诉家长或老师。',
       'tk.concern.seen': '✅ 家长看过了', 'tk.concern.none': '没有需要注意的聊天。',
       'tk.pv.h': 'ℹ️ 家长须知：AI 聊天',
-      'tk.pv.s1': '<li>岛民的话和声音、口语打分都由<b>人工智能（AI）生成</b>，由<b>阿里云百炼（通义千问）</b>提供。聊天页顶上一直写着「{l}」，每段聊天开头会用语音提示一次。</li>',
+      'tk.pv.s1': '<li>岛民的话和声音、口语打分都由<b>人工智能（AI）生成</b>。聊天页顶上一直写着「{l}」，每天第一次聊天开头还会写一句提示。</li>',
       'tk.pv.s2': '<li>聊天、口语打分时，孩子说话的<b>声音和识别出来的文字</b>直接从这台手机发到阿里云，用的是<b>您自己的阿里云账号和密钥</b>（费用也由阿里云直接向您收）。开发者<b>收不到</b>这些声音和文字，也没有服务器存它们。</li>',
       'tk.pv.role': '<li>岛民只扮演游戏角色、只聊游戏和日常的话题，不会问真名、学校、住址、电话。孩子认真问「你是真人吗」，岛民会说自己是<b>电脑做的游戏角色</b>。</li>',
       'tk.pv.safe': '<li>孩子说到难过、被欺负、害怕或有危险时，岛民会认真回应、提醒他马上告诉家长或老师，这段聊天会标出来，家长在「👪 家长看看」里输密码能看全文，周报上也会提示。</li>',
       'tk.pv.s5': '<li>聊天记录、岛民记住的小事都<b>只存在这台手机里</b>（聊天记录最近 30 段），卸载 App 就全部删掉。每天最多聊 {n} 分钟。</li>',
       'tk.pv.name': '<li>给主角起名时请用<b>游戏昵称</b>，不要用真名。</li>',
-      'tk.pv.w1': '<li>和岛民聊天、口语题打分时，孩子说话的<b>声音和识别出来的文字</b>会发到<b>阿里云百炼（通义千问）</b>做语音识别、对话和打分。安卓 APK 直接连阿里云；网页版经过家里的中转服务。</li>',
+      'tk.pv.w1': '<li>和岛民聊天、口语题打分时，孩子说话的<b>声音和识别出来的文字</b>会发到<b>阿里云百炼</b>做语音识别、对话和打分。安卓 APK 直接连阿里云；网页版经过家里的中转服务。</li>',
       'tk.pv.w4': '<li>聊天记录存在这台手机里（最近 30 段）；网页版的中转服务也会存一份，<b>保留 90 天</b>后自动删掉。</li>',
       'tk.pv.w5': '<li>岛民会记住孩子在游戏里说过的小事（比如喜欢画画、有一只火怪兽），下次聊天提起来——<b>只存在这台手机里</b>，不记真名、学校、住址。</li>',
       'tk.pv.doc': '📄 儿童隐私说明（全文）', 'tk.pv.forget': '🧹 让岛民忘掉以前聊过的事', 'tk.forgot': '岛民忘掉以前聊过的事了',
@@ -101,9 +101,9 @@
       'tk.card.now': ' · 📍 Studying now', 'tk.card.next': '🎯 Next: {lv}', 'tk.h.book': '📗 Textbook topics · {b}', 'tk.h.isle': '🏝️ Islanders',
       'tk.intro.h': '🗣️ Chat with islanders in English',
       'tk.intro.p': 'Hold the mic and speak English, then let go to send. Each islander answers in their own voice. Every chat has a goal with a few small steps: you get a tick for each step, and coins when you finish! If you get stuck, tap "💡 Help me".',
-      'tk.ai.line': '🤖 The islanders\' words and voices are made by AI (powered by Alibaba Cloud Qwen)', 'tk.warn': 'Not connected to the chat service yet. A parent can tap "⚙️ Chat service" below.',
+      'tk.ai.line': '🤖 The islanders\' words and voices are made by AI', 'tk.warn': 'Not connected to the chat service yet. A parent can tap "⚙️ Chat service" below.',
       'tk.foot.log': '📜 Chat log', 'tk.foot.cfg': '⚙️ Chat service', 'tk.concern.btn': '👪 Parent check',
-      'tk.ai.spoken': 'Please note: what the islanders say, and their voices, are made by AI.', 'tk.ai.bubble': '🤖 {s} ({l})', 'tk.ai.title': 'The islanders\' words and voices are made by AI',
+      'tk.ai.spoken': 'Please note: what the islanders say, and their voices, are made by AI.', 'tk.ai.bubble': '🤖 {s}', 'tk.ai.title': 'The islanders\' words and voices are made by AI',
       'tk.ready.mic': 'Hold the mic and speak English. Let go when you finish.', 'tk.ready.type': 'Typing chat: write your message and tap "Send".',
       'tk.top.free': 'Free chat · {isle}', 'tk.top.quest': '📋 Request · {q}', 'tk.end': 'End', 'tk.eg': 'e.g. {s}', 'tk.step': 'Step {n}', 'tk.st.conn': 'Connecting…',
       'tk.help': '💡 Help me', 'tk.replay': '🔁 Hear it again', 'tk.slow': '🐢 Slower', 'tk.mic': '🎤 Hold to speak English', 'tk.mic.on': '🔴 Listening… let go to send',
@@ -124,7 +124,7 @@
       'tk.r.all': '🎯 Goal done! You did every step', 'tk.r.most': '🎯 Goal done! (One step missing still counts)', 'tk.r.speak': 'You need to speak for it to count',
       'tk.r.near': 'Almost there! Next time, try to do all the small steps',
       'tk.r.few': 'You spoke fewer than 3 English lines this time{typed}, so the goal does not count yet. Next time, hold the mic and talk!', 'tk.r.typed': ' (typed lines don\'t count)',
-      'tk.r.ai': '🤖 Comments made by AI (powered by Alibaba Cloud Qwen)', 'tk.r.noai': 'There was no time to write comments this time, but this chat still counts. It has been saved!',
+      'tk.r.ai': '🤖 Comments made by AI', 'tk.r.noai': 'There was no time to write comments this time, but this chat still counts. It has been saved!',
       'tk.r.tips': 'A better way to say it (you\'ll practise it in tomorrow\'s Daily review):',
       'tk.r.coins': { one: '🪙 +{n} coin', other: '🪙 +{n} coins' }, 'tk.r.q.done': '📋 Request done! Go back to your adventure: {name} has a reward for you',
       'tk.r.q.not': '📋 Request not done yet: do all the small steps, then try again',
@@ -140,14 +140,14 @@
       'tk.concern.p': 'If the child talks about feeling sad, being bullied, being scared or being in danger, that chat is marked (judged by AI plus a keyword check on this device, so there may be false alarms). The islander reminds the child to tell a parent or teacher right away.',
       'tk.concern.seen': '✅ A parent has seen this', 'tk.concern.none': 'No chats need checking.',
       'tk.pv.h': 'ℹ️ Notes for parents: AI chat',
-      'tk.pv.s1': '<li>The islanders\' words and voices, and speech scoring, are <b>made by artificial intelligence (AI)</b>, powered by <b>Alibaba Cloud Model Studio (Qwen)</b>. The top of the chat page always says "{l}", and each chat starts with a spoken notice.</li>',
+      'tk.pv.s1': '<li>The islanders\' words and voices, and speech scoring, are <b>made by artificial intelligence (AI)</b>. The top of the chat page always says "{l}", and the first chat of each day starts with a written notice.</li>',
       'tk.pv.s2': '<li>During chats and speech scoring, the child\'s <b>voice and the recognised text</b> go straight from this phone to Alibaba Cloud, using <b>your own Alibaba Cloud account and key</b> (Alibaba Cloud bills you directly). The developer <b>never receives</b> this voice or text, and no server stores it.</li>',
       'tk.pv.role': '<li>Islanders only play game characters and only talk about the game and everyday topics. They never ask for a real name, school, address or phone number. If the child seriously asks "Are you a real person?", the islander says it is <b>a game character made by a computer</b>.</li>',
       'tk.pv.safe': '<li>If the child talks about feeling sad, being bullied, being scared or being in danger, the islander takes it seriously and reminds them to tell a parent or teacher right away. That chat is marked: in "👪 Parent check", enter the parent PIN to read all of it. The Weekly report shows a note too.</li>',
       'tk.pv.s5': { one: '<li>The chat log and the small things islanders remember are <b>kept only on this phone</b> (the last 30 chats). Uninstalling the app deletes all of it. Chat time is at most {n} minute a day.</li>',
         other: '<li>The chat log and the small things islanders remember are <b>kept only on this phone</b> (the last 30 chats). Uninstalling the app deletes all of it. Chat time is at most {n} minutes a day.</li>' },
       'tk.pv.name': '<li>Please use a <b>game nickname</b> for the player, not a real name.</li>',
-      'tk.pv.w1': '<li>When the child chats with islanders or speaking questions are scored, the child\'s <b>voice and the recognised text</b> are sent to <b>Alibaba Cloud Model Studio (Qwen)</b> for speech recognition, chat and scoring. The Android app connects to Alibaba Cloud directly; the web version goes through the family\'s own relay service.</li>',
+      'tk.pv.w1': '<li>When the child chats with islanders or speaking questions are scored, the child\'s <b>voice and the recognised text</b> are sent to <b>Alibaba Cloud Model Studio</b> for speech recognition, chat and scoring. The Android app connects to Alibaba Cloud directly; the web version goes through the family\'s own relay service.</li>',
       'tk.pv.w4': '<li>The chat log is kept on this phone (the last 30 chats). The web version\'s relay service also keeps a copy, which is <b>deleted automatically after 90 days</b>.</li>',
       'tk.pv.w5': '<li>Islanders remember small things the child said in the game (for example, likes drawing, has a fire monster) and bring them up next time. This is <b>kept only on this phone</b>; real names, schools and addresses are never kept.</li>',
       'tk.pv.doc': '📄 Children\'s privacy notice (full text)', 'tk.pv.forget': '🧹 Make the islanders forget past chats', 'tk.forgot': 'The islanders have forgotten past chats',
@@ -417,44 +417,16 @@
     talking();
   }
 
-  // ---------- AI 标识（《人工智能生成合成内容标识办法》，2025-09-01 起）：聊天页顶上一直写着，开头再用语音说一句 ----------
-  // 语音提示是打包进去的中文配音 assets/voice/zh/ai-notice.ogg（Opus；本机 Kokoro，Apache-2.0，声音 zf_xiaobei；
-  // 合成的就是字表 tk.ai.spoken 的中文，speed 1.1；Whisper 听写核对过），放在聊天自己的声音通道里，岛民的第一句排在它后面；读不到文件就用阿里云现场合成。
-  // 别的界面语言还没有打包的配音：用阿里云现场合成那门语言的那句（这次打开游戏只合成一次）
-  const aiLabel = () => tx('g.sr.aimark');   // 「AI 生成 · 由阿里云通义千问提供」（game.js 的字表，和口语点评的 AI 标记同一句）
-  const NOTICE_URL = { zh: 'assets/voice/zh/ai-notice.ogg' };
-  const OGG_OK = (() => { try { return !!new Audio().canPlayType('audio/ogg; codecs="opus"'); } catch (e) { return false; } })();   // 老 iOS Safari 解不了 Opus：当没有打包的提示，走下面的阿里云合成
-  const noticeBuf = {};   // 界面语言 → 解好的声音
-  async function noticeBuffer(ctx) {
-    const l = zhUi() ? 'zh' : I18N.lang();
-    if (noticeBuf[l]) return noticeBuf[l];
-    let ab = null;
-    try { if (NOTICE_URL[l] && OGG_OK && location.protocol !== 'file:') { const r = await fetch(NOTICE_URL[l]); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
-    if (!ab) {   // 没有打包的配音（网页版没带上 / 别的界面语言）：阿里云合成这一句
-      try { const u = await cloudTTS(tx('tk.ai.spoken'), 'f', l === 'zh' ? 'Chinese' : 'English'); if (u) { const r = await fetch(u); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
-    }
-    if (!ab) return null;
-    try { noticeBuf[l] = await new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); } catch (e) { noticeBuf[l] = null; }
-    return noticeBuf[l];
-  }
-  function aiNotice(c) {
-    bubble('sys', tx('tk.ai.bubble', { s: tx('tk.ai.spoken'), l: aiLabel() }));
+  // ---------- AI 标识（《人工智能生成合成内容标识办法》，2025-09-01 起）----------
+  // 聊天页顶上一直写着「AI 生成」；另外每天第一次聊天，开头写一句「岛民说的话和声音都由人工智能生成」。
+  // 2026-11-20 老板定：每天一次、只写字、不用语音念，也不写是哪家的模型（以前每段聊天都写 + 用打包的中文配音念一遍，还带着服务商的名字）。
+  // 「今天写过没有」记在今天的学习记录里（dayLog().aiNotice，原来就在数次数）
+  const aiLabel = () => tx('g.sr.aimark');   // 「AI 生成」（game.js 的字表，和口语点评的 AI 标记同一句）
+  function aiNotice() {
+    let L = null; try { L = G && G.dayLog ? G.dayLog() : null; } catch (e) { L = null; }
+    if (L && L.aiNotice) return;
+    bubble('sys', tx('tk.ai.bubble', { s: tx('tk.ai.spoken') }));
     countLog('aiNotice');
-    try { if (!OUT.ctx) OUT.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
-    const ctx = OUT.ctx, q = OUT.hold = [];
-    if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
-    const release = () => { if (OUT.hold !== q) return; OUT.hold = null; q.forEach(b => playChunk(b)); };
-    const tm = setTimeout(release, 4000);   // 提示 4 秒还没准备好：不等了，岛民先说
-    noticeBuffer(ctx).then(buf => {
-      clearTimeout(tm);
-      if (OUT.hold !== q || c !== C) return;
-      if (buf) {
-        const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination);
-        const t = Math.max(ctx.currentTime + 0.05, OUT.next); src.start(t); OUT.next = t + buf.duration;
-        OUT.notice = src; src.onended = () => { if (OUT.notice === src) OUT.notice = null; };
-      }
-      release();
-    }, () => { clearTimeout(tm); release(); });
   }
   const npcSpeaking = () => OUT.srcs.length > 0 || !!(OUT.el && !OUT.el.paused);
   // 岛民说完一句：这一句的声音留着（再听一遍）
@@ -592,7 +564,7 @@
     const c = C;
     progress();
     OUT.last = null; OUT.cur = [];
-    aiNotice(c);   // AI 标识：开头先用界面语言说一句「岛民说的话和声音都由人工智能生成」（岛民的声音排在它后面）
+    aiNotice();   // AI 标识：每天第一次聊天，开头写一句「岛民说的话和声音都由人工智能生成」
 
     // 麦克风：先要权限；要不到就只能打字（打字框直接打开）
     let micOk = false;
@@ -1220,7 +1192,7 @@
     let url = '';
     try {
       if (direct()) {
-        const body = { model: 'qwen3-tts-flash', input: { text: String(text).slice(0, 300), voice: g === 'm' ? 'Ethan' : 'Cherry', language_type: lang } };
+        const body = { model: 'qwen3-tts-flash', input: { text: String(text).slice(0, 300), voice: g === 'm' ? 'Aiden' : 'Jennifer', language_type: lang } };
         const r = await nativePost('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', JSON.stringify(body), 6000);
         if (r.ok) url = JSON.parse(r.text).output.audio.url; else noteAi('tts', r.text);
       } else if (relayHttp()) {

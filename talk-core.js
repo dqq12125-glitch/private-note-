@@ -32,7 +32,10 @@
       'tc.err.up': 'The chat service had a problem: {msg}', 'tc.err.closed': 'The chat connection was lost',
     },
   });
-  const VOICES = { f:['Serena', 'Tina', 'Mione', 'Katerina', 'Maia', 'Jennifer'], m: ['Aiden', 'Ryan', 'Theo Calm', 'Joyner', 'Raymond', 'Dolce'], kf: ['Cici', 'Momo'], km: ['Evan'] };
+  // 音色只用阿里云音色表里写明是美式 / 英式的三个（2026-11-20 老板：「口音太中国了」「改美式英式澳式，普通话的不要」）：
+  // Jennifer（美式女声）、Aiden（美式男声）、Mione（英式女声）。表里别的都是普通话音色，能说英语但带口音；没有澳式的、也没有英式男声。
+  // 孩子的角色暂时也用这几个。想要澳式、想要每个人声音都不一样，得另接有地道口音的语音服务
+  const VOICES = { f: ['Jennifer', 'Mione'], m: ['Aiden'], kf: ['Jennifer'], km: ['Aiden'] };
   const MODEL = 'qwen3.8-omni-flash-realtime';
   const REALTIME_URL = 'wss://dashscope.aliyuncs.com/api-ws/v1/realtime';
   const EVAL_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';

@@ -786,7 +786,7 @@ async function browserTests() {
     await T.shot('11-wizard-kid');
     await p.click('#su-who [data-act=suWho][data-m=open]'); await W(200);
     st = await EV(() => ({ tabs: [...document.querySelectorAll('.su-tabs li span')].map(x => x.textContent).join('/'), txt: document.querySelector('#su-box').textContent, head: document.querySelector('.su-head').textContent, dis: document.querySelector('#su-next').disabled, f: window.EchoGame.S.settings.family }));
-    check(st.tabs === '欢迎/设备检查/AI 密钥/完成' && /人工智能/.test(st.txt) && /阿里云通义千问/.test(st.txt) && /只存在这台手机里/.test(st.txt) && /已年满 14 周岁/.test(st.txt) && !/监护人|孩子的父母/.test(st.txt.replace(/给孩子用/g, '')) && /首次设置/.test(st.head) && st.dis && st.f.who === 'open' && !/游戏/.test(st.txt),
+    check(st.tabs === '欢迎/设备检查/AI 密钥/完成' && /人工智能/.test(st.txt) && !/通义千问/.test(st.txt) && /只存在这台手机里/.test(st.txt) && /已年满 14 周岁/.test(st.txt) && !/监护人|孩子的父母/.test(st.txt.replace(/给孩子用/g, '')) && /首次设置/.test(st.head) && st.dis && st.f.who === 'open' && !/游戏/.test(st.txt),
       '选「我自己学」：四步（欢迎、设备检查、AI 密钥、完成），AI 说明和隐私要点都在，同意的是本人；没有家长密码和家庭定制', { tabs: st.tabs, head: st.head });
     await T.shot('11-wizard-self');
     await p.click('#su-who [data-act=suUi][data-l=en]'); await W(200);

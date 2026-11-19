@@ -376,7 +376,7 @@
      "It is important to"
     ],
     "look": "scientist",
-    "voice": "Dolce",
+    "voice": "Aiden",
     "voiceZh": "热情的大哥"
    }
   },
@@ -1113,7 +1113,7 @@
      "thank goodness"
     ],
     "look": "whisper",
-    "voice": "Katerina",
+    "voice": "Mione",
     "voiceZh": "成熟的女声"
    }
   },
@@ -1459,7 +1459,7 @@
      "I like it because"
     ],
     "look": "granny",
-    "voice": "Serena",
+    "voice": "Jennifer",
     "voiceZh": "慈祥的奶奶"
    }
   },
@@ -1824,7 +1824,7 @@
     "name": "Mira",
     "zh": "科学家米拉",
     "look": "weather",
-    "voice": "Maia",
+    "voice": "Mione",
     "voiceZh": "知性的女声",
     "topic": "Protecting animals in danger",
     "topicZh": "保护濒危动物",
@@ -2522,7 +2522,7 @@
      "at some point"
     ],
     "look": "grandpa",
-    "voice": "Theo Calm",
+    "voice": "Aiden",
     "voiceZh": "沉稳的爷爷"
    }
   },
@@ -2863,7 +2863,7 @@
      "it's unnecessary"
     ],
     "look": "police",
-    "voice": "Joyner",
+    "voice": "Aiden",
     "voiceZh": "幽默的大哥"
    }
   }

@@ -712,7 +712,7 @@
     "name": "Owen",
     "zh": "外教欧文",
     "look": "teacher",
-    "voice": "Dolce",
+    "voice": "Aiden",
     "voiceZh": "热情的大哥",
     "topic": "Helping a new teacher with culture shock",
     "topicZh": "帮新外教适应中国生活",
@@ -1099,7 +1099,7 @@
      "make a difference"
     ],
     "look": "prof",
-    "voice": "Tina",
+    "voice": "Jennifer",
     "voiceZh": "甜美的姐姐"
    }
   },
@@ -1816,7 +1816,7 @@
      "build up"
     ],
     "look": "athlete",
-    "voice": "Joyner",
+    "voice": "Aiden",
     "voiceZh": "幽默的大哥"
    }
   },
@@ -2182,7 +2182,7 @@
      "a balanced life"
     ],
     "look": "nurse",
-    "voice": "Katerina",
+    "voice": "Mione",
     "voiceZh": "成熟的女声"
    }
   }

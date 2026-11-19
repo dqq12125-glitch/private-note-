@@ -19,7 +19,7 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const sales = () => !!(D && D.sales);
   const nat = f => { try { return !!(window.EchoNative && typeof EchoNative[f] === 'function'); } catch (e) { return false; } };
-  const DOC_V = '2026-10-08';   // 隐私说明 / 同意书的版本：同意的记录里存这个，以后改了文书要重新同意
+  const DOC_V = '2026-11-20';   // 隐私说明 / 同意书的版本：同意的记录里存这个，以后改了文书要重新同意
   const BASE_LOOK = P ? { boy: Object.assign({}, P.LOOKS.boy), girl: Object.assign({}, P.LOOKS.girl) } : {};   // 改造型之前的主角
   const BASE_STARTERS = window.MonsterGame ? MonsterGame.STARTERS.slice() : [];
 
@@ -79,7 +79,7 @@
       'su.open.title': '欢迎使用回声岛',
       'su.open.lead': '回声岛是一个练外语听说的软件：要<b>开口说</b>，才能让怪兽出招、和岛民聊天。下面几页是使用前的设置，设置只存在这台手机里。',
       'su.open.ai.t': '🤖 关于 AI（人工智能）',
-      'su.open.ai': '和岛民聊天、口语打分、能力检测里的口语部分，是由<b>人工智能</b>完成的，由<b>阿里云通义千问</b>提供。AI 生成的内容在 App 里都标着「AI 生成」，每段聊天开头还有一句语音提示。AI 只扮演 App 里的角色、只聊岛上的事和日常话题，不会问您的真名、单位、住址、电话。',
+      'su.open.ai': '和岛民聊天、口语打分、能力检测里的口语部分，是由<b>人工智能</b>完成的。AI 生成的内容在 App 里都标着「AI 生成」，每天第一次聊天开头还有一句提示。AI 只扮演 App 里的角色、只聊岛上的事和日常话题，不会问您的真名、单位、住址、电话。',
       'su.open.pr.t': '🔒 隐私要点',
       'su.open.pr.1': '存档、昵称、聊天记录<b>只存在这台手机里</b>，开发者收不到。',
       'su.open.pr.2': '聊天和口语打分时，您说话的<b>声音和识别出来的文字</b>会直接发到阿里云处理，用的是<b>您自己的阿里云账号</b>。开发者收不到，也不跑服务器。',
@@ -101,7 +101,7 @@
       'su.kid.head': '👪 家长首次设置', 'su.kid.head.s': '这几页请家长来填，大约 5 分钟', 'su.edit.head': '🔒 家长设置',
       'su.kid.finish': '🎉 把手机交给孩子',
       'su.kid.lead': '回声岛是一个练英语听说的软件：孩子要<b>开口说英语</b>才能让怪兽出招、和岛民聊天。下面几页请<b>家长</b>来设置，设置只存在这台手机里。',
-      'su.kid.ai': '和岛民英语聊天、口语打分，是由<b>人工智能</b>完成的，由<b>阿里云通义千问</b>提供。AI 生成的内容在 App 里都标着「AI 生成」，每段聊天开头还有一句语音提示。AI 只扮演 App 里的角色、只聊岛上的事和日常话题，不会问孩子的真名、学校、住址、电话。',
+      'su.kid.ai': '和岛民英语聊天、口语打分，是由<b>人工智能</b>完成的。AI 生成的内容在 App 里都标着「AI 生成」，每天第一次聊天开头还有一句提示。AI 只扮演 App 里的角色、只聊岛上的事和日常话题，不会问孩子的真名、学校、住址、电话。',
       'su.kid.pr.1': '孩子的存档、昵称、家人设置、聊天记录<b>只存在这台手机里</b>，开发者收不到。',
       'su.kid.pr.2': '聊天和口语打分时，孩子说话的<b>声音和识别出来的文字</b>会直接发到阿里云处理，用的是<b>您自己的阿里云账号</b>。开发者收不到，也不跑服务器。',
       'su.kid.pr.3': '不收集真名、照片、学校、住址、电话。请给孩子起一个<b>英文昵称</b>（不要用真名），家人只用「Mom」「Dad」这样的称呼。',
@@ -191,7 +191,7 @@
       'su.open.title': 'Welcome to Echo Island',
       'su.open.lead': 'Echo Island is an app for practising listening and speaking in a new language: you have to <b>speak aloud</b> for your monsters to move and to chat with the islanders. The next pages set things up. Everything stays on this phone.',
       'su.open.ai.t': '🤖 About AI',
-      'su.open.ai': 'Chatting with islanders, scoring your speaking and the speaking part of the level check are done by <b>artificial intelligence</b>, provided by <b>Alibaba Cloud Tongyi Qianwen</b>. AI-generated content is labelled in the app, and each chat starts with a short spoken notice. The AI only plays characters in the app and talks about the islands and everyday topics. It will not ask for your real name, workplace, address or phone number.',
+      'su.open.ai': 'Chatting with islanders, scoring your speaking and the speaking part of the level check are done by <b>artificial intelligence</b>. AI-generated content is labelled in the app, and the first chat of each day starts with a short written notice. The AI only plays characters in the app and talks about the islands and everyday topics. It will not ask for your real name, workplace, address or phone number.',
       'su.open.pr.t': '🔒 Privacy in brief',
       'su.open.pr.1': 'Your save, nickname and chat history are stored <b>only on this phone</b>. The developer cannot see them.',
       'su.open.pr.2': 'When you chat or your speaking is scored, <b>your voice and the recognised text</b> go straight to Alibaba Cloud, using <b>your own Alibaba Cloud account</b>. The developer does not receive them and runs no server.',
@@ -212,7 +212,7 @@
       'su.kid.head': '👪 First-time setup for parents', 'su.kid.head.s': 'A parent fills in these pages. About 5 minutes', 'su.edit.head': '🔒 Parent Settings',
       'su.kid.finish': '🎉 Finish',
       'su.kid.lead': 'Echo Island is an app for practising English listening and speaking: your child has to <b>speak English aloud</b> to make the monsters move and to chat with the islanders. A <b>parent</b> should fill in the next pages. Everything stays on this phone.',
-      'su.kid.ai': 'English chats with the islanders and speech scoring are done by <b>artificial intelligence</b>, provided by <b>Alibaba Cloud Tongyi Qianwen</b>. AI-generated content is labelled "AI-generated" in the app, and each chat starts with a short spoken notice. The AI only plays characters in the app and only talks about the islands and everyday topics. It will not ask for your child\'s real name, school, address or phone number.',
+      'su.kid.ai': 'English chats with the islanders and speech scoring are done by <b>artificial intelligence</b>. AI-generated content is labelled "AI-generated" in the app, and the first chat of each day starts with a short written notice. The AI only plays characters in the app and only talks about the islands and everyday topics. It will not ask for your child\'s real name, school, address or phone number.',
       'su.kid.pr.1': 'Your child\'s save, nickname, family settings and chat history are stored <b>only on this phone</b>. The developer cannot see them.',
       'su.kid.pr.2': 'When your child chats or their speaking is scored, <b>their voice and the recognised text</b> go straight to Alibaba Cloud for processing, using <b>your own Alibaba Cloud account</b>. The developer does not receive them and runs no server.',
       'su.kid.pr.3': 'No real name, photo, school, address or phone number is collected. Please give your child an <b>English nickname</b> (not their real name). Family members are only called "Mom", "Dad" and so on.',

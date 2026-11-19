@@ -376,7 +376,7 @@
      "never gives up"
     ],
     "look": "granny",
-    "voice": "Serena",
+    "voice": "Jennifer",
     "voiceZh": "慈祥的奶奶"
    }
   },
@@ -781,7 +781,7 @@
     "name": "Felix",
     "zh": "导游费利克斯",
     "look": "hiker",
-    "voice": "Ryan",
+    "voice": "Aiden",
     "voiceZh": "豪爽的大叔",
     "topic": "Planning a dream trip",
     "topicZh": "规划一次梦想旅行",
@@ -1167,7 +1167,7 @@
     "name": "Doctor Fern",
     "zh": "森林科学家芬恩",
     "look": "prof",
-    "voice": "Tina",
+    "voice": "Jennifer",
     "voiceZh": "甜美的姐姐",
     "topic": "Why we need trees and how to save them",
     "topicZh": "我们为什么需要树木、怎样保护树木",
@@ -1950,7 +1950,7 @@
      "drinking water"
     ],
     "look": "mom",
-    "voice": "Katerina",
+    "voice": "Mione",
     "voiceZh": "成熟的女声"
    }
   },
@@ -2321,7 +2321,7 @@
      "the air conditioner"
     ],
     "look": "weather",
-    "voice": "Maia",
+    "voice": "Mione",
     "voiceZh": "知性的女声"
    }
   },
@@ -3143,7 +3143,7 @@
      "come true"
     ],
     "look": "swimmerF",
-    "voice": "Tina",
+    "voice": "Jennifer",
     "voiceZh": "甜美的姐姐"
    }
   }

@@ -89,7 +89,7 @@ export function config(env) {
       asrModel: String(env.ASR_MODEL || 'qwen3-asr-flash'),
       evalModel: String(env.EVAL_MODEL || 'qwen-plus'),
       ttsModel: String(env.TTS_MODEL || 'qwen3-tts-flash'),
-      ttsVoice: { f: String(env.TTS_VOICE_F || 'Cherry'), m: String(env.TTS_VOICE_M || 'Ethan') },
+      ttsVoice: { f: String(env.TTS_VOICE_F || 'Jennifer'), m: String(env.TTS_VOICE_M || 'Aiden') },
       voiceMap: obj(env.TALK_VOICE_MAP, {}),   // 岛民音色改名：{ "talk-npcs 里的名字": "国际版有的名字" }，默认不改
     },
     apple: {

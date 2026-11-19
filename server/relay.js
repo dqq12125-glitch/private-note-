@@ -218,7 +218,7 @@ function cloudHelp(u, req, res) {
         const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
         try {
           const r = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: 'qwen3-tts-flash', input: { text, voice: j.g === 'm' ? 'Ethan' : 'Cherry', language_type: 'English' } }), signal: ctl.signal });
+            body: JSON.stringify({ model: 'qwen3-tts-flash', input: { text, voice: j.g === 'm' ? 'Aiden' : 'Jennifer', language_type: 'English' } }), signal: ctl.signal });
           const o = await r.json(), url = o.output && o.output.audio && o.output.audio.url;
           res.writeHead(url ? 200 : 502, cors); return res.end(JSON.stringify(url ? { url } : { url: '', error: 'upstream', up: String(o.code || r.status).slice(0, 40) }));
         } finally { clearTimeout(tm); }

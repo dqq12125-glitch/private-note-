@@ -647,7 +647,7 @@
      "lightning rod"
     ],
     "look": "scientist",
-    "voice": "Ryan",
+    "voice": "Aiden",
     "voiceZh": "豪爽的大叔"
    }
   },
@@ -958,7 +958,7 @@
      "Could you repeat that, please?"
     ],
     "look": "prof",
-    "voice": "Tina",
+    "voice": "Jennifer",
     "voiceZh": "甜美的姐姐"
    }
   },
@@ -1680,7 +1680,7 @@
      "Could you tell me"
     ],
     "look": "dad",
-    "voice": "Raymond",
+    "voice": "Aiden",
     "voiceZh": "爽朗的叔叔"
    }
   },
@@ -2021,7 +2021,7 @@
      "it's good for"
     ],
     "look": "mom",
-    "voice": "Katerina",
+    "voice": "Mione",
     "voiceZh": "成熟的女声"
    }
   },
@@ -2372,7 +2372,7 @@
      "a writer who"
     ],
     "look": "weather",
-    "voice": "Maia",
+    "voice": "Mione",
     "voiceZh": "知性的女声"
    }
   },
@@ -2748,7 +2748,7 @@
      "pass it down"
     ],
     "look": "granny",
-    "voice": "Serena",
+    "voice": "Jennifer",
     "voiceZh": "慈祥的奶奶"
    }
   }

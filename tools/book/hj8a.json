@@ -707,7 +707,7 @@
      "What about you?"
     ],
     "look": "mom",
-    "voice": "Katerina",
+    "voice": "Mione",
     "voiceZh": "成熟的女声"
    }
   },
@@ -1122,7 +1122,7 @@
     "name": "Grandma Mei",
     "zh": "梅奶奶",
     "look": "granny",
-    "voice": "Serena",
+    "voice": "Jennifer",
     "voiceZh": "慈祥的奶奶",
     "topic": "How digital technology has changed my life",
     "topicZh": "数字技术怎样改变了我的生活",
@@ -1544,7 +1544,7 @@
      "My invention can"
     ],
     "look": "prof",
-    "voice": "Maia",
+    "voice": "Mione",
     "voiceZh": "知性的女声"
    }
   },
@@ -1900,7 +1900,7 @@
      "make foreign friends"
     ],
     "look": "granny",
-    "voice": "Serena",
+    "voice": "Jennifer",
     "voiceZh": "慈祥的奶奶"
    }
   },
@@ -2266,7 +2266,7 @@
      "We can learn to"
     ],
     "look": "teacher",
-    "voice": "Raymond",
+    "voice": "Aiden",
     "voiceZh": "爽朗的叔叔"
    }
   },
@@ -2983,7 +2983,7 @@
      "in short"
     ],
     "look": "nurse",
-    "voice": "Tina",
+    "voice": "Jennifer",
     "voiceZh": "甜美的姐姐"
    }
   }

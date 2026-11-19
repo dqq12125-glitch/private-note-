@@ -6,7 +6,7 @@
 //   ⑤ 家庭定制：昵称校验（只能英文、像真名的拼音要确认）、预设部件拼形象、约 50 只原创伙伴里挑 3 只（没有保留的撞脸怪兽）、家人当 NPC ⑥ 完成 → 把手机交给孩子
 // - 定制在 App 里生效：开场渡轮上念家长填好的通行证（不再选照片、起名）、家里是挑的家人（每天对他们说一句英语）、三个贝壳里是挑的 3 只、主角形象
 // - 课本单元只开放本学年（七上、七下）；忘了家长密码：导出存档 → 清除数据 → 重新设置 → 从备份恢复，进度回来
-// - AI 标识：聊天页顶上「AI 生成 · 由阿里云通义千问提供」、开头的语音提示；没有配音的句子用阿里云 qwen3-tts-flash，不再连有道
+// - AI 标识：聊天页顶上「AI 生成」（不写是哪家的模型）、每天第一次聊天开头写一句提示（不用语音念）；没有配音的句子用阿里云 qwen3-tts-flash，不再连有道
 // - 周报 AI 花费按 qwen3.8-omni-flash-realtime 北京区现价；开源许可与致谢页；销售版改家长密码、改家庭定制；家庭版不出向导
 // - iPhone 版（假桥 platform: 'ios'）：② 设备检查是 iOS 版本 + 机型（最低 18.4）、WebGL2、空间、麦克风，没有安卓的字；中文、英语界面各走一遍；横屏 844×390 按钮不压在内容上
 // 运行：node tests/sales.test.js（大约 1–2 分钟）。和 tests/apk.test.js 一样起一个本机小网站（http://echo.localhost:端口），外面的网址一律挡掉
@@ -97,7 +97,7 @@ function fakeMic() {
   check(await E(() => window.DEX.sales && window.EchoNative.edition() === 'sales' && !window.EchoNative.hasPin() && !window.EchoNative.hasKey()), '销售版：原生说 sales，没有打包的家长密码和密钥');
   check(await step() === 'welcome' && await p.locator('.su-tabs li').count() === 6, '① 欢迎页，上面 6 步进度');
   let t = await box();
-  check(/人工智能/.test(t) && /阿里云通义千问/.test(t) && /只存在这台手机里/.test(t) && /您自己的阿里云账号/.test(t) && /英文昵称/.test(t) && /练英语听说的软件/.test(t) && !/游戏/.test(t), '欢迎页（对家长说「软件」，不说「游戏」）：AI 说明（阿里云通义千问）+ 隐私要点', t.slice(0, 300));
+  check(/人工智能/.test(t) && !/通义千问/.test(t) && /只存在这台手机里/.test(t) && /您自己的阿里云账号/.test(t) && /英文昵称/.test(t) && /练英语听说的软件/.test(t) && !/游戏/.test(t), '欢迎页（对家长说「软件」，不说「游戏」）：AI 说明（阿里云通义千问）+ 隐私要点', t.slice(0, 300));
   check(await p.isDisabled('#su-next'), '没勾同意不能往下走');
   await p.screenshot({ path: out + '/sales-1-welcome.png' });
   // 全文页
@@ -276,9 +276,14 @@ function fakeMic() {
   await E(() => { window.__fakeNative.onWsOpen = (id, url, cb) => setTimeout(() => cb(id, 'open', ''), 10); });
   await E(() => window.EchoTalk.open('lily')); await W(600);
   const tk = await E(() => ({ label: (document.querySelector('#tk-ai') || {}).textContent, sys: (document.querySelector('#tk-log .tk-b.sys') || {}).textContent, n: window.EchoGame.dayLog().aiNotice }));
-  check(tk.label === 'AI 生成 · 由阿里云通义千问提供', '聊天页顶上：「AI 生成 · 由阿里云通义千问提供」', tk);
-  check(/人工智能生成/.test(tk.sys || '') && tk.n >= 1, '聊天开头：一句 AI 提示（同时用语音说，打包的中文配音 assets/voice/zh/ai-notice.ogg）', tk);
-  check(fs.existsSync(path.join(ROOT, 'assets/voice/zh/ai-notice.ogg')), 'AI 提示的中文配音打包在 assets/voice/zh/');
+  check(tk.label === 'AI 生成', '聊天页顶上：「AI 生成」（不写是哪家的模型）', tk);
+  check(/人工智能生成/.test(tk.sys || '') && !/千问|阿里云/.test(tk.sys || '') && tk.n === 1, '今天第一次聊天：开头写一句 AI 提示（只写字，不提是哪家的）', tk);
+  await E(() => { const x = document.querySelector('[data-act=talk_end]'); if (x) x.click(); }); await W(300);
+  await E(() => { if (document.querySelector('#tk-ov')) window.EchoTalk.endIfOpen(); document.querySelectorAll('#tk-ov').forEach(e => e.remove()); });
+  // 同一天再聊一次：不再写那句提示（每天一次），顶上的「AI 生成」还在
+  await E(() => window.EchoTalk.open('lily')); await W(600);
+  const tk2 = await E(() => ({ sys: document.querySelectorAll('#tk-log .tk-b.sys').length, n: window.EchoGame.dayLog().aiNotice, label: (document.querySelector('#tk-ai') || {}).textContent }));
+  check(tk2.sys === 0 && tk2.n === 1 && tk2.label === 'AI 生成', '同一天第二次聊天：开头不再写提示，顶上的「AI 生成」还在', tk2);
   await E(() => { const x = document.querySelector('[data-act=talk_end]'); if (x) x.click(); }); await W(300);
   await E(() => { if (document.querySelector('#tk-ov')) window.EchoTalk.endIfOpen(); document.querySelectorAll('#tk-ov').forEach(e => e.remove()); });
   await route({ 'qwen3-tts-flash': { type: 'ok', data: { output: { audio: { url: HOST + '/assets/voice/zh/ai-notice.ogg' } } } } });
