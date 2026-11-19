@@ -9,6 +9,7 @@
 - 原生桥带着百炼密钥直连 `dashscope.aliyuncs.com`（`URLSessionWebSocketTask` + `Authorization` 头），**只许连这一个域名**，网页拿不到密钥本身。
 - 家长密码 `PinGuard.swift`、备份文件名 `BackupNames.swift` 是照着安卓的 Java 一条一条写的（同一个盐、同样的 SHA-256、错 5 次锁 10 分钟、改手机时钟解不开）。
 - 网页进程没了（内存不够被系统收掉）：重建网页、重新打开首页，存档还在，网页能用 `takeRecovered()` 知道刚恢复过；前台 2 分钟里连挂 3 次显示一句话，等孩子点一下。
+- 公开版的**订阅**（App 内购买，StoreKit 2）和**通过 Apple 登录**：iPhone 才有的 9 个异步方法（`Store.swift`、`AppleSignIn.swift`），见「订阅和登录」。安卓以后接 Google Play 结算。
 
 方法全表、哪些和安卓不完全一样，见下面「原生桥：和安卓不一样的地方」。
 
@@ -17,18 +18,24 @@
 | 文件 | 内容 |
 | --- | --- |
 | `project.yml` | XcodeGen 的工程定义（不手写 `.xcodeproj`）：App、单元测试、UI 测试三个 target；最低 iOS 18.4；Swift 语言版本钉在 5 |
-| `Config/Base.xcconfig` | 进仓库的默认打包设置：App 标识 `ECHO_BUNDLE_ID`（**现在是占位的 `com.example.echoisland`**）、版本号、开发者团队。`Generated/Echo.xcconfig` 盖掉同名的 |
+| `Config/Base.xcconfig` | 进仓库的默认打包设置：App 标识 `ECHO_BUNDLE_ID` = **`com.echoisland.app`**（和安卓的包名一样，只写在这一处，`make-config.mjs` 也从这里读）、版本号、开发者团队。`Generated/Echo.xcconfig` 盖掉同名的 |
 | `App/Info.plist` | App 名「回声岛」、麦克风说明（中文）、竖屏 + 横屏、不显示状态栏、`ITSAppUsesNonExemptEncryption = false`、备份在「文件」App 里看得到 |
 | `App/Resources/` | `echo-native.js`（EchoNative 那一层 + iPhone 才要管的声音、触摸、横屏标记）、`PrivacyInfo.xcprivacy`（隐私清单）、图标 |
-| `App/Sources/` | `AppDelegate`（场景、屏幕常亮）、`GameViewController`（网页、prompt/alert、麦克风放行、方向、后台前存档、进程挂了重建）、`WebAssetHandler`、`Bridge`、`DashScope`、`PinGuard`、`BackupNames`、`Stores`（钥匙串里的密钥、「文稿」里的备份）、`AppAudio`（声音会话） |
+| `App/Sources/` | `AppDelegate`（场景、屏幕常亮、一开 App 就听订阅的交易）、`GameViewController`（网页、prompt/alert、麦克风放行、方向、后台前存档、进程挂了重建）、`WebAssetHandler`、`Bridge`、`DashScope`、`PinGuard`、`BackupNames`、`Stores`（钥匙串里的密钥、「文稿」里的备份）、`AppAudio`（声音会话）、`Store`（订阅，StoreKit 2）、`AppleSignIn`（通过 Apple 登录） |
+| `App/EchoIsland.entitlements` | 「通过 Apple 登录」的权限。**只有签名的包带**（`make-config.mjs` 的 `ECHO_APPLE_SIGNIN`），见「通过 Apple 登录的权限」 |
+| `App/Store.storekit` | 本地的 App Store（测试用）：一个订阅组、月度 US$8.99、年度 US$59.99（年度 7 天免费试用是**例子**，真的在 App Store Connect 里定） |
 | `Tests/LogicTests.swift` | 单元测试（模拟器里跑）：家长密码、备份轮换、Range、类型、只连阿里云、原生桥的入口 |
-| `UITests/SmokeUITests.swift` | UI 测试：打开到首页（竖屏、横屏截图）、原生桥自测页一个都不能没过、麦克风弹窗、分享面板和文件选择器 |
-| `www-test/selftest.html` | 原生桥自测页（**只打进调试包**）：把 26 个方法都调一遍，再看几样 WebKit 的本事 |
+| `Tests/AccountLogicTests.swift` | 单元测试：订阅和登录里不碰 App Store 的那一层（参数不对当场回、买的四种结果、取消、没带权限的包说 unavailable） |
+| `Tests/StoreKitTests.swift` | 订阅的真流程（用 `Store.storekit`）：商品、买（带账号 UUID）、请求购买、恢复、续费、过期、退款 → 事件。云上单独一步、挑 iOS 26.2 的模拟器 |
+| `UITests/SmokeUITests.swift` | UI 测试：打开到首页（竖屏、横屏截图）、原生桥自测页一个都不能没过、麦克风弹窗、分享面板和文件选择器、订阅的商品问得到 |
+| `www-test/selftest.html` | 原生桥自测页（**只打进调试包**）：把 26 个方法和 iPhone 才有的 9 个都调一遍，再看几样 WebKit 的本事 |
 | `scripts/prepare.mjs` | 打包前一条命令做完：`make-config.mjs` → `copy-web.mjs` → 没有图标时 `make-icons.mjs` |
-| `scripts/make-config.mjs` | 生成 `Generated/BuildConfig.swift`、`Generated/Echo.xcconfig`（版本、构建号；家庭版另有密钥和家长密码的**哈希**） |
+| `scripts/make-config.mjs` | 生成 `Generated/BuildConfig.swift`、`Generated/Echo.xcconfig`（版本、构建号、订阅的两个商品编号、带不带「通过 Apple 登录」；家庭版另有密钥和家长密码的**哈希**） |
 | `scripts/copy-web.mjs` | 把游戏网页复制进 `www/`：和安卓 `copyWeb` 同一份白名单，销售版不带保留怪兽 |
 | `scripts/make-icons.mjs` | 从 `android/icon-512.png` 生成 1024 的图标（垫底色、去透明） |
+| `scripts/pick-simulator.mjs` | 云上挑一台 iPhone 模拟器（可以指定 iOS 版本，StoreKit 测试要 26.2） |
 | `../.github/workflows/ios-simulator.yml` | 云上的 Mac 编译、跑测试 |
+| `../.github/workflows/ios-testflight.yml` | 打正式包、签名、传到 TestFlight（**只能手动点**），见「上 TestFlight」 |
 | `../tests/ios.test.js` | 不用 Mac 的核对（`node tests/ios.test.js`，几秒） |
 | `../tools/ios/` | 用 Playwright 的 WebKit 检查网页在 iPhone 内核上的问题（见「WebKit 检查」） |
 
@@ -53,7 +60,8 @@
 `.github/workflows/ios-simulator.yml`：推到 `echo-island/next` 并且改了 `ios/`、这个工作流或 `tools/ios/` 时自动跑；也可以在 Actions 页面手动点 **Run workflow**。仓库是公开的，macOS 的机器不要钱。
 
 - 机器：`macos-26`（Apple 芯片），Xcode **26.6**（`/Applications/Xcode_26.6.app`），模拟器 **iPhone 17 / iOS 26.5**。
-- 步骤（每一步单独一行，红在哪一步一眼看得出来）：浅克隆 → `node tests/ios.test.js` → 装 XcodeGen → `prepare.mjs`（销售版）→ `xcodegen` → 编译调试包（模拟器，不用开发者证书）→ 单元测试 → UI 测试 → 再编一遍正式包的设置（不签名，核对没有自测页）→ 导出截图 → **不管成没成**上传 `ios-simulator-results`：完整的编译日志、两个 `.xcresult`、截图和自测结果。
+- 步骤（每一步单独一行，红在哪一步一眼看得出来）：浅克隆 → `node tests/ios.test.js` → 装 XcodeGen → `prepare.mjs`（销售版）→ `xcodegen` → 编译调试包（模拟器，不用开发者证书）→ 单元测试（不含 StoreKit 的）→ **StoreKit 测试**（同一份包，换一台 iOS 26.2 的模拟器）→ UI 测试 → 再编一遍正式包的设置（不签名，核对没有自测页）→ 导出截图 → **不管成没成**上传 `ios-simulator-results`：完整的编译日志、三个 `.xcresult`、截图和自测结果。
+- 为什么 StoreKit 测试要另一台模拟器：iOS 26.5 的模拟器上 `SKTestSession` 存不进本地 App Store 的配置（苹果开发者论坛上的已知问题 FB22237318，26.1 / 26.2 上好的；Xcode 26.6 的说明里说修了，实际还有人遇到）。`pick-simulator.mjs` 先挑 26.2、再 26.1；机器上都没有就用最新的，并出一条黄色提示——那时 StoreKit 测试红了先看是不是这个原因。
 - 只编模拟器的包：**装不到真 iPhone 上**（要签名，见下）。
 - 构建号：浅克隆数不出提交数，自动退回 1（模拟器包用不到）。打给人装的包要么把历史取全（`fetch-depth: 0`），要么设 `ECHO_VERSION_CODE`。
 
@@ -79,7 +87,7 @@ cd ios && xcodegen generate && open EchoIsland.xcodeproj
 - 模拟器：选一个 iPhone 模拟器，⌘R。命令行跑测试：`xcodebuild test -project ios/EchoIsland.xcodeproj -scheme EchoIsland -destination 'platform=iOS Simulator,name=iPhone 17'`。
 - 真机 / TestFlight：先在 `Config/Base.xcconfig` 把 `ECHO_BUNDLE_ID` 换成自己登记的（或者设环境变量 `ECHO_BUNDLE_ID`），设 `ECHO_TEAM_ID`（10 位团队编号）再跑一次 `prepare.mjs`；Xcode 的 Signing & Capabilities 选自己的团队（自动管理签名）。上 TestFlight：Product → Archive → Distribute App → App Store Connect。
 - 调试包里网页能用 Mac 的 Safari 连（开发 → 模拟器 / 手机 → 回声岛）；正式包不行。
-- 调试包的启动参数（UI 测试用）：`-EchoUITest`（屏幕最下面一行很小的状态字）、`-EchoSelfTest all|mic|share|pick`（打开原生桥自测页）、`-EchoOrient landscape`（这次横屏打开）。正式包里都没有。
+- 调试包的启动参数（UI 测试用）：`-EchoUITest`（屏幕最下面一行很小的状态字）、`-EchoSelfTest all|mic|share|pick|store`（打开原生桥自测页）、`-EchoOrient landscape`（这次横屏打开）。正式包里都没有。
 
 ## 家庭版：密钥和家长密码怎么进去
 
@@ -99,7 +107,7 @@ cd ios && xcodegen generate && open EchoIsland.xcodeproj
 
 ## 原生桥：和安卓不一样的地方
 
-26 个方法都有，名字、参数个数、返回值的类型、同步 / 异步（异步 = 连阿里云的四个）都和安卓一样（`tests/ios.test.js` 核对三处：README、`echo-native.js`、`Bridge.swift`）。不一样的：
+26 个方法都有，名字、参数个数、返回值的类型、同步 / 异步（异步 = 连阿里云的四个）都和安卓一样（`tests/ios.test.js` 核对三处：README、`echo-native.js`、`Bridge.swift`）。另有 iPhone 才有的 9 个（下一节「订阅和登录」，`tests/ios.test.js` 的 `IOS_ONLY` 表）。不一样的：
 
 | 方法 | iPhone 上 |
 | --- | --- |
@@ -116,6 +124,50 @@ cd ios && xcodegen generate && open EchoIsland.xcodeproj
 | `wsOpen()` 出错的说明 | 握手被拒写成 `HTTP 401 NSURLError -1011 …`、断网写成 `Unable to resolve host "dashscope.aliyuncs.com" (…)`，网页按 `HTTP 401` / `HTTP 429` / `Unable to resolve host` 分原因，和安卓的一样认得出来 |
 
 **返回键**：iPhone 没有。游戏每个画面都有自己的关闭 / 返回按钮（网页版在 iPhone 上本来就这样玩），所以壳子不接「右划返回」（屏幕左边是摇杆的地方，会抢手指），也不调 `window.EchoBack`。安卓按返回键时会顺手整份存一次档；iPhone 上改成**离开前台时**（来电、下拉通知、切 App）原生调一次 `EchoGame.flush()`，并向系统多要几秒让 WebKit 落盘。
+
+## 订阅和登录（iPhone 才有的方法）
+
+公开版：免费每天 5 分钟 AI；Premium 月度 US$8.99、年度 US$59.99（自动续期订阅，苹果要求用 App 内购买）；登录用邮箱验证码或**通过 Apple 登录**。账号、用量、订阅状态都在服务器（`cloud/API.md`）；这里只是原生这一侧：网页调下面 9 个方法，拿到苹果签名的东西交给服务器。
+
+都是**异步**的，和 `wsOpen` / `post` 一样：`webkit.messageHandlers.echo` 发过去，第一个参数是网页自己给的编号，结果回 `window.__echoNative(编号, 'ok' / 'fail', JSON 文字)`（`JSON.parse` 一下）；网页重建过就不回。`'fail'` 的 JSON 一律是 `{"error":"短代号","message":"英文说明"}`。安卓的 `EchoNative` 里没有它们（以后接 Google Play 结算）：网页先看 `typeof EchoNative.iapProducts === 'function'`。`diag()` 在 iPhone 上多两项：`appleSignIn`（这个包能不能通过 Apple 登录）、`iapProducts`（两个商品编号）。
+
+| 方法 | 说明 |
+| --- | --- |
+| `iapProducts(id, ids)` | 商品。`ids` 可以是数组或逗号分开的文字，空的 = 月度、年度两个。`ok`：`{products:[{id, kind:'monthly'/'yearly', title, description, displayPrice:'$8.99', price:'8.99', currency:'USD', groupId, period:{unit:'month',value:1}, introOffer:{paymentMode:'freeTrial'/'payAsYouGo'/'payUpFront', period, periodCount, displayPrice} 或 null, introEligible, trial}], missing:[App Store 里没有的编号], canPay}`。`trial` = 有免费试用且这个 Apple 账户还能用。`fail`：`bad-product`、`network`、`store`… |
+| `iapBuy(id, productId, appAccountToken)` | 买。`appAccountToken` 是服务器给这个账号的 UUID（`GET /v1/me` 的 `iapToken`），放进 `Product.PurchaseOption.appAccountToken`，苹果的服务器通知靠它找到账号；不是 UUID 就不买（`fail bad-token`）。在游戏画面上弹苹果的购买确认。`ok` 的 `status` 四种：`purchased`（核对过）/ `unverified`（手机这边核对没过，照样交给服务器，由服务器定）/ `pending`（「请求购买」等家长批准、或者付款要先处理，批准以后从 `echo-iap` 事件来）/ `cancelled`。`purchased` / `unverified` 带交易（见下）。`fail`：`busy`（上一个还没完）、`payments-disabled`（屏幕使用时间禁止了购买）、`not-found`、`network`、`purchase`… |
+| `iapRestore(id)` | 恢复购买：`AppStore.sync()`（可能要输 Apple 账户密码）再列有效的订阅。`ok`：`{synced, syncError?, cancelled?, entitlements:[交易…]}`——同步失败也照样列 |
+| `iapCurrent(id)` | 现在有效的订阅（`Transaction.currentEntitlements`，不弹界面）。`ok`：`{entitlements:[交易…]}` |
+| `iapPending(id)` | 还没 `finish` 的交易（`Transaction.unfinished`）。`ok`：`{transactions:[交易 + kind…]}`。**网页每次打开（登录以后）问一次**：上次买完 App 被杀、或者网页还没打开时来的续费都在这里 |
+| `iapFinish(id, transactionId)` | 服务器存好了这一笔（`POST /v1/iap/apple` 回了 200）才调：`finish()`。`ok`：`{finished:true}`；已经 finish 过、没有这一笔是 `{finished:false, reason:'not-unfinished'}`（不算错）。**原生自己从不 finish**：没 finish 的苹果下次打开 App 再给一次 |
+| `iapManage(id)` | 系统的「管理订阅」面板（取消、换月度 / 年度）。关掉以后回 `ok {shown:true}`，网页再 `iapCurrent` |
+| `appleSignIn(id, nonce)` | 通过 Apple 登录。`nonce` 是网页生成的随机串（16–256 个看得见的 ASCII 字），原生把它的 SHA-256（小写十六进制）放进请求，网页把**原文**和 `identityToken` 一起交给 `POST /v1/auth/apple`。`ok`：`{identityToken, authorizationCode, user, email?, fullName?:{givenName, familyName…}, realUserStatus}`（`email`、`fullName` 只有第一次授权才给）；自己点了取消：`ok {cancelled:true}`。`fail`：`bad-nonce`、`unavailable`（这个包没有登录权限，见下）、`busy`、`unknown`（1000 号，带 `hint`）、`failed`… |
+| `appleCredentialState(id, user)` | 这个 Apple 用户编号还授权着没有：`ok {state:'authorized'/'revoked'/'notFound'/'transferred'}`。`revoked` = 用户在「设置」里停用了，网页应该退出登录。没有登录权限的包：`fail unavailable` |
+
+**交易**（`iapBuy`、`iapCurrent`、`iapRestore`、`iapPending` 和事件里的每一项）：`{jws, verified, verifyError?, transactionId, originalId, productId, purchaseDate, expires, revoked, revocationReason?, upgraded, appAccountToken, environment, ownership}`。`jws` = `VerificationResult.jwsRepresentation`，原样作为 `signedTransaction` 交给服务器；编号是**字符串**（UInt64，JavaScript 的数字放不下全部）；时间是毫秒，没有就是 `null`；`environment` 是 `Production` / `Sandbox` / `Xcode`。
+
+**事件** `echo-iap`（`window.addEventListener('echo-iap', e => …)`，和 `echo-mic` 一样的写法）：一开 App 原生就听 `Transaction.updates`，续费、退款 / 撤销、「请求购买」被批准、别的设备上买的、优惠码，来一笔发一次，`e.detail` = 交易 + `kind`：`purchase` / `renewal` / `revoked` / `expired` / `upgraded`。网页收到就交给服务器，服务器回 200 再 `iapFinish`。网页还没打开时来的不会丢（`iapPending` 拿）。
+
+网页那边的顺序（下一步做账号页和付费墙时照这个）：登录（邮箱验证码，或 `appleSignIn` → `POST /v1/auth/apple`）→ `GET /v1/me` 拿 `iapToken` → `iapPending`，有就逐笔交给服务器再 `iapFinish` → 付费墙 `iapProducts` → `iapBuy(…, iapToken)` → `purchased` / `unverified` 交给服务器 → `iapFinish`；「恢复购买」按钮 `iapRestore` → 每个 `jws` 交给服务器。苹果审核要求付费墙上写清价格、周期、自动续费、怎么取消，并有《使用条款》和《隐私政策》的链接（见下面的清单）。
+
+### 通过 Apple 登录的权限：不签名的包 / 签名的包
+
+`com.apple.developer.applesignin` 这个权限要描述文件（要签名）；云上模拟器的包都不签名。所以权限文件 `App/EchoIsland.entitlements` **不写在 `project.yml` 里**，由 `make-config.mjs` 决定带不带：
+
+| | 云上的模拟器包（`ios-simulator.yml`）、自己在 Mac 上不设团队 | 签名的包（`ios-testflight.yml`、设了 `ECHO_TEAM_ID`） |
+| --- | --- | --- |
+| `ECHO_APPLE_SIGNIN` | 不写 = 没有团队编号就不带 | 不写 = 有团队编号就带；`0` 不带 |
+| `Generated/Echo.xcconfig` | 没有 `CODE_SIGN_ENTITLEMENTS` | `CODE_SIGN_ENTITLEMENTS = App/EchoIsland.entitlements` |
+| `BuildConfig.appleSignIn` | `false`：`appleSignIn` / `appleCredentialState` 当场回 `fail {error:'unavailable', message:'Sign in with Apple is not available in this build …'}`，不碰系统、不崩 | `true` |
+
+TestFlight 的工作流先带着它签；苹果不肯（App ID 上没勾「Sign In with Apple」、密钥的权限不够）就自动不带它再签一次、照样传上去，并在 Actions 页面上出一条黄色提示，说要去哪里勾。勾上以后再跑一次就有了。
+
+### 本地 App Store（StoreKit 测试）
+
+- `App/Store.storekit`：Xcode 的 StoreKit 配置文件，一个订阅组「Echo Island Premium」，两个自动续期订阅 `com.echoisland.app.premium.monthly`（US$8.99 / 月）、`com.echoisland.app.premium.yearly`（US$59.99 / 年，7 天免费试用——**例子**，真的价格和试用在 App Store Connect 里定，这个文件只给测试用）。改了 App 标识，这里的两个编号也要跟着改（`tests/ios.test.js` 核对）。
+- 在 Mac 的 Xcode 里 ⌘R：scheme 的运行设置用它（`project.yml` 的 `storeKitConfiguration`），买东西不花钱、不连苹果；Debug → StoreKit → Manage Transactions 里能退款、让订阅过期、批准「请求购买」。正式包、TestFlight 不受影响。
+- 单元测试 `Tests/StoreKitTests.swift` 用 `SKTestSession(contentsOf:)` 读测试包里的那一份（不弹界面）：商品、买月度（JWS 里带着账号的 UUID）、`iapPending` → `iapFinish`、请求购买 → 批准以后从事件来、恢复、强制续费 → `renewal` 事件 → 过期以后不再有效、退款 → `revoked` 事件。取消只测了结果怎么回（`AccountLogicTests`：关掉了确认界面的测试里点不了「取消」）；`unverified` 在本地 App Store 里造不出来。
+- Xcode 本地 App Store 的交易是 Xcode 的证书签的：手机上算核对过，**服务器那边会拒**（`cloud/API.md`：只认 Apple Root CA – G3），这是对的。
+- UI 测试（`-EchoSelfTest store`）只要求异步桥一路通（网页 → `Store.swift` → `window.__echoNative`，用一个当场回的 `bad-token`）；问商品、有商品时弹不弹购买面板只记下来：`xcodebuild test` 不把配置文件交给模拟器（UI 测试里 `SKTestSession` 也管不到被测的 App），云上多半一个商品都没有。
 
 ## iPhone 上才要管的（都在壳子里，安卓不变）
 
@@ -139,15 +191,48 @@ node tools/ios/scan.js                   # 列出用到的、iOS 要特别注意
 
 ## 装到真 iPhone：家长（老板）自己要做的
 
-Claude 不能注册账号、同意协议、付钱，也不能碰证书。下面这些要本人来：
+Claude 不能注册账号、同意协议、付钱，也不能碰证书和密钥。下面这些要本人来（2026-11-19：公司账号 **Echo of Forest Pty Ltd** 已经开通，另一个 App 已经在用 TestFlight；签了「免费 App 协议」，**还没签「付费 App 协议」**）：
 
-1. **加入 Apple Developer Program**（developer.apple.com/programs）：每年 **US$99（中国区 ¥688）**。
-   - 个人：卖家名字是本人的名字。
-   - 公司（推荐，App Store 上显示公司名）：要公司的法律实体、**D-U-N-S 编号**（免费申请，要几天到几周）、有权代表公司签字、公司网站、公司域名的邮箱。
-2. 登录 App Store Connect，**同意协议**（免费 App 只要「Apple Developer Program 许可协议」；以后收费或内购才要签「付费 App 协议」并填银行和税务）。
-3. 在开发者后台登记 **App ID**（Bundle ID，例如 `com.公司域名倒过来.echoisland`），告诉我（Claude）换掉 `Config/Base.xcconfig` 的占位值；把 **团队编号**（Team ID，10 位）告诉我。
-4. 证书和描述文件：用 Xcode 的「自动管理签名」就行（要一台装了 Xcode 的 Mac 登录这个 Apple 账号）；或者在云上签名：要把分发证书（.p12 + 密码）和 App Store Connect API 密钥放进仓库的 Secrets——**这两样只能本人去建、去放**，不要发给别人、不要贴进聊天。
+1. ~~加入 Apple Developer Program~~（已经有了，公司名义）。
+2. App Store Connect 里**签「付费 App 协议」**（协议、税务和银行 → 付费 App）：要填银行账户和税务（澳洲公司填 ABN）。**不签它，订阅在沙盒和 TestFlight 里都买不了**（`iapProducts` 回 `missing`），也上不了架。
+3. 开发者后台登记 **App ID** `com.echoisland.app`，勾 **Sign In with Apple**（见「上 TestFlight」第 1 步）。
+4. 证书和描述文件：不用自己建。TestFlight 的工作流用 App Store Connect API 密钥让苹果的云签名签（API 密钥、团队编号放进仓库的 Secrets——**只能本人去建、去放**，不要发给别人、不要贴进聊天）。自己有 Mac 时也可以 Xcode 的「自动管理签名」。
 5. 在 App Store Connect 里**建这个 App 的记录**（名字、主要语言、Bundle ID、SKU）。
+
+## 上 TestFlight（每个版本先给老板自己装）
+
+`.github/workflows/ios-testflight.yml`，照老板另一个仓库（restaurantweb-site-stack）已经跑通的做法：Linux 上先看密钥都放了 → Mac 上 `tests/ios.test.js` → 正式包的设置编一个模拟器包、装上打开、25 秒后还在、网页打开了（坏的包到这里就停）→ `xcodebuild archive`（临时签名，权限文件带进去）→ `-exportArchive`（`app-store-connect`，API 密钥 + `-allowProvisioningUpdates`：苹果的云签名，自动登记 App ID、生成描述文件，不在用完就扔的 Mac 上建证书）→ 看签好的包（构建号、权限、没有自测页）→ `altool` 用 API 密钥上传，不行再用 xcodebuild 的上传。
+
+- **只能手动点**，推代码不会自己跑；同一个分支后来的排队，不取消正在传的。
+- 构建号 = 2026-01-01（UTC）以来的分钟数（和老板另一个 App 一样：只增不减）；版本号（`1.0.0` 这种）不写就用 `Config/Base.xcconfig` 的 `MARKETING_VERSION`，写了用写的。
+- 仓库是公开的：**只上传日志**（`ios-testflight-logs`），不传 `.ipa`、`.xcarchive`、签过名的东西；密钥只放进要用的那几步，xcodebuild 跑的时候去掉它们（它会把环境变量写进日志），上传前再把团队编号、密钥编号从日志里抹掉。
+- 输入：`edition`（默认 `sales`；`family` 要另外两个 Secrets `ECHO_PARENT_PIN`、`ECHO_DASHSCOPE_KEY`，App 标识多 `.family`、要在 App Store Connect 另建一个 App，**只给自家人**）、`version`、`apple_signin`（默认带）。
+
+**老板第一次要做的（按顺序）：**
+
+1. developer.apple.com → Certificates, Identifiers & Profiles → **Identifiers** → ＋ → App IDs → App → 描述「Echo Island」、Bundle ID 选 **Explicit**：`com.echoisland.app` → Capabilities 里勾 **Sign In with Apple**（选 Enable as a primary App ID）；**In-App Purchase** 默认就有 → Continue → Register。
+   （不勾也能传：工作流会不带登录权限再签一次、照样传上去，并提示去这里勾。）
+2. App Store Connect → 我的 App → ＋ 新建 App：平台 iOS、名称（商店里的名字，全球不能重名，例如「Echo Island: English Adventure」）、主要语言、Bundle ID 选 `com.echoisland.app`、SKU（自己起，例如 `echoisland-ios`）、用户访问权限「完全访问」。
+3. App Store Connect → 用户和访问 → 集成 → App Store Connect API → 团队密钥 → ＋：名字「GitHub TestFlight」、访问权限 **管理（Admin）**（要能登记 App ID、生成描述文件）→ 下载 `AuthKey_XXXXXXXXXX.p8`（**只能下载一次**），记下密钥 ID 和页面上方的 Issuer ID。
+   （另一个 App 已经有一把 Admin 的团队密钥的话，同一把也能用。）
+4. 把四个值放进**这个仓库**的 Secrets（Settings → Secrets and variables → Actions）：`ASC_KEY_ID`、`ASC_ISSUER_ID`、`ASC_KEY_P8`（.p8 文件的全文，从 BEGIN 那一行到 END 那一行都要）、`APPLE_TEAM_ID`（10 位团队编号）。用 `tools/` 里准备好的那个设置小窗口，或者 `gh secret set 名字 -R 仓库`（值从剪贴板 / 文件来，不要贴进聊天）。
+5. 触发（下面）。第一次传上去以后 App Store Connect → TestFlight 里：处理完（5–30 分钟）→「出口合规」已经在 Info.plist 里答了（只用标准加密）→ 把自己加进内部测试组 → iPhone 上装 TestFlight App 就能装。
+
+**怎么触发：**
+
+```bash
+gh workflow run ios-testflight.yml --ref echo-island/next                      # 销售版，带通过 Apple 登录
+gh workflow run ios-testflight.yml --ref echo-island/next -f version=1.0.1     # 换版本号
+gh workflow run ios-testflight.yml --ref echo-island/next -f apple_signin=false
+gh run list --workflow ios-testflight.yml                                       # 看结果；日志：gh run download <编号> -n ios-testflight-logs
+```
+
+**注意：这个工作流只在 `echo-island/next` 分支上，不在默认分支 `main` 上**（这个仓库的 `main` 不是游戏，不往那边放）。GitHub 只认得「默认分支上有、或者已经跑过一次」的手动工作流，所以第一次 `gh workflow run` 可能说找不到（HTTP 404）。**最省事的办法是推一个 `testflight-` 开头的标签**，它按默认的设置（销售版、`Base.xcconfig` 里的版本号、带通过 Apple 登录）传一次；跑过一次以后 `gh workflow run` 也认得了：
+
+```bash
+git tag testflight-20261119-1
+git push origin testflight-20261119-1
+```
 
 三条路装到 iPhone 上：
 
@@ -161,7 +246,7 @@ Claude 不能注册账号、同意协议、付钱，也不能碰证书。下面�
 
 ## App Store 审核要点（这个 App 的）
 
-- **隐私清单** `App/Resources/PrivacyInfo.xcprivacy`：不追踪；收集的数据写了「音频」和「其他用户内容」（口语录音、聊天的话发到阿里云识别和回答，不和身份关联、不用于追踪）。代码里真的用到的「要说明原因的接口」：
+- **隐私清单** `App/Resources/PrivacyInfo.xcprivacy`：不追踪（`NSPrivacyTracking` = false，没有追踪域名）；收集的数据（公开版有账号，所以都**和身份关联**、都只为 App 的功能）：邮箱、用户 ID、购买记录、音频（口语打分、和岛民聊天时说的话，经服务器转给 AI，服务器不留）、其他用户内容（聊天打的字、举报时发的几句）。代码里真的用到的「要说明原因的接口」：
   - UserDefaults（家长密码的状态、屏幕方向、渲染挂了几次）→ `CA92.1`；
   - 文件修改时间（列「文稿」里的备份）→ `C617.1`；
   - 开机以来的时间（`ProcessInfo.systemUptime`：2 分钟里网页挂了几次）→ `35F9.1`；
@@ -172,7 +257,68 @@ Claude 不能注册账号、同意协议、付钱，也不能碰证书。下面�
 - **年龄分级**（2025 年起是 4+ / 9+ / 13+ / 16+ / 18+，问卷里新加了「家长控制」「年龄验证」「AI 聊天」这类问题）：如实答；有家长密码、学习锁、冒险时间这些「App 内的控制」。AI 岛民说什么由云上的模型决定，审核会关心它会不会说出不合适的话——岛民的人设和安全规则（`talk-core.js` 的 `instructions()`）、本机的关键词标记、家长能看全文，在审核备注里写清楚。
 - **AI 内容**（审核指南 1.2、5.1.2(i)）：用第三方 AI 时要在用之前清楚告诉用户数据发给了谁（阿里云）、征得同意（销售版向导的第 ① 步和聊天页「家长须知」就是这个）；要有举报不合适内容的办法和联系方式。
 - **不要放进「儿童」分类**（Kids Category，指南 1.3 / 5.1.4）：「儿童」分类不许把孩子的个人信息（包括声音）发给第三方，而这个 App 的核心就是把孩子的声音发给阿里云识别、和 AI 自由对话；一旦进了「儿童」分类，以后每次更新都要守它的规矩。面向所有年龄、按普通 App 上架。
-- **审核用的账号**：销售版第一次打开要家长设密码、粘贴百炼密钥。给审核员准备一把**单独的、额度很小的**测试密钥写在审核备注里（不要用家里那把），或者说明没有密钥时哪些功能能用（闯关、冒险、复习都不用 AI）。
+- **审核用的账号**：公开版的 AI 走服务器（`cloud/`）、要登录：给审核员一个**演示账号**（见下面清单的「审核备注」）。还没接服务器的老销售版（家长粘贴百炼密钥）不要拿去公开审核。
+
+## App Store Connect 清单（Echo of Forest Pty Ltd 上架这个 App 要填的）
+
+本人在 App Store Connect / 开发者后台填；Claude 只能写草稿、不能替你点「提交」。
+
+**1. 订阅（App 内购买）** —— 先签「付费 App 协议」（协议、税务和银行）
+
+- 我的 App → 回声岛 → 订阅 → 新建**订阅组**：参考名称 `Echo Island Premium`（组的显示名称可以写「回声岛 Premium」/「Echo Island Premium」）。
+- 组里两个**自动续期订阅**（两个放同一个级别：只是长短不同，换档在下一个周期生效）：
+
+  | 参考名称 | 产品 ID（**和 `make-config.mjs` 的默认值一字不差**） | 时长 | 价格 |
+  | --- | --- | --- | --- |
+  | Premium Monthly | `com.echoisland.app.premium.monthly` | 1 个月 | US$8.99（价格表按美国定，别的地区自动换算，可以单独改） |
+  | Premium Yearly | `com.echoisland.app.premium.yearly` | 1 年 | US$59.99 |
+
+  要换编号：打包时设 `ECHO_IAP_MONTHLY` / `ECHO_IAP_YEARLY`，服务器的 `APPLE_PRODUCTS` 也要一样（`cloud/API.md` §7）。
+- 每个订阅填：显示名称和描述（至少英文、简体中文）、**审核截图**（付费墙的截图）、审核备注。
+- **首次优惠**（可选）：年度 7 天免费试用只是 `Store.storekit` 里的**例子**，在这里定真的（订阅 → 订阅价格 → 推介促销优惠）。
+- 第一次提交审核时，订阅要和 App 的版本**一起**提交（版本页面「App 内购买项目和订阅」里勾上）。
+
+**2. App Store 服务器通知（V2）** —— App 信息 → App Store 服务器通知
+
+- 正式环境和沙盒环境的网址都填：`https://<服务器的域名>/v1/iap/apple/notifications`（`cloud/API.md` §7 `POST /v1/iap/apple/notifications`；域名等 `cloud/README.md` 定了再填）。版本选 **Version 2**。
+
+**3. 通过 Apple 登录**
+
+- App ID `com.echoisland.app` 勾 **Sign In with Apple**（Enable as a primary App ID）——见「上 TestFlight」第 1 步。
+- 服务器要能撤销 Apple 登录（删账号时，`cloud/API.md` §4 `DELETE /v1/me`）：开发者后台 → Keys → ＋ → 勾 Sign In with Apple → Configure 选 `com.echoisland.app` → 下载 `.p8`（只能下载一次），记下 Key ID；这把钥匙、团队编号、`com.echoisland.app` 交给服务器的设置（放进服务器的密钥里，不进仓库）。
+- 服务器核对 identityToken 的 `aud` = `com.echoisland.app`。
+
+**4. 年龄分级**（2025 年起的问卷：4+ / 9+ / 13+ / 16+ / 18+）
+
+- 「用户生成内容」「和别人聊天 / 发消息」：**是**——岛民的话是 AI 当场生成的，内容不是我们提前写死、审过的，按「用户生成内容」答最稳妥；有安全规则（只扮演游戏角色、限定话题）、本机关键词标记、举报按钮（`POST /v1/report`，留 90 天）、家长能看全文。孩子之间不能互相聊天。
+- 「家长控制」：**是**（家长密码、学习锁、冒险时间、儿童账号要家长邮件同意）。「年龄验证 / 年龄确认」：只问年龄段（自己选，不验证证件），按「否」或「自我申报」如实答。
+- 不是赌博、没有不受限制的网页浏览、没有暴力 / 色情内容；医疗、健康话题：否。
+- 结果多半是 **9+ 或 13+**，以问卷算出来的为准。**不要勾「为儿童设计」/ 不进「儿童」分类**（上面「审核要点」说了原因）。
+
+**5. App 隐私（营养标签）**——和隐私清单一致
+
+| 数据类型 | 收集 | 和身份关联 | 用于追踪 | 用途 |
+| --- | --- | --- | --- | --- |
+| 联系信息 → 电子邮件地址 | 是（登录、儿童账号的家长同意邮件） | 是 | 否 | App 功能 |
+| 标识符 → 用户 ID | 是（账号编号、Apple 的用户编号） | 是 | 否 | App 功能 |
+| 购买项目 → 购买历史记录 | 是（订阅） | 是 | 否 | App 功能 |
+| 用户内容 → 音频数据 | 是（说的话，转给 AI 识别和回答，不保存） | 是 | 否 | App 功能 |
+| 用户内容 → 其他用户内容 | 是（聊天打的字、举报的那几句） | 是 | 否 | App 功能 |
+
+再按服务器最后的样子核对一遍（`cloud/README.md` 出来以后）：年龄段、能力级别、每天用了多少分钟也存在服务器上——按「其他数据类型」或「产品交互」申报更稳妥。隐私政策网址必填（`pages/privacy.html` 的内容改成公开版放到公司网站上），付费墙和商品页还要有《使用条款》（EULA）的链接（用苹果的标准 EULA 就在描述里写那个链接）。
+
+**6. 审核备注**（App 审核 → 登录信息 + 备注）
+
+- 演示账号：给一个审核员用的邮箱，服务器那边要能让它不用收邮件就登录（例如固定的验证码，只对这一个邮箱有效、上架后换掉）——**要和做服务器的那一步一起做**，这里先占位：`review@<公司域名>` / 验证码 `<服务器设的>`；年龄段选「成人」（不用家长同意就能用 AI 聊天）。也可以用「通过 Apple 登录」。
+- 怎么找到 AI 聊天：打开 → 登录 → 首页第三个标签「和岛民聊天」→ 选一个岛民 → 按住话筒说英语（或点「麦克风用不了？点这里打字」）；免费每天 5 分钟。
+- 写明：AI 是第三方模型（阿里云通义千问）经我们的服务器调用；数据发给谁在首次打开和聊天页的说明里写了；有举报按钮和联系邮箱。
+- 订阅：写明在哪里看到付费墙、怎么恢复购买。沙盒测试账号审核员自己有，不用给。
+
+**7. 欧盟的「交易商」身份（数字服务法 DSA）**
+
+- App Store Connect → 业务 / 协议 → **交易商身份**：公司卖订阅，是交易商，选「是，我是交易商」。
+- 要填并经苹果验证：公司地址（Echo of Forest Pty Ltd 的注册地址）、电话、邮箱；这些会**显示在欧盟区的商品页上**（用公司的电话和邮箱，不用私人的）。
+- 不填的话 App 在欧盟 27 国的商店里不上架（别的地区不受影响）。
 
 ## 中国大陆
 
@@ -181,5 +327,6 @@ Claude 不能注册账号、同意协议、付钱，也不能碰证书。下面�
 ## 还没验证过的（要在真 iPhone / 云上的 Mac 上看）
 
 - 第一次在云上编译：这台电脑编不了 Swift，Swift 的写法是对着苹果的文档和 WebKit 的头文件核过的，但还没真编过。
+- 订阅和登录（2026-11-19 加的 `Store.swift`、`AppleSignIn.swift`、StoreKit 测试、TestFlight 工作流）：还没在云上编过、没传过 TestFlight；`-allowProvisioningUpdates` 能不能自己给 App ID 加上「通过 Apple 登录」没试过（工作流不行就不带它再签一次）；沙盒里真的买要等「付费 App 协议」签好、App Store Connect 里建好两个订阅。
 - 真 iPhone 上：麦克风录音和阿里云实时识别、AI 聊天（直连）、配音的 Ogg Opus、静音键、来电打断以后声音接不接得上、横屏的灵动岛、长按会不会出放大镜、存档在 WebKit 里能放多少、内存大的 3D 场景会不会把网页进程挤掉。
 - 销售版的首次设置向导第 ② 步「设备检查」是按安卓写的（系统版本那一行、「iPhone 装不上」那句说明），iPhone 上要改成认 `diag().platform === 'ios'`（`setup.js`，见交接说明）。

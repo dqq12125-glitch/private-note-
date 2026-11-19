@@ -7,6 +7,8 @@ import UIKit
 final class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // 订阅：一开 App 就听 Transaction.updates（苹果只在刚打开时把没 finish 的交易给一次，晚了会错过；Store.swift）
+        Store.shared.start()
         return true
     }
 

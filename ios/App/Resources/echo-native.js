@@ -3,6 +3,7 @@
 // 所以 game.js / talk.js / setup.js 不用为 iPhone 改。安卓上这些方法是同步的，这里分两条路：
 //   同步（SYNC）：window.prompt('__echo_native__:' + JSON) → 原生在 prompt 回调里办完、把结果当 prompt 的返回值交回来；
 //   异步（ASYNC，连阿里云的四个，没有返回值）：webkit.messageHandlers.echo.postMessage(…)，结果由原生调 window.__echoNative(id, 类型, 数据)。
+// 另有 iPhone 才有的几个（IOS_ONLY：订阅、通过 Apple 登录），走同一条异步的路；安卓的 EchoNative 里没有它们。
 // 另外还管几件只有 iPhone 才要管的事（都在这个文件里，不动游戏的代码）：声音不被静音键关掉、开麦克风时切到「边录边放」、
 // 来电 / Siri 打断以后把声音接上、麦克风的 16kHz 声音通道在 iPhone 上会丢样本所以改用系统默认的（WebKit bug 251350）、不让长按选字 / 双指缩放、
 // <html> 上加 class="echo-ios"（style.css 末尾横屏让开灵动岛的几条认它）、请求持久存储。
@@ -61,8 +62,22 @@
     backupRead: ['sync', 's', ''],
     backupPick: ['sync', '', false],
     shareText: ['sync', 'ss', false],
-    shareFile: ['sync', 'sss', false]
+    shareFile: ['sync', 'sss', false],
+    // ---- iPhone 才有的（IOS_ONLY，安卓以后接 Google Play 结算再加）：都是异步的，第一个参数是网页给的编号，
+    //      结果 window.__echoNative(id, 'ok' / 'fail', JSON 文字)；说明在 ios/README.md「订阅和登录」 ----
+    // 订阅（StoreKit 2）。iapProducts 的第二个参数可以是数组（转成 "a,b"）或者逗号分开的文字，空的 = 月度、年度两个
+    iapProducts: ['async', 'is'],
+    iapBuy: ['async', 'iss'],          // (id, 商品编号, 服务器给这个账号的 UUID)
+    iapRestore: ['async', 'i'],
+    iapCurrent: ['async', 'i'],
+    iapPending: ['async', 'i'],
+    iapFinish: ['async', 'is'],        // (id, transactionId)：服务器存好了才调
+    iapManage: ['async', 'i'],
+    // 通过 Apple 登录
+    appleSignIn: ['async', 'is'],      // (id, 网页生成的随机 nonce 原文)
+    appleCredentialState: ['async', 'is']
   };
+  var IOS_ONLY = ['iapProducts', 'iapBuy', 'iapRestore', 'iapCurrent', 'iapPending', 'iapFinish', 'iapManage', 'appleSignIn', 'appleCredentialState'];
 
   function make(name, spec) {
     var kind = spec[0], types = spec[1], hasRet = spec.length > 2, dflt = spec[2];
@@ -187,7 +202,7 @@
     if (!live.length) sessionType('playback');
     return n;
   }
-  W.__echoIOS = { wake: wake, spec: SPEC, live: function () { return live.length; } };
+  W.__echoIOS = { wake: wake, spec: SPEC, iosOnly: IOS_ONLY.slice(), live: function () { return live.length; } };
 
   // ---------- 触摸 ----------
   // 长按不弹「拷贝 / 查询」、不选中文字（输入框照常能选、能粘贴）；横屏时文字不自动放大；不让双指缩放、输入框聚焦时不放大页面

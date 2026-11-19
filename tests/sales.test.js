@@ -8,6 +8,7 @@
 // - 课本单元只开放本学年（七上、七下）；忘了家长密码：导出存档 → 清除数据 → 重新设置 → 从备份恢复，进度回来
 // - AI 标识：聊天页顶上「AI 生成 · 由阿里云通义千问提供」、开头的语音提示；没有配音的句子用阿里云 qwen3-tts-flash，不再连有道
 // - 周报 AI 花费按 qwen3.8-omni-flash-realtime 北京区现价；开源许可与致谢页；销售版改家长密码、改家庭定制；家庭版不出向导
+// - iPhone 版（假桥 platform: 'ios'）：② 设备检查是 iOS 版本 + 机型（最低 18.4）、WebGL2、空间、麦克风，没有安卓的字；中文、英语界面各走一遍；横屏 844×390 按钮不压在内容上
 // 运行：node tests/sales.test.js（大约 1–2 分钟）。和 tests/apk.test.js 一样起一个本机小网站（http://echo.localhost:端口），外面的网址一律挡掉
 const path = require('path');
 const fs = require('fs');
@@ -375,6 +376,79 @@ function fakeMic() {
   check(await q.evaluate(() => !window.DEX.sales && !document.querySelector('#setup') && !window.EchoSetup.needed() && window.EchoNative.setPin('5555') === false),
     '家庭版：不出向导，原生不让在手机上设密码');
   await q.close();
+
+  // ---------- iPhone 版：② 设备检查认 diag().platform === 'ios'（假桥照 ios/App/Sources/Bridge.swift 回）——iOS 版本 + 机型（最低 18.4）、WebGL2、空间、麦克风 ----------
+  const CJK = /[　-〿㐀-䶿一-鿿豈-﫿＀-￯]/;   // 和 tests/i18n.test.js 的一样
+  const ic = await b.newContext({ viewport: { width: 390, height: 844 } });
+  await ic.route(u => !u.href.startsWith(HOST), r => r.abort());
+  const ip = await ic.newPage();
+  ip.setDefaultTimeout(6000);
+  const ierrs = []; ip.on('pageerror', e => ierrs.push(e.message));
+  await ip.addInitScript(FN.install, { edition: 'sales', pin: null, key: '', net: 'ok', mic: 'granted', platform: 'ios', ios: '18.4', model: 'iPhone15,2' });
+  await ip.addInitScript(keep);
+  await ip.addInitScript(fakeMic);
+  const IE = (f, a) => ip.evaluate(f, a);
+  const iuntil = async fn => { for (let i = 0; i < 60; i++) { if (await fn()) return true; await ip.waitForTimeout(150); } return false; };
+  const ifake = o => IE(o => { Object.assign(window.__fakeNative, o); const k = JSON.parse(localStorage.getItem('__fakeOpts') || '{}'); localStorage.setItem('__fakeOpts', JSON.stringify(Object.assign(k, o))); }, o);
+  const irun = async () => { await ip.click('[data-act=suDevRun]'); await iuntil(() => IE(() => !!document.querySelector('#su-verdict'))); };
+  const idev = () => IE(() => ({ rows: Object.fromEntries([...document.querySelectorAll('.su-dev li[data-k]')].map(li => [li.dataset.k, li.className])), txt: document.querySelector('#su-box').innerText,
+    verdict: (document.querySelector('#su-verdict') || {}).className || '', next: document.querySelector('#su-next').disabled }));
+  await ip.goto(PAGE);
+  await IE(() => localStorage.clear());
+  await ip.reload();
+  await iuntil(() => IE(() => !!document.querySelector('#setup')));
+  await ip.click('#su-consent'); await ip.waitForTimeout(150);
+  await ip.click('#su-next'); await ip.waitForTimeout(250);
+  check(await iuntil(() => IE(() => !!document.querySelector('#su-verdict'))) && await IE(() => window.EchoNative.diag().includes('"platform":"ios"')), 'iPhone 版（diag 的 platform = ios）② 设备检查：检查完给结论');
+  let dv = await idev();
+  check(dv.rows.ios === 'ok' && !('android' in dv.rows) && !('webview' in dv.rows) && 'webgl2' in dv.rows && dv.rows.storage === 'ok' && dv.rows.mic === 'ok', 'iPhone 版：iOS 版本、WebGL2、剩余空间、麦克风，没有安卓版本、WebView 两行', dv.rows);
+  check(/iOS 系统/.test(dv.txt) && /iOS 18\.4（iPhone15,2）/.test(dv.txt) && /这台 iPhone/.test(dv.txt), 'iPhone 版：显示 iOS 版本和机型「iOS 18.4（iPhone15,2）」', dv.txt.slice(0, 200));
+  check(!/安卓|Android|WebView|装不上|应用商店|权限/.test(dv.txt), 'iPhone 版：没有安卓的字（安卓版本、WebView、「iPhone 装不上」）', dv.txt.slice(0, 300));
+  check(!/bad/.test(dv.verdict) && /付款链接/.test(dv.txt) && !dv.next, 'iOS 18.4：合格，提示这时候付款，可以往下走（和安卓一样）', dv);
+  await ip.screenshot({ path: out + '/sales-8-ios-device.png' });
+  await ifake({ ios: '17.5' }); await irun();
+  dv = await idev();
+  check(dv.rows.ios === 'bad' && /bad/.test(dv.verdict) && /不合格/.test(dv.txt) && /iOS 17\.5（iPhone15,2）/.test(dv.txt) && /要 iOS 18\.4 以上/.test(dv.txt) && /软件更新/.test(dv.txt), 'iOS 17.5：不合格，说清楚要 iOS 18.4 以上、到「软件更新」升级', dv.txt.slice(0, 400));
+  check(dv.next && !/付款链接/.test(dv.txt) && /不收费/.test(dv.txt), 'iOS 17.5：不能往下走、不提付款', dv);
+  await ip.screenshot({ path: out + '/sales-8-ios-device-bad.png' });
+  await ifake({ ios: '18.3.2' }); await irun();
+  const v183 = (await idev()).rows.ios;
+  await ifake({ ios: '26.0' }); await irun();
+  check(v183 === 'bad' && (await idev()).rows.ios === 'ok', '版本按「主.次」比：18.3.2 不合格，26.0 合格', v183);
+  await IE(() => localStorage.setItem('__mic', 'deny')); await ifake({ mic: 'blocked' }); await irun();
+  dv = await idev();
+  check(dv.rows.mic === 'bad' && /打开「麦克风」开关/.test(dv.txt) && !/「权限」/.test(dv.txt) && await ip.isVisible('[data-act=suMicFix]'), 'iPhone 版麦克风被拒：「去打开」→ 直接是「麦克风」开关（没有安卓「权限」那一层）', dv.txt.slice(0, 400));
+  await IE(() => localStorage.setItem('__mic', 'ok')); await ifake({ mic: 'granted' }); await irun();
+  check((await idev()).rows.mic === 'ok', 'iPhone 版：麦克风好了，重新检查合格');
+  // 英语界面：回第一页换成 English，再来设备检查
+  await ip.click('[data-act=suBack]'); await ip.waitForTimeout(250);
+  await ip.click('[data-act=suUi][data-l=en]'); await ip.waitForTimeout(250);
+  await ifake({ ios: '26.1', model: 'iPhone17,3' });
+  await ip.click('#su-next'); await ip.waitForTimeout(250);
+  await irun();
+  dv = await idev();
+  check(!CJK.test(dv.txt) && /iOS version/.test(dv.txt) && /iOS 26\.1 \(iPhone17,3\)/.test(dv.txt) && /this iPhone/.test(dv.txt) && !/Android|WebView/.test(dv.txt) && /payment link/.test(dv.txt) && !dv.next,
+    '英语界面 · iPhone 版设备检查：没有中文，「iOS 26.1 (iPhone17,3)」合格，可以往下走', dv.txt.slice(0, 400));
+  await ifake({ ios: '17.5' }); await irun();
+  dv = await idev();
+  check(!CJK.test(dv.txt) && dv.rows.ios === 'bad' && /Needs iOS 18\.4 or newer/.test(dv.txt) && /Software Update/.test(dv.txt) && dv.next, '英语界面 · iOS 17.5：不合格（Needs iOS 18.4 or newer），没有中文，不能往下走', dv.txt.slice(0, 400));
+  await ip.screenshot({ path: out + '/sales-8-ios-device-en.png' });
+  // 横屏（844×390）：左边标题和步骤，右边内容一栏自己滚动，「上一步 / 下一步」在内容下面——按钮不压在内容上，整个框不用滚
+  const land = () => IE(() => {
+    const box = document.querySelector('#su-box'), step = box.querySelector('.su-step'), R = e => e.getBoundingClientRect(), sr = R(step);
+    const hit = (a, c) => Math.min(a.right, c.right) - Math.max(a.left, c.left) > 0.5 && Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top) > 0.5;
+    const btns = [...box.querySelectorAll('.su-nav button')].map(R);
+    return { scrolls: getComputedStyle(step).overflowY === 'auto', apart: !btns.some(x => hit(x, sr)), boxOver: box.scrollHeight - box.clientHeight, inView: btns.every(x => x.top >= 0 && x.bottom <= innerHeight) };
+  });
+  await ip.setViewportSize({ width: 844, height: 390 }); await ip.waitForTimeout(300);
+  let ld = await land();
+  check(ld.scrolls && ld.apart && ld.boxOver <= 1 && ld.inView, '横屏 844×390 · 设备检查：内容一栏自己滚动，按钮在它下面、不压在内容上', ld);
+  await ip.click('[data-act=suBack]'); await ip.waitForTimeout(250);
+  ld = await land();
+  check(ld.scrolls && ld.apart && ld.boxOver <= 1 && ld.inView, '横屏 844×390 · 第一页（语言、谁来用）：按钮不压在内容上', ld);
+  await ip.screenshot({ path: out + '/sales-9-land-welcome.png' });
+  check(!ierrs.length, 'iPhone 版向导没有页面错误', ierrs);
+  await ic.close();
 
   await b.close(); srv.close();
   console.log(fails ? `\n✗ ${fails} 项没过` : '\n全部通过');

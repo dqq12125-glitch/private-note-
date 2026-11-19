@@ -7,8 +7,11 @@
 // 4. ios/ 里会进仓库的文件没有像密钥的字符串（sk-…、64 位十六进制、私钥），生成的设置和网页不进仓库
 // 5. ios/scripts/copy-web.mjs 的白名单和安卓 build.gradle 的 copyWeb 一样（按真的文件列表比一遍，家庭版、销售版）
 // 6. ios/scripts/make-config.mjs：家长密码的哈希和 PinGuard（Swift / Java）一样；销售版给了密钥、密码、地址就停下；家庭版只放哈希
-// 7. .github/workflows/ios-simulator.yml 读得出来、推到 echo-island/next 时跑、步骤齐全
+// 7. .github/workflows/ios-simulator.yml 读得出来、推到 echo-island/next 时跑、步骤齐全（StoreKit 测试单独一步、挑 26.2 的模拟器）；
+//    ios-testflight.yml 只能手动点、先核对再传、密钥不进日志、只上传日志
 // 8. 工程（project.yml）、Swift 里几处容易出错的地方（WebKit 回调的写法、调试包才能被网页检查器连、被叫停的请求不再回）、自测页覆盖每个方法
+// 9. 订阅（Store.swift）和「通过 Apple 登录」（AppleSignIn.swift）：iPhone 才有的方法（IOS_ONLY 表）三处 + 自测页 + 两份 README 对得上、
+//    finish 只在网页确认以后、没带权限的包当场回 unavailable、本地 App Store（Store.storekit）的商品和打包设置一样
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -51,6 +54,15 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(names.every(n => andr[n] && andr[n].args === docMethods[n]), 'README 写的参数个数和安卓一样');
   const ASYNC = names.filter(n => andr[n] && andr[n].async).sort();
   check(JSON.stringify(ASYNC) === JSON.stringify(['post', 'wsClose', 'wsOpen', 'wsSend']), '异步的是连阿里云的四个：wsOpen / wsSend / wsClose / post', ASYNC);
+  // iPhone 才有的方法（安卓以后接 Google Play 结算再加对应的）：名字 → [同步 / 异步, 参数个数]。
+  // 要在 echo-native.js、Bridge.swift（iosOnlyMethods）、自测页里名字和种类都一样，在 ios/README.md 和 android/README.md 的「iPhone 才有的」里写着
+  const IOS_ONLY = {
+    iapProducts: ['async', 2], iapBuy: ['async', 3], iapRestore: ['async', 1], iapCurrent: ['async', 1], iapPending: ['async', 1],
+    iapFinish: ['async', 2], iapManage: ['async', 1], appleSignIn: ['async', 2], appleCredentialState: ['async', 2],
+  };
+  const IOSN = Object.keys(IOS_ONLY);
+  const ALL = names.concat(IOSN);
+  check(!IOSN.some(n => n in docMethods || n in andr), 'iPhone 才有的方法安卓那边还没有（有了就从 IOS_ONLY 里拿掉，按共有的核对）', IOSN.filter(n => n in docMethods || n in andr));
 
   // echo-native.js 在 vm 里跑：假的 prompt（同步通道）和 webkit.messageHandlers（异步通道）
   const shimSrc = read('ios/App/Resources/echo-native.js');
@@ -73,13 +85,16 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(!!N && !!SPEC, 'echo-native.js 装好了 window.EchoNative 和 __echoIOS.spec');
   check(ctx.ECHO_APP === 1 && ctx.ECHO_IOS === 1 && ctx.ECHO_TALK_URL === '', 'echo-native.js 设了 ECHO_APP、ECHO_IOS、ECHO_TALK_URL（和安卓一样一开始就有）');
   check(ctx.document.documentElement.classList.list.includes('echo-ios'), '<html> 上加了 echo-ios（style.css 末尾的 iPhone 专用几条认它）');
-  check(same(Object.keys(N), names) && same(Object.keys(SPEC), names), 'echo-native.js 的方法和 README 一一对应', diff(Object.keys(N), names));
+  check(same(Object.keys(N), ALL) && same(Object.keys(SPEC), ALL), 'echo-native.js 的方法 = README 的 26 个 + iPhone 才有的 ' + IOSN.length + ' 个', diff(Object.keys(N), ALL));
   check(names.every(n => typeof N[n] === 'function' && N[n].length === docMethods[n] && SPEC[n][1].length === docMethods[n]), '每个方法的参数个数（fn.length）和安卓一样',
     names.filter(n => !(N[n] && N[n].length === docMethods[n])));
   check(names.every(n => SPEC[n][0] === (ASYNC.includes(n) ? 'async' : 'sync')), 'echo-native.js 的同步 / 异步和安卓一样（异步 = 回调的四个）',
     names.filter(n => SPEC[n][0] !== (ASYNC.includes(n) ? 'async' : 'sync')));
   // 安卓有返回值的（boolean / String）这里也有「原生没回音时」的默认值；安卓 void 的这里没有返回值
   check(names.every(n => (andr[n].ret === 'void') === (SPEC[n].length === 2)), '有没有返回值和安卓一样（void ↔ 没有默认值）', names.filter(n => (andr[n].ret === 'void') !== (SPEC[n].length === 2)));
+  check(IOSN.every(n => SPEC[n] && SPEC[n][0] === IOS_ONLY[n][0] && SPEC[n][1].length === IOS_ONLY[n][1] && N[n].length === IOS_ONLY[n][1] && SPEC[n][1][0] === 'i' && SPEC[n].length === 2),
+    'echo-native.js 里 iPhone 才有的：种类、参数个数和 IOS_ONLY 表一样；异步的第一个参数是编号、没有返回值', IOSN.filter(n => !(SPEC[n] && SPEC[n][0] === IOS_ONLY[n][0] && SPEC[n][1].length === IOS_ONLY[n][1])));
+  check(same([...(ctx.__echoIOS.iosOnly || [])], IOSN), 'echo-native.js 的 IOS_ONLY 名单（__echoIOS.iosOnly）和这里一样', ctx.__echoIOS.iosOnly);
   // 真调一遍：同步的走 prompt('__echo_native__:{"m","a"}')，回的 JSON 原样交给网页；异步的走 postMessage、不碰 prompt
   answer = msg => { const o = JSON.parse(msg.slice('__echo_native__:'.length)); return o.m === 'edition' ? '"sales"' : o.m === 'hasPin' ? 'true' : o.m === 'version' ? '"{\\"code\\":5}"' : 'null'; };
   prompts.length = 0;
@@ -93,6 +108,12 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   N.wsOpen('7', 'wss://dashscope.aliyuncs.com/x'); N.wsSend(7.9, '{}'); N.wsClose(7); N.post(8, 'https://dashscope.aliyuncs.com/y', '{"a":1}');
   check(!prompts.length && posted.length === 4 && posted[0].m === 'wsOpen' && posted[0].a[0] === 7 && posted[1].a[0] === 7 && posted[3].a.length === 3,
     '异步方法走 webkit.messageHandlers.echo（编号转成整数），不碰 prompt', posted);
+  posted.length = 0;
+  const r1 = N.iapProducts('11', ['com.a.monthly', 'com.a.yearly']), r2 = N.iapBuy(12, 'com.a.monthly', '3f1d2c4e-0000-4000-8000-000000000000');
+  N.iapFinish(13, '2000000123456789'); N.appleSignIn(14.5, 'n0nce-n0nce-n0nce'); N.iapRestore(15);
+  check(!prompts.length && r1 === undefined && r2 === undefined && posted.length === 5 && posted[0].m === 'iapProducts' && posted[0].a[0] === 11 && posted[0].a[1] === 'com.a.monthly,com.a.yearly' &&
+    posted[1].a.length === 3 && posted[2].a[1] === '2000000123456789' && posted[3].m === 'appleSignIn' && posted[3].a[0] === 14 && posted[4].a.length === 1,
+    'iPhone 才有的也走 messageHandlers.echo：编号转整数，iapProducts 的数组变成 "a,b"，交易编号按字符串传（不丢精度）', posted);
   answer = () => null;
   check(N.edition() === 'sales' && N.micPermission() === 'denied' && N.backupList() === '[]' && N.storage() === '{}',
     '原生没回音时的默认值（edition = sales，最保守）');
@@ -105,9 +126,11 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   const arr = name => ((bridge.match(new RegExp('static let ' + name + ' = \\[([\\s\\S]*?)\\]')) || [])[1] || '').match(/"(\w+)"/g).map(s => s.slice(1, -1));
   const fnBody = name => { const i = bridge.indexOf('func ' + name + '('); const j = bridge.indexOf('\n    }\n', i); return bridge.slice(i, j); };
   const cases = body => [...body.matchAll(/case "(\w+)":/g)].map(m => m[1]);
-  const swSync = arr('syncMethods'), swAsync = arr('asyncMethods');
-  check(same(swSync.concat(swAsync), names), 'Bridge.swift 的方法表和 README 一一对应', diff(swSync.concat(swAsync), names));
-  check(same(swAsync, ASYNC), 'Bridge.swift 的异步表 = 安卓回调的四个', swAsync);
+  const swSync = arr('syncMethods'), swAsync = arr('asyncMethods'), swIos = arr('iosOnlyMethods');
+  check(same(swSync.concat(swAsync), ALL), 'Bridge.swift 的方法表 = README 的 26 个 + iPhone 才有的', diff(swSync.concat(swAsync), ALL));
+  check(same(swAsync, ASYNC.concat(IOSN.filter(n => IOS_ONLY[n][0] === 'async'))) && same(swSync, names.filter(n => !ASYNC.includes(n)).concat(IOSN.filter(n => IOS_ONLY[n][0] === 'sync'))),
+    'Bridge.swift 的异步表 = 安卓回调的四个 + iPhone 才有的异步的', swAsync);
+  check(same(swIos, IOSN), 'Bridge.swift 的 iosOnlyMethods = IOS_ONLY 表', diff(swIos, IOSN));
   check(same(cases(fnBody('callSync')), swSync), 'Bridge.callSync 里每个同步方法都有 case', diff(cases(fnBody('callSync')), swSync));
   check(same(cases(fnBody('callAsync')), swAsync), 'Bridge.callAsync 里每个异步方法都有 case', diff(cases(fnBody('callAsync')), swAsync));
   check(/static let tag = "__echo_native__:"/.test(bridge) && shimSrc.includes("TAG = '__echo_native__:'") && /static let handlerName = "echo"/.test(bridge) && shimSrc.includes('messageHandlers.echo'),
@@ -116,6 +139,13 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(/case "edition":\s*\n\s*return Bridge\.sales \? "sales" : "family"/.test(bridge) && /static let sales = BuildConfig\.edition != "family"/.test(bridge), 'edition()：不是 family 就是 sales（公开发的版本）');
   check(/k\.isEmpty \? BuildConfig\.dashscopeKey : k/.test(bridge), '手机上填的密钥（钥匙串）优先，没有才用打包时的');
   check(/"platform": "ios"/.test(bridge) && /"renderGone"/.test(bridge) && /"lastGone"/.test(bridge), 'diag() 有安卓那几个字段，另外写着 platform = ios');
+  check(/"appleSignIn": AppleSignIn\.available/.test(bridge) && /"iapProducts": \[BuildConfig\.iapMonthly, BuildConfig\.iapYearly\]/.test(bridge),
+    'diag() 还说这个包能不能通过 Apple 登录、订阅的两个商品编号（网页决定显不显示那个按钮）');
+  check(/Store\.shared\.onEvent = \{[\s\S]{0,200}emit\("echo-iap"/.test(bridge), 'Transaction.updates 来的交易发事件 echo-iap 给网页（和 echo-mic、echo-backup-picked 一样的写法）');
+  check(IOSN.filter(n => n.startsWith('iap')).every(n => new RegExp('case "' + n + '":[\\s\\S]{0,240}storeCall\\(h\\.gen, Bridge\\.int\\(a, 0\\)\\)').test(bridge)) &&
+    /case "appleSignIn":[\s\S]{0,200}apple\.signIn\(nonce: Bridge\.str\(a, 1\)\)/.test(bridge) && /case "appleCredentialState":[\s\S]{0,200}apple\.credentialState\(user: Bridge\.str\(a, 1\)\)/.test(bridge) &&
+    /self\?\.callback\(gen, id, r\.ok \? "ok" : "fail", r\.json\)/.test(bridge),
+    '订阅、登录的结果和 wsOpen / post 一样回 window.__echoNative(id, ok / fail, JSON)，网页重建过就不回（gen）');
 
   // ---------- 2. Info.plist、隐私清单 ----------
   const plist = read('ios/App/Info.plist');
@@ -138,6 +168,18 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(/UserDefaults/.test(swiftAll) && /contentModificationDate/.test(swiftAll) && /systemUptime/.test(swiftAll) && /volumeAvailableCapacityForImportantUsage/.test(swiftAll),
     '（这四类接口代码里真的用到了，清单没有白写）');
   check(/NSPrivacyCollectedDataTypeAudioData/.test(pr), '隐私清单：声音会发出去（识别、打分），写了「音频」');
+  // 公开版有账号和订阅：邮箱、用户 ID、购买记录、音频，都和身份关联、只为 App 功能、不追踪
+  const dataType = t => (pr.match(new RegExp('<string>NSPrivacyCollectedDataType' + t + '</string>([\\s\\S]*?)</dict>')) || [])[1] || '';
+  const linkedForApp = t => { const b = dataType(t); return /NSPrivacyCollectedDataTypeLinked<\/key>\s*<true\/>/.test(b) && /NSPrivacyCollectedDataTypeTracking<\/key>\s*<false\/>/.test(b) &&
+    /<string>NSPrivacyCollectedDataTypePurposeAppFunctionality<\/string>/.test(b) && !/PurposeThirdPartyAdvertising|PurposeDeveloperAdvertising|PurposeAnalytics/.test(b); };
+  check(['EmailAddress', 'UserID', 'PurchaseHistory', 'AudioData', 'OtherUserContent'].every(linkedForApp),
+    '隐私清单：邮箱、用户 ID、购买记录、音频、其他用户内容——和身份关联、只为 App 的功能、不追踪', ['EmailAddress', 'UserID', 'PurchaseHistory', 'AudioData', 'OtherUserContent'].filter(t => !linkedForApp(t)));
+  check(!/<key>NSPrivacyTrackingDomains<\/key>\s*<array>\s*<string>/.test(pr), '隐私清单：没有追踪用的域名');
+  // 「通过 Apple 登录」的权限文件：只有这一项；工程里不直接引用它（只有签名的包经 make-config.mjs 带上）
+  const ent = read('ios/App/EchoIsland.entitlements');
+  check(/<key>com\.apple\.developer\.applesignin<\/key>\s*<array>\s*<string>Default<\/string>\s*<\/array>/.test(ent) && (ent.match(/<key>/g) || []).length === 1,
+    '权限文件 App/EchoIsland.entitlements 只有「通过 Apple 登录」（Default）');
+  check(!/CODE_SIGN_ENTITLEMENTS:/.test(read('ios/project.yml')), 'project.yml 里不写 CODE_SIGN_ENTITLEMENTS（写了会盖掉 make-config.mjs 给签名包的那一行，云上不签名的包也会带上它）');
 
   // ---------- 3. 只连得到阿里云 ----------
   const ds = fs.readFileSync(path.join(SRC, 'DashScope.swift'), 'utf8');
@@ -157,7 +199,7 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   // ---------- 4. 会进仓库的文件里没有密钥 ----------
   let tracked = [];
   try {
-    tracked = execFileSync('git', ['--no-optional-locks', 'ls-files', '-co', '--exclude-standard', '--', 'ios', 'tools/ios', '.github/workflows/ios-simulator.yml', 'tests/ios.test.js'],
+    tracked = execFileSync('git', ['--no-optional-locks', 'ls-files', '-co', '--exclude-standard', '--', 'ios', 'tools/ios', '.github/workflows/ios-simulator.yml', '.github/workflows/ios-testflight.yml', 'tests/ios.test.js'],
       { cwd: ROOT, encoding: 'utf8' }).split(/\r?\n/).filter(Boolean);
   } catch (e) { tracked = []; }
   check(tracked.length > 20, '用 git 列出 ios/ 里会进仓库的文件（' + tracked.length + ' 个）');
@@ -248,6 +290,29 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   const mcSrc = read('ios/scripts/make-config.mjs');
   check(/is-shallow-repository/.test(mcSrc) && /rev-list', '--count', 'HEAD'/.test(mcSrc), '浅克隆（云上 CI）数不出提交数时有退路');
   check(!/console\.log\([^)]*\b(key|hash|pin)\b\)/.test(mcSrc), 'make-config.mjs 不打印密钥、哈希、密码');
+  // App 标识只写在 Config/Base.xcconfig 一处，和安卓的包名一样；订阅的商品编号跟着它
+  const baseXc = read('ios/Config/Base.xcconfig');
+  check(MC.DEFAULT_BUNDLE_ID === 'com.echoisland.app' && /^ECHO_BUNDLE_ID = com\.echoisland\.app$/m.test(baseXc) && gradle.includes("'com.echoisland.app'"),
+    'App 标识 com.echoisland.app（和安卓的包名一样），只写在 Config/Base.xcconfig，make-config.mjs 从那里读', MC.DEFAULT_BUNDLE_ID);
+  check(auto.cfg.iapMonthly === 'com.echoisland.app.premium.monthly' && auto.cfg.iapYearly === 'com.echoisland.app.premium.yearly' && auto.cfg.appleSignIn === false &&
+    /static let iapMonthly = "com\.echoisland\.app\.premium\.monthly"/.test(auto.swift) && /static let appleSignIn: Bool = false/.test(auto.swift) && !/CODE_SIGN_ENTITLEMENTS/.test(auto.xcconfig),
+    '默认（云上的模拟器包）：商品编号 = App 标识 + .premium.monthly / .yearly，不带「通过 Apple 登录」的权限');
+  const famIap = MC.compute({ edition: 'family', env: { ECHO_PARENT_PIN: '2468' } });
+  check(famIap.cfg.iapMonthly === 'com.echoisland.app.family.premium.monthly', '家庭版的商品编号跟着它自己的 App 标识（.family）', famIap.cfg.iapMonthly);
+  const salesIap = MC.compute({ edition: 'sales', env: { ECHO_IAP_MONTHLY: 'echo_monthly', ECHO_IAP_YEARLY: 'echo.yearly', ECHO_BUNDLE_ID: 'com.example.other' } });
+  check(salesIap.cfg.iapMonthly === 'echo_monthly' && salesIap.cfg.iapYearly === 'echo.yearly', '销售版可以给商品编号（不是秘密，安全检查不拦）');
+  check(MC.compute({ edition: 'sales', env: { ECHO_BUNDLE_ID: 'com.example.other' } }).cfg.iapYearly === 'com.example.other.premium.yearly', '换了 App 标识，默认的商品编号跟着换');
+  for (const bad of [{ ECHO_IAP_MONTHLY: 'has space' }, { ECHO_IAP_YEARLY: 'a-b' }, { ECHO_IAP_MONTHLY: 'same', ECHO_IAP_YEARLY: 'same' }, { ECHO_APPLE_SIGNIN: 'maybe' }]) {
+    let t = '';
+    try { MC.compute({ edition: 'sales', env: bad }); } catch (e) { t = e.message; }
+    check(!!t, '写错就停下：' + JSON.stringify(bad), t);
+  }
+  const signed = MC.compute({ edition: 'sales', env: { ECHO_TEAM_ID: 'ABCDE12345' } });
+  check(signed.cfg.appleSignIn === true && /^CODE_SIGN_ENTITLEMENTS = App\/EchoIsland\.entitlements$/m.test(signed.xcconfig) && /static let appleSignIn: Bool = true/.test(signed.swift),
+    '给了团队编号（要签名的包）：默认带「通过 Apple 登录」的权限，BuildConfig.appleSignIn = true');
+  const off = MC.compute({ edition: 'sales', env: { ECHO_TEAM_ID: 'ABCDE12345', ECHO_APPLE_SIGNIN: '0' } });
+  check(off.cfg.appleSignIn === false && !/CODE_SIGN_ENTITLEMENTS/.test(off.xcconfig), 'ECHO_APPLE_SIGNIN=0：签名的包也不带（TestFlight 工作流里苹果不肯给权限时用）');
+  check(fs.existsSync(path.join(IOS, 'App', 'EchoIsland.entitlements')), 'CODE_SIGN_ENTITLEMENTS 指的文件在（路径相对 ios/）');
 
   // ---------- 7. 云上的工作流 ----------
   const wfText = read('.github/workflows/ios-simulator.yml');
@@ -268,13 +333,67 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
     const order = [/brew install xcodegen/, /ios\/scripts\/prepare\.mjs/, /xcodegen generate/, /build-for-testing/, /-only-testing:EchoIslandTests/, /-only-testing:EchoIslandUITests/].map(re => steps.indexOf(stepWith(re)));
     check(order.every(i => i >= 0) && order.every((v, i) => !i || v > order[i - 1]), '步骤分开、按顺序：装 XcodeGen → prepare → xcodegen → 编译 → 单元测试 → UI 测试', order);
     const xb = steps.filter(s => /xcodebuild (build|test)/.test(String(s.run || '')));
-    check(xb.length === 4 && xb.every(s => /set -o pipefail/.test(s.run) && /tee "\$OUT\//.test(s.run)), '每次编译、测试都把完整日志存下来（pipefail，失败不会被管道吞掉）', xb.length);
-    check(steps.filter(s => /resultBundlePath/.test(String(s.run || ''))).length === 2, '单元测试、UI 测试各存一份 .xcresult');
+    check(xb.length === 5 && xb.every(s => /set -o pipefail/.test(s.run) && /tee "\$OUT\//.test(s.run)), '每次编译、测试都把完整日志存下来（pipefail，失败不会被管道吞掉）', xb.length);
+    check(steps.filter(s => /resultBundlePath/.test(String(s.run || ''))).length === 3, '单元测试、StoreKit 测试、UI 测试各存一份 .xcresult');
+    const unit = stepWith(/-only-testing:EchoIslandTests /), sk = stepWith(/-only-testing:EchoIslandTests\/StoreKitTests/);
+    check(!!unit && /-skip-testing:EchoIslandTests\/StoreKitTests/.test(unit.run) && !!sk && /pick-simulator\.mjs --prefer 26\.2,26\.1/.test(sk.run) && /-destination "id=\$udid"/.test(sk.run) &&
+      steps.indexOf(sk) > steps.indexOf(unit) && steps.indexOf(sk) < steps.indexOf(stepWith(/-only-testing:EchoIslandUITests/)),
+      'StoreKit 测试单独一步、挑 iOS 26.2 / 26.1 的模拟器（26.5 上 SKTestSession 不管用），别的单元测试那一步跳过它');
+    check(/for r in unit-tests storekit-tests ui-tests/.test(String((stepWith(/xcresulttool export attachments/) || {}).run || '')), 'StoreKit 测试的截图、附件也导出来');
     const up = stepWith(/actions\/upload-artifact/), ex = stepWith(/xcresulttool export attachments/);
     check(!!up && up.if === 'always()' && /\.xcresult/.test(up.with.path) && /attachments/.test(up.with.path) && /\.log/.test(up.with.path) && !!ex && ex.if === 'always()',
       '不管成没成都上传：日志、.xcresult、截图');
     check(!/secrets\.|ECHO_DASHSCOPE_KEY|ECHO_PARENT_PIN|ECHO_TEAM_ID/.test(wfText) && (job.env || {}).ECHO_EDITION === 'sales', '工作流里不用任何密钥、不签名，打的是销售版');
     check(stepWith(/tests\/ios\.test\.js/) !== undefined, '云上也先跑一遍这个文件');
+  }
+
+  // ---------- 7b. 传 TestFlight 的工作流 ----------
+  const tfText = read('.github/workflows/ios-testflight.yml');
+  let tf = null, tfErr = '';
+  try { tf = parseYaml(tfText); } catch (e) { tfErr = e.message; }
+  check(!!tf && !tfErr, '.github/workflows/ios-testflight.yml 读得出来（YAML）', tfErr);
+  if (tf) {
+    const on = tf.on || {};
+    // 手动点，或者推一个 testflight-* 标签（这个仓库的默认分支不是游戏，手动点的工作流 GitHub 认不到）；推分支、推别的标签都不传
+    const push = on.push || null, tags = push && push.tags || [];
+    check(same(Object.keys(on).sort(), ['push', 'workflow_dispatch']) && push && !push.branches && !push.paths && same(tags, ['testflight-*']),
+      '只能手动点（workflow_dispatch）或推 testflight-* 标签才传，推代码不会自己传', on);
+    const inp = (on.workflow_dispatch || {}).inputs || {};
+    check(inp.edition && inp.edition.default === 'sales' && same(inp.edition.options || [], ['sales', 'family']) && inp.version && inp.version.default === '' && inp.apple_signin && inp.apple_signin.type === 'boolean',
+      '输入：版本（默认 sales）、可选的版本号、要不要「通过 Apple 登录」', inp);
+    check(tf.concurrency && tf.concurrency['cancel-in-progress'] === false, '不取消正在传的（后来的排队）');
+    const jobs = tf.jobs || {}, sj = jobs.secrets || {}, job = jobs.testflight || {};
+    check(sj['runs-on'] === 'ubuntu-latest' && job.needs === 'secrets' && job['runs-on'] === 'macos-26', '先在 Linux 上看密钥都放了，再用 Mac');
+    const sjRun = String(((sj.steps || [])[0] || {}).run || '');
+    check(['ASC_KEY_ID', 'ASC_ISSUER_ID', 'ASC_KEY_P8', 'APPLE_TEAM_ID'].every(k => sjRun.includes(k)) && !/echo[^\n]*\$\{?(ASC_KEY_P8|ASC_KEY_ID|ASC_ISSUER_ID|APPLE_TEAM_ID)\b/.test(sjRun),
+      '四个密钥都查了，只打印名字');
+    check(!JSON.stringify(job.env || {}).includes('secrets.'), '密钥不放在整个 job 上（xcodebuild 会把环境变量写进日志），只给要用的那几步');
+    const ts = job.steps || [];
+    const at = re => ts.findIndex(s => re.test(String(s.run || '') + ' ' + String(s.uses || '') + ' ' + String(s.name || '')));
+    const order = [/tests\/ios\.test\.js/, /prepare\.mjs/, /Simulator launch check/, /xcodebuild archive/, /Check the signed app/, /xcrun altool --upload-app/, /actions\/upload-artifact/].map(at);
+    check(order.every(i => i >= 0) && order.every((v, i) => !i || v > order[i - 1]), '顺序：静态核对 → 准备 → 模拟器里打开看一眼 → archive / 签名 → 看签好的包 → 上传 → 只传日志', order);
+    const sim = ts[order[2]] || {};
+    check(/-configuration Release/.test(sim.run) && /simctl launch/.test(sim.run) && /launchctl list/.test(sim.run) && /page load failed/.test(sim.run), '模拟器检查：正式包的设置、装上打开、还在跑、网页打开了');
+    const arch = ts[order[3]] || {}, up = ts[order[5]] || {};
+    check(/-allowProvisioningUpdates -authenticationKeyPath "\$key" -authenticationKeyID "\$ASC_KEY_ID" -authenticationKeyIssuerID "\$ASC_ISSUER_ID"/.test(arch.run) &&
+      /<key>method<\/key><string>app-store-connect<\/string>/.test(arch.run) && /CODE_SIGN_IDENTITY=- /.test(arch.run) && /AD_HOC_CODE_SIGNING_ALLOWED=YES/.test(arch.run) && /DEVELOPMENT_TEAM="\$APPLE_TEAM_ID"/.test(arch.run),
+      'archive 临时签名、export 用 API 密钥让苹果云签名（method app-store-connect、自动签名）');
+    check(/archive 1 && export_to export/.test(arch.run) && /archive 0/.test(arch.run) && /Sign In with Apple/.test(arch.run), '苹果不肯给「通过 Apple 登录」就不带它再签一次，并说老板要去后台勾哪里');
+    const xcLines = tfText.split(/\r?\n/).filter(l => !/^\s*#/.test(l) && /\bxcodebuild (archive|-exportArchive)/.test(l));
+    check(xcLines.length >= 3 && xcLines.every(l => /"\$\{clean\[@\]\}" xcodebuild/.test(l)) && /clean=\(env -u ASC_KEY_P8 -u ASC_KEY_ID -u ASC_ISSUER_ID/.test(tfText),
+      '带着密钥的步骤里 xcodebuild 都先去掉密钥的环境变量再跑', xcLines);
+    check(/trap 'rm -f "\$key"/.test(arch.run) && /trap 'rm -f "\$key"; rm -rf "\$keys"'/.test(up.run) && /chmod 600/.test(arch.run), '.p8 写在临时文件夹、用完就删');
+    check(/API_PRIVATE_KEYS_DIR="\$keys" xcrun altool --upload-app --type ios --file "\$ipa" --apiKey "\$ASC_KEY_ID" --apiIssuer "\$ASC_ISSUER_ID"/.test(up.run) && /<string>upload<\/string>/.test(up.run),
+      '用 altool + API 密钥传，不行再用 xcodebuild 的上传');
+    const bn = ts.find(s => /Build number/.test(String(s.name || ''))) || {};
+    check(/Date\.UTC\(2026, 0, 1\)\) \/ 60000/.test(bn.run) && /ECHO_VERSION_CODE=\$n/.test(bn.run) && /CURRENT_PROJECT_VERSION="\$ECHO_VERSION_CODE"/.test(arch.run),
+      '构建号 = 2026-01-01（UTC）以来的分钟数（和老板另一个 App 一样，只增不减）');
+    const art = ts[order[6]] || {}, scrub = ts.find(s => /Scrub/.test(String(s.name || ''))) || {};
+    check(art.if === 'always()' && /^ios-ci\/\*\.log\nios-ci\/\*\.txt\n?$/.test(String((art.with || {}).path || '')) && !/ipa|xcarchive|export|\.p8/.test(String((art.with || {}).path || '')),
+      '只上传日志：.ipa、.xcarchive、签过名的东西不传（仓库是公开的）', (art.with || {}).path);
+    check(ts.indexOf(scrub) >= 0 && ts.indexOf(scrub) < order[6] && scrub.if === 'always()' && /APPLE_TEAM_ID/.test(scrub.run) && /PRIVATE KEY/.test(scrub.run),
+      '上传前把团队编号、密钥编号从日志里抹掉，提到私钥的日志不传');
+    check(!/set -x|cat "\$key"|echo "\$ASC_KEY_P8|printenv|env \|/.test(tfText), '不打印密钥（没有 set -x、cat 密钥、printenv）');
   }
 
   // ---------- 8. 工程和 Swift 里容易出错的几处 ----------
@@ -306,9 +425,77 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(names.every(n => selftest.includes(n + ':') && (selftest.includes('N.' + n + '(') || n === 'openAppSettings' || n === 'backupPick')), '原生桥自测页认得每个方法、都调到（离开 App / 弹界面的两个另有按钮和 run=pick）',
     names.filter(n => !selftest.includes('N.' + n + '(')));
   check(/no real AI|不会真的连 AI/.test(selftest) && /if \(!N\.hasKey\(\)\)/.test(selftest), '自测页不真的连 AI（只在没有密钥时测那两个，原生当场回 401）');
+  check(IOSN.every(n => selftest.includes(n + ": ['" + IOS_ONLY[n][0] + "', " + IOS_ONLY[n][1] + ']') && selftest.includes('N.' + n + '(')) &&
+    selftest.includes("var IOS_ONLY = ['" + IOSN.join("', '") + "']"),
+    '自测页认得 iPhone 才有的每个方法（种类、参数个数和 IOS_ONLY 一样），都调得到（弹系统界面的几个在按钮里）', IOSN.filter(n => !selftest.includes('N.' + n + '(')));
+  check(/failed\(r, 'bad-token'\)/.test(selftest) && /failed\(r, 'unavailable'\)/.test(selftest) && /run === 'store'/.test(selftest), '自测页：当场回的（不是 UUID、这个包没有登录权限）一定要对；run=store 问商品');
+  const uiSrc = read('ios/UITests/SmokeUITests.swift');
+  check(/test6StoreProductsAndBuySheet/.test(uiSrc) && /"-EchoSelfTest", "store"/.test(uiSrc), 'UI 测试：订阅的商品问得到（异步桥一路通）、有商品就看购买面板');
+
+  // ---------- 9. 订阅（StoreKit 2）和「通过 Apple 登录」 ----------
+  const store = fs.readFileSync(path.join(SRC, 'Store.swift'), 'utf8');
+  const apple = fs.readFileSync(path.join(SRC, 'AppleSignIn.swift'), 'utf8');
+  const finishBody = store.slice(store.indexOf('func finish('), store.indexOf('\n    }\n', store.indexOf('func finish(')));
+  check((store.match(/\.finish\(\)/g) || []).length === 1 && /await tx\.finish\(\)/.test(finishBody),
+    'finish() 只在 iapFinish 里调（网页说服务器存好了才 finish；没 finish 的苹果下次打开再给）');
+  check(/for await r in Transaction\.updates/.test(store) && /Store\.shared\.start\(\)/.test(read('ios/App/Sources/AppDelegate.swift')),
+    '一开 App 就听 Transaction.updates（AppDelegate 里 start）');
+  check(/\.appAccountToken\(uuid\)/.test(store) && /UUID\(uuidString:/.test(store) && /"bad-token"/.test(store), '买的时候带上账号的 UUID（appAccountToken），不是 UUID 就不买');
+  check(/case \.userCancelled:\s*\n\s*return \.ok\(\["status": "cancelled"\]\)/.test(store) && /case \.pending:\s*\n\s*return \.ok\(\["status": "pending"\]\)/.test(store) &&
+    /"unverified"/.test(store) && /StoreKitError, case \.userCancelled = e \{ return \.ok\(\["status": "cancelled"\]\) \}/.test(store),
+    '买的结果分开回：purchased / unverified / pending（家长批准）/ cancelled（包括抛出来的取消）');
+  check(/jwsRepresentation/.test(store) && /AppStore\.sync\(\)/.test(store) && /Transaction\.currentEntitlements/.test(store) && /Transaction\.unfinished/.test(store) &&
+    /AppStore\.showManageSubscriptions\(in: s\)/.test(store) && /purchase\(confirmIn: vc, options: opts\)/.test(store),
+    'StoreKit 2：jws、恢复（sync）、有效的订阅、没 finish 的、管理订阅面板、在游戏画面上弹购买确认');
+  check(/static let shared = Store\(monthly: BuildConfig\.iapMonthly, yearly: BuildConfig\.iapYearly\)/.test(store), '商品编号来自打包设置（make-config.mjs）');
+  const appleSig = [/nonisolated func authorizationController\(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization\)/,
+    /nonisolated func authorizationController\(controller: ASAuthorizationController, didCompleteWithError error: Error\)/,
+    /nonisolated func presentationAnchor\(for controller: ASAuthorizationController\) -> ASPresentationAnchor/];
+  check(appleSig.every(re => re.test(apple)), '「通过 Apple 登录」的回调写法和 SDK 一字不差（写错了不报错、只是不被调用）', appleSig.map(re => re.test(apple)));
+  check(/req\.nonce = AppleSignIn\.sha256Hex\(n\)/.test(apple) && /requestedScopes = \[\.fullName, \.email\]/.test(apple) && /SHA256\.hash/.test(apple),
+    '请求里放的是 nonce 的 SHA-256（服务器拿原文核对，cloud/API.md §3）');
+  const signInBody = apple.slice(apple.indexOf('func signIn('), apple.indexOf('ASAuthorizationController(authorizationRequests'));
+  check(/guard AppleSignIn\.available else/.test(signInBody) && /"unavailable"/.test(signInBody) && /static var available: Bool \{ return BuildConfig\.appleSignIn \}/.test(apple) &&
+    /getCredentialState\(forUserID:/.test(apple) && /guard AppleSignIn\.available else/.test(apple.slice(apple.indexOf('func credentialState('))),
+    '没带权限的包：两个方法都当场回 unavailable，不碰系统');
+  check(/case \.revoked: return "revoked"/.test(apple) && /\{"cancelled":true\}/.test(apple), '取消回 {cancelled:true}；Apple ID 停用了回 revoked');
+
+  // 本地 App Store（Store.storekit）：两个自动续期订阅在同一个组，商品编号 = 默认的那两个，价格 8.99 / 59.99，年度的例子是 7 天免费试用
+  let kit = null;
+  try { kit = JSON.parse(read('ios/App/Store.storekit')); } catch (e) { kit = null; }
+  const groups = (kit && kit.subscriptionGroups) || [], subs = groups.length === 1 ? groups[0].subscriptions || [] : [];
+  const sub = id => subs.find(s => s.productID === id) || {};
+  const mo = sub(auto.cfg.iapMonthly), yr = sub(auto.cfg.iapYearly);
+  check(!!kit && groups.length === 1 && subs.length === 2 && subs.every(s => s.type === 'RecurringSubscription' && s.subscriptionGroupID === groups[0].id),
+    'Store.storekit：一个订阅组、两个自动续期订阅');
+  check(mo.displayPrice === '8.99' && mo.recurringSubscriptionPeriod === 'P1M' && yr.displayPrice === '59.99' && yr.recurringSubscriptionPeriod === 'P1Y',
+    'Store.storekit：月度 8.99 / 每月，年度 59.99 / 每年，商品编号和 make-config.mjs 默认的一样', { mo: mo.productID, yr: yr.productID });
+  check(!!yr.introductoryOffer && yr.introductoryOffer.paymentMode === 'free' && yr.introductoryOffer.subscriptionPeriod === 'P1W' && !mo.introductoryOffer,
+    'Store.storekit：年度带 7 天免费试用（例子），月度没有');
+  check(kit && kit.settings && kit.settings._storefront === 'USA' && kit.settings._locale === 'en_US' && !('_developerTeamID' in kit.settings), 'Store.storekit：美国区、英文，没有团队编号');
+  check(/run:\s*\n\s*config: Debug\s*\n(\s*#[^\n]*\n)?\s*storeKitConfiguration: App\/Store\.storekit/.test(proj) &&
+    /EchoIslandTests:[\s\S]*?- path: App\/Store\.storekit\s*\n\s*buildPhase: resources/.test(proj),
+    'project.yml：Xcode 里运行用本地 App Store；单元测试包里带一份 Store.storekit（SKTestSession 读它）');
+
+  // 挑模拟器的小脚本
+  const PS = await import(pathToFileURL(path.join(IOS, 'scripts', 'pick-simulator.mjs')).href);
+  const fake = { devices: {
+    'com.apple.CoreSimulator.SimRuntime.iOS-26-5': [{ udid: 'U265', name: 'iPhone 17', isAvailable: true }, { udid: 'P265', name: 'iPad Air', isAvailable: true }],
+    'com.apple.CoreSimulator.SimRuntime.iOS-26-2': [{ udid: 'U262a', name: 'iPhone 16e', isAvailable: true }, { udid: 'U262', name: 'iPhone 17', isAvailable: true }],
+    'com.apple.CoreSimulator.SimRuntime.watchOS-26-0': [{ udid: 'W', name: 'Apple Watch', isAvailable: true }],
+  } };
+  const p1 = PS.pick(fake, { prefer: ['26.2', '26.1'], name: 'iPhone 17' }), p2 = PS.pick(fake, { prefer: ['26.1'], name: 'iPhone 17' }), p3 = PS.pick(fake, { name: 'iPhone 17' });
+  check(p1 && p1.udid === 'U262' && p1.os === '26.2' && p1.preferred && p2 && p2.udid === 'U265' && !p2.preferred && p3 && p3.udid === 'U265' && PS.pick({ devices: {} }) === null,
+    'pick-simulator.mjs：先要 26.2 的 iPhone 17；没有要的版本就挑最新的；只挑 iPhone', { p1, p2, p3 });
   const ui = read('ios/UITests/SmokeUITests.swift');
   check(/-EchoSelfTest/.test(ui) && /springboard/.test(ui) && /landscape/.test(ui) && /XCTAttachment\(screenshot/.test(ui), 'UI 测试：自测页、麦克风弹窗、横屏、截图');
   check(fs.existsSync(path.join(IOS, 'README.md')) && /TestFlight/.test(read('ios/README.md')), 'ios/README.md 写了怎么打包、怎么装到 iPhone');
+  const iosReadme = read('ios/README.md');
+  check(IOSN.every(n => new RegExp('\\| `' + n + '\\(').test(iosReadme)), 'ios/README.md 的「iPhone 才有的方法」表里写了每一个', IOSN.filter(n => !new RegExp('\\| `' + n + '\\(').test(iosReadme)));
+  const andIos = readme.slice(readme.indexOf('### iPhone 才有的方法'));
+  check(readme.includes('### iPhone 才有的方法') && readme.indexOf('### iPhone 才有的方法') > readme.indexOf('**原生发给网页的事件**') && IOSN.every(n => andIos.includes('`' + n + '`')),
+    'android/README.md 有一小节「iPhone 才有的方法」（在安卓方法表外面，安卓的核对不数它们），名字都在', IOSN.filter(n => !andIos.includes('`' + n + '`')));
+  check(/gh workflow run ios-testflight\.yml --ref echo-island\/next/.test(iosReadme) && /默认分支/.test(iosReadme), 'ios/README.md 写了怎么触发 TestFlight、工作流不在默认分支上要注意什么');
 
   console.log(fails ? `\n✗ ${fails} 项没过` : '\n全部通过');
   process.exit(fails ? 1 : 0);

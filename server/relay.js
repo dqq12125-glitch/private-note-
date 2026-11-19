@@ -116,7 +116,7 @@ async function evaluate(npc, turns, o) {
     const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 15000);
     const r = await fetch(EVAL_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal });
     clearTimeout(tm);
-    return CORE.parseEval(await r.json());
+    return CORE.parseEval(await r.json(), o && o.ui);   // ui：别的界面语言的评语按词数要的，字数上限放宽
   } catch (e) { console.log('eval failed', e.message); return null; }
 }
 
@@ -157,7 +157,7 @@ const server = http.createServer((req, res) => {
   res.writeHead(404); res.end();
 });
 
-// ---------- 网页版的口语打分：/asr 录音 → 文字（qwen3-asr-flash，不给答案，听到什么写什么），/tip 目标句子 + 听到的 → 一句中文建议 ----------
+// ---------- 网页版的口语打分：/asr 录音 → 文字（qwen3-asr-flash，不给答案，听到什么写什么），/tip 目标句子 + 听到的 → 一句建议（按界面语言 ui，没给 = 中文） ----------
 // 聊天小工具：/zh 岛民的一句话 → 中文；/steps 聊到现在 → 哪几个小步骤做到了（提示词都在服务器这边按 talk-core 拼，孩子的话包在 <transcript> 里）
 // APK 直连阿里云不走这里。要家庭口令；每个 IP 每分钟最多 40 次。阿里云报错（密钥不对、欠费、额度用完）时把错误代码带回去（up），游戏好告诉家长原因
 const hits = new Map();
@@ -192,7 +192,7 @@ function cloudHelp(u, req, res) {
         const npc = j.q ? questNpc(j.q) : j.npc === 'dyn' ? CORE.personNpc({ name: j.nm }) : NPCS.byId[j.npc];
         if (!npc) return bad(400, 'npc');
         const turns = (Array.isArray(j.turns) ? j.turns : []).slice(-30).map(t => ({ who: t && t.who === 'you' ? 'you' : 'npc', text: clean(t && t.text, 300), typed: !!(t && t.typed) })).filter(t => t.text);
-        const g = CORE.goalOf(npc, j.g), body = CORE.stepsBody(npc, g.i, turns);
+        const g = CORE.goalOf(npc, j.g), body = CORE.stepsBody(npc, g.i, turns, j.ui);   // ui：只认 talk-core 认得的界面语言
         if (!body) { res.writeHead(200, cors); return res.end(JSON.stringify({ done: [] })); }
         body.model = EVAL_MODEL;
         const r = await call(body, EVAL_URL);
@@ -225,9 +225,10 @@ function cloudHelp(u, req, res) {
       }
       const target = clean(j.target, 200), heard = clean(j.heard, 200);
       if (!target || !heard) return bad(400, 'text');
-      const sys = '你是一位耐心的初中英语发音老师。学生要大声说的英文是：「' + target + '」。语音识别听到学生说的是：「' + heard + '」。用一句简体中文（不超过 28 个字）指出最主要的问题：只说漏读了哪个词、多读了哪个词、或者把哪个词说成了哪个词，并告诉他正确的说法；不要猜是哪个音没发好。如果听到的和目标几乎不是同一句话（大部分词都对不上），就只说「你读的好像是另一句话，先点喇叭听一遍原句再读」。不要表扬、不要客套，只输出这一句话。';
-      const r = await call({ model: EVAL_MODEL, temperature: 0.2, max_tokens: 80, messages: [{ role: 'system', content: sys }, { role: 'user', content: '请点评。' }] });
-      res.writeHead(200, cors); res.end(JSON.stringify({ tip: String((r.choices && r.choices[0].message.content) || '').trim().slice(0, 60) }));
+      // 点评的提示词在 talk-core（和 APK 直连同一份）：按界面语言 ui 写，没给 = 中文
+      const body = CORE.tipBody(target, heard, j.ui); body.model = EVAL_MODEL;
+      const r = await call(body, EVAL_URL);   // 和 /zh、/steps 一样走 EVAL_URL（默认就是阿里云；测试里是假的上游）
+      res.writeHead(200, cors); res.end(JSON.stringify({ tip: CORE.parseTip(r, j.ui) }));
     } catch (e) { res.writeHead(502, cors); res.end(JSON.stringify({ error: 'upstream', up: e.up || '' })); }
   });
 }
@@ -333,9 +334,10 @@ wss.on('connection', (cli, req) => {
   const player = (u.searchParams.get('name') || '').replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16);
   const goal = Math.max(0, Math.min(9, parseInt(u.searchParams.get('g'), 10) || 0));   // 这次聊第几个目标（轮换）
   // 按能力走的学习者：手机发来能力级别 lv（只认 0–5 的整数）和界面语言 ui（只认 talk-core 里列着的代码），
-  // 「这一级怎么说话」那一段由 talk-core 在这里拼；别的字段一概不看，手机没法自己写规矩。没发 = 老存档，和以前一字不差
+  // 「这一级怎么说话」那一段由 talk-core 在这里拼；别的字段一概不看，手机没法自己写规矩。没发 = 老存档，和以前一字不差。
+  // ui 不看级别也要：界面不是中文的人不能被说成「中国学生」，评语也按界面语言写（ui=zh / 没发 = 和以前一字不差）
   const lvRaw = u.searchParams.get('lv'), level = lvRaw != null && /^[0-5]$/.test(lvRaw) ? +lvRaw : null;
-  const ui = level != null ? CORE.uiOk(u.searchParams.get('ui') || '') : '';
+  const ui = CORE.uiOk(u.searchParams.get('ui') || '');
   // 岛民记得的上次聊过的小事（孩子手机上存的）：talk-core 的 memOf 再筛一遍，只留游戏里的小事、限长去符号
   let memory = null;
   try { memory = CORE.memOf(JSON.parse(Buffer.from(String(u.searchParams.get('m') || ''), 'base64url').toString('utf8'))); } catch (e) { memory = null; }

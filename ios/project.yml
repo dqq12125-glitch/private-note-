@@ -60,6 +60,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: $(ECHO_BUNDLE_ID)$(ECHO_BUNDLE_SUFFIX)
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
+        # CODE_SIGN_ENTITLEMENTS（「通过 Apple 登录」的权限 App/EchoIsland.entitlements）故意不写在这里：
+        # 只有签名的包才带，由 scripts/make-config.mjs 写进 Generated/Echo.xcconfig（ECHO_APPLE_SIGNIN）。这里写了会盖掉它
       configs:
         Release:
           EXCLUDED_SOURCE_FILE_NAMES: www-test
@@ -71,12 +73,15 @@ targets:
             rm -rf "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/www-test"
           fi
 
-  # 纯逻辑的测试（家长密码的锁定、备份文件名、地址和分段读取、原生桥的入口）：在模拟器里跑
+  # 纯逻辑的测试（家长密码的锁定、备份文件名、地址和分段读取、原生桥的入口、订阅和登录的结果）+ 订阅的 StoreKit 测试：在模拟器里跑
   EchoIslandTests:
     type: bundle.unit-test
     platform: iOS
     sources:
       - path: Tests
+      # 订阅的测试用的本地 App Store（两个自动续期订阅）：StoreKitTests 用 SKTestSession(contentsOf:) 从测试包里读它
+      - path: App/Store.storekit
+        buildPhase: resources
     dependencies:
       - target: EchoIsland
     settings:
@@ -109,6 +114,8 @@ schemes:
         EchoIslandUITests: [test]
     run:
       config: Debug
+      # 在 Mac 的 Xcode 里 ⌘R：订阅走这个本地的 App Store（不用真的商品、不花钱）。正式包、TestFlight 不受影响
+      storeKitConfiguration: App/Store.storekit
     test:
       config: Debug
       gatherCoverageData: false

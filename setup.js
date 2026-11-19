@@ -2,7 +2,7 @@
 // 只在销售版（dex.js 的 DEX.sales：APK 原生桥 EchoNative.edition() === 'sales'，测试用 ?edition=sales）出现。
 // 家长在远程协助安装时做一遍（评估「必须改」第 3、4、5、8、10 条），全部只存在这台手机里：
 //   ① 欢迎 + AI 说明 + 隐私要点 + 监护人单独同意（全文在 pages/privacy.html、pages/consent.html）
-//   ② 设备检查（安卓版本、WebView、WebGL2、剩余空间 ≥1GB、麦克风）——放在最前面：不合格就停在这里，「不过不收钱」（销售流程 00 号第 7–8 步：查完合格再付款）
+//   ② 设备检查（安卓版本、WebView、WebGL2、剩余空间 ≥1GB、麦克风；iPhone 版是 iOS 版本 ≥18.4 和机型、WebGL2、空间、麦克风）——放在最前面：不合格就停在这里，「不过不收钱」（销售流程 00 号第 7–8 步：查完合格再付款）
 //   ③ 家长密码（4 位，必须设；APK 里存在原生：EchoNative.setPin，每台手机自己的随机盐 + 哈希）
 //   ④ 家长自己的阿里云百炼密钥（「测试」真的发一个最小的请求；「怎么开通？」打开 pages/bailian-guide.html）
 //   ⑤ 家庭定制：孩子的英文昵称（不要真名）、预设部件拼的形象、从约 50 只原创伙伴里挑 3 只（开场时博士请孩子挑的三个贝壳里就是它们）、
@@ -128,6 +128,7 @@
       'su.key.had': '✅ 这台手机里已经有密钥了{when}。要换就在下面粘贴新的。', 'su.key.had.when': '（{d} 测试通过）',
       'su.key.ph': 'sk- 开头的一长串', 'su.key.testing': '测试中…', 'su.key.test': '测试', 'su.key.show': '显示密钥', 'su.key.raw': '阿里云说：{raw}',
       'su.key.note': '密钥只存在这台手机里（安卓给这个 App 的私有空间），App 的界面读不回来，也不会发给开发者。以后在「设置 → 🔒 家长设置 → AI 聊天和口语打分」能换。请在阿里云设好<b>费用预警</b>。',
+      'su.key.note.ios': '密钥只存在这台 iPhone 里（系统的钥匙串），App 的界面读不回来，也不会发给开发者。以后在「设置 → 🔒 家长设置 → AI 聊天和口语打分」能换。请在阿里云设好<b>费用预警</b>。',
       'su.key.skip': '先跳过（没有密钥时：口语题不能自动打分，也不能和岛民聊天）',
       'su.nick.empty': '请给孩子起一个英文昵称', 'su.nick.letters': '只能用英文字母（最多两个词），比如 Kevin、Coco、Super Max', 'su.nick.len': '昵称要 2 到 12 个字母',
       'su.nick.ok': '✅ App 里叫：{name}',
@@ -163,6 +164,12 @@
       'su.dev.v.bad': '❌ 这台设备现在不合格：按上面的提示处理后点「重新检查」；处理不了请把这一页截图发给帮您安装的人（不合格不收费）',
       'su.dev.pay': '合格了：如果还没付款，帮您安装的人这时会把付款链接发给您。付好以后点「下一步」，接着设家长密码和 AI 密钥（这两步请您自己输入，远程协助时先暂停屏幕共享）。',
       'su.dev.again': '🔄 重新检查',
+      // iPhone 版（diag().platform === 'ios'）的设备检查
+      'su.dev.ios.p': '看看这台 iPhone 能不能顺利玩（要 iOS 18.4 以上）。',
+      'su.dev.ios': 'iOS 系统', 'su.dev.ios.v': 'iOS {v}', 'su.dev.ios.vm': 'iOS {v}（{model}）',
+      'su.dev.ios.old': '要 iOS 18.4 以上（App 自带的配音要用到）：到「设置 → 通用 → 软件更新」升级系统',
+      'su.dev.ios.mic.blocked': '点「去打开」→ 打开「麦克风」开关，回来再点「重新检查」',
+      'su.dev.ios.mic.ask': '手机问能不能使用麦克风时要同意，再点「重新检查」', 'su.dev.ios.checking.mic': '手机问能不能使用麦克风时，请同意',
       'su.done.pin': '🔑 家长密码：{v}', 'su.done.pin.ok': '已设好', 'su.done.pin.no': '还没设',
       'su.done.key.no': '还没有', 'su.done.key.no.s': '（口语不能自动打分，也不能聊天）',
       'su.done.nick': '🙂 孩子在 App 里叫：<b>{v}</b>', 'su.done.nick.later': '（开场时再起）',
@@ -232,6 +239,7 @@
       'su.key.had': '✅ This phone already has a key{when}. To change it, paste a new one below.', 'su.key.had.when': ' (tested OK on {d})',
       'su.key.ph': 'a long string starting with sk-', 'su.key.testing': 'Testing…', 'su.key.test': 'Test', 'su.key.show': 'Show the key', 'su.key.raw': 'Alibaba Cloud says: {raw}',
       'su.key.note': 'The key is stored only on this phone (in the private space Android gives this app). The app screens cannot read it back, and it is never sent to the developer. You can change it later in "Settings → 🔒 Parent Settings → AI chat and speech scoring". Please set a <b>spending alert</b> in Alibaba Cloud.',
+      'su.key.note.ios': 'The key is stored only on this iPhone (in the system keychain). The app screens cannot read it back, and it is never sent to the developer. You can change it later in "Settings → 🔒 Parent Settings → AI chat and speech scoring". Please set a <b>spending alert</b> in Alibaba Cloud.',
       'su.key.skip': 'Skip for now (without a key, speaking cannot be scored automatically and there is no chat with the islanders)',
       'su.nick.empty': 'Please give your child an English nickname', 'su.nick.letters': 'English letters only (up to two words), for example Kevin, Coco, Super Max', 'su.nick.len': 'The nickname needs 2 to 12 letters',
       'su.nick.ok': '✅ Name in the app: {name}',
@@ -267,6 +275,11 @@
       'su.dev.v.bad': '❌ This device does not pass yet: follow the tips above, then tap "Check again". If you cannot fix it, send a screenshot of this page to the person who installed the app for you (no charge if the device does not pass)',
       'su.dev.pay': 'Passed: if you have not paid yet, the person installing the app will now send you the payment link. After paying, tap "Next" to set the parent PIN and the AI key (please type these two yourself, and pause screen sharing during remote help).',
       'su.dev.again': '🔄 Check again',
+      'su.dev.ios.p': 'Let\'s see if this iPhone runs the app well (it needs iOS 18.4 or newer).',
+      'su.dev.ios': 'iOS version', 'su.dev.ios.v': 'iOS {v}', 'su.dev.ios.vm': 'iOS {v} ({model})',
+      'su.dev.ios.old': 'Needs iOS 18.4 or newer (for the voices built into the app): go to Settings → General → Software Update',
+      'su.dev.ios.mic.blocked': 'Tap "Open settings" → turn on "Microphone", then come back and tap "Check again"',
+      'su.dev.ios.mic.ask': 'When the phone asks to use the microphone, allow it, then tap "Check again"', 'su.dev.ios.checking.mic': 'When the phone asks to use the microphone, please allow it',
       'su.done.pin': '🔑 Parent PIN: {v}', 'su.done.pin.ok': 'set', 'su.done.pin.no': 'not set yet',
       'su.done.key.no': 'none yet', 'su.done.key.no.s': ' (speaking cannot be scored automatically and there is no chat)',
       'su.done.nick': '🙂 Your child\'s name in the app: <b>{v}</b>', 'su.done.nick.later': '(chosen at the start)',
@@ -441,8 +454,11 @@
     else if (WZ.step === 'done') nav = '<div class="su-nav"><button class="btn ghost" data-act="suBack">' + h('su.back') + '</button><button class="btn sun" data-act="suFinish" data-focus>' + h('su.kid.finish') + '</button></div>';
     else if (WZ.edit) nav = '<div class="su-nav"><button class="btn ghost" data-act="' + (i > 0 ? 'suBack' : 'suCancel') + '">' + h(i > 0 ? 'su.back' : 'su.cancel') + '</button><button class="btn" data-act="suNext" id="su-next">' + h(last ? 'su.save' : 'su.next') + '</button></div>';
     else nav = '<div class="su-nav">' + (i > 0 ? '<button class="btn ghost" data-act="suBack">' + h('su.back') + '</button>' : '<span></span>') + '<button class="btn" data-act="suNext" id="su-next"' + (blocked() && WZ.step !== 'nick' ? ' disabled' : '') + '>' + h('su.next') + '</button></div>';
+    // 横屏时内容那一栏自己滚动（style.css）：同一页重画（点密码键、挑伙伴、换部件……）不跳回顶上
+    const old = box.querySelector('.su-step'), sy = old && old.dataset.step === WZ.step ? old.scrollTop : 0;
     box.innerHTML = '<div class="su-head"><b>' + h(WZ.edit ? 'su.edit.head' : self ? 'su.open.head' : 'su.kid.head') + '</b><small>' + (WZ.edit ? '' : h(self ? 'su.open.head.s' : 'su.kid.head.s')) + '</small></div>' + tabs +
       '<div class="su-step" data-step="' + WZ.step + '">' + body + '</div>' + nav;
+    if (sy) box.querySelector('.su-step').scrollTop = sy;
   }
   function onInput(e) {
     const el = e.target;
@@ -565,7 +581,7 @@
       '<button class="btn" data-act="suKeyTest" id="su-key-test"' + (k.busy ? ' disabled' : '') + '>' + h(k.busy ? 'su.key.testing' : 'su.key.test') + '</button></div>' +
       '<label class="su-check small"><input type="checkbox" data-act="suKeyShow"><span>' + h('su.key.show') + '</span></label>' +
       '<div class="su-res" id="su-key-res">' + (res ? '<p class="' + res[0] + '">' + h(res[1]) + '</p>' + (k.res.raw && !k.res.ok ? '<p class="su-raw">' + h('su.key.raw', { raw: k.res.raw }) + '</p>' : '') : '') + '</div>' +
-      '<p class="su-small">' + h('su.key.note') + '</p>' +
+      '<p class="su-small">' + h(onIos() ? 'su.key.note.ios' : 'su.key.note') + '</p>' +
       (WZ.edit ? '' : '<button class="su-skip" data-act="suKeySkip">' + h('su.key.skip') + '</button>');
   }
   async function keyTest() {
@@ -660,17 +676,22 @@
   }
 
   // ② 设备检查：安卓版本、WebView、WebGL2、剩余空间、麦克风（第二步：合格了才付款，不合格不收钱）
-  // 每一行 { k, ok: true 合格 / false 不合格 / null 看不到, warn: 能用但有问题, label, val, tip }。必须合格的：安卓版本、剩余空间、麦克风
+  // iPhone 版（diag().platform === 'ios'）：安卓版本、WebView 两行换成一行「iOS 版本 + 机型」（最低 18.4），其余一样
+  // 每一行 { k, ok: true 合格 / false 不合格 / null 看不到, warn: 能用但有问题, label, val, tip }。必须合格的：安卓版本（iOS 版本）、剩余空间、麦克风
+  // 是不是 iPhone 版（AI 密钥那页说密钥存在哪儿：iPhone 是钥匙串，不是「安卓给 App 的私有空间」）
+  function onIos() { try { return !!(nat('diag') && (JSON.parse(EchoNative.diag() || '{}') || {}).platform === 'ios'); } catch (e) { return false; } }
   async function deviceCheck() {
-    const d = WZ.dev = { busy: true, rows: [] }, rows = d.rows;
-    render();
     let dg = {}; try { if (nat('diag')) dg = JSON.parse(EchoNative.diag() || '{}') || {}; } catch (e) { dg = {}; }
+    const ios = dg.platform === 'ios';
+    const d = WZ.dev = { busy: true, rows: [], ios }, rows = d.rows;
+    render();
     const sdk = +dg.sdk || 0;
     // label / val / tip 是函数：画的时候才按界面语言取字
-    rows.push({ k: 'android', label: () => t('su.dev.android'), ok: sdk ? sdk >= 26 : null, val: () => (dg.android ? t('su.dev.android.v', { v: dg.android, api: sdk }) : t('su.dev.web')),
+    if (ios) rows.push(iosRow(dg));
+    else rows.push({ k: 'android', label: () => t('su.dev.android'), ok: sdk ? sdk >= 26 : null, val: () => (dg.android ? t('su.dev.android.v', { v: dg.android, api: sdk }) : t('su.dev.web')),
       tip: () => (sdk && sdk < 26 ? t('su.dev.android.old') : sdk && sdk < 29 ? t('su.dev.android.9') : '') });
     const wv = String(dg.webview || ''), m = (wv.match(/^(\d+)\./) || (navigator.userAgent.match(/Chrome\/(\d+)/) || []))[1], major = +m || 0;
-    rows.push({ k: 'webview', label: () => t('su.dev.webview'), ok: major ? major >= 105 : null, warn: true, val: () => (major ? t('su.dev.webview.v', { v: major }) : t('su.dev.webview.unknown')),
+    if (!ios) rows.push({ k: 'webview', label: () => t('su.dev.webview'), ok: major ? major >= 105 : null, warn: true, val: () => (major ? t('su.dev.webview.v', { v: major }) : t('su.dev.webview.unknown')),
       tip: () => (major && major < 105 ? t('su.dev.webview.old') : '') });
     let gl = false;
     try { const c = document.createElement('canvas'); gl = !!c.getContext('webgl2'); } catch (e) { gl = false; }
@@ -680,14 +701,22 @@
     rows.push({ k: 'storage', label: () => t('su.dev.storage'), ok: free ? free >= 1e9 : null, val: () => (free ? (free / 1e9).toFixed(1) + ' GB' + (st.ram ? t('su.dev.storage.ram', { n: Math.round(st.ram / 1073741824) }) : '') : t('su.dev.web')),
       tip: () => (free && free < 1e9 ? t('su.dev.storage.low') : '') });
     render();
-    rows.push(await micRow());
+    rows.push(await micRow(ios));
     d.busy = false;
     const F = draft();
     F.device = { at: Date.now(), ok: verdict(rows), rows: rows.map(r => ({ k: r.k, ok: r.ok })) };
     G.save();
     if (WZ.dev === d) render();
   }
-  async function micRow() {
+  // iPhone 版的系统一行：iOS 版本 + 机型（原生给的 hw.machine，比如 iPhone15,2）。
+  // 最低 18.4：打包的配音是 Ogg 里的 Opus，iOS 18.4 起才放得出来（ios/README.md「最低 iOS」）；看不出版本就不拦
+  function iosRow(dg) {
+    const v = String(dg.ios || ''), mm = v.match(/^(\d+)(?:\.(\d+))?/), n = mm ? +mm[1] * 100 + (+mm[2] || 0) : 0, model = String(dg.model || '');
+    return { k: 'ios', label: () => t('su.dev.ios'), ok: n ? n >= 1804 : null, val: () => (n ? t(model ? 'su.dev.ios.vm' : 'su.dev.ios.v', { v, model }) : t('su.dev.webview.unknown')),
+      tip: () => (n && n < 1804 ? t('su.dev.ios.old') : '') };
+  }
+  // ios：iPhone 上「去打开」直接到「设置 → 回声岛」，里面就有麦克风开关（没有安卓的「权限」那一层）
+  async function micRow(ios) {
     const row = { k: 'mic', label: () => t('su.dev.mic'), ok: false, val: () => '', tip: () => '' };
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Object.assign(row, { ok: null, val: () => t('su.dev.mic.nobrowser') });
     try {
@@ -697,7 +726,7 @@
     } catch (e) {
       let st = ''; try { if (nat('micPermission')) st = String(EchoNative.micPermission() || ''); } catch (er) { st = ''; }
       return Object.assign(row, { ok: false, val: () => t(st === 'blocked' ? 'su.dev.mic.blocked' : 'su.dev.mic.no'), fix: nat('openAppSettings'),
-        tip: () => t(st === 'blocked' ? 'su.dev.mic.fix.blocked' : 'su.dev.mic.fix.ask') });
+        tip: () => t(st === 'blocked' ? (ios ? 'su.dev.ios.mic.blocked' : 'su.dev.mic.fix.blocked') : ios ? 'su.dev.ios.mic.ask' : 'su.dev.mic.fix.ask') });
     }
   }
   // 结论：必须的（安卓、空间、麦克风）有一项不合格 = bad；只是 WebView / WebGL2 不行 = warn；都好 = ok
@@ -711,10 +740,10 @@
     const icon = r => r.ok === true ? '✅' : r.ok === null ? '➖' : r.warn ? '⚠️' : '❌';
     const v = d && !d.busy ? verdict(rows) : '';
     return '<div class="su-hero">🩺</div><h2>' + h('su.dev.title') + '</h2>' +
-      '<p>' + h('su.dev.p') + '</p>' +
+      '<p>' + h(d && d.ios ? 'su.dev.ios.p' : 'su.dev.p') + '</p>' +
       '<ul class="su-dev">' + rows.map(r => { const tip = r.tip(); return '<li class="' + (r.ok === true ? 'ok' : r.ok === null ? 'na' : r.warn ? 'warn' : 'bad') + '" data-k="' + r.k + '"><i>' + icon(r) + '</i><div><b>' + esc(r.label()) + '</b><span>' + esc(r.val()) + '</span>' +
         (tip ? '<small>' + esc(tip) + '</small>' : '') + (r.fix && r.ok === false ? '<button class="btn small" data-act="suMicFix">' + h('su.dev.fix') + '</button>' : '') + '</div></li>'; }).join('') +
-      (d && d.busy ? '<li class="na"><i>⏳</i><div><b>' + h('su.dev.checking') + '</b>' + (rows.length >= 4 ? '<span>' + h('su.dev.checking.mic') + '</span>' : '') + '</div></li>' : '') + '</ul>' +
+      (d && d.busy ? '<li class="na"><i>⏳</i><div><b>' + h('su.dev.checking') + '</b>' + (rows.some(r => r.k === 'storage') ? '<span>' + h(d.ios ? 'su.dev.ios.checking.mic' : 'su.dev.checking.mic') + '</span>' : '') + '</div></li>' : '') + '</ul>' +
       (v ? '<div class="su-verdict ' + v + '" id="su-verdict">' + h(v === 'ok' ? 'su.dev.v.ok' : v === 'warn' ? 'su.dev.v.warn' : 'su.dev.v.bad') + '</div>' +
         (v !== 'bad' && !WZ.edit && !selfPath(prof()) ? '<p class="su-small su-pay">' + h('su.dev.pay') + '</p>' : '') : '') +
       '<button class="btn small ghost" data-act="suDevRun"' + (d && d.busy ? ' disabled' : '') + '>' + h('su.dev.again') + '</button>';

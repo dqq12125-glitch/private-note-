@@ -11,6 +11,9 @@
 //   now()（时钟，测锁定时间时可以换掉）；记录：backups、shared（分享过的）、settingsOpened、calls（调用过的方法名）。
 //   销售版：edition（'family' 默认 / 'sales'）、storage（{free, total, ram} 字节，设备检查用）、diagExtra（并进 diag() 的字段，比如 {sdk: 25}）；
 //   销售版装好时没有家长密码：install 时传 pin: null，向导里 setPin 设好。setPin 和原生一样：还没有密码直接设，有了要 2 分钟内刚输对过。
+//   iPhone 版：platform: 'ios' 时 diag() 照 ios/App/Sources/Bridge.swift 的 diagJson() 回——没有 sdk / android，有 platform 'ios'、
+//   ios（系统版本，默认 '26.1'）、model（hw.machine，默认 'iPhone17,3'）、webview 'WebKit'、micLastDeny {}；剩余空间照旧用 storage。
+//   这三个也能在页面里改（window.__fakeNative.ios = '17.5'），下一次 diag() 就是新的。
 function installFakeEchoNative(opts) {
   opts = opts || {};
   const W = typeof window !== 'undefined' ? window : globalThis;
@@ -30,6 +33,9 @@ function installFakeEchoNative(opts) {
     verUrl: opts.verUrl !== undefined ? opts.verUrl : opts.edition === 'sales' ? '' : 'https://dqq12125-glitch.github.io/private-note-/version.json',
     storage: opts.storage || { free: 8e9, total: 128e9, ram: 12e9 },
     diagExtra: opts.diagExtra || null,
+    platform: opts.platform === 'ios' ? 'ios' : 'android',
+    ios: opts.ios || '26.1',
+    model: opts.model !== undefined ? opts.model : 'iPhone17,3',
     okAt: 0,              // 最近一次输对密码的时间（setPin 改密码要 2 分钟内输对过）
     orient: 'portrait',
     fails: 0, lockUntil: 0, lockouts: 0, lastLock: 0,
@@ -75,7 +81,12 @@ function installFakeEchoNative(opts) {
       failPost(id);
     },
     version() { log('version'); return JSON.stringify(S.version); },
-    diag() { log('diag'); return JSON.stringify(Object.assign({ renderGone: 0, lastGone: 0, lastCrash: false, sdk: 35, android: '15', webview: 'fake', debug: true }, S.diagExtra || {})); },
+    diag() {
+      log('diag');
+      return JSON.stringify(Object.assign(S.platform === 'ios'
+        ? { renderGone: 0, lastGone: 0, lastCrash: false, platform: 'ios', ios: S.ios, model: S.model, webview: 'WebKit', debug: true, micLastDeny: {} }
+        : { renderGone: 0, lastGone: 0, lastCrash: false, sdk: 35, android: '15', webview: 'fake', debug: true }, S.diagExtra || {}));
+    },
     takeRecovered() { log('takeRecovered'); const r = S.recovered; S.recovered = false; return r; },
     hasPin() { log('hasPin'); return !!S.pin; },
     checkPin(p) {

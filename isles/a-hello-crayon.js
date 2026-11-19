@@ -1,15 +1,36 @@
 // 回声岛 · 第 0–1 岛：你好岛（海边小村）、彩色文具岛（糖果色小镇 + 涂鸦森林）
 // 地图、剧情、挑战馆机关。写法见 ISLES.md
+// 界面语言：这些函数的第几个参数是台词的中文意思（内容，不进字表；英语界面用 gloss() 不显示）
+// @i18n-content-calls painter:1 K:1 crab:1 orion:1 parrot:1 ask:2 speak:2 U:1 G:1 T:1 kai:1
 (function () {
   'use strict';
   const EM = window.EchoMaps, ST = window.EchoStory, L = ST.lib, P = window.EchoPeople;
 
+  // ---------- 界面文字（i18n.js 字表；键前缀 ia.） ----------
+  // 2026-11-19 搬进来：提示条、提示、说话的人的名字。台词（英文 + 中文意思）是内容，不在这里
+  const I18N = window.EchoI18n;
+  const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
+  // 内容的中文意思：英语界面给 null（不显示）
+  const gl = zh => (I18N ? I18N.gloss({ zh }) : zh);
+  // 旁白：world.js 的 whoLabel 认这个中文，显示时换成界面语言
+  const NAR = () => (I18N ? I18N.t('w.who.nar', null, 'zh') : '');
+  if (I18N) I18N.add({
+    zh: {
+      'ia.zone.now': '🎨 这一段只能踩：<b>{dot} {name}</b>{zh}', 'ia.zone.boss': '🦀 彩虹蟹在最里面等你！', 'ia.who.radio': '广播',
+      'ia.toast.kai': '🔮 小凯收服了 Owlet！', 'ia.toast.heal': '💖 怪兽们的体力都恢复了',
+    },
+    en: {
+      'ia.zone.now': '🎨 Walk only on: <b>{dot} {name}</b>{zh}', 'ia.zone.boss': '🦀 Rainbow Crab is waiting at the far end!', 'ia.who.radio': 'Speaker',
+      'ia.toast.kai': '🔮 Kai caught Owlet!', 'ia.toast.heal': '💖 Your monsters are fully healed',
+    },
+  });
+
   // ======================================================================
   // 第 0 岛 · 你好岛 Hello Island：白墙红瓦的海边小村，南边是沙滩、码头和灯塔
   // ======================================================================
-  EM.define('t0', {
+  EM.define('t0', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 0, name: '你好岛', en: 'Hello Island', sub: '第 1 岛 · 你的家',
-    rows: [
+    rows: [  // @i18n-content-end
       '##############^^##############',
       '#TTTTTTTTTTTTT==TTTTTTTTTTTTT#',
       '#TT.F..F..T..T2TT..T..F..F.TT#',
@@ -61,9 +82,9 @@
   });
 
   // 1 号路：草丛、池塘、一排台阶（往南跳是近路）、路边的小屋，东边岔路去海边悬崖
-  EM.define('r0', {
+  EM.define('r0', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 0, name: '1 号路', en: 'Route 1', sub: '你好岛 → 彩色文具岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '###########^^###########',
       '#TTTT....T.==.T...TTTTT#',
       '#TT..,,,,..==....o..TTT#',
@@ -126,17 +147,17 @@
     },
   });
   // 1 号路边的小屋：罗丝奶奶让你的怪兽休息
-  EM.define('r0h', {
+  EM.define('r0h', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 0, room: 'H', name: '路边小屋', en: 'Rest House', sub: '1 号路',
-    rows: ['WWWWWWWWW', 'Wkk_t__pW', 'W_______W', 'W_YY_1__W', 'W_YY____W', 'Wp______W', 'W___u___W', 'WWWWeWWWW'],
+    rows: ['WWWWWWWWW', 'Wkk_t__pW', 'W_______W', 'W_YY_1__W', 'W_YY____W', 'Wp______W', 'W___u___W', 'WWWWeWWWW'],  // @i18n-content-end
     npc: { 1: { role: 'story', id: 'rest', name: 'Granny Rose', look: 'granny', g: 'f' } },
     links: { e: 'r0' },
   });
 
   // 海边悬崖：悬崖上的草地、往下跳的台阶、沙滩和浅海的小岛；悬崖上有回声洞
-  EM.define('r0b', {
+  EM.define('r0b', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 0, name: '海边悬崖', en: 'Seaside Cliff', sub: '1 号路东边', lv: 1,
-    rows: [
+    rows: [  // @i18n-content-end
       '############################',
       '#TTTTRRRRRRRRRRRRRRRRRRRRTT#',
       '#TT..RRRRRRRRRKRRRRRRRRR.TT#',
@@ -172,9 +193,9 @@
   });
 
   // 回声洞：漆黑的洞穴，墙上刻着古老的字；深处被裂开的岩石封住，里面睡着苔藓巨人
-  EM.define('c0', {
+  EM.define('c0', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', z: 0, cave: 'rock', dark: true, dungeon: true, lv: 2, name: '回声洞', en: 'Echo Cave', sub: '海边悬崖',
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XX::::::XXXXXXXXXXX:::::XX',
       'XX::::::::XXXXXXXXX::Z::XX',
@@ -220,9 +241,9 @@
 
   // ---------- 你好岛的室内 ----------
   // 回声博士的研究所
-  EM.define('i0A', {
+  EM.define('i0A', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 0, room: 'A', name: '回声博士的研究所', en: 'Echo Lab', sub: '你好岛',
-    rows: ['WWWWWWWWWWWWW', 'Wkkkk_P_kkkkW', 'W___________W', 'W_YY__1__YY_W', 'W_YY_____YY_W', 'W___________W', 'Wp_Q_____Q_pW', 'W_____2_____W', 'W_____u_____W', 'WWWWWWeWWWWWW'],
+    rows: ['WWWWWWWWWWWWW', 'Wkkkk_P_kkkkW', 'W___________W', 'W_YY__1__YY_W', 'W_YY_____YY_W', 'W___________W', 'Wp_Q_____Q_pW', 'W_____2_____W', 'W_____u_____W', 'WWWWWWeWWWWWW'],  // @i18n-content-end
     links: { e: 't0' },
     npc: {
       1: { role: 'talk', name: 'Aide Nick', look: 'scientist', say: [['Hello! I help Professor Echo.', '你好！我是回声博士的助手。'], ['Monsters like clear words. Say their names loudly!', '怪兽喜欢清楚的话。大声叫它们的名字吧！'], ['Fire beats grass. Water beats fire. Grass beats water.', '火克草，水克火，草克水。']], speak: 'Water beats fire.' },
@@ -230,9 +251,9 @@
     },
   });
   // 对手的家
-  EM.define('i0J', {
+  EM.define('i0J', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 0, room: 'J', name: '{rival} 的家', en: "Rival's House", sub: '你好岛',
-    rows: ['WWWWWWWWW', 'Wd__t_kkW', 'Wd______W', 'W__YY_1_W', 'W__YY___W', 'Wp____2_W', 'W___u___W', 'WWWWeWWWW'],
+    rows: ['WWWWWWWWW', 'Wd__t_kkW', 'Wd______W', 'W__YY_1_W', 'W__YY___W', 'Wp____2_W', 'W___u___W', 'WWWWeWWWW'],  // @i18n-content-end
     links: { e: 't0' },
     npc: {
       1: { role: 'talk', name: 'Pip', look: 'kid', say: [['Hi! {rival} is not here. {rival} left early this morning.', '嗨！{rival} 不在家，一大早就出门了。'], ['{rival} wants to be the English Champion!', '{rival} 想当英语冠军！']] },
@@ -242,9 +263,9 @@
 
   // ---------- 挑战馆：问候之门（鹦鹉船长） ----------
   // 三道门各有一只鹦鹉守着；看窗外的天色（早上 / 下午 / 晚上），对它说对问候语门才开
-  EM.define('i0G', {
+  EM.define('i0G', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 0, room: 'G', name: '你好岛挑战馆', en: 'Hello Hall', sub: '岛主：鹦鹉船长',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWW',
       'Wk____1____kW',
       'W___________W',
@@ -298,9 +319,9 @@
   // ======================================================================
   // 第 1 岛 · 彩色文具岛 Crayon Island：糖果色的方块房子、铅笔一样的树
   // ======================================================================
-  EM.define('t1', {
+  EM.define('t1', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 1, name: '彩色文具岛', en: 'Crayon Island', sub: '第 2 岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '###############^^###############',
       '#TTTTTTTTTTTTTT==TTTTTTTTTTTTTT#',
       '#TT.F.Z..F.....==....F..Z.F..TT#',
@@ -354,9 +375,9 @@
     ],
   });
   // 蜡笔海滩：可选的海滩，沙堡、游泳的训练师、沙洲上的道具
-  EM.define('r1w', {
+  EM.define('r1w', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 1, name: '蜡笔海滩', en: 'Crayon Beach', sub: '彩色文具岛西边',
-    rows: [
+    rows: [  // @i18n-content-end
       '##########################',
       '#TTT,,,,TTTT.....TTTTTTTT#',
       '#TT,,,,,,.....,,,...TTTTT#',
@@ -393,9 +414,9 @@
     },
   });
   // 涂鸦森林：铅笔树的迷宫。左边一条路往北，右边一条路有往南跳的台阶（近路），中间是死胡同
-  EM.define('f1', {
+  EM.define('f1', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 1, name: '涂鸦森林', en: 'Graffiti Woods', sub: '彩色文具岛北边', lv: 1,
-    rows: [
+    rows: [  // @i18n-content-end
       '##############^^##############',
       '#TTTTTTTTTTTTT==TTTTTTTTTTTTT#',
       '#TTTTTTTTTTTTT2TTTTTTTTTTTTTT#',
@@ -454,9 +475,9 @@
     },
   });
   // 2 号路：田野和池塘，往北就是温馨家庭岛
-  EM.define('r1', {
+  EM.define('r1', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 1, name: '2 号路', en: 'Route 2', sub: '彩色文具岛 → 温馨家庭岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '###########^^###########',
       '#TTTTTTTTTT==TTTTTTTTTT#',
       '#TT....,,,,==,,,,....TT#',
@@ -503,16 +524,16 @@
 
   // ---------- 彩色文具岛的室内 ----------
   // 画家的工作室
-  EM.define('i1A', { markKinds: ['board', 'board'],
+  EM.define('i1A', { markKinds: ['board', 'board'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 1, room: 'A', name: '画家的工作室', en: 'Art Studio', sub: '彩色文具岛',
-    rows: ['WWWWWWWWWWWWW', 'Wkk_Y_Y_Y_kkW', 'W___________W', 'W_Z_______Z_W', 'W_____1_____W', 'Wp_YY___YY_pW', 'W___________W', 'W_____u_____W', 'WWWWWWeWWWWWW'],
+    rows: ['WWWWWWWWWWWWW', 'Wkk_Y_Y_Y_kkW', 'W___________W', 'W_Z_______Z_W', 'W_____1_____W', 'Wp_YY___YY_pW', 'W___________W', 'W_____u_____W', 'WWWWWWeWWWWWW'],  // @i18n-content-end
     links: { e: 't1' },
     npc: { 1: { role: 'story', id: 'studio', name: 'Mr Brush', look: 'teacher' } },
   });
   // 小凯的舅舅家
-  EM.define('i1H', {
+  EM.define('i1H', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 1, room: 'H', name: '小凯的舅舅家', en: "Kai's Uncle's House", sub: '彩色文具岛',
-    rows: ['WWWWWWWWW', 'Wkk_t__dW', 'W______dW', 'W_YY_1__W', 'W_YY__2_W', 'Wp______W', 'W___u___W', 'WWWWeWWWW'],
+    rows: ['WWWWWWWWW', 'Wkk_t__dW', 'W______dW', 'W_YY_1__W', 'W_YY__2_W', 'Wp______W', 'W___u___W', 'WWWWeWWWW'],  // @i18n-content-end
     links: { e: 't1' },
     npc: {
       1: { role: 'story', id: 'uncle', name: 'Uncle Wu', look: 'grandpa' },
@@ -522,9 +543,9 @@
 
   // ---------- 挑战馆：彩色地板（彩虹蟹） ----------
   // 听广播：这一段只能踩什么颜色。踩错颜色就回到这一段的起点；走到这一段的尽头，前面的门就开了
-  EM.define('i1G', {
+  EM.define('i1G', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 1, room: 'G', name: '彩色文具岛挑战馆', en: 'Crayon Hall', sub: '岛主：彩虹蟹',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWW',
       'Wp____1____pW',
       'W___________W',
@@ -589,9 +610,9 @@
   const COLOR_OPTS = ['Red', 'Blue', 'Yellow', 'Green'];
   const crab = (en, zh, x) => Object.assign({ who: 'Rainbow Crab', emo: '🦀', en, zh }, x || {});
   const zoneNow = C => ZONES.find(z => !C.gateOpen(z.gate));
-  function showZone(C, z) { C.note(z ? '🎨 这一段只能踩：<b>' + z.dot + ' ' + z.name + '</b>（' + z.zh + '）' : '🦀 彩虹蟹在最里面等你！'); }
+  function showZone(C, z) { C.note(z ? hx('ia.zone.now', { dot: z.dot, name: z.name, zh: gl(z.zh) ? '（' + gl(z.zh) + '）' : '' }) : tx('ia.zone.boss')); }
   async function announce(C, z) {
-    await C.talk([{ who: '广播', emo: '📢', en: z.en, zh: '仔细听广播：这一段要踩什么颜色？选出来再大声说一遍。', hideEn: true, kind: 'answer', opts: COLOR_OPTS.map(t => ({ t, c: t === z.name })).sort(() => Math.random() - .5), fail: () => [crab('Listen again: ' + z.en, '再听一遍：' + z.en + '（' + z.zh + '）')] }]);
+    await C.talk([{ who: tx('ia.who.radio'), emo: '📢', en: z.en, zh: '仔细听广播：这一段要踩什么颜色？选出来再大声说一遍。', hideEn: true, kind: 'answer', opts: COLOR_OPTS.map(t => ({ t, c: t === z.name })).sort(() => Math.random() - .5), fail: () => [crab('Listen again: ' + z.en, '再听一遍：' + z.en + '（' + z.zh + '）')] }]);
     showZone(C, z);
   }
 
@@ -657,7 +678,7 @@
       K('O-okay! Echo Ball, fly!', '好、好的！回声球，飞吧！', { onShow: () => { E.SFX.hit(); } }),
     ]);
     C.remove(wild);
-    E.SFX.win(); E.toast('🔮 小凯收服了 Owlet！', 'gold');
+    E.SFX.win(); E.toast(tx('ia.toast.kai'), 'gold');
     await C.talk([
       K('I did it! I caught Owlet! It came to me because I spoke clearly!', '我做到了！我收服了 Owlet！因为我说得很清楚，它才过来的！'),
       K('Thank you, {name}. I want to be strong, like you.', '谢谢你，{name}。我想变得像你一样强。'),
@@ -685,10 +706,10 @@
     if (res !== 'win') return;
     C.set('z1h' + n.k);
     C.remove(n);
-    if (!C.flag('z1h0') || !C.flag('z1h1')) { await C.talk([{ who: '旁白', emo: '💬', en: 'The other one still has the crystal!', zh: '水晶还在另一个团员手上！' }]); return; }
+    if (!C.flag('z1h0') || !C.flag('z1h1')) { await C.talk([{ who: NAR(), emo: '💬', en: 'The other one still has the crystal!', zh: '水晶还在另一个团员手上！' }]); return; }
     await C.talk([{ who: 'Hush Crew', look: P.LOOKS.gruntF, g: 'f', en: 'Shh... Fine! Take your noisy crystal!', zh: '嘘……好吧！拿走你们吵死人的水晶！' }]);
     await L.restoreCrystal(C, 1);
-    await C.talk([{ who: '旁白', emo: '🌈', en: 'Colours are coming back to Crayon Island!', zh: '颜色回到彩色文具岛了！快回镇上看看吧！' }]);
+    await C.talk([{ who: NAR(), emo: '🌈', en: 'Colours are coming back to Crayon Island!', zh: '颜色回到彩色文具岛了！快回镇上看看吧！' }]);
   }
   // 回到镇上：颜色回来了，画家道谢
   async function painterThanks(C, n) {
@@ -741,7 +762,7 @@
     const G = S('Granny Rose', 'granny', 'f');
     await C.talk([
       G('Hello, dear! You look tired. Sit down and have a rest.', '你好呀，孩子！你看起来累了。坐下来歇一歇吧。'),
-      G('Your monsters are fine now.', '你的怪兽们都恢复精神了。', { onShow: () => { C.MG.healAll(); C.E.SFX.win(); C.E.toast('💖 怪兽们的体力都恢复了', 'gold'); } }),
+      G('Your monsters are fine now.', '你的怪兽们都恢复精神了。', { onShow: () => { C.MG.healAll(); C.E.SFX.win(); C.E.toast(tx('ia.toast.heal'), 'gold'); } }),
       G('When you leave, what do you say?', '要走的时候，你会说什么？'),
       L.speak(C, 'Goodbye! See you next time!', '和奶奶道别：大声说出来'),
       G('Goodbye, dear! Come back anytime.', '再见，孩子！随时回来。'),

@@ -1,8 +1,9 @@
 // 回声岛 iPhone 版的打包设置（进仓库的默认值）。要改的只有这几行；
 // 打包前 ios/scripts/prepare.mjs 会生成 ios/Generated/Echo.xcconfig（不进仓库），里面的同名设置盖掉这里的。
 
-// App 的唯一标识：现在是占位的，正式打包前换成自己在苹果开发者后台登记的（只改这一处，或者设环境变量 ECHO_BUNDLE_ID）
-ECHO_BUNDLE_ID = com.example.echoisland
+// App 的唯一标识（和安卓的包名一样）。只改这一处，或者设环境变量 ECHO_BUNDLE_ID：
+// make-config.mjs 也从这一行读，订阅的两个商品编号默认就是它后面加 .premium.monthly / .premium.yearly
+ECHO_BUNDLE_ID = com.echoisland.app
 // 家庭版在后面加一截（ECHO_EDITION=family 时生成的设置里是 .family），和公开发的版本能装在同一台手机上
 ECHO_BUNDLE_SUFFIX =
 

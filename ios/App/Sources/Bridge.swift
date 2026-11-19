@@ -9,6 +9,8 @@ import UniformTypeIdentifiers
 //   同步（要返回值、或者后面紧跟着要读结果的）：网页 window.prompt('__echo_native__:{…}') → GameViewController 的 prompt 回调 → callSync
 //   异步（连阿里云的四个，没有返回值）：webkit.messageHandlers.echo.postMessage({…}) → callAsync，结果用 window.__echoNative(...) 回
 // 网页拿不到密钥本身，只能请这里带着密钥去连阿里云。全部在主线程上跑。
+// iPhone 才有的方法（订阅 Store.swift、「通过 Apple 登录」AppleSignIn.swift）都是异步的，写在 iosOnlyMethods 里；
+// 安卓那边以后接 Google Play 结算时再加对应的（tests/ios.test.js 的 IOS_ONLY 表核对这三处和自测页）。
 @MainActor
 final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
     static let tag = "__echo_native__:"
@@ -17,7 +19,12 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
     static let syncMethods = ["hasKey", "setKey", "setOrientation", "version", "diag", "takeRecovered", "edition", "verUrl", "books", "storage",
                               "hasPin", "checkPin", "pinStatus", "setPin", "micPermission", "openAppSettings",
                               "backupWrite", "backupList", "backupRead", "backupPick", "shareText", "shareFile"]
-    static let asyncMethods = ["wsOpen", "wsSend", "wsClose", "post"]
+    static let asyncMethods = ["wsOpen", "wsSend", "wsClose", "post",
+                               "iapProducts", "iapBuy", "iapRestore", "iapCurrent", "iapPending", "iapFinish", "iapManage",
+                               "appleSignIn", "appleCredentialState"]
+    // 上面这些里 iPhone 才有的（安卓的 MainActivity 里没有；以后安卓接 Google Play 结算再说）
+    static let iosOnlyMethods = ["iapProducts", "iapBuy", "iapRestore", "iapCurrent", "iapPending", "iapFinish", "iapManage",
+                                 "appleSignIn", "appleCredentialState"]
     // 销售版（公开发的版本，ECHO_EDITION 不写就是它）：没有打包的密钥和家长密码，家长在首次设置向导里设
     static let sales = BuildConfig.edition != "family"
     static let shareTextMax = 8000                       // 比这长的文字改成文件分享（整个存档当文字发不出去）
@@ -33,6 +40,8 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
     private let backups = BackupStore()
     private var micLast = ""
     private(set) lazy var net = DashScope { [weak self] gen, id, type, data in self?.callback(gen, id, type, data) }
+    // 「通过 Apple 登录」的面板挂在游戏画面的窗口上
+    private lazy var apple = AppleSignIn { [weak self] in self?.host?.view.window }
 
     override init() {
         // 家长密码：家庭版用打包时的哈希；销售版打包时没有，家长在首次设置向导里设（setPin），哈希和随机盐存在 UserDefaults
@@ -45,6 +54,11 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
             defaults.set(true, forKey: "installed")
         }
         micLast = Bridge.micState()
+        // 订阅：Transaction.updates 来的交易（续费、退款、家长批准了的「请求购买」）发事件 echo-iap 给网页。
+        // 网页还没打开时来的不会丢：网页打开后调 iapPending 拿还没 finish 的
+        Store.shared.onEvent = { [weak self] detail in
+            self?.emit("echo-iap", "JSON.parse(" + Bridge.jsStr(Bridge.json(detail)) + ")")
+        }
     }
 
     // 密钥：手机上家长填的优先（钥匙串）；没有就用打包时带的（只有家庭版有）。两个都空时连接一律按「没有密钥」回
@@ -232,8 +246,41 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
             net.wsClose(id: Bridge.int(a, 0))
         case "post":
             net.post(gen: h.gen, id: Bridge.int(a, 0), url: Bridge.str(a, 1), body: Bridge.str(a, 2), key: key())
+        // ---- 订阅（iPhone 才有，Store.swift）：结果 window.__echoNative(id, 'ok' / 'fail', JSON 文字) ----
+        case "iapProducts":
+            let ids = Bridge.str(a, 1)
+            storeCall(h.gen, Bridge.int(a, 0)) { await Store.shared.products(ids) }
+        case "iapBuy":
+            let product = Bridge.str(a, 1), token = Bridge.str(a, 2)
+            storeCall(h.gen, Bridge.int(a, 0)) { [weak h] in await Store.shared.buy(product, token: token, confirmIn: h) }
+        case "iapRestore":
+            storeCall(h.gen, Bridge.int(a, 0)) { await Store.shared.restore() }
+        case "iapCurrent":
+            storeCall(h.gen, Bridge.int(a, 0)) { await Store.shared.current() }
+        case "iapPending":
+            storeCall(h.gen, Bridge.int(a, 0)) { await Store.shared.pending() }
+        case "iapFinish":
+            let tx = Bridge.str(a, 1)
+            storeCall(h.gen, Bridge.int(a, 0)) { await Store.shared.finish(tx) }
+        case "iapManage":
+            storeCall(h.gen, Bridge.int(a, 0)) { [weak h] in await Store.shared.manage(in: h?.view.window?.windowScene) }
+        // ---- 通过 Apple 登录（iPhone 才有，AppleSignIn.swift） ----
+        case "appleSignIn":
+            let gen = h.gen, id = Bridge.int(a, 0)
+            apple.signIn(nonce: Bridge.str(a, 1)) { [weak self] ok, json in self?.callback(gen, id, ok ? "ok" : "fail", json) }
+        case "appleCredentialState":
+            let gen = h.gen, id = Bridge.int(a, 0)
+            apple.credentialState(user: Bridge.str(a, 1)) { [weak self] ok, json in self?.callback(gen, id, ok ? "ok" : "fail", json) }
         default:
             break
+        }
+    }
+
+    // 订阅的方法：在主线程上等 StoreKit 办完，回 window.__echoNative(id, 'ok' / 'fail', JSON)。网页重建过（gen 变了）就不回
+    private func storeCall(_ gen: Int, _ id: Int, _ work: @escaping @MainActor @Sendable () async -> StoreReply) {
+        Task { @MainActor [weak self] in
+            let r = await work()
+            self?.callback(gen, id, r.ok ? "ok" : "fail", r.json)
         }
     }
 
@@ -251,6 +298,9 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
             "webview": "WebKit",
             "debug": Bridge.isDebug,
             "micLastDeny": [String: Any](),
+            // iPhone 才有：这个包能不能「通过 Apple 登录」（签名的正式包才带权限），订阅的两个商品编号
+            "appleSignIn": AppleSignIn.available,
+            "iapProducts": [BuildConfig.iapMonthly, BuildConfig.iapYearly],
         ]
         return Bridge.json(o)
     }

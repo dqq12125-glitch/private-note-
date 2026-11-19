@@ -1,0 +1,325 @@
+# 回声岛 iPhone 版：打正式包、签名、传到 TestFlight。只能手动点（不会因为推代码自己跑）：
+#   gh workflow run ios-testflight.yml --ref echo-island/next [-f version=1.0.1] [-f apple_signin=false] [-f edition=sales]
+# 做法照老板另一个仓库已经跑通的那条（restaurantweb-site-stack 的 .github/workflows/ios.yml）：
+#   ① Linux 上先看四个密钥都放了（没放不占 Mac 的时间）；
+#   ② Mac 上：静态核对（tests/ios.test.js）→ 正式包的设置编一个模拟器包、装上、打开 25 秒没退出、网页打开了 → 才往下走；
+#   ③ xcodebuild archive 只做临时签名（ad-hoc，权限文件照样带进去），export 时用 App Store Connect API 密钥让苹果的云签名签成
+#      上架用的（-allowProvisioningUpdates：自动登记 App ID、生成描述文件；不在这台用完就扔的 Mac 上建证书）；
+#   ④ 先用 altool + API 密钥传，不行再用 xcodebuild 自己的上传。
+# 仓库是公开的：不上传 .ipa、.xcarchive 或任何签过名的东西，只上传日志；密钥只走环境变量，不打印。
+# 要的仓库密钥（Settings → Secrets and variables → Actions）：ASC_KEY_ID、ASC_ISSUER_ID、ASC_KEY_P8（.p8 文件的全文）、APPLE_TEAM_ID。
+# 家庭版（只给自家人，带密钥）另要 ECHO_PARENT_PIN、ECHO_DASHSCOPE_KEY，并且要在 App Store Connect 另建一个 App（App 标识后面多 .family）。
+# 说明见 ios/README.md「上 TestFlight」
+name: iOS TestFlight
+
+on:
+  # 推一个 testflight-<任何字> 的标签也会传（按默认的：销售版、版本号用 Base.xcconfig 里的、带通过 Apple 登录）。
+  # 为什么要这个：只能手动点的工作流，GitHub 要它在默认分支（main）上才认得，这个仓库的 main 不是游戏，不往那边放。
+  #   git tag testflight-20261119-1 && git push origin testflight-20261119-1
+  push:
+    tags: ['testflight-*']
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: sales = the public app (default). family = the family build, needs two more secrets and its own App Store Connect app
+        type: choice
+        options: [sales, family]
+        default: sales
+      version:
+        description: Version number people see, like 1.0.1 (empty = the one in ios/Config/Base.xcconfig)
+        type: string
+        default: ''
+      apple_signin:
+        description: Build with Sign in with Apple (if Apple refuses the capability, this run builds once more without it and says so)
+        type: boolean
+        default: true
+
+# 同一个分支一次只传一个，后来的排队；不取消正在传的
+concurrency:
+  group: ios-testflight-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: The App Store Connect secrets are set
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check the secrets (names only, never the values)
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ECHO_PARENT_PIN: ${{ secrets.ECHO_PARENT_PIN }}
+          EDITION: ${{ inputs.edition || 'sales' }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          bad=0
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then echo "::error::secret $name is not set"; bad=1; fi
+          done
+          if [ -n "$APPLE_TEAM_ID" ] && ! printf '%s' "$APPLE_TEAM_ID" | grep -Eq '^[A-Z0-9]{10}$'; then echo "::error::APPLE_TEAM_ID should be 10 capital letters and digits"; bad=1; fi
+          if [ -n "$ASC_KEY_P8" ] && ! printf '%s' "$ASC_KEY_P8" | grep -q 'BEGIN PRIVATE KEY'; then echo "::error::ASC_KEY_P8 should be the whole text of the AuthKey_….p8 file"; bad=1; fi
+          if [ "$EDITION" = family ] && [ -z "$ECHO_PARENT_PIN" ]; then echo "::error::the family edition needs the ECHO_PARENT_PIN secret"; bad=1; fi
+          if [ -n "$VERSION" ] && ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+(\.[0-9]+){0,2}$'; then echo "::error::version should look like 1.0.1"; bad=1; fi
+          exit $bad
+
+  testflight:
+    name: Check, archive and upload to TestFlight
+    needs: secrets
+    runs-on: macos-26
+    timeout-minutes: 100
+    # 密钥只放进要用的那几步（不放在整个 job 上）：xcodebuild 跑脚本阶段时会把所有环境变量原样写进日志，
+    # 而日志文件要上传。所以 xcodebuild 一律用 env -u 去掉它们再跑，最后上传前再把团队编号、密钥编号从日志里抹掉
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      SIM_DEST: 'platform=iOS Simulator,name=iPhone 17,OS=latest'
+      EDITION: ${{ inputs.edition || 'sales' }}
+      WANT_APPLE_SIGNIN: ${{ inputs.apple_signin || github.event_name == 'push' }}
+      OUT: ${{ github.workspace }}/ios-ci
+    steps:
+      - name: Check out (shallow)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          lfs: false
+
+      - name: Show the tools
+        run: |
+          mkdir -p "$OUT"
+          sw_vers
+          xcodebuild -version
+          node --version
+
+      # 和模拟器那个工作流同一份核对：方法表、Info.plist、隐私清单、只连阿里云、仓库里没有密钥、白名单……
+      - name: Static checks (tests/ios.test.js)
+        run: node tests/ios.test.js
+
+      # 构建号 = 2026 年开始（UTC）以来的分钟数：只增不减，哪台机器打的都比上一个大（和老板另一个 App 一样的规矩）
+      - name: Build number and version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          n=$(node -e 'console.log(Math.floor((Date.now() - Date.UTC(2026, 0, 1)) / 60000))')
+          echo "ECHO_VERSION_CODE=$n" >> "$GITHUB_ENV"
+          if [ -n "$VERSION" ]; then echo "ECHO_MARKETING_VERSION=$VERSION" >> "$GITHUB_ENV"; fi
+          echo "build number $n, version ${VERSION:-from ios/Config/Base.xcconfig}, edition $EDITION" | tee "$OUT/version.txt"
+
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+          xcodegen --version
+
+      # 生成打包设置和网页（正式包的设置）。ECHO_APPLE_SIGNIN 先按要的来，archive 那一步可能再改一次
+      - name: Prepare web files, build config and icons
+        env:
+          ECHO_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # 只有家庭版才拿这两个（销售版给了 make-config.mjs 会停下）
+          ECHO_PARENT_PIN: ${{ inputs.edition == 'family' && secrets.ECHO_PARENT_PIN || '' }}
+          ECHO_DASHSCOPE_KEY: ${{ inputs.edition == 'family' && secrets.ECHO_DASHSCOPE_KEY || '' }}
+        run: |
+          if [ "$WANT_APPLE_SIGNIN" = true ]; then export ECHO_APPLE_SIGNIN=1; else export ECHO_APPLE_SIGNIN=0; fi
+          node ios/scripts/prepare.mjs --edition "$EDITION" --release
+
+      - name: Generate the Xcode project
+        working-directory: ios
+        run: xcodegen generate --spec project.yml
+
+      # 坏的包不上 TestFlight：正式包的设置编一个模拟器包（不签名），装上、打开，25 秒后还在、网页打开了
+      - name: Simulator launch check (Release settings)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project ios/EchoIsland.xcodeproj -scheme EchoIsland -configuration Release \
+            -destination "$SIM_DEST" -destination-timeout 180 \
+            -derivedDataPath "$RUNNER_TEMP/dd-sim" \
+            CODE_SIGNING_ALLOWED=NO DEVELOPMENT_TEAM= COMPILER_INDEX_STORE_ENABLE=NO \
+            2>&1 | tee "$OUT/simulator-build.log" | xcbeautify --renderer github-actions
+          app="$RUNNER_TEMP/dd-sim/Build/Products/Release-iphonesimulator/EchoIsland.app"
+          test -f "$app/www/index.html"
+          if [ -e "$app/www-test" ]; then echo "::error::the Release app contains the bridge self-test page"; exit 1; fi
+          IFS=$'\t' read -r udid os name < <(node ios/scripts/pick-simulator.mjs --name "iPhone 17")
+          echo "launch check on $name, iOS $os"
+          xcrun simctl boot "$udid" 2>/dev/null || true
+          xcrun simctl bootstatus "$udid" -b > /dev/null
+          bundle=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Info.plist")
+          xcrun simctl install "$udid" "$app"
+          xcrun simctl launch "$udid" "$bundle"
+          sleep 25
+          xcrun simctl spawn "$udid" launchctl list > "$RUNNER_TEMP/running.txt"
+          xcrun simctl spawn "$udid" log show --last 3m --style compact --predicate 'process == "EchoIsland"' > "$OUT/simulator-app.log" 2>&1 || true
+          tail -40 "$OUT/simulator-app.log" || true
+          if ! grep -q "$bundle" "$RUNNER_TEMP/running.txt"; then echo "::error::the app is not running 25 seconds after launch"; exit 1; fi
+          if grep -q "EchoIsland: page load failed" "$OUT/simulator-app.log"; then echo "::error::the game page did not open in the app"; exit 1; fi
+          xcrun simctl terminate "$udid" "$bundle" || true
+          xcrun simctl shutdown "$udid" || true
+          echo "the app opened and is still running"
+
+      # 签名：archive 只做临时签名（带上权限文件），export 时苹果的云签名签成上架用的（API 密钥，Admin 角色）。
+      # 要「通过 Apple 登录」时：苹果不肯给这个权限（App ID 上没勾、密钥权限不够……）就不带它再来一次，并提示老板去后台勾上
+      - name: Archive and sign for the App Store
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ECHO_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ECHO_PARENT_PIN: ${{ inputs.edition == 'family' && secrets.ECHO_PARENT_PIN || '' }}
+          ECHO_DASHSCOPE_KEY: ${{ inputs.edition == 'family' && secrets.ECHO_DASHSCOPE_KEY || '' }}
+        run: |
+          set -o pipefail
+          key="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+          trap 'rm -f "$key"' EXIT
+          printf '%s\n' "$ASC_KEY_P8" > "$key"
+          chmod 600 "$key"
+          auth=(-allowProvisioningUpdates -authenticationKeyPath "$key" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+          # xcodebuild 不带这些环境变量跑（它会把环境变量写进日志）
+          clean=(env -u ASC_KEY_P8 -u ASC_KEY_ID -u ASC_ISSUER_ID -u ECHO_DASHSCOPE_KEY -u ECHO_PARENT_PIN)
+          archive() {
+            ECHO_APPLE_SIGNIN=$1 node ios/scripts/make-config.mjs --edition "$EDITION" --release || return 1
+            rm -rf "$RUNNER_TEMP/EchoIsland.xcarchive"
+            "${clean[@]}" xcodebuild archive \
+              -project ios/EchoIsland.xcodeproj -scheme EchoIsland -configuration Release \
+              -destination 'generic/platform=iOS' \
+              -archivePath "$RUNNER_TEMP/EchoIsland.xcarchive" \
+              -derivedDataPath "$RUNNER_TEMP/dd-archive" \
+              DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CURRENT_PROJECT_VERSION="$ECHO_VERSION_CODE" COMPILER_INDEX_STORE_ENABLE=NO \
+              CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- PROVISIONING_PROFILE_SPECIFIER= CODE_SIGNING_REQUIRED=NO AD_HOC_CODE_SIGNING_ALLOWED=YES \
+              2>&1 | tee -a "$OUT/archive.log" | xcbeautify --renderer github-actions || return 1
+          }
+          export_to() {
+            cat > "$RUNNER_TEMP/export.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>$1</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+            rm -rf "$RUNNER_TEMP/export-$1"
+            "${clean[@]}" xcodebuild -exportArchive \
+              -archivePath "$RUNNER_TEMP/EchoIsland.xcarchive" \
+              -exportOptionsPlist "$RUNNER_TEMP/export.plist" \
+              -exportPath "$RUNNER_TEMP/export-$1" \
+              "${auth[@]}" 2>&1 | tee -a "$OUT/export.log" || return 1
+          }
+          siwa=0
+          if [ "$WANT_APPLE_SIGNIN" = true ]; then
+            if archive 1 && export_to export; then
+              siwa=1
+            else
+              echo "::warning::Apple did not sign the build with Sign in with Apple. Building again without it. To turn it on: developer.apple.com → Certificates, Identifiers & Profiles → Identifiers → the app's bundle id → tick Sign In with Apple (Enable as a primary App ID) → Save, then run this workflow again."
+            fi
+          fi
+          if [ "$siwa" = 0 ]; then
+            archive 0
+            export_to export
+          fi
+          echo "APPLE_SIGNIN_BUILT=$siwa" >> "$GITHUB_ENV"
+          ls -la "$RUNNER_TEMP/export-export"
+
+      # 传之前看一眼签好的包：版本号、构建号、权限（「通过 Apple 登录」带没带、是不是 TestFlight 用的）、没有自测页
+      - name: Check the signed app
+        run: |
+          set -o pipefail
+          ipa=$(ls "$RUNNER_TEMP"/export-export/*.ipa | head -1)
+          rm -rf "$RUNNER_TEMP/ipa"
+          unzip -q "$ipa" -d "$RUNNER_TEMP/ipa"
+          app=$(ls -d "$RUNNER_TEMP"/ipa/Payload/*.app | head -1)
+          plist="$app/Info.plist"
+          for k in CFBundleIdentifier CFBundleShortVersionString CFBundleVersion ITSAppUsesNonExemptEncryption; do
+            printf '%s: %s\n' "$k" "$(/usr/libexec/PlistBuddy -c "Print :$k" "$plist")"
+          done | tee "$OUT/signed-app.txt"
+          [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist")" = "$ECHO_VERSION_CODE" ] || { echo "::error::the build number in the app is not $ECHO_VERSION_CODE"; exit 1; }
+          test -f "$app/www/index.html"
+          test -f "$app/PrivacyInfo.xcprivacy"
+          if [ -e "$app/www-test" ]; then echo "::error::the signed app contains the bridge self-test page"; exit 1; fi
+          codesign -d --entitlements :- "$app" > "$RUNNER_TEMP/entitlements.plist" 2>/dev/null
+          # 只打印权限的名字（值里有团队编号）
+          plutil -convert json -o - "$RUNNER_TEMP/entitlements.plist" | node -e 'const e=JSON.parse(require("fs").readFileSync(0,"utf8"));console.log("entitlements: "+Object.keys(e).sort().join(", "))' | tee -a "$OUT/signed-app.txt"
+          has=0
+          if /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.applesignin' "$RUNNER_TEMP/entitlements.plist" > /dev/null 2>&1; then has=1; fi
+          if [ "$has" != "$APPLE_SIGNIN_BUILT" ]; then echo "::error::Sign in with Apple entitlement is $has but the build config says $APPLE_SIGNIN_BUILT"; exit 1; fi
+          [ "$(/usr/libexec/PlistBuddy -c 'Print :get-task-allow' "$RUNNER_TEMP/entitlements.plist" 2>/dev/null || echo false)" = "false" ] || { echo "::error::the app is signed for debugging, not for the App Store"; exit 1; }
+          echo "Sign in with Apple in this build: $([ "$has" = 1 ] && echo yes || echo no)" | tee -a "$OUT/signed-app.txt"
+          rm -rf "$RUNNER_TEMP/ipa"
+
+      # altool + API 密钥（老板的另一个 App 2026-11-08 起这样传：Xcode 自己的上传有一次说账号过期了）；不行再用 xcodebuild 的上传
+      - name: Upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -o pipefail
+          key="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+          keys="$RUNNER_TEMP/private_keys"
+          trap 'rm -f "$key"; rm -rf "$keys"' EXIT
+          printf '%s\n' "$ASC_KEY_P8" > "$key"
+          chmod 600 "$key"
+          mkdir -p "$keys" && cp "$key" "$keys/" && chmod 600 "$keys"/*
+          clean=(env -u ASC_KEY_P8 -u ASC_KEY_ID -u ASC_ISSUER_ID)
+          ipa=$(ls "$RUNNER_TEMP"/export-export/*.ipa | head -1)
+          if "${clean[@]}" API_PRIVATE_KEYS_DIR="$keys" xcrun altool --upload-app --type ios --file "$ipa" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" 2>&1 | tee "$OUT/upload.log"; then
+            echo "uploaded build $ECHO_VERSION_CODE with altool"
+          else
+            echo "altool did not upload it; trying xcodebuild's upload" | tee -a "$OUT/upload.log"
+            cat > "$RUNNER_TEMP/upload.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+            "${clean[@]}" xcodebuild -exportArchive \
+              -archivePath "$RUNNER_TEMP/EchoIsland.xcarchive" \
+              -exportOptionsPlist "$RUNNER_TEMP/upload.plist" \
+              -exportPath "$RUNNER_TEMP/export-upload" \
+              -allowProvisioningUpdates -authenticationKeyPath "$key" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+              2>&1 | tee -a "$OUT/upload.log"
+            echo "uploaded build $ECHO_VERSION_CODE with xcodebuild"
+          fi
+          echo "TestFlight: build $ECHO_VERSION_CODE is processing in App Store Connect (usually 5–30 minutes before it can be installed)"
+
+      # 日志要上传（公开的仓库）：先把团队编号、密钥编号、发行者编号抹掉（GitHub 只在网页上的日志里遮，不管上传的文件）
+      - name: Scrub the logs
+        if: always()
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          shopt -s nullglob
+          for f in "$OUT"/*.log "$OUT"/*.txt; do
+            for v in "$APPLE_TEAM_ID" "$ASC_KEY_ID" "$ASC_ISSUER_ID"; do
+              [ -n "$v" ] && V="$v" perl -pi -e 's/\Q$ENV{V}\E/<hidden>/g' "$f"
+            done
+            if grep -q 'PRIVATE KEY' "$f"; then echo "::error::$(basename "$f") mentions a private key: not uploaded"; rm -f "$f"; fi
+          done
+          echo "logs scrubbed"
+
+      # 只传日志（仓库是公开的：.ipa、.xcarchive、签过名的东西一律不传）
+      - name: Upload the logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-testflight-logs
+          path: |
+            ios-ci/*.log
+            ios-ci/*.txt
+          if-no-files-found: warn
+          retention-days: 14

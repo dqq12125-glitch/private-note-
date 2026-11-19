@@ -6,14 +6,18 @@
 <title>原生桥自测</title>
 <!--
   回声岛 iPhone 版 · 原生桥自测页（只打进调试包：ios/project.yml 的 Release 不带 www-test，原生那边正式包也不认 /__test/ 这个路径）。
-  打开方式：调试包带启动参数 -EchoSelfTest all|mic|share|pick（ios/UITests 就是这样开的），地址是 echoisland://localhost/__test/selftest.html?run=…
+  打开方式：调试包带启动参数 -EchoSelfTest all|mic|share|pick|store（ios/UITests 就是这样开的），地址是 echoisland://localhost/__test/selftest.html?run=…
   run=all   ：把 window.EchoNative 的每个方法都调一遍（android/README.md 的 26 个），再看几样 WebKit 的本事（安全来源、Range、配音、类型）。
               不会真的连 AI：只在「没有密钥」时测连阿里云的两个方法（原生当场回 401，不出网）；有密钥时跳过。
               会改手机上状态的几样都先看一眼再做：没有密钥才测 setKey（设了再清掉），销售版还没设家长密码才测 setPin，今天还没有备份才测 backupWrite。
               不自动调 openAppSettings（会离开 App）、backupPick、分享（会弹界面）：这三个由下面的 run=mic / share / pick 和按钮来测。
   run=mic   ：要一次麦克风（第一次会弹系统的「允许使用麦克风」，UI 测试去点「允许」），记下结果和 micPermission()。
   run=share ：shareFile 弹分享面板；run=pick：backupPick 弹文件选择器。弹没弹出来由原生的状态行（UI 测试读）判断。
-  结果：window.__echoTestResult = { run, done, pass, fail, warn, skip, items: [{ name, ok, got, note }], mic, ui }
+  run=store ：订阅：问一次商品（iapProducts）；有商品就开始买第一个（弹购买面板，UI 测试看它弹没弹出来，不点）。
+              云上的模拟器没有本地 App Store（xcodebuild test 不把 Store.storekit 交给模拟器），多半一个商品都没有，只记下来。
+  iPhone 才有的 9 个（订阅、通过 Apple 登录）在 run=all 里只测「当场回」的几样（参数不对、这个包没有登录权限）和不弹界面的几样；
+  iapRestore（可能要输 Apple 账户密码）、iapManage、真的 appleSignIn 只有按钮。
+  结果：window.__echoTestResult = { run, done, pass, fail, warn, skip, items: [{ name, ok, got, note }], mic, ui, store }
         ok：true 过了 / false 没过（UI 测试判失败）/ 'warn' 看情况（和模拟器、系统版本有关的，只记下来）/ 'skip' 没测（写着为什么）
 -->
 <style>
@@ -36,13 +40,17 @@
   <button id="b-share" aria-label="selftest-share">📤 分享一个文件</button>
   <button id="b-pick" aria-label="selftest-pick">📂 选一个文件</button>
   <button id="b-settings" aria-label="selftest-settings">⚙️ 去设置</button>
+  <button id="b-products" aria-label="selftest-products">🛒 商品</button>
+  <button id="b-restore" aria-label="selftest-restore">♻️ 恢复购买</button>
+  <button id="b-manage" aria-label="selftest-manage">🧾 管理订阅</button>
+  <button id="b-apple" aria-label="selftest-apple">🔑 通过 Apple 登录</button>
 </div>
 <ol id="list"></ol>
 <script>
 (function () {
   'use strict';
   var run = (new URLSearchParams(location.search).get('run') || 'all').toLowerCase();
-  var R = window.__echoTestResult = { run: run, done: false, pass: 0, fail: 0, warn: 0, skip: 0, items: [], mic: null, ui: {} };
+  var R = window.__echoTestResult = { run: run, done: false, pass: 0, fail: 0, warn: 0, skip: 0, items: [], mic: null, ui: {}, store: null };
   var N = window.EchoNative;
   var list = document.getElementById('list'), sum = document.getElementById('sum');
 
@@ -52,8 +60,12 @@
     setOrientation: ['sync', 1], version: ['sync', 0], diag: ['sync', 0], takeRecovered: ['sync', 0], edition: ['sync', 0], books: ['sync', 0],
     verUrl: ['sync', 0], storage: ['sync', 0], hasPin: ['sync', 0], checkPin: ['sync', 1], pinStatus: ['sync', 0], setPin: ['sync', 1],
     micPermission: ['sync', 0], openAppSettings: ['sync', 0], backupWrite: ['sync', 1], backupList: ['sync', 0], backupRead: ['sync', 1],
-    backupPick: ['sync', 0], shareText: ['sync', 2], shareFile: ['sync', 3]
+    backupPick: ['sync', 0], shareText: ['sync', 2], shareFile: ['sync', 3],
+    // iPhone 才有的（tests/ios.test.js 的 IOS_ONLY）：订阅、通过 Apple 登录
+    iapProducts: ['async', 2], iapBuy: ['async', 3], iapRestore: ['async', 1], iapCurrent: ['async', 1], iapPending: ['async', 1],
+    iapFinish: ['async', 2], iapManage: ['async', 1], appleSignIn: ['async', 2], appleCredentialState: ['async', 2]
   };
+  var IOS_ONLY = ['iapProducts', 'iapBuy', 'iapRestore', 'iapCurrent', 'iapPending', 'iapFinish', 'iapManage', 'appleSignIn', 'appleCredentialState'];
 
   function show(t) { try { return typeof t === 'string' ? t.slice(0, 140) : JSON.stringify(t).slice(0, 140); } catch (e) { return String(t); } }
   function add(name, ok, got, note) {
@@ -102,7 +114,11 @@
     check('env.kinds', function () {
       var spec = (window.__echoIOS && window.__echoIOS.spec) || {};
       var bad = Object.keys(WANT).filter(function (k) { return !spec[k] || spec[k][0] !== WANT[k][0] || spec[k][1].length !== WANT[k][1]; });
-      return { ok: !bad.length, got: bad.length ? bad : '同步 22 个 / 异步 4 个' };
+      return { ok: !bad.length, got: bad.length ? bad : '同步 22 个 / 异步 4 个 + iPhone 才有的异步 9 个' };
+    });
+    check('env.iosOnly', function () {
+      var mine = ((window.__echoIOS && window.__echoIOS.iosOnly) || []).slice().sort().join(',');
+      return { ok: mine === IOS_ONLY.slice().sort().join(','), got: mine || '(没有)' };
     });
     check('env.getUserMedia', function () { return { ok: !!(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function'), got: !!navigator.mediaDevices }; });
     // 页面换掉 window.prompt 也不影响桥（echo-native.js 先留了一份）
@@ -254,7 +270,76 @@
     add('wsSend / wsClose(没开的连接)', !threw && !got.length, threw || '没回调、没出错');
   }
 
-  // ---------- 五、要点界面的几样（UI 测试按启动参数分开跑，也可以手动按按钮） ----------
+  // ---------- 五、iPhone 才有的：订阅、通过 Apple 登录（只测当场回的和不弹界面的） ----------
+  function uuid() {
+    try { if (crypto.randomUUID) return crypto.randomUUID(); } catch (e) { /* 老系统 */ }
+    var h = '0123456789abcdef', s = '';
+    for (var i = 0; i < 32; i++) s += h[Math.floor(Math.random() * 16)];
+    return s.slice(0, 8) + '-' + s.slice(8, 12) + '-4' + s.slice(13, 16) + '-a' + s.slice(17, 20) + '-' + s.slice(20);
+  }
+  function nonce() { var a = new Uint8Array(24); crypto.getRandomValues(a); return Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
+  // 回了 fail 并且 error 是这个
+  function failed(r, code) { var j = J(r.data); return r.type === 'fail' && !!j && j.error === code; }
+  // 要问 App Store 的：回了就算过（ok 并且形状对），等不到只记下来（模拟器 / 网络的事），回的形状不对才算没过
+  function storeAnswer(name, r, shapeOk, note) {
+    var j = J(r.data);
+    if (r.type === 'timeout') add(name, 'warn', r, note || '等了 10 秒没回：模拟器上 App Store 慢');
+    else if (r.type === 'fail' && j && j.error) add(name, 'warn', j, note || 'App Store 回了错（模拟器里没有商品、没登录 Apple 账户）');
+    else add(name, r.type === 'ok' && !!j && shapeOk(j), j || r, note);
+  }
+  async function account() {
+    var d = J(N.diag()) || {};
+    check('diag.appleSignIn', function () { return { ok: typeof d.appleSignIn === 'boolean', got: d.appleSignIn, note: '签名的正式包才是 true' }; });
+    check('diag.iapProducts', function () { return { ok: Array.isArray(d.iapProducts) && d.iapProducts.length === 2 && d.iapProducts[0] !== d.iapProducts[1], got: d.iapProducts }; });
+    var r = await nativeCall(function (id) { return N.iapBuy(id, 'com.echoisland.selftest', 'not-a-uuid'); });
+    add('iapBuy(不是 UUID)', failed(r, 'bad-token'), r, '没有账号的 UUID 不买，当场回');
+    r = await nativeCall(function (id) { return N.iapBuy(id, 'bad id', uuid()); });
+    add('iapBuy(坏的商品编号)', failed(r, 'bad-product'), r);
+    r = await nativeCall(function (id) { return N.iapFinish(id, 'abc'); });
+    add('iapFinish(不是数字)', failed(r, 'bad-id'), r);
+    r = await nativeCall(function (id) { return N.iapFinish(id, '1'); }, 10000);
+    storeAnswer('iapFinish(没有这一笔)', r, function (j) { return j.finished === false; });
+    r = await nativeCall(function (id) { return N.iapPending(id); }, 10000);
+    storeAnswer('iapPending', r, function (j) { return Array.isArray(j.transactions); });
+    r = await nativeCall(function (id) { return N.iapCurrent(id); }, 10000);
+    storeAnswer('iapCurrent', r, function (j) { return Array.isArray(j.entitlements); });
+    r = await nativeCall(function (id) { return N.iapProducts(id, ''); }, 10000);
+    storeAnswer('iapProducts', r, function (j) { return Array.isArray(j.products) && Array.isArray(j.missing) && typeof j.canPay === 'boolean'; });
+    var pj = J(r.data);
+    if (pj && pj.products && !pj.products.length) add('iapProducts.count', 'warn', pj.missing, '一个商品都没有：没有本地 App Store、App Store Connect 里还没建（或者没签付费 App 协议）');
+    r = await nativeCall(function (id) { return N.appleSignIn(id, ''); });
+    add('appleSignIn(没有 nonce)', failed(r, 'bad-nonce'), r, '当场回，不弹面板');
+    r = await nativeCall(function (id) { return N.appleCredentialState(id, ''); });
+    add('appleCredentialState(没有 user)', failed(r, 'bad-user'), r);
+    if (d.appleSignIn === false) {
+      r = await nativeCall(function (id) { return N.appleSignIn(id, nonce()); });
+      add('appleSignIn(这个包没有权限)', failed(r, 'unavailable') && /not available in this build/.test(r.data), r, '不签名的包：说清楚，不崩');
+      r = await nativeCall(function (id) { return N.appleCredentialState(id, '000123.selftest'); });
+      add('appleCredentialState(这个包没有权限)', failed(r, 'unavailable'), r);
+    } else {
+      add('appleSignIn(这个包没有权限)', 'skip', '', '这个包带了登录权限：按「通过 Apple 登录」试');
+    }
+    check('iapRestore / iapManage', function () { return { ok: typeof N.iapRestore === 'function' && typeof N.iapManage === 'function', got: '在', note: '会弹系统界面：按按钮试' }; });
+  }
+
+  // ---------- run=store：问商品，有就开始买第一个（弹购买面板，不等结果） ----------
+  async function store() {
+    // 先来一个一定当场回的（不是 UUID）：异步桥一路通到 Store.swift 再回来
+    var b0 = await nativeCall(function (id) { return N.iapBuy(id, 'com.echoisland.selftest', 'not-a-uuid'); });
+    var plumbing = failed(b0, 'bad-token');
+    add('store.bridge', plumbing, b0);
+    var r = await nativeCall(function (id) { return N.iapProducts(id, ''); }, 20000);
+    var j = J(r.data) || {};
+    var list = Array.isArray(j.products) ? j.products : [];
+    R.store = { plumbing: plumbing, answered: r.type === 'ok' || r.type === 'fail', type: r.type, count: list.length, ids: list.map(function (p) { return p.id; }), missing: j.missing || null, error: j.error || null };
+    add('store.products', R.store.answered && list.length ? true : 'warn', R.store, list.length ? '' : R.store.answered ? '没有商品：云上的模拟器没有本地 App Store' : '20 秒没回：模拟器上 App Store 慢');
+    if (!list.length) return;
+    R.store.buyStarted = true;
+    nativeCall(function (id) { return N.iapBuy(id, list[0].id, uuid()); }, 120000).then(function (b) { R.store.buy = { type: b.type, data: J(b.data) }; });
+    add('store.buy', true, list[0].id, '购买面板应该弹出来（UI 测试看）');
+  }
+
+  // ---------- 六、要点界面的几样（UI 测试按启动参数分开跑，也可以手动按按钮） ----------
   async function mic() {
     var out = { before: N.micPermission() };
     try {
@@ -278,11 +363,20 @@
   document.getElementById('b-share').addEventListener('click', share);
   document.getElementById('b-pick').addEventListener('click', pick);
   document.getElementById('b-settings').addEventListener('click', function () { add('openAppSettings', N.openAppSettings() === true, '去了「设置」'); });
+  // 手动试的几个（会弹系统界面）：结果加在列表最后
+  function manual(name, fn) { return function () { nativeCall(fn, 300000).then(function (r) { add(name, r.type === 'ok' ? true : 'warn', J(r.data) || r); }); }; }
+  document.getElementById('b-products').addEventListener('click', manual('iapProducts(按钮)', function (id) { return N.iapProducts(id, ''); }));
+  document.getElementById('b-restore').addEventListener('click', manual('iapRestore(按钮)', function (id) { return N.iapRestore(id); }));
+  document.getElementById('b-manage').addEventListener('click', manual('iapManage(按钮)', function (id) { return N.iapManage(id); }));
+  document.getElementById('b-apple').addEventListener('click', manual('appleSignIn(按钮)', function (id) { return N.appleSignIn(id, nonce()); }));
+  // 原生发来的订阅事件（续费、退款、家长批准）：记下来
+  window.addEventListener('echo-iap', function (e) { R.ui.iap = (R.ui.iap || []).concat([e.detail && { kind: e.detail.kind, productId: e.detail.productId }]); });
 
   (async function () {
     if (!N) { add('env.native', false, '没有 window.EchoNative'); finish(); return; }
     try {
-      if (run === 'all') { await env(); await syncMethods(); await asyncMethods(); await media(); }
+      if (run === 'all') { await env(); await syncMethods(); await asyncMethods(); await account(); await media(); }
+      else if (run === 'store') await store();
       else if (run === 'mic') await mic();
       else if (run === 'share') share();
       else if (run === 'pick') pick();

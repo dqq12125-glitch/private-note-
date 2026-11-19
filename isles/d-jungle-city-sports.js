@@ -2,15 +2,41 @@
 // 第 8 岛 t8 动物岛 → j8 丛林小径 → h8a / h8b 嘘声团基地；s8 9 号水路（海上巡逻，9 枚徽章）
 // 第 9 岛 t9 规则城（当一天小交警）→ s9 10 号水路 → 潜海 u9 海底隧道 → s10 11 号水路
 // 第 10 岛 t10 运动美食岛（妈妈电话、对手接力赛、嘘声团垃圾食品）→ c10 冰洞（11 枚徽章）→ r10 雪原 → t11
+// 界面语言：这些函数的第几个参数是台词的中文意思（内容，不进字表；英语界面用 gloss() 不显示）
+// @i18n-content-calls nar:1 S:1 speak:2 rosa:1 radio:2 lee:1 orion:1 kai:1 quiz:3 mom:1 A:1 B:1 door:1 W:1 chef:1 coach:1
 (function () {
   'use strict';
   const EM = window.EchoMaps, ST = window.EchoStory, L = ST.lib, P = window.EchoPeople, LK = P.LOOKS;
   const WALK = EM.WALK;
 
+  // ---------- 界面文字（i18n.js 字表；键前缀 id.） ----------
+  // 2026-11-19 搬进来：提示条、提示、门的名字、选项。台词（英文 + 中文意思）是内容，不在这里
+  const I18N = window.EchoI18n;
+  const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
+  // 旁白：world.js 的 whoLabel 认这个中文，显示时换成界面语言
+  const NAR = () => (I18N ? I18N.t('w.who.nar', null, 'zh') : '');
+  if (I18N) I18N.add({
+    zh: {
+      'id.note.door': '🔒 口令门：走到门前按 A，说出口令', 'id.who.door': '口令门', 'id.who.radio': '📢 广播',
+      'id.opt.push': '🔴 按下去 Push it!', 'id.opt.notnow': '先不 Not now',
+      'id.note.paw': '🐾 第 {k} / 3 个路口：听广播，跟着对的脚印走', 'id.note.pawgo': '🐾 往前走，听广播',
+      'id.light.go': '🚦 <b>🟢 Green light — Walk!</b> 绿灯，可以走斑马线（还剩 {n} 秒）', 'id.light.stop': '🚦 <b>🔴 Red light — Stop!</b> 红灯，请在人行道上等（{n} 秒后变绿）',
+      'id.toast.officer': '🎖️ 你成了小交警！', 'id.note.slide': '🧊 滑到健康食物上停下来：<b>{n} / 3</b>（停在垃圾食品上会滑回起点）',
+    },
+    en: {
+      'id.note.door': '🔒 Password door: walk up to the door, press A and say the password', 'id.who.door': 'Password Door', 'id.who.radio': '📢 Speaker',
+      'id.opt.push': '🔴 Push it!', 'id.opt.notnow': 'Not now',
+      'id.note.paw': '🐾 Fork {k} / 3: listen to the speaker and follow the right paw prints', 'id.note.pawgo': '🐾 Walk on and listen to the speaker',
+      'id.light.go': { one: '🚦 <b>🟢 Green light — Walk!</b> You can cross the road ({n} second left)', other: '🚦 <b>🟢 Green light — Walk!</b> You can cross the road ({n} seconds left)' },
+      'id.light.stop': { one: '🚦 <b>🔴 Red light — Stop!</b> Wait on the pavement (green in {n} second)', other: '🚦 <b>🔴 Red light — Stop!</b> Wait on the pavement (green in {n} seconds)' },
+      'id.toast.officer': '🎖️ You are a Junior Traffic Officer!', 'id.note.slide': '🧊 Slide and stop on healthy food: <b>{n} / 3</b> (If you stop on junk food, you slide back to the start)',
+    },
+  });
+
   // ---------- 小工具 ----------
   // 训练师：名字、造型、朝向、视线、属性、开战台词、输了说的话、打完以后说的话
   const TR = (name, look, g, face, sight, types, line, win, after, x) => Object.assign({ role: 'trainer', name, look, g, face, sight, types, n: 2, lines: [line], win, after: [after] }, x || {});
-  const nar = (en, zh, x) => Object.assign({ who: '旁白', emo: '📣', en, zh }, x || {});
+  const nar = (en, zh, x) => Object.assign({ who: NAR(), emo: '📣', en, zh }, x || {});
   const radio = (who, en, zh, x) => Object.assign({ who: who + ' 📻', emo: '📻', en, zh }, x || {});
   // 在主角旁边找一格能站人的地方（剧情里临时人物出场用）
   function spot(C, prefer) {
@@ -43,9 +69,9 @@
   const kai = L.sayer('Kai', 'kai', 'm');
   const GRUNT_TYPES = ['poison', 'dark', 'bug'];
 
-  EM.define('t8', {
+  EM.define('t8', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 8, name: '动物岛', en: 'Animal Island', sub: '第 9 岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '#############^^#####~~#############^^###',
       '#TTTTTTTTTT..==..TTT~~TTT..........==TT#',
       '#T.......F...==.TTT.~~T....GGGGGGG.==.T#',
@@ -106,9 +132,9 @@
     links: { n: ['j8', 'j8'], w: 's7', e: 's8' },
   });
 
-  EM.define('j8', {
+  EM.define('j8', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 8, name: '丛林小径', en: 'Jungle Path', sub: '动物岛北边',
-    rows: [
+    rows: [  // @i18n-content-end
       '########################################',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRR~~~~~~SSRR#',
@@ -171,9 +197,9 @@
     links: { s: ['t8', 't8'], K: ['h8a'] },
   });
 
-  EM.define('h8a', {
+  EM.define('h8a', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', cave: 'base', z: 8, dungeon: true, lv: 2, name: '嘘声团基地 1F', en: 'Hush Base 1F', sub: '丛林深处',
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
       'X%____XXXXXXXXXXXXXXXXo_____oX',
       'X_____XXXXXXXXXXXXXXXX___*___X',
@@ -208,9 +234,9 @@
     links: { e: 'j8', '%': ['h8b'] },
   });
 
-  EM.define('h8b', {
+  EM.define('h8b', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', cave: 'base', z: 8, dungeon: true, lv: 2, name: '嘘声团基地 2F', en: 'Hush Base 2F', sub: '丛林深处',
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XXXXXXXXXXffffffffffXXXXXXXXXX',
       'XffffXXXXXf________fXXXXXffffX',
@@ -240,9 +266,9 @@
     links: { '%': ['h8a'] },
   });
 
-  EM.define('i8A', {
+  EM.define('i8A', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 8, room: 'J', name: '动物岛 · 巡林站', en: 'Ranger Station', sub: '第 9 岛',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWW',
       'Wkk___t___kkW',
       'W___________W',
@@ -266,6 +292,7 @@
 
   // 挑战馆：脚印小路。每个路口广播描述一种动物，跟着它的脚印走；走错传送回路口
   const PAW = {
+    // @i18n-content 动物 / 台词的中文意思（数组下标 4 / 条件表达式里），英语界面不显示
     e: ['🐘', '#d7ccc8', 'elephant', 'It has a long nose and big ears.', '它有长长的鼻子和大大的耳朵。'],
     m: ['🐒', '#ffe0b2', 'monkey', 'It has a long tail. It likes bananas and climbing trees.', '它有长尾巴，喜欢香蕉和爬树。'],
     g: ['🦒', '#fff59d', 'giraffe', 'It has a very long neck. It is very tall.', '它的脖子很长很长，个子非常高。'],
@@ -275,6 +302,7 @@
     z: ['🦓', '#e0e0e0', 'zebra', "It looks like a horse. It's black and white.", '它长得像马，身上黑白相间。'],
     q: ['🐧', '#b3e5fc', 'penguin', "It can't fly, but it can swim. It lives in a cold place.", '它不会飞，但是会游泳，住在寒冷的地方。'],
     l: ['🦁', '#ffe082', 'lion', "It's from Africa. It's the king of animals.", '它来自非洲，是百兽之王。'],
+    // @i18n-content-end
   };
   const PAWS8 = [['e', 'm', 'g'], ['k', 't', 'p'], ['z', 'q', 'l']];   // 三个路口，每个路口三条小路（从左到右）
   const PAW_COL = [3, 7, 11], JUNCTION = [22, 17, 12];   // 每个路口两行高（训练师走过来也挡不住路），罚回下面那一行
@@ -347,9 +375,9 @@
     links: { e: 't8' },
   });
 
-  EM.define('s8', {
+  EM.define('s8', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 8, sea: true, name: '9 号水路', en: 'Route 9', sub: '动物岛 → 规则城',
-    rows: [
+    rows: [  // @i18n-content-end
       '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~RRR~~~~~~~~~~~~',
       '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~RRR~~RRRRRR~~~~',
       '~~~~~~RSSR~~~~~~~~~~~~~~~~~~RRR~~~RSo~~R~~~~',
@@ -483,10 +511,10 @@
     ]);
     await Promise.all([C.walk(a, 'up', 1, 200), C.walk(b, 'up', 1, 200)]);
     C.remove(a); C.remove(b);
-    C.note('🔒 口令门：走到门前按 A，说出口令');
+    C.note(tx('id.note.door'));
   }
   async function passwordGate(C) {
-    const door = (en, zh, x) => Object.assign({ who: '口令门', emo: '🔒', en, zh }, x || {});
+    const door = (en, zh, x) => Object.assign({ who: tx('id.who.door'), emo: '🔒', en, zh }, x || {});
     const ok = await quiz(C, door, 'Password, please!', '门在问口令。选出你听到的那句话，再大声说出来。', 'Pandas eat bamboo.', ['Pandas are black and white.', 'Koalas eat leaves.']);
     if (!ok) { await C.talk([door('Wrong password! Beep beep!', '口令不对！哔哔！')]); return; }
     C.openGate(0, true);
@@ -497,7 +525,7 @@
   async function redButton(C) {
     if (C.gateOpen(1)) { await C.talk([nar('The button is already pushed.', '按钮已经按下去了。')]); return; }
     let push = false;
-    await C.talk([nar('A machine with a big red button. Push it?', '一台机器，上面有个大大的红色按钮。要按吗？', { kind: 'choice', opts: [{ html: '🔴 按下去 Push it!', cls: 'sun' }, { html: '先不 Not now' }], pick: i => { push = !i; return []; } })]);
+    await C.talk([nar('A machine with a big red button. Push it?', '一台机器，上面有个大大的红色按钮。要按吗？', { kind: 'choice', opts: [{ html: tx('id.opt.push'), cls: 'sun' }, { html: tx('id.opt.notnow') }], pick: i => { push = !i; return []; } })]);
     if (!push) return;
     C.openGate(1, true);
     await C.talk([nar('Click! The door of the storage room opened.', '咔嗒！仓库的门打开了。')]);
@@ -560,10 +588,10 @@
   async function g8Say(C, k) {
     G8.said[k] = true;
     const a = PAW[PAWS8[k][G8.ans[k]]];
-    C.note('🐾 第 ' + (k + 1) + ' / 3 个路口：听广播，跟着对的脚印走');
+    C.note(tx('id.note.paw', { k: k + 1 }));
     await C.talk([
-      { who: '📢 广播', emo: '📢', en: k ? 'Next path! Listen again.' : 'Welcome to the Paw Print Path!', zh: k ? '下一个路口！再仔细听。' : '欢迎来到脚印小路！' },
-      { who: '📢 广播', emo: '📢', en: a[3], zh: '仔细听：说的是哪种动物？跟着它的脚印走！（点右上角的喇叭可以再听一遍，也可以对着喇叭按 A）', hideEn: true },
+      { who: tx('id.who.radio'), emo: '📢', en: k ? 'Next path! Listen again.' : 'Welcome to the Paw Print Path!', zh: k ? '下一个路口！再仔细听。' : '欢迎来到脚印小路！' },
+      { who: tx('id.who.radio'), emo: '📢', en: a[3], zh: '仔细听：说的是哪种动物？跟着它的脚印走！（点右上角的喇叭可以再听一遍，也可以对着喇叭按 A）', hideEn: true },
     ]);
   }
   async function g8Wrong(C, k, ch) {
@@ -571,7 +599,7 @@
     C.E.SFX.bad && C.E.SFX.bad();
     await C.talk([nar('Oops! These are ' + w[2] + ' prints. Back to the start!', '哎呀！这是' + w[0] + '的脚印，走错了。回到路口重新来！')]);
     C.teleport(7, JUNCTION[k], 'up');
-    await C.talk([{ who: '📢 广播', emo: '📢', en: a[3], zh: '再听一遍，跟着对的脚印走！', hideEn: true }]);
+    await C.talk([{ who: tx('id.who.radio'), emo: '📢', en: a[3], zh: '再听一遍，跟着对的脚印走！', hideEn: true }]);
   }
   function g8Step(C) {
     if (C.gateOpen(0)) return null;
@@ -591,7 +619,7 @@
     const k = f.y === 22 ? 0 : f.y === 17 ? 1 : f.y === 12 ? 2 : -1;
     if (k < 0) return false;
     if (C.gateOpen(0)) { await C.talk([nar('The speaker is quiet now.', '广播已经安静了。')]); return true; }
-    await C.talk([{ who: '📢 广播', emo: '📢', en: PAW[PAWS8[k][G8.ans[k]]][3], zh: '再听一遍：说的是哪种动物？', hideEn: true }]);
+    await C.talk([{ who: tx('id.who.radio'), emo: '📢', en: PAW[PAWS8[k][G8.ans[k]]][3], zh: '再听一遍：说的是哪种动物？', hideEn: true }]);
     return true;
   }
 
@@ -604,8 +632,8 @@
         if (C.flag('a8in') && !C.flag('a8find') && !C.npc(n => n.id === 'pk0')) return () => spawnPark(C);
       }
       if (id === 'j8' && C.flag('a8find') && !C.flag('a8cloud') && !C.npc(n => n.id === 'cloud')) return () => { C.spawn({ id: 'cloud', mon: 'cloudsheep', x: 25, y: 7, face: 'down' }); };
-      if (id === 'h8a' && !C.gateOpen(0)) return () => { C.note(C.flag('a8over') ? '🔒 口令门：走到门前按 A，说出口令' : null); };
-      if (id === 'i8G') { g8Reset(); if (!C.gateOpen(0)) return () => { C.note('🐾 往前走，听广播'); }; }
+      if (id === 'h8a' && !C.gateOpen(0)) return () => { C.note(C.flag('a8over') ? tx('id.note.door') : null); };
+      if (id === 'i8G') { g8Reset(); if (!C.gateOpen(0)) return () => { C.note(tx('id.note.pawgo')); }; }
       return null;
     },
     step(C) {
@@ -659,9 +687,9 @@
     { id: 'rb3', flag: 'a9r3', name: 'Busy Ben', look: 'student', g: 'm', x: 13, y: 21, face: 'left' },
   ];
 
-  EM.define('t9', {
+  EM.define('t9', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 9, name: '规则城', en: 'Rule City', sub: '第 10 岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '###############################~~~~~~~~~',
       '~~~TT..F.TTT...o..TT.F...TT..FTS~~~~~~~~',
       '~~~..F....T.....F........F.....S~~~~~~~~',
@@ -762,9 +790,9 @@
     links: { w: 's8', e: 's9' },
   });
 
-  EM.define('i9A', {
+  EM.define('i9A', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 9, room: 'A', name: '规则城 · 警察局', en: 'Police Station', sub: '第 10 岛',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWW',
       'Wkkt_____tkkW',
       'W___________W',
@@ -843,7 +871,7 @@
   let g9Timer = 0;
   function g9Note(C) {
     const l = lightNow();
-    C.note(l.green ? '🚦 <b>🟢 Green light — Walk!</b> 绿灯，可以走斑马线（还剩 ' + l.left + ' 秒）' : '🚦 <b>🔴 Red light — Stop!</b> 红灯，请在人行道上等（' + l.left + ' 秒后变绿）');
+    C.note(tx(l.green ? 'id.light.go' : 'id.light.stop', { n: l.left }));
   }
   function g9Start(C) {
     clearInterval(g9Timer);
@@ -872,9 +900,9 @@
     return null;
   }
 
-  EM.define('s9', {
+  EM.define('s9', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 9, sea: true, name: '10 号水路', en: 'Route 10', sub: '规则城 → 海底隧道',
-    rows: [
+    rows: [  // @i18n-content-end
       '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~RRR',
       '~~~~RR~~~~~~~~~~~~~~~~~~~~~~~~~~~RRR',
       '~~~RSSR~~~~~~~~~~~~~~~~~~~~~~~~~~RRR',
@@ -925,9 +953,9 @@
     links: { w: 't9', D: ['u9'] },
   });
 
-  EM.define('u9', {
+  EM.define('u9', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'under', z: 9, arena: 'under', name: '海底隧道', en: 'Undersea Tunnel', sub: '10 号水路的海底',
-    rows: [
+    rows: [  // @i18n-content-end
       'RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR',
       'RR....,,,,RRRRRRRRRRRRRRRRRRRRRRRRRRRRRR',
       'RRU...,,,,,,..RRRRRRRRRR...o..RRRRRRRRRR',
@@ -973,7 +1001,7 @@
       lee('Now other people are breaking the rules, too. The Rule Crystal is gone!', '现在别人也跟着不守规矩了——规则水晶不见了！'),
       lee('Can you be a Junior Traffic Officer for one day?', '你能当一天小交警吗？'),
       L.speak(C, 'Yes! I can help!', '回答李警官：好的！我能帮忙！'),
-      lee('Great! Here is your whistle. 🎖️', '太好了！这是你的哨子。🎖️', { onShow: () => { C.E.SFX.win(); C.E.toast('🎖️ 你成了小交警！', 'gold'); } }),
+      lee('Great! Here is your whistle. 🎖️', '太好了！这是你的哨子。🎖️', { onShow: () => { C.E.SFX.win(); C.E.toast(tx('id.toast.officer'), 'gold'); } }),
       lee('Find three people who are breaking the rules. Tell them the rules in English!', '找到三个不守规矩的人，用英语告诉他们规则！'),
       lee('Look on the roads. Our Police Station is the big building in the north-west.', '去马路上找找。我们的警察局是西北边那栋大楼。'),
     ]);
@@ -1112,9 +1140,9 @@
   // =====================================================================
   const chef = L.sayer('Chef Mei', 'chef', 'f');
   const coach = L.sayer('Coach Tom', 'athlete', 'm');
-  EM.define('s10', {
+  EM.define('s10', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 10, sea: true, name: '11 号水路', en: 'Route 11', sub: '礁石环绕的海',
-    rows: [
+    rows: [  // @i18n-content-end
       'RRRRRRRRRRRRRR^^RRRRRRRRRRRRRR',
       'RRRRRRRRRRRSSSSSSSSRRRRRRRRRRR',
       'RRRRRRRR~~~~SSBSS~~~~~RRRRRRRR',
@@ -1156,9 +1184,9 @@
     links: { n: 't10', D: ['u9'] },
   });
 
-  EM.define('t10', {
+  EM.define('t10', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 10, name: '运动美食岛', en: 'Sports Island', sub: '第 11 岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '########################################',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
@@ -1284,7 +1312,7 @@
     g10n = 0;
     C.refresh();
   }
-  const g10Note = C => C.note('🧊 滑到健康食物上停下来：<b>' + '🍎🥦🍌'.slice(0, 0) + g10n + ' / 3</b>（停在垃圾食品上会滑回起点）');
+  const g10Note = C => C.note(tx('id.note.slide', { n: g10n }));
   function g10Step(C) {
     if (C.gateOpen(0)) return null;
     const { x, y } = C.pl, f = FOOD[C.over(x, y)];
@@ -1305,9 +1333,9 @@
     };
   }
 
-  EM.define('c10', {
+  EM.define('c10', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', cave: 'ice', z: 10, dungeon: true, lv: 2, name: '冰洞', en: 'Ice Cave', sub: '运动美食岛北边',
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXX^^XXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XXX::::::::::XXXXXXXXXXXXX::::::XXXX',
       'XX:::::::::::::XXXXXXXXXX::::::::XXX',
@@ -1349,9 +1377,9 @@
     links: { e: 't10', n: 'r10' },
   });
 
-  EM.define('r10', {
+  EM.define('r10', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 10, theme: 'snow', name: '雪原', en: 'Snowfield', sub: '冰洞 → 天气岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '##############^^##############',
       '#TTT,,,,,,....==....,,,,,,TTT#',
       '#TT,,,,,,,....==....,,,,,,,TT#',
@@ -1401,7 +1429,7 @@
 
   // ---------- 第 10 岛剧情 ----------
   async function momCall(C) {
-    await C.talk([{ who: '旁白', emo: '📞', en: 'Ring ring! Mom is calling!', zh: '叮铃铃！妈妈打来电话了！', onShow: () => C.E.SFX.tap && C.E.SFX.tap() }]);
+    await C.talk([{ who: NAR(), emo: '📞', en: 'Ring ring! Mom is calling!', zh: '叮铃铃！妈妈打来电话了！', onShow: () => C.E.SFX.tap && C.E.SFX.tap() }]);
     await C.talk([
       L.mom('Hi, {name}! It\'s Mom. Are you on Sports Island now?', '喂，{name}！是妈妈。你现在到运动美食岛了吗？'),
       L.mom('I heard there is a Sports Day and a Food Festival there!', '听说那里正在开运动会和美食节！'),
@@ -1473,7 +1501,9 @@
       const ok = await quiz(C, S, 'Is ice cream healthy?', '她问你冰淇淋健不健康。选出合适的回答，再说出来。', 'No, not really.', ['Yes, please.', "No, I don't."]);
       await C.talk([S(ok ? 'Hmph! You know too much!' : 'Ha! You don\'t even know! Battle!', ok ? '哼！你懂得太多了！' : '哈！你连这都不知道！来对战吧！')]);
     }
+    // @i18n-content 动物 / 台词的中文意思（数组下标 4 / 条件表达式里），英语界面不显示
     const res = await L.hushFight(C, n, g ? 'grunt' : 'gruntF', { types: ['poison', 'dark', 'normal'], lines: [[g ? 'Eat junk food and stay in bed forever!' : 'Shh... A quiet, lazy island is a happy island!', g ? '吃垃圾食品，永远躺在床上吧！' : '嘘……安静又懒洋洋的岛才快乐！']] });
+    // @i18n-content-end
     if (res !== 'win') return;
     C.set(g ? 'a10h1' : 'a10h2');
     C.remove(n);

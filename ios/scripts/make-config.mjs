@@ -13,6 +13,10 @@
 //   加 --release：家庭版没有家长密码就停下（和安卓打正式包一样）
 // 环境变量（云上打包用，优先于配置文件）：ECHO_EDITION、ECHO_BOOKS、ECHO_VERSION_CODE、ECHO_MARKETING_VERSION、ECHO_BUNDLE_ID、
 //   ECHO_BUNDLE_SUFFIX、ECHO_TEAM_ID；家庭版另有 ECHO_DASHSCOPE_KEY、ECHO_PARENT_PIN、ECHO_TALK_URL、ECHO_TALK_CODE、ECHO_VER_URL。
+// 订阅和登录（两个版本都能给，**不是秘密**）：
+//   ECHO_IAP_MONTHLY / ECHO_IAP_YEARLY  App Store Connect 里两个订阅的商品编号；不给就是「App 标识 + .premium.monthly / .premium.yearly」
+//   ECHO_APPLE_SIGNIN=1 / 0             这个包带不带「通过 Apple 登录」的权限（App/EchoIsland.entitlements，要签名）。
+//                                       不写：给了 ECHO_TEAM_ID（要签名的包）就带，没给（云上的模拟器包）就不带
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -31,6 +35,17 @@ export const DEFAULT_BOOKS = 'hj7a,hj7b';
 export const SECRET_ENV = ['ECHO_DASHSCOPE_KEY', 'ECHO_PARENT_PIN', 'ECHO_TALK_URL', 'ECHO_TALK_CODE', 'ECHO_VER_URL'];
 
 export const pinHash = pin => crypto.createHash('sha256').update(PIN_SALT + pin, 'utf8').digest('hex');
+
+// App 标识的默认值只写在一处：Config/Base.xcconfig 的 ECHO_BUNDLE_ID 那一行（这里读它，订阅的商品编号跟着它）
+export function baseBundleId(file = path.join(IOS, 'Config', 'Base.xcconfig')) {
+  const m = fs.readFileSync(file, 'utf8').match(/^\s*ECHO_BUNDLE_ID\s*=\s*([A-Za-z0-9.-]+)\s*$/m);
+  if (!m) throw new Error('Config/Base.xcconfig 里找不到 ECHO_BUNDLE_ID = …');
+  return m[1];
+}
+export const DEFAULT_BUNDLE_ID = baseBundleId();
+// 商品编号：字母、数字、点、下划线（App Store Connect 的规矩，和 Store.swift 的 okId 一样）
+export const okProductId = id => /^[A-Za-z0-9._]{1,100}$/.test(id);
+export const iapIds = bundle => ({ monthly: bundle + '.premium.monthly', yearly: bundle + '.premium.yearly' });
 
 // 读 .properties（key=value，# 开头是注释）
 export function readProps(file) {
@@ -69,6 +84,7 @@ export function compute(o) {
   const warn = [];
   // 销售版：明明白白给了密钥、家长密码、中转服务、检查新版本的地址（环境变量）就停下——多半是把家庭版的设置用错了地方。
   // （配置文件 echo.properties 销售版根本不打开，所以同一份文件两个版本都能用，和安卓一样）
+  // 订阅的商品编号（ECHO_IAP_MONTHLY / ECHO_IAP_YEARLY）、ECHO_APPLE_SIGNIN 不是秘密，销售版可以给（销售版就是卖订阅的那个）
   if (sales) {
     const given = SECRET_ENV.filter(k => String(env[k] || '').trim());
     if (given.length) throw new Error('Sales edition must not be given a DashScope key, a parent PIN, a relay or an update URL (set: ' + given.join(', ') + ').');
@@ -107,6 +123,29 @@ export function compute(o) {
   if (hashShort) dirty = !!git(['status', '--porcelain', '--untracked-files=no']);
   const name = ymd(o.now || new Date()) + '-' + (hashShort || (fixed ? 'v' + fixed : 'nogit')) + (dirty ? '+' : '') + (sales ? '-s' : '');
 
+  const bundleId = String(env.ECHO_BUNDLE_ID || '').trim();
+  if (bundleId && !/^[A-Za-z0-9][A-Za-z0-9.-]*$/.test(bundleId)) throw new Error('ECHO_BUNDLE_ID 只能有字母、数字、点和减号');
+  const suffix = env.ECHO_BUNDLE_SUFFIX !== undefined ? String(env.ECHO_BUNDLE_SUFFIX).trim() : sales ? '' : '.family';
+  if (suffix && !/^\.[A-Za-z0-9.-]+$/.test(suffix)) throw new Error('ECHO_BUNDLE_SUFFIX 要以点开头，只能有字母、数字、点和减号');
+  const team = String(env.ECHO_TEAM_ID || '').trim();
+  if (team && !/^[A-Z0-9]{10}$/.test(team)) throw new Error('ECHO_TEAM_ID 应该是 10 位的大写字母和数字');
+  const marketing = String(env.ECHO_MARKETING_VERSION || '').trim();
+  if (marketing && !/^\d+(\.\d+){0,2}$/.test(marketing)) throw new Error('ECHO_MARKETING_VERSION 要写成 1.2.3 这样');
+
+  // 订阅的两个商品编号：给了就用给的，没给就按这个包最后的 App 标识（家庭版带 .family）推出来
+  const fullBundle = (bundleId || o.baseBundle || DEFAULT_BUNDLE_ID) + suffix;
+  const iapMonthly = String(env.ECHO_IAP_MONTHLY || '').trim() || iapIds(fullBundle).monthly;
+  const iapYearly = String(env.ECHO_IAP_YEARLY || '').trim() || iapIds(fullBundle).yearly;
+  for (const [k, v] of [['ECHO_IAP_MONTHLY', iapMonthly], ['ECHO_IAP_YEARLY', iapYearly]]) {
+    if (!okProductId(v)) throw new Error(k + ' 只能有字母、数字、点和下划线（最长 100）');
+  }
+  if (iapMonthly === iapYearly) throw new Error('ECHO_IAP_MONTHLY 和 ECHO_IAP_YEARLY 不能一样');
+  // 「通过 Apple 登录」的权限：要描述文件，只给签名的包。不写 = 有团队编号（要签名）才带
+  const siwaRaw = String(env.ECHO_APPLE_SIGNIN || '').trim().toLowerCase();
+  if (siwaRaw && !['1', '0', 'true', 'false', 'yes', 'no', 'on', 'off'].includes(siwaRaw)) throw new Error('ECHO_APPLE_SIGNIN 写 1 或 0');
+  const appleSignIn = siwaRaw ? ['1', 'true', 'yes', 'on'].includes(siwaRaw) : !!team;
+  if (appleSignIn && !team) warn.push('ECHO_APPLE_SIGNIN 开着但没有 ECHO_TEAM_ID：这个权限要签名，不签名的包装不上 / 编不过');
+
   const cfg = {
     edition,
     dashscopeKey: key,
@@ -121,23 +160,19 @@ export function compute(o) {
     talkCode: sales ? '' : String(env.ECHO_TALK_CODE || props.TALK_CODE || '').trim(),
     versionCode: code,
     versionName: name,
+    // 订阅（Store.swift）和「通过 Apple 登录」（AppleSignIn.swift）
+    iapMonthly,
+    iapYearly,
+    appleSignIn,
   };
-  // 兜底：销售版里不许有密钥、家长密码、中转服务（和安卓的 checkReleaseConfig 一样）
+  // 兜底：销售版里不许有密钥、家长密码、中转服务（和安卓的 checkReleaseConfig 一样）；商品编号要有（公开发的版本靠它收费）
   if (sales && (cfg.dashscopeKey || cfg.parentPinHash || cfg.talkUrl || cfg.talkCode || cfg.verUrl)) throw new Error('Sales edition must not contain a DashScope key, a baked parent PIN, a relay or an update URL.');
-
-  const bundleId = String(env.ECHO_BUNDLE_ID || '').trim();
-  if (bundleId && !/^[A-Za-z0-9][A-Za-z0-9.-]*$/.test(bundleId)) throw new Error('ECHO_BUNDLE_ID 只能有字母、数字、点和减号');
-  const suffix = env.ECHO_BUNDLE_SUFFIX !== undefined ? String(env.ECHO_BUNDLE_SUFFIX).trim() : sales ? '' : '.family';
-  if (suffix && !/^\.[A-Za-z0-9.-]+$/.test(suffix)) throw new Error('ECHO_BUNDLE_SUFFIX 要以点开头，只能有字母、数字、点和减号');
-  const team = String(env.ECHO_TEAM_ID || '').trim();
-  if (team && !/^[A-Z0-9]{10}$/.test(team)) throw new Error('ECHO_TEAM_ID 应该是 10 位的大写字母和数字');
-  const marketing = String(env.ECHO_MARKETING_VERSION || '').trim();
-  if (marketing && !/^\d+(\.\d+){0,2}$/.test(marketing)) throw new Error('ECHO_MARKETING_VERSION 要写成 1.2.3 这样');
+  if (sales && !(okProductId(cfg.iapMonthly) && okProductId(cfg.iapYearly))) throw new Error('Sales edition needs both subscription product ids.');
 
   const swift = '// 由 ios/scripts/make-config.mjs 生成，不要手改、不进仓库。\n' +
     '// 销售版里 dashscopeKey、parentPinHash、talkUrl、talkCode、verUrl 一定是空的。\n' +
     'enum BuildConfig {\n' +
-    Object.entries(cfg).map(([k, v]) => '    static let ' + k + (typeof v === 'number' ? ': Int = ' + v : ' = ' + swiftStr(v))).join('\n') +
+    Object.entries(cfg).map(([k, v]) => '    static let ' + k + (typeof v === 'number' ? ': Int = ' + v : typeof v === 'boolean' ? ': Bool = ' + v : ' = ' + swiftStr(v))).join('\n') +
     '\n}\n';
   const xc = ['// 由 ios/scripts/make-config.mjs 生成，不要手改、不进仓库。',
     'CURRENT_PROJECT_VERSION = ' + code,
@@ -145,9 +180,12 @@ export function compute(o) {
     bundleId ? 'ECHO_BUNDLE_ID = ' + bundleId : '',
     team ? 'DEVELOPMENT_TEAM = ' + team : '',
     marketing ? 'MARKETING_VERSION = ' + marketing : '',
+    // 只有签名的包带「通过 Apple 登录」的权限（路径相对 ios/）
+    appleSignIn ? 'CODE_SIGN_ENTITLEMENTS = App/EchoIsland.entitlements' : '',
   ].filter(Boolean).join('\n') + '\n';
   return { cfg, swift, xcconfig: xc, warn, summary: 'edition ' + edition + '，版本 ' + name + '（' + code + '）' +
-    '，密钥：' + (key ? '有' : '没有') + '，家长密码：' + (hash ? '有（只存哈希）' : '没有') + (sales ? '，课本 ' + cfg.books : '') };
+    '，密钥：' + (key ? '有' : '没有') + '，家长密码：' + (hash ? '有（只存哈希）' : '没有') + (sales ? '，课本 ' + cfg.books : '') +
+    '，订阅 ' + iapMonthly + ' / ' + iapYearly + '，通过 Apple 登录：' + (appleSignIn ? '带' : '不带') };
 }
 
 function main(argv) {

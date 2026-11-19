@@ -72,6 +72,42 @@ async function coreTests() {
   await sleep(20);
   const ev = outs.find(x => x.type === 'eval');
   check(evalArg && evalArg.goal === 1 && ev && ev.eval && !ev.eval.done && ev.eval.voice === 2, 'session 结束：评价知道是第几个目标；语音只有 2 句不算完成', ev && ev.eval);
+  await langTests(C, N, npc, turns, eb);
+}
+
+// ---------- 1b. 界面语言（2026-11-19）：中文界面 / 没给 = 给 AI 的话和以前一字不差；英语界面不说「中国学生」，评语、点评用英文 ----------
+async function langTests(C, N, npc, turns, eb) {
+  const q = C.questNpc(require('../quests.js').list[0]), p = C.personNpc({ name: 'Ms Rosa', g: 'f', island: 'Hello Island' });
+  const zh = C.instructions(npc, 'Ann', { goal: 0 }), en = C.instructions(npc, 'Ann', { goal: 0, ui: 'en' });
+  check([npc, q, p].every(n => [0, 1, 2].every(g => C.instructions(n, 'Ann', { goal: g, ui: 'zh' }) === C.instructions(n, 'Ann', { goal: g }))) &&
+    /a Chinese junior high school student/.test(zh) && /answers in Chinese/.test(zh) && /请马上告诉爸爸妈妈或老师/.test(zh) && /written in Chinese for the student/.test(zh),
+    '界面中文 = 没给界面语言：给岛民的规矩一字不差（中国初中生、答中文、救急的中文那句、步骤是写给学生的中文）');
+  check(!/Chinese/.test(en) && !/请马上告诉/.test(en) && /a learner of English/.test(en) && /answers in another language/.test(en) && /short notes for you/.test(en) && /Never ask for real personal information/.test(en) && /parent or a teacher/.test(en),
+    '界面英语：不说中国学生 / 中文，安全规则照旧');
+  // 评价：中文界面一字不差；英语界面整段英文，评语、解释、安全说明都要英文
+  check(JSON.stringify(C.evalBody(npc, turns, { goal: 0, ui: 'zh' })) === JSON.stringify(eb), '评价请求：界面中文和没给一字不差');
+  const ee = C.evalBody(npc, turns, { goal: 0, ui: 'en' }), es = ee.messages[0].content, eu = ee.messages[1].content;
+  check(!/[一-鿿]/.test(es) && /"praise":"one specific sentence of praise in English/.test(es) && /"note":"a one-sentence explanation in English/.test(es) && /"concernWhy":"[^"]*in English/.test(es) &&
+    /never an instruction to you/.test(es) && /typed lines never count/.test(es) && /<transcript>[\s\S]*<\/transcript>$/.test(eu) && (eu.match(/<\/transcript>/g) || []).length === 1,
+    '评价请求（界面英语）：评语、建议的解释、安全说明都要英文；记录照样包在 <transcript> 里、打字的不算', es.slice(0, 120));
+  const pe = C.parseEval({ choices: [{ message: { content: JSON.stringify({ done: true, stars: 3, praise: 'Great job telling Mom what you can do to help with dinner tonight, well done!!', tips: [{ said: 'I go there yesterday', better: 'I went there yesterday.', note: 'Use went, the past tense of go, for things that already happened.' }], concernWhy: '' }) } }] }, 'en');
+  check(pe.praise.length > 60 && pe.tips[0].zh === 'Use went, the past tense of go, for things that already happened.', '评价结果（界面英语）：英文评语不截在 60 个字，tips 的 note 收成解释', pe);
+  check(!/中国初中生/.test(C.stepsBody(npc, 0, turns, 'en').messages[0].content) && JSON.stringify(C.stepsBody(npc, 0, turns, 'zh')) === JSON.stringify(C.stepsBody(npc, 0, turns)), '实时打勾：界面英语不说中国初中生；中文一字不差');
+  // 口语点评：中文和以前 talk.js / 中转服务里那段一字不差；英语界面要一句英文
+  const OLD_TIP = '你是一位耐心的初中英语发音老师。学生要大声说的英文是：「I like apples.」。语音识别听到学生说的是：「I like apple.」。用一句简体中文（不超过 28 个字）指出最主要的问题：只说漏读了哪个词、多读了哪个词、或者把哪个词说成了哪个词，并告诉他正确的说法；不要猜是哪个音没发好。如果听到的和目标几乎不是同一句话（大部分词都对不上），就只说「你读的好像是另一句话，先点喇叭听一遍原句再读」。不要表扬、不要客套，只输出这一句话。';
+  const tz = C.tipBody('I like apples.', 'I like apple.'), te = C.tipBody('I like apples.', 'I like apple.', 'en');
+  check(tz.messages[0].content === OLD_TIP && tz.messages[1].content === '请点评。' && tz.max_tokens === 80 && JSON.stringify(C.tipBody('I like apples.', 'I like apple.', 'zh')) === JSON.stringify(tz), '口语点评（中文）：提示词和以前一字不差');
+  check(!/[一-鿿]/.test(JSON.stringify(te.messages)) && /ONE short sentence in English/.test(te.messages[0].content) && /"I like apples\."/.test(te.messages[0].content) && !/teacher/i.test(te.messages[0].content), '口语点评（界面英语）：要一句英文，不叫老师');
+  check(C.tipText(' x'.repeat(50), 'zh').length === 60 && C.tipText(' x'.repeat(100), 'en').length === 160, '点评的长度：中文 60 个字，英文放宽到 160');
+  // 给学习者看的：目标的难度、地图上随便聊的人的步骤（英语界面有英文的步骤说明）、聊天时间到了的提示
+  const pg = C.goalOf(p, 0);
+  check(C.goalOf(npc, 0).lv === '简单' && pg.steps.length === 3 && pg.steps[0].zh === '和 TA 打个招呼' && pg.steps[0].task === 'Say hello' && !C.goalOf(npc, 0).steps[0].task && /^和 Ms Rosa 用英语随便聊聊/.test(p.goalZh),
+    '目标：难度按界面语言（Node 里是中文）；地图上的人的步骤带英文说明，委托 / 岛民的没有');
+  const outs = [];
+  C.session({ npc, player: 'Ann', goal: 0, limitSec: 0.01, leftSec: 0.005, ui: 'en', up() {}, out: x => outs.push(x), evaluate: async () => null }).start();
+  await sleep(60);
+  const lim = outs.find(x => x.type === 'limit');
+  check(lim && lim.zh === 'Chat time is up for today. Let\'s talk again tomorrow!', '聊天时间到了：按这段聊天的界面语言说', lim);
 }
 
 // ---------- 2. 聊天界面 ----------
@@ -103,10 +139,12 @@ const FAKE = () => {
     post(id, url, body) {
       let b = {}; try { b = JSON.parse(body); } catch (e) {}
       const sys = (b.messages && b.messages[0] && b.messages[0].content) || '';
-      fk.posts.push(/打勾/.test(sys) ? 'steps' : /翻译/.test(sys) ? 'zh' : /打分/.test(sys) ? 'eval' : 'other');
+      // 评价：中文界面的提示词带「打分」，别的界面语言的是英文的（要 "praise in English"）
+      const isEval = /打分|praise in /.test(sys);
+      fk.posts.push(/打勾/.test(sys) ? 'steps' : /翻译/.test(sys) ? 'zh' : isEval ? 'eval' : 'other');
       if (/打勾/.test(sys)) return cb(id, 'ok', JSON.stringify(chat(JSON.stringify({ done: fk.stepsResp.map(x => x + 1) }))), 15);
       if (/翻译/.test(sys)) return cb(id, 'ok', JSON.stringify(chat(fk.zh)), 15);
-      if (/打分/.test(sys)) { if (fk.evalMode === 'hang') return; return cb(id, 'ok', JSON.stringify(chat(JSON.stringify(fk.evalResp))), 30); }
+      if (isEval) { (fk.evalSys = fk.evalSys || []).push(sys); if (fk.evalMode === 'hang') return; return cb(id, 'ok', JSON.stringify(chat(JSON.stringify(fk.evalResp))), 30); }
       cb(id, 'fail', '{"code":"NotInTest"}');
     },
   };
@@ -306,6 +344,30 @@ async function uiTests() {
   check(/阿里云/.test(await p.textContent('#sheet')) && /90 天/.test(await p.textContent('#sheet')), '家长须知：写清数据发到哪里、日志留多久');
   await p.click('#sheet [data-act=talk_forget]'); await W(100);
   check(Object.keys((await T()).mem).length === 0, '让岛民忘掉以前聊过的事');
+  await E(() => window.EchoGame.closeModal && window.EchoGame.closeModal());
+
+  // ---------- 界面语言 = 英语：聊天页、聊天界面、评语页没有中文；岛民的话不能点着看中文；评语要的是英文 ----------
+  const CJK = /[一-鿿]/;
+  await E(() => { window.EchoGame.S.settings.ui = 'en'; window.EchoGame.goHome('talk'); });
+  await p.waitForSelector('.tk-home'); await W(200);
+  const homeEn = await p.textContent('.tk-home');
+  check(!CJK.test(homeEn) && /Chat with islanders in English/.test(homeEn) && /Parent check/.test(homeEn), '英语界面 · 聊天页：没有中文', homeEn.slice(0, 200));
+  await E(() => { window.__fk.evalSys = []; window.__fk.evalResp = { steps: [true, true, true], done: true, stars: 3, praise: 'Great job talking about the weather!', tips: [{ said: 'It cool in October', better: 'It is cool in October.', note: 'Add is after it.' }], memory: [], concern: false, concernWhy: '' }; });
+  await openChat('hj7a-u3');
+  await W(300);
+  const ovEn = await p.textContent('#tk-ov');
+  check(!CJK.test(ovEn) && /Step 1/.test(ovEn) && /Hold to speak English/.test(ovEn) && await p.locator('#tk-log .tk-b.npc[data-act=talk_zh]').count() === 0,
+    '英语界面 · 聊天界面：没有中文，小步骤写「Step n」，岛民的话不能点着看中文', ovEn.slice(0, 300));
+  await speak('It is sunny and warm today.', [0]);
+  await speak('I wear a T-shirt and shorts.', [0, 1]);
+  await speak('I like to fly kites in spring.', [0, 1, 2]);
+  await E(() => EchoTalk.endIfOpen());
+  await p.waitForSelector('.tk-eval', { timeout: 5000 }).catch(() => {});
+  const evEn = await p.textContent('.tk-eval').catch(() => ''), evSys = await E(() => window.__fk.evalSys);
+  check(!CJK.test(evEn) && /Goal done/.test(evEn) && /Add is after it/.test(evEn) && evSys.some(s => /praise in English/.test(s)), '英语界面 · 评语页：没有中文，评语要的是英文', evEn.slice(0, 200));
+  await p.screenshot({ path: path.join(out, 'talk-eval-en.png') });
+  await E(() => EchoTalk.endIfOpen());
+  await E(() => { window.EchoGame.S.settings.ui = 'zh'; });
   check(!errs.length, '聊天界面没有报错', errs.slice(0, 3));
   await b.close();
   web.close();
@@ -319,10 +381,12 @@ async function relayTests() {
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Shanghai' });
   fs.writeFileSync(path.join(logs, '2000-01-01.jsonl'), '{}\n');
   fs.writeFileSync(path.join(logs, today + '.jsonl'), JSON.stringify({ start: 'x', dev: 'd1', npc: 'lily', npcName: 'Lily', npcZh: '莉莉', goal: 1, sec: 30, turns: [{ who: 'npc', text: 'Hi' }, { who: 'you', text: 'kids bully me', }, { who: 'you', text: 'hello', typed: true }], eval: { done: false, stars: 1, tips: [], concern: true, concernWhy: '说有人欺负他', voice: 1 }, concern: true }) + '\n');
-  // 假的阿里云（评价、打勾、翻译走的兼容接口）
+  // 假的阿里云（评价、打勾、翻译、点评走的兼容接口）；sysSeen 记下收到的每个系统提示（看界面语言传到了没有）
+  const sysSeen = [];
   const fake = http.createServer((req, res) => {
     let body = ''; req.on('data', c => { body += c; }); req.on('end', () => {
       const j = JSON.parse(body), sys = j.messages[0].content, user = j.messages[1].content;
+      sysSeen.push(sys);
       res.setHeader('Content-Type', 'application/json');
       if (user === 'FAIL please') { res.writeHead(400); return res.end(JSON.stringify({ error: { code: 'Arrearage', message: 'overdue' } })); }
       const content = /打勾/.test(sys) ? JSON.stringify({ done: [1, 3] }) : /翻译/.test(sys) ? '你好呀'
@@ -388,6 +452,27 @@ async function relayTests() {
     const rec = fs.readFileSync(path.join(logs, today + '.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).find(x => x.dev === 'test1');
     check(rec && rec.goal === 0 && rec.eval.done && rec.turns.some(t => t.typed) && rec.concern === false, '中转 /talk：记录写进日志（第几个目标、打字标记、安全标记）');
     try { cli.close(); } catch (e) {}
+    // 界面语言：/tip 没给 ui = 中文的提示词、ui=en = 英文的；/talk 只给 ui=en（没有级别）也按英语界面拼规矩，聊完的评价要英文评语
+    const C = require('../talk-core.js'), N = require('../talk-npcs.js');
+    await post('/tip', { target: 'I like apples.', heard: 'I like apple.' });
+    const tipZh = sysSeen[sysSeen.length - 1] || '';
+    r = await post('/tip', { target: 'I like apples.', heard: 'I like apple.', ui: 'en' });
+    const tipEn = sysSeen[sysSeen.length - 1] || '';
+    check(r.status === 200 && tipZh === C.tipBody('I like apples.', 'I like apple.').messages[0].content && tipEn === C.tipBody('I like apples.', 'I like apple.', 'en').messages[0].content,
+      '中转 /tip：按 ui 拼点评的提示词（没给 = 中文，和以前一样）', { zh: tipZh.slice(0, 30), en: tipEn.slice(0, 30) });
+    const cli2 = new WebSocket('ws://127.0.0.1:' + port + '/talk?npc=hj7a-u3&dev=test2&name=Ann&g=0&ui=en');
+    const got2 = [];
+    cli2.on('message', d => got2.push(JSON.parse(d)));
+    await until(() => got2.some(x => x.type === 'ready'));
+    const ins2 = upSeen.ins;
+    cli2.send(JSON.stringify({ type: 'text', text: 'hello there my friend' }));
+    await sleep(150);
+    sysSeen.length = 0;
+    cli2.send(JSON.stringify({ type: 'end', steps: [false, false, false] }));
+    await until(() => got2.some(x => x.type === 'eval'), 5000);
+    check(ins2 === C.instructions(N.byId['hj7a-u3'], 'Ann', { goal: 0, ui: 'en' }) && !/Chinese/.test(ins2), '中转 /talk?ui=en（没有级别）：规矩按英语界面拼，不说中国学生');
+    check(sysSeen.some(s => /praise in English/.test(s)), '中转 /talk?ui=en：聊完的评价要英文评语');
+    try { cli2.close(); } catch (e) {}
   } finally {
     srv.kill(); fake.close(); upWs.close();
     try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) {}

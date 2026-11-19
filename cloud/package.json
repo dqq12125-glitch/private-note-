@@ -1,0 +1,19 @@
+{
+  "name": "echo-island-cloud",
+  "private": true,
+  "description": "回声岛公开版服务器：账号、每天的 AI 用量、订阅（Cloudflare Workers + D1）",
+  "type": "module",
+  "scripts": {
+    "test": "node test/run.js",
+    "dev": "wrangler dev --local",
+    "migrate:local": "wrangler d1 migrations apply DB --local",
+    "migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --outdir dist"
+  },
+  "devDependencies": {
+    "miniflare": "5.20261103.0-beta",
+    "wrangler": "4.157.0",
+    "ws": "8.18.3"
+  }
+}

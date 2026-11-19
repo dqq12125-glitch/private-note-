@@ -315,11 +315,13 @@ final class ShellLogicTests: XCTestCase {
         XCTAssertEqual(Bridge.int([7.0, "8"], 0), 7); XCTAssertEqual(Bridge.int([7.0, "8"], 1), 8)
     }
 
-    // 方法表：同步 22 个、异步 4 个，和 android/README.md 一样多（名字由 tests/ios.test.js 在电脑上逐个核对）
+    // 方法表：和安卓一样的同步 22 个、异步 4 个，另有 iPhone 才有的异步 9 个（订阅、通过 Apple 登录）；名字由 tests/ios.test.js 在电脑上逐个核对
     @MainActor
     func testBridgeMethodTables() {
         XCTAssertEqual(Bridge.syncMethods.count, 22)
-        XCTAssertEqual(Bridge.asyncMethods.count, 4)
+        XCTAssertEqual(Bridge.asyncMethods.count, 4 + 9)
+        XCTAssertEqual(Bridge.iosOnlyMethods.count, 9)
+        XCTAssertTrue(Set(Bridge.iosOnlyMethods).isSubset(of: Bridge.asyncMethods), "iPhone 才有的都是异步的")
         XCTAssertTrue(Set(Bridge.syncMethods).isDisjoint(with: Bridge.asyncMethods))
         let b = Bridge()
         // 没有原生画面也能答的几个同步方法：返回值的种类对
@@ -335,6 +337,9 @@ final class ShellLogicTests: XCTestCase {
         XCTAssertEqual(b.callSync("backupWrite", ["not json"]) as? Bool, false)
         XCTAssertEqual(b.callSync("shareFile", ["t", "../x.json", "{}"]) as? Bool, false, "文件名不对不分享")
         XCTAssertEqual(b.callSync("shareText", ["t", ""]) as? Bool, false)
+        let d = (try? JSONSerialization.jsonObject(with: Data(((b.callSync("diag", []) as? String) ?? "").utf8))) as? [String: Any]
+        XCTAssertEqual(d?["appleSignIn"] as? Bool, BuildConfig.appleSignIn, "diag() 说这个包能不能通过 Apple 登录")
+        XCTAssertEqual(d?["iapProducts"] as? [String], [BuildConfig.iapMonthly, BuildConfig.iapYearly])
     }
 
     // 这个包是哪个版本：销售版（公开发的）里一定没有密钥、家长密码的哈希、中转服务
@@ -350,5 +355,7 @@ final class ShellLogicTests: XCTestCase {
             XCTAssertTrue(BuildConfig.parentPinHash.isEmpty || BuildConfig.parentPinHash.count == 64)
         }
         XCTAssertGreaterThan(BuildConfig.versionCode, 0)
+        XCTAssertTrue(Store.okId(BuildConfig.iapMonthly) && Store.okId(BuildConfig.iapYearly), "两个订阅的商品编号写对了")
+        XCTAssertNotEqual(BuildConfig.iapMonthly, BuildConfig.iapYearly)
     }
 }

@@ -78,7 +78,8 @@ jobs:
             DEVELOPMENT_TEAM= \
             2>&1 | tee "$OUT/build-debug.log" | xcbeautify --renderer github-actions
 
-      - name: Unit tests (PIN lock, backups, asset handler, bridge)
+      # 订阅的 StoreKit 测试另外一步跑（下一步），这里跳过
+      - name: Unit tests (PIN lock, backups, asset handler, bridge, store and sign-in logic)
         run: |
           set -o pipefail
           rm -rf "$OUT/unit-tests.xcresult"
@@ -86,12 +87,31 @@ jobs:
             -project ios/EchoIsland.xcodeproj -scheme EchoIsland -configuration Debug \
             -destination "$SIM_DEST" -destination-timeout 180 \
             -derivedDataPath "$DERIVED" \
-            -only-testing:EchoIslandTests \
+            -only-testing:EchoIslandTests -skip-testing:EchoIslandTests/StoreKitTests \
             -resultBundlePath "$OUT/unit-tests.xcresult" \
             2>&1 | tee "$OUT/unit-tests.log" | xcbeautify --renderer github-actions
 
-      # 打开 App 到首页（竖屏、横屏截图）、原生桥自测页、麦克风弹窗、分享面板和文件选择器
-      - name: UI smoke test (home screen, bridge self-test, microphone)
+      # 订阅：本地 App Store（ios/App/Store.storekit）里买、等家长批准、恢复、续费、过期、退款（ios/Tests/StoreKitTests.swift）。
+      # iOS 26.5 的模拟器上 SKTestSession 存不进配置（苹果的已知问题，开发者论坛 FB22237318；26.1 / 26.2 上好的），
+      # 所以挑 26.2 / 26.1 的模拟器（同一份编好的包）；都没有就用最新的，并在日志里说一句
+      - name: StoreKit tests (subscriptions, on an iOS 26.2 simulator)
+        run: |
+          set -o pipefail
+          rm -rf "$OUT/storekit-tests.xcresult"
+          IFS=$'\t' read -r udid os name < <(node ios/scripts/pick-simulator.mjs --prefer 26.2,26.1 --name "iPhone 17")
+          echo "StoreKit tests on $name, iOS $os ($udid)" | tee "$OUT/storekit-simulator.txt"
+          case "$os" in 26.2*|26.1*) ;; *) echo "::warning::No iOS 26.2 / 26.1 simulator on this runner: the StoreKit tests run on iOS $os, where SKTestSession is known to fail (FB22237318)";; esac
+          xcodebuild test-without-building \
+            -project ios/EchoIsland.xcodeproj -scheme EchoIsland -configuration Debug \
+            -destination "id=$udid" -destination-timeout 180 \
+            -derivedDataPath "$DERIVED" \
+            -only-testing:EchoIslandTests/StoreKitTests \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 180 \
+            -resultBundlePath "$OUT/storekit-tests.xcresult" \
+            2>&1 | tee "$OUT/storekit-tests.log" | xcbeautify --renderer github-actions
+
+      # 打开 App 到首页（竖屏、横屏截图）、原生桥自测页、麦克风弹窗、分享面板和文件选择器、订阅的商品
+      - name: UI smoke test (home screen, bridge self-test, microphone, store)
         run: |
           set -o pipefail
           rm -rf "$OUT/ui-tests.xcresult"
@@ -123,7 +143,7 @@ jobs:
       - name: Export screenshots and attachments
         if: always()
         run: |
-          for r in unit-tests ui-tests; do
+          for r in unit-tests storekit-tests ui-tests; do
             if [ -d "$OUT/$r.xcresult" ]; then
               mkdir -p "$OUT/attachments/$r"
               xcrun xcresulttool export attachments --path "$OUT/$r.xcresult" --output-path "$OUT/attachments/$r" || echo "could not export attachments from $r"

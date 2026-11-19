@@ -3,13 +3,52 @@
 //       s7 的深水 → u7 海底花园（潜海，可选）
 // 剧情：第 5 岛才艺表演（集社团贴纸、清唱）/ 第 6 岛钟楼停了（问起床时间、拨钟）+ 钟山山顶闷雷、醒狮 / 第 7 岛对手的生日派对（生日日历、闷雷抢蛋糕、对手第 3 战、爸爸送踏浪）
 // 挑战馆：i5G 音符地板 / i6G 时钟转门 / i7G 礼物盒
+// 界面语言：这些函数的第几个参数是台词的中文意思（内容，不进字表；英语界面用 gloss() 不显示）
+// @i18n-content-calls nar:1 RV:1 K:1 B:1 X:1 speak:2 O:1 D:1 radio:1 ask:2 mom:1 T:1 R:1 RB:1 PF:1 PC:1 G1:1 G2:1 G:1
 (function () {
   'use strict';
   const EM = window.EchoMaps, ST = window.EchoStory, L = ST.lib, P = window.EchoPeople, LK = P.LOOKS;
+
+  // ---------- 界面文字（i18n.js 字表；键前缀 ic.） ----------
+  // 2026-11-19 搬进来：提示条、提示、地板上的日期、日期选项。台词（英文 + 中文意思）是内容，不在这里
+  const I18N = window.EchoI18n;
+  const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
+  // 数据里有 zh / nm（英文名）两个名字的：按界面语言取
+  const nm = o => (I18N ? I18N.label({ zh: o.zh, en: o.nm }) : o.zh);
+  // 旁白：world.js 的 whoLabel 认这个中文，显示时换成界面语言
+  const NAR = () => (I18N ? I18N.t('w.who.nar', null, 'zh') : '');
+  // 日期：代码 '10-1' = 10 月 1 日（逻辑里比的是代码，显示 / 中文意思才查表）
+  const dateT = (v, l) => (I18N ? I18N.t('ic.date.' + v, null, l) : v);
+  // 地板上的日期牌：字在画的时候才取（world.js paintOver 每次画图都读 t），所以用 getter
+  const tile = (c, k, n) => ({ c, get t() { return tx('ic.' + k + '.' + n); }, tc: '#ffffff' });
+  if (I18N) I18N.add({
+    zh: {
+      'ic.note.club': '🏷️ 社团贴纸 <b>{n}/3</b>　{list}', 'ic.toast.club': '🏷️ 得到了{club}的贴纸！',
+      'ic.note.notes': '🎵 按顺序踩：{seq}　<small>对着左边的喇叭按 A 再听一遍</small>',
+      'ic.note.ask': '⏰ 问起床时间 <b>{n}/3</b>　{list}', 'ic.note.clock': '🕰️ 拨钟 <b>{n}/3</b>　<small>听广播报时，对着亮着的钟按 A</small>',
+      'ic.note.cal': '🗓️ 生日日历 <b>{n}/3</b>　{list}', 'ic.note.gifts': '🎁 找生日礼物盒 <b>{n}/3</b>　<small>踩上写着那天的盒子；对着墙边的喇叭按 A 再听一遍</small>',
+      'ic.who.radio': '广播',
+      'ic.mon.1': '1月', 'ic.mon.3': '3月', 'ic.mon.5': '5月', 'ic.mon.6': '6月', 'ic.mon.10': '10月',
+      'ic.day.1': '1日', 'ic.day.3': '3日', 'ic.day.5': '5日', 'ic.day.12': '12日', 'ic.day.13': '13日', 'ic.day.15': '15日', 'ic.day.21': '21日', 'ic.day.25': '25日', 'ic.day.30': '30日',
+      'ic.date.10-1': '10月1日', 'ic.date.10-11': '10月11日', 'ic.date.1-10': '1月10日', 'ic.date.5-12': '5月12日', 'ic.date.5-2': '5月2日',
+      'ic.date.3-2': '3月2日', 'ic.date.6-20': '6月20日', 'ic.date.7-12': '7月12日', 'ic.date.6-12': '6月12日',
+    },
+    en: {
+      'ic.note.club': '🏷️ Club stickers <b>{n}/3</b> {list}', 'ic.toast.club': '🏷️ You got the {club} sticker!',
+      'ic.note.notes': '🎵 Step in this order: {seq} <small>Press A at the speaker on the left to hear it again</small>',
+      'ic.note.ask': '⏰ Ask when they get up <b>{n}/3</b> {list}', 'ic.note.clock': '🕰️ Set the clocks <b>{n}/3</b> <small>Listen to the time on the speaker, then press A at the lit clock</small>',
+      'ic.note.cal': '🗓️ Birthday calendar <b>{n}/3</b> {list}', 'ic.note.gifts': '🎁 Find the birthday boxes <b>{n}/3</b> <small>Step on the box with that date. Press A at the speaker on the wall to hear it again</small>',
+      'ic.who.radio': 'Speaker',
+      'ic.mon.1': 'Jan', 'ic.mon.3': 'Mar', 'ic.mon.5': 'May', 'ic.mon.6': 'Jun', 'ic.mon.10': 'Oct',
+      'ic.day.1': '1st', 'ic.day.3': '3rd', 'ic.day.5': '5th', 'ic.day.12': '12th', 'ic.day.13': '13th', 'ic.day.15': '15th', 'ic.day.21': '21st', 'ic.day.25': '25th', 'ic.day.30': '30th',
+      'ic.date.10-1': 'October 1st', 'ic.date.10-11': 'October 11th', 'ic.date.1-10': 'January 10th', 'ic.date.5-12': 'May 12th', 'ic.date.5-2': 'May 2nd',
+      'ic.date.3-2': 'March 2nd', 'ic.date.6-20': 'June 20th', 'ic.date.7-12': 'July 12th', 'ic.date.6-12': 'June 12th',
+    },
+  });
   const S = L.sayer;
-  const nar = (en, zh, emo) => ({ who: '旁白', emo: emo || '📣', en, zh });
+  const nar = (en, zh, emo) => ({ who: NAR(), emo: emo || '📣', en, zh });
   // 广播：只听不看英文
-  const radio = (en, zh) => ({ who: '广播', emo: '📢', en, zh: zh || '（仔细听！点右上角的喇叭可以再听一遍）', hideEn: true });
+  const radio = (en, zh) => ({ who: tx('ic.who.radio'), emo: '📢', en, zh: zh || '（仔细听！点右上角的喇叭可以再听一遍）', hideEn: true });
   const openRow = (C, y, keep) => C.map.gates.filter(g => g.y === y).forEach(g => C.openGate(g.i, keep));
   const rowOpen = (C, y) => C.map.gates.some(g => g.y === y && C.gateOpen(g.i));
 
@@ -18,9 +57,9 @@
   // ======================================================================
 
   // ---------- t5 社团岛：港口（渡轮）、才艺大帐篷、露天舞台、三个社团、沙滩 ----------
-  EM.define('t5', {
+  EM.define('t5', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 5, name: '社团岛', en: 'Club Island', sub: '第 6 岛', theme: 'circus',
-    rows: [
+    rows: [  // @i18n-content-end
       '####################################',
       '#TT..FF..Z....TT........TT.Z...FF.T#',
       '#T.HHHHH....==AAAAAAAAA==...JJJJJ.T#',
@@ -57,7 +96,9 @@
       2: { role: 'story', tag: 'dance', name: 'Dance Club Rosa', look: 'kidF', g: 'f', face: 'left' },
       3: { role: 'talk', name: 'Juggler Pip', look: 'clown', g: 'm', face: 'down', say: [['I can juggle five balls! Look!', '我会同时抛五个球！看！'], ["But I can't sing. Can you?", '可是我不会唱歌。你会吗？']], speak: 'I can juggle five balls!' },
       4: { role: 'story', tag: 'art', name: 'Art Club Ken', look: 'kid', g: 'm', face: 'left' },
+      // @i18n-content 渡轮 toName 是数据（英语界面 world.js 用目的地地图的英文名）/ 英文句子里夹着中文数字的老写法 / 台词中文意思的条件表达式：都是内容，留给内容那一批
       5: { role: 'ferry', name: 'Captain Gale', look: 'gale', g: 'm', face: 'left', to: 't4', toName: '学科岛', say: [['Ahoy! My ferry goes back to Subject Island.', '啊嗬！我的渡轮开回学科岛。'], ['The sea is calm today. Hop on!', '今天海上风平浪静，上船吧！']] },
+      // @i18n-content-end
       6: { role: 'talk', name: 'Swim Club Coach', look: 'swimmer', g: 'm', face: 'down', say: [['I teach the swimming club.', '我是游泳社的教练。'], ['Can you swim? Swimming is fun in summer!', '你会游泳吗？夏天游泳可好玩了！']], speak: 'Yes, I can swim.' },
       7: { role: 'talk', name: 'Strongman Max', look: 'strong', g: 'm', face: 'left', showIf: 'ch5',
         give: { item: 'hm_strength', flag: 'got_strength',
@@ -74,9 +115,9 @@
   });
 
   // ---------- r5 沙丘道：沙地、遗迹、绿洲；一格宽的峡谷里有大力推大石头 ----------
-  EM.define('r5', {
+  EM.define('r5', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 5, name: '沙丘道', en: 'Dune Road', sub: '社团岛 → 作息岛', theme: 'circus',
-    rows: [
+    rows: [  // @i18n-content-end
       'RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR',
       'RTSSSSS,,,,,SSSSSTRRRRRRRRRRRRRRRTSSBSSSSSSSSR',
       'RTSSSrr,,,,,SoSSSSRRRRRRRRRRRRRRRSSSSSSS,,,,SR',
@@ -131,9 +172,9 @@
   });
 
   // ---------- t6 作息岛：石板路、钟楼广场、北边冒烟的钟山 ----------
-  EM.define('t6', {
+  EM.define('t6', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 6, name: '作息岛', en: 'Clock Island', sub: '第 7 岛', theme: 'clock',
-    rows: [
+    rows: [  // @i18n-content-end
       '######################################',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
@@ -185,9 +226,9 @@
   });
 
   // ---------- d6a 钟山 1F：熔岩洞，西、中、东三条路，大力推石头小谜题 ----------
-  EM.define('d6a', {
+  EM.define('d6a', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', cave: 'lava', z: 6, name: '钟山 1F', en: 'Clock Mountain 1F', sub: '作息岛北边', lv: 2, dungeon: true,
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XXo:::::XXXXX:%:::::XXX::::::::X',
       'XX::::::XXXXX:::::::XXX::::::::X',
@@ -231,9 +272,9 @@
   });
 
   // ---------- d6b 钟山山顶：火山口，闷雷的地热机器；剧情后出现醒狮 ----------
-  EM.define('d6b', {
+  EM.define('d6b', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 6, name: '钟山山顶', en: 'Clock Mountain Summit', sub: '作息岛北边', theme: 'clock', lv: 2,
-    rows: [
+    rows: [  // @i18n-content-end
       'RRRRRRRRRRRRRRR^^^RRRRRRRRRRRRRRRR',
       'RRRRTTTRRRRRRSSSSS,SRRRRRRRRRRRRRR',
       'RRRRRRRRRRRRRS,,SSSSRRRRRRRTTRRRRR',
@@ -279,9 +320,9 @@
   });
 
   // ---------- r6 7 号路：火山岩慢慢变成糖果色的海滩 ----------
-  EM.define('r6', {
+  EM.define('r6', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 6, name: '7 号路', en: 'Route 7', sub: '钟山 → 生日派对岛', theme: 'party',
-    rows: [
+    rows: [  // @i18n-content-end
       '#############^^^##############',
       '#TTSSSSSSSTTSS=SSSTTSSS~~~~~~#',
       '#SSSSSSSSSSSSS=BSSSSSSS~~~~~~#',
@@ -347,9 +388,9 @@
   });
 
   // ---------- t7 生日派对岛：蛋糕房子、糖果海滩、港口（爸爸的船） ----------
-  EM.define('t7', {
+  EM.define('t7', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 7, name: '生日派对岛', en: 'Party Island', sub: '第 8 岛', theme: 'party',
-    rows: [
+    rows: [  // @i18n-content-end
       '######################################',
       '#TT.......TT.................TTSS~~~~~',
       '#T.............AAAAAAA...HHHHSSSS~~~~~',
@@ -399,9 +440,9 @@
   });
 
   // ---------- s7 8 号水路：大片的海、小岛、暗礁、深水（潜海） ----------
-  EM.define('s7', {
+  EM.define('s7', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 7, name: '8 号水路', en: 'Sea Route 8', sub: '生日派对岛 → 动物岛', theme: 'party', sea: true,
-    rows: [
+    rows: [  // @i18n-content-end
       '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
       '~~~~~~~~~~~~~~~~RR~~~~~~~~~~~~~~~~~~~~~~~~~~',
       '~~~~~~~~~~~~~~~~RR~~~~~~~~~~~~~~~~~~~~~~~~~~',
@@ -458,9 +499,9 @@
   });
 
   // ---------- u7 海底花园：海草、珊瑚礁 ----------
-  EM.define('u7', {
+  EM.define('u7', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'under', z: 7, arena: 'under', name: '海底花园', en: 'Sea Garden', sub: '8 号水路下面', lv: 3,
-    rows: [
+    rows: [  // @i18n-content-end
       'RRRRRRRRRRRRRRRRRRRRRRRRRRRR',
       'RRRR......,,,,,,,,,.....RRRR',
       'RRRR......,,,,,,,,,.....RRRR',
@@ -493,9 +534,9 @@
   });
 
   // ---------- 室内：剧情建筑 ----------
-  EM.define('i5A', { markKinds: ['speaker', 'speaker'],
+  EM.define('i5A', { markKinds: ['speaker', 'speaker'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 5, room: 'L', name: '社团岛 · 才艺大帐篷', en: 'Talent Show Tent', sub: '第 6 岛', icon: '🎪',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWW',
       'WZ_uuuuuuuuu_ZW',
       'W__uuuuuuuuu__W',
@@ -517,9 +558,9 @@
     ],
     links: { e: 't5' },
   });
-  EM.define('i6A', { markKinds: ['clock', 'clock', 'clock', 'statue', 'statue'],
+  EM.define('i6A', { markKinds: ['clock', 'clock', 'clock', 'statue', 'statue'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 6, room: '1', name: '作息岛 · 钟楼', en: 'Clock Tower', sub: '第 7 岛', icon: '🕰️',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWW',
       'Wk__ZZZ__kW',
       'W_________W',
@@ -536,9 +577,9 @@
     people: [{ id: 'keeper', x: 8, y: 4, role: 'story', name: 'Keeper Tock', look: 'grandpa', g: 'm', face: 'left' }],
     links: { e: 't6' },
   });
-  EM.define('i7A', { markKinds: ['gift'],
+  EM.define('i7A', { markKinds: ['gift'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 7, room: '5', name: '生日派对岛 · 蛋糕房子', en: 'Cake House', sub: '第 8 岛', icon: '🎂',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWW',
       'Wp____uuu____pW',
       'W_Y__uuZuu__Y_W',
@@ -562,9 +603,9 @@
 
   // ---------- 挑战馆 ----------
   // i5G 音符地板：三段，每段听广播里的乐器 / 音符顺序，按顺序踩；踩错回这一段的起点
-  EM.define('i5G', { markKinds: ['statue', 'statue', 'speaker', 'speaker', 'speaker'],
+  EM.define('i5G', { markKinds: ['statue', 'statue', 'speaker', 'speaker', 'speaker'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 5, room: 'G', name: '社团岛 · 挑战馆', en: 'Music Hall', sub: '第 6 岛', icon: '🏟️',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWW',
       'WZ_____1_____ZW',
       'W___________4_W',
@@ -622,9 +663,9 @@
     links: { e: 't5' },
   });
   // i6G 时钟转门：三座钟，听广播报时，把钟拨到对的时间，转门跟着转；拨错了门转回原位
-  EM.define('i6G', { markKinds: ['statue', 'statue', 'clock', 'clock', 'clock'],
+  EM.define('i6G', { markKinds: ['statue', 'statue', 'clock', 'clock', 'clock'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 6, room: 'G', name: '作息岛 · 挑战馆', en: 'Clock Hall', sub: '第 7 岛', icon: '🏟️',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWW',
       'WZ_____1_____ZW',
       'W_____________W',
@@ -651,9 +692,9 @@
     links: { e: 't6' },
   });
   // i7G 礼物盒：广播说一个生日，踩写着这个日期的礼物盒；错的盒子里跳出训练师
-  EM.define('i7G', { markKinds: ['statue', 'statue', 'speaker', 'speaker'],
+  EM.define('i7G', { markKinds: ['statue', 'statue', 'speaker', 'speaker'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 7, room: 'G', name: '生日派对岛 · 挑战馆', en: 'Party Hall', sub: '第 8 岛', icon: '🏟️',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWW',
       'WZ_____1_____ZW',
       'W_____________W',
@@ -691,24 +732,26 @@
       '...............',
     ],
     paint: {
-      a: { c: '#ff80ab', t: '5月', tc: '#ffffff' }, A: { c: '#ff80ab', t: '15日', tc: '#ffffff' },
-      b: { c: '#4fc3f7', t: '3月', tc: '#ffffff' }, B: { c: '#4fc3f7', t: '5日', tc: '#ffffff' },
-      c: { c: '#ffb74d', t: '5月', tc: '#ffffff' }, C: { c: '#ffb74d', t: '5日', tc: '#ffffff' },
-      d: { c: '#81c784', t: '10月', tc: '#ffffff' }, D: { c: '#81c784', t: '3日', tc: '#ffffff' },
-      e: { c: '#ba68c8', t: '1月', tc: '#ffffff' }, E: { c: '#ba68c8', t: '12日', tc: '#ffffff' },
-      f: { c: '#ff8a65', t: '6月', tc: '#ffffff' }, F: { c: '#ff8a65', t: '21日', tc: '#ffffff' },
-      g: { c: '#4fc3f7', t: '10月', tc: '#ffffff' }, G: { c: '#4fc3f7', t: '13日', tc: '#ffffff' },
-      h: { c: '#ff80ab', t: '5月', tc: '#ffffff' }, H: { c: '#ff80ab', t: '25日', tc: '#ffffff' },
-      i: { c: '#81c784', t: '1月', tc: '#ffffff' }, I: { c: '#81c784', t: '21日', tc: '#ffffff' },
-      j: { c: '#ffb74d', t: '10月', tc: '#ffffff' }, J: { c: '#ffb74d', t: '30日', tc: '#ffffff' },
-      k: { c: '#ff8a65', t: '3月', tc: '#ffffff' }, K: { c: '#ff8a65', t: '15日', tc: '#ffffff' },
-      l: { c: '#ba68c8', t: '1月', tc: '#ffffff' }, L: { c: '#ba68c8', t: '1日', tc: '#ffffff' },
+      a: tile('#ff80ab', 'mon', 5), A: tile('#ff80ab', 'day', 15),
+      b: tile('#4fc3f7', 'mon', 3), B: tile('#4fc3f7', 'day', 5),
+      c: tile('#ffb74d', 'mon', 5), C: tile('#ffb74d', 'day', 5),
+      d: tile('#81c784', 'mon', 10), D: tile('#81c784', 'day', 3),
+      e: tile('#ba68c8', 'mon', 1), E: tile('#ba68c8', 'day', 12),
+      f: tile('#ff8a65', 'mon', 6), F: tile('#ff8a65', 'day', 21),
+      g: tile('#4fc3f7', 'mon', 10), G: tile('#4fc3f7', 'day', 13),
+      h: tile('#ff80ab', 'mon', 5), H: tile('#ff80ab', 'day', 25),
+      i: tile('#81c784', 'mon', 1), I: tile('#81c784', 'day', 21),
+      j: tile('#ffb74d', 'mon', 10), J: tile('#ffb74d', 'day', 30),
+      k: tile('#ff8a65', 'mon', 3), K: tile('#ff8a65', 'day', 15),
+      l: tile('#ba68c8', 'mon', 1), L: tile('#ba68c8', 'day', 1),
       x: { c: '#fff59d', t: '🎉' }, y: { c: '#e0e0e0', t: '💨' },
     },
     npc: {
       1: { role: 'leader' },
       2: { role: 'trainer', name: 'Party Girl Pat', look: 'kidF', g: 'f', face: 'up', sight: 2, team: [['cakelet', 0], ['creamcake', 0]],
+        // @i18n-content 渡轮 toName 是数据（英语界面 world.js 用目的地地图的英文名）/ 英文句子里夹着中文数字的老写法 / 台词中文意思的条件表达式：都是内容，留给内容那一批
         lines: [['My birthday is on May 2nd. When is yours?', '我的生日是 5 月 2 日。你的呢？']], win: ['Oh! My cake fell down!', '哎呀！我的蛋糕掉了！'], after: [['May fifth is 5月5日. Listen carefully!', 'May fifth 就是 5 月 5 日。仔细听！']] },
+        // @i18n-content-end
       3: { role: 'trainer', name: 'Balloon Boy Bob', look: 'kid', g: 'm', face: 'up', sight: 2, team: [['skyballoon', 0], ['cheerpuff', 1]],
         lines: [['I have thirteen balloons, one for every year!', '我有十三个气球，一岁一个！']], win: ['Pop! Pop! Pop!', '砰！砰！砰！'], after: [['Thirteen and thirty sound different. Listen for "-teen"!', 'thirteen 和 thirty 听起来不一样，注意听 “-teen”！']] },
     },
@@ -721,21 +764,21 @@
 
   // ---------- 第 5 岛：才艺表演 ----------
   const CLUBS = {
-    music: { who: ['Music Club Lily', 'studentF', 'f'], zh: '音乐社',
+    music: { who: ['Music Club Lily', 'studentF', 'f'], zh: '音乐社', nm: 'music club',
       hi: [['Hi! I\'m Lily from the music club.', '嗨！我是音乐社的莉莉。'], ['We sing and play the guitar every Friday.', '我们每周五唱歌、弹吉他。']],
       q: ['Can you sing?', 'Yes, I can.', ['Yes, I do.', 'Yes, it is.']], ok: ['Great! Here is a music club sticker.', '太好了！这是音乐社的贴纸。'],
       after: [['See you at the show! We can sing together!', '表演时见！我们可以一起唱！']] },
-    dance: { who: ['Dance Club Rosa', 'kidF', 'f'], zh: '舞蹈社',
+    dance: { who: ['Dance Club Rosa', 'kidF', 'f'], zh: '舞蹈社', nm: 'dance club',
       hi: [['Hello! I\'m Rosa. I\'m in the dance club.', '你好！我是罗莎，我在舞蹈社。'], ['My monster can dance, too. Look! One, two, three!', '我的怪兽也会跳舞。看！一、二、三！']],
       q: ['Can your monster dance?', 'Yes, it can.', ['Yes, I am.', "No, it isn't."]], ok: ['Wow! Take a dance club sticker.', '哇！拿一张舞蹈社的贴纸吧。'],
       after: [["Let's dance at the show!", '表演的时候一起跳舞吧！']] },
-    art: { who: ['Art Club Ken', 'kid', 'm'], zh: '美术社',
+    art: { who: ['Art Club Ken', 'kid', 'm'], zh: '美术社', nm: 'art club',
       hi: [['Hi! I\'m Ken. I can draw animals and flowers.', '嗨！我是肯。我会画动物和花。'], ['We have fun in the art club.', '我们在美术社玩得很开心。']],
       q: ['Do you want to join the art club?', 'Sure! I love drawing.', ["It's an art club.", "I'm Tom."]], ok: ['Welcome! Here is an art club sticker.', '欢迎！这是美术社的贴纸。'],
       after: [['I will draw a picture of your show!', '我要把你的表演画下来！']] },
   };
   const clubN = C => Object.keys(CLUBS).filter(k => C.flag('c5club_' + k)).length;
-  const clubNote = C => C.note('🏷️ 社团贴纸 <b>' + clubN(C) + '/3</b>　' + Object.keys(CLUBS).map(k => CLUBS[k].zh + (C.flag('c5club_' + k) ? '✅' : '⬜')).join(' '));
+  const clubNote = C => C.note(hx('ic.note.club', { n: clubN(C), list: Object.keys(CLUBS).map(k => nm(CLUBS[k]) + (C.flag('c5club_' + k) ? '✅' : '⬜')).join(' ') }));
 
   async function intro5(C) {
     const pl = C.pl, B = S('MC Bobo', 'clown', 'm');
@@ -774,7 +817,7 @@
     if (!ok) return;
     C.set('c5club_' + k);
     C.E.SFX.win();
-    C.E.toast('🏷️ 得到了' + c.zh + '的贴纸！', 'gold');
+    C.E.toast(tx('ic.toast.club', { club: nm(c) }), 'gold');
     const got = clubN(C);
     clubNote(C);
     if (got >= 3) await C.talk([nar('You have three club stickers! Go to the big tent.', '三个社团贴纸都集齐了！去中间的大帐篷参加才艺表演吧。', '🏷️')]);
@@ -858,7 +901,7 @@
   ];
   const NOTE5 = { d: ['Drum', '🥁'], p: ['Piano', '🎹'], g: ['Guitar', '🎸'], D: ['Do', 'Do'], M: ['Mi', 'Mi'], S: ['Sol', 'Sol'] };
   const g5 = { stage: -1, k: 0, heard: -1 };
-  const note5 = (C, s) => C.note('🎵 按顺序踩：' + G5[s].seq.map((c, i) => i < g5.k ? '<b>' + NOTE5[c][1] + '</b>' : '❓').join(' → ') + '　<small>对着左边的喇叭按 A 再听一遍</small>');
+  const note5 = (C, s) => C.note(tx('ic.note.notes', { seq: G5[s].seq.map((c, i) => i < g5.k ? '<b>' + NOTE5[c][1] + '</b>' : '❓').join(' → ') }));
   async function cast5(C, s) {
     g5.heard = s; g5.stage = s; g5.k = 0;
     await C.talk([
@@ -930,18 +973,18 @@
 
   // ---------- 第 6 岛：钟楼停了 ----------
   const RISE = {
-    baker: { who: ['Baker Bun', 'chef', 'm'], zh: '面包师', v: '5:00', en: "I get up at five o'clock every day.",
+    baker: { who: ['Baker Bun', 'chef', 'm'], zh: '面包师', nm: 'Baker', v: '5:00', en: "I get up at five o'clock every day.",
       hi: [['Good morning! Or is it good evening? My bread is late!', '早上好！还是晚上好？我的面包都做晚了！']], more: ['I make bread for the whole town before six!', '六点以前我要为全镇做好面包！'],
       lost: [['Zzz... Is it night? Is it morning? I don\'t know!', '呼……现在是晚上？还是早上？我也不知道！']] },
-    student: { who: ['Student Lucy', 'studentF', 'f'], zh: '学生', v: '6:30', en: 'I usually get up at half past six.',
+    student: { who: ['Student Lucy', 'studentF', 'f'], zh: '学生', nm: 'Student', v: '6:30', en: 'I usually get up at half past six.',
       hi: [['Hi! School starts at eight. But what time is it now?', '嗨！学校八点上课。可现在几点了？']], more: ['Then I have breakfast and go to school.', '然后我吃早饭、去上学。'],
       lost: [["It's time for dinner... or breakfast? I'm so confused!", '现在该吃晚饭……还是早饭？我都糊涂了！']] },
-    mayor: { who: ['Mayor Tick', 'grandpa', 'm'], zh: '镇长', v: '7:00', en: "I always get up at seven o'clock.",
+    mayor: { who: ['Mayor Tick', 'grandpa', 'm'], zh: '镇长', nm: 'Mayor', v: '7:00', en: "I always get up at seven o'clock.",
       hi: [['I am the mayor. I am never late!', '我是镇长，我从不迟到！']], more: ['Then I open the town hall at eight.', '然后八点打开镇政府的大门。'],
       lost: [['Our clock tower stopped! Please go to the tower!', '我们的钟楼停了！请快去钟楼看看！']] },
   };
   const askN = C => Object.keys(RISE).filter(k => C.flag('c6ask_' + k)).length;
-  const askNote = C => C.note('⏰ 问起床时间 <b>' + askN(C) + '/3</b>　' + Object.keys(RISE).map(k => RISE[k].zh + (C.flag('c6ask_' + k) ? '✅' : '⬜')).join(' '));
+  const askNote = C => C.note(hx('ic.note.ask', { n: askN(C), list: Object.keys(RISE).map(k => nm(RISE[k]) + (C.flag('c6ask_' + k) ? '✅' : '⬜')).join(' ') }));
   // 画一个小钟面（选项里用）
   function clockSVG(v) {
     const [h, mm] = v.split(':').map(Number), rad = d => (d - 90) * Math.PI / 180;
@@ -1012,7 +1055,9 @@
     const r = RISE[k], X = S(...r.who);
     C.faceEach(n);
     if (!C.flag('c6grunt')) { await C.talk(r.lost.map(([en, zh]) => X(en, zh))); return; }
+    // @i18n-content 渡轮 toName 是数据（英语界面 world.js 用目的地地图的英文名）/ 英文句子里夹着中文数字的老写法 / 台词中文意思的条件表达式：都是内容，留给内容那一批
     if (C.flag('ch6')) { await C.talk([X(r.en, '我' + ({ '5:00': '五点', '6:30': '六点半', '7:00': '七点' })[r.v] + '起床。钟楼好了，大家又能准时起床了！'), X('Thank you for fixing the clock!', '谢谢你修好了钟楼！')]); return; }
+    // @i18n-content-end
     await C.talk(r.hi.map(([en, zh]) => X(en, zh)).concat([
       L.speak(C, 'What time do you get up?', '问问' + r.zh + '：你几点起床？'),
       Object.assign(X(r.en, '（仔细听！' + r.zh + '几点起床？记住这个时间，点喇叭可以再听一遍）'), { hideEn: true }),
@@ -1145,7 +1190,7 @@
     { en: "It's a quarter past four.", v: '4:15', opts: ['4:45', '5:15', '4:15'] },
   ];
   const g6 = { r: 0 };
-  const note6 = C => C.note('🕰️ 拨钟 <b>' + g6.r + '/3</b>　<small>听广播报时，对着亮着的钟按 A</small>');
+  const note6 = C => C.note(tx('ic.note.clock', { n: g6.r }));
   async function round6(C, i) {
     const q = R6[i];
     let ok = false;
@@ -1214,15 +1259,15 @@
 
   // ---------- 第 7 岛：对手的生日派对 ----------
   const BDAY = {
-    granny: { who: ['Granny Rose', 'granny', 'f'], zh: '罗丝奶奶', en: 'My birthday is on October 1st.', v: '10月1日', opts: ['10月1日', '10月11日', '1月10日'],
+    granny: { who: ['Granny Rose', 'granny', 'f'], zh: '罗丝奶奶', nm: 'Granny Rose', en: 'My birthday is on October 1st.', v: '10-1', opts: ['10-1', '10-11', '1-10'],
       hi: [['Oh, hello, dear! Are you going to the party?', '哎呀，你好呀，孩子！你也去参加派对吗？']], more: ['I am eighty years old this year!', '我今年八十岁啦！'] },
-    amy: { who: ['Amy', 'kidF', 'f'], zh: '艾米', en: 'My birthday is on May 2nd.', v: '5月2日', opts: ['5月12日', '5月2日', '3月2日'],
+    amy: { who: ['Amy', 'kidF', 'f'], zh: '艾米', nm: 'Amy', en: 'My birthday is on May 2nd.', v: '5-2', opts: ['5-12', '5-2', '3-2'],
       hi: [['Hi! I made a card for the party!', '嗨！我给派对做了一张贺卡！']], more: ['I want a new bike for my birthday!', '我生日想要一辆新自行车！'] },
-    baker7: { who: ['Baker Sugar', 'chef', 'm'], zh: '蛋糕师', en: "It's on June 12th. I make my own cake!", v: '6月12日', opts: ['6月20日', '7月12日', '6月12日'],
+    baker7: { who: ['Baker Sugar', 'chef', 'm'], zh: '蛋糕师', nm: 'Baker Sugar', en: "It's on June 12th. I make my own cake!", v: '6-12', opts: ['6-20', '7-12', '6-12'],
       hi: [['I made a big cake for the party. It has thirteen candles!', '我为派对做了个大蛋糕，插了十三根蜡烛！']], more: ['Would you like some cake later?', '等会儿要来块蛋糕吗？'] },
   };
   const calN = C => Object.keys(BDAY).filter(k => C.flag('c7cal_' + k)).length;
-  const calNote = C => C.note('🗓️ 生日日历 <b>' + calN(C) + '/3</b>　' + Object.keys(BDAY).map(k => BDAY[k].zh + (C.flag('c7cal_' + k) ? '✅' : '⬜')).join(' '));
+  const calNote = C => C.note(hx('ic.note.cal', { n: calN(C), list: Object.keys(BDAY).map(k => nm(BDAY[k]) + (C.flag('c7cal_' + k) ? '✅' : '⬜')).join(' ') }));
 
   async function intro7(C) {
     const R = C.rivalInfo(), RV = S(R.name, R.look, R.g), pl = C.pl;
@@ -1251,12 +1296,12 @@
     const b = BDAY[k], X = S(...b.who);
     C.faceEach(n);
     if (!C.flag('c7intro')) { await C.talk(b.hi.map(([en, zh]) => X(en, zh))); return; }
-    if (C.flag('c7cal_' + k)) { await C.talk([X(b.en, '我的生日是' + b.v + '。'), X(b.more[0], b.more[1])]); return; }
+    if (C.flag('c7cal_' + k)) { await C.talk([X(b.en, '我的生日是' + dateT(b.v, 'zh') + '。'), X(b.more[0], b.more[1])]); return; }
     let ok = false;
     await C.talk(b.hi.map(([en, zh]) => X(en, zh)).concat([
       L.speak(C, 'When is your birthday?', '问问' + b.zh + '：你的生日是什么时候？'),
       Object.assign(X(b.en, '（仔细听！' + b.zh + '的生日是哪天？选出来写在日历上。点喇叭可以再听）'), {
-        hideEn: true, kind: 'choice', opts: b.opts.map(v => ({ html: '<span data-v="' + v + '">🗓️ ' + v + '</span>' })),
+        hideEn: true, kind: 'choice', opts: b.opts.map(v => ({ html: '<span data-v="' + dateT(v, 'zh') + '">🗓️ ' + dateT(v) + '</span>' })),
         pick: i => { ok = b.opts[i] === b.v; return ok ? [X("Yes! That's my birthday!", '对！那就是我的生日！'), X(b.more[0], b.more[1])] : [X('No, no! Ask me again and listen carefully.', '不对不对！再问我一次，仔细听。')]; },
       }),
     ]));
@@ -1350,7 +1395,7 @@
   const BOX7 = { a: 'May 15th', b: 'March 5th', c: 'May 5th', d: 'October 3rd', e: 'January 12th', f: 'June 21st', g: 'October 13th', h: 'May 25th', i: 'January 21st', j: 'October 30th', k: 'March 15th', l: 'January 1st' };
   const R7 = [{ en: 'My birthday is May 5th.', box: 'c' }, { en: 'My birthday is October 13th.', box: 'g' }, { en: 'My birthday is January 21st.', box: 'i' }];
   const g7 = { r: 0 };
-  const note7 = C => C.note('🎁 找生日礼物盒 <b>' + g7.r + '/3</b>　<small>踩上写着那天的盒子；对着墙边的喇叭按 A 再听一遍</small>');
+  const note7 = C => C.note(tx('ic.note.gifts', { n: g7.r }));
   function reset7(C) {
     const d = C.map.def.over;
     let ch = false;

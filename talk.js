@@ -19,6 +19,141 @@
   const CFG = { evalWait: 20000, httpWait: 15000 };
   const NEED = (window.TalkCore && TalkCore.VOICE_NEED) || 6;
 
+  // ---------- 界面文字（i18n.js 字表；键前缀 tk.） ----------
+  // 2026-11-19 搬进来。中文和原来一字不差；英文写得短、写得浅。岛民的话、委托和角色的中文意思是内容，按 gloss 显示（英语界面不显示）。
+  // 给 AI 的提示词不是界面，在 talk-core.js（评语、点评按界面语言要）
+  const I18N = window.EchoI18n;
+  const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
+  // 数据里有 zh / en 两个名字的（委托名、目标、岛名）：按界面语言取
+  const lbl = o => (I18N ? I18N.label(o) : (o && o.zh) || '');
+  // 内容的中文意思（岛民的中文名、话题、词卡）：中文界面给中文，英语界面给 null（不显示）
+  const gloss = o => (I18N ? I18N.gloss(o) : (o && o.zh) || null);
+  // 中文界面：才有「点岛民的话看中文」（只会翻成中文），小步骤才显示数据里的中文
+  const zhUi = () => !I18N || I18N.lang() === 'zh';
+  const loc = () => (zhUi() ? 'zh-CN' : 'en-GB');
+  // 小步骤给学习者看的那句：中文界面用数据里的中文；别的界面语言用英文的步骤说明（goalOf 的 task，现在只有地图上随便聊的人有），
+  // 没有就写「第 n 步」（点一下看示范句）
+  const stepTxt = (s, k) => (zhUi() ? s.zh : s.task || tx('tk.step', { n: k + 1 }));
+  if (I18N) I18N.add({
+    zh: {
+      'tk.err.offline': '现在没网，连上网再来聊吧', 'tk.err.auth': 'AI 密钥不对，请告诉家长', 'tk.err.quota': 'AI 额度用完了，请告诉家长', 'tk.err.busy': 'AI 有点忙，过一会儿再试',
+      'tk.err.code': '家庭口令不对，请告诉家长', 'tk.err.network': '连不上 AI 聊天，过一会儿再试；一直不行就告诉家长', 'tk.err.daily': '今天的聊天时间用完了，明天再来吧！',
+      'tk.err.nonpc': '没有这个岛民', 'tk.err.log': '聊天：{raw}', 'tk.err.conn': '连不上对话服务 {url}', 'tk.err.up': '连不上对话服务（{msg}）',
+      'tk.prog': '🗣️ 已开口说 {a}/{b} 句', 'tk.prog.done': '🗣️ 今天已开口说 {n} 句 ✅', 'tk.prog.ok': ' · 今天的聊天任务完成了', 'tk.prog.need': ' · 用语音说满 {n} 句英语，或者完成一个小目标',
+      // 首页的聊天
+      'tk.card.now': ' · 📍 正在学', 'tk.card.next': '🎯 下次：{lv}', 'tk.h.book': '📗 课本话题 · {b}', 'tk.h.isle': '🏝️ 岛上的人',
+      'tk.intro.h': '🗣️ 用英语和岛民聊天',
+      'tk.intro.p': '按住话筒说英语，松开就发出去；岛民会用自己的声音回答你。每段聊天有一个小目标，拆成几个小步骤，做到一步就打一个勾，完成了有金币！听不懂就点「💡 帮帮我」或者点岛民的话看中文。',
+      'tk.ai.line': '🤖 岛民的话和声音由 AI 生成（阿里云通义千问提供）', 'tk.warn': '还没连上对话服务。请家长点下面的「设置服务」。',
+      'tk.foot.log': '📜 聊天记录', 'tk.foot.cfg': '⚙️ 设置服务', 'tk.concern.btn': '👪 家长看看',
+      // AI 标识
+      'tk.ai.spoken': '温馨提示：岛民说的话和声音，都由人工智能生成。', 'tk.ai.bubble': '🤖 {s}（{l}）', 'tk.ai.title': '岛民的话和声音由人工智能生成',
+      // 聊天界面
+      'tk.ready.mic': '按住话筒说英语，说完松开。点岛民说的话可以看中文。', 'tk.ready.type': '打字聊天：写好按「发送」。',
+      'tk.top.free': '自由聊天 · {isle}', 'tk.top.quest': '📋 委托 · {q}', 'tk.end': '结束', 'tk.eg': '例：{s}', 'tk.step': '第 {n} 步', 'tk.st.conn': '正在连接……',
+      'tk.help': '💡 帮帮我', 'tk.replay': '🔁 再听一遍', 'tk.slow': '🐢 慢一点', 'tk.mic': '🎤 按住说英语', 'tk.mic.on': '🔴 正在听……松开发送',
+      'tk.typeopen': '⌨️ 麦克风用不了？点这里打字', 'tk.type.ph': '打字聊天（英文）', 'tk.send': '发送', 'tk.typenote': '打字的话不算「开口说」的句数，也不给金币',
+      'tk.st.nomic': '用不了麦克风（没给权限或不支持），可以先打字聊。', 'tk.micfix': '🎤 去设置里打开麦克风', 'tk.st.badurl': '服务地址不对：{url}', 'tk.zh.tap': '点一下看中文',
+      'tk.st.short': '按住久一点再说哦。', 'tk.st.think': '岛民在想……', 'tk.st.notyet': '还没连上，等一下再发。',
+      'tk.toast.done': '🎉 今天的聊天任务完成了！（已开口说 {n} 句英语）', 'tk.toast.all': '🎯 小步骤全做到了！和 TA 说再见，再点「结束」', 'tk.toast.most': '🎯 小目标差不多完成了！再做一步更好，也可以点「结束」',
+      'tk.zh.busy': '翻译中……', 'tk.zh.fail': '（这次没翻译出来，再点一下试试）', 'tk.st.help': '💡 岛民在想一句你可以照着说的话……', 'tk.st.eval': '聊得不错！正在给这段对话写评语……',
+      'tk.toast.goal': '🎯 和 {name} 的聊天目标完成了！', 'tk.coins': '+{n} 金币', 'tk.why.def': '孩子说到了难过或不安全的事',
+      // 聊完：评语页
+      'tk.btn.reward': '🎁 回去领奖励', 'tk.btn.retry': '再试一次', 'tk.btn.again': '再聊一次', 'tk.btn.back': '返回', 'tk.gate.open': '🔓 今天的学习任务完成了，可以去怪兽冒险！',
+      'tk.e.daily.h': '今天聊够啦', 'tk.e.fail.h': '⚠️ 没连上', 'tk.e.raw': '（给家长看：{raw}）', 'tk.e.quiet.h': '这次没说话哦', 'tk.e.quiet.p': '按住话筒说英语，岛民就会回答你。',
+      'tk.left': '今天还能聊 {n} 分钟', 'tk.time': '这次聊了 {n} 秒',
+      'tk.r.all': '🎯 目标完成！每一步都做到了', 'tk.r.most': '🎯 目标完成！（差 1 步也算完成）', 'tk.r.speak': '要开口说才算哦', 'tk.r.near': '还差一点点，下次试试把小步骤都说到',
+      'tk.r.few': '这次用语音说的英语句子不到 3 句{typed}，目标先不算完成。下次按住话筒说吧！', 'tk.r.typed': '（打字的不算）',
+      'tk.r.ai': '🤖 评语由 AI 生成（阿里云通义千问提供）', 'tk.r.noai': '这次没来得及写评语，不过这段聊天算数，已经记下来了！', 'tk.r.tips': '可以这样说更好（明天的每日复习里会再练）：',
+      'tk.r.coins': '🪙 +{n} 金币', 'tk.r.q.done': '📋 委托完成了！回到冒险里，{name} 有奖励给你', 'tk.r.q.not': '📋 委托还没完成：把小步骤都说到，再来试一次',
+      'tk.r.late.h': '聊完啦！这段聊天算数 👍', 'tk.r.late.p': '这次评语没来得及写完（可能是网络慢），不过你开口说的句子已经记下来了。',
+      'tk.r.concern': '💛 如果你遇到了难过或者不安全的事，记得马上告诉爸爸妈妈或者老师。',
+      // 口语题的识别
+      'tk.asr.say': '🎤 请说……', 'tk.asr.busy': '🎧 识别中……',
+      // 家长：设置服务、聊天记录、家长看看、家长须知
+      'tk.cfg.why': '改 AI 密钥', 'tk.cfg.key': '家长设置：阿里云百炼 API Key（只存在这台手机里，用来和岛民聊天）\n已经设置过的话，留空就是不改；填 clear 删除',
+      'tk.cfg.ok': '✅ 已连上阿里云，可以和岛民聊天了', 'tk.cfg.nokey': '还没有设置密钥',
+      'tk.cfg.url': '对话服务地址（家长填）：\n例如 wss://你的服务器域名 ；本机试用填 ws://localhost:8787\n留空恢复默认', 'tk.cfg.code': '家庭口令（服务没设口令就留空）：',
+      'tk.cfg.now': '对话服务：{url}', 'tk.cfg.none': '未设置',
+      'tk.log.me': '我：', 'tk.log.who': '{name}：', 'tk.log.typed': '（打字）', 'tk.log.voice': ' · 开口 {n} 句', 'tk.log.none': '还没有聊天记录。', 'tk.log.p': '最近 30 次，只存在这台设备上。',
+      'tk.concern.p': '孩子在聊天里说到难过、被欺负、害怕或有危险时，这段聊天会标出来（AI 判断，加上本机查关键词，可能有误报）。岛民会提醒孩子马上告诉家长或老师。',
+      'tk.concern.seen': '✅ 家长看过了', 'tk.concern.none': '没有需要注意的聊天。',
+      'tk.pv.h': 'ℹ️ 家长须知：AI 聊天',
+      'tk.pv.s1': '<li>岛民的话和声音、口语打分都由<b>人工智能（AI）生成</b>，由<b>阿里云百炼（通义千问）</b>提供。聊天页顶上一直写着「{l}」，每段聊天开头会用语音提示一次。</li>',
+      'tk.pv.s2': '<li>聊天、口语打分时，孩子说话的<b>声音和识别出来的文字</b>直接从这台手机发到阿里云，用的是<b>您自己的阿里云账号和密钥</b>（费用也由阿里云直接向您收）。开发者<b>收不到</b>这些声音和文字，也没有服务器存它们。</li>',
+      'tk.pv.role': '<li>岛民只扮演游戏角色、只聊游戏和日常的话题，不会问真名、学校、住址、电话。孩子认真问「你是真人吗」，岛民会说自己是<b>电脑做的游戏角色</b>。</li>',
+      'tk.pv.safe': '<li>孩子说到难过、被欺负、害怕或有危险时，岛民会认真回应、提醒他马上告诉家长或老师，这段聊天会标出来，家长在「👪 家长看看」里输密码能看全文，周报上也会提示。</li>',
+      'tk.pv.s5': '<li>聊天记录、岛民记住的小事都<b>只存在这台手机里</b>（聊天记录最近 30 段），卸载 App 就全部删掉。每天最多聊 {n} 分钟。</li>',
+      'tk.pv.name': '<li>给主角起名时请用<b>游戏昵称</b>，不要用真名。</li>',
+      'tk.pv.w1': '<li>和岛民聊天、口语题打分时，孩子说话的<b>声音和识别出来的文字</b>会发到<b>阿里云百炼（通义千问）</b>做语音识别、对话和打分。安卓 APK 直接连阿里云；网页版经过家里的中转服务。</li>',
+      'tk.pv.w4': '<li>聊天记录存在这台手机里（最近 30 段）；网页版的中转服务也会存一份，<b>保留 90 天</b>后自动删掉。</li>',
+      'tk.pv.w5': '<li>岛民会记住孩子在游戏里说过的小事（比如喜欢画画、有一只火怪兽），下次聊天提起来——<b>只存在这台手机里</b>，不记真名、学校、住址。</li>',
+      'tk.pv.doc': '📄 儿童隐私说明（全文）', 'tk.pv.forget': '🧹 让岛民忘掉以前聊过的事', 'tk.forgot': '岛民忘掉以前聊过的事了',
+    },
+    en: {
+      'tk.err.offline': 'You\'re offline. Connect to the internet, then come back to chat', 'tk.err.auth': 'The AI key is wrong. Please ask a parent or check Settings',
+      'tk.err.quota': 'The AI credit has run out. Please ask a parent or check Settings', 'tk.err.busy': 'The AI is a bit busy. Try again in a moment',
+      'tk.err.code': 'The family code is wrong. Please ask a parent', 'tk.err.network': 'Can\'t reach AI chat. Try again in a moment; if it keeps happening, ask a parent',
+      'tk.err.daily': 'Today\'s chat time is used up. Come back tomorrow!',
+      'tk.err.nonpc': 'No such islander', 'tk.err.log': 'Chat: {raw}', 'tk.err.conn': 'Can\'t connect to the chat service {url}', 'tk.err.up': 'Can\'t connect to the chat service ({msg})',
+      'tk.prog': '🗣️ Lines spoken: {a}/{b}', 'tk.prog.done': { one: '🗣️ Spoke {n} line today ✅', other: '🗣️ Spoke {n} lines today ✅' },
+      'tk.prog.ok': ' · Today\'s chat task is done', 'tk.prog.need': { one: ' · Say {n} English line aloud, or finish a chat goal', other: ' · Say {n} English lines aloud, or finish a chat goal' },
+      'tk.card.now': ' · 📍 Studying now', 'tk.card.next': '🎯 Next: {lv}', 'tk.h.book': '📗 Textbook topics · {b}', 'tk.h.isle': '🏝️ Islanders',
+      'tk.intro.h': '🗣️ Chat with islanders in English',
+      'tk.intro.p': 'Hold the mic and speak English, then let go to send. Each islander answers in their own voice. Every chat has a goal with a few small steps: you get a tick for each step, and coins when you finish! If you get stuck, tap "💡 Help me".',
+      'tk.ai.line': '🤖 The islanders\' words and voices are made by AI (powered by Alibaba Cloud Qwen)', 'tk.warn': 'Not connected to the chat service yet. A parent can tap "⚙️ Chat service" below.',
+      'tk.foot.log': '📜 Chat log', 'tk.foot.cfg': '⚙️ Chat service', 'tk.concern.btn': '👪 Parent check',
+      'tk.ai.spoken': 'Please note: what the islanders say, and their voices, are made by AI.', 'tk.ai.bubble': '🤖 {s} ({l})', 'tk.ai.title': 'The islanders\' words and voices are made by AI',
+      'tk.ready.mic': 'Hold the mic and speak English. Let go when you finish.', 'tk.ready.type': 'Typing chat: write your message and tap "Send".',
+      'tk.top.free': 'Free chat · {isle}', 'tk.top.quest': '📋 Request · {q}', 'tk.end': 'End', 'tk.eg': 'e.g. {s}', 'tk.step': 'Step {n}', 'tk.st.conn': 'Connecting…',
+      'tk.help': '💡 Help me', 'tk.replay': '🔁 Hear it again', 'tk.slow': '🐢 Slower', 'tk.mic': '🎤 Hold to speak English', 'tk.mic.on': '🔴 Listening… let go to send',
+      'tk.typeopen': '⌨️ Mic not working? Tap here to type', 'tk.type.ph': 'Type in English', 'tk.send': 'Send', 'tk.typenote': 'Typed lines don\'t count as spoken lines and don\'t earn coins',
+      'tk.st.nomic': 'Can\'t use the microphone (no permission, or not supported). You can type for now.', 'tk.micfix': '🎤 Turn on the mic in Settings', 'tk.st.badurl': 'Wrong service address: {url}',
+      'tk.zh.tap': 'Tap to translate',
+      'tk.st.short': 'Hold it a little longer while you speak.', 'tk.st.think': 'The islander is thinking…', 'tk.st.notyet': 'Not connected yet. Wait a moment, then send.',
+      'tk.toast.done': { one: '🎉 Today\'s chat task is done! (You said {n} English line)', other: '🎉 Today\'s chat task is done! (You said {n} English lines)' },
+      'tk.toast.all': '🎯 You did every step! Say goodbye, then tap "End"', 'tk.toast.most': '🎯 Goal almost done! One more step is even better, or tap "End"',
+      'tk.zh.busy': 'Translating…', 'tk.zh.fail': '(Could not translate this time. Tap again to try.)', 'tk.st.help': '💡 The islander is thinking of a line you can copy…',
+      'tk.st.eval': 'Nice chat! Writing comments on it…',
+      'tk.toast.goal': '🎯 Chat goal with {name} done! ', 'tk.coins': { one: '+{n} coin', other: '+{n} coins' }, 'tk.why.def': 'The child talked about something sad or unsafe',
+      'tk.btn.reward': '🎁 Go back for your reward', 'tk.btn.retry': 'Try again', 'tk.btn.again': 'Chat again', 'tk.btn.back': 'Back',
+      'tk.gate.open': '🔓 Today\'s study tasks are done. Time for a Monster Adventure!',
+      'tk.e.daily.h': 'That\'s enough chat for today', 'tk.e.fail.h': '⚠️ Couldn\'t connect', 'tk.e.raw': '(For parents: {raw})', 'tk.e.quiet.h': 'You didn\'t say anything this time',
+      'tk.e.quiet.p': 'Hold the mic and speak English, and the islander will answer you.',
+      'tk.left': { one: '{n} minute of chat left today', other: '{n} minutes of chat left today' }, 'tk.time': { one: 'This chat: {n} second', other: 'This chat: {n} seconds' },
+      'tk.r.all': '🎯 Goal done! You did every step', 'tk.r.most': '🎯 Goal done! (One step missing still counts)', 'tk.r.speak': 'You need to speak for it to count',
+      'tk.r.near': 'Almost there! Next time, try to do all the small steps',
+      'tk.r.few': 'You spoke fewer than 3 English lines this time{typed}, so the goal does not count yet. Next time, hold the mic and talk!', 'tk.r.typed': ' (typed lines don\'t count)',
+      'tk.r.ai': '🤖 Comments made by AI (powered by Alibaba Cloud Qwen)', 'tk.r.noai': 'There was no time to write comments this time, but this chat still counts. It has been saved!',
+      'tk.r.tips': 'A better way to say it (you\'ll practise it in tomorrow\'s Daily review):',
+      'tk.r.coins': { one: '🪙 +{n} coin', other: '🪙 +{n} coins' }, 'tk.r.q.done': '📋 Request done! Go back to your adventure: {name} has a reward for you',
+      'tk.r.q.not': '📋 Request not done yet: do all the small steps, then try again',
+      'tk.r.late.h': 'Chat over! This chat counts 👍', 'tk.r.late.p': 'There was no time to finish the comments (maybe the network is slow), but the lines you said have been saved.',
+      'tk.r.concern': '💛 If something sad or unsafe is happening to you, tell a parent or a teacher right away.',
+      'tk.asr.say': '🎤 Speak now…', 'tk.asr.busy': '🎧 Recognising…',
+      'tk.cfg.why': 'Change the AI key', 'tk.cfg.key': 'Parent Settings: Alibaba Cloud Model Studio API key (kept only on this phone, used to chat with islanders)\nIf a key is already set, leave this empty to keep it; type clear to delete it',
+      'tk.cfg.ok': '✅ Connected to Alibaba Cloud. You can chat with the islanders now', 'tk.cfg.nokey': 'No key set yet',
+      'tk.cfg.url': 'Chat service address (for parents):\nfor example wss://your-server-domain ; to try it on this computer, use ws://localhost:8787\nLeave empty to go back to the default',
+      'tk.cfg.code': 'Family code (leave empty if the service has none):', 'tk.cfg.now': 'Chat service: {url}', 'tk.cfg.none': 'not set',
+      'tk.log.me': 'Me: ', 'tk.log.who': '{name}: ', 'tk.log.typed': ' (typed)', 'tk.log.voice': { one: ' · {n} line spoken', other: ' · {n} lines spoken' }, 'tk.log.none': 'No chats yet.',
+      'tk.log.p': 'The last 30 chats, kept only on this device.',
+      'tk.concern.p': 'If the child talks about feeling sad, being bullied, being scared or being in danger, that chat is marked (judged by AI plus a keyword check on this device, so there may be false alarms). The islander reminds the child to tell a parent or teacher right away.',
+      'tk.concern.seen': '✅ A parent has seen this', 'tk.concern.none': 'No chats need checking.',
+      'tk.pv.h': 'ℹ️ Notes for parents: AI chat',
+      'tk.pv.s1': '<li>The islanders\' words and voices, and speech scoring, are <b>made by artificial intelligence (AI)</b>, powered by <b>Alibaba Cloud Model Studio (Qwen)</b>. The top of the chat page always says "{l}", and each chat starts with a spoken notice.</li>',
+      'tk.pv.s2': '<li>During chats and speech scoring, the child\'s <b>voice and the recognised text</b> go straight from this phone to Alibaba Cloud, using <b>your own Alibaba Cloud account and key</b> (Alibaba Cloud bills you directly). The developer <b>never receives</b> this voice or text, and no server stores it.</li>',
+      'tk.pv.role': '<li>Islanders only play game characters and only talk about the game and everyday topics. They never ask for a real name, school, address or phone number. If the child seriously asks "Are you a real person?", the islander says it is <b>a game character made by a computer</b>.</li>',
+      'tk.pv.safe': '<li>If the child talks about feeling sad, being bullied, being scared or being in danger, the islander takes it seriously and reminds them to tell a parent or teacher right away. That chat is marked: in "👪 Parent check", enter the parent PIN to read all of it. The Weekly report shows a note too.</li>',
+      'tk.pv.s5': { one: '<li>The chat log and the small things islanders remember are <b>kept only on this phone</b> (the last 30 chats). Uninstalling the app deletes all of it. Chat time is at most {n} minute a day.</li>',
+        other: '<li>The chat log and the small things islanders remember are <b>kept only on this phone</b> (the last 30 chats). Uninstalling the app deletes all of it. Chat time is at most {n} minutes a day.</li>' },
+      'tk.pv.name': '<li>Please use a <b>game nickname</b> for the player, not a real name.</li>',
+      'tk.pv.w1': '<li>When the child chats with islanders or speaking questions are scored, the child\'s <b>voice and the recognised text</b> are sent to <b>Alibaba Cloud Model Studio (Qwen)</b> for speech recognition, chat and scoring. The Android app connects to Alibaba Cloud directly; the web version goes through the family\'s own relay service.</li>',
+      'tk.pv.w4': '<li>The chat log is kept on this phone (the last 30 chats). The web version\'s relay service also keeps a copy, which is <b>deleted automatically after 90 days</b>.</li>',
+      'tk.pv.w5': '<li>Islanders remember small things the child said in the game (for example, likes drawing, has a fire monster) and bring them up next time. This is <b>kept only on this phone</b>; real names, schools and addresses are never kept.</li>',
+      'tk.pv.doc': '📄 Children\'s privacy notice (full text)', 'tk.pv.forget': '🧹 Make the islanders forget past chats', 'tk.forgot': 'The islanders have forgotten past chats',
+    },
+  });
+
   // ---------- 聊天界面新加元素的样式（style.css 不归这个文件管，只补 .tk-* 的新东西） ----------
   (function css() {
     if (document.getElementById('tk-css')) return;
@@ -58,7 +193,7 @@
       '.tk-prog.ok{color:#1f8650}',
       '.tk-concern{border:2px solid #ffb74d;border-radius:12px;padding:8px 10px;margin:8px 0;background:#fff8ee;text-align:left}',
       '.tk-concern .why{color:#8a4b00;font-weight:700}',
-      '.tk-lr .typed::after{content:"（打字）";color:var(--ink-3,#7d93a3);font-size:12px}',
+      '.tk-lr .typed::after{content:attr(data-typed);color:var(--ink-3,#7d93a3);font-size:12px}',   // 「（打字）」按界面语言：turnsHTML 写在 data-typed 里
       '.tk-notice{text-align:left;font-size:14px;line-height:1.55}',
       '.tk-notice li{margin:4px 0}',
       '.tk-badge{display:inline-block;min-width:1.4em;margin-left:4px;border-radius:9px;background:#ff7043;color:#fff;font-size:12px;line-height:1.4em;text-align:center}',
@@ -119,13 +254,14 @@
   }
   function noteAi(where, text) { LASTERR = { why: errWhy(text), where, at: Date.now() }; return LASTERR.why; }
   // 给孩子看的出错说明：只说一句他听得懂的话。服务器 / 原生报的原文（HTTP 401、Unable to resolve host……）只给家长看（灰色小字 + 出错记录）
-  const ERR_ZH = { offline: '现在没网，连上网再来聊吧', auth: 'AI 密钥不对，请告诉家长', quota: 'AI 额度用完了，请告诉家长', busy: 'AI 有点忙，过一会儿再试',
-    code: '家庭口令不对，请告诉家长', network: '连不上 AI 聊天，过一会儿再试；一直不行就告诉家长' };
-  const kidErr = (why, raw) => (why === 'daily' || why === 'limit' ? String(raw || '今天的聊天时间用完了，明天再来吧！') : ERR_ZH[why] || ERR_ZH.network);
+  // 每种原因一句（字表 tk.err.*）。时间用完了也用字表里的那句（中转服务发来的是中文，和这句一字不差）
+  const ERR_WHY = ['offline', 'auth', 'quota', 'busy', 'code', 'network'];
+  const errTxt = why => (ERR_WHY.includes(why) ? tx('tk.err.' + why) : '');
+  const kidErr = why => (why === 'daily' || why === 'limit' ? tx('tk.err.daily') : errTxt(why) || errTxt('network'));
   // 原文记进出错记录（家长设置「🔧 出错记录」），'direct:'（APK 直连）这种内部地址不写
   function errRaw(raw) {
     raw = String(raw || '').replace(/\s*[（(]?direct:[）)]?/g, '').trim();
-    if (raw && window.EchoErr) EchoErr.log('ai', '聊天：' + raw, 'talk');
+    if (raw && window.EchoErr) EchoErr.log('ai', tx('tk.err.log', { raw }), 'talk');
     return raw;
   }
 
@@ -171,7 +307,7 @@
   }
   // 家长还没看过的、有安全标记的聊天有几段（周报提示一行用）
   function concerns() { if (!G || !G.S) return 0; return state().log.filter(r => r.concern && !r.seen).length; }
-  const progText = t => t.voiceLines >= NEED ? '🗣️ 今天已开口说 ' + t.voiceLines + ' 句 ✅' : '🗣️ 已开口说 ' + t.voiceLines + '/' + NEED + ' 句';
+  const progText = t => t.voiceLines >= NEED ? tx('tk.prog.done', { n: t.voiceLines }) : tx('tk.prog', { a: t.voiceLines, b: NEED });
   function progress() {
     const el = $('#tk-cnt'); if (!el) return;
     const t = today(); el.textContent = progText(t); el.classList.toggle('ok', t.voiceLines >= NEED);
@@ -182,26 +318,28 @@
     const esc = G.esc, T = state(), url = relayUrl(), core = Core(), t = today(), nc = concerns();
     const card = (n, now) => {
       const best = T.done[n.id], g = core.goalOf(n, core.goalIndex ? core.goalIndex(n, T.n[n.id] || 0, chatLv()) : T.n[n.id] || 0);
+      // 角色的中文名、话题和音色的中文是内容：英语界面只留英文名、英文话题，没有音色那一截
+      const nz = gloss({ zh: n.zh }), tz = gloss({ zh: n.topicZh }), vz = gloss({ zh: n.voiceZh });
       return '<button class="tk-card' + (now ? ' now' : '') + '" data-act="talk_open" data-npc="' + n.id + '">' +
         '<img src="' + face(n) + '" alt="">' +
-        '<span class="tk-t"><b>' + (n.unit ? '<em>Unit ' + n.unit + (now ? ' · 📍 正在学' : '') + '</em> ' : '') + esc(n.zh) + ' <small>' + esc(n.name) + '</small></b>' +
-        '<span>' + esc(n.topicZh) + ' · <i>' + esc(n.topic) + '</i></span>' +
-        '<small>🔊 ' + esc(n.voiceZh) + (best ? ' · ' + '★'.repeat(best) : '') + (g.lv ? ' · 🎯 下次：' + g.lv : '') + '</small></span><span class="tk-go">🎙️</span></button>';
+        '<span class="tk-t"><b>' + (n.unit ? '<em>Unit ' + n.unit + (now ? hx('tk.card.now') : '') + '</em> ' : '') + (nz != null ? esc(nz) + ' <small>' + esc(n.name) + '</small>' : esc(n.name)) + '</b>' +
+        '<span>' + (tz != null ? esc(tz) + ' · ' : '') + '<i>' + esc(n.topic) + '</i></span>' +
+        '<small>' + [vz != null ? '🔊 ' + esc(vz) : '', best ? '★'.repeat(best) : '', g.lv ? hx('tk.card.next', { lv: g.lv }) : ''].filter(Boolean).join(' · ') + '</small></span><span class="tk-go">🎙️</span></button>';
     };
     // 课本单元的聊天角色放前面，正在学的单元排第一个；后面是岛上的人
     // 只列正在学的这一册（别的册在闯关页每个单元上点「聊这个单元」）
     const cu = G.curUnit ? G.curUnit() : null, units = cu ? NPCS.list.filter(n => n.book === cu.book) : [], isle = NPCS.list.filter(n => !n.unit);
     const order = units.filter(n => n.unit === cu.n).concat(units.filter(n => n.unit !== cu.n));
-    const cards = (units.length ? '<h3 class="tk-h">📗 课本话题 · ' + esc(cu.bshort) + '</h3>' + order.map(n => card(n, n.unit === cu.n)).join('') + '<h3 class="tk-h">🏝️ 岛上的人</h3>' : '') +
+    const cards = (units.length ? '<h3 class="tk-h">' + hx('tk.h.book', { b: cu.bshort }) + '</h3>' + order.map(n => card(n, n.unit === cu.n)).join('') + '<h3 class="tk-h">' + hx('tk.h.isle') + '</h3>' : '') +
       isle.map(n => card(n, false)).join('');
     return '<section class="tk-home">' +
-      '<div class="tk-intro"><b>🗣️ 用英语和岛民聊天</b><p>按住话筒说英语，松开就发出去；岛民会用自己的声音回答你。每段聊天有一个小目标，拆成几个小步骤，做到一步就打一个勾，完成了有金币！听不懂就点「💡 帮帮我」或者点岛民的话看中文。</p>' +
-      '<p class="tk-prog' + (t.done ? ' ok' : '') + '">' + progText(t) + (t.done ? ' · 今天的聊天任务完成了' : ' · 用语音说满 ' + NEED + ' 句英语，或者完成一个小目标') + '</p>' +
-      '<p class="tk-ai-line">🤖 岛民的话和声音由 AI 生成（阿里云通义千问提供）</p></div>' +
-      (url ? '' : '<div class="tk-warn">还没连上对话服务。请家长点下面的「设置服务」。</div>') +
+      '<div class="tk-intro"><b>' + hx('tk.intro.h') + '</b><p>' + hx('tk.intro.p') + '</p>' +
+      '<p class="tk-prog' + (t.done ? ' ok' : '') + '">' + esc(progText(t)) + (t.done ? hx('tk.prog.ok') : hx('tk.prog.need', { n: NEED })) + '</p>' +
+      '<p class="tk-ai-line">' + hx('tk.ai.line') + '</p></div>' +
+      (url ? '' : '<div class="tk-warn">' + hx('tk.warn') + '</div>') +
       '<div class="tk-list">' + cards + '</div>' +
-      '<div class="tk-foot"><button class="btn ghost" data-act="talk_log">📜 聊天记录</button><button class="btn ghost" data-act="talk_cfg">⚙️ 设置服务</button></div>' +
-      '<div class="tk-foot"><button class="btn ghost small" data-act="talk_privacy">ℹ️ 家长须知</button><button class="btn ghost small" data-act="talk_concerns">👪 家长看看' + (nc ? '<span class="tk-badge">' + nc + '</span>' : '') + '</button></div>' +
+      '<div class="tk-foot"><button class="btn ghost" data-act="talk_log">' + hx('tk.foot.log') + '</button><button class="btn ghost" data-act="talk_cfg">' + hx('tk.foot.cfg') + '</button></div>' +
+      '<div class="tk-foot"><button class="btn ghost small" data-act="talk_privacy">' + hx('g.set.saf.info') + '</button><button class="btn ghost small" data-act="talk_concerns">' + hx('tk.concern.btn') + (nc ? '<span class="tk-badge">' + nc + '</span>' : '') + '</button></div>' +
       '</section>';
   }
 
@@ -269,25 +407,26 @@
 
   // ---------- AI 标识（《人工智能生成合成内容标识办法》，2025-09-01 起）：聊天页顶上一直写着，开头再用语音说一句 ----------
   // 语音提示是打包进去的中文配音 assets/voice/zh/ai-notice.ogg（Opus；本机 Kokoro，Apache-2.0，声音 zf_xiaobei；
-  // 合成的就是 AI_SPOKEN 这句话，speed 1.1；Whisper 听写核对过），放在聊天自己的声音通道里，岛民的第一句排在它后面；读不到文件就用阿里云现场合成（中文）
-  const AI_LABEL = 'AI 生成 · 由阿里云通义千问提供';
-  const AI_SPOKEN = '温馨提示：岛民说的话和声音，都由人工智能生成。';
-  const NOTICE_URL = 'assets/voice/zh/ai-notice.ogg';
+  // 合成的就是字表 tk.ai.spoken 的中文，speed 1.1；Whisper 听写核对过），放在聊天自己的声音通道里，岛民的第一句排在它后面；读不到文件就用阿里云现场合成。
+  // 别的界面语言还没有打包的配音：用阿里云现场合成那门语言的那句（这次打开游戏只合成一次）
+  const aiLabel = () => tx('g.sr.aimark');   // 「AI 生成 · 由阿里云通义千问提供」（game.js 的字表，和口语点评的 AI 标记同一句）
+  const NOTICE_URL = { zh: 'assets/voice/zh/ai-notice.ogg' };
   const OGG_OK = (() => { try { return !!new Audio().canPlayType('audio/ogg; codecs="opus"'); } catch (e) { return false; } })();   // 老 iOS Safari 解不了 Opus：当没有打包的提示，走下面的阿里云合成
-  let noticeBuf = null;
+  const noticeBuf = {};   // 界面语言 → 解好的声音
   async function noticeBuffer(ctx) {
-    if (noticeBuf) return noticeBuf;
+    const l = zhUi() ? 'zh' : I18N.lang();
+    if (noticeBuf[l]) return noticeBuf[l];
     let ab = null;
-    try { if (OGG_OK && location.protocol !== 'file:') { const r = await fetch(NOTICE_URL); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
-    if (!ab) {   // 没有打包的配音（网页版没带上）：阿里云合成一句中文
-      try { const u = await cloudTTS(AI_SPOKEN, 'f', 'Chinese'); if (u) { const r = await fetch(u); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
+    try { if (NOTICE_URL[l] && OGG_OK && location.protocol !== 'file:') { const r = await fetch(NOTICE_URL[l]); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
+    if (!ab) {   // 没有打包的配音（网页版没带上 / 别的界面语言）：阿里云合成这一句
+      try { const u = await cloudTTS(tx('tk.ai.spoken'), 'f', l === 'zh' ? 'Chinese' : 'English'); if (u) { const r = await fetch(u); if (r.ok) ab = await r.arrayBuffer(); } } catch (e) { ab = null; }
     }
     if (!ab) return null;
-    try { noticeBuf = await new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); } catch (e) { noticeBuf = null; }
-    return noticeBuf;
+    try { noticeBuf[l] = await new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); } catch (e) { noticeBuf[l] = null; }
+    return noticeBuf[l];
   }
   function aiNotice(c) {
-    bubble('sys', '🤖 ' + AI_SPOKEN + '（' + AI_LABEL + '）');
+    bubble('sys', tx('tk.ai.bubble', { s: tx('tk.ai.spoken'), l: aiLabel() }));
     countLog('aiNotice');
     try { if (!OUT.ctx) OUT.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
     const ctx = OUT.ctx, q = OUT.hold = [];
@@ -361,14 +500,14 @@
   const firstFree = c => () => c.pend.find(x => !x._item) || null;
   function dropPend(c, b) { c.pend = c.pend.filter(x => x !== b); }
   function status(t) { const s = $('#tk-status'); if (s) s.textContent = t; }
-  const readyText = () => MIC.ctx ? '按住话筒说英语，说完松开。点岛民说的话可以看中文。' : '打字聊天：写好按「发送」。';
+  const readyText = () => tx(MIC.ctx ? 'tk.ready.mic' : 'tk.ready.type');
 
   // 大地图上随便一个人：把名字、身份、所在的岛、他说过的话交给中转服务，由服务器拼出人设（安全规则服务器自己加）
+  // top：聊天界面顶上那一行（已经按界面语言拼好）；目标、步骤用 talk-core 的 personNpc（和服务器拼的一样）
   function openPerson(d) {
     const npc = {
       id: 'dyn', name: d.name, zh: d.name, lookObj: d.lookObj, voiceZh: '',
-      topicZh: '自由聊天 · ' + (d.islandZh || ''), topic: 'Free chat',
-      goalZh: '和 ' + d.name + ' 用英语随便聊聊：打个招呼，问 TA 一个问题，也回答 TA 的问题。',
+      top: tx('tk.top.free', { isle: lbl({ zh: d.islandZh || '', en: d.island || '' }) }), topic: 'Free chat',
       words: (d.words || []).slice(0, 6), desc: d,
     };
     return open(npc);
@@ -381,7 +520,7 @@
     if (!q) return;
     return open({
       id: 'dyn', quest: q.id, name: q.who, zh: q.who, lookObj: look, voiceZh: '',
-      topicZh: '📋 委托 · ' + q.zh, topic: q.en, goalZh: q.goalZh,
+      top: tx('tk.top.quest', { q: lbl(q) }), topic: q.en, goalZh: q.goalZh,
       words: q.words.map(w => w[0]), wordsZh: q.words.map(w => w[1]), onResult,
     });
   }
@@ -393,8 +532,8 @@
   // 现在能不能开聊（大地图上的委托先问一下）：能聊返回 ''；肯定聊不了就返回给孩子看的一句话（和聊天界面里连不上时说的一样）：
   // 没开通、手机说没网、今天的聊天时间用完了。密钥不对 / 额度用完由 game.js 的 chatKeyBad 判断，那一句用 errText('auth' / 'quota') 取
   function blocked() {
-    if (!relayUrl()) return 'AI 聊天还没开通，请告诉家长';
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) return ERR_ZH.offline;
+    if (!relayUrl()) return tx('w.q.noai');   // world.js 的字表：「AI 聊天还没开通，请告诉家长」
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return errTxt('offline');
     try { if (G && G.S && (G.dayLog().chatDaily || (direct() && DAILY_SEC - usage() < 20))) return kidErr('daily'); } catch (e) { /* 读不到就让他试 */ }
     return '';
   }
@@ -408,31 +547,35 @@
     const esc = G.esc, core = Core(), T = state();
     // 地图上的人：目标、步骤按 talk-core 的临时人设（和服务器拼的一样）；委托按 quests.js 里那一条
     const base = npc.quest ? core.questNpc(QUESTS.byId[npc.quest]) : npc.desc ? core.personNpc(npc.desc) : npc, mk = memKey(npc), lvl = chatLv(), goal = core.goalOf(base, core.goalIndex ? core.goalIndex(base, T.n[mk] || 0, lvl) : T.n[mk] || 0);   // lvl：按能力走时岛民按第几级说话、挑哪个目标（没有 = null，照旧）
-    const goalZh = goal.goalZh || npc.goalZh || '', zh = npc.wordsZh || [], mem = T.mem[mk] || null;
+    // 目标：中文界面用中文的目标；别的界面语言用英文的（委托、岛民、地图上的人都有英文的 goal）
+    const goalTx = lbl({ zh: goal.goalZh || npc.goalZh || '', en: goal.goal || npc.goal || '' }), zh = npc.wordsZh || [], mem = T.mem[mk] || null;
+    // 顶上：中文名 · 英文名（英语界面只有英文名）、话题（地图上的人 / 委托是拼好的 top）
+    const nz = npc.zh === npc.name ? null : gloss({ zh: npc.zh }), top = npc.top != null ? npc.top : lbl({ zh: npc.topicZh, en: npc.topic });
     const ov = document.createElement('div');
     ov.id = 'tk-ov'; ov.className = 'tk-ov';
     ov.innerHTML = '<div class="tk-box">' +
-      '<div class="tk-head"><img id="tk-face" src="' + face(npc) + '" alt=""><div><b>' + (npc.zh === npc.name ? esc(npc.name) : esc(npc.zh) + ' · ' + esc(npc.name)) + '</b><small>' + esc(npc.topicZh) + '</small>' +
-      '<span class="tk-ai" id="tk-ai" title="岛民的话和声音由人工智能生成">' + AI_LABEL + '</span><span class="tk-cnt" id="tk-cnt"></span></div>' +
-      '<button class="tk-x" data-act="talk_end" aria-label="结束">结束</button></div>' +
-      '<div class="tk-goal"><div class="tk-gt">🎯 ' + (goal.lv ? '<em class="tk-lv">' + goal.lv + '</em> ' : '') + esc(goalZh) + '</div>' +
-      (goal.steps.length ? '<ol class="tk-steps" id="tk-steps">' + goal.steps.map((s, k) => '<li data-act="talk_step" data-i="' + k + '"><i>☐</i><span>' + esc(s.zh) + '</span>' + (s.en ? '<small hidden>例：' + esc(s.en) + '</small>' : '') + '</li>').join('') + '</ol>' : '') +
-      '<div class="tk-words">' + npc.words.map((w, k) => '<button type="button" class="tk-w" data-act="talk_word" data-i="' + k + '">' + esc(w) + (zh[k] ? '<small>' + esc(zh[k]) + '</small>' : '') + '</button>').join('') + '</div></div>' +
+      '<div class="tk-head"><img id="tk-face" src="' + face(npc) + '" alt=""><div><b>' + (nz == null ? esc(npc.name) : esc(nz) + ' · ' + esc(npc.name)) + '</b><small>' + esc(top) + '</small>' +
+      '<span class="tk-ai" id="tk-ai" title="' + hx('tk.ai.title') + '">' + esc(aiLabel()) + '</span><span class="tk-cnt" id="tk-cnt"></span></div>' +
+      '<button class="tk-x" data-act="talk_end" aria-label="' + hx('tk.end') + '">' + hx('tk.end') + '</button></div>' +
+      '<div class="tk-goal"><div class="tk-gt">🎯 ' + (goal.lv ? '<em class="tk-lv">' + esc(goal.lv) + '</em> ' : '') + esc(goalTx) + '</div>' +
+      (goal.steps.length ? '<ol class="tk-steps" id="tk-steps">' + goal.steps.map((s, k) => '<li data-act="talk_step" data-i="' + k + '"><i>☐</i><span>' + esc(stepTxt(s, k)) + '</span>' + (s.en ? '<small hidden>' + hx('tk.eg', { s: s.en }) + '</small>' : '') + '</li>').join('') + '</ol>' : '') +
+      '<div class="tk-words">' + npc.words.map((w, k) => '<button type="button" class="tk-w" data-act="talk_word" data-i="' + k + '">' + esc(w) + (gloss({ zh: zh[k] }) ? '<small>' + esc(zh[k]) + '</small>' : '') + '</button>').join('') + '</div></div>' +
       '<div class="tk-log" id="tk-log"></div>' +
-      '<div class="tk-status" id="tk-status">正在连接……</div>' +
-      '<div class="tk-ctl"><div class="tk-tools"><button type="button" id="tk-help" data-act="talk_help" disabled>💡 帮帮我</button><button type="button" id="tk-re" data-act="talk_replay" disabled>🔁 再听一遍</button><button type="button" id="tk-slow" data-act="talk_replay" data-slow="1" disabled>🐢 慢一点</button></div>' +
-      '<button class="tk-mic" id="tk-mic" disabled>🎤 按住说英语</button>' +
-      '<button type="button" class="tk-typeopen" id="tk-typeopen" data-act="talk_typeopen" hidden>⌨️ 麦克风用不了？点这里打字</button>' +
-      '<form class="tk-type" id="tk-type" hidden><input id="tk-in" maxlength="200" autocomplete="off" placeholder="打字聊天（英文）"><button class="btn">发送</button></form>' +
-      '<small class="tk-typenote" id="tk-typenote" hidden>打字的话不算「开口说」的句数，也不给金币</small></div></div>';
+      '<div class="tk-status" id="tk-status">' + hx('tk.st.conn') + '</div>' +
+      '<div class="tk-ctl"><div class="tk-tools"><button type="button" id="tk-help" data-act="talk_help" disabled>' + hx('tk.help') + '</button><button type="button" id="tk-re" data-act="talk_replay" disabled>' + hx('tk.replay') + '</button><button type="button" id="tk-slow" data-act="talk_replay" data-slow="1" disabled>' + hx('tk.slow') + '</button></div>' +
+      '<button class="tk-mic" id="tk-mic" disabled>' + hx('tk.mic') + '</button>' +
+      '<button type="button" class="tk-typeopen" id="tk-typeopen" data-act="talk_typeopen" hidden>' + hx('tk.typeopen') + '</button>' +
+      '<form class="tk-type" id="tk-type" hidden><input id="tk-in" maxlength="200" autocomplete="off" placeholder="' + hx('tk.type.ph') + '"><button class="btn">' + hx('tk.send') + '</button></form>' +
+      '<small class="tk-typenote" id="tk-typenote" hidden>' + hx('tk.typenote') + '</small></div></div>';
     document.body.appendChild(ov);
     LAST = npc;
-    C = { npc, base, mk, goal, level: lvl, ws: null, bubble: null, holding: false, ready: false, ending: false, done: false, t0: Date.now(), turns: [], pend: [], live: null, ticks: goal.steps.map(() => false) };
+    // ui：这段聊天的界面语言（发给 AI：评语、打勾按它；「更好的说法」的解释是不是中文）
+    C = { npc, base, mk, goal, level: lvl, ui: uiNow(), ws: null, bubble: null, holding: false, ready: false, ending: false, done: false, t0: Date.now(), turns: [], pend: [], live: null, ticks: goal.steps.map(() => false) };
     if (window.EchoMusic) EchoMusic.hold(true);   // 聊天时麦克风一直开着：背景音乐静音
     const c = C;
     progress();
     OUT.last = null; OUT.cur = [];
-    aiNotice(c);   // AI 标识：开头先用中文说一句「岛民说的话和声音都由人工智能生成」（岛民的声音排在它后面）
+    aiNotice(c);   // AI 标识：开头先用界面语言说一句「岛民说的话和声音都由人工智能生成」（岛民的声音排在它后面）
 
     // 麦克风：先要权限；要不到就只能打字（打字框直接打开）
     let micOk = false;
@@ -440,11 +583,11 @@
     if (c !== C) return;
     if (micOk) $('#tk-typeopen').hidden = false;
     else {
-      typeOpen(false); status('用不了麦克风（没给权限或不支持），可以先打字聊。');
+      typeOpen(false); status(tx('tk.st.nomic'));
       // 安卓原生桥有「打开本应用的设置」时，给一个去打开麦克风权限的按钮
       try {
         if (window.EchoNative && typeof EchoNative.openAppSettings === 'function') {
-          const n = $('#tk-typenote'); if (n) n.insertAdjacentHTML('afterend', '<button type="button" class="tk-typeopen" data-act="talk_micfix">🎤 去设置里打开麦克风</button>');
+          const n = $('#tk-typenote'); if (n) n.insertAdjacentHTML('afterend', '<button type="button" class="tk-typeopen" data-act="talk_micfix">' + hx('tk.micfix') + '</button>');
         }
       } catch (e) {}
     }
@@ -452,12 +595,15 @@
     const q = new URLSearchParams({ npc: npc.id, dev: devId(), name: (G.S.player && G.S.player.name) || '', g: String(goal.i) });
     if (npc.desc) { const d = npc.desc; q.set('p', b64(JSON.stringify({ name: d.name, g: d.g, kid: !!d.kid, role: d.role, island: d.island, place: d.place, lines: d.lines, words: d.words }))); }
     if (npc.quest) q.set('quest', npc.quest);   // 委托：只发 id
-    if (lvl != null) { q.set('lv', String(lvl)); q.set('ui', uiNow()); }   // 能力级别和界面语言：中转服务只认 0–5 和认得的语言代码，那一段「怎么说话」在服务器上拼
+    // 能力级别和界面语言：中转服务只认 0–5 和认得的语言代码，那一段「怎么说话」在服务器上拼。
+    // 界面不是中文时不管有没有级别都发 ui（别把他说成中国学生、评语按界面语言写）；中文界面、按课本走的照旧不发
+    if (lvl != null) q.set('lv', String(lvl));
+    if (lvl != null || c.ui !== 'zh') q.set('ui', c.ui);
     if (mem) q.set('m', b64(JSON.stringify({ facts: mem.facts || [], better: mem.better || '' })));
     const code = LS('echo-talk-code'); if (code) q.set('code', code);
     let ws;
-    if (url === 'direct:') ws = directSocket(npc, (G.S.player && G.S.player.name) || '', goal.i, mem, lvl, uiNow());
-    else try { ws = new WebSocket(url + '/talk?' + q); } catch (e) { status('服务地址不对：' + url); return; }
+    if (url === 'direct:') ws = directSocket(npc, (G.S.player && G.S.player.name) || '', goal.i, mem, lvl, c.ui);
+    else try { ws = new WebSocket(url + '/talk?' + q); } catch (e) { status(tx('tk.st.badurl', { url })); return; }
     c.ws = ws;
     ws.onmessage = e => {
       let m; try { m = JSON.parse(e.data); } catch (er) { return; }
@@ -468,7 +614,7 @@
         // 今天聊天连上过（学习锁据此判断「Wi-Fi 连着但上不了网」：连上过就不算没网）
         { const L = G.dayLog(); if (!L.chatConn) { L.chatConn = 1; G.save(); } }
         if (LASTERR && LASTERR.where === 'chat') LASTERR = null;   // 这次连上了：以前「聊天连不上」的原因（密钥 / 额度 / 没网）作废，委托和学习锁不再拿它说事
-        status(micOk ? readyText() : '打字聊天：写好按「发送」。');
+        status(micOk ? readyText() : tx('tk.ready.type'));
         const mic = $('#tk-mic'); if (mic && micOk) mic.disabled = false;
         const h = $('#tk-help'); if (h) h.disabled = false;
       } else if (m.type === 'usage') addUse(m);
@@ -479,8 +625,8 @@
         if (c.bubble) { c.bubble.textContent += m.delta; stick(); }
       } else if (m.type === 'npc_done') {
         c.responding = false; if (m.text) c.turns.push({ who: 'npc', text: m.text });
-        // 说完的话可以点一下看中文
-        if (c.bubble && m.text) { c.bubble._text = m.text; c.bubble.dataset.act = 'talk_zh'; c.bubble.classList.add('tap'); c.bubble.title = '点一下看中文'; }
+        // 说完的话可以点一下看中文（只有中文界面：英语界面就是在学这门语言，不翻译）
+        if (c.bubble && m.text) { c.bubble._text = m.text; if (zhUi()) { c.bubble.dataset.act = 'talk_zh'; c.bubble.classList.add('tap'); c.bubble.title = tx('tk.zh.tap'); } }
         c.bubble = null;
         keepLast();
         if (OUT.last) ['#tk-re', '#tk-slow'].forEach(s => { const b = $(s); if (b) b.disabled = false; });
@@ -508,7 +654,7 @@
         if (c.ready && (m.code === 'upstream' || m.code === 'closed')) c.upErr = true;   // 连上以后服务器出错 / 断开
         c.errWhy = noteErr(c, m);
         if (c.errWhy !== 'daily') errRaw(m.zh);
-        status('⚠️ ' + kidErr(c.errWhy, m.zh)); if (m.code === 'code') setTimeout(configure, 600);
+        status('⚠️ ' + kidErr(c.errWhy)); if (m.code === 'code') setTimeout(configure, 600);
       }
       else if (m.type === 'eval') { clearTimeout(c.evalTimer); finishWith(c, m.eval, m.sec, m.left, 'eval'); }
     };
@@ -516,7 +662,7 @@
       if (c !== C || c.ending || c.ready) return;
       // 直连（APK）的原因在 LASTERR 里（原生回的 HTTP 401 / 找不到服务器……）；中转服务没开时只知道「连不上」
       const le = LASTERR && Date.now() - LASTERR.at < 3000 ? LASTERR.why : '', why = noteErr(c, { code: 'net', zh: '', why: le });
-      if (!le) errRaw(/^direct:/.test(url) ? '' : '连不上对话服务 ' + url);
+      if (!le) errRaw(/^direct:/.test(url) ? '' : tx('tk.err.conn', { url }));
       c.errWhy = c.errWhy || why;
       status('⚠️ ' + kidErr(why));
     };
@@ -537,19 +683,19 @@
       if (MIC.ctx && MIC.ctx.state === 'suspended') MIC.ctx.resume();
       if (OUT.ctx && OUT.ctx.state === 'suspended') OUT.ctx.resume();
       MIC.buf = []; MIC.len = 0; MIC.on = true; c.pressAt = Date.now();
-      mic.classList.add('on'); mic.textContent = '🔴 正在听……松开发送';
+      mic.classList.add('on'); mic.textContent = tx('tk.mic.on');
       // 一按下就出现自己的气泡，说的话边说边冒出来
       c.live = bubble('you wait', '🎤 …'); c.pend.push(c.live);
     };
     const up = () => {
       if (!c.holding) return;
       c.holding = false; MIC.on = false; flushMic();
-      mic.classList.remove('on'); mic.textContent = '🎤 按住说英语';
+      mic.classList.remove('on'); mic.textContent = tx('tk.mic');
       const b = c.live; c.live = null;
-      if (Date.now() - c.pressAt < 400) { wsSend({ type: 'commit' }); if (b) { b.remove(); dropPend(c, b); } status('按住久一点再说哦。'); return; }
+      if (Date.now() - c.pressAt < 400) { wsSend({ type: 'commit' }); if (b) { b.remove(); dropPend(c, b); } status(tx('tk.st.short')); return; }
       wsSend({ type: 'commit' });
       if (b && !b._has) b.textContent = '……';
-      status('岛民在想……');
+      status(tx('tk.st.think'));
     };
     mic.addEventListener('pointerdown', down);
     mic.addEventListener('contextmenu', e => e.preventDefault());   // 安卓长按会弹菜单 / 选字，按住说话时不要
@@ -565,14 +711,14 @@
       e.preventDefault();
       if (c.ending || c.done) return;
       const inp = $('#tk-in'), t = inp.value.replace(/\s+/g, ' ').trim(); if (!t) return;
-      if (!c.ws || c.ws.readyState !== 1) { status('还没连上，等一下再发。'); return; }
+      if (!c.ws || c.ws.readyState !== 1) { status(tx('tk.st.notyet')); return; }
       if (npcSpeaking()) { stopPlayback(); stopReplay(); }
       if (c.responding) { wsSend({ type: 'cancel' }); c.responding = false; }
       // 打字的标上 typed：不算开口句数、不给金币、不开锁（规则在 talk-core 的 judge）
       wsSend({ type: 'text', text: t }); bubble('you typed', t); c.turns.push({ who: 'you', text: t, typed: true }); inp.value = '';
       countLog('typedLines');
       checkSteps(c);
-      status('岛民在想……');
+      status(tx('tk.st.think'));
     });
   }
   // 打开打字框（麦克风能用时要点「麦克风用不了？点这里打字」才出来）
@@ -603,7 +749,7 @@
     G.save();
     progress();
     if (before < NEED && before + 1 >= NEED) {
-      G.toast('🎉 今天的聊天任务完成了！（已开口说 ' + NEED + ' 句英语）');
+      G.toast(tx('tk.toast.done', { n: NEED }));
       if (G.renderTop) G.renderTop();
     }
     return true;
@@ -624,14 +770,14 @@
     const core = Core(), turns = c.turns.slice(-30), n = c.goal.steps.length;
     try {
       if (direct()) {
-        const body = core.stepsBody(c.base, c.goal.i, turns); if (!body) return [];
+        const body = core.stepsBody(c.base, c.goal.i, turns, c.ui); if (!body) return [];
         const r = await nativePost(core.EVAL_URL, JSON.stringify(body), 12000);
         if (!r.ok) { noteAi('steps', r.text); return []; }
         const j = JSON.parse(r.text); textUse(j);
         return core.parseSteps(j, n);
       }
       if (relayHttp()) {
-        const r = await relayPost('/steps', { npc: c.npc.id, nm: c.npc.id === 'dyn' ? c.npc.name : undefined, q: c.npc.quest || undefined, g: c.goal.i, turns: turns.map(t => ({ who: t.who, text: t.text, typed: !!t.typed })) }, 12000);
+        const r = await relayPost('/steps', { npc: c.npc.id, nm: c.npc.id === 'dyn' ? c.npc.name : undefined, q: c.npc.quest || undefined, g: c.goal.i, ui: c.ui !== 'zh' ? c.ui : undefined, turns: turns.map(t => ({ who: t.who, text: t.text, typed: !!t.typed })) }, 12000);
         if (!r.ok) { noteAi('steps', 'HTTP ' + r.status + ' ' + r.text); return []; }
         return (JSON.parse(r.text).done || []).map(x => x | 0).filter(x => x >= 0 && x < n);
       }
@@ -647,7 +793,7 @@
       const before = c.ticks.filter(Boolean).length;
       idx.forEach(k => { if (!c.ticks[k]) { c.ticks[k] = true; tick(k); } });
       const n = c.goal.steps.length, need = n <= 2 ? n : n - 1, now = c.ticks.filter(Boolean).length;
-      if (c === C && !c.ending && before < need && now >= need) G.toast(now === n ? '🎯 小步骤全做到了！和 TA 说再见，再点「结束」' : '🎯 小目标差不多完成了！再做一步更好，也可以点「结束」');
+      if (c === C && !c.ending && before < need && now >= need) G.toast(tx(now === n ? 'tk.toast.all' : 'tk.toast.most'));
       if (c.stepAgain) { c.stepAgain = false; checkSteps(c); }
     });
   }
@@ -675,15 +821,15 @@
     return zh;
   }
   async function showZh(b) {
-    if (!b || !b._text || b._busy) return;
+    if (!b || !b._text || b._busy || !zhUi()) return;   // 只翻成中文：别的界面语言不出这个
     let z = b.querySelector('.tk-zh');
     if (z && !z._fail) { z.hidden = !z.hidden; stick(); return; }
     if (z) z.remove();
-    z = document.createElement('small'); z.className = 'tk-zh'; z.textContent = '翻译中……'; b.appendChild(z); b._busy = true;
+    z = document.createElement('small'); z.className = 'tk-zh'; z.textContent = tx('tk.zh.busy'); b.appendChild(z); b._busy = true;
     const zh = await translate(b._text);
     b._busy = false;
     if (zh) { z.textContent = zh; countLog('chatZh'); }
-    else { z.textContent = '（这次没翻译出来，再点一下试试）'; z._fail = true; }
+    else { z.textContent = tx('tk.zh.fail'); z._fail = true; }
     stick();
   }
 
@@ -697,7 +843,7 @@
     if (c.responding) { wsSend({ type: 'cancel' }); c.responding = false; }
     wsSend({ type: 'help' });
     countLog('chatHelp');
-    status('💡 岛民在想一句你可以照着说的话……');
+    status(tx('tk.st.help'));
   }
 
   // ---------- 结束：返回键、切后台、点「结束」都走这里（结束并评价） ----------
@@ -709,7 +855,7 @@
     stopPlayback(); stopReplay(); MIC.on = false; c.holding = false;
     ['#tk-mic', '#tk-help', '#tk-re', '#tk-slow'].forEach(s => { const b = $(s); if (b) b.disabled = true; });
     if (c.ws && c.ws.readyState === 1) {
-      status('聊得不错！正在给这段对话写评语……');
+      status(tx('tk.st.eval'));
       wsSend({ type: 'end', steps: c.ticks });
       // 老师太慢：先把这段存下来、照样算（晚到的评价还会补上）
       c.evalTimer = setTimeout(() => { if (!c.done) finishWith(c, null, null, null, 'timeout'); }, CFG.evalWait);
@@ -758,7 +904,7 @@
     const first = !c.rec, r = settle(c, raw, sec, how);
     c.done = c.ended = true;
     if (c !== C) {   // 聊天界面已经关了：在后台存好，弹一句
-      if (r.newGoal) G.toast('🎯 和 ' + c.npc.name + ' 的聊天目标完成了！' + (r.coins ? '+' + r.coins + ' 金币' : ''));
+      if (r.newGoal) G.toast(tx('tk.toast.goal', { name: c.npc.name }) + (r.coins ? tx('tk.coins', { n: r.coins }) : ''));
       try { c.ws && c.ws.close(); } catch (e) {}
       if (G.renderHome && !$('#home').hidden) G.renderHome();
       result(c);
@@ -785,7 +931,7 @@
     if (ev) { rec.eval = ev; delete rec.late; if (!ev.ai) rec.late = how; }
     // 安全标记：模型说的，或者本机查到的
     if (((ev && ev.concern) || core.worried(c.turns)) && !rec.concern) {
-      rec.concern = 1; rec.why = (ev && ev.concernWhy) || '孩子说到了难过或不安全的事';
+      rec.concern = 1; rec.why = (ev && ev.concernWhy) || '';   // 模型没说是哪句（本机查到的）：空着，显示时用字表那句（whyOf）
       L.concern = (L.concern || 0) + 1;
     }
     if (ev && ev.done && !rec.goal) {
@@ -797,8 +943,9 @@
     if (ev && npc.id !== 'dyn') T.done[npc.id] = Math.max(T.done[npc.id] || 0, ev.stars);
     if (ev && ev.ai && !rec.taught) {
       rec.taught = 1;
-      // 老师给的「更好的说法」进每日复习（第三个参数是孩子的原话，复习时可以显示「你原来说的」）
-      if (G.revAddFree) ev.tips.forEach(t => G.revAddFree(t.better, t.zh, t.said));
+      // 老师给的「更好的说法」进每日复习（第三个参数是孩子的原话，复习时可以显示「你原来说的」）。
+      // 第二个参数存成这句的中文意思：评语是按别的界面语言写的，解释就不是中文，不存
+      if (G.revAddFree) ev.tips.forEach(t => G.revAddFree(t.better, c.ui === 'zh' ? t.zh : '', t.said));
       remember(c.mk, ev);
     }
     // 连上过、服务器真出错，又没拿到老师的评价：今天的聊天这一项免了（没网、一开始就没连上的不算）
@@ -834,45 +981,47 @@
   function evalBtns(c) {
     // 大地图上的委托：完成了回去领奖励；没完成可以马上再试一次，也可以以后再说（委托一直留着）
     if (c.npc.quest) {
-      return c.rec && c.rec.goal ? '<div class="tk-btns"><button class="btn" data-act="talk_close">🎁 回去领奖励</button></div>'
-        : '<div class="tk-btns"><button class="btn" data-act="talk_again" data-npc="dyn">再试一次</button><button class="btn ghost" data-act="talk_close">以后再说</button></div>';
+      return c.rec && c.rec.goal ? '<div class="tk-btns"><button class="btn" data-act="talk_close">' + hx('tk.btn.reward') + '</button></div>'
+        : '<div class="tk-btns"><button class="btn" data-act="talk_again" data-npc="dyn">' + hx('tk.btn.retry') + '</button><button class="btn ghost" data-act="talk_close">' + hx('w.q.later') + '</button></div>';
     }
-    return '<div class="tk-btns"><button class="btn" data-act="talk_again" data-npc="' + c.npc.id + '">再聊一次</button><button class="btn ghost" data-act="talk_close">返回</button></div>';
+    return '<div class="tk-btns"><button class="btn" data-act="talk_again" data-npc="' + c.npc.id + '">' + hx('tk.btn.again') + '</button><button class="btn ghost" data-act="talk_close">' + hx('tk.btn.back') + '</button></div>';
   }
-  function gateLine() { try { return G.gate && G.gate().on && G.gate().open ? '<p class="tk-coin">🔓 今天的学习任务完成了，可以去怪兽冒险！</p>' : ''; } catch (e) { return ''; } }
-  function progLine() { const t = today(); return '<p class="tk-prog' + (t.voiceLines >= NEED ? ' ok' : '') + '">' + progText(t) + '</p>'; }
+  function gateLine() { try { return G.gate && G.gate().on && G.gate().open ? '<p class="tk-coin">' + hx('tk.gate.open') + '</p>' : ''; } catch (e) { return ''; } }
+  function progLine() { const t = today(); return '<p class="tk-prog' + (t.voiceLines >= NEED ? ' ok' : '') + '">' + G.esc(progText(t)) + '</p>'; }
   // 一句都没说就结束了（连不上 / 时间到）
   function showEmpty(c, left) {
     const esc = G.esc, box = $('#tk-ov .tk-box'); if (!box) return;
     const why = c.err ? c.errWhy || errWhy(c.err) : '', raw = c.err ? String(c.err).replace(/\s*[（(]?direct:[）)]?/g, '').trim() : '';
     box.innerHTML = '<div class="tk-eval"><img src="' + face(c.npc) + '" alt="">' +
-      (why === 'daily' ? '<b>今天聊够啦</b><p>' + esc(kidErr(why, c.err)) + '</p>'
-        : c.err ? '<b>⚠️ 没连上</b><p>' + esc(kidErr(why)) + '</p>' + (raw && raw !== kidErr(why) ? '<p class="tk-raw">（给家长看：' + esc(raw) + '）</p>' : '')
-        : '<b>这次没说话哦</b><p>按住话筒说英语，岛民就会回答你。</p>') +
-      progLine() + (left != null ? '<p class="tk-time">今天还能聊 ' + Math.floor(left / 60) + ' 分钟</p>' : '') + evalBtns(c) + '</div>';
+      (why === 'daily' ? '<b>' + hx('tk.e.daily.h') + '</b><p>' + esc(kidErr(why)) + '</p>'
+        : c.err ? '<b>' + hx('tk.e.fail.h') + '</b><p>' + esc(kidErr(why)) + '</p>' + (raw && raw !== kidErr(why) ? '<p class="tk-raw">' + hx('tk.e.raw', { raw }) + '</p>' : '')
+        : '<b>' + hx('tk.e.quiet.h') + '</b><p>' + hx('tk.e.quiet.p') + '</p>') +
+      progLine() + (left != null ? '<p class="tk-time">' + hx('tk.left', { n: Math.floor(left / 60) }) + '</p>' : '') + evalBtns(c) + '</div>';
   }
   function showEval(c, r, left) {
     const esc = G.esc, ev = r.ev, rec = r.rec, box = $('#tk-ov .tk-box'); if (!box) return;
     const steps = c.goal.steps, typed = c.turns.some(t => t.who === 'you' && t.typed), voice = rec.voice;
     const coins = r.coins;
+    // 小步骤：中文界面照旧；别的界面语言没有步骤说明的（「第 n 步」）后面带上示范句
+    const stepR = (s, k) => esc(stepTxt(s, k)) + (!zhUi() && !s.task && s.en ? ' <small>' + hx('tk.eg', { s: s.en }) + '</small>' : '');
     let body;
     if (ev) {
       body = '<div class="tk-stars">' + '★'.repeat(ev.stars) + '<i>' + '★'.repeat(3 - ev.stars) + '</i></div>' +
-        '<b>' + (ev.done ? (ev.stars === 3 ? '🎯 目标完成！每一步都做到了' : '🎯 目标完成！（差 1 步也算完成）') : voice < 3 ? '要开口说才算哦' : '还差一点点，下次试试把小步骤都说到') + '</b>' +
-        (voice < 3 ? '<p class="tk-note">这次用语音说的英语句子不到 3 句' + (typed ? '（打字的不算）' : '') + '，目标先不算完成。下次按住话筒说吧！</p>' : '') +
-        (steps.length ? '<ul class="tk-steps-r">' + steps.map((s, k) => '<li>' + (ev.steps[k] ? '✅ ' : '⬜ ') + esc(s.zh) + '</li>').join('') + '</ul>' : '') +
+        '<b>' + hx(ev.done ? (ev.stars === 3 ? 'tk.r.all' : 'tk.r.most') : voice < 3 ? 'tk.r.speak' : 'tk.r.near') + '</b>' +
+        (voice < 3 ? '<p class="tk-note">' + hx('tk.r.few', { typed: typed ? tx('tk.r.typed') : '' }) + '</p>' : '') +
+        (steps.length ? '<ul class="tk-steps-r">' + steps.map((s, k) => '<li>' + (ev.steps[k] ? '✅ ' : '⬜ ') + stepR(s, k) + '</li>').join('') + '</ul>' : '') +
         (ev.praise ? '<p>' + esc(ev.praise) + '</p>' : '') +
-        (ev.ai ? '<p class="tk-ai-line">🤖 评语由 AI 生成（阿里云通义千问提供）</p>' : '') +
-        (!ev.ai ? '<p class="tk-note">这次没来得及写评语，不过这段聊天算数，已经记下来了！</p>' : '') +
-        (ev.tips.length ? '<div class="tk-tips"><b>可以这样说更好（明天的每日复习里会再练）：</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
-        (coins ? '<p class="tk-coin">🪙 +' + coins + ' 金币</p>' : '') +
-        (c.npc.quest ? '<p class="tk-coin">' + (ev.done ? '📋 委托完成了！回到冒险里，' + esc(c.npc.name) + ' 有奖励给你' : '📋 委托还没完成：把小步骤都说到，再来试一次') + '</p>' : '');
+        (ev.ai ? '<p class="tk-ai-line">' + hx('tk.r.ai') + '</p>' : '') +
+        (!ev.ai ? '<p class="tk-note">' + hx('tk.r.noai') + '</p>' : '') +
+        (ev.tips.length ? '<div class="tk-tips"><b>' + hx('tk.r.tips') + '</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
+        (coins ? '<p class="tk-coin">' + hx('tk.r.coins', { n: coins }) + '</p>' : '') +
+        (c.npc.quest ? '<p class="tk-coin">' + (ev.done ? hx('tk.r.q.done', { name: c.npc.name }) : hx('tk.r.q.not')) + '</p>' : '');
     } else {
-      body = '<b>聊完啦！这段聊天算数 👍</b><p>这次评语没来得及写完（可能是网络慢），不过你开口说的句子已经记下来了。</p>';
+      body = '<b>' + hx('tk.r.late.h') + '</b><p>' + hx('tk.r.late.p') + '</p>';
     }
-    if (ev && ev.concern) body += '<p class="tk-note">💛 如果你遇到了难过或者不安全的事，记得马上告诉爸爸妈妈或者老师。</p>';
+    if (ev && ev.concern) body += '<p class="tk-note">' + hx('tk.r.concern') + '</p>';
     box.innerHTML = '<div class="tk-eval"><img src="' + face(c.npc) + '" alt="">' + body + progLine() + gateLine() +
-      '<p class="tk-time">这次聊了 ' + rec.sec + ' 秒' + (left != null ? ' · 今天还能聊 ' + Math.floor(left / 60) + ' 分钟' : '') + '</p>' + evalBtns(c) + '</div>';
+      '<p class="tk-time">' + hx('tk.time', { n: rec.sec }) + (left != null ? ' · ' + hx('tk.left', { n: Math.floor(left / 60) }) : '') + '</p>' + evalBtns(c) + '</div>';
     if (ev && ev.done && r.newGoal && G.confetti) G.confetti(80);
   }
 
@@ -895,7 +1044,7 @@
     const shut = () => { if (sock.readyState === 3) return; sock.readyState = 3; delete NWS[id]; if (sock.onclose) sock.onclose(); };
     const npc = npcIn.quest ? C.questNpc(window.QUESTS && QUESTS.byId[npcIn.quest]) : npcIn.desc ? C.personNpc(npcIn.desc) : npcIn;
     const left = DAILY_SEC - usage();
-    if (!npc || left < 20) { setTimeout(() => { toGame({ type: 'error', code: 'daily', zh: npc ? '今天的聊天时间用完了，明天再来吧！' : '没有这个岛民' }); shut(); }, 0); sock.send = () => {}; sock.close = shut; return sock; }
+    if (!npc || left < 20) { setTimeout(() => { toGame({ type: 'error', code: 'daily', zh: tx(npc ? 'tk.err.daily' : 'tk.err.nonpc') }); shut(); }, 0); sock.send = () => {}; sock.close = shut; return sock; }
     const S = C.session({
       npc, player: String(player).replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16), limitSec: Math.min(SESSION_SEC, left), leftSec: left, goal: gi, memory: mem, level, ui,
       up: m => { try { N.wsSend(id, JSON.stringify(m)); } catch (e) {} },
@@ -903,7 +1052,7 @@
       evaluate: (n, turns, o) => new Promise(res => {
         const body = C.evalBody(n, turns, o); if (!body) return res(null);
         const pid = ++nid, tm = setTimeout(() => { delete NWS[pid]; res(null); }, CFG.httpWait);
-        NWS[pid] = (type, data) => { clearTimeout(tm); delete NWS[pid]; let ev = null; try { if (type === 'ok') { const j = JSON.parse(data); textUse(j); ev = C.parseEval(j); } else noteAi('eval', data); } catch (e) {} res(ev); };
+        NWS[pid] = (type, data) => { clearTimeout(tm); delete NWS[pid]; let ev = null; try { if (type === 'ok') { const j = JSON.parse(data); textUse(j); ev = C.parseEval(j, o && o.ui); } else noteAi('eval', data); } catch (e) {} res(ev); };
         try { N.post(pid, C.EVAL_URL, JSON.stringify(body)); } catch (e) { clearTimeout(tm); res(null); }
       }),
       onEnd: ({ sec }) => { usage(sec); try { N.wsClose(id); } catch (e) {} setTimeout(shut, 300); },
@@ -912,7 +1061,7 @@
       if (type === 'open') { sock.readyState = 1; S.start(); }
       else if (type === 'message') { let m; try { m = JSON.parse(data); } catch (e) { return; } S.fromUp(m); }
       else if (type === 'closed') S.upClosed();
-      else if (type === 'error') { noteAi('chat', data); if (sock.readyState === 0 && sock.onerror) sock.onerror({}); S.upClosed('连不上对话服务（' + String(data || '').slice(0, 60) + '）'); }
+      else if (type === 'error') { noteAi('chat', data); if (sock.readyState === 0 && sock.onerror) sock.onerror({}); S.upClosed(tx('tk.err.up', { msg: String(data || '').slice(0, 60) })); }
     };
     sock.send = str => { let m; try { m = JSON.parse(str); } catch (e) { return; } S.fromGame(m); };
     sock.close = () => { if (!S.closed) S.finish(); else shut(); };
@@ -955,19 +1104,18 @@
       return { ok: r.ok, status: r.status, text: await r.text() };
     } catch (e) { return { ok: false, status: 0, text: e.message }; } finally { clearTimeout(tm); }
   }
-  // AI 老师点评：目标句子 + 识别出来的话 → 一句中文，指出最主要的差别、怎么读对
+  // AI 点评：目标句子 + 识别出来的话 → 一句话（按界面语言写），指出最主要的差别、怎么读对。提示词在 talk-core 的 tipBody（中转服务用同一份）
   const TIPS = {};
   async function aiTip(target, heard) {
-    const k = target + '|' + heard;
+    const ui = uiNow(), k = ui + '|' + target + '|' + heard, core = Core();
     if (TIPS[k] !== undefined) return TIPS[k];
-    const sys = '你是一位耐心的初中英语发音老师。学生要大声说的英文是：「' + target + '」。语音识别听到学生说的是：「' + heard + '」。用一句简体中文（不超过 28 个字）指出最主要的问题：只说漏读了哪个词、多读了哪个词、或者把哪个词说成了哪个词，并告诉他正确的说法；不要猜是哪个音没发好。如果听到的和目标几乎不是同一句话（大部分词都对不上），就只说「你读的好像是另一句话，先点喇叭听一遍原句再读」。不要表扬、不要客套，只输出这一句话。';
-    const body = { model: 'qwen-plus', temperature: 0.2, max_tokens: 80, messages: [{ role: 'system', content: sys }, { role: 'user', content: '请点评。' }] };
+    const body = core.tipBody(target, heard, ui);
     let tip = '';
     try {
       if (direct()) { const r = await nativePost('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', JSON.stringify(body), 10000); if (r.ok) { const j = JSON.parse(r.text); textUse(j); tip = j.choices[0].message.content; } else noteAi('tip', r.text); }
-      else if (relayHttp()) { const r = await relayPost('/tip', { target, heard }, 10000); if (r.ok) tip = JSON.parse(r.text).tip; else noteAi('tip', 'HTTP ' + r.status + ' ' + r.text); }
+      else if (relayHttp()) { const r = await relayPost('/tip', { target, heard, ui: ui !== 'zh' ? ui : undefined }, 10000); if (r.ok) tip = JSON.parse(r.text).tip; else noteAi('tip', 'HTTP ' + r.status + ' ' + r.text); }
     } catch (e) { tip = ''; }
-    tip = String(tip || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+    tip = core.tipText(tip, ui);
     TIPS[k] = tip;
     return tip;
   }
@@ -1170,7 +1318,7 @@
         if (t && !partial) return resolve({ text: t, err: null, ms: Math.round(performance.now() - t0), how: why });
         if (voiced < 3 || len < rate * 0.3) return resolve(t ? { text: t, err: null, how: why } : { text: '', err: why === 'user' ? 'aborted' : 'no-speech' });
         // 实时识别没认完（或者没连上）：录好的整段重新识别；整段也失败就用手上的半句
-        if (o.onState) o.onState('🎧 识别中……');
+        if (o.onState) o.onState(tx('tk.asr.busy'));
         const w = await wholeAsr(chunks, len, rate);
         resolve(w.text || !t ? Object.assign(w, { how: 'whole' }) : { text: t, err: null, how: 'partial' });
       };
@@ -1195,80 +1343,74 @@
         if (now - t0 > (o.maxMs || 8000)) finish('max');
         else if (voiced < 3 && now - t0 > 5000) finish('silence');
       };
-      if (o.onState) o.onState('🎤 请说……');
+      if (o.onState) o.onState(tx('tk.asr.say'));
     });
   }
 
   // ---------- 家长：设置服务地址 / 家庭口令；看记录；须知 ----------
   function configure() {
     // 销售版：用首次设置向导的那一页（粘贴、「测试」、「怎么开通？」），要家长密码
-    if (window.EchoNative && window.EchoSetup && EchoSetup.sales && EchoSetup.sales()) { if (G.parentOk) G.parentOk('改 AI 密钥', () => EchoSetup.open('key', true)); return; }
+    if (window.EchoNative && window.EchoSetup && EchoSetup.sales && EchoSetup.sales()) { if (G.parentOk) G.parentOk(tx('tk.cfg.why'), () => EchoSetup.open('key', true)); return; }
     if (window.EchoNative) {   // 安卓 APK：家长在这台手机上填一次百炼密钥（只存在这台手机里），直连阿里云
-      if (G.parentOk && !G.parentOk('改 AI 密钥')) return;
-      const k = prompt('家长设置：阿里云百炼 API Key（只存在这台手机里，用来和岛民聊天）\n已经设置过的话，留空就是不改；填 clear 删除', '');
+      if (G.parentOk && !G.parentOk(tx('tk.cfg.why'))) return;
+      const k = prompt(tx('tk.cfg.key'), '');
       if (k === null) return;
       if (k.trim() === 'clear') EchoNative.setKey('');
       else if (k.trim()) EchoNative.setKey(k.trim());
-      G.toast(direct() ? '✅ 已连上阿里云，可以和岛民聊天了' : '还没有设置密钥');
+      G.toast(tx(direct() ? 'tk.cfg.ok' : 'tk.cfg.nokey'));
       if (G.renderHome) G.renderHome();
       return;
     }
     const cur = relayUrl();
-    const u = prompt('对话服务地址（家长填）：\n例如 wss://你的服务器域名 ；本机试用填 ws://localhost:8787\n留空恢复默认', LS('echo-talk-url') || cur);
+    const u = prompt(tx('tk.cfg.url'), LS('echo-talk-url') || cur);
     if (u === null) return;
     LS('echo-talk-url', u.trim() || null);
-    const c = prompt('家庭口令（服务没设口令就留空）：', LS('echo-talk-code'));
+    const c = prompt(tx('tk.cfg.code'), LS('echo-talk-code'));
     if (c !== null) LS('echo-talk-code', c.trim() || null);
-    G.toast('对话服务：' + (relayUrl() || '未设置'));
+    G.toast(tx('tk.cfg.now', { url: relayUrl() || tx('tk.cfg.none') }));
     if (G.renderHome) G.renderHome();
   }
   const npcOf = r => NPCS.byId[r.npc] || { zh: r.nm || r.npc, name: r.nm || r.npc };
-  const turnsHTML = (r, n) => r.turns.map(t => '<div class="' + t.who + (t.typed ? ' typed' : '') + '">' + (t.who === 'you' ? '我：' : G.esc(n.name) + '：') + G.esc(t.text) + '</div>').join('');
+  // 记录里岛民的名字：中文界面用中文名，英语界面用英文名（中文名是内容）
+  const nameOf = n => { const z = gloss({ zh: n.zh }); return z != null ? z : n.name; };
+  // 安全标记的原因：模型写的那句；本机查到的（老记录里存的是中文那句）按界面语言显示
+  const whyOf = r => (!r.why || (I18N && r.why === I18N.t('tk.why.def', null, 'zh')) ? tx('tk.why.def') : r.why);
+  const turnsHTML = (r, n) => r.turns.map(t => '<div class="' + t.who + (t.typed ? ' typed' : '') + '"' + (t.typed ? ' data-typed="' + hx('tk.log.typed') + '"' : '') + '>' + (t.who === 'you' ? hx('tk.log.me') : hx('tk.log.who', { name: n.name })) + G.esc(t.text) + '</div>').join('');
   function showLog() {
     const esc = G.esc, T = state();
     const rows = T.log.map(r => {
       const n = npcOf(r);
-      return '<div class="tk-lr"><b>' + esc(n.zh) + '</b> <small>' + new Date(r.t).toLocaleString('zh-CN') + (r.eval ? ' · ' + '★'.repeat(r.eval.stars) + (r.eval.done ? ' · 🎯' : '') : '') + (r.voice != null ? ' · 开口 ' + r.voice + ' 句' : '') + '</small>' +
+      return '<div class="tk-lr"><b>' + esc(nameOf(n)) + '</b> <small>' + new Date(r.t).toLocaleString(loc()) + (r.eval ? ' · ' + '★'.repeat(r.eval.stars) + (r.eval.done ? ' · 🎯' : '') : '') + (r.voice != null ? hx('tk.log.voice', { n: r.voice }) : '') + '</small>' +
         turnsHTML(r, n) + '</div>';
-    }).join('') || '<p>还没有聊天记录。</p>';
-    G.openModal('<h2>📜 聊天记录</h2><p class="muted">最近 30 次，只存在这台设备上。</p><div class="tk-logs">' + rows + '</div><button class="btn" data-act="close">关闭</button>');
+    }).join('') || '<p>' + hx('tk.log.none') + '</p>';
+    G.openModal('<h2>' + hx('tk.foot.log') + '</h2><p class="muted">' + hx('tk.log.p') + '</p><div class="tk-logs">' + rows + '</div><button class="btn" data-act="close">' + hx('g.close') + '</button>');
   }
   // 家长看看：有安全标记的聊天（孩子说到难过、被欺负、有危险……）全文。要家长密码；看过的点「家长看过了」，周报就不再提示
   let parentUntil = 0;
   function concernSheet(again) {
     if (!again || Date.now() > parentUntil) {
-      if (G.parentOk && !G.parentOk('看需要注意的聊天')) return;
+      if (G.parentOk && !G.parentOk(tx('g.set.saf.look'))) return;   // game.js 的字表：「看需要注意的聊天」
       parentUntil = Date.now() + 5 * 60000;
     }
     const esc = G.esc, T = state(), list = T.log.filter(r => r.concern);
     const rows = list.map(r => {
       const n = npcOf(r);
-      return '<div class="tk-concern"><b>' + esc(n.zh) + '</b> <small>' + new Date(r.t).toLocaleString('zh-CN') + '</small>' +
-        '<p class="why">⚠️ ' + esc(r.why || '') + '</p><div class="tk-lr">' + turnsHTML(r, n) + '</div>' +
-        (r.seen ? '<small>✅ 家长看过了</small>' : '<button class="btn small" data-act="talk_ack" data-t="' + r.t + '">✅ 家长看过了</button>') + '</div>';
-    }).join('') || '<p>没有需要注意的聊天。</p>';
-    G.openModal('<h2>👪 家长看看</h2><p class="muted">孩子在聊天里说到难过、被欺负、害怕或有危险时，这段聊天会标出来（AI 判断，加上本机查关键词，可能有误报）。岛民会提醒孩子马上告诉家长或老师。</p><div class="tk-logs">' + rows + '</div><button class="btn" data-act="close">关闭</button>');
+      return '<div class="tk-concern"><b>' + esc(nameOf(n)) + '</b> <small>' + new Date(r.t).toLocaleString(loc()) + '</small>' +
+        '<p class="why">⚠️ ' + esc(whyOf(r)) + '</p><div class="tk-lr">' + turnsHTML(r, n) + '</div>' +
+        (r.seen ? '<small>' + hx('tk.concern.seen') + '</small>' : '<button class="btn small" data-act="talk_ack" data-t="' + r.t + '">' + hx('tk.concern.seen') + '</button>') + '</div>';
+    }).join('') || '<p>' + hx('tk.concern.none') + '</p>';
+    G.openModal('<h2>' + hx('tk.concern.btn') + '</h2><p class="muted">' + hx('tk.concern.p') + '</p><div class="tk-logs">' + rows + '</div><button class="btn" data-act="close">' + hx('g.close') + '</button>');
   }
   function privacySheet() {
     if (window.EchoSetup && EchoSetup.sales && EchoSetup.sales()) {   // 销售版：没有中转服务，用的是家长自己的阿里云账号
-      G.openModal('<h2>ℹ️ 家长须知：AI 聊天</h2><ul class="tk-notice">' +
-        '<li>岛民的话和声音、口语打分都由<b>人工智能（AI）生成</b>，由<b>阿里云百炼（通义千问）</b>提供。聊天页顶上一直写着「' + AI_LABEL + '」，每段聊天开头会用语音提示一次。</li>' +
-        '<li>聊天、口语打分时，孩子说话的<b>声音和识别出来的文字</b>直接从这台手机发到阿里云，用的是<b>您自己的阿里云账号和密钥</b>（费用也由阿里云直接向您收）。开发者<b>收不到</b>这些声音和文字，也没有服务器存它们。</li>' +
-        '<li>岛民只扮演游戏角色、只聊游戏和日常的话题，不会问真名、学校、住址、电话。孩子认真问「你是真人吗」，岛民会说自己是<b>电脑做的游戏角色</b>。</li>' +
-        '<li>孩子说到难过、被欺负、害怕或有危险时，岛民会认真回应、提醒他马上告诉家长或老师，这段聊天会标出来，家长在「👪 家长看看」里输密码能看全文，周报上也会提示。</li>' +
-        '<li>聊天记录、岛民记住的小事都<b>只存在这台手机里</b>（聊天记录最近 30 段），卸载 App 就全部删掉。每天最多聊 ' + Math.round(DAILY_SEC / 60) + ' 分钟。</li>' +
-        '<li>给主角起名时请用<b>游戏昵称</b>，不要用真名。</li></ul>' +
-        '<div class="tk-btns"><button class="btn ghost small" data-act="suDoc" data-doc="privacy">📄 儿童隐私说明（全文）</button><button class="btn ghost small" data-act="talk_forget">🧹 让岛民忘掉以前聊过的事</button><button class="btn" data-act="close">知道了</button></div>');
+      G.openModal('<h2>' + hx('tk.pv.h') + '</h2><ul class="tk-notice">' +
+        hx('tk.pv.s1', { l: aiLabel() }) + hx('tk.pv.s2') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('tk.pv.s5', { n: Math.round(DAILY_SEC / 60) }) + hx('tk.pv.name') + '</ul>' +
+        '<div class="tk-btns"><button class="btn ghost small" data-act="suDoc" data-doc="privacy">' + hx('tk.pv.doc') + '</button><button class="btn ghost small" data-act="talk_forget">' + hx('tk.pv.forget') + '</button><button class="btn" data-act="close">' + hx('g.ok') + '</button></div>');
       return;
     }
-    G.openModal('<h2>ℹ️ 家长须知：AI 聊天</h2><ul class="tk-notice">' +
-      '<li>和岛民聊天、口语题打分时，孩子说话的<b>声音和识别出来的文字</b>会发到<b>阿里云百炼（通义千问）</b>做语音识别、对话和打分。安卓 APK 直接连阿里云；网页版经过家里的中转服务。</li>' +
-      '<li>岛民只扮演游戏角色、只聊游戏和日常的话题，不会问真名、学校、住址、电话。孩子认真问「你是真人吗」，岛民会说自己是<b>电脑做的游戏角色</b>。</li>' +
-      '<li>孩子说到难过、被欺负、害怕或有危险时，岛民会认真回应、提醒他马上告诉家长或老师，这段聊天会标出来，家长在「👪 家长看看」里输密码能看全文，周报上也会提示。</li>' +
-      '<li>聊天记录存在这台手机里（最近 30 段）；网页版的中转服务也会存一份，<b>保留 90 天</b>后自动删掉。</li>' +
-      '<li>岛民会记住孩子在游戏里说过的小事（比如喜欢画画、有一只火怪兽），下次聊天提起来——<b>只存在这台手机里</b>，不记真名、学校、住址。</li>' +
-      '<li>给主角起名时请用<b>游戏昵称</b>，不要用真名。</li></ul>' +
-      '<div class="tk-btns"><button class="btn ghost small" data-act="talk_forget">🧹 让岛民忘掉以前聊过的事</button><button class="btn" data-act="close">知道了</button></div>');
+    G.openModal('<h2>' + hx('tk.pv.h') + '</h2><ul class="tk-notice">' +
+      hx('tk.pv.w1') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('tk.pv.w4') + hx('tk.pv.w5') + hx('tk.pv.name') + '</ul>' +
+      '<div class="tk-btns"><button class="btn ghost small" data-act="talk_forget">' + hx('tk.pv.forget') + '</button><button class="btn" data-act="close">' + hx('g.ok') + '</button></div>');
   }
 
   function init(api) {
@@ -1294,13 +1436,13 @@
         if (s.en && G.say && !c.holding) { stopPlayback(); stopReplay(); G.say(s.en); }
       },
       talk_privacy: () => privacySheet(),
-      talk_forget: () => { state().mem = {}; G.save(); G.toast('岛民忘掉以前聊过的事了'); },
+      talk_forget: () => { state().mem = {}; G.save(); G.toast(tx('tk.forgot')); },
       talk_concerns: () => concernSheet(false),
       talk_ack: t => { const r = state().log.find(x => x.t === +t.dataset.t); if (r) { r.seen = 1; G.save(); } concernSheet(true); },
     };
   }
   window.EchoTalk = {
-    init, homeHTML, open, openPerson, openQuest, blocked, errText: why => ERR_ZH[why] || '', relayUrl, cloudSR, listenOnce, aiTip, placeJudge, cloudTTS, keyTest, AI_LABEL, stopListen: () => SR.stop && SR.stop(),
+    init, homeHTML, open, openPerson, openQuest, blocked, errText: errTxt, relayUrl, cloudSR, listenOnce, aiTip, placeJudge, cloudTTS, keyTest, get AI_LABEL() { return aiLabel(); }, stopListen: () => SR.stop && SR.stop(),
     today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG,
   };
 })();

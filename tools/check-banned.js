@@ -16,13 +16,18 @@ const SKIP_DIR = [
   'tests/screenshots',
   'tools/mon3d',      // 美术复核清单和出图提示词：要写清楚「别像哪个现成角色」，仓库不公开
   'tools/blender',    // Blender 的接口名（Strength 之类）
+  'ios/www', 'ios/Generated', 'ios/.sales-web',   // iPhone 版打包时生成的网页拷贝和配置（不进仓库）
+  'cloud/dist',       // 公开版服务器打包出来的（wrangler 生成，不进仓库）
 ];
+// 不管在哪一层，叫这些名字的目录都是第三方库或工具的缓存（2026-11-19：cloud/ 装了 wrangler，它的 node_modules 里有 11 处误报）
+const SKIP_ANY = ['node_modules', '.wrangler'];
 const SKIP_FILE = [
   'tools/banned-terms.txt', 'tools/check-banned.js',
   'tools/voice/lines.json', 'tools/voice/misses.jsonl',   // 生成的配音清单，改了源码重新跑 collect.js
   'package-lock.json', 'server/package-lock.json',
 ];
-const EXT = /\.(js|mjs|cjs|html|css|md|json|txt|java|xml|gradle|py|properties\.example)$/i;
+// iPhone 版和云上的文件也查（swift、工作流 yml、plist、StoreKit 配置……）
+const EXT = /\.(js|mjs|cjs|html|css|md|json|txt|java|xml|gradle|py|properties\.example|swift|ya?ml|plist|storekit|entitlements|xcconfig|xcprivacy|ps1|toml|sql)$/i;
 
 function terms() {
   const out = [];
@@ -44,7 +49,7 @@ function files() {
     const abs = path.join(ROOT, rel);
     for (const d of fs.readdirSync(abs, { withFileTypes: true })) {
       const r = rel ? rel + '/' + d.name : d.name;
-      if (d.isDirectory()) { if (!SKIP_DIR.includes(r)) walk(r); continue; }
+      if (d.isDirectory()) { if (!SKIP_DIR.includes(r) && !SKIP_ANY.includes(d.name)) walk(r); continue; }
       if (SKIP_FILE.includes(r) || !EXT.test(d.name)) continue;
       out.push(r);
     }

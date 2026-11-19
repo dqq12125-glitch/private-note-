@@ -3,7 +3,7 @@
 window.WORLDS = [
   {
     name: '你好岛', en: 'Hello!', icon: '👋', color: '#FF8A5B',
-    boss: { emoji: '🦜', name: '鹦鹉船长', hello: "Hello! I'm Captain Polly. Can you talk to me?" },
+    boss: { emoji: '🦜', name: '鹦鹉船长', en: 'Captain Polly', hello: "Hello! I'm Captain Polly. Can you talk to me?" },
     words: [
       ['hello', '你好', '👋'], ['good morning', '早上好', '🌅'], ['good afternoon', '下午好', '🌤️'],
       ['good evening', '晚上好', '🌙'], ['goodbye', '再见', '🚶'], ['name', '名字', '🏷️'],
@@ -28,7 +28,7 @@ window.WORLDS = [
   },
   {
     name: '彩色文具岛', en: 'Keep Tidy!', icon: '🎨', color: '#F2B705',
-    boss: { emoji: '🦀', name: '彩虹蟹', hello: "I'm Crabby the rainbow crab. What colour is my shell?" },
+    boss: { emoji: '🦀', name: '彩虹蟹', en: 'Crabby', hello: "I'm Crabby the rainbow crab. What colour is my shell?" },
     words: [
       ['pen', '钢笔', '🖊️'], ['pencil', '铅笔', '✏️'], ['ruler', '尺子', '📏'], ['book', '书', '📘'],
       ['schoolbag', '书包', '🎒'], ['key', '钥匙', '🔑'], ['cap', '帽子', '🧢'], ['red', '红色', '🔴'],
@@ -52,7 +52,7 @@ window.WORLDS = [
   },
   {
     name: '温馨家庭岛', en: "We're Family!", icon: '🏡', color: '#E85D75',
-    boss: { emoji: '🐢', name: '海龟奶奶', hello: "Hello, dear. I'm Granny Turtle. Tell me about your family." },
+    boss: { emoji: '🐢', name: '海龟奶奶', en: 'Granny Turtle', hello: "Hello, dear. I'm Granny Turtle. Tell me about your family." },
     words: [
       ['family', '家庭', '👨‍👩‍👧'], ['father', '父亲', '👨'], ['mother', '母亲', '👩'],
       ['grandfather', '祖父', '👴'], ['grandmother', '祖母', '👵'], ['brother', '兄弟', '👦'],
@@ -77,7 +77,7 @@ window.WORLDS = [
   },
   {
     name: '校园岛', en: 'My School', icon: '🏫', color: '#3A86FF',
-    boss: { emoji: '🦉', name: '猫头鹰校长', hello: "Welcome! I'm Principal Owl. Let me test you." },
+    boss: { emoji: '🦉', name: '猫头鹰校长', en: 'Principal Owl', hello: "Welcome! I'm Principal Owl. Let me test you." },
     words: [
       ['classroom', '教室', '🏫'], ['library', '图书馆', '📚'], ['playground', '操场', '🛝'],
       ['dining hall', '食堂', '🍽️'], ['gym', '体育馆', '🏀'], ['lab', '实验室', '🔬'],
@@ -103,7 +103,7 @@ window.WORLDS = [
   },
   {
     name: '学科岛', en: 'Favourite Subjects', icon: '📐', color: '#8E6CEF',
-    boss: { emoji: '🐙', name: '八爪博士', hello: "I'm Doctor Octo. I teach eight subjects at the same time!" },
+    boss: { emoji: '🐙', name: '八爪博士', en: 'Doctor Octo', hello: "I'm Doctor Octo. I teach eight subjects at the same time!" },
     words: [
       ['English', '英语', '🔤'], ['Chinese', '语文', '🀄'], ['maths', '数学', '➗'],
       ['science', '科学', '🧪'], ['history', '历史', '🏺'], ['geography', '地理', '🌏'],
@@ -128,7 +128,7 @@ window.WORLDS = [
   },
   {
     name: '社团岛', en: 'Fun Clubs', icon: '🎸', color: '#FF5E9C',
-    boss: { emoji: '🦩', name: '火烈鸟乐手', hello: "Hi! I'm Flo. I can sing, dance and play the drums. What can you do?" },
+    boss: { emoji: '🦩', name: '火烈鸟乐手', en: 'Flo', hello: "Hi! I'm Flo. I can sing, dance and play the drums. What can you do?" },
     words: [
       ['club', '社团', '🎪'], ['sing', '唱歌', '🎤'], ['dance', '跳舞', '💃'], ['swim', '游泳', '🏊'],
       ['draw', '画画', '🖍️'], ['play chess', '下国际象棋', '♟️'], ['play the guitar', '弹吉他', '🎸'],
@@ -152,7 +152,7 @@ window.WORLDS = [
   },
   {
     name: '作息岛', en: 'A Day in the Life', icon: '⏰', color: '#14A38B',
-    boss: { emoji: '🐓', name: '闹钟公鸡', hello: "Cock-a-doodle-doo! I'm Rooster Rex. Wake up and answer me!" },
+    boss: { emoji: '🐓', name: '闹钟公鸡', en: 'Rooster Rex', hello: "Cock-a-doodle-doo! I'm Rooster Rex. Wake up and answer me!" },
     words: [
       ['get up', '起床', '🛏️'], ['brush teeth', '刷牙', '🪥'], ['shower', '淋浴', '🚿'],
       ['breakfast', '早餐', '🥣'], ['lunch', '午餐', '🍱'], ['dinner', '晚餐', '🍲'],
@@ -180,7 +180,7 @@ window.WORLDS = [
   },
   {
     name: '生日派对岛', en: 'Happy Birthday!', icon: '🎂', color: '#F77F00',
-    boss: { emoji: '🐡', name: '河豚派对王', hello: "It's my party! I'm Puffy. Answer me and get some cake!" },
+    boss: { emoji: '🐡', name: '河豚派对王', en: 'Puffy', hello: "It's my party! I'm Puffy. Answer me and get some cake!" },
     words: [
       ['birthday', '生日', '🎂'], ['cake', '蛋糕', '🍰'], ['party', '派对', '🎉'], ['gift', '礼物', '🎁'],
       ['candle', '蜡烛', '🕯️'], ['balloon', '气球', '🎈'], ['noodles', '面条', '🍜'], ['egg', '鸡蛋', '🥚'],
@@ -204,7 +204,7 @@ window.WORLDS = [
   },
   {
     name: '动物岛', en: 'Animal Friends', icon: '🐼', color: '#2E9E4F',
-    boss: { emoji: '🐊', name: '鳄鱼巡查员', hello: "Snap snap! I'm Croc. Do you really know animals?" },
+    boss: { emoji: '🐊', name: '鳄鱼巡查员', en: 'Croc', hello: "Snap snap! I'm Croc. Do you really know animals?" },
     words: [
       ['panda', '熊猫', '🐼'], ['elephant', '大象', '🐘'], ['tiger', '老虎', '🐯'], ['lion', '狮子', '🦁'],
       ['giraffe', '长颈鹿', '🦒'], ['monkey', '猴子', '🐒'], ['koala', '考拉', '🐨'], ['dolphin', '海豚', '🐬'],
@@ -227,7 +227,7 @@ window.WORLDS = [
   },
   {
     name: '规则岛', en: 'No Rules, No Order', icon: '🚦', color: '#D62828',
-    boss: { emoji: '🦈', name: '鲨鱼纪律官', hello: "I'm Sharky. I make the rules here. Do you know them?" },
+    boss: { emoji: '🦈', name: '鲨鱼纪律官', en: 'Sharky', hello: "I'm Sharky. I make the rules here. Do you know them?" },
     words: [
       ['rule', '规则', '📜'], ['late', '迟到的', '🐌'], ['quiet', '安静的', '🤫'], ['run', '跑', '🏃'],
       ['fight', '打架', '🥊'], ['listen', '听', '👂'], ['wear', '穿', '👕'], ['uniform', '校服', '🧥'],
@@ -250,7 +250,7 @@ window.WORLDS = [
   },
   {
     name: '运动美食岛', en: 'Keep Fit, Eat Well', icon: '🥗', color: '#6A994E',
-    boss: { emoji: '🦭', name: '海狮教练', hello: "I'm Coach Seal. Healthy body, happy mind! Ready?" },
+    boss: { emoji: '🦭', name: '海狮教练', en: 'Coach Seal', hello: "I'm Coach Seal. Healthy body, happy mind! Ready?" },
     words: [
       ['basketball', '篮球', '🏀'], ['football', '足球', '⚽'], ['ping-pong', '乒乓球', '🏓'],
       ['exercise', '锻炼', '🏋️'], ['healthy', '健康的', '💪'], ['vegetables', '蔬菜', '🥦'],
@@ -274,7 +274,7 @@ window.WORLDS = [
   },
   {
     name: '天气岛', en: 'Rain or Shine', icon: '🌦️', color: '#4895EF',
-    boss: { emoji: '🐳', name: '天气鲸', hello: "Hello from the sea! I'm Whaley. How's the weather up there?" },
+    boss: { emoji: '🐳', name: '天气鲸', en: 'Whaley', hello: "Hello from the sea! I'm Whaley. How's the weather up there?" },
     words: [
       ['sunny', '晴朗的', '☀️'], ['rainy', '下雨的', '🌧️'], ['cloudy', '多云的', '☁️'], ['windy', '有风的', '🌬️'],
       ['snowy', '下雪的', '❄️'], ['hot', '热的', '🥵'], ['cold', '冷的', '🥶'], ['warm', '温暖的', '🌡️'],
@@ -298,7 +298,7 @@ window.WORLDS = [
   },
   {
     name: '回忆岛', en: 'A Day to Remember', icon: '📸', color: '#9D4EDD',
-    boss: { emoji: '🐉', name: '回忆巨龙', hello: "I am the Memory Dragon. Tell me about your past, if you dare!" },
+    boss: { emoji: '🐉', name: '回忆巨龙', en: 'Memory Dragon', hello: "I am the Memory Dragon. Tell me about your past, if you dare!" },
     words: [
       ['went', '去了', '🚶'], ['visited', '参观了', '🏛️'], ['saw', '看见了', '👀'], ['ate', '吃了', '🍽️'],
       ['took photos', '拍了照片', '📸'], ['bought', '买了', '🛍️'], ['trip', '旅行', '🧳'],

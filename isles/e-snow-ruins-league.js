@@ -1,16 +1,35 @@
 // 回声岛 · 第 11–12 天气岛、回忆岛、勇气之路、英语冠军赛大厅（地图、剧情、挑战馆机关）。写法见 ISLES.md
 // 地图：t11 天气岛 / d11a d11b 气象塔 / i11W 气象台 / i11G 天气挑战馆 / r11 12 号路瀑布河
 //       t12 回忆岛 / d12a d12b 回忆神殿 / i12G 回忆挑战馆 / v1 v2 v3 勇气之路 / vL 冠军高原 / vLC vLM / i12L 冠军赛大厅
+// 界面语言：这些函数的第几个参数是台词的中文意思（内容，不进字表；英语界面用 gloss() 不显示）
+// @i18n-content-calls nar:1 ORI:1 SKYE:1 S:1 K:1 speak:2 MU:1 ask:2 SW:1 MA:1 V:1 CARD:1 PNL:1 RS:1 W:1 DOOR:1 H:1 Rb:1 q:1 RADIO:1
 (function () {
   'use strict';
   const EM = window.EchoMaps;
 
+  // ---------- 界面文字（i18n.js 字表；键前缀 ie.） ----------
+  // 2026-11-19 搬进来：提示条、提示、选项。台词（英文 + 中文意思）是内容，不在这里
+  const I18N = window.EchoI18n;
+  const tx = (k, p) => (I18N ? I18N.t(k, p) : k);
+  if (I18N) I18N.add({
+    zh: {
+      'ie.note.weather': '📻 按天气预报的顺序打开天气开关 · 已打开 <b>{n}/3</b>（听不清就去问收音机）',
+      'ie.opt.on': ' Turn it on! 打开', 'ie.opt.notnow': 'Not now 先不',
+      'ie.toast.thanks': '💠 金回声球 +3（默先生还回来的谢礼）', 'ie.note.cards': '🃏 踩在牌上翻开它：一张英文、一张中文，配成一对',
+    },
+    en: {
+      'ie.note.weather': '📻 Turn on the weather switches in the order of the forecast · On: <b>{n}/3</b> (If you cannot hear it, ask the radio)',
+      'ie.opt.on': ' Turn it on!', 'ie.opt.notnow': 'Not now',
+      'ie.toast.thanks': '💠 Gold Echo Ball +3 (a thank-you from Mr. Mute)', 'ie.note.cards': '🃏 Step on a card to flip it. Match each English word with its picture',
+    },
+  });
+
   // =====================================================================
   // 第 11 岛 · 天气岛（雪山、冰湖、雪松林、雪顶木屋、气象塔）
   // =====================================================================
-  EM.define('t11', {
+  EM.define('t11', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 11, name: '天气岛', en: 'Weather Island', sub: '第 12 岛', theme: 'snow',
-    rows: [
+    rows: [  // @i18n-content-end
       '#################^^#################',
       '#RRRRRRRRRRRRRRR.==.RRRRRRRRRRRRRRR#',
       '#RTT,,,,,TTRRRR..==..====..RAAAAARR#',
@@ -82,9 +101,9 @@
   });
 
   // 气象塔 1 楼：冰面大厅。先滑过冰面到上面的走廊，再用控制台打开楼梯前的机关门
-  EM.define('d11a', {
+  EM.define('d11a', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 11, name: '气象塔 1 楼', en: 'Weather Tower 1F', sub: '天气岛',
-    pal: { floor: '#dfe7ec', floor2: '#cfdae1', wall: '#eef3f6', trim: '#546e7a', rug: '#90caf9', rock: '#9fb3c2' },
+    pal: { floor: '#dfe7ec', floor2: '#cfdae1', wall: '#eef3f6', trim: '#546e7a', rug: '#90caf9', rock: '#9fb3c2' },  // @i18n-content-end
     rows: [
       'WWWWWWWWWWWWWWWWW',
       'W%_|___k_Z_k__p_W',
@@ -113,9 +132,9 @@
   });
 
   // 气象塔顶层：嘘声团的天气机（三个雕像），干部低语和闷雷
-  EM.define('d11b', {
+  EM.define('d11b', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 11, name: '气象塔顶层', en: 'Weather Tower Top', sub: '天气岛',
-    pal: { floor: '#d9dee8', floor2: '#c7cedb', wall: '#e8ecf3', trim: '#5c6bc0', rug: '#7986cb' },
+    pal: { floor: '#d9dee8', floor2: '#c7cedb', wall: '#e8ecf3', trim: '#5c6bc0', rug: '#7986cb' },  // @i18n-content-end
     rows: [
       'WWWWWWWWWWWWWWW',
       'Wt____ZZZ____tW',
@@ -137,9 +156,9 @@
   });
 
   // 气象台（圆顶的房子）：台长斯凯博士
-  EM.define('i11W', {
+  EM.define('i11W', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 11, name: '气象台', en: 'Weather Station', sub: '天气岛',
-    pal: { floor: '#e3f2fd', floor2: '#d0e6f7', wall: '#f5fbff', trim: '#1e88e5', rug: '#90caf9' },
+    pal: { floor: '#e3f2fd', floor2: '#d0e6f7', wall: '#f5fbff', trim: '#1e88e5', rug: '#90caf9' },  // @i18n-content-end
     rows: [
       'WWWWWWWWWWWWW',
       'WtPt__kk__tpW',
@@ -183,9 +202,9 @@
   ];
   // 开关旁边地上的天气牌（over 图层）
   const G11_LABEL = { '2,5': 'S', '12,5': 'W', '3,11': 'R', '11,11': 'N', '3,14': 'C', '11,14': 'U' };
-  EM.define('i11G', {
+  EM.define('i11G', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 11, room: 'G', name: '天气挑战馆', en: 'Weather Hall', sub: '天气岛',
-    pal: { floor: '#e1ecf4', floor2: '#d2e1ec', wall: '#f4f9fc', trim: '#0277bd', rug: '#4fc3f7', rock: '#9fb3c2' },
+    pal: { floor: '#e1ecf4', floor2: '#d2e1ec', wall: '#f4f9fc', trim: '#0277bd', rug: '#4fc3f7', rock: '#9fb3c2' },  // @i18n-content-end
     rows: G11_ROWS,
     over: G11_ROWS.map((r, y) => [...r].map((c, x) => G11_LABEL[x + ',' + y] || '.').join('')),
     paint: {
@@ -207,9 +226,9 @@
   });
 
   // 12 号路 · 瀑布河：南边是雪原，中间一整道岩壁，只有逆流才能上去；北边是雾里的石头古迹和高山湖
-  EM.define('r11', {
+  EM.define('r11', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 11, name: '12 号路', en: 'Route 12 · Waterfall River', sub: '天气岛 → 回忆岛', theme: 'snow',
-    rows: [
+    rows: [  // @i18n-content-end
       '#############^^###############',
       '#TTTTTTTTTTT.==.TTTTTTTTTTTTT#',
       '#TT,,,,,TTT..==...TTTTT.o.TTT#',
@@ -310,9 +329,9 @@
   // =====================================================================
   // 第 12 岛 · 回忆岛（雾、古迹、石柱、石头神殿）
   // =====================================================================
-  EM.define('t12', {
+  EM.define('t12', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 12, name: '回忆岛', en: 'Memory Island', sub: '第 13 岛', theme: 'ruins',
-    rows: [
+    rows: [  // @i18n-content-end
       '####################################',
       '#TTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRTT#',
       '#T,,RRRRRRRRRRRRRRRRRRRRRRRRRRRR.oT#',
@@ -383,9 +402,9 @@
   });
 
   // 回忆神殿 1 楼：刻着古代英语句子的石板，记忆之门要回答石板上的故事
-  EM.define('d12a', {
+  EM.define('d12a', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', cave: 'temple', z: 12, name: '回忆神殿', en: 'Memory Temple', sub: '回忆岛', lv: 1, dungeon: true,
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXXX%XXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXX:::XXXXXXXXXXXXXX',
@@ -432,9 +451,9 @@
   });
 
   // 神殿深处 · 封印之间：海底之门（水池）、十二颗水晶、默先生
-  EM.define('d12b', {
+  EM.define('d12b', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', cave: 'temple', z: 12, name: '封印之间', en: 'The Sea Door', sub: '回忆神殿', lv: 1, dungeon: true,
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXXXXXXXXXXXXXXXXXX',
       'XXXXXXXZXXXXXZXXXXXXX',
       'XXXXXZX:::~~~:::XZXXX',
@@ -492,7 +511,9 @@
     'WWWWWWeWWWWWW',
   ];
   // 牌：三组（从下往上），每组 4 张 = 2 对；pair 是第几对，en 英文牌 / 中文牌
+  // @i18n-content 单词牌的中文面 / 天气词的中文意思：内容（词的中文意思），英语界面不显示
   const MEM_PAIRS = [['went', '去了', '🚶'], ['saw', '看见了', '👀'], ['ate', '吃了', '🍽️'], ['bought', '买了', '🛍️'], ['trip', '旅行', '🧳'], ['beach', '海滩', '🏖️']];
+  // @i18n-content-end
   const MEM_SECTIONS = [
     { y: 14, gate: 2, cards: [[0, 'en'], [1, 'zh'], [0, 'zh'], [1, 'en']] },
     { y: 10, gate: 1, cards: [[3, 'zh'], [2, 'en'], [3, 'en'], [2, 'zh']] },
@@ -502,14 +523,17 @@
   const MEM_CARDS = [];
   MEM_SECTIONS.forEach((s, si) => s.cards.forEach(([pair, side], k) => MEM_CARDS.push({ x: MEM_X[k], y: s.y, pair, side, sec: si, i: MEM_CARDS.length })));
   const G12_PAINT = { '?': { c: '#6a5acd', t: '?', tc: '#ffe082' } };
+  // 意思牌的牌面：界面语言里有这个词的意思就写意思（中文界面 = 中文），没有（英语界面）就画图——和闯关「选意思」换成别的题是同一条规矩
+  const memMean = p => (I18N ? I18N.gloss({ zh: p[1] }) : p[1]);
+  const memFace = c => { const p = MEM_PAIRS[c.pair]; return c.side === 'en' ? p[0] : memMean(p) || p[2]; };
+  // 牌面写成 getter：world.js 每次重画都读 paint[字].t，换了界面语言也跟着变
   MEM_CARDS.forEach(c => {
-    const p = MEM_PAIRS[c.pair], t = c.side === 'en' ? p[0] : p[1];
-    G12_PAINT['abcdefghijkl'[c.i]] = { c: '#fff8e1', t, tc: '#4e342e' };
-    G12_PAINT['ABCDEFGHIJKL'[c.i]] = { c: '#b9f6ca', t, tc: '#1b5e20' };
+    G12_PAINT['abcdefghijkl'[c.i]] = { c: '#fff8e1', get t() { return memFace(c); }, tc: '#4e342e' };
+    G12_PAINT['ABCDEFGHIJKL'[c.i]] = { c: '#b9f6ca', get t() { return memFace(c); }, tc: '#1b5e20' };
   });
-  EM.define('i12G', {
+  EM.define('i12G', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 12, room: 'G', name: '回忆挑战馆', en: 'Memory Hall', sub: '回忆岛',
-    pal: { floor: '#e6dccb', floor2: '#d9ccb6', wall: '#f3ecdf', trim: '#6d4c41', rug: '#8d6e63' },
+    pal: { floor: '#e6dccb', floor2: '#d9ccb6', wall: '#f3ecdf', trim: '#6d4c41', rug: '#8d6e63' },  // @i18n-content-end
     rows: G12_ROWS,
     over: G12_ROWS.map((r, y) => [...r].map((c, x) => MEM_CARDS.some(q => q.x === x && q.y === y) ? '?' : '.').join('')),
     paint: G12_PAINT,
@@ -528,9 +552,9 @@
   // =====================================================================
   // 勇气之路：入口高地 v1 → 洞窟 1 楼 v2（漆黑，大力推 / 敲石 / 地下湖）→ 洞窟 2 楼 v3（小凯）→ 冠军高原 vL
   // =====================================================================
-  EM.define('v1', {
+  EM.define('v1', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 12, name: '勇气之路', en: 'Brave Road', sub: '回忆岛 → 英语冠军赛', theme: 'clock', lv: 2,
-    rows: [
+    rows: [  // @i18n-content-end
       '##############################',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
       '#RRRRRRRRRRRRRRRRRRRRKRRRRRRR#',
@@ -574,9 +598,9 @@
   });
 
   // 勇气之路洞窟 1 楼：漆黑（要点灯）。南边大厅 → 敲石 → 大力推石 → 踏浪过地下湖 → 北边迷宫 → 楼梯
-  EM.define('v2', {
+  EM.define('v2', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', cave: 'rock', z: 12, name: '勇气之路 洞窟 1 楼', en: 'Brave Road Cave 1F', sub: '勇气之路', dark: true, dungeon: true, lv: 3,
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XX:::::XXX::::::::XXXXXXX:::::::XXXXX%XX',
@@ -629,9 +653,9 @@
   });
 
   // 勇气之路洞窟 2 楼：有光从北边照进来；出口前小凯在等你
-  EM.define('v3', {
+  EM.define('v3', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', cave: 'rock', z: 12, name: '勇气之路 洞窟 2 楼', en: 'Brave Road Cave 2F', sub: '勇气之路', dark: false, dungeon: true, lv: 3,
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXXXXXXXXXXXXXX^^XXXXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXXXXX::::XXXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXXXX::::::XXXXXXXXXXXXXXX',
@@ -674,9 +698,9 @@
   });
 
   // 冠军高原：英语冠军赛会场（体育场）、休息站、商店
-  EM.define('vL', {
+  EM.define('vL', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', noGrass: true, z: 12, name: '冠军高原', en: 'Champion Plateau', sub: '英语冠军赛', theme: 'lab',
-    rows: [
+    rows: [  // @i18n-content-end
       '##########################',
       '#TT....AAAAAAAAAAAA....TT#',
       '#T.....AAAAAAAAAAAA.....T#',
@@ -712,21 +736,21 @@
         say: [['Wow! You came up the Brave Road! I watched the English Cup on TV last year.', '哇！你是从勇气之路上来的！去年我在电视上看了冠军赛。'], ['The Champion was amazing. I want to be like her one day!', '冠军太厉害了，我以后也想像她一样！']], speak: 'I want to be the Champion!' },
     ],
   });
-  EM.define('vLC', {
+  EM.define('vLC', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 12, room: 'C', name: '冠军高原 · 休息站', en: 'Rest Stop', sub: '冠军高原',
-    rows: ['WWWWWWWWWWW', 'Wk___1___kW', 'W__QQQQQ__W', 'W_________W', 'WP_______pW', 'W__uuuuu__W', 'Wp_uuuuu_YW', 'W____u____W', 'WWWWWeWWWWW'],
+    rows: ['WWWWWWWWWWW', 'Wk___1___kW', 'W__QQQQQ__W', 'W_________W', 'WP_______pW', 'W__uuuuu__W', 'Wp_uuuuu_YW', 'W____u____W', 'WWWWWeWWWWW'],  // @i18n-content-end
     links: { e: 'vL' }, npc: { 1: { role: 'nurse' } },
   });
-  EM.define('vLM', {
+  EM.define('vLM', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 12, room: 'M', name: '冠军高原 · 商店', en: 'Shop', sub: '冠军高原',
-    rows: ['WWWWWWWWWWW', 'Wk_1_kkkkkW', 'WQQQQ_____W', 'W_________W', 'W__YY_YY__W', 'W__YY_YY__W', 'Wp_______pW', 'W____u____W', 'WWWWWeWWWWW'],
+    rows: ['WWWWWWWWWWW', 'Wk_1_kkkkkW', 'WQQQQ_____W', 'W_________W', 'W__YY_YY__W', 'W__YY_YY__W', 'Wp_______pW', 'W____u____W', 'WWWWWeWWWWW'],  // @i18n-content-end
     links: { e: 'vL' }, npc: { 1: { role: 'clerk' } },
   });
 
   // 英语冠军赛大厅：北墙的出口通第一位擂主的房间（i121–i125 用老模板）
-  EM.define('i12L', {
+  EM.define('i12L', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 12, room: 'L', name: '英语冠军赛 · 大厅', en: 'English Cup', sub: '冠军高原',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWW^WWWWW',
       'W_1_____2_W',
       'WQQQ___QQQW',
@@ -796,7 +820,9 @@
   const SKYE = L.sayer('Dr. Skye', 'weather', 'f');
   const RADIO = (en, zh, x) => Object.assign({ who: 'Radio', emo: '📻', en, zh }, x || {});
   const SEQ = ['sunny', 'rainy', 'windy'];
+  // @i18n-content 单词牌的中文面 / 天气词的中文意思：内容（词的中文意思），英语界面不显示
   const WX = { sunny: ['☀️', 'Sunny', '晴天'], rainy: ['🌧️', 'Rainy', '下雨'], windy: ['🌬️', 'Windy', '刮风'], snowy: ['❄️', 'Snowy', '下雪'], cloudy: ['☁️', 'Cloudy', '多云'] };
+  // @i18n-content-end
 
   async function snowIntro(C) {
     await C.talk([
@@ -963,7 +989,7 @@
   const G11 = { '12,14': 'sunny', '2,14': 'cloudy', '2,11': 'rainy', '12,11': 'snowy', '1,5': 'sunny', '13,5': 'windy' };
   const G11_GATE = { sunny: 2, rainy: 1, windy: 0 };
   const g11k = C => C.gateOpen(2) ? (C.gateOpen(1) ? (C.gateOpen(0) ? 3 : 2) : 1) : 0;
-  const g11note = C => C.note('📻 按天气预报的顺序打开天气开关 · 已打开 <b>' + g11k(C) + '/3</b>（听不清就去问收音机）');
+  const g11note = C => C.note(tx('ie.note.weather', { n: g11k(C) }));
   const broadcast = C => C.talk([
     { who: 'Hall Radio', emo: '📻', en: 'Ding dong! Here is the weather report for the Weather Hall.', zh: '叮咚！天气挑战馆的天气预报来了。' },
     { who: 'Hall Radio', emo: '📻', en: 'Sunny, then rainy, then windy.', zh: '（仔细听！只听不看。点右上角的喇叭可以再听一遍）', hideEn: true },
@@ -979,7 +1005,7 @@
     if (G11_GATE[w] != null && C.gateOpen(G11_GATE[w]) && key !== '1,5') { await C.talk([SW('This switch is already on.', '这个开关已经打开了。')]); return; }
     let yes = false;
     await C.talk([SW('This is the ' + WX[w][1].toUpperCase() + ' switch. Turn it on?', '这是「' + WX[w][2] + '」开关（' + WX[w][1] + '）。要打开吗？', {
-      kind: 'choice', opts: [{ html: WX[w][0] + ' Turn it on! 打开', cls: 'sun' }, { html: 'Not now 先不' }], pick: i => { yes = i === 0; return []; },
+      kind: 'choice', opts: [{ html: WX[w][0] + tx('ie.opt.on'), cls: 'sun' }, { html: tx('ie.opt.notnow') }], pick: i => { yes = i === 0; return []; },
     })]);
     if (!yes) return;
     if (w === SEQ[k]) {
@@ -1174,7 +1200,7 @@
     if (mute) C.remove(mute);
     C.set('ch12');
     C.MG.addItem('superball', 3);
-    C.E.toast('💠 金回声球 +3（默先生还回来的谢礼）', 'gold');
+    C.E.toast(tx('ie.toast.thanks'), 'gold');
     C.E.save();
     await C.walk(d, 'down', 2, 260);
     await C.talk([
@@ -1198,7 +1224,9 @@
   async function flipCard(C, c) {
     const p = MEM_PAIRS[c.pair], CARD = (en, zh, x) => Object.assign({ who: 'Memory Card', emo: '🃏', en, zh }, x || {});
     C.setOver(c.x, c.y, memChar(c)); C.refresh(); C.E.SFX.tap();
-    await C.talk([c.side === 'en' ? CARD(p[0], p[2] + '（英文牌）') : CARD('', p[1] + ' ' + p[2] + '（中文牌）')]);
+    // 没有意思可显示（英语界面）：意思牌就是一张图，翻开时只亮出这张图
+    const mean = memMean(p);
+    await C.talk([c.side === 'en' ? CARD(p[0], p[2] + '（英文牌）') : mean ? CARD('', p[1] + ' ' + p[2] + '（中文牌）') : CARD('', '', { emo: p[2] })]);
     if (!memFirst) { memFirst = c; return; }
     const a = memFirst;
     memFirst = null;
@@ -1206,7 +1234,7 @@
       C.set('mem12:' + c.pair);
       C.setOver(a.x, a.y, memChar(a, true)); C.setOver(c.x, c.y, memChar(c, true)); C.refresh();
       C.E.SFX.ok(3);
-      await C.talk([CARD(p[0] + ' = ' + p[1] + '. It\'s a pair!', '配对成功！' + p[0] + ' 就是“' + p[1] + '”。'), L.speak(C, p[0], '把这个词大声读一遍')]);
+      await C.talk([mean ? CARD(p[0] + ' = ' + p[1] + '. It\'s a pair!', '配对成功！' + p[0] + ' 就是“' + p[1] + '”。') : CARD('It\'s a pair: ' + p[0] + '!', '', { emo: p[2] }), L.speak(C, p[0], '把这个词大声读一遍')]);
       const sec = MEM_SECTIONS[c.sec];
       if (sec.cards.every(([pi]) => C.flag('mem12:' + pi)) && !C.gateOpen(sec.gate)) {
         C.openGate(sec.gate, true);
@@ -1285,7 +1313,7 @@
         if (!C.flag('leg:echodrake') && !C.npc(n => n.mon === 'echodrake')) return () => { C.spawn({ mon: 'echodrake', role: 'legend', x: 10, y: 6, face: 'down' }); };
       }
       if (id === 'v2' && !C.flag('leg:irongiant') && !C.npc(n => n.mon === 'irongiant')) return () => { C.spawn({ mon: 'irongiant', role: 'legend', x: 3, y: 3, face: 'down' }); };
-      if (id === 'i12G') return () => { memSync(C); C.refresh(); if (!C.gateOpen(0)) C.note('🃏 踩在牌上翻开它：一张英文、一张中文，配成一对'); };
+      if (id === 'i12G') return () => { memSync(C); C.refresh(); if (!C.gateOpen(0)) C.note(tx('ie.note.cards')); };
       return null;
     },
     step(C) {

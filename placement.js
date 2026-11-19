@@ -206,7 +206,7 @@
     en: {
       'place.next': 'Next', 'place.back': 'Back', 'place.later': 'Maybe later', 'place.start': 'Start', 'place.done': 'Done', 'place.close': 'Close',
       'place.lang.title': 'Choose your language', 'place.lang.ui': 'Interface language', 'place.lang.learn': 'I want to learn', 'place.lang.soon': 'More languages are on the way',
-      'place.lang.partial': 'For now only the new screens are in English. The rest of the app is still in Chinese and is being translated.',
+      'place.lang.partial': '',
       'place.who.title': 'First, a little about you', 'place.who.q': 'Who is learning?',
       'place.who.child': 'A child', 'place.who.child.s': 'under 13', 'place.who.teen': 'A teenager', 'place.who.teen.s': '13 to 17', 'place.who.adult': 'An adult', 'place.who.adult.s': '18 or over',
       'place.know.q': 'How much {lang} do you know?',
@@ -276,7 +276,7 @@
       'place.unit.free': 'Skipped',
       'place.unit.free.tip': 'Skipped because of your level check (you can still play it)',
       'place.b.listen.word': '👂 Listen and tap the word you hear to use <b>{mv}</b>',
-      'place.b.listen.sent': '👂 Listen and tap the line you hear to use <b>{mv}</b>',
+      'place.b.listen.sent': '👂 Listen and tap the spell you hear to use <b>{mv}</b>',
       'place.b.listen.foot': 'Listen carefully, then tap. A right answer makes the move',
     },
   };

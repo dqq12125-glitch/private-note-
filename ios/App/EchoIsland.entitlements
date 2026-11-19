@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  回声岛 iPhone 版的权限（只有「通过 Apple 登录」）。
+  只给签名的包用：ios/scripts/make-config.mjs 在 ECHO_APPLE_SIGNIN 开着时（给了 ECHO_TEAM_ID 就默认开）往
+  Generated/Echo.xcconfig 里写 CODE_SIGN_ENTITLEMENTS = App/EchoIsland.entitlements，同时 BuildConfig.appleSignIn = true。
+  云上模拟器的包不签名、不带它（这个权限要描述文件），原生桥的 appleSignIn 当场回 unavailable。
+  App 内购买（订阅）在 iPhone 上不用写权限。
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+</dict>
+</plist>

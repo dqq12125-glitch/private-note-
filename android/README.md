@@ -144,6 +144,11 @@ APK 里没有家长密码时 `hasPin()` 是 false、`checkPin()` 一律 false—
 加新方法时：MainActivity 的 `Native` 里写、这张表里写、`tests/fake-native.js` 里写同名同参数个数的假方法——`node tests/native.test.js` 会核对三处对得上，
 还会用 JDK 编译 `PinGuard.java` / `BackupNames.java` 实测密码锁定和备份轮换。
 
+### iPhone 才有的方法（安卓：以后）
+
+公开版的订阅和「通过 Apple 登录」只在 iPhone 版里有（`ios/README.md`「订阅和登录」）：`iapProducts`、`iapBuy`、`iapRestore`、`iapCurrent`、`iapPending`、`iapFinish`、`iapManage`、`appleSignIn`、`appleCredentialState`，都是异步的（第一个参数是编号，结果回 `window.__echoNative(id, 'ok' / 'fail', JSON)`），另有事件 `echo-iap`。
+**安卓对应的：以后**（Google Play 结算 + 安卓的登录）。到时候在 MainActivity 里加，把它们从 `tests/ios.test.js` 的 `IOS_ONLY` 表里拿掉、写进上面的表；在那之前网页先看 `EchoNative.iapProducts` 有没有再用。
+
 ## 在模拟器上看原生桥
 
 模拟器 `echo35`（`D:\Claude\tools\android\start-echo-emulator.bat`）是 userdebug 系统，正式包的 WebView 也能用开发者工具连：

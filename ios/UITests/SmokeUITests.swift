@@ -3,7 +3,7 @@ import XCTest
 // 开起来看一眼（在模拟器里跑，云上的 Mac：.github/workflows/ios-simulator.yml）。
 // 怎么知道网页走到哪了：调试包带启动参数 -EchoUITest 时，原生在屏幕最下面放一行很小的字（accessibilityIdentifier = echo-status），
 // 每半秒写一次 {"native":{…},"page":{…}}（GameViewController 的 statusProbe），这里读它。
-// 测试按名字的顺序跑（test1… test5…）：前两个开游戏，第三个跑原生桥自测页（销售版里会设一个家长密码），后面几个弹界面。
+// 测试按名字的顺序跑（test1… test6…）：前两个开游戏，第三个跑原生桥自测页（销售版里会设一个家长密码），后面几个弹界面，第六个问订阅的商品。
 // 截图都挂在结果里（.xcresult），云上的工作流把它们导出来一起上传。
 final class SmokeUITests: XCTestCase {
     override func setUpWithError() throws {
@@ -107,7 +107,7 @@ final class SmokeUITests: XCTestCase {
     @MainActor
     func test3BridgeSelfTest() {
         let app = launch(["-EchoSelfTest", "all"])
-        let s = waitStatus(app, timeout: 120, "selftest") { _, p in
+        let s = waitStatus(app, timeout: 180, "selftest") { _, p in
             ((p["test"] as? [String: Any])?["done"] as? Bool) == true
         }
         let t = (s["page"] as? [String: Any])?["test"] as? [String: Any] ?? [:]
@@ -166,6 +166,38 @@ final class SmokeUITests: XCTestCase {
         s = waitStatus(app, timeout: 30, "document-picker") { n, _ in (n["presented"] as? String ?? "").contains("DocumentPicker") }
         shot("document-picker")
         attachJSON(s, "status-pick")
+        app.terminate()
+    }
+
+    // ---------- 6. 订阅：网页问得到商品（异步桥一路通到 StoreKit 再回来）；有商品就看购买面板弹没弹出来 ----------
+    // 云上的模拟器没有本地 App Store：xcodebuild test 不把 Store.storekit 交给模拟器（iOS 26.5 上 UI 测试里 SKTestSession 也不管用，
+    // 苹果开发者论坛 FB22237318），所以多半一个商品都没有——只要求 iapProducts 回了话；商品、买、续费、退款在单元测试 StoreKitTests 里测
+    @MainActor
+    func test6StoreProductsAndBuySheet() {
+        let app = launch(["-EchoSelfTest", "store"])
+        let s = waitStatus(app, timeout: 60, "store") { _, p in ((p["test"] as? [String: Any])?["done"] as? Bool) == true }
+        let t = (s["page"] as? [String: Any])?["test"] as? [String: Any] ?? [:]
+        let store = t["store"] as? [String: Any] ?? [:]
+        attachJSON(t, "store-result")
+        shot("store")
+        XCTAssertEqual(store["plumbing"] as? Bool, true, "网页 → 原生 Store.swift → window.__echoNative 一路通（不是 UUID 当场回 bad-token）")
+        let count = store["count"] as? Int ?? 0
+        // 问商品要连 App Store：回没回、有几个都只记下来（云上的模拟器多半没有）
+        print("EchoIsland store: products answered = \(store["answered"] ?? "") count = \(count) \(store["ids"] ?? "") missing = \(store["missing"] ?? "") error = \(store["error"] ?? "")")
+        guard count > 0 else { return }
+        // 有商品：购买面板（系统的）应该弹出来。只看、不点，弹没弹出来都只记下来
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        var seen = ""
+        let end = Date().addingTimeInterval(20)
+        while Date() < end && seen.isEmpty {
+            let n = status(app)["native"] as? [String: Any] ?? [:]
+            if let pres = n["presented"] as? String, !pres.isEmpty { seen = "presented " + pres }
+            else if springboard.alerts.count > 0 { seen = "springboard alert" }
+            else if app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Subscribe' OR label CONTAINS[c] 'Confirm' OR label CONTAINS[c] 'Purchase'")).count > 0 { seen = "purchase button" }
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        shot("buy-sheet")
+        print("EchoIsland store: buy sheet = \(seen.isEmpty ? "not seen" : seen)")
         app.terminate()
     }
 }

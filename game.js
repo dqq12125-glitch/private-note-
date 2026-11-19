@@ -5,11 +5,1217 @@
 (function () {
   'use strict';
 
+  // ---------- 界面文字（i18n.js 字表；键前缀 g.） ----------
+  // 2026-11-19 第二批搬进来（游戏给所有人用，界面要有英文）。中文和原来一字不差；英文给学英语的人看，写得短、写得浅。
+  // tr(键, 参数) 纯文字（toast、textContent、aria-label、prompt）；trh(键, 参数) 拼进 innerHTML（参数先转义）。
+  // 内容（单词、句子、台词、单元标题的中文意思）不搬进字表：要显示「意思」走 meanOf() / gloss()（见下面）
+  const I18N = window.EchoI18n;
+  const tr = (k, p) => (I18N ? I18N.t(k, p) : k), trh = (k, p) => (I18N ? I18N.h(k, p) : k);
+  // 数据里有 zh / en 两个名字的（道具、属性、岛名……）：界面语言 → 英文 → 中文
+  const lbl = o => (I18N ? I18N.label(o) : (o && o.zh) || '');
+  // 内容在界面语言里的意思（{ zh: … }）：中文界面给 zh；英语界面（界面语言就是要学的语言）/ 内容没有这门语言的意思给 null（不显示那一行）
+  const gloss = o => (I18N ? I18N.gloss(o) : (o && o.zh) || null);
+  // ---------- 单词 / 句子的「意思」（规则只写在这里）----------
+  // 条目是 data.js / book.js 的单词 [英文, 中文意思, 表情] 或句子 [英文, 中文意思]（对话 [问, 答, [错的答]] 没有意思）；
+  // 复习本里聊天改过的句子是 { en, zh }。
+  // 钩子：以后的内容批次给别的界面语言加意思时，在数组最后放一个对象 { fr: '…', es: '…' }（对象条目放在 .gloss），这里自动读到。
+  // meanOf(条目) = 现在的界面语言里的意思：中文界面给中文；英语界面给 null；别的界面语言有 gloss[界面语言] 就给，没有给 null（不退回中文）。
+  // 拿到 null 时不显示意思那一行，也不拿「意思」出题——闯关 / 复习 / 对战换成什么题见 cueMode()
+  const glossObj = it => { const g = Array.isArray(it) ? it[it.length - 1] : it && it.gloss; return g && typeof g === 'object' && !Array.isArray(g) ? g : null; };
+  const meanOf = it => (it ? gloss(Object.assign({ zh: Array.isArray(it) ? it[1] : it.zh }, glossObj(it))) : null);
+  // 课本的册名（七上……）：book.js 里只有中文的 short；别的界面语言用字表 g.book.<册 id>
+  const bookShort = b => { const k = 'g.book.' + (b && b.id); return I18N && I18N.lang() !== 'zh' && I18N.has(k) ? tr(k) : (b && b.short) || ''; };
+  // 岛主 / 单元 BOSS 的名字：中文界面用中文名；别的语言用英文名（data.js 的 boss.en；课本单元的 BOSS 没有 en，从开场白里取：I'm Ollie.）
+  const bossName = b => lbl({ zh: b && b.name, en: (b && b.en) || (/\bI(?:'m| am) ((?:the )?[A-Z][\w-]*(?: [A-Z][\w-]*)*)/.exec((b && b.hello) || '') || [])[1] });
+  // 小岛的名字：中文界面用中文名（你好岛）；别的语言用这座岛小镇地图的英文名（Crayon Island……，和大地图、剧情里说的一样，world.js 的 townName）
+  const isleName = z => { const w = window.WORLDS[z], m = window.EchoMaps && EchoMaps.get ? EchoMaps.get('t' + z) : null; return w ? lbl({ zh: w.name, en: (m && m.en) || String(w.en).replace(/[!?]/g, '') + ' Town' }) : ''; };
+  if (I18N) I18N.add({
+    zh: {
+      // —— 公用 ——
+      'g.ok': '知道了', 'g.close': '关闭', 'g.cancel': '取消',
+      'g.book.hj7a': '七上', 'g.book.hj7b': '七下', 'g.book.hj8a': '八上', 'g.book.hj8b': '八下', 'g.book.hj9a': '九上', 'g.book.hj9b': '九下',
+
+      // —— 第一段：关卡配方、成就、存档、朗读、识别、AI 用不了、打分（G1）——
+      'g.rc.0.n': '听词', 'g.rc.0.d': '听单词，选出意思和拼写。',
+      'g.rc.1.n': '说词', 'g.rc.1.d': '跟读单词，再看图说出英文。',
+      'g.rc.2.n': '听句', 'g.rc.2.d': '听整句话，理解意思、排出顺序。',
+      'g.rc.3.n': '说句', 'g.rc.3.d': '一句一句跟读，把句子说顺。',
+      'g.rc.4.n': '对话', 'g.rc.4.d': '听对方说话，选出并说出合适的回答。',
+      'g.rc.5.n': '挑战', 'g.rc.5.d': '所有题型混在一起，还会复习前面岛上的内容。',
+      'g.rc.6.d': '和岛主面对面对话！听懂它的话，大声说出正确回答来攻击它。',
+      'g.type.lw': '🎧 听音选义', 'g.type.ls': '🎧 听音选词', 'g.type.lm': '🎧 听句选意', 'g.type.lr': '💬 听问选答', 'g.type.lo': '🧩 听音排句',
+      'g.type.sr_w': '🎤 单词跟读', 'g.type.sr_s': '🎤 句子跟读', 'g.type.sr_d': '🎤 说出回答', 'g.type.sp': '🖼️ 看图说英语', 'g.type.bt': '⚔️ 对话攻击',
+      'g.tag.lw': '听音选义', 'g.tag.ls': '听音选词', 'g.tag.lm': '听句选意', 'g.tag.lr': '听问选答', 'g.tag.lo': '听音排句',
+      'g.tag.sr_w': '单词跟读', 'g.tag.sr_s': '句子跟读', 'g.tag.sr_d': '说出回答', 'g.tag.sp': '看图说英语', 'g.tag.bt': '对话攻击',
+      'g.praise': ['太棒了！', 'Great!', 'Nice!', '答对了！', 'Excellent!', 'Well done!', '厉害！'],
+      'g.title.1': '见习水手', 'g.title.3': '小小水手', 'g.title.5': '听力侦探', 'g.title.7': '口语新星', 'g.title.10': '发音达人',
+      'g.title.13': '对话高手', 'g.title.16': '岛屿探险家', 'g.title.20': '英语船长', 'g.title.25': '回声大师', 'g.title.30': '传奇船长',
+      'g.pet.chick': '小鸡', 'g.pet.cat': '小猫', 'g.pet.dog': '小狗', 'g.pet.rabbit': '兔子', 'g.pet.frog': '青蛙', 'g.pet.fox': '狐狸',
+      'g.pet.panda': '熊猫', 'g.pet.penguin': '企鹅', 'g.pet.owl': '猫头鹰', 'g.pet.dolphin': '海豚', 'g.pet.unicorn': '独角兽', 'g.pet.dragon': '小龙',
+      'g.pet.dino': '小恐龙', 'g.pet.butterfly': '蝴蝶', 'g.pet.octopus': '小章鱼',
+      'g.qp.lv2': '完成 2 个关卡', 'g.qp.lv4': '完成 4 个关卡', 'g.qp.sp10': '开口说对 10 次', 'g.qp.sp25': '开口说对 25 次',
+      'g.qp.cb8': '一关里连击达到 8', 'g.qp.st3': '拿到 1 次三星', 'g.qp.pf5': '获得 5 次 Perfect 发音', 'g.qp.ls20': '听力题答对 20 道',
+      'g.qp.rv5': '每日复习答对 5 题', 'g.qp.rp1': '完成 1 次对话角色扮演', 'g.qp.bt3': '赢得 3 场怪兽对战', 'g.qp.ct1': '收服 1 只野生怪兽',
+      'g.qp.tk1': '用英语和岛民聊天，完成 1 个目标',
+      'g.ach.first.n': '起航', 'g.ach.first.d': '完成第 1 关',
+      'g.ach.lv10.n': '乘风破浪', 'g.ach.lv10.d': '完成 10 关',
+      'g.ach.lv50.n': '远洋航行', 'g.ach.lv50.d': '完成 50 关',
+      'g.ach.boss1.n': '初战告捷', 'g.ach.boss1.d': '打败第 1 个 Boss',
+      'g.ach.boss5.n': 'Boss 猎人', 'g.ach.boss5.d': '打败 5 个 Boss',
+      'g.ach.allboss.n': '群岛之王', 'g.ach.allboss.d': '打败全部 13 个 Boss',
+      'g.ach.c10.n': '十连击', 'g.ach.c10.d': '一关里连击 10 次',
+      'g.ach.flaw.n': '零失误', 'g.ach.flaw.d': '一关里每题都答对',
+      'g.ach.sp50.n': '敢开口', 'g.ach.sp50.d': '开口说对 50 次',
+      'g.ach.sp300.n': '口语达人', 'g.ach.sp300.d': '开口说对 300 次',
+      'g.ach.pf30.n': '标准发音', 'g.ach.pf30.d': '获得 30 次 Perfect 发音',
+      'g.ach.st3.n': '三天打卡', 'g.ach.st3.d': '连续打卡 3 天',
+      'g.ach.st7.n': '一周不断', 'g.ach.st7.d': '连续打卡 7 天',
+      'g.ach.st30.n': '月度坚持', 'g.ach.st30.d': '连续打卡 30 天',
+      'g.ach.three10.n': '星星收集者', 'g.ach.three10.d': '拿到 10 次三星',
+      'g.ach.world.n': '完美海岛', 'g.ach.world.d': '一个岛的 7 关全部三星',
+      'g.ach.rv20.n': '温故知新', 'g.ach.rv20.d': '每日复习答对 20 题',
+      'g.ach.pets3.n': '宠物之家', 'g.ach.pets3.d': '拥有 3 只宠物',
+      'g.ach.rich.n': '小富翁', 'g.ach.rich.d': '同时拥有 500 金币',
+      'g.ach.actor.n': '小演员', 'g.ach.actor.d': '完成 5 次对话角色扮演',
+      'g.ach.catch1.n': '第一个伙伴', 'g.ach.catch1.d': '收服第 1 只野生怪兽',
+      'g.ach.dex8.n': '手册收集家', 'g.ach.dex8.d': '手册点亮 8 种怪兽',
+      'g.ach.dexall.n': '怪兽大师', 'g.ach.dexall.d': '手册点亮第一大区全部 {n} 种',
+      'g.ach.evo1.n': '进化！', 'g.ach.evo1.d': '第一次让怪兽进化',
+      'g.ach.badge5.n': '徽章收集者', 'g.ach.badge5.d': '拿到 5 枚岛主徽章',
+      'g.ach.badgeall.n': '冠军训练师', 'g.ach.badgeall.d': '拿到全部 13 枚岛主徽章',
+      'g.ach.sight1.n': '好眼力', 'g.ach.sight1.d': '读懂英文线索，收服 1 只「今日目击」的怪兽',
+      'g.ach.sight7.n': '线索小侦探', 'g.ach.sight7.d': '收服 7 只「今日目击」的怪兽',
+      'g.save.dev': '这台设备上 {d} 的备份', 'g.save.phone': '手机「下载/EchoIsland」里 {d} 的备份', 'g.save.before': '以前',
+      'g.save.badlog': '存档读不出来（{n} 字）', 'g.save.wlog': '存档写不出来：{msg}', 'g.save.fulllog': '存档存不进去（空间满了？）',
+      'g.save.full': '存档存不进去了（手机给游戏的空间满了），今天玩的可能存不下来。请家长在 设置 → 💾 存档备份 里先「导出存档」。',
+      'g.save.full.h': '存档存不进去了',
+      'g.store.cutlog': '存档空间快满了，删掉了较早的两份备份', 'g.store.pctlog': '存档空间快满了：已用 {pct}%（{n} 字）',
+      'g.store.h': '存档空间快满了',
+      'g.store.p1': '<p>手机给游戏放存档的地方已经用了 <b>{pct}%</b>。现在还能正常存；满了以后，新的进度就存不进去了。</p>',
+      'g.store.p2': '<p class="tip">请家长：先在「设置 → 🔒 家长设置 → 💾 存档备份」里点「导出存档」，发到微信里存一份；再把这条提示告诉帮你装游戏的人。</p>',
+      'g.store.bar': '💾 存档空间快满了（已用 {pct}%），请告诉家长',
+      'g.streak.keep': '🧊 连胜保护卡生效，{n} 天连续打卡保住了！', 'g.streak.lost': '💧 {n} 天的连续打卡断了，今天重新开始吧',
+      'g.tts.silent': '这句的声音要联网才能听到', 'g.tts.tap': '点一下 🔊 就能听到发音',
+      'g.sr.aimark': 'AI 生成 · 由阿里云通义千问提供', 'g.sr.cloud': '连不上 AI 打分，先用浏览器的识别 / 录音自评',
+      'g.fail.key.auth': 'AI 密钥不对', 'g.fail.key.quota': 'AI 额度用完了', 'g.fail.key.busy': 'AI 有点忙', 'g.fail.key.code': '家庭口令不对',
+      'g.fail.short.auth': '密钥不对', 'g.fail.short.quota': '额度用完了', 'g.fail.short.busy': '有点忙', 'g.fail.short.code': '家庭口令不对',
+      'g.fail.key.other': 'AI 打分用不了', 'g.fail.key.line': '{why}，没法打分：请告诉家长',
+      'g.fail.mic': '🎤 要先允许回声岛用麦克风，才能开口说', 'g.fail.nokey': '🔑 还没有 AI 密钥，没法自动打分：请家长在设置里粘贴',
+      'g.fail.net': '📶 没网，没法打分：连上网再说一次', 'g.fail.busy': '⏳ AI 有点忙，过一会儿再说一次',
+      'g.fail.unheard': '没听清，靠近一点、大声一点再试一次',
+      'g.bar.nokey': '🔑 还没有 AI 密钥：口语没法自动打分，请家长在设置里粘贴', 'g.bar.net': '📶 连不上网：口语打分和聊天要联网',
+      'g.bar.quota': '💳 AI 额度用完了，请告诉家长', 'g.bar.busy': '⏳ AI 太忙了，过一会儿再试', 'g.bar.code': '🔑 家庭口令不对，请告诉家长',
+      'g.bar.auth': '🔑 AI 密钥不对：口语打分和聊天用不了，请告诉家长',
+      'g.bar.how': '怎么办？', 'g.bar.see': '看看',
+      'g.bar.upd.n': '🆕 有新版本（{name}），请家长更新', 'g.bar.upd': '🆕 有新版本，请家长更新',
+      'g.bar.parent': '🔒 家长设置',
+      'g.bar.i.nokey': '这台手机上还没有 AI 密钥。请家长打开「设置 → 🔒 家长设置 → AI 聊天和口语打分」，粘贴阿里云百炼的 API Key（只存在这台手机里）。',
+      'g.bar.i.net': '口语打分和和岛民聊天都要联网。看看 Wi-Fi 或者流量开着没有，连上网再说。',
+      'g.bar.i.quota': '家长：阿里云百炼的额度用完了（或者欠费了）。请到百炼控制台看看费用和额度，充值或者换一把新密钥。',
+      'g.bar.i.busy': 'AI 那边一下子收到太多请求了，过几分钟再试就好。',
+      'g.bar.i.code': '家长：中转服务的家庭口令不对，请在设置里重新填。',
+      'g.bar.i.auth': '家长：AI 密钥不对（可能被作废了）。请在「设置 → 🔒 家长设置 → AI 聊天和口语打分」里粘贴新的密钥。',
+      'g.bar.i.tip': '<p class="tip">AI 用不了的时候：要开口的题可以「先跳过」，这些句子都放进了每日复习，联网以后要补说；对战这一回合改成听一听、选出来（不能暴击）。</p>',
+      'g.mic.h': '要用麦克风才能开口说英语',
+      'g.mic.p': '<p>回声岛要<b>听你说的英语</b>，才能给你打分、让你和岛民聊天。声音只用来打分，不会存下来。</p>',
+      'g.mic.blocked': '<p class="tip">手机现在不让回声岛用麦克风，也不会再问了：点「去打开」→「权限」→「麦克风」→ 选「允许」，再回到游戏。</p>',
+      'g.mic.denied': '<p class="tip">刚才没有允许。再点一次话筒，手机会问你，这次点「允许」就好。</p>',
+      'g.mic.later': '等会儿', 'g.mic.fix': '⚙️ 去打开', 'g.mic.fix2': '⚙️ 去设置里打开', 'g.mic.retry': '好的，再试一次',
+      'g.mic.granted': '🎤 麦克风可以用了！再点一次话筒说吧',
+      'g.mic.mic.ok': '🎤 麦克风 ✅', 'g.mic.mic.bad': '🎤 麦克风 ❌ 没允许用', 'g.mic.mic.quiet': '🎤 麦克风 ⚠️ 没听到声音：是不是被手指挡住了？', 'g.mic.mic.idle': '🎤 麦克风',
+      'g.mic.net.ok': '📶 网络 ✅', 'g.mic.net.bad': '📶 网络 ❌ 连不上', 'g.mic.net.idle': '📶 网络',
+      'g.mic.key.ok': '🔑 AI 密钥 ✅', 'g.mic.key.bad': '🔑 AI 密钥 ❌', 'g.mic.key.idle': '🔑 AI 密钥',
+      'g.mic.nokey': '还没有：请家长在「设置 → 🔒 家长设置」里粘贴',
+      'g.mic.chk.h': '开口前的小检查',
+      'g.mic.chk.p': '<p>回声岛要听你说英语。点话筒，大声说：<b class="chk-say">Hello!</b></p>',
+      'g.mic.chk.hint': '点话筒，说 Hello', 'g.mic.chk.go': '好了，出发！',
+      'g.mic.listen': '正在听……大声说 Hello!', 'g.mic.nobrowser': '浏览器没让用麦克风',
+      'g.mic.ok': '麦克风没问题！', 'g.mic.ok.key': '麦克风没问题！还差 AI 密钥：请家长在设置里粘贴，才能自动打分。',
+      'g.mic.quiet': '没听到声音：靠近一点、大声说 Hello，再点一次话筒',
+      'g.mic.allok': '全都没问题，可以开口说英语了！',
+      'g.mic.covered': '没听到声音：麦克风是不是被挡住了？靠近一点、大声说 Hello，再点一次话筒',
+
+
+      // —— 第二段：出题、每日复习、撤提示、每日任务、首页、课本单元、按能力走、闯关（G2）——
+      'g.rev.card.again': '<b>今天复习过了</b><small>还可以加练 {n} 题（不练也行）</small>',
+      'g.rev.card.done': '<b>今天的复习做完了</b><small>答错的题、课本新学的内容会按 1、2、4、7…天的间隔自动回来</small>',
+      'g.rev.card.wrong': '{n} 道错题', 'g.rev.card.old': '{n} 道学过的', 'g.rev.card.chat': '{n} 句聊天里的',
+      'g.rev.card.n': '今日复习 {n} 题', 'g.rev.card.per': '，一次复习 {n} 题',
+      'g.fade.1': '🔤 看首字母说', 'g.fade.2': '🧠 凭记忆说', 'g.fade.3': '✏️ 改正说法',
+      // 界面语言里没有意思时换出来的题（cueMode）：中文界面不会出现，留着给以后没写意思的语言
+      'g.cue.lw.ty': '🎧 听音选词（带图）', 'g.cue.lw.tag': '听音选词（带图）', 'g.cue.lm.ty': '🎧 听句选句', 'g.cue.lm.tag': '听句选句',
+      'g.cue.lw.t': '听一听，选出你听到的词', 'g.cue.lm.t': '听句子，选出你听到的那一句', 'g.cue.pic.t': '看图，凭记忆用英语说出来',
+      'g.cue.hear.w': '先听一遍，再看首字母说出这个词', 'g.cue.hear.s': '先听一遍，再看首字母说出整句话',
+      'g.q.lw.t': '听一听，选出正确的意思', 'g.q.ls.t': '听一听，选出你听到的英文', 'g.q.lm.t': '听句子，选出正确的中文意思',
+      'g.q.lr.t': '对方这样说，你该怎么回答？', 'g.q.see.long': '看原文（先试着只用耳朵听）', 'g.q.see': '看原文',
+      'g.q.lo.t': '听句子，按顺序点出单词', 'g.q.check': '检查', 'g.q.rep.t': '先听，再大声跟读',
+      'g.q.fix.t': '这句话可以说得更好：直接说出正确的英文', 'g.q.mem.t': '看中文，凭记忆用英语说出来',
+      'g.q.cue.w': '看首字母提示，说出这个词', 'g.q.cue.s': '看首字母提示，说出整句话', 'g.q.said': '你原来说的：<s>{s}</s>',
+      'g.q.dlg.t': '听对方说话，然后大声说出你的回答', 'g.q.dlg.mem': '听对方说话，然后凭记忆大声说出你的回答', 'g.q.you': '你来说：',
+      'g.q.sp.t': '看图，用英语说出来',
+      'g.q.bt.mem': '听懂它的话，<b>凭记忆用英语回答</b>攻击它！', 'g.q.bt.sr': '选一句正确的回答，<b>大声说出来</b>攻击它！（点选项可以先听一听）',
+      'g.q.bt.self': '先点出正确的回答，再大声说出来攻击它！', 'g.q.bt.show': '👀 看看可以怎么回答（这题就不能暴击了）',
+      'g.task.done': '✅ 任务完成：{t}，回地图领奖励', 'g.toast.ach': '🏆 新成就「{name}」 +20 金币',
+      'g.home.streak.on': '今天已打卡，连续 {n} 天', 'g.home.streak.off': '今天还没打卡，完成任意一关就算',
+      'g.home.claim': '领取 +{n}', 'g.home.claimed': '✓ 已领取',
+      'g.home.chest.open': '今天的宝箱已经打开', 'g.home.chest.ready': '每日宝箱可以打开了！', 'g.home.chest': '每日宝箱',
+      'g.home.chest.tmr': '明天任务会刷新，记得回来', 'g.home.chest.how': '领完 3 个任务奖励就能打开，可能开出进化曲、怪兽蛋',
+      'g.home.tasks': '今日任务', 'g.home.reset': '{n} 小时后刷新',
+      'g.home.isle.no': '第 {n} 岛', 'g.home.isle.lock': '🔒 打败上一岛的 Boss 解锁', 'g.home.locked': '（未解锁）', 'g.home.start': '开始',
+      'g.home.scene': '对话动画 · {t}', 'g.home.scene.seen': '✓ 看过了 · 可以再来跟读、角色扮演', 'g.home.scene.new': '先看看这个话题的英语对话怎么说 · 第一次看完 +10 金币',
+      'g.home.tab.mon': '🐲 怪兽冒险', 'g.home.tab.quiz': '📚 闯关练习', 'g.home.tab.talk': '🗣️ 和岛民聊天',
+      'g.home.qv.book': '📗 课本单元', 'g.home.qv.isle': '🏝️ 话题小岛',
+      'g.unit.now': ' · 📍 正在学', 'g.unit.gram': '📐 语法：{t}', 'g.unit.talk': '🗣️ 和 {name} 聊这个单元', 'g.unit.setnow': '设为正在学',
+      'g.unit.head': '📗 课本单元 · 适用于沪教版词汇', 'g.unit.open': '这个学年的课本单元（{list}）', 'g.unit.sep': '、', 'g.unit.all': '七年级到九年级六册书',
+      'g.unit.what': '：每个单元要学的单词和短语，加上按单元的话题和语法自己编写的句子和对话（不是课文）。',
+      'g.unit.cur': '正在学：<b>{u}</b>', 'g.unit.guess': '（按日期猜的）', 'g.unit.change': '改',
+      'g.unit.old': '{b}的新教材还没出版（预计 2027 年春季），现在先用旧版教材的单元，新书出来后会换掉。',
+      'g.det.count': ' 共 {n} 题，3 颗心。', 'g.det.best': '最好成绩：', 'g.det.scene': '🎬 先看对话动画', 'g.det.pre': '📖 先预习一下（点一句就能听）',
+      'g.det.later': '再想想', 'g.det.go': '开始闯关',
+      'g.play.norev': '今天没有要复习的题，太棒了！', 'g.play.boss': '{name} 挡住了去路！听懂它的话，<b>大声说出</b>正确的回答来攻击它。', 'g.play.fight': '⚔️ 迎战！',
+      'g.play.combo': '🔥 {n} 连击', 'g.play.xpx': ' · 经验 ×{m}',
+      'g.play.play': '播放', 'g.play.slowplay': '慢速播放', 'g.play.slow': '慢速', 'g.play.hear': '听原音', 'g.play.hearq': '听对方说', 'g.play.model': '听示范', 'g.play.again': '再听一遍',
+      'g.play.mic': '开始说话', 'g.play.mic.sr': '点麦克风，然后大声说英语', 'g.play.mic.rec': '点麦克风开始录音，说完再点一次',
+      'g.play.skip': '现在不方便开口？跳过这题', 'g.play.hint': '💡 提示', 'g.play.hint2': '💡 再给点提示',
+      'g.play.listening': '正在听……说完会自动停止', 'g.play.nomic': '用不了麦克风，已切换成「大声读 + 自评」模式',
+      'g.play.nosr': '这个浏览器连不上语音识别，已切换成「录音自评」模式', 'g.play.bt.tap': '点出正确的回答，再大声说出来',
+      'g.play.rec.done': '录好了！在下面比一比', 'g.play.rec.on': '正在录音……说完点一下停止', 'g.play.rerec': '点麦克风重新录音',
+      'g.play.self.pic': '先看图<b>大声说出英文</b>，说完再看答案', 'g.play.self.mem': '先<b>凭记忆大声说出来</b>，说完再看答案', 'g.play.self.done': '我说完了，看答案',
+      'g.play.self.bt': '现在对着{name}大声说：<b>{s}</b>', 'g.play.self.cmp': '听听自己的录音，和原音比一比，像不像？', 'g.play.self.read': '大声读 2 遍，然后诚实地给自己打个分',
+      'g.play.self.mine': '▶ 我的录音', 'g.play.self.orig': '🔊 原音',
+      'g.play.rate.0': '😅 再练练', 'g.play.rate.1': '🙂 还行', 'g.play.rate.2': '😎 很像',
+      'g.play.rate.again': '再听一遍原音，跟着读 ', 'g.play.rate.rerec': '，然后重新录音',
+      'g.fb.xp': ' +{n} 经验', 'g.fb.peek': '（看了原文，减半）', 'g.fb.aid': '（有提示，减半）',
+      'g.fb.wrong': '哎呀，不对', 'g.fb.ans': '正确答案：', 'g.fb.order': '顺序不对', 'g.fb.sent': '正确句子：', 'g.fb.reply': '正确回答：',
+      'g.fb.heard': '我听到的是：“{s}”', 'g.fb.pts': '分',
+      'g.fb.retry.mem': '再试一次！想不起来可以点「💡 提示」', 'g.fb.retry.red': '红色的词没读准，先点🔊听一遍，再试一次', 'g.fb.try': '（第 {n}/3 次）',
+      'g.fb.bt.unheard': '没听清。直接点出正确的回答，再大声读一遍也行（这题不能暴击了）',
+      'g.fb.pass.aid.rev': '过关！这次有提示，明天再考一次', 'g.fb.pass.aid': '过关！这次有提示，经验减半', 'g.fb.perfect': 'Perfect！每个词都说对了',
+      'g.fb.good': 'Good！说得不错', 'g.fb.pass': '过关！再多练练会更好',
+      'g.fb.fail': '没关系，这句先记下来', 'g.fb.saved': '已放进错题本（不扣心）：',
+      'g.fb.skip.ai': '先跳过了', 'g.fb.skip': '已跳过', 'g.fb.skip.owe': '已放进复习，联网后要补说：',
+      'g.fb.dodge': '{name} 躲开了！这句回答不对', 'g.fb.bt.see': '没对上。看看这几个回答，把对的那句大声说出来（这题不能暴击了）',
+      'g.fb.bt.tap': '识别不太准？直接点出正确回答，再大声读一遍也行', 'g.fb.bt.again': '没对上任何一个选项，再说一次（第 {n}/3 次）',
+      'g.fb.crit': '暴击！', 'g.fb.hit': '命中！',
+      'g.res.fail': '<h2>小船没电了！</h2><p>3 颗心都用完了。错的题已经放进错题本。</p>', 'g.res.revive': '花 30 金币复活，继续这关',
+      'g.res.once': '（每关只能复活一次）', 'g.res.poor': '（金币不够）', 'g.res.map': '回地图', 'g.res.retry': '重新挑战',
+      'g.res.next': '下一关 →', 'g.res.goisle': '出发去 {name} →', 'g.res.nextunit': '下一单元：{name} →', 'g.res.adv': '🗺️ 去冒险', 'g.res.talk': '🗣️ 去和岛民聊天',
+      'g.res.rev': '复习完成！', 'g.res.beat': '打败 {name}！', 'g.res.perfect': '完美通关！', 'g.res.clear': '通关！',
+      'g.res.more': '今天还有 {n} 题可以复习', 'g.res.alldone': '今天的复习全部完成 ✅',
+      'g.res.lucky': '🍀 幸运暴击！金币翻倍', 'g.res.three': '首次三星奖励 +15 金币', 'g.res.balls': '🔮 回声球 +{n}（去怪兽冒险收服怪兽）', 'g.res.newisle': '🏝️ 新岛屿解锁：{name}',
+      'g.res.gate.open': '🔓 冒险解锁了！今天可以去怪兽冒险了', 'g.res.gate.talk': '✅ 复习完成 · 再和岛民用英语聊一聊（已开口说 {n}/{need} 句）就能去冒险',
+      'g.res.gate.more': '再复习一轮（答对一半以上）才算完成哦',
+      'g.res.xp': '经验', 'g.res.coins': '金币', 'g.res.combo': '最高连击', 'g.res.recall': '🔥 不看字说对 {n} 题，记得真牢！',
+      'g.res.score': '答对 {c} / {t}', 'g.res.nolose': '不丢心、', 'g.res.3star': '答对 90% 以上可拿三星',
+      'g.res.aided': '💡 其中 {n} 题用了提示（经验减半）', 'g.res.aided.rev': '💡 其中 {n} 题用了提示（经验减半，明天再考一次）', 'g.res.again': '再玩一次',
+      'g.res.streak': '🔥 今日打卡成功！已连续 {n} 天',
+      'g.res.lvup': '<h2>升级啦！Lv {lv}</h2><p>新称号：<b>{title}</b>。奖励 20 金币，去宠物店看看吧！</p>', 'g.res.yay': '太好了',
+      'g.res.rest': '<h2>护眼时间</h2><p>已经连续练了 30 分钟，真厉害！看看窗外远处 20 秒，喝口水，让眼睛和嗓子歇一歇。</p>',
+      'g.res.resting': '休息中 {n}', 'g.res.rested': '休息好了，继续',
+
+
+      // —— 第三段：对话动画剧场、宝箱 / 商店 / 设置、新版本、导出 / 恢复（G3）——
+      'g.ver.name': '回声岛 {name}（{code}）', 'g.ver.app': '回声岛 安卓版', 'g.ver.web.name': '回声岛 网页版',
+      'g.ver.new.h': '有新版本了',
+      'g.ver.new.p': '<p>现在装的是 <b>{me}（{mc}）</b>，新版本是 <b>{ne}（{nc}）</b>。</p>',
+      'g.ver.new.notes': '<p class="tip">更新了什么：{notes}</p>',
+      'g.ver.new.how': '请家长把新版本覆盖安装到这台手机上（存档不会丢，安装前也可以先在设置里「导出存档」）。',
+      'g.ver.new.url': '下载地址：<br><b class="ver-url">{url}</b>', 'g.ver.share': '📤 把地址发给家长',
+      'g.ver.sheet.h': '🆕 检查新版本的地址', 'g.ver.sheet.p': '打开 App 时去这个地址看有没有新版本（一个 version.json 文件）。',
+      'g.ver.sheet.def': '留空就用默认地址：', 'g.ver.sheet.none': '留空就不检查。', 'g.ver.back': '返回', 'g.ver.save': '保存',
+      'g.bak.title': '回声岛存档（含 AI 生成的聊天文字）', 'g.bak.toast.file': '📤 选「微信」发给家长或者「文件传输助手」存起来', 'g.bak.toast.text': '📤 选「微信」发给家长存起来',
+      'g.bak.toast.dl': '💾 存档下载好了：{name}', 'g.bak.toast.fail': '导出失败了',
+      'g.bak.row.dev': '📱 这台设备 · {d}', 'g.bak.row.reset': '↩️ 清空之前的进度', 'g.bak.row.restore': '↩️ 上次恢复之前的进度', 'g.bak.row.dl': '📁 下载/EchoIsland · {d}',
+      'g.bak.sheet.h': '🗂️ 从备份恢复', 'g.bak.sheet.p': '选一份备份，用它替换现在的进度。现在的进度会先另存一份（恢复错了还能换回来）。',
+      'g.bak.none': '还没有备份。每天第一次打开游戏时会自动备份一份。',
+      'g.bak.file.native': '📂 从文件里选（换手机、重装以后用；微信里收到的存档文件先存到手机里）', 'g.bak.file.web': '📂 选一个存档文件（.json）',
+      'g.bak.bad': '这个文件不是回声岛的存档，或者已经坏了', 'g.bak.label': '备份',
+      'g.bak.use.h': '用这份备份？', 'g.bak.use.p': '现在的进度（{cur}）会被换掉，不过会先另存一份。', 'g.bak.use.no': '不了', 'g.bak.use.go': '恢复',
+      'g.bak.full': '存不进去（这台设备的空间满了？）', 'g.bak.picked': '选的文件', 'g.bak.readfail': '读不了这个文件（{e}）',
+      'g.err.native': '原生：', 'g.err.recent': ' · 最近 {n} 条（最多留 50 条）', 'g.err.none': '没有出错记录 👍',
+      'g.err.share': '📤 发给帮忙的人', 'g.err.clear': '🧹 清空',
+      'g.intro.h': '欢迎来到回声岛！',
+      'g.intro.p1': '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用英语念咒语攻击，听懂对手的英语来防御。收服新怪兽、升级进化，打败 13 个区域的岛主拿徽章。</p>',
+      'g.intro.p2': '<p><b>📚 闯关练习</b>：📗 课本单元（适用于沪教版词汇，跟着学校的单元走）和 13 座话题小岛。每通关一关送回声球，用来收服怪兽。</p>',
+      'g.intro.p3': '<p><b>🗣️ 和岛民聊天</b>：按住话筒，用英语和岛上的人真的聊天；聊完 AI 写评语，说错的句子第二天会出现在 📕 每日复习里。</p>',
+      'g.intro.p4': '<p>🎁 每天 3 个任务，做完开宝箱 · 🔥 每天打一场就算打卡</p>',
+      'g.intro.voice': '🔊 试试声音', 'g.intro.go': '出发！',
+      'g.set.nokey.h': '🔑 请家长在这里粘贴 AI 密钥', 'g.set.nokey.d': '还没有 AI 密钥：口语题没法自动打分（可以先跳过，联网有密钥以后再补说），也不能和岛民聊天。',
+      'g.set.h': '设置', 'g.set.mine': '🙂 我的设置',
+      'g.set.mic': '🩺 麦克风和网络', 'g.set.mic.btn': '检查一下（说一句 Hello）',
+      'g.set.rate': '朗读速度', 'g.set.try': '🔊 试听',
+      'g.set.tts': '发音来源', 'g.set.tts.auto': '自然配音', 'g.set.tts.device': '本机声音', 'g.set.tts.online': '只用配音',
+      'g.set.tts.d': '「自然配音」：固定的句子用提前合成的真人感配音，拼了名字的句子联网时用阿里云现场合成，没网时用本机声音。「只用配音」不用本机声音。选「本机声音」就全部用浏览器自带的朗读。',
+      'g.set.voice': '朗读声音',
+      'g.set.sc.app': '口语打分', 'g.set.sc.app.d': '🎤 一律开口说，AI 听写打分（阿里云语音识别），说得不准会给一句中文建议。要联网。',
+      'g.set.sc.mode': '口语打分方式', 'g.set.mode.auto': 'AI 打分（推荐）', 'g.set.mode.self': '录音自评',
+      'g.set.sc.mode.d': 'AI 打分：连得上对话服务就用阿里云语音识别打分，否则用浏览器自带的识别。',
+      'g.set.gfx': '冒险画面', 'g.set.gfx.auto': '自动', 'g.set.gfx.high': '精美', 'g.set.gfx.mid': '标准', 'g.set.gfx.low': '省电', 'g.set.gfx.2d': '2D 流畅',
+      'g.set.gfx.auto.d': '自动：好手机先用精美画质，其他先用标准，跑不动会自动降一档', 'g.set.gfx.now': '（现在是「{m}」）', 'g.set.stop': '。',
+      'g.set.gfx.hot': '手机发烫或者卡顿，就选省电或 2D 流畅。',
+      'g.set.look': '画面风格', 'g.set.look.std': '经典', 'g.set.look.new': '新画风（试用）',
+      'g.set.look.d': '新画风还在试：只换户外的小镇和道路，房子里、洞穴里照旧。卡顿就换回经典。',
+      'g.set.ctl': '冒险里的操作', 'g.set.ctl.joy': '🕹️ 摇杆', 'g.set.ctl.pad': '✚ 方向键',
+      'g.set.ctl.pad.d': '方向键：左下角十字键走路；A / B 在右下角。', 'g.set.ctl.joy.d': '摇杆：左手按住屏幕左边任意地方推着走；A / B 在右下角。',
+      'g.set.or': '屏幕方向', 'g.set.or.portrait': '📱 竖屏', 'g.set.or.landscape': '🎮 横屏', 'g.set.or.auto': '🔄 跟着手机转',
+      'g.set.or.d': '横屏玩冒险和对战更像掌机；做题、聊天竖着横着都能用。',
+      'g.set.sfx': '音效', 'g.set.on': '开', 'g.set.off': '关',
+      'g.set.mu': '音乐', 'g.set.mu.off': '关', 'g.set.mu.low': '小', 'g.set.mu.mid': '中', 'g.set.mu.high': '大',
+      'g.set.lic': '开源许可与致谢',
+      'g.set.gate': '先学习再冒险', 'g.set.gate.on': '🔒 开（推荐）',
+      'g.set.gate.d': '开着时，每天先做完每日复习、用英语和岛民聊一聊（用语音说满 6 句，或者完成一个小目标），才能去怪兽冒险。关掉要家长密码，关过的天周报上会标出来；关着时冒险也不限时。',
+      'g.set.lim': '⏱️ 冒险时间', 'g.set.edit': '改',
+      'g.set.lim.d': '只算大地图和对战的时间。时间到了不会半路掐断，等这一场战斗或这段对话结束再回首页。多做一轮复习、多完成一个聊天目标、多通关一关新练习（或拿到更多星星），每样 +10 分钟。',
+      'g.set.mix': '冒险里的英语题', 'g.set.mix.a': '多出课本', 'g.set.mix.b': '少量课本', 'g.set.mix.c': '只用岛上话题',
+      'g.set.mix.d': '打怪兽、答村民的题时，有一部分换成课本正在学的单元（{unit}，在闯关页「📗 课本单元」里改）。',
+      'g.set.ai': '🗣️ AI 聊天和口语打分', 'g.set.ai.on': '✅ 已连上阿里云', 'g.set.ai.off': '⚠️ 还没有 AI 密钥', 'g.set.ai.change': '换密钥', 'g.set.ai.paste': '粘贴密钥',
+      'g.set.ai.on.d': '用阿里云百炼的 API Key，只存在这台手机里，装新版也不用重填。',
+      'g.set.ai.off.d': '请家长在这里粘贴 AI 密钥（阿里云百炼的 API Key），只存在这台手机里。设好以后能和岛民用英语聊天，口语题也会自动打分。',
+      'g.set.unl': '闯关练习：全部关卡直接开放', 'g.set.unl.0': '按顺序解锁', 'g.set.unl.1': '全部直接开放',
+      'g.set.unl.d': '只对「📚 闯关练习」有效（想跟着课本直接练某个单元时打开）；冒险里的徽章、守卫、回声技能不受影响。',
+      'g.set.push': '📲 学习日报发到微信', 'g.set.push.on': '✅ 每天 20 点以后发（{k}）', 'g.set.push.wecom': '企业微信群机器人', 'g.set.push.off': '没开（默认不发）', 'g.set.push.btn': '设置',
+      'g.set.saf': '👪 聊天安全', 'g.set.saf.look': '看需要注意的聊天', 'g.set.saf.n': '看需要注意的聊天（{n} 段）', 'g.set.saf.info': 'ℹ️ 家长须知',
+      'g.set.saf.d': '孩子在聊天里说到难过、被欺负、有危险时，那段聊天会标出来，输家长密码能看全文。',
+      'g.set.pin': '🔑 家长密码', 'g.set.pin.has': '已经设好了', 'g.set.pin.none': '还没设', 'g.set.pin.change': '改密码', 'g.set.pin.set': '设密码',
+      'g.set.pin.d1': '首次设置时家长设的 4 位密码（手机里只存加了随机盐的哈希），输错 5 次锁 10 分钟。忘了密码：先「💾 导出存档」（不用密码）→ 在手机设置里清除这个 App 的数据 → 重新走一遍家长设置、设新密码 → 「从备份恢复」，进度就回来了（手机「下载/EchoIsland」里每天也有自动备份）。',
+      'g.set.pin.nat.has': '打包时设好的 4 位密码，输错 5 次锁 10 分钟。要换密码：改 echo.properties 的 PARENT_PIN，重新打包安装（存档不会丢）。',
+      'g.set.pin.nat.none': '⚠️ 这个安装包没有设家长密码，上面这些都改不了。请家长在 echo.properties 里写 PARENT_PIN（4 位数字），重新打包安装。',
+      'g.set.pin.web.none': '还没设（第一次要用时由家长来设）', 'g.set.pin.lock': '输错 5 次锁 10 分钟。',
+      'g.set.fam': '👪 家庭定制', 'g.set.fam.noname': '（没起名）', 'g.set.sep': '、',
+      'g.set.fam.d': '孩子的英文昵称和形象、博士包里的 3 只伙伴（开始新冒险时生效）、家里的人。只存在这台手机里。',
+      'g.set.dev': '🩺 设备检查', 'g.set.dev.ok': '✅ 合格', 'g.set.dev.warn': '⚠️ 能玩', 'g.set.dev.bad': '❌ 不合格', 'g.set.dev.none': '没做过', 'g.set.dev.again': '再检查一次',
+      'g.set.priv': '📄 隐私和同意', 'g.set.priv.doc': '儿童隐私说明', 'g.set.priv.consent': '监护人同意书',
+      'g.set.priv.ok': '监护人 {d} 同意过（{v} 版）。要撤回同意：在上面「AI 聊天和口语打分」里删掉密钥（就不再连 AI），或者卸载 App。',
+      'g.bak.h': '💾 存档备份', 'g.bak.export': '📤 导出存档', 'g.bak.restore': '🗂️ 从备份恢复',
+      'g.bak.d1': '每天第一次打开时自动备份：这台设备上留 3 份', 'g.bak.last': '（最近一份是 {d} 的）', 'g.bak.before': '以前',
+      'g.bak.dl': '，手机「下载/EchoIsland」文件夹里留 7 份（卸载 App 也不会删）',
+      'g.bak.d2': '。「导出存档」可以发到微信里存着，换手机、重装以后用「从备份恢复」。', 'g.bak.used': '存档空间已用 {n}%。',
+      'g.ver.h': '🆕 检查新版本', 'g.ver.edit': '改地址', 'g.ver.defaultUrl': '默认地址',
+      'g.ver.on': '打开 App 时去看一眼有没有新版本（{url}），有就在首页提示「请家长更新」。',
+      'g.ver.noaddr': '没有填地址：不检查新版本（新版本由帮您安装的人发给您）。', 'g.ver.web': '网页版总是最新的，不用检查。',
+      'g.err.h': '🔧 出错记录', 'g.err.week': '最近 7 天 {n} 条', 'g.err.look': '看看',
+      'g.err.d': '游戏出错时自动记下最近 50 条，只存在这台设备里。手机上有问题时，可以把它发给帮你装游戏的人。',
+      'g.set.reset': '清空进度', 'g.set.reset.btn': '清空全部进度', 'g.set.reset.d': '星星、金币、怪兽、复习记录都会清零，无法恢复。要家长密码，还要输入「清空」两个字。',
+      'g.set.parent': '🔒 家长设置',
+      'g.chest.pet': '<h2>开出限定宠物：{name}！</h2><p>宝箱限定，商店买不到哦。</p>',
+      'g.chest.freeze': '<h2>开出连胜保护卡！</h2><p>哪天忘了打卡，它会自动帮你保住连续天数。</p>',
+      'g.chest.coins': '<h2>开出 {n} 金币！</h2><p>明天再来，任务会刷新。</p>',
+      'g.chest.take': '收下',
+      'g.shop.following': '跟着你', 'g.shop.take': '点击带上', 'g.shop.chestonly': '宝箱限定', 'g.shop.fromchest': '每日宝箱开出',
+      'g.shop.head': '<h2>宠物店</h2><p>你有 <b>{n}</b> 金币。宠物会在地图上陪你闯关。</p>',
+      'g.shop.fz': '连胜保护卡（有 {n} 张，最多 2 张）', 'g.shop.fzd': '忘记打卡一天时自动使用，保住连续天数', 'g.shop.fzbtn': '100 金币',
+      'g.shop.chestpet': '这只宠物只能从每日宝箱开出', 'g.shop.short': '金币还差 {n}，去闯关赚金币吧', 'g.shop.bought': '买到了 {name}！',
+      'g.achv.h': '成就 {n} / {t}', 'g.achv.sum': 'Lv {lv} {title} · 共 {stars} 颗星 · 开口说对 {spoken} 次 · 完成 {levels} 关',
+      'g.set.env.app': '✅ 朗读：自然配音（装在手机里，不用联网）', 'g.set.env.sr.ok': '✅ 口语自动打分：说完一句交给阿里云识别（要联网）',
+      'g.set.env.sr.nokey': '⚠️ 口语自动打分：还没有 AI 密钥', 'g.set.env.see': '（见上面）', 'g.set.env.paste': '，请家长在「设置 → 🔒 家长设置」里粘贴',
+      'g.set.env.dev': '✅ 朗读：本机声音 {name}', 'g.set.env.nodev': '⚠️ 朗读：这个浏览器没有英语声音，在「设置」里换成「自然配音」',
+      'g.set.env.nat': '✅ 朗读：自然配音（没有配音的句子联网时用阿里云现场合成）', 'g.set.env.nat.dev': '✅ 朗读：自然配音（没有配音的句子联网时用阿里云现场合成，没网时用本机声音）',
+      'g.set.env.wx': '<br>📱 你正在微信里打开：点右上角「···」→「在浏览器打开」，录音和语音识别会更稳定。',
+      'g.set.env.sr.web': '✅ 支持语音识别，开口会自动打分', 'g.set.env.sr.none': '⚠️ 语音识别不可用，口语题用「录音 + 自评」',
+      'g.set.env.tip': '在中国大陆，电脑上推荐用 <b>Edge 浏览器</b>，手机推荐 <b>iPhone 自带 Safari</b>；Chrome 的语音识别要连 Google 服务器，通常用不了。',
+      'g.th.tip.watch': '先完整看一遍。关掉英文字幕，就能练纯听力。点下面的对话记录可以单独再听一句。',
+      'g.th.tip.shadow': '每句播完会停下来，你跟着说一遍，说对了自动继续。',
+      'g.th.tip.role': '选一个角色，轮到你时大声说出台词，另一个角色由电脑来演。',
+      'g.th.lvup': '🎖️ 升级啦！Lv {lv} {title} +20 金币',
+      'g.th.pause': '⏸ 暂停', 'g.th.resume': '▶ 继续', 'g.th.again': '🔁 再来一遍', 'g.th.start': '▶ 开始播放',
+      'g.th.m.watch': '👀 看动画', 'g.th.m.shadow': '🔁 跟读', 'g.th.m.role': '🎭 角色扮演',
+      'g.th.exit': '退出', 'g.th.ep': '第 {n} 集', 'g.th.you': ' · 你', 'g.th.me': '我来演',
+      'g.th.slow': '<span>🐢</span>慢速', 'g.th.en': '<span>En</span>英文', 'g.th.zh': '<span>中</span>中文',
+      'g.th.end': '🎉 演完啦！', 'g.th.idle': '点「开始播放」，看看他们怎么说', 'g.th.ear': '🎧 只用耳朵听……',
+      'g.th.logh': '对话记录（点一句再听一遍）',
+      'g.th.turn.role': '轮到你了，大声说：', 'g.th.turn.shadow': '跟着说一遍：',
+      'g.th.taps': '点麦克风，然后大声说', 'g.th.hear': '🔊 听示范', 'g.th.skip': '跳过这句',
+      'g.th.orskip': '，或者点「跳过这句」', 'g.th.canskip': '（可以先点「跳过这句」）',
+      'g.th.perfect': '<b>{n} 分</b> Perfect！', 'g.th.good': '<b>{n} 分</b> Good！',
+      'g.th.msg.watch': '第一次看完 +10 金币', 'g.th.msg.shadow': '跟读完成 +20 经验', 'g.th.msg.role': '角色扮演完成 +30 经验 +10 金币',
+      'g.th.next.shadow': '🔁 接着跟读', 'g.th.next.role': '🎭 试试角色扮演', 'g.th.swap': '换演 {name}',
+      'g.th.fin.role': '演得真棒！', 'g.th.fin.shadow': '跟读完成！', 'g.th.fin.watch': '看完啦！', 'g.th.fin.more': '多看几遍，对话就能脱口而出', 'g.th.map': '回地图',
+
+
+      // —— 第四段：事件、对战工具、学习记录、学习锁、冒险时间、家长密码、周报、日报推送、启动（G4）——
+      'g.ev.bookat': '📍 现在学 {b} Unit {n}，冒险里会多出它的题',
+      'g.ev.locked.h': '{b}还没开放',
+      'g.ev.locked.p': '这台手机上开放的是这个学年的课本单元。下一学年的单元是另外的内容包，请家长联系帮您安装的人。',
+      'g.ev.pick.h': '📗 课本学到哪个单元了？',
+      'g.ev.pick.p': '选好以后，闯关页会标出这个单元；怪兽冒险里的英语题也会多出这个单元的单词和句子。',
+      'g.ev.pick.old': '（旧版）',
+      'g.ev.gram.h': 'Unit {n} 语法：{t}',
+      'g.ev.gram.h0': 'Unit {n} 语法',
+      'g.ev.why.mix': '改冒险里的英语题',
+      'g.ev.why.gate': '关学习锁',
+      'g.ev.why.clock': '手机日期被改过：从今天重新开始',
+      'g.ev.clock.ok': '📅 好了，从今天重新开始',
+      'g.ev.why.pin': '改家长密码',
+      'g.ev.pin.ok': '🔑 家长密码改好了',
+      'g.ev.why.lim': '改冒险时间',
+      'g.ev.why.push': '改学习日报推送',
+      'g.ev.why.ver': '改检查新版本的地址',
+      'g.ev.why.bak': '从备份恢复',
+      'g.ev.why.unlock': '闯关练习全部直接开放',
+      'g.ev.why.reset': '清空全部进度',
+      'g.ev.why.zh': '改剧情中文',
+      'g.ev.micfix': '在「权限 → 麦克风」里选「允许」，再回到游戏',
+      'g.ev.upd.t': '回声岛有新版本',
+      'g.ev.upd.b': '回声岛新版本 {v}：{u}',
+      'g.ev.ver.https': '地址要以 https:// 开头',
+      'g.ev.ver.new': '好了，以后去新地址检查',
+      'g.ev.ver.def': '用回默认地址',
+      'g.ev.bak.bad': '这份备份读不出来',
+      'g.ev.bak.pick': '打不开文件选择',
+      'g.ev.bak.big': '文件太大了，不像存档',
+      'g.ev.bak.read': '读不了这个文件',
+      'g.ev.err.title': '回声岛出错记录',
+      'g.ev.err.copied': '复制好了，可以粘贴发给别人',
+      'g.ev.err.nocopy': '复制不了',
+      'g.ev.playfail': '播放录音失败',
+      'g.ev.quit.h': '要离开这一关吗？',
+      'g.ev.quit.p': '现在退出，这一关的进度不会保存。',
+      'g.ev.quit.yes': '退出',
+      'g.ev.quit.no': '继续闯关',
+      'g.ev.revive': '❤️ 复活成功！',
+      'g.ev.sep': '、',
+      'g.ev.rv.h': '每日复习',
+      'g.ev.rv.miss': ' · 错过 {n} 次',
+      'g.ev.rv.today': '今天要复习 <b>{n}</b> 题：{list}。',
+      'g.ev.rv.wrong': '{n} 道错题',
+      'g.ev.rv.old': '{n} 道学过的',
+      'g.ev.rv.chat': '{n} 句 AI 聊天里学到的更好说法',
+      'g.ev.rv.done': '今天的复习做完了！',
+      'g.ev.rv.rule': '答错的题当天就复习；复习答对一次，隔 1、2、4、7、15、30 天再考一次，都对了就算掌握。冒险里答对今天到期的题也算复习。',
+      'g.ev.rv.tip': '⏳ 以后会回来的 {a} 题 · 🏅 已经掌握 {b} 题',
+      'g.ev.rv.sum': '📖 错题本（点一句就能听）',
+      'g.ev.rv.later': '等会儿',
+      'g.ev.rv.go': '复习 {n} 题',
+      'g.ev.claim': '+{c} 金币 +20 经验',
+      'g.ev.nosr': '这个浏览器不支持语音识别，会继续用录音自评',
+      'g.ev.reset.h': '清空全部进度',
+      'g.ev.reset.p': '星星、金币、怪兽、徽章、复习记录都会清零。清空前会先另存一份，清错了可以在「从备份恢复」里找回（要家长密码）。',
+      'g.ev.reset.ask': '真的要清空，请在下面输入「清空」两个字：',
+      'g.ev.reset.aria': '输入清空两个字',
+      'g.ev.reset.no': '不清空了',
+      'g.ev.reset.go': '清空',
+      'g.ev.reset.word': '清空',
+      'g.ev.reset.need': '要输入「清空」两个字才会清空',
+      'g.ev.reset.done': '进度已清空',
+      'g.gate.rev.done': '每日复习 · 今天做完一轮了',
+      'g.gate.rev.none': '每日复习（今天没有要复习的）',
+      'g.gate.rev.todo': '做一轮每日复习（{n} 题）',
+      'g.gate.chat.goal': '和岛民聊天：完成了小目标',
+      'g.gate.chat.said': '和岛民聊天：今天开口说了 {n} 句英语',
+      'g.gate.chat.noai': '和岛民聊天（AI 聊天还没开通，今天先跳过）',
+      'g.gate.chat.daily': '和岛民聊天（今天的聊天时间用完了，先跳过）',
+      'g.gate.chat.pass': '和岛民聊天：{r}，先让你冒险 {n} 分钟',
+      'g.gate.chat.key': '和岛民聊天：{r}，现在聊不了，请告诉家长（家长可以在 🔒 家长设置 里暂时关学习锁）',
+      'g.gate.chat.used': '用英语和岛民聊天：已开口说 <em class="gate-n">{a}/{b}</em> 句（{x}）',
+      'g.gate.chat.go': '用英语和岛民聊天：已开口说 <em class="gate-n">{a}/{b}</em> 句，或者完成一个小目标',
+      'g.gate.why.offline': '现在没网',
+      'g.gate.why.daily': '今天的聊天时间用完了',
+      'g.gate.why.fail': '今天聊天连不上',
+      'g.gate.key.quota': 'AI 额度用完了',
+      'g.gate.key.auth': 'AI 密钥不对',
+      'g.gate.again.tmr': '明天再来聊',
+      'g.gate.again.net': '连上网说满就能接着冒险',
+      'g.gate.t.back': '📅 手机日期好像被改过了',
+      'g.gate.t.pass': '📵 今天先去冒险吧（临时 {n} 分钟）',
+      'g.gate.t.open': '🎉 今天的学习完成了，出发冒险吧！',
+      'g.gate.t.todo': '📚 冒险前的 2 个小任务（完成 {n}/2）',
+      'g.gate.back.tip': '把手机改回「自动设置日期和时间」再来。',
+      'g.gate.back.btn': '👪 家长：从今天重新开始',
+      'g.gate.btn.rev': '去复习',
+      'g.gate.btn.chat': '去聊天',
+      'g.gate.report': '📊 看这周的学习周报',
+      'g.gate.blk.back': '手机日期好像被改过了，改回自动时间再来',
+      'g.gate.blk.rev': '先把今天的每日复习做完，再去冒险',
+      'g.gate.blk.key': '{r}，现在没法聊天：请告诉家长',
+      'g.gate.blk.used.daily': '临时冒险时间用完了，今天的聊天时间也用完了，明天再来吧',
+      'g.gate.blk.used': '临时冒险时间用完了：连上网，用英语和岛民聊一聊就能接着玩',
+      'g.gate.blk.chat': '先用英语和岛民聊一聊：开口说满 {need} 句（现在 {n} 句），或者完成一个小目标',
+      'g.adv.nolimit': '不限时',
+      'g.adv.lim': '上学日 {wd} 分钟 · 周末 {we} 分钟',
+      'g.adv.lim.night': ' · {a}–{b} 不能冒险',
+      'g.adv.line.night': '🌙 {a} 到早上 {b} 不能冒险',
+      'g.adv.line.over': '⏰ 今天的冒险时间用完了',
+      'g.adv.line.more': '（多学一点能换时间）',
+      'g.adv.line.left': '🕹️ 今天还能冒险 <b>{n}</b> 分钟',
+      'g.adv.line.bonus': '（含多学奖励 {n} 分钟）',
+      'g.adv.pass.toast': '📵 {r}：先让你冒险 {n} 分钟',
+      'g.adv.pass.offline': '今天没网',
+      'g.adv.pass.daily': '今天的聊天时间用完了',
+      'g.adv.pass.fail': '今天聊天连不上',
+      'g.adv.stop.night.h': '该睡觉啦！',
+      'g.adv.stop.night.p': '{a} 到早上 {b} 不能冒险。怪兽们都睡着了，明天再来吧！',
+      'g.adv.stop.time.h': '今天的冒险时间到啦！',
+      'g.adv.stop.time.in': '今天冒险了 {n} 分钟，怪兽们也要休息了。明天再来！',
+      'g.adv.stop.time.out': '今天冒险了 {n} 分钟，怪兽们也要休息了。进度都存好了，明天再来！',
+      'g.adv.stop.pass.h': '临时冒险时间到了',
+      'g.adv.stop.pass.p': '今天没网（或者聊天连不上），先让你冒险了 {n} 分钟。连上网，用英语和岛民聊一聊，就能接着冒险。',
+      'g.adv.stop.def': '先休息一下吧',
+      'g.adv.stop.more': '想多玩一会儿？多做一轮复习、多完成一个聊天目标、或者多通关一关新练习（或拿到更多星星），每样能换 10 分钟（今天还能换 {n} 分钟）。',
+      'g.adv.ok': '好的',
+      'g.adv.warn5': '⏰ 今天的冒险还剩 5 分钟，打完这一场就该休息啦',
+      'g.adv.min': '{n} 分钟',
+      'g.adv.sheet.h': '⏱️ 冒险时间',
+      'g.adv.sheet.p': '只算大地图和对战的时间（做题、复习、聊天不算）。时间到了不会半路掐断：等这一场战斗或这段对话结束，再提示回首页。',
+      'g.adv.sheet.on': '冒险限时',
+      'g.adv.sheet.lim': '限时（推荐）',
+      'g.adv.sheet.wd': '上学日（周一到周五）每天',
+      'g.adv.sheet.we': '周末每天',
+      'g.adv.sheet.from': '晚上几点以后不能冒险',
+      'g.adv.sheet.any': '不管',
+      'g.adv.sheet.to': '早上几点以后才能冒险',
+      'g.adv.sheet.max': '多学一点换时间，每天最多',
+      'g.adv.sheet.plus': '+{n} 分钟',
+      'g.adv.sheet.none': '不奖励',
+      'g.adv.sheet.small': '多做一轮复习、多完成一个聊天目标、多通关一关新练习（或拿到更多星星），每样 +10 分钟。',
+      'g.adv.sheet.done': '完成',
+      'g.pin.none.h': '还没有家长密码',
+      'g.pin.none.p': '这个安装包打包时没有设家长密码，「{w}」现在改不了。',
+      'g.pin.this': '这个设置',
+      'g.pin.none.tip': '请家长在电脑上的 android/echo.properties 里写 PARENT_PIN（4 位数字），重新打包安装（存档不会丢）。',
+      'g.pin.first': '第一次用：请家长设一个 4 位数字密码，别告诉孩子',
+      'g.pin.locked': '输错太多次了，{n} 分钟后再试',
+      'g.pin.t.set1': '设一个 4 位数字的家长密码',
+      'g.pin.t.set2': '再输一遍，确认一下',
+      'g.pin.t.check': '请家长输入 4 位密码',
+      'g.pin.clr': '清除',
+      'g.pin.del': '删掉一位',
+      'g.pin.h': '家长密码',
+      'g.pin.typed': '已经输了 {n} 位',
+      'g.pin.weak': '这个密码太好猜了，换一个吧',
+      'g.pin.diff': '两次不一样，重新设一次',
+      'g.pin.nosave': '密码没改成：要先输对旧密码，2 分钟内改完。再点一次「改密码」',
+      'g.pin.saved': '🔑 家长密码设好了，别告诉孩子哦',
+      'g.pin.wrong': '密码不对，还能试 {n} 次',
+      'g.pin.again': '密码对了，再点一次刚才的按钮',
+      'g.rp.dlg': '问：{q} 答：{a}',
+      'g.rp.mon': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+      'g.rp.md': '{mon}/{dd}',
+      'g.rp.wd': ['日', '一', '二', '三', '四', '五', '六'],
+      'g.rp.today': '今天',
+      'g.rp.dow': '周{d}',
+      'g.rp.heavy.tip': '冒险超过学习的 3 倍',
+      'g.rp.miss': ' · 错 {n} 次',
+      'g.rp.ex.noai': 'AI 聊天没开通',
+      'g.rp.ex.daily': '聊天时间用完了',
+      'g.rp.f.off': '🔓 {n} 天关过学习锁',
+      'g.rp.f.back': '⏰ 手机日期被改过',
+      'g.rp.f.reset': '⏰ 家长重设过日期',
+      'g.rp.f.pass': '📵 断网放行 {n} 天',
+      'g.rp.f.ex': '🟡 聊天免了 {n} 天（{why}）',
+      'g.rp.f.night': '🌙 {n} 天很晚还在冒险',
+      'g.rp.f.heavy': '冒险超过学习 3 倍 {n} 天',
+      'g.rp.f.pin': '🔑 家长密码输错 {n} 次',
+      'g.rp.f.pinlock': '（锁住 {n} 次）',
+      'g.rp.f.cleared': '🧹 清空过进度',
+      'g.rp.f.restored': '🗂️ 从备份恢复过存档',
+      'g.rp.f.noai': '⚠️ AI 聊天没开通',
+      'g.rp.f.key': '💳 AI 额度或密钥出问题 {n} 天',
+      'g.rp.f.net': '📶 AI 连不上网 {n} 天',
+      'g.rp.f.skip': '⏭️ AI 用不了先跳过 {n} 题（都在复习里）',
+      'g.rp.f.mic': '🎤 麦克风被拒 {n} 次',
+      'g.rp.ab.a': '<p class="rp-ab">💪 <b>能力</b>（和上周比）：每句 {n} 个词',
+      'g.rp.ab.b': ' · 一次说对 {n}',
+      'g.rp.ab.c': ' · 隔一周还记得 {n}',
+      'g.rp.hb.a': '<p class="rp-line">🔥 不看字说对 <b>{n}</b> 句',
+      'g.rp.hb.w': '（另有 {n} 个词）',
+      'g.rp.hb.say': ' · 💡 带提示 {h} 次 · 🗣️ 聊天开口 {n} 句',
+      'g.rp.hb.max': '（最长一句 {n} 个词）',
+      'g.rp.hb.zh': ' · 说中文 {n} 句',
+      'g.rp.hb.look': ' · 看中文 {a} 次 · 帮帮我 {b} 次',
+      'g.rp.hist': '<h3>最近几周</h3><p class="rp-line">📈 学习日 {a}　🔥 不看字说对 {b}</p>',
+      'g.rp.cost.lt': '不到 0.01',
+      'g.rp.title.n': '{name} 的学习周报',
+      'g.rp.title.me': '我的学习周报',
+      'g.rp.sub': '{a} – {b} · 学习日 <b>{n}/7</b>',
+      'g.rp.since': '（{d} 开始记录）',
+      'g.rp.concern': '👪 有 {n} 段聊天需要家长看看（设置 → 🔒 家长设置 → 聊天安全，要家长密码）',
+      'g.rp.legend': '每天几分钟：<i class="l"></i>学习 {a} <i class="p"></i>冒险 {b} <i class="o"></i>翻菜单　✅ 完成 🟡 免聊天 📵 断网放行 🔓 关锁 ⏰ 改日期 🌙 很晚',
+      'g.rp.t.levels': '完成关卡',
+      'g.rp.t.spoken': '开口说对',
+      'g.rp.t.review': '复习答对',
+      'g.rp.t.chat': 'AI 聊天 {m} 分钟',
+      'g.rp.t.fresh': '新学的词句',
+      'g.rp.t.mastered': '累计掌握',
+      'g.rp.cu': '<p class="rp-line">📗 正在学 <b>{u}</b> · ★ {s}/21 · 这周答错 {n} 次（都进了复习）</p>',
+      'g.rp.top': '最容易错的（累计）',
+      'g.rp.tips': '聊天里 AI 改过的句子',
+      'g.rp.cost': '💰 本周 AI 花费约 ¥{c}',
+      'g.rp.cost.web': '（网页版的聊天费用记在中转服务那边）',
+      'g.rp.end': '📸 截个图发给家长吧！',
+      'g.rp.dg.ai': 'AI 出错 {n} 次',
+      'g.rp.dg.aiwhy': '（没网 {a} · 密钥/额度 {b}）',
+      'g.rp.dg.chat': ' · 聊天连不上 {n} 天',
+      'g.rp.dg.err': ' · 程序出错 {n} 条',
+      'g.rp.dg.gl': ' · 3D 画面丢过 {n} 次',
+      'g.rp.dg.gone': ' · 画面重开过 {n} 次',
+      'g.push.bad': '看不懂这个地址：要 32 位的 PushPlus token，或者 https://qyapi.weixin.qq.com/… 开头的机器人地址',
+      'g.push.on': '📲 好了：每天 20 点以后发一条学习日报',
+      'g.push.off': '不发日报了',
+      'g.push.fill': '先填好 PushPlus token 或企业微信机器人地址',
+      'g.push.test.t': '回声岛：测试消息',
+      'g.push.test.b': '家长您好！以后每天晚上 8 点以后，会在这里收到孩子当天的学习小结。',
+      'g.push.test.ok': '📲 发出去了，去微信里看看有没有收到',
+      'g.push.test.no': '没发出去：检查一下网络和地址',
+      'g.push.h': '📲 学习日报发到微信',
+      'g.push.p': '每天晚上 8 点以后，把孩子当天的学习小结（学了多久、冒险多久、开口说了几句、学习任务完成没有）发一条到家长微信。默认不发。两种方式选一种：',
+      'g.push.how1': '<b>PushPlus</b>：微信关注「pushplus 推送加」，在它的网站上复制你的 token（32 位）。',
+      'g.push.how2': '<b>企业微信群机器人</b>：企业微信的群 → 群设置 → 群机器人 → 添加，复制 webhook 地址（https://qyapi.weixin.qq.com/… 开头）。',
+      'g.push.ph': 'PushPlus token 或机器人地址',
+      'g.push.tip': '聊天的内容不会发出去；有需要家长看看的聊天，只提示一句。没网时等联网后补发。',
+      'g.push.btn.test': '发一条试试',
+      'g.push.btn.save': '保存',
+      'g.push.btn.off': '不发了',
+      'g.push.btn.back': '返回',
+      'g.push.title': '回声岛日报 {md}（{dow}）',
+      'g.push.s.open': '✅ 学习任务完成了',
+      'g.push.s.ex': '🟡 复习做完了（聊天这一项免了：{why}）',
+      'g.push.s.pass': '📵 {r}，先临时冒险了 {n} 分钟（聊天没做）',
+      'g.push.s.pass.daily': '聊天时间用完了（没怎么开口）',
+      'g.push.s.pass.fail': '聊天连不上',
+      'g.push.s.pass.off': '没网',
+      'g.push.s.off': '🔓 学习锁关着',
+      'g.push.s.todo': '⬜ 学习任务还没完成',
+      'g.push.l.time': '⏱️ 学习 {a} 分钟 · 冒险 {b} 分钟',
+      'g.push.l.rev': '📕 复习答对 {a} 题 · 🎤 开口说对 {b} 次 · 🔥 不看字说对 {c} 句',
+      'g.push.l.chat': '🗣️ 和岛民聊天 {a} 段，用语音说了 {b} 句英语',
+      'g.push.l.max': '（最长一句 {n} 个词）',
+      'g.push.l.goals': '，完成 {n} 个小目标',
+      'g.push.w.off': '🔓 关过学习锁',
+      'g.push.w.back': '⏰ 手机日期被改过',
+      'g.push.w.night': '🌙 很晚还在冒险',
+      'g.push.w.quota': '💳 AI 额度用完了',
+      'g.push.w.busy': '⏳ AI 太忙',
+      'g.push.w.auth': '🔑 AI 密钥不对',
+      'g.push.w.nokey': '🔑 还没有 AI 密钥',
+      'g.push.w.skip': '⏭️ AI 用不了先跳过 {n} 题',
+      'g.push.w.pinlock': '🔑 家长密码输错太多次被锁了',
+      'g.push.w.pin': '🔑 家长密码输错 {n} 次',
+      'g.push.l.concern': '👪 有 {n} 段聊天需要家长看看（游戏里：设置 → 🔒 家长设置 → 聊天安全）',
+      'g.boot.quiet': '🔇 不用说话模式：要说话的地方都变成按钮了',
+      'g.boot.bad.h': '存档读不出来了',
+      'g.boot.bad.none': '也没找到能用的备份，只好从头开始。',
+      'g.boot.bad.used': '别担心，已经用<b>{w}</b>恢复了，最多少了最近一点点进度。',
+      'g.boot.bad.tip': '坏掉的那份另外存着没有删',
+      'g.boot.bad.full': '；这台设备的空间满了，这次的进度先不保存，请告诉家长',
+      'g.boot.bad.tip2': '。家长也可以在「设置 → 🔒 家长设置 → 💾 存档备份」里换一份备份。',
+      'g.boot.restored': '🗂️ 已经从备份恢复：{w}',
+      'g.boot.crash.log': '画面进程挂了，已经重新打开',
+      'g.boot.crash': '刚才画面出了点问题，已经重新打开了，存档还在',
+      'g.shell.title': '回声岛 Echo Island',
+      'g.shell.pet': '我的宠物',
+      'g.shell.streak': '连续打卡天数',
+      'g.shell.coins': '金币',
+      'g.shell.tabs': '模式',
+      'g.shell.quests': '每日任务',
+      'g.shell.review': '错题本',
+      'g.shell.shop': '宠物店',
+      'g.shell.ach': '成就',
+      'g.shell.report': '周报',
+      'g.shell.settings': '设置',
+      'g.shell.foot': '回声岛 · 七年级英语听说闯关 · 进度只保存在这台设备的浏览器里',
+      'g.shell.quit': '退出本关',
+      'g.shell.next': '继续',
+
+
+      // —— 字表结束 ——
+    },
+    en: {
+      // —— 公用 ——
+      'g.ok': 'Got it', 'g.close': 'Close', 'g.cancel': 'Cancel',
+      'g.book.hj7a': '7A', 'g.book.hj7b': '7B', 'g.book.hj8a': '8A', 'g.book.hj8b': '8B', 'g.book.hj9a': '9A', 'g.book.hj9b': '9B',
+
+      // —— 第一段（G1）——
+      'g.rc.0.n': 'Hear Words', 'g.rc.0.d': 'Listen to the words. Choose the meaning and the spelling.',
+      'g.rc.1.n': 'Say Words', 'g.rc.1.d': 'Repeat the words, then look at the pictures and say the English.',
+      'g.rc.2.n': 'Hear Sentences', 'g.rc.2.d': 'Listen to whole sentences. Understand them and put the words in order.',
+      'g.rc.3.n': 'Say Sentences', 'g.rc.3.d': 'Repeat sentence by sentence until you can say them smoothly.',
+      'g.rc.4.n': 'Dialogue', 'g.rc.4.d': 'Listen to the other person. Choose a good answer and say it.',
+      'g.rc.5.n': 'Challenge', 'g.rc.5.d': 'All question types mixed together, with review of the earlier islands.',
+      'g.rc.6.d': 'Talk face to face with the Isle Master! Understand what they say, then say the right answer aloud to attack.',
+      'g.type.lw': '🎧 Hear a word, pick its meaning', 'g.type.ls': '🎧 Hear a word, pick its spelling', 'g.type.lm': '🎧 Hear a sentence, pick its meaning', 'g.type.lr': '💬 Hear a question, pick the answer', 'g.type.lo': '🧩 Hear a sentence, put it in order',
+      'g.type.sr_w': '🎤 Repeat the word', 'g.type.sr_s': '🎤 Repeat the sentence', 'g.type.sr_d': '🎤 Say the answer', 'g.type.sp': '🖼️ Say it from the picture', 'g.type.bt': '⚔️ Dialogue attack',
+      'g.tag.lw': 'Word meaning', 'g.tag.ls': 'Word spelling', 'g.tag.lm': 'Sentence meaning', 'g.tag.lr': 'Question and answer', 'g.tag.lo': 'Sentence order',
+      'g.tag.sr_w': 'Repeat words', 'g.tag.sr_s': 'Repeat sentences', 'g.tag.sr_d': 'Say the answer', 'g.tag.sp': 'Say from picture', 'g.tag.bt': 'Dialogue attack',
+      'g.praise': ['Great!', 'Nice!', 'Excellent!', 'Well done!', 'Super!', 'Correct!', 'Awesome!'],
+      'g.title.1': 'Trainee Sailor', 'g.title.3': 'Little Sailor', 'g.title.5': 'Listening Detective', 'g.title.7': 'Speaking Star', 'g.title.10': 'Pronunciation Pro',
+      'g.title.13': 'Conversation Pro', 'g.title.16': 'Island Explorer', 'g.title.20': 'English Captain', 'g.title.25': 'Echo Master', 'g.title.30': 'Legendary Captain',
+      'g.pet.chick': 'Chick', 'g.pet.cat': 'Kitten', 'g.pet.dog': 'Puppy', 'g.pet.rabbit': 'Rabbit', 'g.pet.frog': 'Frog', 'g.pet.fox': 'Fox',
+      'g.pet.panda': 'Panda', 'g.pet.penguin': 'Penguin', 'g.pet.owl': 'Owl', 'g.pet.dolphin': 'Dolphin', 'g.pet.unicorn': 'Unicorn', 'g.pet.dragon': 'Little Dragon',
+      'g.pet.dino': 'Little Dinosaur', 'g.pet.butterfly': 'Butterfly', 'g.pet.octopus': 'Little Octopus',
+      'g.qp.lv2': 'Clear 2 levels', 'g.qp.lv4': 'Clear 4 levels', 'g.qp.sp10': 'Say 10 things correctly aloud', 'g.qp.sp25': 'Say 25 things correctly aloud',
+      'g.qp.cb8': 'Reach a combo of 8 in one level', 'g.qp.st3': 'Get 3 stars on a level once', 'g.qp.pf5': 'Get 5 Perfect pronunciations', 'g.qp.ls20': 'Get 20 listening questions right',
+      'g.qp.rv5': 'Get 5 Daily review questions right', 'g.qp.rp1': 'Finish 1 role-play', 'g.qp.bt3': 'Win 3 monster battles', 'g.qp.ct1': 'Catch 1 wild monster',
+      'g.qp.tk1': 'Chat with an islander in English and finish 1 goal',
+      'g.ach.first.n': 'Set Sail', 'g.ach.first.d': 'Clear your first level',
+      'g.ach.lv10.n': 'Riding the Waves', 'g.ach.lv10.d': 'Clear 10 levels',
+      'g.ach.lv50.n': 'Ocean Voyage', 'g.ach.lv50.d': 'Clear 50 levels',
+      'g.ach.boss1.n': 'First Win', 'g.ach.boss1.d': 'Beat your first Boss',
+      'g.ach.boss5.n': 'Boss Hunter', 'g.ach.boss5.d': 'Beat 5 Bosses',
+      'g.ach.allboss.n': 'King of the Islands', 'g.ach.allboss.d': 'Beat all 13 Bosses',
+      'g.ach.c10.n': 'Ten Hits', 'g.ach.c10.d': 'Get a combo of 10 in one level',
+      'g.ach.flaw.n': 'No Mistakes', 'g.ach.flaw.d': 'Get every question right in one level',
+      'g.ach.sp50.n': 'Brave Voice', 'g.ach.sp50.d': 'Say 50 things correctly aloud',
+      'g.ach.sp300.n': 'Speaking Pro', 'g.ach.sp300.d': 'Say 300 things correctly aloud',
+      'g.ach.pf30.n': 'Clear Pronunciation', 'g.ach.pf30.d': 'Get 30 Perfect pronunciations',
+      'g.ach.st3.n': 'Three Days Running', 'g.ach.st3.d': 'Play 3 days in a row',
+      'g.ach.st7.n': 'A Week Strong', 'g.ach.st7.d': 'Play 7 days in a row',
+      'g.ach.st30.n': 'A Month Strong', 'g.ach.st30.d': 'Play 30 days in a row',
+      'g.ach.three10.n': 'Star Collector', 'g.ach.three10.d': 'Get 3 stars 10 times',
+      'g.ach.world.n': 'Perfect Island', 'g.ach.world.d': 'Get 3 stars on all 7 levels of one island',
+      'g.ach.rv20.n': 'Learn by Reviewing', 'g.ach.rv20.d': 'Get 20 Daily review questions right',
+      'g.ach.pets3.n': 'Pet Family', 'g.ach.pets3.d': 'Have 3 pets',
+      'g.ach.rich.n': 'Coin Collector', 'g.ach.rich.d': 'Have 500 coins at the same time',
+      'g.ach.actor.n': 'Little Actor', 'g.ach.actor.d': 'Finish 5 role-plays',
+      'g.ach.catch1.n': 'First Partner', 'g.ach.catch1.d': 'Catch your first wild monster',
+      'g.ach.dex8.n': 'Monster Collector', 'g.ach.dex8.d': 'Add 8 monsters to your Monsters list',
+      'g.ach.dexall.n': 'Monster Master', 'g.ach.dexall.d': 'Add all {n} monsters of the first region to your Monsters list',
+      'g.ach.evo1.n': 'Grow Up!', 'g.ach.evo1.d': 'Make a monster grow up for the first time',
+      'g.ach.badge5.n': 'Badge Collector', 'g.ach.badge5.d': 'Win 5 Isle Master badges',
+      'g.ach.badgeall.n': 'Champion Trainer', 'g.ach.badgeall.d': 'Win all 13 Isle Master badges',
+      'g.ach.sight1.n': 'Sharp Eyes', 'g.ach.sight1.d': 'Read the English clues and catch 1 monster from Today\'s Sighting',
+      'g.ach.sight7.n': 'Clue Detective', 'g.ach.sight7.d': 'Catch 7 monsters from Today\'s Sighting',
+      'g.save.dev': 'Backup from {d} on this device', 'g.save.phone': 'Backup from {d} in the phone\'s Download/EchoIsland folder', 'g.save.before': 'earlier',
+      'g.save.badlog': 'The save could not be read ({n} characters)', 'g.save.wlog': 'The save could not be written: {msg}', 'g.save.fulllog': 'The save could not be stored (storage full?)',
+      'g.save.full': 'The save could not be stored (the phone\'s space for the game is full). Today\'s progress may be lost. A parent should first tap "Export save" in Settings → 💾 Save backup.',
+      'g.save.full.h': 'The save could not be stored',
+      'g.store.cutlog': 'Save storage is almost full. The two oldest backups were deleted', 'g.store.pctlog': 'Save storage is almost full: {pct}% used ({n} characters)',
+      'g.store.h': 'Save storage is almost full',
+      'g.store.p1': '<p>The phone\'s space for the game\'s save is <b>{pct}%</b> full. Saving still works for now, but when it is full, new progress cannot be saved.</p>',
+      'g.store.p2': '<p class="tip">Parents: first go to "Settings → 🔒 Parent Settings → 💾 Save backup" and tap "Export save". Send the file to yourself or save it somewhere safe. Then tell the person who set up the game about this message.</p>',
+      'g.store.bar': '💾 Save storage is almost full ({pct}% used). Please tell a parent',
+      'g.streak.keep': '🧊 Streak freeze used! Your {n}-day streak is saved!', 'g.streak.lost': '💧 Your {n}-day streak has ended. Start again today!',
+      'g.tts.silent': 'You need to be online to hear this sentence', 'g.tts.tap': 'Tap 🔊 to hear the pronunciation',
+      'g.sr.aimark': 'AI-generated, powered by Alibaba Cloud Qwen', 'g.sr.cloud': 'Cannot reach AI scoring. Using the browser\'s speech recognition / self-check for now',
+      'g.fail.key.auth': 'The AI key is wrong', 'g.fail.key.quota': 'The AI credit has run out', 'g.fail.key.busy': 'The AI is a bit busy', 'g.fail.key.code': 'The family code is wrong',
+      'g.fail.short.auth': 'not accepted', 'g.fail.short.quota': 'no credit left', 'g.fail.short.busy': 'busy', 'g.fail.short.code': 'wrong family code',
+      'g.fail.key.other': 'AI scoring is not working', 'g.fail.key.line': '{why}, so I cannot score you. Please tell a parent',
+      'g.fail.mic': '🎤 Allow Echo Island to use the microphone first, so you can speak', 'g.fail.nokey': '🔑 There is no AI key yet, so I cannot score you automatically. A parent can paste one in Settings',
+      'g.fail.net': '📶 No internet, so I cannot score you. Connect and say it again', 'g.fail.busy': '⏳ The AI is a bit busy. Say it again in a moment',
+      'g.fail.unheard': 'I didn\'t catch that. Move closer, speak louder and try again',
+      'g.bar.nokey': '🔑 No AI key yet: speaking cannot be scored automatically. A parent can paste one in Settings', 'g.bar.net': '📶 No connection: scoring and Chat need the internet',
+      'g.bar.quota': '💳 The AI credit has run out. Please tell a parent', 'g.bar.busy': '⏳ The AI is too busy. Try again in a moment', 'g.bar.code': '🔑 The family code is wrong. Please tell a parent',
+      'g.bar.auth': '🔑 The AI key is wrong: scoring and Chat do not work. Please tell a parent',
+      'g.bar.how': 'What to do?', 'g.bar.see': 'Details',
+      'g.bar.upd.n': '🆕 A new version is available ({name}). Please ask a parent to update', 'g.bar.upd': '🆕 A new version is available. Please ask a parent to update',
+      'g.bar.parent': '🔒 Parent Settings',
+      'g.bar.i.nokey': 'This phone has no AI key yet. A parent should open "Settings → 🔒 Parent Settings → AI chat and speech scoring" and paste an Alibaba Cloud Bailian API key (it is only stored on this phone).',
+      'g.bar.i.net': 'Speaking scores and Chat with islanders both need the internet. Check that Wi-Fi or mobile data is on, then try again.',
+      'g.bar.i.quota': 'Parents: the Alibaba Cloud Bailian credit has run out (or the account is overdue). Check the cost and quota in the Bailian console, then top up or use a new key.',
+      'g.bar.i.busy': 'The AI got too many requests at once. Try again in a few minutes.',
+      'g.bar.i.code': 'Parents: the family code for the relay service is wrong. Please enter it again in Settings.',
+      'g.bar.i.auth': 'Parents: the AI key is wrong (it may have been cancelled). Please paste a new key in "Settings → 🔒 Parent Settings → AI chat and speech scoring".',
+      'g.bar.i.tip': '<p class="tip">When the AI is down: you can use "Skip for now" on speaking questions. Those sentences go into Daily review, and you say them later when you are online. In battle, this turn becomes listen-and-choose (no power hit).</p>',
+      'g.mic.h': 'The microphone is needed to speak English',
+      'g.mic.p': '<p>Echo Island needs to <b>hear your English</b> to score it and to let you chat with islanders. Your voice is only used for scoring and is not saved.</p>',
+      'g.mic.blocked': '<p class="tip">The phone is blocking the microphone for Echo Island and will not ask again. Tap "Open settings", then "Permissions" → "Microphone" → "Allow", and come back to the game.</p>',
+      'g.mic.denied': '<p class="tip">You did not allow it. Tap the mic again. The phone will ask you, and this time tap "Allow".</p>',
+      'g.mic.later': 'Later', 'g.mic.fix': '⚙️ Open settings', 'g.mic.fix2': '⚙️ Open it in Settings', 'g.mic.retry': 'OK, try again',
+      'g.mic.granted': '🎤 The microphone works now! Tap the mic again and speak',
+      'g.mic.mic.ok': '🎤 Microphone ✅', 'g.mic.mic.bad': '🎤 Microphone ❌ Not allowed', 'g.mic.mic.quiet': '🎤 Microphone ⚠️ No sound heard: is a finger covering it?', 'g.mic.mic.idle': '🎤 Microphone',
+      'g.mic.net.ok': '📶 Network ✅', 'g.mic.net.bad': '📶 Network ❌ Cannot connect', 'g.mic.net.idle': '📶 Network',
+      'g.mic.key.ok': '🔑 AI key ✅', 'g.mic.key.bad': '🔑 AI key ❌', 'g.mic.key.idle': '🔑 AI key',
+      'g.mic.nokey': 'Not set up yet: a parent can paste it in "Settings → 🔒 Parent Settings"',
+      'g.mic.chk.h': 'Quick check before you speak',
+      'g.mic.chk.p': '<p>Echo Island needs to hear you speak English. Tap the mic and say aloud: <b class="chk-say">Hello!</b></p>',
+      'g.mic.chk.hint': 'Tap the mic and say Hello', 'g.mic.chk.go': 'All done, let\'s go!',
+      'g.mic.listen': 'Listening… say Hello loudly!', 'g.mic.nobrowser': 'The browser did not allow the microphone',
+      'g.mic.ok': 'The microphone works!', 'g.mic.ok.key': 'The microphone works! The AI key is still missing: a parent can paste it in Settings so speaking can be scored automatically.',
+      'g.mic.quiet': 'No sound heard. Move closer, say Hello loudly and tap the mic again',
+      'g.mic.allok': 'All good! You can speak English now!',
+      'g.mic.covered': 'No sound heard. Is the microphone covered? Move closer, say Hello loudly and tap the mic again',
+
+
+      // —— 第二段（G2）——
+      'g.rev.card.again': { one: '<b>Review done for today</b><small>You can practise {n} more question (only if you want)</small>', other: '<b>Review done for today</b><small>You can practise {n} more questions (only if you want)</small>' },
+      'g.rev.card.done': '<b>Daily review is done</b><small>Questions you got wrong and new textbook words come back after 1, 2, 4, 7… days</small>',
+      'g.rev.card.wrong': { one: '{n} wrong question', other: '{n} wrong questions' }, 'g.rev.card.old': '{n} learnt before', 'g.rev.card.chat': { one: '{n} line from Chat', other: '{n} lines from Chat' },
+      'g.rev.card.n': { one: 'Daily review: {n} question', other: 'Daily review: {n} questions' }, 'g.rev.card.per': ', {n} per round',
+      'g.fade.1': '🔤 Say it from the first letters', 'g.fade.2': '🧠 Say it from memory', 'g.fade.3': '✏️ Say it the better way',
+      'g.cue.lw.ty': '🎧 Hear a word, pick it (with pictures)', 'g.cue.lw.tag': 'Hear a word, pick it (pictures)', 'g.cue.lm.ty': '🎧 Hear a sentence, pick it', 'g.cue.lm.tag': 'Hear a sentence, pick it',
+      'g.cue.lw.t': 'Listen and choose the word you hear', 'g.cue.lm.t': 'Listen and choose the sentence you hear', 'g.cue.pic.t': 'Look at the picture and say it in English from memory',
+      'g.cue.hear.w': 'Listen once, then use the first letters to say this word', 'g.cue.hear.s': 'Listen once, then use the first letters to say the whole sentence',
+      'g.q.lw.t': 'Listen and choose the right meaning', 'g.q.ls.t': 'Listen and choose the English you hear', 'g.q.lm.t': 'Listen and choose what the sentence means',
+      'g.q.lr.t': 'What should you say back?', 'g.q.see.long': 'Show the words (try with just your ears first)', 'g.q.see': 'Show the words',
+      'g.q.lo.t': 'Listen, then tap the words in order', 'g.q.check': 'Check', 'g.q.rep.t': 'Listen, then say it aloud after the voice',
+      'g.q.fix.t': 'This can be said better: say the right English', 'g.q.mem.t': 'Look at the meaning and say it in English from memory',
+      'g.q.cue.w': 'Use the first letters to say this word', 'g.q.cue.s': 'Use the first letters to say the whole sentence', 'g.q.said': 'You said: <s>{s}</s>',
+      'g.q.dlg.t': 'Listen, then say your answer aloud', 'g.q.dlg.mem': 'Listen, then say your answer aloud from memory', 'g.q.you': 'Your turn:',
+      'g.q.sp.t': 'Look at the picture and say it in English',
+      'g.q.bt.mem': 'Understand what it says and <b>answer in English from memory</b> to attack!', 'g.q.bt.sr': 'Choose the right answer and <b>say it aloud</b> to attack! (Tap an answer to hear it first)',
+      'g.q.bt.self': 'Tap the right answer, then say it aloud to attack!', 'g.q.bt.show': '👀 See some answers (no power hit for this one)',
+      'g.task.done': '✅ Task done: {t}. Go back to the map for your reward', 'g.toast.ach': '🏆 New achievement "{name}" +20 coins',
+      'g.home.streak.on': { one: 'Streak done today: {n} day in a row', other: 'Streak done today: {n} days in a row' }, 'g.home.streak.off': 'No streak yet today. Clear any level to get it',
+      'g.home.claim': 'Get +{n}', 'g.home.claimed': '✓ Collected',
+      'g.home.chest.open': 'Today\'s chest is open', 'g.home.chest.ready': 'The daily chest is ready!', 'g.home.chest': 'Daily chest',
+      'g.home.chest.tmr': 'New tasks tomorrow. Come back!', 'g.home.chest.how': 'Get all 3 task rewards to open it. It may hold a growth song or a monster egg',
+      'g.home.tasks': 'Today\'s tasks', 'g.home.reset': { one: 'New in {n} hour', other: 'New in {n} hours' },
+      'g.home.isle.no': 'Island {n}', 'g.home.isle.lock': '🔒 Beat the Boss of the last island to unlock', 'g.home.locked': ' (locked)', 'g.home.start': 'Start',
+      'g.home.scene': 'Theatre · {t}', 'g.home.scene.seen': '✓ Watched · Come back to repeat the lines or act a role', 'g.home.scene.new': 'See how people talk about this topic in English · +10 coins the first time',
+      'g.home.tab.mon': '🐲 Monster Adventure', 'g.home.tab.quiz': '📚 Practice', 'g.home.tab.talk': '🗣️ Chat with islanders',
+      'g.home.qv.book': '📗 Textbook units', 'g.home.qv.isle': '🏝️ Topic islands',
+      'g.unit.now': ' · 📍 Learning now', 'g.unit.gram': '📐 Grammar: {t}', 'g.unit.talk': '🗣️ Chat with {name} about this unit', 'g.unit.setnow': 'Learn this unit now',
+      'g.unit.head': '📗 Textbook units · for Hujiao-edition vocabulary', 'g.unit.open': 'Textbook units for this school year ({list})', 'g.unit.sep': ', ', 'g.unit.all': 'Six books, from Year 7 to Year 9',
+      'g.unit.what': ': the words and phrases to learn in each unit, plus our own sentences and dialogues written for its topic and grammar (not the textbook texts).',
+      'g.unit.cur': 'Learning now: <b>{u}</b>', 'g.unit.guess': ' (guessed from the date)', 'g.unit.change': 'Change',
+      'g.unit.old': 'The new {b} textbook is not out yet (expected in spring 2027). For now these are the units of the old textbook. They will change when the new book comes out.',
+      'g.det.count': { one: ' {n} question, 3 hearts.', other: ' {n} questions, 3 hearts.' }, 'g.det.best': 'Best: ', 'g.det.scene': '🎬 Watch the Theatre first', 'g.det.pre': '📖 Preview first (tap a line to hear it)',
+      'g.det.later': 'Not now', 'g.det.go': 'Start',
+      'g.play.norev': 'Nothing to review today. Great!', 'g.play.boss': '{name} blocks the way! Understand what it says, then <b>say</b> the right answer aloud to attack.', 'g.play.fight': '⚔️ Fight!',
+      'g.play.combo': '🔥 {n} combo', 'g.play.xpx': ' · XP ×{m}',
+      'g.play.play': 'Play', 'g.play.slowplay': 'Play slowly', 'g.play.slow': 'Slow', 'g.play.hear': 'Hear it', 'g.play.hearq': 'Hear them', 'g.play.model': 'Hear an example', 'g.play.again': 'Hear it again',
+      'g.play.mic': 'Start speaking', 'g.play.mic.sr': 'Tap the mic, then speak English aloud', 'g.play.mic.rec': 'Tap the mic to record, and tap again when you finish',
+      'g.play.skip': 'Can\'t speak right now? Skip this one', 'g.play.hint': '💡 Hint', 'g.play.hint2': '💡 More help',
+      'g.play.listening': 'Listening… It stops when you finish', 'g.play.nomic': 'The microphone does not work, so now you read aloud and judge yourself',
+      'g.play.nosr': 'This browser cannot use speech recognition, so now you record and judge yourself', 'g.play.bt.tap': 'Tap the right answer, then say it aloud',
+      'g.play.rec.done': 'Recorded! Compare below', 'g.play.rec.on': 'Recording… Tap to stop when you finish', 'g.play.rerec': 'Tap the mic to record again',
+      'g.play.self.pic': 'Look at the picture and <b>say the English aloud</b> first, then see the answer', 'g.play.self.mem': '<b>Say it aloud from memory</b> first, then see the answer', 'g.play.self.done': 'I said it. Show the answer',
+      'g.play.self.bt': 'Now say it aloud to {name}: <b>{s}</b>', 'g.play.self.cmp': 'Listen to your recording. Does it sound like the original?', 'g.play.self.read': 'Read it aloud twice, then give yourself an honest score',
+      'g.play.self.mine': '▶ My recording', 'g.play.self.orig': '🔊 Original',
+      'g.play.rate.0': '😅 Need practice', 'g.play.rate.1': '🙂 OK', 'g.play.rate.2': '😎 Very close',
+      'g.play.rate.again': 'Listen to the original again and say it with the voice', 'g.play.rate.rerec': ', then record again',
+      'g.fb.xp': ' +{n} XP', 'g.fb.peek': ' (you saw the words: half)', 'g.fb.aid': ' (with help: half)',
+      'g.fb.wrong': 'Oops, not right', 'g.fb.ans': 'Right answer: ', 'g.fb.order': 'Wrong order', 'g.fb.sent': 'Right sentence: ', 'g.fb.reply': 'Right answer: ',
+      'g.fb.heard': 'I heard: "{s}"', 'g.fb.pts': 'pts',
+      'g.fb.retry.mem': 'Try again! If you can\'t remember, tap "💡 Hint"', 'g.fb.retry.red': 'The red words were not right. Tap 🔊 to listen, then try again', 'g.fb.try': ' (try {n}/3)',
+      'g.fb.bt.unheard': 'I could not hear you. You can tap the right answer and read it aloud (no power hit for this one)',
+      'g.fb.pass.aid.rev': 'Passed! You had help, so it comes back tomorrow', 'g.fb.pass.aid': 'Passed! You had help, so half XP', 'g.fb.perfect': 'Perfect! Every word was right',
+      'g.fb.good': 'Good! Well said', 'g.fb.pass': 'Passed! A bit more practice will help',
+      'g.fb.fail': 'That\'s OK. This one is saved for later', 'g.fb.saved': 'Added to your Review list (no heart lost): ',
+      'g.fb.skip.ai': 'Skipped for now', 'g.fb.skip': 'Skipped', 'g.fb.skip.owe': 'Added to review. Say it when you are online again: ',
+      'g.fb.dodge': '{name} dodged! That answer was not right', 'g.fb.bt.see': 'No match. Look at these answers and say the right one aloud (no power hit for this one)',
+      'g.fb.bt.tap': 'Not heard well? You can tap the right answer and read it aloud', 'g.fb.bt.again': 'That did not match any answer. Say it again (try {n}/3)',
+      'g.fb.crit': 'Power hit!', 'g.fb.hit': 'Hit!',
+      'g.res.fail': '<h2>The boat is out of power!</h2><p>All 3 hearts are gone. The questions you got wrong are in your Review list.</p>', 'g.res.revive': 'Spend 30 coins to keep going in this level',
+      'g.res.once': ' (only once per level)', 'g.res.poor': ' (not enough coins)', 'g.res.map': 'Back to the map', 'g.res.retry': 'Try again',
+      'g.res.next': 'Next level →', 'g.res.goisle': 'Go to {name} →', 'g.res.nextunit': 'Next unit: {name} →', 'g.res.adv': '🗺️ Go on an adventure', 'g.res.talk': '🗣️ Chat with islanders',
+      'g.res.rev': 'Review done!', 'g.res.beat': 'You beat {name}!', 'g.res.perfect': 'Perfect clear!', 'g.res.clear': 'Level cleared!',
+      'g.res.more': { one: '{n} more question to review today', other: '{n} more questions to review today' }, 'g.res.alldone': 'Today\'s review is all done ✅',
+      'g.res.lucky': '🍀 Lucky hit! Double coins', 'g.res.three': 'First 3 stars bonus: +15 coins', 'g.res.balls': '🔮 Echo Ball +{n} (catch monsters in Monster Adventure)', 'g.res.newisle': '🏝️ New island unlocked: {name}',
+      'g.res.gate.open': '🔓 Adventure unlocked! You can go on a Monster Adventure today', 'g.res.gate.talk': '✅ Review done · Now chat with islanders in English ({n}/{need} lines spoken) to go on an adventure',
+      'g.res.gate.more': 'Do one more round (get at least half right) to finish',
+      'g.res.xp': 'XP', 'g.res.coins': 'Coins', 'g.res.combo': 'Best combo', 'g.res.recall': { one: '🔥 You said {n} answer right without looking. Great memory!', other: '🔥 You said {n} answers right without looking. Great memory!' },
+      'g.res.score': 'Right: {c} / {t}', 'g.res.nolose': 'lose no hearts and ', 'g.res.3star': 'get 90% or more right for 3 stars',
+      'g.res.aided': { one: '💡 {n} of them used a hint (half XP)', other: '💡 {n} of them used hints (half XP)' },
+      'g.res.aided.rev': { one: '💡 {n} of them used a hint (half XP, back tomorrow)', other: '💡 {n} of them used hints (half XP, back tomorrow)' }, 'g.res.again': 'Play again',
+      'g.res.streak': { one: '🔥 Streak kept today! {n} day in a row', other: '🔥 Streak kept today! {n} days in a row' },
+      'g.res.lvup': '<h2>Level up! Lv {lv}</h2><p>New title: <b>{title}</b>. You get 20 coins. Go and see the Pet Shop!</p>', 'g.res.yay': 'Great!',
+      'g.res.rest': '<h2>Eye break</h2><p>You have practised for 30 minutes. Well done! Look at something far away out of the window for 20 seconds, drink some water, and rest your eyes and voice.</p>',
+      'g.res.resting': 'Resting {n}', 'g.res.rested': 'Rested. Let\'s go on',
+
+
+      // —— 第三段（G3）——
+      'g.ver.name': 'Echo Island {name} ({code})', 'g.ver.app': 'Echo Island for Android', 'g.ver.web.name': 'Echo Island web version',
+      'g.ver.new.h': 'A new version is ready',
+      'g.ver.new.p': '<p>You have <b>{me} ({mc})</b>. The new version is <b>{ne} ({nc})</b>.</p>',
+      'g.ver.new.notes': '<p class="tip">What is new: {notes}</p>',
+      'g.ver.new.how': 'Please ask a parent to install the new version over this one on this phone (your save is kept, and you can also use "Export save" in Settings first). ',
+      'g.ver.new.url': 'Download address:<br><b class="ver-url">{url}</b>', 'g.ver.share': '📤 Send the address to a parent',
+      'g.ver.sheet.h': '🆕 Address for new-version check', 'g.ver.sheet.p': 'When the app opens, it looks at this address to see if there is a new version (a version.json file). ',
+      'g.ver.sheet.def': 'Leave it empty to use the default address:', 'g.ver.sheet.none': 'Leave it empty and it will not check.', 'g.ver.back': 'Back', 'g.ver.save': 'Save',
+      'g.bak.title': 'Echo Island save (includes AI-written chat text)', 'g.bak.toast.file': '📤 Choose an app to send it to a parent or save it', 'g.bak.toast.text': '📤 Choose an app to send it to a parent to keep',
+      'g.bak.toast.dl': '💾 Save downloaded: {name}', 'g.bak.toast.fail': 'Export failed',
+      'g.bak.row.dev': '📱 This device · {d}', 'g.bak.row.reset': '↩️ Progress before clearing', 'g.bak.row.restore': '↩️ Progress before the last restore', 'g.bak.row.dl': '📁 Downloads/EchoIsland · {d}',
+      'g.bak.sheet.h': '🗂️ Restore from backup', 'g.bak.sheet.p': 'Pick a backup to replace your current progress. Your current progress is saved first (so you can switch back if it was a mistake).',
+      'g.bak.none': 'No backup yet. The game backs up the first time you open it each day.',
+      'g.bak.file.native': '📂 Pick from a file (after changing phone or reinstalling; save a save-file you got in a chat app to the phone first)', 'g.bak.file.web': '📂 Pick a save file (.json)',
+      'g.bak.bad': 'This file is not an Echo Island save, or it is broken', 'g.bak.label': 'Backup',
+      'g.bak.use.h': 'Use this backup?', 'g.bak.use.p': 'Your current progress ({cur}) will be replaced, but it is saved first.', 'g.bak.use.no': 'No', 'g.bak.use.go': 'Restore',
+      'g.bak.full': 'Cannot save (is this device full?)', 'g.bak.picked': 'the file you picked', 'g.bak.readfail': 'Cannot read this file ({e})',
+      'g.err.native': 'Native: ', 'g.err.recent': ' · last {n} (up to 50 are kept)', 'g.err.none': 'No errors recorded 👍',
+      'g.err.share': '📤 Send to a helper', 'g.err.clear': '🧹 Clear',
+      'g.intro.h': 'Welcome to Echo Island!',
+      'g.intro.p1': '<p><b>🐲 Monster Adventure</b>: pick a monster as your partner. Say spells in English to attack, and understand your rival\'s English to defend. Catch new monsters, grow them up, and beat the Isle Masters of 13 areas to win badges.</p>',
+      'g.intro.p2': '<p><b>📚 Practice</b>: 📗 Textbook units (for Hujiao-edition vocabulary, following your school units) and 13 topic islands. Each level you clear gives you Echo Balls to catch monsters.</p>',
+      'g.intro.p3': '<p><b>🗣️ Chat with islanders</b>: hold the mic and really chat with the people on the islands in English. After the chat, the AI writes comments, and sentences you got wrong show up in 📕 Daily review the next day.</p>',
+      'g.intro.p4': '<p>🎁 3 tasks a day. Finish them to open the chest · 🔥 Play one battle a day to keep your streak</p>',
+      'g.intro.voice': '🔊 Try the sound', 'g.intro.go': 'Let\'s go!',
+      'g.set.nokey.h': '🔑 Ask a parent to paste the AI key here', 'g.set.nokey.d': 'There is no AI key yet, so speaking questions cannot be scored automatically (you can skip them and say them later, once there is a key and internet). You also cannot chat with islanders.',
+      'g.set.h': 'Settings', 'g.set.mine': '🙂 My settings',
+      'g.set.mic': '🩺 Microphone and internet', 'g.set.mic.btn': 'Check now (say "Hello")',
+      'g.set.rate': 'Read-aloud speed', 'g.set.try': '🔊 Listen',
+      'g.set.tts': 'Voice source', 'g.set.tts.auto': 'Natural voice', 'g.set.tts.device': 'Device voice', 'g.set.tts.online': 'Recordings only',
+      'g.set.tts.d': '"Natural voice": fixed sentences use ready-made natural recordings. Sentences with a name in them are made online by Alibaba Cloud, or use the device voice when offline. "Recordings only" never uses the device voice. "Device voice" uses the voice built into your browser for everything.',
+      'g.set.voice': 'Read-aloud voice',
+      'g.set.sc.app': 'Speaking score', 'g.set.sc.app.d': '🎤 You always speak aloud. AI listens and scores you (Alibaba Cloud speech recognition). If you are not accurate, you get a short tip. Needs internet.',
+      'g.set.sc.mode': 'How speaking is scored', 'g.set.mode.auto': 'AI score (recommended)', 'g.set.mode.self': 'Record and judge yourself',
+      'g.set.sc.mode.d': 'AI score: if the chat service is reachable, Alibaba Cloud speech recognition scores you. If not, the speech recognition built into the browser is used.',
+      'g.set.gfx': 'Adventure graphics', 'g.set.gfx.auto': 'Auto', 'g.set.gfx.high': 'High quality', 'g.set.gfx.mid': 'Standard', 'g.set.gfx.low': 'Battery saver', 'g.set.gfx.2d': 'Smooth mode (2D)',
+      'g.set.gfx.auto.d': 'Auto: good phones start with high quality and others with standard. If it runs slowly, it goes down one level by itself', 'g.set.gfx.now': ' (now: "{m}")', 'g.set.stop': '.',
+      'g.set.gfx.hot': 'If your phone gets hot or slow, choose Battery saver or Smooth mode (2D).',
+      'g.set.look': 'Look', 'g.set.look.std': 'Classic', 'g.set.look.new': 'New (preview)',
+      'g.set.look.d': 'The new look is a preview: it changes outdoor towns and roads only; houses and caves stay the same. If it is slow, switch back to Classic.',
+      'g.set.ctl': 'Adventure controls', 'g.set.ctl.joy': '🕹️ Joystick', 'g.set.ctl.pad': '✚ D-pad',
+      'g.set.ctl.pad.d': 'D-pad: walk with the cross at the bottom left. A / B are at the bottom right.', 'g.set.ctl.joy.d': 'Joystick: hold anywhere on the left of the screen with your left thumb and push to walk. A / B are at the bottom right.',
+      'g.set.or': 'Screen direction', 'g.set.or.portrait': '📱 Portrait', 'g.set.or.landscape': '🎮 Landscape', 'g.set.or.auto': '🔄 Follow the phone',
+      'g.set.or.d': 'Landscape makes adventures and battles feel like a handheld game. Questions and chat work either way.',
+      'g.set.sfx': 'Sound effects', 'g.set.on': 'On', 'g.set.off': 'Off',
+      'g.set.mu': 'Music', 'g.set.mu.off': 'Off', 'g.set.mu.low': 'Low', 'g.set.mu.mid': 'Medium', 'g.set.mu.high': 'High',
+      'g.set.lic': 'Open-source licences and thanks',
+      'g.set.gate': 'Study gate', 'g.set.gate.on': '🔒 On (recommended)',
+      'g.set.gate.d': 'When it is on, each day you first finish the Daily review and chat with an islander in English (say 6 sentences by voice, or finish one small goal). Then you can go on a Monster Adventure. Turning it off needs the parent PIN, and the days it was off show in the Weekly report. While it is off, adventure time has no limit either.',
+      'g.set.lim': '⏱️ Adventure time', 'g.set.edit': 'Change',
+      'g.set.lim.d': 'Only time on the world map and in battles counts. When time is up, the game does not cut you off. It waits until the battle or talk ends, then goes to the home page. Do one more round of review, finish one more chat goal, or clear one more new level (or win more stars), and each one adds 10 minutes.',
+      'g.set.mix': 'English questions in the adventure', 'g.set.mix.a': 'More textbook', 'g.set.mix.b': 'A little textbook', 'g.set.mix.c': 'Island topics only',
+      'g.set.mix.d': 'When you battle monsters or answer islanders, some questions come from the textbook unit you are on now ({unit}). Change it on the Practice page, in "📗 Textbook units".',
+      'g.set.ai': '🗣️ AI chat and speech scoring', 'g.set.ai.on': '✅ Connected to Alibaba Cloud', 'g.set.ai.off': '⚠️ No AI key yet', 'g.set.ai.change': 'Change key', 'g.set.ai.paste': 'Paste key',
+      'g.set.ai.on.d': 'Uses an Alibaba Cloud Bailian API key. It is kept only on this phone, and you do not need to enter it again after an update.',
+      'g.set.ai.off.d': 'Ask a parent to paste the AI key here (an Alibaba Cloud Bailian API key). It is kept only on this phone. After that you can chat with islanders in English, and speaking questions are scored automatically.',
+      'g.set.unl': 'Practice: open all levels', 'g.set.unl.0': 'Unlock in order', 'g.set.unl.1': 'Open all',
+      'g.set.unl.d': 'Only works for "📚 Practice" (turn it on to go straight to a textbook unit). Badges, guards and Echo Skills in the adventure are not affected.',
+      'g.set.push': '📲 Send a daily report to WeChat', 'g.set.push.on': '✅ Sent every day after 8 pm ({k})', 'g.set.push.wecom': 'WeCom group bot', 'g.set.push.off': 'Off (nothing is sent by default)', 'g.set.push.btn': 'Set up',
+      'g.set.saf': '👪 Chat safety', 'g.set.saf.look': 'Chats to check', 'g.set.saf.n': 'Chats to check ({n})', 'g.set.saf.info': 'ℹ️ Notes for parents',
+      'g.set.saf.d': 'If the child talks about feeling sad, being bullied or being in danger, that chat is marked. Enter the parent PIN to read all of it.',
+      'g.set.pin': '🔑 Parent PIN', 'g.set.pin.has': 'Already set', 'g.set.pin.none': 'Not set yet', 'g.set.pin.change': 'Change PIN', 'g.set.pin.set': 'Set PIN',
+      'g.set.pin.d1': 'The 4-digit PIN a parent set during first set-up (the phone stores only a salted hash). Five wrong tries lock it for 10 minutes. If you forget it: first "💾 Export save" (no PIN needed) → clear this app\'s data in the phone settings → go through the parent set-up again and set a new PIN → "Restore from backup", and your progress comes back (there is also an automatic daily backup in the phone\'s Downloads/EchoIsland folder).',
+      'g.set.pin.nat.has': 'A 4-digit PIN set when the app was built. Five wrong tries lock it for 10 minutes. To change it: edit PARENT_PIN in echo.properties, then build and install again (your save is kept).',
+      'g.set.pin.nat.none': '⚠️ This app has no parent PIN, so the settings above cannot be changed. Please write PARENT_PIN (4 digits) in echo.properties, then build and install again.',
+      'g.set.pin.web.none': 'Not set yet (a parent sets it the first time it is needed)', 'g.set.pin.lock': 'Five wrong tries lock it for 10 minutes.',
+      'g.set.fam': '👪 Family set-up', 'g.set.fam.noname': '(no name yet)', 'g.set.sep': ', ',
+      'g.set.fam.d': 'The child\'s English nickname and look, the 3 partners in the Professor\'s bag (they apply when a new adventure starts), and the family members. Kept only on this phone.',
+      'g.set.dev': '🩺 Device check', 'g.set.dev.ok': '✅ Passed', 'g.set.dev.warn': '⚠️ Can play', 'g.set.dev.bad': '❌ Not suitable', 'g.set.dev.none': 'Not done', 'g.set.dev.again': 'Check again',
+      'g.set.priv': '📄 Privacy and consent', 'g.set.priv.doc': 'Children\'s privacy notice', 'g.set.priv.consent': 'Guardian consent form',
+      'g.set.priv.ok': 'A guardian agreed on {d} (version {v}). To withdraw consent: delete the key in "AI chat and speech scoring" above (then the app no longer connects to the AI), or uninstall the app.',
+      'g.bak.h': '💾 Save backup', 'g.bak.export': '📤 Export save', 'g.bak.restore': '🗂️ Restore from backup',
+      'g.bak.d1': 'The game backs up the first time you open it each day. This device keeps 3 copies', 'g.bak.last': ' (the latest is from {d})', 'g.bak.before': 'earlier',
+      'g.bak.dl': ', and the phone\'s Downloads/EchoIsland folder keeps 7 (they stay even if you uninstall the app)',
+      'g.bak.d2': '. "Export save" lets you send the file somewhere safe, such as a chat app. After changing phone or reinstalling, use "Restore from backup". ', 'g.bak.used': 'Save space used: {n}%.',
+      'g.ver.h': '🆕 Check for a new version', 'g.ver.edit': 'Change address', 'g.ver.defaultUrl': 'default address',
+      'g.ver.on': 'When the app opens, it checks if there is a new version ({url}). If there is, the home page asks a parent to update.',
+      'g.ver.noaddr': 'No address is set, so it does not check for a new version. (The person who installed the app for you will send you new versions.)', 'g.ver.web': 'The web version is always up to date, so there is nothing to check.',
+      'g.err.h': '🔧 Error log', 'g.err.week': 'Last 7 days: {n}', 'g.err.look': 'View',
+      'g.err.d': 'When the game has an error, the last 50 are saved automatically. They stay only on this device. If something goes wrong on your phone, you can send them to the person who installed the game.',
+      'g.set.reset': 'Clear progress', 'g.set.reset.btn': 'Clear all progress', 'g.set.reset.d': 'Stars, coins, monsters and review records will all be cleared, and this cannot be undone. You need the parent PIN, and you must also type the word "clear".',
+      'g.set.parent': '🔒 Parent Settings',
+      'g.chest.pet': '<h2>You got a chest-only pet: {name}!</h2><p>Only the chest gives this one. The shop does not sell it.</p>',
+      'g.chest.freeze': '<h2>You got a streak saver card!</h2><p>If you forget a day, it keeps your days in a row for you.</p>',
+      'g.chest.coins': { one: '<h2>You got {n} coin!</h2><p>Come back tomorrow. The tasks will be new.</p>', other: '<h2>You got {n} coins!</h2><p>Come back tomorrow. The tasks will be new.</p>' },
+      'g.chest.take': 'Take it',
+      'g.shop.following': 'With you', 'g.shop.take': 'Tap to take along', 'g.shop.chestonly': 'Chest only', 'g.shop.fromchest': 'From the daily chest',
+      'g.shop.head': { one: '<h2>Pet Shop</h2><p>You have <b>{n}</b> coin. Pets come with you on the map.</p>', other: '<h2>Pet Shop</h2><p>You have <b>{n}</b> coins. Pets come with you on the map.</p>' },
+      'g.shop.fz': 'Streak saver cards (you have {n}, max 2)', 'g.shop.fzd': 'Used automatically if you miss a day. It keeps your days in a row.', 'g.shop.fzbtn': '100 coins',
+      'g.shop.chestpet': 'This pet only comes from the daily chest', 'g.shop.short': { one: '{n} more coin needed. Go and play levels to earn coins.', other: '{n} more coins needed. Go and play levels to earn coins.' }, 'g.shop.bought': 'You got {name}!',
+      'g.achv.h': 'Achievements {n} / {t}', 'g.achv.sum': 'Lv {lv} {title} · Stars: {stars} · Spoken correctly: {spoken} · Levels cleared: {levels}',
+      'g.set.env.app': '✅ Read-aloud: natural voice (stored on the phone, no internet needed)', 'g.set.env.sr.ok': '✅ Automatic speaking score: each sentence goes to Alibaba Cloud to be recognised (needs internet)',
+      'g.set.env.sr.nokey': '⚠️ Automatic speaking score: no AI key yet', 'g.set.env.see': ' (see above)', 'g.set.env.paste': '. Ask a parent to paste it in Settings → 🔒 Parent Settings',
+      'g.set.env.dev': '✅ Read-aloud: device voice {name}', 'g.set.env.nodev': '⚠️ Read-aloud: this browser has no English voice. In Settings, switch to "Natural voice"',
+      'g.set.env.nat': '✅ Read-aloud: natural voice (sentences without a recording are made online by Alibaba Cloud)', 'g.set.env.nat.dev': '✅ Read-aloud: natural voice (sentences without a recording are made online by Alibaba Cloud, and the device voice is used offline)',
+      'g.set.env.wx': '<br>📱 You opened this in WeChat: tap "···" at the top right, then "Open in browser". Recording and speech recognition work better there.',
+      'g.set.env.sr.web': '✅ Speech recognition works. Your speaking is scored automatically', 'g.set.env.sr.none': '⚠️ Speech recognition is not available. Speaking questions use "record and judge yourself"',
+      'g.set.env.tip': 'For speech recognition, <b>Edge</b> or <b>Safari</b> work best. In some places Chrome cannot use speech recognition, because it needs Google servers.',
+      'g.th.tip.watch': 'Watch it once all the way through. Turn off the English text to practise listening only. Tap a line in the record below to hear it again.',
+      'g.th.tip.shadow': 'It stops after each line. Say the line after it. When you get it right, it goes on.',
+      'g.th.tip.role': 'Pick a character. When it is your turn, say the line aloud. The computer plays the other character.',
+      'g.th.lvup': '🎖️ Level up! Lv {lv} {title} +20 coins',
+      'g.th.pause': '⏸ Pause', 'g.th.resume': '▶ Resume', 'g.th.again': '🔁 Play again', 'g.th.start': '▶ Play',
+      'g.th.m.watch': '👀 Watch', 'g.th.m.shadow': '🔁 Repeat', 'g.th.m.role': '🎭 Role-play',
+      'g.th.exit': 'Exit', 'g.th.ep': 'Episode {n}', 'g.th.you': ' · You', 'g.th.me': 'I play',
+      'g.th.slow': '<span>🐢</span>Slow', 'g.th.en': '<span>En</span>English', 'g.th.zh': '<span>zh</span>Chinese',
+      'g.th.end': '🎉 All done!', 'g.th.idle': 'Tap "Play" to see what they say', 'g.th.ear': '🎧 Just listen…',
+      'g.th.logh': 'Lines so far (tap one to hear it again)',
+      'g.th.turn.role': 'Your turn. Say it aloud:', 'g.th.turn.shadow': 'Say it after me:',
+      'g.th.taps': 'Tap the mic, then say it aloud', 'g.th.hear': '🔊 Hear it', 'g.th.skip': 'Skip this line',
+      'g.th.orskip': ', or tap "Skip this line"', 'g.th.canskip': ' (you can tap "Skip this line" for now)',
+      'g.th.perfect': '<b>{n} points</b> Perfect!', 'g.th.good': '<b>{n} points</b> Good!',
+      'g.th.msg.watch': 'First time finished +10 coins', 'g.th.msg.shadow': 'Repeat done +20 XP', 'g.th.msg.role': 'Role-play done +30 XP +10 coins',
+      'g.th.next.shadow': '🔁 Now repeat it', 'g.th.next.role': '🎭 Try role-play', 'g.th.swap': 'Play {name}',
+      'g.th.fin.role': 'Great acting!', 'g.th.fin.shadow': 'Repeat done!', 'g.th.fin.watch': 'All watched!', 'g.th.fin.more': 'Watch a few more times and the lines will come easily', 'g.th.map': 'Back to map',
+
+
+      // —— 第四段（G4）——
+      'g.ev.bookat': '📍 Now studying {b} Unit {n}. Its questions will also show up in Monster Adventure.',
+      'g.ev.locked.h': 'Textbook {b} is not open yet',
+      'g.ev.locked.p': 'This device only has the textbook units for this school year. Next year\'s units are a separate content pack. Please ask a parent to contact the person who set this up for you.',
+      'g.ev.pick.h': '📗 Which textbook unit are you on?',
+      'g.ev.pick.p': 'Once you choose, the Practice page marks this unit, and Monster Adventure will ask more questions with its words and sentences.',
+      'g.ev.pick.old': ' (old edition)',
+      'g.ev.gram.h': 'Unit {n} grammar: {t}',
+      'g.ev.gram.h0': 'Unit {n} grammar',
+      'g.ev.why.mix': 'Change the English questions in Adventure',
+      'g.ev.why.gate': 'Turn off the study gate',
+      'g.ev.why.clock': 'The phone date was changed: start again from today',
+      'g.ev.clock.ok': '📅 Done. Starting again from today',
+      'g.ev.why.pin': 'Change the parent PIN',
+      'g.ev.pin.ok': '🔑 Parent PIN changed',
+      'g.ev.why.lim': 'Change adventure time',
+      'g.ev.why.push': 'Change the daily report to a parent',
+      'g.ev.why.ver': 'Change the address for checking updates',
+      'g.ev.why.bak': 'Restore from backup',
+      'g.ev.why.unlock': 'Open all Practice levels',
+      'g.ev.why.reset': 'Erase all progress',
+      'g.ev.why.zh': 'Change the story Chinese setting',
+      'g.ev.micfix': 'In "Permissions → Microphone" choose "Allow", then come back to the game',
+      'g.ev.upd.t': 'New version of Echo Island',
+      'g.ev.upd.b': 'New version of Echo Island {v}: {u}',
+      'g.ev.ver.https': 'The address must start with https://',
+      'g.ev.ver.new': 'Done. From now on it will check the new address',
+      'g.ev.ver.def': 'Using the default address again',
+      'g.ev.bak.bad': 'This backup cannot be read',
+      'g.ev.bak.pick': 'Cannot open the file picker',
+      'g.ev.bak.big': 'This file is too big to be a save',
+      'g.ev.bak.read': 'Cannot read this file',
+      'g.ev.err.title': 'Echo Island error log',
+      'g.ev.err.copied': 'Copied. You can paste it and send it',
+      'g.ev.err.nocopy': 'Cannot copy',
+      'g.ev.playfail': 'Could not play the recording',
+      'g.ev.quit.h': 'Leave this level?',
+      'g.ev.quit.p': 'If you leave now, your progress in this level will not be saved.',
+      'g.ev.quit.yes': 'Leave',
+      'g.ev.quit.no': 'Keep going',
+      'g.ev.revive': '❤️ You are back in the game!',
+      'g.ev.sep': ', ',
+      'g.ev.rv.h': 'Daily review',
+      'g.ev.rv.miss': { one: ' · missed {n} time', other: ' · missed {n} times' },
+      'g.ev.rv.today': { one: 'You have <b>{n}</b> question to review today: {list}.', other: 'You have <b>{n}</b> questions to review today: {list}.' },
+      'g.ev.rv.wrong': '{n} missed',
+      'g.ev.rv.old': '{n} from before',
+      'g.ev.rv.chat': { one: '{n} better way to say it from Chat', other: '{n} better ways to say it from Chat' },
+      'g.ev.rv.done': 'Today\'s review is done!',
+      'g.ev.rv.rule': ' Questions you get wrong come back the same day. Each time you get one right, it comes back after 1, 2, 4, 7, 15 and 30 days. Get them all right and it counts as mastered. Right answers to questions due today in Adventure count as review too.',
+      'g.ev.rv.tip': '⏳ Coming back later: {a} · 🏅 Mastered: {b}',
+      'g.ev.rv.sum': '📖 Review list (tap a line to hear it)',
+      'g.ev.rv.later': 'Later',
+      'g.ev.rv.go': { one: 'Review {n} question', other: 'Review {n} questions' },
+      'g.ev.claim': '+{c} coins +20 XP',
+      'g.ev.nosr': 'This browser does not support speech recognition. You will keep checking yourself.',
+      'g.ev.reset.h': 'Clear all progress',
+      'g.ev.reset.p': 'Stars, coins, monsters, badges and review records will all be cleared. A copy is saved first, so if you clear by mistake you can get it back with "Restore from backup" (needs the parent PIN).',
+      'g.ev.reset.ask': 'To really clear everything, type the word "clear" below:',
+      'g.ev.reset.aria': 'Type the word clear',
+      'g.ev.reset.no': 'Do not clear',
+      'g.ev.reset.go': 'Clear',
+      'g.ev.reset.word': 'clear',
+      'g.ev.reset.need': 'Type the word "clear" to clear everything',
+      'g.ev.reset.done': 'Progress cleared',
+      'g.gate.rev.done': 'Daily review · one round done today',
+      'g.gate.rev.none': 'Daily review (nothing to review today)',
+      'g.gate.rev.todo': { one: 'Do one round of Daily review ({n} question)', other: 'Do one round of Daily review ({n} questions)' },
+      'g.gate.chat.goal': 'Chat with islanders: finished a chat goal',
+      'g.gate.chat.said': { one: 'Chat with islanders: spoke {n} line of English today', other: 'Chat with islanders: spoke {n} lines of English today' },
+      'g.gate.chat.noai': 'Chat with islanders (AI chat is not set up yet, skipped today)',
+      'g.gate.chat.daily': 'Chat with islanders (today\'s chat time is used up, skipped)',
+      'g.gate.chat.pass': { one: 'Chat with islanders: {r}, so you can adventure for {n} minute first', other: 'Chat with islanders: {r}, so you can adventure for {n} minutes first' },
+      'g.gate.chat.key': 'Chat with islanders: {r}, so chat is not possible now. Please tell a parent (a parent can turn off the study gate for now in 🔒 Parent Settings)',
+      'g.gate.chat.used': 'Chat with islanders in English: spoke <em class="gate-n">{a}/{b}</em> lines ({x})',
+      'g.gate.chat.go': 'Chat with islanders in English: spoke <em class="gate-n">{a}/{b}</em> lines, or finish a chat goal',
+      'g.gate.why.offline': 'there is no internet now',
+      'g.gate.why.daily': 'today\'s chat time is used up',
+      'g.gate.why.fail': 'chat cannot connect today',
+      'g.gate.key.quota': 'the AI credit has run out',
+      'g.gate.key.auth': 'the AI key is wrong',
+      'g.gate.again.tmr': 'come back tomorrow to chat',
+      'g.gate.again.net': 'get online and finish speaking to carry on',
+      'g.gate.t.back': '📅 The phone date looks like it was changed',
+      'g.gate.t.pass': { one: '📵 Go and adventure first today ({n} minute for now)', other: '📵 Go and adventure first today ({n} minutes for now)' },
+      'g.gate.t.open': '🎉 Today\'s study is done. Off you go!',
+      'g.gate.t.todo': '📚 2 small tasks before adventure ({n}/2 done)',
+      'g.gate.back.tip': 'Set the phone back to "Set date and time automatically", then come back.',
+      'g.gate.back.btn': '👪 Parent: start again from today',
+      'g.gate.btn.rev': 'Go review',
+      'g.gate.btn.chat': 'Go chat',
+      'g.gate.report': '📊 See this week\'s report',
+      'g.gate.blk.back': 'The phone date looks like it was changed. Set it back to automatic and come back',
+      'g.gate.blk.rev': 'Finish today\'s Daily review first, then go adventuring',
+      'g.gate.blk.key': '{r}, so chat is not possible now. Please tell a parent',
+      'g.gate.blk.used.daily': 'Your temporary adventure time is up and today\'s chat time is used up too. See you tomorrow!',
+      'g.gate.blk.used': 'Your temporary adventure time is up. Get online and chat with islanders in English to keep playing',
+      'g.gate.blk.chat': 'First chat with islanders in English: speak {need} lines (now {n}), or finish a chat goal',
+      'g.adv.nolimit': 'No limit',
+      'g.adv.lim': 'School days {wd} min · Weekends {we} min',
+      'g.adv.lim.night': ' · No adventures {a}–{b}',
+      'g.adv.line.night': '🌙 No adventures from {a} until {b} in the morning',
+      'g.adv.line.over': '⏰ Today\'s adventure time is used up',
+      'g.adv.line.more': ' (study a bit more to earn time)',
+      'g.adv.line.left': { one: '🕹️ You can adventure for <b>{n}</b> more minute today', other: '🕹️ You can adventure for <b>{n}</b> more minutes today' },
+      'g.adv.line.bonus': { one: ' (includes {n} bonus minute)', other: ' (includes {n} bonus minutes)' },
+      'g.adv.pass.toast': { one: '📵 {r}: you can adventure for {n} minute first', other: '📵 {r}: you can adventure for {n} minutes first' },
+      'g.adv.pass.offline': 'No internet today',
+      'g.adv.pass.daily': 'Today\'s chat time is used up',
+      'g.adv.pass.fail': 'Chat cannot connect today',
+      'g.adv.stop.night.h': 'Time to sleep!',
+      'g.adv.stop.night.p': 'No adventures from {a} until {b} in the morning. The monsters are asleep. Come back tomorrow!',
+      'g.adv.stop.time.h': 'Today\'s adventure time is up!',
+      'g.adv.stop.time.in': { one: 'You adventured for {n} minute today. The monsters need a rest too. Come back tomorrow!', other: 'You adventured for {n} minutes today. The monsters need a rest too. Come back tomorrow!' },
+      'g.adv.stop.time.out': { one: 'You adventured for {n} minute today. The monsters need a rest too. Your progress is saved. Come back tomorrow!', other: 'You adventured for {n} minutes today. The monsters need a rest too. Your progress is saved. Come back tomorrow!' },
+      'g.adv.stop.pass.h': 'Your temporary adventure time is up',
+      'g.adv.stop.pass.p': { one: 'There was no internet today (or chat could not connect), so you had {n} minute of adventure first. Get online and chat with islanders in English to carry on.', other: 'There was no internet today (or chat could not connect), so you had {n} minutes of adventure first. Get online and chat with islanders in English to carry on.' },
+      'g.adv.stop.def': 'Have a little rest',
+      'g.adv.stop.more': 'Want to play a bit longer? Do one more round of review, finish one more chat goal, or clear one more new level (or earn more stars). Each is worth 10 minutes (you can still earn {n} minutes today).',
+      'g.adv.ok': 'OK',
+      'g.adv.warn5': '⏰ 5 minutes of adventure left today. Finish this one, then it is time to rest',
+      'g.adv.min': '{n} min',
+      'g.adv.sheet.h': '⏱️ Adventure time',
+      'g.adv.sheet.p': 'Only time on the map and in battles counts (Practice, review and chat do not). When time is up, you are not cut off: it waits until the battle or chat ends, then takes you home.',
+      'g.adv.sheet.on': 'Adventure limit',
+      'g.adv.sheet.lim': 'Limited (recommended)',
+      'g.adv.sheet.wd': 'Each school day (Mon–Fri)',
+      'g.adv.sheet.we': 'Each weekend day',
+      'g.adv.sheet.from': 'No adventures after (evening)',
+      'g.adv.sheet.any': 'Off',
+      'g.adv.sheet.to': 'Adventures can start from (morning)',
+      'g.adv.sheet.max': 'Extra study earns time, at most per day',
+      'g.adv.sheet.plus': '+{n} min',
+      'g.adv.sheet.none': 'No bonus',
+      'g.adv.sheet.small': 'One more round of review, one more chat goal, or one more new level cleared (or more stars): +10 minutes each.',
+      'g.adv.sheet.done': 'Done',
+      'g.pin.none.h': 'No parent PIN yet',
+      'g.pin.none.p': 'This app was built without a parent PIN, so "{w}" cannot be changed now.',
+      'g.pin.this': 'this setting',
+      'g.pin.none.tip': 'A parent needs to write PARENT_PIN (4 digits) in android/echo.properties on the computer, then build and install again (your save is kept).',
+      'g.pin.first': 'First time: a parent sets a 4-digit PIN. Keep it secret from the child',
+      'g.pin.locked': { one: 'Too many wrong tries. Try again in {n} minute', other: 'Too many wrong tries. Try again in {n} minutes' },
+      'g.pin.t.set1': 'Set a 4-digit parent PIN',
+      'g.pin.t.set2': 'Enter it again to confirm',
+      'g.pin.t.check': 'Parent: enter the 4-digit PIN',
+      'g.pin.clr': 'Clear',
+      'g.pin.del': 'Delete one digit',
+      'g.pin.h': 'Parent PIN',
+      'g.pin.typed': { one: '{n} digit entered', other: '{n} digits entered' },
+      'g.pin.weak': 'That PIN is too easy to guess. Choose another one',
+      'g.pin.diff': 'The two did not match. Set it again',
+      'g.pin.nosave': 'The PIN was not changed: enter the old PIN first and finish within 2 minutes. Tap "Change PIN" again',
+      'g.pin.saved': '🔑 Parent PIN set. Keep it secret from the child',
+      'g.pin.wrong': { one: 'Wrong PIN. {n} try left', other: 'Wrong PIN. {n} tries left' },
+      'g.pin.again': 'PIN correct. Tap the button again',
+      'g.rp.dlg': 'Q: {q} A: {a}',
+      'g.rp.mon': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      'g.rp.md': '{dd} {mon}',
+      'g.rp.wd': ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+      'g.rp.today': 'Today',
+      'g.rp.dow': '{d}',
+      'g.rp.heavy.tip': 'Adventure time is over 3 times study time',
+      'g.rp.miss': { one: ' · missed {n} time', other: ' · missed {n} times' },
+      'g.rp.ex.noai': 'AI chat not set up',
+      'g.rp.ex.daily': 'chat time used up',
+      'g.rp.f.off': { one: '🔓 Study gate turned off on {n} day', other: '🔓 Study gate turned off on {n} days' },
+      'g.rp.f.back': '⏰ The phone date was changed',
+      'g.rp.f.reset': '⏰ A parent reset the date',
+      'g.rp.f.pass': { one: '📵 Offline pass on {n} day', other: '📵 Offline pass on {n} days' },
+      'g.rp.f.ex': { one: '🟡 Chat skipped on {n} day ({why})', other: '🟡 Chat skipped on {n} days ({why})' },
+      'g.rp.f.night': { one: '🌙 Late-night adventure on {n} day', other: '🌙 Late-night adventure on {n} days' },
+      'g.rp.f.heavy': { one: 'Adventure over 3 times study on {n} day', other: 'Adventure over 3 times study on {n} days' },
+      'g.rp.f.pin': { one: '🔑 Parent PIN wrong {n} time', other: '🔑 Parent PIN wrong {n} times' },
+      'g.rp.f.pinlock': { one: ' (locked {n} time)', other: ' (locked {n} times)' },
+      'g.rp.f.cleared': '🧹 Progress was erased',
+      'g.rp.f.restored': '🗂️ Save was restored from a backup',
+      'g.rp.f.noai': '⚠️ AI chat is not set up',
+      'g.rp.f.key': { one: '💳 AI credit or key problem on {n} day', other: '💳 AI credit or key problem on {n} days' },
+      'g.rp.f.net': { one: '📶 AI had no internet on {n} day', other: '📶 AI had no internet on {n} days' },
+      'g.rp.f.skip': { one: '⏭️ AI was down: {n} question skipped (all in review)', other: '⏭️ AI was down: {n} questions skipped (all in review)' },
+      'g.rp.f.mic': { one: '🎤 Microphone refused {n} time', other: '🎤 Microphone refused {n} times' },
+      'g.rp.ab.a': '<p class="rp-ab">💪 <b>Skills</b> (compared with last week): words per line {n}',
+      'g.rp.ab.b': ' · right first time {n}',
+      'g.rp.ab.c': ' · still remembered after a week {n}',
+      'g.rp.hb.a': { one: '<p class="rp-line">🔥 Said from memory: <b>{n}</b> line', other: '<p class="rp-line">🔥 Said from memory: <b>{n}</b> lines' },
+      'g.rp.hb.w': { one: ' (plus {n} word)', other: ' (plus {n} words)' },
+      'g.rp.hb.say': { one: ' · 💡 With hints: {h} · 🗣️ Spoken in chat: {n} line', other: ' · 💡 With hints: {h} · 🗣️ Spoken in chat: {n} lines' },
+      'g.rp.hb.max': ' (longest: {n} words)',
+      'g.rp.hb.zh': ' · Said in Chinese: {n}',
+      'g.rp.hb.look': ' · Chinese looked up: {a} · "Help me" used: {b}',
+      'g.rp.hist': '<h3>Recent weeks</h3><p class="rp-line">📈 Study days {a} &nbsp; 🔥 Said from memory {b}</p>',
+      'g.rp.cost.lt': 'under 0.01',
+      'g.rp.title.n': '{name}\'s weekly report',
+      'g.rp.title.me': 'My weekly report',
+      'g.rp.sub': '{a} – {b} · Study days <b>{n}/7</b>',
+      'g.rp.since': ' (tracking since {d})',
+      'g.rp.concern': { one: '👪 {n} chat needs a parent to look at it (Settings → 🔒 Parent Settings → Chat safety, needs the parent PIN)', other: '👪 {n} chats need a parent to look at them (Settings → 🔒 Parent Settings → Chat safety, needs the parent PIN)' },
+      'g.rp.legend': 'Minutes per day: <i class="l"></i>Study {a} <i class="p"></i>Adventure {b} <i class="o"></i>In menus &nbsp; ✅ Done 🟡 Chat skipped 📵 Offline pass 🔓 Gate off ⏰ Date changed 🌙 Late',
+      'g.rp.t.levels': 'Levels done',
+      'g.rp.t.spoken': 'Said correctly',
+      'g.rp.t.review': 'Review answers right',
+      'g.rp.t.chat': 'Chats · {m} min',
+      'g.rp.t.fresh': 'New words and sentences',
+      'g.rp.t.mastered': 'Mastered so far',
+      'g.rp.cu': '<p class="rp-line">📗 Studying <b>{u}</b> · ★ {s}/21 · wrong this week: {n} (all in review)</p>',
+      'g.rp.top': 'Most missed so far',
+      'g.rp.tips': 'Better ways to say it (from chats)',
+      'g.rp.cost': '💰 AI cost this week: about ¥{c}',
+      'g.rp.cost.web': ' (on the web version, chat costs are counted on the relay server)',
+      'g.rp.end': '📸 Take a screenshot and send it to a parent!',
+      'g.rp.dg.ai': { one: 'AI errors: {n}', other: 'AI errors: {n}' },
+      'g.rp.dg.aiwhy': ' (no internet {a} · key/credit {b})',
+      'g.rp.dg.chat': { one: ' · chat could not connect on {n} day', other: ' · chat could not connect on {n} days' },
+      'g.rp.dg.err': ' · app errors: {n}',
+      'g.rp.dg.gl': ' · 3D view lost: {n}',
+      'g.rp.dg.gone': ' · view restarted: {n}',
+      'g.push.bad': 'This address is not valid: use a 32-character PushPlus token, or a bot address starting with https://qyapi.weixin.qq.com/…',
+      'g.push.on': '📲 Done: a daily report will be sent after 8 pm each day',
+      'g.push.off': 'No more daily reports',
+      'g.push.fill': 'First enter a PushPlus token or a WeCom bot address',
+      'g.push.test.t': 'Echo Island: test message',
+      'g.push.test.b': 'Hello! From now on, after 8 pm each day you will get the learner\'s study summary here.',
+      'g.push.test.ok': '📲 Sent. Check your messages to see if it arrived',
+      'g.push.test.no': 'Not sent: check the internet and the address',
+      'g.push.h': '📲 Send the daily report to WeChat',
+      'g.push.p': 'After 8 pm each day, one message with the learner\'s study summary (study time, adventure time, lines spoken, whether the study tasks are done) is sent to a parent\'s WeChat. It is off by default. Choose one of two ways:',
+      'g.push.how1': '<b>PushPlus</b>: follow "pushplus" on WeChat and copy your token (32 characters) from its website.',
+      'g.push.how2': '<b>WeCom group bot</b>: in a WeCom group go to Group settings → Group bots → Add, then copy the webhook address (it starts with https://qyapi.weixin.qq.com/…).',
+      'g.push.ph': 'PushPlus token or bot address',
+      'g.push.tip': 'The content of chats is never sent; if a chat needs a parent\'s attention, only a short note is sent. When there is no internet, it is sent once you are back online.',
+      'g.push.btn.test': 'Send a test',
+      'g.push.btn.save': 'Save',
+      'g.push.btn.off': 'Stop sending',
+      'g.push.btn.back': 'Back',
+      'g.push.title': 'Echo Island daily report {md} ({dow})',
+      'g.push.s.open': '✅ Study tasks done',
+      'g.push.s.ex': '🟡 Review done (chat skipped: {why})',
+      'g.push.s.pass': '📵 {r}; adventured for {n} minutes first (chat not done)',
+      'g.push.s.pass.daily': 'chat time used up (hardly any speaking)',
+      'g.push.s.pass.fail': 'chat could not connect',
+      'g.push.s.pass.off': 'no internet',
+      'g.push.s.off': '🔓 Study gate was off',
+      'g.push.s.todo': '⬜ Study tasks not done yet',
+      'g.push.l.time': '⏱️ Study {a} min · Adventure {b} min',
+      'g.push.l.rev': '📕 Review answers right: {a} · 🎤 Said correctly: {b} · 🔥 Said from memory: {c}',
+      'g.push.l.chat': '🗣️ Chats with islanders: {a}, lines of English spoken: {b}',
+      'g.push.l.max': ' (longest: {n} words)',
+      'g.push.l.goals': { one: ', {n} chat goal finished', other: ', {n} chat goals finished' },
+      'g.push.w.off': '🔓 Study gate was turned off',
+      'g.push.w.back': '⏰ The phone date was changed',
+      'g.push.w.night': '🌙 Adventuring late at night',
+      'g.push.w.quota': '💳 AI credit has run out',
+      'g.push.w.busy': '⏳ AI was too busy',
+      'g.push.w.auth': '🔑 AI key is wrong',
+      'g.push.w.nokey': '🔑 No AI key yet',
+      'g.push.w.skip': { one: '⏭️ AI was down: {n} question skipped', other: '⏭️ AI was down: {n} questions skipped' },
+      'g.push.w.pinlock': '🔑 Parent PIN was locked after too many wrong tries',
+      'g.push.w.pin': { one: '🔑 Parent PIN wrong {n} time', other: '🔑 Parent PIN wrong {n} times' },
+      'g.push.l.concern': { one: '👪 {n} chat needs a parent to look at it (in the game: Settings → 🔒 Parent Settings → Chat safety)', other: '👪 {n} chats need a parent to look at them (in the game: Settings → 🔒 Parent Settings → Chat safety)' },
+      'g.boot.quiet': '🔇 No-speaking mode: everywhere you would speak is now a button',
+      'g.boot.bad.h': 'The save could not be read',
+      'g.boot.bad.none': 'No usable backup was found either, so we have to start again from the beginning.',
+      'g.boot.bad.used': 'Do not worry: it has been restored from <b>{w}</b>. At most a little recent progress is missing.',
+      'g.boot.bad.tip': 'The damaged copy is kept and not deleted',
+      'g.boot.bad.full': '; this device is full, so this time\'s progress is not being saved. Please tell a parent',
+      'g.boot.bad.tip2': '. A parent can also switch to another backup in "Settings → 🔒 Parent Settings → 💾 Save backup".',
+      'g.boot.restored': '🗂️ Restored from a backup: {w}',
+      'g.boot.crash.log': 'The view process crashed and was reopened',
+      'g.boot.crash': 'The screen had a problem and was reopened. Your save is safe',
+      'g.shell.title': 'Echo Island',
+      'g.shell.pet': 'My pet',
+      'g.shell.streak': 'Days in a row',
+      'g.shell.coins': 'Coins',
+      'g.shell.tabs': 'Mode',
+      'g.shell.quests': 'Daily tasks',
+      'g.shell.review': 'Review list',
+      'g.shell.shop': 'Pet Shop',
+      'g.shell.ach': 'Achievements',
+      'g.shell.report': 'Weekly report',
+      'g.shell.settings': 'Settings',
+      'g.shell.foot': 'Echo Island · English listening and speaking practice · Your progress is saved only on this device',
+      'g.shell.quit': 'Leave this level',
+      'g.shell.next': 'Continue',
+
+
+      // —— 字表结束 ——
+    },
+  });
+
   const W = window.WORLDS;
   // 课本单元（book.js）：课本的每个单元和小岛一样有单词/句子/对话，接在 13 座岛后面编号（第 NB 号起），
   // 闯关、错题本、冒险出题都用 WX[编号]；只有岛屿才有的东西（岛主、徽章、乘风、对话动画）还是用 W
   const BOOKS = (window.BOOKS && window.BOOKS.list) || [];
-  const BK = BOOKS.flatMap((b, bi) => b.units.map(u => Object.assign(u, { book: b.id, bshort: b.short, bi })));   // 所有册的单元排成一列
+  // bshort（七上……）是 getter：按界面语言给册名（world.js 的挑战馆门槛、talk.js 的课本话题也读它）
+  const BK = BOOKS.flatMap((b, bi) => b.units.map(u => Object.defineProperty(Object.assign(u, { book: b.id, bi }), 'bshort', { get: () => bookShort(b), enumerable: true, configurable: true })));   // 所有册的单元排成一列
   const NB = W.length, WX = W.concat(BK);
   const isUnit = wi => wi >= NB;
   const $ = (s, r = document) => r.querySelector(s);
@@ -26,72 +1232,84 @@
   const STOP = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
 
   // ---------- 关卡配方：每个岛 7 关，最后是 Boss ----------
+  // 数据表里的字按界面语言取（getter，用到的时候才取）：表的形状不变——别处还是 RECIPES[i].name、TYPE_TAG[t]、ACH 的 [id, 图标, 名字, 说明, 条件] 这样读
+  // lazy(对象, 字段, 键, 参数函数)：给对象的字段（数组的下标也行）装一个按界面语言取字的 getter
+  const lazy = (o, f, k, p) => Object.defineProperty(o, f, { get: () => tr(k, p ? p() : undefined), enumerable: true, configurable: true });
+  // { 编号: 字 }：键 = 前缀 + 编号（编号是 '' 的用 idle）；没列出的编号读出来是 undefined
+  const lazyMap = (pre, ids) => ids.reduce((o, id) => lazy(o, id, pre + (id === '' ? 'idle' : id)), {});
+  const rc = (i, o) => { lazy(o, 'desc', 'g.rc.' + i + '.d'); return i < 6 ? lazy(o, 'name', 'g.rc.' + i + '.n') : o; };
   const RECIPES = [
-    { name: '听词', icon: '🎧', desc: '听单词，选出意思和拼写。', mix: [['lw', 6], ['ls', 4]] },
-    { name: '说词', icon: '🎤', desc: '跟读单词，再看图说出英文。', mix: [['sr_w', 4], ['sp', 4], ['lw', 2]] },
-    { name: '听句', icon: '🎧', desc: '听整句话，理解意思、排出顺序。', mix: [['lm', 5], ['lo', 3], ['ls', 2]] },
-    { name: '说句', icon: '🎤', desc: '一句一句跟读，把句子说顺。', mix: [['sr_s', 5], ['lo', 2], ['lm', 3]] },
-    { name: '对话', icon: '💬', desc: '听对方说话，选出并说出合适的回答。', mix: [['lr', 6], ['sr_d', 4]] },
-    { name: '挑战', icon: '⚡', desc: '所有题型混在一起，还会复习前面岛上的内容。', mix: [['lw', 2], ['ls', 1], ['lm', 2], ['lo', 2], ['lr', 2], ['sr_s', 2], ['sp', 1]], review: true },
-    { name: 'BOSS', icon: '👑', desc: '和岛主面对面对话！听懂它的话，大声说出正确回答来攻击它。', mix: [['bt', 6], ['lo', 2]], boss: true },
+    rc(0, { icon: '🎧', mix: [['lw', 6], ['ls', 4]] }),
+    rc(1, { icon: '🎤', mix: [['sr_w', 4], ['sp', 4], ['lw', 2]] }),
+    rc(2, { icon: '🎧', mix: [['lm', 5], ['lo', 3], ['ls', 2]] }),
+    rc(3, { icon: '🎤', mix: [['sr_s', 5], ['lo', 2], ['lm', 3]] }),
+    rc(4, { icon: '💬', mix: [['lr', 6], ['sr_d', 4]] }),
+    rc(5, { icon: '⚡', mix: [['lw', 2], ['ls', 1], ['lm', 2], ['lo', 2], ['lr', 2], ['sr_s', 2], ['sp', 1]], review: true }),
+    rc(6, { name: 'BOSS', icon: '👑', mix: [['bt', 6], ['lo', 2]], boss: true }),
   ];
   const KIND = { lw: 'word', ls: 'word', sp: 'word', sr_w: 'word', lm: 'sent', lo: 'sent', sr_s: 'sent', lr: 'dlg', sr_d: 'dlg', bt: 'dlg' };
-  const TYPE_LABEL = { lw: '🎧 听音选义', ls: '🎧 听音选词', lm: '🎧 听句选意', lr: '💬 听问选答', lo: '🧩 听音排句', sr_w: '🎤 单词跟读', sr_s: '🎤 句子跟读', sr_d: '🎤 说出回答', sp: '🖼️ 看图说英语', bt: '⚔️ 对话攻击' };
-  const TYPE_TAG = { lw: '听音选义', ls: '听音选词', lm: '听句选意', lr: '听问选答', lo: '听音排句', sr_w: '单词跟读', sr_s: '句子跟读', sr_d: '说出回答', sp: '看图说英语', bt: '对话攻击' };
+  const TYPE_LABEL = lazyMap('g.type.', ['lw', 'ls', 'lm', 'lr', 'lo', 'sr_w', 'sr_s', 'sr_d', 'sp', 'bt']);
+  const TYPE_TAG = lazyMap('g.tag.', ['lw', 'ls', 'lm', 'lr', 'lo', 'sr_w', 'sr_s', 'sr_d', 'sp', 'bt']);
   const SPEAK_TYPES = ['sr_w', 'sr_s', 'sr_d', 'sp'];
-  const PRAISE = ['太棒了！', 'Great!', 'Nice!', '答对了！', 'Excellent!', 'Well done!', '厉害！'];
+  // 表扬的话：数组的每一格是 getter（g.praise 在两门语言里一样长），pick(PRAISE) 照旧能用
+  const PRAISE = [];
+  for (let i = 0; i < 7; i++) Object.defineProperty(PRAISE, i, { get: () => { const a = I18N ? I18N.raw('g.praise') : null; return a ? a[i] : ''; }, enumerable: true, configurable: true });
 
-  const TITLES = [[1, '见习水手'], [3, '小小水手'], [5, '听力侦探'], [7, '口语新星'], [10, '发音达人'], [13, '对话高手'], [16, '岛屿探险家'], [20, '英语船长'], [25, '回声大师'], [30, '传奇船长']];
-  const PETS = [['🐣', 0, '小鸡'], ['🐱', 60, '小猫'], ['🐶', 60, '小狗'], ['🐰', 80, '兔子'], ['🐸', 80, '青蛙'], ['🦊', 120, '狐狸'], ['🐼', 150, '熊猫'], ['🐧', 150, '企鹅'], ['🦉', 200, '猫头鹰'], ['🐬', 250, '海豚'], ['🦄', 400, '独角兽'], ['🐲', 600, '小龙']];
-  const CHEST_PETS = [['🦖', '小恐龙'], ['🦋', '蝴蝶'], ['🐙', '小章鱼']];
+  const TITLES = [1, 3, 5, 7, 10, 13, 16, 20, 25, 30].map(n => lazy([n, ''], 1, 'g.title.' + n));
+  const PETS = [['🐣', 0, 'chick'], ['🐱', 60, 'cat'], ['🐶', 60, 'dog'], ['🐰', 80, 'rabbit'], ['🐸', 80, 'frog'], ['🦊', 120, 'fox'], ['🐼', 150, 'panda'], ['🐧', 150, 'penguin'], ['🦉', 200, 'owl'], ['🐬', 250, 'dolphin'], ['🦄', 400, 'unicorn'], ['🐲', 600, 'dragon']]
+    .map(([e, price, id]) => lazy([e, price, ''], 2, 'g.pet.' + id));
+  const CHEST_PETS = [['🦖', 'dino'], ['🦋', 'butterfly'], ['🐙', 'octopus']].map(([e, id]) => lazy([e, ''], 1, 'g.pet.' + id));
 
+  // 每日任务池：t（任务名）是 getter
   const QPOOL = [
-    { id: 'lv2', t: '完成 2 个关卡', goal: 2, key: 'levels', rw: 20 },
-    { id: 'lv4', t: '完成 4 个关卡', goal: 4, key: 'levels', rw: 40 },
-    { id: 'sp10', t: '开口说对 10 次', goal: 10, key: 'spoken', rw: 20 },
-    { id: 'sp25', t: '开口说对 25 次', goal: 25, key: 'spoken', rw: 40 },
-    { id: 'cb8', t: '一关里连击达到 8', goal: 8, key: 'combo', max: true, rw: 30 },
-    { id: 'st3', t: '拿到 1 次三星', goal: 1, key: 'three', rw: 30 },
-    { id: 'pf5', t: '获得 5 次 Perfect 发音', goal: 5, key: 'perfect', rw: 30 },
-    { id: 'ls20', t: '听力题答对 20 道', goal: 20, key: 'listen', rw: 20 },
-    { id: 'rv5', t: '每日复习答对 5 题', goal: 5, key: 'review', rw: 30 },
-    { id: 'rp1', t: '完成 1 次对话角色扮演', goal: 1, key: 'roleplay', rw: 30 },
-    { id: 'bt3', t: '赢得 3 场怪兽对战', goal: 3, key: 'battle', rw: 30 },
-    { id: 'ct1', t: '收服 1 只野生怪兽', goal: 1, key: 'catch', rw: 40 },
-    { id: 'tk1', t: '用英语和岛民聊天，完成 1 个目标', goal: 1, key: 'talk', rw: 40 },
-  ];
+    { id: 'lv2', goal: 2, key: 'levels', rw: 20 },
+    { id: 'lv4', goal: 4, key: 'levels', rw: 40 },
+    { id: 'sp10', goal: 10, key: 'spoken', rw: 20 },
+    { id: 'sp25', goal: 25, key: 'spoken', rw: 40 },
+    { id: 'cb8', goal: 8, key: 'combo', max: true, rw: 30 },
+    { id: 'st3', goal: 1, key: 'three', rw: 30 },
+    { id: 'pf5', goal: 5, key: 'perfect', rw: 30 },
+    { id: 'ls20', goal: 20, key: 'listen', rw: 20 },
+    { id: 'rv5', goal: 5, key: 'review', rw: 30 },
+    { id: 'rp1', goal: 1, key: 'roleplay', rw: 30 },
+    { id: 'bt3', goal: 3, key: 'battle', rw: 30 },
+    { id: 'ct1', goal: 1, key: 'catch', rw: 40 },
+    { id: 'tk1', goal: 1, key: 'talk', rw: 40 },
+  ].map(q => lazy(q, 't', 'g.qp.' + q.id));
   const QDEF = Object.fromEntries(QPOOL.map(q => [q.id, q]));
 
+  // 成就：[id, 图标, 名字, 说明, 条件]——名字（下标 2）和说明（下标 3）是 getter；p = 说明里 {n} 的取法
+  const ach = (id, icon, test, p) => lazy(lazy([id, icon, '', '', test], 2, 'g.ach.' + id + '.n'), 3, 'g.ach.' + id + '.d', p);
   const ACH = [
-    ['first', '🚩', '起航', '完成第 1 关', s => s.stats.levels >= 1],
-    ['lv10', '⛵', '乘风破浪', '完成 10 关', s => s.stats.levels >= 10],
-    ['lv50', '🚢', '远洋航行', '完成 50 关', s => s.stats.levels >= 50],
-    ['boss1', '⚔️', '初战告捷', '打败第 1 个 Boss', s => s.stats.bosses >= 1],
-    ['boss5', '🛡️', 'Boss 猎人', '打败 5 个 Boss', s => s.stats.bosses >= 5],
-    ['allboss', '👑', '群岛之王', '打败全部 13 个 Boss', s => W.every((w, i) => (s.stars[i + '-6'] || 0) > 0)],
-    ['c10', '🔥', '十连击', '一关里连击 10 次', s => s.stats.maxCombo >= 10],
-    ['flaw', '🎯', '零失误', '一关里每题都答对', s => s.stats.flawless >= 1],
-    ['sp50', '🎤', '敢开口', '开口说对 50 次', s => s.stats.spoken >= 50],
-    ['sp300', '📣', '口语达人', '开口说对 300 次', s => s.stats.spoken >= 300],
-    ['pf30', '💯', '标准发音', '获得 30 次 Perfect 发音', s => s.stats.perfect >= 30],
-    ['st3', '📅', '三天打卡', '连续打卡 3 天', s => s.streak >= 3],
-    ['st7', '🗓️', '一周不断', '连续打卡 7 天', s => s.streak >= 7],
-    ['st30', '🏅', '月度坚持', '连续打卡 30 天', s => s.streak >= 30],
-    ['three10', '⭐', '星星收集者', '拿到 10 次三星', s => s.stats.threeStars >= 10],
-    ['world', '🏝️', '完美海岛', '一个岛的 7 关全部三星', s => W.some((w, i) => range(7).every(l => (s.stars[i + '-' + l] || 0) === 3))],
-    ['rv20', '📕', '温故知新', '每日复习答对 20 题', s => s.stats.reviewed >= 20],
-    ['pets3', '🐾', '宠物之家', '拥有 3 只宠物', s => s.pets.length >= 3],
-    ['rich', '💰', '小富翁', '同时拥有 500 金币', s => s.coins >= 500],
-    ['actor', '🎬', '小演员', '完成 5 次对话角色扮演', s => s.stats.roleplay >= 5],
-    ['catch1', '🔮', '第一个伙伴', '收服第 1 只野生怪兽', s => (s.mon.caught || 0) >= 1],
-    ['dex8', '📖', '手册收集家', '手册点亮 8 种怪兽', s => window.MonsterGame && MonsterGame.caughtCount(s) >= 8],
-    ['dexall', '🌈', '怪兽大师', '手册点亮第一大区全部 ' + ((window.DEX && DEX.region1Total) || '') + ' 种', s => { const r = window.EchoWorld && EchoWorld.dexRegion ? EchoWorld.dexRegion(s) : null; return !!r && r.total > 0 && r.caught >= r.total; }],
-    ['evo1', '✨', '进化！', '第一次让怪兽进化', s => (s.mon.evolved || 0) >= 1],
-    ['badge5', '🏅', '徽章收集者', '拿到 5 枚岛主徽章', s => Object.keys(s.mon.badges).length >= 5],
-    ['badgeall', '🏆', '冠军训练师', '拿到全部 13 枚岛主徽章', s => Object.keys(s.mon.badges).length >= W.length],
+    ach('first', '🚩', s => s.stats.levels >= 1),
+    ach('lv10', '⛵', s => s.stats.levels >= 10),
+    ach('lv50', '🚢', s => s.stats.levels >= 50),
+    ach('boss1', '⚔️', s => s.stats.bosses >= 1),
+    ach('boss5', '🛡️', s => s.stats.bosses >= 5),
+    ach('allboss', '👑', s => W.every((w, i) => (s.stars[i + '-6'] || 0) > 0)),
+    ach('c10', '🔥', s => s.stats.maxCombo >= 10),
+    ach('flaw', '🎯', s => s.stats.flawless >= 1),
+    ach('sp50', '🎤', s => s.stats.spoken >= 50),
+    ach('sp300', '📣', s => s.stats.spoken >= 300),
+    ach('pf30', '💯', s => s.stats.perfect >= 30),
+    ach('st3', '📅', s => s.streak >= 3),
+    ach('st7', '🗓️', s => s.streak >= 7),
+    ach('st30', '🏅', s => s.streak >= 30),
+    ach('three10', '⭐', s => s.stats.threeStars >= 10),
+    ach('world', '🏝️', s => W.some((w, i) => range(7).every(l => (s.stars[i + '-' + l] || 0) === 3))),
+    ach('rv20', '📕', s => s.stats.reviewed >= 20),
+    ach('pets3', '🐾', s => s.pets.length >= 3),
+    ach('rich', '💰', s => s.coins >= 500),
+    ach('actor', '🎬', s => s.stats.roleplay >= 5),
+    ach('catch1', '🔮', s => (s.mon.caught || 0) >= 1),
+    ach('dex8', '📖', s => window.MonsterGame && MonsterGame.caughtCount(s) >= 8),
+    ach('dexall', '🌈', s => { const r = window.EchoWorld && EchoWorld.dexRegion ? EchoWorld.dexRegion(s) : null; return !!r && r.total > 0 && r.caught >= r.total; }, () => ({ n: (window.DEX && DEX.region1Total) || '' })),
+    ach('evo1', '✨', s => (s.mon.evolved || 0) >= 1),
+    ach('badge5', '🏅', s => Object.keys(s.mon.badges).length >= 5),
+    ach('badgeall', '🏆', s => Object.keys(s.mon.badges).length >= W.length),
     // 今日目击（sighting.js）：按一共收服了几只算，不按连续天数——不逼着天天来
-    ['sight1', '🔎', '好眼力', '读懂英文线索，收服 1 只「今日目击」的怪兽', s => (((s.world || {}).sight || {}).total || 0) >= 1],
-    ['sight7', '🧭', '线索小侦探', '收服 7 只「今日目击」的怪兽', s => (((s.world || {}).sight || {}).total || 0) >= 7],
+    ach('sight1', '🔎', s => (((s.world || {}).sight || {}).total || 0) >= 1),
+    ach('sight7', '🧭', s => (((s.world || {}).sight || {}).total || 0) >= 7),
   ];
 
   // ---------- 存档 ----------
@@ -236,18 +1454,20 @@
   // 往备份的键里放的：够大的压着放（已经压过的不动）；bakGet 读回原文（没有、解不开 → ''）
   const packBig = t => (t && t.length >= PACK_MIN && t.slice(0, LZ_TAG.length) !== LZ_TAG ? lzPack(t) : t);
   const bakGet = k => lzUnpack(lsGet(k) || '') || '';
+  // 备份日期：bakmeta 里存的是日期（或空；老存档里存过中文的「以前」），显示时按界面语言补；备份的 label 是 getter，显示的时候才按界面语言拼
+  const bakDayTxt = v => (!v || (I18N && v === I18N.t('g.save.before', null, 'zh')) ? tr('g.save.before') : v);
   // 最近一份读得出来的备份：{ o 存档, txt 原文, label 哪里的哪天的 }；先看本机的 3 份，再看手机「下载/EchoIsland」里的
   function bestBackup() {
     const meta = bakMeta();
     for (let i = 0; i < BAK.length; i++) {
       const txt = bakGet(BAK[i]), o = parseSave(txt);
-      if (o) return { o, txt, label: '这台设备上 ' + (meta['d' + (i + 1)] || '以前') + ' 的备份' };
+      if (o) return { o, txt, get label() { return tr('g.save.dev', { d: bakDayTxt(meta['d' + (i + 1)]) }); } };
     }
     if (nat('backupList') && nat('backupRead')) {
       try {
         for (const b of JSON.parse(EchoNative.backupList() || '[]').slice(0, 7)) {
           const txt = EchoNative.backupRead(b.name), o = parseSave(txt);
-          if (o) return { o, txt, label: '手机「下载/EchoIsland」里 ' + (b.date || b.name) + ' 的备份' };
+          if (o) return { o, txt, get label() { return tr('g.save.phone', { d: b.date || b.name }); } };
         }
       } catch (e) { /* 读不到就算了 */ }
     }
@@ -299,8 +1519,8 @@
         if (!lsSet(BAD, keep)) RT.noSave = true;   // 连另存的地方都没有：这次先不保存，免得把坏档盖掉
       }
       { const meta = bakMeta(); meta.bad = dayStr(); lsSet(BAK_META, JSON.stringify(meta)); }   // 哪天坏的（空间紧的时候，一个月前的坏档先删）
-      if (window.EchoErr) EchoErr.log('app', '存档读不出来（' + raw.length + ' 字）', 'load');
-      RT.restored = b ? b.label : 'none';
+      if (window.EchoErr) EchoErr.log('app', tr('g.save.badlog', { n: raw.length }), 'load');
+      RT.restored = b ? { toString: () => b.label } : 'none';   // 读档时界面语言还没定：弹窗显示的时候（esc → String）才拼名字
       let s = fresh();
       if (b) { if (!RT.noSave && lsSet(KEY, b.txt)) RT.lastTxt = b.txt; s = merge(s, b.o); }
       RT.posBase = posOf(s.world);
@@ -322,7 +1542,7 @@
   function save() {
     if (RT.noSave) return;
     let txt;
-    try { txt = JSON.stringify(S); } catch (e) { if (window.EchoErr) EchoErr.log('app', '存档写不出来：' + e.message, 'save'); return; }
+    try { txt = JSON.stringify(S); } catch (e) { if (window.EchoErr) EchoErr.log('app', tr('g.save.wlog', { msg: e.message }), 'save'); return; }
     const d = dayStr();
     if (RT.bakDay !== d) { RT.bakDay = d; dailyBackup(d, txt); }
     if (lsSet(KEY, txt)) { saved(txt); return; }
@@ -332,11 +1552,11 @@
     setTimeout(storeCheck, 0);
     if (!RT.saveWarned) {
       RT.saveWarned = true;
-      if (window.EchoErr) EchoErr.log('app', '存档存不进去（空间满了？）', 'save');
+      if (window.EchoErr) EchoErr.log('app', tr('g.save.fulllog'), 'save');
       // 第一次存不进去就说一声（只说一次）：不然孩子每次玩的进度都悄悄丢了
       setTimeout(() => {
-        const t = '存档存不进去了（手机给游戏的空间满了），今天玩的可能存不下来。请家长在 设置 → 💾 存档备份 里先「导出存档」。';
-        if ($('#modal').hidden) openModal('<div class="big">💾</div><h2>存档存不进去了</h2><p>' + t + '</p><button class="btn wide" data-act="close" data-focus>知道了</button>');
+        const t = tr('g.save.full');
+        if ($('#modal').hidden) openModal('<div class="big">💾</div><h2>' + tr('g.save.full.h') + '</h2><p>' + t + '</p><button class="btn wide" data-act="close" data-focus>' + tr('g.ok') + '</button>');
         else toast('💾 ' + t);
       }, 0);
     }
@@ -351,7 +1571,7 @@
         if (v2) lsSet(BAK[2], packBig(v2));
         if (v1) lsSet(BAK[1], packBig(v1));
         lsSet(BAK[0], packBig(cur));   // 大存档压着放（约六分之一），不然 3 份备份就把 localStorage 占掉一大半
-        meta.d3 = meta.d2; meta.d2 = meta.d1; meta.d1 = meta.day || '以前';   // 上一份存档最后是哪天存的
+        meta.d3 = meta.d2; meta.d2 = meta.d1; meta.d1 = meta.day || '';   // 上一份存档最后是哪天存的
       }
       meta.day = d;
       lsSet(BAK_META, JSON.stringify(meta));
@@ -422,20 +1642,20 @@
     if (used > q * .9) {
       [BAK[2], BAK[1], BAD].forEach(lsDel);
       used = lsUsage();
-      if (window.EchoErr && !RT.storeCut) { RT.storeCut = true; EchoErr.log('app', '存档空间快满了，删掉了较早的两份备份', 'store'); }
+      if (window.EchoErr && !RT.storeCut) { RT.storeCut = true; EchoErr.log('app', tr('g.store.cutlog'), 'store'); }
     }
     RT.store = { used, quota: q, pct: Math.round(used / q * 100), warn: used > q * .8 };
-    if (RT.store.warn && !RT.storeLogged) { RT.storeLogged = true; if (window.EchoErr) EchoErr.log('app', '存档空间快满了：已用 ' + RT.store.pct + '%（' + used + ' 字）', 'store'); }
+    if (RT.store.warn && !RT.storeLogged) { RT.storeLogged = true; if (window.EchoErr) EchoErr.log('app', tr('g.store.pctlog', { pct: RT.store.pct, n: used }), 'store'); }
     refreshBars();
     return RT.store;
   }
   function storeInfo() {
     const st = storeCheck();
     if (!st || !st.warn) return;
-    openModal('<div class="big">💾</div><h2>存档空间快满了</h2>' +
-      '<p>手机给游戏放存档的地方已经用了 <b>' + st.pct + '%</b>。现在还能正常存；满了以后，新的进度就存不进去了。</p>' +
-      '<p class="tip">请家长：先在「设置 → 🔒 家长设置 → 💾 存档备份」里点「导出存档」，发到微信里存一份；再把这条提示告诉帮你装游戏的人。</p>' +
-      '<div class="row"><button class="btn ghost" data-act="parentSet">🔒 家长设置</button><button class="btn" data-act="close" data-focus>知道了</button></div>');
+    openModal('<div class="big">💾</div><h2>' + tr('g.store.h') + '</h2>' +
+      trh('g.store.p1', { pct: st.pct }) +
+      trh('g.store.p2') +
+      '<div class="row"><button class="btn ghost" data-act="parentSet">' + tr('g.bar.parent') + '</button><button class="btn" data-act="close" data-focus>' + tr('g.ok') + '</button></div>');
   }
 
   let S = fresh();
@@ -450,9 +1670,8 @@
     // store 最近一次量的存档空间 { used, quota, pct, warn }、lsQuota 测试用的假配额
     lastTxt: '', posBase: null, posKey: false, walkDirty: false, walkTm: 0, walkFull: null, store: null, lsQuota: 0 };
   let P = null; // 当前关卡
-  // 2026-11-19（给所有人用）——界面语言：新加的画面上的字从 i18n.js 的字表里取（tr 纯文字；trh 拼进 HTML 用，参数会转义）
+  // 2026-11-19（给所有人用）——界面语言：画面上的字从 i18n.js 的字表里取（tr / trh 在文件开头）
   if (window.EchoI18n) EchoI18n.use(() => (S && S.settings && S.settings.ui) || 'zh');
-  const tr = (k, p) => (window.EchoI18n ? EchoI18n.t(k, p) : k), trh = (k, p) => (window.EchoI18n ? EchoI18n.h(k, p) : k);
   // 谁在学：'kid' 孩子（老存档、家庭版都是：学习锁、冒险限时、家长密码）/ 'open' 青少年和成人自己学（这三样都没有，别的一样）
   const kidMode = () => S.settings.learner !== 'open';
   // 按能力走（做过能力检测、课程选的是「按能力」）时现在是第几级；不是就返回 null，一切照旧。分级和内容对照表在 levels.js
@@ -468,11 +1687,11 @@
     if (d === 2 && S.freeze > 0 && S.streak > 0) {
       S.freeze--;
       S.lastDay = dayStr(new Date(Date.now() - 864e5));
-      setTimeout(() => toast('🧊 连胜保护卡生效，' + S.streak + ' 天连续打卡保住了！', 'gold'), 600);
+      setTimeout(() => toast(tr('g.streak.keep', { n: S.streak }), 'gold'), 600);
     } else if (S.streak > 0) {
       const lost = S.streak;
       S.streak = 0;
-      setTimeout(() => toast('💧 ' + lost + ' 天的连续打卡断了，今天重新开始吧'), 600);
+      setTimeout(() => toast(tr('g.streak.lost', { n: lost })), 600);
     }
     save();
   }
@@ -594,7 +1813,7 @@
   // 按句子长短停一小会儿再算「读完」（背景音乐照样压低这一会儿），对话、剧场的节奏和有声音时差不多
   function silent(res, text) {
     endPlaying();
-    if (!RT.ttsWarned && window.ECHO_APP) { RT.ttsWarned = true; toast('这句的声音要联网才能听到'); }
+    if (!RT.ttsWarned && window.ECHO_APP) { RT.ttsWarned = true; toast(tr('g.tts.silent')); }
     setTimeout(res, Math.min(1500, 200 + String(text || '').length * 20));
   }
   // 放一段音频（配音文件或阿里云合成的地址）；放不出来就 onFail()（没给就不出声）
@@ -613,7 +1832,7 @@
     a.playbackRate = (rate || S.settings.rate) < 0.75 ? 0.75 : 1;
     startPlaying();
     const pr = a.play();
-    if (pr && pr.catch) pr.catch(() => { if (!done) toast('点一下 🔊 就能听到发音'); fin(); });
+    if (pr && pr.catch) pr.catch(() => { if (!done) toast(tr('g.tts.tap')); fin(); });
   }
   // g：对话角色的声音 'f' / 'm'；不传就用默认声音。朗读的时候把背景音乐压低，读完恢复
   // 只认最新的一句：新的一句打断旧的时，旧的那句晚一点才结束也不会提前把音乐放回来
@@ -708,7 +1927,7 @@
   function aiTip(target, heard, el) {
     if (!heard || !el || !window.EchoTalk || !EchoTalk.aiTip) return;
     try { const L = dayLog(); L.tipN = (L.tipN || 0) + 1; } catch (e) { /* 周报用的计数 */ }
-    EchoTalk.aiTip(target, heard).then(tip => { if (tip && el.isConnected && !el.querySelector('.ai-tip')) el.insertAdjacentHTML('beforeend', '<span class="ai-tip">💡 ' + esc(tip) + ' <i class="ai-mark" title="AI 生成 · 由阿里云通义千问提供">AI</i></span>'); });   // AI 生成的点评标上「AI」
+    EchoTalk.aiTip(target, heard).then(tip => { if (tip && el.isConnected && !el.querySelector('.ai-tip')) el.insertAdjacentHTML('beforeend', '<span class="ai-tip">💡 ' + esc(tip) + ' <i class="ai-mark" title="' + esc(tr('g.sr.aimark')) + '">AI</i></span>'); });   // AI 生成的点评标上「AI」
   }
   // 麦克风在听的时候背景音乐完全静音（不然会被录进去，影响 AI 打分），正在放的朗读也停掉（别让识别听到示范读音）
   // targets：这道题的答案（可以几个）。实时识别的结果一和答案对上（90 分以上，而且最后一个词也说出来了，见 earlyMatch）就立刻结束，不用等孩子停顿——「秒出分」
@@ -755,7 +1974,7 @@
         }
         if (fail === 'net' || fail === 'key') {
           aiNote(fail, r.why);
-          if (!window.ECHO_APP && (RT.cloudFails = (RT.cloudFails || 0) + 1) >= 2) { RT.cloudBroken = true; toast('连不上 AI 打分，先用浏览器的识别 / 录音自评'); }
+          if (!window.ECHO_APP && (RT.cloudFails = (RT.cloudFails || 0) + 1) >= 2) { RT.cloudBroken = true; toast(tr('g.sr.cloud')); }
           return { alts: [], err: 'no-speech', fail, why: r.why || '' };
         }
         if (r.text) { aiNote('ok'); RT.cloudFails = 0; }
@@ -828,18 +2047,19 @@
   }
   window.addEventListener('online', () => { if (RT.aiBar && RT.aiBar.cls === 'net') { RT.aiBar = null; RT.aiFails = 0; } refreshBars(); });
   window.addEventListener('offline', () => refreshBars());
-  const KEY_TXT = { auth: 'AI 密钥不对', quota: 'AI 额度用完了', busy: 'AI 有点忙', code: '家庭口令不对' };
+  const KEY_TXT = lazyMap('g.fail.key.', ['auth', 'quota', 'busy', 'code']), KEY_SHORT = lazyMap('g.fail.short.', ['auth', 'quota', 'busy', 'code']);   // KEY_SHORT：去掉「AI」的短说法，小检查里跟在 ❌ 后面
   // 没听到的时候，话筒下面那一行提示（练习 / 剧情 / 战斗 / 对话剧场共用）
   function failHint(res) {
     const f = res && res.fail, w = res && res.why;
-    if (f === 'mic') return '🎤 要先允许回声岛用麦克风，才能开口说';
-    if (f === 'nokey') return '🔑 还没有 AI 密钥，没法自动打分：请家长在设置里粘贴';
-    if (f === 'net') return '📶 没网，没法打分：连上网再说一次';
-    if (f === 'key') return w === 'busy' ? '⏳ AI 有点忙，过一会儿再说一次' : (w === 'quota' ? '💳 ' : '🔑 ') + (KEY_TXT[w] || 'AI 打分用不了') + '，没法打分：请告诉家长';
+    if (f === 'mic') return tr('g.fail.mic');
+    if (f === 'nokey') return tr('g.fail.nokey');
+    if (f === 'net') return tr('g.fail.net');
+    if (f === 'key') return w === 'busy' ? tr('g.fail.busy') : (w === 'quota' ? '💳 ' : '🔑 ') + tr('g.fail.key.line', { why: KEY_TXT[w] || tr('g.fail.key.other') });
     if (f === 'stop') return '';
-    return '没听清，靠近一点、大声一点再试一次';
+    return tr('g.fail.unheard');
   }
-  const SKIP_TXT = '📶 先跳过（已放进复习，联网后要补说）';
+  // 「先跳过」按钮上的字：和大地图（world.js）的 w.aiskip 是同一句，字表里只有一份
+  const skipTxt = () => tr('w.aiskip');
   // 首页红条：现在 AI 用不了的原因（没有就返回 null）。口语打分的失败（aiNote）和聊天 / 朗读连不上（EchoTalk.lastErr）都算
   function aiBarState() {
     if (S.settings.mode === 'self' && !window.ECHO_APP) return null;   // 网页版的录音自评（测试也是）不用 AI
@@ -855,12 +2075,12 @@
     return st;
   }
   function barText(st) {
-    if (st.cls === 'nokey') return '🔑 还没有 AI 密钥：口语没法自动打分，请家长在设置里粘贴';
-    if (st.cls === 'net') return '📶 连不上网：口语打分和聊天要联网';
-    if (st.why === 'quota') return '💳 AI 额度用完了，请告诉家长';
-    if (st.why === 'busy') return '⏳ AI 太忙了，过一会儿再试';
-    if (st.why === 'code') return '🔑 家庭口令不对，请告诉家长';
-    return '🔑 AI 密钥不对：口语打分和聊天用不了，请告诉家长';
+    if (st.cls === 'nokey') return tr('g.bar.nokey');
+    if (st.cls === 'net') return tr('g.bar.net');
+    if (st.why === 'quota') return tr('g.bar.quota');
+    if (st.why === 'busy') return tr('g.bar.busy');
+    if (st.why === 'code') return tr('g.bar.code');
+    return tr('g.bar.auth');
   }
   // 首页上面的提示条：AI 用不了（红）、有新版本（蓝）。挂在 #tabs 后面（index.html 不用改；横屏时在右栏最上面，见 style.css）
   function homeBars() {
@@ -868,10 +2088,10 @@
     let box = $('#home-bars');
     if (!box) { box = document.createElement('div'); box.id = 'home-bars'; tabs.parentNode.insertBefore(box, tabs.nextSibling); }
     const st = aiBarState(), up = updNew(), full = RT.store && RT.store.warn ? RT.store : null;
-    box.innerHTML = (st ? '<button class="ai-bar" data-act="aiBarInfo" data-cls="' + st.cls + '">' + esc(barText(st)) + '<em>怎么办？</em></button>' : '') +
+    box.innerHTML = (st ? '<button class="ai-bar" data-act="aiBarInfo" data-cls="' + st.cls + '">' + esc(barText(st)) + '<em>' + esc(tr('g.bar.how')) + '</em></button>' : '') +
       // 存档空间快满了（storeCheck）：还存得进去的时候就说，请家长导出
-      (full ? '<button class="ai-bar" data-act="storeInfo" data-cls="store">💾 存档空间快满了（已用 ' + full.pct + '%），请告诉家长<em>怎么办？</em></button>' : '') +
-      (up ? '<button class="upd-bar" data-act="updInfo">🆕 有新版本' + (S.upd.name ? '（' + esc(S.upd.name) + '）' : '') + '，请家长更新<em>看看</em></button>' : '');
+      (full ? '<button class="ai-bar" data-act="storeInfo" data-cls="store">' + trh('g.store.bar', { pct: full.pct }) + '<em>' + esc(tr('g.bar.how')) + '</em></button>' : '') +
+      (up ? '<button class="upd-bar" data-act="updInfo">' + (S.upd.name ? trh('g.bar.upd.n', { name: S.upd.name }) : trh('g.bar.upd')) + '<em>' + esc(tr('g.bar.see')) + '</em></button>' : '');
     box.hidden = !st && !up && !full;
   }
   function refreshBars() { try { if (!$('#home').hidden) homeBars(); } catch (e) { /* 还没启动 */ } }
@@ -879,15 +2099,15 @@
     const st = aiBarState();
     if (!st) { homeBars(); return; }
     const parent = st.cls === 'nokey' || st.why === 'auth' || st.why === 'code';
-    const how = st.cls === 'nokey' ? '这台手机上还没有 AI 密钥。请家长打开「设置 → 🔒 家长设置 → AI 聊天和口语打分」，粘贴阿里云百炼的 API Key（只存在这台手机里）。'
-      : st.cls === 'net' ? '口语打分和和岛民聊天都要联网。看看 Wi-Fi 或者流量开着没有，连上网再说。'
-      : st.why === 'quota' ? '家长：阿里云百炼的额度用完了（或者欠费了）。请到百炼控制台看看费用和额度，充值或者换一把新密钥。'
-      : st.why === 'busy' ? 'AI 那边一下子收到太多请求了，过几分钟再试就好。'
-      : st.why === 'code' ? '家长：中转服务的家庭口令不对，请在设置里重新填。'
-      : '家长：AI 密钥不对（可能被作废了）。请在「设置 → 🔒 家长设置 → AI 聊天和口语打分」里粘贴新的密钥。';
+    const how = st.cls === 'nokey' ? tr('g.bar.i.nokey')
+      : st.cls === 'net' ? tr('g.bar.i.net')
+      : st.why === 'quota' ? tr('g.bar.i.quota')
+      : st.why === 'busy' ? tr('g.bar.i.busy')
+      : st.why === 'code' ? tr('g.bar.i.code')
+      : tr('g.bar.i.auth');
     openModal('<div class="big">' + (st.cls === 'net' ? '📶' : st.why === 'quota' ? '💳' : '🔑') + '</div><h2>' + esc(barText(st).replace(/^\S+\s/, '')) + '</h2><p>' + how + '</p>' +
-      '<p class="tip">AI 用不了的时候：要开口的题可以「先跳过」，这些句子都放进了每日复习，联网以后要补说；对战这一回合改成听一听、选出来（不能暴击）。</p>' +
-      '<div class="row">' + (parent ? '<button class="btn ghost" data-act="parentSet">🔒 家长设置</button>' : '') + '<button class="btn" data-act="close" data-focus>知道了</button></div>');
+      trh('g.bar.i.tip') +
+      '<div class="row">' + (parent ? '<button class="btn ghost" data-act="parentSet">' + tr('g.bar.parent') + '</button>' : '') + '<button class="btn" data-act="close" data-focus>' + tr('g.ok') + '</button></div>');
   }
   // 麦克风被拒（APK）：问原生是「这次没允许」还是「永久拒绝、系统不会再问」，弹窗说明 +「去打开」
   const micState = () => { try { return nat('micPermission') ? String(EchoNative.micPermission() || '') : ''; } catch (e) { return ''; } };
@@ -898,24 +2118,23 @@
   function micSheet(state) {
     const blocked = state === 'blocked', canFix = nat('openAppSettings');
     RT.micSheet = true;
-    openModal('<div class="big">🎤</div><h2>要用麦克风才能开口说英语</h2>' +
-      '<p>回声岛要<b>听你说的英语</b>，才能给你打分、让你和岛民聊天。声音只用来打分，不会存下来。</p>' +
-      (blocked ? '<p class="tip">手机现在不让回声岛用麦克风，也不会再问了：点「去打开」→「权限」→「麦克风」→ 选「允许」，再回到游戏。</p>'
-        : '<p class="tip">刚才没有允许。再点一次话筒，手机会问你，这次点「允许」就好。</p>') +
+    openModal('<div class="big">🎤</div><h2>' + tr('g.mic.h') + '</h2>' +
+      trh('g.mic.p') +
+      (blocked ? trh('g.mic.blocked') : trh('g.mic.denied')) +
       '<div class="row">' + (blocked
-        ? '<button class="btn ghost" data-act="close">等会儿</button>' + (canFix ? '<button class="btn" data-act="micFix" data-focus>⚙️ 去打开</button>' : '')
-        : (canFix ? '<button class="btn ghost" data-act="micFix">⚙️ 去设置里打开</button>' : '') + '<button class="btn" data-act="close" data-focus>好的，再试一次</button>') + '</div>');
+        ? '<button class="btn ghost" data-act="close">' + tr('g.mic.later') + '</button>' + (canFix ? '<button class="btn" data-act="micFix" data-focus>' + tr('g.mic.fix') + '</button>' : '')
+        : (canFix ? '<button class="btn ghost" data-act="micFix">' + tr('g.mic.fix2') + '</button>' : '') + '<button class="btn" data-act="close" data-focus>' + tr('g.mic.retry') + '</button>') + '</div>');
   }
   window.addEventListener('echo-mic', e => {
-    if (e && e.detail === 'granted' && RT.micSheet) { RT.micSheet = false; if ($('#sheet [data-act=micFix]')) closeModal(); toast('🎤 麦克风可以用了！再点一次话筒说吧'); }
+    if (e && e.detail === 'granted' && RT.micSheet) { RT.micSheet = false; if ($('#sheet [data-act=micFix]')) closeModal(); toast(tr('g.mic.granted')); }
   });
 
   // ---------- 第一次打开：「麦克风 + 网络 + 密钥」小检查（评估第 3 条 ⑤）----------
   // 请孩子说一句 Hello：顺便弹出麦克风权限框，测出麦克风被拒 / 被挡住、声音太小、没网、没密钥、额度用完。设置里也能再做一次
   const CHK_TXT = {
-    mic: { ok: '🎤 麦克风 ✅', bad: '🎤 麦克风 ❌ 没允许用', quiet: '🎤 麦克风 ⚠️ 没听到声音：是不是被手指挡住了？', '': '🎤 麦克风' },
-    net: { ok: '📶 网络 ✅', bad: '📶 网络 ❌ 连不上', '': '📶 网络' },
-    key: { ok: '🔑 AI 密钥 ✅', bad: '🔑 AI 密钥 ❌', '': '🔑 AI 密钥' },
+    mic: lazyMap('g.mic.mic.', ['ok', 'bad', 'quiet', '']),
+    net: lazyMap('g.mic.net.', ['ok', 'bad', '']),
+    key: lazyMap('g.mic.key.', ['ok', 'bad', '']),
   };
   function chkRows() {
     const c = RT.chk || {};
@@ -923,11 +2142,11 @@
   }
   function checkSheet() {
     const nokey = aiNoKey();
-    RT.chk = { mic: '', net: navigator.onLine === false ? 'bad' : '', key: nokey ? 'bad' : '', keyWhy: nokey ? '还没有：请家长在「设置 → 🔒 家长设置」里粘贴' : '' };
-    openModal('<div class="big">🩺</div><h2>开口前的小检查</h2><p>回声岛要听你说英语。点话筒，大声说：<b class="chk-say">Hello!</b></p>' +
+    RT.chk = { mic: '', net: navigator.onLine === false ? 'bad' : '', key: nokey ? 'bad' : '', keyWhy: nokey ? tr('g.mic.nokey') : '' };
+    openModal('<div class="big">🩺</div><h2>' + tr('g.mic.chk.h') + '</h2>' + trh('g.mic.chk.p') +
       '<ul class="chk" id="chk">' + chkRows() + '</ul>' +
-      '<div class="mic-wrap"><button class="mic" id="chk-mic" data-act="chkMic" aria-label="开始说话">' + MIC + '</button><div class="mic-hint" id="chk-hint">点话筒，说 Hello</div><div class="heard" id="chk-heard"></div></div>' +
-      '<div class="row"><button class="btn ghost" data-act="chkSkip">先跳过</button><button class="btn" data-act="chkDone" id="chk-done" hidden>好了，出发！</button></div>');
+      '<div class="mic-wrap"><button class="mic" id="chk-mic" data-act="chkMic" aria-label="' + esc(tr('w.mic.aria')) + '">' + MIC + '</button><div class="mic-hint" id="chk-hint">' + tr('g.mic.chk.hint') + '</div><div class="heard" id="chk-heard"></div></div>' +
+      '<div class="row"><button class="btn ghost" data-act="chkSkip">' + tr('w.skip') + '</button><button class="btn" data-act="chkDone" id="chk-done" hidden>' + tr('g.mic.chk.go') + '</button></div>');
   }
   // 没有 AI 密钥时只能测麦克风：开 2.5 秒，看声音够不够大
   async function micProbe(ms) {
@@ -954,16 +2173,16 @@
     const m = $('#chk-mic'), hint = $('#chk-hint'), heard = $('#chk-heard'); if (!m) return;
     const c = RT.chk = RT.chk || {};
     const upd = () => { const ul = $('#chk'); if (ul) ul.innerHTML = chkRows(); };
-    m.classList.add('on'); m.innerHTML = STOP; hint.textContent = '正在听……大声说 Hello!'; heard.textContent = '';
+    m.classList.add('on'); m.innerHTML = STOP; hint.textContent = tr('g.mic.listen'); heard.textContent = '';
     if (aiNoKey() || !cloudSR()) {   // 没有密钥：只能看麦克风有没有声音
       RT.chkBusy = true;
       const r = await micProbe(2500);
       RT.chkBusy = false;
       if (!$('#chk-mic')) return;
       m.classList.remove('on'); m.innerHTML = MIC;
-      if (r.err) { c.mic = 'bad'; upd(); if (window.ECHO_APP) micBlocked(r.why); else hint.textContent = '浏览器没让用麦克风'; return; }
+      if (r.err) { c.mic = 'bad'; upd(); if (window.ECHO_APP) micBlocked(r.why); else hint.textContent = tr('g.mic.nobrowser'); return; }
       c.mic = r.loud ? 'ok' : 'quiet'; upd();
-      hint.textContent = r.loud ? '麦克风没问题！' + (c.key === 'bad' ? '还差 AI 密钥：请家长在设置里粘贴，才能自动打分。' : '') : '没听到声音：靠近一点、大声说 Hello，再点一次话筒';
+      hint.textContent = r.loud ? tr(c.key === 'bad' ? 'g.mic.ok.key' : 'g.mic.ok') : tr('g.mic.quiet');
       if (r.loud) { S.micCheck = dayStr(); save(); const d = $('#chk-done'); if (d) d.hidden = false; }
       return;
     }
@@ -972,18 +2191,18 @@
     m.classList.remove('on'); m.innerHTML = MIC;
     if (res.alts.length) {
       Object.assign(c, { mic: 'ok', net: 'ok', key: 'ok', keyWhy: '' }); upd();
-      heard.textContent = '我听到：“' + res.alts[0] + '”';
-      hint.textContent = '全都没问题，可以开口说英语了！';
+      heard.textContent = tr('w.heard', { t: res.alts[0] });
+      hint.textContent = tr('g.mic.allok');
       S.micCheck = dayStr(); save();
       const d = $('#chk-done'); if (d) d.hidden = false;
       return;
     }
     if (res.fail === 'mic') { c.mic = 'bad'; upd(); return; }   // 说明弹窗已经弹出来了（APK）
     if (res.fail === 'net') { c.mic = 'ok'; c.net = 'bad'; }
-    else if (res.fail === 'key') { c.mic = 'ok'; c.net = 'ok'; c.key = 'bad'; c.keyWhy = KEY_TXT[res.why] ? KEY_TXT[res.why].replace(/^AI /, '') : ''; }
+    else if (res.fail === 'key') { c.mic = 'ok'; c.net = 'ok'; c.key = 'bad'; c.keyWhy = KEY_SHORT[res.why] || ''; }
     else if (res.fail === 'unheard') c.mic = 'quiet';
     upd();
-    hint.textContent = res.fail === 'unheard' ? '没听到声音：麦克风是不是被挡住了？靠近一点、大声说 Hello，再点一次话筒' : failHint(res);
+    hint.textContent = res.fail === 'unheard' ? tr('g.mic.covered') : failHint(res);
   }
 
   const ONES = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
@@ -1207,17 +2426,28 @@
   function makeQ(type, wi, i) {
     const w = WX[wi];
     const q = { type, kind: KIND[type], w: wi, i };
+    // q.mean：题面上的意思（界面语言里的，meanOf；没有是 null）。听音选义 / 听句选意：四个选项里有一个没有意思，就换成「选听到的英文」（q.ear，见 cueMode 上面）
     if (q.kind === 'word') {
       const it = w.words[i];
-      q.en = it[0]; q.zh = it[1]; q.em = it[2];
-      if (type === 'lw') { q.audio = it[0]; q.opts = shuffle([{ c: true, e: it[2], t: it[1] }, ...distract(w.words, i, 3, 1).map(o => ({ e: o[2], t: o[1] }))]); }
+      q.en = it[0]; q.zh = it[1]; q.em = it[2]; q.mean = meanOf(it);
+      if (type === 'lw') {
+        q.audio = it[0];
+        const ds = distract(w.words, i, 3, q.mean != null ? 1 : 0), ms = ds.map(meanOf), ear = q.mean == null || ms.some(m => m == null);
+        if (ear) q.ear = true;
+        q.opts = shuffle([{ c: true, e: it[2], t: ear ? it[0] : q.mean }, ...ds.map((o, k) => ({ e: o[2], t: ear ? o[0] : ms[k] }))]);
+      }
       if (type === 'ls') { q.audio = it[0]; q.opts = shuffle([{ c: true, t: it[0] }, ...distract(w.words, i, 3, 0).map(o => ({ t: o[0] }))]); }
       if (type === 'sr_w') { q.audio = it[0]; q.target = it[0]; }
       if (type === 'sp') { q.audio = null; q.target = it[0]; }
     } else if (q.kind === 'sent') {
       const it = w.sents[i];
-      q.en = it[0]; q.zh = it[1];
-      if (type === 'lm') { q.audio = it[0]; q.opts = shuffle([{ c: true, t: it[1] }, ...distract(w.sents, i, 3, 1).map(o => ({ t: o[1] }))]); }
+      q.en = it[0]; q.zh = it[1]; q.mean = meanOf(it);
+      if (type === 'lm') {
+        q.audio = it[0];
+        const ds = distract(w.sents, i, 3, q.mean != null ? 1 : 0), ms = ds.map(meanOf), ear = q.mean == null || ms.some(m => m == null);
+        if (ear) q.ear = true;
+        q.opts = shuffle([{ c: true, t: ear ? it[0] : q.mean }, ...ds.map((o, k) => ({ t: ear ? o[0] : ms[k] }))]);
+      }
       if (type === 'lo') { q.audio = it[0]; q.tokens = tokens(it[0]); q.bank = shuffle(range(q.tokens.length)); }
       if (type === 'sr_s') { q.audio = it[0]; q.target = it[0]; }
     } else {
@@ -1423,7 +2653,7 @@
     return take({ kind, w: sr.w, i }, L[i], sr.d);
   }
   function freeQ(type, e, k) {   // AI 聊天句子出题：跟读或听音排句
-    const q = { type, kind: 'sent', w: -1, i: -1, free: k, en: e.en, zh: e.zh, audio: e.en };
+    const q = { type, kind: 'sent', w: -1, i: -1, free: k, en: e.en, zh: e.zh, mean: meanOf(e), audio: e.en };
     if (type === 'lo') { q.tokens = tokens(e.en); q.bank = shuffle(range(q.tokens.length)); }
     else q.target = e.en;
     return q;
@@ -1446,15 +2676,16 @@
   }
   function revCard() {   // 首页上方：今天的复习
     const r = revSummary();
-    if (r.n && (dayLog().revSess || 0) > 0) return '<button class="rev-card done" data-act="review"><span>✅</span><div><b>今天复习过了</b><small>还可以加练 ' + r.n + ' 题（不练也行）</small></div></button>';
-    if (!r.n) return '<div class="rev-card done"><span>✅</span><div><b>今天的复习做完了</b><small>答错的题、课本新学的内容会按 1、2、4、7…天的间隔自动回来</small></div></div>';
-    const parts = [r.wrong ? r.wrong + ' 道错题' : '', r.old ? r.old + ' 道学过的' : '', r.chat ? r.chat + ' 句聊天里的' : ''].filter(Boolean).join(' + ');
-    return '<button class="rev-card" data-act="review"><span>📕</span><div><b>今日复习 ' + r.n + ' 题</b><small>' + parts + (r.n > REV_N ? '，一次复习 ' + REV_N + ' 题' : '') + '</small></div><em>开始</em></button>';
+    if (r.n && (dayLog().revSess || 0) > 0) return '<button class="rev-card done" data-act="review"><span>✅</span><div>' + trh('g.rev.card.again', { n: r.n }) + '</div></button>';
+    if (!r.n) return '<div class="rev-card done"><span>✅</span><div>' + trh('g.rev.card.done') + '</div></div>';
+    const parts = [r.wrong ? trh('g.rev.card.wrong', { n: r.wrong }) : '', r.old ? trh('g.rev.card.old', { n: r.old }) : '', r.chat ? trh('g.rev.card.chat', { n: r.chat }) : ''].filter(Boolean).join(' + ');
+    return '<button class="rev-card" data-act="review"><span>📕</span><div><b>' + trh('g.rev.card.n', { n: r.n }) + '</b><small>' + parts + (r.n > REV_N ? trh('g.rev.card.per', { n: REV_N }) : '') + '</small></div><em>' + trh('g.home.start') + '</em></button>';
   }
   // ---------- 按掌握程度撤提示（家长 2026-10-07 定，评估第 9 条）----------
   // 0 = 看着念（新学的、刚错过的：第 0–1 格）；1 = 只给每个词的首字母（第 2–3 格）；2 = 凭记忆说，只给中文和图（第 4 格以上、已掌握）；
   // 3 = 聊天里老师改过的句子：显示他原来的说法（划掉）和中文，让他直接说出对的
-  function fadeOf(q) {
+  // fadeRaw 只看复习本的格子（和界面语言无关）；界面上用的是 fadeFor / fadeOf（按 cueMode 换，见下面）
+  function fadeRaw(q) {
     if (!q) return 0;
     const e = S.rev.items[revKey(q)];
     if (!e) return 0;
@@ -1469,6 +2700,41 @@
     const initial = w => { let seen = false; return w.replace(/[a-z]/gi, c => (seen ? '_' : (seen = true, c))); };
     return String(text).split(/\s+/).filter(Boolean).map((w, k) => lv >= 2 ? (first && k === 0 ? w : w.replace(/[a-z]/gi, '_')) : initial(w)).join('  ');
   }
+  // ---------- 界面语言里没有意思时，题怎么出（规则只写在这里，2026-11-19）----------
+  // 原来不少题靠中文意思：听音选义 / 听句选意（选中文意思）、看中文凭记忆说、对战咒语下面那行中文。
+  // 界面语言里没有这条的意思（meanOf 给 null，比如英语界面）时，一道题也不能显示中文，又都要答得出来：
+  // · 「选意思」换成「选听到的英文」（单词的选项带着图）：makeQ 里看 meanOf，设 q.ear
+  // · 「看意思说」按条目换，cueMode(意思, 条目, 种类, live) 给出：
+  //   'mean' 有意思（中文界面；以后别的语言在条目里加了 gloss[界面语言]）：和以前一模一样。
+  //          对话（问 → 答）本来就不靠意思（问句就是提示），也是 'mean'；中文界面一律 'mean'（没写中文的聊天句子照老规矩，见 fadeRaw）
+  //   'pic'  单词有表情图：看图说——格子照旧，只是意思那一行不显示（凭记忆 = 只给图，和「看图说英语」一样）
+  //   'hear' 能先念一遍的地方（闯关、复习，live = true）：先念一遍，再看首字母说；凭记忆的也只撤到首字母
+  //   'read' 都不行（对战：monsters.js 不先念句子）：看着念
+  // 打分照旧：换出来的就是这条平常的题，不算带提示——P.aided 还是只看点提示、重听、看原文、第 2 次才说对；
+  // 复习本的键、格子、到期、revRight / revWrong / revMiss、REV_* 一点不变。
+  // 「不看字说对」（P.blind → recall / recallW，周报和神兽里程碑）：看图说算（题面上只有图，和看图说英语一样）；
+  // 先念一遍再说的不算（刚听过答案）、看着念的不算——所以 'hear' 撤到首字母（格数 1，blind 是 false）
+  // 钩子：以后的内容批次给单词 / 句子加了别的语言的意思，meanOf 自动读到，这里就回到 'mean'，不用改
+  const zhUi = () => !I18N || I18N.lang() === 'zh';
+  function cueMode(mean, it, kind, live) {
+    if (kind === 'dlg' || mean != null || zhUi()) return 'mean';
+    if (kind === 'word' && Array.isArray(it) && it[2]) return 'pic';
+    return live ? 'hear' : 'read';
+  }
+  // 题对应的内容条目：单词 / 句子是 words / sents 里的那一条，聊天句子是复习本里的 { en, zh }
+  const itemOfQ = q => (q.free ? S.rev.items[q.free] || q : WX[q.w] ? listOf(WX[q.w], q.kind)[q.i] || null : null);
+  // 题面上「意思」那一行：中文界面就是 q.zh（和以前一模一样，空的也照样占一行）；别的界面语言用 makeQ 存的 q.mean（meanOf），没有就是 null（不显示）
+  const qMean = q => (zhUi() ? q.zh || '' : q.mean != null ? q.mean : null);
+  // 撤提示的格数，按界面语言换过。live：这里会先念一遍（闯关、复习）。改正说法（3）题面上有他原来的话，闯关里照旧
+  function fadeFor(q, live) {
+    const f = fadeRaw(q);
+    if (!f) return f;
+    const it = itemOfQ(q), m = cueMode(live ? meanOf(it) : gloss({ zh: it && (Array.isArray(it) ? it[1] : it.zh) }), it, q.kind, live);
+    return m === 'mean' || m === 'pic' ? f : live && f === 3 ? 3 : m === 'hear' ? 1 : 0;
+  }
+  // 对战（monsters.js 的 E.fadeOf）、EchoGame.rev.fade、place.fade 用这个：对战里咒语下面的意思那行只认 zh（gloss({ zh })），也不先念——
+  // 界面语言里看不到意思的句子就看着念（不会撤到「凭记忆」、也不会只剩首字母），聊天句子不显示原话也是看着念
+  const fadeOf = q => fadeFor(q, false);
 
   // ---------- 每日任务 ----------
   function seeded(str) {
@@ -1501,7 +2767,7 @@
       if (!d || d.key !== key || q.claimed) return;
       const was = q.p >= d.goal;
       q.p = Math.min(d.goal, isMax ? Math.max(q.p, n) : q.p + n);
-      if (!was && q.p >= d.goal) toast('✅ 任务完成：' + d.t + '，回地图领奖励', 'gold');
+      if (!was && q.p >= d.goal) toast(tr('g.task.done', { t: d.t }), 'gold');
     });
   }
 
@@ -1511,7 +2777,7 @@
       if (S.ach[id] || !cond(S)) return;
       S.ach[id] = Date.now();
       S.coins += 20;
-      toast('🏆 新成就「' + name + '」 +20 金币', 'gold');
+      toast(tr('g.toast.ach', { name }), 'gold');
       SFX.coin();
     });
     save();
@@ -1583,7 +2849,7 @@
     $('#t-coins').textContent = S.coins;
     $('#t-streak-n').textContent = S.streak;
     $('#t-streak').classList.toggle('off', S.lastDay !== dayStr());
-    $('#t-streak').title = S.lastDay === dayStr() ? '今天已打卡，连续 ' + S.streak + ' 天' : '今天还没打卡，完成任意一关就算';
+    $('#t-streak').title = S.lastDay === dayStr() ? tr('g.home.streak.on', { n: S.streak }) : tr('g.home.streak.off');
     const n = dueList().length;
     $('#t-wrong').textContent = n ? n : '';
   }
@@ -1597,34 +2863,36 @@
       const d = QDEF[q.id]; if (!d) return '';
       const done = q.p >= d.goal;
       const right = done && !q.claimed
-        ? '<button class="btn small sun claim" data-act="claim" data-q="' + q.id + '">领取 +' + d.rw + '</button>'
-        : '<span class="q-rw">' + (q.claimed ? '✓ 已领取' : q.p + ' / ' + d.goal) + '</span>';
+        ? '<button class="btn small sun claim" data-act="claim" data-q="' + q.id + '">' + trh('g.home.claim', { n: d.rw }) + '</button>'
+        : '<span class="q-rw">' + (q.claimed ? trh('g.home.claimed') : q.p + ' / ' + d.goal) + '</span>';
       return '<div class="q-row ' + (q.claimed ? 'done' : '') + '"><span class="q-name">' + d.t + '</span>' + right + '<span class="q-bar"><i style="width:' + Math.min(100, q.p / d.goal * 100) + '%"></i></span></div>';
     }).join('');
     const opened = S.quests.chest, ready = allDone && !opened;
-    const chest = '<button class="chest-btn ' + (ready ? 'ready' : '') + '" data-act="chest" ' + (ready ? '' : 'disabled') + '><span class="ch">' + (opened ? '📭' : '🎁') + '</span><span><b>' + (opened ? '今天的宝箱已经打开' : ready ? '每日宝箱可以打开了！' : '每日宝箱') + '</b><br><small>' + (opened ? '明天任务会刷新，记得回来' : '领完 3 个任务奖励就能打开，可能开出进化曲、怪兽蛋') + '</small></span></button>';
+    const chest = '<button class="chest-btn ' + (ready ? 'ready' : '') + '" data-act="chest" ' + (ready ? '' : 'disabled') + '><span class="ch">' + (opened ? '📭' : '🎁') + '</span><span><b>' + trh(opened ? 'g.home.chest.open' : ready ? 'g.home.chest.ready' : 'g.home.chest') + '</b><br><small>' + trh(opened ? 'g.home.chest.tmr' : 'g.home.chest.how') + '</small></span></button>';
     // 能力检测的卡片（placement.js）：还没测过的存档在这里给一张（不强拉进去）；做到一半的显示「继续」
     const pc = window.EchoPlace && EchoPlace.homeCard ? EchoPlace.homeCard() : '';
-    return pc + revCard() + '<div class="q-head"><h3>今日任务</h3><small>' + hrs + ' 小时后刷新</small></div>' + rows + chest;
+    return pc + revCard() + '<div class="q-head"><h3>' + trh('g.home.tasks') + '</h3><small>' + trh('g.home.reset', { n: hrs }) + '</small></div>' + rows + chest;
   }
   const OFFS = [0, -56, -78, -34, 38, 76, 0];
+  // 小岛 / 课本单元的名字（按界面语言）：小岛 isleName（你好岛 / Crayon Island），单元 unitTxt（七上 Unit 1 友谊 / 7A Unit 1 Friendship）
+  const wxName = wi => (isUnit(wi) ? unitTxt(WX[wi]) : isleName(wi));
   function worldHTML(w, wi, cur) {
     const unlocked = isUnlocked(wi, 0);
     const tot = range(7).reduce((a, l) => a + (S.stars[wi + '-' + l] || 0), 0);
-    const head = isUnit(wi) ? unitHead(w, wi, tot) : '<div class="w-head"><span class="w-ico">' + w.icon + '</span><div><div class="w-no">第 ' + (wi + 1) + ' 岛</div><h2>' + w.name + '</h2><p class="w-en">' + esc(w.en) + '</p></div>' +
-      (unlocked ? '<span class="w-stars">★ ' + tot + '/21</span>' : '<span class="w-lock">🔒 打败上一岛的 Boss 解锁</span>') + '</div>';
+    const head = isUnit(wi) ? unitHead(w, wi, tot) : '<div class="w-head"><span class="w-ico">' + w.icon + '</span><div><div class="w-no">' + trh('g.home.isle.no', { n: wi + 1 }) + '</div><h2>' + esc(isleName(wi)) + '</h2><p class="w-en">' + esc(w.en) + '</p></div>' +
+      (unlocked ? '<span class="w-stars">★ ' + tot + '/21</span>' : '<span class="w-lock">' + trh('g.home.isle.lock') + '</span>') + '</div>';
     if (!unlocked) return '<section class="world locked" style="--wc:' + w.color + '">' + head + '</section>';
     const nodes = RECIPES.map((r, li) => {
       const k = wi + '-' + li, st = S.stars[k] || 0, un = isUnlocked(wi, li), isCur = k === cur;
       const cls = ['node', r.boss ? 'boss' : '', st ? 'done' : '', un ? '' : 'lock', isCur ? 'cur' : ''].join(' ');
-      return '<button class="' + cls + '" style="--x:' + OFFS[li] + 'px" data-act="level" data-w="' + wi + '" data-l="' + li + '"' + (un ? '' : ' disabled') + ' aria-label="' + w.name + ' ' + r.name + (un ? '' : '（未解锁）') + '">' +
-        (isCur ? '<span class="n-start">开始</span><span class="n-pet">' + S.pet + '</span>' : '') +
+      return '<button class="' + cls + '" style="--x:' + OFFS[li] + 'px" data-act="level" data-w="' + wi + '" data-l="' + li + '"' + (un ? '' : ' disabled') + ' aria-label="' + esc(wxName(wi) + ' ' + r.name) + (un ? '' : trh('g.home.locked')) + '">' +
+        (isCur ? '<span class="n-start">' + trh('g.home.start') + '</span><span class="n-pet">' + S.pet + '</span>' : '') +
         '<span class="n-ico">' + (un ? (r.boss ? w.boss.emoji : r.icon) : '🔒') + '</span>' +
-        '<span class="n-name">' + (r.boss ? 'BOSS · ' + w.boss.name : r.name) + '</span><span class="n-stars">' + (un ? starStr(st) : '') + '</span></button>';
+        '<span class="n-name">' + (r.boss ? 'BOSS · ' + esc(bossName(w.boss)) : r.name) + '</span><span class="n-stars">' + (un ? starStr(st) : '') + '</span></button>';
     }).join('');
     const sc = window.SCENES && window.SCENES[wi], seen = S.scenes[wi];
-    const scBtn = sc ? '<button class="scene-btn" data-act="scene" data-w="' + wi + '"><span class="sb-ico">🎬</span><span class="sb-t"><b>对话动画 · ' + esc(sc.title) + '</b><small>' +
-      (seen && seen.watched ? '✓ 看过了 · 可以再来跟读、角色扮演' : '先看看这个话题的英语对话怎么说 · 第一次看完 +10 金币') + '</small></span><span class="sb-go">▶</span></button>' : '';
+    const scBtn = sc ? '<button class="scene-btn" data-act="scene" data-w="' + wi + '"><span class="sb-ico">🎬</span><span class="sb-t"><b>' + trh('g.home.scene', { t: gloss({ zh: sc.title }) || isleName(wi) }) + '</b><small>' +
+      trh(seen && seen.watched ? 'g.home.scene.seen' : 'g.home.scene.new') + '</small></span><span class="sb-go">▶</span></button>' : '';
     return '<section class="world' + (isUnit(wi) ? ' unit' + (wi - NB === curIdx() ? ' now' : '') : '') + '" id="w' + wi + '" style="--wc:' + w.color + '">' + head + '<div class="path">' + scBtn + nodes + '</div></section>';
   }
   // ---------- 课本单元（适用于沪教版词汇；不叫「同步」，也不说「配套」：评估「必须改」第 6 条） ----------
@@ -1698,6 +2966,7 @@
     if (!window.EchoI18n) return;
     S.settings.ui = EchoI18n.LANGS.some(x => x.id === l) ? l : 'zh';
     EchoI18n.set(S.settings.ui); save();
+    if (typeof shellUi === 'function') shellUi();   // index.html 里写死的字（事件那一段）也换过来
   }
   // 全新开始时选了「谁在学」（placement.js，只在全新的存档上调）：孩子 → 'kid'；青少年 / 成人 → 'open'。
   // 这台设备上有家长密码（安装包打包的 / 网页版设过的）就要输对才换成 'open'，没输（关掉了密码键盘）就还是 'kid'——年龄段照样记着；
@@ -1722,11 +2991,13 @@
   function unitHead(u, wi, tot) {
     const now = wi - NB === curIdx();
     const free = unitFree(wi - NB) ? ' <span class="u-free" title="' + trh('place.unit.free.tip') + '">✓ ' + trh('place.unit.free') + '</span>' : '';   // 按能力走：起点前面的单元
-    return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · Unit ' + u.n + (now ? ' · 📍 正在学' : '') + free + '</div><h2>' + esc(u.en) + ' <small>' + esc(u.zh) + '</small></h2><p class="w-en">' + esc(u.key) + '</p></div>' +
+    // 单元的中文标题、语法讲解是内容（gloss）：界面语言里没有就不显示（语法弹窗整段是中文，按钮也收起来）
+    const zt = gloss({ zh: u.zh }), gt = gloss({ zh: u.grammar.title });
+    return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · Unit ' + u.n + (now ? trh('g.unit.now') : '') + free + '</div><h2>' + esc(u.en) + (zt != null ? ' <small>' + esc(zt) + '</small>' : '') + '</h2><p class="w-en">' + esc(u.key) + '</p></div>' +
       '<span class="w-stars">★ ' + tot + '/21</span></div>' +
-      '<div class="u-bar"><button class="link" data-act="bookGram" data-w="' + wi + '">📐 语法：' + esc(u.grammar.title) + '</button>' +
-      (unitTalk(u) ? '<button class="btn small sun" data-act="talk_open" data-npc="' + unitTalk(u).id + '">🗣️ 和 ' + esc(unitTalk(u).name) + ' 聊这个单元</button>' : '') +
-      (now ? '' : '<button class="btn small ghost" data-act="bookAt" data-i="' + (wi - NB) + '">设为正在学</button>') + '</div>';
+      '<div class="u-bar">' + (gt != null ? '<button class="link" data-act="bookGram" data-w="' + wi + '">' + trh('g.unit.gram', { t: gt }) + '</button>' : '') +
+      (unitTalk(u) ? '<button class="btn small sun" data-act="talk_open" data-npc="' + unitTalk(u).id + '">' + trh('g.unit.talk', { name: unitTalk(u).name }) + '</button>' : '') +
+      (now ? '' : '<button class="btn small ghost" data-act="bookAt" data-i="' + (wi - NB) + '">' + trh('g.unit.setnow') + '</button>') + '</div>';
   }
   function unitTalk(u) {   // 这个单元的 AI 聊天角色（连不上对话服务就不显示）
     if (!window.EchoTalk || !EchoTalk.relayUrl() || !window.TALK_NPCS) return null;
@@ -1739,11 +3010,11 @@
   }
   function bookHTML() {
     const cu = curUnit(), vb = viewBook();
-    const chips = '<div class="seg books">' + BOOKS.map(b => '<button class="' + (b === vb ? 'on' : '') + (bookOpen(b.id) ? '' : ' locked') + '" data-act="bookView" data-b="' + b.id + '">' + (bookOpen(b.id) ? '' : '🔒') + esc(b.short) + (b.id === cu.book ? ' 📍' : '') + '</button>').join('') + '</div>';
-    return '<div class="book-head"><b>📗 课本单元 · 适用于沪教版词汇</b>' +
-      '<p>' + (BOOK_OPEN ? '这个学年的课本单元（' + BOOKS.filter(b => bookOpen(b.id)).map(b => esc(b.short)).join('、') + '）' : '七年级到九年级六册书') + '：每个单元要学的单词和短语，加上按单元的话题和语法自己编写的句子和对话（不是课文）。</p>' +
-      '<p>正在学：<b>' + esc(cu.bshort) + ' Unit ' + cu.n + ' ' + esc(cu.en) + '</b>' + (S.book.at >= 0 ? '' : '（按日期猜的）') + ' <button class="link" data-act="bookPick">改</button></p>' + chips +
-      (vb.old ? '<p class="tip">' + esc(vb.short) + '的新教材还没出版（预计 2027 年春季），现在先用旧版教材的单元，新书出来后会换掉。</p>' : '') + '</div>' +
+    const chips = '<div class="seg books">' + BOOKS.map(b => '<button class="' + (b === vb ? 'on' : '') + (bookOpen(b.id) ? '' : ' locked') + '" data-act="bookView" data-b="' + b.id + '">' + (bookOpen(b.id) ? '' : '🔒') + esc(bookShort(b)) + (b.id === cu.book ? ' 📍' : '') + '</button>').join('') + '</div>';
+    return '<div class="book-head"><b>' + trh('g.unit.head') + '</b>' +
+      '<p>' + (BOOK_OPEN ? trh('g.unit.open', { list: BOOKS.filter(b => bookOpen(b.id)).map(bookShort).join(tr('g.unit.sep')) }) : trh('g.unit.all')) + trh('g.unit.what') + '</p>' +
+      '<p>' + trh('g.unit.cur', { u: cu.bshort + ' Unit ' + cu.n + ' ' + cu.en }) + (S.book.at >= 0 ? '' : trh('g.unit.guess')) + ' <button class="link" data-act="bookPick">' + trh('g.unit.change') + '</button></p>' + chips +
+      (vb.old ? '<p class="tip">' + trh('g.unit.old', { b: bookShort(vb) }) + '</p>' : '') + '</div>' +
       BK.map((x, j) => x.book === vb.id ? worldHTML(x, NB + j, bookNode()) : '').join('');
   }
   function renderHome() {
@@ -1751,8 +3022,8 @@
     homeBars();   // AI 用不了的红条、有新版本
     const talkOn = !!(window.EchoTalk && EchoTalk.relayUrl());   // 连得上对话服务才显示「和岛民聊天」
     const tab = S.homeTab === 'talk' && talkOn ? 'talk' : window.MonsterGame && S.homeTab !== 'quiz' ? 'mon' : 'quiz';
-    $('#tabs').innerHTML = window.MonsterGame ? '<button class="' + (tab === 'mon' ? 'on' : '') + '" data-act="tab" data-t="mon">🐲 怪兽冒险</button><button class="' + (tab === 'quiz' ? 'on' : '') + '" data-act="tab" data-t="quiz">📚 闯关练习</button>' +
-      (talkOn ? '<button class="' + (tab === 'talk' ? 'on' : '') + '" data-act="tab" data-t="talk">🗣️ 和岛民聊天</button>' : '') : '';
+    $('#tabs').innerHTML = window.MonsterGame ? '<button class="' + (tab === 'mon' ? 'on' : '') + '" data-act="tab" data-t="mon">' + trh('g.home.tab.mon') + '</button><button class="' + (tab === 'quiz' ? 'on' : '') + '" data-act="tab" data-t="quiz">' + trh('g.home.tab.quiz') + '</button>' +
+      (talkOn ? '<button class="' + (tab === 'talk' ? 'on' : '') + '" data-act="tab" data-t="talk">' + trh('g.home.tab.talk') + '</button>' : '') : '';
     $('#tabs').classList.toggle('three', talkOn);
     $('#quests').innerHTML = questHTML();
     $('#mon-home').hidden = tab !== 'mon';
@@ -1761,7 +3032,7 @@
     if (tab === 'talk') { $('#talk-home').innerHTML = EchoTalk.homeHTML(); return; }
     if (tab === 'mon') { $('#mon-home').innerHTML = MonsterGame.homeHTML(); MonsterGame.afterHome(); return; }
     const book = BK.length && S.book.view !== 'isle';
-    const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">📗 课本单元</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">🏝️ 话题小岛</button></div>' : '';
+    const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">' + trh('g.home.qv.book') + '</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">' + trh('g.home.qv.isle') + '</button></div>' : '';
     const cur = currentNode();
     $('#map').innerHTML = seg + (book ? bookHTML() : W.map((w, wi) => worldHTML(w, wi, cur)).join(''));
     if (RT.scrollCur) {
@@ -1801,21 +3072,24 @@
   function levelSheet(wi, li) {
     const w = WX[wi], r = RECIPES[li];
     const st = S.stars[wi + '-' + li] || 0;
-    const types = [...new Set(r.mix.map(m => m[0]))].map(t => '<span class="tag">' + TYPE_TAG[t] + '</span>').join('');
+    // 听音选义 / 听句选意：这一关的内容在界面语言里没有意思时，出的是「选听到的英文」（makeQ 的 q.ear），标签跟着换
+    const ear = t => (t === 'lw' && meanOf(w.words[0]) == null) || (t === 'lm' && meanOf(w.sents[0]) == null);
+    const types = [...new Set(r.mix.map(m => m[0]))].map(t => '<span class="tag">' + (ear(t) ? trh('g.cue.' + t + '.tag') : TYPE_TAG[t]) + '</span>').join('');
+    // 预习：英文 + 界面语言里的意思（没有就只有英文；单词带图）
     let items;
-    if (li <= 1) items = w.words.map(x => [x[0], x[2] + ' ' + x[1]]);
-    else if (li <= 3) items = w.sents.map(x => [x[0], x[1]]);
+    if (li <= 1) items = w.words.map(x => { const m = meanOf(x); return [x[0], x[2] + (m != null ? ' ' + m : '')]; });
+    else if (li <= 3) items = w.sents.map(x => [x[0], meanOf(x) || '']);
     else items = w.dlgs.map(x => [x[0] + ' → ' + x[1], '']);
     const pre = items.map(([en, zh]) => '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + esc(en) + '</b><span>' + esc(zh) + '</span></button>').join('');
     openModal(
       '<div class="big">' + (r.boss ? w.boss.emoji : r.icon) + '</div>' +
-      '<h2>' + w.name + ' · ' + (r.boss ? 'BOSS ' + w.boss.name : r.name) + '</h2>' +
-      '<p>' + r.desc + (r.boss ? '' : ' 共 ' + r.mix.reduce((a, m) => a + m[1], 0) + ' 题，3 颗心。') + '</p>' +
+      '<h2>' + esc(wxName(wi)) + ' · ' + (r.boss ? 'BOSS ' + esc(bossName(w.boss)) : r.name) + '</h2>' +
+      '<p>' + r.desc + (r.boss ? '' : trh('g.det.count', { n: r.mix.reduce((a, m) => a + m[1], 0) })) + '</p>' +
       '<div class="lv-types">' + types + '</div>' +
-      (st ? '<p>最好成绩：<span class="n-stars" style="font-size:18px">' + starStr(st) + '</span></p>' : '') +
-      (li === 4 && window.SCENES && window.SCENES[wi] ? '<button class="btn sun wide" data-act="scene" data-w="' + wi + '">🎬 先看对话动画</button>' : '') +
-      '<details class="pre"><summary>📖 先预习一下（点一句就能听）</summary><div class="pre-list">' + pre + '</div></details>' +
-      '<div class="row"><button class="btn ghost" data-act="close">再想想</button><button class="btn" data-act="start" data-w="' + wi + '" data-l="' + li + '" data-focus>开始闯关</button></div>'
+      (st ? '<p>' + trh('g.det.best') + '<span class="n-stars" style="font-size:18px">' + starStr(st) + '</span></p>' : '') +
+      (li === 4 && window.SCENES && window.SCENES[wi] ? '<button class="btn sun wide" data-act="scene" data-w="' + wi + '">' + trh('g.det.scene') + '</button>' : '') +
+      '<details class="pre"><summary>' + trh('g.det.pre') + '</summary><div class="pre-list">' + pre + '</div></details>' +
+      '<div class="row"><button class="btn ghost" data-act="close">' + trh('g.det.later') + '</button><button class="btn" data-act="start" data-w="' + wi + '" data-l="' + li + '" data-focus>' + trh('g.det.go') + '</button></div>'
     );
   }
 
@@ -1824,7 +3098,7 @@
   function startLevel(wi, li, review, given) {
     primeTTS(); ac();
     const qs = given || (review ? buildReview() : buildLevel(wi, li));
-    if (!qs.length) { toast('今天没有要复习的题，太棒了！'); return; }
+    if (!qs.length) { toast(tr('g.play.norev')); return; }
     const boss = !review && RECIPES[li].boss;
     // aidedN：带提示通过了几题；recall：不看字说对了几题（结算页显示）
     P = { wi, li, review: !!review, qs, idx: 0, total: qs.length, hearts: 3, combo: 0, maxCombo: 0, correct: 0, xp: 0, lost: 0, hits: 0, boss, bossMax: qs.filter(q => q.type === 'bt').length, revived: false, aidedN: 0, recall: 0 };
@@ -1837,8 +3111,8 @@
       hideFb();
       $('#p-prog').style.width = '0%';
       $('#p-body').innerHTML = '<div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="hidden-line">' + esc(b.hello) + '</div></div></div>' +
-        '<p class="say-zh" style="text-align:center">' + b.name + ' 挡住了去路！听懂它的话，<b>大声说出</b>正确的回答来攻击它。</p>' +
-        '<button class="btn sun wide" data-act="bossGo" data-focus>⚔️ 迎战！</button>';
+        '<p class="say-zh" style="text-align:center">' + trh('g.play.boss', { name: bossName(b) }) + '</p>' +
+        '<button class="btn sun wide" data-act="bossGo" data-focus>' + trh('g.play.fight') + '</button>';
       $('#p-body').dataset.q = 'intro';
       say(b.hello);
     } else renderQ();
@@ -1846,7 +3120,7 @@
   function bossBar() {
     const b = WX[P.wi].boss;
     const pct = P.bossMax ? (1 - P.hits / P.bossMax) * 100 : 100;
-    return '<div class="boss-hp" id="bosshp"><span class="be">' + b.emoji + '</span><span class="bn">' + b.name + '</span><div class="hp"><i style="width:' + pct + '%"></i></div></div>';
+    return '<div class="boss-hp" id="bosshp"><span class="be">' + b.emoji + '</span><span class="bn">' + esc(bossName(b)) + '</span><div class="hp"><i style="width:' + pct + '%"></i></div></div>';
   }
   function renderHearts() {
     $('#p-hearts').innerHTML = range(3).map(i => '<span class="' + (i < P.hearts ? '' : 'lost') + '">❤️</span>').join('');
@@ -1855,13 +3129,13 @@
     const el = $('#p-combo');
     if (P.combo >= 2) {
       const m = mult();
-      el.textContent = '🔥 ' + P.combo + ' 连击' + (m > 1 ? ' · 经验 ×' + m : '');
+      el.textContent = tr('g.play.combo', { n: P.combo }) + (m > 1 ? tr('g.play.xpx', { m }) : '');
       el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
     } else el.textContent = '';
   }
   const mult = () => P.combo >= 10 ? 3 : P.combo >= 5 ? 2 : P.combo >= 3 ? 1.5 : 1;
 
-  const audioBlock = () => '<div class="q-audio"><button class="spk" data-act="say" aria-label="播放">' + SPK + '</button><button class="slow" data-act="saySlow" aria-label="慢速播放"><span>🐢</span>慢速</button></div>';
+  const audioBlock = () => '<div class="q-audio"><button class="spk" data-act="say" aria-label="' + trh('g.play.play') + '">' + SPK + '</button><button class="slow" data-act="saySlow" aria-label="' + trh('g.play.slowplay') + '"><span>🐢</span>' + trh('g.play.slow') + '</button></div>';
   function optsHTML(q, cls, list) {
     return '<div class="opts ' + (list ? 'list' : '') + '">' + q.opts.map((o, i) =>
       '<button class="opt ' + (cls || '') + '" data-act="' + (q.type === 'bt' ? 'btOpt' : 'pick') + '" data-i="' + i + '"><span class="k">' + (i + 1) + '</span>' +
@@ -1872,14 +3146,14 @@
     const selfNoRec = mode === 'self' && !canRecord();
     let h = '';
     if (!selfNoRec) {
-      h += '<div class="mic-wrap"><button class="mic" id="mic" data-act="mic" aria-label="开始说话">' + MIC + '</button>' +
-        '<div class="mic-hint" id="mic-hint">' + (mode === 'sr' ? '点麦克风，然后大声说英语' : '点麦克风开始录音，说完再点一次') + '</div>' +
+      h += '<div class="mic-wrap"><button class="mic" id="mic" data-act="mic" aria-label="' + trh('g.play.mic') + '">' + MIC + '</button>' +
+        '<div class="mic-hint" id="mic-hint">' + trh(mode === 'sr' ? 'g.play.mic.sr' : 'g.play.mic.rec') + '</div>' +
         '<div class="heard" id="heard"></div><div id="score"></div></div>';
     }
     h += '<div class="self" id="self" hidden></div>';
     // 开口模式平时不能跳过（说三次还不行会记进每日复习）；AI 打分用不了（没网、额度、没密钥，aiDown）时才出现「先跳过」
-    if (mode !== 'sr') h += '<button class="link" data-act="skip">现在不方便开口？跳过这题</button>';
-    else h += '<button class="link ai-skip" data-act="skip" id="p-skip"' + (aiDown() ? '' : ' hidden') + '>' + SKIP_TXT + '</button>';
+    if (mode !== 'sr') h += '<button class="link" data-act="skip">' + trh('g.play.skip') + '</button>';
+    else h += '<button class="link ai-skip" data-act="skip" id="p-skip"' + (aiDown() ? '' : ' hidden') + '>' + esc(skipTxt()) + '</button>';
     return h;
   }
   // 口语题分两块：q-main 是题目卡片，q-side 是话筒 / 自评 / 跳过（竖屏照常上下排，横屏左右两栏）
@@ -1889,56 +3163,63 @@
   function renderQ() {
     const q = P.qs[P.idx];
     P.q = q; P.answered = false; P.tries = 0; P.miss = 0; P.hint = 0; P.lo = []; P.btChoose = false; P.pickedOk = false; P.selfReveal = false;
-    // 按掌握程度撤提示：fade 见 fadeOf()；看图说英语一直是凭记忆说；Boss 的对话题掌握了以后先不给选项（只在 AI 打分时，自评要点选项）
+    // 按掌握程度撤提示：fade 见 fadeRaw() / fadeFor()；看图说英语一直是凭记忆说；Boss 的对话题掌握了以后先不给选项（只在 AI 打分时，自评要点选项）
     // aided：这题点过提示 / 看过原文 / 第 2 次才说对（不算 Perfect、不加连击、经验减半、复习里不升格）；blind：题面上没有答案
-    const t = q.type, srm = speakMode() === 'sr';
-    P.fade = t === 'sp' ? 2 : /^sr_/.test(t) ? fadeOf(q) : t === 'bt' && srm ? Math.min(1, fadeOf(q)) : 0;
+    // 界面语言里没有意思时：P.cue（cueMode）= 'pic' 看图说 / 'hear' 先念一遍再看首字母说，格数按 fadeFor 换过；blind 的算法不变
+    const t = q.type, srm = speakMode() === 'sr', it = itemOfQ(q);
+    P.cue = cueMode(meanOf(it), it, q.kind, true);
+    P.fade = t === 'sp' ? 2 : /^sr_/.test(t) ? fadeFor(q, true) : t === 'bt' && srm ? Math.min(1, fadeFor(q, true)) : 0;
     P.aided = false;
     P.blind = t === 'sp' || P.fade >= 2 || (t === 'bt' && P.fade >= 1);
     hideFb();
     window.scrollTo(0, 0);   // 上一题往下滚过，新题要从标题开始看
     $('#p-prog').style.width = (P.idx / P.total * 100) + '%';
     // 撤了提示的跟读题不再叫「跟读」：看首字母说 / 凭记忆说 / 改正说法
-    const FADE_LABEL = { 1: '🔤 看首字母说', 2: '🧠 凭记忆说', 3: '✏️ 改正说法' };
-    let h = '<div class="q-type">' + ((/^sr_/.test(t) && FADE_LABEL[P.fade]) || TYPE_LABEL[q.type]) + '</div>';
-    const hintRow = '<div class="say-row"><button class="btn small ghost" data-act="hint" id="hintbtn">💡 提示</button></div>';
+    const FADE_LABEL = { 1: trh('g.fade.1'), 2: trh('g.fade.2'), 3: trh('g.fade.3') };
+    let h = '<div class="q-type">' + ((/^sr_/.test(t) && FADE_LABEL[P.fade]) || (q.ear ? trh('g.cue.' + t + '.ty') : TYPE_LABEL[q.type])) + '</div>';
+    const hintRow = '<div class="say-row"><button class="btn small ghost" data-act="hint" id="hintbtn">' + trh('g.play.hint') + '</button></div>';
     const said = P.fade === 3 ? (S.rev.items[revKey(q)] || {}).said || '' : '';
-    if (t === 'lw') h += '<h2 class="q-title">听一听，选出正确的意思</h2>' + audioBlock() + optsHTML(q);
-    else if (t === 'ls') h += '<h2 class="q-title">听一听，选出你听到的英文</h2>' + audioBlock() + optsHTML(q, 'en');
-    else if (t === 'lm') h += '<h2 class="q-title">听句子，选出正确的中文意思</h2>' + audioBlock() + optsHTML(q, '', true);
-    else if (t === 'lr') h += '<h2 class="q-title">对方这样说，你该怎么回答？</h2>' + audioBlock() +
-      '<div class="hidden-line blur" id="hl">' + esc(q.prompt) + '</div><div style="text-align:center"><button class="link" data-act="reveal">看原文（先试着只用耳朵听）</button></div>' + optsHTML(q, 'en', true);
-    else if (t === 'lo') h += '<h2 class="q-title">听句子，按顺序点出单词</h2>' + audioBlock() +
+    // 意思那一行（qMean：中文界面照旧是 q.zh；界面语言里没有意思就不显示）
+    const mean = qMean(q), meanDiv = mean != null ? '<div class="say-zh">' + esc(mean) + '</div>' : '';
+    const slow = '<span>🐢</span>' + trh('g.play.slow');
+    if (t === 'lw') h += '<h2 class="q-title">' + trh(q.ear ? 'g.cue.lw.t' : 'g.q.lw.t') + '</h2>' + audioBlock() + optsHTML(q, q.ear ? 'en' : '');
+    else if (t === 'ls') h += '<h2 class="q-title">' + trh('g.q.ls.t') + '</h2>' + audioBlock() + optsHTML(q, 'en');
+    else if (t === 'lm') h += '<h2 class="q-title">' + trh(q.ear ? 'g.cue.lm.t' : 'g.q.lm.t') + '</h2>' + audioBlock() + optsHTML(q, q.ear ? 'en' : '', true);
+    else if (t === 'lr') h += '<h2 class="q-title">' + trh('g.q.lr.t') + '</h2>' + audioBlock() +
+      '<div class="hidden-line blur" id="hl">' + esc(q.prompt) + '</div><div style="text-align:center"><button class="link" data-act="reveal">' + trh('g.q.see.long') + '</button></div>' + optsHTML(q, 'en', true);
+    else if (t === 'lo') h += '<h2 class="q-title">' + trh('g.q.lo.t') + '</h2>' + audioBlock() +
       '<div class="lo-ans" id="lo-ans"></div><div class="lo-bank" id="lo-bank">' + q.bank.map(i => '<button class="tile" data-act="tile" data-i="' + i + '">' + esc(q.tokens[i]) + '</button>').join('') + '</div>' +
-      '<button class="btn wide" data-act="loCheck" id="lo-check" disabled>检查</button>';
-    else if ((t === 'sr_w' || t === 'sr_s') && !P.fade) h += '<h2 class="q-title">先听，再大声跟读</h2>' +
-      '<div class="q-main"><div class="say-card">' + (q.em ? '<div class="say-emoji">' + q.em + '</div>' : '') + '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div><div class="say-zh">' + esc(q.zh) + '</div>' +
-      '<div class="say-row"><button class="spk mini" data-act="sayT" aria-label="听原音">' + SPK + '</button><button class="slow" data-act="sayTSlow" aria-label="慢速"><span>🐢</span>慢速</button></div></div></div>' + qSide(micHTML(q));
-    else if (t === 'sr_w' || t === 'sr_s') h += '<h2 class="q-title">' + (P.fade === 3 ? '这句话可以说得更好：直接说出正确的英文' : P.fade === 2 ? '看中文，凭记忆用英语说出来' : '看首字母提示，说出' + (t === 'sr_w' ? '这个词' : '整句话')) + '</h2>' +
+      '<button class="btn wide" data-act="loCheck" id="lo-check" disabled>' + trh('g.q.check') + '</button>';
+    else if ((t === 'sr_w' || t === 'sr_s') && !P.fade) h += '<h2 class="q-title">' + trh('g.q.rep.t') + '</h2>' +
+      '<div class="q-main"><div class="say-card">' + (q.em ? '<div class="say-emoji">' + q.em + '</div>' : '') + '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div>' + meanDiv +
+      '<div class="say-row"><button class="spk mini" data-act="sayT" aria-label="' + trh('g.play.hear') + '">' + SPK + '</button><button class="slow" data-act="sayTSlow" aria-label="' + trh('g.play.slow') + '">' + slow + '</button></div></div></div>' + qSide(micHTML(q));
+    else if (t === 'sr_w' || t === 'sr_s') h += '<h2 class="q-title">' + (P.fade === 3 ? trh('g.q.fix.t') : P.fade === 2 ? trh(P.cue === 'pic' ? 'g.cue.pic.t' : 'g.q.mem.t') : trh((P.cue === 'hear' ? 'g.cue.hear.' : 'g.q.cue.') + (t === 'sr_w' ? 'w' : 's'))) + '</h2>' +
       '<div class="q-main"><div class="say-card">' + (q.em ? '<div class="say-emoji">' + q.em + '</div>' : '') +
-      (said ? '<div class="say-zh">你原来说的：<s>' + esc(said) + '</s></div>' : '') + (q.zh ? '<div class="say-zh">' + esc(q.zh) + '</div>' : '') +
+      (said ? '<div class="say-zh">' + trh('g.q.said', { s: said }) + '</div>' : '') + (mean ? meanDiv : '') +
       '<div class="say-text mask" id="st">' + esc(cueText(q.target, P.fade === 1 ? 1 : 2)) + '</div>' + hintRow + '</div></div>' + qSide(micHTML(q));
-    else if (t === 'sr_d') h += '<h2 class="q-title">听对方说话，然后' + (P.fade >= 2 ? '凭记忆' : '') + '大声说出你的回答</h2>' +
-      '<div class="q-main"><div class="bubble-row"><span class="be">🧑‍🏫</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="听对方说">' + SPK + '</button><span>' + esc(q.prompt) + '</span></div></div></div>' +
-      '<div class="say-card"><div class="say-zh">你来说：</div>' + (P.fade
+    else if (t === 'sr_d') h += '<h2 class="q-title">' + trh(P.fade >= 2 ? 'g.q.dlg.mem' : 'g.q.dlg.t') + '</h2>' +
+      '<div class="q-main"><div class="bubble-row"><span class="be">🧑‍🏫</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.hearq') + '">' + SPK + '</button><span>' + esc(q.prompt) + '</span></div></div></div>' +
+      '<div class="say-card"><div class="say-zh">' + trh('g.q.you') + '</div>' + (P.fade
         ? '<div class="say-text mask" id="st">' + esc(cueText(q.target, P.fade, true)) + '</div>' + hintRow
-        : '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div><div class="say-row"><button class="spk mini" data-act="sayT" aria-label="听示范">' + SPK + '</button><button class="slow" data-act="sayTSlow"><span>🐢</span>慢速</button></div>') + '</div></div>' + qSide(micHTML(q));
-    else if (t === 'sp') h += '<h2 class="q-title">看图，用英语说出来</h2>' +
-      '<div class="q-main"><div class="say-card"><div class="say-emoji">' + q.em + '</div><div class="say-zh">' + esc(q.zh) + '</div><div class="say-text mask" id="st">' + esc(cueText(q.target, 2)) + '</div>' +
+        : '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div><div class="say-row"><button class="spk mini" data-act="sayT" aria-label="' + trh('g.play.model') + '">' + SPK + '</button><button class="slow" data-act="sayTSlow">' + slow + '</button></div>') + '</div></div>' + qSide(micHTML(q));
+    else if (t === 'sp') h += '<h2 class="q-title">' + trh('g.q.sp.t') + '</h2>' +
+      '<div class="q-main"><div class="say-card"><div class="say-emoji">' + q.em + '</div>' + meanDiv + '<div class="say-text mask" id="st">' + esc(cueText(q.target, 2)) + '</div>' +
       hintRow + '</div></div>' + qSide(micHTML(q));
     else if (t === 'bt') {
       const b = WX[P.wi].boss, hide = P.fade >= 1;
-      h += '<div class="q-main"><div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="再听一遍">' + SPK + '</button><button class="slow" data-act="saySlow"><span>🐢</span>慢速</button></div>' +
-        '<div class="hidden-line blur" id="hl">' + esc(q.prompt) + '</div><button class="link" data-act="reveal">看原文</button></div></div>' +
-        '<p class="say-zh" style="text-align:center;margin:0">' + (hide ? '听懂它的话，<b>凭记忆用英语回答</b>攻击它！' : srm ? '选一句正确的回答，<b>大声说出来</b>攻击它！（点选项可以先听一听）' : '先点出正确的回答，再大声说出来攻击它！') + '</p></div>' +
-        (hide ? optsHTML(q, 'en', true).replace('<div class="opts', '<div id="bt-opts" hidden class="opts') + '<div style="text-align:center"><button class="link" data-act="btShow" id="bt-show">👀 看看可以怎么回答（这题就不能暴击了）</button></div>' : optsHTML(q, 'en', true)) +
+      h += '<div class="q-main"><div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.again') + '">' + SPK + '</button><button class="slow" data-act="saySlow">' + slow + '</button></div>' +
+        '<div class="hidden-line blur" id="hl">' + esc(q.prompt) + '</div><button class="link" data-act="reveal">' + trh('g.q.see') + '</button></div></div>' +
+        '<p class="say-zh" style="text-align:center;margin:0">' + trh(hide ? 'g.q.bt.mem' : srm ? 'g.q.bt.sr' : 'g.q.bt.self') + '</p></div>' +
+        (hide ? optsHTML(q, 'en', true).replace('<div class="opts', '<div id="bt-opts" hidden class="opts') + '<div style="text-align:center"><button class="link" data-act="btShow" id="bt-show">' + trh('g.q.bt.show') + '</button></div>' : optsHTML(q, 'en', true)) +
         qSide(srm ? micHTML(q) : '<div class="self" id="self" hidden></div>');
     }
     $('#p-body').innerHTML = h;
     $('#p-body').dataset.q = t;   // 横屏排版按题型分栏（style.css 横屏那段）
     if (SPEAK_TYPES.includes(t) && speakMode() === 'self' && !canRecord()) showSelf(false, true);
-    // 自动先念一遍：跟读题撤了提示以后不念（不然等于把答案念出来）；说出回答 / Boss 念的是对方的问题，照常念
-    if (t !== 'sp' && !(P.fade && (t === 'sr_w' || t === 'sr_s'))) setTimeout(() => { if (P && P.q === q) say(q.audio); }, 380);
+    // 自动先念一遍：跟读题撤了提示以后不念（不然等于把答案念出来）；说出回答 / Boss 念的是对方的问题，照常念。
+    // 例外：界面语言里没有意思、换成「先听一遍，再看首字母说」的（cueMode 'hear'，格数 1）就念这一遍——再听要点提示，算带提示
+    const once = P.cue === 'hear' && P.fade === 1;
+    if (t !== 'sp' && (once || !(P.fade && (t === 'sr_w' || t === 'sr_s')))) setTimeout(() => { if (P && P.q === q) say(q.audio); }, 380);
   }
   // 撤了提示的题：亮出答案（marks：每个词说对没有，标绿 / 标红）
   function showAnswer(marks) {
@@ -1966,7 +3247,7 @@
     fb.className = 'fb show ' + (ok === true ? 'ok' : ok === false ? 'bad' : '');
     $('#fb-t').textContent = title;
     $('#fb-d').innerHTML = detail || '';
-    $('#fb-btn').textContent = btn || '继续';
+    $('#fb-btn').textContent = btn || tr('g.shell.next');
     $('#p-prog').style.width = ((P.idx + 1) / P.total * 100) + '%';
     setTimeout(() => $('#fb-btn').focus({ preventScroll: true }), 60);
     // 标出对错的选项 / 排好的句子不要被反馈条盖住（横屏时屏幕矮，最常见）：往上滚一点，但别把它滚到顶栏下面
@@ -2025,7 +3306,8 @@
   }
   function detailOf(q) {
     if (q.kind === 'dlg') return '<b>' + esc(q.prompt) + '</b> → ' + esc(q.en);
-    return '<b>' + esc(q.en) + '</b> · ' + esc(q.zh);
+    const m = qMean(q);   // 界面语言里没有意思：只给英文
+    return '<b>' + esc(q.en) + '</b>' + (m != null ? ' · ' + esc(m) : '');
   }
 
   // 选择题
@@ -2039,10 +3321,10 @@
       else b.classList.add('dim');
     });
     const hl = $('#hl'); if (hl) hl.classList.remove('blur');
-    if (o.c) { const g = good(false); showFb(true, praise() + ' +' + g + ' 经验' + (P.aided ? '（看了原文，减半）' : ''), detailOf(q)); }
+    if (o.c) { const g = good(false); showFb(true, praise() + tr('g.fb.xp', { n: g }) + (P.aided ? tr('g.fb.peek') : ''), detailOf(q)); }
     else {
       bad();
-      showFb(false, '哎呀，不对', '正确答案：' + detailOf(q));
+      showFb(false, tr('g.fb.wrong'), trh('g.fb.ans') + detailOf(q));
       setTimeout(() => say(q.type === 'lr' ? q.en : q.audio), 300);
     }
   }
@@ -2063,8 +3345,8 @@
     P.answered = true;
     const ok = P.lo.map(k => q.tokens[k].toLowerCase()).join(' ') === q.tokens.map(t => t.toLowerCase()).join(' ');
     $('#lo-ans').classList.add(ok ? 'right' : 'wrong');
-    if (ok) { const g = good(false); showFb(true, praise() + ' +' + g + ' 经验', detailOf(q)); }
-    else { bad(); showFb(false, '顺序不对', '正确句子：' + detailOf(q)); setTimeout(() => say(q.audio), 300); }
+    if (ok) { const g = good(false); showFb(true, praise() + tr('g.fb.xp', { n: g }), detailOf(q)); }
+    else { bad(); showFb(false, tr('g.fb.order'), trh('g.fb.sent') + detailOf(q)); setTimeout(() => say(q.audio), 300); }
   }
 
   // 口语题
@@ -2081,7 +3363,7 @@
     if (RT.audio) RT.audio.pause();
     const q = P.q;
     if (speakMode() === 'sr') {
-      setMic(true, '正在听……说完会自动停止');
+      setMic(true, tr('g.play.listening'));
       $('#heard').textContent = '';
       $('#score').innerHTML = '';
       const res = await recognize(t => { const h = $('#heard'); if (h) h.textContent = t; }, q.type === 'bt' ? q.opts.map(o => o.t) : [q.target]);
@@ -2090,8 +3372,8 @@
       if (res.err && FATAL.includes(res.err)) {
         RT.srBroken = true;
         if (res.err === 'not-allowed' || res.err === 'audio-capture') RT.noRec = true;
-        toast(RT.noRec ? '用不了麦克风，已切换成「大声读 + 自评」模式' : '这个浏览器连不上语音识别，已切换成「录音自评」模式');
-        if (q.type === 'bt') { P.btChoose = true; btReveal(false); const wrap = $('.mic-wrap'); if (wrap) wrap.remove(); toast('点出正确的回答，再大声说出来'); }
+        toast(tr(RT.noRec ? 'g.play.nomic' : 'g.play.nosr'));
+        if (q.type === 'bt') { P.btChoose = true; btReveal(false); const wrap = $('.mic-wrap'); if (wrap) wrap.remove(); toast(tr('g.play.bt.tap')); }
         else renderQ();
         return;
       }
@@ -2104,18 +3386,18 @@
   function evalSpeak(alts) {
     const q = P.q;
     const r = bestScore(q.target, alts);
-    $('#heard').textContent = '我听到的是：“' + r.heard + '”';
+    $('#heard').textContent = tr('g.fb.heard', { s: r.heard });
     { const L = dayLog(); L.sayN = (L.sayN || 0) + 1; L.saySum = (L.saySum || 0) + r.score; }   // 周报：开口几次、平均几分
     if (r.score < 90) aiTip(q.target, r.heard, $('#heard'));
     const st = $('#st'), masked = st && st.classList.contains('mask');
     if (st && !masked) $$('.w', st).forEach((w, k) => { w.classList.toggle('ok', !!r.marks[k]); w.classList.toggle('miss', !r.marks[k]); });
     const cls = r.score >= 85 ? 'good' : r.score >= 60 ? 'mid' : 'low';
-    $('#score').innerHTML = '<div class="score ' + cls + '"><b>' + r.score + '</b><span>分</span></div>';
+    $('#score').innerHTML = '<div class="score ' + cls + '"><b>' + r.score + '</b><span>' + trh('g.fb.pts') + '</span></div>';
     if (r.score >= 60) passSpeak(r.score, true, r.marks);
     else {
       P.tries++;
       if (P.tries + P.miss >= 3) failSpeak(r.marks);
-      else { SFX.bad(); $('#mic-hint').textContent = (masked ? '再试一次！想不起来可以点「💡 提示」' : '红色的词没读准，先点🔊听一遍，再试一次') + '（第 ' + (P.tries + P.miss + 1) + '/3 次）'; }
+      else { SFX.bad(); $('#mic-hint').textContent = tr(masked ? 'g.fb.retry.mem' : 'g.fb.retry.red') + tr('g.fb.try', { n: P.tries + P.miss + 1 }); }
     }
   }
   // 话筒没拿到话：没听清算一次尝试（第 3 次还没听清就记进错题本）；没网 / 额度 / 没密钥说清原因，AI 用不了时亮出「先跳过」
@@ -2124,11 +3406,11 @@
     if (res.fail === 'unheard') {
       P.miss++;
       if (P.tries + P.miss >= 3) {
-        if (P.q.type === 'bt') { P.btChoose = true; btReveal(true); hint.textContent = '没听清。直接点出正确的回答，再大声读一遍也行（这题不能暴击了）'; return; }
+        if (P.q.type === 'bt') { P.btChoose = true; btReveal(true); hint.textContent = tr('g.fb.bt.unheard'); return; }
         failSpeak(); return;
       }
       SFX.bad();
-      hint.textContent = failHint(res) + '（第 ' + (P.tries + P.miss + 1) + '/3 次）';
+      hint.textContent = failHint(res) + tr('g.fb.try', { n: P.tries + P.miss + 1 });
       return;
     }
     hint.textContent = failHint(res);
@@ -2141,7 +3423,7 @@
     const perfect = measured && score >= 85 && !P.aided;
     showAnswer(marks);
     const g = good(true, perfect);
-    showFb(true, (P.aided ? (P.review ? '过关！这次有提示，明天再考一次' : '过关！这次有提示，经验减半') : perfect ? 'Perfect！每个词都说对了' : score >= 75 ? 'Good！说得不错' : '过关！再多练练会更好') + ' +' + g + ' 经验', detailOf(q));
+    showFb(true, tr(P.aided ? (P.review ? 'g.fb.pass.aid.rev' : 'g.fb.pass.aid') : perfect ? 'g.fb.perfect' : score >= 75 ? 'g.fb.good' : 'g.fb.pass') + tr('g.fb.xp', { n: g }), detailOf(q));
   }
   function failSpeak(marks) {
     const q = P.q;
@@ -2150,7 +3432,7 @@
     addWrong(q);
     logSpk(false);
     showAnswer(marks);
-    showFb(false, '没关系，这句先记下来', '已放进错题本（不扣心）：' + detailOf(q));
+    showFb(false, tr('g.fb.fail'), trh('g.fb.saved') + detailOf(q));
     setTimeout(() => say(q.target || q.en), 300);
   }
   // 跳过：自评模式「现在不方便开口」；开口模式只有 AI 用不了时才有——这题放进复习（今天到期、不算答错），联网以后复习里要补说
@@ -2163,7 +3445,7 @@
     if (ai) { revLater(q); const L = dayLog(); L.aiSkip = (L.aiSkip || 0) + 1; }
     showAnswer();
     btReveal(false);
-    showFb(null, ai ? '先跳过了' : '已跳过', (ai ? '已放进复习，联网后要补说：' : '') + detailOf(q));
+    showFb(null, tr(ai ? 'g.fb.skip.ai' : 'g.fb.skip'), (ai ? trh('g.fb.skip.owe') : '') + detailOf(q));
   }
   // 💡 提示：一级级给（凭记忆 → 首字母 → 整句并念一遍）。点了就算带提示（不算 Perfect、经验减半、复习里不升格）
   function onHint() {
@@ -2171,7 +3453,7 @@
     const q = P.q, st = $('#st'); if (!st) return;
     P.hint++; P.aided = true;
     const b = $('#hintbtn');
-    if (P.fade - P.hint === 1) { st.textContent = cueText(q.target, 1); if (b) b.textContent = '💡 再给点提示'; }
+    if (P.fade - P.hint === 1) { st.textContent = cueText(q.target, 1); if (b) b.textContent = tr('g.play.hint2'); }
     else { st.classList.remove('mask'); st.innerHTML = wordsHTML(q.target); say(q.target); if (b) b.disabled = true; }
   }
 
@@ -2193,13 +3475,13 @@
       if (!P || P.q !== q) return;
       if (RT.recUrl) URL.revokeObjectURL(RT.recUrl);
       RT.recUrl = URL.createObjectURL(new Blob(chunks, { type: mr.mimeType || 'audio/webm' }));
-      setMic(false, '录好了！在下面比一比');
+      setMic(false, tr('g.play.rec.done'));
       showSelf(true);
     };
     RT.mr = mr; RT.recording = true;
     if (MUS()) MUS().hold(true);
     mr.start();
-    setMic(true, '正在录音……说完点一下停止');
+    setMic(true, tr('g.play.rec.on'));
     RT.recTimer = setTimeout(() => { if (RT.recording) stopListening(); }, 9000);
   }
   // quiet：刚出题时直接显示（不滚动）；录完音、选对回答之后才出来的，滚到看得见的地方（横屏时常在屏幕下面）
@@ -2211,15 +3493,15 @@
     // 撤了提示的题（看图说、凭记忆说）：先自己说，说完再看答案
     if (masked && !hasRec && !P.selfReveal && q.type !== 'bt') {
       box.hidden = false;
-      box.innerHTML = '<p>' + (sp ? '先看图<b>大声说出英文</b>' : '先<b>凭记忆大声说出来</b>') + '，说完再看答案</p><button class="btn small" data-act="selfReveal">我说完了，看答案</button>';
+      box.innerHTML = '<p>' + trh(sp ? 'g.play.self.pic' : 'g.play.self.mem') + '</p><button class="btn small" data-act="selfReveal">' + trh('g.play.self.done') + '</button>';
       reveal();
       return;
     }
     if (masked) { st.classList.remove('mask'); st.innerHTML = wordsHTML(q.target); if (hasRec) say(q.target); }
     box.hidden = false;
-    box.innerHTML = '<p>' + (q.type === 'bt' ? '现在对着' + WX[P.wi].boss.name + '大声说：<b>' + esc(q.target) + '</b>' : hasRec ? '听听自己的录音，和原音比一比，像不像？' : '大声读 2 遍，然后诚实地给自己打个分') + '</p>' +
-      '<div class="say-row">' + (hasRec ? '<button class="btn small ghost" data-act="playMine">▶ 我的录音</button>' : '') + '<button class="btn small ghost" data-act="sayT">🔊 原音</button></div>' +
-      '<div class="rate"><button class="btn coral" data-act="rate" data-v="0">😅 再练练</button><button class="btn sun" data-act="rate" data-v="1">🙂 还行</button><button class="btn leaf" data-act="rate" data-v="2">😎 很像</button></div>';
+    box.innerHTML = '<p>' + (q.type === 'bt' ? trh('g.play.self.bt', { name: bossName(WX[P.wi].boss), s: q.target }) : trh(hasRec ? 'g.play.self.cmp' : 'g.play.self.read')) + '</p>' +
+      '<div class="say-row">' + (hasRec ? '<button class="btn small ghost" data-act="playMine">' + trh('g.play.self.mine') + '</button>' : '') + '<button class="btn small ghost" data-act="sayT">' + trh('g.play.self.orig') + '</button></div>' +
+      '<div class="rate"><button class="btn coral" data-act="rate" data-v="0">' + trh('g.play.rate.0') + '</button><button class="btn sun" data-act="rate" data-v="1">' + trh('g.play.rate.1') + '</button><button class="btn leaf" data-act="rate" data-v="2">' + trh('g.play.rate.2') + '</button></div>';
     reveal();
   }
   function onRate(v) {
@@ -2227,9 +3509,9 @@
     if (v === 0) {
       P.tries++;
       if (P.tries >= 3) { failSpeak(); return; }
-      toast('再听一遍原音，跟着读 ' + (canRecord() && P.q.type !== 'bt' ? '，然后重新录音' : ''));
+      toast(tr('g.play.rate.again') + (canRecord() && P.q.type !== 'bt' ? tr('g.play.rate.rerec') : ''));
       say(P.q.target);
-      if (canRecord() && P.q.type !== 'bt' && speakMode() === 'self') { $('#self').hidden = true; setMic(false, '点麦克风重新录音'); }
+      if (canRecord() && P.q.type !== 'bt' && speakMode() === 'self') { $('#self').hidden = true; setMic(false, tr('g.play.rerec')); }
       return;
     }
     passSpeak(v === 2 ? 90 : 72, false);
@@ -2241,7 +3523,7 @@
     const scores = q.opts.map(o => bestScore(o.t, alts));
     let bi = 0; scores.forEach((s, k) => { if (s.score > scores[bi].score) bi = k; });
     const best = scores[bi];
-    $('#heard').textContent = '我听到的是：“' + best.heard + '”';
+    $('#heard').textContent = tr('g.fb.heard', { s: best.heard });
     if (q.opts[bi].c && best.score >= 55) {
       markBt(bi);
       const hl = $('#hl'); if (hl) hl.classList.remove('blur');
@@ -2251,14 +3533,14 @@
       markBt(q.opts.findIndex(o => o.c), bi);
       const hl = $('#hl'); if (hl) hl.classList.remove('blur');
       bad();
-      showFb(false, WX[P.wi].boss.name + ' 躲开了！这句回答不对', '正确回答：' + detailOf(q));
+      showFb(false, tr('g.fb.dodge', { name: bossName(WX[P.wi].boss) }), trh('g.fb.reply') + detailOf(q));
       setTimeout(() => say(q.en), 300);
     } else {
       P.tries++;
       const hidden = !!$('#bt-opts') && $('#bt-opts').hidden;
-      if (hidden) { btReveal(true); $('#mic-hint').textContent = '没对上。看看这几个回答，把对的那句大声说出来（这题不能暴击了）'; }
-      else if (P.tries + P.miss >= 3) { P.btChoose = true; $('#mic-hint').textContent = '识别不太准？直接点出正确回答，再大声读一遍也行'; }
-      else $('#mic-hint').textContent = '没对上任何一个选项，再说一次（第 ' + (P.tries + P.miss + 1) + '/3 次）';
+      if (hidden) { btReveal(true); $('#mic-hint').textContent = tr('g.fb.bt.see'); }
+      else if (P.tries + P.miss >= 3) { P.btChoose = true; $('#mic-hint').textContent = tr('g.fb.bt.tap'); }
+      else $('#mic-hint').textContent = tr('g.fb.bt.again', { n: P.tries + P.miss + 1 });
     }
   }
   function markBt(ri, wi) {
@@ -2269,7 +3551,7 @@
     P.answered = true;
     if (P.tries > 0) P.aided = true;
     const crit = score >= 85 && !P.aided, g = good(true, crit);
-    showFb(true, (crit ? '暴击！' : '命中！') + ' +' + g + ' 经验' + (P.aided ? '（有提示，减半）' : ''), detailOf(P.q));
+    showFb(true, tr(crit ? 'g.fb.crit' : 'g.fb.hit') + tr('g.fb.xp', { n: g }) + (P.aided ? tr('g.fb.aid') : ''), detailOf(P.q));
   }
   function onBtOpt(i) {
     if (!P || P.answered) return;
@@ -2290,7 +3572,7 @@
       markBt(q.opts.findIndex(o => o.c), i);
       const hl = $('#hl'); if (hl) hl.classList.remove('blur');
       bad();
-      showFb(false, WX[P.wi].boss.name + ' 躲开了！这句回答不对', '正确回答：' + detailOf(q));
+      showFb(false, tr('g.fb.dodge', { name: bossName(WX[P.wi].boss) }), trh('g.fb.reply') + detailOf(q));
       setTimeout(() => say(q.en), 300);
     }
   }
@@ -2304,9 +3586,9 @@
   }
   function failModal() {
     const can = S.coins >= 30 && !P.revived;
-    openModal('<div class="big">💔</div><h2>小船没电了！</h2><p>3 颗心都用完了。错的题已经放进错题本。</p>' +
-      '<button class="btn sun wide" data-act="revive" ' + (can ? '' : 'disabled') + '>花 30 金币复活，继续这关' + (P.revived ? '（每关只能复活一次）' : S.coins < 30 ? '（金币不够）' : '') + '</button>' +
-      '<div class="row"><button class="btn ghost" data-act="home">回地图</button><button class="btn" data-act="retry">重新挑战</button></div>', { locked: true });
+    openModal('<div class="big">💔</div>' + trh('g.res.fail') +
+      '<button class="btn sun wide" data-act="revive" ' + (can ? '' : 'disabled') + '>' + trh('g.res.revive') + (P.revived ? trh('g.res.once') : S.coins < 30 ? trh('g.res.poor') : '') + '</button>' +
+      '<div class="row"><button class="btn ghost" data-act="home">' + trh('g.res.map') + '</button><button class="btn" data-act="retry">' + trh('g.res.retry') + '</button></div>', { locked: true });
   }
 
   function finish() {
@@ -2348,32 +3630,32 @@
     const newWorld = P.boss && prev === 0 && P.wi + 1 < W.length;
     let nextBtn = '';
     if (!P.review) {
-      if (P.li < 6) nextBtn = '<button class="btn wide" data-act="go" data-w="' + P.wi + '" data-l="' + (P.li + 1) + '" data-focus>下一关 →</button>';
-      else if (P.wi + 1 < W.length) nextBtn = '<button class="btn wide" data-act="go" data-w="' + (P.wi + 1) + '" data-l="0" data-focus>出发去 ' + W[P.wi + 1].name + ' →</button>';
-      else if (isUnit(P.wi) && P.wi + 1 < WX.length) nextBtn = '<button class="btn wide" data-act="go" data-w="' + (P.wi + 1) + '" data-l="0" data-focus>下一单元：' + esc(WX[P.wi + 1].name) + ' →</button>';
+      if (P.li < 6) nextBtn = '<button class="btn wide" data-act="go" data-w="' + P.wi + '" data-l="' + (P.li + 1) + '" data-focus>' + trh('g.res.next') + '</button>';
+      else if (P.wi + 1 < W.length) nextBtn = '<button class="btn wide" data-act="go" data-w="' + (P.wi + 1) + '" data-l="0" data-focus>' + trh('g.res.goisle', { name: isleName(P.wi + 1) }) + '</button>';
+      else if (isUnit(P.wi) && P.wi + 1 < WX.length) nextBtn = '<button class="btn wide" data-act="go" data-w="' + (P.wi + 1) + '" data-l="0" data-focus>' + trh('g.res.nextunit', { name: wxName(P.wi + 1) }) + '</button>';
     }
     const gt = P.review && S.settings.gate !== false ? gate() : null;
-    if (P.review && gt && gt.open) nextBtn = '<button class="btn sun wide" data-act="goAdventure" data-focus>🗺️ 去冒险</button>';
+    if (P.review && gt && gt.open) nextBtn = '<button class="btn sun wide" data-act="goAdventure" data-focus>' + trh('g.res.adv') + '</button>';
     // 复习做完了、还差聊天：主按钮直接去和岛民聊天
-    else if (P.review && gt && gt.revDone && !gt.chatOk && gt.chatOn && !gt.keyBad) nextBtn = '<button class="btn sun wide" data-act="gateTalk" data-focus>🗣️ 去和岛民聊天</button>';
-    const title = P.review ? '复习完成！' : P.boss ? '打败 ' + w.boss.name + '！' : stars === 3 ? '完美通关！' : '通关！';
+    else if (P.review && gt && gt.revDone && !gt.chatOk && gt.chatOn && !gt.keyBad) nextBtn = '<button class="btn sun wide" data-act="gateTalk" data-focus>' + trh('g.res.talk') + '</button>';
+    const title = P.review ? trh('g.res.rev') : P.boss ? trh('g.res.beat', { name: bossName(w.boss) }) : trh(stars === 3 ? 'g.res.perfect' : 'g.res.clear');
     // r-hero（大图、标题、星星）和 r-body（奖励、数据、按钮）：竖屏照常一列，横屏左右两栏
     $('#result').innerHTML =
       '<div class="r-hero"><div class="big" style="font-size:64px">' + (P.boss ? w.boss.emoji + '💥' : S.pet) + '</div>' +
       '<h1 class="r-title">' + title + '</h1>' +
-      '<p class="r-sub">' + (P.review ? (dueList().length ? '今天还有 ' + dueList().length + ' 题可以复习' : '今天的复习全部完成 ✅') : w.name + ' · ' + r.name) + '</p>' +
+      '<p class="r-sub">' + (P.review ? (dueList().length ? trh('g.res.more', { n: dueList().length }) : trh('g.res.alldone')) : esc(wxName(P.wi)) + ' · ' + r.name) + '</p>' +
       '<div class="r-stars" id="rstars"><span>⭐</span><span>⭐</span><span>⭐</span></div></div><div class="r-body">' +
-      (lucky ? '<div class="lucky">🍀 幸运暴击！金币翻倍</div>' : '') +
-      (firstThree ? '<div class="lucky">首次三星奖励 +15 金币</div>' : '') +
-      (window.MonsterGame ? '<div class="lucky">🔮 回声球 +' + balls + '（去怪兽冒险收服怪兽）</div>' : '') +
-      (newWorld ? '<div class="lucky">🏝️ 新岛屿解锁：' + W[P.wi + 1].name + '</div>' : '') +
-      (gt ? '<div class="lucky">' + (gt.open ? '🔓 冒险解锁了！今天可以去怪兽冒险了' : gt.revDone ? '✅ 复习完成 · 再和岛民用英语聊一聊（已开口说 ' + Math.min(gt.voice, gt.need) + '/' + gt.need + ' 句）就能去冒险' : '再复习一轮（答对一半以上）才算完成哦') + '</div>' : '') +
-      '<div class="r-stats"><div class="stat xp"><b>+' + xp + '</b><small>经验</small></div><div class="stat cn"><b>+' + coins + '</b><small>金币</small></div><div class="stat cb"><b>' + P.maxCombo + '</b><small>最高连击</small></div></div>' +
-      (P.recall ? '<div class="lucky">🔥 不看字说对 ' + P.recall + ' 题，记得真牢！</div>' : '') +
-      '<p class="r-sub" style="margin:0">答对 ' + P.correct + ' / ' + P.total + (stars < 3 ? ' · ' + (P.lost ? '不丢心、' : '') + '答对 90% 以上可拿三星' : '') + '</p>' +
-      (P.aidedN ? '<p class="r-sub" style="margin:0">💡 其中 ' + P.aidedN + ' 题用了提示（经验减半' + (P.review ? '，明天再考一次' : '') + '）</p>' : '') +
-      '<div class="r-actions">' + nextBtn + '<div class="row" style="display:flex;gap:10px"><button class="btn ghost" style="flex:1" data-act="home">回地图</button>' +
-      (P.review ? '' : '<button class="btn ghost" style="flex:1" data-act="retry">再玩一次</button>') + '</div></div></div>';
+      (lucky ? '<div class="lucky">' + trh('g.res.lucky') + '</div>' : '') +
+      (firstThree ? '<div class="lucky">' + trh('g.res.three') + '</div>' : '') +
+      (window.MonsterGame ? '<div class="lucky">' + trh('g.res.balls', { n: balls }) + '</div>' : '') +
+      (newWorld ? '<div class="lucky">' + trh('g.res.newisle', { name: isleName(P.wi + 1) }) + '</div>' : '') +
+      (gt ? '<div class="lucky">' + (gt.open ? trh('g.res.gate.open') : gt.revDone ? trh('g.res.gate.talk', { n: Math.min(gt.voice, gt.need), need: gt.need }) : trh('g.res.gate.more')) + '</div>' : '') +
+      '<div class="r-stats"><div class="stat xp"><b>+' + xp + '</b><small>' + trh('g.res.xp') + '</small></div><div class="stat cn"><b>+' + coins + '</b><small>' + trh('g.res.coins') + '</small></div><div class="stat cb"><b>' + P.maxCombo + '</b><small>' + trh('g.res.combo') + '</small></div></div>' +
+      (P.recall ? '<div class="lucky">' + trh('g.res.recall', { n: P.recall }) + '</div>' : '') +
+      '<p class="r-sub" style="margin:0">' + trh('g.res.score', { c: P.correct, t: P.total }) + (stars < 3 ? ' · ' + (P.lost ? trh('g.res.nolose') : '') + trh('g.res.3star') : '') + '</p>' +
+      (P.aidedN ? '<p class="r-sub" style="margin:0">' + trh(P.review ? 'g.res.aided.rev' : 'g.res.aided', { n: P.aidedN }) + '</p>' : '') +
+      '<div class="r-actions">' + nextBtn + '<div class="row" style="display:flex;gap:10px"><button class="btn ghost" style="flex:1" data-act="home">' + trh('g.res.map') + '</button>' +
+      (P.review ? '' : '<button class="btn ghost" style="flex:1" data-act="retry">' + trh('g.res.again') + '</button>') + '</div></div></div>';
     show('result');
     SFX.win();
     confetti(stars === 3 ? 180 : 90);
@@ -2382,25 +3664,25 @@
     if (f) setTimeout(() => f.focus({ preventScroll: true }), 100);
 
     setTimeout(() => {
-      if (newDay) toast('🔥 今日打卡成功！已连续 ' + S.streak + ' 天', 'gold');
+      if (newDay) toast(tr('g.res.streak', { n: S.streak }), 'gold');
       checkAch();
       if (after > before) {
         confetti(200);
-        openModal('<div class="big">🎖️</div><h2>升级啦！Lv ' + after + '</h2><p>新称号：<b>' + titleOf(after) + '</b>。奖励 20 金币，去宠物店看看吧！</p><button class="btn sun wide" data-act="close" data-focus>太好了</button>');
+        openModal('<div class="big">🎖️</div>' + trh('g.res.lvup', { lv: after, title: titleOf(after) }) + '<button class="btn sun wide" data-act="close" data-focus>' + trh('g.res.yay') + '</button>');
       } else if (Date.now() - RT.lastRest > 30 * 60e3) restModal();
     }, 1700);
   }
   function restModal() {
     RT.lastRest = Date.now();
     if (!kidMode()) return;   // 「自己学」不限时，也不强制休息
-    openModal('<div class="big">👀</div><h2>护眼时间</h2><p>已经连续练了 30 分钟，真厉害！看看窗外远处 20 秒，喝口水，让眼睛和嗓子歇一歇。</p><button class="btn wide" id="restbtn" data-act="close" disabled>休息中 20</button>', { locked: true });
+    openModal('<div class="big">👀</div>' + trh('g.res.rest') + '<button class="btn wide" id="restbtn" data-act="close" disabled>' + trh('g.res.resting', { n: 20 }) + '</button>', { locked: true });
     let n = 20;
     const t = setInterval(() => {
       n--;
       const b = $('#restbtn');
       if (!b) { clearInterval(t); return; }
-      if (n <= 0) { clearInterval(t); b.disabled = false; b.textContent = '休息好了，继续'; }
-      else b.textContent = '休息中 ' + n;
+      if (n <= 0) { clearInterval(t); b.disabled = false; b.textContent = tr('g.res.rested'); }
+      else b.textContent = tr('g.res.resting', { n });
     }, 1000);
   }
 
@@ -2408,17 +3690,17 @@
   // ---------- 对话动画剧场：看动画 / 跟读 / 角色扮演 ----------
   let T = null;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const MODE_TIP = {
-    watch: '先完整看一遍。关掉英文字幕，就能练纯听力。点下面的对话记录可以单独再听一句。',
-    shadow: '每句播完会停下来，你跟着说一遍，说对了自动继续。',
-    role: '选一个角色，轮到你时大声说出台词，另一个角色由电脑来演。',
-  };
+  // 台词的中文意思（内容）：英语界面给 null，不显示、也不出「中」开关
+  const thZh = L2 => (T && T.zh ? gloss({ zh: L2 }) : null);
+  const glossOn = () => gloss({ zh: '·' }) != null;
+  // 日期、时间按界面语言的写法
+  const loc = () => (I18N && I18N.lang() !== 'zh' ? 'en-GB' : 'zh-CN');
   function gainXp(n) {
     if (!n) return;
     const b = lvInfo(S.xp).lv;
     S.xp += n;
     const a = lvInfo(S.xp).lv;
-    if (a > b) { S.coins += 20; toast('🎖️ 升级啦！Lv ' + a + ' ' + titleOf(a) + ' +20 金币', 'gold'); confetti(160); }
+    if (a > b) { S.coins += 20; toast(tr('g.th.lvup', { lv: a, title: titleOf(a) }), 'gold'); confetti(160); }
   }
   function openScene(wi) {
     const sc = window.SCENES && window.SCENES[wi];
@@ -2437,27 +3719,29 @@
     if (TTS.ok) speechSynthesis.cancel();
     if (RT.audio) RT.audio.pause();
   }
-  const playLabel = () => T.playing ? '⏸ 暂停' : (T.idx >= 0 && !T.done ? '▶ 继续' : T.done ? '🔁 再来一遍' : '▶ 开始播放');
+  const playLabel = () => T.playing ? tr('g.th.pause') : (T.idx >= 0 && !T.done ? tr('g.th.resume') : T.done ? tr('g.th.again') : tr('g.th.start'));
   function updPlay() { const b = $('#th-play'); if (b) b.textContent = playLabel(); }
   function renderTheater() {
     const sc = T.sc, w = W[T.wi], toon = !!window.Cartoon;
-    const modes = [['watch', '👀 看动画'], ['shadow', '🔁 跟读'], ['role', '🎭 角色扮演']];
+    const modes = ['watch', 'shadow', 'role'].map(m => [m, tr('g.th.m.' + m)]);
+    // 标题 / 地点是中文内容：英语界面标题用岛名，地点不显示
+    const ttl = gloss({ zh: sc.title }) || isleName(T.wi), plc = gloss({ zh: sc.place });
     $('#theater').innerHTML =
-      '<div class="p-top"><button class="x" data-act="thClose" aria-label="退出">✕</button><div class="th-title"><b>🎬 ' + esc(sc.title) + '</b><small>' + w.name + ' · ' + esc(sc.place) + '</small></div></div>' +
+      '<div class="p-top"><button class="x" data-act="thClose" aria-label="' + tr('g.th.exit') + '">✕</button><div class="th-title"><b>🎬 ' + esc(ttl) + '</b><small>' + (plc != null ? esc(isleName(T.wi)) + ' · ' + esc(plc) : tr('g.th.ep', { n: T.wi + 1 })) + '</small></div></div>' +
       '<div class="stage' + (toon ? ' cartoon' : '') + ' live" id="stage" style="--wc:' + w.color + '">' +
       (toon && Cartoon.set(sc.set) ? '<div class="stage-set">' + Cartoon.set(sc.set) + '</div>' : '<span class="stage-bg">' + sc.bg + '</span>') +
       sc.cast.map((c, k) => '<div class="actor a' + k + '" id="actor' + k + '">' +
         (toon && Cartoon.has(c[0]) ? Cartoon.actor(c[0]) : '<span class="ae"><span class="af">' + c[1] + '</span></span>') +
-        '<span class="an">' + esc(c[0]) + (T.mode === 'role' && T.me === k ? ' · 你' : '') + '</span></div>').join('') +
+        '<span class="an">' + esc(c[0]) + (T.mode === 'role' && T.me === k ? tr('g.th.you') : '') + '</span></div>').join('') +
       '<div class="stage-sub" id="th-sub"></div>' +
-      '<div class="clap" id="th-clap" hidden><small>第 ' + (T.wi + 1) + ' 集</small><b>' + esc(sc.title) + '</b><span>' + esc(sc.place) + '</span></div></div>' +
+      '<div class="clap" id="th-clap" hidden><small>' + tr('g.th.ep', { n: T.wi + 1 }) + '</small><b>' + esc(ttl) + '</b>' + (plc != null ? '<span>' + esc(plc) + '</span>' : '') + '</div></div>' +
       '<div class="th-side"><div class="seg th-modes">' + modes.map(([m, n]) => '<button class="' + (T.mode === m ? 'on' : '') + '" data-act="thMode" data-m="' + m + '">' + n + '</button>').join('') + '</div>' +
-      (T.mode === 'role' ? '<div class="seg th-modes"><span class="th-lab">我来演</span>' + sc.cast.map((c, k) => '<button class="' + (T.me === k ? 'on' : '') + '" data-act="thMe" data-i="' + k + '">' + c[1] + ' ' + esc(c[0]) + '</button>').join('') + '</div>' : '') +
+      (T.mode === 'role' ? '<div class="seg th-modes"><span class="th-lab">' + tr('g.th.me') + '</span>' + sc.cast.map((c, k) => '<button class="' + (T.me === k ? 'on' : '') + '" data-act="thMe" data-i="' + k + '">' + c[1] + ' ' + esc(c[0]) + '</button>').join('') + '</div>' : '') +
       '<div class="th-ctrl"><button class="btn" id="th-play" data-act="thPlay">' + playLabel() + '</button>' +
-      '<button class="slow' + (T.slow ? ' on' : '') + '" data-act="thSlow" aria-pressed="' + T.slow + '"><span>🐢</span>慢速</button>' +
-      '<button class="slow' + (T.en ? ' on' : '') + '" data-act="thEn" aria-pressed="' + T.en + '"><span>En</span>英文</button>' +
-      '<button class="slow' + (T.zh ? ' on' : '') + '" data-act="thZh" aria-pressed="' + T.zh + '"><span>中</span>中文</button></div>' +
-      '<p class="th-tip">' + MODE_TIP[T.mode] + '</p>' +
+      '<button class="slow' + (T.slow ? ' on' : '') + '" data-act="thSlow" aria-pressed="' + T.slow + '">' + trh('g.th.slow') + '</button>' +
+      '<button class="slow' + (T.en ? ' on' : '') + '" data-act="thEn" aria-pressed="' + T.en + '">' + trh('g.th.en') + '</button>' +
+      (glossOn() ? '<button class="slow' + (T.zh ? ' on' : '') + '" data-act="thZh" aria-pressed="' + T.zh + '">' + trh('g.th.zh') + '</button>' : '') + '</div>' +
+      '<p class="th-tip">' + tr('g.th.tip.' + T.mode) + '</p>' +
       '<div id="th-turn"></div><div class="th-log" id="th-log"></div></div>';   // th-side：横屏时放在动画右边，自己上下滚
     renderStage(); renderLog();
     window.scrollTo(0, 0);
@@ -2470,18 +3754,18 @@
       a.classList.toggle('dim', !!L && L[0] !== k);
     });
     const sub = $('#th-sub'); if (!sub) return;
-    if (!L) { sub.className = 'stage-sub'; sub.innerHTML = T.done ? '<span class="ss-en">The End</span><span class="ss-zh">🎉 演完啦！</span>' : '<span class="ss-zh">点「开始播放」，看看他们怎么说</span>'; return; }
+    if (!L) { sub.className = 'stage-sub'; sub.innerHTML = T.done ? '<span class="ss-en">The End</span><span class="ss-zh">' + tr('g.th.end') + '</span>' : '<span class="ss-zh">' + tr('g.th.idle') + '</span>'; return; }
     sub.className = 'stage-sub ' + (L[0] === 0 ? 'l' : 'r');
     sub.innerHTML = '<span class="ss-who">' + esc(T.sc.cast[L[0]][0]) + '</span>' +
-      (T.en ? '<span class="ss-en">' + esc(L[1]) + '</span>' : '<span class="ss-en muted">🎧 只用耳朵听……</span>') +
-      (T.zh ? '<span class="ss-zh">' + esc(L[2]) + '</span>' : '');
+      (T.en ? '<span class="ss-en">' + esc(L[1]) + '</span>' : '<span class="ss-en muted">' + tr('g.th.ear') + '</span>') +
+      (thZh(L[2]) != null ? '<span class="ss-zh">' + esc(thZh(L[2])) + '</span>' : '');
   }
   function renderLog() {
     const log = $('#th-log'); if (!log) return;
     const n = T.done ? T.sc.lines.length : Math.max(0, T.idx);
-    log.innerHTML = (n ? '<div class="th-lab">对话记录（点一句再听一遍）</div>' : '') + T.sc.lines.slice(0, n).map((L, i) => {
+    log.innerHTML = (n ? '<div class="th-lab">' + tr('g.th.logh') + '</div>' : '') + T.sc.lines.slice(0, n).map((L, i) => {
       const c = T.sc.cast[L[0]];
-      return '<button class="lg lg' + L[0] + '" data-act="thLine" data-i="' + i + '"><span class="lg-e">' + c[1] + '</span><span class="lg-b"><b>' + esc(L[1]) + '</b><small>' + esc(L[2]) + '</small></span></button>';
+      return '<button class="lg lg' + L[0] + '" data-act="thLine" data-i="' + i + '"><span class="lg-e">' + c[1] + '</span><span class="lg-b"><b>' + esc(L[1]) + '</b>' + (gloss({ zh: L[2] }) != null ? '<small>' + esc(gloss({ zh: L[2] })) + '</small>' : '') + '</span></button>';
     }).join('');
   }
   // 关掉或切换模式后，还在等待的旧播放流程要安静退出
@@ -2526,11 +3810,11 @@
       T.turn = res; T.tries = 0;
       const L = T.sc.lines[T.idx], sr = speakMode() === 'sr';
       const a = $('#actor' + L[0]); if (a) a.classList.add('talk');
-      $('#th-turn').innerHTML = '<div class="say-card th-you"><div class="say-zh">' + (T.mode === 'role' ? '轮到你了，大声说：' : '跟着说一遍：') + '</div>' +
-        '<div class="say-text" id="th-say">' + wordsHTML(L[1]) + '</div>' + (T.zh ? '<div class="say-zh">' + esc(L[2]) + '</div>' : '') +
-        (sr ? '<button class="mic" id="th-mic" data-act="thMic" aria-label="开始说话">' + MIC + '</button>' : '') +
-        '<div class="mic-hint" id="th-hint">' + (sr ? '点麦克风，然后大声说' : '大声说出来，说完点「我说完了」') + '</div><div class="heard" id="th-heard"></div>' +
-        '<div class="say-row"><button class="btn small ghost" data-act="thHear">🔊 听示范</button><button class="btn small ' + (sr ? 'ghost' : 'leaf') + '" id="th-done" data-act="thDone">' + (sr ? '跳过这句' : '🎤 我说完了') + '</button></div></div>';
+      $('#th-turn').innerHTML = '<div class="say-card th-you"><div class="say-zh">' + tr('g.th.turn.' + (T.mode === 'role' ? 'role' : 'shadow')) + '</div>' +
+        '<div class="say-text" id="th-say">' + wordsHTML(L[1]) + '</div>' + (thZh(L[2]) != null ? '<div class="say-zh">' + esc(thZh(L[2])) + '</div>' : '') +
+        (sr ? '<button class="mic" id="th-mic" data-act="thMic" aria-label="' + tr('w.mic.aria') + '">' + MIC + '</button>' : '') +
+        '<div class="mic-hint" id="th-hint">' + (sr ? tr('g.th.taps') : tr('w.self.hint')) + '</div><div class="heard" id="th-heard"></div>' +
+        '<div class="say-row"><button class="btn small ghost" data-act="thHear">' + tr('g.th.hear') + '</button><button class="btn small ' + (sr ? 'ghost' : 'leaf') + '" id="th-done" data-act="thDone">' + (sr ? tr('g.th.skip') : tr('w.self.done')) + '</button></div></div>';
       $('#th-turn').scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
     });
   }
@@ -2549,57 +3833,57 @@
     if (RT.audio) RT.audio.pause();
     const turn = T.turn, L = T.sc.lines[T.idx], m = $('#th-mic');
     m.classList.add('on'); m.innerHTML = STOP;
-    $('#th-hint').textContent = '正在听……说完会自动停止';
+    $('#th-hint').textContent = tr('b.mic.listen');
     const res = await recognize(t => { const h = $('#th-heard'); if (h) h.textContent = t; }, [L[1]]);
     if (!T || T.turn !== turn) return;
     m.classList.remove('on'); m.innerHTML = MIC;
     if (res.err && FATAL.includes(res.err)) {
       RT.srBroken = true;
       if (res.err === 'not-allowed' || res.err === 'audio-capture') RT.noRec = true;
-      toast('这里用不了语音识别，改成自己说、自己确认');
+      toast(tr('w.sr.broken'));
       m.remove();
-      $('#th-hint').textContent = '大声说出来，说完点「我说完了」';
-      const d = $('#th-done'); d.textContent = '🎤 我说完了'; d.className = 'btn small leaf';
+      $('#th-hint').textContent = tr('w.self.hint');
+      const d = $('#th-done'); d.textContent = tr('w.self.done'); d.className = 'btn small leaf';
       return;
     }
     if (!res.alts.length) {
       // 对话剧场本来就有「跳过这句」：AI 用不了时只是把原因说清楚
       const h = failHint(res);
-      if (res.fail === 'unheard') { T.tries++; $('#th-hint').textContent = h + (T.tries >= 2 ? '，或者点「跳过这句」' : ''); }
-      else if (h) $('#th-hint').textContent = h + (aiDown() ? '（可以先点「跳过这句」）' : '');
+      if (res.fail === 'unheard') { T.tries++; $('#th-hint').textContent = h + (T.tries >= 2 ? tr('g.th.orskip') : ''); }
+      else if (h) $('#th-hint').textContent = h + (aiDown() ? tr('g.th.canskip') : '');
       return;
     }
     const r = bestScore(L[1], res.alts);
-    $('#th-heard').textContent = '我听到：“' + r.heard + '”';
+    $('#th-heard').textContent = tr('w.heard', { t: r.heard });
     $$('#th-say .w').forEach((w, k) => { w.classList.toggle('ok', !!r.marks[k]); w.classList.toggle('miss', !r.marks[k]); });
     if (r.score >= 55) {
       SFX.ok(T.spoke);
       if (r.score >= 85) { S.stats.perfect++; qProg('perfect', 1); }
-      $('#th-hint').innerHTML = '<b>' + r.score + ' 分</b> ' + (r.score >= 85 ? 'Perfect！' : 'Good！');
+      $('#th-hint').innerHTML = trh(r.score >= 85 ? 'g.th.perfect' : 'g.th.good', { n: r.score });
       setTimeout(() => { if (T && T.turn === turn) endTurn(true); }, 900);
     } else {
       T.tries++;
       SFX.bad();
-      $('#th-hint').textContent = r.score + ' 分，红色的词再读准一点' + (T.tries >= 2 ? '，或者点「跳过这句」' : '');
+      $('#th-hint').textContent = tr('w.score.low', { n: r.score }) + (T.tries >= 2 ? tr('g.th.orskip') : '');
     }
   }
   function sceneDone() {
     const rec = S.scenes[T.wi] || (S.scenes[T.wi] = {});
     const msg = [];
     let coins = 0, xp = 0;
-    if (T.mode === 'watch' && !rec.watched) { rec.watched = 1; coins += 10; msg.push('第一次看完 +10 金币'); }
-    if (T.mode === 'shadow') { rec.shadow = 1; xp += 20; msg.push('跟读完成 +20 经验'); }
-    if (T.mode === 'role') { rec.role = 1; xp += 30; coins += 10; S.stats.roleplay++; qProg('roleplay', 1); msg.push('角色扮演完成 +30 经验 +10 金币'); }
+    if (T.mode === 'watch' && !rec.watched) { rec.watched = 1; coins += 10; msg.push(tr('g.th.msg.watch')); }
+    if (T.mode === 'shadow') { rec.shadow = 1; xp += 20; msg.push(tr('g.th.msg.shadow')); }
+    if (T.mode === 'role') { rec.role = 1; xp += 30; coins += 10; S.stats.roleplay++; qProg('roleplay', 1); msg.push(tr('g.th.msg.role')); }
     S.coins += coins;
     gainXp(xp);
     save(); checkAch();
     SFX.win(); confetti(90);
     const other = T.me === 0 ? 1 : 0;
-    const nextBtn = T.mode === 'watch' ? '<button class="btn" data-act="thMode" data-m="shadow" data-go="1">🔁 接着跟读</button>'
-      : T.mode === 'shadow' ? '<button class="btn" data-act="thMode" data-m="role" data-go="1">🎭 试试角色扮演</button>'
-        : '<button class="btn" data-act="thMe" data-i="' + other + '" data-go="1">换演 ' + esc(T.sc.cast[other][0]) + '</button>';
-    $('#th-turn').innerHTML = '<div class="th-end"><div class="big">🎉</div><b>' + (T.mode === 'role' ? '演得真棒！' : T.mode === 'shadow' ? '跟读完成！' : '看完啦！') + '</b>' +
-      '<p>' + (msg.join(' · ') || '多看几遍，对话就能脱口而出') + '</p><div class="say-row">' + nextBtn + '<button class="btn ghost" data-act="thClose">回地图</button></div></div>';
+    const nextBtn = T.mode === 'watch' ? '<button class="btn" data-act="thMode" data-m="shadow" data-go="1">' + tr('g.th.next.shadow') + '</button>'
+      : T.mode === 'shadow' ? '<button class="btn" data-act="thMode" data-m="role" data-go="1">' + tr('g.th.next.role') + '</button>'
+        : '<button class="btn" data-act="thMe" data-i="' + other + '" data-go="1">' + trh('g.th.swap', { name: T.sc.cast[other][0] }) + '</button>';
+    $('#th-turn').innerHTML = '<div class="th-end"><div class="big">🎉</div><b>' + tr('g.th.fin.' + T.mode) + '</b>' +
+      '<p>' + (msg.join(' · ') || tr('g.th.fin.more')) + '</p><div class="say-row">' + nextBtn + '<button class="btn ghost" data-act="thClose">' + tr('g.th.map') + '</button></div></div>';
     renderTop();
   }
 
@@ -2616,16 +3900,16 @@
     if (wp) { prize = wp.prize; html = wp.html; }
     else if (r < 0.2 && unownedChest.length) {
       const p = pick(unownedChest); S.pets.push(p[0]); prize = p[0];
-      html = '<h2>开出限定宠物：' + p[1] + '！</h2><p>宝箱限定，商店买不到哦。</p>';
+      html = trh('g.chest.pet', { name: p[1] });
     } else if (r < 0.32 && S.freeze < 2) {
       S.freeze++; prize = '🧊';
-      html = '<h2>开出连胜保护卡！</h2><p>哪天忘了打卡，它会自动帮你保住连续天数。</p>';
+      html = trh('g.chest.freeze');
     } else {
       const c = pick([30, 40, 50, 60, 80, 100, 150]); S.coins += c; prize = '💰';
-      html = '<h2>开出 ' + c + ' 金币！</h2><p>明天再来，任务会刷新。</p>';
+      html = trh('g.chest.coins', { n: c });
     }
     save();
-    openModal('<div class="big" id="chestbig" style="animation:wiggle .5s 3">🎁</div><div id="chestres" hidden><div class="big">' + prize + '</div>' + html + '</div><button class="btn sun wide" data-act="close" id="chestok" hidden>收下</button>', { locked: true });
+    openModal('<div class="big" id="chestbig" style="animation:wiggle .5s 3">🎁</div><div id="chestres" hidden><div class="big">' + prize + '</div>' + html + '</div><button class="btn sun wide" data-act="close" id="chestok" hidden>' + tr('g.chest.take') + '</button>', { locked: true });
     SFX.tap();
     setTimeout(() => { $('#chestbig').hidden = true; $('#chestres').hidden = false; $('#chestok').hidden = false; SFX.win(); confetti(120); renderHome(); checkAch(); }, 1500);
   }
@@ -2633,23 +3917,23 @@
     const pets = PETS.map(([e, price, name]) => {
       const own = S.pets.includes(e), sel = S.pet === e;
       return '<button class="pet ' + (sel ? 'sel' : '') + (own || S.coins >= price ? '' : ' no') + '" data-act="pet" data-p="' + e + '"><span class="pe">' + e + '</span>' + name +
-        '<small>' + (sel ? '跟着你' : own ? '点击带上' : '<span class="coin"></span>' + price) + '</small></button>';
+        '<small>' + (sel ? tr('g.shop.following') : own ? tr('g.shop.take') : '<span class="coin"></span>' + price) + '</small></button>';
     }).join('');
     const chest = CHEST_PETS.map(([e, name]) => {
       const own = S.pets.includes(e);
-      return '<button class="pet ' + (S.pet === e ? 'sel' : '') + (own ? '' : ' no') + '" data-act="pet" data-p="' + e + '"><span class="pe">' + (own ? e : '❓') + '</span>' + (own ? name : '宝箱限定') + '<small>' + (own ? (S.pet === e ? '跟着你' : '点击带上') : '每日宝箱开出') + '</small></button>';
+      return '<button class="pet ' + (S.pet === e ? 'sel' : '') + (own ? '' : ' no') + '" data-act="pet" data-p="' + e + '"><span class="pe">' + (own ? e : '❓') + '</span>' + (own ? name : tr('g.shop.chestonly')) + '<small>' + (own ? (S.pet === e ? tr('g.shop.following') : tr('g.shop.take')) : tr('g.shop.fromchest')) + '</small></button>';
     }).join('');
-    openModal('<h2>宠物店</h2><p>你有 <b>' + S.coins + '</b> 金币。宠物会在地图上陪你闯关。</p><div class="grid3">' + pets + chest + '</div>' +
-      '<div class="ach"><span class="ae">🧊</span><div style="flex:1"><b>连胜保护卡（有 ' + S.freeze + ' 张，最多 2 张）</b><small>忘记打卡一天时自动使用，保住连续天数</small></div><button class="btn small sun" data-act="buyFreeze" ' + (S.freeze >= 2 || S.coins < 100 ? 'disabled' : '') + '>100 金币</button></div>' +
-      '<button class="btn ghost wide" data-act="close">关闭</button>');
+    openModal(trh('g.shop.head', { n: S.coins }) + '<div class="grid3">' + pets + chest + '</div>' +
+      '<div class="ach"><span class="ae">🧊</span><div style="flex:1"><b>' + tr('g.shop.fz', { n: S.freeze }) + '</b><small>' + tr('g.shop.fzd') + '</small></div><button class="btn small sun" data-act="buyFreeze" ' + (S.freeze >= 2 || S.coins < 100 ? 'disabled' : '') + '>' + tr('g.shop.fzbtn') + '</button></div>' +
+      '<button class="btn ghost wide" data-act="close">' + tr('g.close') + '</button>');
   }
   function onPet(e) {
     if (S.pets.includes(e)) { S.pet = e; SFX.tap(); }
     else {
       const p = PETS.find(x => x[0] === e);
-      if (!p) { toast('这只宠物只能从每日宝箱开出'); return; }
-      if (S.coins < p[1]) { toast('金币还差 ' + (p[1] - S.coins) + '，去闯关赚金币吧'); return; }
-      S.coins -= p[1]; S.pets.push(e); S.pet = e; SFX.coin(); toast('买到了 ' + p[2] + '！', 'gold');
+      if (!p) { toast(tr('g.shop.chestpet')); return; }
+      if (S.coins < p[1]) { toast(tr('g.shop.short', { n: p[1] - S.coins })); return; }
+      S.coins -= p[1]; S.pets.push(e); S.pet = e; SFX.coin(); toast(tr('g.shop.bought', { name: p[2] }), 'gold');
     }
     save(); renderTop(); shopSheet(); checkAch();
   }
@@ -2657,52 +3941,57 @@
     const n = Object.keys(S.ach).length;
     const L = lvInfo(S.xp);
     const totalStars = Object.values(S.stars).reduce((a, b) => a + b, 0);
-    openModal('<h2>成就 ' + n + ' / ' + ACH.length + '</h2>' +
-      '<p>Lv ' + L.lv + ' ' + titleOf(L.lv) + ' · 共 ' + totalStars + ' 颗星 · 开口说对 ' + S.stats.spoken + ' 次 · 完成 ' + S.stats.levels + ' 关</p>' +
+    openModal('<h2>' + tr('g.achv.h', { n, t: ACH.length }) + '</h2>' +
+      '<p>' + tr('g.achv.sum', { lv: L.lv, title: titleOf(L.lv), stars: totalStars, spoken: S.stats.spoken, levels: S.stats.levels }) + '</p>' +
       ACH.map(([id, e, name, desc]) => '<div class="ach ' + (S.ach[id] ? '' : 'no') + '"><span class="ae">' + e + '</span><div><b>' + name + '</b><small>' + desc + '</small></div></div>').join('') +
-      '<button class="btn ghost wide" data-act="close">关闭</button>');
+      '<button class="btn ghost wide" data-act="close">' + tr('g.close') + '</button>');
   }
+  const unitTxt = u => (u ? lbl({ zh: u.name, en: u.bshort + ' Unit ' + u.n + ' ' + u.en }) : '');
   function envHTML(inSet) {   // inSet：在设置页里（上面已经有「请家长粘贴 AI 密钥」的提示）
     if (window.ECHO_APP) {   // 安卓 APK：不用讲浏览器的事
-      return '<div class="env">✅ 朗读：自然配音（装在手机里，不用联网）<br>' +
-        (cloudSR() ? '✅ 口语自动打分：说完一句交给阿里云识别（要联网）' : '⚠️ 口语自动打分：还没有 AI 密钥' + (inSet ? '（见上面）' : '，请家长在「设置 → 🔒 家长设置」里粘贴')) + '</div>';
+      return '<div class="env">' + tr('g.set.env.app') + '<br>' +
+        (cloudSR() ? tr('g.set.env.sr.ok') : tr('g.set.env.sr.nokey') + (inSet ? tr('g.set.env.see') : tr('g.set.env.paste'))) + '</div>';
     }
     const st = S.settings.tts || 'auto';
-    const tts = st === 'device' ? (TTS.voices.length ? '✅ 朗读：本机声音 ' + esc(TTS.v ? TTS.v.name : '') : '⚠️ 朗读：这个浏览器没有英语声音，在「设置」里换成「自然配音」')
-      : '✅ 朗读：自然配音（没有配音的句子联网时用阿里云现场合成' + (st === 'auto' && TTS.voices.length ? '，没网时用本机声音' : '') + '）';
-    const wx = /MicroMessenger/i.test(navigator.userAgent) ? '<br>📱 你正在微信里打开：点右上角「···」→「在浏览器打开」，录音和语音识别会更稳定。' : '';
-    const sr = SRC && !RT.srBroken ? '✅ 支持语音识别，开口会自动打分' : '⚠️ 语音识别不可用，口语题用「录音 + 自评」';
-    return '<div class="env">' + tts + '<br>' + sr + '<br>在中国大陆，电脑上推荐用 <b>Edge 浏览器</b>，手机推荐 <b>iPhone 自带 Safari</b>；Chrome 的语音识别要连 Google 服务器，通常用不了。' + wx + '</div>';
+    const tts = st === 'device' ? (TTS.voices.length ? trh('g.set.env.dev', { name: TTS.v ? TTS.v.name : '' }) : tr('g.set.env.nodev'))
+      : tr(st === 'auto' && TTS.voices.length ? 'g.set.env.nat.dev' : 'g.set.env.nat');
+    const wx = /MicroMessenger/i.test(navigator.userAgent) ? trh('g.set.env.wx') : '';
+    const sr = SRC && !RT.srBroken ? tr('g.set.env.sr.web') : tr('g.set.env.sr.none');
+    return '<div class="env">' + tts + '<br>' + sr + '<br>' + trh('g.set.env.tip') + wx + '</div>';
   }
   // 设置分两块：「🙂 我的设置」孩子自己随便改；「🔒 家长设置」收起来，里面改什么都要家长密码（家长 2026-10-07，评估第 4 条）
   function settingsSheet() {
     const st = S.settings;
     const voices = TTS.voices.map(v => '<option value="' + esc(v.name) + '"' + (TTS.v && TTS.v.name === v.name ? ' selected' : '') + '>' + esc(v.name + ' (' + v.lang + ')') + '</option>').join('');
     // APK 里还没有 AI 密钥：设置页最上面就说清楚（口语没法自动打分，走「先跳过」）
-    const noKey = aiNoKey() ? '<div class="set-warn"><b>🔑 请家长在这里粘贴 AI 密钥</b><small>还没有 AI 密钥：口语题没法自动打分（可以先跳过，联网有密钥以后再补说），也不能和岛民聊天。</small><button class="btn small" data-act="talk_cfg">粘贴密钥</button></div>' : '';
-    openModal('<h2>设置</h2>' + noKey + envHTML(true) +
-      '<h3 class="set-h">🙂 我的设置</h3>' +
-      (speakMode() === 'sr' ? '<div class="set"><label>🩺 麦克风和网络</label><div class="say-row"><button class="btn small ghost" data-act="micCheck">检查一下（说一句 Hello）</button></div></div>' : '') +
-      '<div class="set"><label for="set-rate">朗读速度 <span id="rate-v">' + st.rate.toFixed(2) + '</span></label><input type="range" id="set-rate" min="0.6" max="1.1" step="0.05" value="' + st.rate + '"><div class="say-row"><button class="btn small ghost" data-act="testVoice">🔊 试听</button></div></div>' +
-      '<div class="set"><label>发音来源</label><div class="seg">' +
-      [['auto', '自然配音'], ['device', '本机声音'], ['online', '只用配音']].map(([m, n]) => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + n + '</button>').join('') +
-      '</div><small>「自然配音」：固定的句子用提前合成的真人感配音，拼了名字的句子联网时用阿里云现场合成，没网时用本机声音。「只用配音」不用本机声音。选「本机声音」就全部用浏览器自带的朗读。</small></div>' +
-      (voices ? '<div class="set"><label for="set-voice">朗读声音</label><select id="set-voice">' + voices + '</select></div>' : '') +
-      (window.ECHO_APP ? '<div class="set"><label>口语打分</label><small>🎤 一律开口说，AI 听写打分（阿里云语音识别），说得不准会给一句中文建议。要联网。</small></div>' :
-      '<div class="set"><label>口语打分方式</label><div class="seg">' +
-      [['auto', 'AI 打分（推荐）'], ['self', '录音自评']].map(([m, n]) => '<button class="' + (st.mode === m ? 'on' : '') + '" data-act="setMode" data-m="' + m + '">' + n + '</button>').join('') +
-      '</div><small>AI 打分：连得上对话服务就用阿里云语音识别打分，否则用浏览器自带的识别。</small></div>') +
-      '<div class="set"><label>冒险画面</label><div class="seg wrap">' +
-      [['auto', '自动'], ['high', '精美'], ['mid', '标准'], ['low', '省电'], ['2d', '2D 流畅']].map(([m, n]) => '<button class="' + ((st.gfx || 'auto') === m ? 'on' : '') + '" data-act="setGfx" data-m="' + m + '">' + n + '</button>').join('') +
-      '</div><small>' + ((st.gfx || 'auto') === 'auto' ? '自动：好手机先用精美画质，其他先用标准，跑不动会自动降一档' + (st.gfxAuto ? '（现在是「' + ({ high: '精美', mid: '标准', low: '省电', '2d': '2D 流畅' })[st.gfxAuto] + '」）' : '') + '。' : '手机发烫或者卡顿，就选省电或 2D 流畅。') + '</small></div>' +
-      '<div class="set"><label>冒险里的操作</label><div class="seg">' +
-        [['joy', '🕹️ 摇杆'], ['pad', '✚ 方向键']].map(([m, n]) => '<button class="' + ((st.ctl || 'joy') === m ? 'on' : '') + '" data-act="setCtl" data-m="' + m + '">' + n + '</button>').join('') +
-        '</div><small>' + (st.ctl === 'pad' ? '方向键：左下角十字键走路；A / B 在右下角。' : '摇杆：左手按住屏幕左边任意地方推着走；A / B 在右下角。') + '</small></div>' +
-      (window.EchoNative && EchoNative.setOrientation ? '<div class="set"><label>屏幕方向</label><div class="seg">' +
-        [['portrait', '📱 竖屏'], ['landscape', '🎮 横屏'], ['auto', '🔄 跟着手机转']].map(([m, n]) => '<button class="' + ((st.orient || 'portrait') === m ? 'on' : '') + '" data-act="setOrient" data-m="' + m + '">' + n + '</button>').join('') +
-        '</div><small>横屏玩冒险和对战更像掌机；做题、聊天竖着横着都能用。</small></div>' : '') +
-      '<div class="set"><label>音效</label><div class="seg"><button class="' + (st.sfx ? 'on' : '') + '" data-act="sfx" data-v="1">开</button><button class="' + (st.sfx ? '' : 'on') + '" data-act="sfx" data-v="0">关</button></div></div>' +
-      '<div class="set"><label>音乐</label><div class="seg">' + [['off', '关'], ['low', '小'], ['mid', '中'], ['high', '大']].map(([v, t]) => '<button class="' + ((st.music || 'mid') === v ? 'on' : '') + '" data-act="setMusic" data-v="' + v + '">' + t + '</button>').join('') + '</div></div>' +
+    const noKey = aiNoKey() ? '<div class="set-warn"><b>' + tr('g.set.nokey.h') + '</b><small>' + tr('g.set.nokey.d') + '</small><button class="btn small" data-act="talk_cfg">' + tr('g.set.ai.paste') + '</button></div>' : '';
+    openModal('<h2>' + tr('g.set.h') + '</h2>' + noKey + envHTML(true) +
+      '<h3 class="set-h">' + tr('g.set.mine') + '</h3>' +
+      (speakMode() === 'sr' ? '<div class="set"><label>' + tr('g.set.mic') + '</label><div class="say-row"><button class="btn small ghost" data-act="micCheck">' + tr('g.set.mic.btn') + '</button></div></div>' : '') +
+      '<div class="set"><label for="set-rate">' + tr('g.set.rate') + ' <span id="rate-v">' + st.rate.toFixed(2) + '</span></label><input type="range" id="set-rate" min="0.6" max="1.1" step="0.05" value="' + st.rate + '"><div class="say-row"><button class="btn small ghost" data-act="testVoice">' + tr('g.set.try') + '</button></div></div>' +
+      '<div class="set"><label>' + tr('g.set.tts') + '</label><div class="seg">' +
+      ['auto', 'device', 'online'].map(m => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + tr('g.set.tts.' + m) + '</button>').join('') +
+      '</div><small>' + tr('g.set.tts.d') + '</small></div>' +
+      (voices ? '<div class="set"><label for="set-voice">' + tr('g.set.voice') + '</label><select id="set-voice">' + voices + '</select></div>' : '') +
+      (window.ECHO_APP ? '<div class="set"><label>' + tr('g.set.sc.app') + '</label><small>' + tr('g.set.sc.app.d') + '</small></div>' :
+      '<div class="set"><label>' + tr('g.set.sc.mode') + '</label><div class="seg">' +
+      ['auto', 'self'].map(m => '<button class="' + (st.mode === m ? 'on' : '') + '" data-act="setMode" data-m="' + m + '">' + tr('g.set.mode.' + m) + '</button>').join('') +
+      '</div><small>' + tr('g.set.sc.mode.d') + '</small></div>') +
+      '<div class="set"><label>' + tr('g.set.gfx') + '</label><div class="seg wrap">' +
+      ['auto', 'high', 'mid', 'low', '2d'].map(m => '<button class="' + ((st.gfx || 'auto') === m ? 'on' : '') + '" data-act="setGfx" data-m="' + m + '">' + tr('g.set.gfx.' + m) + '</button>').join('') +
+      '</div><small>' + ((st.gfx || 'auto') === 'auto' ? tr('g.set.gfx.auto.d') + (st.gfxAuto ? tr('g.set.gfx.now', { m: tr('g.set.gfx.' + st.gfxAuto) }) : '') + tr('g.set.stop') : tr('g.set.gfx.hot')) + '</small></div>' +
+      // 画面风格（新画风试用）：只有 3D 时才有这一行（2D 流畅模式用不上新画风）；默认经典
+      (window.EchoWorldOpen && (st.gfx || 'auto') !== '2d' ? '<div class="set" id="set-look"><label>' + trh('g.set.look') + '</label><div class="seg">' +
+        ['std', 'new'].map(m => '<button class="' + ((lookOn() ? 'new' : 'std') === m ? 'on' : '') + '" data-act="setLook" data-m="' + m + '">' + trh('g.set.look.' + m) + '</button>').join('') +
+        '</div><small>' + trh('g.set.look.d') + '</small></div>' : '') +
+      '<div class="set"><label>' + tr('g.set.ctl') + '</label><div class="seg">' +
+        ['joy', 'pad'].map(m => '<button class="' + ((st.ctl || 'joy') === m ? 'on' : '') + '" data-act="setCtl" data-m="' + m + '">' + tr('g.set.ctl.' + m) + '</button>').join('') +
+        '</div><small>' + tr(st.ctl === 'pad' ? 'g.set.ctl.pad.d' : 'g.set.ctl.joy.d') + '</small></div>' +
+      (window.EchoNative && EchoNative.setOrientation ? '<div class="set"><label>' + tr('g.set.or') + '</label><div class="seg">' +
+        ['portrait', 'landscape', 'auto'].map(m => '<button class="' + ((st.orient || 'portrait') === m ? 'on' : '') + '" data-act="setOrient" data-m="' + m + '">' + tr('g.set.or.' + m) + '</button>').join('') +
+        '</div><small>' + tr('g.set.or.d') + '</small></div>' : '') +
+      '<div class="set"><label>' + tr('g.set.sfx') + '</label><div class="seg"><button class="' + (st.sfx ? 'on' : '') + '" data-act="sfx" data-v="1">' + tr('g.set.on') + '</button><button class="' + (st.sfx ? '' : 'on') + '" data-act="sfx" data-v="0">' + tr('g.set.off') + '</button></div></div>' +
+      '<div class="set"><label>' + tr('g.set.mu') + '</label><div class="seg">' + ['off', 'low', 'mid', 'high'].map(v => '<button class="' + ((st.music || 'mid') === v ? 'on' : '') + '" data-act="setMusic" data-v="' + v + '">' + tr('g.set.mu.' + v) + '</button>').join('') + '</div></div>' +
       // 2026-11-19（给所有人用）：能力检测和分级（placement.js）、界面语言（i18n.js）、谁在学（孩子 / 自己学）
       (window.EchoPlace ? EchoPlace.settingsRow() : '') +
       (window.EchoI18n ? '<div class="set" id="set-ui"><label>' + trh('place.set.ui') + '</label><div class="seg">' + EchoI18n.LANGS.map(l => '<button class="' + ((st.ui || 'zh') === l.id ? 'on' : '') + '" data-act="setUi" data-l="' + l.id + '">' + esc(l.name) + '</button>').join('') + '</div>' +
@@ -2710,63 +3999,74 @@
       '<div class="set" id="set-learner"><label>' + trh('place.set.learner') + '</label><div class="seg">' + [['kid', 'place.learner.kid'], ['open', 'place.learner.open']].map(([m, k]) => '<button class="' + ((kidMode() ? 'kid' : 'open') === m ? 'on' : '') + '" data-act="setLearner" data-m="' + m + '">' + trh(k) + '</button>').join('') +
         '</div><small>' + trh('place.learner.' + (kidMode() ? 'kid' : 'open') + '.note') + '</small></div>' +
       parentHTML() +
-      '<p class="set-ver">' + esc(verText()) + ' · <button class="link" data-act="suDoc" data-doc="licenses">开源许可与致谢</button></p>' +
-      '<button class="btn ghost wide" data-act="close">完成</button>');
+      '<p class="set-ver">' + esc(verText()) + ' · <button class="link" data-act="suDoc" data-doc="licenses">' + tr('g.set.lic') + '</button></p>' +
+      '<button class="btn ghost wide" data-act="close">' + tr('place.done') + '</button>');
   }
   // 「🔒 家长设置」：默认收起来；看可以随便看，改要家长密码（parentOk）
   function parentHTML() {
     const st = S.settings, c = limitCfg(), ps = pinState(), nc = window.EchoTalk && EchoTalk.concerns ? EchoTalk.concerns() : 0;
     const cloud = !!(window.EchoTalk && EchoTalk.cloudSR && EchoTalk.cloudSR()), pk = pushKind(st.push);
     const b = [], kid = kidMode();   // 「自己学」（青少年 / 成人）：没有学习锁和冒险限时这两行，这一块也不叫「家长设置」、不要密码
-    if (kid) b.push('<div class="set"><label>先学习再冒险</label><div class="seg">' +
-      [[true, '🔒 开（推荐）'], [false, '关']].map(([m, n]) => '<button class="' + ((st.gate !== false) === m ? 'on' : '') + '" data-act="setGate" data-m="' + (m ? 1 : 0) + '">' + n + '</button>').join('') +
-      '</div><small>开着时，每天先做完每日复习、用英语和岛民聊一聊（用语音说满 6 句，或者完成一个小目标），才能去怪兽冒险。关掉要家长密码，关过的天周报上会标出来；关着时冒险也不限时。</small></div>');
-    if (kid) b.push('<div class="set"><label>⏱️ 冒险时间</label><div class="say-row"><span class="set-v">' + esc(limText(c)) + '</span><button class="btn small ghost" data-act="limEdit">改</button></div>' +
-      '<small>只算大地图和对战的时间。时间到了不会半路掐断，等这一场战斗或这段对话结束再回首页。多做一轮复习、多完成一个聊天目标、多通关一关新练习（或拿到更多星星），每样 +10 分钟。</small></div>');
-    if (BK.length) b.push('<div class="set"><label>冒险里的英语题</label><div class="seg">' +
-      [[.6, '多出课本'], [.3, '少量课本'], [0, '只用岛上话题']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + n + '</button>').join('') +
-      '</div><small>打怪兽、答村民的题时，有一部分换成课本正在学的单元（' + esc(curUnit().name) + '，在闯关页「📗 课本单元」里改）。</small></div>');
+    if (kid) b.push('<div class="set"><label>' + tr('g.set.gate') + '</label><div class="seg">' +
+      [[true, tr('g.set.gate.on')], [false, tr('g.set.off')]].map(([m, n]) => '<button class="' + ((st.gate !== false) === m ? 'on' : '') + '" data-act="setGate" data-m="' + (m ? 1 : 0) + '">' + n + '</button>').join('') +
+      '</div><small>' + tr('g.set.gate.d') + '</small></div>');
+    if (kid) b.push('<div class="set"><label>' + tr('g.set.lim') + '</label><div class="say-row"><span class="set-v">' + esc(limText(c)) + '</span><button class="btn small ghost" data-act="limEdit">' + tr('g.set.edit') + '</button></div>' +
+      '<small>' + tr('g.set.lim.d') + '</small></div>');
+    if (BK.length) b.push('<div class="set"><label>' + tr('g.set.mix') + '</label><div class="seg">' +
+      [[.6, 'a'], [.3, 'b'], [0, 'c']].map(([m, n]) => '<button class="' + (S.book.mix === m ? 'on' : '') + '" data-act="setBookMix" data-m="' + m + '">' + tr('g.set.mix.' + n) + '</button>').join('') +
+      '</div><small>' + trh('g.set.mix.d', { unit: unitTxt(curUnit()) }) + '</small></div>');
     if (window.EchoWorld && EchoWorld.storyZhHTML) b.push(EchoWorld.storyZhHTML());
-    if (window.EchoNative) b.push('<div class="set"><label>🗣️ AI 聊天和口语打分</label><div class="say-row"><span class="set-v">' + (cloud ? '✅ 已连上阿里云' : '⚠️ 还没有 AI 密钥') + '</span><button class="btn small ghost" data-act="talk_cfg">' + (cloud ? '换密钥' : '粘贴密钥') + '</button></div>' +
-      '<small>' + (cloud ? '用阿里云百炼的 API Key，只存在这台手机里，装新版也不用重填。' : '请家长在这里粘贴 AI 密钥（阿里云百炼的 API Key），只存在这台手机里。设好以后能和岛民用英语聊天，口语题也会自动打分。') + '</small></div>');
-    b.push('<div class="set"><label>闯关练习：全部关卡直接开放</label><div class="seg"><button class="' + (st.unlockAll ? '' : 'on') + '" data-act="unlock" data-v="0">按顺序解锁</button><button class="' + (st.unlockAll ? 'on' : '') + '" data-act="unlock" data-v="1">全部直接开放</button></div>' +
-      '<small>只对「📚 闯关练习」有效（想跟着课本直接练某个单元时打开）；冒险里的徽章、守卫、回声技能不受影响。</small></div>');
-    b.push('<div class="set"><label>📲 学习日报发到微信</label><div class="say-row"><span class="set-v">' + (pk ? '✅ 每天 20 点以后发（' + (pk === 'wecom' ? '企业微信群机器人' : 'PushPlus') + '）' : '没开（默认不发）') + '</span><button class="btn small ghost" data-act="pushEdit">设置</button></div></div>');
-    if (window.EchoTalk) b.push('<div class="set"><label>👪 聊天安全</label><div class="say-row"><button class="btn small ghost" data-act="talk_concerns">看需要注意的聊天' + (nc ? '（' + nc + ' 段）' : '') + '</button><button class="btn small ghost" data-act="talk_privacy">ℹ️ 家长须知</button></div>' +
-      '<small>孩子在聊天里说到难过、被欺负、有危险时，那段聊天会标出来，输家长密码能看全文。</small></div>');
-    b.push('<div class="set"><label>🔑 家长密码</label>' + (ps.native && ps.sales
-      ? '<div class="say-row"><span class="set-v">' + (ps.has ? '已经设好了' : '还没设') + '</span><button class="btn small ghost" data-act="pinChange">' + (ps.has ? '改密码' : '设密码') + '</button></div>' +
-        '<small>首次设置时家长设的 4 位密码（手机里只存加了随机盐的哈希），输错 5 次锁 10 分钟。忘了密码：先「💾 导出存档」（不用密码）→ 在手机设置里清除这个 App 的数据 → 重新走一遍家长设置、设新密码 → 「从备份恢复」，进度就回来了（手机「下载/EchoIsland」里每天也有自动备份）。</small>'
+    if (window.EchoNative) b.push('<div class="set"><label>' + tr('g.set.ai') + '</label><div class="say-row"><span class="set-v">' + tr(cloud ? 'g.set.ai.on' : 'g.set.ai.off') + '</span><button class="btn small ghost" data-act="talk_cfg">' + tr(cloud ? 'g.set.ai.change' : 'g.set.ai.paste') + '</button></div>' +
+      '<small>' + tr(cloud ? 'g.set.ai.on.d' : 'g.set.ai.off.d') + '</small></div>');
+    b.push('<div class="set"><label>' + tr('g.set.unl') + '</label><div class="seg"><button class="' + (st.unlockAll ? '' : 'on') + '" data-act="unlock" data-v="0">' + tr('g.set.unl.0') + '</button><button class="' + (st.unlockAll ? 'on' : '') + '" data-act="unlock" data-v="1">' + tr('g.set.unl.1') + '</button></div>' +
+      '<small>' + tr('g.set.unl.d') + '</small></div>');
+    b.push('<div class="set"><label>' + tr('g.set.push') + '</label><div class="say-row"><span class="set-v">' + (pk ? tr('g.set.push.on', { k: pk === 'wecom' ? tr('g.set.push.wecom') : 'PushPlus' }) : tr('g.set.push.off')) + '</span><button class="btn small ghost" data-act="pushEdit">' + tr('g.set.push.btn') + '</button></div></div>');
+    if (window.EchoTalk) b.push('<div class="set"><label>' + tr('g.set.saf') + '</label><div class="say-row"><button class="btn small ghost" data-act="talk_concerns">' + (nc ? tr('g.set.saf.n', { n: nc }) : tr('g.set.saf.look')) + '</button><button class="btn small ghost" data-act="talk_privacy">' + tr('g.set.saf.info') + '</button></div>' +
+      '<small>' + tr('g.set.saf.d') + '</small></div>');
+    b.push('<div class="set"><label>' + tr('g.set.pin') + '</label>' + (ps.native && ps.sales
+      ? '<div class="say-row"><span class="set-v">' + tr(ps.has ? 'g.set.pin.has' : 'g.set.pin.none') + '</span><button class="btn small ghost" data-act="pinChange">' + tr(ps.has ? 'g.set.pin.change' : 'g.set.pin.set') + '</button></div>' +
+        '<small>' + tr('g.set.pin.d1') + '</small>'
       : ps.native
-      ? '<small>' + (ps.has ? '打包时设好的 4 位密码，输错 5 次锁 10 分钟。要换密码：改 echo.properties 的 PARENT_PIN，重新打包安装（存档不会丢）。' : '⚠️ 这个安装包没有设家长密码，上面这些都改不了。请家长在 echo.properties 里写 PARENT_PIN（4 位数字），重新打包安装。') + '</small>'
-      : '<div class="say-row"><span class="set-v">' + (ps.has ? '已经设好了' : '还没设（第一次要用时由家长来设）') + '</span>' + (ps.has ? '<button class="btn small ghost" data-act="pinChange">改密码</button>' : '') + '</div><small>输错 5 次锁 10 分钟。</small>') + '</div>');
+      ? '<small>' + tr(ps.has ? 'g.set.pin.nat.has' : 'g.set.pin.nat.none') + '</small>'
+      : '<div class="say-row"><span class="set-v">' + tr(ps.has ? 'g.set.pin.has' : 'g.set.pin.web.none') + '</span>' + (ps.has ? '<button class="btn small ghost" data-act="pinChange">' + tr('g.set.pin.change') + '</button>' : '') + '</div><small>' + tr('g.set.pin.lock') + '</small>') + '</div>');
     // 销售版：家庭定制（昵称、形象、伙伴、家人）、设备检查、儿童隐私说明（家长首次设置向导 setup.js 里做过的，这里能改）
     if (window.EchoSetup && EchoSetup.sales()) {
       const fm = EchoSetup.members(), F = st.family || {};
-      if (F.who !== 'open') b.push('<div class="set"><label>👪 家庭定制</label><div class="say-row"><span class="set-v">' + esc((S.player && S.player.name) || F.nick || '（没起名）') + (fm.length ? ' · ' + esc(fm.map(m => m.call).join('、')) : '') + '</span><button class="btn small ghost" data-act="suFamily">改</button></div>' +
-        '<small>孩子的英文昵称和形象、博士包里的 3 只伙伴（开始新冒险时生效）、家里的人。只存在这台手机里。</small></div>');
-      b.push('<div class="set"><label>🩺 设备检查</label><div class="say-row"><span class="set-v">' + (F.device ? (F.device.ok === 'ok' ? '✅ 合格' : F.device.ok === 'warn' ? '⚠️ 能玩' : '❌ 不合格') : '没做过') + '</span><button class="btn small ghost" data-act="suDevice">再检查一次</button></div></div>');
-      b.push('<div class="set"><label>📄 隐私和同意</label><div class="say-row"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">儿童隐私说明</button><button class="btn small ghost" data-act="suDoc" data-doc="consent">监护人同意书</button></div>' +
-        (F.consent && F.consent.at ? '<small>监护人 ' + esc(new Date(F.consent.at).toLocaleDateString('zh-CN')) + ' 同意过（' + esc(F.consent.v || '') + ' 版）。要撤回同意：在上面「AI 聊天和口语打分」里删掉密钥（就不再连 AI），或者卸载 App。</small>' : '') + '</div>');
+      if (F.who !== 'open') b.push('<div class="set"><label>' + tr('g.set.fam') + '</label><div class="say-row"><span class="set-v">' + esc((S.player && S.player.name) || F.nick || tr('g.set.fam.noname')) + (fm.length ? ' · ' + esc(fm.map(m => m.call).join(tr('g.set.sep'))) : '') + '</span><button class="btn small ghost" data-act="suFamily">' + tr('g.set.edit') + '</button></div>' +
+        '<small>' + tr('g.set.fam.d') + '</small></div>');
+      b.push('<div class="set"><label>' + tr('g.set.dev') + '</label><div class="say-row"><span class="set-v">' + (F.device ? tr(F.device.ok === 'ok' ? 'g.set.dev.ok' : F.device.ok === 'warn' ? 'g.set.dev.warn' : 'g.set.dev.bad') : tr('g.set.dev.none')) + '</span><button class="btn small ghost" data-act="suDevice">' + tr('g.set.dev.again') + '</button></div></div>');
+      b.push('<div class="set"><label>' + tr('g.set.priv') + '</label><div class="say-row"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">' + tr('g.set.priv.doc') + '</button><button class="btn small ghost" data-act="suDoc" data-doc="consent">' + tr('g.set.priv.consent') + '</button></div>' +
+        (F.consent && F.consent.at ? '<small>' + trh('g.set.priv.ok', { d: new Date(F.consent.at).toLocaleDateString(loc()), v: F.consent.v || '' }) + '</small>' : '') + '</div>');
     }
     // 存档备份（评估第 7 条）：导出（分享到微信 / 下载成文件）不用密码；从备份恢复要家长密码
     // （有没有备份只看在不在，不一份份解开来读：存档大了以后，设置页每点一下都重画，读三份备份要一两百毫秒）
     const meta = bakMeta(), nb = BAK.filter(k => lsGet(k)).length;
-    b.push('<div class="set"><label>💾 存档备份</label><div class="say-row"><button class="btn small ghost" data-act="bakExport">📤 导出存档</button><button class="btn small ghost" data-act="bakRestore">🗂️ 从备份恢复</button></div>' +
-      '<small>每天第一次打开时自动备份：这台设备上留 3 份' + (nb ? '（最近一份是 ' + esc(meta.d1 || '以前') + ' 的）' : '') +
-      (nat('backupWrite') ? '，手机「下载/EchoIsland」文件夹里留 7 份（卸载 App 也不会删）' : '') + '。「导出存档」可以发到微信里存着，换手机、重装以后用「从备份恢复」。' +
-      '存档空间已用 ' + ((RT.store || storeCheck() || { pct: 0 }).pct) + '%。</small></div>');
-    b.push('<div class="set"><label>🆕 检查新版本</label><div class="say-row"><span class="set-v">' + esc(verText()) + '</span><button class="btn small ghost" data-act="verEdit">改地址</button></div>' +
-      '<small>' + (myVer() ? (S.settings.verUrl || VER_URL0 ? '打开 App 时去看一眼有没有新版本（' + esc(S.settings.verUrl || '默认地址') + '），有就在首页提示「请家长更新」。' : '没有填地址：不检查新版本（新版本由帮您安装的人发给您）。') : '网页版总是最新的，不用检查。') + '</small></div>');
+    b.push('<div class="set"><label>' + tr('g.bak.h') + '</label><div class="say-row"><button class="btn small ghost" data-act="bakExport">' + tr('g.bak.export') + '</button><button class="btn small ghost" data-act="bakRestore">' + tr('g.bak.restore') + '</button></div>' +
+      '<small>' + tr('g.bak.d1') + (nb ? trh('g.bak.last', { d: meta.d1 || tr('g.bak.before') }) : '') +
+      (nat('backupWrite') ? tr('g.bak.dl') : '') + tr('g.bak.d2') +
+      tr('g.bak.used', { n: (RT.store || storeCheck() || { pct: 0 }).pct }) + '</small></div>');
+    b.push('<div class="set"><label>' + tr('g.ver.h') + '</label><div class="say-row"><span class="set-v">' + esc(verText()) + '</span><button class="btn small ghost" data-act="verEdit">' + tr('g.ver.edit') + '</button></div>' +
+      '<small>' + (myVer() ? (S.settings.verUrl || VER_URL0 ? trh('g.ver.on', { url: S.settings.verUrl || tr('g.ver.defaultUrl') }) : tr('g.ver.noaddr')) : tr('g.ver.web')) + '</small></div>');
     const ne = window.EchoErr ? EchoErr.count(7) : 0;
-    b.push('<div class="set"><label>🔧 出错记录</label><div class="say-row"><span class="set-v">最近 7 天 ' + ne + ' 条</span><button class="btn small ghost" data-act="errLog">看看</button></div><small>游戏出错时自动记下最近 50 条，只存在这台设备里。手机上有问题时，可以把它发给帮你装游戏的人。</small></div>');
-    b.push('<div class="set"><label>清空进度</label><button class="btn small coral" data-act="reset" id="resetbtn">清空全部进度</button><small>星星、金币、怪兽、复习记录都会清零，无法恢复。要家长密码，还要输入「清空」两个字。</small></div>');
-    return '<details class="parent" id="set-parent"' + (RT.parentOpen ? ' open' : '') + '><summary>' + (kid ? '🔒 家长设置' : trh('place.set.more')) + '</summary><div class="parent-in">' + b.join('') + '</div></details>';
+    b.push('<div class="set"><label>' + tr('g.err.h') + '</label><div class="say-row"><span class="set-v">' + tr('g.err.week', { n: ne }) + '</span><button class="btn small ghost" data-act="errLog">' + tr('g.err.look') + '</button></div><small>' + tr('g.err.d') + '</small></div>');
+    b.push('<div class="set"><label>' + tr('g.set.reset') + '</label><button class="btn small coral" data-act="reset" id="resetbtn">' + tr('g.set.reset.btn') + '</button><small>' + tr('g.set.reset.d') + '</small></div>');
+    return '<details class="parent" id="set-parent"' + (RT.parentOpen ? ' open' : '') + '><summary>' + (kid ? tr('g.set.parent') : trh('place.set.more')) + '</summary><div class="parent-in">' + b.join('') + '</div></details>';
+  }
+  // ---------- 画面风格：新画风试用（2026-11-19，老板要在 iPhone 上试，App 里没法加 ?look=new）----------
+  // world3d-open.js 打开时读一次 ?look=new / localStorage['echo-look']，结果在 EchoWorldOpen.on；这里改 localStorage（下次打开也记得），
+  // 同时把 on 跟着改，再让大地图换渲染器。画质没变时 world.js 的 ensureRenderer 不会重建，所以先把现在那个渲染器的 tier 清掉：
+  // 在大地图上就当场换（EchoWorld.setGfx，和改画质一样），不在就等下次进地图时换。默认经典，不碰的人一切照旧
+  function lookOn() { return !!(window.EchoWorldOpen && EchoWorldOpen.on); }
+  function lookApply(on) {
+    if (window.EchoWorldOpen) EchoWorldOpen.on = !!on;
+    if (!window.EchoWorld) return;
+    try { const d = EchoWorld._debug ? EchoWorld._debug() : null; if (d && d.R) d.R.tier = ''; } catch (e) { /* 还没进过大地图 */ }
+    if (EchoWorld.setGfx) EchoWorld.setGfx();
   }
   // 版本号（APK 里原生给：日期 + 短哈希，见 android/README.md）
   function verText() {
-    try { if (window.EchoNative && EchoNative.version) { const v = JSON.parse(EchoNative.version() || '{}'); if (v && v.name) return '回声岛 ' + v.name + '（' + v.code + '）'; } } catch (e) { /* 老版本的原生没有 version() */ }
-    return window.ECHO_APP ? '回声岛 安卓版' : '回声岛 网页版';
+    try { if (window.EchoNative && EchoNative.version) { const v = JSON.parse(EchoNative.version() || '{}'); if (v && v.name) return tr('g.ver.name', { name: v.name, code: v.code }); } } catch (e) { /* 老版本的原生没有 version() */ }
+    return tr(window.ECHO_APP ? 'g.ver.app' : 'g.ver.web.name');
   }
 
   // ---------- 新版本提示（家长 2026-10-07，评估第 19 条）----------
@@ -2794,15 +4094,15 @@
   function updInfo() {
     const me = myVer(), u = S.upd || {};
     if (!updNew()) { refreshBars(); return; }
-    openModal('<div class="big">🆕</div><h2>有新版本了</h2><p>现在装的是 <b>' + esc(me.name || '') + '（' + me.code + '）</b>，新版本是 <b>' + esc(u.name || '') + '（' + u.code + '）</b>。</p>' +
-      (u.notes ? '<p class="tip">更新了什么：' + esc(u.notes) + '</p>' : '') +
-      '<p>请家长把新版本覆盖安装到这台手机上（存档不会丢，安装前也可以先在设置里「导出存档」）。' + (u.url ? '下载地址：<br><b class="ver-url">' + esc(u.url) + '</b>' : '') + '</p>' +
-      '<div class="row">' + (u.url && nat('shareText') ? '<button class="btn ghost" data-act="updShare">📤 把地址发给家长</button>' : '') + '<button class="btn" data-act="close" data-focus>知道了</button></div>');
+    openModal('<div class="big">🆕</div><h2>' + tr('g.ver.new.h') + '</h2>' + trh('g.ver.new.p', { me: me.name || '', mc: me.code, ne: u.name || '', nc: u.code }) +
+      (u.notes ? trh('g.ver.new.notes', { notes: u.notes }) : '') +
+      '<p>' + tr('g.ver.new.how') + (u.url ? trh('g.ver.new.url', { url: u.url }) : '') + '</p>' +
+      '<div class="row">' + (u.url && nat('shareText') ? '<button class="btn ghost" data-act="updShare">' + tr('g.ver.share') + '</button>' : '') + '<button class="btn" data-act="close" data-focus>' + tr('g.ok') + '</button></div>');
   }
   function verSheet() {
-    openModal('<h2>🆕 检查新版本的地址</h2><p>打开 App 时去这个地址看有没有新版本（一个 version.json 文件）。' + (VER_URL0 ? '留空就用默认地址：</p><p class="tip ver-url">' + esc(VER_URL0) + '</p>' : '留空就不检查。</p>') +
+    openModal('<h2>' + tr('g.ver.sheet.h') + '</h2><p>' + tr('g.ver.sheet.p') + (VER_URL0 ? tr('g.ver.sheet.def') + '</p><p class="tip ver-url">' + esc(VER_URL0) + '</p>' : tr('g.ver.sheet.none') + '</p>') +
       '<input id="ver-in" class="txt-in" autocomplete="off" spellcheck="false" placeholder="https://…/version.json" value="' + esc(S.settings.verUrl || '') + '">' +
-      '<div class="row"><button class="btn ghost" data-act="setBack">返回</button><button class="btn" data-act="verSave">保存</button></div>');
+      '<div class="row"><button class="btn ghost" data-act="setBack">' + tr('g.ver.back') + '</button><button class="btn" data-act="verSave">' + tr('g.ver.save') + '</button></div>');
   }
 
   // ---------- 导出存档 / 从备份恢复（评估第 7 条）----------
@@ -2810,17 +4110,17 @@
   function exportSave() {
     save();
     const txt = JSON.stringify(S), name = saveName();
-    try { if (nat('shareFile') && EchoNative.shareFile('回声岛存档（含 AI 生成的聊天文字）', name, txt)) { toast('📤 选「微信」发给家长或者「文件传输助手」存起来'); return true; } } catch (e) { /* 换下一种 */ }
-    try { if (nat('shareText') && EchoNative.shareText('回声岛存档（含 AI 生成的聊天文字）', txt)) { toast('📤 选「微信」发给家长存起来'); return true; } } catch (e) { /* 换下一种 */ }
+    try { if (nat('shareFile') && EchoNative.shareFile(tr('g.bak.title'), name, txt)) { toast(tr('g.bak.toast.file')); return true; } } catch (e) { /* 换下一种 */ }
+    try { if (nat('shareText') && EchoNative.shareText(tr('g.bak.title'), txt)) { toast(tr('g.bak.toast.text')); return true; } } catch (e) { /* 换下一种 */ }
     // 网页版：下载成一个文件
     try {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = name;
       document.body.appendChild(a); a.click();
       setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-      toast('💾 存档下载好了：' + name);
+      toast(tr('g.bak.toast.dl', { name }));
       return true;
-    } catch (e) { toast('导出失败了'); return false; }
+    } catch (e) { toast(tr('g.bak.toast.fail')); return false; }
   }
   // 一份存档的样子：名字 · 等级 · 徽章 · 怪兽
   function saveSum(o) {
@@ -2829,15 +4129,15 @@
   }
   function restoreSheet() {
     const meta = bakMeta(), rows = [];
-    BAK.forEach((k, i) => { const o = parseSave(lsGet(k)); if (o) rows.push(['l', i, '📱 这台设备 · ' + (meta['d' + (i + 1)] || '以前'), saveSum(o)]); });
-    const pre = parseSave(lsGet(PRE)); if (pre) rows.push(['p', 0, (meta.preWhy === 'reset' ? '↩️ 清空之前的进度' : '↩️ 上次恢复之前的进度') + (meta.pre ? ' · ' + meta.pre : ''), saveSum(pre)]);
-    if (nat('backupList')) { try { JSON.parse(EchoNative.backupList() || '[]').forEach(b => rows.push(['n', b.name, '📁 下载/EchoIsland · ' + (b.date || b.name), Math.max(1, Math.round((b.size || 0) / 1024)) + ' KB'])); } catch (e) { /* 读不到就不列 */ } }
+    BAK.forEach((k, i) => { const o = parseSave(lsGet(k)); if (o) rows.push(['l', i, tr('g.bak.row.dev', { d: meta['d' + (i + 1)] || tr('g.bak.before') }), saveSum(o)]); });
+    const pre = parseSave(lsGet(PRE)); if (pre) rows.push(['p', 0, tr(meta.preWhy === 'reset' ? 'g.bak.row.reset' : 'g.bak.row.restore') + (meta.pre ? ' · ' + meta.pre : ''), saveSum(pre)]);
+    if (nat('backupList')) { try { JSON.parse(EchoNative.backupList() || '[]').forEach(b => rows.push(['n', b.name, tr('g.bak.row.dl', { d: b.date || b.name }), Math.max(1, Math.round((b.size || 0) / 1024)) + ' KB'])); } catch (e) { /* 读不到就不列 */ } }
     const list = rows.map(r => '<button class="pre-item bak-item" data-act="bakUse" data-src="' + r[0] + '" data-k="' + esc(r[1]) + '"><b>' + esc(r[2]) + '</b><span>' + esc(r[3]) + '</span></button>').join('');
-    openModal('<h2>🗂️ 从备份恢复</h2><p>选一份备份，用它替换现在的进度。现在的进度会先另存一份（恢复错了还能换回来）。</p>' +
-      '<div class="pre-list bak-list">' + (list || '<p class="tip">还没有备份。每天第一次打开游戏时会自动备份一份。</p>') + '</div>' +
-      (nat('backupPick') ? '<button class="btn small ghost wide" data-act="bakFile">📂 从文件里选（换手机、重装以后用；微信里收到的存档文件先存到手机里）</button>'
-        : '<label class="btn small ghost wide bak-file">📂 选一个存档文件（.json）<input type="file" id="bak-file" accept=".json,application/json,text/plain" hidden></label>') +
-      '<button class="btn ghost wide" data-act="setBack">返回</button>');
+    openModal('<h2>' + tr('g.bak.sheet.h') + '</h2><p>' + tr('g.bak.sheet.p') + '</p>' +
+      '<div class="pre-list bak-list">' + (list || '<p class="tip">' + tr('g.bak.none') + '</p>') + '</div>' +
+      (nat('backupPick') ? '<button class="btn small ghost wide" data-act="bakFile">' + tr('g.bak.file.native') + '</button>'
+        : '<label class="btn small ghost wide bak-file">' + tr('g.bak.file.web') + '<input type="file" id="bak-file" accept=".json,application/json,text/plain" hidden></label>') +
+      '<button class="btn ghost wide" data-act="setBack">' + tr('g.ver.back') + '</button>');
   }
   function bakText(src, k) {
     if (src === 'l') return bakGet(BAK[+k]);
@@ -2847,24 +4147,24 @@
   }
   function restoreConfirm(txt, label) {
     const o = parseSave(txt);
-    if (!o) { toast('这个文件不是回声岛的存档，或者已经坏了'); return; }
-    RT.restoreTxt = txt; RT.restoreLabel = label || '备份';
-    openModal('<div class="big">🗂️</div><h2>用这份备份？</h2><p><b>' + esc(label || '') + '</b><br>' + esc(saveSum(o)) + '</p>' +
-      '<p>现在的进度（' + esc(saveSum(S)) + '）会被换掉，不过会先另存一份。</p>' +
-      '<div class="row"><button class="btn ghost" data-act="bakRestore">不了</button><button class="btn coral" data-act="bakGo">恢复</button></div>');
+    if (!o) { toast(tr('g.bak.bad')); return; }
+    RT.restoreTxt = txt; RT.restoreLabel = label || tr('g.bak.label');
+    openModal('<div class="big">🗂️</div><h2>' + tr('g.bak.use.h') + '</h2><p><b>' + esc(label || '') + '</b><br>' + esc(saveSum(o)) + '</p>' +
+      '<p>' + tr('g.bak.use.p', { cur: saveSum(S) }) + '</p>' +
+      '<div class="row"><button class="btn ghost" data-act="bakRestore">' + tr('g.bak.use.no') + '</button><button class="btn coral" data-act="bakGo">' + tr('g.bak.use.go') + '</button></div>');
   }
   function doRestore(txt, label) {
     const o = parseSave(txt);
-    if (!o) { toast('这个文件不是回声岛的存档，或者已经坏了'); return false; }
+    if (!o) { toast(tr('g.bak.bad')); return false; }
     save();
     txt = lzUnpack(txt);   // 存档本身一直是原样的 JSON（压着存的只有备份）
     const meta = bakMeta(), cur = packBig(JSON.stringify(S)); meta.pre = dayStr(); delete meta.preWhy;
     if (!lsSet(PRE, cur)) { lsDel(BAK[2]); lsSet(PRE, cur); }
     lsSet(BAK_META, JSON.stringify(meta));
-    if (!lsSet(KEY, txt)) { toast('存不进去（这台设备的空间满了？）'); return false; }
+    if (!lsSet(KEY, txt)) { toast(tr('g.bak.full')); return false; }
     lsDel(POS);   // 位置记录是跟着换掉的那份存档的
     RT.noSave = true;   // 马上重新打开：别让现在的进度又存回去
-    try { sessionStorage.setItem('echo-restored', label || '备份'); } catch (e) { /* 忽略 */ }
+    try { sessionStorage.setItem('echo-restored', label || tr('g.bak.label')); } catch (e) { /* 忽略 */ }
     closeModal();
     setTimeout(() => location.reload(), 50);
     return true;
@@ -2874,22 +4174,22 @@
     const d = (e && e.detail) || {};
     if (!RT.pickWait) return;
     RT.pickWait = false;
-    if (d.ok && d.text) restoreConfirm(d.text, '📂 ' + (d.name || '选的文件'));
-    else if (d.error && d.error !== 'cancel') toast('读不了这个文件（' + d.error + '）');
+    if (d.ok && d.text) restoreConfirm(d.text, '📂 ' + (d.name || tr('g.bak.picked')));
+    else if (d.error && d.error !== 'cancel') toast(tr('g.bak.readfail', { e: d.error }));
   });
   // 出错记录（家长设置里看；可以发给帮忙的人）
   function errText() {
     const L = window.EchoErr ? EchoErr.list().reverse() : [];
     let diag = ''; try { if (nat('diag')) diag = EchoNative.diag(); } catch (e) { /* 忽略 */ }
-    return verText() + '\n' + (diag ? '原生：' + diag + '\n' : '') + L.map(x => new Date(x.t).toLocaleString('zh-CN') + ' [' + x.k + '] ' + x.m + (x.s ? ' @' + x.s : '') + (x.n > 1 ? ' ×' + x.n : '')).join('\n');
+    return verText() + '\n' + (diag ? tr('g.err.native') + diag + '\n' : '') + L.map(x => new Date(x.t).toLocaleString(loc()) + ' [' + x.k + '] ' + x.m + (x.s ? ' @' + x.s : '') + (x.n > 1 ? ' ×' + x.n : '')).join('\n');
   }
   function errSheet() {
     const L = window.EchoErr ? EchoErr.list().reverse() : [];
-    const rows = L.slice(0, 50).map(x => '<li><small>' + esc(new Date(x.t).toLocaleString('zh-CN')) + (x.n > 1 ? ' ×' + x.n : '') + '</small>' + esc(x.m) + (x.s ? ' <i>' + esc(x.s) + '</i>' : '') + '</li>').join('');
-    openModal('<h2>🔧 出错记录</h2><p class="tip">' + esc(verText()) + ' · 最近 ' + L.length + ' 条（最多留 50 条）</p>' +
-      (rows ? '<ul class="err-list">' + rows + '</ul>' : '<p>没有出错记录 👍</p>') +
-      (rows ? '<div class="say-row"><button class="btn small ghost" data-act="errShare">📤 发给帮忙的人</button><button class="btn small ghost" data-act="errClear">🧹 清空</button></div>' : '') +
-      '<button class="btn wide" data-act="setBack">返回</button>');
+    const rows = L.slice(0, 50).map(x => '<li><small>' + esc(new Date(x.t).toLocaleString(loc())) + (x.n > 1 ? ' ×' + x.n : '') + '</small>' + esc(x.m) + (x.s ? ' <i>' + esc(x.s) + '</i>' : '') + '</li>').join('');
+    openModal('<h2>' + tr('g.err.h') + '</h2><p class="tip">' + esc(verText()) + tr('g.err.recent', { n: L.length }) + '</p>' +
+      (rows ? '<ul class="err-list">' + rows + '</ul>' : '<p>' + tr('g.err.none') + '</p>') +
+      (rows ? '<div class="say-row"><button class="btn small ghost" data-act="errShare">' + tr('g.err.share') + '</button><button class="btn small ghost" data-act="errClear">' + tr('g.err.clear') + '</button></div>' : '') +
+      '<button class="btn wide" data-act="setBack">' + tr('g.ver.back') + '</button>');
   }
   // 家长首次设置做完了（setup.js）：回首页，给孩子看游戏说明（看完接着做「说一句 Hello」的小检查，家长那边测过就不用）
   function afterSetup() {
@@ -2901,45 +4201,47 @@
     else if (window.ECHO_APP && !S.micCheck && speakMode() === 'sr') setTimeout(checkSheet, 300);
   }
   function introSheet() {
-    openModal('<div class="big">🏝️</div><h2>欢迎来到回声岛！</h2>' +
-      '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用英语念咒语攻击，听懂对手的英语来防御。收服新怪兽、升级进化，打败 13 个区域的岛主拿徽章。</p>' +
-      '<p><b>📚 闯关练习</b>：📗 课本单元（适用于沪教版词汇，跟着学校的单元走）和 13 座话题小岛。每通关一关送回声球，用来收服怪兽。</p>' +
-      '<p><b>🗣️ 和岛民聊天</b>：按住话筒，用英语和岛上的人真的聊天；聊完 AI 写评语，说错的句子第二天会出现在 📕 每日复习里。</p>' +
-      '<p>🎁 每天 3 个任务，做完开宝箱 · 🔥 每天打一场就算打卡</p>' +
+    openModal('<div class="big">🏝️</div><h2>' + tr('g.intro.h') + '</h2>' +
+      trh('g.intro.p1') + trh('g.intro.p2') + trh('g.intro.p3') + trh('g.intro.p4') +
       envHTML() +
-      '<div class="row"><button class="btn ghost" data-act="testVoice">🔊 试试声音</button><button class="btn" data-act="introGo" data-focus>出发！</button></div>', { locked: true });
+      '<div class="row"><button class="btn ghost" data-act="testVoice">' + tr('g.intro.voice') + '</button><button class="btn" data-act="introGo" data-focus>' + tr('g.intro.go') + '</button></div>', { locked: true });
   }
 
   // ---------- 事件 ----------
   const num = (t, k) => +t.dataset[k];
+  // 课本的名字（选单元页的小标题）：中文界面给 book.js 的全名；别的界面语言给册名（7A……）
+  const bookName = b => (I18N && I18N.lang() !== 'zh' ? bookShort(b) : b.name);
+  // 单词 / 句子的意思；中文界面没有意思时是空串（和原来一样），别的界面语言没有意思是 null（不显示）
+  const meanTxt = it => { const m = meanOf(it); return m == null && (!I18N || I18N.lang() === 'zh') ? '' : m; };
   const ACT = {
     level: t => { SFX.tap(); levelSheet(num(t, 'w'), num(t, 'l')); },
     quizView: t => { S.book.view = t.dataset.v; save(); RT.scrollCur = true; renderHome(); },
-    bookAt: t => { const i = num(t, 'i'); if (!unitOpen(i)) return; S.book.at = i; S.book.vb = BK[i].book; save(); closeModal(); RT.scrollCur = true; renderHome(); toast('📍 现在学 ' + BK[i].bshort + ' Unit ' + BK[i].n + '，冒险里会多出它的题'); },
+    bookAt: t => { const i = num(t, 'i'); if (!unitOpen(i)) return; S.book.at = i; S.book.vb = BK[i].book; save(); closeModal(); RT.scrollCur = true; renderHome(); toast(tr('g.ev.bookat', { b: BK[i].bshort, n: BK[i].n })); },
     bookView: t => {
-      if (!bookOpen(t.dataset.b)) { const b = BOOKS.find(x => x.id === t.dataset.b) || {}; openModal('<div class="big">🔒</div><h2>' + esc(b.short || '') + '还没开放</h2><p>这台手机上开放的是这个学年的课本单元。下一学年的单元是另外的内容包，请家长联系帮您安装的人。</p><button class="btn wide" data-act="close" data-focus>知道了</button>'); return; }
+      if (!bookOpen(t.dataset.b)) { const b = BOOKS.find(x => x.id === t.dataset.b) || {}; openModal('<div class="big">🔒</div><h2>' + trh('g.ev.locked.h', { b: bookShort(b) }) + '</h2><p>' + trh('g.ev.locked.p') + '</p><button class="btn wide" data-act="close" data-focus>' + trh('g.ok') + '</button>'); return; }
       S.book.vb = t.dataset.b; save(); renderHome();
     },
     bookPick: () => {
       const ci = curIdx();
-      openModal('<h2>📗 课本学到哪个单元了？</h2><p>选好以后，闯关页会标出这个单元；怪兽冒险里的英语题也会多出这个单元的单词和句子。</p>' +
-        BOOKS.filter(b => bookOpen(b.id)).map(b => '<h3 class="pick-h">' + esc(b.name) + (b.old ? '（旧版）' : '') + '</h3><div class="fly-list">' +
+      openModal('<h2>' + trh('g.ev.pick.h') + '</h2><p>' + trh('g.ev.pick.p') + '</p>' +
+        BOOKS.filter(b => bookOpen(b.id)).map(b => '<h3 class="pick-h">' + esc(bookName(b)) + (b.old ? trh('g.ev.pick.old') : '') + '</h3><div class="fly-list">' +
           BK.map((u, i) => u.book !== b.id ? '' : '<button class="btn small ' + (i === ci ? '' : 'ghost') + '" data-act="bookAt" data-i="' + i + '">' + u.icon + ' U' + u.n + ' ' + esc(u.en) + '</button>').join('') + '</div>').join('') +
-        '<button class="btn ghost wide" data-act="close">取消</button>');
+        '<button class="btn ghost wide" data-act="close">' + trh('g.cancel') + '</button>');
     },
-    bookGram: t => { const u = WX[num(t, 'w')]; openModal('<div class="big">📐</div><h2>Unit ' + u.n + ' 语法：' + esc(u.grammar.title) + '</h2><p>' + esc(u.grammar.tip) + '</p><button class="btn wide" data-act="close" data-focus>知道了</button>'); },
-    setBookMix: t => { const m = +t.dataset.m; if (m === S.book.mix) return; parentOk('改冒险里的英语题', () => { S.book.mix = m; save(); settingsSheet(); }); },
+    // 语法提示的标题和说明是中文写的内容：英语界面没有可显示的翻译，只给个标题
+    bookGram: t => { const u = WX[num(t, 'w')], gt = gloss({ zh: u.grammar.title }), gp = gloss({ zh: u.grammar.tip }); openModal('<div class="big">📐</div><h2>' + (gt == null ? trh('g.ev.gram.h0', { n: u.n }) : trh('g.ev.gram.h', { n: u.n, t: gt })) + '</h2>' + (gp == null ? '' : '<p>' + esc(gp) + '</p>') + '<button class="btn wide" data-act="close" data-focus>' + trh('g.ok') + '</button>'); },
+    setBookMix: t => { const m = +t.dataset.m; if (m === S.book.mix) return; parentOk(tr('g.ev.why.mix'), () => { S.book.mix = m; save(); settingsSheet(); }); },
     setGate: t => {
       const on = t.dataset.m === '1';
       if (on === (S.settings.gate !== false)) return;
       const go = () => { S.settings.gate = on; if (!on) dayLog().gateOff = 1; save(); settingsSheet(); };
-      if (on) go(); else parentOk('关学习锁', go);
+      if (on) go(); else parentOk(tr('g.ev.why.gate'), go);
     },
     goAdventure: () => goHome('mon'),
     report: () => { closeModal(); reportSheet(); },
     gateTalk: () => { closeModal(); goHome('talk'); },
     // 学习锁卡片上「手机日期被改过」：家长输密码，从今天重新开始（maxDay 设成今天，周报记一笔）
-    clockReset: () => parentOk('手机日期被改过：从今天重新开始', () => { S.maxDay = dayStr(); dayLog().clockReset = 1; save(); renderHome(); toast('📅 好了，从今天重新开始'); }),
+    clockReset: () => parentOk(tr('g.ev.why.clock'), () => { S.maxDay = dayStr(); dayLog().clockReset = 1; save(); renderHome(); toast(tr('g.ev.clock.ok')); }),
     // 家长密码的数字键盘
     pinKey: t => pinKey(t.dataset.k),
     pinDel: () => { if (RT.pin) { RT.pin.buf = RT.pin.buf.slice(0, -1); pinUpd(); } },
@@ -2947,11 +4249,11 @@
     // 改家长密码：网页版和销售版的 APK 能改（销售版原生要 2 分钟内刚输对过旧密码，所以这里一律重新输一次）
     pinChange: () => {
       RT.parentUntil = 0; RT.pinPass = null;
-      const setNew = () => pinPad('改家长密码', () => { toast('🔑 家长密码改好了'); settingsSheet(); }, 'set1');
-      if (pinState().has) parentOk('改家长密码', setNew); else setNew();
+      const setNew = () => pinPad(tr('g.ev.why.pin'), () => { toast(tr('g.ev.pin.ok')); settingsSheet(); }, 'set1');
+      if (pinState().has) parentOk(tr('g.ev.why.pin'), setNew); else setNew();
     },
     // 冒险时间
-    limEdit: () => parentOk('改冒险时间', limitSheet),
+    limEdit: () => parentOk(tr('g.ev.why.lim'), limitSheet),
     limSet: t => {
       const k = t.dataset.k, v = t.dataset.v, c = S.settings.limit = limitCfg();
       c[k] = k === 'on' ? v === '1' : k === 'from' || k === 'to' ? v : +v;
@@ -2959,17 +4261,17 @@
     },
     setBack: () => settingsSheet(),   // 家长设置里的小页面「完成 / 返回」：回到设置（家长设置保持展开）
     // 日报推送
-    pushEdit: () => parentOk('改学习日报推送', pushSheet),
+    pushEdit: () => parentOk(tr('g.ev.why.push'), pushSheet),
     pushSave: () => {
       const v = (($('#push-in') || {}).value || '').trim();
-      if (v && !pushKind(v)) { toast('看不懂这个地址：要 32 位的 PushPlus token，或者 https://qyapi.weixin.qq.com/… 开头的机器人地址'); return; }
-      S.settings.push = v; S.push = { sent: '' }; save(); toast(v ? '📲 好了：每天 20 点以后发一条学习日报' : '不发日报了'); settingsSheet();
+      if (v && !pushKind(v)) { toast(tr('g.push.bad')); return; }
+      S.settings.push = v; S.push = { sent: '' }; save(); toast(v ? tr('g.push.on') : tr('g.push.off')); settingsSheet();
     },
-    pushOff: () => { S.settings.push = ''; save(); toast('不发日报了'); settingsSheet(); },
+    pushOff: () => { S.settings.push = ''; save(); toast(tr('g.push.off')); settingsSheet(); },
     pushTest: () => {
       const v = (($('#push-in') || {}).value || '').trim();
-      if (!pushKind(v)) { toast('先填好 PushPlus token 或企业微信机器人地址'); return; }
-      pushSend('回声岛：测试消息', '家长您好！以后每天晚上 8 点以后，会在这里收到孩子当天的学习小结。', v).then(ok => toast(ok ? '📲 发出去了，去微信里看看有没有收到' : '没发出去：检查一下网络和地址'));
+      if (!pushKind(v)) { toast(tr('g.push.fill')); return; }
+      pushSend(tr('g.push.test.t'), tr('g.push.test.b'), v).then(ok => toast(ok ? tr('g.push.test.ok') : tr('g.push.test.no')));
     },
     setCtl: t => { S.settings.ctl = t.dataset.m; save(); if (window.EchoWorld && EchoWorld.ctlMode) EchoWorld.ctlMode(); settingsSheet(); },
     // 界面语言（i18n.js）
@@ -2995,32 +4297,32 @@
     aiBarInfo: () => aiBarInfo(),
     storeInfo: () => storeInfo(),
     parentSet: () => { RT.parentOpen = true; settingsSheet(); setTimeout(() => { const d = $('#set-parent'); if (d) d.scrollIntoView({ block: 'start' }); }, 60); },
-    micFix: () => { try { if (nat('openAppSettings')) EchoNative.openAppSettings(); } catch (e) { /* 忽略 */ } toast('在「权限 → 麦克风」里选「允许」，再回到游戏'); },
+    micFix: () => { try { if (nat('openAppSettings')) EchoNative.openAppSettings(); } catch (e) { /* 忽略 */ } toast(tr('g.ev.micfix')); },
     micCheck: () => checkSheet(),
     chkMic: () => chkMic(),
     chkSkip: () => { if (!S.micCheck) S.micCheck = 'skip'; save(); stopListening(); closeModal(); },
     chkDone: () => closeModal(),
     // 新版本
     updInfo: () => updInfo(),
-    updShare: () => { try { if (S.upd && S.upd.url) EchoNative.shareText('回声岛有新版本', '回声岛新版本 ' + (S.upd.name || '') + '：' + S.upd.url); } catch (e) { /* 忽略 */ } },
-    verEdit: () => parentOk('改检查新版本的地址', verSheet),
+    updShare: () => { try { if (S.upd && S.upd.url) EchoNative.shareText(tr('g.ev.upd.t'), tr('g.ev.upd.b', { v: S.upd.name || '', u: S.upd.url })); } catch (e) { /* 忽略 */ } },
+    verEdit: () => parentOk(tr('g.ev.why.ver'), verSheet),
     verSave: () => {
       const v = (($('#ver-in') || {}).value || '').trim();
-      if (v && !/^https:\/\/\S+$/.test(v)) { toast('地址要以 https:// 开头'); return; }
-      S.settings.verUrl = v; S.upd = {}; save(); toast(v ? '好了，以后去新地址检查' : '用回默认地址'); settingsSheet(); verCheck();
+      if (v && !/^https:\/\/\S+$/.test(v)) { toast(tr('g.ev.ver.https')); return; }
+      S.settings.verUrl = v; S.upd = {}; save(); toast(v ? tr('g.ev.ver.new') : tr('g.ev.ver.def')); settingsSheet(); verCheck();
     },
     // 存档备份
     bakExport: () => exportSave(),
-    bakRestore: () => parentOk('从备份恢复', restoreSheet),
-    bakUse: t => { const txt = bakText(t.dataset.src, t.dataset.k); if (!txt) { toast('这份备份读不出来'); return; } restoreConfirm(txt, (t.querySelector('b') || t).textContent); },
-    bakFile: () => { RT.pickWait = true; try { EchoNative.backupPick(); } catch (e) { RT.pickWait = false; toast('打不开文件选择'); } },
+    bakRestore: () => parentOk(tr('g.ev.why.bak'), restoreSheet),
+    bakUse: t => { const txt = bakText(t.dataset.src, t.dataset.k); if (!txt) { toast(tr('g.ev.bak.bad')); return; } restoreConfirm(txt, (t.querySelector('b') || t).textContent); },
+    bakFile: () => { RT.pickWait = true; try { EchoNative.backupPick(); } catch (e) { RT.pickWait = false; toast(tr('g.ev.bak.pick')); } },
     bakGo: () => { if (RT.restoreTxt) doRestore(RT.restoreTxt, RT.restoreLabel); },
     // 出错记录
     errLog: () => errSheet(),
     errShare: () => {
       const txt = errText();
-      try { if (nat('shareText') && EchoNative.shareText('回声岛出错记录', txt)) return; } catch (e) { /* 换下一种 */ }
-      try { navigator.clipboard.writeText(txt).then(() => toast('复制好了，可以粘贴发给别人'), () => toast('复制不了')); } catch (e) { toast('复制不了'); }
+      try { if (nat('shareText') && EchoNative.shareText(tr('g.ev.err.title'), txt)) return; } catch (e) { /* 换下一种 */ }
+      try { navigator.clipboard.writeText(txt).then(() => toast(tr('g.ev.err.copied')), () => toast(tr('g.ev.err.nocopy'))); } catch (e) { toast(tr('g.ev.err.nocopy')); }
     },
     errClear: () => { if (window.EchoErr) EchoErr.clear(); errSheet(); },
     say: () => P && P.q && say(P.q.audio),
@@ -3039,7 +4341,7 @@
     hint: onHint,
     skip: onSkip,
     rate: t => onRate(num(t, 'v')),
-    playMine: () => { if (RT.recUrl) { const a = new Audio(RT.recUrl); a.play().catch(() => toast('播放录音失败')); } },
+    playMine: () => { if (RT.recUrl) { const a = new Audio(RT.recUrl); a.play().catch(() => toast(tr('g.ev.playfail'))); } },
     selfReveal: () => { P.selfReveal = true; const st = $('#st'); if (st) { st.classList.remove('mask'); st.innerHTML = wordsHTML(P.q.target); } const b = $('#hintbtn'); if (b) b.disabled = true; say(P.q.target); showSelf(false); },
     btOpt: t => onBtOpt(num(t, 'i')),
     bossGo: () => renderQ(),
@@ -3068,35 +4370,35 @@
     next: onNext,
     quit: () => {
       if (!P) { goHome(); return; }
-      openModal('<h2>要离开这一关吗？</h2><p>现在退出，这一关的进度不会保存。</p><div class="row"><button class="btn ghost" data-act="home">退出</button><button class="btn" data-act="close" data-focus>继续闯关</button></div>');
+      openModal('<h2>' + trh('g.ev.quit.h') + '</h2><p>' + trh('g.ev.quit.p') + '</p><div class="row"><button class="btn ghost" data-act="home">' + trh('g.ev.quit.yes') + '</button><button class="btn" data-act="close" data-focus>' + trh('g.ev.quit.no') + '</button></div>');
     },
     home: () => { closeModal(); goHome(); },
     retry: () => { closeModal(); const p = P; if (!p) { goHome(); return; } if (p.review) startLevel(0, 0, true); else startLevel(p.wi, p.li); },
     revive: () => {
       if (!P || S.coins < 30 || P.revived) return;
       S.coins -= 30; P.revived = true; P.hearts = 2; save(); renderHearts(); closeModal(); SFX.coin();
-      toast('❤️ 复活成功！');
+      toast(tr('g.ev.revive'));
       P.idx++; if (P.idx >= P.total) finish(); else renderQ();
     },
     review: () => {
       const r = revSummary(), all = Object.values(S.rev.items);
       const wrongs = all.filter(e => e.x > 0 && e.due).sort((a, b) => b.x - a.x).slice(0, 30);
-      const txt = e => e.k === 'free' ? [e.en, e.zh] : (() => { const w = WX[e.w], it = e.k === 'word' ? w.words[e.i] : e.k === 'sent' ? w.sents[e.i] : w.dlgs[e.i]; return e.k === 'dlg' ? [it[0] + ' → ' + it[1], ''] : [it[0], it[1]]; })();
-      const list = wrongs.map(e => { const [en, zh] = txt(e); return '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + esc(en) + '</b><span>' + esc(zh) + (e.x > 1 ? ' · 错过 ' + e.x + ' 次' : '') + '</span></button>'; }).join('');
+      const txt = e => e.k === 'free' ? [e.en, meanTxt(e)] : (() => { const w = WX[e.w], it = e.k === 'word' ? w.words[e.i] : e.k === 'sent' ? w.sents[e.i] : w.dlgs[e.i]; return e.k === 'dlg' ? [it[0] + ' → ' + it[1], ''] : [it[0], meanTxt(it)]; })();
+      const list = wrongs.map(e => { const [en, zh] = txt(e), miss = e.x > 1 ? tr('g.ev.rv.miss', { n: e.x }) : ''; return '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + esc(en) + '</b><span>' + (zh == null ? esc(miss.slice(3)) : esc(zh) + esc(miss)) + '</span></button>'; }).join('');
       const mastered = revMastered(), waiting = all.filter(e => e.due && e.due > dayStr()).length;
-      openModal('<div class="big">📕</div><h2>每日复习</h2>' +
-        '<p>' + (r.n ? '今天要复习 <b>' + r.n + '</b> 题：' + [r.wrong ? r.wrong + ' 道错题' : '', r.old ? r.old + ' 道学过的' : '', r.chat ? r.chat + ' 句 AI 聊天里学到的更好说法' : ''].filter(Boolean).join('、') + '。' : '今天的复习做完了！') +
-        '答错的题当天就复习；复习答对一次，隔 1、2、4、7、15、30 天再考一次，都对了就算掌握。冒险里答对今天到期的题也算复习。</p>' +
-        '<p class="tip">⏳ 以后会回来的 ' + waiting + ' 题 · 🏅 已经掌握 ' + mastered + ' 题</p>' +
-        (list ? '<details class="pre"><summary>📖 错题本（点一句就能听）</summary><div class="pre-list">' + list + '</div></details>' : '') +
-        '<div class="row"><button class="btn ghost" data-act="close">等会儿</button>' + (r.n ? '<button class="btn" data-act="startReview" data-focus>复习 ' + Math.min(REV_N, r.n) + ' 题</button>' : '') + '</div>');
+      openModal('<div class="big">📕</div><h2>' + trh('g.ev.rv.h') + '</h2>' +
+        '<p>' + (r.n ? trh('g.ev.rv.today', { n: r.n, list: [r.wrong ? tr('g.ev.rv.wrong', { n: r.wrong }) : '', r.old ? tr('g.ev.rv.old', { n: r.old }) : '', r.chat ? tr('g.ev.rv.chat', { n: r.chat }) : ''].filter(Boolean).join(tr('g.ev.sep')) }) : trh('g.ev.rv.done')) +
+        trh('g.ev.rv.rule') + '</p>' +
+        '<p class="tip">' + trh('g.ev.rv.tip', { a: waiting, b: mastered }) + '</p>' +
+        (list ? '<details class="pre"><summary>' + trh('g.ev.rv.sum') + '</summary><div class="pre-list">' + list + '</div></details>' : '') +
+        '<div class="row"><button class="btn ghost" data-act="close">' + trh('g.ev.rv.later') + '</button>' + (r.n ? '<button class="btn" data-act="startReview" data-focus>' + trh('g.ev.rv.go', { n: Math.min(REV_N, r.n) }) + '</button>' : '') + '</div>');
     },
     startReview: () => { closeModal(); startLevel(0, 0, true); },
     claim: t => {
       const q = S.quests.list.find(x => x.id === t.dataset.q), d = QDEF[t.dataset.q];
       if (!q || !d || q.claimed || q.p < d.goal) return;
       q.claimed = true; S.coins += d.rw; S.xp += 20; save(); SFX.coin();
-      toast('+' + d.rw + ' 金币 +20 经验', 'gold');
+      toast(tr('g.ev.claim', { c: d.rw }), 'gold');
       renderHome(); checkAch();
     },
     chest: openChest,
@@ -3106,24 +4408,25 @@
     ach: achSheet,
     settings: () => { RT.parentOpen = false; settingsSheet(); },
     testVoice: () => { ac(); primeTTS(); say('Hello! Welcome to Echo Island. Let\'s learn English together!'); },
-    setMode: t => { S.settings.mode = t.dataset.m; if (t.dataset.m === 'auto') { RT.srBroken = false; RT.noRec = false; if (!SRC) toast('这个浏览器不支持语音识别，会继续用录音自评'); } save(); settingsSheet(); },
+    setMode: t => { S.settings.mode = t.dataset.m; if (t.dataset.m === 'auto') { RT.srBroken = false; RT.noRec = false; if (!SRC) toast(tr('g.ev.nosr')); } save(); settingsSheet(); },
     setTts: t => { S.settings.tts = t.dataset.m; RT.ttsBroken = false; save(); settingsSheet(); primeTTS(); say('Hello! How are you?'); },
     setGfx: t => { S.settings.gfx = t.dataset.m; if (t.dataset.m === 'auto') S.settings.gfxAuto = ''; save(); settingsSheet(); if (window.EchoWorld) EchoWorld.setGfx(); },
+    setLook: t => { const on = t.dataset.m === 'new'; if (on === lookOn()) return; try { if (on) localStorage.setItem('echo-look', 'new'); else localStorage.removeItem('echo-look'); } catch (e) { /* 存不下：只管这一次 */ } lookApply(on); settingsSheet(); },
     sfx: t => { S.settings.sfx = t.dataset.v === '1'; save(); settingsSheet(); },
     setMusic: t => { S.settings.music = t.dataset.v; save(); musicVol(); sceneMusic(); settingsSheet(); },
     // 「全部关卡直接开放」只对闯关练习有效；打开要家长密码，关上不用
     unlock: t => {
       const on = t.dataset.v === '1', go = () => { S.settings.unlockAll = on; save(); settingsSheet(); renderHome(); };
       if (on === !!S.settings.unlockAll) return;
-      if (on) parentOk('闯关练习全部直接开放', go); else go();
+      if (on) parentOk(tr('g.ev.why.unlock'), go); else go();
     },
-    // 清空进度：家长密码 + 再输入「清空」两个字
-    reset: () => parentOk('清空全部进度', () => openModal('<div class="big">⚠️</div><h2>清空全部进度</h2><p>星星、金币、怪兽、徽章、复习记录都会清零。清空前会先另存一份，清错了可以在「从备份恢复」里找回（要家长密码）。</p>' +
-      '<p>真的要清空，请在下面输入「清空」两个字：</p><input id="reset-in" class="txt-in" autocomplete="off" aria-label="输入清空两个字">' +
-      '<div class="row"><button class="btn ghost" data-act="setBack">不清空了</button><button class="btn coral" data-act="resetGo">清空</button></div>')),
+    // 清空进度：家长密码 + 再输入「清空」两个字（英语界面：输入 reset）
+    reset: () => parentOk(tr('g.ev.why.reset'), () => openModal('<div class="big">⚠️</div><h2>' + trh('g.ev.reset.h') + '</h2><p>' + trh('g.ev.reset.p') + '</p>' +
+      '<p>' + trh('g.ev.reset.ask') + '</p><input id="reset-in" class="txt-in" autocomplete="off" aria-label="' + trh('g.ev.reset.aria') + '">' +
+      '<div class="row"><button class="btn ghost" data-act="setBack">' + trh('g.ev.reset.no') + '</button><button class="btn coral" data-act="resetGo">' + trh('g.ev.reset.go') + '</button></div>')),
     resetGo: () => {
       const i = $('#reset-in');
-      if (!i || i.value.trim() !== '清空') { toast('要输入「清空」两个字才会清空'); return; }
+      if (!i || i.value.trim().toLowerCase() !== tr('g.ev.reset.word').toLowerCase()) { toast(tr('g.ev.reset.need')); return; }
       // 设置和每周的记录（家长看的）留着；今天的记录上标一笔「清空过进度」
       // 清空前先另存一份（和「从备份恢复」之前一样存在 PRE），清错了还能找回来
       const meta = bakMeta(), cur = packBig(JSON.stringify(S)); meta.pre = dayStr(); meta.preWhy = 'reset';
@@ -3132,7 +4435,7 @@
       const keep = S.settings, weekly = S.weekly, maxDay = S.maxDay;
       S = fresh(); S.settings = keep; S.weekly = weekly; S.maxDay = maxDay; S.seenIntro = true; dayLog().reset = 1;
       if (window.EchoSetup) EchoSetup.apply(false);   // 销售版：家长设好的昵称、形象、伙伴接着用
-      save(); closeModal(); renderHome(); toast('进度已清空');
+      save(); closeModal(); renderHome(); toast(tr('g.ev.reset.done'));
     },
   };
   document.addEventListener('click', e => {
@@ -3157,10 +4460,10 @@
     // 网页版「从备份恢复」：选了一个存档文件
     if (e.target.id === 'bak-file' && e.target.files && e.target.files[0]) {
       const f = e.target.files[0];
-      if (f.size > 32 * 1024 * 1024) { toast('文件太大了，不像存档'); return; }
+      if (f.size > 32 * 1024 * 1024) { toast(tr('g.ev.bak.big')); return; }
       const rd = new FileReader();
       rd.onload = () => restoreConfirm(String(rd.result || ''), '📂 ' + f.name);
-      rd.onerror = () => toast('读不了这个文件');
+      rd.onerror = () => toast(tr('g.ev.bak.read'));
       rd.readAsText(f);
     }
   });
@@ -3219,8 +4522,10 @@
       qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML, aiTip, gate, gateCard, gateBlock, dayLog, parentOk, music, jingle, sceneMusic,
       reduced, dayStr,
       // AI 打分用不了时（评估第 3 条）：aiDown() 现在该不该给「先跳过 / 听音选」；failHint(res) 没听到时的一行提示；
-      // revLater(q 或 {en, zh}) 先跳过的题放进复习、联网后要补说；SKIP_TXT 跳过按钮上的字
-      aiDown, failHint, revLater, SKIP_TXT,
+      // revLater(q 或 {en, zh}) 先跳过的题放进复习、联网后要补说；SKIP_TXT 跳过按钮上的字（按界面语言，和 world.js 的 w.aiskip 一样）
+      aiDown, failHint, revLater, get SKIP_TXT() { return skipTxt(); },
+      // 界面语言（i18n.js）：gloss(内容) 内容在界面语言里的意思（英语界面给 null）、label(数据) { zh, en } 名字按界面语言、meanOf(单词 / 句子条目)
+      gloss, label: lbl, meanOf,
       // 大地图上的支线委托（world.js）：chatKeyBad() 聊天是不是因为密钥 / 额度聊不了（'auth' / 'quota' / ''）；
       // advBonus() 冒险限时开着没有、今天「多学换时间」换了几分钟、最多几分钟（完成委托算一个聊天目标，也换 10 分钟）
       chatKeyBad, advBonus: () => { const pi = playInfo(); return { on: pi.on, bonus: pi.bonus, max: pi.c.max || 0 }; },
@@ -3258,7 +4563,7 @@
         const cur = S.settings.storyZh || 'auto', v = t.dataset.m;
         if (!(v in ZR)) return;
         if (ZR[v] > (ZR[cur] != null ? ZR[cur] : 1)) { zf(t, e); return; }
-        parentOk('改剧情中文', () => { zf(t, e); RT.parentOpen = true; settingsSheet(); });
+        parentOk(tr('g.ev.why.zh'), () => { zf(t, e); RT.parentOpen = true; settingsSheet(); });
       };
     }
   }
@@ -3287,6 +4592,7 @@
   // night 很晚还在冒险、warn5 冒险还剩 5 分钟提醒过、stopped 冒险被叫回首页的原因、pinFail / pinLock 家长密码输错几次 / 被锁几次、
   // reset 清空过进度、pract 通关的练习关、asrN / asrSec / tipN / aiFail AI 用量和失败、sayN / saySum / spkQ / spk1 / weekN / weekOk 能力指标、
   // quests 今天在大地图上完成了几条支线委托（world.js 记；每条也算进 chatGoals）
+  // （这里存的都是数字和代码，不存界面文字；周报显示时才按界面语言翻）
   function dayLog(d) {
     d = d || dayStr();
     if (!S.log) S.log = {};
@@ -3391,30 +4697,30 @@
     if (!g.on) return '';
     const L = dayLog();
     const row = (ok, txt, act, btn) => '<div class="gate-row' + (ok ? ' ok' : '') + '">' + (ok ? '<span>✅</span>' : '<i class="todo"></i>') + '<b>' + txt + '</b>' + (ok || !act ? '' : '<button class="btn small" data-act="' + act + '">' + btn + '</button>') + '</div>';
-    const revTxt = g.revDone ? ((L.revSess || 0) ? '每日复习 · 今天做完一轮了' : '每日复习（今天没有要复习的）') : '做一轮每日复习（' + Math.min(g.due, REV_N) + ' 题）';
-    const prog = '已开口说 <em class="gate-n">' + Math.min(g.voice, g.need) + '/' + g.need + '</em> 句';
-    const chatTxt = g.chatDone ? (g.goals ? '和岛民聊天：完成了小目标' : '和岛民聊天：今天开口说了 ' + g.voice + ' 句英语')
-      : g.exWhy === 'noai' ? '和岛民聊天（AI 聊天还没开通，今天先跳过）'
-      : g.exWhy === 'daily' ? '和岛民聊天（今天的聊天时间用完了，先跳过）'
-      : g.pass ? '和岛民聊天：' + (g.passWhy === 'offline' ? '现在没网' : g.passWhy === 'daily' ? '今天的聊天时间用完了' : '今天聊天连不上') + '，先让你冒险 ' + g.passMin + ' 分钟'
-      : g.keyBad ? '和岛民聊天：' + (g.keyBad === 'quota' ? 'AI 额度用完了' : 'AI 密钥不对') + '，现在聊不了，请告诉家长（家长可以在 🔒 家长设置 里暂时关学习锁）'
-      : g.passUsed ? '用英语和岛民聊天：' + prog + '（' + (g.passWhy === 'daily' || g.chatDaily ? '明天再来聊' : '连上网说满就能接着冒险') + '）'
-      : '用英语和岛民聊天：' + prog + '，或者完成一个小目标';
+    const revTxt = g.revDone ? ((L.revSess || 0) ? trh('g.gate.rev.done') : trh('g.gate.rev.none')) : trh('g.gate.rev.todo', { n: Math.min(g.due, REV_N) });
+    const prog = { a: Math.min(g.voice, g.need), b: g.need };
+    const chatTxt = g.chatDone ? (g.goals ? trh('g.gate.chat.goal') : trh('g.gate.chat.said', { n: g.voice }))
+      : g.exWhy === 'noai' ? trh('g.gate.chat.noai')
+      : g.exWhy === 'daily' ? trh('g.gate.chat.daily')
+      : g.pass ? trh('g.gate.chat.pass', { r: tr('g.gate.why.' + (g.passWhy === 'offline' ? 'offline' : g.passWhy === 'daily' ? 'daily' : 'fail')), n: g.passMin })
+      : g.keyBad ? trh('g.gate.chat.key', { r: tr('g.gate.key.' + (g.keyBad === 'quota' ? 'quota' : 'auth')) })
+      : g.passUsed ? trh('g.gate.chat.used', { a: prog.a, b: prog.b, x: tr(g.passWhy === 'daily' || g.chatDaily ? 'g.gate.again.tmr' : 'g.gate.again.net') })
+      : trh('g.gate.chat.go', prog);
     const chatGood = g.chatOk && !g.pass, done = (g.revDone ? 1 : 0) + (chatGood ? 1 : 0);
-    const title = g.back ? '📅 手机日期好像被改过了' : g.open ? (g.pass ? '📵 今天先去冒险吧（临时 ' + g.passMin + ' 分钟）' : '🎉 今天的学习完成了，出发冒险吧！') : '📚 冒险前的 2 个小任务（完成 ' + done + '/2）';
+    const title = g.back ? trh('g.gate.t.back') : g.open ? (g.pass ? trh('g.gate.t.pass', { n: g.passMin }) : trh('g.gate.t.open')) : trh('g.gate.t.todo', { n: done });
     return '<section class="gate-card' + (g.open ? ' open' : '') + (g.pass ? ' pass' : '') + '"><h3>' + title + '</h3>' +
-      (g.back ? '<p class="tip">把手机改回「自动设置日期和时间」再来。</p><button class="link" data-act="clockReset">👪 家长：从今天重新开始</button>' : '') +
-      row(g.revDone, revTxt, 'review', '去复习') + row(chatGood, chatTxt, g.chatOn && !g.pass && !g.keyBad ? 'gateTalk' : '', '去聊天') +
+      (g.back ? '<p class="tip">' + trh('g.gate.back.tip') + '</p><button class="link" data-act="clockReset">' + trh('g.gate.back.btn') + '</button>' : '') +
+      row(g.revDone, revTxt, 'review', trh('g.gate.btn.rev')) + row(chatGood, chatTxt, g.chatOn && !g.pass && !g.keyBad ? 'gateTalk' : '', trh('g.gate.btn.chat')) +
       playLine() +
-      '<button class="link" data-act="report">📊 看这周的学习周报</button></section>';
+      '<button class="link" data-act="report">' + trh('g.gate.report') + '</button></section>';
   }
   function gateBlock() {
     const g = gate();
-    toast(g.back ? '手机日期好像被改过了，改回自动时间再来'
-      : !g.revDone ? '先把今天的每日复习做完，再去冒险'
-      : g.keyBad ? (g.keyBad === 'quota' ? 'AI 额度用完了' : 'AI 密钥不对') + '，现在没法聊天：请告诉家长'
-      : g.passUsed ? (g.chatDaily ? '临时冒险时间用完了，今天的聊天时间也用完了，明天再来吧' : '临时冒险时间用完了：连上网，用英语和岛民聊一聊就能接着玩')
-      : '先用英语和岛民聊一聊：开口说满 ' + g.need + ' 句（现在 ' + Math.min(g.voice, g.need) + ' 句），或者完成一个小目标');
+    toast(g.back ? tr('g.gate.blk.back')
+      : !g.revDone ? tr('g.gate.blk.rev')
+      : g.keyBad ? tr('g.gate.blk.key', { r: tr('g.gate.key.' + (g.keyBad === 'quota' ? 'quota' : 'auth')) })
+      : g.passUsed ? (g.chatDaily ? tr('g.gate.blk.used.daily') : tr('g.gate.blk.used'))
+      : tr('g.gate.blk.chat', { need: g.need, n: Math.min(g.voice, g.need) }));
     const c = $('.gate-card');
     if (c) { c.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' }); c.classList.remove('nudge'); void c.offsetWidth; c.classList.add('nudge'); }
   }
@@ -3448,16 +4754,16 @@
     return { on, base, bonus, used: Math.round(L.play || 0), left: Math.max(0, Math.ceil(left)), night, over: on && (night || left <= 0), wkend, c };
   }
   function limText(c) {
-    if (c.on === false) return '不限时';
-    return '上学日 ' + c.wd + ' 分钟 · 周末 ' + c.we + ' 分钟' + (hm(c.from) >= 0 ? ' · ' + c.from + '–' + clockTxt(c.to) + ' 不能冒险' : '');
+    if (c.on === false) return tr('g.adv.nolimit');
+    return tr('g.adv.lim', { wd: c.wd, we: c.we }) + (hm(c.from) >= 0 ? tr('g.adv.lim.night', { a: c.from, b: clockTxt(c.to) }) : '');
   }
   // 首页学习锁卡片上的一行：还能冒险几分钟 / 时间用完了 / 太晚了
   function playLine() {
     const pi = playInfo(), c = pi.c;
     if (!pi.on || !(S.mon && S.mon.box || []).length) return '';
-    const t = pi.night ? '🌙 ' + c.from + ' 到早上 ' + clockTxt(c.to) + ' 不能冒险'
-      : pi.over ? '⏰ 今天的冒险时间用完了' + (pi.bonus < (c.max || 0) ? '（多学一点能换时间）' : '')
-      : '🕹️ 今天还能冒险 <b>' + pi.left + '</b> 分钟' + (pi.bonus ? '（含多学奖励 ' + pi.bonus + ' 分钟）' : '');
+    const t = pi.night ? trh('g.adv.line.night', { a: c.from, b: clockTxt(c.to) })
+      : pi.over ? trh('g.adv.line.over') + (pi.bonus < (c.max || 0) ? trh('g.adv.line.more') : '')
+      : trh('g.adv.line.left', { n: pi.left }) + (pi.bonus ? trh('g.adv.line.bonus', { n: pi.bonus }) : '');
     return '<p class="gate-time' + (pi.over ? ' over' : '') + '">' + t + '</p>';
   }
   const advLimitWhy = () => { const pi = playInfo(); return !pi.on ? '' : pi.night ? 'night' : pi.over ? 'time' : ''; };
@@ -3479,7 +4785,7 @@
     if (why) { stopSheet(why, true); return false; }
     if (g.pass && !dayLog().passAt) {
       const L = dayLog(); L.passAt = Date.now(); L.passWhy = g.passWhy; save();
-      toast('📵 ' + (g.passWhy === 'offline' ? '今天没网' : g.passWhy === 'daily' ? '今天的聊天时间用完了' : '今天聊天连不上') + '：先让你冒险 ' + PASS_MIN + ' 分钟');
+      toast(tr('g.adv.pass.toast', { r: tr('g.adv.pass.' + (g.passWhy === 'offline' ? 'offline' : g.passWhy === 'daily' ? 'daily' : 'fail')), n: PASS_MIN }));
     }
     return true;
   }
@@ -3487,13 +4793,13 @@
     const pi = playInfo(), c = pi.c;
     const more = (c.max || 0) - pi.bonus;
     const H = {
-      night: ['🌙', '该睡觉啦！', c.from + ' 到早上 ' + clockTxt(c.to) + ' 不能冒险。怪兽们都睡着了，明天再来吧！'],
-      time: ['⏰', '今天的冒险时间到啦！', '今天冒险了 ' + pi.used + ' 分钟，怪兽们也要休息了。' + (entering ? '' : '进度都存好了，') + '明天再来！'],
-      pass: ['📵', '临时冒险时间到了', '今天没网（或者聊天连不上），先让你冒险了 ' + PASS_MIN + ' 分钟。连上网，用英语和岛民聊一聊，就能接着冒险。'],
-    }[why] || ['⏰', '先休息一下吧', ''];
+      night: ['🌙', trh('g.adv.stop.night.h'), trh('g.adv.stop.night.p', { a: c.from, b: clockTxt(c.to) })],
+      time: ['⏰', trh('g.adv.stop.time.h'), trh(entering ? 'g.adv.stop.time.in' : 'g.adv.stop.time.out', { n: pi.used })],
+      pass: ['📵', trh('g.adv.stop.pass.h'), trh('g.adv.stop.pass.p', { n: PASS_MIN })],
+    }[why] || ['⏰', trh('g.adv.stop.def'), ''];
     openModal('<div class="big">' + H[0] + '</div><h2>' + H[1] + '</h2><p>' + H[2] + '</p>' +
-      (why === 'time' && more > 0 ? '<p class="tip">想多玩一会儿？多做一轮复习、多完成一个聊天目标、或者多通关一关新练习（或拿到更多星星），每样能换 10 分钟（今天还能换 ' + more + ' 分钟）。</p>' : '') +
-      '<button class="btn wide" data-act="close" data-focus>好的</button>');
+      (why === 'time' && more > 0 ? '<p class="tip">' + trh('g.adv.stop.more', { n: more }) + '</p>' : '') +
+      '<button class="btn wide" data-act="close" data-focus>' + trh('g.adv.ok') + '</button>');
   }
   // 大地图里现在空着吗（没在说话、没在播剧情、没有弹窗、没在和岛民聊天）
   function worldIdle() {
@@ -3510,7 +4816,7 @@
     if (!S) return;
     if (RT.scr !== 'world' && RT.scr !== 'battle') { RT.advStop = ''; return; }
     const pi = playInfo(), L = dayLog();
-    if (pi.on && !pi.over && pi.left <= 5 && !L.warn5) { L.warn5 = 1; toast('⏰ 今天的冒险还剩 5 分钟，打完这一场就该休息啦'); }
+    if (pi.on && !pi.over && pi.left <= 5 && !L.warn5) { L.warn5 = 1; toast(tr('g.adv.warn5')); }
     if (!RT.advStop) RT.advStop = advStopWhy();
     if (RT.scr !== 'world' || !worldIdle()) return;
     if (RT.advStop) {
@@ -3526,14 +4832,15 @@
   function limitSheet() {
     const c = limitCfg();
     const seg = (k, list, fmt) => '<div class="seg wrap">' + list.map(v => '<button class="' + (String(c[k]) === String(v) ? 'on' : '') + '" data-act="limSet" data-k="' + k + '" data-v="' + v + '">' + fmt(v) + '</button>').join('') + '</div>';
-    openModal('<h2>⏱️ 冒险时间</h2><p>只算大地图和对战的时间（做题、复习、聊天不算）。时间到了不会半路掐断：等这一场战斗或这段对话结束，再提示回首页。</p>' +
-      '<div class="set"><label>冒险限时</label><div class="seg"><button class="' + (c.on ? 'on' : '') + '" data-act="limSet" data-k="on" data-v="1">限时（推荐）</button><button class="' + (c.on ? '' : 'on') + '" data-act="limSet" data-k="on" data-v="0">不限时</button></div></div>' +
-      (c.on ? '<div class="set"><label>上学日（周一到周五）每天</label>' + seg('wd', [30, 45, 60, 90, 120], v => v + ' 分钟') + '</div>' +
-        '<div class="set"><label>周末每天</label>' + seg('we', [45, 60, 90, 120, 180], v => v + ' 分钟') + '</div>' +
-        '<div class="set"><label>晚上几点以后不能冒险</label>' + seg('from', ['20:30', '21:00', '21:30', '22:00', ''], v => v || '不管') + '</div>' +
-        '<div class="set"><label>早上几点以后才能冒险</label>' + seg('to', ['06:30', '07:00', '07:30', '08:00'], clockTxt) + '</div>' +
-        '<div class="set"><label>多学一点换时间，每天最多</label>' + seg('max', [0, 30, 60], v => v ? '+' + v + ' 分钟' : '不奖励') + '<small>多做一轮复习、多完成一个聊天目标、多通关一关新练习（或拿到更多星星），每样 +10 分钟。</small></div>' : '') +
-      '<button class="btn wide" data-act="setBack" data-focus>完成</button>');
+    const mins = v => trh('g.adv.min', { n: v });
+    openModal('<h2>' + trh('g.adv.sheet.h') + '</h2><p>' + trh('g.adv.sheet.p') + '</p>' +
+      '<div class="set"><label>' + trh('g.adv.sheet.on') + '</label><div class="seg"><button class="' + (c.on ? 'on' : '') + '" data-act="limSet" data-k="on" data-v="1">' + trh('g.adv.sheet.lim') + '</button><button class="' + (c.on ? '' : 'on') + '" data-act="limSet" data-k="on" data-v="0">' + trh('g.adv.nolimit') + '</button></div></div>' +
+      (c.on ? '<div class="set"><label>' + trh('g.adv.sheet.wd') + '</label>' + seg('wd', [30, 45, 60, 90, 120], mins) + '</div>' +
+        '<div class="set"><label>' + trh('g.adv.sheet.we') + '</label>' + seg('we', [45, 60, 90, 120, 180], mins) + '</div>' +
+        '<div class="set"><label>' + trh('g.adv.sheet.from') + '</label>' + seg('from', ['20:30', '21:00', '21:30', '22:00', ''], v => v || trh('g.adv.sheet.any')) + '</div>' +
+        '<div class="set"><label>' + trh('g.adv.sheet.to') + '</label>' + seg('to', ['06:30', '07:00', '07:30', '08:00'], clockTxt) + '</div>' +
+        '<div class="set"><label>' + trh('g.adv.sheet.max') + '</label>' + seg('max', [0, 30, 60], v => v ? trh('g.adv.sheet.plus', { n: v }) : trh('g.adv.sheet.none')) + '<small>' + trh('g.adv.sheet.small') + '</small></div>' : '') +
+      '<button class="btn wide" data-act="setBack" data-focus>' + trh('g.adv.sheet.done') + '</button>');
   }
 
   // ---------- 家长密码（家长 2026-10-07，评估第 4 条）----------
@@ -3578,8 +4885,8 @@
     const st = pinState();
     if (st.native && !st.has && st.sales) { pinPad(why, onOk, 'set1', !onOk && RT.lastAct && now - RT.lastAct.t < 2000 ? RT.lastAct : null); return false; }   // 销售版还没设密码（向导没做完）：现在设
     if (st.native && !st.has) {
-      openModal('<div class="big">🔑</div><h2>还没有家长密码</h2><p>这个安装包打包时没有设家长密码，「' + esc(why || '这个设置') + '」现在改不了。</p>' +
-        '<p class="tip">请家长在电脑上的 android/echo.properties 里写 PARENT_PIN（4 位数字），重新打包安装（存档不会丢）。</p><button class="btn wide" data-act="close" data-focus>知道了</button>');
+      openModal('<div class="big">🔑</div><h2>' + trh('g.pin.none.h') + '</h2><p>' + trh('g.pin.none.p', { w: why || tr('g.pin.this') }) + '</p>' +
+        '<p class="tip">' + trh('g.pin.none.tip') + '</p><button class="btn wide" data-act="close" data-focus>' + trh('g.ok') + '</button>');
       return false;
     }
     const redo = !onOk && RT.lastAct && now - RT.lastAct.t < 2000 ? RT.lastAct : null;
@@ -3587,29 +4894,29 @@
     return false;
   }
   function pinPad(why, onOk, mode, redo) {
-    RT.pin = { why: why || '', onOk: onOk || null, redo: redo || null, mode: mode || 'check', buf: '', first: '', msg: mode === 'set1' && !pinState().has ? '第一次用：请家长设一个 4 位数字密码，别告诉孩子' : '' };
+    RT.pin = { why: why || '', onOk: onOk || null, redo: redo || null, mode: mode || 'check', buf: '', first: '', msg: mode === 'set1' && !pinState().has ? tr('g.pin.first') : '' };
     pinRender();
   }
   function pinRender(shake) {
     const p = RT.pin; if (!p) return;
     const st = pinState(), locked = p.mode === 'check' && st.locked;
-    if (locked) p.msg = '输错太多次了，' + Math.max(1, Math.ceil(st.waitSec / 60)) + ' 分钟后再试';
-    const t = p.mode === 'set1' ? '设一个 4 位数字的家长密码' : p.mode === 'set2' ? '再输一遍，确认一下' : '请家长输入 4 位密码';
+    if (locked) p.msg = tr('g.pin.locked', { n: Math.max(1, Math.ceil(st.waitSec / 60)) });
+    const t = p.mode === 'set1' ? trh('g.pin.t.set1') : p.mode === 'set2' ? trh('g.pin.t.set2') : trh('g.pin.t.check');
     const dis = locked ? ' disabled' : '';
     const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clr', '0', 'del'].map(k =>
-      k === 'clr' ? '<button class="pin-k fn" data-act="pinClr"' + dis + '>清除</button>'
-        : k === 'del' ? '<button class="pin-k fn" data-act="pinDel" aria-label="删掉一位"' + dis + '>⌫</button>'
+      k === 'clr' ? '<button class="pin-k fn" data-act="pinClr"' + dis + '>' + trh('g.pin.clr') + '</button>'
+        : k === 'del' ? '<button class="pin-k fn" data-act="pinDel" aria-label="' + trh('g.pin.del') + '"' + dis + '>⌫</button>'
           : '<button class="pin-k" data-act="pinKey" data-k="' + k + '"' + dis + '>' + k + '</button>').join('');
-    openModal('<div class="pin"><div class="pin-ico">🔒</div><h2>家长密码</h2>' + (p.why ? '<p class="pin-why">' + esc(p.why) + '</p>' : '') +
+    openModal('<div class="pin"><div class="pin-ico">🔒</div><h2>' + trh('g.pin.h') + '</h2>' + (p.why ? '<p class="pin-why">' + esc(p.why) + '</p>' : '') +
       '<p class="pin-t">' + t + '</p><div class="pin-dots' + (shake ? ' shake' : '') + '" id="pin-dots"></div><p class="pin-msg" id="pin-msg"></p>' +
-      '<div class="pin-pad" id="pin-pad">' + keys + '</div></div><button class="btn ghost wide" data-act="close">取消</button>');
+      '<div class="pin-pad" id="pin-pad">' + keys + '</div></div><button class="btn ghost wide" data-act="close">' + trh('g.cancel') + '</button>');
     pinUpd();
   }
   function pinUpd() {
     const p = RT.pin, d = $('#pin-dots'), m = $('#pin-msg');
     if (!p || !d) return;
     d.innerHTML = range(4).map(i => '<i class="' + (i < p.buf.length ? 'on' : '') + '">' + (i < p.buf.length ? '●' : '○') + '</i>').join('');
-    d.setAttribute('aria-label', '已经输了 ' + p.buf.length + ' 位');
+    d.setAttribute('aria-label', tr('g.pin.typed', { n: p.buf.length }));
     if (m) m.textContent = p.msg || '';
   }
   function pinKey(k) {
@@ -3624,18 +4931,18 @@
     const v = p.buf; p.buf = '';
     if (p.mode === 'set1') {
       // 销售版：太好猜的密码（1111、1234……）不要
-      if (window.DEX && DEX.sales && (/^(\d)\1{3}$/.test(v) || '0123456789'.includes(v) || '9876543210'.includes(v))) { p.msg = '这个密码太好猜了，换一个吧'; pinRender(true); return; }
+      if (window.DEX && DEX.sales && (/^(\d)\1{3}$/.test(v) || '0123456789'.includes(v) || '9876543210'.includes(v))) { p.msg = tr('g.pin.weak'); pinRender(true); return; }
       p.first = v; p.mode = 'set2'; p.msg = ''; pinRender(); return;
     }
     if (p.mode === 'set2') {
-      if (v !== p.first) { p.mode = 'set1'; p.first = ''; p.msg = '两次不一样，重新设一次'; pinRender(true); return; }
-      if (!pinSave(v)) { RT.pin = null; closeModal(); toast('密码没改成：要先输对旧密码，2 分钟内改完。再点一次「改密码」'); return; }
-      toast('🔑 家长密码设好了，别告诉孩子哦');
+      if (v !== p.first) { p.mode = 'set1'; p.first = ''; p.msg = tr('g.pin.diff'); pinRender(true); return; }
+      if (!pinSave(v)) { RT.pin = null; closeModal(); toast(tr('g.pin.nosave')); return; }
+      toast(tr('g.pin.saved'));
       pinGrant(p); return;
     }
     const r = pinCheck(v);
     if (r.ok) { pinGrant(p); return; }
-    p.msg = r.locked ? '输错太多次了，' + r.min + ' 分钟后再试' : '密码不对，还能试 ' + r.left + ' 次';
+    p.msg = r.locked ? tr('g.pin.locked', { n: r.min }) : tr('g.pin.wrong', { n: r.left });
     pinRender(true);
   }
   // 核对密码；输错记进今天的日志（周报「家长密码输错几次、被锁几次」）
@@ -3670,20 +4977,26 @@
     if (p.onOk) { try { p.onOk(); } finally { done(); } return; }
     const f = p.redo && ACT[p.redo.act];
     // 找不到刚才的按钮：只放行「同一件事」30 秒（再点一次那个按钮），别的家长设置照样要密码
-    if (!f) { RT.parentUntil = 0; RT.pinPass = { why: p.why, until: Date.now() + 30e3 }; toast('密码对了，再点一次刚才的按钮'); return; }
+    if (!f) { RT.parentUntil = 0; RT.pinPass = { why: p.why, until: Date.now() + 30e3 }; toast(tr('g.pin.again')); return; }
     RT.pinPass = { why: p.why, until: Date.now() + 5000 };
     try { f(p.redo.el); } finally { RT.pinPass = null; done(); }
   }
 
   // ---------- 学习周报（孩子截图发给家长；家长 2026-10-07：要看得出能力有没有进步、要讲实话，评估第 12 条）----------
+  // [英文, 意思]：意思在英语界面是 null（不显示）；中文界面没有意思是空串
   function revText(e) {
-    if (e.k === 'free') return [e.en, e.zh];
+    if (e.k === 'free') return [e.en, meanTxt(e)];
     const w = WX[e.w], it = w && (e.k === 'word' ? w.words[e.i] : e.k === 'sent' ? w.sents[e.i] : w.dlgs[e.i]);
-    if (!it) return ['', ''];
-    return e.k === 'dlg' ? ['问：' + it[0] + ' 答：' + it[1], ''] : [it[0], it[1]];
+    if (!it) return ['', meanTxt(null)];
+    return e.k === 'dlg' ? [tr('g.rp.dlg', { q: it[0], a: it[1] }), ''] : [it[0], meanTxt(it)];
   }
   const r1 = x => Math.round(x * 10) / 10;
   const pct = x => (x == null ? null : Math.round(x * 100));
+  // 日期写成「月/日」（中文界面 11/13）；别的界面语言 13 Nov
+  const rawArr = k => (I18N ? I18N.raw(k) : []) || [];
+  const mdTxt = d => tr('g.rp.md', { mon: rawArr('g.rp.mon')[+d.slice(5, 7) - 1], dd: d.slice(8, 10) });
+  // 固定用中文写的（存进出错记录的那种，以后看还是同一句）
+  const trz = k => (I18N ? I18N.t(k, null, 'zh') : k);
   // 最近 n 天的日期（最后一天是今天）
   const daysBack = n => range(n).map(k => { const d = new Date(); d.setDate(d.getDate() - (n - 1) + k); return dayStr(d); });
   // AI 花费估算（元）：单价按阿里云百炼的公开价估（会变，只让家长心里有数）。实时聊天（其中音频另算）和文字模型的 token
@@ -3712,14 +5025,15 @@
   }
   // 每天的标记：✅ 学习任务真做完了 🟡 聊天这一项整天免了 📵 断网放行 🔓 关过学习锁 ⏰ 手机日期被改过 / 家长重设 🌙 很晚还在冒险
   const dayMarks = x => (x.gateOpen ? '✅' : x.gateEx ? '🟡' : '') + (x.passAt ? '📵' : '') + (x.gateOff ? '🔓' : '') + (x.clockBack || x.clockReset ? '⏰' : '') + (x.night ? '🌙' : '');
-  const EX_TXT = { noai: 'AI 聊天没开通', daily: '聊天时间用完了' };
+  // 聊天这一项为什么免了（日志里存的是代码 noai / daily，显示时按界面语言翻）
+  const EX_TXT = { get noai() { return tr('g.rp.ex.noai'); }, get daily() { return tr('g.rp.ex.daily'); } };
   const arrow = (a, b, eps) => (a == null || b == null ? '' : a > b + eps ? '<i class="up">↑</i>' : a < b - eps ? '<i class="dn">↓</i>' : '<i class="eq">→</i>');
   // 诊断一行：AI 失败几次（没网 / 密钥和额度）、聊天连不上几天、程序出错几条（EchoErr）、画面重开过几次（原生 diag）、版本号
   function diagLine(W0) {
     const fails = W0.sum('aiFail'), chatErr = W0.n('chatErr'), errs = window.EchoErr ? EchoErr.count(7) : 0;
     let gone = 0; try { if (nat('diag')) gone = +(JSON.parse(EchoNative.diag() || '{}').renderGone || 0); } catch (e) { /* 老版本的原生没有 diag() */ }
-    return 'AI 出错 ' + fails + ' 次' + (fails ? '（没网 ' + W0.sum('aiNet') + ' · 密钥/额度 ' + W0.sum('aiKey') + '）' : '') + (chatErr ? ' · 聊天连不上 ' + chatErr + ' 天' : '') +
-      ' · 程序出错 ' + errs + ' 条' + (W0.sum('glLost') ? ' · 3D 画面丢过 ' + W0.sum('glLost') + ' 次' : '') + (gone ? ' · 画面重开过 ' + gone + ' 次' : '') + ' · ' + verText();
+    return tr('g.rp.dg.ai', { n: fails }) + (fails ? tr('g.rp.dg.aiwhy', { a: W0.sum('aiNet'), b: W0.sum('aiKey') }) : '') + (chatErr ? tr('g.rp.dg.chat', { n: chatErr }) : '') +
+      tr('g.rp.dg.err', { n: errs }) + (W0.sum('glLost') ? tr('g.rp.dg.gl', { n: W0.sum('glLost') }) : '') + (gone ? tr('g.rp.dg.gone', { n: gone }) : '') + ' · ' + verText();
   }
   function reportSheet() {
     weeklyRoll();
@@ -3727,12 +5041,12 @@
     const L = W0.L.map(x => x || {}), sum = W0.sum;
     const first = Object.keys(S.log || {}).sort()[0] || days[6];
     const maxMin = Math.max(20, ...L.map(x => x.min || 0));
-    const wk = ['日', '一', '二', '三', '四', '五', '六'];
+    const wk = rawArr('g.rp.wd');
     const heavy = x => (x.play || 0) >= 30 && (x.play || 0) > 3 * (x.learn || 0);   // 冒险超过学习的 3 倍
     const bars = days.map((d, k) => {
       const x = L[k], lh = (x.learn || 0) / maxMin * 100, ph = (x.play || 0) / maxMin * 100, other = Math.max(0, (x.min || 0) - (x.learn || 0) - (x.play || 0)) / maxMin * 100, dt = new Date(d.replace(/-/g, '/'));
       return '<div class="rp-day"><em>' + (dayMarks(x) || '&nbsp;') + '</em><div class="rp-bar"><i class="o" style="height:' + other + '%"></i><i class="p" style="height:' + ph + '%"></i><i class="l" style="height:' + lh + '%"></i></div>' +
-        '<b' + (heavy(x) ? ' class="warn" title="冒险超过学习的 3 倍"' : '') + '>' + (d < first ? '–' : Math.round(x.min || 0)) + '</b><small>' + (k === 6 ? '今天' : '周' + wk[dt.getDay()]) + '</small></div>';
+        '<b' + (heavy(x) ? ' class="warn" title="' + trh('g.rp.heavy.tip') + '"' : '') + '>' + (d < first ? '–' : Math.round(x.min || 0)) + '</b><small>' + (k === 6 ? trh('g.rp.today') : trh('g.rp.dow', { d: wk[dt.getDay()] })) + '</small></div>';
     }).join('');
     const t0 = new Date(days[0].replace(/-/g, '/')).getTime();
     const chats = ((S.talk && S.talk.log) || []).filter(r => r.t >= t0);
@@ -3740,55 +5054,55 @@
     const chatMin = Math.round(chats.reduce((a, r) => a + (r.sec || 0), 0) / 60);
     const tips = []; chats.forEach(r => (r.eval && r.eval.tips || []).forEach(t => { if (tips.length < 3 && !tips.some(x => x.better === t.better)) tips.push(t); }));
     const items = Object.values(S.rev.items), mastered = revMastered();
-    const top = items.filter(e => e.x > 1 && e.due).sort((a, b) => b.x - a.x).slice(0, 4).map(e => { const [en, zh] = revText(e); return en ? '<li><b>' + esc(en) + '</b> <small>' + esc(zh) + ' · 错 ' + e.x + ' 次</small></li>' : ''; }).join('');
+    const top = items.filter(e => e.x > 1 && e.due).sort((a, b) => b.x - a.x).slice(0, 4).map(e => { const [en, zh] = revText(e); return en ? '<li><b>' + esc(en) + '</b> <small>' + (zh == null ? esc(tr('g.rp.miss', { n: e.x }).slice(3)) : esc(zh) + esc(tr('g.rp.miss', { n: e.x }))) + '</small></li>' : ''; }).join('');
     const cu = curUnit(), cwi = cu ? NB + curIdx() : -1, ustars = cu ? range(7).reduce((a, l) => a + (S.stars[cwi + '-' + l] || 0), 0) : 0;
     const name = S.player && S.player.name;
-    const exWhy = [...new Set(L.filter(x => x.gateEx).map(x => EX_TXT[x.gateEx] || x.gateEx))].join('、');
+    const exWhy = [...new Set(L.filter(x => x.gateEx).map(x => EX_TXT[x.gateEx] || x.gateEx))].join(tr('g.ev.sep'));
     const heavyN = L.filter(heavy).length, nc = window.EchoTalk && EchoTalk.concerns ? EchoTalk.concerns() : 0;
     const flags = [
-      W0.n('gateOff') ? '🔓 ' + W0.n('gateOff') + ' 天关过学习锁' : '',
-      W0.n('clockBack') ? '⏰ 手机日期被改过' : '',
-      W0.n('clockReset') ? '⏰ 家长重设过日期' : '',
-      W0.n('passAt') ? '📵 断网放行 ' + W0.n('passAt') + ' 天' : '',
-      W0.n('gateEx') ? '🟡 聊天免了 ' + W0.n('gateEx') + ' 天（' + exWhy + '）' : '',
-      W0.n('night') ? '🌙 ' + W0.n('night') + ' 天很晚还在冒险' : '',
-      heavyN ? '冒险超过学习 3 倍 ' + heavyN + ' 天' : '',
-      sum('pinFail') ? '🔑 家长密码输错 ' + sum('pinFail') + ' 次' + (sum('pinLock') ? '（锁住 ' + sum('pinLock') + ' 次）' : '') : '',
-      W0.n('reset') ? '🧹 清空过进度' : '',
-      W0.n('restore') ? '🗂️ 从备份恢复过存档' : '',
-      window.ECHO_APP && !(window.EchoTalk && EchoTalk.relayUrl()) ? '⚠️ AI 聊天没开通' : '',
+      W0.n('gateOff') ? tr('g.rp.f.off', { n: W0.n('gateOff') }) : '',
+      W0.n('clockBack') ? tr('g.rp.f.back') : '',
+      W0.n('clockReset') ? tr('g.rp.f.reset') : '',
+      W0.n('passAt') ? tr('g.rp.f.pass', { n: W0.n('passAt') }) : '',
+      W0.n('gateEx') ? tr('g.rp.f.ex', { n: W0.n('gateEx'), why: exWhy }) : '',
+      W0.n('night') ? tr('g.rp.f.night', { n: W0.n('night') }) : '',
+      heavyN ? tr('g.rp.f.heavy', { n: heavyN }) : '',
+      sum('pinFail') ? tr('g.rp.f.pin', { n: sum('pinFail') }) + (sum('pinLock') ? tr('g.rp.f.pinlock', { n: sum('pinLock') }) : '') : '',
+      W0.n('reset') ? tr('g.rp.f.cleared') : '',
+      W0.n('restore') ? tr('g.rp.f.restored') : '',
+      window.ECHO_APP && !(window.EchoTalk && EchoTalk.relayUrl()) ? tr('g.rp.f.noai') : '',
       // AI 打分用不了（评估第 3 条）：额度 / 密钥出问题的天数、没网的天数、先跳过了几题、麦克风被拒
-      W0.n('aiKey') ? '💳 AI 额度或密钥出问题 ' + W0.n('aiKey') + ' 天' : '',
-      W0.n('aiNet') ? '📶 AI 连不上网 ' + W0.n('aiNet') + ' 天' : '',
-      sum('aiSkip') ? '⏭️ AI 用不了先跳过 ' + sum('aiSkip') + ' 题（都在复习里）' : '',
-      sum('micDeny') ? '🎤 麦克风被拒 ' + sum('micDeny') + ' 次' : '',
+      W0.n('aiKey') ? tr('g.rp.f.key', { n: W0.n('aiKey') }) : '',
+      W0.n('aiNet') ? tr('g.rp.f.net', { n: W0.n('aiNet') }) : '',
+      sum('aiSkip') ? tr('g.rp.f.skip', { n: sum('aiSkip') }) : '',
+      sum('micDeny') ? tr('g.rp.f.mic', { n: sum('micDeny') }) : '',
     ].filter(Boolean).join(' · ');
     const pctS = x => (x == null ? '–' : pct(x) + '%');
-    const ability = '<p class="rp-ab">💪 <b>能力</b>（和上周比）：每句 ' + (W0.wpl == null ? '–' : r1(W0.wpl)) + ' 个词' + arrow(W0.wpl, W1.wpl, 0.2) +
-      ' · 一次说对 ' + pctS(W0.first) + arrow(pct(W0.first), pct(W1.first), 2) + ' · 隔一周还记得 ' + pctS(W0.week) + arrow(pct(W0.week), pct(W1.week), 2) + '</p>';
+    const ability = trh('g.rp.ab.a', { n: W0.wpl == null ? '–' : r1(W0.wpl) }) + arrow(W0.wpl, W1.wpl, 0.2) +
+      trh('g.rp.ab.b', { n: pctS(W0.first) }) + arrow(pct(W0.first), pct(W1.first), 2) + trh('g.rp.ab.c', { n: pctS(W0.week) }) + arrow(pct(W0.week), pct(W1.week), 2) + '</p>';
     const maxW = Math.max(0, ...L.map(x => x.voiceMax || 0));
-    const habit = '<p class="rp-line">🔥 不看字说对 <b>' + sum('recall') + '</b> 句' + (sum('recallW') ? '（另有 ' + sum('recallW') + ' 个词）' : '') + ' · 💡 带提示 ' + sum('aided') + ' 次 · 🗣️ 聊天开口 ' + sum('voiceLines') + ' 句' + (maxW ? '（最长一句 ' + maxW + ' 个词）' : '') +
-      (sum('chatSaidZh') ? ' · 说中文 ' + sum('chatSaidZh') + ' 句' : '') + ' · 看中文 ' + (sum('chatZh') + sum('zhTaps')) + ' 次 · 帮帮我 ' + sum('chatHelp') + ' 次</p>';
+    const habit = trh('g.rp.hb.a', { n: sum('recall') }) + (sum('recallW') ? trh('g.rp.hb.w', { n: sum('recallW') }) : '') + trh('g.rp.hb.say', { h: sum('aided'), n: sum('voiceLines') }) + (maxW ? trh('g.rp.hb.max', { n: maxW }) : '') +
+      (sum('chatSaidZh') ? trh('g.rp.hb.zh', { n: sum('chatSaidZh') }) : '') + trh('g.rp.hb.look', { a: sum('chatZh') + sum('zhTaps'), b: sum('chatHelp') }) + '</p>';
     const hist = (S.weekly || []).slice(-6);
-    const histLine = hist.length >= 2 ? '<h3>最近几周</h3><p class="rp-line">📈 学习日 ' + hist.map(r => r.d).join(' · ') + '　🔥 不看字说对 ' + hist.map(r => r.rc || 0).join(' · ') + '</p>' : '';
-    const cost = W0.cost, costTxt = cost <= 0 ? '0' : cost < 0.01 ? '不到 0.01' : cost.toFixed(2);
+    const histLine = hist.length >= 2 ? trh('g.rp.hist', { a: hist.map(r => r.d).join(' · '), b: hist.map(r => r.rc || 0).join(' · ') }) : '';
+    const cost = W0.cost, costTxt = cost <= 0 ? '0' : cost < 0.01 ? tr('g.rp.cost.lt') : cost.toFixed(2);
     const tile = (n, t) => '<div class="rp-tile"><b>' + n + '</b><small>' + t + '</small></div>';
-    openModal('<div class="report"><h2>📊 ' + (name ? esc(name) + ' 的' : '我的') + '学习周报</h2>' +
-      '<p class="rp-sub">' + days[0].slice(5).replace('-', '/') + ' – ' + days[6].slice(5).replace('-', '/') + ' · 学习日 <b>' + W0.study + '/7</b>' + (first > days[0] ? '（' + first.slice(5).replace('-', '/') + ' 开始记录）' : '') + '</p>' +
-      (flags ? '<p class="rp-warn">' + flags + '</p>' : '') +
-      (nc ? '<p class="rp-warn rp-concern">👪 有 ' + nc + ' 段聊天需要家长看看（设置 → 🔒 家长设置 → 聊天安全，要家长密码）</p>' : '') +
-      '<div class="rp-chart">' + bars + '</div><p class="rp-legend">每天几分钟：<i class="l"></i>学习 ' + Math.round(sum('learn')) + ' <i class="p"></i>冒险 ' + Math.round(sum('play')) + ' <i class="o"></i>翻菜单　✅ 完成 🟡 免聊天 📵 断网放行 🔓 关锁 ⏰ 改日期 🌙 很晚</p>' +
+    openModal('<div class="report"><h2>📊 ' + (name ? trh('g.rp.title.n', { name }) : trh('g.rp.title.me')) + '</h2>' +
+      '<p class="rp-sub">' + trh('g.rp.sub', { a: mdTxt(days[0]), b: mdTxt(days[6]), n: W0.study }) + (first > days[0] ? trh('g.rp.since', { d: mdTxt(first) }) : '') + '</p>' +
+      (flags ? '<p class="rp-warn">' + esc(flags) + '</p>' : '') +
+      (nc ? '<p class="rp-warn rp-concern">' + trh('g.rp.concern', { n: nc }) + '</p>' : '') +
+      '<div class="rp-chart">' + bars + '</div><p class="rp-legend">' + trh('g.rp.legend', { a: Math.round(sum('learn')), b: Math.round(sum('play')) }) + '</p>' +
       ability +
-      '<div class="rp-tiles">' + tile(Math.max(0, sum('levels') - sum('revSess')), '完成关卡') + tile(sum('spoken'), '开口说对') + tile(sum('review'), '复习答对') +
-      tile(chats.length, 'AI 聊天 ' + chatMin + ' 分钟' + (avg ? ' · ' + avg + '★' : '')) + tile(sum('fresh'), '新学的词句') + tile(mastered, '累计掌握') + '</div>' +
+      '<div class="rp-tiles">' + tile(Math.max(0, sum('levels') - sum('revSess')), trh('g.rp.t.levels')) + tile(sum('spoken'), trh('g.rp.t.spoken')) + tile(sum('review'), trh('g.rp.t.review')) +
+      tile(chats.length, trh('g.rp.t.chat', { m: chatMin }) + (avg ? ' · ' + avg + '★' : '')) + tile(sum('fresh'), trh('g.rp.t.fresh')) + tile(mastered, trh('g.rp.t.mastered')) + '</div>' +
       habit +
-      (cu ? '<p class="rp-line">📗 正在学 <b>' + esc(cu.bshort + ' Unit ' + cu.n + ' ' + cu.en) + '</b> · ★ ' + ustars + '/21 · 这周答错 ' + sum('wrongs') + ' 次（都进了复习）</p>' : '') +
+      (cu ? trh('g.rp.cu', { u: cu.bshort + ' Unit ' + cu.n + ' ' + cu.en, s: ustars, n: sum('wrongs') }) : '') +
       '<div class="rp-more">' +
-      (top ? '<h3>最容易错的（累计）</h3><ul class="rp-list">' + top + '</ul>' : '') +
-      (tips.length ? '<h3>聊天里 AI 改过的句子</h3><ul class="rp-list">' + tips.map(t => '<li><s>' + esc(t.said) + '</s> → <b>' + esc(t.better) + '</b></li>').join('') + '</ul>' : '') +
+      (top ? '<h3>' + trh('g.rp.top') + '</h3><ul class="rp-list">' + top + '</ul>' : '') +
+      (tips.length ? '<h3>' + trh('g.rp.tips') + '</h3><ul class="rp-list">' + tips.map(t => '<li><s>' + esc(t.said) + '</s> → <b>' + esc(t.better) + '</b></li>').join('') + '</ul>' : '') +
       histLine +
-      '</div><p class="rp-diag">💰 本周 AI 花费约 ¥' + costTxt + (window.ECHO_APP ? '' : '（网页版的聊天费用记在中转服务那边）') + ' · 🔧 ' + esc(diagLine(W0)) + '</p>' +
-      '<div class="rp-end"><span>📸 截个图发给家长吧！</span><button class="btn small ghost" data-act="close">关闭</button></div></div>');
+      '</div><p class="rp-diag">' + trh('g.rp.cost', { c: costTxt }) + (window.ECHO_APP ? '' : trh('g.rp.cost.web')) + ' · 🔧 ' + esc(diagLine(W0)) + '</p>' +
+      '<div class="rp-end"><span>' + trh('g.rp.end') + '</span><button class="btn small ghost" data-act="close">' + trh('g.close') + '</button></div></div>');
   }
 
   // ---------- 每周一行，永久保留（S.weekly）----------
@@ -3830,24 +5144,25 @@
     if (/^[0-9a-f]{32}$/i.test(v)) return 'pushplus';
     return '';
   }
+  // 给家长的日报：按界面语言写（家长看的就是孩子手机上选的那门语言）
   function daySummary(d) {
     const x = (S.log && S.log[d]) || {}, name = S.player && S.player.name, dt = new Date(d.replace(/-/g, '/')), m = n => Math.round(n || 0);
-    const status = x.gateOpen ? '✅ 学习任务完成了' : x.gateEx ? '🟡 复习做完了（聊天这一项免了：' + (EX_TXT[x.gateEx] || x.gateEx) + '）'
-      : x.passAt ? '📵 ' + (x.passWhy === 'daily' ? '聊天时间用完了（没怎么开口）' : x.passWhy === 'fail' ? '聊天连不上' : '没网') + '，先临时冒险了 ' + PASS_MIN + ' 分钟（聊天没做）' : x.gateOff ? '🔓 学习锁关着' : '⬜ 学习任务还没完成';
+    const status = x.gateOpen ? tr('g.push.s.open') : x.gateEx ? tr('g.push.s.ex', { why: EX_TXT[x.gateEx] || x.gateEx })
+      : x.passAt ? tr('g.push.s.pass', { r: tr('g.push.s.pass.' + (x.passWhy === 'daily' ? 'daily' : x.passWhy === 'fail' ? 'fail' : 'off')), n: PASS_MIN }) : x.gateOff ? tr('g.push.s.off') : tr('g.push.s.todo');
     const lines = [status,
-      '⏱️ 学习 ' + m(x.learn) + ' 分钟 · 冒险 ' + m(x.play) + ' 分钟',
-      '📕 复习答对 ' + (x.review || 0) + ' 题 · 🎤 开口说对 ' + (x.spoken || 0) + ' 次 · 🔥 不看字说对 ' + (x.recall || 0) + ' 句',
-      '🗣️ 和岛民聊天 ' + (x.chats || 0) + ' 段，用语音说了 ' + (x.voiceLines || 0) + ' 句英语' + (x.voiceMax ? '（最长一句 ' + x.voiceMax + ' 个词）' : '') + (x.chatGoals ? '，完成 ' + x.chatGoals + ' 个小目标' : ''),
+      tr('g.push.l.time', { a: m(x.learn), b: m(x.play) }),
+      tr('g.push.l.rev', { a: x.review || 0, b: x.spoken || 0, c: x.recall || 0 }),
+      tr('g.push.l.chat', { a: x.chats || 0, b: x.voiceLines || 0 }) + (x.voiceMax ? tr('g.push.l.max', { n: x.voiceMax }) : '') + (x.chatGoals ? tr('g.push.l.goals', { n: x.chatGoals }) : ''),
     ];
-    const warn = [x.gateOff ? '🔓 关过学习锁' : '', x.clockBack ? '⏰ 手机日期被改过' : '', x.night ? '🌙 很晚还在冒险' : '',
-      x.aiKey ? (x.aiKeyWhy === 'quota' ? '💳 AI 额度用完了' : x.aiKeyWhy === 'busy' ? '⏳ AI 太忙' : '🔑 AI 密钥不对') : x.aiNoKey ? '🔑 还没有 AI 密钥' : '',
-      x.aiSkip ? '⏭️ AI 用不了先跳过 ' + x.aiSkip + ' 题' : '',
-      x.pinLock ? '🔑 家长密码输错太多次被锁了' : x.pinFail ? '🔑 家长密码输错 ' + x.pinFail + ' 次' : ''].filter(Boolean);
+    const warn = [x.gateOff ? tr('g.push.w.off') : '', x.clockBack ? tr('g.push.w.back') : '', x.night ? tr('g.push.w.night') : '',
+      x.aiKey ? (x.aiKeyWhy === 'quota' ? tr('g.push.w.quota') : x.aiKeyWhy === 'busy' ? tr('g.push.w.busy') : tr('g.push.w.auth')) : x.aiNoKey ? tr('g.push.w.nokey') : '',
+      x.aiSkip ? tr('g.push.w.skip', { n: x.aiSkip }) : '',
+      x.pinLock ? tr('g.push.w.pinlock') : x.pinFail ? tr('g.push.w.pin', { n: x.pinFail }) : ''].filter(Boolean);
     if (warn.length) lines.push('⚠️ ' + warn.join(' · '));
     const nc = window.EchoTalk && EchoTalk.concerns ? EchoTalk.concerns() : 0;
-    if (nc) lines.push('👪 有 ' + nc + ' 段聊天需要家长看看（游戏里：设置 → 🔒 家长设置 → 聊天安全）');
+    if (nc) lines.push(tr('g.push.l.concern', { n: nc }));
     lines.push('—— ' + verText());
-    return { title: '回声岛日报 ' + d.slice(5).replace('-', '/') + '（周' + '日一二三四五六'[dt.getDay()] + '）' + (name ? ' · ' + name : ''), text: lines.join('\n') };
+    return { title: tr('g.push.title', { md: mdTxt(d), dow: tr('g.rp.dow', { d: rawArr('g.rp.wd')[dt.getDay()] }) }) + (name ? ' · ' + name : ''), text: lines.join('\n') };
   }
   function pushSend(title, text, to) {
     const v = String(to != null ? to : S.settings.push || '').trim(), kind = pushKind(v);
@@ -3874,18 +5189,36 @@
   }
   function pushSheet() {
     const v = S.settings.push || '';
-    openModal('<h2>📲 学习日报发到微信</h2><p>每天晚上 8 点以后，把孩子当天的学习小结（学了多久、冒险多久、开口说了几句、学习任务完成没有）发一条到家长微信。默认不发。两种方式选一种：</p>' +
-      '<ul class="push-how"><li><b>PushPlus</b>：微信关注「pushplus 推送加」，在它的网站上复制你的 token（32 位）。</li>' +
-      '<li><b>企业微信群机器人</b>：企业微信的群 → 群设置 → 群机器人 → 添加，复制 webhook 地址（https://qyapi.weixin.qq.com/… 开头）。</li></ul>' +
-      '<input id="push-in" class="txt-in" autocomplete="off" spellcheck="false" placeholder="PushPlus token 或机器人地址" value="' + esc(v) + '">' +
-      '<p class="tip">聊天的内容不会发出去；有需要家长看看的聊天，只提示一句。没网时等联网后补发。</p>' +
-      '<div class="row"><button class="btn ghost" data-act="pushTest">发一条试试</button><button class="btn" data-act="pushSave">保存</button></div>' +
-      (v ? '<button class="btn ghost wide" data-act="pushOff">不发了</button>' : '<button class="btn ghost wide" data-act="setBack">返回</button>'));
+    openModal('<h2>' + trh('g.push.h') + '</h2><p>' + trh('g.push.p') + '</p>' +
+      '<ul class="push-how"><li>' + trh('g.push.how1') + '</li>' +
+      '<li>' + trh('g.push.how2') + '</li></ul>' +
+      '<input id="push-in" class="txt-in" autocomplete="off" spellcheck="false" placeholder="' + trh('g.push.ph') + '" value="' + esc(v) + '">' +
+      '<p class="tip">' + trh('g.push.tip') + '</p>' +
+      '<div class="row"><button class="btn ghost" data-act="pushTest">' + trh('g.push.btn.test') + '</button><button class="btn" data-act="pushSave">' + trh('g.push.btn.save') + '</button></div>' +
+      (v ? '<button class="btn ghost wide" data-act="pushOff">' + trh('g.push.btn.off') + '</button>' : '<button class="btn ghost wide" data-act="setBack">' + trh('g.push.btn.back') + '</button>'));
   }
 
   // 安卓 APK：竖屏 / 横屏 / 跟着手机转（原生那边记住，下次打开直接用）
   function applyOrient() {
     try { if (window.EchoNative && EchoNative.setOrientation) EchoNative.setOrientation(S.settings.orient || 'portrait'); } catch (e) { /* 忽略 */ }
+  }
+
+  // index.html 里写死的中文（标题、顶栏提示、导航、五个工具按钮、页脚、退出本关、「继续」）：启动时和换界面语言时按字表写一遍
+  // （函数声明：setUi 在别的段里也会调它；中文界面写出来和 index.html 里原来的字一样）
+  function shellUi() {
+    document.title = tr('g.shell.title');
+    const at = (sel, attr, key) => { const e = $(sel); if (e) e.setAttribute(attr, tr(key)); };
+    at('#topbar .me', 'aria-label', 'g.shell.pet'); at('#t-streak', 'title', 'g.shell.streak'); at('.chip.coins', 'title', 'g.shell.coins');
+    at('#tabs', 'aria-label', 'g.shell.tabs'); at('#quests', 'aria-label', 'g.shell.quests'); at('#play .x[data-act=quit]', 'aria-label', 'g.shell.quit');
+    // 工具按钮：<span>表情</span>文字<em>：只换中间那段文字
+    $$('#quiz-home .tools .tool').forEach(b => {
+      const key = { review: 'g.shell.review', shop: 'g.shell.shop', ach: 'g.shell.ach', report: 'g.shell.report', settings: 'g.shell.settings' }[b.dataset.act];
+      const tn = key && Array.from(b.childNodes).find(n => n.nodeType === 3 && n.nodeValue.trim());
+      if (tn) tn.nodeValue = tr(key);
+    });
+    const foot = $('#home .foot'); if (foot) foot.textContent = tr('g.shell.foot');
+    // 「继续」按钮：做题时 game.js 会按情况改它的字，这里只在它还是默认的「继续」时换
+    const fb = $('#fb-btn'); if (fb && ['zh', 'en'].some(l => fb.textContent === (I18N ? I18N.t('g.shell.next', null, l) : ''))) fb.textContent = tr('g.shell.next');
   }
 
   // 测试用：课本出题来源、每日复习
@@ -3930,6 +5263,7 @@
     revTrim();   // 老存档里攒了很多掌握了的聊天句子：打开时理一次
     if (S.book.cur && S.book.at < 0) { S.book.at = S.book.cur - 1; delete S.book.cur; }
     if (window.EchoI18n) EchoI18n.set(S.settings.ui || 'zh');   // 界面语言（<html lang> 也跟着换）
+    shellUi();   // index.html 里写死的字按界面语言写一遍
     applyOrient();
     trackDay();
     weeklyRoll();
@@ -3937,7 +5271,7 @@
     if (window.MonsterGame) MonsterGame.migrate();
     if (window.EchoSetup) EchoSetup.apply(false);   // 销售版：家长设好的形象、伙伴（博士的包）、昵称
     // 链接带 ?quiet：不方便说话时，所有口语任务都改成按按钮（等同设置里的「录音自评」）
-    if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast('🔇 不用说话模式：要说话的地方都变成按钮了'), 800); }
+    if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast(tr('g.boot.quiet')), 800); }
     checkStreak();
     ensureQuests();
     loadVoices();
@@ -3950,16 +5284,16 @@
     let told = false;
     if (RT.restored) {
       told = true;
-      setTimeout(() => openModal('<div class="big">🛟</div><h2>存档读不出来了</h2>' +
-        (RT.restored === 'none' ? '<p>也没找到能用的备份，只好从头开始。</p>' : '<p>别担心，已经用<b>' + esc(RT.restored) + '</b>恢复了，最多少了最近一点点进度。</p>') +
-        '<p class="tip">坏掉的那份另外存着没有删' + (RT.noSave ? '；这台设备的空间满了，这次的进度先不保存，请告诉家长' : '') + '。家长也可以在「设置 → 🔒 家长设置 → 💾 存档备份」里换一份备份。</p>' +
-        '<button class="btn wide" data-act="restoredOk" data-focus>知道了</button>'), 400);
+      setTimeout(() => openModal('<div class="big">🛟</div><h2>' + trh('g.boot.bad.h') + '</h2>' +
+        (RT.restored === 'none' ? '<p>' + trh('g.boot.bad.none') + '</p>' : '<p>' + trh('g.boot.bad.used', { w: RT.restored }) + '</p>') +
+        '<p class="tip">' + trh('g.boot.bad.tip') + (RT.noSave ? trh('g.boot.bad.full') : '') + trh('g.boot.bad.tip2') + '</p>' +
+        '<button class="btn wide" data-act="restoredOk" data-focus>' + trh('g.ok') + '</button>'), 400);
     }
     // 刚从备份恢复（restore 以后重新打开的）
     let rs = ''; try { rs = sessionStorage.getItem('echo-restored') || ''; sessionStorage.removeItem('echo-restored'); } catch (e) { /* 忽略 */ }
-    if (rs) { dayLog().restore = 1; save(); setTimeout(() => toast('🗂️ 已经从备份恢复：' + rs), 500); }
+    if (rs) { dayLog().restore = 1; save(); setTimeout(() => toast(tr('g.boot.restored', { w: rs })), 500); }
     // 渲染进程挂了、原生刚重建过 WebView（评估第 15 条）
-    try { if (nat('takeRecovered') && EchoNative.takeRecovered()) { if (window.EchoErr) EchoErr.log('app', '画面进程挂了，已经重新打开', 'native'); setTimeout(() => toast('刚才画面出了点问题，已经重新打开了，存档还在'), 600); } } catch (e) { /* 忽略 */ }
+    try { if (nat('takeRecovered') && EchoNative.takeRecovered()) { if (window.EchoErr) EchoErr.log('app', trz('g.boot.crash.log'), 'native'); setTimeout(() => toast(tr('g.boot.crash')), 600); } } catch (e) { /* 忽略 */ }
     // 销售版第一次打开：先做家长首次设置（家长密码、AI 密钥、家庭定制、设备检查），做完再给孩子看说明（afterSetup）
     if (window.EchoSetup && EchoSetup.needed()) setTimeout(() => EchoSetup.open(), 100);
     // 全新的开始（没有存档、没有进度）：先选语言、做能力检测，做完或者说「以后再测」以后再看游戏说明（afterPlace）。

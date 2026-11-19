@@ -153,7 +153,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     private func loadHome() {
         var url = WebAssets.home
         #if DEBUG
-        // 自动化测试：打开原生桥自测页（ios/www-test/selftest.html，只有调试包里有）。值是要跑的那一组：all / mic / share / pick
+        // 自动化测试：打开原生桥自测页（ios/www-test/selftest.html，只有调试包里有）。值是要跑的那一组：all / mic / share / pick / store
         if let mode = GameViewController.launchArg("-EchoSelfTest"),
            let t = URL(string: WebAssets.origin + WebAssets.testPrefix + "selftest.html?run=" + (mode.isEmpty ? "all" : mode)) { url = t }
         #endif

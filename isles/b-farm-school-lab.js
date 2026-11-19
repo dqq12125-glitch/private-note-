@@ -1,7 +1,44 @@
 // 回声岛 · 第 2–4 温馨家庭岛、校园岛、学科岛（地图、剧情、挑战馆机关）。写法见 ISLES.md
+// 界面语言：这些函数的第几个参数是台词的中文意思（内容，不进字表；英语界面用 gloss() 不显示）
+// @i18n-content-calls O:1 S:1 T:1 nar:1 speak:2 ask:2 bc:1 RS:1 K:1 talk:0 M:1 N:1 A:1 W:1 board:1 D:1 F:1 phone:1 G:1 B:1
 (function () {
   'use strict';
   const EM = window.EchoMaps, ST = window.EchoStory, L = ST.lib;
+
+  // ---------- 界面文字（i18n.js 字表；键前缀 ib.） ----------
+  // 2026-11-19 搬进来：提示条、提示、选项。台词（英文 + 中文意思）是内容，不在这里
+  const I18N = window.EchoI18n;
+  const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
+  // 数据里有 zh / en 两个名字的：按界面语言取
+  const lb = o => (I18N ? I18N.label(o) : (o && o.zh) || '');
+  // 旁白：world.js 的 whoLabel 认这个中文，显示时换成界面语言
+  const NAR = () => (I18N ? I18N.t('w.who.nar', null, 'zh') : '');
+  if (I18N) I18N.add({
+    zh: {
+      'ib.n2.tree': '🌳 树医生在北边路口的小屋；挑战馆里海龟奶奶在等你', 'ib.n2.tim': '😢 井边有个小男孩在哭，去问问他', 'ib.n2.fam': '🔎 帮蒂姆找家人：{list}',
+      'ib.n2.field': '🌾 风车田里的稻草人在动？去看看！',
+      'ib.n2g.tree': '🌳 家族树：{list}<br><small>按 A 看墙上的全家福可以再听一遍</small>', 'ib.n2g.done': '🐢 家人都找齐了！去见海龟奶奶',
+      'ib.n3.miner': '⛏️ 矿工在北边的隧道口；挑战馆在跑道南边', 'ib.n3.miner2': '⛏️ 矿工在北边的隧道口等你；挑战馆在跑道南边',
+      'ib.n3.hush': '🏫 嘘声团在红砖教学楼里（有钟楼的那栋）', 'ib.n3.lib': '📝 找人问一问：图书馆在哪儿？', 'ib.n3.lib2': '📚 图书馆在食堂旁边，去问问图书管理员',
+      'ib.n3.lab': '🔬 实验室在二楼，音乐教室旁边（走廊尽头有楼梯）', 'ib.n3.c5': '❓ 问问二楼的同学：五班在哪儿？', 'ib.n3.c52': '🏫 五班在实验室旁边，快去堵住低语！',
+      'ib.n3g.now': '🧑‍🏫 教室换座：对着黑板按 A 答题，答对开门（{n}/3）', 'ib.n3g.done': '🦉 三间教室都过了！去见猫头鹰校长',
+      'ib.n4.hall': '🐙 八爪博士在挑战馆等你', 'ib.n4.lab': '🧪 去八爪博士的实验室（镇子中间的玻璃圆顶）', 'ib.n4.dish': '📡 嘘声团在东边的卫星天线旁',
+      'ib.n4g.done': '🐙 两张课程表都对了！去见八爪博士', 'ib.n4g.now': '📅 按广播的顺序踩学科开关：第 {k} 张课程表（{n}/4）<br><small>对着墙角的喇叭按 A 可以再听一遍</small>',
+      'ib.opt.sure': '⚔️ 好呀 Sure!', 'ib.opt.next': '下次吧 Next time', 'ib.toast.items': '🧪 超级药水 +2　✨ 复活药 +1',
+    },
+    en: {
+      'ib.n2.tree': '🌳 The Tree Doctor is in the hut at the north road. Granny Turtle is waiting in the Challenge Hall', 'ib.n2.tim': '😢 A little boy is crying by the well. Go and ask him', 'ib.n2.fam': '🔎 Help Tim find his family: {list}',
+      'ib.n2.field': '🌾 Is the scarecrow in the windmill field moving? Go and look!',
+      'ib.n2g.tree': '🌳 Family tree: {list}<br><small>Press A at the family photo on the wall to hear it again</small>', 'ib.n2g.done': '🐢 You found the whole family! Go and see Granny Turtle',
+      'ib.n3.miner': '⛏️ The Miner is at the north tunnel. The Challenge Hall is south of the track', 'ib.n3.miner2': '⛏️ The Miner is waiting at the north tunnel. The Challenge Hall is south of the track',
+      'ib.n3.hush': '🏫 Hush Crew is in the red-brick school (the one with the clock tower)', 'ib.n3.lib': '📝 Ask someone: where is the library?', 'ib.n3.lib2': '📚 The library is next to the dining hall. Ask the librarian',
+      'ib.n3.lab': '🔬 The lab is upstairs, next to the music room (the stairs are at the end of the hall)', 'ib.n3.c5': '❓ Ask a student upstairs: where is Class Five?', 'ib.n3.c52': '🏫 Class Five is next to the lab. Go and stop Whisper!',
+      'ib.n3g.now': '🧑‍🏫 Seat swap: press A at the blackboard and answer. A right answer opens the door ({n}/3)', 'ib.n3g.done': '🦉 You passed all three classrooms! Go and see Principal Owl',
+      'ib.n4.hall': '🐙 Doctor Octo is waiting in the Challenge Hall', 'ib.n4.lab': '🧪 Go to Doctor Octo\'s lab (the glass dome in the middle of town)', 'ib.n4.dish': '📡 Hush Crew is by the satellite dish in the east',
+      'ib.n4g.done': '🐙 Both timetables are right! Go and see Doctor Octo', 'ib.n4g.now': '📅 Step on the subject switches in the order you hear: timetable {k} ({n}/4)<br><small>Press A at the speaker in the corner to hear it again</small>',
+      'ib.opt.sure': '⚔️ Sure!', 'ib.opt.next': 'Next time', 'ib.toast.items': '🧪 Big Potion +2   ✨ Energy Fruit +1',
+    },
+  });
 
   // ======================================================================
   //  造型（配角和路人）
@@ -43,9 +80,9 @@
   // ======================================================================
   //  第 2 岛 · 温馨家庭岛（farm：农田、篱笆、风车、小河、木屋茅草顶）
   // ======================================================================
-  EM.define('t2', {
+  EM.define('t2', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 2, name: '温馨家庭岛', en: 'Family Island', sub: '第 3 岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '#################^^#################',
       '#TTTTTTTTTTTTTTTT..TTTTTTTTTTTTTTTT#',
       '#TTTTTTTTTTTTTTTTnTTTTTTTTTTTTTTTTT#',
@@ -141,9 +178,9 @@
     ],
   });
   // 树医生的小木屋（送开路）
-  EM.define('i2A', {
+  EM.define('i2A', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 2, room: 'A', name: '树医生的小屋', en: "Tree Doctor's Hut", sub: '温馨家庭岛',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWW',
       'Wkkp_pkkW',
       'W_______W',
@@ -167,9 +204,9 @@
 
   // 挑战馆「家族树迷宫」：三间花盆迷宫，按描述找到奶奶、爸爸、妹妹，对应的机关门才开
   // 机关门从上往下编号：0 通岛主（妹妹），1 通第三间（爸爸），2 通第二间（奶奶）
-  EM.define('i2G', { markKinds: ['statue', 'statue', 'photo', 'photo', 'photo'],
+  EM.define('i2G', { markKinds: ['statue', 'statue', 'photo', 'photo', 'photo'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 2, room: 'G', name: '温馨家庭岛挑战馆', en: 'Family Hall', sub: '家族树迷宫',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWWWW',
       'WZ_____________ZW',
       'W_______________W',
@@ -223,9 +260,9 @@
   });
 
   // 农田环路（可选支线：果园、稻田、农夫训练师）
-  EM.define('r2e', {
+  EM.define('r2e', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 2, name: '农田环路', en: 'Farm Loop', sub: '温馨家庭岛东边',
-    rows: [
+    rows: [  // @i18n-content-end
       '##############################',
       '#TTTTTTTTTTTTTTTTTTTTTTTTTTTT#',
       '#TT.T.T.T.T.TT..,,,,,,,,,,oTT#',
@@ -275,9 +312,9 @@
   });
 
   // 3 号路：t2 → t3，对手在路中间第二次对战
-  EM.define('r2', {
+  EM.define('r2', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 2, name: '3 号路', en: 'Route 3', sub: '温馨家庭岛 → 校园岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '###########^^###########',
       '#TTTTTTTTTT..TTTTTTTTTT#',
       '#TT,,,,,TT.==.TT..o..TT#',
@@ -352,9 +389,9 @@
   // ======================================================================
   //  第 3 岛 · 校园岛（school：操场跑道、红砖教学楼、钟楼）
   // ======================================================================
-  EM.define('t3', {
+  EM.define('t3', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 3, name: '校园岛', en: 'Campus Island', sub: '第 4 岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '######################################',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR#',
@@ -420,9 +457,9 @@
   });
 
   // 校园岛教学楼 1 楼（剧情：问路找低语）
-  EM.define('i3A', {
+  EM.define('i3A', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 3, room: 'J', name: '教学楼 1 楼', en: 'School 1F', sub: '校园岛',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWWWWWWWWWWWW',
       'Wkkkkkkk_W_YY__YY_W____kW',
       'W_______kW________W_P_Y_W',
@@ -483,9 +520,9 @@
     ],
   });
   // 教学楼 2 楼：实验室、音乐教室、五班
-  EM.define('i3A2', { markKinds: ['board'],
+  EM.define('i3A2', { markKinds: ['board'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 3, room: 'J', name: '教学楼 2 楼', en: 'School 2F', sub: '校园岛',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWWWWWWWWWWWW',
       'W_Z_____W_P_P__YY_W_Y_Y_W',
       'W_______W_________W_____W',
@@ -526,9 +563,9 @@
 
   // 挑战馆「教室换座」：三间教室串起来，每间黑板一道题，答对这间的门开，答错回座位
   // 机关门从上往下编号：0 通校长室，1 通第三间，2 通第二间
-  EM.define('i3G', { markKinds: ['board', 'board', 'board'],
+  EM.define('i3G', { markKinds: ['board', 'board', 'board'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 3, room: 'G', name: '校园岛挑战馆', en: 'School Hall', sub: '教室换座',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWW',
       'Wk___________kW',
       'W_____________W',
@@ -570,9 +607,9 @@
   });
 
   // 山道（可选：陡坡台阶、登山训练师，山顶有莲花猫）
-  EM.define('r3m', {
+  EM.define('r3m', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 3, lv: 2, name: '书山小道', en: 'Book Mountain Path', sub: '校园岛西边',
-    rows: [
+    rows: [  // @i18n-content-end
       '############################',
       '#RRRRRRRRRRRRRRRRRRRRRRRRRR#',
       '#RR......Z....RRRRRRRRRRRRR#',
@@ -628,9 +665,9 @@
   });
 
   // 裂石隧道：t3 → r3，主路被两块裂石挡住（开路 2 级，4 枚徽章）
-  EM.define('c3', {
+  EM.define('c3', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'cave', cave: 'rock', dark: false, z: 3, lv: 2, name: '裂石隧道', en: 'Crack Tunnel', sub: '校园岛 → 学科岛',
-    rows: [
+    rows: [  // @i18n-content-end
       'XXXXXXXXXXXXXX^^XXXXXXXXXXXXXX',
       'XXXXXXXXXXXXX::::XXXXXXXXXXXXX',
       'XX:::o:XXXXX::::::XXXX::::*:XX',
@@ -679,9 +716,9 @@
   });
 
   // 4 号路：c3 → t4
-  EM.define('r3', {
+  EM.define('r3', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 3, name: '4 号路', en: 'Route 4', sub: '校园岛 → 学科岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '############^^############',
       '#TTTTTTTTTTT==TTTTTTTTTTT#',
       '#TT.....B...==.......,,,T#',
@@ -739,9 +776,9 @@
   // ======================================================================
   //  第 4 岛 · 学科岛（lab：整齐的园区、玻璃圆顶、实验楼、天文台）
   // ======================================================================
-  EM.define('t4', {
+  EM.define('t4', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'town', z: 4, name: '学科岛', en: 'Subject Island', sub: '第 5 岛',
-    rows: [
+    rows: [  // @i18n-content-end
       '######################################',
       '#~~~~~~~~~~~~~~~#TTTTTTTTTTRRRRRRRRRR#',
       '#~~~~~~~~~~~~~~~TT...........RAAAAAR.#',
@@ -792,7 +829,9 @@
     doors: { A: 'i4A2', A2: 'i4A' },
     start: [7, 7],   // 渡轮从社团岛回来时站在码头上（盖尔船长旁边）
     people: [
+      // @i18n-content 渡轮的 toName 是数据：英语界面 world.js 的 ferryTo 用目的地地图的英文名
       { id: 'gale', x: 7, y: 4, face: 'down', name: 'Captain Gale', g: 'm', look: 'gale', role: 'ferry', to: 't5', badge: 5, toName: '社团岛',
+      // @i18n-content-end
         say: [['Ahoy! I\'m Captain Gale. My ferry goes to Club Island.', '你好呀！我是盖尔船长，我的渡轮开往社团岛。'], ['You have five badges. Welcome aboard!', '你有五枚徽章了，欢迎上船！']],
         no: [['Ahoy! I\'m Captain Gale.', '你好呀！我是盖尔船长。'], ['My ferry goes to Club Island. But the sea is rough.', '我的渡轮开往社团岛，可是海上风浪很大。'], ['Come back with five badges. Then I can take you!', '等你有了五枚徽章再来，我就带你过去！']] },
       { id: 'nova', x: 19, y: 15, face: 'down', name: 'Assistant Nova', g: 'f', look: LK.nova, role: 'story', showIf: 'f4in', hideIf: 'ch4' },
@@ -809,9 +848,9 @@
     ],
   });
   // 八爪博士的实验室（按课程表摆书）
-  EM.define('i4A', {
+  EM.define('i4A', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 4, room: '3', name: '八爪博士的实验室', en: "Doctor Octo's Lab", sub: '学科岛',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWW',
       'WkkkkkkkkkkkW',
       'W___________W',
@@ -831,9 +870,9 @@
     ],
   });
   // 天文台：导师欧瑞讲传说
-  EM.define('i4A2', { markKinds: ['telescope'],
+  EM.define('i4A2', { markKinds: ['telescope'],  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 4, room: '2', name: '天文台', en: 'Observatory', sub: '学科岛',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWW',
       'Wk___Z___kW',
       'W_________W',
@@ -853,8 +892,10 @@
   // 挑战馆「课程表开关」：按广播念的课程顺序踩地上的学科开关，踩错全部复位、回起点
   // 机关门从上往下编号：0 通岛主（第二段），1 通第二段（第一段）
   const SUBJ = {
+    // @i18n-content 学科 / 序数的中文名是内容（词的中文意思），英语界面不显示
     m: ['Maths', '#ef5350', '数学'], e: ['English', '#42a5f5', '英语'], s: ['Science', '#26a69a', '科学'], u: ['Music', '#ab47bc', '音乐'],
     a: ['Art', '#ff7043', '美术'], p: ['PE', '#8d6e63', '体育'], c: ['Chinese', '#d81b60', '语文'], h: ['History', '#6d4c41', '历史'], g: ['Geography', '#1e88e5', '地理'],
+    // @i18n-content-end
   };
   const paint4 = {};
   Object.entries(SUBJ).forEach(([k, [t, c]]) => { paint4[k] = { c, t, tc: '#ffffff' }; paint4[k.toUpperCase()] = { c: '#fff176', t: '✓ ' + t, tc: '#2e7d32' }; });
@@ -884,9 +925,9 @@
     '.................',
     '.................',
   ];
-  EM.define('i4G', {
+  EM.define('i4G', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'inside', z: 4, room: 'G', name: '学科岛挑战馆', en: 'Subject Hall', sub: '课程表开关',
-    rows: [
+    rows: [  // @i18n-content-end
       'WWWWWWWWWWWWWWWWW',
       'Wk_____________kW',
       'W_______________W',
@@ -928,9 +969,9 @@
   });
 
   // 海岸路（可选：钓鱼、渔夫、看海、灯塔）
-  EM.define('r4', {
+  EM.define('r4', {  // @i18n-content 地图名、副标题是数据：英语界面用 en 字段和通用的岛名（world.js placeName）
     kind: 'route', z: 4, name: '海岸路', en: 'Seaside Path', sub: '学科岛东边',
-    rows: [
+    rows: [  // @i18n-content-end
       '############################',
       '#TTTTTTTTTTTTTSSSSS~~~~~~~~#',
       '#TT,,,,,TTTTSSSSSSS~~~~~~~~#',
@@ -983,8 +1024,8 @@
   // ======================================================================
   //  剧情小工具
   // ======================================================================
-  const nar = (en, zh, x) => Object.assign({ who: '旁白', emo: '📣', en, zh }, x || {});
-  const phone = (en, zh) => ({ who: '旁白', emo: '📞', en, zh });
+  const nar = (en, zh, x) => Object.assign({ who: NAR(), emo: '📣', en, zh }, x || {});
+  const phone = (en, zh) => ({ who: NAR(), emo: '📞', en, zh });
   const say = n => L.sayer(n.name, n.look, n.g);
   const filter = (C, css) => { if (C.filter) C.filter(css); };
 
@@ -1001,11 +1042,11 @@
   };
   const famLeft = C => Object.keys(FAM2).filter(k => !C.flag(FAM2[k].flag));
   function note2(C) {
-    if (C.flag('ch2')) { C.note(C.E.S.mon.badges[2] ? null : '🌳 树医生在北边路口的小屋；挑战馆里海龟奶奶在等你'); return; }
+    if (C.flag('ch2')) { C.note(C.E.S.mon.badges[2] ? null : tx('ib.n2.tree')); return; }
     if (!C.flag('f2call')) return;
-    if (!C.flag('f2tim')) { C.note('😢 井边有个小男孩在哭，去问问他'); return; }
-    if (famLeft(C).length) C.note('🔎 帮蒂姆找家人：' + Object.keys(FAM2).map(k => (C.flag(FAM2[k].flag) ? '✅' : '⬜') + FAM2[k].zh).join(' '));
-    else C.note('🌾 风车田里的稻草人在动？去看看！');
+    if (!C.flag('f2tim')) { C.note(tx('ib.n2.tim')); return; }
+    if (famLeft(C).length) C.note(hx('ib.n2.fam', { list: Object.keys(FAM2).map(k => (C.flag(FAM2[k].flag) ? '✅' : '⬜') + lb(FAM2[k])).join(' ') }));
+    else C.note(tx('ib.n2.field'));
   }
   // 一上岛，妈妈打电话来
   async function momCall(C) {
@@ -1130,7 +1171,7 @@
   const hint2 = (C, k) => { const T = turtle(C), f = G2[k]; return [T(f.desc[0], '（仔细听广播：要找的' + f.zh + '长什么样？）', { hideEn: true }), L.ask(T, f.q[0], f.q[1], f.right, f.wrong), T(f.desc[0], f.desc[1])]; };
   function note2g(C) {
     const k = cur2(C);
-    C.note(k ? '🌳 家族树：' + ORDER2.map(q => (C.gateOpen(G2[q].gate) ? '✅' : q === k ? '👉' : '⬜') + G2[q].zh).join(' → ') + '<br><small>按 A 看墙上的全家福可以再听一遍</small>' : '🐢 家人都找齐了！去见海龟奶奶');
+    C.note(k ? hx('ib.n2g.tree', { list: ORDER2.map(q => (C.gateOpen(G2[q].gate) ? '✅' : q === k ? '👉' : '⬜') + lb(G2[q])).join(' → ') }) : tx('ib.n2g.done'));
   }
   async function gym2Enter(C) {
     const k = cur2(C), T = turtle(C);
@@ -1220,11 +1261,11 @@
   //  第 3 岛 · 校园岛：嘘声团要取消英语课 → 和对手一起在教学楼里问路找线索 → 五班堵住低语
   // ======================================================================
   function note3(C) {
-    if (C.flag('ch3')) { C.note(C.map.id === 't3' && !C.E.S.mon.badges[3] ? '⛏️ 矿工在北边的隧道口；挑战馆在跑道南边' : null); return; }
+    if (C.flag('ch3')) { C.note(C.map.id === 't3' && !C.E.S.mon.badges[3] ? tx('ib.n3.miner') : null); return; }
     if (!C.flag('f3in')) return;
-    if (C.map.id === 't3') { C.note('🏫 嘘声团在红砖教学楼里（有钟楼的那栋）'); return; }
-    C.note(!C.flag('f3lib') ? '📝 找人问一问：图书馆在哪儿？' : !C.flag('f3lab') ? '📚 图书馆在食堂旁边，去问问图书管理员' : !C.flag('f3grunt') ? '🔬 实验室在二楼，音乐教室旁边（走廊尽头有楼梯）'
-      : !C.flag('f3c5') ? '❓ 问问二楼的同学：五班在哪儿？' : '🏫 五班在实验室旁边，快去堵住低语！');
+    if (C.map.id === 't3') { C.note(tx('ib.n3.hush')); return; }
+    C.note(tx(!C.flag('f3lib') ? 'ib.n3.lib' : !C.flag('f3lab') ? 'ib.n3.lib2' : !C.flag('f3grunt') ? 'ib.n3.lab'
+      : !C.flag('f3c5') ? 'ib.n3.c5' : 'ib.n3.c52'));
   }
   const rivalS = C => { const R = C.rivalInfo(); return L.sayer(R.name, R.look, R.g); };
   function spawnRival(C, x, y, face) {
@@ -1324,7 +1365,9 @@
     C.remove(n);
     C.set('f3grunt');
     const r = C.npc(q => q.id === 'rv3');
+    // @i18n-content 台词的中文意思（藏在条件表达式里），英语界面用 gloss 不显示
     if (r) await C.talk([rivalS(C)('Class Five? Where is it? Let\'s ask Sam in the hall!', '五班？在哪儿呢？我们问问走廊里的萨姆吧！')]);
+    // @i18n-content-end
     note3(C);
   }
   async function samTalk(C, n) {
@@ -1368,7 +1411,7 @@
     ]);
     const r = C.npc(q => q.id === 'rv3');
     if (r) { await C.walk(r, 'down', 2, 150); C.remove(r); }
-    C.note('⛏️ 矿工在北边的隧道口等你；挑战馆在跑道南边');
+    C.note(tx('ib.n3.miner2'));
   }
   // 小凯来学校看你
   async function kaiTalk(C, n) {
@@ -1380,7 +1423,7 @@
       K('I came to see your school. It\'s so big!', '我来看看你的学校，好大呀！'),
       L.ask(K, 'Is there a library in your school?', '你们学校有图书馆吗？', 'Yes, there is.', ['Yes, it is.', 'Yes, I am.']),
       K('Cool! I\'m training hard, too. My monsters are getting stronger.', '真棒！我也在努力训练，我的怪兽越来越强了。'),
-      K('Can we have a small battle? Just a little one...', '我们可以来一场小小的对战吗？就一小场……', { kind: 'choice', opts: [{ html: '⚔️ 好呀 Sure!', cls: 'sun' }, { html: '下次吧 Next time' }], pick: i => { fight = !i; return []; } }),
+      K('Can we have a small battle? Just a little one...', '我们可以来一场小小的对战吗？就一小场……', { kind: 'choice', opts: [{ html: tx('ib.opt.sure'), cls: 'sun' }, { html: tx('ib.opt.next') }], pick: i => { fight = !i; return []; } }),
     ]);
     if (!fight) { await C.talk([K('OK! I\'ll wait here on the playground.', '好！我就在操场这儿等你。')]); return; }
     const res = await C.battle('trainer', { foes: [C.MG.newMon('seedlet', 9), C.MG.newMon('songlet', 10)], trainer: { name: 'Kai', img: C.portrait(L.P.LOOKS.kai) }, noWhiteout: true });
@@ -1406,7 +1449,7 @@
   const board = (en, zh, x) => Object.assign({ who: 'Blackboard', emo: '🧑‍🏫', en, zh }, x || {});
   function note3g(C) {
     const n = [2, 1, 0].filter(g => C.gateOpen(g)).length;
-    C.note(n < 3 ? '🧑‍🏫 教室换座：对着黑板按 A 答题，答对开门（' + n + '/3）' : '🦉 三间教室都过了！去见猫头鹰校长');
+    C.note(n < 3 ? tx('ib.n3g.now', { n }) : tx('ib.n3g.done'));
   }
   async function gym3Enter(C) {
     if (!C.flag('g3hi') && !C.gateOpen(0)) {
@@ -1447,11 +1490,15 @@
       if (id === 't3' && n.id === 'kai') return () => kaiTalk(C, n);
       if (id === 'i3A' && n.id === 'amy') return () => amyTalk(C, n);
       if (id === 'i3A' && n.id === 'libr') return () => librTalk(C, n);
+      // @i18n-content 台词的中文意思（藏在条件表达式里），英语界面用 gloss 不显示
       if (id === 'i3A' && n.id === 'rv3') return () => C.talk([rivalS(C)(C.flag('f3lib') ? 'The library is next to the dining hall. Let\'s go!' : 'Let\'s ask Amy. She is in the hall.', C.flag('f3lib') ? '图书馆在食堂旁边，走吧！' : '我们问问走廊里的艾米吧。')]);
+      // @i18n-content-end
       if (id === 'i3A2' && n.id === 'sam') return () => samTalk(C, n);
       if (id === 'i3A2' && n.id === 'g3') return () => grunt3Talk(C, n);
       if (id === 'i3A2' && n.id === 'wh3') return () => whisperTalk(C, n);
+      // @i18n-content 台词的中文意思（藏在条件表达式里），英语界面用 gloss 不显示
       if (id === 'i3A2' && n.id === 'rv3') return () => C.talk([rivalS(C)(C.flag('f3c5') ? 'Whisper is in Class Five! Talk to her!' : 'The lab is next to the music room!', C.flag('f3c5') ? '低语就在五班！去和她对峙！' : '实验室就在音乐教室旁边！')]);
+      // @i18n-content-end
       return null;
     },
     tile(C, f) {
@@ -1470,11 +1517,13 @@
     { en: 'On Monday we have maths, English and science.', zh: '星期一我们有数学、英语和科学。', list: ['m', 'e', 's'] },
     { en: 'On Tuesday we have Chinese, music and PE.', zh: '星期二我们有语文、音乐和体育。', list: ['c', 'u', 'p'] },
   ];
+  // @i18n-content 学科 / 序数的中文名是内容（词的中文意思），英语界面不显示
   const ORD = [['first', '第一'], ['second', '第二'], ['third', '第三']];
+  // @i18n-content-end
   function note4(C) {
-    if (C.flag('ch4')) { C.note(!C.E.S.mon.badges[4] && C.map.kind !== 'inside' ? '🐙 八爪博士在挑战馆等你' : null); return; }
+    if (C.flag('ch4')) { C.note(!C.E.S.mon.badges[4] && C.map.kind !== 'inside' ? tx('ib.n4.hall') : null); return; }
     if (!C.flag('f4in')) return;
-    C.note(!C.flag('f4books') ? '🧪 去八爪博士的实验室（镇子中间的玻璃圆顶）' : '📡 嘘声团在东边的卫星天线旁');
+    C.note(tx(!C.flag('f4books') ? 'ib.n4.lab' : 'ib.n4.dish'));
   }
   async function intro4(C) {
     const pl = C.pl, N = L.sayer('Assistant Nova', LK.nova, 'f');
@@ -1497,7 +1546,9 @@
   // 听课程表，按顺序把书放回书架（选错了从头再听）
   async function bookRound(C, O, day) {
     for (let tries = 0; ; tries++) {
+      // @i18n-content 台词的中文意思（藏在条件表达式里），英语界面用 gloss 不显示
       await C.talk([O(day.en, '（仔细听课程表，记住顺序！' + (tries ? '再听一遍。' : '') + '）', { hideEn: true })]);
+      // @i18n-content-end
       let ok = true;
       for (let k = 0; k < day.list.length && ok; k++) {
         let got = null;
@@ -1576,7 +1627,7 @@
       O('The words were kept in thirteen crystals, one on each island.', '这些词语被收进了十三颗水晶，每座岛一颗。'),
       O('Team Hush is stealing the crystals. They want to wake the Hush King!', '嘘声团在偷水晶，他们想唤醒寂静之王！'),
       L.ask(O, 'What do you think of history?', '你觉得历史课怎么样？', "It's interesting.", ["It's on Friday.", 'I think so.']),
-      O('Yes! History is full of stories. Take these for your journey.', '没错！历史里全是故事。这些拿着，路上用得到。', { onShow: () => { C.MG.addItem('superpotion', 2); C.MG.addItem('revive', 1); C.E.save(); C.E.SFX.win(); C.E.toast('🧪 超级药水 +2　✨ 复活药 +1', 'gold'); } }),
+      O('Yes! History is full of stories. Take these for your journey.', '没错！历史里全是故事。这些拿着，路上用得到。', { onShow: () => { C.MG.addItem('superpotion', 2); C.MG.addItem('revive', 1); C.E.save(); C.E.SFX.win(); C.E.toast(tx('ib.toast.items'), 'gold'); } }),
       L.speak(C, 'Thank you, Orion!', '对欧瑞说：谢谢你，欧瑞！'),
       O('We will meet again. The stars will guide you.', '我们还会再见的。星星会为你指路。'),
     ]);
@@ -1605,8 +1656,8 @@
   }
   function note4g(C) {
     const k = stage4(C);
-    if (k < 0) { C.note('🐙 两张课程表都对了！去见八爪博士'); return; }
-    C.note('📅 按广播的顺序踩学科开关：第 ' + (k + 1) + ' 张课程表（' + prog4[k] + '/4）<br><small>对着墙角的喇叭按 A 可以再听一遍</small>');
+    if (k < 0) { C.note(tx('ib.n4g.done')); return; }
+    C.note(tx('ib.n4g.now', { k: k + 1, n: prog4[k] }));
   }
   async function gym4Enter(C) {
     SEQ4.forEach((s, k) => paintStage(C, k, C.gateOpen(s.gate)));
@@ -1664,7 +1715,9 @@
       if (id === 'i4A' && n.id === 'octo') return () => octoTalk(C, n);
       if (id === 'i4A2' && n.id === 'orion') return () => orionTalk(C, n);
       if (id === 't4' && (n.id === 'g4a' || n.id === 'g4b')) return () => dishTalk(C, n);
+      // @i18n-content 台词的中文意思（藏在条件表达式里），英语界面用 gloss 不显示
       if (id === 't4' && n.id === 'nova') return () => C.talk([say(n)(C.flag('f4books') ? 'Team Hush is at the satellite dish in the east!' : "Doctor Octo's lab is the glass dome. Please help him!", C.flag('f4books') ? '嘘声团在东边的卫星天线那儿！' : '八爪博士的实验室是那座玻璃圆顶，请帮帮他！')]);
+      // @i18n-content-end
       return null;
     },
     tile(C, f) {
