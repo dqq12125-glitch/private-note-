@@ -1872,7 +1872,10 @@
     });
   }
   // 本机（浏览器自带）的英语声音；用不了就不出声
+  // iPhone 版启动时没查本机声音（见 start()）：第一次真要用时再查
+  function voicesNow() { if (window.ECHO_IOS && !TTS.loaded) { loadVoices(); TTS.loaded = true; } }
   function sayDevice(text, rate, res, g) {
+    voicesNow();
     if (!deviceOk()) { silent(res, text); return; }
     const u = new SpeechSynthesisUtterance(text);
     const v = g === 'f' ? (TTS.vf || TTS.v) : g === 'm' ? (TTS.vm || TTS.v) : TTS.v;
@@ -5274,9 +5277,13 @@
     if (/[?&](quiet|nomic)\b/.test(location.search)) { S.settings.mode = 'self'; save(); setTimeout(() => toast(tr('g.boot.quiet')), 800); }
     checkStreak();
     ensureQuests();
-    loadVoices();
-    if (TTS.ok && 'onvoiceschanged' in speechSynthesis) speechSynthesis.onvoiceschanged = loadVoices;
-    setTimeout(() => { loadVoices(); TTS.loaded = true; }, 1500); // 一些安卓浏览器永远返回空列表
+    // iPhone 版不在启动时查本机声音：云上的模拟器里 getVoices() 卡住主线程 47 秒（2026-11-19 的 StoreKit 测试日志）；
+    // iPhone 上本机声音只是最后一道兜底（前面有打包的配音和阿里云），真用到时 sayDevice 再查（voicesNow）
+    if (!window.ECHO_IOS) {
+      loadVoices();
+      if (TTS.ok && 'onvoiceschanged' in speechSynthesis) speechSynthesis.onvoiceschanged = loadVoices;
+      setTimeout(() => { loadVoices(); TTS.loaded = true; }, 1500); // 一些安卓浏览器永远返回空列表
+    }
     // 字体在 assets/fonts（style.css 的 @font-face），不再连 Google（国内连不上，也让测试不稳）
     show('home');
     renderHome();
