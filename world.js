@@ -1302,7 +1302,9 @@
     if (R) { R.destroy(); R = null; }
     const view = $('w-view');
     if (tier !== '2d' && window.EchoWorld3D) {
-      try { R = EchoWorld3D.create(view, tier, ART); } catch (e) { R = null; }
+      // 新画风的样品（网址带 ?look=new 才打开，见 world3d-open.js）：户外地图换成新渲染器，它自己会把室内 / 洞穴交回 world3d.js；建不出来就照旧
+      if (window.EchoWorldOpen && EchoWorldOpen.on) { try { R = EchoWorldOpen.create(view, tier, ART); } catch (e) { R = null; } }
+      if (!R) { try { R = EchoWorld3D.create(view, tier, ART); } catch (e) { R = null; } }
       if (!R) { E.toast('这台设备不支持 3D，已切换成流畅模式'); }
     }
     if (!R) R = create2D(view);

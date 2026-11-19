@@ -15,3 +15,5 @@ export { AnimationMixer, LoopOnce, LoopRepeat, SkinnedMesh } from 'three';
 export { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 // 发布版怪兽模型（assets/mon3d/*.glb）用 meshopt 压缩过，要这个解码器
 export { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+// 新画风的大地图（world3d-open.js）：后期描边要读深度图
+export { DepthTexture } from 'three';
