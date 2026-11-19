@@ -32,6 +32,11 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   await p.mouse.click(5, 300);   // 第一次点屏幕：打开声音
   check(await p.evaluate(() => !!(window.EchoMusic && window.MusicCore && window.MUSIC && Object.keys(window.MUSIC.songs).length >= 20)), '引擎和曲库加载了（' + await p.evaluate(() => window.MUSIC ? Object.keys(window.MUSIC.songs).length : 0) + ' 首）');
   check(await cur('title'), '首页：主题曲 title');
+  // 能力检测开着的时候不放背景音乐（听力题要听清，这个画面也进不了设置去关），关了接着放首页的
+  await p.evaluate(() => window.EchoPlace.open('who'));
+  check(await p.evaluate(() => window.EchoPlace.isOpen()) && await cur(null), '能力检测开着：背景音乐停了');
+  for (let i = 0; i < 4 && await p.evaluate(() => window.EchoPlace.isOpen()); i++) { await p.evaluate(() => window.EchoPlace.back()); await W(200); }
+  check(!(await p.evaluate(() => window.EchoPlace.isOpen())) && await cur('title'), '能力检测关了：首页的主题曲回来了');
   check((await st()).enabled, '带 ?music 时引擎是开着的');
   // 朗读时压低（首页没有自动朗读，不会互相干扰）
   const ducked = await p.evaluate(async () => { const pr = window.EchoGame.say('Hello! How are you today?'); await new Promise(r => setTimeout(r, 30)); const d = window.EchoMusic.state().duck; await pr; return [d, window.EchoMusic.state().duck]; });

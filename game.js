@@ -1755,6 +1755,9 @@
   function musicVol() { const m = MUS(); if (m) m.setVolume(MVOL[S.settings.music] != null ? MVOL[S.settings.music] : MVOL.mid); }
   // 这个画面该放哪首：首页放主题曲，闯关练习 / 复习 / 对话剧场放学习音乐，大地图问 EchoWorld，战斗由 monsters.js 开战时选好
   function sceneMusic() {
+    // 能力检测、首次设置时不放背景音乐：听力题要听得清，而且这两个画面进不了设置、关不掉（老板 2026-11-20 在 iPhone 上做检测时提的）。
+    // 两个画面开 / 关的时候各自再调一次这里（placement.js 的 mount / unmount、setup.js 的 open / close）
+    if ((window.EchoPlace && EchoPlace.isOpen && EchoPlace.isOpen()) || (window.EchoSetup && EchoSetup.isOpen && EchoSetup.isOpen())) { music(''); return; }
     const s = RT.scr;
     if (s === 'world') { const id = window.EchoWorld && EchoWorld.music ? EchoWorld.music() : ''; if (id) music(id); return; }
     if (s === 'battle') return;
@@ -4529,6 +4532,7 @@
       // kidMode() 是不是「孩子」（false = 青少年 / 成人自己学）、stopSay() 停掉正在放的朗读、recognize 的第三个参数见上面
       unitSpan, lvListen, kidMode, chatLevel: () => (window.EchoPlace ? EchoPlace.chatLevel() : null), uiLang: () => S.settings.ui || 'zh',
       stopSay: () => { if (TTS.ok) speechSynthesis.cancel(); if (RT.audio) RT.audio.pause(); },
+      sceneMusic,   // 盖在上面的画面（能力检测、首次设置）开 / 关时重新决定放不放音乐
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
       // savePos：大地图走了一步，只记位置（不整份存）；flush：走路攒下的现在就整份存（开战前这种要紧的时候）
       savePos, flush: () => flushWalk(), walkTouch,

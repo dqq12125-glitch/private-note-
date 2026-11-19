@@ -404,13 +404,17 @@
     }
     render();
     if (WZ.step === 'device') deviceCheck();
+    tune();
   }
   function close() {
     closeDoc();
     const el = $('#setup'); if (el) el.remove();
     document.body.classList.remove('su-on');
     WZ.step = ''; WZ.edit = null; WZ.pin = null;
+    tune();
   }
+  // 向导开着的时候不放背景音乐（game.js 的 sceneMusic 看 isOpen()），关了再接着放
+  function tune() { try { if (G && G.sceneMusic) G.sceneMusic(); } catch (e) { /* 忽略 */ } }
   function go(step) {
     WZ.step = step;
     if (!WZ.edit) { const F = draft(); F.step = step; G.save(); }

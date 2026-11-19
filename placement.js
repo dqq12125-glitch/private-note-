@@ -341,6 +341,7 @@
       el.innerHTML = '<div class="pl-box" id="pl-box"></div>';
       document.body.appendChild(el);
       document.body.classList.add('pl-on');
+      tune();
     }
     return $('#pl-box');
   }
@@ -348,7 +349,10 @@
     stopAll();
     const el = $('#place'); if (el) el.remove();
     document.body.classList.remove('pl-on');
+    tune();
   }
+  // 检测开着的时候不放背景音乐（game.js 的 sceneMusic 看 isOpen()），关了再接着放
+  function tune() { try { if (G && G.sceneMusic) G.sceneMusic(); } catch (e) { /* 忽略 */ } }
   const isOpen = () => !!$('#place');
   function stopAll() {
     if (U) U.tok = (U.tok || 0) + 1;
