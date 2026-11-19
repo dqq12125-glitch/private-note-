@@ -8,10 +8,18 @@ import StoreKitTest
 // 云上单独一步跑（.github/workflows/ios-simulator.yml「StoreKit tests」）：iOS 26.5 的模拟器上 SKTestSession 存不进配置
 // （苹果的已知问题，开发者论坛 FB22237318），所以那一步挑 26.2 / 26.1 的模拟器；别的单元测试那一步跳过这个类。
 // 交易签名（jws）是 Xcode 本地证书签的：手机这边算核对过，服务器那边（只认 Apple Root CA）会拒，这是对的。
+// 要事件的测试先 listen()：等 Store 的 Transaction.updates 任务跑起来再买。StoreKit 只把新交易交给当时正在听的人
+// （run 44526910786：批准「请求购买」后 140 毫秒交易就到了 App，那时还没人在听，事件就没了；见 Store.start() 的说明）。
 
 @MainActor
 private final class Events {
     var items: [[String: Any]] = []
+}
+
+// 诊断用：另起的监听收到了什么
+private actor Lines {
+    var items: [String] = []
+    func add(_ s: String) { items.append(s) }
 }
 
 // JWS 中间那段（交易本身）解出来看：服务器看到的就是它
@@ -49,8 +57,55 @@ final class StoreKitTests: XCTestCase {
             if await ok() { return true }
             try? await Task.sleep(nanoseconds: 200_000_000)
         }
+        // 到点了。主线程刚才可能被别的事卡住过（宿主 App 里的网页在加载：run 44526910786 里它查系统语音卡了主线程 47 秒），
+        // 排在后面的事（比如 Transaction.updates 刚交来的那一笔）还没轮到：让它们先跑，再看最后一次
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        if await ok() { return true }
         XCTFail("等了 \(Int(seconds)) 秒还没到：" + what)
         return false
+    }
+
+    // 像 App 里一样先听着 Transaction.updates，再买（App 一打开就 start()，买的时候早就在听了）
+    @MainActor
+    private func listen(_ store: Store, _ events: Events) async {
+        store.onEvent = { events.items.append($0) }
+        let t0 = Date()
+        // 对照：同一时刻起一个 background 优先级的任务（Store 以前用的就是它），看它多久才排上
+        Task.detached(priority: .background) {
+            print("EchoIsland StoreKit: a .background task started after \(Int(Date().timeIntervalSince(t0) * 1000)) ms")
+        }
+        store.start()
+        await waitFor("Store 的 Transaction.updates 任务跑起来", seconds: 15) { store.listening }
+        print("EchoIsland StoreKit: Store listener running after \(Int(Date().timeIntervalSince(t0) * 1000)) ms")
+        try? await Task.sleep(nanoseconds: 300_000_000)      // 让它进到 StoreKit 里等下一笔
+    }
+
+    // 事件没来时打出来：本地 App Store 和 StoreKit 各自看到的交易（下次看日志分得清是交易没变、还是变了没交给 Transaction.updates）
+    @MainActor
+    private func dump(_ label: String, _ session: SKTestSession) async {
+        var all: [String] = []
+        for await r in Transaction.all {
+            let t = Store.payload(r)
+            all.append("\(t.id)/\(t.originalID) \(t.productID) kind=\(Store.kind(t)) revoked=\(t.revocationDate.map { "\($0)" } ?? "nil")")
+        }
+        var unfinished: [UInt64] = []
+        for await r in Transaction.unfinished { unfinished.append(Store.payload(r).id) }
+        let local = session.allTransactions().map { "\($0.identifier) \($0.productIdentifier) askToBuy=\($0.pendingAskToBuyConfirmation)" }
+        print("EchoIsland StoreKit [\(label)]: Transaction.all = \(all); unfinished = \(unfinished); SKTestSession = \(local)")
+    }
+
+    // 诊断：现在新订阅一次 Transaction.updates，几秒内给了什么（开始听的时候 StoreKit 会不会补上刚才变了的交易）
+    private func freshUpdates(seconds: Double) async -> [String] {
+        let got = Lines()
+        let t = Task.detached(priority: .userInitiated) {
+            for await r in Transaction.updates {
+                let tx = Store.payload(r)
+                await got.add("\(tx.id) \(tx.productID) kind=\(Store.kind(tx))")
+            }
+        }
+        try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+        t.cancel()
+        return await got.items
     }
 
     @MainActor
@@ -142,8 +197,7 @@ final class StoreKitTests: XCTestCase {
         session.askToBuyEnabled = true
         let store = Store(monthly: monthly, yearly: yearly)
         let events = Events()
-        store.onEvent = { events.items.append($0) }
-        store.start()
+        await listen(store, events)
         defer { store.stop() }
         let token = UUID()
         let r = await buy(store, monthly, token)
@@ -151,9 +205,10 @@ final class StoreKitTests: XCTestCase {
         XCTAssertEqual(r.body["status"] as? String, "pending", "要等家长批准")
         let waiting = session.allTransactions().first { $0.pendingAskToBuyConfirmation }
         try session.approveAskToBuyTransaction(identifier: try XCTUnwrap(waiting, "本地 App Store 里有一笔等批准的").identifier)
-        await waitFor("家长批准以后，这一笔从 Transaction.updates 发给网页（echo-iap）") {
+        let arrived = await waitFor("家长批准以后，这一笔从 Transaction.updates 发给网页（echo-iap）") {
             events.items.contains { $0["productId"] as? String == self.monthly && $0["kind"] as? String == "purchase" }
         }
+        if !arrived { await dump("ask-to-buy", session) }
         let e = events.items.first { $0["productId"] as? String == monthly } ?? [:]
         XCTAssertEqual(e["appAccountToken"] as? String, token.uuidString.lowercased(), "批准以后还是这个账号的")
         XCTAssertEqual(e["verified"] as? Bool, true)
@@ -185,8 +240,7 @@ final class StoreKitTests: XCTestCase {
         defer { session.clearTransactions() }
         let store = Store(monthly: monthly, yearly: yearly)
         let events = Events()
-        store.onEvent = { events.items.append($0) }
-        store.start()
+        await listen(store, events)
         defer { store.stop() }
         let r = await buy(store, monthly)
         XCTAssertEqual(r.body["status"] as? String, "purchased", r.json)
@@ -222,8 +276,7 @@ final class StoreKitTests: XCTestCase {
         defer { session.clearTransactions() }
         let store = Store(monthly: monthly, yearly: yearly)
         let events = Events()
-        store.onEvent = { events.items.append($0) }
-        store.start()
+        await listen(store, events)
         defer { store.stop() }
         let r = await buy(store, monthly)
         XCTAssertEqual(r.body["status"] as? String, "purchased", r.json)
@@ -232,8 +285,14 @@ final class StoreKitTests: XCTestCase {
         let local = try XCTUnwrap(session.allTransactions().filter { $0.productIdentifier == monthly }.max { $0.purchaseDate < $1.purchaseDate },
                                   "本地 App Store 里有这一笔")
         try session.refundTransaction(identifier: local.identifier)
-        await waitFor("退款从 Transaction.updates 发给网页，kind = revoked") {
+        let arrived = await waitFor("退款从 Transaction.updates 发给网页，kind = revoked") {
             events.items.contains { $0["productId"] as? String == self.monthly && $0["kind"] as? String == "revoked" }
+        }
+        if !arrived {
+            await dump("refund", session)
+            let fresh = await freshUpdates(seconds: 5)
+            let seen = events.items.map { "\($0["transactionId"] ?? "?") \($0["kind"] ?? "?")" }
+            print("EchoIsland StoreKit [refund]: a fresh Transaction.updates subscription got \(fresh); events so far: \(seen)")
         }
         let e = events.items.first { $0["kind"] as? String == "revoked" } ?? [:]
         XCTAssertGreaterThan(e["revoked"] as? Int64 ?? 0, 0, "带撤销时间")

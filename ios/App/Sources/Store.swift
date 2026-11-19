@@ -38,6 +38,8 @@ final class Store {
     // 有交易从 Transaction.updates 来了（续费、退款……）：交给网页。detail 见 eventBody
     var onEvent: (@MainActor (_ detail: [String: Any]) -> Void)?
     private var listener: Task<Void, Never>?
+    // 听 Transaction.updates 的那个任务已经跑起来了（马上就在等下一笔）。测试等它再买，和 App 里一样（一打开就听，买的时候早就在听了）
+    private(set) var listening = false
     private var waiting: [UInt64: Transaction] = [:]      // 还没 finish 的（等网页说服务器存好了）
     private var buying = false
 
@@ -108,10 +110,16 @@ final class Store {
 
     // 这一笔是什么：revoked 退款 / 撤销，expired 已经过期，upgraded 换了更高的档，renewal 续费，purchase 第一次买（包括家长批准了的「请求购买」、优惠码）
     nonisolated static func kind(_ t: Transaction, now: Date = Date()) -> String {
-        if t.revocationDate != nil { return "revoked" }
-        if let e = t.expirationDate, e < now { return "expired" }
-        if t.isUpgraded { return "upgraded" }
-        return t.id == t.originalID ? "purchase" : "renewal"
+        return kind(revoked: t.revocationDate, expires: t.expirationDate, upgraded: t.isUpgraded, id: t.id, originalId: t.originalID, now: now)
+    }
+
+    // 同一条规则，只看那几个字段（Transaction 没有公开的构造方法，单元测试从这里喂：退了款的、过期的、换档的……）。
+    // 退款最先判：退了款的订阅可能同时也过期了、换过档，网页要按「撤销」收回会员
+    nonisolated static func kind(revoked: Date?, expires: Date?, upgraded: Bool, id: UInt64, originalId: UInt64, now: Date = Date()) -> String {
+        if revoked != nil { return "revoked" }
+        if let e = expires, e < now { return "expired" }
+        if upgraded { return "upgraded" }
+        return id == originalId ? "purchase" : "renewal"
     }
 
     // 一笔交易给网页的样子。jws = 苹果签名的整笔交易，原样交给服务器（POST /v1/iap/apple 的 signedTransaction）。
@@ -171,11 +179,23 @@ final class Store {
 
     // ---------- 一开 App 就听 ----------
 
+    // StoreKit 只把新来的交易（家长批准了「请求购买」、退款、续费、刚打开 App 时没 finish 的）交给**当时正在听**的人，
+    // 晚一步开始听的拿不到。所以：
+    //   · 优先级用 userInitiated，不用 background。background 的任务系统忙时可以一直排不上：2026-11-19 云上的 StoreKit 测试里，
+    //     App 打开 9 秒后买东西，StoreKit 还报「Making a purchase without listening for transaction updates」，
+    //     140 毫秒后家长批准的那一笔交到了 App，却没有人在听，事件就没发出去（run 44526910786 的系统日志）
+    //   · 序列自己结束了（不是我们叫停的，比如 StoreKit 换了环境）：歇一秒再订阅一次，别把后面的漏了
     func start() {
         if listener != nil { return }
-        listener = Task.detached(priority: .background) { [weak self] in
-            for await r in Transaction.updates {
-                await self?.received(r)
+        listener = Task.detached(priority: .userInitiated) { [weak self] in
+            while !Task.isCancelled {
+                await self?.mark(true)
+                for await r in Transaction.updates {
+                    await self?.received(r)
+                }
+                await self?.mark(false)
+                if Task.isCancelled { break }
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
             }
         }
     }
@@ -183,6 +203,11 @@ final class Store {
     func stop() {
         listener?.cancel()
         listener = nil
+        listening = false
+    }
+
+    private func mark(_ on: Bool) {
+        if listener != nil { listening = on }
     }
 
     private func received(_ r: VerificationResult<Transaction>) {

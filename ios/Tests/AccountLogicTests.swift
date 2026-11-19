@@ -44,6 +44,33 @@ final class StoreLogicTests: XCTestCase {
         XCTAssertEqual(j["error"] as? String, "bad-token"); XCTAssertEqual(j["message"] as? String, "x")
     }
 
+    // 交易是哪一种（echo-iap 事件和 iapPending 里的 kind）。Transaction 造不出来，喂字段：
+    // 退款最先判（退了款的订阅可能同时已经过期、换过档、是续费的那一笔，网页都要按撤销收回会员），再过期、换档，最后看是不是第一笔
+    func testTransactionKinds() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let past = now.addingTimeInterval(-60), later = now.addingTimeInterval(30 * 86_400)
+        XCTAssertEqual(Store.kind(revoked: past, expires: later, upgraded: false, id: 7, originalId: 7, now: now), "revoked", "退款：订阅还没到期也是撤销")
+        XCTAssertEqual(Store.kind(revoked: past, expires: past, upgraded: true, id: 8, originalId: 7, now: now), "revoked", "退款优先于过期、换档、续费")
+        XCTAssertEqual(Store.kind(revoked: now, expires: nil, upgraded: false, id: 0, originalId: 0, now: now), "revoked", "家庭共享被收回（没有到期时间）也是撤销")
+        XCTAssertEqual(Store.kind(revoked: nil, expires: past, upgraded: false, id: 8, originalId: 7, now: now), "expired")
+        XCTAssertEqual(Store.kind(revoked: nil, expires: later, upgraded: true, id: 8, originalId: 7, now: now), "upgraded")
+        XCTAssertEqual(Store.kind(revoked: nil, expires: later, upgraded: false, id: 7, originalId: 7, now: now), "purchase", "第一笔（包括家长批准了的「请求购买」）")
+        XCTAssertEqual(Store.kind(revoked: nil, expires: later, upgraded: false, id: 8, originalId: 7, now: now), "renewal")
+        XCTAssertEqual(Store.kind(revoked: nil, expires: nil, upgraded: false, id: 0, originalId: 0, now: now), "purchase", "本地 App Store 的编号从 0 开始也认得")
+    }
+
+    // 还没开始听：listening 是 false；stop() 以后也是
+    @MainActor
+    func testListenerFlag() async {
+        let s = Store(monthly: "com.echoisland.app.premium.monthly", yearly: "com.echoisland.app.premium.yearly")
+        XCTAssertFalse(s.listening)
+        s.start()
+        s.stop()
+        XCTAssertFalse(s.listening, "叫停以后不算在听（晚到的任务也不会再把它改回 true）")
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        XCTAssertFalse(s.listening)
+    }
+
     // 参数不对：当场回，不去问 App Store
     @MainActor
     func testBadArgumentsAnswerWithoutTheStore() async {

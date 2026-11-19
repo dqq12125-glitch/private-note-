@@ -1,6 +1,7 @@
 # 回声岛 iPhone 版：在 GitHub 的云上 Mac 里编译、跑测试（这台 Windows 电脑编不了 Swift，这里就是编译器）。
 # 只用 iOS 模拟器，不签名、不上传、不连 AI：打的是销售版（公开发的版本，没有密钥和家长密码）。
 # 每一步分开写，哪一步红了一眼看得出来；不管成没成，完整的编译日志、.xcresult 和截图都上传（Actions 页面最下面的 ios-simulator-results）。
+# 编译过了，单元测试、StoreKit 测试、UI 测试、正式包每一步都跑（一步红了不挡后面的），最后一步「Result」按各步结果收尾：有一步没过整个就是红的。
 # 说明见 ios/README.md
 name: iOS simulator
 
@@ -64,11 +65,13 @@ jobs:
         run: node ios/scripts/prepare.mjs --edition sales
 
       - name: Generate the Xcode project
+        id: project
         working-directory: ios
         run: xcodegen generate --spec project.yml
 
       # 调试包，给模拟器：不用开发者证书和团队（模拟器只要本机的临时签名）。编译日志完整存一份
       - name: Build for the iOS Simulator (Debug, no signing identity)
+        id: build
         run: |
           set -o pipefail
           xcodebuild build-for-testing \
@@ -80,6 +83,8 @@ jobs:
 
       # 订阅的 StoreKit 测试另外一步跑（下一步），这里跳过
       - name: Unit tests (PIN lock, backups, asset handler, bridge, store and sign-in logic)
+        id: unit
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           set -o pipefail
           rm -rf "$OUT/unit-tests.xcresult"
@@ -95,6 +100,8 @@ jobs:
       # iOS 26.5 的模拟器上 SKTestSession 存不进配置（苹果的已知问题，开发者论坛 FB22237318；26.1 / 26.2 上好的），
       # 所以挑 26.2 / 26.1 的模拟器（同一份编好的包）；都没有就用最新的，并在日志里说一句
       - name: StoreKit tests (subscriptions, on an iOS 26.2 simulator)
+        id: storekit
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           set -o pipefail
           rm -rf "$OUT/storekit-tests.xcresult"
@@ -112,6 +119,8 @@ jobs:
 
       # 打开 App 到首页（竖屏、横屏截图）、原生桥自测页、麦克风弹窗、分享面板和文件选择器、订阅的商品
       - name: UI smoke test (home screen, bridge self-test, microphone, store)
+        id: ui
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           set -o pipefail
           rm -rf "$OUT/ui-tests.xcresult"
@@ -125,6 +134,8 @@ jobs:
 
       # 正式包的设置（没有 DEBUG、不带自测页）也要编得过：给模拟器、完全不签名
       - name: Build Release for the iOS Simulator (unsigned)
+        id: release
+        if: ${{ !cancelled() && steps.project.outcome == 'success' }}
         run: |
           set -o pipefail
           xcodebuild build \
@@ -163,3 +174,26 @@ jobs:
             ios-ci/attachments
           if-no-files-found: warn
           retention-days: 14
+
+      # 收尾：列出每一步的结果（也写进 Actions 的 Summary），有一步没过（或者编译没过、后面没跑）就让整个任务红
+      - name: Result
+        if: ${{ !cancelled() }}
+        env:
+          R_BUILD: ${{ steps.build.outcome }}
+          R_UNIT: ${{ steps.unit.outcome }}
+          R_STOREKIT: ${{ steps.storekit.outcome }}
+          R_UI: ${{ steps.ui.outcome }}
+          R_RELEASE: ${{ steps.release.outcome }}
+        run: |
+          bad=0
+          {
+            echo "| step | result |"
+            echo "| --- | --- |"
+            for s in "Debug build:$R_BUILD" "Unit tests:$R_UNIT" "StoreKit tests:$R_STOREKIT" "UI smoke test:$R_UI" "Release build:$R_RELEASE"; do
+              echo "| ${s%%:*} | ${s#*:} |"
+            done
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          for r in "$R_BUILD" "$R_UNIT" "$R_STOREKIT" "$R_UI" "$R_RELEASE"; do
+            if [ "$r" != "success" ]; then bad=1; fi
+          done
+          if [ "$bad" = 1 ]; then echo "::error::Not every build and test step passed (table above)"; exit 1; fi

@@ -60,7 +60,9 @@
 `.github/workflows/ios-simulator.yml`：推到 `echo-island/next` 并且改了 `ios/`、这个工作流或 `tools/ios/` 时自动跑；也可以在 Actions 页面手动点 **Run workflow**。仓库是公开的，macOS 的机器不要钱。
 
 - 机器：`macos-26`（Apple 芯片），Xcode **26.6**（`/Applications/Xcode_26.6.app`），模拟器 **iPhone 17 / iOS 26.5**。
-- 步骤（每一步单独一行，红在哪一步一眼看得出来）：浅克隆 → `node tests/ios.test.js` → 装 XcodeGen → `prepare.mjs`（销售版）→ `xcodegen` → 编译调试包（模拟器，不用开发者证书）→ 单元测试（不含 StoreKit 的）→ **StoreKit 测试**（同一份包，换一台 iOS 26.2 的模拟器）→ UI 测试 → 再编一遍正式包的设置（不签名，核对没有自测页）→ 导出截图 → **不管成没成**上传 `ios-simulator-results`：完整的编译日志、三个 `.xcresult`、截图和自测结果。
+- 步骤（每一步单独一行，红在哪一步一眼看得出来）：浅克隆 → `node tests/ios.test.js` → 装 XcodeGen → `prepare.mjs`（销售版）→ `xcodegen` → 编译调试包（模拟器，不用开发者证书）→ 单元测试（不含 StoreKit 的）→ **StoreKit 测试**（同一份包，换一台 iOS 26.2 的模拟器）→ UI 测试 → 再编一遍正式包的设置（不签名，核对没有自测页）→ 导出截图 → **不管成没成**上传 `ios-simulator-results`：完整的编译日志、三个 `.xcresult`、截图和自测结果 → `Result`。
+- 调试包编过了，单元测试、StoreKit 测试、UI 测试三步都跑（`if: !cancelled()` + 编译成功），工程生成了就编正式包：一步红了不挡后面的，日志里每一步的结果都看得到。最后一步 `Result` 把五步的结果列成表（也在 Actions 的 Summary 里），有一步不是 success 就让整个任务红。
+- `.xcresult` 里带着模拟器的系统日志（`system.logarchive`，tracev3 格式）。没有 Mac 时也能看：解开 xcresult 里的 zstd、再解 tracev3 的 LZ4 块，StoreKit（`storekitd` 和 App 里的 `com.apple.storekit`）每一步都在里面，2026-11-20 查「请求购买」事件丢了就是这样查出来的。
 - 为什么 StoreKit 测试要另一台模拟器：iOS 26.5 的模拟器上 `SKTestSession` 存不进本地 App Store 的配置（苹果开发者论坛上的已知问题 FB22237318，26.1 / 26.2 上好的；Xcode 26.6 的说明里说修了，实际还有人遇到）。`pick-simulator.mjs` 先挑 26.2、再 26.1；机器上都没有就用最新的，并出一条黄色提示——那时 StoreKit 测试红了先看是不是这个原因。
 - 只编模拟器的包：**装不到真 iPhone 上**（要签名，见下）。
 - 构建号：浅克隆数不出提交数，自动退回 1（模拟器包用不到）。打给人装的包要么把历史取全（`fetch-depth: 0`），要么设 `ECHO_VERSION_CODE`。
@@ -145,7 +147,8 @@ cd ios && xcodegen generate && open EchoIsland.xcodeproj
 
 **交易**（`iapBuy`、`iapCurrent`、`iapRestore`、`iapPending` 和事件里的每一项）：`{jws, verified, verifyError?, transactionId, originalId, productId, purchaseDate, expires, revoked, revocationReason?, upgraded, appAccountToken, environment, ownership}`。`jws` = `VerificationResult.jwsRepresentation`，原样作为 `signedTransaction` 交给服务器；编号是**字符串**（UInt64，JavaScript 的数字放不下全部）；时间是毫秒，没有就是 `null`；`environment` 是 `Production` / `Sandbox` / `Xcode`。
 
-**事件** `echo-iap`（`window.addEventListener('echo-iap', e => …)`，和 `echo-mic` 一样的写法）：一开 App 原生就听 `Transaction.updates`，续费、退款 / 撤销、「请求购买」被批准、别的设备上买的、优惠码，来一笔发一次，`e.detail` = 交易 + `kind`：`purchase` / `renewal` / `revoked` / `expired` / `upgraded`。网页收到就交给服务器，服务器回 200 再 `iapFinish`。网页还没打开时来的不会丢（`iapPending` 拿）。
+**事件** `echo-iap`（`window.addEventListener('echo-iap', e => …)`，和 `echo-mic` 一样的写法）：一开 App 原生就听 `Transaction.updates`，续费、退款 / 撤销、「请求购买」被批准、别的设备上买的、优惠码，来一笔发一次，`e.detail` = 交易 + `kind`：`purchase` / `renewal` / `revoked` / `expired` / `upgraded`（退款最先判）。网页收到就交给服务器，服务器回 200 再 `iapFinish`。网页还没打开时来的没 finish 的不会丢（`iapPending` 拿）；已经 finish 过、后来退了款的不在 `iapPending` 里，以服务器收到的 App Store 通知为准。
+StoreKit 只把交易交给**当时正在听**的人，所以 `Store.start()` 用 `userInitiated` 优先级（以前用 `background`，云上测试里任务一直没排上，家长批准的那一笔就丢了），序列自己结束了会重新订阅。
 
 网页那边的顺序（下一步做账号页和付费墙时照这个）：登录（邮箱验证码，或 `appleSignIn` → `POST /v1/auth/apple`）→ `GET /v1/me` 拿 `iapToken` → `iapPending`，有就逐笔交给服务器再 `iapFinish` → 付费墙 `iapProducts` → `iapBuy(…, iapToken)` → `purchased` / `unverified` 交给服务器 → `iapFinish`；「恢复购买」按钮 `iapRestore` → 每个 `jws` 交给服务器。苹果审核要求付费墙上写清价格、周期、自动续费、怎么取消，并有《使用条款》和《隐私政策》的链接（见下面的清单）。
 
@@ -165,7 +168,7 @@ TestFlight 的工作流先带着它签；苹果不肯（App ID 上没勾「Sign 
 
 - `App/Store.storekit`：Xcode 的 StoreKit 配置文件，一个订阅组「Echo Island Premium」，两个自动续期订阅 `com.echoisland.app.premium.monthly`（US$8.99 / 月）、`com.echoisland.app.premium.yearly`（US$59.99 / 年，7 天免费试用——**例子**，真的价格和试用在 App Store Connect 里定，这个文件只给测试用）。改了 App 标识，这里的两个编号也要跟着改（`tests/ios.test.js` 核对）。
 - 在 Mac 的 Xcode 里 ⌘R：scheme 的运行设置用它（`project.yml` 的 `storeKitConfiguration`），买东西不花钱、不连苹果；Debug → StoreKit → Manage Transactions 里能退款、让订阅过期、批准「请求购买」。正式包、TestFlight 不受影响。
-- 单元测试 `Tests/StoreKitTests.swift` 用 `SKTestSession(contentsOf:)` 读测试包里的那一份（不弹界面）：商品、买月度（JWS 里带着账号的 UUID）、`iapPending` → `iapFinish`、请求购买 → 批准以后从事件来、恢复、强制续费 → `renewal` 事件 → 过期以后不再有效、退款 → `revoked` 事件。取消只测了结果怎么回（`AccountLogicTests`：关掉了确认界面的测试里点不了「取消」）；`unverified` 在本地 App Store 里造不出来。
+- 单元测试 `Tests/StoreKitTests.swift` 用 `SKTestSession(contentsOf:)` 读测试包里的那一份（不弹界面）：商品、买月度（JWS 里带着账号的 UUID）、`iapPending` → `iapFinish`、请求购买 → 批准以后从事件来、恢复、强制续费 → `renewal` 事件 → 过期以后不再有效、退款 → `revoked` 事件。要事件的测试先等 `store.listening`（听的任务跑起来了）再买，和 App 里一打开就听一样。`kind` 的规则（退款优先）另有不用 StoreKit 的单元测试（`AccountLogicTests.testTransactionKinds`）。取消只测了结果怎么回（`AccountLogicTests`：关掉了确认界面的测试里点不了「取消」）；`unverified` 在本地 App Store 里造不出来。
 - Xcode 本地 App Store 的交易是 Xcode 的证书签的：手机上算核对过，**服务器那边会拒**（`cloud/API.md`：只认 Apple Root CA – G3），这是对的。
 - UI 测试（`-EchoSelfTest store`）只要求异步桥一路通（网页 → `Store.swift` → `window.__echoNative`，用一个当场回的 `bad-token`）；问商品、有商品时弹不弹购买面板只记下来：`xcodebuild test` 不把配置文件交给模拟器（UI 测试里 `SKTestSession` 也管不到被测的 App），云上多半一个商品都没有。
 
