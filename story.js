@@ -12,10 +12,214 @@
     girl: ['Lily', 'Amy', 'Emma', 'Anna', 'Lucy', 'Kate', 'Grace', 'Sophie'],
   };
   const TYPE_EN = { fire: 'fire', water: 'water', grass: 'grass', spark: 'electric' };
-  const TYPE_ZH = { fire: '火', water: '水', grass: '草', spark: '电' };
+
+  // ---------- 界面文字（i18n.js 字表；键前缀 st.） ----------
+  // 剧情台词是内容：英文是要学的，第二个参数 / zh 字段是它的中文意思，留在原处（对话框显示时走 EchoI18n.gloss，英语界面不显示）。
+  // 下面这行告诉 tests/i18n.test.js 哪些函数的哪个参数是中文意思（从 0 数）：
+  // @i18n-content-calls prof:1 mom:1 nar:1 who:1 say:1 V:1 H:1 L:1 S:1 orionS:1 speak:2
+  // 这个文件也在 Node 的沙箱里加载（tests/maps、quests、sighting，tools/voice/collect.js），那里没有 EchoI18n：加载时不调 tx
+  const I18N = window.EchoI18n;
+  const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
+  // 界面语言里有没有「英文内容的意思」（中文界面有；英语界面没有：英文本身就是内容）
+  const glossOn = () => !I18N || I18N.gloss({ [I18N.lang()]: 1 }) != null;
+  // 属性名（dex.js 的 TYPES 里有 zh / en）
+  const typeName = t => { const T = window.DEX && DEX.TYPES[t]; return T ? (I18N ? I18N.label(T) : T.zh) : t; };
+  if (I18N) I18N.add({
+    zh: {
+      'st.who.nar': '旁白', 'st.who.statue': '雕像',
+      // 开场：小岛通行证
+      'st.pass.boy': '男孩', 'st.pass.girl': '女孩',
+      'st.name.ph': '自己输入英文名', 'st.name.ok': '好了',
+      'st.name.tip': '只能用英文字母，比如 Kevin、Coco。起个游戏昵称就好，不用写真名',
+      'st.name.bad': '要用英文字母写哦，比如 Kevin',
+      // 选伙伴的贝壳
+      'st.bag.shell': '第 {n} 个贝壳', 'st.bag.type': '{type}系',
+      'st.bag.ask': '要选{type}系的 {name}（{zh}）吗？',
+      'st.bag.how': '◀ ▶ 选一个贝壳，按 <b>A</b> 看看里面是谁',
+      'st.bag.yes': '是 YES', 'st.bag.no': '不 NO',
+      // 提示条
+      'st.toast.heal': '💖 怪兽们的体力都恢复了', 'st.toast.potion': '🧪 药水 +{n}', 'st.toast.headset': '🎧 得到了共学耳机！',
+      'st.toast.gold': '💠 金回声球 +{n}（村民的谢礼）', 'st.toast.coins': '💰 金币 +{n}',
+      // 光荣榜
+      'st.fame.title': '🏆 光荣榜 Honor Wall', 'st.fame.line': '英语冠军赛冠军 · {date}',
+      // 现在要做（objective）
+      'st.obj.tired': '怪兽们都累倒了：先去休息站 Rest Stop 找护士恢复体力',
+      'st.obj.champ': '🏆 你是英语冠军了！回各岛找岛主重赛（更强，还会考最近学的课本单元），也去找找「传说的线索」',
+      'st.obj.brave': '从回忆岛北边走勇气之路 Brave Road，去冠军高原参加英语冠军赛（小凯 Kai 在洞窟 2 楼等你）',
+      'st.obj.master': '英语冠军赛：挑战第 {k} 位擂主 {name}（{role}）',
+      'st.obj.final': '英语冠军赛：挑战{name}，赢了就是英语冠军！',
+      'st.obj.study': '岛主{who} 要你先学好课本：去「📚 闯关练习」打败 {unit} 的 BOSS（课本 BOSS {done}/{need}）',
+      'st.obj.gym': '去挑战馆 Challenge Hall 挑战{who}。{how}',
+      'st.master.1': '智者 Master Sage', 'st.master.1.role': '单词擂主',
+      'st.master.2': '露娜 Master Luna', 'st.master.2.role': '听力擂主',
+      'st.master.3': '冰霜 Master Frost', 'st.master.3.role': '口语擂主',
+      'st.master.4': '利爪 Master Talon', 'st.master.4.role': '对话擂主',
+      'st.master.5': '冠军阿丽娅 Champion Aria',
+      // 挑战馆的机关（第 z 座岛）
+      'st.gym.0': '问候之门：看窗外的天色，说对问候语（Good morning / afternoon / evening）',
+      'st.gym.1': '彩色地板：听广播 "Walk on red!"，只踩那种颜色',
+      'st.gym.2': '家族树迷宫：听描述找到奶奶、爸爸、妹妹，问 "Are you the grandma?"',
+      'st.gym.3': '教室换座：对着黑板按 A 答题，答对开门',
+      'st.gym.4': '课程表开关：按广播的顺序踩学科开关',
+      'st.gym.5': '音符地板：听广播，按顺序踩音符',
+      'st.gym.6': '时钟转门：听报时，把钟拨到对的时间',
+      'st.gym.7': '礼物盒：听生日日期，踩写着那天的盒子',
+      'st.gym.8': '脚印小路：听描述，跟着对的脚印走',
+      'st.gym.9': '红绿灯：只走斑马线，绿灯才能走',
+      'st.gym.10': '冰面滑行：只捡健康的食物',
+      'st.gym.11': '天气开关：按天气预报的顺序打开开关',
+      'st.gym.12': '回忆牌：翻牌，把英文和中文配成对',
+      // 去下一座岛的路
+      'st.go.1': '沿 1 号路 Route 1 往北走，去彩色文具岛', 'st.go.1.rival': '（{rival} 在路上等你）',
+      'st.go.2': '穿过涂鸦森林 Graffiti Woods 和 2 号路，往北去温馨家庭岛',
+      'st.go.3': '用「开路」砍掉北边路口的小树，走 3 号路去校园岛', 'st.go.3.get': '去北边路口的小屋找树医生 Tree Doctor，拿「开路」的回声贝',
+      'st.go.4': '用「开路 2 级」敲碎隧道里的裂石，穿过裂石隧道去学科岛', 'st.go.4.get': '去北边的隧道口找矿工 Miner，拿「开路 2 级」的回声贝',
+      'st.go.5': '去港口坐盖尔船长 Captain Gale 的渡轮 ferry，去社团岛',
+      'st.go.6': '用「开路 3 级」推开沙丘道的大石头，去作息岛', 'st.go.6.get': '去沙滩边找大力士 Strongman，拿「开路 3 级」的回声贝',
+      'st.go.7': '钻进钟山 Clock Mountain 的山洞爬到山顶，再沿 7 号路往北去生日派对岛',
+      'st.go.8': '用「水路」往东过 8 号水路，去动物岛', 'st.go.8.get': '去港口找爸爸 Dad，拿「水路」的回声贝',
+      'st.go.9': '用「水路」往东过 9 号水路，去规则城',
+      'st.go.10': '去城东的 10 号水路，在深蓝色的水上用「水路 2 级」潜下去，从海底去运动美食岛', 'st.go.10.get': '去海边找导师欧瑞 Orion，拿「水路 2 级」的回声贝',
+      'st.go.11': '穿过北边的冰洞 Ice Cave，去天气岛',
+      'st.go.12': '去 12 号路，用「水路 3 级」爬上瀑布 waterfall，去回忆岛', 'st.go.12.get': '去气象台找斯凯博士 Dr. Skye，拿「水路 3 级」的回声贝',
+      // 各岛剧情的下一步
+      'st.step.look': '在{isle}走走看看',
+      'st.isle.1': '彩色文具岛', 'st.isle.2': '温馨家庭岛', 'st.isle.3': '校园岛', 'st.isle.4': '学科岛', 'st.isle.5': '社团岛', 'st.isle.6': '作息岛',
+      'st.isle.7': '生日派对岛', 'st.isle.8': '动物岛', 'st.isle.9': '规则城', 'st.isle.10': '运动美食岛', 'st.isle.11': '天气岛',
+      'st.step.0.mom': '和妈妈说说话，然后走到门口的红地垫出门', 'st.step.0.prof': '出门去找邻居回声博士 Professor Echo',
+      'st.step.1.hush': '颜色水晶 Color Crystal 被偷了！去小镇北边的涂鸦森林 Graffiti Woods，打败森林深处的嘘声团（{n}/2）',
+      'st.step.2.well': '井边 well 有个小男孩在哭，去问问他',
+      'st.step.2.fam': '帮蒂姆 Tim 找家人：问 "Are you Tim\'s mom?"（还差{left}）',
+      'st.step.2.mom': '妈妈', 'st.step.2.dad': '爸爸', 'st.step.2.gran': '奶奶', 'st.sep': '、',
+      'st.step.2.field': '风车田 windmill field 里的稻草人在动？去看看！',
+      'st.step.3.note': '嘘声团的低语 Whisper 跑进了红砖教学楼（有钟楼的那栋），去找她',
+      'st.step.3.lib': '找人问一问："Where is the library?"（走廊里的艾米 Amy）',
+      'st.step.3.lab': '图书馆在食堂旁边，去问图书管理员 librarian',
+      'st.step.3.grunt': '实验室 lab 在二楼，音乐教室旁边，去打败那里的团员',
+      'st.step.3.c5': '问问二楼的萨姆 Sam："Where is Class Five?"',
+      'st.step.3.go': '五班 Class Five 在实验室旁边，快去堵住低语！',
+      'st.step.4.books': '去八爪博士的实验室（镇子中间的玻璃圆顶），听课程表 timetable 帮他摆书',
+      'st.step.4.hush': '嘘声团在东边的卫星天线 satellite dish 旁，去打败他们',
+      'st.step.5.clubs': '集齐三个社团的贴纸：去找音乐社、舞蹈社、美术社的人（{n}/3）',
+      'st.step.5.show': '去中间的大帐篷参加才艺表演 Talent Show',
+      'st.step.6.tower': '钟楼 clock tower 停了！去钟楼里看看',
+      'st.step.6.ask': '问面包师、学生和镇长："What time do you get up?"（{n}/3）',
+      'st.step.6.tock': '回钟楼找管理员托克 Tock，把大钟拨好',
+      'st.step.7.ask': '问罗丝奶奶、艾米和蛋糕师："When is your birthday?"（{n}/3）',
+      'st.step.7.party': '去蛋糕房子 Cake House 参加 {rival} 的生日派对',
+      'st.step.8.park': '去东边的动物公园 Animal Park，找出巡林员罗莎说的那只怪兽（small, long tail）',
+      'st.step.8.jungle': '去镇子北边的丛林 jungle，找跑散的怪兽',
+      'st.step.8.bush': '丛林里岩壁旁边有一丛奇怪的灌木 bush，去看看',
+      'st.step.8.base': '潜进嘘声团基地：偷听口令 password，打开笼子，打败低语',
+      'st.step.9.rules': '当小交警：在马路上找到不守规矩的人，用英语提醒他们（{n}/3）',
+      'st.step.9.spy': '喷泉旁边有个乔装的团员：red cap（红帽子）、glasses（眼镜）、bag（背包），找出他',
+      'st.step.10.rival': '{rival} 在运动场旁边，去找他聊聊',
+      'st.step.10.market': '嘘声团在集市 market 发垃圾食品，打败两个团员（{n}/2）',
+      'st.step.11.skye': '去气象台 Weather Station（玻璃圆顶的房子）找斯凯博士 Dr. Skye',
+      'st.step.11.door': '打败气象塔 Weather Tower 门口的嘘声团团员',
+      'st.step.11.tower': '爬上气象塔，按天气预报 sunny → rainy → windy 的顺序关掉天气机',
+      'st.step.12.fog': '在回忆岛的雾里走走，{rival} 在等你',
+      'st.step.12.orion': '去镇子北边的回忆神殿 Memory Temple 门口找欧瑞 Orion',
+      'st.step.12.temple': '进回忆神殿：读石板 tablets、回答记忆之门，到最里面阻止默先生 Mr. Mute',
+      // 传说的线索：四个学习里程碑
+      'st.mile.book': '七上 8 个单元的 BOSS 全部打败', 'st.mile.chat': '和岛民用英语聊天，完成目标 30 次',
+      'st.mile.streak': '连续打卡 30 天', 'st.mile.recall': '不看字说对 300 句英语',
+    },
+    en: {
+      'st.who.nar': 'Narrator', 'st.who.statue': 'Statue',
+      'st.pass.boy': 'Boy', 'st.pass.girl': 'Girl',
+      'st.name.ph': 'Type an English name', 'st.name.ok': 'OK',
+      'st.name.tip': 'English letters only, like Kevin or Coco. Use a game nickname, not your real name',
+      'st.name.bad': 'Please use English letters, like Kevin',
+      'st.bag.shell': 'Shell {n}', 'st.bag.type': '{type} type',
+      'st.bag.ask': 'Take {name} ({zh}), a {type} type monster?',
+      'st.bag.how': '◀ ▶ Choose a shell, then press <b>A</b> to look inside',
+      'st.bag.yes': 'YES', 'st.bag.no': 'NO',
+      'st.toast.heal': '💖 Your monsters are all better now', 'st.toast.potion': '🧪 Potion +{n}', 'st.toast.headset': '🎧 You got the Team Headset!',
+      'st.toast.gold': '💠 Gold Echo Ball +{n} (a thank-you gift from the villagers)', 'st.toast.coins': '💰 Coins +{n}',
+      'st.fame.title': '🏆 Honor Wall', 'st.fame.line': 'English Champion · {date}',
+      'st.obj.tired': 'All your monsters are too tired. Go to a Rest Stop and see the nurse first',
+      'st.obj.champ': '🏆 You are the English Champion! Visit the Isle Masters again for rematches (they are stronger and ask about your latest textbook units), and look at the "Legend Clues"',
+      'st.obj.brave': 'Take Brave Road north of Memory Island to the Champion Plateau for the English Championship (Kai is waiting on the second floor of the cave)',
+      'st.obj.master': 'English Championship: challenge {name}, master {k} of 4 ({role})',
+      'st.obj.final': 'English Championship: challenge {name}. Win, and you are the English Champion!',
+      'st.obj.study': 'Isle Master {who} wants you to study first: in "📚 Practice", beat the boss of {unit} (textbook bosses {done}/{need})',
+      'st.obj.gym': 'Go to the Challenge Hall and challenge {who}. {how}',
+      'st.master.1': 'Master Sage', 'st.master.1.role': 'words',
+      'st.master.2': 'Master Luna', 'st.master.2.role': 'listening',
+      'st.master.3': 'Master Frost', 'st.master.3.role': 'speaking',
+      'st.master.4': 'Master Talon', 'st.master.4.role': 'talking',
+      'st.master.5': 'Champion Aria',
+      'st.gym.0': 'Greeting doors: look at the sky through the window and say the right greeting (Good morning / afternoon / evening)',
+      'st.gym.1': 'Colour floor: listen for "Walk on red!" and step only on that colour',
+      'st.gym.2': 'Family tree maze: listen and find the grandma, the dad and the little sister. Ask "Are you the grandma?"',
+      'st.gym.3': 'Classroom seats: press A at the blackboard and answer. A right answer opens the door',
+      'st.gym.4': 'Timetable switches: step on the subject switches in the order you hear',
+      'st.gym.5': 'Music floor: listen, then step on the notes in order',
+      'st.gym.6': 'Clock doors: listen to the time and turn the clock to it',
+      'st.gym.7': 'Gift boxes: listen for the birthday and step on the box with that date',
+      'st.gym.8': 'Footprint path: listen and follow the right footprints',
+      'st.gym.9': 'Traffic lights: walk only on the zebra crossing, and only on green',
+      'st.gym.10': 'Ice slide: pick up only healthy food',
+      'st.gym.11': 'Weather switches: turn them on in the order of the weather report',
+      'st.gym.12': 'Memory cards: turn the cards over and match each English word with its Chinese meaning',
+      'st.go.1': 'Walk north along Route 1 to Crayon Island', 'st.go.1.rival': ' ({rival} is waiting on the way)',
+      'st.go.2': 'Go through Graffiti Woods and Route 2, north to Family Island',
+      'st.go.3': 'Use Clear Way to cut the small tree at the north exit, then take Route 3 to Campus Island', 'st.go.3.get': 'Find the Tree Doctor in the hut by the north exit and get the Clear Way Echo Shell',
+      'st.go.4': 'Use Clear Way 2 to break the cracked rocks in the tunnel, then go through it to Subject Island', 'st.go.4.get': 'Find the Miner at the tunnel to the north and get the Clear Way 2 Echo Shell',
+      'st.go.5': 'Take Captain Gale\'s ferry from the harbour to Club Island',
+      'st.go.6': 'Use Clear Way 3 to push the big rocks on the dune road, then go on to Clock Island', 'st.go.6.get': 'Find the Strongman by the beach and get the Clear Way 3 Echo Shell',
+      'st.go.7': 'Go up through the caves of Clock Mountain to the top, then north along Route 7 to Party Island',
+      'st.go.8': 'Use Water Way to cross Sea Route 8 to the east, to Animal Island', 'st.go.8.get': 'Find Dad at the harbour and get the Water Way Echo Shell',
+      'st.go.9': 'Use Water Way to cross Sea Route 9 to the east, to Rule City',
+      'st.go.10': 'Go to Sea Route 10, east of the city. Use Water Way 2 on the dark blue water to dive, and swim under the sea to Sports Island', 'st.go.10.get': 'Find Orion by the sea and get the Water Way 2 Echo Shell',
+      'st.go.11': 'Go through the Ice Cave to the north, to Weather Island',
+      'st.go.12': 'Go to Route 12 and use Water Way 3 to climb the waterfall to Memory Island', 'st.go.12.get': 'Find Dr. Skye at the Weather Station and get the Water Way 3 Echo Shell',
+      'st.step.look': 'Look around {isle}',
+      'st.isle.1': 'Crayon Island', 'st.isle.2': 'Family Island', 'st.isle.3': 'Campus Island', 'st.isle.4': 'Subject Island', 'st.isle.5': 'Club Island', 'st.isle.6': 'Clock Island',
+      'st.isle.7': 'Party Island', 'st.isle.8': 'Animal Island', 'st.isle.9': 'Rule City', 'st.isle.10': 'Sports Island', 'st.isle.11': 'Weather Island',
+      'st.step.0.mom': 'Talk to Mom, then walk to the red mat by the door to go outside', 'st.step.0.prof': 'Go outside and say hello to your neighbour, Professor Echo',
+      'st.step.1.hush': 'The Color Crystal was stolen! Go to Graffiti Woods north of town and beat the Hush Crew deep in the woods ({n}/2)',
+      'st.step.2.well': 'A little boy is crying by the well. Go and ask him what is wrong',
+      'st.step.2.fam': 'Help Tim find his family. Ask "Are you Tim\'s mom?" (still to find: {left})',
+      'st.step.2.mom': 'Mom', 'st.step.2.dad': 'Dad', 'st.step.2.gran': 'Grandma', 'st.sep': ', ',
+      'st.step.2.field': 'Is the scarecrow in the windmill field moving? Go and see!',
+      'st.step.3.note': 'Whisper from the Hush Crew ran into the red brick school building (the one with the clock tower). Go and find her',
+      'st.step.3.lib': 'Ask someone: "Where is the library?" (Amy in the hallway)',
+      'st.step.3.lab': 'The library is next to the dining hall. Go and ask the librarian',
+      'st.step.3.grunt': 'The lab is on the second floor, next to the music room. Beat the Hush Crew member there',
+      'st.step.3.c5': 'Ask Sam on the second floor: "Where is Class Five?"',
+      'st.step.3.go': 'Class Five is next to the lab. Hurry and stop Whisper!',
+      'st.step.4.books': 'Go to Doctor Octo\'s lab (the glass dome in the middle of town). Listen to the timetable and help him put his books in order',
+      'st.step.4.hush': 'The Hush Crew are by the satellite dish in the east. Go and beat them',
+      'st.step.5.clubs': 'Collect stickers from three clubs: find the music, dance and art club people ({n}/3)',
+      'st.step.5.show': 'Go to the big tent in the middle for the Talent Show',
+      'st.step.6.tower': 'The clock tower has stopped! Go inside and have a look',
+      'st.step.6.ask': 'Ask the baker, the student and the mayor: "What time do you get up?" ({n}/3)',
+      'st.step.6.tock': 'Go back to the clock tower and help Tock set the big clock',
+      'st.step.7.ask': 'Ask Granny Rose, Amy and the cake maker: "When is your birthday?" ({n}/3)',
+      'st.step.7.party': 'Go to the Cake House for {rival}\'s birthday party',
+      'st.step.8.park': 'Go to the Animal Park in the east and find the monster that Ranger Rosa talks about (small, long tail)',
+      'st.step.8.jungle': 'Go to the jungle north of town and find the lost monsters',
+      'st.step.8.bush': 'There is a strange bush by the rock wall in the jungle. Go and have a look',
+      'st.step.8.base': 'Sneak into the Hush Crew base: listen for the password, open the cages and beat Whisper',
+      'st.step.9.rules': 'Be a little traffic helper: find people breaking the rules on the street and remind them in English ({n}/3)',
+      'st.step.9.spy': 'A Hush Crew member in disguise is near the fountain: red cap, glasses, bag. Find him',
+      'st.step.10.rival': '{rival} is by the sports field. Go and have a chat',
+      'st.step.10.market': 'The Hush Crew are giving out junk food at the market. Beat two of them ({n}/2)',
+      'st.step.11.skye': 'Find Dr. Skye at the Weather Station (the house with the glass dome)',
+      'st.step.11.door': 'Beat the Hush Crew member at the door of the Weather Tower',
+      'st.step.11.tower': 'Climb the Weather Tower and turn off the weather machines in the order of the forecast: sunny → rainy → windy',
+      'st.step.12.fog': '{rival} is waiting for you in the fog on Memory Island',
+      'st.step.12.orion': 'Find Orion at the door of the Memory Temple, north of town',
+      'st.step.12.temple': 'Go into the Memory Temple: read the stone tablets, answer the memory doors and stop Mr. Mute at the very end',
+      'st.mile.book': 'Beat all 8 unit bosses of Grade 7 Book 1', 'st.mile.chat': 'Finish 30 chat goals with the islanders in English',
+      'st.mile.streak': 'Study 30 days in a row', 'st.mile.recall': 'Say 300 English sentences right without looking',
+    },
+  });
   const prof = (en, zh, x) => Object.assign({ who: 'Professor Echo', look: P.LOOKS.prof, g: 'f', en, zh }, x || {});
   const mom = (en, zh, x) => Object.assign({ who: 'Mom', look: P.LOOKS.mom, g: 'f', en, zh }, x || {});
-  const nar = (en, zh) => ({ who: '旁白', emo: '📣', en, zh });
+  const nar = (en, zh) => ({ who: tx('st.who.nar'), emo: '📣', en, zh });
 
   // ---------- 开场：渡轮上填「小岛通行证」（老存档补问名字时由博士来问） ----------
   async function intro(C, short) {
@@ -36,10 +240,11 @@
     // 通行证上的照片（男孩 / 女孩的样子）
     const S = E.S;
     S.player = S.player || {};
-    const card = (g, zh, en) => '<span class="ch-card"><img alt="" src="' + P.standing(P.LOOKS[g], 120, 170) + '"><b>' + zh + '</b><small>' + en + '</small></span>';
+    // 照片下面：界面语言的「男孩 / 女孩」，下面一行小字是英文（英语界面只写一遍英文）
+    const card = (g, en) => '<span class="ch-card"><img alt="" src="' + P.standing(P.LOOKS[g], 120, 170) + '"><b>' + hx('st.pass.' + g) + '</b>' + (glossOn() ? '<small>' + en + '</small>' : '') + '</span>';
     await C.talk([who('Which photo is you?', '通行证上贴哪张照片？选一张像你的。', {
       kind: 'choice',
-      opts: [{ html: card('boy', '男孩', 'Boy') }, { html: card('girl', '女孩', 'Girl') }],
+      opts: [{ html: card('boy', 'Boy') }, { html: card('girl', 'Girl') }],
       pick: i => { S.player.gender = i ? 'girl' : 'boy'; E.save(); E.say(i ? "I'm a girl." : "I'm a boy."); return []; },
     })]);
     // 英文名
@@ -48,7 +253,7 @@
     await C.talk([who('Now write your English name on it.', '再写上你的英文名。选一个，也可以自己起一个游戏昵称（不要用真名哦）。', {
       kind: 'custom',
       html: '<div class="nm-grid">' + names.map(n => '<button class="btn ghost nm" data-n="' + n + '">' + n + '</button>').join('') + '</div>' +
-        '<div class="nm-own"><input id="nm-in" maxlength="12" placeholder="自己输入英文名" autocomplete="off" autocapitalize="words" spellcheck="false"><button class="btn sun" id="nm-ok">好了</button></div><small class="tip" id="nm-tip">只能用英文字母，比如 Kevin、Coco。起个游戏昵称就好，不用写真名</small>',
+        '<div class="nm-own"><input id="nm-in" maxlength="12" placeholder="' + hx('st.name.ph') + '" autocomplete="off" autocapitalize="words" spellcheck="false"><button class="btn sun" id="nm-ok">' + hx('st.name.ok') + '</button></div><small class="tip" id="nm-tip">' + hx('st.name.tip') + '</small>',
       mount: (el, done) => {
         const pickName = n => { S.player.name = n; E.save(); E.say(n); done([]); };
         el.addEventListener('click', e => {
@@ -57,7 +262,7 @@
           if (b) pickName(b.dataset.n);
           if (e.target.id === 'nm-ok') {
             const v = ($('nm-in').value || '').trim().replace(/\s+/g, ' ');
-            if (!/^[A-Za-z][A-Za-z ]{0,11}$/.test(v)) { $('nm-tip').textContent = '要用英文字母写哦，比如 Kevin'; return; }
+            if (!/^[A-Za-z][A-Za-z ]{0,11}$/.test(v)) { $('nm-tip').textContent = tx('st.name.bad'); return; }
             pickName(v.split(' ').map(w => w[0].toUpperCase() + w.slice(1).toLowerCase()).join(' '));
           }
         });
@@ -96,7 +301,7 @@
     if (!C.flag('starter')) { await C.talk([mom('Professor Echo lives next door. Go and say hello!', '回声博士就住在隔壁，快去打个招呼吧！')]); return; }
     await C.talk([
       mom('Welcome home, {name}! You look tired.', '欢迎回家，{name}！你看起来累了。'),
-      mom('Let your monsters have a good rest.', '让你的怪兽们好好休息一下吧。', { onShow: () => { C.MG.healAll(); C.E.SFX.win(); C.E.toast('💖 怪兽们的体力都恢复了', 'gold'); } }),
+      mom('Let your monsters have a good rest.', '让你的怪兽们好好休息一下吧。', { onShow: () => { C.MG.healAll(); C.E.SFX.win(); C.E.toast(tx('st.toast.heal'), 'gold'); } }),
       mom("Don't forget to eat well and sleep early!", '记得好好吃饭，早点睡觉！'),
     ]);
   }
@@ -121,7 +326,7 @@
       sc.innerHTML = '<div class="bg-field"><i></i><i></i><i></i><i></i><i></i><i></i></div>' +
         '<div class="bg-preview" id="bg-prev"></div>' +
         '<div class="bg-bag">' + TRAY_SVG + '</div>' +
-        '<div class="bg-balls">' + ids.map((id, k) => '<button class="bg-ball" data-k="' + k + '" aria-label="第 ' + (k + 1) + ' 个贝壳">' + BALL_SVG + '</button>').join('') + '</div>' +
+        '<div class="bg-balls">' + ids.map((id, k) => '<button class="bg-ball" data-k="' + k + '" aria-label="' + hx('st.bag.shell', { n: k + 1 }) + '">' + BALL_SVG + '</button>').join('') + '</div>' +
         '<div class="bg-hand" id="bg-hand">' + HAND_SVG + '</div>' +
         '<div class="bg-box" id="bg-box"></div>';
       const render = () => {
@@ -129,10 +334,12 @@
         sc.querySelectorAll('.bg-ball').forEach((b, k) => b.classList.toggle('on', k === i));
         $('bg-hand').style.left = (22 + i * 28) + '%';
         const fresh = render.last !== i; render.last = i;
-        $('bg-prev').innerHTML = '<div class="bg-circle' + (fresh ? ' new' : '') + '" style="--tc:' + ({ fire: '#f0642f', water: '#2f8fdd', grass: '#3fa34d', spark: '#d9a000' })[t] + '">' + Cartoon.monster(sp) + '</div><b>' + sp.en + '</b><small>' + sp.zh + ' · ' + TYPE_ZH[t] + '系</small>';
+        // 怪兽的中文名、「要选…吗？」是英文的意思：英语界面不显示（EchoI18n.gloss）；「选一个贝壳」是操作说明，每种界面语言都显示
+        const zhName = I18N ? I18N.gloss(sp) : sp.zh;
+        $('bg-prev').innerHTML = '<div class="bg-circle' + (fresh ? ' new' : '') + '" style="--tc:' + ({ fire: '#f0642f', water: '#2f8fdd', grass: '#3fa34d', spark: '#d9a000' })[t] + '">' + Cartoon.monster(sp) + '</div><b>' + sp.en + '</b><small>' + (zhName ? zhName + ' · ' : '') + hx('st.bag.type', { type: typeName(t) }) + '</small>';
         $('bg-box').innerHTML = asking
-          ? '<p class="bg-en">' + esc(sp.en) + ' is a ' + TYPE_EN[t] + ' monster. Will you take it?</p><p class="bg-zh">要选' + TYPE_ZH[t] + '系的 ' + esc(sp.en) + '（' + sp.zh + '）吗？</p><div class="bg-yn"><button class="btn sun" id="bg-yes">是 YES</button><button class="btn ghost" id="bg-no">不 NO</button></div>'
-          : '<p class="bg-en">Which shell will you open?</p><p class="bg-zh">◀ ▶ 选一个贝壳，按 <b>A</b> 看看里面是谁</p>';
+          ? '<p class="bg-en">' + esc(sp.en) + ' is a ' + TYPE_EN[t] + ' monster. Will you take it?</p>' + (zhName ? '<p class="bg-zh">' + hx('st.bag.ask', { type: typeName(t), name: sp.en, zh: zhName }) + '</p>' : '') + '<div class="bg-yn"><button class="btn sun" id="bg-yes">' + hx('st.bag.yes') + '</button><button class="btn ghost" id="bg-no">' + hx('st.bag.no') + '</button></div>'
+          : '<p class="bg-en">Which shell will you open?</p><p class="bg-zh">' + tx('st.bag.how') + '</p>';
       };
       const move = d => { if (asking || over) return; i = (i + d + ids.length) % ids.length; E.SFX.tap(); render(); E.say(MG.species(ids[i]).en); };
       const ask = () => { if (over) return; asking = true; render(); const sp = MG.species(ids[i]); E.say(sp.en + ' is a ' + TYPE_EN[sp.type] + ' monster. Will you take it?', undefined, 'f'); };
@@ -195,7 +402,7 @@
       : [prof("That's okay, {name}. You two just met!", '没关系，{name}。你们才刚认识嘛！'), prof('Practice together, and you will get better every day.', '一起多练练，你们会一天比一天棒。')];
     await C.talk(pages.concat([
       prof(sp.en + ' is your partner now. Take good care of it!', sp.en + ' 现在是你的伙伴了，要好好照顾它哦！'),
-      prof('Take these potions, too.', '这两瓶药水也拿着。', { onShow: () => { MG.addItem('potion', 2); E.toast('🧪 药水 +2', 'gold'); } }),
+      prof('Take these potions, too.', '这两瓶药水也拿着。', { onShow: () => { MG.addItem('potion', 2); E.toast(tx('st.toast.potion', { n: 2 }), 'gold'); } }),
       prof('Monsters here listen to English. Speak clearly, and ' + sp.en + ' will be strong.', '这里的怪兽听英语。你说得越清楚，' + sp.en + ' 就越强。'),
       prof('First, visit the Challenge Hall and meet Captain Polly. Win her badge!', '先去挑战馆见见鹦鹉船长，赢下她的徽章！'),
       prof('But Captain Polly only battles students who study hard.', '不过鹦鹉船长只和用功的学生对战：先在「📚 闯关练习」里打败课本前两个单元的 BOSS 吧！', { zhKeep: true }),
@@ -271,7 +478,7 @@
     C.faceEach(n);
     await C.talk([
       prof('{name}! You won the first badge! Well done!', '{name}！你拿到第一枚徽章了！真棒！'),
-      prof('Take this. It is a Team Headset.', '这个送给你，它叫共学耳机。', { onShow: () => { C.MG.addItem('expshare', 1); C.E.SFX.win(); C.E.toast('🎧 得到了共学耳机！', 'gold'); } }),
+      prof('Take this. It is a Team Headset.', '这个送给你，它叫共学耳机。', { onShow: () => { C.MG.addItem('expshare', 1); C.E.SFX.win(); C.E.toast(tx('st.toast.headset'), 'gold'); } }),
       prof('With it, all the monsters in your team can listen and learn from every battle.', '戴着它，队伍里没出场的怪兽也在旁边听，也能分到经验。'),
       prof('You can turn it on or off in your bag.', '在背包里可以打开或者关掉它。'),
     ]);
@@ -281,6 +488,7 @@
 
   // ---------- 第一年主线：嘘声团偷走每座岛的词语水晶（第 2–13 镇） ----------
   // stages：要打败的人，按顺序站在挑战馆门口；say：夺回水晶后大声念的句子（这座岛的主题）
+  // @i18n-content 水晶的英文名、台词和要念的句子是内容，zh / sayZh 是它们的中文意思（对话框里走 EchoI18n.gloss）
   const CH = [
     null,
     { crystal: 'Color Crystal', zh: '颜色水晶', hush: ['poison', 'dark'], stages: ['grunt', 'gruntF'],
@@ -320,6 +528,7 @@
       flavor: ['Mr. Mute is here! He wants to wake the Hush King!', '默先生来了！他要唤醒寂静之王！'],
       say: 'We remember! Echodrake, wake up!', sayZh: '我们记得！回声龙，醒来吧！' },
   ];
+  // @i18n-content-end
   const HUSH = {
     grunt: { name: 'Hush Crew', look: 'grunt', g: 'm', n: 2, lines: [['Shh! Words only make trouble!', '嘘！说话只会惹麻烦！'], ['Silence is peace!', '安静就是和平！'], ['You talk too much, kid!', '小朋友，你话太多了！']] },
     gruntF: { name: 'Hush Crew', look: 'gruntF', g: 'f', n: 2, lines: [['Be quiet! This crystal is ours now!', '安静！这颗水晶现在是我们的了！'], ['Shh... go home, little trainer.', '嘘……回家去吧，小训练师。']] },
@@ -371,7 +580,7 @@
     await restoreCrystal(C, z);
   }
   async function restoreCrystal(C, z) {
-    const ch = CH[z], E = C.E, nar = (en, zh, x) => Object.assign({ who: '旁白', emo: '💎', en, zh }, x || {});
+    const ch = CH[z], E = C.E, nar = (en, zh, x) => Object.assign({ who: tx('st.who.nar'), emo: '💎', en, zh }, x || {});
     await C.talk([
       nar('You got the ' + ch.crystal + ' back!', '你夺回了' + ch.zh + '！'),
       nar('Say the magic words to make it shine again!', '大声念出这句话，让水晶重新亮起来！'),
@@ -380,13 +589,13 @@
     ]);
     C.set(chFlag(z));
     C.MG.addItem('superball', 3);
-    E.toast('💠 金回声球 +3（村民的谢礼）', 'gold');
+    E.toast(tx('st.toast.gold', { n: 3 }), 'gold');
     if (z === 12) await echodrakeWakes(C);
     else await C.talk([nar('Now you can challenge the Isle Master!', '现在可以去挑战岛主了！')]);
   }
   // 最后一章：13 座岛的声音一起唤醒回声龙
   async function echodrakeWakes(C) {
-    const b = C.map.buildings.G || { door: { x: C.pl.x, y: C.pl.y - 3 } }, nar = (en, zh) => ({ who: '旁白', emo: '🐉', en, zh });
+    const b = C.map.buildings.G || { door: { x: C.pl.x, y: C.pl.y - 3 } }, nar = (en, zh) => ({ who: tx('st.who.nar'), emo: '🐉', en, zh });
     C.E.SFX.win();
     await C.talk([
       nar('The ground is shaking...', '大地在摇晃……'),
@@ -399,7 +608,7 @@
   // ---------- 挑战馆：点亮三座雕像（回答英语问题），岛主才接受挑战 ----------
   const litN = (C, z) => Object.keys(C.E.S.world.flags).filter(k => k.startsWith('s:g' + z + ':')).length;
   async function statueQuiz(C, f) {
-    const z = C.map.z, key = 'g' + z + ':' + f.x + ':' + f.y, w = C.E.W[z], nar = (en, zh, x) => Object.assign({ who: '雕像', emo: '🗿', en, zh }, x || {});
+    const z = C.map.z, key = 'g' + z + ':' + f.x + ':' + f.y, w = C.E.W[z], nar = (en, zh, x) => Object.assign({ who: tx('st.who.statue'), emo: '🗿', en, zh }, x || {});
     if (C.flag(key)) { await C.talk([nar('The statue is shining.', '这座雕像已经亮了。')]); return; }
     const sr = C.E.src ? C.E.src(z) : { w: z, d: w }, k = Math.floor(Math.random() * sr.d.dlgs.length), it = sr.d.dlgs[k];   // 有几成换成课本正在学的单元
     const opts = [{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))].sort(() => Math.random() - .5);
@@ -409,7 +618,9 @@
     C.set(key);
     const n = litN(C, z);
     C.E.SFX.ok(3);
+    // @i18n-content 雕像这页的中文意思（后半句是括号里的条件，测试分不出它还在 nar 的第二个参数里）
     await C.talk([nar('The statue lights up! (' + n + '/4)', '雕像亮起来了！（' + n + '/4）' + (n >= 3 ? '现在可以挑战岛主了！' : '再点亮 ' + (3 - n) + ' 座就能挑战岛主。'))]);
+    // @i18n-content-end
   }
   function leaderGate(C, n) {
     const z = C.map.z, b = C.E.W[z].boss;
@@ -478,7 +689,9 @@
   const sayer = (who, look, g) => (en, zh, x) => Object.assign({ who, look: typeof look === 'string' ? P.LOOKS[look] : look, g: g || 'm', en, zh }, x || {});
   const me = C => (en, zh, x) => Object.assign({ who: '{name}', look: C.plook(), g: C.E.S.player && C.E.S.player.gender === 'girl' ? 'f' : 'm', en, zh }, x || {});
   // 让玩家大声说一句
+  // @i18n-content 说话任务页没给中文意思时的那一句（页面的 zh：中文界面显示，英语界面不显示，下面的说话任务本身有界面文字）
   const speak = (C, target, zh, x) => Object.assign(me(C)(target, zh || '大声说出来！'), { kind: 'speak', target }, x || {});
+  // @i18n-content-end
   // 听一句话，选出正确的回答再说出来（right：正确回答；wrong：错的选项）
   const ask = (S, en, zh, right, wrong, x) => S(en, zh, Object.assign({ kind: 'answer', opts: [{ c: true, t: right }].concat(wrong.map(t => ({ t }))).sort(() => Math.random() - .5) }, x || {}));
 
@@ -507,20 +720,21 @@
   async function hallOfFame(C) {
     const E = C.E, MG = C.MG, sc = C.scene(), team = E.S.mon.team.map(u => E.S.mon.box.find(m => m.uid === u)).filter(Boolean);
     sc.className = 'w-scene fame'; sc.hidden = false;
-    sc.innerHTML = '<div class="fame-in"><h2>🏆 光荣榜 Honor Wall</h2><p class="fame-name">' + E.esc(C.pname()) + '</p><div class="fame-team">' +
-      team.map(m => { const s = MG.species(m.sp); return '<span class="fame-mon">' + Cartoon.monster(s) + '<b>' + s.en + '</b><small>Lv ' + m.lv + '</small></span>'; }).join('') + '</div><p>英语冠军赛冠军 · ' + new Date().toLocaleDateString('zh-CN') + '</p></div>';
+    const loc = (I18N && (I18N.LANGS.find(l => l.id === I18N.lang()) || {}).html) || 'zh-CN';   // 日期按界面语言写
+    sc.innerHTML = '<div class="fame-in"><h2>' + hx('st.fame.title') + '</h2><p class="fame-name">' + E.esc(C.pname()) + '</p><div class="fame-team">' +
+      team.map(m => { const s = MG.species(m.sp); return '<span class="fame-mon">' + Cartoon.monster(s) + '<b>' + s.en + '</b><small>Lv ' + m.lv + '</small></span>'; }).join('') + '</div><p>' + hx('st.fame.line', { date: new Date().toLocaleDateString(loc) }) + '</p></div>';
     E.SFX.win(); E.confetti(300);
     C.set('champion');
     E.S.coins += 500; E.renderTop();
     await C.wait(600);
     await C.talk([
-      { who: '旁白', emo: '🏆', en: 'Congratulations, {name}! You are the Champion!', zh: '恭喜你，{name}！你成为了英语冠军！' },
-      { who: '旁白', emo: '🏆', en: 'Your monsters and your English made it happen.', zh: '是你的怪兽和你的英语一起做到的。' },
+      { who: tx('st.who.nar'), emo: '🏆', en: 'Congratulations, {name}! You are the Champion!', zh: '恭喜你，{name}！你成为了英语冠军！' },
+      { who: tx('st.who.nar'), emo: '🏆', en: 'Your monsters and your English made it happen.', zh: '是你的怪兽和你的英语一起做到的。' },
       prof('Wonderful, {name}! But the world is bigger than these islands...', '太棒了，{name}！不过世界比这些岛大得多……'),
       prof('Far to the north, new islands are waiting. See you next year!', '在遥远的北方，还有新的群岛在等你。明年见！'),
     ]);
     sc.classList.add('out'); await C.wait(700); sc.hidden = true; sc.className = 'w-scene'; sc.innerHTML = '';
-    E.toast('💰 金币 +500', 'gold');
+    E.toast(tx('st.toast.coins', { n: 500 }), 'gold');
     // 打通以后还有事做：岛主重赛（更强、题目换成最近学的课本单元）、传说的线索
     await C.talk([
       prof('Oh, and one more thing! The Isle Masters want to battle you again.', '对了，还有一件事！各岛的岛主都想再和你比一场。'),
@@ -537,113 +751,105 @@
   // ---------- 现在该去哪、做什么（大地图顶上的 📍、冒险菜单、首页「继续冒险」下面、进地图时的提示）----------
   // 只看徽章、去过的岛和剧情旗标，不看当前地图（首页也能用）。返回 { zh, z }：一句中文目标，带上关键的英文
   const LEADER_EN = ['Captain Polly', 'Crabby', 'Granny Turtle', 'Principal Owl', 'Doctor Octo', 'Flo', 'Rooster Rex', 'Puffy', 'Croc', 'Sharky', 'Coach Seal', 'Whaley', 'the Memory Dragon'];
-  const GYM_HOW = [
-    '问候之门：看窗外的天色，说对问候语（Good morning / afternoon / evening）',
-    '彩色地板：听广播 "Walk on red!"，只踩那种颜色',
-    '家族树迷宫：听描述找到奶奶、爸爸、妹妹，问 "Are you the grandma?"',
-    '教室换座：对着黑板按 A 答题，答对开门',
-    '课程表开关：按广播的顺序踩学科开关',
-    '音符地板：听广播，按顺序踩音符',
-    '时钟转门：听报时，把钟拨到对的时间',
-    '礼物盒：听生日日期，踩写着那天的盒子',
-    '脚印小路：听描述，跟着对的脚印走',
-    '红绿灯：只走斑马线，绿灯才能走',
-    '冰面滑行：只捡健康的食物',
-    '天气开关：按天气预报的顺序打开开关',
-    '回忆牌：翻牌，把英文和中文配成对',
-  ];
+  const GYM_HOW = z => tx('st.gym.' + z);   // 第 z 座岛挑战馆的机关怎么玩（字表 st.gym.0–12）
   const HM_OK = (C, k) => C.MG.itemCount('hm_' + k) > 0;
-  // 去第 z 座岛的路（还没去过那座岛时）
+  // 去第 z 座岛的路（还没去过那座岛时）：有回声贝的走 st.go.z，没有的先去拿（st.go.z.get）
+  const goHm = (C, z, k) => tx('st.go.' + z + (HM_OK(C, k) ? '' : '.get'));
   const TRAVEL = {
-    1: C => '沿 1 号路 Route 1 往北走，去彩色文具岛' + (C.flag('rival1') ? '' : '（{rival} 在路上等你）'),
-    2: () => '穿过涂鸦森林 Graffiti Woods 和 2 号路，往北去温馨家庭岛',
-    3: C => HM_OK(C, 'cut') ? '用「开路」砍掉北边路口的小树，走 3 号路去校园岛' : '去北边路口的小屋找树医生 Tree Doctor，拿「开路」的回声贝',
-    4: C => HM_OK(C, 'smash') ? '用「开路 2 级」敲碎隧道里的裂石，穿过裂石隧道去学科岛' : '去北边的隧道口找矿工 Miner，拿「开路 2 级」的回声贝',
-    5: () => '去港口坐盖尔船长 Captain Gale 的渡轮 ferry，去社团岛',
-    6: C => HM_OK(C, 'strength') ? '用「开路 3 级」推开沙丘道的大石头，去作息岛' : '去沙滩边找大力士 Strongman，拿「开路 3 级」的回声贝',
-    7: () => '钻进钟山 Clock Mountain 的山洞爬到山顶，再沿 7 号路往北去生日派对岛',
-    8: C => HM_OK(C, 'surf') ? '用「水路」往东过 8 号水路，去动物岛' : '去港口找爸爸 Dad，拿「水路」的回声贝',
-    9: () => '用「水路」往东过 9 号水路，去规则城',
-    10: C => HM_OK(C, 'dive') ? '去城东的 10 号水路，在深蓝色的水上用「水路 2 级」潜下去，从海底去运动美食岛' : '去海边找导师欧瑞 Orion，拿「水路 2 级」的回声贝',
-    11: () => '穿过北边的冰洞 Ice Cave，去天气岛',
-    12: C => HM_OK(C, 'falls') ? '去 12 号路，用「水路 3 级」爬上瀑布 waterfall，去回忆岛' : '去气象台找斯凯博士 Dr. Skye，拿「水路 3 级」的回声贝',
+    1: C => tx('st.go.1') + (C.flag('rival1') ? '' : tx('st.go.1.rival')),
+    2: () => tx('st.go.2'),
+    3: C => goHm(C, 3, 'cut'),
+    4: C => goHm(C, 4, 'smash'),
+    5: () => tx('st.go.5'),
+    6: C => goHm(C, 6, 'strength'),
+    7: () => tx('st.go.7'),
+    8: C => goHm(C, 8, 'surf'),
+    9: () => tx('st.go.9'),
+    10: C => goHm(C, 10, 'dive'),
+    11: () => tx('st.go.11'),
+    12: C => goHm(C, 12, 'falls'),
   };
   // 各岛的剧情还没做完时：下一步做什么（做完了返回 null）
   const n3 = (C, ks) => ks.filter(k => C.flag(k)).length;
+  // 字表里的一步（st.step.<岛>.<名字>）、「在某某岛走走看看」
+  const step = (z, k, p) => tx('st.step.' + z + '.' + k, p);
+  const lookAround = z => tx('st.step.look', { isle: tx('st.isle.' + z) });
   const STEPS = {
-    0: C => !C.flag('mom') ? '和妈妈说说话，然后走到门口的红地垫出门' : !C.flag('starter') ? '出门去找邻居回声博士 Professor Echo' : null,
-    1: C => C.flag('ch1') ? null : !C.flag('z1intro') ? '在彩色文具岛走走看看' : '颜色水晶 Color Crystal 被偷了！去小镇北边的涂鸦森林 Graffiti Woods，打败森林深处的嘘声团（' + n3(C, ['z1h0', 'z1h1']) + '/2）',
+    0: C => !C.flag('mom') ? step(0, 'mom') : !C.flag('starter') ? step(0, 'prof') : null,
+    1: C => C.flag('ch1') ? null : !C.flag('z1intro') ? lookAround(1) : step(1, 'hush', { n: n3(C, ['z1h0', 'z1h1']) }),
     2: C => {
       if (C.flag('ch2')) return null;
-      if (!C.flag('f2call')) return '在温馨家庭岛走走看看';
-      if (!C.flag('f2tim')) return '井边 well 有个小男孩在哭，去问问他';
-      const left = [['f2mom', '妈妈'], ['f2dad', '爸爸'], ['f2gran', '奶奶']].filter(([k]) => !C.flag(k)).map(q => q[1]);
-      return left.length ? '帮蒂姆 Tim 找家人：问 "Are you Tim\'s mom?"（还差' + left.join('、') + '）' : '风车田 windmill field 里的稻草人在动？去看看！';
+      if (!C.flag('f2call')) return lookAround(2);
+      if (!C.flag('f2tim')) return step(2, 'well');
+      const left = [['f2mom', 'mom'], ['f2dad', 'dad'], ['f2gran', 'gran']].filter(([k]) => !C.flag(k)).map(q => step(2, q[1]));
+      return left.length ? step(2, 'fam', { left: left.join(tx('st.sep')) }) : step(2, 'field');
     },
-    3: C => C.flag('ch3') ? null : !C.flag('f3in') ? '在校园岛走走看看'
-      : !C.flag('f3note') ? '嘘声团的低语 Whisper 跑进了红砖教学楼（有钟楼的那栋），去找她'
-        : !C.flag('f3lib') ? '找人问一问："Where is the library?"（走廊里的艾米 Amy）'
-          : !C.flag('f3lab') ? '图书馆在食堂旁边，去问图书管理员 librarian'
-            : !C.flag('f3grunt') ? '实验室 lab 在二楼，音乐教室旁边，去打败那里的团员'
-              : !C.flag('f3c5') ? '问问二楼的萨姆 Sam："Where is Class Five?"' : '五班 Class Five 在实验室旁边，快去堵住低语！',
-    4: C => C.flag('ch4') ? null : !C.flag('f4in') ? '在学科岛走走看看'
-      : !C.flag('f4books') ? '去八爪博士的实验室（镇子中间的玻璃圆顶），听课程表 timetable 帮他摆书' : '嘘声团在东边的卫星天线 satellite dish 旁，去打败他们',
+    3: C => C.flag('ch3') ? null : !C.flag('f3in') ? lookAround(3)
+      : !C.flag('f3note') ? step(3, 'note')
+        : !C.flag('f3lib') ? step(3, 'lib')
+          : !C.flag('f3lab') ? step(3, 'lab')
+            : !C.flag('f3grunt') ? step(3, 'grunt')
+              : !C.flag('f3c5') ? step(3, 'c5') : step(3, 'go'),
+    4: C => C.flag('ch4') ? null : !C.flag('f4in') ? lookAround(4)
+      : !C.flag('f4books') ? step(4, 'books') : step(4, 'hush'),
     5: C => {
       if (C.flag('ch5')) return null;
-      if (!C.flag('c5intro')) return '在社团岛走走看看';
+      if (!C.flag('c5intro')) return lookAround(5);
       const n = n3(C, ['c5club_music', 'c5club_dance', 'c5club_art']);
-      return n < 3 ? '集齐三个社团的贴纸：去找音乐社、舞蹈社、美术社的人（' + n + '/3）' : '去中间的大帐篷参加才艺表演 Talent Show';
+      return n < 3 ? step(5, 'clubs', { n }) : step(5, 'show');
     },
     6: C => {
       if (C.flag('ch6')) return null;
-      if (!C.flag('c6call')) return '在作息岛走走看看';
-      if (!C.flag('c6grunt')) return '钟楼 clock tower 停了！去钟楼里看看';
+      if (!C.flag('c6call')) return lookAround(6);
+      if (!C.flag('c6grunt')) return step(6, 'tower');
       const n = n3(C, ['c6ask_baker', 'c6ask_student', 'c6ask_mayor']);
-      return n < 3 ? '问面包师、学生和镇长："What time do you get up?"（' + n + '/3）' : '回钟楼找管理员托克 Tock，把大钟拨好';
+      return n < 3 ? step(6, 'ask', { n }) : step(6, 'tock');
     },
     7: C => {
       if (C.flag('ch7') && C.flag('rival3')) return null;
-      if (!C.flag('c7intro')) return '在生日派对岛走走看看';
+      if (!C.flag('c7intro')) return lookAround(7);
       const n = n3(C, ['c7cal_granny', 'c7cal_amy', 'c7cal_baker7']);
-      return n < 3 ? '问罗丝奶奶、艾米和蛋糕师："When is your birthday?"（' + n + '/3）' : '去蛋糕房子 Cake House 参加 {rival} 的生日派对';
+      return n < 3 ? step(7, 'ask', { n }) : step(7, 'party');
     },
-    8: C => C.flag('ch8') ? null : !C.flag('a8in') ? '在动物岛走走看看'
-      : !C.flag('a8find') ? '去东边的动物公园 Animal Park，找出巡林员罗莎说的那只怪兽（small, long tail）'
-        : !C.flag('a8cloud') ? '去镇子北边的丛林 jungle，找跑散的怪兽'
-          : !C.flag('a8bush') ? '丛林里岩壁旁边有一丛奇怪的灌木 bush，去看看' : '潜进嘘声团基地：偷听口令 password，打开笼子，打败低语',
+    8: C => C.flag('ch8') ? null : !C.flag('a8in') ? lookAround(8)
+      : !C.flag('a8find') ? step(8, 'park')
+        : !C.flag('a8cloud') ? step(8, 'jungle')
+          : !C.flag('a8bush') ? step(8, 'bush') : step(8, 'base'),
     9: C => {
       if (C.flag('ch9')) return null;
-      if (!C.flag('a9in')) return '在规则城走走看看';
-      if (!C.flag('a9spyq')) return '当小交警：在马路上找到不守规矩的人，用英语提醒他们（' + n3(C, ['a9r1', 'a9r2', 'a9r3']) + '/3）';
-      return '喷泉旁边有个乔装的团员：red cap（红帽子）、glasses（眼镜）、bag（背包），找出他';
+      if (!C.flag('a9in')) return lookAround(9);
+      if (!C.flag('a9spyq')) return step(9, 'rules', { n: n3(C, ['a9r1', 'a9r2', 'a9r3']) });
+      return step(9, 'spy');
     },
-    10: C => C.flag('ch10') ? null : !C.flag('a10mom') ? '在运动美食岛走走看看'
-      : !C.flag('rival4') ? '{rival} 在运动场旁边，去找他聊聊' : '嘘声团在集市 market 发垃圾食品，打败两个团员（' + n3(C, ['a10h1', 'a10h2']) + '/2）',
-    11: C => C.flag('ch11') ? null : !C.flag('w11in') ? '在天气岛走走看看'
-      : !C.flag('w11fc') ? '去气象台 Weather Station（玻璃圆顶的房子）找斯凯博士 Dr. Skye'
-        : !C.flag('w11door') ? '打败气象塔 Weather Tower 门口的嘘声团团员' : '爬上气象塔，按天气预报 sunny → rainy → windy 的顺序关掉天气机',
-    12: C => C.flag('ch12') ? null : !C.flag('rival5') ? '在回忆岛的雾里走走，{rival} 在等你'
-      : !C.flag('m12orion') ? '去镇子北边的回忆神殿 Memory Temple 门口找欧瑞 Orion' : '进回忆神殿：读石板 tablets、回答记忆之门，到最里面阻止默先生 Mr. Mute',
+    10: C => C.flag('ch10') ? null : !C.flag('a10mom') ? lookAround(10)
+      : !C.flag('rival4') ? step(10, 'rival') : step(10, 'market', { n: n3(C, ['a10h1', 'a10h2']) }),
+    11: C => C.flag('ch11') ? null : !C.flag('w11in') ? lookAround(11)
+      : !C.flag('w11fc') ? step(11, 'skye')
+        : !C.flag('w11door') ? step(11, 'door') : step(11, 'tower'),
+    12: C => C.flag('ch12') ? null : !C.flag('rival5') ? step(12, 'fog')
+      : !C.flag('m12orion') ? step(12, 'orion') : step(12, 'temple'),
   };
-  const MASTERS = [['智者 Master Sage', '单词擂主'], ['露娜 Master Luna', '听力擂主'], ['冰霜 Master Frost', '口语擂主'], ['利爪 Master Talon', '对话擂主'], ['冠军阿丽娅 Champion Aria', '冠军']];
+  // 冠军赛的四位擂主和冠军：字表 st.master.<k>（名字）、st.master.<k>.role（擂主管什么）
+  // 返回 { zh, z }：zh 是老名字（首页、HUD、冒险菜单都读它），现在放的是界面语言的那句；text 是同一句
   function objective(C) {
     const E = C.E, S = E.S, b = (S.mon && S.mon.badges) || {}, vis = (S.world && S.world.visited) || {};
-    const out = (zh, z) => ({ zh: zh.split('{rival}').join(C.rivalInfo().name), z });
-    if (S.mon && S.mon.box && S.mon.box.length && C.MG.anyAlive && !C.MG.anyAlive()) return out('怪兽们都累倒了：先去休息站 Rest Stop 找护士恢复体力', -1);
+    const out = (zh, z) => { const s = zh.split('{rival}').join(C.rivalInfo().name); return { zh: s, text: s, z }; };
+    if (S.mon && S.mon.box && S.mon.box.length && C.MG.anyAlive && !C.MG.anyAlive()) return out(tx('st.obj.tired'), -1);
     let z = 0; while (z < E.W.length && b[z]) z++;
     if (z >= E.W.length) {
-      if (C.flag('champion')) return out('🏆 你是英语冠军了！回各岛找岛主重赛（更强，还会考最近学的课本单元），也去找找「传说的线索」', 13);
+      if (C.flag('champion')) return out(tx('st.obj.champ'), 13);
       const k = [1, 2, 3, 4, 5].find(i => !C.flag('lg' + i)) || 5;
-      if (k === 1 && !C.flag('kai_final')) return out('从回忆岛北边走勇气之路 Brave Road，去冠军高原参加英语冠军赛（小凯 Kai 在洞窟 2 楼等你）', 13);
-      return out('英语冠军赛：挑战' + (k < 5 ? '第 ' + k + ' 位擂主 ' : '') + MASTERS[k - 1][0] + (k < 5 ? '（' + MASTERS[k - 1][1] + '）' : '，赢了就是英语冠军！'), 13);
+      if (k === 1 && !C.flag('kai_final')) return out(tx('st.obj.brave'), 13);
+      return out(k < 5 ? tx('st.obj.master', { k, name: tx('st.master.' + k), role: tx('st.master.' + k + '.role') }) : tx('st.obj.final', { name: tx('st.master.5') }), 13);
     }
     if (z > 0 && !vis[z]) return out(TRAVEL[z](C), z);
     const st = STEPS[z] && STEPS[z](C);
     if (st) return out(st, z);
     const g = C.gymNeed ? C.gymNeed(z) : { ok: true };
-    const who = E.W[z].boss.name + ' ' + LEADER_EN[z];
-    if (!g.ok) return out('岛主' + who + ' 要你先学好课本：去「📚 闯关练习」打败 ' + g.unitLabel + ' 的 BOSS（课本 BOSS ' + g.done + '/' + g.need + '）', z);
-    return out('去挑战馆 Challenge Hall 挑战' + who + '。' + GYM_HOW[z], z);
+    // 岛主的名字：中文界面是「鹦鹉船长 Captain Polly」，别的语言只写英文名
+    const who = I18N ? I18N.label({ zh: E.W[z].boss.name + ' ' + LEADER_EN[z], en: LEADER_EN[z] }) : E.W[z].boss.name + ' ' + LEADER_EN[z];
+    if (!g.ok) return out(tx('st.obj.study', { who, unit: g.unitLabel, done: g.done, need: g.need }), z);
+    return out(tx('st.obj.gym', { who, how: GYM_HOW(z) }), z);
   }
 
   // ---------- 传说的线索：四只神兽是学习的里程碑（七上全过、聊天完成 30 次、连续打卡 30 天、不看字说对 300 句）----------
@@ -661,19 +867,21 @@
   }
   const bookBoss = (C, bi) => { const E = C.E, NB = E.W.length; return (E.WX || []).slice(NB).filter((u, i) => u.bi === bi && (E.S.stars[(NB + i) + '-6'] || 0) > 0).length; };
   const orionS = sayer('Orion', 'orion', 'm');
+  // @i18n-content 打来电话这页的中文意思（打电话的人的中文名在括号里的条件中，测试分不出它还在 nar 的第二个参数里）
   const call = who => nar('Ring, ring! ' + who + ' is calling!', '📞 叮铃铃！' + (who === 'Orion' ? '导师欧瑞' : '回声博士') + '打来电话！');
+  // @i18n-content-end
   // id：这个里程碑自己的旗标（ml:id、mlday:id、mlseen:id）；mon：飞来的神兽；old：老存档里这个里程碑用的旗标（leg:old 已经有了就算收服过）
   const MILES = [
-    { id: 'book', mon: 'wishstar', old: 'frostwing', icon: '🐢', task: '七上 8 个单元的 BOSS 全部打败', need: 8, have: C => bookBoss(C, 0),
+    { id: 'book', mon: 'wishstar', old: 'frostwing', icon: '🐢', get task() { return tx('st.mile.book'); }, need: 8, have: C => bookBoss(C, 0),
       call: () => [call('Professor Echo'), prof('{name}! You beat all eight units of your first English book!', '{name}！七年级上册 8 个单元的 BOSS，你全都打败了！'), prof('A little clockwork turtle heard about you. It is called Tickturtle.', '一只小发条龟听说了你，它叫发条龟。'), prof('Its key turned once for every lesson you finished. Now it is awake!', '你每学完一课，它背上的钥匙就转一圈。现在它醒过来了！')],
       meet: C => [nar('Tick, tock, tick, tock... Something is walking up to you!', '嘀嗒、嘀嗒……有个小家伙朝你走过来了！'), nar('Tickturtle is here, and its key is turning!', '发条龟来了，背上的钥匙还在转！'), speak(C, 'Tickturtle, I am ready!', '对发条龟大声说：我准备好了！')] },
-    { id: 'chat', mon: 'skyecho', old: 'stormwing', icon: '🔊', task: '和岛民用英语聊天，完成目标 30 次', need: 30, have: C => mile(C).talk,
+    { id: 'chat', mon: 'skyecho', old: 'stormwing', icon: '🔊', get task() { return tx('st.mile.chat'); }, need: 30, have: C => mile(C).talk,
       call: () => [call('Professor Echo'), prof('{name}! You finished thirty chats with the islanders in English!', '{name}！你已经用英语和岛民聊天、完成了 30 次目标！'), prof('Your voice is loud and clear now. Skyecho heard it!', '你的声音现在又响亮又清楚，天响听见了！')],
       meet: C => [nar('Hello... hello... hello... Your words are coming back from the sky!', '你好……你好……你好……你说过的话从天上传回来了！'), nar('Skyecho came down to see you!', '天响飞下来找你了！'), speak(C, "Skyecho, let's battle!", '对天响大声说：我们来对战吧！')] },
-    { id: 'streak', mon: 'timesprout', old: 'blazewing', icon: '🌱', task: '连续打卡 30 天', need: 30, have: C => mile(C).streak,
+    { id: 'streak', mon: 'timesprout', old: 'blazewing', icon: '🌱', get task() { return tx('st.mile.streak'); }, need: 30, have: C => mile(C).streak,
       call: () => [call('Professor Echo'), prof('{name}! You came back and learned for thirty days in a row!', '{name}！你已经连续打卡 30 天了！'), prof('You grew a little every day, like a small tree. Daysprout saw it!', '你每天都长大一点点，就像一棵小树。日日芽看见了！')],
       meet: C => [nar('The leaves are singing... A little green friend is here!', '树叶在唱歌……一个绿色的小家伙来了！'), nar('Daysprout is looking at you!', '日日芽正看着你！'), speak(C, 'Daysprout, I never give up!', '对日日芽大声说：我永不放弃！')] },
-    { id: 'recall', mon: 'lullaby', old: 'lullaby', icon: '🌙', task: '不看字说对 300 句英语', need: 300, have: C => mile(C).recall,
+    { id: 'recall', mon: 'lullaby', old: 'lullaby', icon: '🌙', get task() { return tx('st.mile.recall'); }, need: 300, have: C => mile(C).recall,
       call: () => [call('Orion'), orionS('{name}, I heard you can say three hundred sentences without looking!', '{name}，听说你已经不看字说对了 300 句英语！'), orionS('Lullaby is a shy monster. It only visits people with English in their hearts.', '摇篮灵是只害羞的怪兽，只会去找心里装满英语的人。')],
       meet: C => [nar('You hear a soft song... La, la, la...', '你听见一首轻轻的歌……啦，啦，啦……'), nar('Lullaby is here!', '摇篮灵来了！'), speak(C, 'Hello, Lullaby. Nice to meet you!', '对摇篮灵说：你好，很高兴认识你！')] },
   ];

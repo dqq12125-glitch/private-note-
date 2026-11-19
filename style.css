@@ -580,6 +580,8 @@ body.in-world { overflow: hidden; }
 .w-zone { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .w-zone b { font-family: var(--f-display); font-size: 18px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .w-zone small { font-size: 11px; color: #b9cad6; }
+/* 界面语言不是中文（2026-11-19）：英文地名比中文长（Crayon Island），竖屏里一行放不下就折成两行、字小一点，不省略成「Crayon I…」 */
+html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-height: 1.08; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .w-hud .chip { font-size: 14px; padding: 4px 8px; box-shadow: none; color: var(--ink); }
 .w-menu { width: 40px; height: 40px; border: 0; border-radius: 12px; background: #2b5376; color: #fff; font-size: 20px; }
 .w-view { position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: 16px; touch-action: none; }

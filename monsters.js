@@ -2,6 +2,303 @@
 (function () {
   'use strict';
 
+  // ---------- 界面文字（i18n.js 字表；键前缀 b.） ----------
+  // 2026-11-19 搬进来：中文界面和以前一字不差。tx 纯文字（toast、textContent），hx 拼进 innerHTML（参数先转义）。
+  // 内容（英文句子的中文意思、怪兽 / 招式的中文名）不搬：显示时走 gloss（英语界面不显示）；道具、属性、状态这种有 zh / en 两个名字的走 label
+  const I18N = window.EchoI18n;
+  const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
+  const gloss = o => (I18N ? I18N.gloss(o) : (o && o.zh) || null);
+  const label = o => (I18N ? I18N.label(o) : (o && o.zh) || '');
+  const isZh = () => !I18N || I18N.lang() === 'zh';
+  // 中文名放在英文名后面的括号里：「Bubbly（泡泡）」；英语界面没有中文意思，就什么都不加
+  const zhOf = o => { const g = gloss(o); return g ? tx('b.zhName', { zh: g }) : ''; };
+  if (I18N) I18N.add({
+    zh: {
+      'b.zhName': '（{zh}）', 'b.q': '？', 'b.sep.list': '、', 'b.sep.comma': '，', 'b.sep.semi': '；',
+      'b.task': ['🗣 说单词', '📜 念句子', '💬 对话大招'], 'b.tier': ['小招', '中招', '大招'],
+      'b.eff.weak': '打中弱点！', 'b.eff.barely': '几乎没用', 'b.eff.low': '不太管用',
+      'b.sup.roar': '对手攻击↓', 'b.sup.guard': '自己防御↑↑', 'b.sup.power': '自己攻击↑↑', 'b.sup.speed': '自己速度↑↑', 'b.sup.chill': '对手速度↓↓', 'b.sup.spooky': '对手防御↓↓',
+      'b.sup.sleep': '让对手睡着', 'b.sup.poison': '让对手中毒', 'b.sup.para': '让对手麻痹', 'b.sup.burn': '让对手烧伤', 'b.sup.confuse': '让对手混乱', 'b.sup.heal': '回复一半体力',
+      'b.st.brn': '被烧伤了！每回合都会掉血🔥', 'b.st.psn': '中毒了！每回合都会掉血☠️', 'b.st.par': '麻痹了！有时候会动不了⚡', 'b.st.slp': '睡着了💤', 'b.st.frz': '被冻住了🧊', 'b.st.conf': '混乱了！有时候会撞到自己😵',
+      'b.item.ball': '收服野生怪兽', 'b.item.superball': '更容易收服', 'b.item.potion': '回复 40% 体力', 'b.item.superpotion': '回复 80% 体力', 'b.item.revive': '让累倒的怪兽恢复一半体力',
+      'b.item.repel': '100 步内野生怪兽听不见你，不会跑出来', 'b.item.rope': '从洞穴里一下回到洞口', 'b.item.antidote': '治好中毒', 'b.item.burnheal': '治好烧伤', 'b.item.paraheal': '治好麻痹',
+      'b.item.awakening': '叫醒睡着的怪兽', 'b.item.iceheal': '治好冰冻', 'b.item.fullheal': '治好所有异常状态', 'b.item.expshare': '戴着它，没出场的怪兽也在旁边听，能分到一半经验',
+      'b.item.rod': '对着水按 A 钓鱼', 'b.item.bike': '骑车走得快一倍（右上角 🚲 按钮）', 'b.item.dowsing': '藏起来的道具会一闪一闪', 'b.item.stone': '进化曲：放给某些怪兽听，它就会进化',
+      'b.item.hm': '回声技能「{skill}」{icon}（菜单 → 回声技能）', 'b.item.ticket': '坐渡轮去别的岛',
+      'b.boss': ['鹦鹉船长', '彩虹蟹', '海龟奶奶', '猫头鹰校长', '八爪博士', '火烈鸟乐手', '闹钟公鸡', '河豚派对王', '鳄鱼巡查员', '鲨鱼纪律官', '海狮教练', '天气鲸', '回忆巨龙'],
+      'b.fr': '亲密度', 'b.type': '{t}系', 'b.shiny': '稀有色', 'b.hp': '体力', 'b.xp': '经验',
+      // 首页「怪兽冒险」
+      'b.home.new.t': '新的冒险', 'b.home.new.p': '你刚搬到回声群岛最南边的你好岛。这里的怪兽听得懂英语——话说得越清楚，怪兽就越强。<br>回声博士好像遇到麻烦了……',
+      'b.home.start': '🌅 开始冒险', 'b.home.clock': '手机日期被改过，先改回来', 'b.home.steps': '还差 {n} 步就能去冒险',
+      'b.home.stats': 'HP {hp} · 攻击 {atk}', 'b.home.evo': ' · Lv {lv} 会进化',
+      'b.home.mons': '🐾 我的怪兽 {n}', 'b.home.dex': '📖 怪兽手册 {a}/{b}', 'b.home.balls': '🔮 回声球 {n}',
+      'b.home.continue': '继续冒险', 'b.home.go': '出发去冒险！',
+      'b.gym.t': '🏅 下一枚徽章（{isle}）', 'b.gym.p': '岛主{leader}要你先学好课本：还差 <b>{unit}</b> 的 BOSS（课本 BOSS {done}/{need}）', 'b.gym.go': '📚 去闯关练习',
+      'b.leg.t': '✨ 传说的线索', 'b.leg.name': '<b>{name}</b>：', 'b.leg.caught': '已经收服了！', 'b.leg.task': '{task}（{have}/{need}）', 'b.leg.done': ' · 到户外走走，它会来找你！',
+      'b.home.tip': '走进草丛会遇到野生怪兽，路上的训练师看到你就会来挑战。<br>打败每个小镇的岛主拿到徽章，守卫才会让你去下一个小镇。岛主会先看你课本学到哪了：要先在「📚 闯关练习」打败对应单元的 BOSS。',
+      'b.home.fly': '✈️ 飞回去过的小镇',
+      'b.home.foot': '🏅 徽章 {a} / {b} · <button class="link" data-act="mBag">🎒 背包</button> · <button class="link" data-act="report">📊 学习周报</button> · 在「📚 闯关练习」每通关一关送 1 个回声球，三星送 2 个。',
+      // 选初始怪兽、说话、麦克风
+      'b.st.say': '想让它当你的伙伴，就对它大声说：', 'b.st.other': '再看看别的', 'b.st.retry': '再试一次：be my partner!', 'b.st.joined': '🎉 {name} 成为了你的伙伴！',
+      'b.mic.say': '点麦克风，大声说', 'b.mic.read': '点麦克风，大声念出来', 'b.mic.on': '正在听……', 'b.mic.listen': '正在听……说完会自动停止', 'b.mic.start': '开始说话',
+      'b.mic.again': '没听清，再大声一点', 'b.mic.closer': '没听清，靠近一点、大声一点再试一次', 'b.mic.try': '（第 {n}/3 次）',
+      'b.said': '🎤 我说了！', 'b.listen': '🔊 听一遍', 'b.hear': '听', 'b.hearModel': '听示范', 'b.hearAgain': '再听一遍', 'b.hearQ': '再听一遍问题',
+      'b.skip': '先跳过', 'b.skipAi': '📶 先跳过（已放进复习，联网后要补说）', 'b.heard': '我听到：“{t}”',
+      'b.need.starter': '先选一只初始怪兽吧', 'b.need.rest': '怪兽们都没力气了，先去休息站休息',
+      // 对战画面
+      'b.leave': '离开战斗', 'b.title.wild': '野外对战', 'b.title.trainer': '训练师 {name}', 'b.title.leader': '岛主 {name}', 'b.title.zone': '第 {n} 区 · {isle}',
+      'b.energy': '能量，攒满 3 格可以放大招', 'b.foeLeft': '对手剩下的怪兽',
+      'b.stat.atk': '攻', 'b.stat.def': '防', 'b.stat.spd': '速', 'b.stat.atkL': '攻击', 'b.stat.defL': '防御', 'b.stat.spdL': '速度',
+      'b.in.shiny': '✨ 闪闪发光的！', 'b.in.wild': '前面跳出来一只 <b>{name}</b>{zh}！', 'b.in.shinyToast': '✨ 是稀有色的 {name}！颜色和平常不一样，很少见哦',
+      'b.in.foe': '{who}：“<b>{name}</b>，该你了！”', 'b.in.next': '{who}：“还没完！<b>{name}</b>，该你了！”', 'b.go': '<b>{name}</b>，上场！', 'b.rest': '<b>{name}</b>，先休息一下！',
+      'b.selfWake': '{icon}{name} 自己恢复了！', 'b.menu': '念对英语，<b>{name}</b> 就出招！',
+      'b.mv.strong': '克制', 'b.mv.low': '不太管用', 'b.mv.lock': '攒满 3 格能量',
+      'b.catch': '🔮 收服', 'b.catch.weak': ' · 先打虚弱', 'b.switch': '🔄 换怪兽', 'b.bag': '🎒 背包',
+      'b.wake.slp': '<b>{name}</b> 睡着了💤！大声喊它，念得越准越容易叫醒。', 'b.wake.frz': '<b>{name}</b> 被冻住了🧊！大声喊它，念得越准越容易化开。',
+      'b.use': '用', 'b.back': '返回', 'b.close': '关闭', 'b.ok': '好了', 'b.okay': '好的',
+      'b.bbag.t': '🎒 背包', 'b.bbag.p': '给 <b>{name}</b> 用道具（体力 {hp} / {max}{st}）。用道具会用掉这一回合。',
+      'b.hpOf': '体力 {hp} / {max}', 'b.sw.go': '换它上场', 'b.sw.t': '🔄 换哪只上场？', 'b.sw.p': '换怪兽会用掉这一回合。',
+      'b.why.listen': '没听出来', 'b.why.unheard': '没听清', 'b.why.wrong': '说成了错误的回答', 'b.why.pick': '选错了回答', 'b.why.miss': '没念准', 'b.why.unclear': '念得不够清楚',
+      'b.l.right': '👂 听对了！（这回合不能暴击）', 'b.l.wrong': '没听出来，听一下正确的 👂',
+      'b.noBalls': '回声球用完了！去「闯关练习」通关就能拿到，或者去商店买',
+      'b.ball.t': '用哪种球？', 'b.ball.n': '🔮 回声球 ×{n}', 'b.ball.s': '💠 金回声球 ×{n}',
+      // 招式面板
+      'b.l.down': '📶 AI 打分暂时用不了：', 'b.l.ult': '听对手的问题，点出正确的回答', 'b.l.word': '听一听，点出你听到的词', 'b.l.sent': '听一听，点出你听到的咒语', 'b.l.use': '，发动 <b>{mv}</b>（这回合不能暴击）',
+      'b.l.owe': '联网以后这一句要在复习里补说', 'b.l.catch': '<b>{name}</b> 已经很虚弱了，听准收服咒语！', 'b.l.hit': '听准了才能打中！', 'b.l.toast': '📶 AI 打分暂时用不了：这回合听一听、点出来',
+      'b.back.move': '换个技能',
+      'b.t.word': '🗣 说出图上的英文，发动 <b>{mv}</b>', 'b.hint.hear': '💡 听一下答案（这次就不能暴击了）', 'b.hint.see': '💡 看一下答案（这次就不能暴击了）',
+      'b.blind': '🔥 不看字念（念对伤害 ×1.5）', 'b.t.mem': '🧠 凭记忆念出咒语，发动 <b>{mv}</b>', 'b.t.cue': '📜 看首字母，念出咒语，发动 <b>{mv}</b>', 'b.t.sent': '📜 大声念出咒语，发动 <b>{mv}</b>', 'b.t.blindOn': ' · 🔥 念对伤害 ×1.5',
+      'b.t.ult.mem': '💬 大招 <b>{mv}</b>：听懂对手的问题，凭记忆大声回答！', 'b.t.ult.sr': '💬 大招 <b>{mv}</b>：听懂对手的问题，大声说出正确回答！', 'b.t.ult.self': '💬 大招 <b>{mv}</b>：听懂对手的问题，先选出正确回答，再大声说出来！',
+      'b.showOpts': '👀 看看可以怎么回答（这次就不能暴击了）', 'b.optHear': '点选项可以先听一听',
+      'b.t.wake': '📣 大声喊它！', 'b.t.catch': '🔮 念出收服咒语，把它装进回声球！',
+      'b.rate.0': '😅 没念好', 'b.rate.1': '🙂 还行', 'b.rate.2': '😎 很准',
+      'b.self.ult': '先点出正确的回答', 'b.self.rate': '大声念出来，然后诚实地给自己打分', 'b.self.picked': '选对了！现在大声说出这句回答，再打个分',
+      'b.tip.catch': '<b>{name}</b> 已经很虚弱了，快收服它！', 'b.tip.sup': '念得清楚，辅助招式才会成功！', 'b.tip.hit': '念得越准，伤害越高；念得特别准会<b>暴击</b>！',
+      'b.noSr': '这里用不了语音识别，改成自己念、自己打分',
+      'b.ult.retry1': '没对上。看看这几个回答，把对的那句大声说出来（最后一次机会，这次不能暴击了）', 'b.ult.retry2': '没对上任何一个回答，再说一次（最后一次机会，这次不能暴击了）',
+      'b.retry': '{n} 分，没念准，再试一次（最后一次机会{nc}）', 'b.retry.nc': '，这次不能暴击了',
+      'b.rev.good': '念得很准！', 'b.rev.hear': '听一下正确的读法 👂',
+      // 对战里的消息
+      'b.faster': '<b>{name}</b> 速度更快，抢先出手！',
+      'b.ca.slp': '<b>{name}</b> 正在呼呼大睡💤', 'b.ca.frz': '<b>{name}</b> 被冻住了，动不了🧊', 'b.ca.woke': '<b>{name}</b> 醒过来了！',
+      'b.ca.par': '<b>{name}</b> 身体麻痹，动不了！⚡', 'b.ca.confEnd': '<b>{name}</b> 不再混乱了。', 'b.ca.confHit': '<b>{name}</b> 晕头转向，撞到了自己！',
+      'b.ca.obey': '<b>{name}</b> 等级太高，不太听你的话，在发呆……（多拿徽章它就会听话了）',
+      'b.eor.brn': '<b>{name}</b> 被烧伤了，好烫！🔥', 'b.eor.psn': '<b>{name}</b> 中毒了，好难受……☠️', 'b.got': '<b>{name}</b> {got}',
+      'b.stg.maxUp': '<b>{name}</b> 的{stat}已经不能再提高了。', 'b.stg.maxDown': '<b>{name}</b> 的{stat}已经不能再降低了。',
+      'b.stg.up2': '<b>{name}</b> 的{stat}大幅提高了！', 'b.stg.up1': '<b>{name}</b> 的{stat}提高了！', 'b.stg.down2': '<b>{name}</b> 的{stat}大幅降低了！', 'b.stg.down1': '<b>{name}</b> 的{stat}降低了！',
+      'b.noEffect': '但是没有效果……', 'b.hpFull': '体力已经是满的了。', 'b.healed': '<b>{name}</b> 恢复了体力！',
+      'b.rule.words': '📖 单词擂主的规则：你的小招伤害 ×1.5', 'b.rule.listen': '👂 听力擂主的规则：防御只有 8 秒，要听得快！',
+      'b.rule.clear': '🗣️ 口语擂主的规则：念得很准伤害 ×1.6，一般只有 ×0.8', 'b.rule.talk': '💬 对话擂主的规则：一上场就有 3 格能量，可以直接放大招！',
+      'b.used': '<b>{name}</b> 使用了 <b>{mv}</b>！', 'b.supFail': '咒语{why}，<b>{mv}</b> 失败了！',
+      'b.crit': '暴击！', 'b.lbl.mem': '🔥 凭记忆', 'b.lbl.block': '挡住了',
+      'b.hit.critBlind': '不看字也念得超准，<b>暴击</b>！', 'b.hit.crit': '发音超准，<b>暴击</b>！', 'b.hit.blind': '🔥 不看字也念对了，威力 ×1.5！', 'b.hit.graze': '咒语有点含糊，只擦伤了它。', 'b.hit.ok': '打中了！',
+      'b.hit.weak': '属性克制，打中弱点！', 'b.hit.low': '属性不太对，不太管用。', 'b.miss': '咒语{why}，攻击落空了！',
+      'b.wk.slp': '<b>{name}</b> 被你叫醒了！下一回合可以出招。', 'b.wk.frz': '<b>{name}</b> 身上的冰化开了！下一回合可以出招。',
+      'b.wk.no.slp': '<b>{name}</b> 还是没醒……{tip}', 'b.wk.no.frz': '<b>{name}</b> 还是冻着……{tip}', 'b.wk.tip.clear': '喊得再清楚一点！', 'b.wk.tip.next': '下回合再试试。',
+      'b.foePotion': '{who} 给 <b>{name}</b> 用了药水！',
+      'b.def.msg': '<b>{name}</b> 要用 <b>{mv}</b>{zh}了！听懂它的咒语来防御！', 'b.def.msgUlt': '<b>{name}</b> 要用 <b>{mv}</b>{zh}了！<b>这是大招！</b>听懂它的咒语来防御！',
+      'b.def.h': '🛡️ 它念的咒语是什么意思？选对就能挡住', 'b.def.hEn': '🛡️ 它念的是哪一句？选对就能挡住',
+      'b.def.ok': '🛡️ <b>防住了！</b>', 'b.def.okSup': '它的招式没有效果。', 'b.def.okHit': '只受到一点点伤害。', 'b.def.late': '⏰ 来不及了！', 'b.def.wrong': '没听懂……', 'b.def.ans': '它念的是：<b>{ans}</b>',
+      'b.hold': '💖 <b>{name}</b> 想着你，又站了起来！',
+      // 升级、学招
+      'b.lvup': '⬆️ {name} 升到了 Lv {lv}！', 'b.learned': '✨ {name} 学会了 {mv}！',
+      'b.learn.t': '{name} 能学一个新招式了！', 'b.learn.p': '它已经会 4 个招式了。要忘掉哪一个，换成 <b>{mv}</b>？', 'b.learn.no': '不学了',
+      'b.learn.skip': '{name} 没有学 {mv}', 'b.learn.ok': '好，{mv} 换下来了！', 'b.learn.say': '现在大声教它新招式：',
+      'b.learn.ai': '📶 AI 打分暂时用不了，先学会这一招', 'b.learn.again': '再清楚一点，再说一次！',
+      'b.tired': '<b>{name}</b> 累得不能再战斗了！', 'b.down': '<b>{name}</b> 累倒了……',
+      // 收服、结算
+      'b.throw': '扔出回声球！', 'b.throw.s': '扔出金回声球！', 'b.caught': '🎉 收服成功！<b>{name}</b>{zh}成为了你的伙伴！',
+      'b.free': '哎呀，<b>{name}</b> 挣脱了！', 'b.free.say': '收服咒语要念得清楚一点。', 'b.free.weak': '再把它打虚弱一点，或者让它睡着、麻痹再试试。',
+      'b.win.badge': '🏅 拿到了 {isle} 徽章！', 'b.win.balls': '🔮 回声球 +3', 'b.win.obey': '🐾 等级 {n} 以下的怪兽都会听你的话', 'b.win.unlock': '🏝️ 新区域解锁：{isle}',
+      'b.win.coins': '💰 金币 +{n}', 'b.win.xp': '⭐ 出战的怪兽获得经验 +{n}', 'b.win.share': '（共学耳机：其他队员也分到一半）',
+      'b.win.box': '队伍已经有 6 只了，新伙伴被送到了电脑箱子里（去休息站的电脑换）。', 'b.win.team': '新伙伴已经加入队伍！',
+      'b.win.leader': '{who}：“你太厉害了！这枚徽章是你的了！”', 'b.win.trainer': '{who}：“你真厉害！”', 'b.win': '胜利！',
+      'b.res.caught': '收服成功！', 'b.res.leader': '打败岛主！', 'b.res.go': '继续冒险 ▶', 'b.res.again': '⚔️ 再战一场', 'b.res.home': '回基地',
+      'b.streak': '🔥 今日打卡成功！已连续 {n} 天',
+      'b.lose': '你的怪兽们都累倒了……', 'b.lose.t': '先去休息站休息一下',
+      'b.lose.p': '休息站能让怪兽恢复体力、治好异常状态。<br>小窍门：多在草丛里打野生怪兽把等级练上去，<br>用<b>属性克制</b>的招式，或者先用辅助招式降低对手的攻击。', 'b.lose.go': '去休息站',
+      'b.potion.hp': '用了{item}！<b>{name}</b> 恢复了体力。', 'b.potion.st': '用了{item}！<b>{name}</b> 恢复正常了。',
+      // 进化、详情
+      'b.evo.t': '看！{name} 在长大……', 'b.evo.p': '{name} 正在长大！', 'b.evo.ok': '太棒了！', 'b.evo.done': '太棒了！<b>{from}</b> 长成了 <b>{to}</b>{zh}！',
+      'b.egg': '蛋 Egg', 'b.egg.tip': '带着它一起走路，它就会慢慢长大、孵出来。',
+      'b.egg.far': '它好像还要很久才会孵出来。', 'b.egg.mid': '里面有动静了！', 'b.egg.near': '快孵出来了！它在里面动来动去。',
+      'b.sum.evoLv': 'Lv {lv} 进化成 {name}', 'b.sum.xp': '经验 {a} / {b}', 'b.sum.hp': '体力 HP', 'b.sum.atk': '攻击 ATK', 'b.sum.def': '防御 DEF', 'b.sum.spd': '速度 SPD',
+      'b.sum.moves': '招式', 'b.sum.next': '以后还能学：{list}', 'b.sum.evo': '进化：{list}',
+      'b.talk.done': '💬 今天聊过了', 'b.talk.go': '💬 和它说说话', 'b.nick.btn': '✏️ 起名字',
+      // 起名字、说说话
+      'b.nick.t': '给 {name} 起个英文名字吧！', 'b.nick.p': '选一个，也可以自己输入。', 'b.nick.ph': '自己输入英文名', 'b.nick.tip': '只能用英文字母，最多 10 个',
+      'b.nick.keep': '不改了', 'b.nick.use': '就叫 {name}', 'b.nick.clear': '用回原名 {name}', 'b.nick.say': '大声告诉它新名字：', 'b.nick.back': '换一个名字',
+      'b.nick.done': '它现在叫 {name} 了！', 'b.nick.orig': '用回了原来的名字', 'b.nick.ai': '📶 AI 打分暂时用不了，名字先起好了', 'b.nick.bad': '要用英文字母写哦，比如 Kiki',
+      'b.score.again': '{n} 分，再清楚一点！',
+      'b.mood': ['它有点害羞地看着你。', '它歪着头听你说话。', '它开心地转了一圈。', '它蹭了蹭你的手。', '它高兴得跳了起来！', '它紧紧地贴着你，最喜欢你了！💖'],
+      'b.talk.later': '今天已经聊过了，明天再来和它说说话吧。', 'b.talk.t': '和 {name} 说说话', 'b.talk.p': '每天用英语和它说一句，它会越来越喜欢你。亲密度 {h}', 'b.talk.no': '先不说',
+      'b.talk.close': '很亲的怪兽：快倒下时有时会为你坚持住，打起来也更用力。', 'b.talk.ok': '😊 好',
+      // 怪兽幼儿园
+      'b.day.take': '领回来', 'b.day.good': '💞 它们俩相处得很好（有相同的属性）。', 'b.day.bad': '它们俩不太合得来（没有相同的属性），不会有蛋。', 'b.day.leave': '寄养',
+      'b.day.t': '🏡 怪兽幼儿园', 'b.day.p': '把两只怪兽寄养在这里，它们会跟着爷爷奶奶长大（每走 100 步长 1 级）。两只有相同属性的话，过一阵子会发现一个蛋！',
+      'b.day.egg': '发现了一个蛋！', 'b.day.egg.s': '是它们俩留下的', 'b.day.eggTake': '收下', 'b.day.in': '寄养中 {n} / 2', 'b.day.none': '还没有寄养的怪兽。',
+      'b.day.pick': '从队伍里选一只寄养', 'b.day.keep': '队伍里至少要留一只能战斗的怪兽。', 'b.day.thanks': '谢谢 Thank you!',
+      'b.day.back': '🏡 {name} 回来了！', 'b.day.backLv': '🏡 {name} 回来了，长到了 Lv {lv}！', 'b.day.gotEgg': '🥚 得到了一个蛋！放在队伍里走路就会孵出来',
+      // 手册的出没地点
+      'b.hab.weed': '海草', 'b.hab.cave': '洞穴', 'b.hab.grass': '草丛', 'b.hab.water': '水上 / 钓鱼',
+      'b.hab.one': '<b>{name}</b>（{how}）', 'b.hab.more': ' 等 {n} 个地方', 'b.hab.legend': '传说中的怪兽，只在特别的地方出现。', 'b.hab.starter': '回声博士的研究所。',
+      'b.hab.from': '由 <b>{from}</b> 进化而来。', 'b.hab.fromAt': '由 <b>{from}</b> 进化而来；{base} 在 <b>{place}</b> 出没。',
+      'b.hab.sight': '平时在野外很难遇到，偶尔会出现在回声博士告示板的「🔎 今日目击」里。', 'b.hab.none': '在第一年的群岛上还没有发现它。', 'b.hab.t': '📍 出没地点：',
+      // 队伍、电脑箱子、背包
+      'b.inTeam': '队伍中', 'b.tiredOut': ' · 累倒了', 'b.more': '详情', 'b.lead': '⭐ 主力', 'b.setLead': '设为主力',
+      'b.team.t': '我的队伍 {n} / {max}', 'b.team.p': '主力先出场，倒下后队友自动接上。', 'b.team.box': '💻 电脑箱子里还有 {n} 只怪兽，去休息站的电脑可以换进队伍。',
+      'b.pc.bench': '存进箱子', 'b.pc.join': '放进队伍', 'b.pc.move': '搬到…', 'b.pc.sort': '排序：', 'b.pc.lv': '等级', 'b.pc.no': '编号', 'b.pc.name': '名字',
+      'b.pc.t': '💻 怪兽箱子', 'b.pc.p': '队伍最多 {team} 只；{boxes} 个箱子，每个放 {cap} 只。', 'b.pc.full': '队伍满了，先存一只进箱子再取。', 'b.pc.team': '队伍 {n} / {max}',
+      'b.pc.box': '箱子 {n} Box {n}（{have} / {cap}）', 'b.pc.empty': '这个箱子是空的。', 'b.pc.close': '关闭电脑', 'b.pc.moveT': '把 {name} 搬到哪个箱子？', 'b.pc.boxN': '箱子 {n}',
+      'b.on': '开着', 'b.off': '关着', 'b.ride': '骑', 'b.bag.t': '🎒 背包', 'b.bag.p': '💰 {n} 金币 · 道具可以在商店买，也可以在路上捡', 'b.bag.back': '返回背包',
+      'b.useOn.t': '{icon} {item} 给谁用？', 'b.item.st': '{icon} {name} 恢复正常了', 'b.item.hp': '{icon} {name} 恢复了体力',
+      // 怪兽手册、回声球
+      'b.dex.page': '第 {p} / {n} 页', 'b.dex.t': '怪兽手册 {a} / {b}', 'b.dex.p': '收服或进化就能点亮，遇到过的会显示影子。点一只看它的介绍。',
+      'b.dex.extra': '番外', 'b.dex.caught': '已收服', 'b.dex.seen': '见过', 'b.dex.none': '未发现', 'b.legend': '传说', 'b.dex.words': '名字里的英语：', 'b.dex.lock': '收服它就能看到完整的介绍。', 'b.dex.back': '返回手册',
+      'b.balls.t': '回声球 × {n}', 'b.balls.p': '把野生怪兽打虚弱后，扔回声球并念出收服咒语，就能收服它。<br>在「📚 闯关练习」每通关一关送 1 个，三星送 2 个；打败岛主送 3 个。', 'b.balls.buy': '30 金币买 3 个',
+      'b.flee.wild': '要逃跑吗？', 'b.flee.t': '要放弃挑战吗？', 'b.flee.p': '这场战斗不会有奖励。', 'b.flee.go': '离开', 'b.flee.stay': '继续战斗',
+    },
+    en: {
+      'b.zhName': ' ({zh})', 'b.q': '?', 'b.sep.list': ', ', 'b.sep.comma': ', ', 'b.sep.semi': '; ',
+      'b.task': ['🗣 Say a word', '📜 Say a sentence', '💬 Answer a question'], 'b.tier': ['Small move', 'Medium move', 'Big move'],
+      'b.eff.weak': 'Weak spot!', 'b.eff.barely': 'Barely works', 'b.eff.low': 'Not so good',
+      'b.sup.roar': 'Their ATK↓', 'b.sup.guard': 'Your DEF↑↑', 'b.sup.power': 'Your ATK↑↑', 'b.sup.speed': 'Your SPD↑↑', 'b.sup.chill': 'Their SPD↓↓', 'b.sup.spooky': 'Their DEF↓↓',
+      'b.sup.sleep': 'Puts them to sleep', 'b.sup.poison': 'Poisons them', 'b.sup.para': 'Makes them numb', 'b.sup.burn': 'Burns them', 'b.sup.confuse': 'Makes them dizzy', 'b.sup.heal': 'Heals half HP',
+      'b.st.brn': 'is burned! It loses HP every turn🔥', 'b.st.psn': 'is poisoned! It loses HP every turn☠️', 'b.st.par': 'is numb! Sometimes it cannot move⚡', 'b.st.slp': 'fell asleep💤', 'b.st.frz': 'is frozen🧊', 'b.st.conf': 'is dizzy! Sometimes it hits itself😵',
+      'b.item.ball': 'Catches wild monsters', 'b.item.superball': 'Catches more easily', 'b.item.potion': 'Heals 40% HP', 'b.item.superpotion': 'Heals 80% HP', 'b.item.revive': 'Brings back a tired-out monster with half HP',
+      'b.item.repel': 'For 100 steps, wild monsters cannot hear you and stay away', 'b.item.rope': 'Takes you from a cave straight back to its entrance', 'b.item.antidote': 'Cures poison', 'b.item.burnheal': 'Cures burns', 'b.item.paraheal': 'Cures numbness',
+      'b.item.awakening': 'Wakes up a sleeping monster', 'b.item.iceheal': 'Thaws a frozen monster', 'b.item.fullheal': 'Cures every status problem', 'b.item.expshare': 'Monsters that did not battle listen too and get half the XP',
+      'b.item.rod': 'Face the water and press A to fish', 'b.item.bike': 'Ride twice as fast (🚲 button, top right)', 'b.item.dowsing': 'Hidden items flash', 'b.item.stone': 'Growth song: play it to some monsters and they grow',
+      'b.item.hm': 'Echo Skill "{skill}" {icon} (Menu → Echo Skills)', 'b.item.ticket': 'Takes the ferry to another island',
+      'b.boss': ['Captain Polly', 'Crabby', 'Granny Turtle', 'Principal Owl', 'Doctor Octo', 'Flo', 'Rooster Rex', 'Puffy', 'Croc', 'Sharky', 'Coach Seal', 'Whaley', 'Memory Dragon'],
+      'b.fr': 'Friendship', 'b.type': '{t}', 'b.shiny': 'Rare colour', 'b.hp': 'HP', 'b.xp': 'XP',
+      'b.home.new.t': 'A new adventure', 'b.home.new.p': 'You just moved to Hello Island, at the south end of the Echo Islands. The monsters here understand English: the more clearly you speak, the stronger they are.<br>Professor Echo seems to need help…',
+      'b.home.start': '🌅 Start the adventure', 'b.home.clock': 'The phone date was changed. Please change it back first', 'b.home.steps': { one: 'Finish {n} more task to start the adventure', other: 'Finish {n} more tasks to start the adventure' },
+      'b.home.stats': 'HP {hp} · ATK {atk}', 'b.home.evo': ' · grows at Lv {lv}',
+      'b.home.mons': '🐾 My monsters {n}', 'b.home.dex': '📖 Monster Book {a}/{b}', 'b.home.balls': '🔮 Echo Balls {n}',
+      'b.home.continue': 'Keep exploring', 'b.home.go': "Let's go!",
+      'b.gym.t': '🏅 Next badge ({isle})', 'b.gym.p': 'Isle Master {leader} wants you to study first: beat the boss level of <b>{unit}</b> (textbook bosses {done}/{need})', 'b.gym.go': '📚 Go to Practice',
+      'b.leg.t': '✨ Legend Clues', 'b.leg.name': '<b>{name}</b>: ', 'b.leg.caught': 'Caught!', 'b.leg.task': '{task} ({have}/{need})', 'b.leg.done': ' · Go outside. It will come to find you!',
+      'b.home.tip': 'Walk into tall grass to meet wild monsters. Trainers on the road come to battle you when they see you.<br>Beat each town\'s Isle Master to get a badge. Then the guard lets you go to the next town. Isle Masters check your textbook first: beat the boss level of the matching unit in "📚 Practice".',
+      'b.home.fly': '✈️ Fly back to a town',
+      'b.home.foot': '🏅 Badges {a} / {b} · <button class="link" data-act="mBag">🎒 Bag</button> · <button class="link" data-act="report">📊 Weekly Report</button> · Each level you clear in "📚 Practice" gives 1 Echo Ball, 3 stars give 2.',
+      'b.st.say': 'To make it your partner, say this to it aloud:', 'b.st.other': 'Look at another one', 'b.st.retry': 'Try again: be my partner!', 'b.st.joined': '🎉 {name} joined your team!',
+      'b.mic.say': 'Tap the mic and say it aloud', 'b.mic.read': 'Tap the mic and say it aloud', 'b.mic.on': 'Listening…', 'b.mic.listen': 'Listening… It stops when you finish', 'b.mic.start': 'Start speaking',
+      'b.mic.again': "I didn't catch that. A bit louder, please", 'b.mic.closer': "I didn't catch that. Come closer, speak louder and try again", 'b.mic.try': ' (try {n}/3)',
+      'b.said': '🎤 I said it!', 'b.listen': '🔊 Listen', 'b.hear': 'Listen', 'b.hearModel': 'Listen to the example', 'b.hearAgain': 'Listen again', 'b.hearQ': 'Listen to the question again',
+      'b.skip': 'Skip for now', 'b.skipAi': '📶 Skip for now (saved for review: say it when you are online)', 'b.heard': 'I heard: "{t}"',
+      'b.need.starter': 'Choose your first monster first', 'b.need.rest': 'Your monsters are too tired. Rest at a Rest Stop first',
+      'b.leave': 'Leave the battle', 'b.title.wild': 'Wild battle', 'b.title.trainer': 'Trainer {name}', 'b.title.leader': 'Isle Master {name}', 'b.title.zone': 'Area {n} · {isle}',
+      'b.energy': 'Energy: fill all 3 to use a big move', 'b.foeLeft': "Opponent's monsters left",
+      'b.stat.atk': 'ATK', 'b.stat.def': 'DEF', 'b.stat.spd': 'SPD', 'b.stat.atkL': 'Attack', 'b.stat.defL': 'Defence', 'b.stat.spdL': 'Speed',
+      'b.in.shiny': '✨ It sparkles! ', 'b.in.wild': 'A wild <b>{name}</b>{zh} jumped out!', 'b.in.shinyToast': '✨ A rare-colour {name}! Its colours are different. That is very rare!',
+      'b.in.foe': '{who}: "<b>{name}</b>, your turn!"', 'b.in.next': '{who}: "Not over yet! <b>{name}</b>, your turn!"', 'b.go': '<b>{name}</b>, your turn!', 'b.rest': '<b>{name}</b>, take a rest!',
+      'b.selfWake': '{icon}{name} is fine again!', 'b.menu': 'Say the English right, and <b>{name}</b> makes a move!',
+      'b.mv.strong': 'Strong', 'b.mv.low': 'Not great', 'b.mv.lock': 'Fill 3 energy first',
+      'b.catch': '🔮 Catch', 'b.catch.weak': ' · weaken it first', 'b.switch': '🔄 Switch', 'b.bag': '🎒 Bag',
+      'b.wake.slp': '<b>{name}</b> is asleep💤! Call it loudly. The clearer you say it, the easier it wakes up.', 'b.wake.frz': '<b>{name}</b> is frozen🧊! Call it loudly. The clearer you say it, the faster the ice melts.',
+      'b.use': 'Use', 'b.back': 'Back', 'b.close': 'Close', 'b.ok': 'OK', 'b.okay': 'OK',
+      'b.bbag.t': '🎒 Bag', 'b.bbag.p': 'Use an item on <b>{name}</b> (HP {hp} / {max}{st}). Using an item takes this turn.',
+      'b.hpOf': 'HP {hp} / {max}', 'b.sw.go': 'Send it in', 'b.sw.t': '🔄 Which one goes in?', 'b.sw.p': 'Switching takes this turn.',
+      'b.why.listen': 'not heard right', 'b.why.unheard': 'not heard clearly', 'b.why.wrong': 'the wrong answer', 'b.why.pick': 'the wrong choice', 'b.why.miss': 'not said right', 'b.why.unclear': 'not clear enough',
+      'b.l.right': '👂 You heard it right! (No power hit this turn)', 'b.l.wrong': 'Not quite. Listen to the right one 👂',
+      'b.noBalls': 'No Echo Balls left! Clear levels in "Practice" to get more, or buy some at the shop',
+      'b.ball.t': 'Which ball?', 'b.ball.n': '🔮 Echo Ball ×{n}', 'b.ball.s': '💠 Gold Echo Ball ×{n}',
+      'b.l.down': '📶 AI scoring is not working right now: ', 'b.l.ult': "listen to the opponent's question and tap the right answer", 'b.l.word': 'listen and tap the word you hear', 'b.l.sent': 'listen and tap the spell you hear', 'b.l.use': ' to use <b>{mv}</b> (no power hit this turn)',
+      'b.l.owe': 'When you are online, say this one again in review', 'b.l.catch': '<b>{name}</b> is very weak. Listen for the catch spell!', 'b.l.hit': 'Listen carefully to hit!', 'b.l.toast': '📶 AI scoring is not working right now: this turn, listen and tap',
+      'b.back.move': 'Choose another move',
+      'b.t.word': '🗣 Say the English for the picture to use <b>{mv}</b>', 'b.hint.hear': '💡 Hear the answer (no power hit this time)', 'b.hint.see': '💡 See the answer (no power hit this time)',
+      'b.blind': '🔥 Say it without looking (×1.5 damage if right)', 'b.t.mem': '🧠 Say the spell from memory to use <b>{mv}</b>', 'b.t.cue': '📜 Use the first letters, say the spell and use <b>{mv}</b>', 'b.t.sent': '📜 Say the spell aloud to use <b>{mv}</b>', 'b.t.blindOn': ' · 🔥 ×1.5 damage if right',
+      'b.t.ult.mem': '💬 Big move <b>{mv}</b>: understand the question and answer aloud from memory!', 'b.t.ult.sr': '💬 Big move <b>{mv}</b>: understand the question and say the right answer aloud!', 'b.t.ult.self': '💬 Big move <b>{mv}</b>: understand the question, choose the right answer, then say it aloud!',
+      'b.showOpts': '👀 See possible answers (no power hit this time)', 'b.optHear': 'Tap an answer to hear it first',
+      'b.t.wake': '📣 Call it loudly!', 'b.t.catch': '🔮 Say the catch spell to put it in the Echo Ball!',
+      'b.rate.0': '😅 Not good', 'b.rate.1': '🙂 OK', 'b.rate.2': '😎 Very good',
+      'b.self.ult': 'First tap the right answer', 'b.self.rate': 'Say it aloud, then give yourself an honest score', 'b.self.picked': 'Right! Now say this answer aloud, then score yourself',
+      'b.tip.catch': '<b>{name}</b> is very weak. Catch it now!', 'b.tip.sup': 'Say it clearly to make the support move work!', 'b.tip.hit': 'The better you say it, the more damage it does. Say it really well for a <b>power hit</b>!',
+      'b.noSr': 'Speech recognition does not work here. Say it and score yourself instead',
+      'b.ult.retry1': 'No match. Look at these answers and say the right one aloud (last chance, no power hit this time)', 'b.ult.retry2': 'That did not match any answer. Say it again (last chance, no power hit this time)',
+      'b.retry': { one: '{n} point. Not quite. Try again (last chance{nc})', other: '{n} points. Not quite. Try again (last chance{nc})' }, 'b.retry.nc': ', no power hit this time',
+      'b.rev.good': 'Very clear!', 'b.rev.hear': 'Listen to the right way to say it 👂',
+      'b.faster': '<b>{name}</b> is faster and moves first!',
+      'b.ca.slp': '<b>{name}</b> is fast asleep💤', 'b.ca.frz': '<b>{name}</b> is frozen and cannot move🧊', 'b.ca.woke': '<b>{name}</b> woke up!',
+      'b.ca.par': '<b>{name}</b> is numb and cannot move!⚡', 'b.ca.confEnd': '<b>{name}</b> is not dizzy any more.', 'b.ca.confHit': '<b>{name}</b> is so dizzy that it hit itself!',
+      'b.ca.obey': "<b>{name}</b>'s level is too high. It is not listening and just stares… (Get more badges and it will listen)",
+      'b.eor.brn': '<b>{name}</b> is hurt by its burn. Ouch, hot!🔥', 'b.eor.psn': '<b>{name}</b> is hurt by the poison…☠️', 'b.got': '<b>{name}</b> {got}',
+      'b.stg.maxUp': "<b>{name}</b>'s {stat} cannot go any higher.", 'b.stg.maxDown': "<b>{name}</b>'s {stat} cannot go any lower.",
+      'b.stg.up2': "<b>{name}</b>'s {stat} went way up!", 'b.stg.up1': "<b>{name}</b>'s {stat} went up!", 'b.stg.down2': "<b>{name}</b>'s {stat} went way down!", 'b.stg.down1': "<b>{name}</b>'s {stat} went down!",
+      'b.noEffect': 'But nothing happened…', 'b.hpFull': 'Its HP is already full.', 'b.healed': '<b>{name}</b> got its HP back!',
+      'b.rule.words': '📖 Word Master rule: your small moves do ×1.5 damage', 'b.rule.listen': '👂 Listening Master rule: you have only 8 seconds to defend. Listen fast!',
+      'b.rule.clear': '🗣️ Speaking Master rule: very clear speech does ×1.6 damage, OK speech only ×0.8', 'b.rule.talk': '💬 Talk Master rule: you start with 3 energy, so you can use a big move right away!',
+      'b.used': '<b>{name}</b> used <b>{mv}</b>!', 'b.supFail': 'The spell was {why}, so <b>{mv}</b> failed!',
+      'b.crit': 'Power hit!', 'b.lbl.mem': '🔥 From memory', 'b.lbl.block': 'Blocked',
+      'b.hit.critBlind': 'Perfect without looking: <b>power hit</b>! ', 'b.hit.crit': 'Perfect speaking: <b>power hit</b>! ', 'b.hit.blind': '🔥 Right without looking: ×1.5 power! ', 'b.hit.graze': 'The spell was a bit unclear. It only scratched it. ', 'b.hit.ok': 'Hit! ',
+      'b.hit.weak': 'A weak spot!', 'b.hit.low': 'It did not work well.', 'b.miss': 'The spell was {why}. The attack missed!',
+      'b.wk.slp': '<b>{name}</b> woke up! It can move next turn.', 'b.wk.frz': 'The ice on <b>{name}</b> melted! It can move next turn.',
+      'b.wk.no.slp': '<b>{name}</b> is still asleep… {tip}', 'b.wk.no.frz': '<b>{name}</b> is still frozen… {tip}', 'b.wk.tip.clear': 'Call more clearly!', 'b.wk.tip.next': 'Try again next turn.',
+      'b.foePotion': '{who} gave <b>{name}</b> a potion!',
+      'b.def.msg': '<b>{name}</b> is going to use <b>{mv}</b>{zh}! Understand its spell to defend!', 'b.def.msgUlt': '<b>{name}</b> is going to use <b>{mv}</b>{zh}! <b>It is a big move!</b> Understand its spell to defend!',
+      'b.def.h': '🛡️ What does its spell mean? Choose right to block it', 'b.def.hEn': '🛡️ Which spell did it say? Choose right to block it',
+      'b.def.ok': '🛡️ <b>Blocked!</b> ', 'b.def.okSup': 'Its move did nothing.', 'b.def.okHit': 'Only a little damage.', 'b.def.late': '⏰ Too late! ', 'b.def.wrong': 'Not quite… ', 'b.def.ans': 'It said: <b>{ans}</b>',
+      'b.hold': '💖 <b>{name}</b> thought of you and did not give up!',
+      'b.lvup': '⬆️ {name} reached Lv {lv}!', 'b.learned': '✨ {name} learned {mv}!',
+      'b.learn.t': '{name} can learn a new move!', 'b.learn.p': 'It already knows 4 moves. Which one should it drop for <b>{mv}</b>?', 'b.learn.no': "Don't learn it",
+      'b.learn.skip': '{name} did not learn {mv}', 'b.learn.ok': 'OK, {mv} is dropped!', 'b.learn.say': 'Now teach it the new move aloud:',
+      'b.learn.ai': '📶 AI scoring is not working right now. It learns the move anyway', 'b.learn.again': 'A bit more clearly. Say it once more!',
+      'b.tired': '<b>{name}</b> is too tired to go on!', 'b.down': '<b>{name}</b> is too tired…',
+      'b.throw': 'You threw an Echo Ball!', 'b.throw.s': 'You threw a Gold Echo Ball!', 'b.caught': '🎉 Caught! <b>{name}</b>{zh} is your new friend!',
+      'b.free': 'Oh no, <b>{name}</b> broke free! ', 'b.free.say': 'Say the catch spell more clearly.', 'b.free.weak': 'Make it weaker, or make it sleep or go numb, then try again.',
+      'b.win.badge': '🏅 You got the {isle} badge!', 'b.win.balls': '🔮 Echo Balls +3', 'b.win.obey': '🐾 Monsters up to Lv {n} will listen to you', 'b.win.unlock': '🏝️ New area open: {isle}',
+      'b.win.coins': '💰 Coins +{n}', 'b.win.xp': '⭐ Monsters that battled got XP +{n}', 'b.win.share': ' (Team Headset: the rest of the team got half)',
+      'b.win.box': 'Your team already has 6 monsters, so your new friend went to the Monster Box (swap it at a Rest Stop computer).', 'b.win.team': 'Your new friend joined your team!',
+      'b.win.leader': '{who}: "You are amazing! This badge is yours!"', 'b.win.trainer': '{who}: "You are really good!"', 'b.win': 'You won!',
+      'b.res.caught': 'Caught!', 'b.res.leader': 'You beat the Isle Master!', 'b.res.go': 'Keep exploring ▶', 'b.res.again': '⚔️ Battle again', 'b.res.home': 'Home',
+      'b.streak': { one: '🔥 Today counts! {n} day in a row', other: '🔥 Today counts! {n} days in a row' },
+      'b.lose': 'Your monsters are all too tired…', 'b.lose.t': 'Rest at a Rest Stop first',
+      'b.lose.p': 'A Rest Stop brings back HP and cures status problems.<br>Tip: battle wild monsters in the grass to level up,<br>use moves that are <b>strong against</b> your opponent, or use a support move first to lower its attack.', 'b.lose.go': 'Go to the Rest Stop',
+      'b.potion.hp': 'You used {item}! <b>{name}</b> got its HP back.', 'b.potion.st': 'You used {item}! <b>{name}</b> is back to normal.',
+      'b.evo.t': 'Look! {name} is growing up…', 'b.evo.p': '{name} is growing!', 'b.evo.ok': 'Great!', 'b.evo.done': 'Great! <b>{from}</b> grew into <b>{to}</b>{zh}!',
+      'b.egg': 'Egg', 'b.egg.tip': 'Walk with it and it will slowly grow and hatch.',
+      'b.egg.far': 'It looks like it will take a long time to hatch.', 'b.egg.mid': 'Something is moving inside!', 'b.egg.near': 'It will hatch soon! It is moving around inside.',
+      'b.sum.evoLv': 'Lv {lv}: grows into {name}', 'b.sum.xp': 'XP {a} / {b}', 'b.sum.hp': 'HP', 'b.sum.atk': 'ATK', 'b.sum.def': 'DEF', 'b.sum.spd': 'SPD',
+      'b.sum.moves': 'Moves', 'b.sum.next': 'Can learn later: {list}', 'b.sum.evo': 'Grows: {list}',
+      'b.talk.done': '💬 Talked today', 'b.talk.go': '💬 Talk to it', 'b.nick.btn': '✏️ Name it',
+      'b.nick.t': 'Give {name} an English name!', 'b.nick.p': 'Pick one, or type your own.', 'b.nick.ph': 'Type an English name', 'b.nick.tip': 'English letters only, up to 10',
+      'b.nick.keep': 'No change', 'b.nick.use': 'Keep the name {name}', 'b.nick.clear': 'Go back to {name}', 'b.nick.say': 'Tell it its new name aloud:', 'b.nick.back': 'Choose another name',
+      'b.nick.done': 'Its name is now {name}!', 'b.nick.orig': 'It has its old name again', 'b.nick.ai': '📶 AI scoring is not working right now. The name is saved anyway', 'b.nick.bad': 'Please use English letters, like Kiki',
+      'b.score.again': { one: '{n} point. A bit more clearly!', other: '{n} points. A bit more clearly!' },
+      'b.mood': ['It looks at you a little shyly.', 'It tilts its head and listens to you.', 'It happily turns around.', 'It rubs against your hand.', 'It jumps for joy!', 'It stays close to you. It loves you most!💖'],
+      'b.talk.later': 'You already talked today. Come back and talk to it tomorrow.', 'b.talk.t': 'Talk to {name}', 'b.talk.p': 'Say one English sentence to it every day, and it will like you more and more. Friendship {h}', 'b.talk.no': 'Not now',
+      'b.talk.close': 'A very close monster sometimes keeps going when it is about to fall, and hits a little harder.', 'b.talk.ok': '😊 OK',
+      'b.day.take': 'Take back', 'b.day.good': '💞 They get along well (they share a type).', 'b.day.bad': 'They do not get along (no shared type). There will be no egg.', 'b.day.leave': 'Leave here',
+      'b.day.t': '🏡 Monster Daycare', 'b.day.p': 'Leave two monsters here. They grow up with Grandpa and Grandma (1 level every 100 steps). If they share a type, you may find an egg after a while!',
+      'b.day.egg': 'An egg was found!', 'b.day.egg.s': 'Your two monsters left it', 'b.day.eggTake': 'Take it', 'b.day.in': 'Staying here {n} / 2', 'b.day.none': 'No monsters are staying here yet.',
+      'b.day.pick': 'Choose one from your team', 'b.day.keep': 'Keep at least one monster in your team that can battle.', 'b.day.thanks': 'Thank you!',
+      'b.day.back': '🏡 {name} is back!', 'b.day.backLv': '🏡 {name} is back and reached Lv {lv}!', 'b.day.gotEgg': '🥚 You got an egg! Keep it in your team and walk, and it will hatch',
+      'b.hab.weed': 'seaweed', 'b.hab.cave': 'cave', 'b.hab.grass': 'tall grass', 'b.hab.water': 'on the water / fishing',
+      'b.hab.one': '<b>{name}</b> ({how})', 'b.hab.more': ' and more ({n} places)', 'b.hab.legend': 'A legendary monster. It only appears in special places.', 'b.hab.starter': "Professor Echo's lab.",
+      'b.hab.from': 'Grows from <b>{from}</b>.', 'b.hab.fromAt': 'Grows from <b>{from}</b>. {base} lives in <b>{place}</b>.',
+      'b.hab.sight': 'Hard to meet in the wild. It sometimes shows up in "🔎 Today\'s Sighting" on Professor Echo\'s notice board.', 'b.hab.none': 'Nobody has found it on the first-year islands yet.', 'b.hab.t': '📍 Where to find it: ',
+      'b.inTeam': 'In team', 'b.tiredOut': ' · too tired', 'b.more': 'Details', 'b.lead': '⭐ Lead', 'b.setLead': 'Make lead',
+      'b.team.t': 'My team {n} / {max}', 'b.team.p': 'Your lead goes first. When it is too tired, the next one comes in.',
+      'b.team.box': { one: '💻 There is {n} more monster in the Monster Box. Use the computer at a Rest Stop to swap it in.', other: '💻 There are {n} more monsters in the Monster Box. Use the computer at a Rest Stop to swap them in.' },
+      'b.pc.bench': 'Put in box', 'b.pc.join': 'Add to team', 'b.pc.move': 'Move to…', 'b.pc.sort': 'Sort: ', 'b.pc.lv': 'Level', 'b.pc.no': 'Number', 'b.pc.name': 'Name',
+      'b.pc.t': '💻 Monster Box', 'b.pc.p': 'Your team holds up to {team} monsters. There are {boxes} boxes with {cap} spaces each.', 'b.pc.full': ' Your team is full. Put one in a box first.', 'b.pc.team': 'Team {n} / {max}',
+      'b.pc.box': 'Box {n} ({have} / {cap})', 'b.pc.empty': 'This box is empty.', 'b.pc.close': 'Turn off the computer', 'b.pc.moveT': 'Move {name} to which box?', 'b.pc.boxN': 'Box {n}',
+      'b.on': 'On', 'b.off': 'Off', 'b.ride': 'Ride', 'b.bag.t': '🎒 Bag', 'b.bag.p': '💰 {n} coins · Buy items at the shop or find them on the road', 'b.bag.back': 'Back to Bag',
+      'b.useOn.t': '{icon} Use {item} on which monster?', 'b.item.st': '{icon} {name} is back to normal', 'b.item.hp': '{icon} {name} got its HP back',
+      'b.dex.page': 'Page {p} / {n}', 'b.dex.t': 'Monster Book {a} / {b}', 'b.dex.p': 'Catch or grow a monster to fill in its page. Monsters you have seen show as a shadow. Tap one to read about it.',
+      'b.dex.extra': 'Extra', 'b.dex.caught': 'Caught', 'b.dex.seen': 'Seen', 'b.dex.none': 'Not found yet', 'b.legend': 'Legend', 'b.dex.words': 'English in its name: ', 'b.dex.lock': 'Catch it to read its full entry.', 'b.dex.back': 'Back to the Book',
+      'b.balls.t': 'Echo Balls × {n}', 'b.balls.p': 'Make a wild monster weak, throw an Echo Ball and say the catch spell to catch it.<br>Each level you clear in "📚 Practice" gives 1, 3 stars give 2, and beating an Isle Master gives 3.', 'b.balls.buy': 'Buy 3 for 30 coins',
+      'b.flee.wild': 'Run away?', 'b.flee.t': 'Give up this battle?', 'b.flee.p': 'You get no reward from this battle.', 'b.flee.go': 'Leave', 'b.flee.stay': 'Keep battling',
+    },
+  });
+  // 岛主的名字：数据里只有中文名（data.js 的 boss.name），别的界面语言用字表里的英文名
+  const bossName = z => { const L = !isZh() && I18N.raw('b.boss'); return (L && L[z]) || E.W[z].boss.name; };
+  // 小岛的名字：中文界面用 data.js 的名字（和以前一样），别的语言用小镇地图的英文名（Hello Island……）
+  const isleName = z => { if (isZh() || !window.EchoMaps) return E.W[z].name; const m = EchoMaps.get('t' + z); return (m && m.en) || E.W[z].name; };
+  // 「先跳过」：中文界面照旧用 game.js 的那句（phase B 以后 game.js 自己换语言）
+  const skipTxt = () => (isZh() ? E.SKIP_TXT || tx('b.skip') : tx('b.skipAi'));
+
   // ---------- 怪兽手册（数据在 dex.js：全部原创怪兽、17 种属性、招式、进化曲） ----------
   const D = window.DEX;
   const TYPES = D.TYPES;
@@ -12,37 +309,41 @@
   const STARTERS = ['emberpup', 'bubbly', 'sprouty'];
   const MOVES = D.MOVES;
   const POWER = [1.0, 1.6, 2.6];
-  const TASK = ['🗣 说单词', '📜 念句子', '💬 对话大招'];
+  const TASK = k => (I18N ? I18N.raw('b.task') || [] : [])[k] || '';   // 招式按钮上的「说单词 / 念句子 / 对话大招」
   const DOTS = ['●○○', '●●○', '●●●'];
   const STRONG = {}; D.ORDER.forEach(t => { STRONG[t] = (D.CHART[t].strong || []).slice(); });
   // 属性克制：招式属性打对手（对手可能是双属性）
   const eff = (atkType, defId) => D.eff(atkType, SPECIES[defId].types);
-  const effLabel = e => e > 1 ? '打中弱点！' : e < .4 ? '几乎没用' : e < 1 ? '不太管用' : '';
+  const effLabel = e => e > 1 ? tx('b.eff.weak') : e < .4 ? tx('b.eff.barely') : e < 1 ? tx('b.eff.low') : '';
   // ---------- 招式 ----------
   // 招式编号：攻击招式 "fire:1"（属性:小招0/中招1/大招2），辅助招式 "s:sleep"
   const SUP = {
-    roar: { en: 'Big Roar', zh: '大吼', type: 'normal', fx: { foe: { atk: -1 } }, desc: '对手攻击↓' },
-    guard: { en: 'Iron Guard', zh: '铁甲护身', type: 'steel', fx: { self: { def: 2 } }, desc: '自己防御↑↑' },
-    power: { en: 'Power Up', zh: '鼓足劲', type: 'fight', fx: { self: { atk: 2 } }, desc: '自己攻击↑↑' },
-    speed: { en: 'Speed Up', zh: '加速', type: 'flying', fx: { self: { spd: 2 } }, desc: '自己速度↑↑' },
-    chill: { en: 'Cold Wind', zh: '寒风', type: 'ice', fx: { foe: { spd: -2 } }, desc: '对手速度↓↓' },
-    spooky: { en: 'Spooky Face', zh: '鬼脸', type: 'ghost', fx: { foe: { def: -2 } }, desc: '对手防御↓↓' },
-    sleep: { en: 'Sleepy Song', zh: '催眠曲', type: 'grass', status: 'slp', desc: '让对手睡着' },
-    poison: { en: 'Poison Mist', zh: '毒雾', type: 'poison', status: 'psn', desc: '让对手中毒' },
-    para: { en: 'Static Zap', zh: '麻痹电', type: 'spark', status: 'par', desc: '让对手麻痹' },
-    burn: { en: 'Hot Breath', zh: '灼热吐息', type: 'fire', status: 'brn', desc: '让对手烧伤' },
-    confuse: { en: 'Dizzy Dance', zh: '眩晕舞', type: 'psychic', status: 'conf', desc: '让对手混乱' },
-    heal: { en: 'Sweet Rest', zh: '甜蜜休息', type: 'water', heal: .45, desc: '回复一半体力' },
+    roar: { en: 'Big Roar', zh: '大吼', type: 'normal', fx: { foe: { atk: -1 } } },
+    guard: { en: 'Iron Guard', zh: '铁甲护身', type: 'steel', fx: { self: { def: 2 } } },
+    power: { en: 'Power Up', zh: '鼓足劲', type: 'fight', fx: { self: { atk: 2 } } },
+    speed: { en: 'Speed Up', zh: '加速', type: 'flying', fx: { self: { spd: 2 } } },
+    chill: { en: 'Cold Wind', zh: '寒风', type: 'ice', fx: { foe: { spd: -2 } } },
+    spooky: { en: 'Spooky Face', zh: '鬼脸', type: 'ghost', fx: { foe: { def: -2 } } },
+    sleep: { en: 'Sleepy Song', zh: '催眠曲', type: 'grass', status: 'slp' },
+    poison: { en: 'Poison Mist', zh: '毒雾', type: 'poison', status: 'psn' },
+    para: { en: 'Static Zap', zh: '麻痹电', type: 'spark', status: 'par' },
+    burn: { en: 'Hot Breath', zh: '灼热吐息', type: 'fire', status: 'brn' },
+    confuse: { en: 'Dizzy Dance', zh: '眩晕舞', type: 'psychic', status: 'conf' },
+    heal: { en: 'Sweet Rest', zh: '甜蜜休息', type: 'water', heal: .45 },
   };
+  // 说明（desc）按界面语言现取：字表 b.sup.<id>
+  Object.keys(SUP).forEach(k => Object.defineProperty(SUP[k], 'desc', { get: () => tx('b.sup.' + k), enumerable: true }));
   const SUP_OF = { normal: 'roar', fire: 'burn', water: 'heal', grass: 'sleep', spark: 'para', ice: 'chill', fight: 'power', poison: 'poison', ground: 'guard', flying: 'speed', psychic: 'confuse', bug: 'poison', rock: 'guard', ghost: 'spooky', dragon: 'power', dark: 'spooky', steel: 'guard' };
   const STATUS = {
-    brn: { zh: '烧伤', color: '#f0642f', got: '被烧伤了！每回合都会掉血🔥' },
-    psn: { zh: '中毒', color: '#9b4dca', got: '中毒了！每回合都会掉血☠️' },
-    par: { zh: '麻痹', color: '#d9a000', got: '麻痹了！有时候会动不了⚡' },
-    slp: { zh: '睡眠', color: '#5c6bc0', got: '睡着了💤' },
-    frz: { zh: '冰冻', color: '#4fc3e8', got: '被冻住了🧊' },
-    conf: { zh: '混乱', color: '#ec407a', got: '混乱了！有时候会撞到自己😵' },
+    brn: { zh: '烧伤', en: 'Burn', color: '#f0642f' },
+    psn: { zh: '中毒', en: 'Poison', color: '#9b4dca' },
+    par: { zh: '麻痹', en: 'Numb', color: '#d9a000' },
+    slp: { zh: '睡眠', en: 'Sleep', color: '#5c6bc0' },
+    frz: { zh: '冰冻', en: 'Frozen', color: '#4fc3e8' },
+    conf: { zh: '混乱', en: 'Dizzy', color: '#ec407a' },
   };
+  // 陷入这种状态时的那句话（got）按界面语言现取：字表 b.st.<状态>
+  Object.keys(STATUS).forEach(k => Object.defineProperty(STATUS[k], 'got', { get: () => tx('b.st.' + k), enumerable: true }));
   function parseMove(id) {
     if (id.startsWith('s:')) { const sup = SUP[id.slice(2)]; return { id, sup, type: sup.type, tier: 1 }; }
     const [type, t] = id.split(':');
@@ -70,35 +371,39 @@
   const TEAM_MAX = 6;
   // 背包道具。回声球和药水沿用老存档里的 balls / potions，其余放在 bag 里
   const ITEMS = {
-    ball: { zh: '回声球', en: 'Echo Ball', icon: '🔮', price: 10, desc: '收服野生怪兽' },
-    superball: { zh: '金回声球', en: 'Gold Echo Ball', icon: '💠', price: 25, desc: '更容易收服' },
-    potion: { zh: '药水', en: 'Potion', icon: '🧪', price: 20, desc: '回复 40% 体力', heal: 0.4 },
-    superpotion: { zh: '大瓶药水', en: 'Big Potion', icon: '💊', price: 40, desc: '回复 80% 体力', heal: 0.8 },
-    revive: { zh: '元气果', en: 'Energy Fruit', icon: '🍑', price: 60, desc: '让累倒的怪兽恢复一半体力' },
-    repel: { zh: '悄悄喷雾', en: 'Quiet Spray', icon: '🧴', price: 30, desc: '100 步内野生怪兽听不见你，不会跑出来' },
-    rope: { zh: '回程绳', en: 'Return Rope', icon: '🪢', price: 25, desc: '从洞穴里一下回到洞口' },
+    ball: { zh: '回声球', en: 'Echo Ball', icon: '🔮', price: 10 },
+    superball: { zh: '金回声球', en: 'Gold Echo Ball', icon: '💠', price: 25 },
+    potion: { zh: '药水', en: 'Potion', icon: '🧪', price: 20, heal: 0.4 },
+    superpotion: { zh: '大瓶药水', en: 'Big Potion', icon: '💊', price: 40, heal: 0.8 },
+    revive: { zh: '元气果', en: 'Energy Fruit', icon: '🍑', price: 60 },
+    repel: { zh: '悄悄喷雾', en: 'Quiet Spray', icon: '🧴', price: 30 },
+    rope: { zh: '回程绳', en: 'Return Rope', icon: '🪢', price: 25 },
   };
   Object.assign(ITEMS, {
-    antidote: { zh: '薄荷茶', en: 'Mint Tea', icon: '🍵', price: 15, desc: '治好中毒' },
-    burnheal: { zh: '冰凉膏', en: 'Cool Gel', icon: '🧯', price: 20, desc: '治好烧伤' },
-    paraheal: { zh: '活力贴', en: 'Move Patch', icon: '🟡', price: 20, desc: '治好麻痹' },
-    awakening: { zh: '闹钟铃', en: 'Alarm Bell', icon: '🔔', price: 20, desc: '叫醒睡着的怪兽' },
-    iceheal: { zh: '暖暖包', en: 'Warm Pack', icon: '🔥', price: 20, desc: '治好冰冻' },
-    fullheal: { zh: '彩虹糖', en: 'Rainbow Candy', icon: '🍬', price: 50, desc: '治好所有异常状态' },
-    expshare: { zh: '共学耳机', en: 'Team Headset', icon: '🎧', price: 0, desc: '戴着它，没出场的怪兽也在旁边听，能分到一半经验', key: true },
-    rod: { zh: '钓竿', en: 'Fishing Rod', icon: '🎣', price: 150, desc: '对着水按 A 钓鱼', key: true },
-    bike: { zh: '自行车', en: 'Bike', icon: '🚲', price: 300, desc: '骑车走得快一倍（右上角 🚲 按钮）', key: true },
-    dowsing: { zh: '回声探测器', en: 'Echo Finder', icon: '📟', price: 200, desc: '藏起来的道具会一闪一闪', key: true },
+    antidote: { zh: '薄荷茶', en: 'Mint Tea', icon: '🍵', price: 15 },
+    burnheal: { zh: '冰凉膏', en: 'Cool Gel', icon: '🧯', price: 20 },
+    paraheal: { zh: '活力贴', en: 'Move Patch', icon: '🟡', price: 20 },
+    awakening: { zh: '闹钟铃', en: 'Alarm Bell', icon: '🔔', price: 20 },
+    iceheal: { zh: '暖暖包', en: 'Warm Pack', icon: '🔥', price: 20 },
+    fullheal: { zh: '彩虹糖', en: 'Rainbow Candy', icon: '🍬', price: 50 },
+    expshare: { zh: '共学耳机', en: 'Team Headset', icon: '🎧', price: 0, key: true },
+    rod: { zh: '钓竿', en: 'Fishing Rod', icon: '🎣', price: 150, key: true },
+    bike: { zh: '自行车', en: 'Bike', icon: '🚲', price: 300, key: true },
+    dowsing: { zh: '回声探测器', en: 'Echo Finder', icon: '📟', price: 200, key: true },
   });
-  Object.entries(D.STONES).forEach(([id, st]) => { ITEMS[id] = { zh: st.zh, en: st.en, icon: st.icon, price: 120, desc: '进化曲：放给某些怪兽听，它就会进化', stone: true }; });
+  Object.entries(D.STONES).forEach(([id, st]) => { ITEMS[id] = { zh: st.zh, en: st.en, icon: st.icon, price: 120, stone: true }; });
   // 回声贝：剧情里的人送的重要物品，贴在耳边能听见一种回声技能；有了它再拿够徽章，就能在野外用（id 沿用老存档的 hm_*）
   // 回声技能只有四种（2026-10-08 按评审改）：开路（1–3 级：砍小树 / 敲碎裂石 / 推大石头）、点灯、水路（1–3 级：在水上走 / 潜到海底 / 爬上瀑布）、乘风。
   // 后面几级的回声贝是给已有技能升级。名字和 world.js 的 SKILLS 一致
+  // @i18n-content 回声技能的中英文名是一对数据（界面上用 EchoI18n.label 按语言取）；tools/voice/collect.js 按 [id, 中文, 英文, 图标] 这个形状找英文名，不改形状
   [['cut', '开路', 'Clear Way', '🌿'], ['flash', '点灯', 'Light Up', '💡'], ['smash', '开路 2 级', 'Clear Way 2', '🪨'], ['strength', '开路 3 级', 'Clear Way 3', '💪'],
     ['surf', '水路', 'Water Way', '🌊'], ['fly', '乘风', 'Sky Ride', '🕊️'], ['dive', '水路 2 级', 'Water Way 2', '🤿'], ['falls', '水路 3 级', 'Water Way 3', '🏞️']].forEach(([k, zh, en, icon]) => {
-    ITEMS['hm_' + k] = { zh: '回声贝 · ' + zh, en: 'Echo Shell: ' + en, icon: '🐚', price: 0, desc: '回声技能「' + zh + '」' + icon + '（菜单 → 回声技能）', key: true, hm: true };
+    ITEMS['hm_' + k] = { zh: '回声贝 · ' + zh, en: 'Echo Shell: ' + en, icon: '🐚', price: 0, skill: { zh, en, icon }, key: true, hm: true };
   });
-  ITEMS.ticket = { zh: '船票', en: 'Ferry Ticket', icon: '🎫', price: 0, desc: '坐渡轮去别的岛', key: true };
+  // @i18n-content-end
+  ITEMS.ticket = { zh: '船票', en: 'Ferry Ticket', icon: '🎫', price: 0, key: true };
+  // 道具说明（desc）按界面语言现取（world.js 的商店也读 it.desc）：进化曲一句、回声贝带技能名、其余字表 b.item.<id>
+  Object.keys(ITEMS).forEach(id => { const it = ITEMS[id]; Object.defineProperty(it, 'desc', { get: () => (it.stone ? tx('b.item.stone') : it.hm ? tx('b.item.hm', { skill: label(it.skill), icon: it.skill.icon }) : tx('b.item.' + id)), enumerable: true }); });
   const BAG_ORDER = ['expshare', 'hm_cut', 'hm_flash', 'hm_smash', 'hm_strength', 'hm_surf', 'hm_fly', 'hm_dive', 'hm_falls', 'ticket', 'bike', 'rod', 'dowsing','ball', 'superball', 'potion', 'superpotion', 'revive', 'antidote', 'burnheal', 'paraheal', 'awakening', 'iceheal', 'fullheal', 'repel', 'rope'].concat(Object.keys(D.STONES));
   function itemCount(id) { const m = M(); return id === 'ball' ? m.balls : id === 'potion' ? (m.potions || 0) : ((m.bag || {})[id] || 0); }
   function addItem(id, n) {
@@ -139,7 +444,7 @@
   const svg = sp => window.Cartoon ? Cartoon.monster(SPECIES[sp]) : '';
   // 属性小图标（SVG，不依赖手机的 emoji 字体）
   const TICON = {}; D.ORDER.forEach(t => { TICON[t] = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + TYPES[t].icon + '" fill="currentColor"/></svg>'; });
-  const tchip = t => '<span class="tchip" style="--tc:' + TYPES[t].color + '">' + TICON[t] + TYPES[t].zh + '系</span>';
+  const tchip = t => '<span class="tchip" style="--tc:' + TYPES[t].color + '">' + TICON[t] + hx('b.type', { t: label(TYPES[t]) }) + '</span>';
   // 颜色很浅的属性（电、飞行、普通、冰……）招式按钮上用深色字，白字看不清
   const LIGHT = {};
   D.ORDER.forEach(t => { const n = parseInt(TYPES[t].color.slice(1), 16), lin = v => { v /= 255; return v <= .04045 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; LIGHT[t] = .2126 * lin(n >> 16) + .7152 * lin((n >> 8) & 255) + .0722 * lin(n & 255) > .32; });
@@ -148,9 +453,11 @@
   // ---------- 养成：英文昵称、亲密度、稀有色、蛋 ----------
   const SHINY_RATE = 1 / 64;          // 野外遇到稀有色的机会（给孩子玩，故意定得高一点）
   const nm = mon => (mon && mon.nick) || SPECIES[mon.sp].en;
+  // 名字后面的小字：起了昵称就写原来的英文名，再加中文名（中文界面才有）
+  const subName = mon => { const s = SPECIES[mon.sp]; return [mon.nick ? s.en : '', gloss(s) || ''].filter(Boolean).join(' · '); };
   const frOf = mon => mon.fr == null ? 70 : mon.fr;
   const hearts = mon => Math.min(5, Math.floor(frOf(mon) / 51));
-  const heartsHTML = mon => '<span class="frh" title="亲密度">' + [0, 1, 2, 3, 4].map(k => k < hearts(mon) ? '♥' : '♡').join('') + '</span>';
+  const heartsHTML = mon => '<span class="frh" title="' + hx('b.fr') + '">' +[0, 1, 2, 3, 4].map(k => k < hearts(mon) ? '♥' : '♡').join('') + '</span>';
   function befriend(mon, n) { if (mon && !mon.egg) mon.fr = Math.max(0, Math.min(255, frOf(mon) + n)); }
   // 颜色转一个角度（稀有色用）；灰白的颜色不动
   function hueShift(hex, deg) {
@@ -233,60 +540,61 @@
     const m = M(), esc = E.esc;
     if (!m.box.length) {
       return '<section class="mon-card starter-pick new-game"><div class="ng-mons">' + STARTERS.map(id => '<span class="st-svg">' + svg(id) + '</span>').join('') + '</div>' +
-        '<h2>新的冒险</h2><p>你刚搬到回声群岛最南边的你好岛。这里的怪兽听得懂英语——话说得越清楚，怪兽就越强。<br>回声博士好像遇到麻烦了……</p>' +
-        '<button class="btn sun wide world-go" data-act="wEnter">🌅 开始冒险</button></section>';
+        '<h2>' + hx('b.home.new.t') + '</h2><p>' + hx('b.home.new.p') + '</p>' +
+        '<button class="btn sun wide world-go" data-act="wEnter">' + hx('b.home.start') + '</button></section>';
     }
     const L = lead(), s = SPECIES[L.sp], st = stats(L);
     // 学习锁：锁着时两个小任务和锁着的按钮放在最上面，一眼就看到；开了就放在怪兽卡片下面
     const g = E.gate ? E.gate() : { open: true }, lock = E.gateCard ? E.gateCard() : '';
-    const lockedBtn = '<button class="btn wide world-go locked" data-act="wEnter">🔒 ' + (g.back ? '手机日期被改过，先改回来' : '还差 ' + (g.steps || 1) + ' 步就能去冒险') + '</button>';
+    const lockedBtn = '<button class="btn wide world-go locked" data-act="wEnter">🔒 ' + (g.back ? hx('b.home.clock') : hx('b.home.steps', { n: g.steps || 1 })) + '</button>';
     // 现在该去哪、做什么（评估第 14 条）：冒险按钮下面一行小字
     const ws = E.S.world || {}, EW = window.EchoWorld, safe = f => { try { return f(); } catch (e) { return null; } };
     const obj = ws.started && EW && EW.objective ? safe(() => EW.objective()) : null;
-    const objLine = obj && obj.zh ? '<p class="tip obj" style="margin-top:-4px">📍 ' + esc(obj.zh) + '</p>' : '';
+    const objText = obj && (obj.text || obj.zh);   // story.js 的 objective()：text 是界面语言的那句（老的 zh 字段也是同一句）
+    const objLine = objText ? '<p class="tip obj" style="margin-top:-4px">📍 ' + esc(objText) + '</p>' : '';
     let h = g.open ? '' : lock + lockedBtn + objLine;
     h += '<section class="mon-card lead" style="--tc:' + TYPES[s.type].color + '"><div class="lead-mon">' + svgMon(L) + '</div><div class="lead-info">' +
-      '<div class="lead-name"><b>' + (L.shiny ? '✨' : '') + E.esc(nm(L)) + '</b><span>' + (L.nick ? s.en + ' · ' : '') + s.zh + '</span> ' + heartsHTML(L) + '</div>' +
+      '<div class="lead-name"><b>' + (L.shiny ? '✨' : '') + E.esc(nm(L)) + '</b><span>' + subName(L) + '</span> ' + heartsHTML(L) + '</div>' +
       '<div class="chips">' + chips(L.sp) + '<span class="lvchip">Lv ' + L.lv + '</span></div>' +
       '<div class="xpbar"><i style="width:' + (L.xp / xpNeed(L.lv) * 100) + '%"></i></div>' +
-      '<small>HP ' + st.hp + ' · 攻击 ' + st.atk + ((s.evo || []).find(e => e.lv) ? ' · Lv ' + s.evo.find(e => e.lv).lv + ' 会进化' : '') + '</small></div>' +
-      '<div class="lead-btns"><button class="btn small ghost" data-act="mTeam">🐾 我的怪兽 ' + m.box.length + '</button><button class="btn small ghost" data-act="mDex">📖 怪兽手册 ' + caughtN() + '/' + D.total + '</button><button class="btn small sun" data-act="mBalls">🔮 回声球 ' + m.balls + '</button></div></section>';
+      '<small>' + hx('b.home.stats', { hp: st.hp, atk: st.atk }) + ((s.evo || []).find(e => e.lv) ? hx('b.home.evo', { lv: s.evo.find(e => e.lv).lv }) : '') + '</small></div>' +
+      '<div class="lead-btns"><button class="btn small ghost" data-act="mTeam">' + hx('b.home.mons', { n: m.box.length }) + '</button><button class="btn small ghost" data-act="mDex">' + hx('b.home.dex', { a: caughtN(), b: D.total }) + '</button><button class="btn small sun" data-act="mBalls">' + hx('b.home.balls', { n: m.balls }) + '</button></div></section>';
     const place = EW && EW.placeLabel ? EW.placeLabel() : null;
-    if (g.open) h += lock + '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? '继续冒险' + (place ? ' · ' + place.name : '') : '出发去冒险！') + '</button>' + objLine;
+    if (g.open) h += lock + '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? hx('b.home.continue') + (place ? ' · ' + place.name : '') : hx('b.home.go')) + '</button>' + objLine;
     // 下一枚徽章要先打败哪个课本单元的 BOSS（评估第 10 条：挑战馆跟着课本进度开）
     const gn = ws.started && EW && EW.nextGymNeed ? safe(() => EW.nextGymNeed()) : null;
     if (gn && !gn.ok && gn.unitLabel) {
-      h += '<section class="mon-card gym-need"><h3>🏅 下一枚徽章（' + esc(gn.island) + '）</h3><p>岛主' + esc(gn.leader) + '要你先学好课本：还差 <b>' + esc(gn.unitLabel) + '</b> 的 BOSS（课本 BOSS ' + gn.done + '/' + gn.need + '）</p>' +
-        '<button class="btn small" data-act="tab" data-t="quiz" style="margin-top:8px">📚 去闯关练习</button></section>';
+      h += '<section class="mon-card gym-need"><h3>' + hx('b.gym.t', { isle: gn.island }) + '</h3><p>' + hx('b.gym.p', { leader: gn.leader, unit: gn.unitLabel, done: gn.done, need: gn.need }) + '</p>' +
+        '<button class="btn small" data-act="tab" data-t="quiz" style="margin-top:8px">' + hx('b.gym.go') + '</button></section>';
     }
     // 今日目击（sighting.js）：博士的告示板每天一条英文线索，读懂了去对的地方才遇得到稀有怪兽；收服了就收成一行
     if (ws.started && window.EchoSight) h += safe(() => EchoSight.homeCard()) || '';
     // 传说的线索：四只神兽是学习的里程碑
     const clues = ws.started && EW && EW.legendClues ? safe(() => EW.legendClues()) || [] : [];
     if (clues.length) {
-      h += '<section class="mon-card legends"><h3>✨ 传说的线索</h3><ul style="list-style:none;padding:0;margin:6px 0 0;display:grid;gap:4px;font-size:14px">' + clues.map(c =>
-        '<li>' + (c.caught ? '✅' : c.icon) + ' <b>' + esc(c.zh) + '</b>：' + (c.caught ? '已经收服了！' : esc(c.task) + '（' + c.have + '/' + c.need + '）' + (c.done ? ' · 到户外走走，它会来找你！' : '')) + '</li>').join('') + '</ul></section>';
+      h += '<section class="mon-card legends"><h3>' + hx('b.leg.t') + '</h3><ul style="list-style:none;padding:0;margin:6px 0 0;display:grid;gap:4px;font-size:14px">' + clues.map(c =>
+        '<li>' + (c.caught ? '✅' : c.icon) + ' ' + hx('b.leg.name', { name: label({ zh: c.zh, en: c.en }) }) + (c.caught ? hx('b.leg.caught') : hx('b.leg.task', { task: c.task, have: c.have, need: c.need }) + (c.done ? hx('b.leg.done') : '')) + '</li>').join('') + '</ul></section>';
     }
-    h += '<p class="tip">走进草丛会遇到野生怪兽，路上的训练师看到你就会来挑战。<br>打败每个小镇的岛主拿到徽章，守卫才会让你去下一个小镇。岛主会先看你课本学到哪了：要先在「📚 闯关练习」打败对应单元的 BOSS。</p>';
+    h += '<p class="tip">' + hx('b.home.tip') + '</p>';
     const visited = Object.keys(ws.visited || {}).map(Number).sort((a, b) => a - b);
     if (visited.length > 1) {
-      h += '<section class="mon-card fly"><h3>✈️ 飞回去过的小镇</h3><div class="fly-list">' + visited.map(z =>
-        '<button class="btn small ghost" data-act="wFly" data-z="' + z + '">' + E.W[z].icon + ' ' + E.W[z].name + (m.badges[z] ? ' 🏅' : '') + '</button>').join('') + '</div></section>';
+      h += '<section class="mon-card fly"><h3>' + hx('b.home.fly') + '</h3><div class="fly-list">' + visited.map(z =>
+        '<button class="btn small ghost" data-act="wFly" data-z="' + z + '">' + E.W[z].icon + ' ' + isleName(z) + (m.badges[z] ? ' 🏅' : '') + '</button>').join('') + '</div></section>';
     }
-    h += '<p class="tip">🏅 徽章 ' + Object.keys(m.badges).length + ' / ' + E.W.length + ' · <button class="link" data-act="mBag">🎒 背包</button> · <button class="link" data-act="report">📊 学习周报</button> · 在「📚 闯关练习」每通关一关送 1 个回声球，三星送 2 个。</p>';
+    h += '<p class="tip">' + hx('b.home.foot', { a: Object.keys(m.badges).length, b: E.W.length }) + '</p>';
     return h;
   }
 
   // ---------- 选初始怪兽：大声说 be my partner! ----------
   function starterSheet(id) {
     const s = SPECIES[id], sr = E.speakMode() === 'sr';
-    E.openModal('<div class="evo-stage">' + svg(id) + '</div><h2>' + s.en + '（' + s.zh + '）</h2>' +
-      '<p>想让它当你的伙伴，就对它大声说：</p><div class="say-text" id="st-say">' + E.wordsHTML(s.en + ', be my partner!') + '</div>' +
-      (sr ? '<button class="mic" id="st-mic" data-act="mStarterMic" data-sp="' + id + '">' + E.MIC + '</button><div class="mic-hint" id="st-hint">点麦克风，大声说</div>' +
+    E.openModal('<div class="evo-stage">' + svg(id) + '</div><h2>' + s.en + E.esc(zhOf(s)) + '</h2>' +
+      '<p>' + hx('b.st.say') + '</p><div class="say-text" id="st-say">' + E.wordsHTML(s.en + ', be my partner!') + '</div>' +
+      (sr ? '<button class="mic" id="st-mic" data-act="mStarterMic" data-sp="' + id + '">' + E.MIC + '</button><div class="mic-hint" id="st-hint">' + hx('b.mic.say') + '</div>' +
           // AI 打分用不了（没网 / 额度 / 没密钥，评估第 3 条）：可以先跳过，这句放进复习、联网后要补说；说了 3 次还不行也能先跳过
-          '<button class="link ai-skip" data-act="mStarterSkip" data-sp="' + id + '" id="st-skip"' + (E.aiDown && E.aiDown() ? '' : ' hidden') + '>' + E.esc(E.SKIP_TXT || '先跳过') + '</button>'
-        : '<button class="btn leaf wide" data-act="mStarterGo" data-sp="' + id + '">🎤 我说了！</button>') +
-      '<div class="row"><button class="btn ghost" data-act="close">再看看别的</button><button class="btn ghost" data-act="mSayName" data-sp="' + id + '">🔊 听一遍</button></div>');
+          '<button class="link ai-skip" data-act="mStarterSkip" data-sp="' + id + '" id="st-skip"' + (E.aiDown && E.aiDown() ? '' : ' hidden') + '>' + E.esc(skipTxt()) + '</button>'
+        : '<button class="btn leaf wide" data-act="mStarterGo" data-sp="' + id + '">' + hx('b.said') + '</button>') +
+      '<div class="row"><button class="btn ghost" data-act="close">' + hx('b.st.other') + '</button><button class="btn ghost" data-act="mSayName" data-sp="' + id + '">' + hx('b.listen') + '</button></div>');
     starterTries = 0;
     E.say(s.en + ', be my partner!');
   }
@@ -294,7 +602,7 @@
   async function starterMic(id) {
     const m = $('st-mic'); if (!m) return;
     if (E.RT.listening) { E.stopListening(); return; }
-    m.classList.add('on'); m.innerHTML = E.STOP; $('st-hint').textContent = '正在听……';
+    m.classList.add('on'); m.innerHTML = E.STOP; $('st-hint').textContent = tx('b.mic.on');
     const res = await E.recognize(null, ['be my partner']);
     if (!$('st-mic')) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
@@ -302,13 +610,13 @@
     const skip = () => { const sk = $('st-skip'); if (sk) sk.hidden = false; };
     if (!res.alts.length) {
       if (res.fail === 'unheard' || !E.failHint) starterTries++;
-      $('st-hint').textContent = E.failHint ? E.failHint(res) : '没听清，再大声一点';
+      $('st-hint').textContent = E.failHint ? E.failHint(res) : tx('b.mic.again');
       if (starterTries >= 3 || (E.aiDown && E.aiDown())) skip();
       return;
     }
     const r = E.bestScore('be my partner', res.alts);
     if (r.score >= 40) takeStarter(id);
-    else { starterTries++; $('st-hint').textContent = '再试一次：be my partner!'; if (starterTries >= 3) skip(); }
+    else { starterTries++; $('st-hint').textContent = tx('b.st.retry'); if (starterTries >= 3) skip(); }
   }
   // 先跳过：伙伴照样选好，这句放进复习（联网以后要补说）
   function starterSkip(id) {
@@ -324,7 +632,7 @@
     m.box.push(mon); m.team = [mon.uid]; m.dex[id] = 'caught';
     E.save(); E.closeModal(); E.confetti(160); E.SFX.win();
     E.say(SPECIES[id].en + ' joined your team!');
-    E.toast('🎉 ' + SPECIES[id].en + ' 成为了你的伙伴！', 'gold');
+    E.toast(tx('b.st.joined', { name: SPECIES[id].en }), 'gold');
     E.renderHome();
   }
 
@@ -395,8 +703,8 @@
   }
   function startBattle(kind, z, opts) {
     opts = opts || {};
-    if (!M().box.length) { E.toast('先选一只初始怪兽吧'); return false; }
-    if (!anyAlive()) { E.toast('怪兽们都没力气了，先去休息站休息'); return false; }
+    if (!M().box.length) { E.toast(tx('b.need.starter')); return false; }
+    if (!anyAlive()) { E.toast(tx('b.need.rest')); return false; }
     E.primeTTS(); E.ac();
     stopBattle();
     const team = M().team.filter(u => byUid(u) && !byUid(u).egg);
@@ -413,7 +721,7 @@
       tag: opts.tag || null,   // 特别的野外对战（今日目击，sighting.js）：{ title 顶上的标题, sub 标题下面的小字, msg 开场那句话前面加的一段 }
     };
     if (rule('talk')) B.energy = 3;
-    if (B.rules) setTimeout(() => { if (B && B.rules) E.toast(RULE_TEXT[ruleNow()] || '', 'gold'); }, 1500);
+    if (B.rules) setTimeout(() => { if (B && B.rules) E.toast(ruleText(ruleNow()), 'gold'); }, 1500);
     team.forEach(u => { B.hp[u] = curHp(byUid(u)); });
     B.foeHp = stats(foes[0]).hp;
     B.enter = 'both';
@@ -457,8 +765,8 @@
     const mine = side === 'me', max = stats(mon).hp, p = Math.max(0, mine ? B.hp[mon.uid] : B.foeHp) / max, w = (p * 100) + '%';
     const id = mine ? 'my' : 'foe', t0 = SPECIES[mon.sp].types[0];
     return '<div class="hpcard ' + side + (B.enter === 'both' || B.enter === side ? ' enter' : '') + '" style="--tc:' + TYPES[t0].color + '">' +
-      '<div class="hp-top"><b>' + (mon.shiny ? '<span class="shiny" title="稀有色">✨</span>' : '') + name + '</b><span class="hp-lv"><small>Lv</small>' + mon.lv + '</span></div>' +
-      '<div class="hpbar" title="体力"><span class="hp-ghost" id="b-' + id + 'ghost" style="width:' + w + '"></span><i id="b-' + id + 'hp" style="width:' + w + ';background-color:' + hpColor(p) + '"></i></div>' +
+      '<div class="hp-top"><b>' + (mon.shiny ? '<span class="shiny" title="' + hx('b.shiny') + '">✨</span>' : '') + name + '</b><span class="hp-lv"><small>Lv</small>' + mon.lv + '</span></div>' +
+      '<div class="hpbar" title="' + hx('b.hp') + '"><span class="hp-ghost" id="b-' + id + 'ghost" style="width:' + w + '"></span><i id="b-' + id + 'hp" style="width:' + w + ';background-color:' + hpColor(p) + '"></i></div>' +
       '<div class="hp-foot">' + (extra || '') + '<div class="chips">' + chips(mon.sp) + '<span class="st-chip" id="b-' + id + 'st"></span><span class="stg" id="b-' + id + 'stg"></span></div></div></div>';
   }
   // 转屏（竖屏 ⇄ 横屏）后战斗画面跟着重新算大小
@@ -466,14 +774,14 @@
   function renderBattle() {
     const w = E.W[B.z], f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
     $('battle').innerHTML =
-      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="离开战斗">✕</button><div class="th-title"><b>' + (B.tag && B.tag.title ? B.tag.title : B.kind === 'wild' ? '野外对战' : B.kind === 'trainer' ? '训练师 ' + B.trainer.name : '岛主 ' + w.boss.name) + '</b><small>' + (B.tag && B.tag.sub ? E.esc(B.tag.sub) : '第 ' + (B.z + 1) + ' 区 · ' + w.name) + '</small></div><span class="b-energy" id="b-energy" title="能量，攒满 3 格可以放大招"></span></div>' +
+      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="' + hx('b.leave') + '">✕</button><div class="th-title"><b>' + (B.tag && B.tag.title ? B.tag.title : B.kind === 'wild' ? hx('b.title.wild') : B.kind === 'trainer' ? hx('b.title.trainer', { name: B.trainer.name }) : hx('b.title.leader', { name: bossName(B.z) })) + '</b><small>' + (B.tag && B.tag.sub ? E.esc(B.tag.sub) : hx('b.title.zone', { n: B.z + 1, isle: isleName(B.z) })) + '</small></div><span class="b-energy" id="b-energy" title="' + hx('b.energy') + '"></span></div>' +
       '<div class="arena" id="b-arena" style="--wc:' + w.color + '">' + arenaBG(B.z) +
       // 2D 画面：两只怪兽侧面对站在同一条地平线上，脚下是属性色的一圈圈水波（3D 画面在 battle3d.js 里同样处理）
       '<div class="pad me" style="--rc:' + TYPES[sm.types[0]].color + '"></div><div class="mon me' + (B.enter === 'both' || B.enter === 'me' ? ' enter' : '') + '" id="b-me">' + svgMon(m) + '</div>' +
       '<div class="pad foe" style="--rc:' + TYPES[sf.types[0]].color + '"></div><div class="mon foe' + (B.enter === 'both' || B.enter === 'foe' ? ' enter' : '') + '" id="b-foe">' + svgMon(f) + '</div>' +
       '<div class="b-hud">' + plate('me', m, nm(m)) +
       '<span class="b-vs">' + (B.kind !== 'wild' ? '<span class="trainer">' + (B.kind === 'trainer' && B.trainer.img ? '<img src="' + B.trainer.img + '" alt="">' : '<span>' + w.boss.emoji + '</span>') + '</span>' : 'VS') + '</span>' +
-      plate('foe', f, sf.en, (B.kind !== 'wild' ? '<div class="balls" title="对手剩下的怪兽">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '"></span>').join('') + '</div>' : '')) + '</div>' +
+      plate('foe', f, sf.en, (B.kind !== 'wild' ? '<div class="balls" title="' + hx('b.foeLeft') + '">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '"></span>').join('') + '</div>' : '')) + '</div>' +
       '</div><div class="b-msg" id="b-msg"></div><div class="b-panel" id="b-panel"></div>';
     if (B3) {
       const ar = $('b-arena'); ar.classList.add('is3d'); B3.mount(ar);
@@ -519,7 +827,7 @@
     if (z === 11) return { sky1: '#a9c9e0', sky2: '#eef6fb', ground: '#eef4f8', hill: '#cfe3ee', pad: '#ffffff', rim: '#9fc3d6' };
     return { rim: E.W[z] ? E.W[z].color : '#7aa85a' };
   }
-  const STAT_ZH = { atk: '攻', def: '防', spd: '速' };
+  const STAT_ZH = k => tx('b.stat.' + k);   // 能力升降小标签：攻 / 防 / 速
   function updHp() {
     const f = foe(), m = me();
     const fmax = stats(f).hp, mmax = stats(m).hp, fh = Math.max(0, B.foeHp), mh = Math.max(0, B.hp[m.uid]);
@@ -535,8 +843,8 @@
     const en = $('b-energy'); if (en) en.innerHTML = [0, 1, 2].map(k => '<span class="' + (k < B.energy ? 'on' : 'off') + '">' + TICON.spark + '</span>').join('');
     [['me', 'b-myst', 'b-mystg'], ['foe', 'b-foest', 'b-foestg']].forEach(([side, sid, gid]) => {
       const mon = monOf(side), st = mon.st, e1 = $(sid), e2 = $(gid);
-      if (e1) { e1.textContent = st ? STATUS[st].zh : B.conf[side] ? '混乱' : ''; e1.style.setProperty('--sc', st ? STATUS[st].color : '#ec407a'); e1.hidden = !st && !B.conf[side]; }
-      if (e2) e2.innerHTML = Object.entries(B.stg[side]).filter(([, v]) => v).map(([k, v]) => '<span class="' + (v > 0 ? 'up' : 'down') + '">' + STAT_ZH[k] + (v > 0 ? '↑' : '↓') + Math.abs(v) + '</span>').join('');
+      if (e1) { e1.textContent = st ? label(STATUS[st]) : B.conf[side] ? label(STATUS.conf) : ''; e1.style.setProperty('--sc', st ? STATUS[st].color : '#ec407a'); e1.hidden = !st && !B.conf[side]; }
+      if (e2) e2.innerHTML = Object.entries(B.stg[side]).filter(([, v]) => v).map(([k, v]) => '<span class="' + (v > 0 ? 'up' : 'down') + '">' + E.esc(STAT_ZH(k)) + (v > 0 ? '↑' : '↓') + Math.abs(v) + '</span>').join('');
     });
   }
   const msg = t => { const e = $('b-msg'); if (e) e.innerHTML = t; };
@@ -547,18 +855,18 @@
     const f = foe(), sf = SPECIES[f.sp], w = E.W[b.z];
     $('b-foe').classList.add('appear');
     if (b.kind === 'wild') {
-      msg((b.tag && b.tag.msg ? b.tag.msg : '') + (f.shiny ? '✨ 闪闪发光的！' : '') + '前面跳出来一只 <b>' + sf.en + '</b>（' + sf.zh + '）！');
-      if (f.shiny) { E.SFX.win(); E.toast('✨ 是稀有色的 ' + sf.en + '！颜色和平常不一样，很少见哦', 'gold'); }
+      msg((b.tag && b.tag.msg ? b.tag.msg : '') + (f.shiny ? hx('b.in.shiny') : '') + hx('b.in.wild', { name: sf.en, zh: zhOf(sf) }));
+      if (f.shiny) { E.SFX.win(); E.toast(tx('b.in.shinyToast', { name: sf.en }), 'gold'); }
       if (B3) B3.enter('foe', false);
       await E.say('Look out! Here comes ' + sf.en + '!');
     } else {
-      const who = b.kind === 'trainer' ? b.trainer.name : w.boss.name;
-      msg(who + '：“<b>' + sf.en + '</b>，该你了！”');
+      const who = b.kind === 'trainer' ? b.trainer.name : bossName(b.z);
+      msg(hx('b.in.foe', { who, name: sf.en }));
       if (B3) B3.enter('foe', true);
       await E.say("Let's battle! " + sf.en + ', your turn!', undefined, 'm');
     }
     if (!live(b)) return;
-    msg('<b>' + nm(me()) + '</b>，上场！');
+    msg(hx('b.go', { name: nm(me()) }));
     if (B3) B3.enter('me', true);
     await E.say(nm(me()) + ', your turn!');
     if (!live(b)) return;
@@ -574,21 +882,23 @@
     if (m.st === 'slp' || m.st === 'frz') {
       if (m.st === 'slp') { m.slp = (m.slp || 1) - 1; if (m.slp <= 0) m.st = null; }
       else if (Math.random() < .2) m.st = null;
-      if (!m.st) { E.toast((m.slp != null ? '☀️ ' : '🔥 ') + nm(m) + ' 自己恢复了！'); updHp(); }
+      if (!m.st) { E.toast(tx('b.selfWake', { icon: m.slp != null ? '☀️ ' : '🔥 ', name: nm(m) })); updHp(); }
       else { wakeTask(); return; }
     }
     const canCatch = B.kind === 'wild' && !B.noCatch && B.foeHp <= stats(f).hp * 0.6;
     const others = B.team.some((u, k) => k !== B.ti && B.hp[u] > 0);
-    msg('念对英语，<b>' + nm(m) + '</b> 就出招！');
+    msg(hx('b.menu', { name: nm(m) }));
     panel('<div class="moves">' + movesOf(m).map((mv, i) => {
       const lock = mv.tier === 2 && B.energy < 3, nm = mvName(mv), e = mv.sup ? 1 : eff(mv.type, f.sp);
-      const tag = mv.sup ? mv.sup.desc : (e > 1 ? '<em class="mv-eff">克制</em>' : e < 1 ? '不太管用' : TYPES[mv.type].zh);
-      return '<button class="move' + (mv.tier === 2 ? ' ult' : '') + (mv.sup ? ' sup' : '') + (LIGHT[mv.type] ? ' lt' : '') + '" style="--tc:' + TYPES[mv.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><span class="mv-pow">' + (mv.sup ? '✦' : DOTS[mv.tier]) + '</span></span><small>' + nm[1] + ' · ' + tag + ' · ' + (lock ? '攒满 3 格能量' : TASK[mv.sup ? 1 : mv.tier]) + '</small></button>';
+      const tag = mv.sup ? E.esc(mv.sup.desc) : (e > 1 ? '<em class="mv-eff">' + hx('b.mv.strong') + '</em>' : e < 1 ? hx('b.mv.low') : E.esc(label(TYPES[mv.type])));
+      // 小字：招式的中文名（中文界面才有）· 克制 / 属性 / 辅助说明 · 要做什么
+      const small = [E.esc(gloss({ zh: nm[1] }) || ''), tag, lock ? hx('b.mv.lock') : E.esc(TASK(mv.sup ? 1 : mv.tier))].filter(Boolean).join(' · ');
+      return '<button class="move' + (mv.tier === 2 ? ' ult' : '') + (mv.sup ? ' sup' : '') + (LIGHT[mv.type] ? ' lt' : '') + '" style="--tc:' + TYPES[mv.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><span class="mv-pow">' + (mv.sup ? '✦' : DOTS[mv.tier]) + '</span></span><small>' + small + '</small></button>';
     }).join('') + '</div>' +
       '<div class="b-items">' +
-      (B.kind === 'wild' && !B.noCatch ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>🔮 收服' + (canCatch ? '' : ' · 先打虚弱') + '</button>' : '') +
-      '<button class="btn small ghost" data-act="bSwitch"' + (others ? '' : ' disabled') + '>🔄 换怪兽</button>' +
-      '<button class="btn small ghost" data-act="bBag">🎒 背包</button></div>');
+      (B.kind === 'wild' && !B.noCatch ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>' + hx('b.catch') + (canCatch ? '' : hx('b.catch.weak')) + '</button>' : '') +
+      '<button class="btn small ghost" data-act="bSwitch"' + (others ? '' : ' disabled') + '>' + hx('b.switch') + '</button>' +
+      '<button class="btn small ghost" data-act="bBag">' + hx('b.bag') + '</button></div>');
   }
   // 叫醒睡着 / 冻住的怪兽：大声喊它的名字
   function wakeTask() {
@@ -597,7 +907,7 @@
     B.task = { kind: 'wake', target: (slp ? 'Wake up, ' : 'Warm up, ') + nm(m) + '!', zh: slp ? '快醒醒！' : '快暖和起来！' };
     listenIfDown(B.task);
     taskPanel();
-    msg('<b>' + nm(m) + '</b> ' + (slp ? '睡着了💤' : '被冻住了🧊') + '！大声喊它，念得越准越容易' + (slp ? '叫醒' : '化开') + '。');
+    msg(hx(slp ? 'b.wake.slp' : 'b.wake.frz', { name: nm(m) }));
   }
   // 战斗里的背包：回复体力、治异常状态，用掉这一回合
   const STATUS_HEAL = { antidote: ['psn'], burnheal: ['brn'], paraheal: ['par'], awakening: ['slp'], iceheal: ['frz'], fullheal: ['psn', 'brn', 'par', 'slp', 'frz'] };
@@ -607,9 +917,9 @@
     const ids = ['potion', 'superpotion'].concat(Object.keys(STATUS_HEAL).filter(id => itemCount(id) > 0));
     const rows = ids.map(id => {
       const it = ITEMS[id], n = itemCount(id), ok = n > 0 && (it.heal ? !full : STATUS_HEAL[id].includes(m.st));
-      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + (it.key ? '' : ' ×' + n) + '</b><small>' + it.desc + '</small></div><button class="btn small sun" data-act="bUse" data-id="' + id + '"' + (ok ? '' : ' disabled') + '>用</button></div>';
+      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + E.esc(label(it)) + (it.key ? '' : ' ×' + n) + '</b><small>' + E.esc(it.desc) + '</small></div><button class="btn small sun" data-act="bUse" data-id="' + id + '"' + (ok ? '' : ' disabled') + '>' + hx('b.use') + '</button></div>';
     }).join('');
-    E.openModal('<h2>🎒 背包</h2><p>给 <b>' + nm(m) + '</b> 用道具（体力 ' + Math.max(0, Math.round(B.hp[m.uid])) + ' / ' + stats(m).hp + (m.st ? ' · ' + STATUS[m.st].zh : '') + '）。用道具会用掉这一回合。</p>' + rows + '<button class="btn ghost wide" data-act="close">返回</button>');
+    E.openModal('<h2>' + hx('b.bbag.t') + '</h2><p>' + hx('b.bbag.p', { name: nm(m), hp: Math.max(0, Math.round(B.hp[m.uid])), max: stats(m).hp, st: m.st ? ' · ' + label(STATUS[m.st]) : '' }) + '</p>' + rows + '<button class="btn ghost wide" data-act="close">' + hx('b.back') + '</button>');
   }
   // 换怪兽：换上来的怪兽会挨对手这一回合的攻击
   function switchSheet() {
@@ -617,10 +927,10 @@
     const rows = B.team.map((u, k) => {
       if (k === B.ti) return '';
       const mon = byUid(u), s = SPECIES[mon.sp], hp = Math.max(0, Math.round(B.hp[u]));
-      return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>Lv ' + mon.lv + '</small><div class="chips">' + chips(mon.sp) + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + STATUS[mon.st].zh + '</span>' : '') + '</div><small>体力 ' + hp + ' / ' + stats(mon).hp + '</small></div><div class="mrow-b"><button class="btn small sun" data-act="bSwitchTo" data-k="' + k + '"' + (hp > 0 ? '' : ' disabled') + '>换它上场</button></div></div>';
+      return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>Lv ' + mon.lv + '</small><div class="chips">' + chips(mon.sp) + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + E.esc(label(STATUS[mon.st])) + '</span>' : '') + '</div><small>' + hx('b.hpOf', { hp, max: stats(mon).hp }) + '</small></div><div class="mrow-b"><button class="btn small sun" data-act="bSwitchTo" data-k="' + k + '"' + (hp > 0 ? '' : ' disabled') + '>' + hx('b.sw.go') + '</button></div></div>';
     }).join('');
     // pick-grid：竖屏不起作用（照常一行一只），横屏排成三列小卡片，点整张卡片就换上场
-    E.openModal('<h2>🔄 换哪只上场？</h2><p>换怪兽会用掉这一回合。</p><div class="pick-grid">' + rows + '</div><button class="btn ghost wide" data-act="close">返回</button>');
+    E.openModal('<h2>' + hx('b.sw.t') + '</h2><p>' + hx('b.sw.p') + '</p><div class="pick-grid">' + rows + '</div><button class="btn ghost wide" data-act="close">' + hx('b.back') + '</button>');
   }
   function doSwitch(k) {
     if (!B || B.turn !== 'me' || k === B.ti || !(B.hp[B.team[k]] > 0)) return;
@@ -629,14 +939,14 @@
     B.turn = 'busy';
     round(b, Object.assign(async () => {
       const old = SPECIES[me().sp];
-      msg('<b>' + old.en + '</b>，先休息一下！');
+      msg(hx('b.rest', { name: old.en }));
       E.say(old.en + ', take a rest!');
       await Promise.all([sleep(700), prep([spOf(byUid(B.team[k]))])]);
       B.ti = k; B.used.add(B.team[k]); B.stg.me = newStages(); B.conf.me = 0;
       B.enter = 'me';
       renderBattle();
       const n = SPECIES[me().sp];
-      msg('<b>' + n.en + '</b>，上场！');
+      msg(hx('b.go', { name: n.en }));
       $('b-me').classList.add('appear');
       if (B3) B3.enter('me', true);
       await E.say(n.en + ', your turn!');
@@ -696,17 +1006,17 @@
     document.querySelectorAll('#b-panel .opt').forEach((b, k) => b.classList.add(k === ci ? 'right' : k === i ? 'wrong' : 'dim'));
     const L = E.dayLog && E.dayLog(); if (L) L.aiListen = (L.aiListen || 0) + 1;
     if (o.c) reveal(70, '', () => finishTask(70, false));
-    else reveal(0, t.target, () => finishTask(0, false, '没听出来'));
-    const h = $('b-hint'); if (h) h.textContent = o.c ? '👂 听对了！（这回合不能暴击）' : '没听出来，听一下正确的 👂';
+    else reveal(0, t.target, () => finishTask(0, false, tx('b.why.listen')));
+    const h = $('b-hint'); if (h) h.textContent = o.c ? tx('b.l.right') : tx('b.l.wrong');
   }
   // 「🔥 不看字念」只给攻击的中招（辅助招式没有伤害）
   const canBlind = () => !!(B && B.mv && !B.mv.sup && B.mv.tier === 1);
   function onCatch(ball) {
     if (!B || B.turn !== 'me' || B.kind !== 'wild') return;
     const nb = itemCount('ball'), ns = itemCount('superball');
-    if (nb + ns <= 0) { E.toast('回声球用完了！去「闯关练习」通关就能拿到，或者去商店买'); return; }
+    if (nb + ns <= 0) { E.toast(tx('b.noBalls')); return; }
     if (!ball && nb > 0 && ns > 0) {
-      E.openModal('<h2>用哪种球？</h2><div class="row"><button class="btn sun" data-act="bCatch" data-ball="ball">🔮 回声球 ×' + nb + '</button><button class="btn" data-act="bCatch" data-ball="superball">💠 金回声球 ×' + ns + '</button></div><button class="btn ghost wide" data-act="close">返回</button>');
+      E.openModal('<h2>' + hx('b.ball.t') + '</h2><div class="row"><button class="btn sun" data-act="bCatch" data-ball="ball">' + hx('b.ball.n', { n: nb }) + '</button><button class="btn" data-act="bCatch" data-ball="superball">' + hx('b.ball.s', { n: ns }) + '</button></div><button class="btn ghost wide" data-act="close">' + hx('b.back') + '</button>');
       return;
     }
     E.closeModal();
@@ -723,48 +1033,50 @@
       const ult = t.kind === 'ult';
       const I = window.EchoI18n;
       head = t.lv && I ? I.h('place.b.listen.' + t.kind, { mv: mv[0] })   // 按能力换成听音选的回合：不是 AI 出了问题，说法不一样
-        : '📶 AI 打分暂时用不了：' + (ult ? '听对手的问题，点出正确的回答' : '听一听，点出你听到的' + (t.kind === 'word' ? '词' : '咒语')) + (B.mv && !B.mv.sup && t.kind !== 'catch' && t.kind !== 'wake' ? '，发动 <b>' + mv[0] + '</b>（这回合不能暴击）' : '');
+        : hx('b.l.down') + (ult ? hx('b.l.ult') : hx(t.kind === 'word' ? 'b.l.word' : 'b.l.sent')) + (B.mv && !B.mv.sup && t.kind !== 'catch' && t.kind !== 'wake' ? hx('b.l.use', { mv: mv[0] }) : '');
       body = (t.em ? '<div class="say-emoji">' + t.em + '</div>' : '') +
-        '<div class="say-row"><button class="spk mini" data-act="' + (ult ? 'bHearQ' : 'bHear') + '" aria-label="再听一遍">' + E.SPK + '</button><span class="say-zh">' + (ult ? '再听一遍问题' : '再听一遍') + '</span></div>' +
+        '<div class="say-row"><button class="spk mini" data-act="' + (ult ? 'bHearQ' : 'bHear') + '" aria-label="' + hx('b.hearAgain') + '">' + E.SPK + '</button><span class="say-zh">' + hx(ult ? 'b.hearQ' : 'b.hearAgain') + '</span></div>' +
         '<div class="opts list b-listen">' + t.lopts.map((o, k) => '<button class="opt en" data-act="bLOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>';
-      panel('<div class="task"><div class="task-h">' + head + '</div>' + body + '<div class="task-foot"><div class="mic-hint" id="b-hint">' + (t.lv && I ? I.h('place.b.listen.foot') : '联网以后这一句要在复习里补说') + '</div></div>' +
-        (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">换个技能</button>') + '</div>');
-      if (t.kind !== 'wake') msg(t.kind === 'catch' ? '<b>' + SPECIES[foe().sp].en + '</b> 已经很虚弱了，听准收服咒语！' : '听准了才能打中！');
+      panel('<div class="task"><div class="task-h">' + head + '</div>' + body + '<div class="task-foot"><div class="mic-hint" id="b-hint">' + (t.lv && I ? I.h('place.b.listen.foot') : hx('b.l.owe')) + '</div></div>' +
+        (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">' + hx('b.back.move') + '</button>') + '</div>');
+      if (t.kind !== 'wake') msg(t.kind === 'catch' ? hx('b.l.catch', { name: SPECIES[foe().sp].en }) : hx('b.l.hit'));
       if (ult) E.say(t.prompt, undefined, 'm'); else E.say(t.target, 0.9);
       return;
     }
+    // 英文下面的中文意思（中文界面才有；英语界面英文本身就是要学的内容）
+    const zhLine = () => { const g = gloss({ zh: t.zh }); return g ? '<div class="say-zh">' + esc(g) + '</div>' : ''; };
     if (t.kind === 'word') {
-      head = '🗣 说出图上的英文，发动 <b>' + mv[0] + '</b>';
-      body = '<div class="say-emoji">' + t.em + '</div><div class="say-zh">' + esc(t.zh) + '</div><div class="say-text mask" id="b-say">' + esc(t.target.replace(/[a-z]/gi, '_')) + '</div>' +
-        '<button class="link" data-act="bHint">💡 听一下答案（这次就不能暴击了）</button>';
+      head = hx('b.t.word', { mv: mv[0] });
+      body = '<div class="say-emoji">' + t.em + '</div>' + zhLine() + '<div class="say-text mask" id="b-say">' + esc(t.target.replace(/[a-z]/gi, '_')) + '</div>' +
+        '<button class="link" data-act="bHint">' + hx('b.hint.hear') + '</button>';
     } else if (t.kind === 'sent') {
       const lv = B.hinted ? 0 : B.blind ? 2 : t.fade || 0;
-      const blindBtn = canBlind() && !B.blind && !B.hinted ? '<button class="link" data-act="bBlind">🔥 不看字念（念对伤害 ×1.5）</button>' : '';
-      head = (lv >= 2 ? '🧠 凭记忆念出咒语' : lv === 1 ? '📜 看首字母，念出咒语' : '📜 大声念出咒语') + '，发动 <b>' + mv[0] + '</b>' + (B.blind ? ' · 🔥 念对伤害 ×1.5' : '');
+      const blindBtn = canBlind() && !B.blind && !B.hinted ? '<button class="link" data-act="bBlind">' + hx('b.blind') + '</button>' : '';
+      head = hx(lv >= 2 ? 'b.t.mem' : lv === 1 ? 'b.t.cue' : 'b.t.sent', { mv: mv[0] }) + (B.blind ? hx('b.t.blindOn') : '');
       body = lv
-        ? '<div class="say-zh">' + esc(t.zh) + '</div><div class="say-text mask" id="b-say">' + esc(E.cueText(t.target, lv)) + '</div>' + blindBtn +
-          '<button class="link" data-act="bHint">💡 看一下答案（这次就不能暴击了）</button>'
-        : '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-zh">' + esc(t.zh) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="听示范">' + E.SPK + '</button></div>' + blindBtn;
+        ? zhLine() + '<div class="say-text mask" id="b-say">' + esc(E.cueText(t.target, lv)) + '</div>' + blindBtn +
+          '<button class="link" data-act="bHint">' + hx('b.hint.see') + '</button>'
+        : '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div>' + zhLine() + '<div class="say-row"><button class="spk mini" data-act="bHear" aria-label="' + hx('b.hearModel') + '">' + E.SPK + '</button></div>' + blindBtn;
     } else if (t.kind === 'ult') {
       const hid = t.hid && sr && !t.shown;   // 自评模式要点选项：不藏
-      head = '💬 大招 <b>' + mv[0] + '</b>：听懂对手的问题，' + (hid ? '凭记忆大声回答！' : sr ? '大声说出正确回答！' : '先选出正确回答，再大声说出来！');
-      body = '<div class="say-row"><button class="spk mini" data-act="bHearQ" aria-label="再听一遍">' + E.SPK + '</button><span class="hidden-line blur" id="b-q">' + esc(t.prompt) + '</span></div>' +
+      head = hx(hid ? 'b.t.ult.mem' : sr ? 'b.t.ult.sr' : 'b.t.ult.self', { mv: mv[0] });
+      body = '<div class="say-row"><button class="spk mini" data-act="bHearQ" aria-label="' + hx('b.hearAgain') + '">' + E.SPK + '</button><span class="hidden-line blur" id="b-q">' + esc(t.prompt) + '</span></div>' +
         '<div class="opts list" id="b-opts"' + (hid ? ' hidden' : '') + '>' + t.opts.map((o, k) => '<button class="opt en" data-act="bOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>' +
-        (hid ? '<button class="link" data-act="bShowOpts" id="b-show">👀 看看可以怎么回答（这次就不能暴击了）</button>' : sr ? '<small class="tip">点选项可以先听一听</small>' : '');
+        (hid ? '<button class="link" data-act="bShowOpts" id="b-show">' + hx('b.showOpts') + '</button>' : sr ? '<small class="tip">' + hx('b.optHear') + '</small>' : '');
     } else if (t.kind === 'wake') {
-      head = '📣 大声喊它！';
-      body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-zh">' + esc(t.zh) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="听示范">' + E.SPK + '</button></div>';
+      head = hx('b.t.wake');
+      body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div>' + zhLine() + '<div class="say-row"><button class="spk mini" data-act="bHear" aria-label="' + hx('b.hearModel') + '">' + E.SPK + '</button></div>';
     } else {
-      head = '🔮 念出收服咒语，把它装进回声球！';
-      body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="听示范">' + E.SPK + '</button></div>';
+      head = hx('b.t.catch');
+      body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="' + hx('b.hearModel') + '">' + E.SPK + '</button></div>';
     }
-    const rate = '<div class="rate"><button class="btn coral" data-act="bRate" data-v="0">😅 没念好</button><button class="btn sun" data-act="bRate" data-v="1">🙂 还行</button><button class="btn leaf" data-act="bRate" data-v="2">😎 很准</button></div>';
+    const rate = '<div class="rate"><button class="btn coral" data-act="bRate" data-v="0">' + hx('b.rate.0') + '</button><button class="btn sun" data-act="bRate" data-v="1">' + hx('b.rate.1') + '</button><button class="btn leaf" data-act="bRate" data-v="2">' + hx('b.rate.2') + '</button></div>';
     // 话筒 / 提示 / 打分按钮放在一起（task-foot）：横屏时贴在面板底部，题目再长也看得见
     panel('<div class="task"><div class="task-h">' + head + '</div>' + body + '<div class="task-foot">' +
-      (sr ? '<button class="mic" id="b-mic" data-act="bMic" aria-label="开始说话">' + E.MIC + '</button><div class="mic-hint" id="b-hint">点麦克风，大声念出来</div><div class="heard" id="b-heard"></div>'
-        : '<div class="mic-hint" id="b-hint">' + (t.kind === 'ult' ? '先点出正确的回答' : '大声念出来，然后诚实地给自己打分') + '</div><div id="b-rate"' + (t.kind === 'ult' ? ' hidden' : '') + '>' + rate + '</div>') +
-      '</div>' + (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">换个技能</button>') + '</div>');
-    if (t.kind !== 'wake') msg(t.kind === 'catch' ? '<b>' + SPECIES[foe().sp].en + '</b> 已经很虚弱了，快收服它！' : B.mv && B.mv.sup ? '念得清楚，辅助招式才会成功！' : '念得越准，伤害越高；念得特别准会<b>暴击</b>！');
+      (sr ? '<button class="mic" id="b-mic" data-act="bMic" aria-label="' + hx('b.mic.start') + '">' + E.MIC + '</button><div class="mic-hint" id="b-hint">' + hx('b.mic.read') + '</div><div class="heard" id="b-heard"></div>'
+        : '<div class="mic-hint" id="b-hint">' + hx(t.kind === 'ult' ? 'b.self.ult' : 'b.self.rate') + '</div><div id="b-rate"' + (t.kind === 'ult' ? ' hidden' : '') + '>' + rate + '</div>') +
+      '</div>' + (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">' + hx('b.back.move') + '</button>') + '</div>');
+    if (t.kind !== 'wake') msg(t.kind === 'catch' ? hx('b.tip.catch', { name: SPECIES[foe().sp].en }) : B.mv && B.mv.sup ? hx('b.tip.sup') : hx('b.tip.hit'));
     if (t.kind === 'ult') E.say(t.prompt, undefined, 'm');
   }
   async function onMic() {
@@ -772,14 +1084,14 @@
     if (E.RT.listening) { E.stopListening(); return; }
     const b = B, t = B.task, m = $('b-mic');
     m.classList.add('on'); m.innerHTML = E.STOP;
-    $('b-hint').textContent = '正在听……说完会自动停止';
+    $('b-hint').textContent = tx('b.mic.listen');
     const res = await E.recognize(x => { const h = $('b-heard'); if (h) h.textContent = x; }, t.kind === 'ult' ? t.opts.map(o => o.t) : [t.target]);
     if (!live(b) || b.task !== t) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
     if (res.err && E.FATAL.includes(res.err)) {
       E.RT.srBroken = true;
       if (res.err === 'not-allowed' || res.err === 'audio-capture') E.RT.noRec = true;
-      E.toast('这里用不了语音识别，改成自己念、自己打分');
+      E.toast(tx('b.noSr'));
       taskPanel();
       return;
     }
@@ -787,32 +1099,32 @@
       // 没听清算一次尝试：第 3 次还没听清，这一招就落空（不卡在这一回合）
       if (res.fail === 'unheard' || !E.failHint) {
         t.miss = (t.miss || 0) + 1;
-        if (t.miss >= 3) { reveal(0, t.target, () => finishTask(0, true, '没听清')); return; }
-        $('b-hint').textContent = (E.failHint ? E.failHint(res) : '没听清，靠近一点、大声一点再试一次') + '（第 ' + (t.miss + 1) + '/3 次）';
+        if (t.miss >= 3) { reveal(0, t.target, () => finishTask(0, true, tx('b.why.unheard'))); return; }
+        $('b-hint').textContent = (E.failHint ? E.failHint(res) : tx('b.mic.closer')) + tx('b.mic.try', { n: t.miss + 1 });
         return;
       }
       // 没网 / 额度 / 没密钥：连着用不了就把这一回合改成听音选招
-      if (listenIfDown(t)) { taskPanel(); E.toast('📶 AI 打分暂时用不了：这回合听一听、点出来'); return; }
+      if (listenIfDown(t)) { taskPanel(); E.toast(tx('b.l.toast')); return; }
       const h = E.failHint(res); if (h) $('b-hint').textContent = h;
       return;
     }
     if (t.kind === 'ult') {
       const sc = t.opts.map(o => E.bestScore(o.t, res.alts));
       let bi = 0; sc.forEach((s, k) => { if (s.score > sc[bi].score) bi = k; });
-      $('b-heard').textContent = '我听到：“' + sc[bi].heard + '”';
+      $('b-heard').textContent = tx('b.heard', { t: sc[bi].heard });
       const ci = t.opts.findIndex(o => o.c);
       if (t.opts[bi].c && sc[bi].score >= 45) { markOpts(bi); reveal(sc[bi].score, '', () => finishTask(sc[bi].score, true)); }
-      else if (!t.opts[bi].c && sc[bi].score >= 60) { markOpts(ci, bi); reveal(0, t.target, () => finishTask(0, true, '说成了错误的回答')); }
+      else if (!t.opts[bi].c && sc[bi].score >= 60) { markOpts(ci, bi); reveal(0, t.target, () => finishTask(0, true, tx('b.why.wrong'))); }
       else if (B.tries < 1) {
         B.tries++; B.hinted = true;
         const was = showOpts(true);   // 凭记忆没说对：亮出选项再给一次机会
-        $('b-hint').textContent = was ? '没对上。看看这几个回答，把对的那句大声说出来（最后一次机会，这次不能暴击了）' : '没对上任何一个回答，再说一次（最后一次机会，这次不能暴击了）';
+        $('b-hint').textContent = tx(was ? 'b.ult.retry1' : 'b.ult.retry2');
       }
       else { markOpts(ci); reveal(0, t.target, () => finishTask(0, true)); }
       return;
     }
     const r = E.bestScore(t.target, res.alts);
-    $('b-heard').textContent = '我听到：“' + r.heard + '”';
+    $('b-heard').textContent = tx('b.heard', { t: r.heard });
     if (r.score < 90 && E.aiTip) E.aiTip(t.target, r.heard, $('b-heard'));
     const say = $('b-say');
     if (say) {
@@ -822,7 +1134,7 @@
     // 第二次机会：答案已经亮出来了（单词题还会念一遍），跟着念对了也只算普通命中，不能暴击
     if (r.score < 30 && B.tries < 1) {
       B.tries++; B.hinted = true;
-      $('b-hint').textContent = r.score + ' 分，没念准，再试一次（最后一次机会' + (B.mv && !B.mv.sup && t.kind !== 'catch' ? '，这次不能暴击了' : '') + '）';
+      $('b-hint').textContent = tx('b.retry', { n: r.score, nc: B.mv && !B.mv.sup && t.kind !== 'catch' ? tx('b.retry.nc') : '' });
       if (t.kind === 'word') E.say(t.target);
       return;
     }
@@ -834,7 +1146,7 @@
     const b = B, t = B.task, h = $('b-hint'), t0 = Date.now();
     B.turn = 'show';
     document.querySelectorAll('#b-panel [data-act=bHint], #b-panel [data-act=bBack], #b-panel [data-act=bBlind], #b-panel [data-act=bShowOpts]').forEach(x => { x.style.visibility = 'hidden'; });
-    if (h) h.textContent = score >= 85 ? '念得很准！' : '听一下正确的读法 👂';
+    if (h) h.textContent = tx(score >= 85 ? 'b.rev.good' : 'b.rev.hear');
     if (score < 85 && target) { await Promise.race([E.say(target), sleep(5000)]); await sleep(400); }
     await sleep(Math.max(0, (score >= 85 ? 700 : 1500) - (Date.now() - t0)));
     if (live(b) && B.task === t && B.turn === 'show') done();
@@ -860,12 +1172,12 @@
     if (t.picked) return;
     if (t.opts[i].c) {
       t.picked = true; markOpts(i);
-      $('b-hint').textContent = '选对了！现在大声说出这句回答，再打个分';
+      $('b-hint').textContent = tx('b.self.picked');
       $('b-rate').hidden = false;
       E.say(t.opts[i].t);
     } else {
       markOpts(t.opts.findIndex(o => o.c), i);
-      finishTask(0, false, '选错了回答');
+      finishTask(0, false, tx('b.why.pick'));
     }
   }
   function onRate(v) {
@@ -905,7 +1217,7 @@
   function spdOf(side) { const mon = monOf(side); let v = stats(mon).spd * stageMul(B.stg[side].spd); if (mon.st === 'par') v /= 2; return v; }
   async function round(b, mine) {
     const foeFirst = !(mine && mine.priority) && spdOf('foe') > spdOf('me');
-    if (foeFirst) { msg('<b>' + SPECIES[foe().sp].en + '</b> 速度更快，抢先出手！'); await sleep(800); }
+    if (foeFirst) { msg(hx('b.faster', { name: SPECIES[foe().sp].en })); await sleep(800); }
     for (const who of foeFirst ? ['foe', 'me'] : ['me', 'foe']) {
       if (!live(b)) return;
       if (who === 'me') { if (mine) { const r = await mine(); if (r === 'end') return; } }
@@ -927,17 +1239,17 @@
       if (mon.st === 'slp') { mon.slp = (mon.slp || 1) - 1; if (mon.slp <= 0) mon.st = null; }
       else if (Math.random() < .25) mon.st = null;
       updHp();
-      msg(mon.st ? '<b>' + name + '</b> ' + (mon.st === 'slp' ? '正在呼呼大睡💤' : '被冻住了，动不了🧊') : '<b>' + name + '</b> ' + '醒过来了！');
+      msg(hx(mon.st ? (mon.st === 'slp' ? 'b.ca.slp' : 'b.ca.frz') : 'b.ca.woke', { name }));
       await sleep(900);
       if (mon.st) return false;
     }
-    if (mon.st === 'par' && Math.random() < .25) { msg('<b>' + name + '</b> 身体麻痹，动不了！⚡'); if (B3) B3.status(side, 'par'); await sleep(1000); return false; }
+    if (mon.st === 'par' && Math.random() < .25) { msg(hx('b.ca.par', { name })); if (B3) B3.status(side, 'par'); await sleep(1000); return false; }
     if (B.conf[side] > 0) {
       B.conf[side]--;
-      if (!B.conf[side]) { msg('<b>' + name + '</b> 不再混乱了。'); updHp(); await sleep(700); }
+      if (!B.conf[side]) { msg(hx('b.ca.confEnd', { name })); updHp(); await sleep(700); }
       else if (Math.random() < .33) {
         const s = stats(mon), dmg = Math.max(1, Math.round(s.atk * .5 * Math.sqrt((s.atk + 20) / (s.def + 20))));
-        msg('<b>' + name + '</b> 晕头转向，撞到了自己！');
+        msg(hx('b.ca.confHit', { name }));
         if (B3) B3.status(side, 'conf');
         addHp(side, -dmg); pop(side === 'me' ? 'b-me' : 'b-foe', '-' + dmg, 'dmg'); updHp();
         await sleep(1000);
@@ -946,7 +1258,7 @@
     }
     if (side === 'me') {
       const cap = 20 + 10 * Object.keys(M().badges).length;
-      if (mon.lv > cap && Math.random() < .3) { msg('<b>' + name + '</b> 等级太高，不太听你的话，在发呆……（多拿徽章它就会听话了）'); await sleep(1200); return false; }
+      if (mon.lv > cap && Math.random() < .3) { msg(hx('b.ca.obey', { name })); await sleep(1200); return false; }
     }
     return live(b);
   }
@@ -957,7 +1269,7 @@
       if (!(mon.st === 'brn' || mon.st === 'psn') || hpOf(side) <= 0) continue;
       const dmg = Math.max(1, Math.floor(stats(mon).hp / 8));
       addHp(side, -dmg);
-      msg('<b>' + nm(mon) + '</b> ' + (mon.st === 'brn' ? '被烧伤了，好烫！🔥' : '中毒了，好难受……☠️'));
+      msg(hx(mon.st === 'brn' ? 'b.eor.brn' : 'b.eor.psn', { name: nm(mon) }));
       if (B3) B3.status(side, mon.st);
       pop(side === 'me' ? 'b-me' : 'b-foe', '-' + dmg, 'dmg');
       updHp();
@@ -995,7 +1307,7 @@
     }
     updHp();
     if (B3) B3.status(side, kind);
-    msg('<b>' + name + '</b> ' + STATUS[kind].got);
+    msg(hx('b.got', { name, got: STATUS[kind].got }));
     E.SFX.bad();
     await sleep(1000);
     return true;
@@ -1003,27 +1315,28 @@
   // 能力升降
   async function stage(side, stat, n) {
     const cur = B.stg[side][stat], nv = Math.max(-6, Math.min(6, cur + n)), name = nm(monOf(side));
-    if (nv === cur) { msg('<b>' + name + '</b> 的' + { atk: '攻击', def: '防御', spd: '速度' }[stat] + '已经不能再' + (n > 0 ? '提高' : '降低') + '了。'); await sleep(800); return; }
+    const sl = tx('b.stat.' + stat + 'L');   // 攻击 / 防御 / 速度
+    if (nv === cur) { msg(hx(n > 0 ? 'b.stg.maxUp' : 'b.stg.maxDown', { name, stat: sl })); await sleep(800); return; }
     B.stg[side][stat] = nv;
     updHp();
     if (B3) B3.buff(side, n > 0);
-    msg('<b>' + name + '</b> 的' + { atk: '攻击', def: '防御', spd: '速度' }[stat] + (n > 0 ? (n > 1 ? '大幅提高了！' : '提高了！') : (n < -1 ? '大幅降低了！' : '降低了！')));
+    msg(hx(n > 0 ? (n > 1 ? 'b.stg.up2' : 'b.stg.up1') : (n < -1 ? 'b.stg.down2' : 'b.stg.down1'), { name, stat: sl }));
     await sleep(900);
   }
   // 辅助招式的效果
   async function supEffect(att, def, sup) {
-    if (sup.status) { if (!(await inflict(def, sup.status))) { msg('但是没有效果……'); await sleep(800); } }
+    if (sup.status) { if (!(await inflict(def, sup.status))) { msg(hx('b.noEffect')); await sleep(800); } }
     if (sup.fx) {
       for (const [stat, n] of Object.entries(sup.fx.self || {})) await stage(att, stat, n);
       for (const [stat, n] of Object.entries(sup.fx.foe || {})) await stage(def, stat, n);
     }
     if (sup.heal) {
       const mon = monOf(att), max = stats(mon).hp, v = Math.round(max * sup.heal);
-      if (hpOf(att) >= max) { msg('体力已经是满的了。'); await sleep(800); return; }
+      if (hpOf(att) >= max) { msg(hx('b.hpFull')); await sleep(800); return; }
       addHp(att, v); updHp();
       if (B3) B3.heal(att);
       pop(att === 'me' ? 'b-me' : 'b-foe', '+' + v, 'lbl');
-      msg('<b>' + nm(mon) + '</b> 恢复了体力！');
+      msg(hx('b.healed', { name: nm(mon) }));
       await sleep(900);
     }
   }
@@ -1063,11 +1376,11 @@
       if (dmg > 0) {
         // 受击音效：有战斗合成音效（battle-sfx.js，带儿童安全的滤波和限幅）就用它的「hit」，不再叠一层老的方波 / 锯齿波音效
         if (window.BattleSFX && BattleSFX.enabled) { if (E.S.settings.sfx !== false) BattleSFX.play(type, 'hit', tier || 0); } else E.SFX.hit();
-        B3.hit(to, { crit: labels.includes('暴击！') });
+        B3.hit(to, { crit: labels.includes(tx('b.crit')) });
         pop(toId, '-' + dmg, 'dmg');
         labels.forEach((l, k) => setTimeout(() => pop(toId, l, 'lbl'), 250 + k * 250));
       } else pop(toId, 'MISS', 'lbl');
-      await sleep(dmg > 0 ? (labels.includes('暴击！') ? 1300 : 1100) : 600);   // 挨打的画面多留一会儿
+      await sleep(dmg > 0 ? (labels.includes(tx('b.crit')) ? 1300 : 1100) : 600);   // 挨打的画面多留一会儿
       return;
     }
     const f = $(fromId);
@@ -1080,7 +1393,7 @@
     if (dmg > 0) {
       t.classList.remove('hit'); void t.offsetWidth; t.classList.add('hit');
       E.SFX.hit();
-      const crit = labels.includes('暴击！');
+      const crit = labels.includes(tx('b.crit'));
       burst(toId, type, crit);
       if (crit) { const ar = $('b-arena'); ar.classList.remove('shake'); void ar.offsetWidth; ar.classList.add('shake'); }
       pop(toId, '-' + dmg, 'dmg');
@@ -1092,12 +1405,8 @@
   // ---------- 英语冠军赛的特殊规则 ----------
   // words 单词擂主：小招伤害 ×1.5；listen 听力擂主：防御只有 8 秒；clear 口语擂主：念得很准 ×1.6、一般 ×0.8；talk 对话擂主：一上场就有 3 格能量
   // rotate：冠军每只怪兽换一种规则
-  const RULE_TEXT = {
-    words: '📖 单词擂主的规则：你的小招伤害 ×1.5',
-    listen: '👂 听力擂主的规则：防御只有 8 秒，要听得快！',
-    clear: '🗣️ 口语擂主的规则：念得很准伤害 ×1.6，一般只有 ×0.8',
-    talk: '💬 对话擂主的规则：一上场就有 3 格能量，可以直接放大招！',
-  };
+  const RULE_KINDS = ['words', 'listen', 'clear', 'talk'];   // 说明在字表 b.rule.<规则>
+  const ruleText = k => (RULE_KINDS.includes(k) ? tx('b.rule.' + k) : '');
   const ruleNow = () => !B || !B.rules ? null : B.rules.rotate ? B.rules.rotate[B.fi % B.rules.rotate.length] : B.rules.kind;
   const rule = k => ruleNow() === k;
 
@@ -1116,27 +1425,27 @@
     if (rule('words') && mvo.tier === 0 && !mvo.sup) mult *= 1.5;
     mult *= hearts(m) >= 5 ? 1.1 : hearts(m) >= 3 ? 1.05 : 1;
     panel('');
-    msg('<b>' + nm(m) + '</b> 使用了 <b>' + mv[0] + '</b>！');
+    msg(hx('b.used', { name: nm(m), mv: mv[0] }));
     E.say(nm(m) + ', use ' + mv[0] + '!');
     if (mvo.sup) {
-      if (score < 55) { msg('咒语' + (why || '念得不够清楚') + '，<b>' + mv[0] + '</b> 失败了！'); await sleep(1000); return; }
+      if (score < 55) { msg(hx('b.supFail', { why: why || tx('b.why.unclear'), mv: mv[0] })); await sleep(1000); return; }
       B.energy = Math.min(3, B.energy + 1);
-      if (B3) await B3.attack('me', mvo.type, 0, true, { name: mv[0], zh: mv[1], sp: spOf(m) });
+      if (B3) await B3.attack('me', mvo.type, 0, true, { name: mv[0], zh: gloss({ zh: mv[1] }) || '', sp: spOf(m) });
       await supEffect('me', 'foe', mvo.sup);
       return;
     }
     const { dmg, e } = damage('me', 'foe', mvo, mult);
     if (mvo.tier === 2) B.energy = 0; else if (mult) B.energy = Math.min(3, B.energy + 1);
     const labels = [];
-    if (crit && dmg) labels.push('暴击！');
-    if (blind && dmg) labels.push('🔥 凭记忆');
+    if (crit && dmg) labels.push(tx('b.crit'));
+    if (blind && dmg) labels.push(tx('b.lbl.mem'));
     if (dmg && effLabel(e)) labels.push(effLabel(e));
-    await strike('b-me', 'b-foe', mvo.type, dmg, labels, mvo.tier, { name: mv[0], zh: mv[1], sp: spOf(m) });
+    await strike('b-me', 'b-foe', mvo.type, dmg, labels, mvo.tier, { name: mv[0], zh: gloss({ zh: mv[1] }) || '', sp: spOf(m) });
     if (!live(b)) return;
     addHp('foe', -dmg);
     if (dmg && foe().st === 'frz' && mvo.type === 'fire') { foe().st = null; }
     updHp();
-    msg(dmg ? (crit ? (blind ? '不看字也念得超准，<b>暴击</b>！' : '发音超准，<b>暴击</b>！') : blind ? '🔥 不看字也念对了，威力 ×1.5！' : mult < 1 ? '咒语有点含糊，只擦伤了它。' : '打中了！') + (e > 1 ? '属性克制，打中弱点！' : e < 1 ? '属性不太对，不太管用。' : '') : '咒语' + (why || '没念准') + '，攻击落空了！');
+    msg(dmg ? hx(crit ? (blind ? 'b.hit.critBlind' : 'b.hit.crit') : blind ? 'b.hit.blind' : mult < 1 ? 'b.hit.graze' : 'b.hit.ok') + (e > 1 ? hx('b.hit.weak') : e < 1 ? hx('b.hit.low') : '') : hx('b.miss', { why: why || tx('b.why.miss') }));
     await sleep(900);
     if (dmg) await sideEffect('me', 'foe', mvo);
   }
@@ -1146,9 +1455,9 @@
     panel('');
     if (score >= 55 && Math.random() < (score >= 85 ? .9 : .6)) {
       m.st = null; updHp();
-      msg('<b>' + name + '</b> ' + (slp ? '被你叫醒了！' : '身上的冰化开了！') + '下一回合可以出招。');
+      msg(hx(slp ? 'b.wk.slp' : 'b.wk.frz', { name }));
       E.SFX.ok(2);
-    } else msg('<b>' + name + '</b> 还是' + (slp ? '没醒……' : '冻着……') + (score < 55 ? '喊得再清楚一点！' : '下回合再试试。'));
+    } else msg(hx(slp ? 'b.wk.no.slp' : 'b.wk.no.frz', { name, tip: tx(score < 55 ? 'b.wk.tip.clear' : 'b.wk.tip.next') }));
     await sleep(1100);
   }
 
@@ -1171,7 +1480,7 @@
       addHp('foe', v); updHp();
       if (B3) B3.heal('foe');
       pop('b-foe', '+' + v, 'lbl');
-      msg((B.kind === 'leader' ? E.W[B.z].boss.name : B.trainer.name) + ' 给 <b>' + sf.en + '</b> 用了药水！');
+      msg(hx('b.foePotion', { who: B.kind === 'leader' ? bossName(B.z) : B.trainer.name, name: sf.en }));
       E.say('Here, take this potion!', undefined, 'm');
       await sleep(1300);
       return;
@@ -1186,20 +1495,22 @@
     const f = foe(), sf = SPECIES[f.sp], mv = mvo.tier === 0 && !mvo.sup ? 0 : 1, esc = E.esc;
     let d;
     // 听力防御也先出今天到期的复习题（pickQ），干扰项从同一个小岛 / 单元里挑
+    // 选项是这句咒语的中文意思；界面语言里没有意思（英语界面）就改成「它念的是哪一句」，选项是英文原句（单词题照样带图）
+    const mean = x => gloss({ zh: x[1] }), byEn = mean(['', '-']) == null;
     if (mv === 0) {
       const p = pickQ('word'), it = p.it;
-      const others = shuffle(p.d.words.filter(x => x !== it && x[1] !== it[1])).slice(0, 2);
-      d = { q: p.q, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, e: it[2], t: it[1] }, ...others.map(o => ({ e: o[2], t: o[1] }))]) };
+      const others = shuffle(p.d.words.filter(x => x !== it && x[1] !== it[1] && (!byEn || x[0] !== it[0]))).slice(0, 2);
+      d = { q: p.q, spell: it[0], ans: it[0] + (byEn ? '' : ' = ' + it[1]), opts: shuffle([{ c: true, e: it[2], t: byEn ? it[0] : it[1] }, ...others.map(o => ({ e: o[2], t: byEn ? o[0] : o[1] }))]) };
     } else {
       const p = pickQ('sent'), it = p.it;
       const others = shuffle(p.d.sents.filter(x => x[0] !== it[0] && x[1] !== it[1])).slice(0, 2);
-      d = { q: p.q, spell: it[0], ans: it[0] + ' = ' + it[1], opts: shuffle([{ c: true, t: it[1] }, ...others.map(o => ({ t: o[1] }))]) };
+      d = { q: p.q, spell: it[0], ans: it[0] + (byEn ? '' : ' = ' + it[1]), opts: shuffle([{ c: true, t: byEn ? it[0] : it[1] }, ...others.map(o => ({ t: byEn ? o[0] : o[1] }))]) };
     }
     d.mv = mv; d.mvo = mvo; d.type = mvo.type; B.def = d;
     const nm = mvName(mvo);
-    msg('<b>' + sf.en + '</b> 要用 <b>' + nm[0] + '</b>（' + nm[1] + '）了！' + (mvo.tier === 2 ? '<b>这是大招！</b>' : '') + '听懂它的咒语来防御！');
-    panel('<div class="task def"><div class="task-h">🛡️ 它念的咒语是什么意思？选对就能挡住</div><div class="b-timer"><i id="b-timer"></i></div>' +
-      '<div class="say-row"><button class="spk mini" data-act="bDefHear" aria-label="再听一遍">' + E.SPK + '</button></div>' +
+    msg(hx(mvo.tier === 2 ? 'b.def.msgUlt' : 'b.def.msg', { name: sf.en, mv: nm[0], zh: zhOf({ zh: nm[1] }) }));
+    panel('<div class="task def"><div class="task-h">' + hx(byEn ? 'b.def.hEn' : 'b.def.h') + '</div><div class="b-timer"><i id="b-timer"></i></div>' +
+      '<div class="say-row"><button class="spk mini" data-act="bDefHear" aria-label="' + hx('b.hearAgain') + '">' + E.SPK + '</button></div>' +
       '<div class="opts' + (mv === 0 ? '' : ' list') + '">' + d.opts.map((o, k) => '<button class="opt" data-act="bDef" data-i="' + k + '">' + (o.e ? '<span class="o-e">' + o.e + '</span>' : '') + '<span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div></div>');
     $('b-foe').classList.add('attack');
     await E.say(d.spell, undefined, 'm');
@@ -1220,11 +1531,11 @@
     const bar = $('b-timer'); if (bar) { bar.style.transition = 'none'; }
     if (ok) { B.energy = Math.min(3, B.energy + 1); E.S.stats.listen++; E.qProg('listen', 1); E.SFX.ok(2); if (E.revRight) E.revRight(d.q); }
     else { (E.revMiss || E.addWrong)(d.q); E.SFX.bad(); }   // 没听懂：复习本里只降一格
-    msg(ok ? '🛡️ <b>防住了！</b>' + (d.mvo.sup ? '它的招式没有效果。' : '只受到一点点伤害。') : (i < 0 ? '⏰ 来不及了！' : '没听懂……') + '它念的是：<b>' + E.esc(d.ans) + '</b>');
+    msg(ok ? hx('b.def.ok') + hx(d.mvo.sup ? 'b.def.okSup' : 'b.def.okHit') : hx(i < 0 ? 'b.def.late' : 'b.def.wrong') + hx('b.def.ans', { ans: d.ans }));
     await sleep(700);
     if (!live(b)) return finish();
     panel('');
-    const fo = foe(), fn = mvName(d.mvo), fi = fo ? { name: fn[0], zh: fn[1], sp: spOf(fo) } : null;   // 给 3D 战斗的招式名和物种
+    const fo = foe(), fn = mvName(d.mvo), fi = fo ? { name: fn[0], zh: gloss({ zh: fn[1] }) || '', sp: spOf(fo) } : null;   // 给 3D 战斗的招式名（中文名中文界面才有）和物种
     if (d.mvo.sup) {
       if (B3) await B3.attack('foe', d.type, 0, true, fi);
       if (!ok) await supEffect('foe', 'me', d.mvo.sup);
@@ -1235,10 +1546,10 @@
     // 很亲的怪兽：本来要倒下了，想着主人又站了起来
     const hold = hearts(me()) >= 4 && B.hp[me().uid] > 1 && dmg >= B.hp[me().uid] && Math.random() < .2;
     if (hold) dmg = B.hp[me().uid] - 1;
-    await strike('b-foe', 'b-me', d.type, dmg, ok ? ['挡住了'] : effLabel(e) ? [effLabel(e)] : [], d.mvo.tier, fi);
+    await strike('b-foe', 'b-me', d.type, dmg, ok ? [tx('b.lbl.block')] : effLabel(e) ? [effLabel(e)] : [], d.mvo.tier, fi);
     if (!live(b)) return finish();
     addHp('me', -dmg);
-    if (hold) { msg('💖 <b>' + nm(me()) + '</b> 想着你，又站了起来！'); E.say(nm(me()) + ' did not give up!'); await sleep(1300); }
+    if (hold) { msg(hx('b.hold', { name: nm(me()) })); E.say(nm(me()) + ' did not give up!'); await sleep(1300); }
     if (me().st === 'frz' && d.type === 'fire') me().st = null;
     updHp();
     await sleep(500);
@@ -1254,7 +1565,7 @@
       mon.xp -= xpNeed(mon.lv); mon.lv++;
       befriend(mon, 2);
       if (B && B.hp[mon.uid] > 0) { B.hp[mon.uid] += 6; updHp(); }
-      if (!quiet) E.toast('⬆️ ' + nm(mon) + ' 升到了 Lv ' + mon.lv + '！', 'gold');
+      if (!quiet) E.toast(tx('b.lvup', { name: nm(mon), lv: mon.lv }), 'gold');
       const pend = M().pendingEvo || (M().pendingEvo = []);
       if (lvEvo(mon) && !pend.includes(mon.uid)) pend.push(mon.uid);
       learnAt(mon, mon.lv);
@@ -1264,7 +1575,7 @@
   function learnAt(mon, lv) {
     learnset(SPECIES[mon.sp]).filter(([l]) => l === lv).forEach(([, id]) => {
       if (mon.moves.includes(id)) return;
-      if (mon.moves.length < 4) { mon.moves.push(id); E.toast('✨ ' + nm(mon) + ' 学会了 ' + mvName(parseMove(id))[0] + '！', 'gold'); }
+      if (mon.moves.length < 4) { mon.moves.push(id); E.toast(tx('b.learned', { name: nm(mon), mv: mvName(parseMove(id))[0] }), 'gold'); }
       else (M().pendingLearn || (M().pendingLearn = [])).push({ u: mon.uid, id });
     });
   }
@@ -1275,9 +1586,9 @@
     const it = q[0], mon = byUid(it.u);
     if (!mon || mon.moves.includes(it.id)) { q.shift(); E.save(); return learnNext(); }
     const s = SPECIES[mon.sp], nm = mvName(parseMove(it.id));
-    E.openModal('<h2>' + s.en + ' 能学一个新招式了！</h2><div class="learn-new">' + moveCard(parseMove(it.id)) + '</div><p>它已经会 4 个招式了。要忘掉哪一个，换成 <b>' + nm[0] + '</b>？</p>' +
+    E.openModal('<h2>' + hx('b.learn.t', { name: s.en }) + '</h2><div class="learn-new">' + moveCard(parseMove(it.id)) + '</div><p>' + hx('b.learn.p', { mv: nm[0] }) + '</p>' +
       '<div class="learn-old">' + mon.moves.map((id, k) => '<button class="btn ghost" data-act="mForget" data-k="' + k + '">' + moveCard(parseMove(id)) + '</button>').join('') + '</div>' +
-      '<button class="btn ghost wide" data-act="mForget" data-k="-1">不学了</button>', { locked: true });
+      '<button class="btn ghost wide" data-act="mForget" data-k="-1">' + hx('b.learn.no') + '</button>', { locked: true });
     E.say(s.en + ' can learn ' + nm[0] + ' now!');
     return true;
   }
@@ -1285,12 +1596,12 @@
     const q = M().pendingLearn || [], it = q[0];
     if (!it) { E.closeModal(); return; }
     const mon = byUid(it.u), s = SPECIES[mon.sp], nm = mvName(parseMove(it.id));
-    if (k < 0) { q.shift(); E.save(); E.closeModal(); E.toast(s.en + ' 没有学 ' + nm[0]); setTimeout(afterBattleQueue, 300); return; }
+    if (k < 0) { q.shift(); E.save(); E.closeModal(); E.toast(tx('b.learn.skip', { name: s.en, mv: nm[0] })); setTimeout(afterBattleQueue, 300); return; }
     const old = mvName(parseMove(mon.moves[k]));
     const line = s.en + ', learn ' + nm[0] + '!', sr = E.speakMode() === 'sr';
-    E.openModal('<h2>好，' + old[0] + ' 换下来了！</h2><p>现在大声教它新招式：</p><div class="say-text" id="lr-say">' + E.wordsHTML(line) + '</div>' +
-      (sr ? '<button class="mic" id="lr-mic" data-act="mLearnMic" data-k="' + k + '">' + E.MIC + '</button><div class="mic-hint" id="lr-hint">点麦克风，大声说</div>' : '<button class="btn leaf wide" data-act="mLearnGo" data-k="' + k + '">🎤 我说了！</button>') +
-      '<button class="btn ghost wide" data-act="mHearLearn">🔊 听一遍</button>', { locked: true });
+    E.openModal('<h2>' + hx('b.learn.ok', { mv: old[0] }) + '</h2><p>' + hx('b.learn.say') + '</p><div class="say-text" id="lr-say">' + E.wordsHTML(line) + '</div>' +
+      (sr ? '<button class="mic" id="lr-mic" data-act="mLearnMic" data-k="' + k + '">' + E.MIC + '</button><div class="mic-hint" id="lr-hint">' + hx('b.mic.say') + '</div>' : '<button class="btn leaf wide" data-act="mLearnGo" data-k="' + k + '">' + hx('b.said') + '</button>') +
+      '<button class="btn ghost wide" data-act="mHearLearn">' + hx('b.listen') + '</button>', { locked: true });
     E.say(line);
   }
   function learnDone(k) {
@@ -1299,13 +1610,13 @@
     const mon = byUid(it.u);
     if (mon) mon.moves[k] = it.id;
     E.save(); E.closeModal(); E.SFX.win();
-    E.toast('✨ ' + nm(mon) + ' 学会了 ' + mvName(parseMove(it.id))[0] + '！', 'gold');
+    E.toast(tx('b.learned', { name: nm(mon), mv: mvName(parseMove(it.id))[0] }), 'gold');
     setTimeout(afterBattleQueue, 400);
   }
   async function learnMic(k) {
     const m = $('lr-mic'); if (!m) return;
     if (E.RT.listening) { E.stopListening(); return; }
-    m.classList.add('on'); m.innerHTML = E.STOP; $('lr-hint').textContent = '正在听……';
+    m.classList.add('on'); m.innerHTML = E.STOP; $('lr-hint').textContent = tx('b.mic.on');
     const it = (M().pendingLearn || [])[0], line = it ? nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] : '';
     const res = await E.recognize(null, [line]);
     if (!$('lr-mic')) return;
@@ -1313,10 +1624,10 @@
     if (res.err && E.FATAL.includes(res.err)) { E.RT.srBroken = true; learnDone(k); return; }
     if (!res.alts.length) {
       // AI 打分用不了（没网 / 额度 / 没密钥）：招式先学会，不卡在这里
-      if (res.fail !== 'unheard' && E.aiDown && E.aiDown()) { E.toast('📶 AI 打分暂时用不了，先学会这一招'); learnDone(k); return; }
-      $('lr-hint').textContent = E.failHint ? E.failHint(res) : '没听清，再大声一点'; return;
+      if (res.fail !== 'unheard' && E.aiDown && E.aiDown()) { E.toast(tx('b.learn.ai')); learnDone(k); return; }
+      $('lr-hint').textContent = E.failHint ? E.failHint(res) : tx('b.mic.again'); return;
     }
-    if (E.bestScore(line, res.alts).score >= 45) learnDone(k); else $('lr-hint').textContent = '再清楚一点，再说一次！';
+    if (E.bestScore(line, res.alts).score >= 45) learnDone(k); else $('lr-hint').textContent = tx('b.learn.again');
   }
   // 战斗结束后依次处理：学新招 → 进化
   function afterBattleQueue() {
@@ -1329,7 +1640,7 @@
     const f = foe(), sf = SPECIES[f.sp];
     $('b-foe').classList.add('faint');
     if (B3) B3.faint('foe');
-    msg('<b>' + sf.en + '</b> 累得不能再战斗了！');
+    msg(hx('b.tired', { name: sf.en }));
     E.say(sf.en + ' is too tired to go on.');
     shareXp(10 + f.lv * 8);
     const eb = $('b-exp'), cm = me(); if (eb && cm) eb.style.width = (cm.xp / xpNeed(cm.lv) * 100) + '%';
@@ -1340,13 +1651,13 @@
       B.fi++;
       B.foeHp = stats(foe()).hp; B.stg.foe = newStages(); B.conf.foe = 0; B.fen = 0;
       // 冠军换怪兽也换规则
-      if (B.rules && B.rules.rotate) { if (rule('talk')) B.energy = 3; E.toast(RULE_TEXT[ruleNow()], 'gold'); }
+      if (B.rules && B.rules.rotate) { if (rule('talk')) B.energy = 3; E.toast(ruleText(ruleNow()), 'gold'); }
       await prep([spOf(foe())]);
       if (!live(b)) return;
       B.enter = 'foe';
       renderBattle();
       const n = SPECIES[foe().sp];
-      msg((B.kind === 'trainer' ? B.trainer.name : E.W[B.z].boss.name) + '：“还没完！<b>' + n.en + '</b>，该你了！”');
+      msg(hx('b.in.next', { who: B.kind === 'trainer' ? B.trainer.name : bossName(B.z), name: n.en }));
       $('b-foe').classList.add('appear');
       if (B3) B3.enter('foe', true);
       await E.say(n.en + ', your turn!', undefined, 'm');
@@ -1363,7 +1674,7 @@
     const m = me();
     $('b-me').classList.add('faint');
     if (B3) B3.faint('me');
-    msg('<b>' + nm(m) + '</b> 累倒了……');
+    msg(hx('b.down', { name: nm(m) }));
     m.st = null;
     await sleep(1300);
     if (!live(b)) return;
@@ -1374,7 +1685,7 @@
       B.ti = next; B.used.add(B.team[next]); B.stg.me = newStages(); B.conf.me = 0;
       B.enter = 'me';
       renderBattle();
-      msg('<b>' + nm(me()) + '</b>，上场！');
+      msg(hx('b.go', { name: nm(me()) }));
       $('b-me').classList.add('appear');
       if (B3) B3.enter('me', true);
       await E.say(nm(me()) + ', your turn!');
@@ -1388,7 +1699,7 @@
     const f = foe(), sf = SPECIES[f.sp], max = stats(f).hp, sup = B.ball === 'superball';
     addItem(sup ? 'superball' : 'ball', -1);
     panel('');
-    msg(sup ? '扔出金回声球！' : '扔出回声球！');
+    msg(hx(sup ? 'b.throw.s' : 'b.throw'));
     const ball = document.createElement('span');
     ball.className = 'proj ball';
     const arena = $('b-arena'), [x1, y1] = center('b-me'), [x2, y2] = center('b-foe');
@@ -1420,7 +1731,7 @@
       M().caught = (M().caught || 0) + 1;
       E.qProg('catch', 1);
       E.jingle('catch', E.SFX.win); E.confetti(140);
-      msg('🎉 收服成功！<b>' + sf.en + '</b>（' + sf.zh + '）成为了你的伙伴！');
+      msg(hx('b.caught', { name: sf.en, zh: zhOf(sf) }));
       E.say('Yes! ' + sf.en + ' is your new friend!');
       E.save();
       await sleep(1200);
@@ -1432,7 +1743,7 @@
     $('b-foe').classList.remove('caught-in');
     if (B3) B3.breakOut();
     E.SFX.bad();
-    msg('哎呀，<b>' + sf.en + '</b> 挣脱了！' + (score < 55 ? '收服咒语要念得清楚一点。' : '再把它打虚弱一点，或者让它睡着、麻痹再试试。'));
+    msg(hx('b.free', { name: sf.en }) + hx(score < 55 ? 'b.free.say' : 'b.free.weak'));
     E.save();
     await sleep(1200);
   }
@@ -1449,13 +1760,13 @@
       const first = !m.badges[z];
       m.badges[z] = 1;
       coins += first ? 40 : 10;
-      if (first) { badge = true; m.balls += 3; lines.push('🏅 拿到了 ' + w.name + ' 徽章！'); lines.push('🔮 回声球 +3'); lines.push('🐾 等级 ' + (20 + 10 * Object.keys(m.badges).length) + ' 以下的怪兽都会听你的话'); if (z + 1 < E.W.length) lines.push('🏝️ 新区域解锁：' + E.W[z + 1].name); }
+      if (first) { badge = true; m.balls += 3; lines.push(hx('b.win.badge', { isle: isleName(z) })); lines.push(hx('b.win.balls')); lines.push(hx('b.win.obey', { n: 20 + 10 * Object.keys(m.badges).length })); if (z + 1 < E.W.length) lines.push(hx('b.win.unlock', { isle: isleName(z + 1) })); }
     }
     E.S.coins += coins;
     B.result = caught ? 'caught' : 'win';
     writeBack();
-    lines.unshift('💰 金币 +' + coins);
-    lines.push('⭐ 出战的怪兽获得经验 +' + (10 + topLv * 8) + (itemCount('expshare') > 0 && m.expShareOn !== false ? '（共学耳机：其他队员也分到一半）' : ''));
+    lines.unshift(hx('b.win.coins', { n: coins }));
+    lines.push(hx('b.win.xp', { n: 10 + topLv * 8 }) + (itemCount('expshare') > 0 && m.expShareOn !== false ? hx('b.win.share') : ''));
     E.gainXp(15 + topLv);
     B.used.forEach(u => befriend(byUid(u), B.kind === 'wild' ? 1 : 3));
     m.wins = (m.wins || 0) + 1;
@@ -1464,22 +1775,22 @@
     E.save(); E.renderTop();
     if (!caught) { E.jingle(badge ? 'badge' : 'win', E.SFX.win); E.confetti(B.kind === 'leader' ? 200 : 90); }
     E.music('victory');   // 号角放完接着放结算画面的音乐
-    msg(caught ? (B.toBox ? '队伍已经有 6 只了，新伙伴被送到了电脑箱子里（去休息站的电脑换）。' : '新伙伴已经加入队伍！') : B.kind === 'leader' ? w.boss.name + '：“你太厉害了！这枚徽章是你的了！”' : B.kind === 'trainer' ? B.trainer.name + '：“你真厉害！”' : '胜利！');
+    msg(caught ? hx(B.toBox ? 'b.win.box' : 'b.win.team') : B.kind === 'leader' ? hx('b.win.leader', { who: bossName(z) }) : B.kind === 'trainer' ? hx('b.win.trainer', { who: B.trainer.name }) : hx('b.win'));
     // 经验条只在结算画面出现（对战时的状态栏不放）
-    const xm = me(), xpBar = xm ? '<div class="res-exp"><span>' + E.esc(nm(xm)) + ' <small>Lv ' + xm.lv + '</small></span><div class="xpbar" title="经验"><i style="width:' + Math.min(100, xm.xp / xpNeed(xm.lv) * 100) + '%"></i></div></div>' : '';
-    panel('<div class="b-result"><div class="big">' + (caught ? '🔮' : B.kind === 'leader' ? '🏅' : '🏆') + '</div><b>' + (caught ? '收服成功！' : B.kind === 'leader' ? '打败岛主！' : '胜利！') + '</b><p>' + lines.join('<br>') + '</p>' + xpBar +
-      '<div class="say-row">' + (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>继续冒险 ▶</button>'
-        : (B.kind === 'wild' ? '<button class="btn" data-act="mWild" data-z="' + z + '">⚔️ 再战一场</button>' : '') + '<button class="btn ghost" data-act="bHome">回基地</button>') + '</div></div>');
-    if (newDay) setTimeout(() => E.toast('🔥 今日打卡成功！已连续 ' + E.S.streak + ' 天', 'gold'), 900);
+    const xm = me(), xpBar = xm ? '<div class="res-exp"><span>' + E.esc(nm(xm)) + ' <small>Lv ' + xm.lv + '</small></span><div class="xpbar" title="' + hx('b.xp') + '"><i style="width:' + Math.min(100, xm.xp / xpNeed(xm.lv) * 100) + '%"></i></div></div>' : '';
+    panel('<div class="b-result"><div class="big">' + (caught ? '🔮' : B.kind === 'leader' ? '🏅' : '🏆') + '</div><b>' + hx(caught ? 'b.res.caught' : B.kind === 'leader' ? 'b.res.leader' : 'b.win') + '</b><p>' + lines.join('<br>') + '</p>' + xpBar +
+      '<div class="say-row">' + (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>' + hx('b.res.go') + '</button>'
+        : (B.kind === 'wild' ? '<button class="btn" data-act="mWild" data-z="' + z + '">' + hx('b.res.again') + '</button>' : '') + '<button class="btn ghost" data-act="bHome">' + hx('b.res.home') + '</button>') + '</div></div>');
+    if (newDay) setTimeout(() => E.toast(tx('b.streak', { n: E.S.streak }), 'gold'), 900);
     setTimeout(() => { E.checkAch(); afterBattleQueue(); }, 1300);
   }
   function lose() {
     B.turn = 'done'; B.result = 'lose';
     writeBack();
     E.jingle('lose'); E.music(null);
-    msg('你的怪兽们都累倒了……');
-    panel('<div class="b-result"><div class="big">💤</div><b>先去休息站休息一下</b><p>休息站能让怪兽恢复体力、治好异常状态。<br>小窍门：多在草丛里打野生怪兽把等级练上去，<br>用<b>属性克制</b>的招式，或者先用辅助招式降低对手的攻击。</p><div class="say-row">' +
-      (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>去休息站</button>' : '<button class="btn" data-act="bHome">回基地</button>') + '</div></div>');
+    msg(hx('b.lose'));
+    panel('<div class="b-result"><div class="big">💤</div><b>' + hx('b.lose.t') + '</b><p>' + hx('b.lose.p') + '</p><div class="say-row">' +
+      (B.onEnd ? '<button class="btn" data-act="bEnd" data-focus>' + hx('b.lose.go') + '</button>' : '<button class="btn" data-act="bHome">' + hx('b.res.home') + '</button>') + '</div></div>');
   }
   // 战斗里用道具：回复体力或治异常状态，用掉这一回合
   function usePotion(id) {
@@ -1495,9 +1806,9 @@
       if (it.heal) {
         const heal = Math.max(20, Math.round(max * it.heal));
         B.hp[m.uid] = Math.min(max, B.hp[m.uid] + heal);
-        msg('用了' + it.zh + '！<b>' + nm(m) + '</b> 恢复了体力。');
+        msg(hx('b.potion.hp', { item: label(it), name: nm(m) }));
         pop('b-me', '+' + heal, 'lbl');
-      } else { m.st = null; msg('用了' + it.zh + '！<b>' + nm(m) + '</b> 恢复正常了。'); }
+      } else { m.st = null; msg(hx('b.potion.st', { item: label(it), name: nm(m) })); }
       E.SFX.coin();
       if (B3) B3.heal('me');
       updHp(); E.save();
@@ -1516,8 +1827,8 @@
   function evolveTo(mon, toId) {
     const from = SPECIES[mon.sp], to = SPECIES[toId];
     if (window.Mon3D && Mon3D.preload) Mon3D.preload([toId]);
-    E.openModal('<h2>看！' + from.en + ' 在长大……</h2><div class="evo-stage"><div class="evo-old">' + svg(mon.sp) + '</div><div class="evo-new">' + svg(toId) + '</div></div>' +
-      '<p id="evo-t">' + from.zh + ' 正在长大！</p><button class="btn sun wide" data-act="mEvoOk" id="evo-ok" hidden>太棒了！</button>', { locked: true });
+    E.openModal('<h2>' + hx('b.evo.t', { name: from.en }) + '</h2><div class="evo-stage"><div class="evo-old">' + svg(mon.sp) + '</div><div class="evo-new">' + svg(toId) + '</div></div>' +
+      '<p id="evo-t">' + hx('b.evo.p', { name: label(from) }) + '</p><button class="btn sun wide" data-act="mEvoOk" id="evo-ok" hidden>' + hx('b.evo.ok') + '</button>', { locked: true });
     E.say('Look! ' + from.en + ' is growing up!');
     E.music('evolve');
     mon.sp = toId;
@@ -1526,7 +1837,7 @@
     E.save();
     setTimeout(() => {
       const st = document.querySelector('.evo-stage'); if (st) st.classList.add('done');
-      const t = $('evo-t'); if (t) t.innerHTML = '太棒了！<b>' + from.en + '</b> 长成了 <b>' + to.en + '</b>（' + to.zh + '）！';
+      const t = $('evo-t'); if (t) t.innerHTML = hx('b.evo.done', { from: from.en, to: to.en, zh: zhOf(to) });
       const ok = $('evo-ok'); if (ok) ok.hidden = false;
       E.jingle('levelup', E.SFX.win); E.confetti(180);
       E.say(from.en + ' has grown up! Say hello to ' + to.en + '!');
@@ -1537,25 +1848,26 @@
   // ---------- 怪兽详情 ----------
   function moveCard(mv) {
     const nm = mvName(mv);
-    return '<span class="mv-card" style="--tc:' + TYPES[mv.type].color + '"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><small>' + nm[1] + ' · ' + TYPES[mv.type].zh + ' · ' + (mv.sup ? mv.sup.desc : ['小招', '中招', '大招'][mv.tier]) + '</small></span>';
+    const tier = (I18N ? I18N.raw('b.tier') || [] : [])[mv.tier] || '';
+    return '<span class="mv-card" style="--tc:' + TYPES[mv.type].color + '"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><small>' + [gloss({ zh: nm[1] }) || '', label(TYPES[mv.type]), mv.sup ? mv.sup.desc : tier].filter(Boolean).map(x => E.esc(x)).join(' · ') + '</small></span>';
   }
   function summarySheet(u, back) {
     const mon = byUid(u); if (!mon) return;
-    if (mon.egg) { E.openModal('<div class="sum-top"><span class="sum-pic">' + EGG_SVG + '</span><div><h2>蛋 Egg</h2><p>' + eggHint(mon) + '</p><p class="tip">带着它一起走路，它就会慢慢长大、孵出来。</p></div></div><button class="btn ghost wide" data-act="' + (back || 'mTeam') + '">返回</button>'); return; }
+    if (mon.egg) { E.openModal('<div class="sum-top"><span class="sum-pic">' + EGG_SVG + '</span><div><h2>' + hx('b.egg') + '</h2><p>' + hx(eggHint(mon)) + '</p><p class="tip">' + hx('b.egg.tip') + '</p></div></div><button class="btn ghost wide" data-act="' + (back || 'mTeam') + '">' + hx('b.back') + '</button>'); return; }
     ensureMoves(mon);
     const s = SPECIES[mon.sp], st = stats(mon), hp = curHp(mon), esc = E.esc;
     const bar = (k, v, max) => '<div class="sum-stat"><span>' + k + '</span><b>' + v + '</b><i><em style="width:' + Math.min(100, v / max * 100) + '%"></em></i></div>';
-    const nextEvo = (s.evo || []).map(e => e.lv ? 'Lv ' + e.lv + ' 进化成 ' + SPECIES[e.to].en : D.STONES[e.item].zh + ' → ' + SPECIES[e.to].en).join('；');
-    const nextMoves = learnset(s).filter(([l, id]) => l > mon.lv && !mon.moves.includes(id)).slice(0, 2).map(([l, id]) => 'Lv ' + l + ' ' + mvName(parseMove(id))[0]).join('，');
-    const talked = (M().talked || {})[mon.uid] === E.dayStr();
-    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + (mon.shiny ? '✨' : '') + nm(mon) + ' <small>' + (mon.nick ? s.en + ' · ' : '') + s.zh + '</small></h2>' +
-      '<div class="sum-fr">亲密度 ' + heartsHTML(mon) + ' <button class="btn small ' + (talked ? 'ghost' : 'sun') + '" data-act="mTalk" data-u="' + mon.uid + '">' + (talked ? '💬 今天聊过了' : '💬 和它说说话') + '</button> <button class="btn small ghost" data-act="mNick" data-u="' + mon.uid + '">✏️ 起名字</button></div><div class="chips">' + chips(mon.sp) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + STATUS[mon.st].zh + '</span>' : '') + '</div>' +
-      '<small>经验 ' + mon.xp + ' / ' + xpNeed(mon.lv) + '</small><div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div></div>' +
-      '<div class="sum-stats">' + bar('体力 HP', hp + '/' + st.hp, st.hp) + bar('攻击 ATK', st.atk, 250) + bar('防御 DEF', st.def, 250) + bar('速度 SPD', st.spd, 250) + '</div>' +
-      '<h3 class="pc-h">招式</h3><div class="sum-moves">' + mon.moves.map(id => moveCard(parseMove(id))).join('') + '</div>' +
-      (nextMoves ? '<p class="tip">以后还能学：' + nextMoves + '</p>' : '') + (nextEvo ? '<p class="tip">进化：' + nextEvo + '</p>' : '') +
-      '<p class="dex-en">' + esc(s.dexEn) + '</p><p class="dex-zh">' + esc(s.dexZh) + '</p>' +
-      '<button class="btn ghost wide" data-act="' + (back || 'mTeam') + '">返回</button>');
+    const nextEvo = (s.evo || []).map(e => e.lv ? tx('b.sum.evoLv', { lv: e.lv, name: SPECIES[e.to].en }) : label(D.STONES[e.item]) + ' → ' + SPECIES[e.to].en).join(tx('b.sep.semi'));
+    const nextMoves = learnset(s).filter(([l, id]) => l > mon.lv && !mon.moves.includes(id)).slice(0, 2).map(([l, id]) => 'Lv ' + l + ' ' + mvName(parseMove(id))[0]).join(tx('b.sep.comma'));
+    const talked = (M().talked || {})[mon.uid] === E.dayStr(), dz = gloss({ zh: s.dexZh });
+    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + (mon.shiny ? '✨' : '') + nm(mon) + ' <small>' + subName(mon) + '</small></h2>' +
+      '<div class="sum-fr">' + hx('b.fr') + ' ' + heartsHTML(mon) + ' <button class="btn small ' + (talked ? 'ghost' : 'sun') + '" data-act="mTalk" data-u="' + mon.uid + '">' + hx(talked ? 'b.talk.done' : 'b.talk.go') + '</button> <button class="btn small ghost" data-act="mNick" data-u="' + mon.uid + '">' + hx('b.nick.btn') + '</button></div><div class="chips">' + chips(mon.sp) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + esc(label(STATUS[mon.st])) + '</span>' : '') + '</div>' +
+      '<small>' + hx('b.sum.xp', { a: mon.xp, b: xpNeed(mon.lv) }) + '</small><div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div></div>' +
+      '<div class="sum-stats">' + bar(hx('b.sum.hp'), hp + '/' + st.hp, st.hp) + bar(hx('b.sum.atk'), st.atk, 250) + bar(hx('b.sum.def'), st.def, 250) + bar(hx('b.sum.spd'), st.spd, 250) + '</div>' +
+      '<h3 class="pc-h">' + hx('b.sum.moves') + '</h3><div class="sum-moves">' + mon.moves.map(id => moveCard(parseMove(id))).join('') + '</div>' +
+      (nextMoves ? '<p class="tip">' + hx('b.sum.next', { list: nextMoves }) + '</p>' : '') + (nextEvo ? '<p class="tip">' + hx('b.sum.evo', { list: nextEvo }) + '</p>' : '') +
+      '<p class="dex-en">' + esc(s.dexEn) + '</p>' + (dz ? '<p class="dex-zh">' + esc(dz) + '</p>' : '') +
+      '<button class="btn ghost wide" data-act="' + (back || 'mTeam') + '">' + hx('b.back') + '</button>');
   }
 
   // ---------- 英文昵称 ----------
@@ -1571,10 +1883,10 @@
     const mon = byUid(u); if (!mon) { if (then === 'queue') afterBattleQueue(); return; }
     const s = SPECIES[mon.sp], pool = [...new Set((NICKS[s.type] || []).concat(NICKS.normal, ['Momo', 'Pepper', 'Cookie', 'Max']))].slice(0, 8);
     nickCtx = { u, then, name: '' };
-    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>给 ' + nm(mon) + ' 起个英文名字吧！</h2><p>选一个，也可以自己输入。</p></div></div>' +
+    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + hx('b.nick.t', { name: nm(mon) }) + '</h2><p>' + hx('b.nick.p') + '</p></div></div>' +
       '<div class="nm-grid">' + pool.map(n => '<button class="btn ghost nm" data-act="mNickPick" data-n="' + n + '">' + n + '</button>').join('') + '</div>' +
-      '<div class="nm-own"><input id="nick-in" maxlength="10" placeholder="自己输入英文名" autocomplete="off" autocapitalize="words" spellcheck="false"><button class="btn sun" data-act="mNickOwn">好了</button></div><small class="tip" id="nick-tip">只能用英文字母，最多 10 个</small>' +
-      '<div class="row"><button class="btn ghost" data-act="mNickSkip">' + (mon.nick ? '不改了' : '就叫 ' + s.en) + '</button>' + (mon.nick ? '<button class="btn ghost" data-act="mNickClear">用回原名 ' + s.en + '</button>' : '') + '</div>', { locked: true });
+      '<div class="nm-own"><input id="nick-in" maxlength="10" placeholder="' + hx('b.nick.ph') + '" autocomplete="off" autocapitalize="words" spellcheck="false"><button class="btn sun" data-act="mNickOwn">' + hx('b.ok') + '</button></div><small class="tip" id="nick-tip">' + hx('b.nick.tip') + '</small>' +
+      '<div class="row"><button class="btn ghost" data-act="mNickSkip">' + (mon.nick ? hx('b.nick.keep') : hx('b.nick.use', { name: s.en })) + '</button>' + (mon.nick ? '<button class="btn ghost" data-act="mNickClear">' + hx('b.nick.clear', { name: s.en }) + '</button>' : '') + '</div>', { locked: true });
     // 弹出软键盘以后（横屏时屏幕只剩一小条），输入框要留在看得见的地方
     const inp = $('nick-in'); if (inp) inp.addEventListener('focus', () => setTimeout(() => { if (inp.isConnected) inp.scrollIntoView({ block: 'center' }); }, 300));
   }
@@ -1583,10 +1895,10 @@
     const mon = byUid(nickCtx.u); if (!mon) return;
     nickCtx.name = name;
     const line = 'Your name is ' + name + '!', sr = E.speakMode() === 'sr';
-    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + name + '</h2><p>大声告诉它新名字：</p></div></div><div class="say-text" id="nick-say">' + E.wordsHTML(line) + '</div>' +
-      '<button class="spk mini" data-act="mNickHear" aria-label="听">' + E.SPK + '</button>' +
-      (sr ? '<button class="mic" id="nick-mic" data-act="mNickMic">' + E.MIC + '</button><div class="mic-hint" id="nick-hint">点麦克风，大声说</div>' : '<button class="btn leaf wide" data-act="mNickGo">🎤 我说了！</button>') +
-      '<button class="link" data-act="mNickBack">换一个名字</button>', { locked: true });
+    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + name + '</h2><p>' + hx('b.nick.say') + '</p></div></div><div class="say-text" id="nick-say">' + E.wordsHTML(line) + '</div>' +
+      '<button class="spk mini" data-act="mNickHear" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button>' +
+      (sr ? '<button class="mic" id="nick-mic" data-act="mNickMic">' + E.MIC + '</button><div class="mic-hint" id="nick-hint">' + hx('b.mic.say') + '</div>' : '<button class="btn leaf wide" data-act="mNickGo">' + hx('b.said') + '</button>') +
+      '<button class="link" data-act="mNickBack">' + hx('b.nick.back') + '</button>', { locked: true });
     E.say(line);
   }
   function nickDone(ok) {
@@ -1597,7 +1909,7 @@
       befriend(mon, 5);
       E.S.stats.spoken = (E.S.stats.spoken || 0) + 1;
       E.save(); E.SFX.win();
-      E.toast('💖 ' + (mon.nick ? '它现在叫 ' + mon.nick + ' 了！' : '用回了原来的名字'), 'gold');
+      E.toast('💖 ' + (mon.nick ? tx('b.nick.done', { name: mon.nick }) : tx('b.nick.orig')), 'gold');
       E.say(nm(mon) + '!');
     }
     E.closeModal();
@@ -1612,11 +1924,11 @@
     const res = await E.recognize(() => {}, [line]);
     m.classList.remove('on');
     if (!res.alts.length) {
-      if (res.fail !== 'unheard' && E.aiDown && E.aiDown()) { E.toast('📶 AI 打分暂时用不了，名字先起好了'); nickDone(true); return; }
-      $('nick-hint').textContent = E.failHint ? E.failHint(res) : '没听清，再大声一点'; return;
+      if (res.fail !== 'unheard' && E.aiDown && E.aiDown()) { E.toast(tx('b.nick.ai')); nickDone(true); return; }
+      $('nick-hint').textContent = E.failHint ? E.failHint(res) : tx('b.mic.again'); return;
     }
     const r = E.bestScore(line, res.alts);
-    if (r.score >= 45) nickDone(true); else $('nick-hint').textContent = r.score + ' 分，再清楚一点！';
+    if (r.score >= 45) nickDone(true); else $('nick-hint').textContent = tx('b.score.again', { n: r.score });
   }
 
   // ---------- 每天和怪兽说说话：亲密度 ----------
@@ -1624,18 +1936,19 @@
     n => 'Good morning, ' + n + '! You are my friend.', n => n + ", let's play together!", n => 'You are so brave, ' + n + '!', n => 'Thank you for your help, ' + n + '.',
     n => 'I like you very much, ' + n + '!', n => n + ', you did a great job today!', n => "Don't worry, " + n + ". I'm here.", n => n + ', are you hungry? Let me get some food.',
   ];
-  const MOOD = ['它有点害羞地看着你。', '它歪着头听你说话。', '它开心地转了一圈。', '它蹭了蹭你的手。', '它高兴得跳了起来！', '它紧紧地贴着你，最喜欢你了！💖'];
+  const MOOD = k => ((I18N && I18N.raw('b.mood')) || [])[k] || '';   // 按亲密度（0–5 颗心）它的样子
   let talkCtx = null;
   function talkSheet(u, then) {
     const mon = byUid(u); if (!mon || mon.egg) return;
     const today = E.dayStr(), done = (M().talked || {})[u] === today;
-    if (done) { E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + nm(mon) + '</h2><p>' + MOOD[hearts(mon)] + '</p><p>亲密度 ' + heartsHTML(mon) + '</p><p class="tip">今天已经聊过了，明天再来和它说说话吧。</p></div></div><button class="btn ghost wide" data-act="' + (then ? 'mTalkBack' : 'close') + '" data-u="' + u + '">好的</button>'); talkCtx = { u, then }; return; }
+    if (done) { E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + nm(mon) + '</h2><p>' + E.esc(MOOD(hearts(mon))) + '</p><p>' + hx('b.fr') + ' ' + heartsHTML(mon) + '</p><p class="tip">' + hx('b.talk.later') + '</p></div></div><button class="btn ghost wide" data-act="' + (then ? 'mTalkBack' : 'close') + '" data-u="' + u + '">' + hx('b.okay') + '</button>'); talkCtx = { u, then }; return; }
     const line = TALKS[(new Date().getDate() + (SPECIES[mon.sp].sd || 0)) % TALKS.length](nm(mon)), sr = E.speakMode() === 'sr';
     talkCtx = { u, then, line };
-    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>和 ' + nm(mon) + ' 说说话</h2><p>每天用英语和它说一句，它会越来越喜欢你。亲密度 ' + heartsHTML(mon) + '</p></div></div>' +
-      '<div class="say-text" id="talk-say">' + E.wordsHTML(line) + '</div><button class="spk mini" data-act="mTalkHear" aria-label="听">' + E.SPK + '</button>' +
-      (sr ? '<button class="mic" id="talk-mic" data-act="mTalkMic">' + E.MIC + '</button><div class="mic-hint" id="talk-hint">点麦克风，大声说</div>' : '<button class="btn leaf wide" data-act="mTalkGo">🎤 我说了！</button>') +
-      '<button class="btn ghost wide" data-act="' + (then ? 'mTalkBack' : 'close') + '" data-u="' + u + '">先不说</button>');
+    // b.talk.p 的 {h} 是爱心的 HTML（heartsHTML），所以用 tx 不用 hx；字表里这句没有要转义的字
+    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + hx('b.talk.t', { name: nm(mon) }) + '</h2><p>' + tx('b.talk.p', { h: heartsHTML(mon) }) + '</p></div></div>' +
+      '<div class="say-text" id="talk-say">' + E.wordsHTML(line) + '</div><button class="spk mini" data-act="mTalkHear" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button>' +
+      (sr ? '<button class="mic" id="talk-mic" data-act="mTalkMic">' + E.MIC + '</button><div class="mic-hint" id="talk-hint">' + hx('b.mic.say') + '</div>' : '<button class="btn leaf wide" data-act="mTalkGo">' + hx('b.said') + '</button>') +
+      '<button class="btn ghost wide" data-act="' + (then ? 'mTalkBack' : 'close') + '" data-u="' + u + '">' + hx('b.talk.no') + '</button>');
     E.say(line);
   }
   function talkDone() {
@@ -1646,8 +1959,8 @@
     E.S.stats.spoken = (E.S.stats.spoken || 0) + 1; E.qProg('spoken', 1);
     E.save(); E.SFX.ok(3);
     E.say(nm(mon) + '!');
-    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + nm(mon) + '</h2><p>' + MOOD[hearts(mon)] + '</p><p>亲密度 ' + heartsHTML(mon) + (hearts(mon) > before ? ' <b>+1 ♥</b>' : '') + '</p>' +
-      (hearts(mon) >= 4 ? '<p class="tip">很亲的怪兽：快倒下时有时会为你坚持住，打起来也更用力。</p>' : '') + '</div></div><button class="btn wide" data-act="' + (c.then ? 'mTalkBack' : 'close') + '" data-u="' + c.u + '">😊 好</button>');
+    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + nm(mon) + '</h2><p>' + E.esc(MOOD(hearts(mon))) + '</p><p>' + hx('b.fr') + ' ' + heartsHTML(mon) + (hearts(mon) > before ? ' <b>+1 ♥</b>' : '') + '</p>' +
+      (hearts(mon) >= 4 ? '<p class="tip">' + hx('b.talk.close') + '</p>' : '') + '</div></div><button class="btn wide" data-act="' + (c.then ? 'mTalkBack' : 'close') + '" data-u="' + c.u + '">' + hx('b.talk.ok') + '</button>');
   }
   async function talkMic() {
     const c = talkCtx; if (!c) return;
@@ -1655,30 +1968,30 @@
     const m = $('talk-mic'); m.classList.add('on');
     const res = await E.recognize(() => {}, [c.line]);
     m.classList.remove('on');
-    if (!res.alts.length) { $('talk-hint').textContent = E.failHint ? E.failHint(res) : '没听清，再大声一点'; return; }
+    if (!res.alts.length) { $('talk-hint').textContent = E.failHint ? E.failHint(res) : tx('b.mic.again'); return; }
     const r = E.bestScore(c.line, res.alts);
-    if (r.score >= 45) talkDone(); else $('talk-hint').textContent = r.score + ' 分，再清楚一点！';
+    if (r.score >= 45) talkDone(); else $('talk-hint').textContent = tx('b.score.again', { n: r.score });
   }
 
   // ---------- 怪兽幼儿园和蛋 ----------
   // 放两只有相同属性的怪兽在怪兽幼儿园，走一段路就会有蛋；蛋放在队伍里走路会孵出来
   const eggSteps = id => 250 + (SPECIES[id].rarity || 1) * 100;
-  const eggHint = mon => mon.steps > eggSteps(mon.sp) * .6 ? '它好像还要很久才会孵出来。' : mon.steps > 80 ? '里面有动静了！' : '快孵出来了！它在里面动来动去。';
+  const eggHint = mon => mon.steps > eggSteps(mon.sp) * .6 ? 'b.egg.far' : mon.steps > 80 ? 'b.egg.mid' : 'b.egg.near';   // 字表的键
   function makeEgg(id) { const b = baseOf(id); return { uid: 'e' + Date.now().toString(36) + rnd(1e6).toString(36), sp: b, egg: true, steps: eggSteps(b), lv: 5, xp: 0 }; }
   function giveEgg(id) { const egg = makeEgg(id); addMon(egg); E.save(); return egg; }
   const day = () => (M().day = M().day || { mons: [], steps: 0, egg: false });
   const canBreed = (a, b) => a && b && !SPECIES[a.sp].legend && !SPECIES[b.sp].legend && SPECIES[a.sp].types.some(t => SPECIES[b.sp].types.includes(t));
   function daycareSheet() {
     const d = day(), gained = mon => Math.floor(d.steps / 100);
-    const slots = d.mons.map((mon, i) => '<div class="mrow"><span class="mrow-svg">' + svgMon(mon) + '</span><div class="mrow-i"><b>' + nm(mon) + '</b> <small>Lv ' + mon.lv + (gained(mon) ? ' → Lv ' + Math.min(100, mon.lv + gained(mon)) : '') + '</small> ' + heartsHTML(mon) + '</div><div class="mrow-b"><button class="btn small" data-act="mDayTake" data-i="' + i + '">领回来</button></div></div>').join('');
-    const pair = d.mons.length === 2 ? (canBreed(d.mons[0], d.mons[1]) ? '<p class="tip">💞 它们俩相处得很好（有相同的属性）。</p>' : '<p class="tip">它们俩不太合得来（没有相同的属性），不会有蛋。</p>') : '';
+    const slots = d.mons.map((mon, i) => '<div class="mrow"><span class="mrow-svg">' + svgMon(mon) + '</span><div class="mrow-i"><b>' + nm(mon) + '</b> <small>Lv ' + mon.lv + (gained(mon) ? ' → Lv ' + Math.min(100, mon.lv + gained(mon)) : '') + '</small> ' + heartsHTML(mon) + '</div><div class="mrow-b"><button class="btn small" data-act="mDayTake" data-i="' + i + '">' + hx('b.day.take') + '</button></div></div>').join('');
+    const pair = d.mons.length === 2 ? '<p class="tip">' + hx(canBreed(d.mons[0], d.mons[1]) ? 'b.day.good' : 'b.day.bad') + '</p>' : '';
     const room = d.mons.length < 2, can = M().team.filter(u => byUid(u) && !byUid(u).egg).length > 1;
-    const pick = room ? teamMons().filter(x => !x.egg).map(mon => monRow(mon, '<button class="btn small sun" data-act="mDayLeave" data-u="' + mon.uid + '"' + (can ? '' : ' disabled') + '>寄养</button>', true)).join('') : '';
-    E.openModal('<h2>🏡 怪兽幼儿园</h2><p>把两只怪兽寄养在这里，它们会跟着爷爷奶奶长大（每走 100 步长 1 级）。两只有相同属性的话，过一阵子会发现一个蛋！</p>' +
-      (d.egg ? '<div class="ach"><span class="ae">🥚</span><div style="flex:1"><b>发现了一个蛋！</b><small>是它们俩留下的</small></div><button class="btn small sun" data-act="mDayEgg">收下</button></div>' : '') +
-      '<h3 class="pc-h">寄养中 ' + d.mons.length + ' / 2</h3>' + (slots || '<p class="tip">还没有寄养的怪兽。</p>') + pair +
-      (room ? '<h3 class="pc-h">从队伍里选一只寄养</h3>' + (can ? '' : '<p class="tip">队伍里至少要留一只能战斗的怪兽。</p>') + pick : '') +
-      '<button class="btn ghost wide" data-act="close">谢谢 Thank you!</button>');
+    const pick = room ? teamMons().filter(x => !x.egg).map(mon => monRow(mon, '<button class="btn small sun" data-act="mDayLeave" data-u="' + mon.uid + '"' + (can ? '' : ' disabled') + '>' + hx('b.day.leave') + '</button>', true)).join('') : '';
+    E.openModal('<h2>' + hx('b.day.t') + '</h2><p>' + hx('b.day.p') + '</p>' +
+      (d.egg ? '<div class="ach"><span class="ae">🥚</span><div style="flex:1"><b>' + hx('b.day.egg') + '</b><small>' + hx('b.day.egg.s') + '</small></div><button class="btn small sun" data-act="mDayEgg">' + hx('b.day.eggTake') + '</button></div>' : '') +
+      '<h3 class="pc-h">' + hx('b.day.in', { n: d.mons.length }) + '</h3>' + (slots || '<p class="tip">' + hx('b.day.none') + '</p>') + pair +
+      (room ? '<h3 class="pc-h">' + hx('b.day.pick') + '</h3>' + (can ? '' : '<p class="tip">' + hx('b.day.keep') + '</p>') + pick : '') +
+      '<button class="btn ghost wide" data-act="close">' + hx('b.day.thanks') + '</button>');
   }
   function dayLeave(u) {
     const m = M(), d = day(), mon = byUid(u);
@@ -1694,14 +2007,14 @@
     if (up) { mon.lv = Math.min(100, mon.lv + up); mon.hp = null; learnAt(mon, mon.lv); }
     d.mons.splice(i, 1); if (!d.mons.length) d.steps = 0;
     addMon(mon); E.save(); E.SFX.coin();
-    E.toast('🏡 ' + nm(mon) + ' 回来了' + (up ? '，长到了 Lv ' + mon.lv + '！' : '！'), 'gold');
+    E.toast(up ? tx('b.day.backLv', { name: nm(mon), lv: mon.lv }) : tx('b.day.back', { name: nm(mon) }), 'gold');
     daycareSheet();
   }
   function dayEgg() {
     const d = day(); if (!d.egg || !d.mons.length) return;
     d.egg = false;
     giveEgg(d.mons[rnd(d.mons.length)].sp);
-    E.SFX.win(); E.toast('🥚 得到了一个蛋！放在队伍里走路就会孵出来', 'gold');
+    E.SFX.win(); E.toast(tx('b.day.gotEgg'), 'gold');
     daycareSheet();
   }
   // 大地图每走一步调一次：带头的怪兽慢慢变亲、蛋慢慢孵、怪兽幼儿园慢慢出蛋。返回要孵出来的蛋
@@ -1734,33 +2047,36 @@
     EM.all().forEach(id => {
       const mp = EM.get(id); if (!mp || mp.kind === 'inside' || mp.kind === 'town') return;
       const flat = mp.grid.map(r => r.join('')).join(''), habs = [];
-      if (flat.includes(',')) habs.push([mp.kind === 'under' ? 'water' : mp.hab || (mp.kind === 'cave' ? 'cave' : 'grass'), mp.kind === 'under' ? '海草' : mp.kind === 'cave' ? '洞穴' : '草丛']);
-      if (flat.includes(':')) habs.push(['cave', '洞穴']);
-      if (/[~D]/.test(flat) && mp.kind !== 'under') habs.push(['water', '水上 / 钓鱼']);
-      habs.forEach(([h, how]) => wildTable(mp.z, h).forEach(sp => { const L = HAB_INDEX[sp.id] = HAB_INDEX[sp.id] || []; const nmp = mp.name || mp.id; if (!L.some(x => x.name === nmp && x.how === how)) L.push({ name: nmp, how }); }));
+      // how 存字表的键（显示时按界面语言取）；地图名按界面语言取（中文名 / 英文名）
+      if (flat.includes(',')) habs.push([mp.kind === 'under' ? 'water' : mp.hab || (mp.kind === 'cave' ? 'cave' : 'grass'), mp.kind === 'under' ? 'b.hab.weed' : mp.kind === 'cave' ? 'b.hab.cave' : 'b.hab.grass']);
+      if (flat.includes(':')) habs.push(['cave', 'b.hab.cave']);
+      if (/[~D]/.test(flat) && mp.kind !== 'under') habs.push(['water', 'b.hab.water']);
+      habs.forEach(([h, hk]) => wildTable(mp.z, h).forEach(sp => { const L = HAB_INDEX[sp.id] = HAB_INDEX[sp.id] || []; const nmp = mp.name || mp.id; if (!L.some(x => x.zh === nmp && x.hk === hk)) L.push({ zh: nmp, en: mp.en || nmp, hk }); }));
     });
     return HAB_INDEX;
   }
+  // 出没地点（按界面语言）：[{ name 地图名, how 怎么遇到 }]
+  const habitatsOf = id => (habitatIndex()[id] || []).map(x => ({ name: label(x), how: tx(x.hk) }));
   function habitatHTML(id) {
-    const s = SPECIES[id], L = habitatIndex()[id];
+    const s = SPECIES[id], L = habitatsOf(id);
     let txt;
-    if (L && L.length) txt = L.slice(0, 5).map(x => '<b>' + E.esc(x.name) + '</b>（' + x.how + '）').join('、') + (L.length > 5 ? ' 等 ' + L.length + ' 个地方' : '');
-    else if (s.legend) txt = '传说中的怪兽，只在特别的地方出现。';
-    else if (s.starter) txt = '回声博士的研究所。';
-    else if (s.from && SPECIES[s.from]) { const b = habitatIndex()[baseOf(id)]; txt = '由 <b>' + SPECIES[s.from].en + '</b> 进化而来' + (b && b.length ? '；' + SPECIES[baseOf(id)].en + ' 在 <b>' + E.esc(b[0].name) + '</b> 出没' : '') + '。'; }
-    else if (window.EchoSight && EchoSight.may(id)) txt = '平时在野外很难遇到，偶尔会出现在回声博士告示板的「🔎 今日目击」里。';
-    else txt = '在第一年的群岛上还没有发现它。';
-    return '<p class="dex-hab">📍 出没地点：' + txt + '</p>';
+    if (L && L.length) txt = L.slice(0, 5).map(x => hx('b.hab.one', { name: x.name, how: x.how })).join(hx('b.sep.list')) + (L.length > 5 ? hx('b.hab.more', { n: L.length }) : '');
+    else if (s.legend) txt = hx('b.hab.legend');
+    else if (s.starter) txt = hx('b.hab.starter');
+    else if (s.from && SPECIES[s.from]) { const b = habitatsOf(baseOf(id)); txt = b.length ? hx('b.hab.fromAt', { from: SPECIES[s.from].en, base: SPECIES[baseOf(id)].en, place: b[0].name }) : hx('b.hab.from', { from: SPECIES[s.from].en }); }
+    else if (window.EchoSight && EchoSight.may(id)) txt = hx('b.hab.sight');
+    else txt = hx('b.hab.none');
+    return '<p class="dex-hab">' + hx('b.hab.t') + txt + '</p>';
   }
 
   // ---------- 我的怪兽 / 怪兽手册 / 回声球 ----------
   // 一只怪兽的信息行，btn 是右边的按钮
   function monRow(mon, btn, inTeam) {
     const s = SPECIES[mon.sp];
-    if (mon.egg) return '<div class="mrow"><span class="mrow-svg">' + EGG_SVG + '</span><div class="mrow-i"><b>蛋 Egg</b> <small>' + eggHint(mon) + '</small>' + (inTeam ? '<div class="chips"><span class="lvchip in">队伍中</span></div>' : '') + '</div><div class="mrow-b">' + btn + '</div></div>';
-    return '<div class="mrow"><span class="mrow-svg">' + svgMon(mon) + '</span><div class="mrow-i"><b>' + (mon.shiny ? '✨' : '') + nm(mon) + '</b> <small>' + (mon.nick ? s.en + ' · ' : '') + s.zh + '</small> ' + heartsHTML(mon) + '<div class="chips">' + chips(mon.sp) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (inTeam ? '<span class="lvchip in">队伍中</span>' : '') + '</div>' +
-      '<small>体力 ' + curHp(mon) + ' / ' + stats(mon).hp + (curHp(mon) === 0 ? ' · 累倒了' : mon.st ? ' · ' + STATUS[mon.st].zh : '') + '</small>' +
-      '<div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div><div class="mrow-b"><button class="btn small ghost" data-act="mSum" data-u="' + mon.uid + '">详情</button>' + btn + '</div></div>';
+    if (mon.egg) return '<div class="mrow"><span class="mrow-svg">' + EGG_SVG + '</span><div class="mrow-i"><b>' + hx('b.egg') + '</b> <small>' + hx(eggHint(mon)) + '</small>' + (inTeam ? '<div class="chips"><span class="lvchip in">' + hx('b.inTeam') + '</span></div>' : '') + '</div><div class="mrow-b">' + btn + '</div></div>';
+    return '<div class="mrow"><span class="mrow-svg">' + svgMon(mon) + '</span><div class="mrow-i"><b>' + (mon.shiny ? '✨' : '') + nm(mon) + '</b> <small>' + subName(mon) + '</small> ' + heartsHTML(mon) + '<div class="chips">' + chips(mon.sp) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (inTeam ? '<span class="lvchip in">' + hx('b.inTeam') + '</span>' : '') + '</div>' +
+      '<small>' + hx('b.hpOf', { hp: curHp(mon), max: stats(mon).hp }) + (curHp(mon) === 0 ? hx('b.tiredOut') : mon.st ? ' · ' + E.esc(label(STATUS[mon.st])) : '') + '</small>' +
+      '<div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div><div class="mrow-b"><button class="btn small ghost" data-act="mSum" data-u="' + mon.uid + '">' + hx('b.more') + '</button>' + btn + '</div></div>';
   }
   const teamMons = () => M().team.map(byUid).filter(Boolean);
   const boxMons = () => M().box.filter(x => !M().team.includes(x.uid)).sort((a, b) => b.lv - a.lv);
@@ -1776,11 +2092,11 @@
   }
   // 队伍：看状态、换主力。存进箱子 / 从箱子取出要去休息站的电脑
   function teamSheet() {
-    const rows = teamMons().map((mon, k) => monRow(mon, k === 0 ? '<span class="lead-tag">⭐ 主力</span>' : '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '">设为主力</button>', true)).join('');
+    const rows = teamMons().map((mon, k) => monRow(mon, k === 0 ? '<span class="lead-tag">' + hx('b.lead') + '</span>' : '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '">' + hx('b.setLead') + '</button>', true)).join('');
     const nb = boxMons().length;
-    E.openModal('<h2>我的队伍 ' + teamMons().length + ' / ' + TEAM_MAX + '</h2><p>主力先出场，倒下后队友自动接上。</p>' + rows +
-      (nb ? '<p class="tip">💻 电脑箱子里还有 ' + nb + ' 只怪兽，去休息站的电脑可以换进队伍。</p>' : '') +
-      '<button class="btn ghost wide" data-act="close">关闭</button>');
+    E.openModal('<h2>' + hx('b.team.t', { n: teamMons().length, max: TEAM_MAX }) + '</h2><p>' + hx('b.team.p') + '</p>' + rows +
+      (nb ? '<p class="tip">' + hx('b.team.box', { n: nb }) + '</p>' : '') +
+      '<button class="btn ghost wide" data-act="close">' + hx('b.close') + '</button>');
   }
   // 休息站的电脑：队伍和箱子互相换
   function pcSheet(k) {
@@ -1788,19 +2104,19 @@
     if (k != null) m.pcBox = Math.max(0, Math.min(BOXES - 1, k));
     const cur = m.pcBox || 0, sortBy = m.pcSort || 'lv';
     const full = m.team.length >= TEAM_MAX, one = m.team.filter(u => byUid(u) && !byUid(u).egg).length <= 1;
-    const team = teamMons().map((mon, i) => monRow(mon, (i ? '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '" data-pc="1">设为主力</button>' : '<span class="lead-tag">⭐ 主力</span>') +
-      '<button class="btn small ghost" data-act="mBench" data-u="' + mon.uid + '" data-pc="1"' + (one && !mon.egg ? ' disabled' : '') + '>存进箱子</button>', true)).join('');
+    const team = teamMons().map((mon, i) => monRow(mon, (i ? '<button class="btn small" data-act="mLead" data-u="' + mon.uid + '" data-pc="1">' + hx('b.setLead') + '</button>' : '<span class="lead-tag">' + hx('b.lead') + '</span>') +
+      '<button class="btn small ghost" data-act="mBench" data-u="' + mon.uid + '" data-pc="1"' + (one && !mon.egg ? ' disabled' : '') + '>' + hx('b.pc.bench') + '</button>', true)).join('');
     const sorter = { lv: (a, b) => b.lv - a.lv, no: (a, b) => (SPECIES[a.sp].dexNo || 9999) - (SPECIES[b.sp].dexNo || 9999), name: (a, b) => nm(a).localeCompare(nm(b)) }[sortBy];
-    const list = inBox(cur).sort(sorter).map(mon => monRow(mon, '<button class="btn small sun" data-act="mJoin" data-u="' + mon.uid + '" data-pc="1"' + (full ? ' disabled' : '') + '>放进队伍</button><button class="btn small ghost" data-act="mMoveAsk" data-u="' + mon.uid + '">搬到…</button>', false)).join('');
+    const list = inBox(cur).sort(sorter).map(mon => monRow(mon, '<button class="btn small sun" data-act="mJoin" data-u="' + mon.uid + '" data-pc="1"' + (full ? ' disabled' : '') + '>' + hx('b.pc.join') + '</button><button class="btn small ghost" data-act="mMoveAsk" data-u="' + mon.uid + '">' + hx('b.pc.move') + '</button>', false)).join('');
     const tabs = '<div class="pc-tabs">' + Array.from({ length: BOXES }, (_, i) => '<button class="btn small ' + (i === cur ? 'sun' : 'ghost') + '" data-act="mBox" data-b="' + i + '">' + (i + 1) + '<small>' + inBox(i).length + '</small></button>').join('') + '</div>';
-    const sorts = '<div class="pc-sort">排序：' + [['lv', '等级'], ['no', '编号'], ['name', '名字']].map(([k2, zh]) => '<button class="link' + (k2 === sortBy ? ' on' : '') + '" data-act="mPcSort" data-k="' + k2 + '">' + zh + '</button>').join(' · ') + '</div>';
-    E.openModal('<h2>💻 怪兽箱子</h2><p>队伍最多 ' + TEAM_MAX + ' 只；' + BOXES + ' 个箱子，每个放 ' + BOX_CAP + ' 只。' + (full ? '队伍满了，先存一只进箱子再取。' : '') + '</p><h3 class="pc-h">队伍 ' + m.team.length + ' / ' + TEAM_MAX + '</h3>' + team +
-      '<h3 class="pc-h">箱子 ' + (cur + 1) + ' Box ' + (cur + 1) + '（' + inBox(cur).length + ' / ' + BOX_CAP + '）</h3>' + tabs + sorts + (list || '<p class="tip">这个箱子是空的。</p>') +
-      '<button class="btn ghost wide" data-act="close">关闭电脑</button>');
+    const sorts = '<div class="pc-sort">' + hx('b.pc.sort') + ['lv', 'no', 'name'].map(k2 => '<button class="link' + (k2 === sortBy ? ' on' : '') + '" data-act="mPcSort" data-k="' + k2 + '">' + hx('b.pc.' + k2) + '</button>').join(' · ') + '</div>';
+    E.openModal('<h2>' + hx('b.pc.t') + '</h2><p>' + hx('b.pc.p', { team: TEAM_MAX, boxes: BOXES, cap: BOX_CAP }) + (full ? hx('b.pc.full') : '') + '</p><h3 class="pc-h">' + hx('b.pc.team', { n: m.team.length, max: TEAM_MAX }) + '</h3>' + team +
+      '<h3 class="pc-h">' + hx('b.pc.box', { n: cur + 1, have: inBox(cur).length, cap: BOX_CAP }) + '</h3>' + tabs + sorts + (list || '<p class="tip">' + hx('b.pc.empty') + '</p>') +
+      '<button class="btn ghost wide" data-act="close">' + hx('b.pc.close') + '</button>');
   }
   function moveAsk(u) {
     const mon = byUid(u); if (!mon) return;
-    E.openModal('<h2>把 ' + nm(mon) + ' 搬到哪个箱子？</h2><div class="pc-tabs">' + Array.from({ length: BOXES }, (_, i) => '<button class="btn ' + ((mon.bx || 0) === i ? 'sun' : 'ghost') + '" data-act="mMoveTo" data-u="' + u + '" data-b="' + i + '"' + (inBox(i).length >= BOX_CAP ? ' disabled' : '') + '>箱子 ' + (i + 1) + '<small>' + inBox(i).length + '/' + BOX_CAP + '</small></button>').join('') + '</div><button class="btn ghost wide" data-act="mPc">返回</button>');
+    E.openModal('<h2>' + hx('b.pc.moveT', { name: nm(mon) }) + '</h2><div class="pc-tabs">' + Array.from({ length: BOXES }, (_, i) => '<button class="btn ' + ((mon.bx || 0) === i ? 'sun' : 'ghost') + '" data-act="mMoveTo" data-u="' + u + '" data-b="' + i + '"' + (inBox(i).length >= BOX_CAP ? ' disabled' : '') + '>' + hx('b.pc.boxN', { n: i + 1 }) + '<small>' + inBox(i).length + '/' + BOX_CAP + '</small></button>').join('') + '</div><button class="btn ghost wide" data-act="mPc">' + hx('b.back') + '</button>');
   }
 
   // 背包：在大地图上用回复道具、悄悄喷雾、回程绳
@@ -1809,18 +2125,21 @@
       const it = ITEMS[id], n = itemCount(id);
       if (!n && id !== 'ball' && id !== 'potion') return '';
       let use = '';
-      if (id === 'expshare') use = '<button class="btn small ' + (M().expShareOn !== false ? 'sun' : 'ghost') + '" data-act="mExpShare">' + (M().expShareOn !== false ? '开着' : '关着') + '</button>';
-      else if (id === 'dowsing') use = '<button class="btn small ' + (M().dowseOn !== false ? 'sun' : 'ghost') + '" data-act="mDowse">' + (M().dowseOn !== false ? '开着' : '关着') + '</button>';
-      else if (id === 'bike') use = '<button class="btn small" data-act="mUse" data-id="bike"' + (FH && FH.inWorld() ? '' : ' disabled') + '>骑</button>';
+      const onOff = on => hx(on ? 'b.on' : 'b.off'), useBtn = hx('b.use');
+      if (id === 'expshare') use = '<button class="btn small ' + (M().expShareOn !== false ? 'sun' : 'ghost') + '" data-act="mExpShare">' + onOff(M().expShareOn !== false) + '</button>';
+      else if (id === 'dowsing') use = '<button class="btn small ' + (M().dowseOn !== false ? 'sun' : 'ghost') + '" data-act="mDowse">' + onOff(M().dowseOn !== false) + '</button>';
+      else if (id === 'bike') use = '<button class="btn small" data-act="mUse" data-id="bike"' + (FH && FH.inWorld() ? '' : ' disabled') + '>' + hx('b.ride') + '</button>';
       else if (it.key) use = '';
-      else if (STATUS_HEAL[id]) use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
-      else if (it.stone) use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
-      else if (it.heal || id === 'revive') use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>用</button>';
-      else if (id === 'repel') use = '<button class="btn small" data-act="mUse" data-id="repel"' + (n && FH && FH.inWorld() ? '' : ' disabled') + '>用</button>';
-      else if (id === 'rope') use = '<button class="btn small" data-act="mUse" data-id="rope"' + (n && FH && FH.canRope() ? '' : ' disabled') + '>用</button>';
-      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + it.zh + ' ×' + n + '</b><small>' + it.desc + ' · ' + it.en + '</small></div>' + use + '</div>';
+      else if (STATUS_HEAL[id]) use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>' + useBtn + '</button>';
+      else if (it.stone) use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>' + useBtn + '</button>';
+      else if (it.heal || id === 'revive') use = '<button class="btn small" data-act="mUse" data-id="' + id + '"' + (n ? '' : ' disabled') + '>' + useBtn + '</button>';
+      else if (id === 'repel') use = '<button class="btn small" data-act="mUse" data-id="repel"' + (n && FH && FH.inWorld() ? '' : ' disabled') + '>' + useBtn + '</button>';
+      else if (id === 'rope') use = '<button class="btn small" data-act="mUse" data-id="rope"' + (n && FH && FH.canRope() ? '' : ' disabled') + '>' + useBtn + '</button>';
+      // 名字按界面语言；小字里的英文名只在名字不是英文时才写（中文界面：说明 · Echo Ball）
+      const name = label(it);
+      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + E.esc(name) + ' ×' + n + '</b><small>' + E.esc(it.desc) + (name !== it.en ? ' · ' + it.en : '') + '</small></div>' + use + '</div>';
     }).join('');
-    E.openModal('<h2>🎒 背包</h2><p>💰 ' + E.S.coins + ' 金币 · 道具可以在商店买，也可以在路上捡</p>' + rows + '<button class="btn ghost wide" data-act="close">关闭</button>');
+    E.openModal('<h2>' + hx('b.bag.t') + '</h2><p>' + hx('b.bag.p', { n: E.S.coins }) + '</p>' + rows + '<button class="btn ghost wide" data-act="close">' + hx('b.close') + '</button>');
   }
   // 选一只怪兽用回复道具
   function useItem(id) {
@@ -1831,21 +2150,21 @@
     if (id === 'bike') { FH && FH.bike(); return; }
     const rows = teamMons().map(mon => {
       const max = stats(mon).hp, hp = curHp(mon), ok = STATUS_HEAL[id] ? STATUS_HEAL[id].includes(mon.st) : it.stone ? !!itemEvo(mon, id) : id === 'revive' ? hp === 0 : hp > 0 && hp < max;
-      return monRow(mon, '<button class="btn small sun" data-act="mUseOn" data-id="' + id + '" data-u="' + mon.uid + '"' + (ok ? '' : ' disabled') + '>' + it.icon + ' 用</button>', true);
+      return monRow(mon, '<button class="btn small sun" data-act="mUseOn" data-id="' + id + '" data-u="' + mon.uid + '"' + (ok ? '' : ' disabled') + '>' + it.icon + ' ' + hx('b.use') + '</button>', true);
     }).join('');
-    E.openModal('<h2>' + it.icon + ' ' + it.zh + ' 给谁用？</h2><p>' + it.desc + '</p>' + rows + '<button class="btn ghost wide" data-act="mBag">返回背包</button>');
+    E.openModal('<h2>' + hx('b.useOn.t', { icon: it.icon, item: label(it) }) + '</h2><p>' + E.esc(it.desc) + '</p>' + rows + '<button class="btn ghost wide" data-act="mBag">' + hx('b.bag.back') + '</button>');
   }
   function useItemOn(id, u) {
     const mon = byUid(u), it = ITEMS[id];
     if (!mon || itemCount(id) <= 0) return;
     const max = stats(mon).hp, hp = curHp(mon);
-    if (STATUS_HEAL[id]) { if (!STATUS_HEAL[id].includes(mon.st)) return; mon.st = null; addItem(id, -1); E.save(); E.SFX.coin(); E.toast(it.icon + ' ' + nm(mon) + ' 恢复正常了', 'gold'); if (itemCount(id) > 0) useItem(id); else bagSheet(); return; }
+    if (STATUS_HEAL[id]) { if (!STATUS_HEAL[id].includes(mon.st)) return; mon.st = null; addItem(id, -1); E.save(); E.SFX.coin(); E.toast(tx('b.item.st', { icon: it.icon, name: nm(mon) }), 'gold'); if (itemCount(id) > 0) useItem(id); else bagSheet(); return; }
     if (it.stone) { const ev = itemEvo(mon, id); if (!ev) return; addItem(id, -1); E.closeModal(); evolveTo(mon, ev.to); return; }
     if (id === 'revive') { if (hp > 0) return; mon.hp = Math.round(max / 2); }
     else { if (hp === 0 || hp >= max) return; mon.hp = Math.min(max, hp + Math.max(20, Math.round(max * it.heal))); }
     addItem(id, -1);
     E.save(); E.SFX.coin();
-    E.toast(it.icon + ' ' + nm(mon) + ' 恢复了体力', 'gold');
+    E.toast(tx('b.item.hp', { icon: it.icon, name: nm(mon) }), 'gold');
     E.say(nm(mon) + ' feels better!');
     if (itemCount(id) > 0) useItem(id); else bagSheet();
   }
@@ -1856,11 +2175,12 @@
     const m = M(), pages = Math.ceil(ORDER.length / DEX_PAGE);
     if (pg != null) dexPage = Math.max(0, Math.min(pages - 1, pg));
     const ids = ORDER.slice(dexPage * DEX_PAGE, dexPage * DEX_PAGE + DEX_PAGE);
-    const nav = '<div class="dex-nav"><button class="btn small ghost" data-act="mDexPage" data-p="' + (dexPage - 1) + '"' + (dexPage ? '' : ' disabled') + '>◀</button><span>第 ' + (dexPage + 1) + ' / ' + pages + ' 页</span><button class="btn small ghost" data-act="mDexPage" data-p="' + (dexPage + 1) + '"' + (dexPage < pages - 1 ? '' : ' disabled') + '>▶</button></div>';
-    E.openModal('<h2>怪兽手册 ' + caughtN() + ' / ' + D.total + '</h2><p>收服或进化就能点亮，遇到过的会显示影子。点一只看它的介绍。</p>' + nav + '<div class="dex">' + ids.map(id => {
+    const nav = '<div class="dex-nav"><button class="btn small ghost" data-act="mDexPage" data-p="' + (dexPage - 1) + '"' + (dexPage ? '' : ' disabled') + '>◀</button><span>' + hx('b.dex.page', { p: dexPage + 1, n: pages }) + '</span><button class="btn small ghost" data-act="mDexPage" data-p="' + (dexPage + 1) + '"' + (dexPage < pages - 1 ? '' : ' disabled') + '>▶</button></div>';
+    E.openModal('<h2>' + hx('b.dex.t', { a: caughtN(), b: D.total }) + '</h2><p>' + hx('b.dex.p') + '</p>' + nav + '<div class="dex">' + ids.map(id => {
       const s = SPECIES[id], st = m.dex[id];
-      return '<button class="dex-i ' + (st || 'none') + '" data-act="mDexOne" data-sp="' + id + '"' + (st ? '' : ' disabled') + '><span class="dex-no">' + (s.dexNo ? String(s.dexNo).padStart(3, '0') : '番外') + ((m.shinyDex || {})[id] ? ' ✨' : '') + '</span><span class="dex-svg">' + (st ? svg(id) : '') + '</span><b>' + (st ? s.en : '???') + '</b><small>' + (st === 'caught' ? s.zh : st ? '见过' : '未发现') + '</small></button>';
-    }).join('') + '</div>' + nav + '<button class="btn ghost wide" data-act="close">关闭</button>');
+      // 收服了：小字是中文名（中文界面）；英语界面没有中文名，写「Caught」
+      return '<button class="dex-i ' + (st || 'none') + '" data-act="mDexOne" data-sp="' + id + '"' + (st ? '' : ' disabled') + '><span class="dex-no">' + (s.dexNo ? String(s.dexNo).padStart(3, '0') : hx('b.dex.extra')) + ((m.shinyDex || {})[id] ? ' ✨' : '') + '</span><span class="dex-svg">' + (st ? svg(id) : '') + '</span><b>' + (st ? s.en : '???') + '</b><small>' + (st === 'caught' ? E.esc(gloss(s) || tx('b.dex.caught')) : hx(st ? 'b.dex.seen' : 'b.dex.none')) + '</small></button>';
+    }).join('') + '</div>' + nav + '<button class="btn ghost wide" data-act="close">' + hx('b.close') + '</button>');
   }
   function dexOne(id) {
     const s = SPECIES[id], st = M().dex[id], esc = E.esc;
@@ -1869,18 +2189,20 @@
     let root = s; while (root.from) root = SPECIES[root.from];
     const walk = (x, depth) => { chain.push({ x, depth }); (x.evo || []).forEach(e => walk(SPECIES[e.to], depth + 1)); };
     walk(root, 0);
-    const how = x => { const f = x.from && (SPECIES[x.from].evo || []).find(e => e.to === x.id); return f ? (f.lv ? 'Lv ' + f.lv : D.STONES[f.item] ? D.STONES[f.item].zh : '') : ''; };
-    E.openModal('<div class="dex-big">' + svg(id) + '</div><h2>' + (s.dexNo ? 'No.' + s.dexNo : '番外') + ' ' + s.en + '（' + (st === 'caught' ? s.zh : '？') + '）</h2><div class="chips" style="justify-content:center">' + chips(id) + (s.legend ? '<span class="lvchip">传说</span>' : '') + '</div>' +
-      (st === 'caught' ? '<p class="dex-en">' + esc(s.dexEn) + ' <button class="spk mini" data-act="mSayDex" data-sp="' + id + '" aria-label="听">' + E.SPK + '</button></p><p class="dex-zh">' + esc(s.dexZh) + '</p>' +
-        (s.words && s.words.length ? '<p class="tip">名字里的英语：' + s.words.map(w => '<b>' + esc(w) + '</b>').join(' + ') + '</p>' : '') : '<p class="tip">收服它就能看到完整的介绍。</p>') +
+    const how = x => { const f = x.from && (SPECIES[x.from].evo || []).find(e => e.to === x.id); return f ? (f.lv ? 'Lv ' + f.lv : D.STONES[f.item] ? E.esc(label(D.STONES[f.item])) : '') : ''; };
+    // 标题：编号 + 英文名 +（中文名）；没收服时中文名写「？」；英语界面没有中文名，括号整个不要
+    const zp = gloss(s) ? zhOf({ zh: st === 'caught' ? gloss(s) : tx('b.q') }) : '', dz = gloss({ zh: s.dexZh });
+    E.openModal('<div class="dex-big">' + svg(id) + '</div><h2>' + (s.dexNo ? 'No.' + s.dexNo : hx('b.dex.extra')) + ' ' + s.en + E.esc(zp) + '</h2><div class="chips" style="justify-content:center">' + chips(id) + (s.legend ? '<span class="lvchip">' + hx('b.legend') + '</span>' : '') + '</div>' +
+      (st === 'caught' ? '<p class="dex-en">' + esc(s.dexEn) + ' <button class="spk mini" data-act="mSayDex" data-sp="' + id + '" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button></p>' + (dz ? '<p class="dex-zh">' + esc(dz) + '</p>' : '') +
+        (s.words && s.words.length ? '<p class="tip">' + hx('b.dex.words') + s.words.map(w => '<b>' + esc(w) + '</b>').join(' + ') + '</p>' : '') : '<p class="tip">' + hx('b.dex.lock') + '</p>') +
       habitatHTML(id) +
       (chain.length > 1 ? '<div class="dex-chain">' + chain.map(c => { const k = M().dex[c.x.id]; return '<span class="dc' + (c.x.id === id ? ' on' : '') + '">' + (c.depth ? '<i>' + how(c.x) + ' →</i>' : '') + '<span class="dc-svg">' + (k ? svg(c.x.id) : '') + '</span><small>' + (k ? c.x.en : '???') + '</small></span>'; }).join('') + '</div>' : '') +
-      '<div class="row"><button class="btn ghost" data-act="mDex">返回手册</button><button class="btn ghost" data-act="close">关闭</button></div>');
+      '<div class="row"><button class="btn ghost" data-act="mDex">' + hx('b.dex.back') + '</button><button class="btn ghost" data-act="close">' + hx('b.close') + '</button></div>');
     if (st === 'caught') E.say(s.en);
   }
   function ballSheet() {
-    E.openModal('<div class="big">🔮</div><h2>回声球 × ' + M().balls + '</h2><p>把野生怪兽打虚弱后，扔回声球并念出收服咒语，就能收服它。<br>在「📚 闯关练习」每通关一关送 1 个，三星送 2 个；打败岛主送 3 个。</p>' +
-      '<div class="row"><button class="btn ghost" data-act="close">关闭</button><button class="btn sun" data-act="mBuyBalls"' + (E.S.coins < 30 ? ' disabled' : '') + '>30 金币买 3 个</button></div>');
+    E.openModal('<div class="big">🔮</div><h2>' + hx('b.balls.t', { n: M().balls }) + '</h2><p>' + hx('b.balls.p') + '</p>' +
+      '<div class="row"><button class="btn ghost" data-act="close">' + hx('b.close') + '</button><button class="btn sun" data-act="mBuyBalls"' + (E.S.coins < 30 ? ' disabled' : '') + '>' + hx('b.balls.buy') + '</button></div>');
   }
 
   // ---------- 对外 ----------
@@ -1917,7 +2239,7 @@
     mMoveTo: t => { const mon = byUid(t.dataset.u); if (mon && inBox(+t.dataset.b).length < BOX_CAP) { mon.bx = +t.dataset.b; E.save(); E.SFX.tap(); } pcSheet(); },
     mNick: t => nickSheet(t.dataset.u, 'sum'),
     mNickPick: t => nickSay(t.dataset.n),
-    mNickOwn: () => { const v = (($('nick-in') || {}).value || '').trim(); if (!/^[A-Za-z][A-Za-z]{0,9}$/.test(v)) { const tip = $('nick-tip'); if (tip) tip.textContent = '要用英文字母写哦，比如 Kiki'; return; } nickSay(v[0].toUpperCase() + v.slice(1).toLowerCase()); },
+    mNickOwn: () => { const v = (($('nick-in') || {}).value || '').trim(); if (!/^[A-Za-z][A-Za-z]{0,9}$/.test(v)) { const tip = $('nick-tip'); if (tip) tip.textContent = tx('b.nick.bad'); return; } nickSay(v[0].toUpperCase() + v.slice(1).toLowerCase()); },
     mNickGo: () => nickDone(true),
     mNickMic: () => nickMic(),
     mNickHear: () => nickCtx && E.say('Your name is ' + nickCtx.name + '!', .8),
@@ -1960,7 +2282,7 @@
     bEnd: () => { if (!B) return; const cb = B.onEnd, res = B.result || 'flee'; E.closeModal(); writeBack(); stopBattle(); if (cb) cb(res); setTimeout(afterBattleQueue, 500); },
     bFlee: () => {
       if (!B || B.turn === 'done') { B && B.onEnd ? actions.bEnd() : actions.bHome(); return; }
-      E.openModal('<h2>' + (B.kind === 'wild' ? '要逃跑吗？' : '要放弃挑战吗？') + '</h2><p>这场战斗不会有奖励。</p><div class="row"><button class="btn ghost" data-act="' + (B.onEnd ? 'bEnd' : 'bHome') + '">离开</button><button class="btn" data-act="close" data-focus>继续战斗</button></div>');
+      E.openModal('<h2>' + hx(B.kind === 'wild' ? 'b.flee.wild' : 'b.flee.t') + '</h2><p>' + hx('b.flee.p') + '</p><div class="row"><button class="btn ghost" data-act="' + (B.onEnd ? 'bEnd' : 'bHome') + '">' + hx('b.flee.go') + '</button><button class="btn" data-act="close" data-focus>' + hx('b.flee.stay') + '</button></div>');
     },
     bHome: () => { E.closeModal(); writeBack(); stopBattle(); E.goHome('mon'); },
   };
@@ -2013,7 +2335,7 @@
     preloadTeam,
     lead: () => lead(),
     nm, spOf, hearts, befriend, talkSheet, nickSheet, daycareSheet, stepHook, hatch, giveEgg, makeEgg,
-    habitats: id => habitatIndex()[id] || [],
+    habitats: id => habitatsOf(id),
     wildTable,   // 一个区域某种栖息地平时会出的怪兽（今日目击用它来挑「平时在这里遇不到的」）
     zoneLv,
     afterHome: () => setTimeout(afterBattleQueue, 400),

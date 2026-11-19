@@ -24,18 +24,19 @@
   const BASE_STARTERS = window.MonsterGame ? MonsterGame.STARTERS.slice() : [];
 
   // ---------- 文书（打包在 pages/，App 里用一层全屏的框打开，不离开 App） ----------
+  // [标题的字表键, 文件]（全文页只有中文）
   const DOCS = {
-    privacy: ['儿童隐私说明', 'pages/privacy.html'],
-    consent: ['监护人同意书', 'pages/consent.html'],
-    guide: ['怎么开通阿里云百炼、拿到 API Key', 'pages/bailian-guide.html'],
-    licenses: ['开源许可与致谢', 'pages/licenses.html'],
+    privacy: ['su.doc.privacy', 'pages/privacy.html'],
+    consent: ['su.doc.consent', 'pages/consent.html'],
+    guide: ['su.doc.guide', 'pages/bailian-guide.html'],
+    licenses: ['su.doc.licenses', 'pages/licenses.html'],
   };
   function openDoc(k) {
     const d = DOCS[k]; if (!d) return;
     closeDoc();
     const el = document.createElement('div');
     el.id = 'su-doc'; el.className = 'su-doc';
-    el.innerHTML = '<div class="su-doc-bar"><b>' + esc(d[0]) + '</b><button class="btn small" data-act="suDocClose">关闭</button></div><iframe src="' + d[1] + '" title="' + esc(d[0]) + '"></iframe>';
+    el.innerHTML = '<div class="su-doc-bar"><b>' + h(d[0]) + '</b><button class="btn small" data-act="suDocClose">' + h('su.close') + '</button></div><iframe src="' + d[1] + '" title="' + h(d[0]) + '"></iframe>';
     document.body.appendChild(el);
   }
   function closeDoc() { const el = $('#su-doc'); if (el) { el.remove(); return true; } return false; }
@@ -89,11 +90,91 @@
       'su.dev.ok': '合格', 'su.dev.warn': '能用（有一项不太好）', 'su.dev.bad': '不合格', 'su.dev.none': '没做',
       'su.open.done.p': '接下来选要学的语言，做一个大约 6 分钟的能力检测，然后就可以开始了。以后要改，都在「设置」里。',
       'su.open.finish': '🎉 开始', 'su.back': '上一步',
+      // ---- 2026-11-19 搬进来的：给孩子用的家长向导（原来写在下面各页里） ----
+      'su.doc.privacy': '儿童隐私说明', 'su.doc.consent': '监护人同意书', 'su.doc.guide': '怎么开通阿里云百炼、拿到 API Key', 'su.doc.licenses': '开源许可与致谢',
+      'su.close': '关闭', 'su.next': '下一步', 'su.cancel': '取消', 'su.save': '保存', 'su.saved': '✅ 保存好了', 'su.sep': '、',
+      'su.tabs': ['欢迎', '设备检查', '家长密码', 'AI 密钥', '家庭定制', '完成'],
+      'su.kid.head': '👪 家长首次设置', 'su.kid.head.s': '这几页请家长来填，大约 5 分钟', 'su.edit.head': '🔒 家长设置',
+      'su.kid.finish': '🎉 把手机交给孩子',
+      'su.kid.lead': '回声岛是一个练英语听说的软件：孩子要<b>开口说英语</b>才能让怪兽出招、和岛民聊天。下面几页请<b>家长</b>来设置，设置只存在这台手机里。',
+      'su.kid.ai': '和岛民英语聊天、口语打分，是由<b>人工智能</b>完成的，由<b>阿里云通义千问</b>提供。AI 生成的内容在 App 里都标着「AI 生成」，每段聊天开头还有一句语音提示。AI 只扮演 App 里的角色、只聊岛上的事和日常话题，不会问孩子的真名、学校、住址、电话。',
+      'su.kid.pr.1': '孩子的存档、昵称、家人设置、聊天记录<b>只存在这台手机里</b>，开发者收不到。',
+      'su.kid.pr.2': '聊天和口语打分时，孩子说话的<b>声音和识别出来的文字</b>会直接发到阿里云处理，用的是<b>您自己的阿里云账号</b>。开发者收不到，也不跑服务器。',
+      'su.kid.pr.3': '不收集真名、照片、学校、住址、电话。请给孩子起一个<b>英文昵称</b>（不要用真名），家人只用「Mom」「Dad」这样的称呼。',
+      'su.kid.pr.4': '家长随时可以看聊天记录（要家长密码），可以在设置里删掉 AI 密钥（就不再连 AI）、清空进度，或者卸载 App 删掉全部数据。',
+      'su.kid.doc.privacy': '📄 儿童隐私说明（全文）', 'su.kid.doc.consent': '📄 监护人同意书（全文）',
+      'su.kid.consent': '我是孩子的父母（或其他监护人），已经读过《儿童隐私说明》和《监护人同意书》，<b>单独同意</b>孩子使用 AI 聊天和口语打分（孩子的声音和识别出来的文字会发给阿里云处理）。',
+      'su.kid.under': '不同意的话请不要继续，可以联系帮您安装的人办理退款。',
+      'su.need.pin': '请先设好家长密码', 'su.need.nick': '这个昵称像真名，请换一个，或者勾选「这不是孩子的真名」', 'su.need.mons': '请选 3 只伙伴（现在选了 {n} 只）',
+      'su.pin.t.done': '家长密码', 'su.pin.done': '✅ 家长密码已经设好了。',
+      'su.pin.done.p': '关学习锁、改冒险时间、看聊天记录、换 AI 密钥……都要输它。以后要改：设置 → 🔒 家长设置 → 家长密码。忘了密码：先「💾 导出存档」（不用密码）→ 清除这个 App 的数据 → 重新设置 →「从备份恢复」，进度不会丢。',
+      'su.pin.clear': '清除', 'su.pin.del': '删掉一位', 'su.pin.title': '设一个家长密码',
+      'su.pin.p': '关学习锁、改冒险时间、看有安全提示的聊天、换 AI 密钥……都要输这个 4 位数字密码。<b>别告诉孩子</b>，也别用 1234、1111、生日这种好猜的。',
+      'su.pin.new': '输入 4 位数字的新密码', 'su.pin.again': '再输一遍，确认一下',
+      'su.pin.store': '密码不会以原文保存：{how}', 'su.pin.store.native': '手机里只存它加了随机「盐」以后的哈希值，输错 5 次锁 10 分钟。', 'su.pin.store.web': '网页版存在这台设备的浏览器里。',
+      'su.pin.weak': '这个密码太好猜了，换一个吧', 'su.pin.diff': '两次不一样，重新设一次', 'su.pin.fail': '密码没存上，再设一次', 'su.pin.ok': '🔑 家长密码设好了，别告诉孩子哦',
+      'su.key.r.ok': '✅ 密钥能用！阿里云已经回答了（这次测试花费不到 0.01 元）。',
+      'su.key.r.format': '❌ 这不像百炼的 API Key：应该是 sk- 开头的一长串字母和数字。复制的时候别多带空格或中文。',
+      'su.key.r.auth': '❌ 密钥不对：检查一下是不是复制完整了；不行就在百炼控制台重新创建一个。',
+      'su.key.r.quota': '💳 阿里云账户欠费或额度用完了：先到阿里云充值（建议先充 20 元），再点「测试」。',
+      'su.key.r.inactive': '⚠️ 百炼服务（或这个模型）还没开通：在百炼控制台点「开通服务」，再点「测试」。',
+      'su.key.r.offline': '📶 手机现在没网：连上 Wi-Fi 或流量再点「测试」。',
+      'su.key.r.busy': '⏳ 阿里云有点忙，等一下再点「测试」。',
+      'su.key.r.network': '❌ 没连上阿里云：检查网络，过一会儿再试。',
+      'su.key.r.nonative': 'ℹ️ 网页版不能在这里填密钥（安卓 App 里才能用）。',
+      'su.key.title': '粘贴您的 AI 密钥',
+      'su.key.p': 'AI 聊天和口语打分用的是<b>您自己的阿里云百炼账号</b>：费用由阿里云直接向您收（每天练 15 分钟左右，每月大约 15–21 元），开发者碰不到您的密钥，也收不到孩子的声音。',
+      'su.key.guide': '❓ 怎么开通？（图文步骤）',
+      'su.key.had': '✅ 这台手机里已经有密钥了{when}。要换就在下面粘贴新的。', 'su.key.had.when': '（{d} 测试通过）',
+      'su.key.ph': 'sk- 开头的一长串', 'su.key.testing': '测试中…', 'su.key.test': '测试', 'su.key.show': '显示密钥', 'su.key.raw': '阿里云说：{raw}',
+      'su.key.note': '密钥只存在这台手机里（安卓给这个 App 的私有空间），App 的界面读不回来，也不会发给开发者。以后在「设置 → 🔒 家长设置 → AI 聊天和口语打分」能换。请在阿里云设好<b>费用预警</b>。',
+      'su.key.skip': '先跳过（没有密钥时：口语题不能自动打分，也不能和岛民聊天）',
+      'su.nick.empty': '请给孩子起一个英文昵称', 'su.nick.letters': '只能用英文字母（最多两个词），比如 Kevin、Coco、Super Max', 'su.nick.len': '昵称要 2 到 12 个字母',
+      'su.nick.ok': '✅ App 里叫：{name}',
+      'su.nick.warn': '⚠️ 这个看起来像中文名字的拼音。岛民会用它叫孩子、也会说给 AI 听：请换一个英文昵称（比如 Kevin、Coco）。',
+      'su.nick.notreal': '这不是孩子的真名，就用它',
+      'su.nick.title': '⑤ 家庭定制 1/3：孩子在 App 里的样子', 'su.nick.lbl': '英文昵称', 'su.nick.ph': '比如 Kevin、Coco',
+      'su.nick.p': '岛民会用这个名字叫孩子，也会说给 AI 听：<b>请用英文昵称，不要用真名</b>。只能用英文字母。',
+      'su.av.alt': '主角预览', 'su.av.g': '男孩 / 女孩', 'su.av.boy': '男孩', 'su.av.girl': '女孩',
+      'su.av.skin': '肤色', 'su.av.style': '发型', 'su.av.hair': '发色', 'su.av.cloth': '衣服', 'su.av.hat': '帽子',
+      'su.style.spiky': '刺刺头', 'su.style.short': '短发', 'su.style.bob': '齐耳', 'su.style.long': '长发', 'su.style.ponytail': '马尾', 'su.style.pigtails': '双马尾',
+      'su.hat.cap': '帽子', 'su.hat.band': '发带', 'su.hat.none': '不戴',
+      'su.type.fire': '🔥 火', 'su.type.water': '💧 水', 'su.type.grass': '🌿 草', 'su.type.spark': '⚡ 电',
+      'su.mons.title': '⑤ 家庭定制 2/3：挑 3 只伙伴',
+      'su.mons.p': '孩子开始冒险时，回声博士请孩子从三个贝壳里挑一只当第一个伙伴，贝壳里就是这 3 只（别的也能在野外遇到）。最好挑 3 种不同的属性。',
+      'su.mons.count': '已选 <b>{n}</b> / 3', 'su.mons.list': '：{list}',
+      'su.fam.title': '⑤ 家庭定制 3/3：家里的人', 'su.fam.add': '＋ ', 'su.fam.del': '去掉', 'su.fam.look': '造型 {n}',
+      'su.fam.p': '选几位家人放进 App 里你好岛的家（最多 {n} 位，也可以不选）。孩子回家时能和他们说话，他们会鼓励孩子说英语、帮怪兽恢复体力。App 里只用英文称呼，造型从下面挑，<b>不用照片</b>。',
+      'su.fam.none': '没选的话，家里就是默认的妈妈。',
+      'su.dev.busy': '正在检查，等一下', 'su.dev.blocked': '这台设备现在不合格：按提示处理好再「重新检查」',
+      'su.dev.title': '② 设备检查',
+      'su.dev.p': '看看这台手机能不能顺利玩。iPhone、iPad、纯血鸿蒙、锁了安装的学习机装不上这个 App——能看到这一页，说明已经装上了。',
+      'su.dev.web': '网页版看不到',
+      'su.dev.android': '安卓系统', 'su.dev.android.v': '安卓 {v}（API {api}）', 'su.dev.android.old': '要安卓 8.0 以上', 'su.dev.android.9': '能用；安卓 9 及以下第一次备份存档时会问「存储」权限',
+      'su.dev.webview': '系统浏览器内核（WebView）', 'su.dev.webview.v': '版本 {v}', 'su.dev.webview.unknown': '看不出版本',
+      'su.dev.webview.old': '版本太老，部分画面会不正常：请在应用商店更新「Android System WebView」',
+      'su.dev.gl': '3D 画面（WebGL2）', 'su.dev.gl.yes': '支持', 'su.dev.gl.no': '不支持', 'su.dev.gl.tip': '能玩，但冒险画面只能用「2D 流畅」',
+      'su.dev.storage': '剩余空间', 'su.dev.storage.ram': ' · 内存 {n} GB', 'su.dev.storage.low': '至少要留 1 GB：先删掉一些不用的 App、照片或视频',
+      'su.dev.mic': '麦克风', 'su.dev.mic.nobrowser': '这个浏览器不能用麦克风', 'su.dev.mic.ok': '可以用', 'su.dev.mic.blocked': '被永久拒绝了', 'su.dev.mic.no': '没允许',
+      'su.dev.mic.fix.blocked': '点「去打开」→「权限」→「麦克风」→ 选「允许」，回来再点「重新检查」',
+      'su.dev.mic.fix.ask': '手机问「允许使用麦克风吗」时要点「允许」，再点「重新检查」',
+      'su.dev.fix': '⚙️ 去打开', 'su.dev.checking': '正在检查……', 'su.dev.checking.mic': '手机问「允许使用麦克风吗」时请点「允许」',
+      'su.dev.v.ok': '✅ 这台设备合格，可以放心用', 'su.dev.v.warn': '⚠️ 能用，但有一项不太好（见上面）',
+      'su.dev.v.bad': '❌ 这台设备现在不合格：按上面的提示处理后点「重新检查」；处理不了请把这一页截图发给帮您安装的人（不合格不收费）',
+      'su.dev.pay': '合格了：如果还没付款，帮您安装的人这时会把付款链接发给您。付好以后点「下一步」，接着设家长密码和 AI 密钥（这两步请您自己输入，远程协助时先暂停屏幕共享）。',
+      'su.dev.again': '🔄 重新检查',
+      'su.done.pin': '🔑 家长密码：{v}', 'su.done.pin.ok': '已设好', 'su.done.pin.no': '还没设',
+      'su.done.key.no': '还没有', 'su.done.key.no.s': '（口语不能自动打分，也不能聊天）',
+      'su.done.nick': '🙂 孩子在 App 里叫：<b>{v}</b>', 'su.done.nick.later': '（开场时再起）',
+      'su.done.mons': '🐾 伙伴：{v}', 'su.done.mons.def': '默认的 3 只', 'su.done.fam': '👪 家里的人：{v}', 'su.done.fam.def': '默认的妈妈',
+      'su.done.dev.warn': '能玩（有一项不太好）',
+      'su.done.p': '现在把手机交给孩子吧！以后要改，在「设置 → 🔒 家长设置」里（要家长密码）。',
+      'su.healed': '💖 怪兽们的体力都恢复了', 'su.why.fam': '改家庭定制',
     },
     en: {
       'su.ui': 'Language · 界面语言',
       'su.who.q': 'Who will use this app?', 'su.who.kid': '👨‍👩‍👧 A child', 'su.who.open': '🧑 Me',
-      'su.who.kid.note': 'For a child: a parent fills in the next pages (consent, device check, parent PIN, AI key, family setup). These pages are in Chinese for now.',
+      'su.who.kid.note': 'For a child: a parent fills in the next pages (consent, device check, parent PIN, AI key, family setup).',
       'su.who.open.note': 'For a teenager or adult learning alone: no parent PIN, no study gate, no time limits. You only read the AI and privacy notes, check the device and enter an AI key.',
       'su.open.head': '🧭 First-time setup', 'su.open.head.s': 'about 3 minutes', 'su.open.tabs': ['Welcome', 'Device check', 'AI key', 'Done'],
       'su.open.title': 'Welcome to Echo Island',
@@ -114,6 +195,85 @@
       'su.dev.ok': 'passed', 'su.dev.warn': 'usable (one item is not ideal)', 'su.dev.bad': 'failed', 'su.dev.none': 'not done',
       'su.open.done.p': 'Next you choose the language to learn and take a level check of about 6 minutes. Then you can start. You can change everything later in Settings.',
       'su.open.finish': '🎉 Start', 'su.back': 'Back',
+      'su.doc.privacy': 'Children\'s privacy notice (in Chinese)', 'su.doc.consent': 'Guardian consent form (in Chinese)', 'su.doc.guide': 'How to set up Alibaba Cloud Bailian and get an API key (in Chinese)', 'su.doc.licenses': 'Open-source licences and thanks',
+      'su.close': 'Close', 'su.next': 'Next', 'su.cancel': 'Cancel', 'su.save': 'Save', 'su.saved': '✅ Saved', 'su.sep': ', ',
+      'su.tabs': ['Welcome', 'Device', 'PIN', 'AI key', 'Family', 'Done'],
+      'su.kid.head': '👪 First-time setup for parents', 'su.kid.head.s': 'A parent fills in these pages. About 5 minutes', 'su.edit.head': '🔒 Parent Settings',
+      'su.kid.finish': '🎉 Finish',
+      'su.kid.lead': 'Echo Island is an app for practising English listening and speaking: your child has to <b>speak English aloud</b> to make the monsters move and to chat with the islanders. A <b>parent</b> should fill in the next pages. Everything stays on this phone.',
+      'su.kid.ai': 'English chats with the islanders and speech scoring are done by <b>artificial intelligence</b>, provided by <b>Alibaba Cloud Tongyi Qianwen</b>. AI-generated content is labelled "AI-generated" in the app, and each chat starts with a short spoken notice. The AI only plays characters in the app and only talks about the islands and everyday topics. It will not ask for your child\'s real name, school, address or phone number.',
+      'su.kid.pr.1': 'Your child\'s save, nickname, family settings and chat history are stored <b>only on this phone</b>. The developer cannot see them.',
+      'su.kid.pr.2': 'When your child chats or their speaking is scored, <b>their voice and the recognised text</b> go straight to Alibaba Cloud for processing, using <b>your own Alibaba Cloud account</b>. The developer does not receive them and runs no server.',
+      'su.kid.pr.3': 'No real name, photo, school, address or phone number is collected. Please give your child an <b>English nickname</b> (not their real name). Family members are only called "Mom", "Dad" and so on.',
+      'su.kid.pr.4': 'At any time a parent can read the chat history (with the parent PIN), delete the AI key in Settings (the app then stops using AI), clear the progress, or uninstall the app to remove all data.',
+      'su.kid.doc.privacy': '📄 Children\'s privacy notice (full text, in Chinese)', 'su.kid.doc.consent': '📄 Guardian consent form (full text, in Chinese)',
+      'su.kid.consent': 'I am the child\'s parent (or other guardian). I have read the "Children\'s privacy notice" and the "Guardian consent form", and I <b>separately agree</b> that my child may use AI chat and speech scoring (my child\'s voice and the recognised text are sent to Alibaba Cloud for processing).',
+      'su.kid.under': 'If you do not agree, please do not continue. You can contact the person who installed the app for you to get a refund.',
+      'su.need.pin': 'Please set the parent PIN first', 'su.need.nick': 'This nickname looks like a real name. Please choose another one, or tick "This is not my child\'s real name"', 'su.need.mons': 'Please choose 3 partners (chosen so far: {n})',
+      'su.pin.t.done': 'Parent PIN', 'su.pin.done': '✅ The parent PIN is set.',
+      'su.pin.done.p': 'You need it to turn off the study gate, change adventure time, read chats, change the AI key and more. To change it later: Settings → 🔒 Parent Settings → Parent PIN. Forgot the PIN? First "💾 Export save" (no PIN needed) → clear this app\'s data → set up again → "Restore from backup". No progress is lost.',
+      'su.pin.clear': 'Clear', 'su.pin.del': 'Delete one digit', 'su.pin.title': 'Set a parent PIN',
+      'su.pin.p': 'You need this 4-digit PIN to turn off the study gate, change adventure time, read chats with a safety flag, change the AI key and more. <b>Do not tell your child</b>, and do not use easy ones like 1234, 1111 or a birthday.',
+      'su.pin.new': 'Enter a new 4-digit PIN', 'su.pin.again': 'Enter it again to confirm',
+      'su.pin.store': 'The PIN is not stored as plain text: {how}', 'su.pin.store.native': 'the phone keeps only a hash of it with a random "salt". 5 wrong tries lock it for 10 minutes.', 'su.pin.store.web': 'the web version keeps it in this device\'s browser.',
+      'su.pin.weak': 'This PIN is too easy to guess. Please choose another one', 'su.pin.diff': 'The two PINs are different. Please set it again', 'su.pin.fail': 'The PIN was not saved. Please set it again', 'su.pin.ok': '🔑 Parent PIN set. Do not tell your child!',
+      'su.key.r.ok': '✅ The key works! Alibaba Cloud answered (this test cost less than 0.01 yuan).',
+      'su.key.r.format': '❌ This does not look like a Bailian API key: it should be a long string of letters and numbers starting with sk-. Do not copy extra spaces or Chinese characters.',
+      'su.key.r.auth': '❌ The key is wrong: check that you copied all of it. If that does not help, create a new one in the Bailian console.',
+      'su.key.r.quota': '💳 The Alibaba Cloud account is in debt or out of credit: top it up first (we suggest 20 yuan to start), then tap "Test".',
+      'su.key.r.inactive': '⚠️ The Bailian service (or this model) is not activated yet: activate the service in the Bailian console, then tap "Test".',
+      'su.key.r.offline': '📶 The phone is offline: connect to Wi-Fi or mobile data, then tap "Test".',
+      'su.key.r.busy': '⏳ Alibaba Cloud is busy. Wait a moment, then tap "Test".',
+      'su.key.r.network': '❌ Could not reach Alibaba Cloud: check the network and try again later.',
+      'su.key.r.nonative': 'ℹ️ The web version cannot take a key here (only the Android app can).',
+      'su.key.title': 'Paste your AI key',
+      'su.key.p': 'AI chat and speech scoring use <b>your own Alibaba Cloud Bailian account</b>: Alibaba Cloud charges you directly (about 15 minutes of practice a day costs roughly 15–21 yuan a month). The developer never touches your key and never receives your child\'s voice.',
+      'su.key.guide': '❓ How to set it up (guide in Chinese)',
+      'su.key.had': '✅ This phone already has a key{when}. To change it, paste a new one below.', 'su.key.had.when': ' (tested OK on {d})',
+      'su.key.ph': 'a long string starting with sk-', 'su.key.testing': 'Testing…', 'su.key.test': 'Test', 'su.key.show': 'Show the key', 'su.key.raw': 'Alibaba Cloud says: {raw}',
+      'su.key.note': 'The key is stored only on this phone (in the private space Android gives this app). The app screens cannot read it back, and it is never sent to the developer. You can change it later in "Settings → 🔒 Parent Settings → AI chat and speech scoring". Please set a <b>spending alert</b> in Alibaba Cloud.',
+      'su.key.skip': 'Skip for now (without a key, speaking cannot be scored automatically and there is no chat with the islanders)',
+      'su.nick.empty': 'Please give your child an English nickname', 'su.nick.letters': 'English letters only (up to two words), for example Kevin, Coco, Super Max', 'su.nick.len': 'The nickname needs 2 to 12 letters',
+      'su.nick.ok': '✅ Name in the app: {name}',
+      'su.nick.warn': '⚠️ This looks like a Chinese name written in pinyin. The islanders will call your child by it, and it is also sent to the AI: please choose an English nickname (for example Kevin or Coco).',
+      'su.nick.notreal': 'This is not my child\'s real name. Use it',
+      'su.nick.title': '⑤ Family setup 1/3: your child in the app', 'su.nick.lbl': 'English nickname', 'su.nick.ph': 'for example Kevin, Coco',
+      'su.nick.p': 'The islanders will call your child by this name, and it is also sent to the AI: <b>please use an English nickname, not a real name</b>. English letters only.',
+      'su.av.alt': 'Character preview', 'su.av.g': 'Boy / Girl', 'su.av.boy': 'Boy', 'su.av.girl': 'Girl',
+      'su.av.skin': 'Skin', 'su.av.style': 'Hairstyle', 'su.av.hair': 'Hair colour', 'su.av.cloth': 'Clothes', 'su.av.hat': 'Hat',
+      'su.style.spiky': 'Spiky', 'su.style.short': 'Short', 'su.style.bob': 'Bob', 'su.style.long': 'Long', 'su.style.ponytail': 'Ponytail', 'su.style.pigtails': 'Pigtails',
+      'su.hat.cap': 'Cap', 'su.hat.band': 'Headband', 'su.hat.none': 'None',
+      'su.type.fire': '🔥 Fire', 'su.type.water': '💧 Water', 'su.type.grass': '🌿 Grass', 'su.type.spark': '⚡ Spark',
+      'su.mons.title': '⑤ Family setup 2/3: choose 3 partners',
+      'su.mons.p': 'When your child starts the adventure, Professor Echo asks them to choose one of three shells as their first partner. These 3 monsters are in the shells (the others can still be met in the wild). It is best to choose 3 different types.',
+      'su.mons.count': 'Chosen <b>{n}</b> / 3', 'su.mons.list': ': {list}',
+      'su.fam.title': '⑤ Family setup 3/3: family members', 'su.fam.add': '+ ', 'su.fam.del': 'Remove', 'su.fam.look': 'Look {n}',
+      'su.fam.p': 'Choose family members to put in your child\'s home on Hello Island (up to {n}, or nobody). When your child goes home, they can talk with them: they cheer your child on to speak English and heal the monsters. The app only uses English names like "Mom", and you choose how they look below: <b>no photos</b>.',
+      'su.fam.none': 'If you choose nobody, the default Mom is at home.',
+      'su.dev.busy': 'Checking, please wait', 'su.dev.blocked': 'This device does not pass yet: follow the tips, then tap "Check again"',
+      'su.dev.title': '② Device check',
+      'su.dev.p': 'Let\'s see if this phone runs the app well. iPhone, iPad, HarmonyOS NEXT and study tablets that block installs cannot install this app. If you can see this page, it is already installed.',
+      'su.dev.web': 'Not visible in the web version',
+      'su.dev.android': 'Android version', 'su.dev.android.v': 'Android {v} (API {api})', 'su.dev.android.old': 'Needs Android 8.0 or newer', 'su.dev.android.9': 'Works. On Android 9 or older, the first save backup asks for "Storage" permission',
+      'su.dev.webview': 'System browser engine (WebView)', 'su.dev.webview.v': 'Version {v}', 'su.dev.webview.unknown': 'Version unknown',
+      'su.dev.webview.old': 'Too old: some screens may not show correctly. Please update "Android System WebView" in the app store',
+      'su.dev.gl': '3D graphics (WebGL2)', 'su.dev.gl.yes': 'Supported', 'su.dev.gl.no': 'Not supported', 'su.dev.gl.tip': 'Playable, but the adventure map can only use "Smooth mode (2D)"',
+      'su.dev.storage': 'Free space', 'su.dev.storage.ram': ' · RAM {n} GB', 'su.dev.storage.low': 'At least 1 GB must be free: delete some apps, photos or videos you do not use',
+      'su.dev.mic': 'Microphone', 'su.dev.mic.nobrowser': 'This browser cannot use the microphone', 'su.dev.mic.ok': 'Works', 'su.dev.mic.blocked': 'Permanently denied', 'su.dev.mic.no': 'Not allowed',
+      'su.dev.mic.fix.blocked': 'Tap "Open settings" → "Permissions" → "Microphone" → choose "Allow", then come back and tap "Check again"',
+      'su.dev.mic.fix.ask': 'When the phone asks about the microphone, tap "Allow", then tap "Check again"',
+      'su.dev.fix': '⚙️ Open settings', 'su.dev.checking': 'Checking…', 'su.dev.checking.mic': 'When the phone asks about the microphone, please tap "Allow"',
+      'su.dev.v.ok': '✅ This device passes. It is ready to use', 'su.dev.v.warn': '⚠️ Usable, but one item is not ideal (see above)',
+      'su.dev.v.bad': '❌ This device does not pass yet: follow the tips above, then tap "Check again". If you cannot fix it, send a screenshot of this page to the person who installed the app for you (no charge if the device does not pass)',
+      'su.dev.pay': 'Passed: if you have not paid yet, the person installing the app will now send you the payment link. After paying, tap "Next" to set the parent PIN and the AI key (please type these two yourself, and pause screen sharing during remote help).',
+      'su.dev.again': '🔄 Check again',
+      'su.done.pin': '🔑 Parent PIN: {v}', 'su.done.pin.ok': 'set', 'su.done.pin.no': 'not set yet',
+      'su.done.key.no': 'none yet', 'su.done.key.no.s': ' (speaking cannot be scored automatically and there is no chat)',
+      'su.done.nick': '🙂 Your child\'s name in the app: <b>{v}</b>', 'su.done.nick.later': '(chosen at the start)',
+      'su.done.mons': '🐾 Partners: {v}', 'su.done.mons.def': 'the default 3', 'su.done.fam': '👪 Family: {v}', 'su.done.fam.def': 'the default Mom',
+      'su.done.dev.warn': 'usable (one item is not ideal)',
+      'su.done.p': 'Now give the phone to your child! To change anything later, go to "Settings → 🔒 Parent Settings" (needs the parent PIN).',
+      'su.healed': '💖 Your monsters are full of energy again', 'su.why.fam': 'Change family setup',
     },
   });
 
@@ -121,8 +281,9 @@
   const SKINS = ['#ffe1c8', '#f1c7a0', '#d9a57b'];
   const HAIRS = ['#212121', '#3a2a24', '#7a4a2c', '#b0703c', '#8e5cc2'];
   const CLOTHES = ['#1f8f8c', '#e53935', '#1e88e5', '#8e6cef', '#ff8f00', '#ff7fa3', '#43a047'];
-  const STYLES = [['spiky', '刺刺头'], ['short', '短发'], ['bob', '齐耳'], ['long', '长发'], ['ponytail', '马尾'], ['pigtails', '双马尾']];
-  const HATS = [['cap', '帽子'], ['band', '发带'], ['none', '不戴']];
+  // [造型, 名字的字表键]
+  const STYLES = ['spiky', 'short', 'bob', 'long', 'ponytail', 'pigtails'].map(v => [v, 'su.style.' + v]);
+  const HATS = ['cap', 'band', 'none'].map(v => [v, 'su.hat.' + v]);
   function avatarLook(a) {
     a = a || {};
     const g = a.g === 'girl' ? 'girl' : 'boy', L = Object.assign({}, BASE_LOOK[g]);
@@ -148,9 +309,9 @@
   // → { ok, name（整理好的大小写）, msg 不行的原因, warn 像真名 }
   function checkNick(v) {
     v = String(v || '').trim().replace(/\s+/g, ' ');
-    if (!v) return { ok: false, msg: '请给孩子起一个英文昵称' };
-    if (!/^[A-Za-z]+( [A-Za-z]+)?$/.test(v)) return { ok: false, msg: '只能用英文字母（最多两个词），比如 Kevin、Coco、Super Max' };
-    if (v.replace(/ /g, '').length < 2 || v.length > 12) return { ok: false, msg: '昵称要 2 到 12 个字母' };
+    if (!v) return { ok: false, msg: t('su.nick.empty') };
+    if (!/^[A-Za-z]+( [A-Za-z]+)?$/.test(v)) return { ok: false, msg: t('su.nick.letters') };
+    if (v.replace(/ /g, '').length < 2 || v.length > 12) return { ok: false, msg: t('su.nick.len') };
     const name = v.split(' ').map(w => w[0].toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     const ws = v.toLowerCase().split(' ');
     const syl = w => { const m = w.match(/(?:zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?(?:iang|iong|uang|ang|eng|ing|ong|ian|iao|uai|uan|ai|ei|ao|ou|an|en|in|un|ia|ie|iu|ua|uo|ue|ui|er|a|o|e|i|u|v)/g); return m ? m.length : 0; };
@@ -163,7 +324,6 @@
   // 只挑火 / 水 / 草 / 电（博士的包按这四种属性画颜色和说明）；有进化链的优先，再补稀有度 ≤3 的；像物件的不要
   const LIB_TYPES = ['fire', 'water', 'grass', 'spark'];
   const LIB_SKIP = new Set(['hotpot', 'skyballoon', 'lamppost', 'strawhat', 'ferryshell', 'kelpdrifter']);
-  const TYPE_ZH = { fire: '🔥 火', water: '💧 水', grass: '🌿 草', spark: '⚡ 电' };
   let LIB = null;
   function library() {
     if (LIB) return LIB;
@@ -188,6 +348,8 @@
     { rel: 'sister', call: 'Sister', zh: '姐姐 / 妹妹', g: 'f', looks: [L0.kidF, L0.studentF, tw(L0.kidF, { style: 'ponytail', hair: '#5d4037', shirt: '#ffca28', bottom: '#26a69a' })] },
   ].map(r => Object.assign(r, { looks: r.looks.map(l => { const o = Object.assign({}, l); Object.keys(o).forEach(k => o[k] === undefined && delete o[k]); return o; }) }));
   const RBY = Object.fromEntries(RELS.map(r => [r.rel, r]));
+  // 称呼后面的小字（妈妈、爷爷 / 外公……）是英文称呼的意思：英语界面不显示
+  const relZh = r => { const g = I18N ? I18N.gloss(r) : r.zh; return g ? ' <small>' + g + '</small>' : ''; };
   const MEM_MAX = 4;
   const member = m => { const r = RBY[m && m.rel]; return r ? { rel: r.rel, call: r.call, zh: r.zh, g: r.g, look: r.looks[m.look] || r.looks[0] } : null; };
   const members = F => (F.members || []).map(member).filter(Boolean);
@@ -198,7 +360,6 @@
   // 顺序和销售流程（00 号第 7–9 步、06 号安装教程、03 号话术）一致：同意 → 设备检查（合格才付款）→ 家长密码 → AI 密钥 → 家庭定制 → 完成
   const FLOW = ['welcome', 'device', 'pin', 'key', 'nick', 'mons', 'fam', 'done'];
   const NUM = { welcome: 1, device: 2, pin: 3, key: 4, nick: 5, mons: 5, fam: 5, done: 6 };
-  const TABS = ['欢迎', '设备检查', '家长密码', 'AI 密钥', '家庭定制', '完成'];
   const WZ = { step: '', edit: null, pin: null, key: null, nickWarnOk: false, dev: null };
   const isOpen = () => !!$('#setup');
 
@@ -257,12 +418,12 @@
   // 这一页还不能往下走的原因（'' = 可以）
   function blocked() {
     const F = draft();
-    if (WZ.step === 'welcome') return F.consent && F.consent.v === DOC_V ? '' : selfPath(F) ? t('su.open.need') : '请先勾选同意（在这一页最下面）';
-    if (WZ.step === 'pin') return pinHas() ? '' : '请先设好家长密码';
-    if (WZ.step === 'nick') { const r = checkNick(($('#su-nick') || {}).value || F.nick); return !r.ok ? r.msg : r.warn && !WZ.nickWarnOk ? '这个昵称像真名，请换一个，或者勾选「这不是孩子的真名」' : ''; }
-    if (WZ.step === 'mons') return F.starters.length === 3 ? '' : '请选 3 只伙伴（现在选了 ' + F.starters.length + ' 只）';
+    if (WZ.step === 'welcome') return F.consent && F.consent.v === DOC_V ? '' : t('su.open.need');   // 两条路说的是同一句
+    if (WZ.step === 'pin') return pinHas() ? '' : t('su.need.pin');
+    if (WZ.step === 'nick') { const r = checkNick(($('#su-nick') || {}).value || F.nick); return !r.ok ? r.msg : r.warn && !WZ.nickWarnOk ? t('su.need.nick') : ''; }
+    if (WZ.step === 'mons') return F.starters.length === 3 ? '' : t('su.need.mons', { n: F.starters.length });
     // 设备检查：不合格就不能往下走（安装包里才这样；网页版看不到手机的情况，不拦）
-    if (WZ.step === 'device') return WZ.dev && WZ.dev.busy ? '正在检查，等一下' : !WZ.edit && nat('diag') && WZ.dev && verdict(WZ.dev.rows) === 'bad' ? '这台设备现在不合格：按提示处理好再「重新检查」' : '';
+    if (WZ.step === 'device') return WZ.dev && WZ.dev.busy ? t('su.dev.busy') : !WZ.edit && nat('diag') && WZ.dev && verdict(WZ.dev.rows) === 'bad' ? t('su.dev.blocked') : '';
     return '';
   }
 
@@ -270,27 +431,27 @@
   function render() {
     const box = $('#su-box'); if (!box) return;
     const F = draft(), self = !WZ.edit && selfPath(F), ps = pages(), i = ps.indexOf(WZ.step), last = i === ps.length - 1, n = self ? i + 1 : NUM[WZ.step];
-    const tabNames = self ? (I18N && I18N.raw('su.open.tabs')) || [] : TABS;
-    const tabs = WZ.edit ? '' : '<ol class="su-tabs"' + (self ? ' style="grid-template-columns:repeat(' + tabNames.length + ',1fr)"' : '') + '>' + tabNames.map((t, k) => '<li class="' + (k + 1 < n ? 'ok' : k + 1 === n ? 'on' : '') + '"><i>' + '①②③④⑤⑥'[k] + '</i><span>' + t + '</span></li>').join('') + '</ol>';
+    const tabNames = (I18N && I18N.raw(self ? 'su.open.tabs' : 'su.tabs')) || [];
+    const tabs = WZ.edit ? '' : '<ol class="su-tabs"' + (self ? ' style="grid-template-columns:repeat(' + tabNames.length + ',1fr)"' : '') + '>' + tabNames.map((nm, k) => '<li class="' + (k + 1 < n ? 'ok' : k + 1 === n ? 'on' : '') + '"><i>' + '①②③④⑤⑥'[k] + '</i><span>' + nm + '</span></li>').join('') + '</ol>';
     // 第一页最上面（只在第一次走向导时）：界面语言、谁来用
     const top = !WZ.edit && WZ.step === 'welcome' ? whoBox(F) : '';
     const body = top + ({ welcome: self ? pWelcomeSelf : pWelcome, pin: pPin, key: pKey, nick: pNick, mons: pMons, fam: pFam, device: pDevice, done: self ? pDoneSelf : pDone })[WZ.step]();
     let nav;
     if (WZ.step === 'done' && self) nav = '<div class="su-nav"><button class="btn ghost" data-act="suBack">' + h('su.back') + '</button><button class="btn sun" data-act="suFinish" data-focus>' + h('su.open.finish') + '</button></div>';
-    else if (WZ.step === 'done') nav = '<div class="su-nav"><button class="btn ghost" data-act="suBack">上一步</button><button class="btn sun" data-act="suFinish" data-focus>🎉 把手机交给孩子</button></div>';
-    else if (WZ.edit) nav = '<div class="su-nav"><button class="btn ghost" data-act="' + (i > 0 ? 'suBack' : 'suCancel') + '">' + (i > 0 ? '上一步' : '取消') + '</button><button class="btn" data-act="suNext" id="su-next">' + (last ? '保存' : '下一步') + '</button></div>';
-    else nav = '<div class="su-nav">' + (i > 0 ? '<button class="btn ghost" data-act="suBack">上一步</button>' : '<span></span>') + '<button class="btn" data-act="suNext" id="su-next"' + (blocked() && WZ.step !== 'nick' ? ' disabled' : '') + '>下一步</button></div>';
-    box.innerHTML = '<div class="su-head"><b>' + (WZ.edit ? '🔒 家长设置' : self ? h('su.open.head') : '👪 家长首次设置') + '</b><small>' + (WZ.edit ? '' : self ? h('su.open.head.s') : '这几页请家长来填，大约 5 分钟') + '</small></div>' + tabs +
+    else if (WZ.step === 'done') nav = '<div class="su-nav"><button class="btn ghost" data-act="suBack">' + h('su.back') + '</button><button class="btn sun" data-act="suFinish" data-focus>' + h('su.kid.finish') + '</button></div>';
+    else if (WZ.edit) nav = '<div class="su-nav"><button class="btn ghost" data-act="' + (i > 0 ? 'suBack' : 'suCancel') + '">' + h(i > 0 ? 'su.back' : 'su.cancel') + '</button><button class="btn" data-act="suNext" id="su-next">' + h(last ? 'su.save' : 'su.next') + '</button></div>';
+    else nav = '<div class="su-nav">' + (i > 0 ? '<button class="btn ghost" data-act="suBack">' + h('su.back') + '</button>' : '<span></span>') + '<button class="btn" data-act="suNext" id="su-next"' + (blocked() && WZ.step !== 'nick' ? ' disabled' : '') + '>' + h('su.next') + '</button></div>';
+    box.innerHTML = '<div class="su-head"><b>' + h(WZ.edit ? 'su.edit.head' : self ? 'su.open.head' : 'su.kid.head') + '</b><small>' + (WZ.edit ? '' : h(self ? 'su.open.head.s' : 'su.kid.head.s')) + '</small></div>' + tabs +
       '<div class="su-step" data-step="' + WZ.step + '">' + body + '</div>' + nav;
   }
   function onInput(e) {
-    const t = e.target;
-    if (t.id === 'su-nick') {
-      const r = checkNick(t.value), m = $('#su-nick-msg');
+    const el = e.target;
+    if (el.id === 'su-nick') {
+      const r = checkNick(el.value), m = $('#su-nick-msg');
       WZ.nickWarnOk = false;
-      if (m) m.innerHTML = !t.value.trim() ? '' : !r.ok ? '<span class="bad">' + esc(r.msg) + '</span>' : r.warn ? nickWarnHTML() : '<span class="ok">✅ App 里叫：' + esc(r.name) + '</span>';
+      if (m) m.innerHTML = !el.value.trim() ? '' : !r.ok ? '<span class="bad">' + esc(r.msg) + '</span>' : r.warn ? nickWarnHTML() : '<span class="ok">' + h('su.nick.ok', { name: r.name }) + '</span>';
     }
-    if (t.id === 'su-key') { WZ.key = Object.assign(WZ.key || {}, { res: null }); const r = $('#su-key-res'); if (r) r.innerHTML = ''; }
+    if (el.id === 'su-key') { WZ.key = Object.assign(WZ.key || {}, { res: null }); const r = $('#su-key-res'); if (r) r.innerHTML = ''; }
   }
 
   // 第一页最上面：界面语言 + 谁来用（默认「给孩子用」= 原来的家长向导，一步不少）
@@ -323,17 +484,13 @@
   // ① 欢迎
   function pWelcome() {
     const F = draft(), on = !!(F.consent && F.consent.v === DOC_V);
-    return '<div class="su-hero">🏝️</div><h2>欢迎使用回声岛</h2>' +
-      '<p class="su-lead">回声岛是一个练英语听说的软件：孩子要<b>开口说英语</b>才能让怪兽出招、和岛民聊天。下面几页请<b>家长</b>来设置，设置只存在这台手机里。</p>' +
-      '<div class="su-card ai"><b>🤖 关于 AI（人工智能）</b><p>和岛民英语聊天、口语打分，是由<b>人工智能</b>完成的，由<b>阿里云通义千问</b>提供。AI 生成的内容在 App 里都标着「AI 生成」，每段聊天开头还有一句语音提示。AI 只扮演 App 里的角色、只聊岛上的事和日常话题，不会问孩子的真名、学校、住址、电话。</p></div>' +
-      '<div class="su-card"><b>🔒 隐私要点</b><ul>' +
-      '<li>孩子的存档、昵称、家人设置、聊天记录<b>只存在这台手机里</b>，开发者收不到。</li>' +
-      '<li>聊天和口语打分时，孩子说话的<b>声音和识别出来的文字</b>会直接发到阿里云处理，用的是<b>您自己的阿里云账号</b>。开发者收不到，也不跑服务器。</li>' +
-      '<li>不收集真名、照片、学校、住址、电话。请给孩子起一个<b>英文昵称</b>（不要用真名），家人只用「Mom」「Dad」这样的称呼。</li>' +
-      '<li>家长随时可以看聊天记录（要家长密码），可以在设置里删掉 AI 密钥（就不再连 AI）、清空进度，或者卸载 App 删掉全部数据。</li></ul></div>' +
-      '<div class="su-links"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">📄 儿童隐私说明（全文）</button><button class="btn small ghost" data-act="suDoc" data-doc="consent">📄 监护人同意书（全文）</button></div>' +
-      '<label class="su-check"><input type="checkbox" id="su-consent" data-act="suConsent"' + (on ? ' checked' : '') + '><span>我是孩子的父母（或其他监护人），已经读过《儿童隐私说明》和《监护人同意书》，<b>单独同意</b>孩子使用 AI 聊天和口语打分（孩子的声音和识别出来的文字会发给阿里云处理）。</span></label>' +
-      '<p class="su-small">不同意的话请不要继续，可以联系帮您安装的人办理退款。</p>';
+    return '<div class="su-hero">🏝️</div><h2>' + h('su.open.title') + '</h2>' +
+      '<p class="su-lead">' + h('su.kid.lead') + '</p>' +
+      '<div class="su-card ai"><b>' + h('su.open.ai.t') + '</b><p>' + h('su.kid.ai') + '</p></div>' +
+      '<div class="su-card"><b>' + h('su.open.pr.t') + '</b><ul>' + [1, 2, 3, 4].map(k => '<li>' + h('su.kid.pr.' + k) + '</li>').join('') + '</ul></div>' +
+      '<div class="su-links"><button class="btn small ghost" data-act="suDoc" data-doc="privacy">' + h('su.kid.doc.privacy') + '</button><button class="btn small ghost" data-act="suDoc" data-doc="consent">' + h('su.kid.doc.consent') + '</button></div>' +
+      '<label class="su-check"><input type="checkbox" id="su-consent" data-act="suConsent"' + (on ? ' checked' : '') + '><span>' + h('su.kid.consent') + '</span></label>' +
+      '<p class="su-small">' + h('su.kid.under') + '</p>';
   }
 
   // ② 家长密码
@@ -347,18 +504,18 @@
   const weakPin = v => /^(\d)\1{3}$/.test(v) || '0123456789'.includes(v) || '9876543210'.includes(v) || COMMON_PINS.includes(v);
   function pPin() {
     if (pinHas() && !WZ.pin) {
-      return '<div class="su-hero">🔑</div><h2>家长密码</h2><p class="su-done-line">✅ 家长密码已经设好了。</p>' +
-        '<p class="su-small">关学习锁、改冒险时间、看聊天记录、换 AI 密钥……都要输它。以后要改：设置 → 🔒 家长设置 → 家长密码。忘了密码：先「💾 导出存档」（不用密码）→ 清除这个 App 的数据 → 重新设置 →「从备份恢复」，进度不会丢。</p>';
+      return '<div class="su-hero">🔑</div><h2>' + h('su.pin.t.done') + '</h2><p class="su-done-line">' + h('su.pin.done') + '</p>' +
+        '<p class="su-small">' + h('su.pin.done.p') + '</p>';
     }
     const p = WZ.pin || (WZ.pin = { mode: 'set1', buf: '', first: '', msg: '' });
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clr', '0', 'del'].map(k => k === 'clr' ? '<button class="pin-k fn" data-act="suPinClr">清除</button>'
-      : k === 'del' ? '<button class="pin-k fn" data-act="suPinDel" aria-label="删掉一位">⌫</button>' : '<button class="pin-k" data-act="suPin" data-k="' + k + '">' + k + '</button>').join('');
-    return '<div class="su-hero">🔑</div><h2>设一个家长密码</h2>' +
-      '<p>关学习锁、改冒险时间、看有安全提示的聊天、换 AI 密钥……都要输这个 4 位数字密码。<b>别告诉孩子</b>，也别用 1234、1111、生日这种好猜的。</p>' +
-      '<div class="pin su-pin"><p class="pin-t">' + (p.mode === 'set1' ? '输入 4 位数字的新密码' : '再输一遍，确认一下') + '</p>' +
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clr', '0', 'del'].map(k => k === 'clr' ? '<button class="pin-k fn" data-act="suPinClr">' + h('su.pin.clear') + '</button>'
+      : k === 'del' ? '<button class="pin-k fn" data-act="suPinDel" aria-label="' + h('su.pin.del') + '">⌫</button>' : '<button class="pin-k" data-act="suPin" data-k="' + k + '">' + k + '</button>').join('');
+    return '<div class="su-hero">🔑</div><h2>' + h('su.pin.title') + '</h2>' +
+      '<p>' + h('su.pin.p') + '</p>' +
+      '<div class="pin su-pin"><p class="pin-t">' + h(p.mode === 'set1' ? 'su.pin.new' : 'su.pin.again') + '</p>' +
       '<div class="pin-dots" id="su-pin-dots">' + [0, 1, 2, 3].map(i => '<i class="' + (i < p.buf.length ? 'on' : '') + '">' + (i < p.buf.length ? '●' : '○') + '</i>').join('') + '</div>' +
       '<p class="pin-msg" id="su-pin-msg">' + esc(p.msg) + '</p><div class="pin-pad">' + keys + '</div></div>' +
-      '<p class="su-small">密码不会以原文保存：' + (nativePin() ? '手机里只存它加了随机「盐」以后的哈希值，输错 5 次锁 10 分钟。' : '网页版存在这台设备的浏览器里。') + '</p>';
+      '<p class="su-small">' + h('su.pin.store', { how: t(nativePin() ? 'su.pin.store.native' : 'su.pin.store.web') }) + '</p>';
   }
   function pinKey(k) {
     const p = WZ.pin; if (!p || p.buf.length >= 4 || p.busy) return;
@@ -370,45 +527,46 @@
     const p = WZ.pin; if (!p || p.buf.length < 4) return;
     const v = p.buf; p.buf = '';
     if (p.mode === 'set1') {
-      if (weakPin(v)) { p.msg = '这个密码太好猜了，换一个吧'; render(); return; }
+      if (weakPin(v)) { p.msg = t('su.pin.weak'); render(); return; }
       p.first = v; p.mode = 'set2'; render(); return;
     }
-    if (v !== p.first) { p.mode = 'set1'; p.first = ''; p.msg = '两次不一样，重新设一次'; render(); return; }
+    if (v !== p.first) { p.mode = 'set1'; p.first = ''; p.msg = t('su.pin.diff'); render(); return; }
     let ok = false;
     if (nativePin()) { try { ok = nat('setPin') && !!EchoNative.setPin(v); } catch (e) { ok = false; } }
     else { G.S.settings.pin = v; G.S.settings.pinLock = { n: 0, until: 0, lockouts: 0 }; ok = true; }
-    if (!ok) { p.mode = 'set1'; p.first = ''; p.msg = '密码没存上，再设一次'; render(); return; }
+    if (!ok) { p.mode = 'set1'; p.first = ''; p.msg = t('su.pin.fail'); render(); return; }
     WZ.pin = null; G.save();
-    G.toast('🔑 家长密码设好了，别告诉孩子哦');
+    G.toast(t('su.pin.ok'));
     render();
   }
 
   // ③ AI 密钥
+  // [样式, 说明的字表键]
   const KEY_RES = {
-    ok: ['ok', '✅ 密钥能用！阿里云已经回答了（这次测试花费不到 0.01 元）。'],
-    format: ['bad', '❌ 这不像百炼的 API Key：应该是 sk- 开头的一长串字母和数字。复制的时候别多带空格或中文。'],
-    auth: ['bad', '❌ 密钥不对：检查一下是不是复制完整了；不行就在百炼控制台重新创建一个。'],
-    quota: ['bad', '💳 阿里云账户欠费或额度用完了：先到阿里云充值（建议先充 20 元），再点「测试」。'],
-    inactive: ['bad', '⚠️ 百炼服务（或这个模型）还没开通：在百炼控制台点「开通服务」，再点「测试」。'],
-    offline: ['bad', '📶 手机现在没网：连上 Wi-Fi 或流量再点「测试」。'],
-    busy: ['warn', '⏳ 阿里云有点忙，等一下再点「测试」。'],
-    network: ['bad', '❌ 没连上阿里云：检查网络，过一会儿再试。'],
-    nonative: ['warn', 'ℹ️ 网页版不能在这里填密钥（安卓 App 里才能用）。'],
+    ok: ['ok', 'su.key.r.ok'],
+    format: ['bad', 'su.key.r.format'],
+    auth: ['bad', 'su.key.r.auth'],
+    quota: ['bad', 'su.key.r.quota'],
+    inactive: ['bad', 'su.key.r.inactive'],
+    offline: ['bad', 'su.key.r.offline'],
+    busy: ['warn', 'su.key.r.busy'],
+    network: ['bad', 'su.key.r.network'],
+    nonative: ['warn', 'su.key.r.nonative'],
   };
   const hasKey = () => { try { return nat('hasKey') && !!EchoNative.hasKey(); } catch (e) { return false; } };
   function pKey() {
     const F = draft(), k = WZ.key || (WZ.key = { res: null, busy: false }), had = hasKey();
     const res = k.res ? KEY_RES[k.res.why] || KEY_RES.network : null;
-    return '<div class="su-hero">🗝️</div><h2>粘贴您的 AI 密钥</h2>' +
-      '<p>AI 聊天和口语打分用的是<b>您自己的阿里云百炼账号</b>：费用由阿里云直接向您收（每天练 15 分钟左右，每月大约 15–21 元），开发者碰不到您的密钥，也收不到孩子的声音。</p>' +
-      '<button class="btn small ghost su-guide" data-act="suDoc" data-doc="guide">❓ 怎么开通？（图文步骤）</button>' +
-      (had && !k.res ? '<p class="su-done-line">✅ 这台手机里已经有密钥了' + (F.keyOk ? '（' + esc(F.keyOk) + ' 测试通过）' : '') + '。要换就在下面粘贴新的。</p>' : '') +
-      '<div class="su-key"><input id="su-key" class="txt-in" type="password" placeholder="sk- 开头的一长串" autocomplete="off" autocapitalize="off" spellcheck="false">' +
-      '<button class="btn" data-act="suKeyTest" id="su-key-test"' + (k.busy ? ' disabled' : '') + '>' + (k.busy ? '测试中…' : '测试') + '</button></div>' +
-      '<label class="su-check small"><input type="checkbox" data-act="suKeyShow"><span>显示密钥</span></label>' +
-      '<div class="su-res" id="su-key-res">' + (res ? '<p class="' + res[0] + '">' + res[1] + '</p>' + (k.res.raw && !k.res.ok ? '<p class="su-raw">阿里云说：' + esc(k.res.raw) + '</p>' : '') : '') + '</div>' +
-      '<p class="su-small">密钥只存在这台手机里（安卓给这个 App 的私有空间），App 的界面读不回来，也不会发给开发者。以后在「设置 → 🔒 家长设置 → AI 聊天和口语打分」能换。请在阿里云设好<b>费用预警</b>。</p>' +
-      (WZ.edit ? '' : '<button class="su-skip" data-act="suKeySkip">先跳过（没有密钥时：口语题不能自动打分，也不能和岛民聊天）</button>');
+    return '<div class="su-hero">🗝️</div><h2>' + h('su.key.title') + '</h2>' +
+      '<p>' + h('su.key.p') + '</p>' +
+      '<button class="btn small ghost su-guide" data-act="suDoc" data-doc="guide">' + h('su.key.guide') + '</button>' +
+      (had && !k.res ? '<p class="su-done-line">' + h('su.key.had', { when: F.keyOk ? t('su.key.had.when', { d: F.keyOk }) : '' }) + '</p>' : '') +
+      '<div class="su-key"><input id="su-key" class="txt-in" type="password" placeholder="' + h('su.key.ph') + '" autocomplete="off" autocapitalize="off" spellcheck="false">' +
+      '<button class="btn" data-act="suKeyTest" id="su-key-test"' + (k.busy ? ' disabled' : '') + '>' + h(k.busy ? 'su.key.testing' : 'su.key.test') + '</button></div>' +
+      '<label class="su-check small"><input type="checkbox" data-act="suKeyShow"><span>' + h('su.key.show') + '</span></label>' +
+      '<div class="su-res" id="su-key-res">' + (res ? '<p class="' + res[0] + '">' + h(res[1]) + '</p>' + (k.res.raw && !k.res.ok ? '<p class="su-raw">' + h('su.key.raw', { raw: k.res.raw }) + '</p>' : '') : '') + '</div>' +
+      '<p class="su-small">' + h('su.key.note') + '</p>' +
+      (WZ.edit ? '' : '<button class="su-skip" data-act="suKeySkip">' + h('su.key.skip') + '</button>');
   }
   async function keyTest() {
     const inp = $('#su-key'), v = inp ? inp.value.trim() : '', k = WZ.key || (WZ.key = {});
@@ -427,8 +585,8 @@
 
   // ④-1 昵称和形象
   function nickWarnHTML() {
-    return '<span class="warn">⚠️ 这个看起来像中文名字的拼音。岛民会用它叫孩子、也会说给 AI 听：请换一个英文昵称（比如 Kevin、Coco）。</span>' +
-      '<label class="su-check small"><input type="checkbox" data-act="suNickOk"' + (WZ.nickWarnOk ? ' checked' : '') + '><span>这不是孩子的真名，就用它</span></label>';
+    return '<span class="warn">' + h('su.nick.warn') + '</span>' +
+      '<label class="su-check small"><input type="checkbox" data-act="suNickOk"' + (WZ.nickWarnOk ? ' checked' : '') + '><span>' + h('su.nick.notreal') + '</span></label>';
   }
   function saveNick() {
     const i = $('#su-nick'); if (!i) return;
@@ -437,19 +595,20 @@
   function pNick() {
     const F = draft(), a = F.avatar, look = avatarLook(a), r = F.nick ? checkNick(F.nick) : null;
     const sw = (part, list) => list.map((c, k) => '<button class="su-sw' + (a[part] === k ? ' on' : '') + '" data-act="suPart" data-p="' + part + '" data-v="' + k + '" style="--c:' + c + '" aria-label="' + part + ' ' + (k + 1) + '"></button>').join('');
-    const seg = (part, list) => list.map(([v, t]) => '<button class="' + (a[part] === v ? 'on' : '') + '" data-act="suPart" data-p="' + part + '" data-v="' + v + '">' + t + '</button>').join('');
-    return '<h2>⑤ 家庭定制 1/3：孩子在 App 里的样子</h2>' +
-      '<label class="su-lbl" for="su-nick">英文昵称</label><input id="su-nick" class="txt-in" maxlength="12" placeholder="比如 Kevin、Coco" autocomplete="off" autocapitalize="words" spellcheck="false" value="' + esc(F.nick) + '">' +
-      '<p class="su-small">岛民会用这个名字叫孩子，也会说给 AI 听：<b>请用英文昵称，不要用真名</b>。只能用英文字母。</p>' +
-      '<div class="su-msg" id="su-nick-msg">' + (r && r.ok ? (r.warn ? nickWarnHTML() : '<span class="ok">✅ App 里叫：' + esc(r.name) + '</span>') : '') + '</div>' +
-      '<div class="su-av"><img class="su-av-img" id="su-av-img" alt="主角预览" src="' + (P ? P.standing(look, 120, 170) : '') + '">' +
+    // list：[值, 名字的字表键]
+    const seg = (part, list) => list.map(([v, key]) => '<button class="' + (a[part] === v ? 'on' : '') + '" data-act="suPart" data-p="' + part + '" data-v="' + v + '">' + h(key) + '</button>').join('');
+    return '<h2>' + h('su.nick.title') + '</h2>' +
+      '<label class="su-lbl" for="su-nick">' + h('su.nick.lbl') + '</label><input id="su-nick" class="txt-in" maxlength="12" placeholder="' + h('su.nick.ph') + '" autocomplete="off" autocapitalize="words" spellcheck="false" value="' + esc(F.nick) + '">' +
+      '<p class="su-small">' + h('su.nick.p') + '</p>' +
+      '<div class="su-msg" id="su-nick-msg">' + (r && r.ok ? (r.warn ? nickWarnHTML() : '<span class="ok">' + h('su.nick.ok', { name: r.name }) + '</span>') : '') + '</div>' +
+      '<div class="su-av"><img class="su-av-img" id="su-av-img" alt="' + h('su.av.alt') + '" src="' + (P ? P.standing(look, 120, 170) : '') + '">' +
       '<div class="su-parts">' +
-      '<div class="su-row"><span>男孩 / 女孩</span><div class="seg">' + seg('g', [['boy', '男孩'], ['girl', '女孩']]) + '</div></div>' +
-      '<div class="su-row"><span>肤色</span><div class="su-sws">' + sw('skin', SKINS) + '</div></div>' +
-      '<div class="su-row"><span>发型</span><div class="seg wrap">' + seg('style', STYLES) + '</div></div>' +
-      '<div class="su-row"><span>发色</span><div class="su-sws">' + sw('hair', HAIRS) + '</div></div>' +
-      '<div class="su-row"><span>衣服</span><div class="su-sws">' + sw('cloth', CLOTHES) + '</div></div>' +
-      '<div class="su-row"><span>帽子</span><div class="seg">' + seg('hat', HATS) + '</div></div>' +
+      '<div class="su-row"><span>' + h('su.av.g') + '</span><div class="seg">' + seg('g', [['boy', 'su.av.boy'], ['girl', 'su.av.girl']]) + '</div></div>' +
+      '<div class="su-row"><span>' + h('su.av.skin') + '</span><div class="su-sws">' + sw('skin', SKINS) + '</div></div>' +
+      '<div class="su-row"><span>' + h('su.av.style') + '</span><div class="seg wrap">' + seg('style', STYLES) + '</div></div>' +
+      '<div class="su-row"><span>' + h('su.av.hair') + '</span><div class="su-sws">' + sw('hair', HAIRS) + '</div></div>' +
+      '<div class="su-row"><span>' + h('su.av.cloth') + '</span><div class="su-sws">' + sw('cloth', CLOTHES) + '</div></div>' +
+      '<div class="su-row"><span>' + h('su.av.hat') + '</span><div class="seg">' + seg('hat', HATS) + '</div></div>' +
       '</div></div>';
   }
   function setPart(t) {
@@ -464,16 +623,17 @@
   // ④-2 伙伴
   function pMons() {
     const F = draft(), n = F.starters.length, lib = library();
-    const groups = LIB_TYPES.map(t => {
-      const ms = lib.filter(s => s.type === t);
-      return ms.length ? '<h3 class="su-h3">' + TYPE_ZH[t] + '</h3><div class="su-mons">' + ms.map(s => {
-        const on = F.starters.includes(s.id);
-        return '<button class="su-mon' + (on ? ' on' : '') + '" data-act="suMon" data-id="' + esc(s.id) + '"' + (!on && n >= 3 ? ' disabled' : '') + '>' + monImg(s) + '<b>' + esc(s.en) + '</b><small>' + esc(s.zh) + '</small></button>';
+    const groups = LIB_TYPES.map(ty => {
+      const ms = lib.filter(s => s.type === ty);
+      return ms.length ? '<h3 class="su-h3">' + h('su.type.' + ty) + '</h3><div class="su-mons">' + ms.map(s => {
+        const on = F.starters.includes(s.id), zh = I18N ? I18N.gloss(s) : s.zh;   // 中文名是英文名的意思：英语界面不显示
+        return '<button class="su-mon' + (on ? ' on' : '') + '" data-act="suMon" data-id="' + esc(s.id) + '"' + (!on && n >= 3 ? ' disabled' : '') + '>' + monImg(s) + '<b>' + esc(s.en) + '</b>' + (zh ? '<small>' + esc(zh) + '</small>' : '') + '</button>';
       }).join('') + '</div>' : '';
     }).join('');
-    return '<h2>⑤ 家庭定制 2/3：挑 3 只伙伴</h2>' +
-      '<p>孩子开始冒险时，回声博士请孩子从三个贝壳里挑一只当第一个伙伴，贝壳里就是这 3 只（别的也能在野外遇到）。最好挑 3 种不同的属性。</p>' +
-      '<p class="su-count" id="su-count">已选 <b>' + n + '</b> / 3' + (n ? '：' + F.starters.map(id => esc((D.byId[id] || {}).en || id)).join('、') : '') + '</p>' + groups;
+    // 名字已经转义过，拼进去用 t()
+    return '<h2>' + h('su.mons.title') + '</h2>' +
+      '<p>' + h('su.mons.p') + '</p>' +
+      '<p class="su-count" id="su-count">' + h('su.mons.count', { n }) + (n ? t('su.mons.list', { list: F.starters.map(id => esc((D.byId[id] || {}).en || id)).join(t('su.sep')) }) : '') + '</p>' + groups;
   }
   function pickMon(id) {
     const F = draft(), i = F.starters.indexOf(id);
@@ -488,15 +648,15 @@
   // ④-3 家里的人
   function pFam() {
     const F = draft(), ms = F.members, has = new Set(ms.map(m => m.rel));
-    const chips = RELS.map(r => '<button class="btn small ' + (has.has(r.rel) ? '' : 'ghost') + '" data-act="suFamAdd" data-rel="' + r.rel + '"' + (has.has(r.rel) || ms.length >= MEM_MAX ? ' disabled' : '') + '>' + (has.has(r.rel) ? '✓ ' : '＋ ') + r.call + ' <small>' + r.zh + '</small></button>').join('');
+    const chips = RELS.map(r => '<button class="btn small ' + (has.has(r.rel) ? '' : 'ghost') + '" data-act="suFamAdd" data-rel="' + r.rel + '"' + (has.has(r.rel) || ms.length >= MEM_MAX ? ' disabled' : '') + '>' + (has.has(r.rel) ? '✓ ' : h('su.fam.add')) + r.call + relZh(r) + '</button>').join('');
     const list = ms.map((m, i) => {
       const r = RBY[m.rel]; if (!r) return '';
-      return '<div class="su-mem"><div class="su-mem-h"><b>' + r.call + '</b> <small>' + r.zh + '</small><button class="su-x" data-act="suFamDel" data-i="' + i + '" aria-label="去掉">✕</button></div>' +
-        '<div class="su-looks">' + r.looks.map((l, k) => '<button class="su-look' + ((m.look || 0) === k ? ' on' : '') + '" data-act="suFamLook" data-i="' + i + '" data-v="' + k + '"><img alt="造型 ' + (k + 1) + '" src="' + (P ? P.standing(l, 72, 102) : '') + '"></button>').join('') + '</div></div>';
+      return '<div class="su-mem"><div class="su-mem-h"><b>' + r.call + '</b>' + relZh(r) + '<button class="su-x" data-act="suFamDel" data-i="' + i + '" aria-label="' + h('su.fam.del') + '">✕</button></div>' +
+        '<div class="su-looks">' + r.looks.map((l, k) => '<button class="su-look' + ((m.look || 0) === k ? ' on' : '') + '" data-act="suFamLook" data-i="' + i + '" data-v="' + k + '"><img alt="' + h('su.fam.look', { n: k + 1 }) + '" src="' + (P ? P.standing(l, 72, 102) : '') + '"></button>').join('') + '</div></div>';
     }).join('');
-    return '<h2>⑤ 家庭定制 3/3：家里的人</h2>' +
-      '<p>选几位家人放进 App 里你好岛的家（最多 ' + MEM_MAX + ' 位，也可以不选）。孩子回家时能和他们说话，他们会鼓励孩子说英语、帮怪兽恢复体力。App 里只用英文称呼，造型从下面挑，<b>不用照片</b>。</p>' +
-      '<div class="su-chips">' + chips + '</div>' + (list ? '<div class="su-mems">' + list + '</div>' : '<p class="su-small">没选的话，家里就是默认的妈妈。</p>');
+    return '<h2>' + h('su.fam.title') + '</h2>' +
+      '<p>' + h('su.fam.p', { n: MEM_MAX }) + '</p>' +
+      '<div class="su-chips">' + chips + '</div>' + (list ? '<div class="su-mems">' + list + '</div>' : '<p class="su-small">' + h('su.fam.none') + '</p>');
   }
 
   // ② 设备检查：安卓版本、WebView、WebGL2、剩余空间、麦克风（第二步：合格了才付款，不合格不收钱）
@@ -506,18 +666,19 @@
     render();
     let dg = {}; try { if (nat('diag')) dg = JSON.parse(EchoNative.diag() || '{}') || {}; } catch (e) { dg = {}; }
     const sdk = +dg.sdk || 0;
-    rows.push({ k: 'android', label: '安卓系统', ok: sdk ? sdk >= 26 : null, val: dg.android ? '安卓 ' + dg.android + '（API ' + sdk + '）' : '网页版看不到',
-      tip: sdk && sdk < 26 ? '要安卓 8.0 以上' : sdk && sdk < 29 ? '能用；安卓 9 及以下第一次备份存档时会问「存储」权限' : '' });
+    // label / val / tip 是函数：画的时候才按界面语言取字
+    rows.push({ k: 'android', label: () => t('su.dev.android'), ok: sdk ? sdk >= 26 : null, val: () => (dg.android ? t('su.dev.android.v', { v: dg.android, api: sdk }) : t('su.dev.web')),
+      tip: () => (sdk && sdk < 26 ? t('su.dev.android.old') : sdk && sdk < 29 ? t('su.dev.android.9') : '') });
     const wv = String(dg.webview || ''), m = (wv.match(/^(\d+)\./) || (navigator.userAgent.match(/Chrome\/(\d+)/) || []))[1], major = +m || 0;
-    rows.push({ k: 'webview', label: '系统浏览器内核（WebView）', ok: major ? major >= 105 : null, warn: true, val: major ? '版本 ' + major : '看不出版本',
-      tip: major && major < 105 ? '版本太老，部分画面会不正常：请在应用商店更新「Android System WebView」' : '' });
+    rows.push({ k: 'webview', label: () => t('su.dev.webview'), ok: major ? major >= 105 : null, warn: true, val: () => (major ? t('su.dev.webview.v', { v: major }) : t('su.dev.webview.unknown')),
+      tip: () => (major && major < 105 ? t('su.dev.webview.old') : '') });
     let gl = false;
     try { const c = document.createElement('canvas'); gl = !!c.getContext('webgl2'); } catch (e) { gl = false; }
-    rows.push({ k: 'webgl2', label: '3D 画面（WebGL2）', ok: gl, warn: true, val: gl ? '支持' : '不支持', tip: gl ? '' : '能玩，但冒险画面只能用「2D 流畅」' });
+    rows.push({ k: 'webgl2', label: () => t('su.dev.gl'), ok: gl, warn: true, val: () => t(gl ? 'su.dev.gl.yes' : 'su.dev.gl.no'), tip: () => (gl ? '' : t('su.dev.gl.tip')) });
     let st = null; try { if (nat('storage')) st = JSON.parse(EchoNative.storage() || '{}') || null; } catch (e) { st = null; }
     const free = st && +st.free;
-    rows.push({ k: 'storage', label: '剩余空间', ok: free ? free >= 1e9 : null, val: free ? (free / 1e9).toFixed(1) + ' GB' + (st.ram ? ' · 内存 ' + Math.round(st.ram / 1073741824) + ' GB' : '') : '网页版看不到',
-      tip: free && free < 1e9 ? '至少要留 1 GB：先删掉一些不用的 App、照片或视频' : '' });
+    rows.push({ k: 'storage', label: () => t('su.dev.storage'), ok: free ? free >= 1e9 : null, val: () => (free ? (free / 1e9).toFixed(1) + ' GB' + (st.ram ? t('su.dev.storage.ram', { n: Math.round(st.ram / 1073741824) }) : '') : t('su.dev.web')),
+      tip: () => (free && free < 1e9 ? t('su.dev.storage.low') : '') });
     render();
     rows.push(await micRow());
     d.busy = false;
@@ -527,16 +688,16 @@
     if (WZ.dev === d) render();
   }
   async function micRow() {
-    const row = { k: 'mic', label: '麦克风', ok: false, val: '', tip: '' };
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Object.assign(row, { ok: null, val: '这个浏览器不能用麦克风' });
+    const row = { k: 'mic', label: () => t('su.dev.mic'), ok: false, val: () => '', tip: () => '' };
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Object.assign(row, { ok: null, val: () => t('su.dev.mic.nobrowser') });
     try {
       const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-      try { s.getTracks().forEach(t => t.stop()); } catch (e) { /* 忽略 */ }
-      return Object.assign(row, { ok: true, val: '可以用' });
+      try { s.getTracks().forEach(tr => tr.stop()); } catch (e) { /* 忽略 */ }
+      return Object.assign(row, { ok: true, val: () => t('su.dev.mic.ok') });
     } catch (e) {
       let st = ''; try { if (nat('micPermission')) st = String(EchoNative.micPermission() || ''); } catch (er) { st = ''; }
-      return Object.assign(row, { ok: false, val: st === 'blocked' ? '被永久拒绝了' : '没允许', fix: nat('openAppSettings'),
-        tip: st === 'blocked' ? '点「去打开」→「权限」→「麦克风」→ 选「允许」，回来再点「重新检查」' : '手机问「允许使用麦克风吗」时要点「允许」，再点「重新检查」' });
+      return Object.assign(row, { ok: false, val: () => t(st === 'blocked' ? 'su.dev.mic.blocked' : 'su.dev.mic.no'), fix: nat('openAppSettings'),
+        tip: () => t(st === 'blocked' ? 'su.dev.mic.fix.blocked' : 'su.dev.mic.fix.ask') });
     }
   }
   // 结论：必须的（安卓、空间、麦克风）有一项不合格 = bad；只是 WebView / WebGL2 不行 = warn；都好 = ok
@@ -549,32 +710,34 @@
     const d = WZ.dev, rows = d ? d.rows : [];
     const icon = r => r.ok === true ? '✅' : r.ok === null ? '➖' : r.warn ? '⚠️' : '❌';
     const v = d && !d.busy ? verdict(rows) : '';
-    return '<div class="su-hero">🩺</div><h2>② 设备检查</h2>' +
-      '<p>看看这台手机能不能顺利玩。iPhone、iPad、纯血鸿蒙、锁了安装的学习机装不上这个 App——能看到这一页，说明已经装上了。</p>' +
-      '<ul class="su-dev">' + rows.map(r => '<li class="' + (r.ok === true ? 'ok' : r.ok === null ? 'na' : r.warn ? 'warn' : 'bad') + '" data-k="' + r.k + '"><i>' + icon(r) + '</i><div><b>' + esc(r.label) + '</b><span>' + esc(r.val) + '</span>' +
-        (r.tip ? '<small>' + esc(r.tip) + '</small>' : '') + (r.fix && r.ok === false ? '<button class="btn small" data-act="suMicFix">⚙️ 去打开</button>' : '') + '</div></li>').join('') +
-      (d && d.busy ? '<li class="na"><i>⏳</i><div><b>正在检查……</b>' + (rows.length >= 4 ? '<span>手机问「允许使用麦克风吗」时请点「允许」</span>' : '') + '</div></li>' : '') + '</ul>' +
-      (v ? '<div class="su-verdict ' + v + '" id="su-verdict">' + (v === 'ok' ? '✅ 这台设备合格，可以放心用' : v === 'warn' ? '⚠️ 能用，但有一项不太好（见上面）' : '❌ 这台设备现在不合格：按上面的提示处理后点「重新检查」；处理不了请把这一页截图发给帮您安装的人（不合格不收费）') + '</div>' +
-        (v !== 'bad' && !WZ.edit && !selfPath(prof()) ? '<p class="su-small su-pay">合格了：如果还没付款，帮您安装的人这时会把付款链接发给您。付好以后点「下一步」，接着设家长密码和 AI 密钥（这两步请您自己输入，远程协助时先暂停屏幕共享）。</p>' : '') : '') +
-      '<button class="btn small ghost" data-act="suDevRun"' + (d && d.busy ? ' disabled' : '') + '>🔄 重新检查</button>';
+    return '<div class="su-hero">🩺</div><h2>' + h('su.dev.title') + '</h2>' +
+      '<p>' + h('su.dev.p') + '</p>' +
+      '<ul class="su-dev">' + rows.map(r => { const tip = r.tip(); return '<li class="' + (r.ok === true ? 'ok' : r.ok === null ? 'na' : r.warn ? 'warn' : 'bad') + '" data-k="' + r.k + '"><i>' + icon(r) + '</i><div><b>' + esc(r.label()) + '</b><span>' + esc(r.val()) + '</span>' +
+        (tip ? '<small>' + esc(tip) + '</small>' : '') + (r.fix && r.ok === false ? '<button class="btn small" data-act="suMicFix">' + h('su.dev.fix') + '</button>' : '') + '</div></li>'; }).join('') +
+      (d && d.busy ? '<li class="na"><i>⏳</i><div><b>' + h('su.dev.checking') + '</b>' + (rows.length >= 4 ? '<span>' + h('su.dev.checking.mic') + '</span>' : '') + '</div></li>' : '') + '</ul>' +
+      (v ? '<div class="su-verdict ' + v + '" id="su-verdict">' + h(v === 'ok' ? 'su.dev.v.ok' : v === 'warn' ? 'su.dev.v.warn' : 'su.dev.v.bad') + '</div>' +
+        (v !== 'bad' && !WZ.edit && !selfPath(prof()) ? '<p class="su-small su-pay">' + h('su.dev.pay') + '</p>' : '') : '') +
+      '<button class="btn small ghost" data-act="suDevRun"' + (d && d.busy ? ' disabled' : '') + '>' + h('su.dev.again') + '</button>';
   }
 
   // ⑥ 完成
   function pDone() {
     const F = draft(), ms = members(F), dv = F.device;
     const nick = F.nick ? checkNick(F.nick).name : '';
-    return '<div class="su-hero">🎉</div><h2>设置好了！</h2><ul class="su-sum">' +
-      '<li>🔑 家长密码：' + (pinHas() ? '已设好' : '<b class="bad">还没设</b>') + '</li>' +
-      '<li>🗝️ AI 密钥：' + (F.keyOk ? '测试通过' : hasKey() ? '已粘贴（还没测试通过）' : '<b class="bad">还没有</b>（口语不能自动打分，也不能聊天）') + '</li>' +
-      '<li>🙂 孩子在 App 里叫：<b>' + esc(nick || '（开场时再起）') + '</b></li>' +
-      '<li>🐾 伙伴：' + (F.starters.length === 3 ? F.starters.map(id => esc((D.byId[id] || {}).en || id)).join('、') : '默认的 3 只') + '</li>' +
-      '<li>👪 家里的人：' + (ms.length ? ms.map(m => m.call).join('、') : '默认的妈妈') + '</li>' +
-      '<li>🩺 设备检查：' + (!dv ? '没做' : dv.ok === 'ok' ? '合格' : dv.ok === 'warn' ? '能玩（有一项不太好）' : '<b class="bad">不合格</b>') + '</li></ul>' +
-      '<p>现在把手机交给孩子吧！以后要改，在「设置 → 🔒 家长设置」里（要家长密码）。</p>';
+    // 参数里有 <b> 或者已经转义过的名字：这几行用 t() 拼
+    const bad = k => '<b class="bad">' + h(k) + '</b>';
+    return '<div class="su-hero">🎉</div><h2>' + h('su.open.done.t') + '</h2><ul class="su-sum">' +
+      '<li>' + t('su.done.pin', { v: pinHas() ? h('su.done.pin.ok') : bad('su.done.pin.no') }) + '</li>' +
+      '<li>' + t('su.open.done.key', { v: F.keyOk ? h('su.key.ok') : hasKey() ? h('su.key.has') : bad('su.done.key.no') + h('su.done.key.no.s') }) + '</li>' +
+      '<li>' + h('su.done.nick', { v: nick || t('su.done.nick.later') }) + '</li>' +
+      '<li>' + t('su.done.mons', { v: F.starters.length === 3 ? F.starters.map(id => esc((D.byId[id] || {}).en || id)).join(t('su.sep')) : h('su.done.mons.def') }) + '</li>' +
+      '<li>' + t('su.done.fam', { v: ms.length ? ms.map(m => m.call).join(t('su.sep')) : h('su.done.fam.def') }) + '</li>' +
+      '<li>' + t('su.open.done.dev', { v: !dv ? h('su.dev.none') : dv.ok === 'ok' ? h('su.dev.ok') : dv.ok === 'warn' ? h('su.done.dev.warn') : bad('su.dev.bad') }) + '</li></ul>' +
+      '<p>' + h('su.done.p') + '</p>';
   }
   function finish() {
     const F = draft(), self = selfPath(F);
-    if (!self && !pinHas()) { G.toast('请先设好家长密码'); go('pin'); return; }
+    if (!self && !pinHas()) { G.toast(t('su.need.pin')); go('pin'); return; }
     if (!(F.consent && F.consent.v === DOC_V)) { go('welcome'); return; }
     F.done = G.dayStr(); F.step = 'done';
     if (self) G.S.settings.learner = 'open';   // 我自己学：没有学习锁、不限时、不要家长密码（game.js 的 kidMode）
@@ -590,7 +753,7 @@
     const F = draft();
     if (WZ.step === 'fam' || WZ.edit.includes('nick')) { saveNick(); apply(true); }
     G.save(); close();
-    G.toast('✅ 保存好了');
+    G.toast(t('su.saved'));
     if (G.afterEdit) G.afterEdit();
   }
 
@@ -641,6 +804,8 @@
     brother: [["Hey, {name}! Let's have a monster battle one day!", '嘿，{name}！哪天我们来一场怪兽对战吧！'], ["Don't forget to practice your English!", '别忘了练英语哦！']],
     sister: [['Hi, {name}! Can you teach me some English words?', '嗨，{name}！你能教我几个英语单词吗？'], ['Good luck on your adventure!', '冒险加油！']],
   };
+  // 家里人和开场的台词：s(英文, 中文意思)、L.nar(英文, 中文意思)，中文是内容（剧情中文），不进字表
+  // @i18n-content-calls s:1 nar:1
   const sayer = m => (en, zh, x) => Object.assign({ who: m.call, look: m.look, g: m.g, en, zh }, x || {});
   async function famTalk(C, n, m, house) {
     const s = sayer(m), E = C.E;
@@ -650,7 +815,7 @@
     if (house) {
       pages = [
         s('Welcome home, {name}! You look tired.', '欢迎回家，{name}！你看起来累了。'),
-        s('Let your monsters have a good rest.', '让你的怪兽们好好休息一下吧。', { onShow: () => { C.MG.healAll(); E.SFX.win(); E.toast('💖 怪兽们的体力都恢复了', 'gold'); } }),
+        s('Let your monsters have a good rest.', '让你的怪兽们好好休息一下吧。', { onShow: () => { C.MG.healAll(); E.SFX.win(); E.toast(t('su.healed'), 'gold'); } }),
         s("Don't forget to eat well and sleep early!", '记得好好吃饭，早点睡觉！'),
       ];
     } else pages = (LINES[m.rel] || LINES.dad).map(([en, zh]) => s(en, zh));
@@ -752,7 +917,7 @@
       suMicFix: () => { try { EchoNative.openAppSettings(); } catch (e) { /* 忽略 */ } },
       suFinish: () => finish(),
       // 设置里（家长设置）：改家庭定制、再做一次设备检查；所有版本都能看开源许可
-      suFamily: () => G.parentOk('改家庭定制', () => { G.closeModal(); open('nick', true); }),
+      suFamily: () => G.parentOk(t('su.why.fam'), () => { G.closeModal(); open('nick', true); }),
       suDevice: () => { G.closeModal(); open('device', true); },
     };
   }

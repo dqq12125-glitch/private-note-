@@ -13,6 +13,8 @@
 //         还可以写 zero（n 是 0 时优先用它），比如 { zero: '没有记录', other: '{n} 条记录' }
 //   EchoI18n.raw('game.praise')          → 原样取出来（数组、对象也行，比如一组表扬的话）
 //   EchoI18n.pick({ zh: '苹果', en: 'apple' })  → 数据里按语言写的字段，取当前界面语言的那个（没有返回 undefined；第二个参数给语言，第三个给 true 就退回中文 / 第一个有的）
+//   EchoI18n.gloss(台词)                 → 内容（英文台词、线索……）在界面语言里的意思：中文界面给 zh；英语界面 / 没有这门语言的意思给 null（不显示、不出「译」）
+//   EchoI18n.label(道具)                 → 数据里的名字：界面语言 → 英文 → 中文（道具、属性、招式名这种 { zh, en } 的）
 // 取不到：当前语言 → 中文 → 键本身（界面上看到键名就知道哪句漏了；EchoI18n.missing() 给测试用，列出哪门语言缺哪些键）。
 // 界面语言存在 S.settings.ui：game.js 启动时 EchoI18n.use(() => S.settings.ui)。这个文件加载时不碰 DOM、不读存档。
 (function (root) {
@@ -76,6 +78,21 @@
     const k = Object.keys(o)[0];
     return k ? o[k] : undefined;
   }
+  // 内容的「意思」：剧情 / 村民的台词、委托、目击线索……英文是要学的内容，旁边的 zh 是它的中文意思（以后加 fr、es……就是那门语言的意思）。
+  // gloss(o) = 这句内容在现在的界面语言里的意思；界面语言就是要学的语言（英语界面学英语）、或者内容没有这门语言的意思 → null（不显示，也不出「译」按钮）。
+  // 和 pick 的区别：英语界面时 pick 会拿到 o.en（内容本身），gloss 给 null；没有这门语言的意思时也不退回中文
+  function gloss(o, target) {
+    const l = lang();
+    if (!o || typeof o !== 'object' || l === (target || 'en')) return null;
+    const v = o[l];
+    return v == null || v === '' ? null : v;
+  }
+  // 数据里的名字（道具、属性、招式……有 zh / en 两个字段）：现在的界面语言 → 英文 → 中文（别的语言的人看英文名比看中文名强）
+  function label(o) {
+    if (!o || typeof o !== 'object') return o == null ? '' : String(o);
+    const l = lang();
+    return o[l] != null ? o[l] : o.en != null ? o.en : o[BASE] != null ? o[BASE] : '';
+  }
   // 换界面语言（game.js 把它存进 S.settings.ui）；顺手改 <html lang>，读屏和浏览器的翻译提示才对
   function set(l) {
     cur = known(l) ? l : BASE;
@@ -96,7 +113,7 @@
     return out;
   }
   const api = {
-    BASE, LANGS, add, t, h, raw, pick, lang, set, use, missing, esc,
+    BASE, LANGS, add, t, h, raw, pick, gloss, label, lang, set, use, missing, esc,
     has: (key, l) => !!(T[l || lang()] && Object.prototype.hasOwnProperty.call(T[l || lang()], key)),
     keys: l => Object.keys(T[l || BASE] || {}),
     name: l => (LANGS.find(x => x.id === l) || {}).name || l,     // 这门语言自己的写法
