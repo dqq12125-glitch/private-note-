@@ -424,7 +424,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         win.windowLevel = UIWindow.Level(rawValue: UIWindow.Level.alert.rawValue + 1)
         win.isUserInteractionEnabled = false
         win.backgroundColor = .clear
-        let root = UIViewController()
+        let root = StatusRootController()
+        root.host = self
         root.view.backgroundColor = .clear
         win.rootViewController = root
         let l = UILabel(frame: root.view.bounds)
@@ -472,3 +473,14 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     }
     #endif
 }
+
+#if DEBUG
+// 测试用的状态行所在的小窗口的根画面：它叠在最上面，系统会问它要不要状态栏、能转哪些方向——
+// 普通的 UIViewController 会把状态栏露出来（云上第一次跑的截图里看到了时间和电量），这里都听游戏画面的
+@MainActor
+final class StatusRootController: UIViewController {
+    weak var host: UIViewController?
+    override var prefersStatusBarHidden: Bool { return true }
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask { return host?.supportedInterfaceOrientations ?? .allButUpsideDown }
+}
+#endif
