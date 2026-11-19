@@ -124,7 +124,7 @@
       'g.mic.granted': '🎤 麦克风可以用了！再点一次话筒说吧',
       'g.mic.mic.ok': '🎤 麦克风 ✅', 'g.mic.mic.bad': '🎤 麦克风 ❌ 没允许用', 'g.mic.mic.quiet': '🎤 麦克风 ⚠️ 没听到声音：是不是被手指挡住了？', 'g.mic.mic.idle': '🎤 麦克风',
       'g.mic.net.ok': '📶 网络 ✅', 'g.mic.net.bad': '📶 网络 ❌ 连不上', 'g.mic.net.idle': '📶 网络',
-      'g.mic.key.ok': '🔑 AI 密钥 ✅', 'g.mic.key.bad': '🔑 AI 密钥 ❌', 'g.mic.key.idle': '🔑 AI 密钥',
+      'g.mic.key.ok': '🔑 AI 密钥 ✅', 'g.mic.key.bad': '🔑 AI 密钥 ❌', 'g.mic.key.idle': '🔑 AI 密钥', 'g.mic.svc.ok': '🤖 AI 服务 ✅', 'g.mic.svc.bad': '🤖 AI 服务 ❌', 'g.mic.svc.idle': '🤖 AI 服务',
       'g.mic.nokey': '还没有：请家长在「设置 → 🔒 家长设置」里粘贴',
       'g.mic.chk.h': '开口前的小检查',
       'g.mic.chk.p': '<p>回声岛要听你说英语。点话筒，大声说：<b class="chk-say">Hello!</b></p>',
@@ -713,7 +713,7 @@
       'g.mic.granted': '🎤 The microphone works now! Tap the mic again and speak',
       'g.mic.mic.ok': '🎤 Microphone ✅', 'g.mic.mic.bad': '🎤 Microphone ❌ Not allowed', 'g.mic.mic.quiet': '🎤 Microphone ⚠️ No sound heard: is a finger covering it?', 'g.mic.mic.idle': '🎤 Microphone',
       'g.mic.net.ok': '📶 Network ✅', 'g.mic.net.bad': '📶 Network ❌ Cannot connect', 'g.mic.net.idle': '📶 Network',
-      'g.mic.key.ok': '🔑 AI key ✅', 'g.mic.key.bad': '🔑 AI key ❌', 'g.mic.key.idle': '🔑 AI key',
+      'g.mic.key.ok': '🔑 AI key ✅', 'g.mic.key.bad': '🔑 AI key ❌', 'g.mic.key.idle': '🔑 AI key', 'g.mic.svc.ok': '🤖 AI service ✅', 'g.mic.svc.bad': '🤖 AI service ❌', 'g.mic.svc.idle': '🤖 AI service',
       'g.mic.nokey': 'Not set up yet: a parent can paste it in "Settings → 🔒 Parent Settings"',
       'g.mic.chk.h': 'Quick check before you speak',
       'g.mic.chk.p': '<p>Echo Island needs to hear you speak English. Tap the mic and say aloud: <b class="chk-say">Hello!</b></p>',
@@ -2150,10 +2150,11 @@
     mic: lazyMap('g.mic.mic.', ['ok', 'bad', 'quiet', '']),
     net: lazyMap('g.mic.net.', ['ok', 'bad', '']),
     key: lazyMap('g.mic.key.', ['ok', 'bad', '']),
+    svc: lazyMap('g.mic.svc.', ['ok', 'bad', '']),   // 云端模式没有「密钥」这回事：第三行叫「AI 服务」
   };
   function chkRows() {
     const c = RT.chk || {};
-    return ['mic', 'net', 'key'].map(k => '<li class="chk-' + (c[k] || 'wait') + '" id="chk-r-' + k + '">' + esc(CHK_TXT[k][c[k] || ''] + (k === 'key' && c.key === 'bad' && c.keyWhy ? ' ' + c.keyWhy : '')) + '</li>').join('');
+    return ['mic', 'net', 'key'].map(k => '<li class="chk-' + (c[k] || 'wait') + '" id="chk-r-' + k + '">' + esc(CHK_TXT[k === 'key' && cloudOn() ? 'svc' : k][c[k] || ''] + (k === 'key' && c.key === 'bad' && c.keyWhy ? ' ' + c.keyWhy : '')) + '</li>').join('');
   }
   function checkSheet() {
     const nokey = aiNoKey();
@@ -2216,6 +2217,7 @@
     if (res.fail === 'net') { c.mic = 'ok'; c.net = 'bad'; }
     else if (res.fail === 'key') { c.mic = 'ok'; c.net = 'ok'; c.key = 'bad'; c.keyWhy = KEY_SHORT[res.why] || ''; }
     else if (res.fail === 'unheard') c.mic = 'quiet';
+    heard.textContent = '';   // 没认出来：把「识别中……」收掉（以前失败了它还挂在话筒下面）
     upd();
     hint.textContent = res.fail === 'unheard' ? tr('g.mic.covered') : failHint(res);
   }

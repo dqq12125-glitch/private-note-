@@ -237,8 +237,8 @@
   const native = (m, args, ms) => (W.EchoTalk && EchoTalk.nativeCall ? EchoTalk.nativeCall(m, args, ms) : Promise.resolve({ type: 'fail', data: '{"error":"nonative"}' }));
 
   // ---------- 调服务器 ----------
-  // → { ok, status, json, text, why }；why：signin（401）/ quota（402）/ consent（403）/ busy（429、503 provider）/ network / offline
-  const whyOf = (st, j) => { const e = j && j.error; return e === 'auth' ? 'signin' : e === 'quota' ? 'quota' : e === 'consent' ? 'consent' : e === 'rate' || e === 'provider' ? 'busy' : 'network'; };
+  // → { ok, status, json, text, why }；why：signin（401）/ quota（402）/ consent（403）/ busy（429、503 provider / unavailable、500）/ network（连不上）/ offline
+  const whyOf = (st, j) => { const e = j && j.error; return e === 'auth' ? 'signin' : e === 'quota' ? 'quota' : e === 'consent' ? 'consent' : e === 'rate' || e === 'provider' || e === 'unavailable' || e === 'server' ? 'busy' : 'network'; };   // 服务器答了 503 / 500：是它那边的事，不算没网
   async function call(method, path, body, o) {
     o = o || {};
     if (!CLOUD.on) return { ok: false, status: 0, json: null, text: 'no cloud', why: 'network' };

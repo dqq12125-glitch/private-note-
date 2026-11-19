@@ -252,7 +252,7 @@
     // 云端模式：服务器的错误码（API.md §2）。auth → signin 要（重新）登录、consent 要家长同意、quota 今天的免费额度用完了
     if (cloudOn()) {
       const m = /"error"\s*:\s*"(auth|quota|consent|rate|provider|unavailable)"/.exec(t);
-      if (m) return { auth: 'signin', quota: 'quota', consent: 'consent', rate: 'busy', provider: 'busy', unavailable: 'network' }[m[1]];
+      if (m) return { auth: 'signin', quota: 'quota', consent: 'consent', rate: 'busy', provider: 'busy', unavailable: 'busy' }[m[1]];   // unavailable = 服务器答了、只是它那边没准备好（比如没配好密钥）：不是孩子没网，别说「没网」
     }
     if (/"error"\s*:\s*"code"|家庭口令/.test(t)) return 'code';
     if (/Arrearage|AllocationQuota|quota|Insufficient|FreeTierOnly|exceeded your|overdue|欠费|额度/i.test(t)) return 'quota';
@@ -942,7 +942,7 @@
     return out ? '<p class="tk-out">' + hx('ac.t.out') + '</p><div class="tk-btns"><button class="btn sun small" data-act="ac_member">' + hx('ac.btn.member') + '</button></div>' : '';
   }
   // 云端模式的错误码（API.md §8）→ 这边的原因：quota 和中转服务的 daily 一样算「今天的聊天时间用完了」（学习锁照 chatDaily 办）
-  const CLOUD_WHY = { quota: 'daily', auth: 'signin', consent: 'consent', rate: 'busy', provider: 'busy', conflict: 'busy', unavailable: 'network', timeout: 'network', server: 'network', bad_request: 'network', too_large: 'network' };
+  const CLOUD_WHY = { quota: 'daily', auth: 'signin', consent: 'consent', rate: 'busy', provider: 'busy', conflict: 'busy', unavailable: 'busy', timeout: 'network', server: 'busy', bad_request: 'network', too_large: 'network' };
   function noteErr(c, m) {
     const cw = cloudOn() && !m.why ? CLOUD_WHY[m.code] || '' : '';
     if (cw && cw !== 'daily') LASTERR = { why: cw, where: 'chat', at: Date.now() };
