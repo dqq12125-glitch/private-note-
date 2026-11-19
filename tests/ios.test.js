@@ -400,6 +400,8 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   const proj = read('ios/project.yml');
   check(/SWIFT_VERSION: "5\.0"/.test(proj) && /SWIFT_STRICT_CONCURRENCY: minimal/.test(proj), 'Swift 的语言版本钉在 5（Xcode 换默认值也不会突然编不过）');
   check(/iOS: "18\.4"/.test(proj), '最低 iOS 18.4（第一个能放 Ogg 里的 Opus 配音的版本）');
+  // 只做 iPhone 要写在 App 的 target 里（XcodeGen 给 target 的默认值是 "1,2"，会盖掉工程级的设置；带着 iPad 传 TestFlight 被退回过：90474）
+  check(/\n  EchoIsland:\s*\n\s*type: application[\s\S]*?\n        TARGETED_DEVICE_FAMILY: "1"[\s\S]*?\n    postBuildScripts:/.test(proj), 'project.yml：App 的 target 自己写着只做 iPhone（TARGETED_DEVICE_FAMILY "1"）');
   check(/Release:\s*\n\s*EXCLUDED_SOURCE_FILE_NAMES: www-test/.test(proj) && /rm -rf "\$\{TARGET_BUILD_DIR\}\/\$\{UNLOCALIZED_RESOURCES_FOLDER_PATH\}\/www-test"/.test(proj), '正式包不带原生桥自测页（两道）');
   check(/EchoIslandUITests:[\s\S]*type: bundle\.ui-testing/.test(proj) && /EchoIslandTests:[\s\S]*type: bundle\.unit-test/.test(proj), '有单元测试和 UI 测试两个 target');
   const wkSig = [/decidePolicyFor navigationAction: WKNavigationAction,\s*decisionHandler: @escaping @MainActor @Sendable \(WKNavigationActionPolicy\) -> Void\)/,

@@ -239,6 +239,10 @@ jobs:
             printf '%s: %s\n' "$k" "$(/usr/libexec/PlistBuddy -c "Print :$k" "$plist")"
           done | tee "$OUT/signed-app.txt"
           [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist")" = "$ECHO_VERSION_CODE" ] || { echo "::error::the build number in the app is not $ECHO_VERSION_CODE"; exit 1; }
+          # 只做 iPhone：UIDeviceFamily 里只能有 1。带着 2（iPad）传上去会被退回（90474：iPad 多任务要四个方向都支持），在这里就拦下
+          fam=$(/usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily' "$plist" | tr -d ' \n')
+          echo "UIDeviceFamily: $fam" | tee -a "$OUT/signed-app.txt"
+          [ "$fam" = "Array{1}" ] || { echo "::error::the app is built for more than iPhone (UIDeviceFamily $fam); set TARGETED_DEVICE_FAMILY to 1 on the app target"; exit 1; }
           test -f "$app/www/index.html"
           test -f "$app/PrivacyInfo.xcprivacy"
           if [ -e "$app/www-test" ]; then echo "::error::the signed app contains the bridge self-test page"; exit 1; fi

@@ -60,6 +60,9 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: $(ECHO_BUNDLE_ID)$(ECHO_BUNDLE_SUFFIX)
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
+        # 只做 iPhone（1）。必须写在 target 这一层：XcodeGen 给 iOS 的 target 默认是 "1,2"（带 iPad），会盖掉上面工程级的那一行——
+        # 第一次传 TestFlight 就因为这个被退回（90474：支持 iPad 多任务要四个方向都支持）。iPad 版以后单独做（排版没在 iPad 上看过）
+        TARGETED_DEVICE_FAMILY: "1"
         # CODE_SIGN_ENTITLEMENTS（「通过 Apple 登录」的权限 App/EchoIsland.entitlements）故意不写在这里：
         # 只有签名的包才带，由 scripts/make-config.mjs 写进 Generated/Echo.xcconfig（ECHO_APPLE_SIGNIN）。这里写了会盖掉它
       configs:
