@@ -65,18 +65,29 @@ $ok.Add_Click({
     $path = $file.Text.Trim()
     if (-not (Test-Path $path)) { $state.Text = "找不到钥匙文件"; return }
     $line = Get-Content $path | Where-Object { $_ -match '^\s*DASHSCOPE_API_KEY\s*=' } | Select-Object -First 1
-    if ($line) { $ds = ($line -replace '^\s*DASHSCOPE_API_KEY\s*=\s*', '').Trim().Trim('"').Trim("'") }
+    if ($line) {
+      # 和打安卓包时读这个文件的办法一样：等号后面的内容，去掉两头的空白和引号；后面要是还跟着注释（空格 + #…）只取第一段
+      $ds = ($line -replace '^\s*DASHSCOPE_API_KEY\s*=\s*', '').Trim().Trim('"').Trim("'").Trim()
+      if ($ds -match '\s') { $ds = ($ds -split '\s+')[0].Trim('"').Trim("'") }
+    }
     if (-not $ds) { $state.Text = "钥匙文件里没有 DASHSCOPE_API_KEY= 那一行"; return }
+    $fromFile = $true
   }
   $rs = $resend.Text.Trim()
   if (-not $ds -and -not $rs) { $state.Text = "两栏都是空的"; return }
-  if ($ds -and $ds -notmatch '^sk-[A-Za-z0-9_-]{16,}$') { $state.Text = "阿里云钥匙应该是 sk- 开头的一长串"; return }
+  # 只做最宽的检查（文件里的钥匙平时打安卓包一直在用，格式由阿里云定，不在这里卡死）：够长、中间没有空白。
+  # 不对的时候只说「长什么样」（多长、是不是 sk- 开头、有没有奇怪的字符），不显示钥匙本身
+  if ($ds -and ($ds.Length -lt 20 -or $ds -match '\s')) {
+    $odd = ([regex]::Matches($ds, '[^A-Za-z0-9_.\-]')).Count
+    $state.Text = "阿里云钥匙看着不对：长度 $($ds.Length)，" + $(if ($ds.StartsWith('sk-')) { "是 sk- 开头" } else { "不是 sk- 开头" }) + "，有 $odd 个不是字母数字的字符。请把这句话告诉 Claude。"
+    return
+  }
   if ($rs -and $rs -notmatch '^re_[A-Za-z0-9_-]{8,}$') { $state.Text = "Resend 钥匙应该是 re_ 开头的"; return }
   $ok.Enabled = $false
   $state.Text = "正在放（每把十几秒）…"
   $form.Refresh()
   $done = @(); $bad = @()
-  if ($ds) { if (Put-Secret "DASHSCOPE_API_KEY" $ds) { $done += "阿里云钥匙" } else { $bad += "阿里云钥匙" } }
+  if ($ds) { if (Put-Secret "DASHSCOPE_API_KEY" $ds) { $done += "阿里云钥匙（$($ds.Length) 位" + $(if ($ds.StartsWith('sk-')) { "，sk- 开头" } else { "" }) + "）" } else { $bad += "阿里云钥匙" } }
   if ($rs) { if (Put-Secret "RESEND_API_KEY" $rs) { $done += "Resend 钥匙" } else { $bad += "Resend 钥匙" } }
   $dsPaste.Text = ""; $resend.Text = ""
   $msg = ""

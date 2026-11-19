@@ -4,10 +4,12 @@
 //   --leak 1：再来回切 6 次地图（小镇 ⇄ 1 号路 ⇄ 屋里），每次记显存里的几何体 / 贴图 / 着色器个数，看涨不涨
 //   --isle 0,1,… / all：不量第一座小镇，改成量这几座岛最重的那张图（tools/look/isles.js 的 perf：在哪里、怎么走），
 //     另外把整张图每隔 4 格站一下、朝北看，记画面里最多的三角形 / draw call（「画面里最多多少」）
+//   --maps j8,t4,t10 [--yaw 0,90,180,270] [--step 8]：转镜头的预算——这几张图上镜头转到每个角度各走一走量帧时间，
+//     再每隔 step 格站一下记那个角度画面里最多的三角形 / draw call（「最多」那几行的 draw call 是各处里最多的，不一定和三角形最多的是同一处）
 // 结果打印成表，同时存 tools/perf/out/look-<时间>.json
 const fs = require('fs'), path = require('path');
 const L = require('./lib');
-const argv = process.argv.slice(2), opt = { gfx: 'high', throttle: 4, sec: 8, leak: 0, isle: '' }, pos = [];
+const argv = process.argv.slice(2), opt = { gfx: 'high', throttle: 4, sec: 8, leak: 0, isle: '', maps: '', yaw: '0,90,180,270', step: 8 }, pos = [];
 for (let i = 0; i < argv.length; i++) { if (argv[i].startsWith('--')) opt[argv[i].slice(2)] = argv[++i]; else pos.push(argv[i]); }
 const WHICH = pos[0] || 'both', r1 = n => Math.round(n * 10) / 10;
 
@@ -34,6 +36,43 @@ const WHICH = pos[0] || 'both', r1 = n => Math.round(n * 10) / 10;
       console.log(JSON.stringify(row));
     };
     const walk = async seq => { for (const [dir, ms] of seq) await t.hold(dir, ms); };
+    if (opt.maps) {
+      // 转镜头：这几张图各站在量性能的那个地方，镜头转到每个角度都走一走（CPU 降速；路线照地图上的东南西北走，按的键跟着镜头换），
+      // 再每隔 --step 格站一下，记这个角度画面里最多的三角形 / draw call
+      const ISL = require('./isles'), ROT = ['up', 'left', 'down', 'right'], yaws = String(opt.yaw).split(',').map(Number), step = Math.max(2, +opt.step || 8);
+      for (const map of String(opt.maps).split(',')) {
+        const isle = ISL.find(q => q.perf && q.perf[0] === map), seq = isle ? isle.perf[3] : [['up', 1500], ['down', 1500]];
+        await t.go(map, 'start'); await t.W(2500);
+        const home = isle ? [isle.perf[1], isle.perf[2]] : await t.p.evaluate(() => { const d = EchoWorld._debug(); return [d.PL.x, d.PL.y]; });
+        const spots = await t.p.evaluate(step => { const m = EchoWorld._debug().M, out = []; for (let y = 2; y < m.H - 1; y += step) for (let x = 2; x < m.W - 1; x += step) { const c = m.grid[y][x]; if (EchoMaps.WALK.includes(c)) out.push([x, y]); } return out; }, step);
+        for (const yaw of yaws) {
+          if (look !== 'new' && yaw) continue;
+          if (look === 'new') await t.p.evaluate(a => EchoWorld._debug().R.orbit('set', a * Math.PI / 180), yaw);
+          await t.tp(home[0], home[1], 'up'); await t.W(1800);
+          const q = look === 'new' ? await t.p.evaluate(() => EchoWorld._debug().R.quarter()) : 0;
+          await cdp.send('Emulation.setCPUThrottlingRate', { rate: +opt.throttle });
+          await t.W(1000);
+          await sample(map + ' ' + yaw + '° 走路', () => walk(seq.map(([dir, ms]) => [ROT[(ROT.indexOf(dir) - q + 4) % 4], ms])));
+          await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+          let mx = { tris: 0, calls: 0, at: '' };
+          for (const [sx, sy] of spots) { await t.tp(sx, sy, 'up'); await t.W(800); let i = null; for (let k = 0; k < 3; k++) { const v = await t.info(); if (!i || v.tris < i.tris) i = v; await t.W(110); } if (i.tris > mx.tris) mx = { tris: i.tris, calls: Math.max(mx.calls, i.calls), at: sx + ',' + sy }; else mx.calls = Math.max(mx.calls, i.calls); }
+          const row = { gfx, look, where: map + ' ' + yaw + '° 最多', fps: 0, drawMs: 0, drawMax: 0, over12: 0, gapOver33: 0, gapOver50: 0, gapP99: 0, gapMax: 0, calls: mx.calls, tris: mx.tris, tex: 0, geo: 0, prog: 0, at: mx.at };
+          rows.push(row); console.log(JSON.stringify(row));
+        }
+        if (look === 'new') {
+          // 手指不停地拖着转 4 秒（每帧 6 个像素，一秒大半圈）：转的时候影子图隔一会儿要重画一次，看平均和最长的一帧
+          await t.p.evaluate(() => EchoWorld._debug().R.orbit('set', 0));
+          await t.tp(home[0], home[1], 'up'); await t.W(1500);
+          await cdp.send('Emulation.setCPUThrottlingRate', { rate: +opt.throttle }); await t.W(800);
+          await sample(map + ' 转圈', () => t.p.evaluate(ms => new Promise(res => { const R = EchoWorld._debug().R, t0 = performance.now(); const f = () => { R.orbit('drag', 6, 0); if (performance.now() - t0 < ms) requestAnimationFrame(f); else res(); }; requestAnimationFrame(f); }), 4000));
+          await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+          await t.p.evaluate(() => EchoWorld._debug().R.orbit('set', 0));
+        }
+      }
+      if (t.errs.length) console.log('  报错：', t.errs.slice(0, 3).join(' | '));
+      await t.ctx.close();
+      continue;
+    }
     if (opt.isle) {
       // 逐岛：最重的那张图上走一走（CPU 降速），再把整张图扫一遍，记画面里最多的三角形和 draw call
       const ISL = require('./isles'), list = String(opt.isle) === 'all' ? ISL : String(opt.isle).split(',').map(n => ISL.find(q => q.n === +n)).filter(Boolean);
@@ -81,7 +120,7 @@ const WHICH = pos[0] || 'both', r1 = n => Math.round(n * 10) / 10;
     await t.ctx.close();
   }
   console.log('\n画质  画风  哪里         帧/秒  一帧CPU(ms) 最长  >12ms  帧间隔>33ms  >50ms  p99   draw call  三角形   贴图 几何体 着色器');
-  rows.forEach(r => console.log([r.gfx.padEnd(5), r.look.padEnd(4), r.where.padEnd(8), String(r.fps).padStart(6), String(r.drawMs).padStart(9), String(r.drawMax).padStart(7), String(r.over12).padStart(5), String(r.gapOver33).padStart(9), String(r.gapOver50).padStart(8), String(r.gapP99).padStart(6), String(r.calls).padStart(8), String(r.tris).padStart(9), String(r.tex).padStart(5), String(r.geo).padStart(5), String(r.prog).padStart(5)].join(' ')));
+  rows.forEach(r => console.log([r.gfx.padEnd(5), r.look.padEnd(4), r.where.padEnd(14), String(r.fps).padStart(6), String(r.drawMs).padStart(9), String(r.drawMax).padStart(7), String(r.over12).padStart(5), String(r.gapOver33).padStart(9), String(r.gapOver50).padStart(8), String(r.gapP99).padStart(6), String(r.calls).padStart(8), String(r.tris).padStart(9), String(r.tex).padStart(5), String(r.geo).padStart(5), String(r.prog).padStart(5)].join(' ')));
   const dir = path.join(L.ROOT, 'tools', 'perf', 'out'); fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'look-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json'), JSON.stringify({ opt, rows, leak }, null, 1));
   await browser.close(); s.close();

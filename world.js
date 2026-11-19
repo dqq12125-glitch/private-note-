@@ -30,6 +30,7 @@
       'w.room.1': '第一位擂主', 'w.room.2': '第二位擂主', 'w.room.3': '第三位擂主', 'w.room.4': '第四位擂主', 'w.room.5': '冠军的房间',
       'w.hud.wild': '野外 Lv {a}–{b}', 'w.hud.home': '回首页', 'w.hud.goal': '现在要做什么', 'w.hud.bike': '骑车', 'w.hud.menu': '菜单',
       'w.pad.up': '上', 'w.pad.left': '左', 'w.pad.right': '右', 'w.pad.down': '下', 'w.hud.chat': '英语聊天', 'w.hud.a': '对话',
+      'w.hud.north': '指北针：红尖指着北边，点一下转回正北', 'w.help.cam': '🧭 新画风的户外：在右半边屏幕上拖动可以转视角（转一整圈都行），双击回到自己身后；转了以后右上角有指北针，点一下转回正北。电脑上按住右键拖，或者按 Q / E。',
       'w.goal.toast': '📍 现在要做：{t}',
       'w.q.tip': '📋 新玩法「委托」：头上有金色 ? 的人有事请你帮忙——走过去按 A，用英语帮 TA，有稀有奖励！',
       'w.kick.day': '🌅 新的一天！先完成今天的小任务', 'w.kick.gate': '📚 先完成今天的小任务，再来冒险吧',
@@ -99,6 +100,7 @@
       'w.room.1': 'First Master', 'w.room.2': 'Second Master', 'w.room.3': 'Third Master', 'w.room.4': 'Fourth Master', 'w.room.5': 'Champion\'s Room',
       'w.hud.wild': 'Wild Lv {a}–{b}', 'w.hud.home': 'Home', 'w.hud.goal': 'What to do now', 'w.hud.bike': 'Ride the bike', 'w.hud.menu': 'Menu',
       'w.pad.up': 'Up', 'w.pad.left': 'Left', 'w.pad.right': 'Right', 'w.pad.down': 'Down', 'w.hud.chat': 'Chat', 'w.hud.a': 'Talk',
+      'w.hud.north': 'Compass: the red tip points north. Tap to face north again', 'w.help.cam': '🧭 Outdoors in the new look: drag on the right half of the screen to turn the view (all the way round), and double-tap to get back behind yourself. Once you have turned, a compass shows at the top right: tap it to face north again. On a computer, drag with the right mouse button or press Q / E.',
       'w.goal.toast': '📍 What to do now: {t}',
       'w.q.tip': '📋 New: requests! People with a gold ? over their heads need your help. Walk up, press A and help them in English. You can get rare rewards!',
       'w.kick.day': '🌅 It\'s a new day! Finish today\'s tasks first', 'w.kick.gate': '📚 Finish today\'s tasks first, then come back for adventure',
@@ -180,6 +182,13 @@
   const FL = { x: 0, y: 0, fx: 0, fy: 0 };
   let held = null, dlg = null, busy = false, wipeT = 0;
   const $ = id => document.getElementById(id);
+  // 新画风的户外地图可以转镜头（world3d-open.js 的 orbit）：摇杆 / 方向键 / 键盘按的「上」是朝镜头看过去的方向走。
+  // 渲染器说镜头转了几个 90°（quarter()，别的渲染器没有这个函数 = 0），按的方向就在 CAMROT 里往后挪几格；held 里存的一直是按的那个方向。
+  // qLatch：换地图的那一下要是键盘还按着（按键自己会重复），到松手之前都照换地图之前的算——不然进门以后镜头回了正北，同一个键变成往回走，又走出门去
+  const CAMROT = ['up', 'left', 'down', 'right'];
+  let qLatch = null;
+  const camQ = () => (qLatch != null ? qLatch : R && R.quarter ? R.quarter() : 0);
+  const camDir = d => { const q = camQ(), i = CAMROT.indexOf(d); return q && i >= 0 ? CAMROT[(i + q) % 4] : d; };
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const WS = () => E.S.world;
   // 调试入口：网址带 ?debug 时，徽章、守卫、回声技能、挑战馆的课本门槛都当作已经有了（家长 / 开发者测试用）。
@@ -398,6 +407,7 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { kickCheck(true); kickTry(); } });
   async function goMap(id, how) {
     busy = true;
+    qLatch = camQ();
     held = null;
     const v = $('w-view'); v.classList.add('fade');
     E.SFX.tap();
@@ -441,7 +451,7 @@
     const set = (sel, k, small) => { const el = document.querySelector(sel); if (!el) return; if (small) { const s = el.querySelector('small'); if (s) s.textContent = tx(k); } else el.setAttribute('aria-label', tx(k)); };
     set('.w-hud .x', 'w.hud.home'); set('#w-goal', 'w.hud.goal'); set('#w-bike', 'w.hud.bike'); set('.w-hud .w-menu', 'w.hud.menu');
     ['up', 'left', 'right', 'down'].forEach(d => set('#w-dpad .dp-' + d, 'w.pad.' + d));
-    set('#w-chat', 'w.hud.chat', 1); set('#w-ctrl .bb', 'w.hud.menu', 1); set('#w-ctrl .ba', 'w.hud.a', 1);
+    set('#w-chat', 'w.hud.chat', 1); set('#w-ctrl .bb', 'w.hud.menu', 1); set('#w-ctrl .ba', 'w.hud.a', 1); set('#w-compass', 'w.hud.north');
   }
   // ---------- 现在该去哪、做什么（目标在 story.js 的 objective()，按剧情进度和徽章数算）----------
   function objective() {
@@ -1559,7 +1569,7 @@
   function frame(now) {
     if (!running) return;
     if (PL.moving && now - PL.t0 >= PL.dur) { PL.moving = false; PL.jump = false; PL.fx = PL.x; PL.fy = PL.y; FL.fx = FL.x; FL.fy = FL.y; onStep(); }
-    if (!PL.moving && held && !dlg && !busy) tryMove(held);
+    if (!PL.moving && held && !dlg && !busy) tryMove(camDir(held));
     // 镇上的人会时不时转头看看四周
     M.npcs.forEach(n => {
       if (n.temp || n.role === 'trainer' || n.role === 'guard' || n.role === 'nurse' || n.role === 'clerk' || n.role === 'leader') return;
@@ -1576,11 +1586,15 @@
     // 主角站着不动（没在走、没按方向、没在演剧情）时每秒 30 次（评估第 15 条）。自动画质正在量帧率的那几秒照常 60 次。
     // 走路、动画都按时间算，上面的走路判定每一帧照样跑，只是不重画
     const tuning = perf.on && (E.S.settings.gfx || 'auto') === 'auto' && R.kind !== '2d';
-    const gap = 1000 / (!PL.moving && !held && !busy && !tuning ? 30 : 60);
+    // 镜头正在转（手指在拖、按键 / 回正还没转到位）：站着不动也按每秒 60 次画，转起来才跟手；停下 0.3 秒以后回到 30 次
+    const co = R.orbit ? R.orbit() : null;
+    if (co && (co.yaw !== camUi.y0 || co.tilt !== camUi.t0 || co.to !== co.yaw)) { camUi.y0 = co.yaw; camUi.t0 = co.tilt; camUi.until = now + 300; nextDraw = Math.min(nextDraw, lastNow + 1000 / 60); }
+    const gap = 1000 / (!PL.moving && !held && !busy && !tuning && now >= camUi.until ? 30 : 60);
     if (now < nextDraw - 2) { raf = requestAnimationFrame(frame); return; }
     nextDraw = Math.max(nextDraw + gap, now + gap - 6);
     const dt = lastNow ? now - lastNow : 16; lastNow = now;
     R.draw(now, view(now));
+    camHud();
     autoTune(now, dt);
     raf = requestAnimationFrame(frame);
   }
@@ -1591,6 +1605,25 @@
     const w = $('world'); if (!w) return;
     const m = E.S.settings.ctl === 'pad' ? 'pad' : 'joy';
     w.classList.toggle('ctl-joy', m === 'joy'); w.classList.toggle('ctl-pad', m === 'pad');
+  }
+  // ---------- 转镜头（只有新画风的户外地图有，见 world3d-open.js 的 orbit）----------
+  // 现在能不能转：渲染器会转、这张图是它画的，而且没有对话、剧情、弹窗开着
+  const orbOK = () => !!(R && R.orbit && R.orbit()) && !dlg && !busy && !overlay && $('modal').hidden;
+  // 每帧：这张图能转的时候右半边屏幕才接手指（#world.cam-on）；镜头不朝正北就亮出指北针，里面那一层跟着转，红尖一直指着北
+  const camUi = { on: null, yaw: null, y0: 0, t0: 0, until: 0 };   // y0 / t0 / until：上一次看到镜头转到哪、俯角多少，转着的时候画面要画得勤（见 frame）
+  function camHud() {
+    const o = R && R.orbit ? R.orbit() : null, on = !!o, el = $('w-compass');
+    if (on !== camUi.on) { camUi.on = on; $('world').classList.toggle('cam-on', on); }
+    if (!el) return;
+    const yaw = on && Math.abs(o.yaw) > .02 ? o.yaw : null;
+    if (yaw === camUi.yaw) return;
+    camUi.yaw = yaw;
+    el.hidden = yaw === null;
+    if (yaw === null) return;
+    // 里面那一层（指针和 N）转过去；N 自己再转回来，一直是正着的（不然转到 90° 的 N 看着像 Z）
+    const deg = (yaw * 180 / Math.PI).toFixed(1), ring = el.firstChild;
+    ring.style.transform = 'rotate(' + deg + 'deg)';
+    ring.firstChild.style.transform = 'rotate(' + -deg + 'deg)';
   }
   function chatBtn(n) {
     if (n === chatNpc) return;
@@ -2182,7 +2215,9 @@
       // 操作：浮在画面上——左边摇杆（手指按哪里就从哪里推），右边 A / B / 英语聊天（像手机上的动作游戏）；设置里可以换回方向键
       '<div class="w-ctrl" id="w-ctrl"><div class="joy-zone" id="w-joy"><div class="joy-base"><i class="joy-knob"></i></div></div><div class="dpad" id="w-dpad">' +
       ['up', 'left', 'right', 'down'].map(d => '<button class="dp dp-' + d + '" data-dir="' + d + '" aria-label="' + hx('w.pad.' + d) + '">' + { up: '▲', left: '◀', right: '▶', down: '▼' }[d] + '</button>').join('') +
-      '</div><div class="ab"><button class="w-chat" id="w-chat" data-act="wChat" hidden>🗣️<small>' + hx('w.hud.chat') + '</small></button><button class="bb" data-act="wB">B<small>' + hx('w.hud.menu') + '</small></button><button class="ba" data-act="wA">A<small>' + hx('w.hud.a') + '</small></button></div></div>';
+      // 新画风的户外地图：右半边屏幕（不是按钮的地方）拖动转镜头；转了以后右上角亮出指北针（红尖指北，点一下回正北）。别的时候这两样都不显示
+      '</div><div class="cam-zone" id="w-orb"></div><div class="ab"><button class="w-chat" id="w-chat" data-act="wChat" hidden>🗣️<small>' + hx('w.hud.chat') + '</small></button><button class="bb" data-act="wB">B<small>' + hx('w.hud.menu') + '</small></button><button class="ba" data-act="wA">A<small>' + hx('w.hud.a') + '</small></button></div>' +
+      '<button class="w-compass" id="w-compass" data-act="wNorth" aria-label="' + hx('w.hud.north') + '" hidden><i><b>N</b></i></button></div>';
     hudLang = I18N ? I18N.lang() : 'zh';
     ctlMode();
     // 摇杆：按下的地方就是摇杆中心，往哪边推得多就往哪边走（格子地图只有上下左右），松手就停
@@ -2209,7 +2244,8 @@
       if (dir === J.dir) return;
       J.dir = dir;
       if (overlay) { if (dir) overlay(dir); return; }
-      held = dir; if (dir) tryMove(dir);
+      qLatch = null;
+      held = dir; if (dir) tryMove(camDir(dir));
     });
     const jEnd = e => {
       if (e.pointerId !== J.id) return;
@@ -2220,6 +2256,38 @@
     jz.addEventListener('pointercancel', jEnd);
     jz.addEventListener('lostpointercapture', jEnd);   // 走着走着弹出对话框（操作藏起来了），手指抬起时也要放开摇杆
     jz.addEventListener('contextmenu', e => e.preventDefault());
+    // 转镜头：右半边屏幕（按钮以外的地方）一根手指拖——拖多少转多少，松手就停，没有惯性；轻点两下回到自己身后。
+    // 电脑上按住右键在画面上哪里拖都行。对话框、剧情、弹窗开着的时候不能转（orbOK）；左手推着摇杆的时候右手照样能转
+    const oz = $('w-orb'), O = { id: null, x: 0, y: 0, moved: 0, t0: 0, tapT: 0, tapX: 0, tapY: 0 };
+    const oStart = e => {
+      O.id = e.pointerId; O.x = e.clientX; O.y = e.clientY; O.moved = 0; O.t0 = e.timeStamp;   // 用事件自己的时间：画面卡一下的时候「点了多久」「隔了多久」也算得准
+      try { oz.setPointerCapture(e.pointerId); } catch (er) { /* 忽略 */ }
+    };
+    oz.addEventListener('pointerdown', e => { if (O.id !== null || !orbOK()) return; e.preventDefault(); oStart(e); });
+    oz.addEventListener('pointermove', e => {
+      if (e.pointerId !== O.id) return;
+      const dx = e.clientX - O.x, dy = e.clientY - O.y;
+      O.x = e.clientX; O.y = e.clientY; O.moved += Math.abs(dx) + Math.abs(dy);
+      if (O.moved > 6 && orbOK()) R.orbit('drag', dx, dy);   // 头几个像素不算：轻点的时候手指总会滑一点
+    });
+    const oEnd = e => {
+      if (e.pointerId !== O.id) return;
+      O.id = null;
+      const now = e.timeStamp;
+      if (e.type !== 'pointerup' || O.moved > 10 || now - O.t0 > 320) return;
+      // 轻点了一下：0.38 秒里在差不多同一个地方又点一下 = 双击
+      if (now - O.tapT < 380 && Math.hypot(e.clientX - O.tapX, e.clientY - O.tapY) < 44) { O.tapT = 0; if (orbOK()) R.orbit('behind'); }
+      else { O.tapT = now; O.tapX = e.clientX; O.tapY = e.clientY; }
+    };
+    oz.addEventListener('pointerup', oEnd);
+    oz.addEventListener('pointercancel', oEnd);
+    oz.addEventListener('lostpointercapture', oEnd);
+    oz.addEventListener('contextmenu', e => e.preventDefault());
+    sec.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'mouse' || e.button !== 2 || O.id !== null || !orbOK() || !e.target.closest('#w-ctrl, #w-view') || e.target.closest('button')) return;
+      e.preventDefault(); e.stopPropagation(); oStart(e);
+    }, true);
+    sec.addEventListener('contextmenu', e => { if (camUi.on && e.target.closest('#w-ctrl, #w-view')) e.preventDefault(); });
     // 对话框里的输入框（起名字）：弹出软键盘后屏幕只剩一小条，把输入框滚到对话框里看得见的地方
     const dlgBox = $('w-dlg');
     dlgBox.addEventListener('focusin', e => {
@@ -2232,7 +2300,7 @@
     });
     // 左手按着摇杆时右手点 A / B / 英语聊天：这是「第二根手指」，浏览器不给它发 click，这里自己补一个；
     // 万一浏览器又发了真的 click，0.5 秒内同一个按钮的就不算，免得按一下触发两次
-    const ab = $('w-ctrl').querySelector('.ab');
+    const ab = $('w-ctrl');   // A / B / 英语聊天，还有指北针
     let synth = false, fired = null;
     ab.addEventListener('pointerup', e => {
       if (e.isPrimary) return;
@@ -2247,7 +2315,7 @@
       fired = null;
     }, true);
     const dp = $('w-dpad');
-    const down = e => { const b = e.target.closest('[data-dir]'); if (!b) return; e.preventDefault(); if (overlay) { overlay(b.dataset.dir); return; } held = b.dataset.dir; b.classList.add('on'); tryMove(held); };
+    const down = e => { const b = e.target.closest('[data-dir]'); if (!b) return; e.preventDefault(); if (overlay) { overlay(b.dataset.dir); return; } qLatch = null; held = b.dataset.dir; b.classList.add('on'); tryMove(camDir(held)); };
     const up = () => { held = null; dp.querySelectorAll('.on').forEach(b => b.classList.remove('on')); };
     dp.addEventListener('pointerdown', down);
     dp.addEventListener('pointerup', up);
@@ -2263,7 +2331,8 @@
         overlay(KEYS[e.key] || (e.key === 'Escape' || e.key === 'x' ? 'B' : 'A'));
         return;
       }
-      if (KEYS[e.key]) { e.preventDefault(); held = KEYS[e.key]; tryMove(held); }
+      if (KEYS[e.key]) { e.preventDefault(); if (!e.repeat) qLatch = null; held = KEYS[e.key]; tryMove(camDir(held)); }
+      else if (/^[qe]$/i.test(e.key)) { if (orbOK()) { e.preventDefault(); R.orbit('step', /q/i.test(e.key) ? 1 : -1); } }   // Q / E：镜头往左 / 往右转到下一个 45°
       else if (e.key === ' ' || e.key === 'Enter' || e.key === 'z') { e.preventDefault(); interact(); }
       else if (e.key === 'Escape' || e.key === 'x') { e.preventDefault(); bButton(); }
     });
@@ -2288,6 +2357,7 @@
   }
   function helpSheet() {
     E.openModal('<h2>' + hx('w.help.title') + '</h2><p>' + hx('w.help.p1', { how: tx(E.S.settings.ctl === 'pad' ? 'w.help.pad' : 'w.help.joy') }) + '</p>' +
+      (R && R.orbit ? '<p>' + hx('w.help.cam') + '</p>' : '') +
       '<p>' + hx('w.help.p2') + '</p>' +
       '<button class="btn wide" data-act="close">' + hx('w.ok') + '</button>');
   }
@@ -2300,6 +2370,7 @@
     wExit: () => { E.closeModal(); E.goHome('mon'); },
     wA: () => overlay ? overlay('A') : interact(),
     wChat: () => { if (!overlay && !dlg && !busy && chatNpc) { chatNpc.face = faceTo(chatNpc, PL); chatWith(chatNpc); } },
+    wNorth: () => { if (orbOK()) { R.orbit('north'); E.SFX.tap(); } },   // 指北针：镜头转回正北
     wB: () => overlay ? overlay('B') : bButton(),
     wPick: t => { const pg = page(); if (!pg || pg.kind !== 'choice') return; const extra = pg.pick(+t.dataset.i); insertPages(extra); pg.kind = null; nextPage(); },
     wMenu: () => menuSheet(),

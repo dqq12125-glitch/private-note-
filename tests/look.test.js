@@ -6,8 +6,13 @@
 //   · 人物：people3d.js 装着就是 3D 小人（主角、镇上每个人），没装、或者它说这个造型不行，就还是纸片；头上的「?」「!」「A」在头顶上面；
 //     剧情换造型、把人藏起来都跟着变；来回切地图小人不越攒越多；镇上站满人时 draw call 和三角形还在预算里
 //   · 整个世界（第 8 节）：所有户外地图都是新画风（包括地上画着斑马线的规则城）、省电档在预算里、没有报错；每座岛的树、房子、天气、远景是它自己的；
-//     瀑布真的从高处冲下来、冰面和岩浆单独画
+//     瀑布真的从高处冲下来、冰面和岩浆单独画；最重的几张图镜头转到四面都在预算里
+//   · 转镜头（第 9 节，只有新画风的户外地图有）：不转的时候和原来一样；Q / E 键、右半边屏幕拖（真的触摸事件）、上下拖调俯角；
+//     摇杆 / 方向键 / 键盘的「上」朝镜头看过去的方向走（0° / 90° / 180° / 270°，停在 45° 不来回跳）；双击回到主角身后、点指北针回正北；
+//     不和 A / B 键、摇杆抢手指；对话框开着、进了屋、老画风、2D 都不能转；四面转过去主角都不被房子和树挡住、头上的牌子朝着镜头；
+//     转着镜头换地图显存不涨、角度留着
 // 运行：node tests/look.test.js（自己起一个本机小网站，这样怪兽的模型读得到；无头浏览器用软件渲染，慢，所以大多数检查用标准档）
+//   node tests/look.test.js --only=orbit 只跑第 9 节（转镜头，约 3 分钟）
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const ROOT = path.join(__dirname, '..'), out = path.join(__dirname, 'screenshots');
@@ -33,7 +38,7 @@ const SAVE = (gfx, extra) => ({
   // 开一页进大地图。url：网址后面带的参数；before：进页面之前在浏览器里做的手脚
   async function open(query, gfx, o) {
     o = o || {};
-    const ctx = await b.newContext({ viewport: o.vp || { width: 390, height: 844 } }), p = await ctx.newPage(), errs = [];
+    const ctx = await b.newContext({ viewport: o.vp || { width: 390, height: 844 }, hasTouch: !!o.touch }), p = await ctx.newPage(), errs = [];
     p.setDefaultTimeout(20000);
     p.on('pageerror', e => { errs.push(e.message); allErrs.push(e.message); console.log('  [err]', e.message.slice(0, 200)); });
     if (o.init) await ctx.addInitScript(o.init);
@@ -58,15 +63,25 @@ const SAVE = (gfx, extra) => ({
     return t;
   }
   const near = (a, bb, eps) => Math.abs(a - bb) <= (eps || .02);
+  const ONLY = (process.argv.find(a => a.startsWith('--only=')) || '').slice(7);
+  let t, st, pr;
+  // 来回切地图用：到这张图，记显存里的东西有多少
+  const memOf = async id => { await t.go(id, id === 'r0' ? 'from:t0' : 'from:r0'); await t.frames(3); const q = await t.st(); return { mem: q.mem, prog: q.prog, using: q.using }; };
+  if (ONLY !== 'orbit') {
 
   // ---------- 1. 不带开关：一切照旧 ----------
-  let t = await open('', 'mid', { file: true });
-  let st = await t.st();
+  t = await open('', 'mid', { file: true });
+  st = await t.st();
   check(st.kind === '3d' && !st.look && !st.using && st.canv === 1, '不带开关：还是老的 3D 渲染器，只有一张画布 ' + JSON.stringify({ kind: st.kind, look: st.look, canv: st.canv }));
   check(await t.E(() => !!window.EchoWorldOpen && EchoWorldOpen.on === false && typeof EchoWorldOpen.create === 'function'), '新渲染器的文件装进来了，但是没打开');
   check(await t.E(() => !EchoWorld._debug().R.probe && !EchoWorld._debug().R.using), '老渲染器身上没有新渲染器的东西');
   await t.go('r0', 'from:t0'); st = await t.st();
   check(st.kind === '3d' && !st.look && st.calls > 3, '不带开关：1 号路也是老渲染器画的');
+  // 老画风不能转镜头：按 Q 没反应，右半边屏幕不接手指，没有指北针，「上」还是往北走
+  await t.tp(12, 30, 'down'); await t.p.keyboard.press('q'); await t.p.keyboard.press('e');
+  await t.p.keyboard.down('ArrowUp'); await t.W(60); await t.p.keyboard.up('ArrowUp'); await t.W(600);
+  { const q = await t.E(() => { const d = EchoWorld._debug(), c = document.getElementById('w-compass'), z = document.getElementById('w-orb'); return { api: !!d.R.orbit || !!d.R.quarter, cls: document.getElementById('world').classList.contains('cam-on'), compass: !!c && !c.hidden, zone: !!z && getComputedStyle(z).display !== 'none', dir: d.PL.dir, y: d.PL.y }; });
+    check(!q.api && !q.cls && !q.compass && !q.zone && q.dir === 'up' && q.y === 29, '老画风不能转镜头：没有指北针，右半边屏幕不接手指，按「上」还是往北走 ' + JSON.stringify(q)); }
   check(!t.errs.length, '不带开关：没有报错');
   await t.ctx.close();
 
@@ -192,7 +207,6 @@ const SAVE = (gfx, extra) => ({
   check(walked.y < 30 && walked.gp < .02 && walked.gf < .02, '走了 ' + (30 - walked.y) + ' 步，主角和怪兽都贴着地面');
 
   // ---------- 4. 来回切地图：显存不涨；进屋交回老渲染器 ----------
-  const memOf = async id => { await t.go(id, id === 'r0' ? 'from:t0' : 'from:r0'); await t.frames(3); const q = await t.st(); return { mem: q.mem, prog: q.prog, using: q.using }; };
   const a0 = await memOf('t0'), a1 = await memOf('r0');
   for (let k = 0; k < 2; k++) { await memOf('t0'); await memOf('r0'); }
   const b0 = await memOf('t0'), b1 = await memOf('r0');
@@ -242,6 +256,11 @@ const SAVE = (gfx, extra) => ({
   await t.tp(14, 14, 'up'); await t.frames(3); pr = await t.probe();
   check(pr.p3.on === false && pr.p3.player === false && pr.p3.people === 0 && pr.p3.paper >= 6 && (await t.st()).marks >= 1, 'people3d.js 没装进来：主角和 ' + pr.p3.paper + ' 个人都是纸片，「?」还在');
   check(pr.heads.filter(h => h.quest != null).every(h => h.top === 1.2 && h.quest > 1.45), '纸片人头上的牌子还在老地方');
+  // 纸片人一直正对镜头：镜头转到东边（90°），主角和每个人的纸片都跟着转过去；转回来又朝南
+  check(pr.facing.player === 0 && pr.facing.people.length >= 6 && pr.facing.people.every(r => r === 0), '镜头不转：纸片都朝南立着');
+  await t.E(() => EchoWorld._debug().R.orbit('set', Math.PI / 2)); await t.frames(3); pr = await t.probe();
+  check(near(pr.facing.player, Math.PI / 2, .001) && pr.facing.people.every(r => near(r, Math.PI / 2, .001)) && pr.facing.marks.length >= 1 && pr.facing.marks.every(r => near(r, Math.PI / 2, .001)), '镜头转到东边：主角、' + pr.facing.people.length + ' 个纸片人和头上的牌子都转过去正对镜头');
+  await t.E(() => EchoWorld._debug().R.orbit('set', 0)); await t.frames(2);
   check(!t.errs.length, '没有 3D 小人：没有报错');
   await t.ctx.close();
   t = await open('?look=new', 'mid', { init: () => { let v; Object.defineProperty(window, 'EchoPeople3D', { configurable: true, get: () => v, set: x => { v = x; if (x) x.has = () => false; } }); } });
@@ -264,6 +283,8 @@ const SAVE = (gfx, extra) => ({
   t = await open('?look=new', 'mid', { init: () => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (k) { return /webgl/i.test(k) ? null : g.apply(this, arguments); }; } });
   st = await t.st();
   check(st.kind === '2d' && st.canv === 1, '没有 WebGL：退回 2D 流畅模式，没有留下多余的画布（' + st.kind + '）');
+  await t.p.keyboard.press('q'); await t.W(200);
+  check(await t.E(() => { const d = EchoWorld._debug(), c = document.getElementById('w-compass'); return !d.R.orbit && !document.getElementById('world').classList.contains('cam-on') && c.hidden; }), '2D 模式不能转镜头，没有指北针');
   await t.go('r0', 'from:t0');
   check((await t.st()).kind === '2d' && !t.errs.length, '2D 模式照样能切地图，没有报错');
   await t.ctx.close();
@@ -287,6 +308,27 @@ const SAVE = (gfx, extra) => ({
     }
     check(ids.length >= 30 && !bad.length, '全部 ' + ids.length + ' 张户外地图都用新画风画出来了，没有报错' + (bad.length ? '：' + bad.join(' | ') : ''));
     check(!over.length, '省电档：每张图站在起点时画面里的三角形和 draw call 都在预算里' + (over.length ? '：' + over.join(' | ') : ''));
+    // 最重的几张图：镜头转到四面（朝北 / 朝西 / 朝南 / 朝东看）也都在预算里；地图外面四面都有东西（南边外面也种了树，另外三面的海上有岛）
+    {
+      const overY = [], worst = { tris: 0, calls: 0 }, ring = [], south = [];
+      for (const id of ['j8', 't4', 't10', 't12', 'r2', 'r11']) {
+        await t.go(id, 'start');
+        for (const a of [0, 90, 180, 270]) {
+          await t.E(a => EchoWorld._debug().R.orbit('set', a * Math.PI / 180), a); await t.W(250); await t.frames(3);
+          const q = await t.st();
+          if (q.tris > worst.tris) { worst.tris = q.tris; worst.at = id + '@' + a + '°'; } worst.calls = Math.max(worst.calls, q.calls);
+          if (q.tris > LOW.tris || q.calls > LOW.calls || q.tris < 3000) overY.push(id + '@' + a + '° ' + q.tris + '/' + q.calls);
+        }
+        // 南边外面是陆地（不是海、不是出口外面的山谷）的地方应该种了树（名字带 _ 的那几种）
+        const lk = (await t.probe()).look, land = await t.E(() => { const d = EchoWorld._debug(), pr = d.R.probe(); let n = 0; for (let u = .1; u < 1; u += .1) { const o = pr.outer(d.M.W * u, d.M.H + 16); if (o.land > .9 && o.val < .3 && o.h > pr.sea + .5) n++; } return n; });
+        if (!(lk.far.ring >= 6) || (land >= 4 && !Object.keys(lk.trees).some(k => k[0] === '_'))) ring.push(id + ' ' + JSON.stringify({ ring: lk.far.ring, land, trees: Object.keys(lk.trees) }));
+        south.push(id + ':' + land + (Object.keys(lk.trees).some(k => k[0] === '_') ? '树' : '—'));
+        await t.E(() => EchoWorld._debug().R.orbit('set', 0));
+      }
+      check(!overY.length, '省电档：最重的 6 张图镜头转到四面都在预算里（最多 ' + worst.tris + ' 个三角形 @ ' + worst.at + '、' + worst.calls + ' 次 draw call）' + (overY.length ? '：' + overY.join(' | ') : ''));
+      check(!ring.length && south.filter(q => q.endsWith('树')).length >= 3, '地图外面四面都有东西：东、南、西三面的海上各有小岛，南边外面是陆地的种了树（' + south.join(' ') + '）' + (ring.length ? '：' + ring.join(' | ') : ''));
+      check(!t.errs.length, '转着镜头逛最重的几张图没有报错');
+    }
     check(looks.t9 && looks.t9.over, '规则城（地上画着斑马线）也是新画风画的');
     // 每座岛：树是这座岛的树、房子是这座岛的房子、天气和远景各不一样
     const TH = await t.E(() => { const out = {}; for (let z = 0; z < 13; z++) { const m = EchoMaps.get('t' + z); out[z] = { theme: m.theme, tree: EchoMaps.THEMES[m.theme].tree, house: EchoMaps.THEMES[m.theme].house }; } return out; });
@@ -312,6 +354,172 @@ const SAVE = (gfx, extra) => ({
     const wf = await t.E(() => { const pr = EchoWorld._debug().R.probe(); return { top: pr.at(12.5, 22.5), mid: pr.at(12.5, 25.5), low: pr.at(12.5, 29.5) }; });
     check(wf.top > wf.mid + .4 && wf.mid > wf.low + .4, '瀑布从上往下一级比一级低 ' + JSON.stringify(wf, (k, v) => typeof v === 'number' ? +v.toFixed(2) : v));
     check(!t.errs.length, '走遍整个世界没有报错' + (t.errs.length ? '：' + t.errs.slice(0, 2).join(' | ') : ''));
+    await t.ctx.close();
+  }
+
+  }
+
+  // ---------- 9. 转镜头（新画风的户外地图才有）----------
+  {
+    t = await open('?look=new', 'mid', { touch: true });
+    const cdp = await t.ctx.newCDPSession(t.p);
+    // 真的触摸事件（CDP 发的）。事件自己带着时间（tc，秒）：软件渲染慢，两次调用之间真的隔了多久说不准，「点了多久」「两下隔了多久」world.js 是按事件的时间算的；gap = 离上一个事件多少毫秒
+    let tc = Date.now() / 1000;
+    const touch = (type, pts, gap) => { tc += (gap == null ? 16 : gap) / 1000; return cdp.send('Input.dispatchTouchEvent', { type, timestamp: tc, touchPoints: pts.map(([x, y, id]) => ({ x, y, id: id || 1 })) }); };
+    // 一根手指从 (x, y) 拖 (dx, dy)：分 n 步，到了以后停 0.3 秒再抬手（不然浏览器当成「甩」了一下，紧接着的轻点会被它吃掉）
+    const drag = async (x, y, dx, dy, n) => { await touch('touchStart', [[x, y]], 400); for (let k = 1; k <= n; k++) await touch('touchMove', [[x + dx * k / n, y + dy * k / n]], 40); await touch('touchMove', [[x + dx, y + dy]], 300); await touch('touchEnd', [], 40); };
+    const cam = () => t.E(() => { const R = EchoWorld._debug().R, o = R.orbit && R.orbit(), c = document.getElementById('w-compass'), z = document.getElementById('w-orb'); return { on: !!o, yaw: o ? o.yaw : 0, to: o ? o.to : 0, tilt: o ? o.tilt : 0, q: R.quarter ? R.quarter() : 0, cls: document.getElementById('world').classList.contains('cam-on'), zone: getComputedStyle(z).display !== 'none' && z.offsetParent !== null, compass: !c.hidden && c.offsetParent !== null, needle: c.firstChild.style.transform }; });
+    const D = r => Math.round(r * 180 / Math.PI), set = (deg, tilt) => t.E(([a, b]) => { EchoWorld._debug().R.orbit('set', a * Math.PI / 180, b); }, [deg, tilt || 0]);
+    // 等镜头转到位（按键 / 回正是慢慢转过去的），再多等一会儿让俯角、房子的淡出也跟上
+    const settle = async () => { await t.p.waitForFunction(() => { const o = EchoWorld._debug().R.orbit(); return !o || o.yaw === o.to; }, null, { timeout: 30000 }).catch(() => {}); await t.W(900); await t.frames(10); };
+    const K = 5.2 / 390;   // 竖屏 390 宽：拖一个像素转多少弧度（world3d-open.js 的 orbit）
+    // 9.1 不转的时候和原来一样
+    await t.tp(14, 14, 'up'); await t.W(900); await t.frames(6);
+    let c = await cam(); pr = await t.probe();
+    check(c.on && c.cls && c.zone && c.yaw === 0 && c.q === 0 && !c.compass && pr.orb === 0 && pr.tilt === 0 && Math.abs(pr.yaw) < .01 && pr.cam[2] > pr.player[2] + 5 && Math.abs(pr.cam[0] - pr.player[0]) < .5, '不转的时候：镜头还在主角南边朝北看，没有指北针；右半边屏幕等着手指');
+    check(pr.glow && near(pr.glow[0], .08, 1e-6) && near(pr.glow[1], 1.06, 1e-6) && pr.glow[2] === 1, '朝北看：太阳那片暖光还在左上角（' + JSON.stringify(pr.glow) + '）');
+    const hole0 = pr.hole, pitch0 = pr.pitch;
+    // 9.2 Q / E 键一次转 45°；摇杆的「上」过了半才换边，转回来也不马上换回去
+    await t.p.keyboard.press('q'); c = await cam();
+    check(D(c.to) === 45 && c.q === 0, '按 Q：镜头往左转到 45°，「上」还是北');
+    await settle(); c = await cam(); pr = await t.probe();
+    check(near(c.yaw, Math.PI / 4, .005) && near(pr.yaw, Math.PI / 4, .02) && pr.cam[0] > pr.player[0] + 3 && pr.cam[2] > pr.player[2] + 3 && c.compass && /rotate\(45/.test(c.needle), '转过去了：镜头在主角东南，指北针亮出来、红尖转了 45°（' + c.needle + '）');
+    const stepOnce = async act => {
+      await t.tp(14, 14, 'down'); await t.W(80); await act();
+      for (let i = 0; i < 40 && await t.E(() => EchoWorld._debug().PL.moving); i++) await t.W(50);
+      return t.E(() => { const d = EchoWorld._debug(); return d.PL.dir + ' ' + Math.sign(d.PL.x - 14) + ',' + Math.sign(d.PL.y - 14); });   // 朝哪边、往哪边走了（软件渲染慢，按一下可能走出两三格，只看方向）
+    };
+    const key = k => async () => { await t.p.keyboard.down(k); await t.W(60); await t.p.keyboard.up(k); };
+    const m45a = await stepOnce(key('ArrowUp'));
+    await t.p.keyboard.press('q'); c = await cam();
+    check(D(c.to) === 90 && c.q === 1, '再按 Q：转到 90°（镜头在东边朝西看），「上」换成西');
+    await t.p.keyboard.press('e'); c = await cam();
+    const m45b = await stepOnce(key('ArrowUp'));
+    check(D(c.to) === 45 && c.q === 1 && m45a === 'up 0,-1' && m45b === 'left -1,0', '停在 45°：从北边转过来的时候按「上」往北走（' + m45a + '），从西边转回来的时候往西走（' + m45b + '）——不来回跳');
+    await t.p.keyboard.press('e'); await settle(); c = await cam();
+    check(c.yaw === 0 && c.q === 0 && !c.compass, '再按 E 回到正北：指北针收起来');
+    // 9.3 「上」朝镜头看过去的方向走：键盘、摇杆、方向键都一样
+    const mv = {};
+    for (const a of [0, 90, 180, 270]) { await set(a); mv[a] = await stepOnce(key('ArrowUp')); }
+    check(mv[0] === 'up 0,-1' && mv[90] === 'left -1,0' && mv[180] === 'down 0,1' && mv[270] === 'right 1,0', '键盘「上」：朝北看往北、朝西看往西、朝南看往南、朝东看往东 ' + JSON.stringify(mv));
+    await set(90);
+    const kR = await stepOnce(key('ArrowRight')), kD = await stepOnce(key('s'));
+    const joy = (dx, dy) => async () => { await t.p.mouse.move(80, 650); await t.p.mouse.down(); await t.p.mouse.move(80 + dx, 650 + dy, { steps: 3 }); await t.W(90); await t.p.mouse.up(); };
+    const jU = await stepOnce(joy(0, -50)), jL = await stepOnce(joy(-50, 0));
+    const pad = dir => async () => { await t.E(dir => document.querySelector('#w-dpad [data-dir=' + dir + ']').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })), dir); await t.W(60); await t.E(() => document.getElementById('w-dpad').dispatchEvent(new PointerEvent('pointerup', { bubbles: true }))); };
+    const pU = await stepOnce(pad('up')), pR = await stepOnce(pad('right'));
+    check(kR === 'up 0,-1' && kD === 'right 1,0' && jU === 'left -1,0' && jL === 'down 0,1' && pU === 'left -1,0' && pR === 'up 0,-1', '镜头在东边（90°）：键盘右 = 北、S = 东；摇杆上 = 西、左 = 南；方向键上 = 西、右 = 北 ' + JSON.stringify({ kR, kD, jU, jL, pU, pR }));
+    await set(0);
+    check(await stepOnce(joy(0, -50)) === 'up 0,-1' && await stepOnce(pad('left')) === 'left -1,0', '转回正北：摇杆和方向键和原来一样');
+    // 9.4 右半边屏幕拖（真的触摸）：拖多少转多少，松手就停；上下拖调俯角，主角在画面上的位置不变
+    await t.tp(14, 14, 'up'); await t.frames(2);
+    await drag(300, 420, -100, 0, 5);
+    c = await cam();
+    check(near(c.yaw, 100 * K, .01) && c.to === c.yaw, '右半边屏幕往左拖 100 像素：镜头当场往左转了 ' + D(c.yaw) + '°（应该是 ' + D(100 * K) + '°）');
+    await t.frames(4); { const c2 = await cam(); check(c2.yaw === c.yaw && c2.compass, '松手就停（没有惯性），指北针亮着'); }
+    await drag(300, 420, 100, 0, 5);
+    c = await cam();
+    check(Math.abs(c.yaw) < .001, '往右拖回 100 像素：回到原来的方向');
+    // 电脑上：按住右键在画面上哪里拖都行（在左半边拖，摇杆也不动）
+    await t.tp(14, 14, 'down'); await t.W(80);
+    await t.p.mouse.move(100, 400); await t.p.mouse.down({ button: 'right' }); await t.p.mouse.move(40, 400, { steps: 4 }); await t.p.mouse.up({ button: 'right' });
+    c = await cam();
+    check(near(c.yaw, 60 * K, .02) && await t.E(() => { const d = EchoWorld._debug(); return d.PL.x === 14 && d.PL.y === 14 && !d.PL.moving; }), '按住鼠标右键拖 60 像素（在左半边也行）：镜头转了 ' + D(c.yaw) + '°，摇杆没动');
+    await set(0); await t.tp(14, 14, 'up'); await t.frames(2);
+    await drag(300, 300, 0, 120, 6);
+    await settle(); pr = await t.probe();
+    const pHi = pr.pitch, holeHi = pr.hole;
+    await drag(300, 600, 0, -240, 12);
+    await settle(); pr = await t.probe();
+    check(pHi > .74 && pHi < .82 && pr.pitch > .19 && pr.pitch < .25 && pitch0 > .28 && pitch0 < .4, '上下拖：俯角最高约 45°（' + D(pHi) + '°）、最低约 12°（' + D(pr.pitch) + '°），平常 ' + D(pitch0) + '°');
+    // 镜头对准的是主角前面一点的地方，所以俯角一变主角在画面上会挪一点点，但不到半个身子
+    check(Math.abs(holeHi[1] - hole0[1]) < hole0[2] * .5 && Math.abs(pr.hole[1] - hole0[1]) < hole0[2] * .5 && Math.abs(pr.hole[0] - hole0[0]) < hole0[2] * .25 && Math.abs(holeHi[0] - hole0[0]) < hole0[2] * .25, '俯角变了，主角还在画面上原来的地方（上下挪了 ' + Math.round(holeHi[1] - hole0[1]) + ' / ' + Math.round(pr.hole[1] - hole0[1]) + ' 个像素，主角约 ' + Math.round(hole0[2] / .86) + ' 个像素高）');
+    // 9.5 双击回到主角身后；点指北针回正北
+    await set(0); await t.tp(14, 14, 'left'); await t.frames(2);
+    await touch('touchStart', [[300, 400]], 1000); await touch('touchEnd', [], 60); await t.W(250);
+    c = await cam();
+    check(c.yaw === 0 && c.to === 0, '点一下：什么也不变');
+    await touch('touchStart', [[300, 400]], 900); await touch('touchEnd', [], 60);
+    c = await cam();
+    check(c.yaw === 0 && c.to === 0, '隔了快一秒再点一下：不算双击');
+    await touch('touchStart', [[300, 400]], 900); await touch('touchEnd', [], 60); await touch('touchStart', [[304, 402]], 110); await touch('touchEnd', [], 60);
+    c = await cam();
+    check(D(c.to) === 90, '主角面朝西，双击（两下隔 0.17 秒）：镜头转到主角身后（在东边朝西看，' + D(c.to) + '°）');
+    await settle(); pr = await t.probe(); c = await cam();
+    check(pr.cam[0] > pr.player[0] + 5 && Math.abs(pr.cam[2] - pr.player[2]) < 1.2 && c.compass && pr.tilt === 0, '转过去了，俯角回到平常');
+    { const bb = await t.p.locator('#w-compass').boundingBox().catch(() => null); check(bb && bb.x + bb.width <= 390 && bb.y > 60 && bb.width >= 40, '指北针在右上角、够手指点 ' + JSON.stringify(bb)); if (bb) await t.p.touchscreen.tap(bb.x + bb.width / 2, bb.y + bb.height / 2); }
+    c = await cam();
+    check(c.to === 0, '点指北针：镜头转回正北');
+    await settle(); c = await cam();
+    check(c.yaw === 0 && !c.compass && c.q === 0, '转回来了，指北针收起来');
+    // 头上的牌子、按 A 的提示都朝着镜头
+    await set(90); await t.tp(10, 17, 'up'); await t.frames(4); pr = await t.probe();
+    check(pr.facing.marks.length >= 1 && pr.facing.marks.every(r => near(r, Math.PI / 2, .001)) && pr.hint && near(pr.facing.hint, Math.PI / 2, .001) && pr.facing.picks.every(r => near(r, Math.PI / 2, .001)), '镜头在东边：「?」、按 A 的提示、地上的道具都转过去朝着镜头');
+    // 9.6 不和 A 键抢手指；对话框开着不能转
+    await set(0); await t.frames(2);
+    { const bb = await t.p.locator('#world .ab .ba').boundingBox(), ax = bb.x + bb.width / 2, ay = bb.y + bb.height / 2;
+      await drag(ax, ay, -80, 0, 4);
+      c = await cam();
+      check(c.yaw === 0 && !(await t.E(() => !!EchoWorld._debug().dlg)), '从 A 键上开始拖：不转镜头');
+      await t.W(400); await t.p.touchscreen.tap(ax, ay); }
+    await t.p.waitForFunction(() => !!EchoWorld._debug().dlg, null, { timeout: 8000 }).catch(() => {});
+    check(await t.E(() => !!EchoWorld._debug().dlg), '点 A 键（在右半边屏幕里）：照样和面前的人说话');
+    await t.p.keyboard.press('q');
+    await drag(300, 300, -80, 0, 4);
+    c = await cam();
+    check(c.to === 0 && !c.zone, '对话框开着：按 Q、拖右半边屏幕都不转（接手指的那一层收起来了）');
+    await t.closeDlg(); await t.W(900); await t.frames(8);
+    c = await cam();
+    check(c.zone && Math.abs((await t.probe()).yaw) < .05, '说完话：又能转了，镜头还朝北');
+    // 左手推着摇杆走，右手同时转镜头
+    await t.tp(14, 14, 'down'); await t.W(80);
+    await touch('touchStart', [[80, 650, 1]], 400); await touch('touchMove', [[80, 625, 1]], 40); await touch('touchMove', [[80, 600, 1]], 40);
+    await touch('touchStart', [[80, 600, 1], [300, 400, 2]], 200); for (let k = 1; k <= 3; k++) await touch('touchMove', [[80, 600, 1], [300 - k * 20, 400, 2]], 40);
+    // 软件渲染慢的时候，手指挪的这几下要等下一帧才交给页面：等镜头真的转到了再看
+    await t.p.waitForFunction(k => Math.abs(EchoWorld._debug().R.orbit().yaw - k) < .02, 60 * K, { timeout: 15000 }).catch(() => {});
+    await t.W(300);
+    c = await cam();
+    const walk2 = await t.E(() => { const d = EchoWorld._debug(); return { y: d.PL.y, dir: d.PL.dir }; });
+    await touch('touchMove', [[80, 600, 1], [240, 400, 2]], 300); await touch('touchEnd', [], 40);
+    check(near(c.yaw, 60 * K, .01) && walk2.dir === 'up' && walk2.y < 14, '左手推着摇杆往前走，右手同时转镜头：镜头转了 ' + D(c.yaw) + '°，人还在走 ' + JSON.stringify(walk2));
+    for (let i = 0; i < 40 && await t.E(() => EchoWorld._debug().PL.moving); i++) await t.W(50);
+    // 9.7 四面转过去主角都不被挡住：房子淡出去、树上开圆窗（seen：主角的头和胸口露在外面的比例；深度图读不了时是 null，只看房子淡没淡）
+    const occ = async (x, y, deg) => {
+      await set(deg); await t.tp(x, y, 'up'); await t.E(() => { const d = EchoWorld._debug(); d.FL.x = d.FL.fx = d.PL.x; d.FL.y = d.FL.fy = d.PL.y; });
+      await t.W(1000); await t.frames(8);
+      return t.E(() => { const p = EchoWorld._debug().R.probe(); return { seen: p.seen(), faded: p.faded }; });
+    };
+    const hs = [], ts = [];
+    for (const [x, y, a] of [[14, 3, 0], [11, 5, 90], [14, 8, 180], [19, 5, 270]]) hs.push(Object.assign({ a }, await occ(x, y, a)));
+    check(hs.every(q => q.faded >= 1 && (q.seen == null || q.seen > .9)), '大房子挡在镜头和主角中间（镜头在南 / 东 / 北 / 西）：四面都淡出去了，主角露在外面 ' + JSON.stringify(hs));
+    for (const [x, y, a] of [[13, 10, 0], [12, 2, 90], [11, 2, 180], [11, 2, 270]]) ts.push(Object.assign({ a }, await occ(x, y, a)));
+    check(ts.every(q => q.seen == null || q.seen > .85), '树挡在镜头和主角中间：四面都开了圆窗，主角露在外面 ' + JSON.stringify(ts));
+    { const q = await occ(14, 14, 0); check(q.faded === 0, '走开以后房子都恢复了'); }
+    // 太阳转到镜头背后：那片暖光没有了
+    await set(180); await t.frames(3); pr = await t.probe();
+    check(pr.glow && pr.glow[2] === 0, '朝南看（太阳在背后）：没有那片暖光');
+    // 9.8 预算：镇子南头、北头，镜头转到四面
+    { const over = [];
+      for (const [x, y] of [[12, 19], [14, 3]]) for (const a of [0, 90, 180, 270]) { await set(a); await t.tp(x, y, 'up'); await t.W(900); await t.frames(4); const q = await t.st(); if (!(q.calls < 120 && q.tris < 360000 && q.tris > 20000)) over.push(x + ',' + y + '@' + a + '° ' + q.tris + '/' + q.calls); }
+      check(!over.length, '标准档：镜头转到四面，draw call 和三角形都在预算里' + (over.length ? '：' + over.join(' | ') : '')); }
+    // 9.9 转着镜头换地图：角度留着、显存不涨；进屋不能转（摇杆照原样），出来接着是原来的角度
+    await set(135); await t.tp(14, 14, 'up');
+    const r0m = await memOf('t0'), r1m = await memOf('r0');
+    for (let k = 0; k < 2; k++) { await memOf('t0'); await memOf('r0'); }
+    const r2m = await memOf('t0'), r3m = await memOf('r0');
+    c = await cam();
+    check(r2m.mem <= r0m.mem + 2 && r3m.mem <= r1m.mem + 2 && r3m.prog <= r1m.prog + 1 && D(c.to) === 135 && c.q === 2, '转到 135° 再来回切 3 趟地图：角度留着，显存里的东西没有变多 ' + JSON.stringify([r0m, r1m, r2m, r3m].map(q => q.mem + '/' + q.prog)));
+    await t.go('t0', 'from:r0'); await t.go('i0C', 'mat');
+    c = await cam();
+    await t.p.keyboard.press('q');
+    const inUp = await t.E(() => { const d = EchoWorld._debug(); return { x: d.PL.x, y: d.PL.y }; });
+    await t.p.keyboard.down('ArrowUp'); await t.W(60); await t.p.keyboard.up('ArrowUp'); await t.W(700);
+    const inUp2 = await t.E(() => { const d = EchoWorld._debug(); return { x: d.PL.x, y: d.PL.y, dir: d.PL.dir }; });
+    check(!c.on && c.q === 0 && !c.cls && !c.zone && !c.compass && inUp2.dir === 'up' && inUp2.x === inUp.x && inUp2.y <= inUp.y, '进屋（老渲染器）：不能转，没有指北针，按「上」还是往北 ' + JSON.stringify(inUp2));
+    await t.go('t0', 'door:C'); await t.frames(3);
+    c = await cam();
+    check(c.on && D(c.to) === 135 && c.compass, '出来：还是进屋之前的角度（' + D(c.to) + '°），指北针亮着');
+    check(!t.errs.length, '转镜头这一圈没有报错' + (t.errs.length ? '：' + t.errs.slice(0, 2).join(' | ') : ''));
     await t.ctx.close();
   }
 

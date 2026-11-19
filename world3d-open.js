@@ -21,9 +21,13 @@
 // 手机（包括 iPhone 的 WKWebView）上能跑的写法：只用 WebGL2 自带的东西；渲染目标都是 8 位的，不用浮点贴图；不边画边读同一张图；
 //   描边要读的深度图先试一次，读不出来就不描边；用到世界坐标和时间的地方都标了 highp；贴图全是画布上画出来的（不用 OffscreenCanvas / createImageBitmap）；
 //   满屏的后期只有一遍（描边 + 柔光 + 调色合在一起），柔光那三遍是缩小了很多倍的小图
-// 镜头和遮挡：镜头在主角南边上方、朝北看（方向不变，摇杆不用改），地平线在画面上面约五分之一、主角在中间偏下。
-//   房子挡在镜头和主角中间 → 整栋用网点淡出去，只留地上一圈墙基；树和别的东西 → 在主角周围开一个圆窗；岩壁 → 镜头抬高；
-//   主角面朝北和人说话 → 镜头也抬高一些（不然主角的背影正好把对面的人挡住）；对面是 3D 小人、对话框开着时再绕到主角右后方约 27°（两个人的脸和背影都看得到），说完转回正北
+// 镜头和遮挡：镜头平常在主角南边上方、朝北看，地平线在画面上面约五分之一、主角在中间偏下。
+//   可以绕着主角转一整圈（2026-11-20，老板要的；见下面的 CAM / orbit）：world.js 把右半边屏幕的拖动、Q / E 键交过来，摇杆的「上」跟着镜头换边（quarter）。
+//   不转的时候画面、镜头的位置和以前一模一样；转过去以后，下面这些「镜头和主角中间」都按镜头现在在哪边算：
+//   房子挡在镜头和主角中间 → 整栋用网点淡出去，只留地上一圈墙基；树和别的东西 → 在主角周围开一个圆窗；岩壁、地图外面的山 → 镜头抬高；
+//   主角背对着镜头和人说话 → 镜头也抬高一些（不然主角的背影正好把对面的人挡住）；对面是 3D 小人、对话框开着时再绕到主角右后方约 27°（两个人的脸和背影都看得到），说完转回去
+//   四面都有东西看：房子的后墙有窗、后坡有瓦，地图南边外面也种了树，东、南、西三面的海上有小岛，四面的天上都有云；太阳的位置不变（背着太阳看时没有那片暖光）；
+//   朝着镜头立着的东西（树叶贴片、小花、草叶、纸片人、头上的牌子、脚下的圆影子）都跟着镜头转
 // 人物：有 people3d.js（EchoPeople3D）就是 3D 小人——主角、对手、村民、剧情里临时出现的人；没装它、或者它说这个造型不行，就是老的纸片人。
 //   站在哪、朝哪边、走多快、在不在说话都还是 world.js 每帧给的；小人的材质由这里给（和别的东西一样受云影、雾、影子、描边），脚下的圆影子不变
 // 逻辑一点没动：走路还是一格一格的，world.js 每帧给的 V（主角 / 怪兽 / 人物 / 道具 / 提示的格子坐标）只是换了个画法；
@@ -115,7 +119,9 @@
   const GUST = 'float gustAt(vec2 p) { float g = sin(dot(p, vec2(0.13, 0.09)) - uTime * 0.62) + 0.5 * sin(dot(p, vec2(-0.07, 0.17)) - uTime * 0.41 + 1.3); return smoothstep(0.7, 1.4, g); }\n';
   // 挡住主角的东西：比主角离镜头近、又落在画面上主角周围那个圆里的像素不画（圆边上用网点过渡），像在房子、树上开了一扇圆窗。
   // uHole = (圆心 x, 圆心 y, 半径, 主角离镜头多远)，前三个是画布上的像素；uHoleY：比这个高度矮的东西挡不住人，不开窗
-  const HOLE = 'uniform vec4 uHole; uniform float uHoleY;\n';
+  const HOLE = 'uniform vec4 uHole; uniform float uHoleY; uniform float uNear;\n';
+  // 镜头钻进地图外面的林子里时（只有转了镜头才会，见 draw）：离镜头不到 uNear 的树叶用网点淡掉，越近淡得越多——不然半个画面都是贴在镜头上的叶子。uNear = 0 就是不淡
+  const NEAR_CUT = '  if (vDep < uNear && bayer4(gl_FragCoord.xy + 1.0) > smoothstep(uNear * 0.4, uNear, vDep)) discard;';
   const HOLE_CUT = '  if (vDep < uHole.w && vWp.y > uHoleY) { float hd = length(gl_FragCoord.xy - uHole.xy) / uHole.z; if (hd < 1.0 && bayer4(gl_FragCoord.xy) > smoothstep(0.68, 1.0, hd)) discard; }';
 
   function createOpen(view, tier, A) {
@@ -166,9 +172,10 @@
     const C = h => new T3.Color(h);
     const U = {
       uTime: { value: 0 }, uPlayer: { value: new T3.Vector3(-99, 0, -99) }, uFollow: { value: new T3.Vector3(-99, 0, -99) },
-      uHole: { value: new T3.Vector4(0, 0, 1, -1) }, uHoleY: { value: 0 },
+      uHole: { value: new T3.Vector4(0, 0, 1, -1) }, uHoleY: { value: 0 }, uNear: { value: 0 },
       uFogA: { value: C('#bcd6ee') }, uHaze: { value: C('#f6ead6') }, uFogP: { value: new T3.Vector3(16, .017, Q.far) },
       uNoise: { value: null }, uSunC: { value: C('#ffffff') },          // 噪声贴图；太阳照到一个纯白的面上有多亮（着色器里用它算「这一点被太阳照到了多少」）
+      uBc: { value: new T3.Vector2(1, 0) },   // 镜头绕着主角转了多少（余弦, 正弦）：朝着镜头立着的东西（树叶贴片、小花、一簇簇草叶）跟着转过去
       uCamT: { value: new T3.Vector3() }, uGrassD: { value: new T3.Vector4(8, 26, 5, 9) },   // 草的远近：围着哪一点（主角前面一点）、多远以内是满的、多远以外没有、离镜头多近开始变稀
     };
     U.uSunC.value.copy(sun.color).multiplyScalar(sun.intensity / Math.PI);
@@ -365,11 +372,15 @@
       const flag = !Q.post || o.flag == null ? 1 : o.flag, cs = o.cloud == null ? .58 : o.cloud;   // 直接画到屏幕上（省电档）时 alpha 必须是 1，不然画布会透出网页的底色
       mat.onBeforeCompile = sh => {
         const u = sh.uniforms;
-        u.uTime = U.uTime; u.uPlayer = U.uPlayer; u.uFollow = U.uFollow; u.uHole = U.uHole; u.uHoleY = U.uHoleY; u.uFogA = U.uFogA; u.uHaze = U.uHaze; u.uFogP = U.uFogP;
-        u.uNoise = U.uNoise; u.uSunC = U.uSunC; u.uCamT = U.uCamT; u.uGrassD = U.uGrassD;
+        u.uTime = U.uTime; u.uPlayer = U.uPlayer; u.uFollow = U.uFollow; u.uHole = U.uHole; u.uHoleY = U.uHoleY; u.uNear = U.uNear; u.uFogA = U.uFogA; u.uHaze = U.uHaze; u.uFogP = U.uFogP;
+        u.uNoise = U.uNoise; u.uSunC = U.uSunC; u.uCamT = U.uCamT; u.uGrassD = U.uGrassD; u.uBc = U.uBc;
         if (mat.userData.u) Object.assign(u, mat.userData.u);
         const v = ['#include <begin_vertex>', 'vec3 oW = vec3(0.0); vGust = 0.0;',
           '#ifdef USE_INSTANCING', 'vec3 ip = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz; float isc = length(instanceMatrix[1].xyz);', '#else', 'vec3 ip = vec3(0.0); float isc = 1.0;', '#endif'];
+        // o.bill：这样东西是「朝着镜头立着」的，镜头绕着主角转了多少它就跟着绕竖轴转多少（uBc）。'o'：绕自己的原点（一簇草、一朵小花）；
+        // 'pv'：每个顶点带着自己绕哪一点转（aPv = 那一点的 x、z，第三个数 1 = 要转）——一棵树上每团叶子的贴片各绕各的那团转，棕榈叶、藤这些真的立体的不转
+        if (o.bill === 'o') v.push('transformed.xz = vec2(transformed.x * uBc.x + transformed.z * uBc.y, transformed.z * uBc.x - transformed.x * uBc.y);');
+        if (o.bill === 'pv') v.push('if (aPv.z > 0.5) { vec2 bd = transformed.xz - aPv.xy; transformed.xz = aPv.xy + vec2(bd.x * uBc.x + bd.y * uBc.y, bd.y * uBc.x - bd.x * uBc.y); }');
         if (o.lod) v.push('transformed *= 1.0 - smoothstep(' + o.lod[0].toFixed(1) + ', ' + o.lod[1].toFixed(1) + ', length(ip.xz - uCamT.xz));');
         if (o.wind) v.push(
           'float wy = max(0.0, transformed.y) * isc; float gu = gustAt(ip.xz); float ph = ip.x * 0.8 + ip.z * 0.6;',
@@ -379,14 +390,15 @@
         if (o.grass) v.push(GRASS_V);
         if (o.rock) v.push('vNy = normal.y;');
         // o.tintW：每个实例的颜色只染「纯白」的顶点（铅笔的笔杆和笔芯、棒棒糖的糖、蜡笔花丛的花），别的顶点（木头、商标纸、叶子）只跟着轻轻深浅一点
+        if (o.bill === 'pv') sh.vertexShader = sh.vertexShader.replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\n  if (aPv.z > 0.5) objectNormal.xz = vec2(objectNormal.x * uBc.x + objectNormal.z * uBc.y, objectNormal.z * uBc.x - objectNormal.x * uBc.y);');
         if (o.tintW) sh.vertexShader = sh.vertexShader.replace('#include <color_vertex>', ['#include <color_vertex>', '#if defined( USE_INSTANCING_COLOR ) && defined( USE_COLOR )',
           '  { float wk = step(2.99, color.r + color.g + color.b); vColor.rgb = color * mix(vec3(0.93 + 0.14 * fract(instanceColor.r * 7.0 + instanceColor.b * 3.0)), instanceColor.rgb, wk); }', '#endif'].join('\n'));
-        sh.vertexShader = 'uniform highp float uTime; uniform vec3 uPlayer; uniform vec3 uFollow; varying float vGust; varying highp float vDep; varying highp vec3 vWp;\n' + (o.grass ? GRASS_VPARS : o.lod ? 'uniform vec3 uCamT;\n' : '') + (o.rock ? 'varying float vNy;\n' : '') + GUST +
+        sh.vertexShader = 'uniform highp float uTime; uniform vec3 uPlayer; uniform vec3 uFollow; varying float vGust; varying highp float vDep; varying highp vec3 vWp;\n' + (o.grass ? GRASS_VPARS : o.lod ? 'uniform vec3 uCamT;\n' : '') + (o.bill ? 'uniform vec2 uBc;\n' + (o.bill === 'pv' ? 'attribute vec3 aPv;\n' : '') : '') + (o.rock ? 'varying float vNy;\n' : '') + GUST +
           sh.vertexShader.replace('#include <begin_vertex>', v.join('\n'))
             .replace('#include <project_vertex>', ['vec4 mvPosition = vec4(transformed, 1.0);', '#ifdef USE_INSTANCING', 'mvPosition = instanceMatrix * mvPosition;', '#endif',
               'mvPosition = modelMatrix * mvPosition; mvPosition.xyz += oW; vWp = mvPosition.xyz;', 'mvPosition = viewMatrix * mvPosition; vDep = -mvPosition.z;', 'gl_Position = projectionMatrix * mvPosition;'].join('\n'));
         let f = 'uniform highp float uTime; uniform vec3 uSunC; varying float vGust; varying highp float vDep; varying highp vec3 vWp;\n' + FOG_PARS + CLOUD + BAYER + HOLE + (o.terrain ? TERRAIN_PARS : '') + (o.grass ? 'varying vec3 vGc;\n' : '') + (o.rock ? 'varying float vNy;\n' : '') + sh.fragmentShader;
-        if (o.occ) f = f.replace('void main() {', 'void main() {\n' + HOLE_CUT);
+        if (o.occ) f = f.replace('void main() {', 'void main() {\n' + HOLE_CUT + (o.near ? '\n' + NEAR_CUT : ''));
         if (o.fade) f = 'uniform float uFade; uniform float uFadeY;\n' + f.replace('void main() {', 'void main() {\n  if (uFade > 0.01 && vWp.y > uFadeY && bayer4(gl_FragCoord.xy + 2.0) < uFade) discard;');
         // 房子淡出去以后剩下的那块墙基顶面：里面画成木地板（一条条木板、墙根暗一圈），像把房子剖开看——原来是一整块灰白的板，占掉小半个屏幕很难看
         if (o.floor) f = 'uniform vec4 uRect;\n' + f.replace('#include <color_fragment>', ['#include <color_fragment>',
@@ -509,14 +521,14 @@
       const mt = new T3.MeshToonMaterial({ gradientMap: softTex, side: T3.DoubleSide }), tu = terrainMat.userData.u;
       mt.userData.u = { uG0: tu.uG0, uG1: tu.uG1, uG2: tu.uG2, uTall: tu.uTall };   // 和地面用同一套颜色
       keep.push(mt);
-      return paint(mt, { key: 'grass', grass: true, flag: 0 });
+      return paint(mt, { key: 'grass', grass: true, flag: 0, bill: 'o' });
     })();
-    const flowerMat = toon({ side: T3.DoubleSide }, { key: 'flower', wind: .05, flag: 0 });
+    const flowerMat = toon({ side: T3.DoubleSide }, { key: 'flower', wind: .05, flag: 0, bill: 'o' });
     // 树：树干和一团团树冠（不透明），树叶贴片 / 棕榈叶（镂空的贴图，两面都画）。fringe 是不随风动的贴片（石坎顶上垂下来的草边）
-    const treeMat = toon({ gradientMap: softTex }, { key: 'tree', wind: .022, occ: true, flag: 0, leaf: true, rim: .55 });
+    const treeMat = toon({ gradientMap: softTex }, { key: 'tree', wind: .022, occ: true, near: true, flag: 0, leaf: true, rim: .55 });
     // 铅笔树、棒棒糖树、蜡笔花丛：每棵一种颜色，只染纯白的部分（见 o.tintW）；笔杆是硬的，摆得少
-    const tintTreeMat = toon({ gradientMap: rampTex }, { key: 'treeT', wind: .008, occ: true, flag: 0, rim: .5, tintW: true });
-    const leafMat = toon({ gradientMap: softTex, map: leafTex, alphaTest: .42, side: T3.DoubleSide }, { key: 'leaf', wind: .022, flutter: true, occ: true, flag: 0, leaf: true });
+    const tintTreeMat = toon({ gradientMap: rampTex }, { key: 'treeT', wind: .008, occ: true, near: true, flag: 0, rim: .5, tintW: true });
+    const leafMat = toon({ gradientMap: softTex, map: leafTex, alphaTest: .42, side: T3.DoubleSide }, { key: 'leaf', wind: .022, flutter: true, occ: true, near: true, flag: 0, leaf: true, bill: 'pv' });
     const fringeMat = toon({ gradientMap: softTex, map: leafTex, alphaTest: .42, side: T3.DoubleSide }, { key: 'fringe', flag: 0, leaf: true });
 
     // ---------- 每张地图的内容 ----------
@@ -1099,6 +1111,12 @@
       g.setAttribute('color', new T3.Float32BufferAttribute(bag.c, 3));
       return g;
     }
+    // 把袋子里从第 i0 个顶点起的东西沿着 z = zr 这条线翻到另一边（法线跟着翻；三角形的绕向也倒过来，不然正面成了背面）
+    function flipZ(bag, i0, zr) {
+      const p = bag.p, n = bag.n, c = bag.c, sw = (a, i, j) => { for (let k = 0; k < 3; k++) { const t = a[i * 3 + k]; a[i * 3 + k] = a[j * 3 + k]; a[j * 3 + k] = t; } };
+      for (let i = i0; i < p.length / 3; i++) { p[i * 3 + 2] = 2 * zr - p[i * 3 + 2]; n[i * 3 + 2] = -n[i * 3 + 2]; }
+      for (let i = i0; i + 2 < p.length / 3; i += 3) { sw(p, i + 1, i + 2); sw(n, i + 1, i + 2); sw(c, i + 1, i + 2); }
+    }
     const box = (bag, w, h, d, col, x, y, z) => put(bag, new T3.BoxGeometry(w, h, d).translate(0, h / 2, 0), col, x, y, z);
     // 上色的几种办法：按高度从 lo 到 hi；树叶团（顶上亮、底下暗）；顶面一种颜色、侧面一种
     const byY = (lo, hi, y0, y1) => { const a = C(lo), b = C(hi); return (out, nx, ny, nz, px, py) => { out.copy(a).lerp(b, clamp((py - y0) / (y1 - y0), 0, 1)); }; };
@@ -1107,8 +1125,8 @@
 
     // ---------- 软的、圆的东西：球、树干、树叶贴片 ----------
     // 这些零件的法线都不是按一块块小面算的：球的法线从球心往外（还可以再往「整个树冠的中心」外面掰），树干的法线从轴心往外，所以受光是连续的、软的
-    const BagU = () => ({ p: [], n: [], c: [], u: [] });   // 带贴图坐标的袋子（树叶贴片）
-    const bakeU = bag => { const g = bake(bag); g.setAttribute('uv', new T3.Float32BufferAttribute(bag.u, 2)); return g; };
+    const BagU = () => ({ p: [], n: [], c: [], u: [], v: [] });   // 带贴图坐标的袋子（树叶贴片）；v：每个顶点绕哪一点跟着镜头转（见 paint 的 o.bill，没有就不转）
+    const bakeU = bag => { const g = bake(bag); g.setAttribute('uv', new T3.Float32BufferAttribute(bag.u, 2)); if (bag.v && bag.v.length) g.setAttribute('aPv', new T3.Float32BufferAttribute(bag.v, 3)); return g; };
     // 把一模一样的顶点并起来（反复画很多遍的零件——树、草——顶点能少一大半）
     function weld(g) {
       const names = Object.keys(g.attributes), atts = names.map(n => g.attributes[n]), n = atts[0].count, seen = new Map(), idx = new Uint32Array(n), outs = atts.map(() => []);
@@ -1158,7 +1176,7 @@
       }
     }
     // 一片树叶贴片：底边中点 b，半宽 R、高 Uv（都是三维的向量）。法线是「从树冠中心 bc 往外」，所以它和后面那团叶子受一样的光；叶尖的颜色往 tip 偏
-    function cardAt(Cd, cell, b, R, Uv, bc, col, tip, dim) {
+    function cardAt(Cd, cell, b, R, Uv, bc, col, tip, dim, pv) {
       const t = [b[0] + Uv[0], b[1] + Uv[1], b[2] + Uv[2]];
       const nr = q => { const x = q[0] - bc[0], y = q[1] - bc[1], z = q[2] - bc[2], l = Math.hypot(x, y, z) || 1; return [x / l, y / l, z / l]; };
       const n0 = nr(b), n1 = nr(t), c0 = new T3.Color(), c1 = new T3.Color();
@@ -1166,21 +1184,22 @@
       if (dim) { c0.multiplyScalar(dim); c1.multiplyScalar(.5 + dim * .5); }
       if (tip) c1.lerp(tip, .36);
       const V = [[b[0] - R[0], b[1] - R[1], b[2] - R[2], cell[0], cell[3]], [b[0] + R[0], b[1] + R[1], b[2] + R[2], cell[2], cell[3]], [t[0] + R[0], t[1] + R[1], t[2] + R[2], cell[2], cell[1]], [t[0] - R[0], t[1] - R[1], t[2] - R[2], cell[0], cell[1]]];
-      for (const i of [0, 1, 2, 0, 2, 3]) { const q = V[i], up = i >= 2, n = up ? n1 : n0, c = up ? c1 : c0; Cd.p.push(q[0], q[1], q[2]); Cd.n.push(n[0], n[1], n[2]); Cd.c.push(c.r, c.g, c.b); Cd.u.push(q[3], q[4]); }
+      for (const i of [0, 1, 2, 0, 2, 3]) { const q = V[i], up = i >= 2, n = up ? n1 : n0, c = up ? c1 : c0; Cd.p.push(q[0], q[1], q[2]); Cd.n.push(n[0], n[1], n[2]); Cd.c.push(c.r, c.g, c.b); Cd.u.push(q[3], q[4]); if (Cd.v) Cd.v.push(pv ? pv[0] : 0, pv ? pv[1] : 0, pv ? 1 : 0); }
     }
-    // 树叶贴片都立在一个稍微仰着、朝着镜头的平面里（镜头永远在南边往北看）：X 是这个平面里的「右」，UPV 是「上」，TOC 是朝着镜头的方向
+    // 树叶贴片都立在一个稍微仰着、朝着镜头的平面里：X 是这个平面里的「右」，UPV 是「上」，TOC 是朝着镜头的方向。
+    // 这里按镜头在南边往北看来摆；镜头绕着主角转了，着色器里把每团叶子的贴片绕那一团的中轴转同样的角度（paint 的 o.bill），所以从哪边看轮廓都是叶子
     const CAMP = .5, UPV = [0, Math.cos(CAMP), -Math.sin(CAMP)], TOC = [0, Math.sin(CAMP), Math.cos(CAMP)];
     // 一团叶子：一个软的球，轮廓上围一圈树叶贴片（叶尖朝外，轮廓就是叶子不是多边形），朝着镜头的这一面再贴几片（一层压一层的感觉）
     function puff(S, Cd, r, x, y, z, o) {
       const sx = o.sx || 1, sy = o.sy || .9, bc = o.bc || [x, y, z], seed = o.seed || 0;
       if (!o.noBall) ball(S, r * .93, o.det == null ? 1 : o.det, x, y, z, { sx, sy, sz: o.sz || 1, lump: o.lump == null ? .13 : o.lump, bc, bk: o.bk, col: (out, nx, ny, nz) => { o.col(out, nx, ny, nz); out.multiplyScalar(.87); }, seed });
       if (!Cd) return;
-      const rx = r * sx, ry = r * sy, n = o.ring || 0, a0 = o.a0 == null ? -.7 : o.a0, a1 = o.a1 == null ? Math.PI + .7 : o.a1, cs = o.cs || 1;
+      const rx = r * sx, ry = r * sy, n = o.ring || 0, a0 = o.a0 == null ? -.7 : o.a0, a1 = o.a1 == null ? Math.PI + .7 : o.a1, cs = o.cs || 1, pv = [x, z];   // pv：这团叶子的贴片跟着镜头绕这团的中轴转
       for (let k = 0; k < n; k++) {
         const j = hash2(k * 7 + 1, seed * 13 + 91), a = a0 + (a1 - a0) * (k + .5 + (j - .5) * .6) / n, ca = Math.cos(a), sa = Math.sin(a);
         const h = r * (.6 + j * .32) * cs, w = h * .5, kk = .66 + hash2(k, seed * 13 + 92) * .1;
         const b = [x + ca * rx * kk, y + sa * ry * kk * UPV[1] + TOC[1] * r * .12, z + sa * ry * kk * UPV[2] + TOC[2] * r * .12];
-        cardAt(Cd, (k + seed) % 2 ? LEAF.clumpB : LEAF.clump, b, [sa * w, -ca * w * UPV[1], -ca * w * UPV[2]], [ca * h, sa * h * UPV[1], sa * h * UPV[2]], bc, o.col, o.tip, .9 + hash2(k, seed * 13 + 96) * .2);
+        cardAt(Cd, (k + seed) % 2 ? LEAF.clumpB : LEAF.clump, b, [sa * w, -ca * w * UPV[1], -ca * w * UPV[2]], [ca * h, sa * h * UPV[1], sa * h * UPV[2]], bc, o.col, o.tip, .9 + hash2(k, seed * 13 + 96) * .2, pv);
       }
       const nd = o.dab || 0;
       for (let k = 0; k < nd; k++) {
@@ -1190,7 +1209,7 @@
         const h = r * (.44 + j1 * .2) * cs, w = h * .56;
         const cx = x + dx * rx, cy = y + dy * ry * UPV[1] + dz * r * 1.14 * TOC[1], cz = z + dy * ry * UPV[2] + dz * r * 1.14 * TOC[2];
         const Uv = [ux * h, uy * h * UPV[1], uy * h * UPV[2]];
-        cardAt(Cd, (k + seed) % 2 ? LEAF.clump : LEAF.clumpB, [cx - Uv[0] * .45, cy - Uv[1] * .45, cz - Uv[2] * .45], [uy * w, -ux * w * UPV[1], -ux * w * UPV[2]], Uv, bc, o.col, o.tip, .86 + hash2(k, seed * 13 + 97) * .26);
+        cardAt(Cd, (k + seed) % 2 ? LEAF.clump : LEAF.clumpB, [cx - Uv[0] * .45, cy - Uv[1] * .45, cz - Uv[2] * .45], [uy * w, -ux * w * UPV[1], -ux * w * UPV[2]], Uv, bc, o.col, o.tip, .86 + hash2(k, seed * 13 + 97) * .26, pv);
       }
     }
     // 一片棕榈叶：从 b 出发朝 ang 方向，先翘起来一点再垂下去；一截一截的带子，贴着 frond 那张图。fold > 0 时左右两半中间对折一点（浅浅的 V 字）
@@ -1199,7 +1218,7 @@
       const at = s => { const r = len * (s - .12 * s * s); return [b[0] + ca * r, b[1] + up * Math.sin(s * 2.5) - droop * s * s, b[2] + sa * r]; };
       const vert = (q, col, u, v) => {
         let nx = (q[0] - bc[0]) * .55, ny = (q[1] - bc[1]) * .55 + .7, nz = (q[2] - bc[2]) * .55; const l = Math.hypot(nx, ny, nz) || 1;
-        Cd.p.push(q[0], q[1], q[2]); Cd.n.push(nx / l, ny / l, nz / l); Cd.c.push(col.r, col.g, col.b); Cd.u.push(u, v);
+        Cd.p.push(q[0], q[1], q[2]); Cd.n.push(nx / l, ny / l, nz / l); Cd.c.push(col.r, col.g, col.b); Cd.u.push(u, v); if (Cd.v) Cd.v.push(0, 0, 0);
       };
       for (let q = 0; q < segs; q++) {
         const s0 = q / segs, s1 = (q + 1) / segs, p0 = at(s0), p1 = at(s1), u0 = lerp(c[0], c[2], s0), u1 = lerp(c[0], c[2], s1), f0 = fold * w * (1 - s0 * .5), f1 = fold * w * (1 - s1 * .5);
@@ -1316,6 +1335,7 @@
               for (let s = 0; s < 2; s++) { const p0 = cols[s], p1 = cols[s + 1]; quadN(rk, lo(p0, .05), lo(p1, .05), hi(p1, .04), hi(p0, .04), nO, nO, UP, UP, capLip, capLip, capLip, capLip); quadN(rk, hi(p0, .04), hi(p1, .04), [p1.x, p1.h + .015, p1.z], [p0.x, p0.h + .015, p0.z], UP, UP, UP, UP, capLip, capLip, capLip, capLip); }
             }
             if (dz === 1 && c !== 'X' && capFr) { fringe(pa.x, pa.h, pa.z, pm.x, pm.h, pm.z, 0, .06, rnd(x, y, 24) * .7); fringe(pm.x, pm.h, pm.z, pb.x, pb.h, pb.z, 0, .06, rnd(y, x, 24) * .7); }
+            if (dz === -1 && c !== 'X' && capFr) { fringe(pa.x, pa.h, pa.z, pm.x, pm.h, pm.z, 0, -.06, rnd(x, y, 27) * .7); fringe(pm.x, pm.h, pm.z, pb.x, pb.h, pb.z, 0, -.06, rnd(y, x, 27) * .7); }   // 朝北的那一面也垂着草（镜头转到北边才看得到）
           });
           if (c === 'K') {   // 洞口：南面一个黑色的拱门（里面越往深处越黑），门框是一圈切好的石块，脚下两块大石头
             const y0 = L.ground(cx, cz + .6) - .05, zf = y + 1.15, n = 12, inC = C('#3a2c22'), sc = topSide(gr3[2], A.shade(gr3[2], .86));
@@ -1606,8 +1626,9 @@
     function buildTrees() {
       const L = LAND, P = PAL, style = THEME.tree || 'round', W = m.W, H = m.H, palm = style === 'palm', lolli = style === 'lolli';
       // 名单：main0* 地图里的树（细）；main1 外面近处的（省）；main2 外面远处平地上的；side0* / side1 棕榈岛上混着种的阔叶树；mound 山上的一团团树冠；bush* 树群之间的矮灌木
-      const lists = {};
-      const push = (key, x, z, s, r, spin, edge) => (lists[key] || (lists[key] = [])).push({ x, y: L.ground(x, z) - .04, z, s, ry: spin ? r * 6.2832 : (r - .5) * .5, r, edge });
+      // 名字前面带 _ 的是地图南边外面的（镜头转过去朝南看才看得到）：另外记在 southL 里，不占下面的三角形预算——朝北看的时候它们一棵也不画，原来的树一棵不少
+      const lists = {}, southL = {};
+      const push = (key, x, z, s, r, spin, edge) => { const T = key[0] === '_' ? southL : lists; (T[key] || (T[key] = [])).push({ x, y: L.ground(x, z) - .04, z, s, ry: spin ? r * 6.2832 : (r - .5) * .5, r, edge }); };
       const woody = (x, y) => { const c = tIn(x, y); return c === '' || c === '#' || c === 'T'; };
       const grp = (x, y) => vnoise(x * .37 + 13.7, y * .37 + 5.1);
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -1638,21 +1659,25 @@
         }
       }
       const o = {}, ring = Q.ring, far = Math.min(Q.skirt - 4, ring + (tier === 'low' ? 4 : 18));
-      for (let y = -far; y < H + far; y++) for (let x = -far; x < W + far; x++) {
+      for (let y = -far; y < H + far + SOUTH0 + 2; y++) for (let x = -far; x < W + far; x++) {
         if (x >= 0 && x < W && y >= 0 && y < H) continue;
         const r = rnd(x, y, 7), r2 = rnd(y, x, 9), px = x + .5 + (r - .5) * .7, pz = y + .5 + (r2 - .5) * .7;
         L.outer(px, pz, o);
         const h = L.ground(px, pz);
-        if (o.landK < .7 || h < L.SEA + .3 || o.dOut > far) continue;
-        if (pz > H + 2.5) continue;                                   // 地图南边外面是镜头待的地方（也看不到），不种
+        // 地图南边外面：镜头朝北看的时候就待在这上面。紧挨着地图的那几格照旧空着（一片草坡，朝北看时正好在画面最下面）；再往外先是几丛矮灌木，
+        // 过了镜头待的地方（SOUTH0 格以外）才是树——转过去朝南看也有一片林子，朝北看的画面一点没变。pre：这些另外记（见上面的 southL）
+        const south = pz > H + 2.5, dO = south ? o.dOut - SOUTH0 : o.dOut, pre = south ? '_' : '';
+        if (o.landK < .7 || h < L.SEA + .3 || dO > far) continue;
+        if (south && (pz < H + 9.5 || rnd(x, y, 17) > .7)) continue;
         if (o.val > .45) continue;                                    // 出口外面的山谷里不种树，看得到路通出去
         const g2 = vnoise(x * .21 + 3.3, y * .21 + 8.8), q = rnd(x, y, 13);
-        if (o.dOut <= ring) {
+        if (dO < 0) { if (g2 > .4 && q < .4) push('_busha', px, pz, .9 + r2 * .6, r); continue; }
+        if (dO <= ring) {
           // 近处：山上是一团团树冠连成的林子，夹着几棵看得出样子的树；平地上一小群一小群的，中间留空
-          if (o.hill > .5) { if (q < .36) push('mound', px, pz, 1.2 + r * .9, r2); else if (q < .6) push(lolli || palm && r2 > .4 ? 'side1' : 'main1', px, pz, .95 + r * .4, r2, palm && r2 <= .4); }
-          else if (g2 > .5) { if (q < .62) push(lolli || palm && r2 > .72 ? 'side1' : 'main1', px, pz, .95 + r * .4, r2, palm && r2 <= .72); }
-          else if (g2 > .36 && q < .14) push('busha', px, pz, .9 + r2 * .6, r);
-        } else if (o.hill > .5 ? q < .3 : g2 > .58 && q < .22) push(o.hill > .5 || lolli ? 'mound' : 'main2', px, pz, o.hill > .5 ? 1.7 + r * 1.3 : 1.15 + r * .5, r2, palm && o.hill <= .5);
+          if (o.hill > .5) { if (q < .36) push(pre + 'mound', px, pz, 1.2 + r * .9, r2); else if (q < .6) push(pre + (lolli || palm && r2 > .4 ? 'side1' : 'main1'), px, pz, .95 + r * .4, r2, palm && r2 <= .4); }
+          else if (g2 > .5) { if (q < .62) push(pre + (lolli || palm && r2 > .72 ? 'side1' : 'main1'), px, pz, .95 + r * .4, r2, palm && r2 <= .72); }
+          else if (g2 > .36 && q < .14) push(pre + 'busha', px, pz, .9 + r2 * .6, r);
+        } else if (o.hill > .5 ? q < .3 : g2 > .58 && q < .22) push(pre + (o.hill > .5 || lolli ? 'mound' : 'main2'), px, pz, o.hill > .5 ? 1.7 + r * 1.3 : 1.15 + r * .5, r2, palm && o.hill <= .5);
       }
       const kitOf = key => {
         switch (key) {
@@ -1681,29 +1706,36 @@
       if (sum(IN) > TREE_TRIS * .7) demote(p => p.edge);
       if (sum(IN) > TREE_TRIS * .7) demote(p => p.deep);
       const all = () => sum(Object.keys(lists));
+      let outK = 1;
       if (all() > TREE_TRIS) {
         const outer = sum(OUT), k = Math.max(.08, (TREE_TRIS - (all() - outer)) / Math.max(1, outer));
         OUT.forEach(key => { if (lists[key]) lists[key] = lists[key].filter(p => p.edge || rnd(p.x | 0, p.z | 0, 19) < k); });
+        outK = k;
       }
       // 树不多（比如你好岛的棕榈）就不分条、不换省的（draw call 少）；多了（铅笔林、丛林、秋天的林子……）才分
       const heavy = all() > TREE_TRIS * (tier === 'high' ? .9 : .5);
       INFO.treeTris = all(); INFO.heavy = heavy;
+      // 南边外面的（上面的预算都没算它们）：照外面那些树抽掉的比例抽，再并进来
+      Object.keys(southL).forEach(k => { lists[k] = outK < 1 ? southL[k].filter(p => rnd(p.x | 0, p.z | 0, 19) < outK) : southL[k]; });
       Object.keys(lists).forEach(key => {
         const list = lists[key];
         if (!list.length) return;
-        const kt = kit(key), cols = kt.tint, far2 = key === 'mound' || key === 'main2';
+        const bkey = key[0] === '_' ? key.slice(1) : key, kt = kit(bkey), cols = kt.tint, far2 = bkey === 'mound' || bkey === 'main2';   // bkey：是哪一种树（南边外面的和别处用同一套零件）
         // 每棵的颜色：染色的树（铅笔、棒棒糖、蜡笔花丛）挑一种颜色；秋天的树各有各的秋色（金黄、橙、红、还有点绿的）；别的只是深浅不一
-        list.forEach(p => { const k = .88 + p.r * .24; p.c = cols ? C(cols[Math.floor(p.r * cols.length) % cols.length]) : new T3.Color(k, k * (.97 + rnd(p.x | 0, p.z | 0, 4) * .06), k * .96); if (!cols && (style === 'autumn' || lolli && (key.startsWith('side') || key === 'mound'))) { const tb = lolli ? PASTEL : AUTUMN, a = tb[Math.floor(rnd(p.x | 0, p.z | 0, 8) * tb.length)]; p.c.r *= a[0]; p.c.g *= a[1]; p.c.b *= a[2]; } });
-        // 树多的那几种按南北分成几条（每条自己一个网格）：镜头在主角南边朝北看，身后那几条整条不画。
-        // 地图里的树（细的那种）每条另外备一份省的：离主角往北远了就换成省的（treeBands，draw 里按远近换），近处才是细的。分得太碎 draw call 就多了，所以只按南北分
-        const coarseKey = COARSE[key] && (tier === 'low' ? (key.startsWith('side') ? 'side2' : 'main2') : COARSE[key]) || null, lod = heavy && coarseKey && list.length > 30;   // 省电档：远了直接换成最省的那种（一团树冠）
-        const groups = {}, band = lod ? (tier === 'low' ? 16 : 10) : heavy && list.length > 120 && !far2 ? 12 : 1e9;
+        list.forEach(p => { const k = .88 + p.r * .24; p.c = cols ? C(cols[Math.floor(p.r * cols.length) % cols.length]) : new T3.Color(k, k * (.97 + rnd(p.x | 0, p.z | 0, 4) * .06), k * .96); if (!cols && (style === 'autumn' || lolli && (bkey.startsWith('side') || bkey === 'mound'))) { const tb = lolli ? PASTEL : AUTUMN, a = tb[Math.floor(rnd(p.x | 0, p.z | 0, 8) * tb.length)]; p.c.r *= a[0]; p.c.g *= a[1]; p.c.b *= a[2]; } });
+        // 树多的那几种按南北分成几条（每条自己一个网格）：镜头身后、画面外面的那几条整条不画（three 按每条的范围裁；镜头转到朝东、朝西看时裁掉的是两边的条）。
+        // 地图里的树（细的那种）每条另外备一份省的：离主角南北方向远了就换成省的（treeBands，draw 里按远近换），近处才是细的。分得太碎 draw call 就多了，所以只按南北分
+        // （试过东西向也分：朝东、朝西看时三角形少一成多，可横屏的 draw call 从 165 涨到 220，不划算）
+        // 南边外面的（sth）：不换零件、不投影子（离能走的地方远，影子落不到跟前），所以整块在镜头身后时可以直接不画（southCh，draw 里看）——朝北看的时候一块也不画
+        const sth = key !== bkey, coarseKey = COARSE[bkey] && (tier === 'low' ? (bkey.startsWith('side') ? 'side2' : 'main2') : COARSE[bkey]) || null, lod = !sth && heavy && coarseKey && list.length > 30;   // 省电档：远了直接换成最省的那种（一团树冠）
+        const groups = {}, band = lod ? (tier === 'low' ? 16 : 10) : (heavy && list.length > 120 && !far2) || sth ? 12 : 1e9;
         list.forEach(p => { const k = Math.floor(p.z / band); (groups[k] || (groups[k] = [])).push(p); });
         const white = g => g.map(p => Object.assign({}, p, { c: new T3.Color(1, 1, 1) }));
         Object.keys(groups).forEach(bk => {
-          const g = groups[bk], fine = [inst(kt.geo, cols ? tintTreeMat : treeMat, g, !far2)];
-          used.add(key);
-          if (kt.cards) fine.push(inst(kt.cards, leafMat, cols ? white(g) : g, !far2 && tier === 'high' || key === 'main0'));
+          const g = groups[bk], fine = [inst(kt.geo, cols ? tintTreeMat : treeMat, g, !far2 && !sth)];
+          used.add(bkey);
+          if (kt.cards) fine.push(inst(kt.cards, leafMat, cols ? white(g) : g, (!far2 && tier === 'high' || bkey === 'main0') && !sth));
+          if (sth) southCh.push({ x0: Math.min(...g.map(p => p.x)) - 1.3, x1: Math.max(...g.map(p => p.x)) + 1.3, z0: Math.min(...g.map(p => p.z)) - 1.3, z1: Math.max(...g.map(p => p.z)) + 1.3, back: bkey.startsWith('bush') ? 2.5 : -1.3, objs: fine.filter(Boolean) });   // back：矮灌木贴着地，镜头前面这么近的也看不到
           if (!lod) return;
           const ck = kit(coarseKey), coarse = [inst(ck.geo, ck.tint ? tintTreeMat : treeMat, g, true)];
           used.add(coarseKey);
@@ -1758,7 +1790,7 @@
       g.setAttribute('position', new T3.Float32BufferAttribute(p, 3)); g.setAttribute('normal', new T3.BufferAttribute(nrm, 3)); g.setAttribute('aB', new T3.Float32BufferAttribute(b, 3));
       return weld(g);
     }
-    const grassChunks = [], treeBands = [];   // treeBands：地图里的树按南北分的一条条，每条有细的和省的两份（draw 里按远近换）
+    const grassChunks = [], treeBands = [], southCh = [];   // treeBands：地图里的树按南北分的一条条，每条有细的和省的两份（draw 里按远近换）；southCh：地图南边外面的树（draw 里整块在镜头身后就不画）
     function buildGrass() {
       const L = LAND, P = PAL, W = m.W, H = m.H, CH = tier === 'high' ? 8 : 12, lists = {}, flowers = [[], [], [], []];   // 一块多大：精美档分得细（按远近换零件更准），另外两档分得粗（少几次绘制）
       const nT = Math.max(2, Math.round(11 * Q.grass)), nL = Math.max(3, Math.round(32 * Q.lawn * (P.snow ? .35 : 1) * (tier === 'high' && INFO.heavy ? .85 : 1)));   // 雪地里的草大多埋在雪下面；树多的图（精美档）草坪稀一点
@@ -1848,10 +1880,11 @@
     const PASTEL = [[1, 1, 1], [.78, 1.3, 1.25], [1.08, 1.32, .8], [.95, 1.12, 1.35], [1.05, 1.18, 1.05]];   // 棉花糖树：粉、薄荷绿、奶黄、淡紫、桃色（乘在粉色的树冠上）
     const AUTUMN = [[1.12, 1.06, .7], [1, .78, .62], [1.05, .9, .78], [.92, 1.12, .72], [1.1, .7, .56], [1, 1, 1]];   // 秋天的树：金黄、红、橙、黄绿、深红、原色
     const TREE_TRIS = tier === 'high' ? 470000 : tier === 'mid' ? 110000 : 42000;
+    const SOUTH0 = 11.5;   // 地图南边外面多远以内不种树（镜头朝北看的时候待在这上面）
 
     // ---------- 房子：每座岛的风格不一样；休息站（青绿屋顶）、商店（琥珀色屋顶）哪座岛都一个样 ----------
     // 一栋房子 = 一个上了色的网格 + 一个贴画网格（门、窗、招牌、砖纹，都画在这张地图的一张大贴图里）。
-    // 房子在主角南边（镜头和主角中间）、屋顶够得着视线时，整栋用网点慢慢淡出去，最后只剩地上一圈墙基（看得出这里有栋房子），影子也收掉（BLD 里记着范围，fadeBuildings 每帧算）
+    // 房子在镜头和主角中间（镜头朝北看时就是在主角南边）、屋顶够得着视线时，整栋用网点慢慢淡出去，最后只剩地上一圈墙基（看得出这里有栋房子），影子也收掉（BLD 里记着范围，fadeBuildings 每帧算）
     const spinners = [], BLD = [];
     let atlas = null;
     function atlasCell(key, w, h, draw) {
@@ -1885,6 +1918,7 @@
         let wallC = L === 'C' ? '#fff6ea' : L === 'M' ? '#f4f8ff' : (P.wall || '#fff8ec'), wallH = gym ? 1.95 : home ? 1.45 : 1.65, top = wallH, round = 0, doorKind = 'wood', winKind = 'plain', shut = '#3b8fd4';
         // 贴画：朝南的一块（z 固定）/ 朝东西的一块（x 固定，s = ±1 是朝哪边）
         const dS = (ax, ay, bx, by, z, c) => { dq.p.push(ax, ay, z, bx, ay, z, bx, by, z, ax, ay, z, bx, by, z, ax, by, z); dq.u.push(c[0], c[1], c[2], c[1], c[2], c[3], c[0], c[1], c[2], c[3], c[0], c[3]); for (let k = 0; k < 6; k++) dq.n.push(0, 0, 1); };
+        const dN = (ax, ay, bx, by, z, c) => { dq.p.push(bx, ay, z, ax, ay, z, ax, by, z, bx, ay, z, ax, by, z, bx, by, z); dq.u.push(c[0], c[1], c[2], c[1], c[2], c[3], c[0], c[1], c[2], c[3], c[0], c[3]); for (let k = 0; k < 6; k++) dq.n.push(0, 0, -1); };   // 朝北的一块（房子的后墙）
         const dX = (x, s, az, ay, bz, by, c) => { const za = s > 0 ? az : bz, zb = s > 0 ? bz : az; dq.p.push(x, ay, za, x, ay, zb, x, by, zb, x, ay, za, x, by, zb, x, by, za); dq.u.push(c[0], c[1], c[2], c[1], c[2], c[3], c[0], c[1], c[2], c[3], c[0], c[3]); for (let k = 0; k < 6; k++) dq.n.push(s, 0, 0); };
         const bx = (bw, bh, bd, col, x, y, z) => box(bag, bw, bh, bd, col, x, y0 + y, z);
         const gp = (g, col, x, y, z) => put(bag, g, col, x, y0 + y, z);
@@ -1903,13 +1937,15 @@
           bx(ww, h, d, byY(A.shade(tex ? texCol : wallC, .86), tex ? texCol : wallC, 0, h * .7), cx, 0, cz);
           bx(ww + .12, .16, d + .12, topSide('#e4ddd0', '#b9af9f'), cx, -.02, cz);
           if (!fnd) fnd = [cx - ww / 2 - .06, cz - d / 2 - .06, cx + ww / 2 + .06, cz + d / 2 + .06];   // 墙基的范围：淡出去以后里面画木地板
-          if (tex) { dS(cx - ww / 2, y0 + .14, cx + ww / 2, y0 + h, front + .006, wallCell(tex, texCol, ww, h)); const sc = wallCell(tex, texCol, d, h); dX(cx - ww / 2 - .006, -1, back, y0 + .14, front, y0 + h, sc); dX(cx + ww / 2 + .006, 1, back, y0 + .14, front, y0 + h, sc); }
+          if (tex) { dS(cx - ww / 2, y0 + .14, cx + ww / 2, y0 + h, front + .006, wallCell(tex, texCol, ww, h)); dN(cx - ww / 2, y0 + .14, cx + ww / 2, y0 + h, back - .006, wallCell(tex, texCol, ww, h)); const sc = wallCell(tex, texCol, d, h); dX(cx - ww / 2 - .006, -1, back, y0 + .14, front, y0 + h, sc); dX(cx + ww / 2 + .006, 1, back, y0 + .14, front, y0 + h, sc); }
         };
         // 人字屋顶：前坡是一排排深浅相间的瓦，屋檐一条厚边，屋脊一根亮色的脊
         // kind：tile 筒瓦（默认）/ thatch 茅草（一层层厚厚的草，下沿一排参差的草尖）/ leaf 棕榈叶（同样的做法，草尖更长更乱）/ snow 积雪（瓦上盖着厚厚一层雪，屋檐挂着冰溜子）
         const gable = (h, col, over, yb, kind) => {
           yb = y0 + (yb == null ? wallH : yb);
-          const hw = (w + .2) / 2, zf = front + over, zb = back - .14, zr = cz + .04, c1 = C(col), c2 = C(A.shade(col, .88)), cR = C(A.shade(col, 1.16)), cF = C(A.shade(col, .7)), nB = 6, wc = C(wallC), cS = C(A.shade(col, .64));
+          const hw = (w + .2) / 2, zfF = front + over, zb = back - .14, zr = cz + .04, c1 = C(col), c2 = C(A.shade(col, .88)), cR = C(A.shade(col, 1.16)), cF = C(A.shade(col, .7)), nB = 6, wc = C(wallC), cS = C(A.shade(col, .64));
+          // 一面坡：从屋檐（zf）铺到屋脊。前坡直接铺；后坡照同样的做法按「后檐到屋脊那么宽」先铺在南边，再沿着屋脊翻到北边去（见下面的 flipZ）——镜头转到房子后面，看到的也是一排排瓦
+          const slope = (zf, isBack) => {
           const sl0 = Math.hypot(h, zf - zr), ny0 = (zf - zr) / sl0, nz0 = h / sl0, dn = [0, -h / sl0, (zf - zr) / sl0];   // 坡面朝外的法线；dn：顺着坡往下（往屋檐）的方向
           if (kind === 'thatch' || kind === 'leaf') {
             const rows = tier === 'high' ? 7 : tier === 'mid' ? 5 : 4, nTe = Math.max(6, Math.round(hw * 2 / (tier === 'high' ? .085 : tier === 'mid' ? .13 : .2))), sag = t => -.05 * Math.sin(t * Math.PI), leaf = kind === 'leaf';
@@ -1928,7 +1964,7 @@
               }
             }
             // 屋脊：一根圆圆的草捆
-            if (tier !== 'low') put(bag, new T3.CylinderGeometry(.11, .11, w + .3, 8).rotateZ(Math.PI / 2), leafC(A.shade(col, .7), col, A.shade(col, 1.12)), cx, yb + h + .03, zr);
+            if (tier !== 'low' && !isBack) put(bag, new T3.CylinderGeometry(.11, .11, w + .3, 8).rotateZ(Math.PI / 2), leafC(A.shade(col, .7), col, A.shade(col, 1.12)), cx, yb + h + .03, zr);
           } else if (kind === 'snow') {
             // 积雪的屋顶：底下是深色的木瓦（屋檐和两头露出来一条），上面一层厚厚的雪，雪的前沿是圆的；屋檐下面挂着几根冰溜子
             const NO = [0, ny0, nz0], cW = C('#f7fafd'), cW2 = C('#e2ecf5'), sag = t => -.04 * Math.sin(t * Math.PI), nS = tier === 'low' ? 3 : 6;
@@ -1965,9 +2001,14 @@
               }
             }
           }
-          quad(bag, [cx + hw, yb, zb], [cx - hw, yb, zb], [cx - hw, yb + h, zr], [cx + hw, yb + h, zr], c2);
+          };
+          const zf = zfF;
+          slope(zf, false);
+          { const i0 = bag.p.length / 3; slope(2 * zr - zb, true); flipZ(bag, i0, zr); }
           quad(bag, [cx - hw, yb - .11, zf], [cx + hw, yb - .11, zf], [cx + hw, yb, zf], [cx - hw, yb, zf], cF);
-          { const xa = cx - (w - .2) / 2, xb = cx + (w - .2) / 2, c0 = mixC(A.shade(wallC, .7), '#8aa0d0', .3), c1 = C(A.shade(wallC, .97)); quad(bag, [xa, yb - .3, front + .004], [xb, yb - .3, front + .004], [xb, yb - .02, front + .004], [xa, yb - .02, front + .004], c1, c1, c0, c0); }
+          quad(bag, [cx + hw, yb - .11, zb], [cx - hw, yb - .11, zb], [cx - hw, yb, zb], [cx + hw, yb, zb], cF);   // 后檐的厚边
+          // 屋檐在墙上压的一道影子：前墙、后墙各一条
+          { const xa = cx - (w - .2) / 2, xb = cx + (w - .2) / 2, c0 = mixC(A.shade(wallC, .7), '#8aa0d0', .3), c1 = C(A.shade(wallC, .97)); quad(bag, [xa, yb - .3, front + .004], [xb, yb - .3, front + .004], [xb, yb - .02, front + .004], [xa, yb - .02, front + .004], c1, c1, c0, c0); quad(bag, [xb, yb - .2, back - .004], [xa, yb - .2, back - .004], [xa, yb - .02, back - .004], [xb, yb - .02, back - .004], c1, c1, c0, c0); }
           box(bag, w + .28, kind === 'snow' ? .14 : .1, kind === 'snow' ? .3 : .16, kind === 'snow' ? C('#f7fafd') : cR, cx, yb + h - .05 + (kind === 'snow' ? .1 : 0), zr);
           [-1, 1].forEach(s => {
             const xw = cx + s * (w - .2) / 2, xe = cx + s * hw, a = [xw, yb - .02, front], bb = [xw, yb - .02, back], t = [xw, yb + h * .93, zr];
@@ -1980,7 +2021,7 @@
         };
         // 四坡 / 多边的尖顶
         const pyramid = (rw, rd, h, col, yb, segs) => { yb = yb == null ? wallH : yb; const g = new T3.ConeGeometry(Math.SQRT1_2, h, segs || 4, 1).rotateY(segs && segs !== 4 ? 0 : Math.PI / 4).scale((segs && segs !== 4 ? 1.414 : 1) * rw, 1, (segs && segs !== 4 ? 1.414 : 1) * rd).translate(0, h / 2, 0); gp(g, byY(A.shade(col, .86), A.shade(col, 1.08), 0, h), cx, yb, cz); top = Math.max(top, yb + h); };
-        const flat = (col, yb, lip) => { yb = yb == null ? wallH : yb; bx(w - .04, .14, d + .16, topSide(A.shade(col, 1.08), A.shade(col, .78)), cx, yb, cz); if (lip !== false) { bx(w - .04, .16, .1, A.shade(col, .86), cx, yb + .14, front + .03); bx(.1, .16, d + .16, A.shade(col, .86), cx - w / 2 + .07, yb + .14, cz); bx(.1, .16, d + .16, A.shade(col, .86), cx + w / 2 - .07, yb + .14, cz); } top = Math.max(top, yb + .3); };
+        const flat = (col, yb, lip, backLip) => { yb = yb == null ? wallH : yb; bx(w - .04, .14, d + .16, topSide(A.shade(col, 1.08), A.shade(col, .78)), cx, yb, cz); if (backLip) bx(w - .04, .16, .1, A.shade(col, .86), cx, yb + .14, back - .03); if (lip !== false) { bx(w - .04, .16, .1, A.shade(col, .86), cx, yb + .14, front + .03); bx(.1, .16, d + .16, A.shade(col, .86), cx - w / 2 + .07, yb + .14, cz); bx(.1, .16, d + .16, A.shade(col, .86), cx + w / 2 - .07, yb + .14, cz); } top = Math.max(top, yb + .3); };
         const chimney = () => {
           const px = x1 - .85, pz = cz - .1;
           bx(.28, .66, .28, byY(A.shade(roofC, .6), A.shade(roofC, .8), 0, .66), px, wallH + .3, pz); bx(.36, .07, .36, '#f1ebe0', px, wallH + .94, pz); bx(.3, .04, .3, '#d8d0c2', px, wallH + 1.01, pz);
@@ -2004,13 +2045,15 @@
           case 'farm': wall(wallH, 'plank', P.wall || '#c9955e'); gable(1.2, '#e3bd5a', .62, null, 'thatch'); winKind = 'shutter'; shut = '#7a4a28'; if (home) chimney(); break;
           case 'brick': {
             // 红砖教学楼：平顶、白色的檐口和窗台线、两层窗；宽的楼中间立着钟楼（方塔、四面钟、尖顶、顶上一只小铃铛）
-            wallH += gym ? .45 : .3; wall(wallH, 'brick', '#b5543c'); flat('#7a5446');
+            wallH += gym ? .45 : .3; wall(wallH, 'brick', '#b5543c'); flat('#7a5446', null, true, true);
             bx(w - .1, .09, d + .08, '#f3ece0', cx, wallH - .04, cz); bx(w - .14, .06, d + .04, '#efe6d6', cx, .62, cz);
             if (w >= 5) {
               const tw2 = Math.min(1.3, w * .2), th2 = 1.5;
               bx(tw2, th2, tw2, byY('#a24c38', '#bf5d46', 0, th2), cx, wallH + .14, cz); bx(tw2 + .12, .1, tw2 + .12, '#f3ece0', cx, wallH + .14 + th2, cz);
               pyramid(tw2 * .62, tw2 * .62, .75, '#5d4037', wallH + .24 + th2);
               dS(cx - .32, y0 + wallH + .55, cx + .32, y0 + wallH + 1.19, cz + tw2 / 2 + .01, clockCell());
+              dN(cx - .32, y0 + wallH + .55, cx + .32, y0 + wallH + 1.19, cz - tw2 / 2 - .01, clockCell());   // 四面都有钟
+              [-1, 1].forEach(sd => dX(cx + sd * (tw2 / 2 + .01), sd, cz - .32, y0 + wallH + .55, cz + .32, y0 + wallH + 1.19, clockCell()));
               gp(new T3.LatheGeometry([[0, 0], [.13, 0], [.12, .04], [.08, .1], [.06, .16], [0, .18]].map(([px, py]) => new T3.Vector2(px, py)), 10), '#ffc93c', cx, wallH + .24 + th2 + .62, cz);
               top = Math.max(top, wallH + 1.2 + th2);
             }
@@ -2054,7 +2097,7 @@
             // 作息岛的石塔：石块墙、一圈铜色的檐、铜绿的尖顶，正面一面钟，两边的墙上画着齿轮
             wallH = gym ? 2.7 : 2.1; wall(wallH, 'stone', '#cfc6b6'); bx(w + .02, .12, d + .14, '#b8862b', cx, wallH - .06, cz);
             pyramid((w + .5) / 2, (d + .5) / 2, 1.3, '#4f9e8a'); gp(new T3.SphereGeometry(.09, 8, 6), '#d9a93c', cx, wallH + 1.36, cz);
-            dS(cx - .3, y0 + wallH - .78, cx + .3, y0 + wallH - .18, front + .012, clockCell());
+            dS(cx - .3, y0 + wallH - .78, cx + .3, y0 + wallH - .18, front + .012, clockCell()); dN(cx - .3, y0 + wallH - .78, cx + .3, y0 + wallH - .18, back - .012, clockCell());
             const gc = gearCell(); dX(x0 + .1 - .006, -1, cz - .32, y0 + wallH * .45, cz + .32, y0 + wallH * .45 + .64, gc); dX(x1 - .1 + .006, 1, cz - .32, y0 + wallH * .45, cz + .32, y0 + wallH * .45 + .64, gc);
             break;
           }
@@ -2079,6 +2122,7 @@
             if (tier !== 'low') [[x0 + .3, 1], [x1 - .3, -1]].forEach(([px, sd]) => gp(new T3.CylinderGeometry(.025, .025, .7, 5).rotateX(sd * .9), '#6d4121', px, .22, cz));
             bx(w - .24, wallH - .1, d, byY('#8c5e30', '#a8773f', 0, wallH - .1), cx, .45, cz);
             dS(cx - (w - .24) / 2, y0 + .45, cx + (w - .24) / 2, y0 + .35 + wallH, front + .006, wallCell('plank', '#a06f3c', w - .24, wallH - .1));
+            dN(cx - (w - .24) / 2, y0 + .45, cx + (w - .24) / 2, y0 + .35 + wallH, back - .006, wallCell('plank', '#a06f3c', w - .24, wallH - .1));
             gable(.9, '#5f9a42', .62, wallH + .35, 'leaf');
             bx(w + .1, .07, .62, topSide('#a87445', '#7a5232'), cx, .4, front + .26);
             if (tier !== 'low') { for (let k = 0; k <= Math.round(w * 2); k++) { const px = x0 + .02 + k / Math.round(w * 2) * (w - .04); if (b.door && Math.abs(px - b.door.x - .5) < .3) continue; bx(.04, .3, .04, '#7a5232', px, .47, front + .55); } bx(w + .06, .025, .025, '#d8c08a', cx, .72, front + .55); }
@@ -2107,7 +2151,7 @@
             break;
           }
           case 'market': {
-            wallC = '#ffffff'; wall(wallH); flat(roofC);
+            wallC = '#ffffff'; wall(wallH); flat(roofC, null, true, true);
             const sc = ['#ff7043', '#1e88e5', '#43a047', '#fdd835'][Math.floor(hsh * 4)], n = Math.max(4, Math.round(w * 2));
             for (let k = 0; k < n; k++) { const xa = x0 + .15 + (w - .3) * k / n, xb = x0 + .15 + (w - .3) * (k + 1) / n; quad(bag, [xa, y0 + wallH * .62, front + .5], [xb, y0 + wallH * .62, front + .5], [xb, y0 + wallH * .86, front + .02], [xa, y0 + wallH * .86, front + .02], C(k % 2 ? '#ffffff' : sc)); }
             winKind = 'none';
@@ -2120,6 +2164,7 @@
             bx(w + .1, .16, d + .62, topSide('#d2c9b2', '#a39a84'), cx, wallH, cz + .06);
             const ph = .62, hw2 = (w + .1) / 2, zf2 = front + .37, zb2 = back - .1, pc2 = C('#c4bba4'), pf = C('#b3a992');
             tri(bag, [cx - hw2, y0 + wallH + .16, zf2], [cx + hw2, y0 + wallH + .16, zf2], [cx, y0 + wallH + .16 + ph, zf2], pc2);
+            tri(bag, [cx + hw2, y0 + wallH + .16, zb2], [cx - hw2, y0 + wallH + .16, zb2], [cx, y0 + wallH + .16 + ph, zb2], pc2);   // 后面的山墙（不然从北边看屋顶是空的）
             { const yb2 = y0 + wallH + .16, yt2 = yb2 + ph, L2 = cx - hw2, R2 = cx + hw2; quad(bag, [L2, yb2, zf2], [cx, yt2, zf2], [cx, yt2, zb2], [L2, yb2, zb2], pf); quad(bag, [R2, yb2, zb2], [cx, yt2, zb2], [cx, yt2, zf2], [R2, yb2, zf2], pf); }
             top = wallH + .16 + ph;
             const nC = Math.max(2, Math.round(w / 1.1)), sgC = tier === 'high' ? 12 : 8;
@@ -2232,6 +2277,14 @@
             }
           };
           [x0 + .86, x1 - .86].forEach(wx => { if (!b.door || Math.abs(wx - (b.door.x + .5)) > .8) win3(wx); });
+          // 后墙：同样位置两扇窗（贴画 + 窗框，没有做出来的窗扇和花箱）——镜头转到房子后面不是一堵光墙
+          [x0 + .86, x1 - .86].forEach(wx => {
+            dN(wx - .42, wy, wx + .42, wy + .72, back - .014, cellW);
+            if (tier === 'low' || winKind === 'round') return;
+            const yw = wy - y0, bz = back - .02, wc = '#ffffff';
+            bx(.5, .04, .06, wc, wx, yw + .655, bz); bx(.5, .045, .08, wc, wx, yw + .155, bz - .01); [-1, 1].forEach(sd => bx(.04, .5, .06, wc, wx + sd * .23, yw + .175, bz));
+            bx(.026, .47, .035, wc, wx, yw + .19, bz); bx(.44, .026, .035, wc, wx, yw + .41, bz);
+          });
           if (w >= 7 && b.door) [cx - 1.1, cx + 1.1].forEach(wx => { if (Math.abs(wx - (b.door.x + .5)) > .8 && Math.abs(wx - x0 - .86) > .9 && Math.abs(wx - x1 + .86) > .9) win3(wx); });
         }
         // 招牌：REST STOP / SHOP / GYM，挂在门上面
@@ -2271,7 +2324,7 @@
           own.push(dg, dm);
           still(add(new T3.Mesh(dg, dm), false));
         }
-        BLD.push({ x0, x1, z0: back - .15, top: y0 + top, fade, cur: 0, mesh: sMesh });
+        BLD.push({ x0, x1, z0: back - .15, zS: z1, top: y0 + top, fade, cur: 0, mesh: sMesh });   // 地基的范围（x0…x1、z0 北边…zS 南边）和房顶多高
       });
       function gearCell() {
         return atlasCell('gear', 64, 64, g => {
@@ -2287,10 +2340,43 @@
         });
       }
     }
+    // 一栋房子的地基（长方形）落在一条带子里的那一段：带子从 (ox, oz) 出发朝 (dx, dz) 伸出去，中线往右偏 lc、左右各宽 w。
+    // 返回这一段沿着带子从多远到多远（_sp[0]…_sp[1]），不在带子里返回 null
+    const _sp = [0, 0];
+    function spanIn(b, ox, oz, dx, dz, lc, w) {
+      let pts = [[b.x0, b.z0], [b.x1, b.z0], [b.x1, b.zS], [b.x0, b.zS]].map(([x, z]) => [(x - ox) * dx + (z - oz) * dz, (x - ox) * dz - (z - oz) * dx - lc]);   // [沿着多远, 往右偏多少]
+      for (const s of [1, -1]) {
+        const out = [];
+        for (let i = 0; i < pts.length; i++) {
+          const p = pts[i], q = pts[(i + 1) % pts.length], pi = s * p[1] <= w, qi = s * q[1] <= w;
+          if (pi) out.push(p);
+          if (pi !== qi) { const t = (s * w - p[1]) / (q[1] - p[1]); out.push([p[0] + (q[0] - p[0]) * t, s * w]); }
+        }
+        if (!out.length) return null;
+        pts = out;
+      }
+      let lo = 1e9, hi = -1e9;
+      for (let i = 0; i < pts.length; i++) { if (pts[i][0] < lo) lo = pts[i][0]; if (pts[i][0] > hi) hi = pts[i][0]; }
+      _sp[0] = lo; _sp[1] = hi;
+      return _sp;
+    }
+    // 房子挡在镜头和主角中间就淡出去。「中间」按镜头现在在哪边算（so、co：从主角指向镜头，不算说话时绕开的那一点）：
+    //   · 主角左右 1.7 格的这条带子里有这栋房子，而且房子整个在主角靠镜头的这一边、又没到镜头跟前（镜头在南边时就是原来的「房子在主角南边」）；
+    //   · 或者视线中段左右 1.2 格的带子里有它（镜头绕到旁边说话时）；
+    //   · 或者视线正好从它中间穿过去（镜头斜着看、房子就在主角旁边时，上面两条认不出来）
+    // 再加上房顶够得着视线：房子靠主角的那一头离主角越远，视线到那里已经越高
     function fadeBuildings(dt, px, py, pz) {
-      const k = 1 - Math.exp(-dt * 8), tan = Math.tan(CAM.cur || CAM.dl), camZ = camera.position.z, mx = (px + camera.position.x) / 2;   // mx：镜头绕到旁边（说话）时视线中段在哪
+      const k = 1 - Math.exp(-dt * 8), tan = Math.tan(CAM.cur || CAM.dl), so = Math.sin(CAM.orb), co = Math.cos(CAM.orb);
+      const cdx = camera.position.x - px, cdz = camera.position.z - pz, camAl = cdx * so + cdz * co, camLat = cdx * co - cdz * so, cl = Math.hypot(cdx, cdz) || 1;
       for (let i = 0; i < BLD.length; i++) {
-        const b = BLD[i], want = b.z0 > pz - .1 && b.z0 < camZ - 1 && ((px > b.x0 - 1.7 && px < b.x1 + 1.7) || (mx > b.x0 - 1.2 && mx < b.x1 + 1.2)) && b.top > py + .3 + (b.z0 - pz) * tan - 1.1 ? 1 : 0;
+        const b = BLD[i];
+        let near = -1, sp;
+        if (Math.abs((b.x0 + b.x1) / 2 - px) < 26 && Math.abs((b.z0 + b.zS) / 2 - pz) < 26) {
+          if ((sp = spanIn(b, px, pz, so, co, 0, 1.7)) && sp[0] > -.1 && sp[0] < camAl - 1) near = sp[0];
+          else if ((sp = spanIn(b, px, pz, so, co, camLat / 2, 1.2)) && sp[0] > -.1 && sp[0] < camAl - 1) near = sp[0];
+          else if ((sp = spanIn(b, px, pz, cdx / cl, cdz / cl, 0, .45)) && sp[1] > .3 && sp[0] < cl - 1) near = Math.max(0, sp[0]);
+        }
+        const want = near >= 0 && b.top > py + .3 + near * tan - 1.1 ? 1 : 0;
         if (b.cur !== want) {
           b.cur += (want - b.cur) * k; if (Math.abs(b.cur - want) < .02) b.cur = want; b.fade.value = b.cur;
           const cast = b.cur < .5 && !!Q.shadow;   // 淡出去的房子影子也收掉（影子图重画一次）
@@ -2434,7 +2520,9 @@
     keep.push(blobMat, blobGeo, blobs);
     const _m4 = new T3.Matrix4();
     let nBlob = 0;
-    function blobAt(x, y, z, sx, sz) { if (nBlob >= 96) return; _m4.makeScale(sx, 1, sz); _m4.setPosition(x, y + .035, z); blobs.setMatrixAt(nBlob++, _m4); }
+    // 脚下的圆影子：一个扁扁的椭圆，长的那一边横在画面上（跟着镜头转），中心比脚往镜头这边挪一点点
+    const _sc3 = new T3.Vector3();
+    function blobAt(x, y, z, sx, sz) { if (nBlob >= 96) return; _m4.makeRotationY(CAM.orb).scale(_sc3.set(sx, 1, sz)); _m4.setPosition(x + Math.sin(CAM.orb) * .02, y + .035, z + Math.cos(CAM.orb) * .02); blobs.setMatrixAt(nBlob++, _m4); }
     // 头顶上的牌子：按 A 的红圈、训练师的「!」、委托的金色「?」
     const bubGeo = new T3.PlaneGeometry(.5, .5);
     keep.push(bubGeo);
@@ -2540,28 +2628,32 @@
       return t;
     })();
     const cloudMat = new T3.ShaderMaterial({
-      uniforms: { uTime: U.uTime, uMap: { value: cloudTex }, uHaze: U.uHaze },
-      vertexShader: 'attribute vec4 aCell; attribute vec2 aDrift; uniform highp float uTime; varying vec2 vUv; varying float vE; varying float vEl;\nvoid main(){ vUv = aCell.xy + vec2(uv.x, 1.0 - uv.y) * aCell.zw; vec4 w = modelMatrix * instanceMatrix * vec4(position, 1.0); float hw = 520.0; float x = mod(w.x + aDrift.x + uTime * aDrift.y + hw, hw * 2.0) - hw; vE = 1.0 - smoothstep(hw * 0.72, hw * 0.98, abs(x)); w.x = x + cameraPosition.x * 0.9; vec3 d = w.xyz - cameraPosition; vEl = d.y / length(d); gl_Position = projectionMatrix * viewMatrix * w; }',
+      uniforms: { uTime: U.uTime, uMap: { value: cloudTex }, uHaze: U.uHaze, uCen: { value: new T3.Vector2() } },
+      // 云排在地图四面的远处，每一面一排、顺着那一面慢慢飘（aSide：0 北、1 东、2 南、3 西；uCen：地图正中）。北面那一排和镜头不会转的时候一模一样；
+      // 另外三面是转过去才看得到的，飘的范围窄一些，拐角上不和旁边那一排叠在一起
+      vertexShader: 'attribute vec4 aCell; attribute vec2 aDrift; attribute float aSide; uniform highp float uTime; uniform vec2 uCen; varying vec2 vUv; varying float vE; varying float vEl;\nvoid main(){ vUv = aCell.xy + vec2(uv.x, 1.0 - uv.y) * aCell.zw; vec4 w = modelMatrix * instanceMatrix * vec4(position, 1.0); float hw = 520.0; float x = mod(w.x + aDrift.x + uTime * aDrift.y + hw, hw * 2.0) - hw; float fw = aSide < 0.5 ? hw : 240.0; vE = 1.0 - smoothstep(fw * 0.72, fw * 0.98, abs(x)); float lz = w.z - uCen.y;\n  if (aSide < 0.5) w.x = x + cameraPosition.x * 0.9; else if (aSide < 1.5) w.xz = vec2(uCen.x - lz, x + cameraPosition.z * 0.9); else if (aSide < 2.5) w.xz = vec2(-x + cameraPosition.x * 0.9, uCen.y - lz); else w.xz = vec2(uCen.x + lz, -x + cameraPosition.z * 0.9);\n  vec3 d = w.xyz - cameraPosition; vEl = d.y / length(d); gl_Position = projectionMatrix * viewMatrix * w; }',
       fragmentShader: 'uniform sampler2D uMap; uniform vec3 uHaze; varying vec2 vUv; varying float vE; varying float vEl;\nvoid main(){ vec4 t = texture2D(uMap, vUv); vec3 c = mix(uHaze, t.rgb, 0.4 + 0.6 * smoothstep(0.0, 0.1, vEl)); gl_FragColor = vec4(c, t.a * vE * (0.5 + 0.5 * smoothstep(0.0, 0.06, vEl)));\n#include <colorspace_fragment>\n}',
       transparent: true, depthWrite: false,
     });
     const cloudGeo = new T3.PlaneGeometry(1, 1);
     const clouds = (() => {
-      const n = Q.clouds, im = new T3.InstancedMesh(cloudGeo, cloudMat, n), cell = new Float32Array(n * 4), drift = new Float32Array(n * 2), o = new T3.Object3D();
+      const n0 = Q.clouds, n = n0 * 4, im = new T3.InstancedMesh(cloudGeo, cloudMat, n), cell = new Float32Array(n * 4), drift = new Float32Array(n * 2), side = new Float32Array(n), o = new T3.Object3D();
       for (let i = 0; i < n; i++) {
-        const r = hash2(i, 71), r2 = hash2(i, 72), r3 = hash2(i, 73), dist = 200 + r * 130, w = dist * (.3 + r2 * .2);
+        const sd = Math.floor(i / n0), j = i % n0, hs = sd * 40;   // 第几面、这一面的第几朵；北面（sd = 0）的每一朵和原来一样
+        const r = hash2(j, 71 + hs), r2 = hash2(j, 72 + hs), r3 = hash2(j, 73 + hs), dist = 200 + r * 130, w = dist * (.3 + r2 * .2);
         o.position.set(0, dist * (.062 + r3 * .1), -dist); o.scale.set(w, w * .5, 1); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
-        const v = i % 4; cell.set([(v % 2) * .5, Math.floor(v / 2) * .5, .5, .5], i * 4);
-        drift.set([(i / n + r * .1) * 1040, 1.5 + r2 * 1.6], i * 2);
+        const v = (j + sd) % 4; cell.set([(v % 2) * .5, Math.floor(v / 2) * .5, .5, .5], i * 4);
+        drift.set([(j / n0 + r * .1) * 1040, 1.5 + r2 * 1.6], i * 2);
+        side[i] = sd;
       }
-      cloudGeo.setAttribute('aCell', new T3.InstancedBufferAttribute(cell, 4)); cloudGeo.setAttribute('aDrift', new T3.InstancedBufferAttribute(drift, 2));
+      cloudGeo.setAttribute('aCell', new T3.InstancedBufferAttribute(cell, 4)); cloudGeo.setAttribute('aDrift', new T3.InstancedBufferAttribute(drift, 2)); cloudGeo.setAttribute('aSide', new T3.InstancedBufferAttribute(side, 1));
       im.frustumCulled = false; im.renderOrder = -50; im.matrixAutoUpdate = false;
       return im;
     })();
     keep.push(cloudTex, cloudMat, cloudGeo, clouds);
     const farMat = toon({ gradientMap: softTex }, { key: 'far', flag: 0, cloud: 0 });
     let farIsles = null;
-    // 每座岛望出去看到什么（镜头一直朝北，看得到的是北边和两边）：
+    // 每座岛望出去看到什么（镜头平常朝北，看得到的是北边和两边；另外三面转过去才看得到，只有海和小岛，见 buildFar 最后）：
     //   north：正北那座（下一座岛：路就是往那边去的）[第几岛, 样子]；side：一边远一点的（上一座岛，或者地图上另一个邻居）；own：近一点的岬角上，本岛自己的地标；mtn：最远的大山什么样
     //   第 0 岛（你好岛）照原样（家长看过、喜欢）：正北灯标塔岛、一边尖岛、另一边大山
     // 邻居都按 WORLD.md 的地图网：0 → 1 → 2 → 3 → 4 →（渡轮）5 → 6 →（钟山）7 →（8 号水路）8 →（9 号水路）9 →（海底隧道）10 →（冰洞）11 →（瀑布）12 →（勇气之路）冠军高原
@@ -2584,7 +2676,8 @@
     function buildFar() {
       // 远景（都隔着海，被空气染成淡蓝）：正北一座岛上立着下一座岛的地标——路就是往那边去的；一边近一点的岬角上是本岛自己的地标，另一边远一点是上一座岛；
       // 最远的地方一座淡在雾气里的大山（每座岛的山不一样：雪山、平顶的红岩山、软软的小丘……）；两头再散着几座小岛
-      const bag = Bag(), P = PAL, sea = LAND.SEA - .15, seed = String(m.id || '').length * 31 + (m.z || 0) * 7 + 3, cxm = m.W / 2, FAR = Q.far, lowT = tier === 'low', sg = lowT ? 8 : 16;
+      let bag = Bag();   // 下面的 mount / part / LM 都往「现在这个袋子」里倒：先是北边那一大片，最后另外三面各换一个
+      const P = PAL, sea = LAND.SEA - .15, seed = String(m.id || '').length * 31 + (m.z || 0) * 7 + 3, cxm = m.W / 2, FAR = Q.far, lowT = tier === 'low', sg = lowT ? 8 : 16;
       const h = k => hash2(k, seed), side = h(1) > .5 ? 1 : -1;
       const cfg = FAR_CFG[String(m.id || '')[0] === 'v' ? 'league' : clamp(m.isle | 0, 0, 12)] || FAR_CFG[0];
       INFO.far = cfg.classic ? { north: 'beacon', own: '', side: 'peak' } : { north: cfg.north[1], own: cfg.own, side: cfg.side[1], mtn: cfg.mtn };
@@ -2597,11 +2690,11 @@
       const green = mixC(P.tree, P.grass, .45), rockC = mixC(P.rock || '#a39b8b', '#8d93ad', .45), paleC = C('#dfe5f0');
       const landCol = landColOf(P);
       // 一座山 / 岛：从中心往外按一条剖面线降下去（prof(半径 0…1, 角度) → 高度 0…1），边缘按噪声进进出出；sq 把它在南北方向压扁
-      const mount = (x, z, R, Hh, prof, sd2, sq, col) => {
+      const mount = (x, z, R, Hh, prof, sd2, sq, col, sqx) => {   // sqx：在东西方向压扁（东、西两面的岛是顺着南北长的）
         const nr = lowT ? 7 : 13, ns = lowT ? 14 : 30, pos = [], idx = [];
         for (let i = 0; i <= nr; i++) for (let j = 0; j < ns; j++) {
           const rr = i / nr, a = j / ns * 6.2832, wob = .76 + .48 * vnoise(Math.cos(a) * 1.4 + sd2, Math.sin(a) * 1.4 + sd2 * 1.7);
-          pos.push(Math.cos(a) * R * rr * wob, i === nr ? -.8 : Hh * prof(rr, a), Math.sin(a) * R * rr * wob * (sq || 1));
+          pos.push(Math.cos(a) * R * rr * wob * (sqx || 1), i === nr ? -.8 : Hh * prof(rr, a), Math.sin(a) * R * rr * wob * (sq || 1));
         }
         for (let i = 0; i < nr; i++) for (let j = 0; j < ns; j++) { const a = i * ns + j, b = i * ns + (j + 1) % ns, c = a + ns, d = b + ns; idx.push(a, b, c, b, d, c); }
         const g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
@@ -2801,6 +2894,29 @@
       const g = bake(bag); own.push(g);
       farIsles = new T3.Mesh(g, farMat); farIsles.frustumCulled = false;
       still(add(farIsles, false, false));
+      // ---- 另外三面（镜头转过去才看得到；上面那些都在北边，朝北看的画面不变）：还是海，海上远远近近散着礁石和小岛，最远一道淡在雾气里的长岛、一座尖山。
+      //      地标只有北边有（路是往北去的）；南面那道长岛用上一座岛的配色（来的时候就是从那边过来的）。每一面单独一个网格，转到背后的那几面整个不画。
+      //      东、西两面的都摆在地图北边线以南，朝北看的时候落在画面外面
+      const prevCol = landColOf(palOf(Math.max(0, (m.isle | 0) - 1)));
+      let nRing = 0;
+      [[1, 0], [0, 1], [-1, 0]].forEach(([ex, ez], k) => {
+        bag = Bag();
+        const hk = q => h(40 + k * 10 + q), sgn = hk(0) > .5 ? 1 : -1;
+        // 往外 d 远、顺着这一面在 u（0…1）的地方立一座：南面的顺着东西排开，东西两面的顺着南北排开（从 R 排到地图南边再往外 25 格）
+        const put1 = (R, Hh, prof, sd2, col, d, u, sq) => {
+          const x = ez ? cxm + (u - .5) * (m.W + 150) : (ex > 0 ? m.W + d : -d), z = ez ? m.H + d : lerp(R, m.H + 25, u);
+          mount(x, z, R, Hh, prof, sd2, ez ? sq : 1, col, ez ? 1 : sq); nRing++;
+        };
+        put1(26 + hk(1) * 5, 4.2 + hk(2), dome, seed + 50 + k * 7, ez ? prevCol : null, Q.skirt + 78 + hk(3) * 16, .5 + sgn * (.08 + hk(4) * .14), .5);
+        put1(9 + hk(5) * 3, 4 + hk(6) * 2.2, k % 2 ? dome : peak, seed + 51 + k * 7, null, Q.skirt + 34 + hk(7) * 14, .5 - sgn * (.2 + hk(8) * .22), .7);
+        if (!lowT) {
+          put1(13 + hk(9) * 3, 8 + hk(10) * 3, crag(seed * .31 + 13 + k), seed + 52 + k * 7, null, Q.skirt + 112 + hk(11) * 20, .5 - sgn * (.05 + hk(12) * .3), .7);
+          put1(4.5 + hk(13) * 1.5, 3.6 + hk(14) * 2, crag(seed * .23 + 19 + k), seed + 53 + k * 7, null, Q.skirt + 20 + hk(15) * 9, .5 + sgn * (.26 + hk(16) * .2), .8);
+        }
+        const g2 = bake(bag); own.push(g2);
+        still(add(new T3.Mesh(g2, farMat), false, false));
+      });
+      INFO.far.ring = nRing;
     }
     // 飘在空气里的东西（全在着色器里算，围着镜头转一个大盒子）：每座岛不一样（MOODS 的 life）——
     //   「片」（转着往下飘的小片：花瓣、落叶、彩纸屑、铅笔屑）和「点」（花粉、雪花、光点）各占一部分；两三只蝴蝶（下雪的岛上没有）
@@ -2882,10 +2998,10 @@
         fragmentShader: 'uniform sampler2D tDiffuse; uniform vec2 uDir; varying vec2 vUv;\nvoid main(){ vec3 c = texture2D(tDiffuse, vUv).rgb * 0.227; c += (texture2D(tDiffuse, vUv + uDir * 1.3846).rgb + texture2D(tDiffuse, vUv - uDir * 1.3846).rgb) * 0.3162; c += (texture2D(tDiffuse, vUv + uDir * 3.2308).rgb + texture2D(tDiffuse, vUv - uDir * 3.2308).rgb) * 0.0703; gl_FragColor = vec4(c, 1.0); }',
       });
       const comp = new T3.ShaderMaterial({
-        uniforms: { tDiffuse: { value: rt.texture }, tDepth: { value: dtex }, tBloom: { value: null }, uPx: { value: new T3.Vector2(1, 1) }, uNF: { value: new T3.Vector2(.5, 600) }, uBloom: { value: Q.bloom ? .32 : 0 }, uLine: { value: dtex ? 1 : 0 } },
+        uniforms: { tDiffuse: { value: rt.texture }, tDepth: { value: dtex }, tBloom: { value: null }, uPx: { value: new T3.Vector2(1, 1) }, uNF: { value: new T3.Vector2(.5, 600) }, uBloom: { value: Q.bloom ? .32 : 0 }, uLine: { value: dtex ? 1 : 0 }, uGlow: { value: new T3.Vector3(.08, 1.06, 1) } },
         vertexShader: VS, depthTest: false, depthWrite: false,
         fragmentShader: [
-          'uniform sampler2D tDiffuse; uniform sampler2D tDepth; uniform sampler2D tBloom; uniform vec2 uPx; uniform vec2 uNF; uniform float uBloom; uniform float uLine; varying vec2 vUv;',
+          'uniform sampler2D tDiffuse; uniform sampler2D tDepth; uniform sampler2D tBloom; uniform vec2 uPx; uniform vec2 uNF; uniform float uBloom; uniform float uLine; uniform vec3 uGlow; varying vec2 vUv;',
           'void main(){',
           '  vec4 c = texture2D(tDiffuse, vUv); vec3 col = c.rgb;',
           '  if (uLine > 0.0) {',
@@ -2902,8 +3018,9 @@
           '    col = mix(col, col * vec3(0.30, 0.27, 0.42), k * 0.82);',
           '  }',
           '  col += texture2D(tBloom, vUv).rgb * uBloom;',
-          // 太阳在左上角外面：那一角罩着一片暖光
-          '  vec2 gq = (vUv - vec2(0.08, 1.06)) * vec2(1.0, 1.5); col += vec3(1.0, 0.85, 0.6) * pow(clamp(1.0 - length(gq), 0.0, 1.0), 2.2) * 0.22;',
+          // 太阳那边罩着一片暖光。uGlow = (太阳在画面上的位置，出了画面就贴在边上, 有多强)：镜头朝北时太阳在左上角外面，就是左上角那一片；
+          // 镜头转了，暖光跟着太阳走，太阳到了镜头背后就没有了（draw 里每帧算）
+          '  vec2 gq = (vUv - uGlow.xy) * vec2(1.0, 1.5); col += vec3(1.0, 0.85, 0.6) * pow(clamp(1.0 - length(gq), 0.0, 1.0), 2.2) * 0.22 * uGlow.z;',
           // 调色（在显示的那个亮度曲线上做）：一条很缓的 S 形，亮部偏暖、暗部偏冷，饱和一点点，四角极轻的压暗
           '  vec3 gc = pow(clamp(col, 0.0, 1.0), vec3(0.4545));',
           '  gc = mix(gc, gc * gc * (3.0 - 2.0 * gc), 0.24);',
@@ -2952,7 +3069,7 @@
       own = [];
       spriteList.forEach(s => dropMesh(s));
       spriteList.length = 0; sprites.clear();
-      BLD.length = 0; spinners.length = 0; grassChunks.length = 0; treeBands.length = 0;
+      BLD.length = 0; spinners.length = 0; grassChunks.length = 0; treeBands.length = 0; southCh.length = 0;
       obstM = []; bouldM = []; gateM = []; pickS = []; boatG = null; farIsles = null; atlas = null;
       world = new T3.Group(); world.matrixAutoUpdate = false;
       scene.add(world);
@@ -2975,7 +3092,7 @@
       INFO = { life: MOOD.life, path: GND.path, sand: GND.sand, cap: GND.cap };
       buildLand(); buildTerrain(); buildWater(); buildFalls(); buildIce(); buildStatics(); buildTrees(); buildGrass(); buildPebbles(); buildBuildings(); buildMovables(); buildFar();
       INFO.falls = LAND.falls.map(f => +f.drop.toFixed(2)); INFO.lava = !!waterMat.uniforms.uHot.value; INFO.over = !!(m.over && m.def && m.def.paint);
-      clouds.position.set(m.W / 2, 0, m.H / 2); clouds.updateMatrix();
+      clouds.position.set(m.W / 2, 0, m.H / 2); clouds.updateMatrix(); cloudMat.uniforms.uCen.value.set(m.W / 2, m.H / 2);
       world.add(sky, clouds, blobs);
       if (life) world.add(life);
       flies.forEach(f => { world.add(f.o); f.t0 = -1e9; f.o.visible = MOOD.life !== 'snow'; });   // 下雪的岛上没有蝴蝶
@@ -3005,8 +3122,41 @@
       buildMs = Math.round(performance.now() - t0);
     }
 
-    // ---------- 镜头：跟在主角身后（南边）上方，朝北看；地平线在画面上面四分之一左右，主角在中间偏下 ----------
-    const CAM = { phi: 0, dl: 0, D: 11, frac: .1, cur: 0, yaw: 0 };
+    // ---------- 镜头：跟在主角身后上方；地平线在画面上面四分之一左右，主角在中间偏下 ----------
+    // 平常在主角南边朝北看。可以绕着主角转一整圈（world.js：右半边屏幕拖、Q / E 键；双击回到主角身后，点指北针回正北），上下拖调俯角。
+    //   orb：现在转到哪了（0 = 在南边朝北看，正的 = 镜头往东边绕、画面往左转）；orbT：要转到哪（拖的时候两个一起变，按键 / 回正是慢慢转过去）；
+    //   tilt：俯角比平常多多少；q：摇杆的「上」现在算哪边（见 quarter）；yaw：和人说话时另外绕开的那一点（见 draw）
+    // 不转的时候（orb = 0、tilt = 0）下面每一处算出来都和「镜头固定朝北」的时候一样
+    const CAM = { phi: 0, dl: 0, D: 11, frac: .1, cur: 0, yaw: 0, orb: 0, orbT: 0, tilt: 0, q: 0 };
+    const PMIN = .21, PMAX = .785, HYS = .21;   // 手指能把镜头压到多低、抬到多高（往下看的角度，约 12°–45°）；HYS：转过 45° 再多这么多（12°），摇杆的「上」才换一边
+    const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a)), angd = (a, b) => wrapA(a - b);
+    const ROT4 = ['up', 'left', 'down', 'right'];   // 逆时针一圈（从上往下看）
+    let lastDir = 'up';
+    // 摇杆的「上」是哪边：镜头转了几个 90°（0 北、1 西、2 南、3 东——world.js 把按的方向在 ROT4 里往后挪这么多格）。
+    // 按「要转到哪」算；停在 45° 附近时不来回变：离现在这一边的正中超过 45° + HYS 才换
+    function quarter() {
+      if (Math.abs(angd(CAM.orbT, CAM.q * Math.PI / 2)) > Math.PI / 4 + HYS) CAM.q = ((Math.round(CAM.orbT / (Math.PI / 2)) % 4) + 4) % 4;
+      return CAM.q;
+    }
+    // 纸片人的图只有四个朝向：镜头转过去以后，TA 在画面上是朝哪边
+    const scrDir = d => (CAM.q ? ROT4[(ROT4.indexOf(d || 'down') + 4 - CAM.q) % 4] : d);
+    // world.js 转镜头用：'drag' 手指拖了 (a, b) 个像素（马上转到，不带惯性）；'step' 往左（1）/ 往右（-1）转到下一个 45°；'north' 回正北；
+    // 'behind' 回到主角身后（朝主角面朝的方向看）；'set' 直接定在 a（弧度）、俯角多 b（测试和 tools/look 用）。不带参数只问现在的样子
+    function orbit(op, a, b) {
+      const tLo = Math.min(0, PMIN + CAM.phi - CAM.dl), tHi = Math.max(0, PMAX + CAM.phi - CAM.dl);   // 平常的俯角总在能调的范围里（横屏平常就是约 11°，不能再压低）
+      if (op === 'drag') {
+        // 横着拖过半个竖屏大约转半圈；往下拖镜头抬高（更俯视），往上拖压低（看得更远）
+        const k = 5.2 / Math.min(VW, 560), dy = clamp(CAM.tilt + (b || 0) * k * .6, tLo, tHi) - CAM.tilt;
+        CAM.orbT = wrapA(CAM.orbT - (a || 0) * k); CAM.orb = wrapA(CAM.orb - (a || 0) * k);
+        CAM.tilt += dy; if (CAM.cur) CAM.cur += dy;
+      } else if (op === 'step') {
+        const u = CAM.orbT / (Math.PI / 4);
+        CAM.orbT = wrapA((a > 0 ? Math.floor(u + .001) + 1 : Math.ceil(u - .001) - 1) * Math.PI / 4);
+      } else if (op === 'north') { CAM.orbT = 0; CAM.tilt = 0; }
+      else if (op === 'behind') { CAM.orbT = { up: 0, down: Math.PI, left: Math.PI / 2, right: -Math.PI / 2 }[lastDir] || 0; CAM.tilt = 0; }
+      else if (op === 'set') { CAM.orbT = CAM.orb = wrapA(a || 0); CAM.tilt = clamp(b || 0, tLo, tHi); CAM.q = ((Math.round(CAM.orbT / (Math.PI / 2)) % 4) + 4) % 4; }
+      return { yaw: CAM.orb, to: CAM.orbT, tilt: CAM.tilt, q: quarter() };
+    }
     const camT = new T3.Vector3(-999, 0, 0), look = new T3.Vector2(), _v = new T3.Vector3();
     const DIRV = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }, DIRYAW = { down: 0, up: Math.PI, left: -Math.PI / 2, right: Math.PI / 2 };
     let VW = 1, VH = 1, bufW = 1, bufH = 1, lastT = 0, snapKey = '', camLift = 0, seenTick = 0, bloomPx = [1, 1];
@@ -3048,11 +3198,18 @@
       U.uTime.value = t;
       renderer.info.reset();
       nBlob = 0;
+      // 镜头绕着主角转到哪了：按键、回正是慢慢转过去的（拖是当场到位，见 orbit）。(so, co) 从主角指向镜头，(-so, -co) 是镜头看过去的方向，(co, -so) 是画面的右边
+      const snapCam = camT.x < -900;
+      { const dO = angd(CAM.orbT, CAM.orb); CAM.orb = snapCam || Math.abs(dO) < .002 ? CAM.orbT : wrapA(CAM.orb + dO * (1 - Math.exp(-dt * 12))); }
+      const so = Math.sin(CAM.orb), co = Math.cos(CAM.orb);
+      U.uBc.value.set(co, so);
+      lastDir = V.pdir;
       // 主角
       const px = V.px + .5, pz = V.py + .5, wl = V.surf ? L.waterLevel(Math.round(V.px), Math.round(V.py)) : 0;
       const py = V.surf ? wl : hopY(jumpP, V.hop, px, pz, L.at(px, pz));
       setLook(player, V.plook);
       player.root.position.set(px, py, pz);
+      player.root.rotation.y = player.inst ? 0 : CAM.orb;   // 纸片人正对镜头（3D 小人自己管朝向）
       if (player.inst) {
         // 踏浪：站在怪兽背上；骑车：坐在车上；跳台阶：world.js 只给了离地多高，上升还是下落看它比上一帧高了还是低了；冰面上滑的时候不迈步
         const hN = clamp(V.hop / .55, 0, 1), rising = V.hop >= (player.hop0 || 0), tc = tIn(Math.round(V.px), Math.round(V.py));
@@ -3060,10 +3217,10 @@
         animate3(player, dt, px, pz, V.pdir, V.pmoving && tc !== 'I' && tc !== 'w', V.surf ? 'surf' : V.bike ? 'bike' : V.hop > .002 ? 'hop' : '', V.hop > .002 ? (rising ? Math.asin(hN) / Math.PI : 1 - Math.asin(hN) / Math.PI) : null);
         player.inst.root.position.y = V.hop + (V.surf ? (fol.R ? clamp(fol.tall * .5, .26, .6) : .34) + Math.sin(t * 2.2) * .03 : V.bike ? .16 : 0);
       } else {
-        setFrame(player, V.pdir, V.pmoving ? 1 + (Math.floor(now / 85) % 2) : 0);
+        setFrame(player, scrDir(V.pdir), V.pmoving ? 1 + (Math.floor(now / 85) % 2) : 0);
         player.mesh.position.y = V.hop + (V.surf ? .36 + Math.sin(t * 2.2) * .03 : V.bike ? .16 : 0);
       }
-      if (!V.surf) blobAt(px, py, pz + .02, .78 - V.hop * .35, .46 - V.hop * .2);
+      if (!V.surf) blobAt(px, py, pz, .78 - V.hop * .35, .46 - V.hop * .2);
       bike.visible = !!V.bike;
       if (V.bike) { bike.position.set(px, py, pz); bike.rotation.y = V.pdir === 'left' || V.pdir === 'right' ? Math.PI / 2 : 0; }
       ripple.visible = !!V.surf;
@@ -3072,7 +3229,7 @@
       for (let i = 0; i < gateM.length; i++) { const o = gateM[i], open = V.open && V.open.has(o.key); o.g.position.y += ((open ? o.y0 - 1.25 : o.y0) - o.g.position.y) * .2; o.g.visible = o.g.position.y > o.y0 - 1.15; }
       for (let i = 0; i < obstM.length; i++) obstM[i].g.visible = !V.cleared || !V.cleared.has(obstM[i].key);
       for (let i = 0; i < V.obst.length && i < bouldM.length; i++) { const b = V.obst[i], g = bouldM[i]; g.position.x += (b.x + .5 - g.position.x) * .3; g.position.z += (b.y + .5 - g.position.z) * .3; g.position.y = L.ground(g.position.x, g.position.z); }
-      for (let i = 0; i < sparkS.length; i++) { const sp = sparkS[i], h = V.sparkles[i]; sp.visible = !!h; if (h) { sp.position.set(h.x + .5, L.at(h.x + .5, h.y + .5) + .28, h.y + .5); sp.material.opacity = .4 + .6 * (Math.sin(now / 230 + i * 2) + 1) / 2; sp.scale.setScalar(.7 + .5 * (Math.sin(now / 300 + i) + 1) / 2); } }
+      for (let i = 0; i < sparkS.length; i++) { const sp = sparkS[i], h = V.sparkles[i]; sp.visible = !!h; if (h) { sp.rotation.y = CAM.orb; sp.position.set(h.x + .5, L.at(h.x + .5, h.y + .5) + .28, h.y + .5); sp.material.opacity = .4 + .6 * (Math.sin(now / 230 + i * 2) + 1) / 2; sp.scale.setScalar(.7 + .5 * (Math.sin(now / 300 + i) + 1) / 2); } }
       if (boatG) { boatG.position.y = boatG.userData.y0 + Math.sin(t * 1.3) * .035 - .04; boatG.rotation.z = Math.sin(t * .9) * .05; boatG.rotation.x = Math.sin(t * 1.1 + 1) * .03; }
       // 跟着走的怪兽
       const showF = V.showF || (V.surf && !!V.lead);
@@ -3080,7 +3237,7 @@
       if (showF) {
         folSet(V.lead);
         let fx = V.fx + .5, fz = V.fy + .5, fy;
-        if (V.surf) { fx = px; fz = pz + .05; fy = wl - (fol.R ? fol.tall * .45 : .22); }
+        if (V.surf) { fx = px + so * .05; fz = pz + co * .05; fy = wl - (fol.R ? fol.tall * .45 : .22); }
         else fy = hopY(jumpF, V.fhop, fx, fz, L.at(fx, fz));
         fol.root.position.set(fx, fy + V.fhop, fz);
         // 朝向：走的时候朝着走的方向；停下来过一会儿慢慢转向主角
@@ -3098,17 +3255,18 @@
           if (fol.mode !== mode) { fol.mode = mode; M3.play(fol.R, mode, mode === 'walk' ? (V.bike ? 1.8 : 1.2) : 1); }
           M3.animate(fol.R, t);
         } else if (fol.icon.mesh) {
-          const fdx = px - fx;
+          fol.icon.root.rotation.y = CAM.orb;   // 纸片图标正对镜头；朝左还是朝右按画面上主角在它哪边
+          const fdx = (px - fx) * co - (pz - fz) * so;
           if (!V.surf && Math.abs(fdx) > .05) fol.face = fdx > 0 ? 1 : -1;
           fol.icon.mesh.position.y = V.pmoving ? Math.abs(Math.sin(now / 90)) * .08 : Math.sin(now / 600) * .02;
           fol.icon.mesh.scale.x = fol.icon.base && fol.face && fol.face !== fol.icon.base ? -1 : 1;
         }
-        if (!V.surf) blobAt(fx, fy, fz + .02, fol.R ? fol.tall * .95 : .7, fol.R ? fol.tall * .62 : .4);
+        if (!V.surf) blobAt(fx, fy, fz, fol.R ? fol.tall * .95 : .7, fol.R ? fol.tall * .62 : .4);
         U.uFollow.value.set(fx, fy, fz);
       } else U.uFollow.value.set(-99, 0, -99);
       // 其他人物：位置平滑跟上（训练师走过来时不会一格一格跳）
       seenTick++;
-      const kN = 1 - Math.exp(-dt * 14), cpz = camera.position.z;
+      const kN = 1 - Math.exp(-dt * 14), cpx = camera.position.x, cpz = camera.position.z;
       // 正在和谁说话：主角站着不动、面前一格有人、按 A 的提示收起来了（对话框开着）——那个人说话时点头、比划
       const dvT = DIRV[V.pdir] || DIRV.down, talkX = Math.round(V.px) + dvT[0], talkY = Math.round(V.py) + dvT[1], talking = !V.pmoving && !V.hint;
       for (let i = 0; i < V.npcs.length; i++) {
@@ -3119,16 +3277,18 @@
         const sx = s.rx + .5, sz = s.ry + .5, sy = L.at(sx, sz), walking = Math.abs(q.x - s.rx) + Math.abs(q.y - s.ry) > .05;
         if (q.mon) { if (s.mesh) s.mesh.position.y = Math.abs(Math.sin(now / 110)) * .12; }
         else if (s.inst) animate3(s, dt, sx, sz, q.face, null, talking && q.x === talkX && q.y === talkY ? 'talk' : '');
-        else setFrame(s, q.face, walking ? 1 + (Math.floor(now / 90) % 2) : 0);
+        else setFrame(s, scrDir(q.face), walking ? 1 + (Math.floor(now / 90) % 2) : 0);
         s.root.position.set(sx, sy, sz);
+        s.root.rotation.y = s.inst ? 0 : CAM.orb;   // 纸片（人、怪兽的图标）正对镜头；3D 小人不转，只转 TA 头上的牌子
+        const mY = s.inst ? CAM.orb : 0;
         s.root.visible = true;
-        blobAt(sx, sy, sz + .02, .76, .44);
+        blobAt(sx, sy, sz, .76, .44);
         // 离镜头远的牌子放大一点，不然看不清
-        const bs = clamp((cpz - sz) / 11, 1, 2.3);
-        if (q.alert) { if (!s.alert) { s.alert = bubble(alertMat); s.root.add(s.alert); } s.alert.visible = true; s.alert.position.set(0, headTop(s) + .3 + .2 * bs, 0); s.alert.scale.setScalar(bs); }
+        const bs = clamp(((cpx - sx) * so + (cpz - sz) * co) / 11, 1, 2.3);
+        if (q.alert) { if (!s.alert) { s.alert = bubble(alertMat); s.root.add(s.alert); } s.alert.visible = true; s.alert.position.set(0, headTop(s) + .3 + .2 * bs, 0); s.alert.scale.setScalar(bs); s.alert.rotation.y = mY; }
         else if (s.alert) s.alert.visible = false;
         // 这个人有委托：头上一个金色的「?」，轻轻上下浮（「!」出来时先让开）
-        if (q.quest && !q.alert) { if (!s.quest) { s.quest = bubble(questMat); s.root.add(s.quest); } s.quest.visible = true; s.quest.position.set(0, headTop(s) + .32 + .22 * bs + Math.sin(now / 260 + q.x) * .05, 0); s.quest.scale.setScalar(bs); }
+        if (q.quest && !q.alert) { if (!s.quest) { s.quest = bubble(questMat); s.root.add(s.quest); } s.quest.visible = true; s.quest.position.set(0, headTop(s) + .32 + .22 * bs + Math.sin(now / 260 + q.x) * .05, 0); s.quest.scale.setScalar(bs); s.quest.rotation.y = mY; }
         else if (s.quest) s.quest.visible = false;
       }
       for (let i = 0; i < spriteList.length; i++) { const s = spriteList[i]; if (s.seen !== seenTick) { s.root.visible = false; if (s.inst && seenTick - (s.seen || 0) > 600) { dropMesh(s); s.key = ''; } } }   // 很久没露面的（剧情里走掉的、被藏起来的）：把 3D 小人收掉，回来再建
@@ -3136,7 +3296,7 @@
       for (let i = 0; i < pickS.length; i++) {
         const ps = pickS[i], on = V.picks.includes(ps.p);
         ps.o.visible = on;
-        if (on) { const gy = L.at(ps.p.x + .5, ps.p.y + .55); ps.o.position.y = gy + .03 + Math.sin(now / 320 + ps.p.x) * .04; blobAt(ps.p.x + .5, gy, ps.p.y + .57, .44, .26); }
+        if (on) { const gy = L.at(ps.p.x + .5, ps.p.y + .55); ps.o.position.y = gy + .03 + Math.sin(now / 320 + ps.p.x) * .04; ps.o.rotation.y = CAM.orb; blobAt(ps.p.x + .5, gy, ps.p.y + .55, .44, .26); }
       }
       // A 键提示
       hintS.visible = !!V.hint;
@@ -3145,49 +3305,58 @@
         let top = 1.2;   // 提示的是一个人：放在 TA 头顶上面
         for (let i = 0; i < V.npcs.length; i++) if (V.npcs[i].x === V.hint.x && V.npcs[i].y === V.hint.y) { const hs = sprites.get(V.npcs[i].n); if (hs) top = headTop(hs); break; }
         hintS.position.set(hx, L.at(hx, hz + (door ? .6 : 0)) + (door ? 1.32 : top + .42) + Math.sin(now / 220) * .06, hz + (door ? .5 : 0));
+        hintS.rotation.y = CAM.orb;
       }
       blobs.count = nBlob; blobs.instanceMatrix.needsUpdate = true;
       // 镜头：稍微慢半拍跟上，往主角面朝的方向多看一点
       const dv = DIRV[V.pdir] || DIRV.down, kl = 1 - Math.exp(-dt * 2.4);
-      look.x += (dv[0] * .75 - look.x) * kl; look.y += (dv[1] * .9 - look.y) * kl;
-      const gx = px + look.x, gz = pz + look.y - .15;
-      const snapCam = camT.x < -900;
-      if (snapCam) { camT.set(px, py, pz - .15); look.set(0, 0); camLift = 0; }
+      const lkR = (dv[0] * co - dv[1] * so) * .75, lkF = -(dv[0] * so + dv[1] * co) * .9;   // 主角面朝的方向在画面上是往右多少、往里多少（左右多看 .75 格，前后 .9 格）
+      look.x += (co * lkR - so * lkF - look.x) * kl; look.y += (-so * lkR - co * lkF - look.y) * kl;
+      const gx = px + look.x - so * .15, gz = pz + look.y - co * .15;
+      if (snapCam) { camT.set(px - so * .15, py, pz - co * .15); look.set(0, 0); camLift = 0; }
       else { const kc = 1 - Math.exp(-dt * 6.5); camT.x += (gx - camT.x) * kc; camT.z += (gz - camT.z) * kc; camT.y += (py - camT.y) * (1 - Math.exp(-dt * 4)); }
       // 岩壁挡在镜头和主角中间：俯角加大（镜头抬高），从它上面看过去；抬到头还挡着就靠「圆窗」。房子不抬镜头，淡出去（fadeBuildings）
+      // 镜头和主角中间：从主角往镜头那边一格一格地看过去（镜头转到哪边就往哪边看）
       const fy0 = camT.y + .55;
-      let need = CAM.dl;
+      // 平常的俯角是 resize() 算好的那个；手指上下拖可以调（CAM.tilt），最低、最高按「往下看的角度」算（PMIN…PMAX）
+      const base = CAM.tilt ? clamp(CAM.dl + CAM.tilt, Math.min(CAM.dl, PMIN + CAM.phi), Math.max(CAM.dl, PMAX + CAM.phi)) : CAM.dl;
+      let need = base;
       for (let sI = 0; sI < 22; sI++) {
-        const zz = Math.floor(camT.z + .6 + sI * .5);
-        if (zz >= m.H) break;
-        if (zz < 0) continue;
         for (let k = -1; k <= 1; k++) {
-          const xx = Math.floor(camT.x + k * .6);
-          if (xx < 0 || xx >= m.W) continue;
+          const xx = Math.floor(camT.x + co * k * .6 + so * .6 + so * sI * .5), zz = Math.floor(camT.z + co * .6 + co * sI * .5 - so * k * .6);
+          if (xx < 0 || xx >= m.W || zz < 0 || zz >= m.H) continue;
           const top = occH[zz * m.W + xx];
-          if (top > 0) { const a = Math.atan2(top + .35 - fy0, Math.max(.5, zz - camT.z + .15)); if (a > need) need = a; }
+          if (top > 0) { const a = Math.atan2(top + .35 - fy0, Math.max(.5, (xx + .5 - camT.x) * so + (zz + .5 - camT.z) * co - .5 * (Math.abs(so) + Math.abs(co)) + .15)); if (a > need) need = a; }
         }
       }
-      need = Math.min(need, .8);   // 岩壁最多抬到这里
-      // 主角面朝北、面前一格站着人（要和 TA 说话）：镜头也抬高（纸片人俯角约 41°、3D 小人约 47°），不然主角的背影正好把对面的人挡住
+      // 转过去以后（或者把镜头压低了），中间还可能隔着地图外面的山、台阶上面那一层：俯角加大到视线能从地面上面过去。
+      // 朝北、没压低的时候不查——南边外面的山本来就压低了（见 buildLand 的 southK），画面和原来一样
+      if (CAM.orb !== 0 || CAM.tilt !== 0) {
+        const chN = Math.cos(need) * CAM.D;
+        for (let al = 1.5; al < chN + 1; al += .75) { const a = Math.atan2(L.ground(camT.x + so * al, camT.z + co * al) + .3 - fy0, al); if (a > need) need = a; }
+      }
+      need = Math.max(base, Math.min(need, .8));   // 岩壁、山最多抬到这里（手指可以抬得更高）
+      // 主角背对着镜头（镜头朝北看时就是面朝北）、面前一格站着人（要和 TA 说话）：镜头也抬高（纸片人俯角约 41°、3D 小人约 47°），不然主角的背影正好把对面的人挡住
       // 和 3D 小人说话（对话框开着）时再绕到主角右后方一点：TA 的脸在头的下半边，从正后方看总被主角的帽子挡住，绕开一点两个人的脸和背影就都看得到。
       // 只在对话框开着时绕（这时候不走路，摇杆的方向不受影响），说完转回正北
       let yawT = 0;
-      if (!V.pmoving && V.pdir === 'up') { const tx = Math.round(V.px), ty = Math.round(V.py) - 1; for (let i = 0; i < V.npcs.length; i++) if (V.npcs[i].x === tx && V.npcs[i].y === ty) { const hs = sprites.get(V.npcs[i].n); need = Math.max(need, hs && hs.inst && talking ? .6 : .72); if (hs && hs.inst && talking) yawT = .48; break; } }
+      if (!V.pmoving && -(dv[0] * so + dv[1] * co) > .64) { const tx = Math.round(V.px) + dv[0], ty = Math.round(V.py) + dv[1]; for (let i = 0; i < V.npcs.length; i++) if (V.npcs[i].x === tx && V.npcs[i].y === ty) { const hs = sprites.get(V.npcs[i].n); need = Math.max(need, hs && hs.inst && talking ? .6 : .72); if (hs && hs.inst && talking) yawT = .48; break; } }
       CAM.yaw = snapCam ? 0 : CAM.yaw + (yawT - CAM.yaw) * (1 - Math.exp(-dt * (yawT ? 4.5 : 8)));
       if (Math.abs(CAM.yaw) < .002 && !yawT) CAM.yaw = 0;
       CAM.cur = snapCam || !CAM.cur ? need : CAM.cur + (need - CAM.cur) * (1 - Math.exp(-dt * (need > CAM.cur ? 5 : 2.5)));
-      const ch = Math.cos(CAM.cur) * CAM.D, cx = camT.x + Math.sin(CAM.yaw) * ch, cz = camT.z + Math.cos(CAM.yaw) * ch;
+      const ya = CAM.orb + CAM.yaw, ch = Math.cos(CAM.cur) * CAM.D, cx = camT.x + Math.sin(ya) * ch, cz = camT.z + Math.cos(ya) * ch;
       let cy = fy0 + Math.sin(CAM.cur) * CAM.D;
       // 不钻进山里：镜头脚下、镜头前面一点的地面再高也留出空隙（慢慢抬上去，不跳）
-      const lift = Math.max(0, Math.max(L.ground(cx, cz), L.ground(cx, cz - 2)) + 1.6 - cy);
+      const lift = Math.max(0, Math.max(L.ground(cx, cz), L.ground(cx - so * 2, cz - co * 2)) + 1.6 - cy);
       camLift += (lift - camLift) * (1 - Math.exp(-dt * 5));
       cy += camLift;
       camera.position.set(cx, cy, cz);
-      camera.rotation.set(-(Math.atan2(cy - fy0, ch) - CAM.phi), CAM.yaw, 0);
+      camera.rotation.set(-(Math.atan2(cy - fy0, ch) - CAM.phi), ya, 0);
       U.uPlayer.value.set(px, py, pz);
+      // 镜头转到了地图外面（西、北、东三面外面是成片的林子；朝北看的时候镜头只会到南边外面，那里跟前不种树）：镜头跟前的树叶淡掉
+      U.uNear.value = CAM.orb ? 7 * sstep(.5, 3, Math.hypot(Math.max(-cx, cx - m.W, 0), Math.max(-cz, 0))) * sstep(0, .3, Math.abs(CAM.orb)) : 0;
       fadeBuildings(dt, px, py, pz);
-      lifeMat.uniforms.uCen.value.set(camT.x, camT.y, camT.z - 7);
+      lifeMat.uniforms.uCen.value.set(camT.x - so * 7, camT.y, camT.z - co * 7);
       // 主角在画面上的位置（给「圆窗」用）：圆心在主角腰上，半径比主角高一点
       camera.updateMatrixWorld();
       _v.set(px, py + .62 + V.hop, pz).applyMatrix4(camera.matrixWorldInverse);
@@ -3195,7 +3364,7 @@
       _v.applyMatrix4(camera.projectionMatrix);
       U.uHole.value.set((_v.x * .5 + .5) * bufW, (_v.y * .5 + .5) * bufH, CAM.frac * .86 * bufH, pd - .55); U.uHoleY.value = py + .38;
       // 草：一块一块地算，离主角越远画的簇越少（每块里的簇按「能留到多远」排好了序，只画前面那些；着色器里用同一个数把它们缩回地里）
-      const gd = U.uGrassD.value, gcx = camT.x, gcz = camT.z - 5;
+      const gd = U.uGrassD.value, gcx = camT.x - so * 5, gcz = camT.z - co * 5;   // 围着主角前面（镜头看过去的方向）5 格的那一点
       U.uCamT.value.set(gcx, camT.y, gcz);
       for (let i = 0; i < grassChunks.length; i++) {
         const ch = grassChunks[i], d = Math.hypot(Math.max(ch.x0 - gcx, gcx - ch.x1, 0), Math.max(ch.z0 - gcz, gcz - ch.z1, 0));
@@ -3207,28 +3376,41 @@
           pt.im.count = n; pt.im.visible = n > 0;
         }
       }
-      // 树：主角北边远了的那几条换成省的（来回走的时候在分界上留一点余量，不反复换）；换了要重画一次影子
+      // 树：离主角远了的那几条换成省的（来回走的时候在分界上留一点余量，不反复换）；换了要重画一次影子。
+      // 按离主角南北方向多远算（南北两边都算），不看镜头朝哪边——转镜头的时候一条也不换；看不到的那几条（镜头身后、画面外面）three 按每条的范围自己裁掉
       for (let i = 0; i < treeBands.length; i++) {
-        const b = treeBands[i], near = camT.z - b.z1 < TREE_NEAR + (b.near ? 1.5 : 0);
+        const b = treeBands[i], near = Math.max(b.z0 - camT.z, camT.z - b.z1, 0) < TREE_NEAR + (b.near ? 1.5 : 0);
         if (near === b.near) continue;
         b.near = near; b.fine.forEach(o => { o.visible = near; }); b.coarse.forEach(o => { o.visible = !near; });
         if (Q.shadow) renderer.shadowMap.needsUpdate = true;
       }
+      // 地图南边外面的树：整块都在镜头身后（朝北看的时候一直是）就不画
+      { const fwx = -Math.sin(ya), fwz = -Math.cos(ya);
+        for (let i = 0; i < southCh.length; i++) {
+          const b = southCh[i], ax = (fwx > 0 ? b.x1 : b.x0) - cx, az = (fwz > 0 ? b.z1 : b.z0) - cz, vis = ax * fwx + az * fwz > b.back;   // 这一块里顺着镜头看过去最靠前的那个角
+          if (vis !== b.vis) { b.vis = vis; for (let k = 0; k < b.objs.length; k++) b.objs[k].visible = vis; }
+        } }
       // 蝴蝶：绕着附近的一小片地方飞；离主角太远了就换到主角前面去
       for (let i = 0; i < flies.length; i++) {
         const f = flies[i];
-        if (Math.abs(f.ax - px) > 9 || f.az - pz > 5 || pz - f.az > 14 || t - f.t0 > 40) { f.ax = px + (hash2(i, Math.floor(t)) - .5) * 8; f.az = pz - 2 - hash2(i + 3, Math.floor(t)) * 7; f.t0 = t; }
+        const bx = f.ax - px, bz = f.az - pz, bAl = -(bx * so + bz * co);   // 在主角前面（镜头看过去的方向）多远
+        if (Math.abs(bx * co - bz * so) > 9 || bAl < -5 || bAl > 14 || t - f.t0 > 40) { const nl = (hash2(i, Math.floor(t)) - .5) * 8, na = 2 + hash2(i + 3, Math.floor(t)) * 7; f.ax = px + co * nl - so * na; f.az = pz - so * nl - co * na; f.t0 = t; }
         const a = t * (.5 + i * .13) + f.ph, x = f.ax + Math.sin(a) * 1.5 + Math.sin(a * 2.3) * .5, z = f.az + Math.cos(a * .8) * 1.2;
         f.o.position.set(x, L.ground(x, z) + .55 + Math.sin(a * 3.1) * .2, z);
         f.o.rotation.y = Math.atan2(Math.cos(a) * 1.5 + Math.cos(a * 2.3) * 1.15, -Math.sin(a * .8) * .96);
         f.o.scale.x = .25 + .75 * Math.abs(Math.sin(t * 13 + f.ph));
       }
-      // 影子：范围跟着镜头走，按 4 格对齐，挪了才重画
+      // 影子：范围跟着镜头走（中心在主角前面 9 格，镜头看过去的方向），按 4 格对齐，挪了才重画
       if (Q.shadow) {
-        const sx = Math.round(camT.x / 4) * 4, sz = Math.round((camT.z - 9) / 4) * 4, key = sx + ',' + sz;
+        const sx = Math.round((camT.x - so * 9) / 4) * 4, sz = Math.round((camT.z - co * 9) / 4) * 4, key = sx + ',' + sz;
         if (key !== snapKey) { snapKey = key; sun.target.position.set(sx, 0, sz); sun.position.set(sx + SUN_DIR.x * 42, SUN_DIR.y * 42, sz + SUN_DIR.z * 42); sun.target.updateMatrixWorld(); renderer.shadowMap.needsUpdate = true; }
       }
       if (post) {
+        // 太阳（天上那个，位置不变）现在在画面的哪里：出了画面就贴在左右两边以内、上边外面一点（朝北看时正好是原来的左上角）
+        const g = post.comp.uniforms.uGlow.value, tH = Math.tan(camera.fov * Math.PI / 360);
+        _v.copy(skyMat.uniforms.uSunD.value).transformDirection(camera.matrixWorldInverse);
+        const zf = Math.max(.05, -_v.z);
+        g.set(clamp(.5 + _v.x / zf / (tH * camera.aspect) * .5, .08, .92), Math.min(1.06, .5 + _v.y / zf / tH * .5), sstep(-.05, .25, -_v.z));
         const q = post.quad;
         renderer.setRenderTarget(rt);
         renderer.render(scene, camera);
@@ -3244,7 +3426,7 @@
     }
     const GRASS_D = tier === 'high' ? [9, 28] : tier === 'mid' ? [6, 21] : [4, 13];   // 草：离主角多远以内是满的、多远以外没有
     const GRASS_NEAR = tier === 'high' ? 7 : tier === 'mid' ? 4 : 0;
-    const TREE_NEAR = tier === 'high' ? 16 : tier === 'mid' ? 10 : 6;   // 树：主角往北多远以内用细的                 // 草：离这么近的那几块用细的零件，再远用省的（省电档只有省的）
+    const TREE_NEAR = tier === 'high' ? 16 : tier === 'mid' ? 10 : 6;   // 树：离主角南北方向多远以内用细的                // 草：离这么近的那几块用细的零件，再远用省的（省电档只有省的）
     function destroy() {
       clear();
       scene.remove(world);
@@ -3268,8 +3450,34 @@
       if (rt) { const n = rt.width * rt.height; b += n * 8 * Math.max(1, rt.samples || 1) + n * 8; if (post.a) b += post.a.width * post.a.height * 8; }
       return Math.round(b / 1048576);
     }
+    // 测试和 tools/look 用：主角的头和胸口有多少露在外面（0…1）。把上一帧深度图里那一小块读回来，比主角近一大截的像素就是被别的东西挡住了
+    // （开了圆窗、淡出去的地方读到的是后面的东西，不算挡）。没有后期（省电档）、深度图读不了的时候返回 null
+    let seenRT = null, seenMat = null;
+    function seen() {
+      if (!post || !post.line) return null;
+      try {
+        if (!seenRT) {
+          seenRT = new T3.WebGLRenderTarget(12, 12, { depthBuffer: false });
+          seenMat = new T3.ShaderMaterial({
+            uniforms: { tDepth: { value: post.dtex }, uBox: { value: new T3.Vector4() }, uNF: { value: new T3.Vector2() } }, depthTest: false, depthWrite: false,
+            vertexShader: 'uniform vec4 uBox; varying vec2 vUv; void main(){ vUv = uBox.xy + uv * uBox.zw; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+            fragmentShader: 'uniform sampler2D tDepth; uniform vec2 uNF; varying vec2 vUv; void main(){ float d = texture2D(tDepth, vUv).x; float z = uNF.x * uNF.y / (uNF.y - d * (uNF.y - uNF.x)); gl_FragColor = vec4(vec3(clamp(z / 48.0, 0.0, 1.0)), 1.0); }',
+          });
+          keep.push(seenRT, seenMat);
+        }
+        const h = U.uHole.value, unit = CAM.frac * bufH / PERSON, pd = h.w + .55;   // unit：主角那么远的地方，一格在画面上是多少像素
+        seenMat.uniforms.uBox.value.set((h.x - .18 * unit) / bufW, (h.y + .15 * unit) / bufH, .36 * unit / bufW, .4 * unit / bufH);
+        seenMat.uniforms.uNF.value.set(camera.near, camera.far);
+        post.quad.material = seenMat; renderer.setRenderTarget(seenRT); renderer.render(post.scene, post.cam);
+        const px = new Uint8Array(12 * 12 * 4); renderer.readRenderTargetPixels(seenRT, 0, 0, 12, 12, px);
+        post.quad.material = post.comp; renderer.setRenderTarget(null);
+        let ok = 0;
+        for (let i = 0; i < 144; i++) if (px[i * 4] / 255 * 48 >= pd - .8) ok++;
+        return ok / 144;
+      } catch (e) { post.quad.material = post.comp; renderer.setRenderTarget(null); return null; }
+    }
     return {
-      kind: '3d', canvas, load, resize, draw, destroy, glState, info: () => renderer.info,
+      kind: '3d', canvas, load, resize, draw, destroy, glState, info: () => renderer.info, orbit, quarter,
       // marks：现在画着几块委托的「?」牌子；probe：测试和 tools/look 用（地面多高、人站在哪、跟着走的是模型还是纸片）
       marks: () => spriteList.filter(s => s.quest && s.quest.visible && s.root.visible).length,
       // 场景里每种东西（按材质分）有几个网格、多少三角形（按多到少），查「哪样东西最费」用；只算现在画着的
@@ -3284,7 +3492,10 @@
         p3: { on: !!window.EchoPeople3D, player: !!player.inst, people: spriteList.filter(s => s.root.visible && s.inst).length, paper: spriteList.filter(s => s.root.visible && !s.inst && s.mesh && s.key.slice(0, 4) !== 'mon:').length, live: window.EchoPeople3D && EchoPeople3D.stats ? EchoPeople3D.stats().live : 0 },
         heads: spriteList.filter(s => s.root.visible).map(s => ({ top: headTop(s), alert: s.alert && s.alert.visible ? s.alert.position.y : null, quest: s.quest && s.quest.visible ? s.quest.position.y : null })), hintTop: hintS.visible ? hintS.position.y : null, follower: fol.root.visible ? fol.root.position.toArray() : null, model: !!fol.R, icon: !fol.R && !!fol.icon.mesh,
         people: spriteList.filter(s => s.root.visible).map(s => s.root.position.toArray()), picks: pickS.filter(p => p.o.visible).map(p => p.o.position.toArray()),
-        hint: hintS.visible ? hintS.position.toArray() : null, cam: camera.position.toArray(), pitch: -camera.rotation.x, yaw: camera.rotation.y, fov: camera.fov, hole: U.uHole.value.toArray(), alerts: spriteList.filter(s => s.alert && s.alert.visible && s.root.visible).length, buildings: BLD.length, faded: BLD.filter(b => b.cur > .4).length,
+        hint: hintS.visible ? hintS.position.toArray() : null, cam: camera.position.toArray(), pitch: -camera.rotation.x, yaw: camera.rotation.y, fov: camera.fov,
+        // 镜头绕着主角转到哪了（orb 现在、orbT 要转到）、摇杆的「上」算哪边（q）、俯角比平常多多少；seen：主角上半身有多少露在外面（见 seen）；glow：太阳那片暖光在画面的哪里、多强
+        orb: CAM.orb, orbT: CAM.orbT, q: CAM.q, tilt: CAM.tilt, seen, glow: post ? post.comp.uniforms.uGlow.value.toArray() : null, bands: treeBands.length,
+        facing: { player: player.root.rotation.y, people: spriteList.filter(s => s.root.visible && !s.inst).map(s => s.root.rotation.y), marks: spriteList.filter(s => s.root.visible).map(s => (s.quest && s.quest.visible ? s.quest : s.alert && s.alert.visible ? s.alert : null)).filter(Boolean).map(o => o.rotation.y + o.parent.rotation.y), hint: hintS.rotation.y, picks: pickS.filter(p => p.o.visible).map(p => p.o.rotation.y) }, hole: U.uHole.value.toArray(), alerts: spriteList.filter(s => s.alert && s.alert.visible && s.root.visible).length, buildings: BLD.length, faded: BLD.filter(b => b.cur > .4).length,
       }),
     };
   }
@@ -3311,6 +3522,9 @@
       info: () => cur.info(),
       marks: () => cur.marks(),
       using: () => (cur === open ? 'open' : 'std'),     // 现在这张地图是谁在画（测试用）
+      // 转镜头只在新画风画的户外地图上有：老渲染器（室内、洞穴……）画的时候不能转（orbit 返回 null），摇杆的方向照原样（quarter 是 0）
+      orbit: (op, a, b) => (cur === open ? open.orbit(op, a, b) : null),
+      quarter: () => (cur === open ? open.quarter() : 0),
       probe: () => (cur === open ? open.probe() : null),
       statsOpen: () => (cur === open ? open.stats() : null),
     };

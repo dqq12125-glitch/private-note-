@@ -1,5 +1,6 @@
 // 回声岛 · 新画风的一段走路录像（竖屏 720×1560，二十几秒）：从小镇的码头出发，穿过小镇（房子、人），出北口上 1 号路，穿过草丛走到路边小屋，再回到大路上
-// 用法：node tools/look/video.js [--look new|old] [--gfx high] [--mode step|record] [--fps 30] [--out walk-new.mp4] [--crf 21] [--group a|b|c|d|e]
+// 用法：node tools/look/video.js [--look new|old] [--gfx high] [--mode step|record] [--fps 30] [--out walk-new.mp4] [--crf 21] [--group a|b|c|d|e] [--orbit 1]
+//   --orbit 1：转镜头的一段（orbit-new.mp4，约半分钟）：小镇里慢慢转一整圈，再朝南看着走到码头、朝西看着走一段，最后转回正北（ORBIT 里的路线）
 //   --group：换成每组岛的一小段（十几秒，GROUPS 里的路线，别从站着人的格子穿过去），文件名默认 walk-<组>-<画风>.mp4：a 彩色文具岛小镇 / b 家庭岛（穿过小镇到风车和花田）/ c 生日派对岛 / d 丛林小径（过河上的桥）/ e 天气岛（冰湖边的雪路）
 //   --mode step（默认）：把页面的时钟接管过来，一帧一帧往前走（每帧 1/30 秒），每走一帧截一张手机 2 倍屏的图（720×1560），最后交给 ffmpeg 拼。
 //       画面是原样的清晰度，每一帧间隔一样，不受这台电脑当时忙不忙的影响
@@ -9,7 +10,7 @@ const fs = require('fs'), path = require('path'), { spawnSync } = require('child
 const L = require('./lib');
 const argv = process.argv.slice(2), opt = { look: 'new', gfx: 'high', mode: 'step', out: '', crf: 21, fps: 30 };
 for (let i = 0; i < argv.length; i++) if (argv[i].startsWith('--')) opt[argv[i].slice(2)] = argv[++i];
-const OUT = path.join(L.OUT, opt.out || 'walk-' + (opt.group ? opt.group + '-' : '') + opt.look + '.mp4'), TMP = path.join(L.OUT, '_video' + (opt.group || ''));
+const OUT = path.join(L.OUT, opt.out || (+opt.orbit ? 'orbit-' : 'walk-' + (opt.group ? opt.group + '-' : '')) + opt.look + '.mp4'), TMP = path.join(L.OUT, '_video' + (+opt.orbit ? 'orbit' : opt.group || ''));
 const VP = { width: 360, height: 780 }, FPS = +opt.fps || 30;   // × 2 倍 = 720×1560
 // 路线：[等几秒] / [走到 x, y] / [等换到哪张地图]
 const ROUTE = [
@@ -32,7 +33,10 @@ const GROUPS = {
   d: { map: 'j8', at: [14, 44], route: [['wait', 1.6], ['walk', 14, 30], ['walk', 35, 30], ['walk', 35, 26], ['wait', 3]] },
   e: { map: 't11', at: [17, 36], route: [['wait', 2.6], ['walk', 17, 22], ['wait', 1.5], ['walk', 17, 9], ['wait', 4.5]] },
 };
-const G = opt.group ? GROUPS[opt.group] : null;
+// --orbit 1：转镜头的一段（文件名默认 orbit-<画风>.mp4）：在小镇中间慢慢转一整圈，再转到朝南看、走到码头上（按的「上」是往南），回头沿着小路走，
+// 镜头转到东边朝西看再走一段，最后转回正北。['turn', 从几度, 到几度, 几秒]：镜头绕着主角转（world3d-open.js 的 orbit）
+const ORBIT = { map: 't0', at: [12, 18], route: [['wait', 1.2], ['turn', 0, 360, 10], ['wait', .6], ['turn', 0, 180, 3], ['wait', .5], ['walk', 14, 18], ['walk', 14, 22], ['wait', 1.2], ['walk', 14, 15], ['walk', 10, 15], ['wait', .5], ['turn', 180, 90, 2.2], ['walk', 5, 15], ['wait', .5], ['turn', 90, 0, 2.6], ['wait', 1.4]] };
+const G = +opt.orbit ? ORBIT : opt.group ? GROUPS[opt.group] : null;
 
 (async () => {
   fs.rmSync(TMP, { recursive: true, force: true }); fs.mkdirSync(TMP, { recursive: true });
@@ -73,8 +77,12 @@ const G = opt.group ? GROUPS[opt.group] : null;
   for (const a of (G ? G.route : ROUTE)) {
     if (a[0] === 'wait') { for (let i = 0; i < Math.round(a[1] * FPS); i++) await frame(); continue; }
     if (a[0] === 'map') { for (let i = 0; i < FPS * 8 && (await dbg()).map !== a[1]; i++) await frame(); continue; }
-    // 走到 (x, y)：按住方向键，主角一迈向最后一格就松手（正好停在那一格）
-    const d0 = await dbg(), dir = a[1] < d0.x ? 'ArrowLeft' : a[1] > d0.x ? 'ArrowRight' : a[2] < d0.y ? 'ArrowUp' : 'ArrowDown';
+    // 镜头绕着主角从 a[1] 度转到 a[2] 度，用 a[3] 秒（起步和收尾慢一点）
+    if (a[0] === 'turn') { const n = Math.round(a[3] * FPS); for (let i = 1; i <= n; i++) { const u = i / n, e = u * u * (3 - 2 * u); await p.evaluate(deg => EchoWorld._debug().R.orbit('set', deg * Math.PI / 180), a[1] + (a[2] - a[1]) * e); await frame(); } continue; }
+    // 走到 (x, y)：按住方向键，主角一迈向最后一格就松手（正好停在那一格）。镜头转了的话，按的键跟着换（「上」是镜头看过去的方向）
+    const d0 = await dbg(), want = a[1] < d0.x ? 'left' : a[1] > d0.x ? 'right' : a[2] < d0.y ? 'up' : 'down', ROT = ['up', 'left', 'down', 'right'];
+    const q = await p.evaluate(() => { const R = EchoWorld._debug().R; return R.quarter ? R.quarter() : 0; });
+    const dir = { up: 'ArrowUp', left: 'ArrowLeft', down: 'ArrowDown', right: 'ArrowRight' }[ROT[(ROT.indexOf(want) - q + 4) % 4]];
     await p.keyboard.down(dir);
     for (let i = 0; i < FPS * 12; i++) { await frame(); const d = await dbg(); if (d.map !== d0.map || (d.x === a[1] && d.y === a[2])) break; }
     await p.keyboard.up(dir);
