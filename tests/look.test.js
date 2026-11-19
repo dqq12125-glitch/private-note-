@@ -5,6 +5,8 @@
 //     房子挡在镜头前会淡出去；画面丢了能重建；没有 WebGL2 退回 2D；怪兽模型读不到就用纸片图标；三档画质都能画
 //   · 人物：people3d.js 装着就是 3D 小人（主角、镇上每个人），没装、或者它说这个造型不行，就还是纸片；头上的「?」「!」「A」在头顶上面；
 //     剧情换造型、把人藏起来都跟着变；来回切地图小人不越攒越多；镇上站满人时 draw call 和三角形还在预算里
+//   · 整个世界（第 8 节）：所有户外地图都是新画风（包括地上画着斑马线的规则城）、省电档在预算里、没有报错；每座岛的树、房子、天气、远景是它自己的；
+//     瀑布真的从高处冲下来、冰面和岩浆单独画
 // 运行：node tests/look.test.js（自己起一个本机小网站，这样怪兽的模型读得到；无头浏览器用软件渲染，慢，所以大多数检查用标准档）
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
@@ -16,10 +18,12 @@ const opts = { args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', 
 if (process.env.CHROMIUM_PATH) opts.executablePath = process.env.CHROMIUM_PATH;
 let fails = 0;
 const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!ok) fails++; return ok; };
-const SAVE = gfx => ({
+// 各岛的主线都做完了（第 8 节逛遍整个世界用：进地图不演剧情、不被对手拦住）
+const ALLDONE = Object.fromEntries([...Array(13).keys()].map(i => ['s:ch' + i, 1]).concat(['rival2', 'rival3', 'rival4', 'rival5', 'kai_final', 'w11in', 'z1intro', 'z1kai', 'f3in', 'f4in', 'c5intro', 'c7intro', 'a9in', 'f2call', 'c6call'].map(k => ['s:' + k, 1])));
+const SAVE = (gfx, extra) => ({
   seenIntro: true, coins: 500, micCheck: 1, settings: { tts: 'online', mode: 'self', gfx, sfx: false, gate: false, music: 'off' }, player: { gender: 'girl', name: 'Coco' },
   mon: { v: 2, box: [{ uid: 'm1', sp: 'emberpup', lv: 12, xp: 0 }], team: ['m1'], dex: { emberpup: 'caught' }, balls: 10, potions: 10, bag: {}, badges: {} },
-  world: { v: 3, started: true, map: 't0', x: 14, y: 9, dir: 'up', visited: { 0: 1 }, flags: { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:expshare': 1, qtip: 1 }, daily: {}, repel: 99999 },
+  world: { v: 3, started: true, map: 't0', x: 14, y: 9, dir: 'up', visited: { 0: 1 }, flags: Object.assign({ 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:expshare': 1, qtip: 1 }, (extra && extra.flags) || {}), daily: {}, repel: 99999 },
 });
 
 (async () => {
@@ -35,7 +39,7 @@ const SAVE = gfx => ({
     if (o.init) await ctx.addInitScript(o.init);
     if (o.block) await ctx.route(o.block, r => r.abort());
     await p.goto((o.file ? 'file://' + path.join(ROOT, 'index.html') : base + '/index.html') + (query || ''));
-    await p.evaluate(([sv, ls]) => { localStorage.setItem('echo-island-v1', JSON.stringify(sv)); if (ls) localStorage.setItem('echo-look', ls); else localStorage.removeItem('echo-look'); }, [SAVE(gfx), o.ls || '']);
+    await p.evaluate(([sv, ls]) => { localStorage.setItem('echo-island-v1', JSON.stringify(sv)); if (ls) localStorage.setItem('echo-look', ls); else localStorage.removeItem('echo-look'); }, [SAVE(gfx, o.save), o.ls || '']);
     await p.reload();
     await p.waitForSelector('[data-act=wEnter]');
     await p.click('[data-act=wEnter]');
@@ -263,6 +267,53 @@ const SAVE = gfx => ({
   await t.go('r0', 'from:t0');
   check((await t.st()).kind === '2d' && !t.errs.length, '2D 模式照样能切地图，没有报错');
   await t.ctx.close();
+
+  // ---------- 8. 整个世界：每张户外地图都用新画风画得出来、在预算里、没有报错；每座岛像它自己 ----------
+  // 用省电档（软件渲染快一些）把所有小镇、道路、海路过一遍；存档里各岛的主线都做完了（进地图不演剧情、不开打）
+  {
+    const LOW = { tris: 170000, calls: 120 };   // 省电档：画面里约十二万个三角形，留一点余量
+    t = await open('?look=new', 'low', { save: { flags: ALLDONE } });
+    const ids = await t.E(() => EchoMaps.all().filter(id => { const m = EchoMaps.get(id); return m && (m.kind === 'town' || m.kind === 'route'); }));
+    const looks = {}, bad = [], over = [];
+    for (const id of ids) {
+      const e0 = t.errs.length;
+      await t.E(id => EchoWorld._debug().goMap(id, 'start'), id);
+      await t.p.waitForFunction(id => EchoWorld._debug().M.id === id, id).catch(() => {});
+      await t.W(300); await t.closeDlg(); await t.frames(2);
+      const q = await t.st(), pr = await t.probe();
+      looks[id] = pr && pr.look;
+      if (q.using !== 'open' || q.calls < 3 || q.tris < 3000 || t.errs.length > e0) bad.push(id + ' ' + JSON.stringify({ using: q.using, calls: q.calls, tris: q.tris, errs: t.errs.length - e0 }));
+      if (q.tris > LOW.tris || q.calls > LOW.calls) over.push(id + ' ' + q.tris + '/' + q.calls);
+    }
+    check(ids.length >= 30 && !bad.length, '全部 ' + ids.length + ' 张户外地图都用新画风画出来了，没有报错' + (bad.length ? '：' + bad.join(' | ') : ''));
+    check(!over.length, '省电档：每张图站在起点时画面里的三角形和 draw call 都在预算里' + (over.length ? '：' + over.join(' | ') : ''));
+    check(looks.t9 && looks.t9.over, '规则城（地上画着斑马线）也是新画风画的');
+    // 每座岛：树是这座岛的树、房子是这座岛的房子、天气和远景各不一样
+    const TH = await t.E(() => { const out = {}; for (let z = 0; z < 13; z++) { const m = EchoMaps.get('t' + z); out[z] = { theme: m.theme, tree: EchoMaps.THEMES[m.theme].tree, house: EchoMaps.THEMES[m.theme].house }; } return out; });
+    const wrong = [];
+    for (let z = 0; z < 13; z++) {
+      const lk = looks['t' + z] || {}, th = TH[z];
+      if (lk.tree !== th.tree) wrong.push('t' + z + ' 树 ' + lk.tree + '≠' + th.tree);
+      if (!(lk.houses || []).includes(th.house)) wrong.push('t' + z + ' 房子里没有 ' + th.house + '（' + (lk.houses || []).join(',') + '）');
+      if (!lk.trees || !Object.keys(lk.trees).length) wrong.push('t' + z + ' 没有树');
+    }
+    check(!wrong.length, '13 座小镇：树和房子都是这座岛自己的样子' + (wrong.length ? '：' + wrong.join(' | ') : ''));
+    const owns = new Set([...Array(13).keys()].map(z => (looks['t' + z] || {}).far && looks['t' + z].far.own)), norths = new Set([...Array(13).keys()].map(z => (looks['t' + z] || {}).far && looks['t' + z].far.north));
+    check(owns.size >= 12 && norths.size >= 12, '13 座小镇望出去的远景各不一样（本岛的地标 ' + owns.size + ' 种、正北的邻居 ' + norths.size + ' 种）');
+    const L = id => looks[id] || {};
+    check(L('t11').life === 'snow' && L('t2').life === 'leaf' && L('t7').life === 'confetti' && L('t1').life === 'shaving' && L('t0').life === 'petal', '空气里飘的东西跟着岛：天气岛下雪、家庭岛落叶、派对岛彩纸屑、文具岛铅笔屑、你好岛花瓣');
+    check(L('t9').path === 'asphalt' && L('t9').sand === 'paving' && L('t6').path === 'stone' && L('r5').sand === 'dune' && L('t11').path === 'snow', '路和沙地跟着地貌：规则城柏油路和人行道、作息岛石板路、沙丘道的沙丘、天气岛的雪路');
+    check(L('t1').trees && Object.keys(L('t1').trees).some(k => k.startsWith('bush')) && L('j8').trees && Object.keys(L('j8').trees).some(k => k.startsWith('side')), '文具岛有蜡笔花丛、丛林里混着棕榈');
+    check((L('r11').falls || []).some(d => d > 1) && (L('j8').falls || []).some(d => d > .5) && (L('s8').falls || []).some(d => d > .5), '瀑布是真的从高处冲下来（12 号路、丛林小径、9 号水路）：' + JSON.stringify([L('r11').falls, L('j8').falls, L('s8').falls]));
+    check(L('t11').ice && L('r10').ice && !L('t0').ice, '冰面单独画（天气岛、雪原）');
+    check(L('d6b').lava && !L('t6').lava, '钟山山顶的火山口画成岩浆');
+    // 瀑布那几格：逆流往上爬的时候人站在一级一级的水面上（上面比下面高）
+    await t.go('r11', 'start');
+    const wf = await t.E(() => { const pr = EchoWorld._debug().R.probe(); return { top: pr.at(12.5, 22.5), mid: pr.at(12.5, 25.5), low: pr.at(12.5, 29.5) }; });
+    check(wf.top > wf.mid + .4 && wf.mid > wf.low + .4, '瀑布从上往下一级比一级低 ' + JSON.stringify(wf, (k, v) => typeof v === 'number' ? +v.toFixed(2) : v));
+    check(!t.errs.length, '走遍整个世界没有报错' + (t.errs.length ? '：' + t.errs.slice(0, 2).join(' | ') : ''));
+    await t.ctx.close();
+  }
 
   check(!allErrs.length, '全程没有报错' + (allErrs.length ? '：' + allErrs.slice(0, 3).join(' | ') : ''));
   console.log(fails ? 'FAIL ' + fails : 'PASS');

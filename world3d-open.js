@@ -44,8 +44,50 @@
   };
   const DIRI = { down: 0, left: 1, right: 2, up: 3 };
   const WATER = '~Dw', EXITS = '^v<>', BUILD = 'CMGHJAEcmghja';
-  // 这张地图新渲染器画不画得了：只管户外的小镇和道路；有机关地板图层（over）的先不管
-  const supports = m => !!m && (m.kind === 'town' || m.kind === 'route') && !m.over;
+  // 这张地图新渲染器画不画得了：只管户外的小镇和道路（户外的 over 图层只是地上画的东西，比如规则城的斑马线，照样画；挑战馆的机关地板都在室内）
+  const supports = m => !!m && (m.kind === 'town' || m.kind === 'route');
+
+  // ---------- 每座岛的「天气」：天空、空气、太阳、空气里飘的东西 ----------
+  // 按岛（m.isle）挑；勇气之路、冠军高原（v 开头的地图）单独一种：晴朗、金色的光。
+  //   fog：远处的东西往这个颜色里淡；haze：地平线那一条；fogP：[雾从多远开始, 浓度]；sky：[头顶, 中间, 贴着地平线]；sun / sunK：太阳的颜色和强弱；hemi：[天光, 地面反光]
+  //   life：空气里飘的东西——petal 花瓣和花粉 / leaf 秋天的落叶 / snow 雪花 / confetti 彩纸屑 / mote 慢慢飘的浅色小光点 / shaving 彩色的铅笔屑；lifeK：多少（× 画质档的量）
+  const MOODS = {
+    0: { fog: '#9cc6f4', haze: '#fbf1de', fogP: [17, .0118], sky: ['#2877dc', '#5fb3f1', '#b9e1f7'], sun: '#fff0b8', sunK: 1, hemi: ['#dce1ff', '#efe2c4'], life: 'petal', lifeK: 1 },
+    1: { fog: '#b2c3f2', haze: '#fff0ea', fogP: [17, .0118], sky: ['#3b7ee2', '#7db9f5', '#d6e4fb'], sun: '#fff2c4', sunK: 1, hemi: ['#e2e0ff', '#f6e4d6'], life: 'shaving', lifeK: 1 },
+    2: { fog: '#b6c8de', haze: '#fde6bf', fogP: [16, .0122], sky: ['#2f7ad2', '#79b6e8', '#dce4e6'], sun: '#ffe2a2', sunK: 1.04, hemi: ['#e0dcf2', '#f4dfb6'], life: 'leaf', lifeK: 1 },
+    3: { fog: '#a3c7f0', haze: '#f8f0e2', fogP: [17, .0115], sky: ['#2774da', '#62b2f1', '#c2e2f6'], sun: '#fff2c0', sunK: 1, hemi: ['#dce2ff', '#ece3cc'], life: 'petal', lifeK: 1.1 },
+    4: { fog: '#a6cbf2', haze: '#eef4fa', fogP: [18, .011], sky: ['#1f6fd8', '#58adf2', '#c0e4fa'], sun: '#fffbe6', sunK: 1, hemi: ['#d8e4ff', '#e6e6dc'], life: 'mote', lifeK: .5 },
+    5: { fog: '#b9cde6', haze: '#fde6c2', fogP: [16, .0124], sky: ['#2b78d6', '#71b4ee', '#d4e4ec'], sun: '#ffeab0', sunK: 1.03, hemi: ['#e0e0fa', '#f4e0bc'], life: 'confetti', lifeK: .55 },
+    6: { fog: '#b2bccb', haze: '#efe2d2', fogP: [14, .0142], sky: ['#3871be', '#78a5d4', '#cdd5dc'], sun: '#ffe6b8', sunK: .96, hemi: ['#dcdcee', '#eadcc6'], life: 'mote', lifeK: .8 },
+    7: { fog: '#c2c3f2', haze: '#ffe8f0', fogP: [17, .0118], sky: ['#3d7ee6', '#86bdf6', '#f0def2'], sun: '#fff0c8', sunK: 1, hemi: ['#ecdcff', '#fbe2e6'], life: 'confetti', lifeK: 1 },
+    8: { fog: '#a3c4b4', haze: '#ecf1dc', fogP: [12, .0165], sky: ['#2c7cc4', '#78bcd4', '#d2e9dc'], sun: '#fff0c0', sunK: .98, hemi: ['#d4e6e4', '#e2e6c4'], life: 'mote', lifeK: 1 },
+    9: { fog: '#a9bdd4', haze: '#edf0f2', fogP: [16, .0125], sky: ['#2a70cc', '#68abe6', '#cde0ee'], sun: '#fff6dc', sunK: 1, hemi: ['#dae2f6', '#e4e4e0'], life: 'mote', lifeK: .35 },
+    10: { fog: '#9cc6f4', haze: '#fbf0dc', fogP: [17, .0115], sky: ['#2470dc', '#5cb0f2', '#bfe0f6'], sun: '#fff2bc', sunK: 1.02, hemi: ['#dce2ff', '#ece4c6'], life: 'petal', lifeK: .7 },
+    11: { fog: '#c2d8f0', haze: '#eef4fb', fogP: [16, .011], sky: ['#3f84d6', '#8cbeee', '#d6e8f8'], sun: '#fffaf0', sunK: .98, hemi: ['#e2e8ff', '#eef0f2'], life: 'snow', lifeK: 1.6 },
+    12: { fog: '#b4c2c4', haze: '#dfe3df', fogP: [8, .024], sky: ['#8fa9ba', '#b3c4cc', '#cfd8d8'], sun: '#fff2d2', sunK: .9, hemi: ['#d8dee4', '#e2e0d2'], life: 'mote', lifeK: 1 },
+    league: { fog: '#a6c6ee', haze: '#fff0d4', fogP: [18, .011], sky: ['#2268d6', '#5aaaf0', '#c6e2f6'], sun: '#ffeaa8', sunK: 1.05, hemi: ['#dce0ff', '#f2e2c2'], life: 'confetti', lifeK: .45 },
+  };
+  // 每种地貌（m.theme）的地面和岩石：
+  //   path：小路的样子 dirt 土路 / asphalt 柏油马路 / stone 石板路 / tile 方砖 / candy 糖果色（撒着彩色糖粒）/ crayon 蜡笔涂过的彩色小路 / snow 踩实的雪
+  //   sand：沙地的样子 beach 沙滩 / dune 沙丘（风吹出来的大波纹）/ paving 人行道的方砖 / ash 火山灰和碎石 / snow 雪
+  //   rock：岩壁的 [暗, 中, 亮]；cap：岩壁顶上是 grass 草 / snow 雪 / rock 光秃秃的石头 / moss 苔藓；band：岩层颜色深浅差多少；book：岩层画成一摞摞的书（书脊和米白的书页）
+  const GROUND = {
+    hello: { path: 'dirt', sand: 'beach', rock: ['#8a6a50', '#b48d6a', '#dcc3a0'], cap: 'grass', band: .22 },
+    crayon: { path: 'crayon', sand: 'beach', rock: ['#7d6aa6', '#a593cc', '#d4c8ec'], cap: 'grass', band: .26 },
+    farm: { path: 'dirt', sand: 'beach', rock: ['#7a5e44', '#a5825e', '#cfb48c'], cap: 'grass', band: .22 },
+    school: { path: 'tile', sand: 'beach', rock: ['#76695c', '#9d9080', '#c9bfb0'], cap: 'grass', band: .2, book: true },   // 书山：岩壁是一摞摞的大书
+    lab: { path: 'tile', sand: 'beach', rock: ['#5f7584', '#8aa2b0', '#c2d2da'], cap: 'grass', band: .18 },
+    circus: { path: 'dirt', sand: 'dune', rock: ['#9a6a42', '#c99a68', '#ecc996'], cap: 'rock', band: .28 },
+    clock: { path: 'stone', sand: 'ash', rock: ['#4e4440', '#76685e', '#a39283'], cap: 'rock', band: .26 },
+    party: { path: 'candy', sand: 'beach', rock: ['#8d6c9a', '#b897c4', '#e2cde8'], cap: 'grass', band: .24 },
+    jungle: { path: 'dirt', sand: 'beach', rock: ['#5a5440', '#857b5e', '#b0a684'], cap: 'moss', band: .2 },
+    city: { path: 'asphalt', sand: 'paving', rock: ['#606a72', '#8a959e', '#bcc6cc'], cap: 'grass', band: .14 },
+    sports: { path: 'dirt', sand: 'beach', rock: ['#7f6a56', '#a8927a', '#d2c0a6'], cap: 'grass', band: .2 },
+    snow: { path: 'snow', sand: 'snow', rock: ['#5d6f80', '#8798aa', '#bccad6'], cap: 'snow', band: .2 },
+    ruins: { path: 'stone', sand: 'beach', rock: ['#5c5a52', '#858278', '#b4b0a2'], cap: 'moss', band: .22 },
+  };
+  const PATHK = { dirt: 0, asphalt: 1, stone: 2, tile: 3, candy: 4, crayon: 5, snow: 6 }, SANDK = { beach: 0, dune: 1, paving: 2, ash: 3, snow: 4 };
+  const LIFEK = { petal: 0, leaf: 1, snow: 2, confetti: 3, mote: 4, shaving: 5 };
 
   // ---------- 噪声（地形起伏、贴图、摆放都用它；同样的输入永远同样的输出） ----------
   const hash2 = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
@@ -57,6 +99,7 @@
   const fbm = (x, y) => vnoise(x, y) * .57 + vnoise(x * 2.03 + 11.3, y * 2.03 + 4.7) * .29 + vnoise(x * 4.1 + 3.1, y * 4.1 + 9.2) * .14;
   const sstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const lerp = (a, b, t) => a + (b - a) * t;
+  const fract2 = x => x - Math.floor(x);
   const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
   // ---------- 着色器里公用的几段 ----------
@@ -335,6 +378,9 @@
         if (o.flutter) v.push('oW.xy += vec2(sin(uTime * 2.7 + ip.x * 1.7 + transformed.y * 6.0 + transformed.x * 5.0), cos(uTime * 2.2 + ip.z * 1.3 + transformed.x * 7.0)) * (0.012 + 0.02 * gustAt(ip.xz)) * isc;');
         if (o.grass) v.push(GRASS_V);
         if (o.rock) v.push('vNy = normal.y;');
+        // o.tintW：每个实例的颜色只染「纯白」的顶点（铅笔的笔杆和笔芯、棒棒糖的糖、蜡笔花丛的花），别的顶点（木头、商标纸、叶子）只跟着轻轻深浅一点
+        if (o.tintW) sh.vertexShader = sh.vertexShader.replace('#include <color_vertex>', ['#include <color_vertex>', '#if defined( USE_INSTANCING_COLOR ) && defined( USE_COLOR )',
+          '  { float wk = step(2.99, color.r + color.g + color.b); vColor.rgb = color * mix(vec3(0.93 + 0.14 * fract(instanceColor.r * 7.0 + instanceColor.b * 3.0)), instanceColor.rgb, wk); }', '#endif'].join('\n'));
         sh.vertexShader = 'uniform highp float uTime; uniform vec3 uPlayer; uniform vec3 uFollow; varying float vGust; varying highp float vDep; varying highp vec3 vWp;\n' + (o.grass ? GRASS_VPARS : o.lod ? 'uniform vec3 uCamT;\n' : '') + (o.rock ? 'varying float vNy;\n' : '') + GUST +
           sh.vertexShader.replace('#include <begin_vertex>', v.join('\n'))
             .replace('#include <project_vertex>', ['vec4 mvPosition = vec4(transformed, 1.0);', '#ifdef USE_INSTANCING', 'mvPosition = instanceMatrix * mvPosition;', '#endif',
@@ -362,7 +408,9 @@
           '  { float st = vWp.y * 3.3 + texture2D(uNoise, vWp.xz * 0.11 + vWp.y * 0.07).r * 1.5; float bd = fract(st); float id = floor(st);',
           '    float tone = 0.88 + 0.22 * fract(sin(id * 12.99) * 43758.5); float seam = smoothstep(0.0, 0.09, bd);',
           '    float gr = texture2D(uNoise, vec2(vWp.x + vWp.z, vWp.y * 3.0) * 0.6).g;',
-          '    diffuseColor.rgb *= mix(1.0, tone * (0.8 + 0.2 * seam) * (0.94 + 0.12 * gr), 1.0 - smoothstep(0.45, 0.8, vNy)); }'].join('\n'));
+          '    diffuseColor.rgb *= mix(1.0, tone * (0.8 + 0.2 * seam) * (0.94 + 0.12 * gr), 1.0 - smoothstep(0.45, 0.8, vNy));',
+          // 顶面：一块块深浅不一（草皮、雪、苔藓不是一整块平平的颜色）
+          '    float tk = smoothstep(0.6, 0.9, vNy); diffuseColor.rgb *= 1.0 + tk * (0.16 * (texture2D(uNoise, vWp.xz * 0.19).r - 0.5) + 0.1 * (texture2D(uNoise, vWp.xz * 1.1 + 0.3).g - 0.5)); }'].join('\n'));
         if (o.leaf) f = f.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(vNormal);');
         // 光：云影挡掉一部分太阳光；背光和影子里偏蓝紫；树叶亮面偏暖、暗面偏冷；逆光的边上一圈暖色
         const L = ['{ float cs = cloudSh(vWp.xz) * ' + cs.toFixed(2) + ';',
@@ -395,7 +443,12 @@
     const toon = (opts, o) => { const m = paint(new T3.MeshToonMaterial(Object.assign({ gradientMap: rampTex, vertexColors: true }, opts || {})), o); keep.push(m); return m; };
 
     // 地面：遮罩图的红 = 小路，绿 = 沙地和水底，蓝 = 草丛；顶点颜色的红 = 山上的林地，绿 = 靠水的湿沙，蓝 = 地图外面有多远
-    const TERRAIN_PARS = 'uniform sampler2D uMask; uniform sampler2D uDetail; uniform vec4 uMapO; uniform float uSeaY; uniform vec3 uG0; uniform vec3 uG1; uniform vec3 uG2; uniform vec3 uTall; uniform vec3 uForest; uniform vec3 uSand; uniform vec3 uSandWet; uniform vec3 uPath; uniform vec3 uPathRim;\n';
+    const TERRAIN_PARS = 'uniform sampler2D uMask; uniform sampler2D uDetail; uniform vec4 uMapO; uniform float uSeaY; uniform vec3 uG0; uniform vec3 uG1; uniform vec3 uG2; uniform vec3 uTall; uniform vec3 uForest; uniform vec3 uSand; uniform vec3 uSandWet; uniform vec3 uPath; uniform vec3 uPathRim; uniform float uPathK; uniform float uSandK;\n' +
+      // 蜡笔、糖粒用的五种颜色
+      'vec3 crayonC(float h) { return h < 0.2 ? vec3(1.0, 0.55, 0.6) : h < 0.4 ? vec3(1.0, 0.84, 0.4) : h < 0.6 ? vec3(0.5, 0.76, 1.0) : h < 0.8 ? vec3(0.56, 0.86, 0.5) : vec3(0.8, 0.62, 1.0); }\n' +
+      // 一格一格的砖 / 石板：返回 (离缝多远, 这一块的编号算出来的 0…1)。k：每格几块；off：隔一行错开半块
+      // 远了缝和深浅都淡掉（不然远处一大片缝会闪、会变成一格格的棋盘）
+      'vec2 slab(highp vec2 p, float k, float off) { highp vec2 q = p * k; q.x += off * step(1.0, mod(floor(q.y), 2.0)) * 0.5; vec2 f = fract(q); float fk = smoothstep(16.0, 34.0, vDep); return mix(vec2(min(min(f.x, 1.0 - f.x), min(f.y, 1.0 - f.y)), fract(sin(dot(floor(q), vec2(12.9898, 78.233))) * 43758.5453)), vec2(0.5), fk); }\n';
     const TERRAIN_COLOR = [
       '{ vec2 muv = (vWp.xz - uMapO.xy) * uMapO.zw;',
       '  vec4 nz = texture2D(uNoise, vWp.xz * 0.041); vec4 nd = texture2D(uNoise, vWp.xz * 0.33);',
@@ -418,15 +471,31 @@
       // 沙地：靠水的地方湿一点、深一点；一道道被水冲出来的波纹，脚边看得到沙粒
       '  vec3 sd = mix(uSand, uSandWet, vColor.g); float rp = sin(vWp.z * 7.5 + nz.a * 9.0 + nd.r * 2.2);',
       '  sd *= 1.0 - 0.035 * smoothstep(0.35, 0.9, rp) * (1.0 - vColor.g) + dt.g * 0.2;',
+      // 不是海滩的「沙地」（只管干的地方，水底照旧是沙）：沙丘上风吹出来的大波纹 / 人行道的方砖 / 火山灰和碎石 / 雪
+      '  if (uSandK > 0.5) { float dry = 1.0 - smoothstep(0.3, 0.7, vColor.g); vec3 s2;',
+      '    if (uSandK < 1.5) { float w2 = sin(vWp.z * 3.1 + vWp.x * 0.7 + nz.a * 6.0 + nd.r * 1.5); s2 = uSand * (0.95 + 0.09 * nz.r) * (1.0 - 0.06 * smoothstep(0.2, 0.95, w2) + 0.03 * smoothstep(-0.9, -0.3, w2)) * (1.0 + dt.g * 0.16); }',
+      '    else if (uSandK < 2.5) { vec2 sb = slab(vWp.xz, 2.0, 1.0); s2 = uSand * (0.93 + 0.1 * sb.y) * (1.0 - 0.16 * (1.0 - smoothstep(0.02, 0.06, sb.x))) * (1.0 + dt.r * 0.08); }',
+      '    else if (uSandK < 3.5) { s2 = uSand * (0.84 + 0.2 * nd.r) * (1.0 + dt.r * 0.42) * (1.0 - 0.12 * smoothstep(0.62, 0.8, nz.g)); }',
+      '    else { s2 = mix(uSand, vec3(1.0), 0.35) * (0.94 + 0.08 * nz.g + 0.03 * nd.b) + vec3(0.25) * step(0.93, texture2D(uNoise, vWp.xz * 5.3).a) * (1.0 - smoothstep(4.0, 14.0, vDep)); }',
+      '    sd = mix(sd, s2, dry); }',
       // 小路：中间浅、边上一圈深一点（像用笔勾过），压实的地方深浅不匀，脚边看得到碎石子
       '  vec3 pc = mix(uPathRim, uPath, smoothstep(0.50, 0.80, pe)); pc *= 1.0 - 0.06 * smoothstep(0.5, 0.7, nz.b) + 0.04 * (nd.a - 0.5) + dt.r * 0.34;',
+      // 别的小路：柏油马路（边上一道浅色的路牙）/ 石板路（一块块大小不一的石头，缝是深的）/ 方砖 / 糖果色（撒着彩色糖粒）/ 蜡笔涂过的（一道道斜着的彩色笔触）/ 踩实的雪
+      '  if (uPathK > 0.5) {',
+      '    if (uPathK < 1.5) { pc = uPath * (0.95 + 0.07 * (nd.a - 0.5)) * (1.0 + dt.r * 0.1); pc = mix(pc, uPathRim, smoothstep(0.43, 0.47, pe) * (1.0 - smoothstep(0.53, 0.57, pe)) * 0.9); }',
+      '    else if (uPathK < 2.5) { vec2 sb = slab(vWp.xz + (nd.rg - 0.5) * 0.08, 1.7, 1.0); pc = mix(uPath * (0.86 + 0.24 * sb.y), uPathRim, (1.0 - smoothstep(0.035, 0.09, sb.x)) * 0.85) * (1.0 + dt.r * 0.14); pc = mix(pc, uPathRim, (1.0 - smoothstep(0.46, 0.56, pe)) * 0.5); }',
+      '    else if (uPathK < 3.5) { vec2 sb = slab(vWp.xz, 2.0, 0.0); pc = mix(uPath * (0.95 + 0.08 * sb.y), uPathRim, (1.0 - smoothstep(0.015, 0.045, sb.x)) * 0.55); pc = mix(pc, uPathRim * 0.92, (1.0 - smoothstep(0.47, 0.55, pe)) * 0.7); }',
+      '    else if (uPathK < 4.5) { float sp = texture2D(uNoise, vWp.xz * 3.3).a, sh = texture2D(uNoise, vWp.xz * 2.1 + 0.37).r; pc = mix(pc, mix(crayonC(fract(sh * 3.7)), vec3(1.0), 0.15), smoothstep(0.74, 0.77, sp) * (1.0 - smoothstep(6.0, 24.0, vDep))); }',
+      '    else if (uPathK < 5.5) { float st = sin(dot(vWp.xz, vec2(4.2, 7.4)) + texture2D(uNoise, vWp.xz * 0.27).r * 7.0); float hh = texture2D(uNoise, vWp.xz * 0.045 + 0.3).b; pc = mix(pc, crayonC(fract(hh * 4.0 + floor(vWp.x * 0.25) * 0.2)) * 1.02, smoothstep(0.55, 0.8, st) * 0.32 * smoothstep(0.5, 0.7, pe)); }',
+      '    else { pc = mix(uPath, vec3(0.97, 0.98, 1.0), 0.25 * nd.b) * (1.0 + dt.r * 0.1) * (1.0 - 0.05 * smoothstep(0.55, 0.75, nz.g)); }',
+      '  }',
       '  vec3 col = mix(gr, sd, snd); col = mix(col, mix(pc, sd * 1.04, snd * 0.75), pth);',
       '  diffuseColor.rgb = col; }',
     ].join('\n');
 
     const terrainMat = (() => {
       const mt = new T3.MeshToonMaterial({ gradientMap: softTex, vertexColors: true });
-      mt.userData.u = { uMask: { value: null }, uDetail: { value: detailTex }, uMapO: { value: new T3.Vector4(0, 0, 1, 1) }, uSeaY: { value: -1 } };
+      mt.userData.u = { uMask: { value: null }, uDetail: { value: detailTex }, uMapO: { value: new T3.Vector4(0, 0, 1, 1) }, uSeaY: { value: -1 }, uPathK: { value: 0 }, uSandK: { value: 0 } };
       ['uG0', 'uG1', 'uG2', 'uTall', 'uForest', 'uSand', 'uSandWet', 'uPath', 'uPathRim'].forEach(k => { mt.userData.u[k] = { value: C('#ffffff') }; });
       keep.push(mt);
       return paint(mt, { key: 'terrain', terrain: true, flag: 0 });
@@ -445,11 +514,14 @@
     const flowerMat = toon({ side: T3.DoubleSide }, { key: 'flower', wind: .05, flag: 0 });
     // 树：树干和一团团树冠（不透明），树叶贴片 / 棕榈叶（镂空的贴图，两面都画）。fringe 是不随风动的贴片（石坎顶上垂下来的草边）
     const treeMat = toon({ gradientMap: softTex }, { key: 'tree', wind: .022, occ: true, flag: 0, leaf: true, rim: .55 });
+    // 铅笔树、棒棒糖树、蜡笔花丛：每棵一种颜色，只染纯白的部分（见 o.tintW）；笔杆是硬的，摆得少
+    const tintTreeMat = toon({ gradientMap: rampTex }, { key: 'treeT', wind: .008, occ: true, flag: 0, rim: .5, tintW: true });
     const leafMat = toon({ gradientMap: softTex, map: leafTex, alphaTest: .42, side: T3.DoubleSide }, { key: 'leaf', wind: .022, flutter: true, occ: true, flag: 0, leaf: true });
     const fringeMat = toon({ gradientMap: softTex, map: leafTex, alphaTest: .42, side: T3.DoubleSide }, { key: 'fringe', flag: 0, leaf: true });
 
     // ---------- 每张地图的内容 ----------
-    let world = null, m = null, own = [], THEME = {}, PAL = {}, LAND = null;
+    let world = null, m = null, own = [], THEME = {}, PAL = {}, LAND = null, MOOD = MOODS[0], GND = GROUND.hello;
+    let INFO = {};   // 这张图画了些什么（probe().look 给测试和 tools/look 用）：树的种类和用到的零件、房子的样子、天气、远景、瀑布、冰面、岩浆、地上画的东西
     const rnd = (x, y, s) => A.hsh(x, y, s);
     const still = o => { o.matrixAutoUpdate = false; o.updateMatrix(); return o; };
     function add(o, cast, recv) {
@@ -572,9 +644,35 @@
         if (k < .4 || !isFinite(steep)) { lev.fill(0); step = 0; }
         else if (k < 1) { for (let i = 0; i < W * H; i++) lev[i] *= k; step *= k; }
       }
+      // ---- 瀑布（w）：一列往南流下去的水。瀑布上面那一片（从最上面那格 w 往北，不穿过岩壁、边界树、瀑布能走到的地方）整片抬高，
+      //      瀑布下面那一片不动，中间（岩壁、边界树）按离两边多远慢慢过渡。上下两片要是不穿过瀑布也连得起来，就不抬（瀑布画成平的急流）
+      const falls = [];
+      {
+        const seen = new Uint8Array(W * H), wall = (x, y) => { const c = m.grid[y][x]; return c === 'R' || c === 'X' || c === 'K' || c === 'w' || c === '#'; };
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          if (m.grid[y][x] !== 'w' || seen[y * W + x]) continue;
+          let x0 = x, x1 = x, y0 = y, y1 = y; const q = [[x, y]]; seen[y * W + x] = 1;
+          while (q.length) { const [cx, cy] = q.pop(); x0 = Math.min(x0, cx); x1 = Math.max(x1, cx); y0 = Math.min(y0, cy); y1 = Math.max(y1, cy); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy; if (nx >= 0 && ny >= 0 && nx < W && ny < H && m.grid[ny][nx] === 'w' && !seen[ny * W + nx]) { seen[ny * W + nx] = 1; q.push([nx, ny]); } }); }
+          const fill = sy => { const r = new Uint8Array(W * H); if (sy < 0 || sy >= H) return r; const st = []; for (let xx = x0; xx <= x1; xx++) if (!wall(xx, sy)) { r[sy * W + xx] = 1; st.push([xx, sy]); } while (st.length) { const [cx, cy] = st.pop(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy; if (nx >= 0 && ny >= 0 && nx < W && ny < H && !r[ny * W + nx] && !wall(nx, ny)) { r[ny * W + nx] = 1; st.push([nx, ny]); } }); } return r; };
+          const up = fill(y0 - 1), dn = fill(y1 + 1), n = y1 - y0 + 1;
+          let ok = up.some(v => v) && dn.some(v => v);
+          for (let k = 0; ok && k < W * H; k++) if (up[k] && dn[k]) ok = false;
+          const drop = ok ? (n + 1) * .52 : 0;
+          if (drop) {
+            // 两边的距离（格），中间的按比例过渡
+            const dist = src => { const d = new Float32Array(W * H).fill(1e3), st = []; for (let k = 0; k < W * H; k++) if (src[k]) { d[k] = 0; st.push(k); } while (st.length) { const k = st.shift(), cx = k % W, cy = (k - cx) / W; [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) return; const j = ny * W + nx; if (d[j] > d[k] + 1) { d[j] = d[k] + 1; st.push(j); } }); } return d; };
+            const dU = dist(up), dD = dist(dn);
+            for (let k = 0; k < W * H; k++) lev[k] += up[k] ? drop : dn[k] ? 0 : drop * sstep(0, 1, dD[k] / Math.max(1e-3, dU[k] + dD[k]));
+            // 瀑布自己那几格：一格一级往下
+            for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) lev[yy * W + xx] = drop * (1 - (yy - y0 + 1) / (n + 1));
+          }
+          falls.push({ x0, x1, y0, y1, n, drop });
+        }
+      }
+      const lifted = falls.some(f => f.drop > 0);
       // 台阶那条线（L 格偏南一点）两边不互相插值：线北边用上面的高度、南边用下面的
       const levAt = (px, pz) => {
-        if (!step) return 0;
+        if (!step && !lifted) return 0;
         const gx = clamp(px - .5, 0, W - 1), gz = clamp(pz - .5, 0, H - 1), x0 = Math.min(W - 2, Math.floor(gx)), z0 = Math.min(H - 2, Math.floor(gz)), fx = gx - x0, fz = gz - z0;
         const col = xc => (m.grid[z0][xc] === 'L' && m.grid[z0 + 1][xc] !== 'L' ? (pz < z0 + CUT ? lev[z0 * W + xc] : lev[(z0 + 1) * W + xc]) : lerp(lev[z0 * W + xc], lev[(z0 + 1) * W + xc], fz));
         return lerp(col(x0), col(x0 + 1), fx);
@@ -601,21 +699,31 @@
       const body = new Int16Array(W * H).fill(-1), wlev = [];
       let SEA = 1e9;
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        if (!(cls[y * W + x] & 1) || body[y * W + x] >= 0) continue;
+        if (!(cls[y * W + x] & 1) || body[y * W + x] >= 0 || m.grid[y][x] === 'w') continue;
         const id = wlev.length, q = [[x, y]]; let lo = 1e9, sea = false;
         body[y * W + x] = id;
         while (q.length) {
           const [cx, cy] = q.pop();
           if (cx === 0 || cy === 0 || cx === W - 1 || cy === H - 1) sea = true;
           for (let jj = (cy + MG) * S; jj <= (cy + MG + 1) * S; jj++) for (let ii = (cx + MG) * S; ii <= (cx + MG + 1) * S; ii++) if (F.dLand[jj * nx + ii] < .01) lo = Math.min(lo, shoreH[jj * nx + ii]);
-          [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const qx = cx + dx, qy = cy + dy; if (qx >= 0 && qy >= 0 && qx < W && qy < H && (cls[qy * W + qx] & 1) && body[qy * W + qx] < 0) { body[qy * W + qx] = id; q.push([qx, qy]); } });
+          [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const qx = cx + dx, qy = cy + dy; if (qx >= 0 && qy >= 0 && qx < W && qy < H && (cls[qy * W + qx] & 1) && body[qy * W + qx] < 0 && m.grid[qy][qx] !== 'w') { body[qy * W + qx] = id; q.push([qx, qy]); } });
         }
         if (lo > 1e8) lo = 0;
         wlev.push(lo - .07);
         if (sea) SEA = Math.min(SEA, lo - .07);
       }
       if (SEA > 1e8) SEA = -.5;
-      const waterLevel = (x, y) => { const b = body[clamp(y, 0, H - 1) * W + clamp(x, 0, W - 1)]; return b < 0 ? SEA : wlev[b]; };
+      const bodyLevel = (x, y) => { const b = body[clamp(y, 0, H - 1) * W + clamp(x, 0, W - 1)]; return b < 0 ? SEA : wlev[b]; };
+      // 瀑布那几格的水面：上面那片水和下面那片水之间，一格一级往下（主角逆流往上爬的时候就站在这一级上）
+      const wfL = new Float32Array(W * H).fill(NaN);
+      falls.forEach(f => {
+        const pick = yy => { for (let xx = f.x0; xx <= f.x1; xx++) if (yy >= 0 && yy < H && body[yy * W + xx] >= 0) return wlev[body[yy * W + xx]]; return null; };
+        let U = pick(f.y0 - 1), D = pick(f.y1 + 1);
+        if (U == null) U = D == null ? SEA : D + f.drop; if (D == null) D = U - f.drop;
+        f.U = U; f.D = D;
+        for (let yy = f.y0; yy <= f.y1; yy++) for (let xx = f.x0; xx <= f.x1; xx++) if (m.grid[yy][xx] === 'w') wfL[yy * W + xx] = lerp(U, D, (yy - f.y0 + 1) / (f.n + 1));
+      });
+      const waterLevel = (x, y) => { const k = clamp(y, 0, H - 1) * W + clamp(x, 0, W - 1); return wfL[k] === wfL[k] ? wfL[k] : bodyLevel(x, y); };
       // 码头：木板面比水面高一点，主角走在木板上（地形本身在水底下）
       const srf = new Float32Array(hgt);
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (cls[y * W + x] === 3) {
@@ -664,7 +772,7 @@
       };
       const inFine = (x, z) => x >= X0 && x <= X1 && z >= Z0 && z <= Z1;
       LAND = {
-        W, H, S, nx, nz, X0, Z0, X1, Z1, F, sd, hgt, srf, cls, SEA, step, samp, outer, levAt, isWater, isPier, waterLevel,
+        W, H, S, nx, nz, X0, Z0, X1, Z1, F, sd, hgt, srf, cls, SEA, step, samp, outer, levAt, isWater, isPier, waterLevel, falls,
         // 地面多高（树、石头这些放东西用）；at：主角 / 人物站的那个面（码头上是木板）
         ground: (x, z) => (inFine(x, z) ? samp(hgt, x, z) : outer(x, z)),
         at: (x, z) => samp(srf, x, z),
@@ -741,9 +849,20 @@
       u.uMask.value = paintMask();
       u.uMapO.value.set(-MG, -MG, 1 / tw, 1 / th); u.uSeaY.value = L.SEA;
       u.uG0.value.set(P.grass); u.uG1.value.copy(mixC(P.grass, '#f4f08c', P.snow ? .04 : .3)); u.uG2.value.copy(mixC(A.shade(P.grass, .86), '#27a082', P.snow ? .03 : .2));
+      if (P.snow) { u.uG1.value.set('#f8fbfd'); u.uG2.value.set('#cddcea'); }   // 雪地：白里透一块块淡淡的蓝（背阴、被风吹出来的雪窝）
       u.uTall.value.copy(mixC(A.shade(P.tall, .92), P.grass, .12)); u.uForest.value.copy(mixC(A.shade(P.tree, .82), P.grass, .28));
       u.uSand.value.set(A.shade(P.sand, .955)); u.uSandWet.value.copy(mixC(A.shade(P.sand, .84), '#b9a37a', .25));
       u.uPath.value.set(P.path); u.uPathRim.value.copy(mixC(A.shade(P.path, .8), '#b08a5a', .2));
+      // 小路、沙地的样子（GROUND）：柏油路深一些、边上的路牙浅；石板路的缝深；方砖的缝浅；雪地更白
+      const pk = PATHK[GND.path] || 0, sk = SANDK[GND.sand] || 0;
+      u.uPathK.value = pk; u.uSandK.value = sk;
+      if (pk === 1) { u.uPath.value.copy(mixC(A.shade(P.path, .62), '#5d6670', .3)); u.uPathRim.value.set('#e6e8ea'); }
+      else if (pk === 2) { u.uPath.value.copy(mixC(P.path, P.rock || '#a39b8b', .25)); u.uPathRim.value.copy(mixC(A.shade(P.rock || '#a39b8b', .62), '#5b5048', .3)); }
+      else if (pk === 3) { u.uPath.value.copy(mixC(P.path, '#ffffff', .2)); u.uPathRim.value.copy(C(A.shade(P.path, .8))); }
+      else if (pk === 6) { u.uPath.value.copy(mixC(P.path, '#c9d6e2', .3)); u.uPathRim.value.copy(mixC(P.path, '#a9bccb', .5)); }
+      if (sk === 2) u.uSand.value.copy(mixC(P.sand, '#cfd5da', .3));
+      else if (sk === 3) u.uSand.value.copy(mixC(A.shade(P.sand, .62), '#6e625a', .45));
+      else if (sk === 4) u.uSand.value.set('#f4f8fb');
       const ms = new T3.Mesh(g, terrainMat);
       ms.frustumCulled = false;
       still(add(ms, false));
@@ -751,15 +870,17 @@
 
     // ---------- 水：浅的地方清澈的青绿，越深越蓝；岸边一道道浪花往岸上推；朝着太阳的方向一条碎碎的亮光；云影也落在水上 ----------
     const waterMat = new T3.ShaderMaterial({
-      uniforms: { uTime: U.uTime, uNoise: U.uNoise, uFogA: U.uFogA, uHaze: U.uHaze, uFogP: U.uFogP, uShallow: { value: C('#9cf3df') }, uMid: { value: C('#38c8d2') }, uDeep: { value: C('#1b7fd0') }, uSky: { value: C('#bfe4f6') }, uSunXZ: { value: new T3.Vector2(-.5, -.86).normalize() } },
-      vertexShader: 'attribute float aShore; varying float vS; varying highp vec3 vW; varying highp float vDep; void main(){ vS = aShore; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mv = viewMatrix * w; vDep = -mv.z; gl_Position = projectionMatrix * mv; }',
+      uniforms: { uTime: U.uTime, uNoise: U.uNoise, uFogA: U.uFogA, uHaze: U.uHaze, uFogP: U.uFogP, uShallow: { value: C('#9cf3df') }, uMid: { value: C('#38c8d2') }, uDeep: { value: C('#1b7fd0') }, uSky: { value: C('#bfe4f6') }, uSunXZ: { value: new T3.Vector2(-.5, -.86).normalize() }, uHot: { value: 0 } },
+      vertexShader: 'attribute float aShore; attribute float aDeep; varying float vS; varying float vD; varying highp vec3 vW; varying highp float vDep; void main(){ vS = aShore; vD = aDeep; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mv = viewMatrix * w; vDep = -mv.z; gl_Position = projectionMatrix * mv; }',
       fragmentShader: [
-        'uniform highp float uTime; uniform vec3 uShallow; uniform vec3 uMid; uniform vec3 uDeep; uniform vec3 uSky; uniform vec2 uSunXZ; varying float vS; varying highp vec3 vW; varying highp float vDep;', FOG_PARS, CLOUD,
+        'uniform highp float uTime; uniform vec3 uShallow; uniform vec3 uMid; uniform vec3 uDeep; uniform vec3 uSky; uniform vec2 uSunXZ; uniform float uHot; varying float vS; varying float vD; varying highp vec3 vW; varying highp float vDep;', FOG_PARS, CLOUD,
         'void main(){',
         '  highp vec2 p = vW.xz; highp float t = uTime;',
         '  float n1 = texture2D(uNoise, p * 0.06 + vec2(t * 0.012, t * 0.008)).g; float n2 = texture2D(uNoise, p * 0.17 - vec2(t * 0.02, -t * 0.015)).r;',
         '  float d = vS + (n2 - 0.5) * 0.22;',
         '  vec3 c = mix(uShallow, uMid, smoothstep(0.05, 1.1, d)); c = mix(c, uDeep, smoothstep(0.9, 4.6, d));',
+        // 深水（D，能潜下去的地方）：一块深深的藏青，水底一串串小气泡慢慢冒上来
+        '  c = mix(c, vec3(0.05, 0.2, 0.46), vD * 0.8); c += vec3(0.7) * smoothstep(0.86, 0.9, texture2D(uNoise, p * 2.2 + vec2(0.0, t * 0.3)).a) * vD * (1.0 - smoothstep(6.0, 26.0, vDep));',
         // 涌：一道道很宽的明暗慢慢往岸这边走
         '  float sw = sin(dot(p, vec2(0.07, 0.23)) + t * 0.55 + n1 * 3.0); c *= 1.0 + 0.045 * sw * smoothstep(0.6, 2.5, d);',
         // 水面上一道道浅色的波纹（两层噪声错着走，取细细的一圈）
@@ -780,6 +901,10 @@
         '  c += vec3(1.0, 0.93, 0.78) * gp * 0.16 * (1.0 - cs) * smoothstep(1.0, 3.0, d);',
         '  c = mix(c, vec3(1.0), foam * 0.92) + sp * (0.6 + 0.6 * gp) * (1.0 - 0.6 * cs);',
         '  float a = mix(0.56, 0.93, smoothstep(0.0, 1.4, d)); a = max(a, foam); a = max(a, fr);',
+        // 岩浆（钟山山顶的火山口）：一块块暗红的硬壳慢慢漂，壳和壳之间的缝里是发亮的橙黄，靠岸的地方一圈更亮（地图外面的海 vS = 7，还是海）
+        '  if (uHot > 0.5 && vS < 6.5) { float k1 = texture2D(uNoise, p * 0.32 + vec2(t * 0.008, t * 0.004)).r, k2 = texture2D(uNoise, p * 0.85 - vec2(t * 0.012, -t * 0.01)).g;',
+        '    float crust = smoothstep(0.46, 0.6, k1 * 0.62 + k2 * 0.38); vec3 glow = mix(vec3(1.0, 0.86, 0.32), vec3(1.0, 0.42, 0.1), smoothstep(0.3, 0.7, k2)) * (1.05 + 0.15 * sin(t * 1.7 + k1 * 9.0));',
+        '    c = mix(glow, vec3(0.24, 0.1, 0.07) + vec3(0.12, 0.03, 0.0) * k2, crust); c = mix(c, vec3(1.0, 0.62, 0.22), (1.0 - smoothstep(0.0, 0.35, d)) * 0.75); a = 1.0; }',
         '  gl_FragColor = vec4(airFog(c, vDep, 0.0), a);',
         '  #include <colorspace_fragment>',
         '}',
@@ -787,31 +912,155 @@
       transparent: true, depthWrite: false,
     });
     keep.push(waterMat);
+    const steamMat = new T3.ShaderMaterial({
+      uniforms: { uTime: U.uTime, uPx: { value: 1 } },
+      vertexShader: 'attribute float aS; uniform highp float uTime; uniform float uPx; varying float vA;\nvoid main(){ float t = fract(uTime * 0.11 + aS); vec3 p = position; p.y += t * 2.6; p.x += sin(t * 3.0 + aS * 6.0) * 0.35 + t * 0.6; vec4 mv = viewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv; gl_PointSize = uPx * (0.5 + t * 1.3) / max(0.5, -mv.z); vA = sin(t * 3.1416) * 0.32; }',
+      fragmentShader: 'varying float vA;\nvoid main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(1.0), (1.0 - smoothstep(0.15, 0.5, d)) * vA);\n#include <colorspace_fragment>\n}',
+      transparent: true, depthWrite: false,
+    });
+    keep.push(steamMat);
     function buildWater() {
-      const L = LAND, S = L.S, pos = [], sh = [], idx = [];
+      const L = LAND, S = L.S, pos = [], sh = [], idx = [], dp = [];
+      // 深水（D）有多深：按四周格子中心插值，边上是软的
+      const isD = (x, y) => (tIn(x, y) === 'D' ? 1 : 0), deepAt = (px, pz) => { const gx = px - .5, gz = pz - .5, x0 = Math.floor(gx), z0 = Math.floor(gz), fx = gx - x0, fz = gz - z0; return lerp(lerp(isD(x0, z0), isD(x0 + 1, z0), fx), lerp(isD(x0, z0 + 1), isD(x0 + 1, z0 + 1), fx), fz); };
       // 地图里（外加两格）的水：照着细网格铺，每个点带着「离岸多远」
       for (let ty = 0; ty < m.H + MG * 2; ty++) for (let tx = 0; tx < m.W + MG * 2; tx++) {
         const x = tx - MG, y = ty - MG;
-        if (!L.isWater(x, y)) continue;
+        if (!L.isWater(x, y) || tIn(x, y) === 'w') continue;   // 瀑布另画（buildFalls）
         const lv = L.waterLevel(x, y), b = pos.length / 3;
-        for (let j = 0; j <= S; j++) for (let i = 0; i <= S; i++) { const q = (ty * S + j) * L.nx + tx * S + i; pos.push(x + i / S, lv, y + j / S); sh.push(Math.max(0, -L.sd[q])); }
+        for (let j = 0; j <= S; j++) for (let i = 0; i <= S; i++) { const q = (ty * S + j) * L.nx + tx * S + i, px = x + i / S, pz = y + j / S; pos.push(px, lv, pz); sh.push(Math.max(0, -L.sd[q])); dp.push(deepAt(px, pz)); }
         for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) { const a = b + j * (S + 1) + i, c = a + S + 1; idx.push(a, c, a + 1, a + 1, c, c + 1); }
       }
       // 外面的海：四大块，一直铺到最远
       const far = Q.far * 1.6, X0 = L.X0, X1 = L.X1, Z0 = L.Z0, Z1 = L.Z1;
       [[X0 - far, Z0 - far, X1 + far, Z0], [X0 - far, Z1, X1 + far, Z1 + far], [X0 - far, Z0, X0, Z1], [X1, Z0, X1 + far, Z1]].forEach(([ax, az, bx, bz]) => {
         const b = pos.length / 3;
-        pos.push(ax, L.SEA, az, bx, L.SEA, az, ax, L.SEA, bz, bx, L.SEA, bz); sh.push(7, 7, 7, 7);
+        pos.push(ax, L.SEA, az, bx, L.SEA, az, ax, L.SEA, bz, bx, L.SEA, bz); sh.push(7, 7, 7, 7); dp.push(0, 0, 0, 0);
         idx.push(b, b + 2, b + 1, b + 1, b + 2, b + 3);
       });
       const g = new T3.BufferGeometry();
       g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3));
-      g.setAttribute('aShore', new T3.Float32BufferAttribute(sh, 1));
+      g.setAttribute('aShore', new T3.Float32BufferAttribute(sh, 1)); g.setAttribute('aDeep', new T3.Float32BufferAttribute(dp, 1));
+      waterMat.uniforms.uHot.value = m.theme === 'clock' && m.kind === 'route' ? 1 : 0;   // 钟山山顶的火山口是岩浆（告示牌：Do not go near the lava）
+      // 岩浆上冒着一缕缕热气和烟：一团团软软的白点从表面升起来、散开、淡掉
+      if (waterMat.uniforms.uHot.value && tier !== 'low') {
+        const cells = []; for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) if (L.isWater(x, y) && tIn(x, y) !== 'w') cells.push([x, y]);
+        const N = Math.min(60, cells.length * 2), sp = new Float32Array(N * 3), sd = new Float32Array(N);
+        for (let i = 0; i < N; i++) { const [x, y] = cells[Math.floor(hash2(i, 91) * cells.length)]; sp.set([x + hash2(i, 92), L.waterLevel(x, y), y + hash2(i, 93)], i * 3); sd[i] = hash2(i, 94); }
+        const sg = new T3.BufferGeometry(); sg.setAttribute('position', new T3.BufferAttribute(sp, 3)); sg.setAttribute('aS', new T3.BufferAttribute(sd, 1)); own.push(sg);
+        const so = new T3.Points(sg, steamMat); so.frustumCulled = false; so.renderOrder = 5; still(add(so, false, false));
+      }
       g.setIndex(idx);
       own.push(g);
       const ms = new T3.Mesh(g, waterMat);
       ms.frustumCulled = false; ms.renderOrder = 2;
       still(add(ms, false, false));
+    }
+
+    // ---------- 瀑布：一级一级往下冲的水（每一级：一小段平的急流、一道往前鼓出去再垂下来的水帘、帘子底下一圈白沫），最下面冲进水潭的地方一大片白沫 ----------
+    // aF：0 平的急流、1 往下落的水帘；aV：顺着水流走了多远（白色的水纹顺着它往下跑）；aFo：白沫有多浓
+    const fallsMat = new T3.ShaderMaterial({
+      uniforms: { uTime: U.uTime, uNoise: U.uNoise, uFogA: U.uFogA, uHaze: U.uHaze, uFogP: U.uFogP },
+      vertexShader: 'attribute float aF; attribute float aV; attribute float aFo; varying float vF; varying float vV; varying float vFo; varying highp vec3 vW; varying highp float vDep; void main(){ vF = aF; vV = aV; vFo = aFo; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mv = viewMatrix * w; vDep = -mv.z; gl_Position = projectionMatrix * mv; }',
+      fragmentShader: [
+        'uniform highp float uTime; varying float vF; varying float vV; varying float vFo; varying highp vec3 vW; varying highp float vDep;', FOG_PARS, CLOUD,
+        'void main(){',
+        '  highp float t = uTime; float sp = mix(1.1, 3.4, vF);',
+        // 一道道顺着水流跑下去的白色水纹（落下来的水帘上又密又快）
+        '  float s1 = texture2D(uNoise, vec2(vW.x * 2.4, vV * 0.8 - t * sp * 0.8)).g, s2 = texture2D(uNoise, vec2(vW.x * 5.1 + 0.3, vV * 1.6 - t * sp * 1.3)).r;',
+        '  float str = smoothstep(0.42, 0.74, s1 * 0.6 + s2 * 0.4);',
+        '  vec3 c = mix(vec3(0.42, 0.80, 0.88), vec3(0.80, 0.95, 1.0), vF * 0.55);',
+        '  c = mix(c, vec3(1.0), str * (0.3 + 0.6 * vF));',
+        // 白沫：一团团翻着的泡沫（两层噪声错着动）
+        '  float fn = texture2D(uNoise, vW.xz * 1.6 + vec2(0.0, -t * 0.45)).a * 0.6 + texture2D(uNoise, vW.xz * 3.1 - vec2(t * 0.3, 0.0)).g * 0.4;',
+        '  float fo = max(vFo, 0.0), fade = clamp(1.0 + vFo, 0.0, 1.0);',
+        '  float foam = smoothstep(0.25, 0.55, fn * 0.7 + fo * 0.6 - 0.2) * min(1.0, fo * 1.6);',
+        '  c = mix(c, vec3(1.0), foam * 0.95);',
+        '  c *= 1.0 - 0.18 * cloudSh(vW.xz);',
+        '  float a = max(mix(0.8, 0.95, vF), foam * 0.95) * fade;',
+        '  gl_FragColor = vec4(airFog(c, vDep, vW.y), a);',
+        '  #include <colorspace_fragment>',
+        '}',
+      ].join('\n'),
+      transparent: true, depthWrite: false,
+    });
+    keep.push(fallsMat);
+    function buildFalls() {
+      const L = LAND;
+      if (!L.falls || !L.falls.length) return;
+      const pos = [], aF = [], aV = [], aFo = [], idx = [], hiQ = tier === 'high';
+      L.falls.forEach(f => {
+        const xa = f.x0 - .03, xb = f.x1 + 1.03, nX = Math.max(2, (f.x1 - f.x0 + 1) * (hiQ ? 6 : 3));
+        const lev = k => (k < 0 ? f.U : k >= f.n ? f.D : lerp(f.U, f.D, (k + 1) / (f.n + 1)));
+        const pts = [{ z: f.y0 - .6, y: f.U + .01, F: 0, fo: -1 }];   // 两头的 fo 是 -1：淡进上面那片水、淡出到下面的水潭里
+        if (f.drop > 0) {
+          for (let j = 0; j <= f.n; j++) {
+            const A0 = lev(j - 1), B0 = lev(j), zj = f.y0 + j;
+            for (let q = 0; q <= 6; q++) { const s = q / 6; pts.push({ z: zj - .14 + .3 * (1 - (1 - s) * (1 - s)), y: A0 + (B0 - A0) * Math.pow(s, 1.3) + .01, F: s < .08 ? .25 : 1, fo: s > .7 ? (s - .7) * 3.3 : 0 }); }
+            if (j < f.n) { pts.push({ z: zj + .36, y: B0 + .01, F: 0, fo: .9 }); pts.push({ z: zj + .86, y: B0 + .01, F: 0, fo: .25 }); }
+            else { pts.push({ z: zj + .5, y: B0 + .012, F: 0, fo: 1 }); pts.push({ z: zj + 1.3, y: B0 + .012, F: 0, fo: .55 }); pts.push({ z: zj + 2.2, y: B0 + .012, F: 0, fo: -1 }); }
+          }
+        } else pts.push({ z: f.y1 + 1.5, y: f.D + .01, F: 0, fo: -1 });
+        let v = 0;
+        pts.forEach((q, i) => { if (i) v += Math.hypot(q.z - pts[i - 1].z, q.y - pts[i - 1].y); q.v = v; });
+        const b = pos.length / 3;
+        pts.forEach(q => { for (let i = 0; i <= nX; i++) { const x = lerp(xa, xb, i / nX), side = Math.min(i, nX - i) / nX; pos.push(x + (i === 0 ? -.04 : i === nX ? .04 : 0) * q.F, q.y, q.z); aF.push(q.F); aV.push(q.v); aFo.push(q.fo < 0 ? q.fo : Math.min(1, q.fo + (side < .08 ? .5 : 0))); } });
+        for (let r = 0; r < pts.length - 1; r++) for (let i = 0; i < nX; i++) { const a = b + r * (nX + 1) + i, c = a + nX + 1; idx.push(a, c, a + 1, a + 1, c, c + 1); }
+      });
+      const g = new T3.BufferGeometry();
+      g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); g.setAttribute('aF', new T3.Float32BufferAttribute(aF, 1)); g.setAttribute('aV', new T3.Float32BufferAttribute(aV, 1)); g.setAttribute('aFo', new T3.Float32BufferAttribute(aFo, 1));
+      g.setIndex(idx); own.push(g);
+      const ms = new T3.Mesh(g, fallsMat); ms.renderOrder = 3; ms.frustumCulled = false;
+      still(add(ms, false, false));
+    }
+
+    // ---------- 冰面（I，踩上去会一直滑）：亮亮的、半透明的蓝，靠边一圈白霜，里面一道道白色的裂纹，天光和太阳在上面反着光，脚边一闪一闪的冰晶 ----------
+    const iceMat = new T3.ShaderMaterial({
+      uniforms: { uTime: U.uTime, uNoise: U.uNoise, uFogA: U.uFogA, uHaze: U.uHaze, uFogP: U.uFogP, uSky: { value: C('#cfe6fb') }, uSunXZ: { value: new T3.Vector2(-.5, -.86).normalize() } },
+      vertexShader: 'attribute float aE; varying float vE; varying highp vec3 vW; varying highp float vDep; void main(){ vE = aE; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mv = viewMatrix * w; vDep = -mv.z; gl_Position = projectionMatrix * mv; }',
+      fragmentShader: [
+        'uniform highp float uTime; uniform vec3 uSky; uniform vec2 uSunXZ; varying float vE; varying highp vec3 vW; varying highp float vDep;', FOG_PARS, CLOUD,
+        'void main(){',
+        '  highp vec2 p = vW.xz; float e = vE;',
+        '  vec3 c = mix(vec3(0.62, 0.84, 0.97), vec3(0.26, 0.56, 0.86), smoothstep(0.15, 1.8, e));',
+        '  c *= 0.93 + 0.12 * texture2D(uNoise, p * 0.17).r;',
+        // 裂纹：两层细细的白线（噪声的等高线），线边上一道浅浅的暗
+        '  float k1 = abs(fract(texture2D(uNoise, p * 0.2).g * 4.0 + texture2D(uNoise, p * 0.55).r * 0.35) - 0.5), k2 = abs(fract(texture2D(uNoise, p * 0.46 + 0.3).b * 3.0) - 0.5);',
+        '  float cr = (1.0 - smoothstep(0.01, 0.026, k1)) + (1.0 - smoothstep(0.006, 0.016, k2)) * 0.6, crD = (1.0 - smoothstep(0.026, 0.05, k1)) * (1.0 - cr);',
+        '  c = mix(c, vec3(0.98, 1.0, 1.0), clamp(cr, 0.0, 1.0) * 0.8) - vec3(0.05, 0.03, 0.0) * crD;',
+        // 靠边的白霜
+        '  float fr = (1.0 - smoothstep(0.0, 0.8, e)) * smoothstep(0.35, 0.65, texture2D(uNoise, p * 2.2).a);',
+        '  c = mix(c, vec3(0.97, 0.99, 1.0), fr * 0.75);',
+        // 反光：越斜着看越是天的颜色；朝着太阳那边一条亮带；脚边一闪一闪的冰晶
+        '  vec3 v = normalize(cameraPosition - vW); float fre = pow(1.0 - clamp(v.y, 0.0, 1.0), 2.2); c = mix(c, uSky, fre * 0.3);',
+        '  float gp = pow(max(dot(normalize(p - cameraPosition.xz), uSunXZ), 0.0), 6.0); c += vec3(1.0, 0.97, 0.88) * gp * 0.22;',
+        '  float g1 = texture2D(uNoise, p * 1.4 + vec2(uTime * 0.015, 0.0)).g, g2 = texture2D(uNoise, p * 1.9 - vec2(0.0, uTime * 0.012)).g;',
+        '  c += vec3(0.6) * smoothstep(0.74, 0.76, min(g1, g2)) * (1.0 - smoothstep(4.0, 18.0, vDep));',
+        '  c *= 1.0 - 0.2 * cloudSh(p);',
+        '  gl_FragColor = vec4(airFog(c, vDep, vW.y), ' + (Q.post ? '0.0' : '1.0') + ');',
+        '  #include <colorspace_fragment>',
+        '}',
+      ].join('\n'),
+    });
+    keep.push(iceMat);
+    function buildIce() {
+      const L = LAND, S = L.S, W = m.W, H = m.H, tw = W + MG * 2, th = H + MG * 2, isI = (x, y) => tIn(x, y) === 'I';
+      let any = false;
+      const kNot = new Uint8Array(tw * th);
+      for (let ty = 0; ty < th; ty++) for (let tx = 0; tx < tw; tx++) { const i = isI(tx - MG, ty - MG); kNot[ty * tw + tx] = i ? 0 : 1; if (i) any = true; }
+      if (!any) return;
+      INFO.ice = 1;
+      const dE = chamfer(kNot, tw, th, S), pos = [], ae = [], idx = [];
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (!isI(x, y)) continue;
+        const b = pos.length / 3;
+        for (let j = 0; j <= S; j++) for (let i = 0; i <= S; i++) { const px = x + i / S, pz = y + j / S, q = ((y + MG) * S + j) * L.nx + (x + MG) * S + i; pos.push(px, L.ground(px, pz) + .03, pz); ae.push(dE[q]); }
+        for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) { const a = b + j * (S + 1) + i, c = a + S + 1; idx.push(a, c, a + 1, a + 1, c, c + 1); }
+      }
+      const g = new T3.BufferGeometry();
+      g.setAttribute('position', new T3.Float32BufferAttribute(pos, 3)); g.setAttribute('aE', new T3.Float32BufferAttribute(ae, 1)); g.setIndex(idx); own.push(g);
+      iceMat.uniforms.uSky.value.set(MOOD.sky[2]);
+      still(add(new T3.Mesh(g, iceMat), false, false));
     }
 
     // ---------- 拼几何体的小工具：把很多小零件倒进一个「袋子」，最后变成一个网格（一次画完） ----------
@@ -1001,33 +1250,81 @@
         }
       }
       const isCliff = (x, y) => { const c = tIn(x, y); return c === 'R' || c === 'X' || c === 'K'; };
-      const cornerH = (ix, iz) => 1.7 + .75 * rnd(ix, iz, 21) + ([[0, 0], [-1, 0], [0, -1], [-1, -1]].every(([dx, dy]) => isCliff(ix + dx, iz + dy)) ? .55 : 0);
+      // 岩壁越往里越高（一大片岩壁是一座山，不是一排一样高的柱子）：每格离最近的「不是岩壁」的格子有几格（最多算 4 格）
+      const cDep = new Float32Array(W * H);
+      { const q = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const k = y * W + x; if (!isCliff(x, y)) continue; cDep[k] = 9; if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const c = tIn(x + dx, y + dy); return c !== '' && !isCliff(x + dx, y + dy); })) { cDep[k] = 1; q.push(k); } }
+        while (q.length) { const k = q.shift(), x = k % W, y = (k - x) / W; [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) return; const j = ny * W + nx; if (cDep[j] > cDep[k] + 1) { cDep[j] = cDep[k] + 1; q.push(j); } }); }
+        for (let k = 0; k < W * H; k++) if (cDep[k] > 8) cDep[k] = 4; }
+      const depAt = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? 1 : cDep[y * W + x]);
+      const cornerH = (ix, iz) => {
+        const cells = [[0, 0], [-1, 0], [0, -1], [-1, -1]], inner = cells.every(([dx, dy]) => isCliff(ix + dx, iz + dy));
+        const dep = cells.reduce((a, [dx, dy]) => a + (isCliff(ix + dx, iz + dy) ? Math.min(4, depAt(ix + dx, iz + dy)) : 0), 0) / 4;
+        return 1.7 + .75 * rnd(ix, iz, 21) + (inner ? .55 : 0) + Math.max(0, dep - 1) * (.42 + .4 * fbm(ix * .23 + 5, iz * .23 + 11));
+      };
       // 岩壁的一个角朝哪边是「外」：挨着这个角的岩壁格子的中心都往这个角指，加起来就是
       const cornerOut = (ix, iz) => { let ox = 0, oz = 0; [[0, 0], [-1, 0], [0, -1], [-1, -1]].forEach(([dx, dy]) => { if (isCliff(ix + dx, iz + dy)) { ox += -(dx + .5); oz += -(dy + .5); } }); const l = Math.hypot(ox, oz); return l < .01 ? [0, 0] : [ox / l, oz / l]; };
-      const capC = mixC(A.shade(P.grass, .9), rock, .25), darkC = C('#17100c');
+      // 岩壁的颜色跟着地貌（GROUND.rock：暗、中、亮）；顶上是草 / 雪 / 光石头 / 苔藓
+      const gr3 = GND.rock || [A.shade(rock, .62), earth, A.shade(rock, 1.04)], kLo = C(gr3[0]), kMid = C(gr3[1]), kHi = C(gr3[2]), cap = GND.cap || 'grass';
+      const capC = cap === 'snow' ? C('#f2f7fb') : cap === 'rock' ? mixC(gr3[2], gr3[1], .3) : cap === 'moss' ? mixC(gr3[1], '#6f9a4c', .55) : mixC(A.shade(P.grass, .9), rock, .25), darkC = C('#17100c');
+      const capLip = cap === 'snow' ? C('#ffffff') : capC, capFr = cap !== 'rock';
       const postG = (r, h, seg) => new T3.CylinderGeometry(r * .92, r, h, seg).translate(0, h / 2, 0);
+      // 岩壁侧面的一层层：每层的上沿往外伸一点（顶面朝上、受光，是亮的一道），下沿往里收（背光，暗的一道），像一层层叠起来的岩层
+      const KS = hiD ? [0, .14, .3, .44, .6, .74, .88, 1] : tier === 'mid' ? [0, .2, .42, .62, .82, 1] : [0, .4, .8, 1];
+      const cliffC = [];   // 每一层的颜色（从下往上）：最下面暗，中间几层深浅交替，最上面亮
+      for (let j = 0; j < KS.length; j++) { const k = KS[j], cc = kLo.clone().lerp(kMid, sstep(0, .35, k)).lerp(kHi, sstep(.5, 1, k)); cc.multiplyScalar(1 + (j % 2 ? -1 : 1) * GND.band * .25); cliffC.push(cc); }
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const c = m.grid[y][x], cx = x + .5, cz = y + .5;
         if (isCliff(x, y)) {
-          // 岩壁：一格一根石柱，挨着的拼成一整面；侧面分三层颜色、底下往外鼓，角上的法线朝斜外（拐角是圆着过去的），顶上是草、朝南的边垂着草
-          const y0 = L.ground(cx, cz) - .05, cr = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]].map(([ix, iz]) => {
-            occH[y * W + x] = y0 + 2.3;
+          // 岩壁：一格一块，挨着的拼成一整面（四个角的高度是共用的，顶面连成一片，越往里越高）；侧面一层层的岩层、底下往外鼓，角上的法线朝斜外（拐角是圆着过去的），
+          // 顶上是草（或雪、苔藓、光石头），朝南的边垂着一排草
+          let top = 0;
+          const cr = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]].map(([ix, iz]) => {
             const inner = [[0, 0], [-1, 0], [0, -1], [-1, -1]].every(([dx, dy]) => isCliff(ix + dx, iz + dy)), out = cornerOut(ix, iz);
-            return { x: ix + (inner ? 0 : (rnd(ix, iz, 22) - .5) * .14), z: iz + (inner ? 0 : (rnd(iz, ix, 23) - .5) * .14), h: y0 + cornerH(ix, iz), ox: out[0], oz: out[1] };
+            const px = ix + (inner ? 0 : (rnd(ix, iz, 22) - .5) * .14), pz = iz + (inner ? 0 : (rnd(iz, ix, 23) - .5) * .14), b = L.ground(px, pz) - .1, h = b + .05 + cornerH(ix, iz);
+            top = Math.max(top, h);
+            return { x: px, z: pz, b, h, ox: out[0], oz: out[1] };
           });
-          quadN(rk, [cr[0].x, cr[0].h, cr[0].z], [cr[3].x, cr[3].h, cr[3].z], [cr[2].x, cr[2].h, cr[2].z], [cr[1].x, cr[1].h, cr[1].z], UP, UP, UP, UP, c === 'X' ? rMid : capC, c === 'X' ? rMid : capC, c === 'X' ? rMid : capC, c === 'X' ? rMid : capC);
+          occH[y * W + x] = top; cliffTop[y * W + x] = (cr[0].h + cr[1].h + cr[2].h + cr[3].h) / 4;
+          const cc = c === 'X' ? rMid : capC;
+          quadN(rk, [cr[0].x, cr[0].h, cr[0].z], [cr[3].x, cr[3].h, cr[3].z], [cr[2].x, cr[2].h, cr[2].z], [cr[1].x, cr[1].h, cr[1].z], UP, UP, UP, UP, cc, cc, cc, cc);
           [[3, 2, 0, 1], [1, 0, 0, -1], [2, 1, 1, 0], [0, 3, -1, 0]].forEach(([a, b, dx, dz]) => {
             if (isCliff(x + dx, y + dz)) return;
             const pa = cr[a], pb = cr[b];
-            const pt = (p, k) => { const bl = lerp(.13, 0, Math.sqrt(k)); return [p.x + (p.ox * .6 + dx * .4) * bl, lerp(y0, p.h, k), p.z + (p.oz * .6 + dz * .4) * bl]; };
-            const nr = (p, k) => [p.ox * .55 + dx * .45, lerp(-.1, .55, k * k), p.oz * .55 + dz * .45];
-            const ks = [0, .4, .8, 1], cs2 = [rLo, rMid, rHi, rHi];
-            for (let q = 0; q < 3; q++) quadN(rk, pt(pa, ks[q]), pt(pb, ks[q]), pt(pb, ks[q + 1]), pt(pa, ks[q + 1]), nr(pa, ks[q]), nr(pb, ks[q]), nr(pb, ks[q + 1]), nr(pa, ks[q + 1]), cs2[q], cs2[q], cs2[q + 1], cs2[q + 1]);
-            if (dz === 1 && c !== 'X') fringe(pa.x, pa.h, pa.z, pb.x, pb.h, pb.z, 0, .06, rnd(x, y, 24) * .7);
+            // 这一面中间再加一列点，往外鼓一点（按世界坐标的噪声，鼓多少每面不一样），面就不是一块平板
+            const mx = (pa.x + pb.x) / 2, mz = (pa.z + pb.z) / 2, bulge = (fbm(mx * 1.3 + 3, mz * 1.3 + 7) - .35) * .22;
+            const pm = { x: mx + dx * bulge, z: mz + dz * bulge, b: L.ground(mx, mz) - .1, h: (pa.h + pb.h) / 2 + (rnd(x * 3 + dx, y * 3 + dz, 25) - .5) * .25, ox: dx, oz: dz };
+            const cols = [pa, pm, pb];
+            const pt = (p, j) => {
+              const k = KS[j], bl = lerp(.13, 0, Math.sqrt(k)), st = j > 0 && j < KS.length - 1 ? (j % 2 ? .05 : -.018) * (.7 + .6 * rnd(Math.round(p.x * 4), j, 26)) : 0;
+              const o = bl + st;
+              return [p.x + (p.ox * .6 + dx * .4) * o, lerp(p.b, p.h, k), p.z + (p.oz * .6 + dz * .4) * o];
+            };
+            const nr = (p, j) => { const k = KS[j], lip = j > 0 && j < KS.length - 1 ? (j % 2 ? .38 : -.22) : 0; return [p.ox * .55 + dx * .45, lerp(-.1, .55, k * k) + lip, p.oz * .55 + dz * .45]; };
+            for (let s = 0; s < 2; s++) {
+              const p0 = cols[s], p1 = cols[s + 1];
+              for (let j = 0; j < KS.length - 1; j++) {
+                if (GND.book) {   // 书山：每一层是一本书——伸出来的那层是彩色的书皮，缩进去的那层是米白的书页；书皮的颜色每两三格换一本
+                  const bc2 = j % 2 ? BOOKC[Math.floor(hash2(Math.floor((p0.x + p0.z) / 2.3 + j * 7), j + Math.round(p0.b * 3)) * BOOKC.length)] : PAGEC;
+                  quadN(rk, pt(p0, j), pt(p1, j), pt(p1, j + 1), pt(p0, j + 1), nr(p0, j), nr(p1, j), nr(p1, j + 1), nr(p0, j + 1), bc2, bc2, bc2, bc2);
+                } else quadN(rk, pt(p0, j), pt(p1, j), pt(p1, j + 1), pt(p0, j + 1), nr(p0, j), nr(p1, j), nr(p1, j + 1), nr(p0, j + 1), cliffC[j], cliffC[j], cliffC[j + 1], cliffC[j + 1]);
+              }
+            }
+            // 顶上的边：一圈压在岩壁上沿的「盖子」（草皮 / 雪 / 苔藓伸出来一点）
+            if (cap !== 'rock' && c !== 'X') {
+              const lo = (p, e) => [p.x + (p.ox * .6 + dx * .4) * e, p.h - .07, p.z + (p.oz * .6 + dz * .4) * e], hi = (p, e) => [p.x + (p.ox * .6 + dx * .4) * e, p.h + .02, p.z + (p.oz * .6 + dz * .4) * e];
+              const nO = [dx * .7, .3, dz * .7];
+              for (let s = 0; s < 2; s++) { const p0 = cols[s], p1 = cols[s + 1]; quadN(rk, lo(p0, .05), lo(p1, .05), hi(p1, .04), hi(p0, .04), nO, nO, UP, UP, capLip, capLip, capLip, capLip); quadN(rk, hi(p0, .04), hi(p1, .04), [p1.x, p1.h + .015, p1.z], [p0.x, p0.h + .015, p0.z], UP, UP, UP, UP, capLip, capLip, capLip, capLip); }
+            }
+            if (dz === 1 && c !== 'X' && capFr) { fringe(pa.x, pa.h, pa.z, pm.x, pm.h, pm.z, 0, .06, rnd(x, y, 24) * .7); fringe(pm.x, pm.h, pm.z, pb.x, pb.h, pb.z, 0, .06, rnd(y, x, 24) * .7); }
           });
-          if (c === 'K') {   // 洞口：南面一个黑色的拱门
-            const zf = y + 1.14, n = 12;
-            for (let k = 0; k < n; k++) { const a0 = Math.PI * k / n, a1 = Math.PI * (k + 1) / n; tri(rk, [cx, y0, zf], [cx + Math.cos(a0) * .36, y0 + .05 + Math.sin(a0) * .86, zf], [cx + Math.cos(a1) * .36, y0 + .05 + Math.sin(a1) * .86, zf], darkC); }
+          if (c === 'K') {   // 洞口：南面一个黑色的拱门（里面越往深处越黑），门框是一圈切好的石块，脚下两块大石头
+            const y0 = L.ground(cx, cz + .6) - .05, zf = y + 1.15, n = 12, inC = C('#3a2c22'), sc = topSide(gr3[2], A.shade(gr3[2], .86));
+            for (let k = 0; k < n; k++) { const a0 = Math.PI * k / n, a1 = Math.PI * (k + 1) / n; tri(rk, [cx, y0, zf], [cx + Math.cos(a0) * .38, y0 + .05 + Math.sin(a0) * .88, zf], [cx + Math.cos(a1) * .38, y0 + .05 + Math.sin(a1) * .88, zf], darkC, inC, inC); }
+            for (let k = 0; k < 7; k++) {
+              const a = Math.PI * (k + .5) / 7, g = new T3.BoxGeometry(.2, .15, .14).rotateZ(a - Math.PI / 2);
+              put(rk, g, sc, cx + Math.cos(a) * .48, y0 + .05 + Math.sin(a) * .98, zf + .03);
+            }
+            [-1, 1].forEach(sd => box(rk, .16, .3, .16, sc, cx + sd * .48, y0, zf + .03));
           }
         } else if (c === 'f') {
           // 栅栏：圆木桩、两道圆木横杆
@@ -1047,6 +1344,10 @@
           box(th, .8, .46, .06, byY('#c79658', '#e6bb7d', 0, .46), cx, y0 + .41, z);
           box(th, .84, .05, .08, '#a87440', cx, y0 + .86, z); box(th, .84, .05, .08, '#9a6838', cx, y0 + .38, z);
           [[.72, .5], [.62, .36], [.52, .44]].forEach(([h, w]) => box(th, w, .045, .02, '#6f4526', cx - (.5 - w) / 2, y0 + h, z + .035));
+        } else if (c === 'T' && m.theme === 'city' && !['#', 'T'].some(q => tIn(x - 1, y) === q && tIn(x + 1, y) === q)) {
+          // 规则城的行道树：种在一个方方的石头花池里（池沿浅灰，里面是深色的土）
+          const y0 = L.ground(cx, cz) - .02;
+          box(bag, .78, .22, .78, topSide('#d5dadd', '#a9b1b6'), cx, y0, cz); box(bag, .62, .02, .62, '#6b5442', cx, y0 + .21, cz);
         } else if (c === '%') {
           const y0 = L.ground(cx, cz), sc = P.rock || '#9e9e9e';
           for (let k = 0; k < 3; k++) box(bag, .9, .1 + k * .12, .3, topSide(A.shade(sc, 1.12), A.shade(sc, .85)), cx, y0, y + .85 - k * .3);
@@ -1056,8 +1357,6 @@
           ball(rk, .3 + r * .08, dt, cx - .06, y0 + .15, cz + .04, { sx: 1.12, sy: .76, sz: .96, lump: .14, col, seed: x * 7 + y });
           ball(rk, .17, Math.max(1, dt - 1), cx + .27, y0 + .08, cz + .17, { sy: .8, lump: .16, col, seed: x + y * 5 });
           if (r > .5) ball(rk, .11, Math.max(1, dt - 1), cx - .3, y0 + .05, cz + .26, { sy: .75, lump: .16, col, seed: x * 3 + y * 2 });
-        } else if (c === 'I') {
-          quad(bag, [x, L.ground(cx, cz) + .02, y], [x, L.ground(cx, cz) + .02, y + 1], [x + 1, L.ground(cx, cz) + .02, y + 1], [x + 1, L.ground(cx, cz) + .02, y], C('#dff3fb'));
         }
         if (L.cls[y * W + x] === 3) {
           // 码头：一块块木板（板和板之间留着缝）、两边的边梁、角上扎进水里的圆木桩，桩头上一圈绳子
@@ -1091,6 +1390,23 @@
         if (onWater) { const b = Bag(); markInto(b, 'boat', 0, 0, 0); const g = bake(b); own.push(g); boatG = new T3.Mesh(g, propMat); boatG.position.set(x + .5, L.waterLevel(x, y), y + .5); boatG.userData.y0 = boatG.position.y; add(boatG, true); }
         else markInto(th, kind, x + .5, L.ground(x + .5, y + .5), y + .55);
       }
+      // 户外的 over 图层：地上画的东西（规则城的斑马线）。斑马线是一道道白条，顺着过马路的方向，沿着马路排开
+      if (m.over && m.def && m.def.paint) {
+        const ov = (x, y) => (m.over[y] && m.over[y][x]) || '.', road = (x, y) => tIn(x, y) === '=' && ov(x, y) === '.';
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const ch = ov(x, y), pd = ch !== '.' && m.def.paint[ch];
+          if (!pd) continue;
+          const col = C(typeof pd === 'string' ? pd : pd.c || '#ffffff'), y0 = L.ground(x + .5, y + .5) + .012;
+          let gx = x, run = 0; while (ov(gx - 1, y) === ch) gx--; while (ov(gx + run, y) === ch) run++;
+          let gy = y, rz = 0; while (ov(x, gy - 1) === ch) gy--; while (ov(x, gy + rz) === ch) rz++;
+          const horiz = road(gx - 1, y) || road(gx + run, y);   // 马路是东西向的：白条南北向，沿着 x 排
+          for (let k = 0; k < 3; k++) {
+            const a = (k + .2) / 3, b = (k + .75) / 3;
+            if (horiz) quad(bag, [x + a, y0, y + .06], [x + a, y0, y + .94], [x + b, y0, y + .94], [x + b, y0, y + .06], col);
+            else quad(bag, [x + .06, y0, y + a], [x + .06, y0, y + b], [x + .94, y0, y + b], [x + .94, y0, y + a], col);
+          }
+        }
+      }
       [[bag, solidMat], [rk, rockMat], [th, thingMat]].forEach(([b, mt]) => { if (!b.p.length) return; const g = bake(b); own.push(g); still(add(new T3.Mesh(g, mt), true)); });
       if (fr.p.length) { const g = bakeU(fr); own.push(g); still(add(new T3.Mesh(g, fringeMat), false)); }
     }
@@ -1101,18 +1417,58 @@
       const base = () => pb(.74, .22, .74, topSide('#dfe6ea', '#b4c0c8'));
       switch (kind) {
         case 'anchor': base(); part(new T3.TorusGeometry(.25, .06, 6, 14, Math.PI).rotateZ(Math.PI), '#546e7a', 0, .58); part(new T3.CylinderGeometry(.05, .05, .7, 6), '#546e7a', 0, .63); part(new T3.TorusGeometry(.1, .04, 6, 12), '#546e7a', 0, 1.03); break;
-        case 'crayon': part(new T3.CylinderGeometry(.22, .22, 1.1, 8).translate(0, .55, 0), ['#ef5350', '#42a5f5', '#66bb6a', '#ffca28'][Math.floor(rnd(Math.floor(x), Math.floor(z), 2) * 4)]); part(new T3.ConeGeometry(.22, .35, 8).translate(0, 1.27, 0), '#f5d7a1'); break;
+        case 'crayon': {
+          // 一盒大蜡笔：黄绿色的纸盒（前面一块蓝色的标签），里面插着四支高高低低的蜡笔——圆笔杆、一圈深色的包装纸、圆锥形的蜡笔头
+          pb(.78, .5, .4, byY('#7cc24a', '#a6dd6a', 0, .5), 0, 0, 0); pb(.5, .26, .02, '#42a5f5', 0, .12, .205);
+          [['#ef5350', -.27, .95], ['#ffca28', -.09, 1.15], ['#42a5f5', .09, .85], ['#ab47bc', .27, 1.05]].forEach(([c, ox, hh]) => {
+            part(new T3.CylinderGeometry(.085, .085, hh, 10).translate(0, hh / 2, 0), c, ox, .1, 0);
+            part(new T3.CylinderGeometry(.088, .088, hh * .4, 10).translate(0, hh * .45, 0), A.shade(c, .72), ox, .1, 0);
+            part(new T3.ConeGeometry(.085, .2, 10).translate(0, .1, 0), c, ox, .1 + hh, 0);
+          });
+          break;
+        }
         case 'scarecrow': part(new T3.CylinderGeometry(.04, .04, 1.3, 5).translate(0, .65, 0), '#8a5a33'); pb(.8, .06, .06, '#8a5a33', 0, .95); part(new T3.SphereGeometry(.17, 8, 6), '#f5d7a1', 0, 1.3); part(new T3.ConeGeometry(.25, .22, 8), '#e8c35a', 0, 1.48); pb(.4, .4, .2, '#e57373', 0, .52); break;
         case 'bell': pb(.08, 1.2, .08, '#6d4c41', -.3); pb(.08, 1.2, .08, '#6d4c41', .3); pb(.7, .08, .1, '#6d4c41', 0, 1.2); part(new T3.ConeGeometry(.2, .3, 12).translate(0, -.15, 0), '#ffca28', 0, 1.18); break;
         case 'telescope': part(new T3.CylinderGeometry(.03, .03, .8, 5).translate(0, .4, 0).rotateZ(.25), '#546e7a', .1); part(new T3.CylinderGeometry(.03, .03, .8, 5).translate(0, .4, 0).rotateZ(-.25), '#546e7a', -.1); part(new T3.CylinderGeometry(.09, .12, .8, 10).rotateZ(-.9), '#eceff1', .05, .9); break;
         case 'balloon': [['#e53935', -.2, 1.1], ['#fdd835', .15, 1.25], ['#1e88e5', .02, .95]].forEach(([c, px, py]) => { part(new T3.SphereGeometry(.17, 10, 8).scale(1, 1.2, 1), c, px, py); part(new T3.CylinderGeometry(.008, .008, py, 3).translate(0, py / 2, 0), '#555555', px * .3, 0); }); pb(.2, .12, .2, '#8d6e63'); break;
         case 'clock': part(new T3.CylinderGeometry(.06, .08, 1.3, 8).translate(0, .65, 0), '#37474f'); part(new T3.CylinderGeometry(.3, .3, .1, 20).rotateX(Math.PI / 2), '#fffdf5', 0, 1.45); part(new T3.TorusGeometry(.3, .045, 6, 20), '#b8862b', 0, 1.45); pb(.03, .2, .02, '#37474f', 0, 1.45, .06); pb(.14, .03, .02, '#37474f', .06, 1.44, .06); break;
         case 'gift': pb(.7, .6, .7, '#ff80ab'); pb(.72, .1, .15, '#ffd54f', 0, .25); pb(.15, .62, .72, '#ffd54f'); part(new T3.TorusGeometry(.12, .04, 6, 12), '#ffd54f', -.1, .68); part(new T3.TorusGeometry(.12, .04, 6, 12), '#ffd54f', .1, .68); break;
-        case 'totem': [['#8d6e63', .0], ['#e53935', .42], ['#1e88e5', .84]].forEach(([c, py]) => { pb(.44, .4, .44, c, 0, py); pb(.46, .06, .1, '#ffffff', 0, py + .24, .2); }); pb(.9, .08, .2, '#43a047', 0, 1.2); break;
+        case 'totem': {
+          // 动物岛的木图腾：三节圆木，每节刻着一张动物的脸（白眼圈、黑眼珠、一张嘴或一个尖嘴，脸的颜色各不一样），最上面张着一对木翅膀
+          [['#a0714a', '#e57373', 0], ['#8d6040', '#4fc3f7', .44], ['#a87a50', '#ffd54f', .88]].forEach(([wc, fc, py], k) => {
+            part(new T3.CylinderGeometry(.22, .24, .44, 10).translate(0, .22, 0), byY(A.shade(wc, .8), wc, 0, .44), 0, py);
+            pb(.3, .1, .03, fc, 0, py + .24, .21);
+            [-1, 1].forEach(sd => { part(new T3.CylinderGeometry(.065, .065, .03, 10).rotateX(Math.PI / 2), '#ffffff', sd * .09, py + .29, .22); part(new T3.CylinderGeometry(.032, .032, .03, 8).rotateX(Math.PI / 2), '#2b211a', sd * .09, py + .29, .235); });
+            if (k === 1) part(new T3.ConeGeometry(.05, .14, 6).rotateX(Math.PI / 2), '#ffb300', 0, py + .18, .27); else pb(.14, .04, .02, '#3a2a1e', 0, py + .1, .225);
+          });
+          [-1, 1].forEach(sd => part(new T3.BoxGeometry(.5, .07, .16).rotateZ(sd * -.35), '#6d4121', sd * .38, 1.32, 0));
+          part(new T3.ConeGeometry(.18, .2, 10).translate(0, .1, 0), '#43a047', 0, 1.32);
+          break;
+        }
         case 'light': part(new T3.CylinderGeometry(.04, .05, 1.2, 6).translate(0, .6, 0), '#455a64'); pb(.24, .6, .2, '#263238', 0, 1.1); [['#e53935', 1.58], ['#fdd835', 1.4], ['#43a047', 1.22]].forEach(([c, py]) => part(new T3.SphereGeometry(.06, 8, 6), c, 0, py, .1)); break;
         case 'trophy': base(); part(new T3.CylinderGeometry(.08, .12, .3, 10).translate(0, .15, 0), '#ffca28', 0, .22); part(new T3.CylinderGeometry(.26, .1, .38, 14).translate(0, .19, 0), '#ffca28', 0, .52); part(new T3.TorusGeometry(.1, .03, 6, 10), '#ffca28', .28, .75); part(new T3.TorusGeometry(.1, .03, 6, 10), '#ffca28', -.28, .75); break;
         case 'snowman': part(new T3.SphereGeometry(.32, 12, 10), '#ffffff', 0, .3); part(new T3.SphereGeometry(.23, 12, 10), '#ffffff', 0, .78); part(new T3.ConeGeometry(.04, .2, 6).rotateX(Math.PI / 2), '#ff7043', 0, .8, .26); part(new T3.CylinderGeometry(.16, .16, .22, 10), '#37474f', 0, 1.08); part(new T3.TorusGeometry(.2, .05, 6, 14).rotateX(Math.PI / 2), '#e53935', 0, .6); break;
-        case 'stone': pb(.5, 1.5, .3, topSide('#b3ada2', '#8f8a80')); pb(.2, .6, .02, '#6d8b5a', .12, .5, .16); break;
+        case 'stone': {
+          // 古老的立石：圆了角的高石头（有点歪），正面刻着几道浅浅的古文字，头上和脚下长着苔藓
+          const sc = leafC('#8a857a', '#aaa496', '#cdc7b8');
+          ball(bag, .3, 1, x, y + .72, z, { sx: 1.05, sy: 2.6, sz: .62, lump: .07, col: sc, seed: Math.round(x * 3 + z) });
+          ball(bag, .2, 1, x + .03, y + 1.42, z, { sx: 1.2, sy: .5, sz: .9, lump: .2, col: leafC('#4f6f3c', '#6f8f4a', '#93b46a'), seed: Math.round(x + z * 5) });
+          [[.0, .95, .22], [-.06, .78, .16], [.05, .62, .2], [-.02, .46, .14]].forEach(([ox, oy, wd]) => pb(wd, .03, .02, '#6a6458', ox, oy, .19));
+          ball(bag, .26, 1, x, y + .04, z + .04, { sx: 1.6, sy: .3, sz: 1.2, lump: .25, col: leafC('#4f6f3c', '#6f8f4a', '#8fb064'), seed: 3 });
+          break;
+        }
+        case 'statue': {
+          // 石头的守护鸟：两层的石座上蹲着一只收着翅膀的大鸟（圆身子、圆脑袋、短短的尖嘴），石头上一块块苔藓
+          const sc = leafC('#8f8a80', '#b6b0a2', '#dcd6c8'), mc = leafC('#4f6f3c', '#6f8f4a', '#8fb064');
+          pb(.78, .22, .78, topSide('#c9c2b2', '#9d968a')); pb(.6, .22, .6, topSide('#d4cdbd', '#a8a194'), 0, .22);
+          ball(bag, .3, 2, x, y + .78, z, { sy: 1.15, sz: .9, lump: .05, col: sc, seed: 11 });
+          ball(bag, .2, 2, x, y + 1.2, z + .04, { lump: .04, col: sc, seed: 12 });
+          part(new T3.ConeGeometry(.06, .16, 6).rotateX(Math.PI / 2), '#a79f8f', 0, 1.18, .25);
+          [-1, 1].forEach(sd => { ball(bag, .2, 1, x + sd * .24, y + .8, z - .02, { sx: .45, sy: 1.15, sz: .95, lump: .06, col: sc, seed: 13 + sd }); pb(.05, .05, .02, '#3a362f', sd * .08, 1.24, .2); });
+          ball(bag, .1, 1, x + .16, y + .48, z + .2, { sx: 1.4, sy: .5, lump: .3, col: mc, seed: 15 });
+          ball(bag, .08, 1, x - .12, y + 1.36, z, { sx: 1.3, sy: .45, lump: .3, col: mc, seed: 16 });
+          break;
+        }
         case 'fountain': part(new T3.CylinderGeometry(.48, .54, .26, 16).translate(0, .13, 0), topSide('#e3eaee', '#b8c4cc')); part(new T3.CylinderGeometry(.4, .4, .05, 16), '#59c9ee', 0, .26); part(new T3.CylinderGeometry(.06, .09, .6, 8).translate(0, .3, 0), '#cfd8dc', 0, .2); part(new T3.SphereGeometry(.1, 8, 6), '#e3eaee', 0, .84); break;
         case 'boat': {
           // 小木船：船身两头翘、白色船舷、一根桅杆一面小帆
@@ -1134,10 +1490,10 @@
     function treeKit(style, P, lod, v) {
       const S = Bag(), Cd = BagU(), dk = A.shade(P.tree, .7), md = P.tree, hi = P.treeHi;
       const lf = leafC(dk, md, hi), lfHi = leafC(md, hi, A.shade(hi, 1.1)), tipC = mixC(hi, '#f4f0a4', .45);
-      const det = Math.max(0, Q.det - 1 - lod), ck = (tier === 'high' ? 1.8 : tier === 'mid' ? 1 : .6) * (lod === 2 ? .85 : 1), sides = Math.max(4, (tier === 'high' ? 10 : tier === 'mid' ? 7 : 5) - lod * 2);
+      const det = Math.max(0, Q.det - 1 - lod), ck = (tier === 'high' ? 1.8 : tier === 'mid' ? 1 : .6) * (lod === 2 ? .85 : 1) * (style === 'jungle' ? (tier === 'high' ? .72 : .6) : 1), sides = Math.max(4, (tier === 'high' ? 10 : tier === 'mid' ? 7 : 5) - lod * 2);
       const trunkC = style === 'dead' ? '#6b6258' : '#7a4a26';
       let bc = [0, 1.3, 0], top = 1.9, spin = false, tint = null, sd = v * 37 + lod * 11 + 1;
-      const stem = (r0, r1, h, col, ln) => trunkTo(S, [[0, -.06, 0], [(ln || 0) * .25, h * .34, 0], [(ln || 0) * .65, h * .68, 0], [ln || 0, h, 0]], r0 * 1.22, r1, sides, C(A.shade(col || trunkC, .68)), C(col || trunkC));
+      const stem = (r0, r1, h, col, ln) => trunkTo(S, tier === 'low' ? [[0, -.06, 0], [(ln || 0) * .4, h * .5, 0], [ln || 0, h, 0]] : [[0, -.06, 0], [(ln || 0) * .25, h * .34, 0], [(ln || 0) * .65, h * .68, 0], [ln || 0, h, 0]], r0 * 1.22, r1, sides, C(A.shade(col || trunkC, .68)), C(col || trunkC));   // 省电档的树干两截
       const blob = (r, x, y, z, sx, sy, col, o) => { o = o || {}; puff(S, Cd, r, x, y, z, { sx: sx || 1, sy: sy || .9, sz: o.sz, col: col || lf, det: o.det == null ? det : Math.max(0, o.det), bc, tip: tipC, seed: sd++, ring: Math.round((o.ring == null ? 8 : o.ring) * ck), dab: Math.round((o.dab == null ? 3 : o.dab) * ck * 3.6), a0: o.a0, a1: o.a1, cs: o.cs, lump: o.lump, bk: o.bk, noBall: o.noBall }); };
       if (style === 'palm') {
         // 棕榈：弯弯的树干一圈一圈的，顶上一蓬往四周垂下来的大叶子，叶心一小团，底下挂着几个椰子
@@ -1150,7 +1506,7 @@
           frond(Cd, [tp[0], tp[1] + (inner ? .1 : .02), 0], a, (inner ? 1.05 : 1.4) + j * .22, inner ? .5 : .24 + j * .2, inner ? .35 : .64 + j * .3, inner ? .5 : .66, fs, bc, cA, cB, cT, lod ? 0 : .2);
         }
         ball(S, .15, Math.min(det, 1), tp[0], tp[1] + .02, 0, { col: lfHi, sy: .8 });
-        if (!lod) [[.11, -.1, .1], [-.09, -.13, -.05], [.02, -.15, -.11]].forEach(([px, py, pz], k) => ball(S, .085, Math.max(1, Q.det - 1), tp[0] + px, tp[1] + py, pz, { col: leafC('#4d3220', '#6d4c2f', '#8a6540'), seed: k }));
+        if (!lod) [[.11, -.1, .1], [-.09, -.13, -.05], [.02, -.15, -.11]].forEach(([px, py, pz], k) => ball(S, .085, Math.max(0, Q.det - 2), tp[0] + px, tp[1] + py, pz, { col: leafC('#4d3220', '#6d4c2f', '#8a6540'), seed: k }));
         top = 2.6; spin = true;
       } else if (style === 'pine' || style === 'snowpine') {
         const snow = style === 'snowpine', seg = lod ? 8 : (tier === 'high' ? 18 : 10);
@@ -1169,25 +1525,57 @@
         blob(.34, 0, 1.15, 0, 1, 2.5, lf, { ring: 10, dab: 4, a0: -1.25, a1: Math.PI + 1.25, cs: .7 }); if (!lod) blob(.24, .06, 1.6, .08, 1, 1.9, lfHi, { ring: 5, dab: 2, a0: 0, a1: Math.PI, cs: .7 });
         top = 2.1;
       } else if (style === 'pencil') {
-        put(S, new T3.CylinderGeometry(.22, .22, 1.25, 6).translate(0, .75, 0), '#ffffff');
-        put(S, new T3.ConeGeometry(.22, .36, 6).translate(0, 1.56, 0), '#f5d7a1'); put(S, new T3.ConeGeometry(.08, .13, 6).translate(0, 1.7, 0), '#37474f'); put(S, new T3.CylinderGeometry(.23, .23, .12, 6).translate(0, .07, 0), '#ef9a9a');
-        tint = ['#ef5350', '#ffca28', '#42a5f5', '#66bb6a', '#ab47bc', '#ff7043', '#26c6da']; top = 1.8; spin = true;
+        // 彩色铅笔树：六棱的笔杆（每一面是平的，棱角分明，一面亮一面暗）、一圈米白的商标纸、削出来的木头尖、和笔杆同色的笔芯；最下面一圈银色的金属箍、粉色的橡皮。
+        // 笔杆和笔芯是纯白的顶点颜色，每棵按实例颜色染成自己的颜色（tintW）；木头、商标纸、金属、橡皮不染
+        const hh = v ? 1.42 : 1.1, r = .2, b0 = .27, flat = g => { const q = g.toNonIndexed(); g.dispose(); q.deleteAttribute('normal'); q.computeVertexNormals(); return q; };
+        put(S, flat(new T3.CylinderGeometry(r * 1.02, r * 1.02, .15, 6).translate(0, .075, 0)), '#f19cad');
+        put(S, new T3.CylinderGeometry(r * 1.08, r * 1.08, .13, lod ? 6 : 12).translate(0, .205, 0), byY('#9aa0a8', '#e2e5ea', .14, .27));
+        put(S, flat(new T3.CylinderGeometry(r, r, hh, 6).translate(0, b0 + hh / 2, 0)), '#ffffff');
+        if (!lod) put(S, flat(new T3.CylinderGeometry(r * 1.012, r * 1.012, .13, 6).translate(0, b0 + hh * .7, 0)), '#f4ead6');
+        put(S, flat(new T3.ConeGeometry(r, .42, 6).translate(0, b0 + hh + .21, 0)), '#f2cf9a');
+        put(S, flat(new T3.ConeGeometry(r * .34, .145, 6).translate(0, b0 + hh + .277 + .072, 0)), '#ffffff');
+        tint = ['#ef5350', '#ffca28', '#42a5f5', '#66bb6a', '#ab47bc', '#ff7043', '#26c6da']; top = b0 + hh + .42; spin = true;
+      } else if (style === 'cbush') {
+        // 蜡笔花丛（彩色文具岛）：一团矮矮的叶子，上面开满一个颜色的圆花（花是纯白的，按实例染色）
+        bc = [0, -.1, 0];
+        blob(.42, 0, .27, 0, 1.2, .74, lf, { ring: 9, dab: 3, a0: -.25, a1: Math.PI + .25, cs: .82 });
+        const nb = lod || tier === 'low' ? 5 : tier === 'mid' ? 8 : 11, bd = tier === 'high' && !lod ? 1 : 0;
+        for (let k = 0; k < nb; k++) { const a = hash2(k, 51 + v) * 6.2832, e = .2 + hash2(k, 52) * .9, rx = Math.cos(a) * Math.cos(e) * .47, rz = Math.abs(Math.sin(a)) * Math.cos(e) * .32 + .06, ry = .27 + Math.sin(e) * .3; ball(S, .075 + hash2(k, 53) * .03, bd, rx, ry, rz, { sy: .8, col: leafC('#e6e6e6', '#ffffff', '#ffffff'), seed: k }); }
+        tint = ['#ff6f91', '#ffc94a', '#6fb8ff', '#7ed67a', '#c391ff', '#ff9a5a']; top = .75;
       } else if (style === 'lolli') {
-        const sg = lod ? 12 : 24;
-        put(S, new T3.CylinderGeometry(.045, .045, 1.0, 8).translate(0, .5, 0), '#fffdf5');
-        put(S, new T3.SphereGeometry(.42, sg, Math.round(sg * .6)).scale(1, 1, .45).translate(0, 1.3, 0), '#ffffff'); put(S, new T3.TorusGeometry(.26, .055, 8, sg).translate(0, 1.3, .18), '#fff3f8');
-        tint = ['#ff80ab', '#ffd54f', '#80deea', '#b39ddb', '#a5d6a7', '#ffab91']; top = 1.8;
-      } else if (style === 'jungle') {
+        // 棒棒糖树：白色的小棍、扁扁的圆糖上一圈圈螺旋花纹（一道糖色一道白：糖色是纯白的顶点、按实例染色，白的那道是 #fdfdfd、不染）、外圈一道白边，棍上系一个同色的蝴蝶结
+        const sg = lod ? 14 : 30;
+        put(S, new T3.CylinderGeometry(.045, .05, 1.06, 8).translate(0, .53, 0), '#fdfdfd');
+        const W1 = C('#ffffff'), W2 = C('#fdfdfd');
+        put(S, new T3.SphereGeometry(.44, sg, Math.round(sg * .62)).scale(1, 1, .42).translate(0, 1.36, 0), (out, nx, ny, nz, px, py) => { const dy = py - 1.36, a = Math.atan2(dy, px), rr = Math.hypot(px, dy); out.copy(fract2(a / 6.2832 * 2 + rr * 4.2) < .55 || rr > .41 ? (rr > .41 ? W2 : W1) : W2); });
+        if (!lod) put(S, new T3.TorusGeometry(.43, .03, 6, sg).scale(1, 1, 1).translate(0, 1.36, 0), '#fdfdfd');
+        if (!lod) [-1, 1].forEach(sd => { tri(S, [0, .95, .06], [sd * .17, 1.03, .07], [sd * .15, .87, .07], W1); tri(S, [0, .95, .06], [sd * .15, .87, .07], [sd * .17, 1.03, .07], W1); });
+        tint = ['#ff80ab', '#ffd54f', '#80deea', '#b39ddb', '#a5d6a7', '#ffab91']; top = 1.85;
+      } else if (style === 'jungle' && lod < 2) {   // 最省的那一档（远处、山上）落到下面「一团树冠」那种
         stem(.17, .1, 1.2, '#5d4128');
         bc = [0, 1.0, 0];
-        blob(.74, 0, 1.38, 0, 1.25, .52, lf, { ring: 10, dab: 4 }); blob(.5, -.5, 1.2, .1, 1.1, .5, lf, { ring: 6, dab: 2, a0: 1.2, a1: Math.PI + .9 }); blob(.5, .52, 1.24, -.08, 1.1, .5, lf, { ring: 6, dab: 2, a0: -.9, a1: 1.9 }); blob(.48, -.08, 1.68, .04, 1.2, .5, lfHi, { ring: 7, dab: 3, a0: -.1, a1: Math.PI + .1 }); if (!lod) blob(.36, .12, 1.22, .5, 1, .5, lf, { ring: 4, dab: 2 });
+        const lite = tier !== 'high';   // 省电档：只留中间、上面两团（两边那两团并进中间那团）
+        blob(lite ? .86 : .74, 0, 1.38, 0, lite ? 1.4 : 1.25, .52, lf, { ring: 10, dab: 4 }); if (!lite) { blob(.5, -.5, 1.2, .1, 1.1, .5, lf, { ring: 6, dab: 2, a0: 1.2, a1: Math.PI + .9 }); blob(.5, .52, 1.24, -.08, 1.1, .5, lf, { ring: 6, dab: 2, a0: -.9, a1: 1.9 }); } blob(.48, -.08, 1.68, .04, 1.2, .5, lfHi, { ring: 7, dab: 3, a0: -.1, a1: Math.PI + .1 }); if (!lod && !lite) blob(.36, .12, 1.22, .5, 1, .5, lf, { ring: 4, dab: 2 });
+        // 树冠底下垂着几根藤（一条条往下挂的叶子带），树根往四周拱出几道板根
+        if (lod < 2 && tier !== 'low') { const vc = mixC(md, dk, .2), vt = mixC(hi, '#cfe88a', .3); for (let k = 0; k < (lod ? 3 : 5); k++) { const a = k * 2.1 + v * .9, rr = .38 + hash2(k, 61 + v) * .3; frond(Cd, [Math.cos(a) * rr, 1.12, Math.sin(a) * rr * .8], a + 1.4, .3, 0, .9 + hash2(k, 62) * .4, .16, lod ? 2 : 4, bc, vc, vc, vt, 0); } }
+        if (!lod && tier !== 'low') for (let k = 0; k < 4; k++) { const a = k * 1.57 + .4 + v; put(S, new T3.ConeGeometry(.07, .5, 4).rotateZ(Math.PI / 2 - .5).translate(.2, .12, 0).rotateY(-a), '#5d4128'); }
         top = 2.0;
-      } else if (style === 'dead') {
-        stem(.13, .06, 1.2);
-        put(S, new T3.CylinderGeometry(.03, .05, .6, 6).rotateZ(-.9).translate(.24, 1.02, 0), trunkC); put(S, new T3.CylinderGeometry(.03, .05, .5, 6).rotateZ(.8).translate(-.22, .92, .05), trunkC);
+      } else if (style === 'dead' && lod < 2) {
+        // 雾里的老树（回忆岛）：歪着长的灰树干，往上分出几根弯弯的光枝子，枝头零星几团苔绿的叶子，枝子上垂着一缕缕灰绿的苔藓
+        trunkTo(S, [[0, -.06, 0], [.08, .45, 0], [-.04, .85, .02], [.1, 1.2, 0]], .15, .07, sides, C(A.shade(trunkC, .7)), C(trunkC));
+        const brs = [[-.9, .95, .55, .05], [.85, 1.05, .5, -.04], [-.35, 1.18, .42, .1], [.5, .7, .4, .08]];
+        brs.forEach(([rz, by, ln, oz], k) => { if (lod && k > 1) return; put(S, new T3.CylinderGeometry(.022, .045, ln, 5).translate(0, ln / 2, 0).rotateZ(rz).translate(.02, by, oz), trunkC); });
         bc = [0, 1.15, 0];
-        blob(.3, .4, 1.22, 0, 1, .9, lf, { ring: 5, dab: 1 }); blob(.26, -.34, 1.1, .05, 1, .9, lfHi, { ring: 5, dab: 1 }); if (!lod) blob(.24, .02, 1.42, -.05, 1, .9, lf, { ring: 4, dab: 1 });
-        top = 1.7;
+        blob(.28, .42, 1.28, 0, 1, .8, lf, { ring: 5, dab: 1 }); blob(.24, -.4, 1.18, .05, 1, .8, lfHi, { ring: 5, dab: 1 }); if (!lod) blob(.2, .06, 1.5, -.05, 1, .8, lf, { ring: 4, dab: 1 });
+        if (lod < 2) { const mc = mixC(md, '#c9cfb8', .45); [[-.38, 1.12, .06], [.4, 1.2, -.02], [.18, .98, .1], [-.12, 1.36, 0]].forEach(([mx, my, mz], k) => { if (lod && k > 1) return; frond(Cd, [mx, my, mz], k * 1.7 + v, .12, 0, .55 + hash2(k, 71) * .3, .14, lod ? 2 : 3, bc, mc, mc, mixC(mc, '#ffffff', .2), 0); }); }
+        top = 1.75;
+      } else if (style === 'fern') {
+        // 丛林里的大叶子（动物岛的林下）：一丛从地里拱出来、往四周垂下去的大羽叶，中间一小团
+        bc = [0, -.2, 0];
+        const nF = lod || tier === 'low' ? 5 : tier === 'mid' ? 7 : 9, sgF = tier === 'low' ? 2 : tier === 'mid' ? 3 : 4, cA = mixC(md, hi, .3), cB = mixC(md, dk, .35), cT = mixC(hi, '#d8f08a', .35);
+        for (let k = 0; k < nF; k++) { const j = hash2(k, 81 + v * 5), a = k / nF * 6.2832 + v * .7 + (j - .5) * .4; frond(Cd, [0, .06, 0], a, .72 + j * .3, .42 + j * .2, .55 + j * .2, .42, lod ? Math.min(3, sgF) : sgF, bc, cA, cB, cT, lod || tier === 'low' ? 0 : .25); }
+        ball(S, .14, 1, 0, .1, 0, { col: lf, sy: .7 });
+        top = .8;
       } else if (style === 'bush') {
         // 矮灌木（树群之间的空当、路边）：两团贴着地的叶子
         bc = [0, -.1, 0];
@@ -1216,7 +1604,7 @@
       return { geo: weld(bake(S)), cards: Cd.p.length ? weld(bakeU(Cd)) : null, top, spin, tint };
     }
     function buildTrees() {
-      const L = LAND, P = PAL, style = THEME.tree || 'round', W = m.W, H = m.H, palm = style === 'palm';
+      const L = LAND, P = PAL, style = THEME.tree || 'round', W = m.W, H = m.H, palm = style === 'palm', lolli = style === 'lolli';
       // 名单：main0* 地图里的树（细）；main1 外面近处的（省）；main2 外面远处平地上的；side0* / side1 棕榈岛上混着种的阔叶树；mound 山上的一团团树冠；bush* 树群之间的矮灌木
       const lists = {};
       const push = (key, x, z, s, r, spin, edge) => (lists[key] || (lists[key] = [])).push({ x, y: L.ground(x, z) - .04, z, s, ry: spin ? r * 6.2832 : (r - .5) * .5, r, edge });
@@ -1232,8 +1620,22 @@
         // 成片的树（地图边上那几排、大树丛）不是每格一棵：一群一群地种，群和群之间是矮灌木——还是过不去，但能从上面、从中间看到后面的山和海
         if (mass && grp(x, y) < .44) { push('busha', px, pz, .85 + r2 * .5, r); continue; }
         const vv = r > .5 ? 'a' : 'b', sc = (edge ? 1.12 : 1) * (.86 + r * .3);
-        if (palm && mass && r2 > .5) push('side0' + vv, px, pz, sc, r2, false, edge);
+        // 棕榈岛：成片的树里一半是阔叶树；生日派对岛：成片的树是一团团的棉花糖树（side 那几种），单独的、路边的才是棒棒糖
+        const sideK = palm ? mass && r2 > .5 : lolli ? mass : style === 'jungle' ? mass && r2 > .66 : false;   // 丛林里三棵里有一棵是棕榈
+        if (sideK) push('side0' + vv, px, pz, sc, r2, false, edge);
         else push(palm ? 'main0' : 'main0' + vv, px, pz, sc, r2, palm, edge);
+        { const it = lists[sideK ? 'side0' + vv : palm ? 'main0' : 'main0' + vv]; it[it.length - 1].deep = nb === 4 && woody(x + 1, y + 1) && woody(x - 1, y - 1) && woody(x + 1, y - 1) && woody(x - 1, y + 1); }   // 四周八格都是树：在树林深处，近看也只看得到树冠
+      }
+      // 一大片岩壁的顶上（四周都是岩壁的格子）零零星星长着灌木；雪岛上是小雪松；光秃秃的石头山（沙丘、火山）上不长
+      if (GND.cap !== 'rock') {
+        const cl = (x, y) => { const c = tIn(x, y); return c === 'R' || c === 'K'; };
+        for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+          if (!cl(x, y) || !cl(x + 1, y) || !cl(x - 1, y) || !cl(x, y + 1) || !cl(x, y - 1)) continue;
+          const r = rnd(x, y, 33); if (r > .2) continue;
+          const px = x + .5 + (rnd(x, y, 34) - .5) * .4, pz = y + .5 + (rnd(y, x, 34) - .5) * .4, snowy = GND.cap === 'snow';
+          push(snowy ? 'main1' : 'busha', px, pz, snowy ? .55 + r * 1.2 : .7 + r * 2, rnd(x, y, 35), false);
+          const it = lists[snowy ? 'main1' : 'busha']; it[it.length - 1].y = cliffTop[y * W + x] - .06;
+        }
       }
       const o = {}, ring = Q.ring, far = Math.min(Q.skirt - 4, ring + (tier === 'low' ? 4 : 18));
       for (let y = -far; y < H + far; y++) for (let x = -far; x < W + far; x++) {
@@ -1247,44 +1649,71 @@
         const g2 = vnoise(x * .21 + 3.3, y * .21 + 8.8), q = rnd(x, y, 13);
         if (o.dOut <= ring) {
           // 近处：山上是一团团树冠连成的林子，夹着几棵看得出样子的树；平地上一小群一小群的，中间留空
-          if (o.hill > .5) { if (q < .36) push('mound', px, pz, 1.2 + r * .9, r2); else if (q < .6) push(palm && r2 > .4 ? 'side1' : 'main1', px, pz, .95 + r * .4, r2, palm && r2 <= .4); }
-          else if (g2 > .5) { if (q < .62) push(palm && r2 > .72 ? 'side1' : 'main1', px, pz, .95 + r * .4, r2, palm && r2 <= .72); }
+          if (o.hill > .5) { if (q < .36) push('mound', px, pz, 1.2 + r * .9, r2); else if (q < .6) push(lolli || palm && r2 > .4 ? 'side1' : 'main1', px, pz, .95 + r * .4, r2, palm && r2 <= .4); }
+          else if (g2 > .5) { if (q < .62) push(lolli || palm && r2 > .72 ? 'side1' : 'main1', px, pz, .95 + r * .4, r2, palm && r2 <= .72); }
           else if (g2 > .36 && q < .14) push('busha', px, pz, .9 + r2 * .6, r);
-        } else if (o.hill > .5 ? q < .3 : g2 > .58 && q < .22) push(o.hill > .5 ? 'mound' : 'main2', px, pz, o.hill > .5 ? 1.7 + r * 1.3 : 1.15 + r * .5, r2, palm && o.hill <= .5);
+        } else if (o.hill > .5 ? q < .3 : g2 > .58 && q < .22) push(o.hill > .5 || lolli ? 'mound' : 'main2', px, pz, o.hill > .5 ? 1.7 + r * 1.3 : 1.15 + r * .5, r2, palm && o.hill <= .5);
       }
       const kitOf = key => {
         switch (key) {
           case 'main0': case 'main0a': return treeKit(style, P, 0, 0);
-          case 'main0b': return treeKit(style, P, 0, 1);
+          case 'main0b': return treeKit(style, m.theme === 'school' ? Object.assign({}, P, { tree: '#e48aae', treeHi: '#ffd4e4' }) : P, 0, 1);   // 校园岛：一半的树开着粉色的花
           case 'main1': return treeKit(style, P, 1, 0);
+          case 'main1b': return treeKit(style, m.theme === 'school' ? Object.assign({}, P, { tree: '#e48aae', treeHi: '#ffd4e4' }) : P, 1, 1);
           case 'main2': return treeKit(style, P, 2, 0);
-          case 'side0a': return treeKit('round', P, 0, 0);
-          case 'side0b': return treeKit('round', P, 0, 1);
-          case 'side1': return treeKit('round', P, 1, 0);
-          case 'mound': return treeKit(palm ? 'round' : style, P, 2, 1);
-          case 'busha': return treeKit('bush', P, 0, 0);
-          default: return treeKit('bush', P, 0, 1);
+          case 'side0a': return treeKit(style === 'jungle' ? 'palm' : 'round', P, 0, 0);
+          case 'side0b': return treeKit(style === 'jungle' ? 'palm' : 'round', P, 0, 1);
+          case 'side1': return treeKit(style === 'jungle' ? 'palm' : 'round', P, 1, 0);
+          case 'side2': return treeKit(style === 'jungle' ? 'palm' : 'round', P, 2, 0);
+          case 'mound': return treeKit(palm || lolli ? 'round' : style, P, 2, 1);
+          case 'busha': return treeKit(style === 'pencil' ? 'cbush' : style === 'jungle' ? 'fern' : 'bush', P, 0, 0);
+          default: return treeKit(style === 'pencil' ? 'cbush' : style === 'jungle' ? 'fern' : 'bush', P, 0, 1);
         }
       };
       const kits = {}, kit = key => kits[key] || (kits[key] = kitOf(key)), nTri = key => triCount(kit(key).geo) + triCount(kit(key).cards);
+      const used = new Set(), COARSE = { main0: 'main1', main0a: 'main1', main0b: 'main1b', side0a: 'side1', side0b: 'side1', main1: 'main2', main1b: 'main2', side1: 'side2' };   // 细的树换成省的时用哪一种
+      INFO.tree = style;
       const sum = keys => keys.reduce((a, k) => a + (lists[k] ? lists[k].length * nTri(k) : 0), 0);
       const IN = ['main0', 'main0a', 'main0b', 'side0a', 'side0b'], OUT = ['main1', 'main2', 'side1', 'mound'];
       // 三角形预算：地图里的树太多，就把最靠边的那一圈（#）换成省的那种；还多，外面的按比例抽掉一些
-      if (sum(IN) > TREE_TRIS * .7) IN.forEach(k => { if (!lists[k]) return; const to = k.startsWith('side') ? 'side1' : 'main1', keepL = []; lists[k].forEach(p => { if (p.edge) (lists[to] || (lists[to] = [])).push(p); else keepL.push(p); }); lists[k] = keepL; });
+      // 还多：树林深处（四周八格都是树）的也换成省的——走在路上看得到的是林子边上那一排，深处的只露出树冠
+      const demote = test => IN.forEach(k => { if (!lists[k]) return; const to = k.startsWith('side') ? 'side1' : 'main1', keepL = []; lists[k].forEach(p => { if (test(p)) (lists[to] || (lists[to] = [])).push(p); else keepL.push(p); }); lists[k] = keepL; });
+      if (sum(IN) > TREE_TRIS * .7) demote(p => p.edge);
+      if (sum(IN) > TREE_TRIS * .7) demote(p => p.deep);
       const all = () => sum(Object.keys(lists));
       if (all() > TREE_TRIS) {
         const outer = sum(OUT), k = Math.max(.08, (TREE_TRIS - (all() - outer)) / Math.max(1, outer));
         OUT.forEach(key => { if (lists[key]) lists[key] = lists[key].filter(p => p.edge || rnd(p.x | 0, p.z | 0, 19) < k); });
       }
+      // 树不多（比如你好岛的棕榈）就不分条、不换省的（draw call 少）；多了（铅笔林、丛林、秋天的林子……）才分
+      const heavy = all() > TREE_TRIS * (tier === 'high' ? .9 : .5);
+      INFO.treeTris = all(); INFO.heavy = heavy;
       Object.keys(lists).forEach(key => {
         const list = lists[key];
         if (!list.length) return;
         const kt = kit(key), cols = kt.tint, far2 = key === 'mound' || key === 'main2';
-        list.forEach(p => { const k = .88 + p.r * .24; p.c = cols ? C(cols[Math.floor(p.r * cols.length) % cols.length]) : new T3.Color(k, k * (.97 + rnd(p.x | 0, p.z | 0, 4) * .06), k * .96); });
-        inst(kt.geo, treeMat, list, !far2);
-        if (kt.cards) inst(kt.cards, leafMat, list, !far2 && tier === 'high' || key === 'main0');
+        // 每棵的颜色：染色的树（铅笔、棒棒糖、蜡笔花丛）挑一种颜色；秋天的树各有各的秋色（金黄、橙、红、还有点绿的）；别的只是深浅不一
+        list.forEach(p => { const k = .88 + p.r * .24; p.c = cols ? C(cols[Math.floor(p.r * cols.length) % cols.length]) : new T3.Color(k, k * (.97 + rnd(p.x | 0, p.z | 0, 4) * .06), k * .96); if (!cols && (style === 'autumn' || lolli && (key.startsWith('side') || key === 'mound'))) { const tb = lolli ? PASTEL : AUTUMN, a = tb[Math.floor(rnd(p.x | 0, p.z | 0, 8) * tb.length)]; p.c.r *= a[0]; p.c.g *= a[1]; p.c.b *= a[2]; } });
+        // 树多的那几种按南北分成几条（每条自己一个网格）：镜头在主角南边朝北看，身后那几条整条不画。
+        // 地图里的树（细的那种）每条另外备一份省的：离主角往北远了就换成省的（treeBands，draw 里按远近换），近处才是细的。分得太碎 draw call 就多了，所以只按南北分
+        const coarseKey = COARSE[key] && (tier === 'low' ? (key.startsWith('side') ? 'side2' : 'main2') : COARSE[key]) || null, lod = heavy && coarseKey && list.length > 30;   // 省电档：远了直接换成最省的那种（一团树冠）
+        const groups = {}, band = lod ? (tier === 'low' ? 16 : 10) : heavy && list.length > 120 && !far2 ? 12 : 1e9;
+        list.forEach(p => { const k = Math.floor(p.z / band); (groups[k] || (groups[k] = [])).push(p); });
+        const white = g => g.map(p => Object.assign({}, p, { c: new T3.Color(1, 1, 1) }));
+        Object.keys(groups).forEach(bk => {
+          const g = groups[bk], fine = [inst(kt.geo, cols ? tintTreeMat : treeMat, g, !far2)];
+          used.add(key);
+          if (kt.cards) fine.push(inst(kt.cards, leafMat, cols ? white(g) : g, !far2 && tier === 'high' || key === 'main0'));
+          if (!lod) return;
+          const ck = kit(coarseKey), coarse = [inst(ck.geo, ck.tint ? tintTreeMat : treeMat, g, true)];
+          used.add(coarseKey);
+          if (ck.cards) coarse.push(inst(ck.cards, leafMat, ck.tint ? white(g) : g, tier === 'high'));
+          coarse.forEach(o => { if (o) o.visible = false; });
+          treeBands.push({ z0: +bk * band, z1: (+bk + 1) * band, fine: fine.filter(Boolean), coarse: coarse.filter(Boolean), near: true });
+        });
       });
-      Object.keys(kits).forEach(k => { if (!lists[k] || !lists[k].length) { kits[k].geo.dispose(); if (kits[k].cards) kits[k].cards.dispose(); } });
+      Object.keys(kits).forEach(k => { if (!used.has(k)) { kits[k].geo.dispose(); if (kits[k].cards) kits[k].cards.dispose(); } });
+      INFO.trees = Object.fromEntries(Object.keys(lists).filter(k => lists[k].length).map(k => [k, lists[k].length]));
       // 省电档没有影子图：树脚下垫一块圆影子
       if (!Q.shadow) inst(new T3.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), blobMat, IN.reduce((a, k) => a.concat(lists[k] || []), []).map(p => ({ x: p.x + .12, y: p.y + .07, z: p.z - .1, s: 1.7 * p.s })), false);
     }
@@ -1329,10 +1758,10 @@
       g.setAttribute('position', new T3.Float32BufferAttribute(p, 3)); g.setAttribute('normal', new T3.BufferAttribute(nrm, 3)); g.setAttribute('aB', new T3.Float32BufferAttribute(b, 3));
       return weld(g);
     }
-    const grassChunks = [];
+    const grassChunks = [], treeBands = [];   // treeBands：地图里的树按南北分的一条条，每条有细的和省的两份（draw 里按远近换）
     function buildGrass() {
       const L = LAND, P = PAL, W = m.W, H = m.H, CH = tier === 'high' ? 8 : 12, lists = {}, flowers = [[], [], [], []];   // 一块多大：精美档分得细（按远近换零件更准），另外两档分得粗（少几次绘制）
-      const nT = Math.max(2, Math.round(11 * Q.grass)), nL = Math.max(3, Math.round(32 * Q.lawn));
+      const nT = Math.max(2, Math.round(11 * Q.grass)), nL = Math.max(3, Math.round(32 * Q.lawn * (P.snow ? .35 : 1) * (tier === 'high' && INFO.heavy ? .85 : 1)));   // 雪地里的草大多埋在雪下面；树多的图（精美档）草坪稀一点
       const listsX = {};   // 带三叶草和小花的那些簇很稀，细的那一种按 16×16 格一块（少几次绘制）
       const into = (kind, x, y, it) => { const k = Math.floor(x / CH) + ',' + Math.floor(y / CH); (lists[k] || (lists[k] = [[], [], []]))[kind].push(it); if (kind === 1) { const k2 = Math.floor(x / CH / 2) + ',' + Math.floor(y / CH / 2); (listsX[k2] || (listsX[k2] = [])).push(it); } };
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -1343,7 +1772,7 @@
             const px = x + ((k % g) + .5) / g + (rnd(x * 3 + k, y, 41) - .5) * .8 / g, pz = y + (Math.floor(k / g) + .5) / g + (rnd(x, y * 3 + k, 42) - .5) * .8 / g, r = rnd(x + k, y - k, 43);
             into(2, x, y, { x: px, y: L.ground(px, pz), z: pz, s: .9 + r * .35, sy: .85 + rnd(k, x + y, 44) * .45, ry: (r - .5) * 2.6, c: new T3.Color(rnd(x * 7 + k, y * 5 + 1, 45), rnd(k, x * 3 + y, 46), rnd(x + 2 * k, y + 9, 47)) });
           }
-        } else if ('.FBofT'.includes(c) && !L.isWater(x, y) && !(m.paintAs && c === 'o' && m.paintAs[x + ',' + y] && m.paintAs[x + ',' + y] !== '.')) {
+        } else if ('.FBofT'.includes(c) && !(c === 'T' && m.theme === 'city') && !L.isWater(x, y) && !(m.paintAs && c === 'o' && m.paintAs[x + ',' + y] && m.paintAs[x + ',' + y] !== '.')) {
           const n = c === 'T' ? Math.ceil(nL / 2) : nL, g = Math.ceil(Math.sqrt(n)), patch = fbm(x * .19 + 5, y * .19 + 2);
           for (let k = 0; k < n; k++) {
             const px = x + ((k % g) + .5) / g + (rnd(x * 5 + k, y, 51) - .5) * 1.1 / g, pz = y + (Math.floor(k / g) + .5) / g + (rnd(x, y * 5 + k, 52) - .5) * 1.1 / g, r = rnd(x + k * 3, y + k, 53);
@@ -1415,7 +1844,10 @@
       ball(bag, 1, Math.max(1, Q.det - 2), 0, .55, 0, { lump: .16, col: leafC(lo, mixC(rock, '#d6cfc2', .5).getStyle(), hiC), seed: 5 });
       inst(weld(bake(bag)), pebbleMat, list, false);
     }
-    const TREE_TRIS = tier === 'high' ? 520000 : tier === 'mid' ? 110000 : 42000;
+    const BOOKC = ['#c0504d', '#3f74b6', '#5f9e4a', '#e3a92f', '#7b5aa6', '#d0603a', '#2f8f8a'].map(h => C(h)), PAGEC = C('#efe6cf');   // 书山的书皮、书页
+    const PASTEL = [[1, 1, 1], [.78, 1.3, 1.25], [1.08, 1.32, .8], [.95, 1.12, 1.35], [1.05, 1.18, 1.05]];   // 棉花糖树：粉、薄荷绿、奶黄、淡紫、桃色（乘在粉色的树冠上）
+    const AUTUMN = [[1.12, 1.06, .7], [1, .78, .62], [1.05, .9, .78], [.92, 1.12, .72], [1.1, .7, .56], [1, 1, 1]];   // 秋天的树：金黄、红、橙、黄绿、深红、原色
+    const TREE_TRIS = tier === 'high' ? 470000 : tier === 'mid' ? 110000 : 42000;
 
     // ---------- 房子：每座岛的风格不一样；休息站（青绿屋顶）、商店（琥珀色屋顶）哪座岛都一个样 ----------
     // 一栋房子 = 一个上了色的网格 + 一个贴画网格（门、窗、招牌、砖纹，都画在这张地图的一张大贴图里）。
@@ -1443,6 +1875,7 @@
       const house0 = THEME.house || 'med', P = PAL;
       list.forEach(b => {
         const L = b.L, gym = L === 'G', std = L === 'C' || L === 'M', home = L === 'H' || L === 'J', style = b.style || (std ? 'std' : house0);
+        (INFO.houses || (INFO.houses = [])).push(style);
         const x0 = b.x0, x1 = b.x1 + 1, z0 = b.y0, z1 = b.y1 + 1, w = x1 - x0, cx = (x0 + x1) / 2;
         const front = z1 - .22, back = z0 + .28, d = front - back, cz = (front + back) / 2, hsh = rnd(b.x0, b.y0, 3);
         const y0 = Math.min(LAND.ground(x0 + .3, z1 - .1), LAND.ground(x1 - .3, z1 - .1), LAND.ground(cx, z1 - .1)) - .02;
@@ -1473,10 +1906,42 @@
           if (tex) { dS(cx - ww / 2, y0 + .14, cx + ww / 2, y0 + h, front + .006, wallCell(tex, texCol, ww, h)); const sc = wallCell(tex, texCol, d, h); dX(cx - ww / 2 - .006, -1, back, y0 + .14, front, y0 + h, sc); dX(cx + ww / 2 + .006, 1, back, y0 + .14, front, y0 + h, sc); }
         };
         // 人字屋顶：前坡是一排排深浅相间的瓦，屋檐一条厚边，屋脊一根亮色的脊
-        const gable = (h, col, over, yb) => {
+        // kind：tile 筒瓦（默认）/ thatch 茅草（一层层厚厚的草，下沿一排参差的草尖）/ leaf 棕榈叶（同样的做法，草尖更长更乱）/ snow 积雪（瓦上盖着厚厚一层雪，屋檐挂着冰溜子）
+        const gable = (h, col, over, yb, kind) => {
           yb = y0 + (yb == null ? wallH : yb);
           const hw = (w + .2) / 2, zf = front + over, zb = back - .14, zr = cz + .04, c1 = C(col), c2 = C(A.shade(col, .88)), cR = C(A.shade(col, 1.16)), cF = C(A.shade(col, .7)), nB = 6, wc = C(wallC), cS = C(A.shade(col, .64));
-          if (tier === 'low') {
+          const sl0 = Math.hypot(h, zf - zr), ny0 = (zf - zr) / sl0, nz0 = h / sl0, dn = [0, -h / sl0, (zf - zr) / sl0];   // 坡面朝外的法线；dn：顺着坡往下（往屋檐）的方向
+          if (kind === 'thatch' || kind === 'leaf') {
+            const rows = tier === 'high' ? 7 : tier === 'mid' ? 5 : 4, nTe = Math.max(6, Math.round(hw * 2 / (tier === 'high' ? .085 : tier === 'mid' ? .13 : .2))), sag = t => -.05 * Math.sin(t * Math.PI), leaf = kind === 'leaf';
+            const NO = [0, ny0, nz0], cU = C(A.shade(col, .5)), cT = new T3.Color(), cTip = C(A.shade(col, leaf ? .8 : 1.14));
+            for (let k = 0; k < rows; k++) {
+              const ta = k / rows, tb = (k + 1) / rows, th = .1 - ta * .03, ya = yb + h * ta + sag(ta), yt = yb + h * tb + sag(tb), za = lerp(zf, zr, ta), zt = lerp(zf, zr, tb);
+              cT.copy(k % 2 ? c2 : c1).multiplyScalar(.94 + hash2(k, Math.round(cx * 5)) * .12);
+              const A0 = [cx - hw, ya + ny0 * th, za + nz0 * th], B0 = [cx + hw, ya + ny0 * th, za + nz0 * th], A1 = [cx - hw, yt + ny0 * th * .6, zt + nz0 * th * .6], B1 = [cx + hw, yt + ny0 * th * .6, zt + nz0 * th * .6];
+              quadN(bag, A0, B0, B1, A1, NO, NO, NO, NO, cT, cT, cT.clone().multiplyScalar(1.05), cT.clone().multiplyScalar(1.05));
+              // 下沿：一排参差的草尖，从这一层的上面垂下来，盖住下一层的根
+              for (let i = 0; i < nTe; i++) {
+                const xa = cx - hw + i / nTe * hw * 2, xb = cx - hw + (i + 1) / nTe * hw * 2, xm = (xa + xb) / 2, ln = (leaf ? .13 : .07) + hash2(i + k * 57, Math.round(cx * 3)) * (leaf ? .14 : .07);
+                const pA = [xa, A0[1], A0[2]], pB = [xb, A0[1], A0[2]], tip = [xm + (hash2(i, k + 9) - .5) * .05, A0[1] + dn[1] * ln - ny0 * .02, A0[2] + dn[2] * ln - nz0 * .02];
+                quadN(bag, pA, pB, [xb, ya - .01, za], [xa, ya - .01, za], [0, -nz0, ny0], [0, -nz0, ny0], [0, -nz0, ny0], [0, -nz0, ny0], cU, cU, cU, cU);
+                tri(bag, pB, pA, tip, cT, cT, cTip); tri(bag, pA, pB, tip, cU, cU, cU);
+              }
+            }
+            // 屋脊：一根圆圆的草捆
+            if (tier !== 'low') put(bag, new T3.CylinderGeometry(.11, .11, w + .3, 8).rotateZ(Math.PI / 2), leafC(A.shade(col, .7), col, A.shade(col, 1.12)), cx, yb + h + .03, zr);
+          } else if (kind === 'snow') {
+            // 积雪的屋顶：底下是深色的木瓦（屋檐和两头露出来一条），上面一层厚厚的雪，雪的前沿是圆的；屋檐下面挂着几根冰溜子
+            const NO = [0, ny0, nz0], cW = C('#f7fafd'), cW2 = C('#e2ecf5'), sag = t => -.04 * Math.sin(t * Math.PI), nS = tier === 'low' ? 3 : 6;
+            quad(bag, [cx - hw, yb, zf], [cx + hw, yb, zf], [cx + hw, yb + h, zr], [cx - hw, yb + h, zr], c1);
+            for (let k = 0; k < nS; k++) {
+              const ta = .06 + k / nS * .94, tb = .06 + (k + 1) / nS * .94, th = .15, ya = yb + h * ta + sag(ta), yt = yb + h * tb + sag(tb), za = lerp(zf, zr, ta), zt = lerp(zf, zr, tb);
+              quadN(bag, [cx - hw + .03, ya + ny0 * th, za + nz0 * th], [cx + hw - .03, ya + ny0 * th, za + nz0 * th], [cx + hw - .03, yt + ny0 * th, zt + nz0 * th], [cx - hw + .03, yt + ny0 * th, zt + nz0 * th], NO, NO, NO, NO, cW, cW, cW, cW);
+            }
+            // 雪的前沿：一道圆边（法线从朝前转到朝上）
+            { const ta = .06, ya = yb + h * ta, za = lerp(zf, zr, ta), th = .15, P0 = [ya + ny0 * th, za + nz0 * th], P1 = [ya - .02, za + .05];
+              quadN(bag, [cx - hw + .03, P1[0], P1[1]], [cx + hw - .03, P1[0], P1[1]], [cx + hw - .03, P0[0], P0[1]], [cx - hw + .03, P0[0], P0[1]], [0, -.2, 1], [0, -.2, 1], NO, NO, cW2, cW2, cW, cW); }
+            if (tier !== 'low') for (let i = 0; i < Math.round(w * 3); i++) { const ix = cx - hw + .15 + (i + hash2(i, 61)) / Math.round(w * 3) * (hw * 2 - .3), ln = .08 + hash2(i, 62) * .16; put(bag, new T3.ConeGeometry(.025, ln, 5).rotateX(Math.PI).translate(0, -ln / 2, 0), '#e8f6ff', ix, yb - .06, zf - .02); }
+          } else if (tier === 'low') {
             for (let k = 0; k < nB; k++) { const ta = k / nB, tb = (k + 1) / nB, sag = t => -.07 * Math.sin(t * Math.PI); const ya = yb + h * ta + sag(ta) + (k ? .045 : 0), yt = yb + h * tb + sag(tb), za = lerp(zf, zr, ta), zt = lerp(zf, zr, tb); quad(bag, [cx - hw, ya, za], [cx + hw, ya, za], [cx + hw, yt, zt], [cx - hw, yt, zt], k % 2 ? c2 : c1); if (k) quad(bag, [cx - hw, ya - .045, za], [cx + hw, ya - .045, za], [cx + hw, ya, za], [cx - hw, ya, za], cS); }
           } else {
             // 一排排筒瓦：每片是一条鼓起来的半圆（法线跟着弧面转，所以是圆的），上一排压着下一排，瓦和瓦之间露出深色的底
@@ -1503,7 +1968,7 @@
           quad(bag, [cx + hw, yb, zb], [cx - hw, yb, zb], [cx - hw, yb + h, zr], [cx + hw, yb + h, zr], c2);
           quad(bag, [cx - hw, yb - .11, zf], [cx + hw, yb - .11, zf], [cx + hw, yb, zf], [cx - hw, yb, zf], cF);
           { const xa = cx - (w - .2) / 2, xb = cx + (w - .2) / 2, c0 = mixC(A.shade(wallC, .7), '#8aa0d0', .3), c1 = C(A.shade(wallC, .97)); quad(bag, [xa, yb - .3, front + .004], [xb, yb - .3, front + .004], [xb, yb - .02, front + .004], [xa, yb - .02, front + .004], c1, c1, c0, c0); }
-          box(bag, w + .28, .1, .16, cR, cx, yb + h - .05, zr);
+          box(bag, w + .28, kind === 'snow' ? .14 : .1, kind === 'snow' ? .3 : .16, kind === 'snow' ? C('#f7fafd') : cR, cx, yb + h - .05 + (kind === 'snow' ? .1 : 0), zr);
           [-1, 1].forEach(s => {
             const xw = cx + s * (w - .2) / 2, xe = cx + s * hw, a = [xw, yb - .02, front], bb = [xw, yb - .02, back], t = [xw, yb + h * .93, zr];
             if (s > 0) tri(bag, a, bb, t, wc); else tri(bag, bb, a, t, wc);
@@ -1524,45 +1989,123 @@
         switch (style) {
           case 'med': wallC = '#fbf7ef'; wall(wallH); gable(gym ? 1.15 : .95, gym ? roofC : '#d9643a', .42); if (home) chimney(); doorKind = 'blue'; winKind = 'shutter'; break;
           case 'crayon': {
-            wallC = HCOL[Math.floor(hsh * HCOL.length)]; wall(wallH); flat(['#ef5350', '#42a5f5', '#66bb6a', '#ffca28', '#ab47bc'][Math.floor(hsh * 5)], wallH, false);
-            const r = Math.min(w, d + .4) * .56; pyramid(r, Math.min(r, d * .62), 1.05, '#f5d7a1', wallH + .14, 6);
-            gp(new T3.ConeGeometry(r * .36, .34, 6).scale(1, 1, Math.min(1, d * .62 / r)), '#37474f', cx, wallH + .14 + .9, cz); top += .1; winKind = 'round';
+            // 糖果色的方块房子，屋顶是一支削尖的彩色铅笔：一圈六棱的笔杆（每面是平的）、削出来的木头尖、和笔杆同色的笔芯；墙上一道同色的「包装纸」色带，圆窗
+            const pc = ['#ef5350', '#42a5f5', '#66bb6a', '#ffca28', '#ab47bc', '#ff7043'][Math.floor(hsh * 6)], fl = g => { const q = g.toNonIndexed(); g.dispose(); q.deleteAttribute('normal'); q.computeVertexNormals(); return q; };
+            wallC = HCOL[Math.floor(hsh * HCOL.length)]; wall(wallH);
+            bx(w - .14, .15, d + .05, pc, cx, wallH - .46, cz);
+            bx(w - .02, .1, d + .16, topSide(A.shade(wallC, 1.04), A.shade(wallC, .84)), cx, wallH, cz);
+            const r = Math.min(w - .1, d + .5) * .58, rz = Math.min(1, d * .68 / r), bh = .36, ch = 1.15, yR = wallH + .1;
+            gp(fl(new T3.CylinderGeometry(r, r, bh, 6).scale(1, 1, rz).translate(0, bh / 2, 0)), byY(A.shade(pc, .82), pc, 0, bh), cx, yR, cz);
+            gp(fl(new T3.ConeGeometry(r, ch, 6).scale(1, 1, rz).translate(0, ch / 2, 0)), byY('#dcaa70', '#f6dbb0', 0, ch), cx, yR + bh, cz);
+            gp(fl(new T3.ConeGeometry(r * .3, ch * .3, 6).scale(1, 1, rz).translate(0, ch * .15, 0)), pc, cx, yR + bh + ch * .7, cz);
+            top = yR + bh + ch; winKind = 'round';
             break;
           }
-          case 'farm': wall(wallH, 'plank', P.wall || '#c9955e'); gable(1.15, '#e8c35a', .6); winKind = 'shutter'; shut = '#7a4a28'; break;
+          case 'farm': wall(wallH, 'plank', P.wall || '#c9955e'); gable(1.2, '#e3bd5a', .62, null, 'thatch'); winKind = 'shutter'; shut = '#7a4a28'; if (home) chimney(); break;
           case 'brick': {
-            wallH += gym ? .3 : .15; wall(wallH, 'brick', '#b5543c'); flat('#6d4c41');
-            if (w >= 5) { bx(1, 1.1, 1, '#b5543c', cx, wallH + .14, cz); pyramid(.8, .8, .6, '#6d4c41', wallH + 1.24); dS(cx - .3, y0 + wallH + .5, cx + .3, y0 + wallH + 1.1, cz + .51, clockCell()); }
+            // 红砖教学楼：平顶、白色的檐口和窗台线、两层窗；宽的楼中间立着钟楼（方塔、四面钟、尖顶、顶上一只小铃铛）
+            wallH += gym ? .45 : .3; wall(wallH, 'brick', '#b5543c'); flat('#7a5446');
+            bx(w - .1, .09, d + .08, '#f3ece0', cx, wallH - .04, cz); bx(w - .14, .06, d + .04, '#efe6d6', cx, .62, cz);
+            if (w >= 5) {
+              const tw2 = Math.min(1.3, w * .2), th2 = 1.5;
+              bx(tw2, th2, tw2, byY('#a24c38', '#bf5d46', 0, th2), cx, wallH + .14, cz); bx(tw2 + .12, .1, tw2 + .12, '#f3ece0', cx, wallH + .14 + th2, cz);
+              pyramid(tw2 * .62, tw2 * .62, .75, '#5d4037', wallH + .24 + th2);
+              dS(cx - .32, y0 + wallH + .55, cx + .32, y0 + wallH + 1.19, cz + tw2 / 2 + .01, clockCell());
+              gp(new T3.LatheGeometry([[0, 0], [.13, 0], [.12, .04], [.08, .1], [.06, .16], [0, .18]].map(([px, py]) => new T3.Vector2(px, py)), 10), '#ffc93c', cx, wallH + .24 + th2 + .62, cz);
+              top = Math.max(top, wallH + 1.2 + th2);
+            }
             break;
           }
           case 'dome': {
+            // 实验楼：白墙、一道蓝色的腰线，玻璃圆顶上几道白色的肋；有的楼顶边上立着一面朝天的卫星天线
             wallC = '#f6fafc'; wall(wallH); bx(w - .16, .12, d + .06, P.trim || '#5c6bc0', cx, wallH - .32, cz);
-            const dr = Math.min(w - .24, d) * .5, dsx = w > d + .5 ? (w - .24) / d : 1;
-            gp(new T3.SphereGeometry(dr, 16, 8, 0, 6.2832, 0, Math.PI / 2).scale(dsx, 1, 1), leafC('#5fb3e0', '#8fd3f4', '#dff4ff'), cx, wallH, cz);
-            bx(.05, .5, .05, '#90a4ae', cx + w * .3, wallH + dr * .8, cz); top = wallH + dr; doorKind = 'glass';
+            const dr = Math.min(w - .24, d) * .5, dsx = w > d + .5 ? (w - .24) / d : 1, sg2 = tier === 'high' ? 24 : 16;
+            gp(new T3.SphereGeometry(dr, sg2, 10, 0, 6.2832, 0, Math.PI / 2).scale(dsx, 1, 1), leafC('#5fb3e0', '#8fd3f4', '#e6f7ff'), cx, wallH, cz);
+            if (tier !== 'low') for (let k = 0; k < 4; k++) gp(new T3.TorusGeometry(dr * 1.005, .022, 4, 16, Math.PI).rotateY(k * Math.PI / 4).scale(dsx, 1, 1), '#f4f8fb', cx, wallH, cz);
+            gp(new T3.CylinderGeometry(dr * .2, dr * .24, .1, 10), '#e8eef2', cx, wallH + dr - .02, cz);
+            if (hsh > .45) { const dx2 = cx + (w / 2 - .45) * (hsh > .7 ? 1 : -1), dz2 = back + .4; gp(new T3.CylinderGeometry(.04, .05, .45, 6).translate(0, .22, 0), '#90a4ae', dx2, wallH, dz2); gp(new T3.SphereGeometry(.34, 12, 5, 0, 6.2832, 0, Math.PI * .32).rotateX(-.75), '#f4f6f8', dx2, wallH + .55, dz2 + .1); gp(new T3.CylinderGeometry(.012, .012, .3, 4).rotateX(-.75).translate(0, .15, .1), '#607d8b', dx2, wallH + .5, dz2 + .1); }
+            else bx(.05, .5, .05, '#90a4ae', cx + w * .3, wallH + dr * .8, cz);
+            top = wallH + dr; doorKind = 'glass';
             break;
           }
           case 'tent': {
-            round = Math.min(w - .2, d + .2) / 2; const sc = gym ? roofC : ['#e53935', '#1e88e5', '#8e24aa', '#43a047'][Math.floor(hsh * 4)], n = 16;
-            for (let k = 0; k < n; k++) { const a0 = k / n * 6.2832, a1 = (k + 1) / n * 6.2832, col = C(k % 2 ? '#ffffff' : sc), col2 = C(k % 2 ? '#ffffff' : (gym ? roofC : '#ffca28')), P0 = [cx + Math.cos(a0) * round, y0, cz + Math.sin(a0) * round], P1 = [cx + Math.cos(a1) * round, y0, cz + Math.sin(a1) * round]; quad(bag, P1, P0, [P0[0], y0 + wallH, P0[2]], [P1[0], y0 + wallH, P1[2]], col); tri(bag, [cx + Math.cos(a1) * round * 1.14, y0 + wallH, cz + Math.sin(a1) * round * 1.14], [cx + Math.cos(a0) * round * 1.14, y0 + wallH, cz + Math.sin(a0) * round * 1.14], [cx, y0 + wallH + 1.3, cz], col2); }
+            // 马戏帐篷：一圈条纹的帐篷布、条纹的尖顶，檐口垂着一圈波浪边，顶上一面小旗，从尖顶往下拉着几串三角彩旗
+            round = Math.min(w - .2, d + .2) / 2; const sc = gym ? roofC : ['#e53935', '#1e88e5', '#8e24aa', '#43a047'][Math.floor(hsh * 4)], n = 16, apex = [cx, y0 + wallH + 1.3, cz];
+            for (let k = 0; k < n; k++) { const a0 = k / n * 6.2832, a1 = (k + 1) / n * 6.2832, col = C(k % 2 ? '#ffffff' : sc), col2 = C(k % 2 ? '#ffffff' : (gym ? roofC : '#ffca28')), P0 = [cx + Math.cos(a0) * round, y0, cz + Math.sin(a0) * round], P1 = [cx + Math.cos(a1) * round, y0, cz + Math.sin(a1) * round]; quad(bag, P1, P0, [P0[0], y0 + wallH, P0[2]], [P1[0], y0 + wallH, P1[2]], col); tri(bag, [cx + Math.cos(a1) * round * 1.14, y0 + wallH, cz + Math.sin(a1) * round * 1.14], [cx + Math.cos(a0) * round * 1.14, y0 + wallH, cz + Math.sin(a0) * round * 1.14], apex, col2); }
+            if (tier !== 'low') {
+              // 檐口的波浪边：每一片布下面垂一个小半圆
+              const vc = C(gym ? A.shade(roofC, .85) : '#ffca28');
+              for (let k = 0; k < n * 2; k++) { const a0 = k / (n * 2) * 6.2832, a1 = (k + 1) / (n * 2) * 6.2832, am = (a0 + a1) / 2, r2 = round * 1.145; tri(bag, [cx + Math.cos(a1) * r2, y0 + wallH, cz + Math.sin(a1) * r2], [cx + Math.cos(a0) * r2, y0 + wallH, cz + Math.sin(a0) * r2], [cx + Math.cos(am) * r2, y0 + wallH - .14, cz + Math.sin(am) * r2], vc); }
+              // 几串三角彩旗：从尖顶垂到帐篷边外面的地上（一根弯下来的绳子，上面挂着一面面小三角旗）
+              const fc = ['#ffca28', '#e53935', '#1e88e5', '#43a047', '#ffffff'].map(h => C(h));
+              [.9, 2.5, 4.1, 5.6].forEach((a, q) => {
+                const end = [cx + Math.cos(a) * (round + 1.1), y0 + .05, cz + Math.sin(a) * (round + 1.1)], N = 8;
+                for (let k = 0; k < N; k++) {
+                  const t0 = k / N, t1 = (k + .55) / N, sag = t => Math.sin(t * Math.PI) * .45, at = t => [lerp(apex[0], end[0], t), lerp(apex[1], end[1], t) - sag(t) + .02, lerp(apex[2], end[2], t)];
+                  const p0 = at(t0), p1 = at(t1), mid = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2 - .17, (p0[2] + p1[2]) / 2];
+                  tri(bag, p0, p1, mid, fc[(k + q) % fc.length]); tri(bag, p1, p0, mid, fc[(k + q) % fc.length]);
+                }
+              });
+            }
             bx(.04, .5, .04, '#6d4121', cx, wallH + 1.25, cz); bx(.3, .18, .02, '#ffca28', cx + .17, wallH + 1.55, cz); top = wallH + 1.6;
             break;
           }
-          case 'tower': wallH = gym ? 2.7 : 2.1; wall(wallH, 'stone', '#cfc6b6'); pyramid((w + .5) / 2, (d + .5) / 2, 1.3, '#4f9e8a'); dS(cx - .3, y0 + wallH - .78, cx + .3, y0 + wallH - .18, front + .012, clockCell()); break;
+          case 'tower': {
+            // 作息岛的石塔：石块墙、一圈铜色的檐、铜绿的尖顶，正面一面钟，两边的墙上画着齿轮
+            wallH = gym ? 2.7 : 2.1; wall(wallH, 'stone', '#cfc6b6'); bx(w + .02, .12, d + .14, '#b8862b', cx, wallH - .06, cz);
+            pyramid((w + .5) / 2, (d + .5) / 2, 1.3, '#4f9e8a'); gp(new T3.SphereGeometry(.09, 8, 6), '#d9a93c', cx, wallH + 1.36, cz);
+            dS(cx - .3, y0 + wallH - .78, cx + .3, y0 + wallH - .18, front + .012, clockCell());
+            const gc = gearCell(); dX(x0 + .1 - .006, -1, cz - .32, y0 + wallH * .45, cz + .32, y0 + wallH * .45 + .64, gc); dX(x1 - .1 + .006, 1, cz - .32, y0 + wallH * .45, cz + .32, y0 + wallH * .45 + .64, gc);
+            break;
+          }
           case 'cake': {
-            round = Math.min(w - .2, d + .2) / 2;
-            gp(new T3.CylinderGeometry(round, round, wallH * .64, 22).translate(0, wallH * .32, 0), '#fff4e0', cx, 0, cz); gp(new T3.CylinderGeometry(round * .72, round * .72, wallH * .46, 22).translate(0, wallH * .23, 0), '#ffe0ea', cx, wallH * .64, cz);
-            gp(new T3.TorusGeometry(round, .1, 6, 22).rotateX(Math.PI / 2), '#ff8fb1', cx, wallH * .64, cz); gp(new T3.TorusGeometry(round * .72, .09, 6, 22).rotateX(Math.PI / 2), '#ffffff', cx, wallH * 1.1, cz);
-            gp(new T3.SphereGeometry(.15, 10, 8), '#e53935', cx, wallH * 1.1 + .14, cz); top = wallH * 1.1 + .3; wallH *= .64;
+            // 蛋糕房子：两层圆蛋糕，粉白相间的竖条奶油墙，每层顶上一圈奶油往下淌（一个个圆圆的「滴」），撒着彩色的糖粒，顶上三根小蜡烛
+            round = Math.min(w - .2, d + .2) / 2; const sg3 = tier === 'high' ? 28 : 20, h1 = wallH * .64, h2 = wallH * .46, r1 = round, r2 = round * .72;
+            gp(new T3.CylinderGeometry(r1, r1, h1, sg3).translate(0, h1 / 2, 0), (out, nx, ny, nz) => { out.set(Math.floor((Math.atan2(nz, nx) / 6.2832 + 1) * 14) % 2 ? '#fff4e0' : '#ffe3ec'); }, cx, 0, cz);
+            gp(new T3.CylinderGeometry(r2, r2, h2, sg3).translate(0, h2 / 2, 0), '#ffd6e2', cx, h1, cz);
+            gp(new T3.CylinderGeometry(r1 + .02, r1 + .02, .06, sg3), '#ff8fb1', cx, h1, cz);
+            [[r1, h1, '#ffffff'], [r2, h1 + h2, '#ffffff']].forEach(([rr, yy, c]) => {
+              gp(new T3.TorusGeometry(rr, .08, 6, sg3).rotateX(Math.PI / 2), c, cx, yy, cz);
+              if (tier !== 'low') for (let k = 0; k < Math.round(rr * 9); k++) { const a = k / Math.round(rr * 9) * 6.2832 + .2, ln = .1 + hash2(k, Math.round(rr * 10)) * .16; gp(new T3.CapsuleGeometry(.045, ln, 3, 6).translate(0, -ln / 2, 0), c, cx + Math.cos(a) * (rr + .03), yy - .02, cz + Math.sin(a) * (rr + .03)); }
+            });
+            if (tier !== 'low') { const spc = ['#e53935', '#fdd835', '#1e88e5', '#43a047', '#ab47bc']; for (let k = 0; k < 22; k++) { const a = hash2(k, 71) * 6.2832, rr = Math.sqrt(hash2(k, 72)) * r2 * .9; bx(.06, .025, .025, spc[k % spc.length], cx + Math.cos(a) * rr, h1 + h2 + .06, cz + Math.sin(a) * rr); } }
+            [-.22, 0, .22].forEach((ox, k) => { gp(new T3.CylinderGeometry(.04, .04, .3, 8).translate(0, .15, 0), ['#80deea', '#ff8fb1', '#fff176'][k], cx + ox, h1 + h2 + .04, cz + (k === 1 ? -.12 : .05)); gp(new T3.SphereGeometry(.05, 8, 6).scale(1, 1.5, 1), '#ffb43c', cx + ox, h1 + h2 + .41, cz + (k === 1 ? -.12 : .05)); });
+            top = h1 + h2 + .5; wallH = h1;
             break;
           }
           case 'hut': {
-            [[x0 + .3, back + .1], [x1 - .3, back + .1], [x0 + .3, front - .1], [x1 - .3, front - .1]].forEach(([px, pz]) => bx(.11, .5, .11, '#6d4121', px, 0, pz));
-            bx(w - .24, wallH - .1, d, byY('#8c5e30', '#a8773f', 0, wallH - .1), cx, .45, cz); gable(.85, '#4c8f3a', .6, wallH + .35); bx(w - .1, .06, .5, '#8a5a33', cx, .42, front + .2);
-            for (let k = 0; k < 3; k++) bx(.42, .05, .1, '#8a5a33', b.door ? b.door.x + .5 : cx, .08 + k * .13, front + .52 - k * .1);
+            // 高脚树屋：四根木桩把屋子架起来（桩子之间斜撑着），木板墙，棕榈叶的屋顶（一层层垂下来的长叶子），门前一圈木平台、绳子栏杆和一段梯子
+            [[x0 + .3, back + .1], [x1 - .3, back + .1], [x0 + .3, front - .1], [x1 - .3, front - .1]].forEach(([px, pz]) => gp(new T3.CylinderGeometry(.06, .075, .52, 8).translate(0, .26, 0), byY('#4e3018', '#6d4121', 0, .5), px, 0, pz));
+            if (tier !== 'low') [[x0 + .3, 1], [x1 - .3, -1]].forEach(([px, sd]) => gp(new T3.CylinderGeometry(.025, .025, .7, 5).rotateX(sd * .9), '#6d4121', px, .22, cz));
+            bx(w - .24, wallH - .1, d, byY('#8c5e30', '#a8773f', 0, wallH - .1), cx, .45, cz);
+            dS(cx - (w - .24) / 2, y0 + .45, cx + (w - .24) / 2, y0 + .35 + wallH, front + .006, wallCell('plank', '#a06f3c', w - .24, wallH - .1));
+            gable(.9, '#5f9a42', .62, wallH + .35, 'leaf');
+            bx(w + .1, .07, .62, topSide('#a87445', '#7a5232'), cx, .4, front + .26);
+            if (tier !== 'low') { for (let k = 0; k <= Math.round(w * 2); k++) { const px = x0 + .02 + k / Math.round(w * 2) * (w - .04); if (b.door && Math.abs(px - b.door.x - .5) < .3) continue; bx(.04, .3, .04, '#7a5232', px, .47, front + .55); } bx(w + .06, .025, .025, '#d8c08a', cx, .72, front + .55); }
+            const lx = b.door ? b.door.x + .5 : cx;
+            [-1, 1].forEach(sd => gp(new T3.CylinderGeometry(.025, .025, .62, 5).rotateX(-.45), '#7a5232', lx + sd * .17, .2, front + .7));
+            for (let k = 0; k < 3; k++) bx(.36, .035, .05, '#8a5a33', lx, .08 + k * .12, front + .82 - k * .055);
             break;
           }
-          case 'city': wallH = gym ? 2.5 : home ? 2.3 + hsh * .8 : 2.9 + hsh * 1.2; wall(wallH, 'office', '#b0bec5'); flat('#546e7a'); bx(.6, .35, .5, '#78909c', cx + w * .2, wallH + .14, cz - .1); doorKind = 'glass'; winKind = 'none'; break;
+          case 'city': {
+            // 规则城的楼：一格格玻璃窗的楼身（每栋一种浅色），一楼是一圈彩色的店面和雨棚，楼顶一圈矮墙，上面有水箱、空调外机、天线
+            wallH = gym ? 2.5 : home ? 2.3 + hsh * .8 : 2.9 + hsh * 1.2;
+            const tone = ['#b0bec5', '#c5cae9', '#b2dfdb', '#d7ccc8', '#cfd8dc'][Math.floor(hsh * 5)];
+            wall(wallH, 'office', tone); flat('#5d6d78');
+            const sh2 = ['#e57373', '#4fc3f7', '#ffb74d', '#81c784'][Math.floor(hsh * 4)];
+            bx(w - .16, .5, .04, A.shade(sh2, .9), cx, .14, front + .012);
+            if (tier !== 'low') for (let k = 0; k < Math.max(3, Math.round(w * 2)); k++) { const n2 = Math.max(3, Math.round(w * 2)), xa = x0 + .12 + (w - .24) * k / n2, xb = x0 + .12 + (w - .24) * (k + 1) / n2; quad(bag, [xa, y0 + .66, front + .32], [xb, y0 + .66, front + .32], [xb, y0 + .84, front + .02], [xa, y0 + .84, front + .02], C(k % 2 ? '#ffffff' : sh2)); }
+            bx(w - .04, .18, .08, '#7f8f9a', cx, wallH + .14, back + .06);
+            if (!gym) {
+              const tx = x0 + .5 + hsh * (w - 1), tz = back + .45;
+              gp(new T3.CylinderGeometry(.22, .22, .38, 10).translate(0, .19, 0), '#8d6e63', tx, wallH + .28, tz); gp(new T3.ConeGeometry(.25, .14, 10).translate(0, .07, 0), '#6d4c41', tx, wallH + .66, tz);
+              [[-.1, '#90a4ae'], [.14, '#78909c']].forEach(([ox, c]) => bx(.28, .2, .22, c, x1 - .6 + ox, wallH + .28, cz - .05 + ox));
+              if (hsh > .5) gp(new T3.CylinderGeometry(.012, .018, .9, 4).translate(0, .45, 0), '#546e7a', x0 + .4, wallH + .28, tz);
+              top = wallH + .9;
+            } else bx(.6, .35, .5, '#78909c', cx + w * .2, wallH + .14, cz - .1);
+            doorKind = 'glass'; winKind = 'none';
+            break;
+          }
           case 'market': {
             wallC = '#ffffff'; wall(wallH); flat(roofC);
             const sc = ['#ff7043', '#1e88e5', '#43a047', '#fdd835'][Math.floor(hsh * 4)], n = Math.max(4, Math.round(w * 2));
@@ -1570,10 +2113,25 @@
             winKind = 'none';
             break;
           }
-          case 'chalet': wall(wallH, 'log', '#8d6e63'); gable(1.4, '#f4f8fb', .6); chimney(); break;
+          case 'chalet': wall(wallH, 'log', '#8d6e63'); gable(1.45, '#6b4636', .62, null, 'snow'); chimney(); winKind = 'shutter'; shut = '#b23a32'; break;
           case 'temple': {
-            wallH += .15; wall(wallH, 'stone', '#c9bfa8'); bx(w + .1, .16, d + .5, '#b3a992', cx, wallH, cz); bx(w - .5, .16, d, '#a39a84', cx, wallH + .16, cz); top = wallH + .32;
-            [x0 + .35, x1 - .35].forEach(px => gp(new T3.CylinderGeometry(.12, .15, wallH, 10).translate(0, wallH / 2, 0), '#ddd4bf', px, 0, front + .24));
+            // 回忆岛的石头神殿：石块墙、门前一排有凹槽的石柱（两头的那根断了半截）、厚厚的檐、三角形的山墙顶；墙上爬着藤，墙根长着苔藓
+            wallH += .15; wall(wallH, 'stone', '#c9bfa8');
+            bx(w + .1, .16, d + .62, topSide('#d2c9b2', '#a39a84'), cx, wallH, cz + .06);
+            const ph = .62, hw2 = (w + .1) / 2, zf2 = front + .37, zb2 = back - .1, pc2 = C('#c4bba4'), pf = C('#b3a992');
+            tri(bag, [cx - hw2, y0 + wallH + .16, zf2], [cx + hw2, y0 + wallH + .16, zf2], [cx, y0 + wallH + .16 + ph, zf2], pc2);
+            { const yb2 = y0 + wallH + .16, yt2 = yb2 + ph, L2 = cx - hw2, R2 = cx + hw2; quad(bag, [L2, yb2, zf2], [cx, yt2, zf2], [cx, yt2, zb2], [L2, yb2, zb2], pf); quad(bag, [R2, yb2, zb2], [cx, yt2, zb2], [cx, yt2, zf2], [R2, yb2, zf2], pf); }
+            top = wallH + .16 + ph;
+            const nC = Math.max(2, Math.round(w / 1.1)), sgC = tier === 'high' ? 12 : 8;
+            for (let k = 0; k < nC; k++) {
+              const px = x0 + .32 + (w - .64) * k / (nC - 1); if (b.door && Math.abs(px - b.door.x - .5) < .45) continue;
+              const broken = (k === 0 || k === nC - 1) && hsh > .4, ch = broken ? wallH * (.45 + hsh * .2) : wallH;
+              gp(new T3.CylinderGeometry(.13, .15, ch, sgC).translate(0, ch / 2, 0), (out, nx, ny, nz) => { out.set('#ddd4bf').multiplyScalar(.86 + .14 * Math.abs(Math.sin(Math.atan2(nz, nx) * sgC / 2))); }, px, 0, front + .26);
+              bx(.36, .1, .36, '#cfc6b0', px, 0, front + .26); if (!broken) bx(.36, .1, .36, '#cfc6b0', px, ch - .1, front + .26);
+              else gp(new T3.IcosahedronGeometry(.11, 0), '#cfc6b0', px + .22, .06, front + .5);
+            }
+            if (tier !== 'low') for (let k = 0; k < 3; k++) { const vx = x0 + .4 + hash2(k, Math.round(cx * 7)) * (w - .8), ln = .5 + hash2(k, 3) * (wallH - .6); bx(.07, ln, .02, byY('#4f7a3a', '#6f9a4c', 0, ln), vx, wallH - ln, front + .015); for (let q = 0; q < 4; q++) ball(bag, .07, 1, vx + (q % 2 ? .05 : -.05), y0 + wallH - ln * (q + .5) / 4, front + .04, { sy: .7, col: leafC('#3f6a30', '#5f8f45', '#86b36a'), seed: k * 5 + q }); }
+            bx(w - .1, .12, .06, '#7f9a5e', cx, .02, front + .02);
             winKind = 'none';
             break;
           }
@@ -1589,16 +2147,32 @@
             break;
           }
           case 'windmill': {
-            wallH += .3; wall(wallH, 'plank', '#e8d5b0'); pyramid((w + .2) / 2, (d + .3) / 2, 1.0, '#8d6e63');
-            const hub = new T3.Group(), hb = Bag(); hub.position.set(cx, y0 + wallH + .5, front + .3);
-            for (let k = 0; k < 4; k++) put(hb, new T3.BoxGeometry(.2, 1.4, .03).translate(0, .78, 0).rotateZ(k * Math.PI / 2), '#f5ecd9'); put(hb, new T3.SphereGeometry(.1, 8, 6), '#8d6e63');
-            const hg = bake(hb); own.push(hg); hub.add(new T3.Mesh(hg, propMat)); hub.children[0].castShadow = !!Q.shadow; add(hub, false); spinners.push(hub); top = wallH + 1.7;
+            // 风车：往上收的八角塔身（木板墙）、八角的尖顶、塔前一根转轴上四片带格子的帆（会转）
+            const rb = Math.min(w, d + .4) * .5, rt2 = rb * .72, hh = wallH + .7;
+            gp(new T3.CylinderGeometry(rt2, rb, hh, 8).translate(0, hh / 2, 0), byY('#d9c5a0', '#f3e6cc', 0, hh), cx, 0, cz);
+            if (tier !== 'low') for (let k = 1; k < 4; k++) { const f2 = k / 4; gp(new T3.CylinderGeometry(lerp(rb, rt2, f2) + .015, lerp(rb, rt2, f2) + .015, .04, 8), '#b39a74', cx, hh * f2, cz); }
+            gp(new T3.ConeGeometry(rt2 * 1.18, .95, 8).translate(0, .47, 0), byY('#7a5240', '#9a6a52', 0, .95), cx, hh, cz);
+            const hub = new T3.Group(), hb = Bag(), zs = cz + rt2 + .14; hub.position.set(cx, y0 + hh - .15, zs);
+            for (let k = 0; k < 4; k++) {
+              const rot = k * Math.PI / 2;
+              put(hb, new T3.BoxGeometry(.05, 1.55, .05).translate(0, .8, 0).rotateZ(rot), '#7a5240');
+              put(hb, new T3.BoxGeometry(.26, 1.1, .02).translate(.15, 1.0, 0).rotateZ(rot), '#f5ecd9');
+              if (tier !== 'low') for (let q = 0; q < 4; q++) put(hb, new T3.BoxGeometry(.28, .025, .03).translate(.15, .55 + q * .3, .015).rotateZ(rot), '#9c7a5a');
+            }
+            put(hb, new T3.SphereGeometry(.1, 8, 6), '#7a5240');
+            const hg = bake(hb); own.push(hg); hub.add(new T3.Mesh(hg, propMat)); hub.children[0].castShadow = !!Q.shadow; add(hub, false); spinners.push(hub);
+            round = rb; top = hh + 1.6; wallH = 1.2; winKind = 'none';
             break;
           }
           case 'stadium': {
-            round = Math.min(w, d + .3) / 2;
-            gp(new T3.CylinderGeometry(round, round * 1.05, wallH, 24, 1, true).translate(0, wallH / 2, 0), byY('#cfd8dc', '#f3f6f7', 0, wallH), cx, 0, cz); gp(new T3.TorusGeometry(round, .09, 6, 24).rotateX(Math.PI / 2), roofC, cx, wallH, cz);
-            round *= 1.04;
+            // 体育场：一圈白墙（一道道竖的肋），顶上一圈彩色的檐和一面面小旗，门口一道拱门；四个角上立着高高的灯架
+            round = Math.min(w, d + .3) / 2; const sgS = tier === 'high' ? 40 : 24, sH = wallH + .3;
+            gp(new T3.CylinderGeometry(round, round * 1.05, sH, sgS, 1, true).translate(0, sH / 2, 0), (out, nx, ny, nz, px, py) => { out.set('#eef2f4').lerp(C('#c4ced4'), 1 - py / sH); if (Math.floor((Math.atan2(nz, nx) / 6.2832 + 1) * sgS) % 4 === 0) out.multiplyScalar(.9); }, cx, 0, cz);
+            gp(new T3.TorusGeometry(round, .12, 6, sgS).rotateX(Math.PI / 2), roofC, cx, sH, cz);
+            gp(new T3.CylinderGeometry(round * 1.08, round * 1.08, .1, sgS, 1, true).translate(0, .05, 0), '#1e88e5', cx, sH - .45, cz);
+            if (tier !== 'low') for (let k = 0; k < 10; k++) { const a = Math.PI * (.08 + .84 * k / 9), px = cx + Math.cos(a) * round, pz = cz + Math.sin(a) * round; bx(.03, .5, .03, '#90a4ae', px, sH, pz); bx(.2, .12, .02, ['#e53935', '#fdd835', '#1e88e5', '#43a047'][k % 4], px + .1, sH + .36, pz); }
+            [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b2]) => { const px = cx + a * (round + .3), pz = cz + b2 * (round * .55); bx(.08, sH + 1.6, .08, '#9aa6ae', px, 0, pz); bx(.5, .26, .12, '#fff8d8', px, sH + 1.55, pz + .04); });
+            round *= 1.04; top = sH + 1.9; wallH = sH;
             break;
           }
           default: wall(wallH); gable(1.0, roofC, .36); if (home) chimney();
@@ -1699,6 +2273,12 @@
         }
         BLD.push({ x0, x1, z0: back - .15, top: y0 + top, fade, cur: 0, mesh: sMesh });
       });
+      function gearCell() {
+        return atlasCell('gear', 64, 64, g => {
+          g.fillStyle = '#b8862b'; g.beginPath(); for (let k = 0; k < 24; k++) { const a = k / 24 * 6.2832, r = k % 2 ? 26 : 31; g.lineTo(32 + Math.cos(a) * r, 32 + Math.sin(a) * r); } g.closePath(); g.fill();
+          g.fillStyle = '#d9b25a'; A.circ(g, 32, 32, 19); g.fill(); g.fillStyle = '#8a6420'; A.circ(g, 32, 32, 8); g.fill();
+        });
+      }
       function clockCell() {
         return atlasCell('clock', 64, 64, g => {
           g.fillStyle = '#b8862b'; A.circ(g, 32, 32, 31); g.fill(); g.fillStyle = '#fffdf5'; A.circ(g, 32, 32, 26); g.fill();
@@ -1718,7 +2298,7 @@
         }
       }
     }
-    let occH = null;   // occH：每格上面的岩壁顶有多高，镜头要从它上面看过去
+    let occH = null, cliffTop = null;   // occH：每格上面的岩壁顶有多高，镜头要从它上面看过去；cliffTop：岩壁这一格顶面的平均高度（顶上种灌木用）
 
     // ---------- 回声技能的障碍（小树、裂开的岩石、大石头）、机关门、地上的道具 ----------
     let obstM = [], bouldM = [], gateM = [], pickS = [];
@@ -1981,12 +2561,41 @@
     keep.push(cloudTex, cloudMat, cloudGeo, clouds);
     const farMat = toon({ gradientMap: softTex }, { key: 'far', flag: 0, cloud: 0 });
     let farIsles = null;
+    // 每座岛望出去看到什么（镜头一直朝北，看得到的是北边和两边）：
+    //   north：正北那座（下一座岛：路就是往那边去的）[第几岛, 样子]；side：一边远一点的（上一座岛，或者地图上另一个邻居）；own：近一点的岬角上，本岛自己的地标；mtn：最远的大山什么样
+    //   第 0 岛（你好岛）照原样（家长看过、喜欢）：正北灯标塔岛、一边尖岛、另一边大山
+    // 邻居都按 WORLD.md 的地图网：0 → 1 → 2 → 3 → 4 →（渡轮）5 → 6 →（钟山）7 →（8 号水路）8 →（9 号水路）9 →（海底隧道）10 →（冰洞）11 →（瀑布）12 →（勇气之路）冠军高原
+    const FAR_CFG = {
+      0: { classic: true },
+      1: { north: [2, 'windmill'], side: [0, 'beacon'], own: 'pencils', mtn: 'pastel' },
+      2: { north: [3, 'clocktower'], side: [1, 'pencils'], own: 'windmill', mtn: 'hills' },
+      3: { north: [4, 'observatory'], side: [2, 'windmill'], own: 'books', mtn: 'classic' },
+      4: { north: [5, 'bigtop'], side: [3, 'books'], own: 'observatory', mtn: 'classic' },
+      5: { north: [6, 'volcano'], side: [4, 'observatory'], own: 'bigtop', mtn: 'mesa' },
+      6: { north: [7, 'balloons'], side: [5, 'bigtop'], own: 'volcano', mtn: 'none' },
+      7: { north: [8, 'bigtree'], side: [6, 'volcano'], own: 'balloons', mtn: 'pastel' },
+      8: { north: [9, 'skyline'], side: [7, 'balloons'], own: 'bigtree', mtn: 'misty' },
+      9: { north: [10, 'stadium'], side: [8, 'bigtree'], own: 'skyline', mtn: 'classic' },
+      10: { north: [11, 'snowpeak'], side: [9, 'skyline'], own: 'stadium', mtn: 'snow' },
+      11: { north: [12, 'temple'], side: [10, 'stadium'], own: 'snowpeak', mtn: 'snow' },
+      12: { north: [13, 'arena'], side: [11, 'snowpeak'], own: 'temple', mtn: 'misty' },
+      league: { north: [13, 'arena'], side: [12, 'temple'], own: 'temple', mtn: 'classic' },
+    };
     function buildFar() {
-      // 远景（都隔着海，被空气染成淡蓝）：正北一座长长的矮岛，上面立着一座灯标塔——路就是往那边去的；一边一座尖顶的岛，另一边更远的地方一座淡在雾气里的大山；两头再散着几座小岛
-      const bag = Bag(), P = PAL, sea = LAND.SEA - .15, seed = String(m.id || '').length * 31 + (m.z || 0) * 7 + 3, cxm = m.W / 2, FAR = Q.far, lowT = tier === 'low';
+      // 远景（都隔着海，被空气染成淡蓝）：正北一座岛上立着下一座岛的地标——路就是往那边去的；一边近一点的岬角上是本岛自己的地标，另一边远一点是上一座岛；
+      // 最远的地方一座淡在雾气里的大山（每座岛的山不一样：雪山、平顶的红岩山、软软的小丘……）；两头再散着几座小岛
+      const bag = Bag(), P = PAL, sea = LAND.SEA - .15, seed = String(m.id || '').length * 31 + (m.z || 0) * 7 + 3, cxm = m.W / 2, FAR = Q.far, lowT = tier === 'low', sg = lowT ? 8 : 16;
       const h = k => hash2(k, seed), side = h(1) > .5 ? 1 : -1;
-      const green = mixC(P.tree, P.grass, .45), sandC = mixC(P.sand, '#e9dcc0', .3), rockC = mixC(P.rock || '#a39b8b', '#8d93ad', .45), paleC = C('#dfe5f0');
-      const landCol = (out, nx, ny, nz, px, py) => { out.copy(sandC).lerp(green, sstep(.25, 1.1, py)); if (ny < .55) out.lerp(rockC, sstep(.55, .3, ny) * .7); };
+      const cfg = FAR_CFG[String(m.id || '')[0] === 'v' ? 'league' : clamp(m.isle | 0, 0, 12)] || FAR_CFG[0];
+      INFO.far = cfg.classic ? { north: 'beacon', own: '', side: 'peak' } : { north: cfg.north[1], own: cfg.own, side: cfg.side[1], mtn: cfg.mtn };
+      // 一座岛的地面颜色：按那座岛自己的配色（雪岛白、沙丘岛黄……）
+      const palOf = z => (z === 13 ? (EchoMaps.THEMES.lab || {}).pal : z === (m.isle | 0) ? P : window.EchoMaps && EchoMaps.palFor ? EchoMaps.palFor(z) : P) || P;
+      const landColOf = pp => {
+        const green = mixC(pp.tree, pp.grass, .45), sandC = mixC(pp.sand, '#e9dcc0', .3), rockC = mixC(pp.rock || '#a39b8b', '#8d93ad', .45);
+        return (out, nx, ny, nz, px, py) => { out.copy(sandC).lerp(green, sstep(.25, 1.1, py)); if (ny < .55) out.lerp(rockC, sstep(.55, .3, ny) * .7); };
+      };
+      const green = mixC(P.tree, P.grass, .45), rockC = mixC(P.rock || '#a39b8b', '#8d93ad', .45), paleC = C('#dfe5f0');
+      const landCol = landColOf(P);
       // 一座山 / 岛：从中心往外按一条剖面线降下去（prof(半径 0…1, 角度) → 高度 0…1），边缘按噪声进进出出；sq 把它在南北方向压扁
       const mount = (x, z, R, Hh, prof, sd2, sq, col) => {
         const nr = lowT ? 7 : 13, ns = lowT ? 14 : 30, pos = [], idx = [];
@@ -2001,35 +2610,191 @@
       const dome = rr => (1 - rr * rr) * .85 + .15 * (1 - rr);
       const ridge = (rr, a, sd2) => { const v = vnoise(Math.cos(a) * 2.3 * (.35 + rr) + sd2 * 1.3, Math.sin(a) * 2.3 * (.35 + rr) + sd2); return 1 - Math.abs(2 * v - 1); };
       const crag = sd2 => (rr, a) => (.42 * (1 - sstep(0, .9, rr)) + .58 * Math.pow(1 - rr, 2.1)) * (.74 + .5 * ridge(rr, a, sd2) * Math.min(1, rr * 3)), peak = crag(seed * .37 + 2);
+      const mesa = rr => (1 - sstep(.55, .78, rr)) * .9 + .1 * (1 - rr);   // 平顶、陡边
       const d0 = Q.skirt + 56;
       // 正北：出口对着的方向（没有往北的出口就在地图正中的北边）
       let xN = 0, nN = 0;
       for (let x = 0; x < m.W; x++) if (EXITS.includes(m.grid[0][x])) { xN += x + .5; nN++; }
       const bx = nN ? xN / nN + 2 : cxm + (h(2) - .5) * 16, bz = -d0 - 8;
-      mount(bx, bz, 30, 5.2, dome, seed + 1, .5);
-      mount(bx - 19, bz + 3, 9, 3.4, dome, seed + 2, .7);
-      {
-        // 灯标塔：往上收的白塔身、一道珊瑚色的腰线、一圈挑出去的平台、发亮的灯室、小尖顶
-        const tx = bx + 4, ty = sea + 4.4, tz = bz, sg = lowT ? 8 : 16, wht = byY('#d9dce6', '#fffaf0', 0, 10);
-        put(bag, new T3.CylinderGeometry(.95, 1.55, 9.6, sg).translate(0, 4.8, 0), wht, tx, ty, tz);
-        put(bag, new T3.CylinderGeometry(1.2, 1.26, 1.1, sg).translate(0, 5.6, 0), '#ef7d62', tx, ty, tz);
-        put(bag, new T3.CylinderGeometry(1.75, 1.45, .36, sg).translate(0, 9.7, 0), '#5d6a7c', tx, ty, tz);
-        put(bag, new T3.CylinderGeometry(.82, .82, 1.5, sg).translate(0, 10.6, 0), '#fff3a6', tx, ty, tz);
-        put(bag, new T3.ConeGeometry(1.25, 1.5, sg).translate(0, 12.1, 0), '#3f7f86', tx, ty, tz);
-        put(bag, new T3.CylinderGeometry(.06, .06, 1.6, 5).translate(0, 13.5, 0), '#5d6a7c', tx, ty, tz);
-        // 岛上几间小房子的剪影
-        [[-7, 1.5, 0], [-10.5, 1.2, 1.4], [9, 1.3, .6]].forEach(([ox, hh, oz], k) => { box(bag, 2.2, hh, 1.6, '#f4efe4', tx + ox, ty - 1.2, tz + oz); put(bag, new T3.ConeGeometry(1.75, 1.1, 4).rotateY(Math.PI / 4).scale(1, 1, .8).translate(0, hh + .55, 0), k % 2 ? '#e0714e' : '#d9643a', tx + ox, ty - 1.2, tz + oz); });
+      const part = (g, col, x, y, z) => put(bag, g, col, x, y, z);
+      const cyl = (r0, r1, hh, col, x, y, z, n) => part(new T3.CylinderGeometry(r1, r0, hh, n || sg).translate(0, hh / 2, 0), col, x, y, z);
+      // ---- 各种地标（都站在 (x, y, z)，s 是大小）----
+      const LM = {
+        // 灯标塔：往上收的白塔身、一道珊瑚色的腰线、一圈挑出去的平台、发亮的灯室、小尖顶；旁边几间白墙红瓦的小房子
+        beacon(x, y, z, s) {
+          const wht = byY('#d9dce6', '#fffaf0', 0, 10 * s);
+          part(new T3.CylinderGeometry(.95 * s, 1.55 * s, 9.6 * s, sg).translate(0, 4.8 * s, 0), wht, x, y, z);
+          part(new T3.CylinderGeometry(1.2 * s, 1.26 * s, 1.1 * s, sg).translate(0, 5.6 * s, 0), '#ef7d62', x, y, z);
+          part(new T3.CylinderGeometry(1.75 * s, 1.45 * s, .36 * s, sg).translate(0, 9.7 * s, 0), '#5d6a7c', x, y, z);
+          part(new T3.CylinderGeometry(.82 * s, .82 * s, 1.5 * s, sg).translate(0, 10.6 * s, 0), '#fff3a6', x, y, z);
+          part(new T3.ConeGeometry(1.25 * s, 1.5 * s, sg).translate(0, 12.1 * s, 0), '#3f7f86', x, y, z);
+          part(new T3.CylinderGeometry(.06 * s, .06 * s, 1.6 * s, 5).translate(0, 13.5 * s, 0), '#5d6a7c', x, y, z);
+          [[-7, 1.5, 0], [-10.5, 1.2, 1.4], [9, 1.3, .6]].forEach(([ox, hh, oz], k) => { box(bag, 2.2 * s, hh * s, 1.6 * s, '#f4efe4', x + ox * s, y - 1.2 * s, z + oz * s); part(new T3.ConeGeometry(1.75 * s, 1.1 * s, 4).rotateY(Math.PI / 4).scale(1, 1, .8).translate(0, (hh + .55) * s, 0), k % 2 ? '#e0714e' : '#d9643a', x + ox * s, y - 1.2 * s, z + oz * s); });
+        },
+        // 一丛竖着的大彩色铅笔（彩色文具岛）：六棱的笔杆、削出来的木头尖、和笔杆一样颜色的笔芯
+        pencils(x, y, z, s) {
+          const cols = ['#ef5350', '#ffca28', '#42a5f5', '#66bb6a', '#ab47bc', '#ff7043', '#26c6da'];
+          for (let k = 0; k < 7; k++) {
+            const a = k * 2.4 + .3, r = k ? (2.2 + (k % 3) * 1.4) * s : 0, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r * .6, hh = (k ? 6 + hash2(k, 9) * 6 : 13) * s, w = (k ? .9 + hash2(k, 8) * .3 : 1.3) * s, c = cols[k % cols.length];
+            part(new T3.CylinderGeometry(w, w, hh, 6).translate(0, hh / 2, 0), byY(A.shade(c, .8), c, 0, hh), px, y - 1, pz);
+            part(new T3.ConeGeometry(w, w * 1.9, 6).translate(0, hh + w * .95, 0), '#f3d2a0', px, y - 1, pz);
+            part(new T3.ConeGeometry(w * .36, w * .7, 6).translate(0, hh + w * 1.55, 0), c, px, y - 1, pz);
+          }
+        },
+        // 大风车（家庭岛）：往上收的八角塔身、尖顶、四片扇叶；旁边一座红色的谷仓
+        windmill(x, y, z, s) {
+          cyl(1.9 * s, 1.25 * s, 7 * s, byY('#e8dcc4', '#fff8ea', 0, 7 * s), x, y - .5, z, 8);
+          part(new T3.ConeGeometry(1.7 * s, 2.2 * s, 8).translate(0, 7.6 * s, 0), '#9a6a48', x, y - .5, z);
+          for (let k = 0; k < 4; k++) part(new T3.BoxGeometry(.9 * s, 5.4 * s, .15 * s).translate(0, 2.9 * s, 0).rotateZ(k * Math.PI / 2 + .4), '#f6efe0', x, y + 5.4 * s, z + 1.6 * s);
+          box(bag, 4 * s, 2.6 * s, 3 * s, '#c0503e', x + 5.5 * s, y - .5, z + 1 * s);
+          part(new T3.CylinderGeometry(1.6 * s, 1.6 * s, 4.2 * s, 3).rotateZ(Math.PI / 2).scale(1, .8, 1.05).translate(0, 2.6 * s, 0), '#8a3f30', x + 5.5 * s, y - .5, z + 1 * s);
+        },
+        // 红砖钟楼（校园岛）：方塔、白色的檐、四面的钟、尖顶；旁边一栋长长的教学楼
+        clocktower(x, y, z, s) {
+          box(bag, 2.6 * s, 10 * s, 2.6 * s, byY('#9c4434', '#c0604a', 0, 10 * s), x, y - .5, z);
+          box(bag, 3 * s, .35 * s, 3 * s, '#f3ece0', x, y - .5 + 8.2 * s, z);
+          part(new T3.CylinderGeometry(.85 * s, .85 * s, .2 * s, sg).rotateX(Math.PI / 2), '#fffdf5', x, y - .5 + 9.1 * s, z + 1.38 * s);
+          part(new T3.ConeGeometry(2.1 * s, 2.6 * s, 4).rotateY(Math.PI / 4).translate(0, 1.3 * s, 0), '#5d4037', x, y - .5 + 10 * s, z);
+          box(bag, 9 * s, 3.6 * s, 3 * s, byY('#a84a38', '#c4644e', 0, 3.6 * s), x - 6.5 * s, y - .5, z + 1 * s);
+          box(bag, 9.2 * s, .3 * s, 3.2 * s, '#efe6d6', x - 6.5 * s, y - .5 + 3.6 * s, z + 1 * s);
+        },
+        // 书山（校园岛）：一摞歪歪的大书，书脊各种颜色，书页是一道道米白
+        books(x, y, z, s) {
+          const cols = ['#c0504d', '#3f74b6', '#5f9e4a', '#e3a92f', '#7b5aa6', '#d0603a', '#2f8f8a'];
+          let yy = y - 1;
+          for (let k = 0; k < 8; k++) {
+            const w = (9 - k * .8) * s, d = (6 - k * .45) * s, th = (1.2 + hash2(k, 3) * .7) * s, rot = (hash2(k, 4) - .5) * .5, ox = (hash2(k, 5) - .5) * 1.2 * s, c = cols[k % cols.length];
+            part(new T3.BoxGeometry(w, th, d).rotateY(rot).translate(0, th / 2, 0), c, x + ox, yy, z);
+            part(new T3.BoxGeometry(w - .3 * s, th * .78, d + .08 * s).rotateY(rot).translate(.2 * s, th / 2, 0), '#f4ecd8', x + ox, yy, z);
+            yy += th;
+          }
+        },
+        // 天文台（学科岛）：白色的圆塔、玻璃圆顶上一道开缝，旁边一面朝天的大锅（卫星天线）
+        observatory(x, y, z, s) {
+          cyl(2.6 * s, 2.5 * s, 3.4 * s, byY('#dfe6ea', '#ffffff', 0, 3.4 * s), x, y - .5, z);
+          part(new T3.SphereGeometry(2.6 * s, sg, 8, 0, 6.2832, 0, Math.PI / 2), leafC('#7fb2d8', '#bfe3f7', '#ffffff'), x, y - .5 + 3.4 * s, z);
+          box(bag, .7 * s, 2.4 * s, .3 * s, '#3a4a5a', x, y - .5 + 3.6 * s, z + 2.3 * s);
+          cyl(.25 * s, .2 * s, 3 * s, '#cfd8dc', x + 5 * s, y - .5, z + .5 * s, 8);
+          part(new T3.SphereGeometry(2.2 * s, sg, 6, 0, 6.2832, 0, Math.PI * .32).rotateX(-.7).scale(1, .7, 1), '#f2f5f7', x + 5 * s, y - .5 + 3.4 * s, z + .5 * s);
+        },
+        // 马戏大帐篷（社团岛）：红白条纹的圆帐篷、尖顶、顶上一面黄旗；旁边一座小的
+        bigtop(x, y, z, s) {
+          [[0, 0, 1, '#e53935'], [-7, 1.5, .55, '#1e88e5']].forEach(([ox, oz, k, c]) => {
+            const R = 5 * s * k, wh = 2.6 * s * k, n = 16;
+            for (let i = 0; i < n; i++) {
+              const a0 = i / n * 6.2832, a1 = (i + 1) / n * 6.2832, cc = C(i % 2 ? '#ffffff' : c), p0 = [x + ox * s + Math.cos(a0) * R, y - .5, z + oz * s + Math.sin(a0) * R], p1 = [x + ox * s + Math.cos(a1) * R, y - .5, z + oz * s + Math.sin(a1) * R];
+              quad(bag, p1, p0, [p0[0], p0[1] + wh, p0[2]], [p1[0], p1[1] + wh, p1[2]], cc);
+              tri(bag, [x + ox * s + Math.cos(a1) * R * 1.1, y - .5 + wh, z + oz * s + Math.sin(a1) * R * 1.1], [x + ox * s + Math.cos(a0) * R * 1.1, y - .5 + wh, z + oz * s + Math.sin(a0) * R * 1.1], [x + ox * s, y - .5 + wh + 4.2 * s * k, z + oz * s], cc);
+            }
+            box(bag, .12 * s, 1.6 * s * k, .12 * s, '#6d4121', x + ox * s, y - .5 + wh + 4 * s * k, z + oz * s);
+            box(bag, 1.1 * s * k, .6 * s * k, .06, '#ffca28', x + ox * s + .55 * s * k, y - .5 + wh + 5 * s * k, z + oz * s);
+          });
+        },
+        // 钟山（作息岛的火山）：山口冒着白烟，朝南的山坡上嵌着一面大钟
+        volcano(x, y, z, s) {
+          const R = 16 * s, Hh = 11 * s, vc = (out, nx, ny, nz, px, py) => { out.set('#7a6a60').lerp(C('#4f4440'), sstep(Hh * .3, Hh * .8, py)); if (py < Hh * .25) out.lerp(green, 1 - sstep(0, Hh * .25, py)); };
+          mount(x, z, R, Hh, rr => (rr < .16 ? .82 + rr * 1.1 : (1 - sstep(.16, 1, rr)) * .99 + .01), seed + 21, .8, vc);
+          // 山口边上一座石头钟塔，大钟朝南
+          const tx = x - 3 * s, ty = sea + Hh * .84, tz = z + 2.6 * s;
+          box(bag, 3 * s, 5 * s, 2.6 * s, byY('#6e625a', '#9a8a7c', 0, 5 * s), tx, ty, tz); part(new T3.ConeGeometry(2.4 * s, 2 * s, 4).rotateY(Math.PI / 4).translate(0, 1 * s, 0), '#4f9e8a', tx, ty + 5 * s, tz);
+          part(new T3.CylinderGeometry(1.1 * s, 1.1 * s, .2 * s, sg).rotateX(Math.PI / 2), '#fff8e6', tx, ty + 3.3 * s, tz + 1.35 * s);
+          part(new T3.TorusGeometry(1.1 * s, .16 * s, 6, sg), '#c7962f', tx, ty + 3.3 * s, tz + 1.4 * s);
+          // 白烟：一团团往上、往一边飘，越高越大越淡（雾会把它们化开）
+          for (let k = 0; k < 6; k++) part(new T3.IcosahedronGeometry((1.6 + k * .55) * s, lowT ? 1 : 2), '#f2f0ee', x + k * 1.6 * s, sea + Hh + (1.4 + k * 2.1) * s, z - k * .5 * s);
+        },
+        // 生日派对岛：一座三层的大蛋糕，上面插着蜡烛；天上飘着一串气球
+        balloons(x, y, z, s) {
+          [[4.2, 2.2, '#fff4e0'], [3.1, 2, '#ffd6e2'], [2, 1.8, '#fff4e0']].reduce((yy, [r, hh, c]) => { cyl(r * s, r * s, hh * s, c, x, yy, z); part(new T3.TorusGeometry(r * s, .25 * s, 6, sg).rotateX(Math.PI / 2), '#ff8fb1', x, yy + hh * s, z); return yy + hh * s; }, y - .5);
+          for (let k = 0; k < 5; k++) { const a = k / 5 * 6.2832; box(bag, .2 * s, 1 * s, .2 * s, '#fffdf5', x + Math.cos(a) * 1.2 * s, y - .5 + 6 * s, z + Math.sin(a) * 1.2 * s); }
+          const bc = ['#e53935', '#fdd835', '#1e88e5', '#43a047', '#ff80ab', '#ab47bc', '#ff7043'];
+          for (let k = 0; k < 9; k++) { const bx2 = x + (6 + (k % 3) * 1.9 + hash2(k, 1) * .8) * s, by2 = y + (8 + Math.floor(k / 3) * 2 + hash2(k, 2) * 1.2) * s, bz2 = z + (hash2(k, 3) - .5) * 2 * s; part(new T3.SphereGeometry(1 * s, 10, 8).scale(1, 1.2, 1), bc[k % bc.length], bx2, by2, bz2); }
+        },
+        // 动物岛：一棵比整座岛还高的大树，伞一样的树冠
+        bigtree(x, y, z, s) {
+          cyl(1.6 * s, .9 * s, 12 * s, byY('#5d4128', '#7a5634', 0, 12 * s), x, y - 1, z, 10);
+          const lc = leafC(A.shade('#2e7d32', .7), '#3f8f3a', '#7cc45a');
+          [[0, 12, 0, 6], [-4.5, 10.5, 1, 4.2], [4.6, 10.8, -.5, 4.4], [-1.5, 14.5, -.5, 4], [2.5, 14, 1, 3.6]].forEach(([ox, oy, oz, r], k) => ball(bag, r * s, lowT ? 1 : 2, x + ox * s, y + oy * s, z + oz * s, { sy: .62, lump: .18, col: lc, seed: k }));
+        },
+        // 规则城：一片高楼，中间一座细高的电视塔
+        skyline(x, y, z, s) {
+          for (let k = 0; k < 12; k++) {
+            const ox = (k - 5.5) * 2.3 * s + (hash2(k, 1) - .5) * s, oz = (hash2(k, 2) - .5) * 3 * s, hh = (5 + hash2(k, 3) * 12 + (Math.abs(k - 6) < 3 ? 5 : 0)) * s, w = (1.6 + hash2(k, 4) * .9) * s;
+            box(bag, w, hh, w, byY('#7d8fa0', k % 3 ? '#cdd8e2' : '#b7c9d8', 0, hh), x + ox, y - 1, z + oz);
+          }
+          cyl(.5 * s, .3 * s, 24 * s, '#dfe6ea', x + 1 * s, y - 1, z - 1 * s, 8);
+          part(new T3.SphereGeometry(1.3 * s, 10, 8).scale(1, .7, 1), '#cfd8dc', x + 1 * s, y - 1 + 18 * s, z - 1 * s);
+        },
+        // 运动美食岛：一座圆形的体育场，四根灯塔
+        stadium(x, y, z, s) {
+          const R = 7 * s;
+          part(new T3.CylinderGeometry(R, R * 1.05, 3.6 * s, lowT ? 16 : 28, 1, true).translate(0, 1.8 * s, 0), byY('#cfd8dc', '#ffffff', 0, 3.6 * s), x, y - .5, z);
+          part(new T3.TorusGeometry(R, .45 * s, 6, lowT ? 16 : 28).rotateX(Math.PI / 2), '#ff7043', x, y - .5 + 3.6 * s, z);
+          [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { box(bag, .3 * s, 8 * s, .3 * s, '#9aa6ae', x + a * R * .8, y - .5, z + b * R * .6); box(bag, 1.6 * s, .9 * s, .4 * s, '#fff8d8', x + a * R * .8, y - .5 + 8 * s, z + b * R * .6); });
+        },
+        // 天气岛：一串戴着雪帽的尖山，最高的那座山顶上一座小气象站
+        snowpeak(x, y, z, s) {
+          const sc = (out, nx, ny, nz, px, py) => { out.set('#6f8496').lerp(C('#f4f8fb'), sstep(4 * s, 8 * s, py + (nx - nz) * s)); };
+          mount(x, z, 13 * s, 15 * s, crag(seed * .3 + 31), seed + 31, .8, sc);
+          mount(x - 9 * s, z + 2, 9 * s, 10 * s, crag(seed * .3 + 32), seed + 32, .8, sc);
+          mount(x + 9 * s, z + 3, 8 * s, 8 * s, crag(seed * .3 + 33), seed + 33, .8, sc);
+          cyl(.9 * s, .9 * s, 1.4 * s, '#f6f8fa', x, sea + 10.6 * s, z);
+          part(new T3.SphereGeometry(.9 * s, 10, 6, 0, 6.2832, 0, Math.PI / 2), '#ffffff', x, sea + 12 * s, z);
+          box(bag, .1 * s, 1.6 * s, .1 * s, '#c62828', x + .9 * s, sea + 12 * s, z);
+        },
+        // 回忆岛：高高的平顶崖上一座石头神殿（一排石柱、三角形的屋顶，有几根断了），崖边挂着一道细细的瀑布
+        temple(x, y, z, s) {
+          const tc = (out, nx, ny, nz, px, py) => { out.set('#8f8a80').lerp(C('#a9b39a'), sstep(6 * s, 8 * s, py)); };
+          mount(x, z, 11 * s, 8 * s, mesa, seed + 41, .8, tc);
+          const ty = sea + 7.6 * s;
+          box(bag, 9 * s, .5 * s, 5 * s, '#c9bfa8', x, ty, z); box(bag, 8 * s, .4 * s, 4.2 * s, '#d8cfb9', x, ty + .5 * s, z);
+          for (let k = 0; k < 6; k++) { const hh = k === 1 ? 2 * s : k === 4 ? 2.8 * s : 4 * s; cyl(.4 * s, .34 * s, hh, '#e3dccb', x - 3.5 * s + k * 1.4 * s, ty + .9 * s, z + 1.5 * s, 8); }
+          box(bag, 8.4 * s, .5 * s, 4 * s, '#d0c7b0', x, ty + 4.9 * s, z);
+          part(new T3.CylinderGeometry(2.4 * s, 2.4 * s, 8.6 * s, 3).rotateZ(Math.PI / 2).scale(1, .45, 1.05).translate(0, 1 * s, 0), '#c2b89f', x, ty + 5.4 * s, z);
+          box(bag, 1 * s, 7.8 * s, .2 * s, byY('#cfe8f4', '#ffffff', 0, 7.8 * s), x + 6 * s, sea, z + 6 * s * .8);
+        },
+        // 冠军高原：一座金顶的圆形大赛场，一圈皇冠一样的尖角，旗子
+        arena(x, y, z, s) {
+          const R = 8 * s;
+          part(new T3.CylinderGeometry(R, R * 1.06, 4.4 * s, lowT ? 16 : 32).translate(0, 2.2 * s, 0), byY('#d9d2c2', '#fbf6ea', 0, 4.4 * s), x, y - .5, z);
+          part(new T3.TorusGeometry(R, .4 * s, 6, lowT ? 16 : 32).rotateX(Math.PI / 2), '#e2b13c', x, y - .5 + 4.4 * s, z);
+          for (let k = 0; k < 12; k++) { const a = k / 12 * 6.2832; part(new T3.ConeGeometry(.7 * s, 2 * s, 4).translate(0, 1 * s, 0), '#f2c544', x + Math.cos(a) * R, y - .5 + 4.6 * s, z + Math.sin(a) * R); }
+          box(bag, .15 * s, 4 * s, .15 * s, '#6d5a3a', x, y - .5 + 4.4 * s, z); box(bag, 1.8 * s, 1 * s, .08, '#e53935', x + .9 * s, y - .5 + 7.4 * s, z);
+        },
+      };
+      if (cfg.classic) {
+        // 第 0 岛：照原样——正北长长的矮岛上一座灯标塔，一边尖岛，另一边大山
+        mount(bx, bz, 30, 5.2, dome, seed + 1, .5);
+        mount(bx - 19, bz + 3, 9, 3.4, dome, seed + 2, .7);
+        LM.beacon(bx + 4, sea + 4.4, bz, 1);
+        mount(cxm - side * (30 + h(3) * 8), -Q.skirt - 84, 19, 15 + h(4) * 4, peak, seed + 3, .8);
+        mount(cxm - side * (48 + h(3) * 8), -Q.skirt - 78, 10, 6, crag(seed * .4 + 3), seed + 4, .8);
+      } else {
+        // 正北：下一座岛（它自己的配色），上面立着它的地标
+        const [nz, nk] = cfg.north, nCol = landColOf(palOf(nz)), big = nk === 'volcano' || nk === 'snowpeak' || nk === 'temple';
+        if (!big) { mount(bx, bz, 26, 4.6, dome, seed + 1, .5, nCol); mount(bx - 18, bz + 3, 8, 3, dome, seed + 2, .7, nCol); }
+        else mount(bx, bz + 2, 22, 2.6, dome, seed + 1, .5, nCol);
+        LM[nk](bx + 3, sea + (big ? 0 : 4.2), bz, big ? 1 : .95);
+        // 一边、近一点：本岛的岬角和本岛的地标（大一些、清楚一些）
+        const ox = cxm + side * (22 + h(3) * 6), oz = -Q.skirt - 34, oBig = cfg.own === 'volcano' || cfg.own === 'snowpeak' || cfg.own === 'temple';
+        if (!oBig) mount(ox, oz, 15, 4.4, dome, seed + 3, .7);
+        LM[cfg.own](ox, sea + (oBig ? 0 : 4), oz - (oBig ? 10 : 0), oBig ? 1.2 : .82);
+        // 另一边、远一点：上一座岛
+        const [sz2, sk] = cfg.side, sx = cxm - side * (28 + h(4) * 8), szz = -Q.skirt - 92, sBig = sk === 'volcano' || sk === 'snowpeak' || sk === 'temple';
+        if (!sBig) mount(sx, szz, 18, 4, dome, seed + 4, .7, landColOf(palOf(sz2)));
+        LM[sk](sx, sea + (sBig ? 0 : 3.6), szz, sBig ? .9 : .75);
       }
-      // 一边：尖顶的岛，旁边带一座小的
-      mount(cxm - side * (30 + h(3) * 8), -Q.skirt - 84, 19, 15 + h(4) * 4, peak, seed + 3, .8);
-      mount(cxm - side * (48 + h(3) * 8), -Q.skirt - 78, 10, 6, crag(seed * .4 + 3), seed + 4, .8);
-      // 另一边、更远：大山（一个主峰带一个矮一点的肩膀），颜色只分山脚的林子、山腰的石头和泛白的山顶
-      {
-        const R = FAR * .2, Hh = FAR * .125, mx = cxm + side * FAR * .15, mz = -FAR * .74;
-        const mcol = (out, nx, ny, nz, px, py) => { out.copy(green).lerp(rockC, sstep(Hh * .12, Hh * .45, py)).lerp(paleC, sstep(Hh * .62, Hh * .9, py + (nx - nz) * Hh * .06)); };
-        mount(mx, mz, R, Hh, crag(seed * .21 + 5), seed + 5, .7, mcol);
-        mount(mx + side * R * .5, mz + 4, R * .62, Hh * .55, crag(seed * .21 + 8), seed + 6, .7, mcol);
-        mount(mx - side * R * .62, mz + 6, R * .5, Hh * .34, crag(seed * .21 + 11), seed + 7, .7, mcol);
+      // 最远：大山（一个主峰带一个矮一点的肩膀）。classic：山脚的林子、山腰的石头、泛白的山顶；snow：一大半是雪；hills：软软的、黄绿色的小丘；
+      // mesa：平顶陡边的红岩山；pastel：颜色淡一些、粉一些；misty：低一些、藏在雾里；none：不要（这座岛自己就是那座山）
+      const mt = cfg.mtn || 'classic';
+      if (mt !== 'none') {
+        const R = FAR * .2, Hh = FAR * (mt === 'hills' ? .06 : mt === 'misty' ? .1 : mt === 'mesa' ? .08 : .125), mx = cxm + side * FAR * .15, mz = -FAR * .74;
+        const snowK = mt === 'snow' ? .3 : mt === 'pastel' ? .55 : .62;
+        const midC = mt === 'mesa' ? C('#c9895a') : mt === 'pastel' ? mixC(rockC, '#c8b6e6', .35) : mt === 'hills' ? mixC(green, '#d9c27a', .4) : rockC;
+        const mcol = (out, nx, ny, nz, px, py) => { out.copy(green).lerp(midC, sstep(Hh * .12, Hh * .45, py)); if (mt !== 'hills' && mt !== 'mesa') out.lerp(paleC, sstep(Hh * snowK, Hh * (snowK + .28), py + (nx - nz) * Hh * .06)); };
+        const prof = mt === 'hills' ? dome : mt === 'mesa' ? mesa : null;
+        mount(mx, mz, R, Hh, prof || crag(seed * .21 + 5), seed + 5, .7, mcol);
+        mount(mx + side * R * .5, mz + 4, R * .62, Hh * .55, prof || crag(seed * .21 + 8), seed + 6, .7, mcol);
+        mount(mx - side * R * .62, mz + 6, R * .5, Hh * .34, prof || crag(seed * .21 + 11), seed + 7, .7, mcol);
       }
       // 两头散着的小岛
       if (!lowT) [[-1, 68, 30, 11, 5], [1, 82, 46, 13, 6.5], [-1, 104, 70, 15, 4.5], [1, 120, 22, 10, 7]].forEach(([sd3, ox, oz, R, Hh], k) => mount(cxm + sd3 * (ox + h(10 + k) * 12), -Q.skirt - oz - h(20 + k) * 14, R, Hh, k % 2 ? peak : dome, seed + 10 + k, .7));
@@ -2037,24 +2802,55 @@
       farIsles = new T3.Mesh(g, farMat); farIsles.frustumCulled = false;
       still(add(farIsles, false, false));
     }
-    // 飘在空气里的花瓣和花粉（全在着色器里算，围着镜头转一个大盒子）；两三只蝴蝶
-    const lifeN = Math.round(90 * Q.life);
+    // 飘在空气里的东西（全在着色器里算，围着镜头转一个大盒子）：每座岛不一样（MOODS 的 life）——
+    //   「片」（转着往下飘的小片：花瓣、落叶、彩纸屑、铅笔屑）和「点」（花粉、雪花、光点）各占一部分；两三只蝴蝶（下雪的岛上没有）
+    const lifeMax = Math.round(150 * Q.life);
     const lifeMat = new T3.ShaderMaterial({
-      uniforms: { uTime: U.uTime, uCen: { value: new T3.Vector3() }, uPx: { value: 1 } },
-      vertexShader: 'attribute vec2 aK; uniform float uTime; uniform vec3 uCen; uniform float uPx; varying vec2 vK; varying float vA;\nvoid main(){ vec3 box = vec3(24.0, 6.5, 30.0); vec3 p = position * box; float t = uTime;\n  p.x += t * (0.55 + aK.x * 0.5); p.z += t * 0.2; p.y += sin(t * 0.8 + position.x * 40.0) * 0.5 - t * 0.12 * aK.y;\n  p = mod(p - uCen + box * 0.5, box) - box * 0.5 + uCen; p.y = uCen.y + mod(p.y - uCen.y + 1.0, box.y) - 0.6;\n  vec4 mv = viewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv; vK = vec2(aK.y, t * (2.0 + aK.x * 3.0) + position.z * 20.0);\n  gl_PointSize = uPx * (aK.y > 0.5 ? 0.085 : 0.045) * (0.7 + aK.x * 0.6) / max(0.5, -mv.z); vA = smoothstep(3.0, 6.0, -mv.z) * (1.0 - smoothstep(22.0, 30.0, -mv.z)); }',
-      fragmentShader: 'varying vec2 vK; varying float vA;\nvoid main(){ vec2 q = gl_PointCoord - 0.5; float a;\n  vec3 c;\n  if (vK.x > 0.5) { float s = sin(vK.y), co = cos(vK.y); vec2 r = vec2(q.x * co - q.y * s, (q.x * s + q.y * co) * (1.6 + 1.2 * abs(sin(vK.y * 0.7)))); a = 1.0 - smoothstep(0.34, 0.42, length(r)); c = mix(vec3(1.0, 0.72, 0.82), vec3(1.0, 0.95, 0.96), smoothstep(-0.3, 0.3, r.x)); }\n  else { a = (1.0 - smoothstep(0.1, 0.5, length(q))) * 0.8; c = vec3(1.0, 0.98, 0.82); }\n  gl_FragColor = vec4(c, a * vA);\n#include <colorspace_fragment>\n}',
+      uniforms: { uTime: U.uTime, uCen: { value: new T3.Vector3() }, uPx: { value: 1 }, uPieces: { value: .33 }, uFall: { value: .12 }, uDFall: { value: 0 }, uSway: { value: 1 }, uDotS: { value: .045 }, uDotA: { value: .8 }, uPS: { value: .085 },
+        uPA: { value: C('#ffb8d0') }, uPB: { value: C('#fff2f4') }, uDot: { value: C('#fffad0') }, uHue: { value: 0 } },
+      vertexShader: 'attribute vec2 aK; uniform float uTime; uniform vec3 uCen; uniform float uPx; uniform float uPieces; uniform float uFall; uniform float uDFall; uniform float uSway; uniform float uDotS; uniform float uPS; varying vec3 vK; varying float vA;\n' +
+        'void main(){ vec3 box = vec3(24.0, 6.5, 30.0); vec3 p = position * box; float t = uTime; float pc = step(aK.y, uPieces);\n' +
+        '  p.x += t * (0.55 + aK.x * 0.5) * uSway; p.z += t * 0.2 * uSway; p.y += sin(t * 0.8 + position.x * 40.0) * 0.5 - t * mix(uDFall, uFall, pc) * (0.7 + aK.x * 0.6);\n' +
+        '  p.x += sin(t * 1.3 + position.z * 31.0) * 0.35 * (1.0 - pc) * step(0.01, uDFall);\n' +
+        '  p = mod(p - uCen + box * 0.5, box) - box * 0.5 + uCen; p.y = uCen.y + mod(p.y - uCen.y + 1.0, box.y) - 0.6;\n' +
+        '  vec4 mv = viewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv; vK = vec3(pc, t * (2.0 + aK.x * 3.0) + position.z * 20.0, fract(aK.x * 7.13 + position.y * 3.7));\n' +
+        '  gl_PointSize = uPx * mix(uDotS, uPS, pc) * (0.7 + aK.x * 0.6) / max(0.5, -mv.z); vA = smoothstep(3.0, 6.0, -mv.z) * (1.0 - smoothstep(22.0, 30.0, -mv.z)); }',
+      fragmentShader: 'uniform vec3 uPA; uniform vec3 uPB; uniform vec3 uDot; uniform float uHue; uniform float uDotA; varying vec3 vK; varying float vA;\n' +
+        'vec3 pal(float h, float k) { vec3 c = h < 0.2 ? vec3(1.0, 0.36, 0.44) : h < 0.4 ? vec3(1.0, 0.82, 0.22) : h < 0.6 ? vec3(0.3, 0.7, 1.0) : h < 0.8 ? vec3(0.44, 0.86, 0.42) : vec3(0.78, 0.5, 1.0); return mix(c, vec3(1.0), k); }\n' +
+        'void main(){ vec2 q = gl_PointCoord - 0.5; float a;\n  vec3 c;\n' +
+        '  if (vK.x > 0.5) { float s = sin(vK.y), co = cos(vK.y); vec2 r = vec2(q.x * co - q.y * s, (q.x * s + q.y * co) * (1.6 + 1.2 * abs(sin(vK.y * 0.7)))); a = 1.0 - smoothstep(0.34, 0.42, length(r));\n' +
+        '    c = uHue > 0.5 ? pal(vK.z, uHue > 1.5 ? 0.42 : 0.0) * (0.85 + 0.15 * smoothstep(-0.3, 0.3, r.x)) : mix(uPA, uPB, uHue < -0.5 ? vK.z : smoothstep(-0.3, 0.3, r.x)); }\n' +
+        '  else { a = (1.0 - smoothstep(0.1, 0.5, length(q))) * uDotA; c = uDot; }\n' +
+        '  gl_FragColor = vec4(c, a * vA);\n#include <colorspace_fragment>\n}',
       transparent: true, depthWrite: false,
     });
     const life = (() => {
-      if (!lifeN) return null;
-      const g = new T3.BufferGeometry(), p = new Float32Array(lifeN * 3), k = new Float32Array(lifeN * 2);
-      for (let i = 0; i < lifeN; i++) { p[i * 3] = hash2(i, 81); p[i * 3 + 1] = hash2(i, 82); p[i * 3 + 2] = hash2(i, 83); k[i * 2] = hash2(i, 84); k[i * 2 + 1] = i % 3 === 0 ? 1 : 0; }
+      if (!lifeMax) return null;
+      const g = new T3.BufferGeometry(), p = new Float32Array(lifeMax * 3), k = new Float32Array(lifeMax * 2);
+      for (let i = 0; i < lifeMax; i++) { p[i * 3] = hash2(i, 81); p[i * 3 + 1] = hash2(i, 82); p[i * 3 + 2] = hash2(i, 83); k[i * 2] = hash2(i, 84); k[i * 2 + 1] = hash2(i, 85); }
       g.setAttribute('position', new T3.BufferAttribute(p, 3)); g.setAttribute('aK', new T3.BufferAttribute(k, 2));
       const o = new T3.Points(g, lifeMat); o.frustumCulled = false; o.renderOrder = 4; o.matrixAutoUpdate = false;
       keep.push(g);
       return o;
     })();
     keep.push(lifeMat);
+    // 换一种「空气里飘的东西」：各种的片 / 点各占多少、往下落多快、什么颜色
+    //   uHue：0 片的颜色在 uPA 和 uPB 之间（一半亮一半暗）/ -1 每片在 uPA、uPB 之间随便挑 / 1 鲜艳的五种颜色 / 2 粉一点的五种颜色
+    const LIFE_SET = {
+      petal: { n: .9, pieces: .33, fall: .12, dfall: 0, sway: 1, dotS: .045, dotA: .8, ps: .085, pa: '#ffb8d0', pb: '#fff2f4', dot: '#fffad0', hue: 0 },
+      leaf: { n: .8, pieces: .62, fall: .32, dfall: 0, sway: 1.1, dotS: .04, dotA: .6, ps: .1, pa: '#e8702a', pb: '#f4c23c', dot: '#fff2c8', hue: -1 },
+      snow: { n: 1, pieces: 0, fall: 0, dfall: .7, sway: .45, dotS: .07, dotA: .95, ps: .08, pa: '#ffffff', pb: '#ffffff', dot: '#ffffff', hue: 0 },
+      confetti: { n: .9, pieces: .78, fall: .26, dfall: 0, sway: .8, dotS: .04, dotA: .7, ps: .075, pa: '#ffffff', pb: '#ffffff', dot: '#fff6d8', hue: 1 },
+      mote: { n: .8, pieces: 0, fall: 0, dfall: -.03, sway: .25, dotS: .04, dotA: .55, ps: .08, pa: '#ffffff', pb: '#ffffff', dot: '#f8f4e2', hue: 0 },
+      shaving: { n: .9, pieces: .55, fall: .16, dfall: 0, sway: .9, dotS: .04, dotA: .7, ps: .08, pa: '#ffffff', pb: '#ffffff', dot: '#fffad8', hue: 2 },
+    };
+    function lifeSet(kind, k) {
+      if (!life) return;
+      const s = LIFE_SET[kind] || LIFE_SET.petal, u = lifeMat.uniforms;
+      u.uPieces.value = s.pieces; u.uFall.value = s.fall; u.uDFall.value = s.dfall; u.uSway.value = s.sway; u.uDotS.value = s.dotS; u.uDotA.value = s.dotA; u.uPS.value = s.ps;
+      u.uPA.value.set(s.pa); u.uPB.value.set(s.pb); u.uDot.value.set(s.dot); u.uHue.value = s.hue;
+      life.geometry.setDrawRange(0, Math.min(lifeMax, Math.round(90 * Q.life * s.n * (k || 1))));
+    }
     const flies = (() => {
       const out = [], n = tier === 'high' ? 3 : tier === 'mid' ? 2 : 0;
       if (!n) return out;
@@ -2156,7 +2952,7 @@
       own = [];
       spriteList.forEach(s => dropMesh(s));
       spriteList.length = 0; sprites.clear();
-      BLD.length = 0; spinners.length = 0; grassChunks.length = 0;
+      BLD.length = 0; spinners.length = 0; grassChunks.length = 0; treeBands.length = 0;
       obstM = []; bouldM = []; gateM = []; pickS = []; boatG = null; farIsles = null; atlas = null;
       world = new T3.Group(); world.matrixAutoUpdate = false;
       scene.add(world);
@@ -2168,15 +2964,21 @@
       m = map;
       clear();
       THEME = (window.EchoMaps && EchoMaps.THEMES[m.theme]) || {}; PAL = Object.assign({ grass: '#9ad66e', tall: '#55ab40', blade: '#2f7d2a', path: '#f1dfb2', tree: '#3f9a4a', treeHi: '#6cc15a', sand: '#f7e8bb', rock: '#a39b8b' }, m.pal || {});
-      // 空气的颜色：远处的东西往这个蓝里淡（雾里的古迹岛灰一些、浓一些；雪岛更白），最远化进地平线上的暖白
-      U.uFogA.value.set(PAL.fog ? '#b7c3c4' : PAL.snow ? '#cfdff0' : '#9cc6f4'); U.uHaze.value.set(PAL.fog ? '#dfe3df' : PAL.snow ? '#f3f6fb' : '#fbf1de'); U.uFogP.value.set(PAL.fog ? 6 : 17, PAL.fog ? .034 : .0118, Q.far);
-      skyMat.uniforms.uZen.value.set(PAL.fog ? '#8fa9ba' : '#2877dc'); skyMat.uniforms.uMid.value.set(PAL.fog ? '#b3c4cc' : '#5fb3f1'); skyMat.uniforms.uLow.value.set(PAL.fog ? '#cfd8d8' : '#b9e1f7');
-      occH = new Float32Array(m.W * m.H);
-      buildLand(); buildTerrain(); buildWater(); buildStatics(); buildTrees(); buildGrass(); buildPebbles(); buildBuildings(); buildMovables(); buildFar();
+      // 这座岛的天气（MOODS）和这种地貌的地面、岩石（GROUND）：空气、天空、太阳的颜色，空气里飘的东西
+      MOOD = MOODS[String(m.id || '')[0] === 'v' ? 'league' : clamp(m.isle | 0, 0, 12)] || MOODS[0]; GND = GROUND[m.theme] || GROUND.hello;
+      U.uFogA.value.set(MOOD.fog); U.uHaze.value.set(MOOD.haze); U.uFogP.value.set(MOOD.fogP[0], MOOD.fogP[1], Q.far);
+      skyMat.uniforms.uZen.value.set(MOOD.sky[0]); skyMat.uniforms.uMid.value.set(MOOD.sky[1]); skyMat.uniforms.uLow.value.set(MOOD.sky[2]);
+      sun.color.set(MOOD.sun); sun.intensity = Math.PI * .54 * MOOD.sunK; hemi.color.set(MOOD.hemi[0]); hemi.groundColor.set(MOOD.hemi[1]);
+      U.uSunC.value.copy(sun.color).multiplyScalar(sun.intensity / Math.PI);
+      lifeSet(MOOD.life, MOOD.lifeK);
+      occH = new Float32Array(m.W * m.H); cliffTop = new Float32Array(m.W * m.H);
+      INFO = { life: MOOD.life, path: GND.path, sand: GND.sand, cap: GND.cap };
+      buildLand(); buildTerrain(); buildWater(); buildFalls(); buildIce(); buildStatics(); buildTrees(); buildGrass(); buildPebbles(); buildBuildings(); buildMovables(); buildFar();
+      INFO.falls = LAND.falls.map(f => +f.drop.toFixed(2)); INFO.lava = !!waterMat.uniforms.uHot.value; INFO.over = !!(m.over && m.def && m.def.paint);
       clouds.position.set(m.W / 2, 0, m.H / 2); clouds.updateMatrix();
       world.add(sky, clouds, blobs);
       if (life) world.add(life);
-      flies.forEach(f => { world.add(f.o); f.t0 = -1e9; });
+      flies.forEach(f => { world.add(f.o); f.t0 = -1e9; f.o.visible = MOOD.life !== 'snow'; });   // 下雪的岛上没有蝴蝶
       m.npcs.forEach(addPerson);
       world.add(player.root, fol.root, bike, ripple, hintS);
       sparkS.forEach(sp => world.add(sp));
@@ -2192,10 +2994,12 @@
         const fc = [];
         world.traverse(o => { if (o.isMesh && o.frustumCulled) { fc.push(o); o.frustumCulled = false; } });
         grassChunks.forEach(ch => ch.parts.forEach(pt => { pt.im.count = pt.n; pt.im.visible = true; }));
+        treeBands.forEach(b => b.coarse.forEach(o => { o.visible = true; }));
         camera.position.set(m.W / 2, 40, m.H / 2 + 30); camera.lookAt(m.W / 2, 0, m.H / 2); camera.updateMatrixWorld();
         if (Q.shadow) renderer.shadowMap.needsUpdate = true;
         renderer.render(scene, camera);
         fc.forEach(o => { o.frustumCulled = true; });
+        treeBands.forEach(b => { b.near = true; b.coarse.forEach(o => { o.visible = false; }); b.fine.forEach(o => { o.visible = true; }); });
         renderer.setRenderTarget(null);
       } catch (e) { /* 画不了就等真画的时候再说 */ }
       buildMs = Math.round(performance.now() - t0);
@@ -2219,8 +3023,9 @@
       bufW = Math.round(VW * dpr); bufH = Math.round(VH * dpr);
       camera.aspect = a; camera.fov = fov; camera.near = .5; camera.far = Q.far * 2.2;
       camera.updateProjectionMatrix();
-      lifeMat.uniforms.uPx.value = VH * dpr / (2 * tH);
-      U.uGrassD.value.set(GRASS_D[0] * lerp(1, .8, k), GRASS_D[1] * lerp(1, .72, k), 4.6, 8.2);   // 横屏看到的地面宽得多，草收近一点
+      lifeMat.uniforms.uPx.value = VH * dpr / (2 * tH); steamMat.uniforms.uPx.value = VH * dpr / (2 * tH);
+      const gD = tier === 'high' && INFO.heavy ? [8.5, 25] : GRASS_D;   // 树多的图（精美档）草收近一点，省下三角形
+      U.uGrassD.value.set(gD[0] * lerp(1, .8, k), gD[1] * lerp(1, .72, k), 4.6, 8.2);   // 横屏看到的地面宽得多，草收近一点
       if (rt) {
         const w = Math.round(VW * dpr), h = Math.round(VH * dpr);
         rt.setSize(w, h);
@@ -2402,6 +3207,13 @@
           pt.im.count = n; pt.im.visible = n > 0;
         }
       }
+      // 树：主角北边远了的那几条换成省的（来回走的时候在分界上留一点余量，不反复换）；换了要重画一次影子
+      for (let i = 0; i < treeBands.length; i++) {
+        const b = treeBands[i], near = camT.z - b.z1 < TREE_NEAR + (b.near ? 1.5 : 0);
+        if (near === b.near) continue;
+        b.near = near; b.fine.forEach(o => { o.visible = near; }); b.coarse.forEach(o => { o.visible = !near; });
+        if (Q.shadow) renderer.shadowMap.needsUpdate = true;
+      }
       // 蝴蝶：绕着附近的一小片地方飞；离主角太远了就换到主角前面去
       for (let i = 0; i < flies.length; i++) {
         const f = flies[i];
@@ -2431,7 +3243,8 @@
       } else renderer.render(scene, camera);
     }
     const GRASS_D = tier === 'high' ? [9, 28] : tier === 'mid' ? [6, 21] : [4, 13];   // 草：离主角多远以内是满的、多远以外没有
-    const GRASS_NEAR = tier === 'high' ? 7 : tier === 'mid' ? 4 : 0;                 // 草：离这么近的那几块用细的零件，再远用省的（省电档只有省的）
+    const GRASS_NEAR = tier === 'high' ? 7 : tier === 'mid' ? 4 : 0;
+    const TREE_NEAR = tier === 'high' ? 16 : tier === 'mid' ? 10 : 6;   // 树：主角往北多远以内用细的                 // 草：离这么近的那几块用细的零件，再远用省的（省电档只有省的）
     function destroy() {
       clear();
       scene.remove(world);
@@ -2462,7 +3275,7 @@
       // 场景里每种东西（按材质分）有几个网格、多少三角形（按多到少），查「哪样东西最费」用；只算现在画着的
       stats: () => { const by = {}; world.traverse(o => { const g = o.geometry; if (!g || !o.visible) return; const n = (g.index ? g.index.count : g.attributes.position.count) / 3 * (o.isInstancedMesh ? o.count : 1), k = (o.material.userData.o || {}).key || o.material.type, r = by[k] || (by[k] = [0, 0, k]); r[0] += Math.round(n); r[1]++; }); return Object.values(by).sort((a, b) => b[0] - a[0]); },
       probe: () => ({
-        texMB: texMB(), buildMs, geoMs, line: !!(post && post.line), tier,
+        texMB: texMB(), buildMs, geoMs, line: !!(post && post.line), tier, look: INFO,
         grass: { chunks: grassChunks.filter(c => !c.extra).length, near: grassChunks.filter(c => c.near && !c.extra).length, drawn: grassChunks.reduce((a, c) => a + c.parts.reduce((b, p) => b + (p.im.visible ? p.im.count : 0), 0), 0), all: grassChunks.reduce((a, c) => a + c.parts.reduce((b, p) => b + (p.fine ? 0 : p.n), 0), 0) },
         outer: (x, z) => { const o = {}; const h = LAND.outer(x, z, o); return { h, hill: o.hill, val: o.val, land: o.landK }; },
         at: (x, z) => LAND.at(x, z), ground: (x, z) => LAND.ground(x, z), step: LAND.step, sea: LAND.SEA,

@@ -2,10 +2,12 @@
 // 用法：node tools/look/perf.js [new|old|both] [--gfx high,mid,low] [--throttle 4] [--sec 8] [--leak 1]
 //   真显卡的无头浏览器（--use-angle=d3d11），CPU 降速 4 倍模拟手机（和 tools/perf/profile.js 一样的量法）
 //   --leak 1：再来回切 6 次地图（小镇 ⇄ 1 号路 ⇄ 屋里），每次记显存里的几何体 / 贴图 / 着色器个数，看涨不涨
+//   --isle 0,1,… / all：不量第一座小镇，改成量这几座岛最重的那张图（tools/look/isles.js 的 perf：在哪里、怎么走），
+//     另外把整张图每隔 4 格站一下、朝北看，记画面里最多的三角形 / draw call（「画面里最多多少」）
 // 结果打印成表，同时存 tools/perf/out/look-<时间>.json
 const fs = require('fs'), path = require('path');
 const L = require('./lib');
-const argv = process.argv.slice(2), opt = { gfx: 'high', throttle: 4, sec: 8, leak: 0 }, pos = [];
+const argv = process.argv.slice(2), opt = { gfx: 'high', throttle: 4, sec: 8, leak: 0, isle: '' }, pos = [];
 for (let i = 0; i < argv.length; i++) { if (argv[i].startsWith('--')) opt[argv[i].slice(2)] = argv[++i]; else pos.push(argv[i]); }
 const WHICH = pos[0] || 'both', r1 = n => Math.round(n * 10) / 10;
 
@@ -32,6 +34,28 @@ const WHICH = pos[0] || 'both', r1 = n => Math.round(n * 10) / 10;
       console.log(JSON.stringify(row));
     };
     const walk = async seq => { for (const [dir, ms] of seq) await t.hold(dir, ms); };
+    if (opt.isle) {
+      // 逐岛：最重的那张图上走一走（CPU 降速），再把整张图扫一遍，记画面里最多的三角形和 draw call
+      const ISL = require('./isles'), list = String(opt.isle) === 'all' ? ISL : String(opt.isle).split(',').map(n => ISL.find(q => q.n === +n)).filter(Boolean);
+      for (const isle of list) {
+        if (!isle.perf) continue;
+        const [map, x, y, seq] = isle.perf;
+        await t.go(map, 'start'); await t.tp(x, y, 'up'); await t.W(2500);
+        await cdp.send('Emulation.setCPUThrottlingRate', { rate: +opt.throttle });
+        await t.W(1200);
+        await sample(map + ' 走路', () => walk(seq));
+        await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+        const spots = await t.p.evaluate(() => { const m = EchoWorld._debug().M, out = []; for (let y = 2; y < m.H - 1; y += 4) for (let x = 2; x < m.W - 1; x += 4) { const c = m.grid[y][x]; if (EchoMaps.WALK.includes(c)) out.push([x, y]); } return out; });
+        let mx = { tris: 0, calls: 0, at: '' };
+        // 传过去以后镜头要滑一会儿才到、影子图也要重画一次（那一帧连影子一起算，三角形会多一倍）：等镜头停稳，再取三帧里最少的那帧
+        for (const [sx, sy] of spots) { await t.tp(sx, sy, 'up'); await t.W(900); let i = null; for (let k = 0; k < 3; k++) { const q = await t.info(); if (!i || q.tris < i.tris) i = q; await t.W(120); } if (i.tris > mx.tris) mx = { tris: i.tris, calls: i.calls, at: sx + ',' + sy }; }
+        const row = { gfx, look, where: map + ' 最多', fps: 0, drawMs: 0, drawMax: 0, over12: 0, gapOver33: 0, gapOver50: 0, gapP99: 0, gapMax: 0, calls: mx.calls, tris: mx.tris, tex: 0, geo: 0, prog: 0, at: mx.at };
+        rows.push(row); console.log(JSON.stringify(row));
+      }
+      if (t.errs.length) console.log('  报错：', t.errs.slice(0, 3).join(' | '));
+      await t.ctx.close();
+      continue;
+    }
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: +opt.throttle });
     const sec = +opt.sec * 1000 / 4;
     // 小镇：在中间的草地上绕一圈；1 号路：沿着小路右边那一列往北走再走回来（不进草丛、不进训练师的视线）

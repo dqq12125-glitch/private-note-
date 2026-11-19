@@ -23,11 +23,11 @@ function serve() {
 // 真显卡（和 tools/perf 一样的参数）；gpu: false 时用软件渲染
 const launch = (o) => chromium.launch({ args: (o && o.gpu === false ? ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] : ['--use-angle=d3d11', '--ignore-gpu-blocklist', '--enable-gpu']).concat(['--autoplay-policy=no-user-gesture-required', '--force-color-profile=srgb']) });
 
-// 存档：刚拿到第一只怪兽（火苗狗跟在后面）、开场剧情都过了、学习锁关着、没有声音
+// 存档：刚拿到第一只怪兽（火苗狗跟在后面）、开场剧情和各岛的主线都过了（进地图不会演剧情、不会被对手拦住）、学习锁关着、没有声音
 const SAVE = (gfx, o) => Object.assign({
   seenIntro: true, coins: 500, micCheck: 1, settings: { tts: 'online', mode: 'self', gfx: gfx || 'high', sfx: false, gate: false, music: 'off' }, player: { gender: (o && o.gender) || 'boy', name: 'Leo' },
   mon: { v: 2, box: [{ uid: 'm1', sp: (o && o.lead) || 'emberpup', lv: 12, xp: 0, shiny: !!(o && o.shiny) }], team: ['m1'], dex: { emberpup: 'caught' }, balls: 10, potions: 10, bag: {}, badges: (o && o.badges) || {} },
-  world: { v: 3, started: true, map: 't0', x: 14, y: 9, dir: 'up', visited: { 0: 1 }, flags: Object.assign({ 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:expshare': 1, qtip: 1 }, Object.fromEntries([...Array(13).keys()].map(i => ['s:ch' + i, 1]))), daily: {}, repel: 99999 },
+  world: { v: 3, started: true, map: 't0', x: 14, y: 9, dir: 'up', visited: { 0: 1 }, flags: Object.assign({ 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:expshare': 1, qtip: 1 }, Object.fromEntries([...Array(13).keys()].map(i => ['s:ch' + i, 1]).concat(['rival2', 'rival3', 'rival4', 'rival5', 'kai_final', 'w11in', 'z1intro', 'z1kai', 'f3in', 'f4in', 'c5intro', 'c7intro', 'a9in', 'f2call', 'c6call'].map(k => ['s:' + k, 1])))), daily: {}, repel: 99999 },
 });
 
 // 开一个页面进大地图。o：{ look: 'new' | '', gfx, vp: {width, height}, dsf, video: {dir, size}, save: {...} }
@@ -51,7 +51,8 @@ async function open(browser, base, o) {
     dbg: () => p.evaluate(() => { const d = EchoWorld._debug(); return { map: d.M.id, x: d.PL.x, y: d.PL.y, dir: d.PL.dir, dlg: !!d.dlg, busy: d.busy, moving: d.PL.moving, kind: d.R.kind, look: d.R.look || '', using: d.R.using ? d.R.using() : '' }; }),
     // 对话框开着就点掉（进地图时可能触发剧情）。要选的时候选最后一个（委托的「以后再说」——第一个是「用英语帮 TA」，会去开 AI 聊天，这里不碰）
     async closeDlg() { for (let i = 0; i < 40 && await p.evaluate(() => !!EchoWorld._debug().dlg); i++) { await p.evaluate(() => { const picks = document.querySelectorAll('#w-dlg [data-act=wPick]'); const a = picks.length ? picks[picks.length - 1] : document.querySelector('#w-dlg [data-act=wSkip]') || document.querySelector('#world [data-act=wA].ba') || document.querySelector('#world [data-act=wA]'); if (a) a.click(); }); await W(140); } },
-    async go(id, how) { await p.evaluate(([id, how]) => EchoWorld._debug().goMap(id, how), [id, how]); await p.waitForFunction(id => EchoWorld._debug().M.id === id, id, { timeout: 20000 }).catch(() => {}); await W(600); await t.closeDlg(); },
+    // 换地图；训练师的视线关掉（拍照、量性能、录像的时候别被拉去对战）
+    async go(id, how) { await p.evaluate(([id, how]) => EchoWorld._debug().goMap(id, how), [id, how]); await p.waitForFunction(id => EchoWorld._debug().M.id === id, id, { timeout: 20000 }).catch(() => {}); await p.evaluate(() => EchoWorld._debug().M.npcs.forEach(n => { n.sight = 0; })).catch(() => {}); await W(600); await t.closeDlg(); },
     // 直接站到 (x, y)、面朝 dir；跟着的怪兽站在身后一格
     tp: (x, y, dir) => p.evaluate(([x, y, dir]) => {
       const d = EchoWorld._debug(), D = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[dir || 'up'];
