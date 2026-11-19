@@ -2,13 +2,14 @@
 # 密钥文件的内容直接从文件交给 gh，谁都不用复制、不打印、不落盘，只告诉你存好了哪几个。
 # 从收银 App 那个仓库的 rw-pos/scripts/ios-secrets-dialog.ps1 抄过来，默认填好了这个仓库和 Echo of Forest 的 Team ID。
 # 运行：pwsh -NoProfile -STA -File tools/ios-secrets-dialog.ps1   （要 PowerShell 7 的 pwsh；gh 已经登录）
-param([string]$Repo = "dqq12125-glitch/private-note-", [string]$TeamId = "8DC33LZZ4G", [string]$IssuerId = "")
+#   -KeyFile <路径>：指定用哪个 .p8（不给就用「下载」里最新的 AuthKey_*.p8）
+param([string]$Repo = "dqq12125-glitch/private-note-", [string]$TeamId = "8DC33LZZ4G", [string]$IssuerId = "", [string]$KeyFile = "")
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 $downloads = Join-Path $env:USERPROFILE "Downloads"
-$found = Get-ChildItem $downloads -Filter "AuthKey_*.p8" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$found = if ($KeyFile -and (Test-Path $KeyFile)) { Get-Item $KeyFile } else { Get-ChildItem $downloads -Filter "AuthKey_*.p8" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1 }
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "App Store Connect 密钥"
