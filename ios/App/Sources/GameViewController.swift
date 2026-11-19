@@ -24,6 +24,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     private var goneAt: [TimeInterval] = []
     private var crashLabel: UILabel?
     private var orient = "portrait"
+    private var didApplyLaunchOrient = false
     private var observers: [NSObjectProtocol] = []
     private var bgTask: UIBackgroundTaskIdentifier = .invalid
     #if DEBUG
@@ -51,6 +52,12 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        // 一打开就是横屏 / 跟着转（上次选的、或者测试的启动参数）：viewDidLoad 那会儿还没有窗口，系统按竖屏开起来；
+        // 窗口有了以后再要一次方向，系统才真的转过去（云上第一次跑 UI 测试，横屏打开一直停在竖屏）
+        if orient != "portrait" && !didApplyLaunchOrient {
+            didApplyLaunchOrient = true
+            applyOrientation(orient)
+        }
         #if DEBUG
         if statusTimer == nil && GameViewController.launchArg("-EchoUITest") != nil { startStatus() }
         #endif

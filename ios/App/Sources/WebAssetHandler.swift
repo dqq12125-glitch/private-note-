@@ -1,5 +1,5 @@
 import Foundation
-import WebKit
+@preconcurrency import WebKit   // WKURLSchemeTask 不是 Sendable：在后台队列读完文件再回主线程交给它（编译器第一次在云上提示过）
 
 // 把 App 里打包的游戏网页（www/）当成一个网站给 WKWebView：echoisland://localhost/index.html。
 // 为什么不用 file://：自己登记的地址在 iOS 15 起算「安全的网页」（麦克风 getUserMedia、fetch 读模型和配音都能用），
