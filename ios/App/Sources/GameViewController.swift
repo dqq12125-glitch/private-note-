@@ -79,7 +79,12 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     }
 
     func applyOrientation(_ mode: String) {
-        orient = GameViewController.orientMode(mode)
+        var m = mode
+        #if DEBUG
+        // 测试的启动参数说了用哪个方向，就一直用它：网页一打开会按自己存的设置调一次 setOrientation（默认竖屏），不能把测试要的横屏改回去
+        if let o = GameViewController.launchArg("-EchoOrient") { m = o }
+        #endif
+        orient = GameViewController.orientMode(m)
         setNeedsUpdateOfSupportedInterfaceOrientations()
         if let scene = view.window?.windowScene {
             scene.requestGeometryUpdate(.iOS(interfaceOrientations: supportedInterfaceOrientations)) { _ in }
