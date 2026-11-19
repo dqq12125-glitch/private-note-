@@ -9,7 +9,6 @@
 145  cinderchick/sunrooster/solarknight  终形像某火鸡格斗进化线
 80-82 frostwing/stormwing/blazewing       三神鸟，检查是否太像急冻鸟/闪电鸟/火焰鸟
 5    nibbler/bigtooth            像小拉达/拉达
-47   shadowlet/nightcloak/midnight  midnight 像耿鬼且太扁 → 换成披斗篷的夜猫头鹰/灯笼幽灵之类，别用紫色尖刺+咧嘴
 112  boltkite/thunderkite           闪电形尾巴像皮卡丘 → 尾巴改成风筝尾飘带
 164  cometlet/cometdrake/cometdragon  蓝蛇龙像哈克龙 → 改成带尾焰的小陨石龙（四足、岩石+火焰）
 193  twirlflame/firedancer          红色小火蜥蜴＋头顶火苗像小火龙/喷火龙 → 改成跳舞的火焰小狐/陀螺造型，别用红蜥蜴

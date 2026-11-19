@@ -565,8 +565,8 @@
  {
   "no": 94,
   "id": "midnight",
-  "en": "Midnight",
-  "zh": "午夜王",
+  "en": "Grinmask",
+  "zh": "笑面王",
   "types": [
    "ghost",
    "dark"
@@ -577,16 +577,15 @@
   "atk": 23,
   "b": "ghost",
   "c": "#7e57c2",
-  "k": "#d1c4e9",
-  "a": "#ffee58",
-  "e": "crown",
+  "k": "#f5efe0",
+  "a": "#ffca28",
+  "e": "horns",
   "t": "none",
   "w": "none",
   "p": "star",
   "m": "grin",
   "x": [
-   "scarf",
-   "cloud"
+   "scarf"
   ],
   "sz": 1.2,
   "habitat": [
@@ -595,11 +594,12 @@
   ],
   "rarity": 4,
   "words": [
-   "mid",
-   "night"
+   "grin",
+   "mask"
   ],
-  "dexEn": "Midnight wakes up at twelve at night. It plays with the stars.",
-  "dexZh": "午夜王在半夜十二点醒来，和星星一起玩。"
+  "dexEn": "Grinmask is a mask with two horns. It has a very big grin. It plays tricks at night.",
+  "dexZh": "笑面王是一张长着两只角的面具，总是咧着大嘴笑，喜欢在夜里恶作剧。",
+  "keepId": true
  },
  {
   "no": 95,
