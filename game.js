@@ -3427,7 +3427,8 @@
         else renderQ();
         return;
       }
-      if (!res.alts.length) { noHeard(res); return; }
+      // 没拿到话：把「🎤 请说……」那一行清掉。识别自己停了（不是孩子点的停）时下面不写提示，这一行不清就像卡住了（2026-11-20 老板的 iPhone）
+      if (!res.alts.length) { const h = $('#heard'); if (h && /^(🎤|🎧)/.test(h.textContent)) h.textContent = ''; noHeard(res); return; }
       if (q.type === 'bt') evalBoss(res.alts); else evalSpeak(res.alts);
     } else {
       startRecording();

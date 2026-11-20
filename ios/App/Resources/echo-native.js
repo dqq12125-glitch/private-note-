@@ -257,9 +257,29 @@
       d.style.cssText = 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom, 0px) + 1px);transform:translateX(-50%);z-index:2147483000;' +
         'font:600 9px/1 -apple-system,system-ui,sans-serif;letter-spacing:.3px;color:#fff;opacity:.5;text-shadow:0 0 2px #000,0 0 2px #000;pointer-events:none;white-space:nowrap';
       document.body.appendChild(d);
+      // 版本号后面跟上最近一次口语识别的情况（talk.js 的 EchoTalk.lastSpeech()）：哪个引擎、怎么结束的、为什么改走云端、原生的错误代号、
+      // 点了到开始听 / 第一个字 / 结束各多少毫秒。老板截图里带着它，不用连电脑也知道识别卡在哪一步
+      setInterval(function () {
+        try {
+          var s = W.EchoTalk && W.EchoTalk.lastSpeech ? W.EchoTalk.lastSpeech() : null, t = String(BOOT.beta);
+          if (s) {
+            t += ' · ' + (s.eng || '?') + ' ' + (s.how || s.err || (s.ok ? 'ok' : '')) + (s.fell ? ' fell:' + s.fell : '') + (s.nerr ? ' ' + String(s.nerr).slice(0, 40) : '') +
+              ' ' + [s.listen, s.first, s.end].map(function (v) { return v == null ? '-' : v; }).join('/');
+          }
+          if (d.textContent !== t) d.textContent = t;
+        } catch (e) { /* 只是给人看的一行字 */ }
+      }, 1000);
       return true;
     } catch (e) { return true; }
   }
+  // ---------- 口语题的本机识别：先关着 ----------
+  // 2026-11-20 第一版（原生自己用 AVAudioEngine 录音）在老板的 iPhone 上一开始听就停：App 自己的声音会话和网页那一层（WebKit 另一个进程）的
+  // 声音会话互相打断，识别被掐掉，界面停在「请说……」。在改成「网页录音、原生只管识别」之前，口语题照旧走云端识别：
+  // talk.js 的 localSR() 看 localStorage['echo-sr']，这里一打开就写成 'cloud'。要在手机上单独试本机识别：localStorage['echo-sr-try'] = '1'
+  try {
+    if (W.localStorage.getItem('echo-sr-try') === '1') W.localStorage.removeItem('echo-sr');
+    else W.localStorage.setItem('echo-sr', 'cloud');
+  } catch (e) { /* 没有存储就算了：talk.js 那边默认会试本机识别 */ }
   if (!addStyle()) document.addEventListener('DOMContentLoaded', addStyle);
   document.addEventListener('DOMContentLoaded', function () { addStyle(); fixViewport(); addBeta(); });
   document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
