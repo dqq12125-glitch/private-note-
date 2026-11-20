@@ -151,8 +151,8 @@ function fakeCloud() {
   await p.goto(PAGE);
 
   // ---------- 1. 本机识别：边说边出字、对上答案当场结束、不连阿里云 ----------
-  // 原生建识别任务用 0.3 秒（startMs）：这段时间网页的麦克风已经在录，录到的要先存着、回 ok 时一起补发
-  await load(BASE(), { fake: { speech: { state: ON, start: 'ok', startMs: 300, script: [] } } });
+  // 原生建识别任务用 0.6 秒（startMs，比开麦克风慢）：这段时间网页的麦克风已经在录，录到的要先存着、回 ok 时一起补发
+  await load(BASE(), { fake: { speech: { state: ON, start: 'ok', startMs: 600, script: [] } } });
   check(await E(() => window.ECHO_IOS === 1 && window.EchoTalk.localSR() && window.EchoTalk.speechState().onDevice === true),
     'iPhone + 本机识别能用：EchoTalk.localSR() 是 true（开机时问过一次 speechState，不弹框）', await E(() => window.EchoTalk.speechState()));
   let target = await question(0);
@@ -170,7 +170,7 @@ function fakeCloud() {
   let s = await last();
   check(s && s.eng === 'device' && s.how === 'match' && s.ok && s.lag != null && s.lag < 250 && s.listen != null && s.first != null && s.end != null,
     '对上答案当场结束（没等 0.6 秒的停顿）：EchoTalk.lastSpeech() 记着用的本机、点了到开始听 / 第一个字 / 结束 / 说完以后等了多久', s);
-  check(tDone < 1600, '点话筒到出分不到 1.6 秒（假的说话 0.5 秒）：' + tDone + ' 毫秒');
+  check(tDone < 1900, '点话筒到出分不到 1.9 秒（假的原生开好 0.6 秒 + 说话 0.5 秒）：' + tDone + ' 毫秒');
   let c = await calls();
   check(c.includes('speechStart') && !c.includes('wsOpen') && !c.includes('post'), '用的是原生的本机识别：没连阿里云（wsOpen / post 都没调），云端连不上也不要紧', c.filter(x => /speech|ws|post/.test(x)));
   let l = await L();
@@ -321,6 +321,7 @@ function fakeCloud() {
   await question(0);
   await p.click('#mic');
   check(await until(() => E(() => !document.querySelector('#modal').hidden && /麦克风/.test(document.querySelector('#sheet').textContent)), 40), '麦克风被拒：弹「为什么要用麦克风 / 去打开」（不白白再去连云端）');
+  await W(300);   // 原生那一次可能比麦克风被拒晚回 ok：回了也要叫停
   c = await calls();
   a = await E(() => ({ fed: window.__fakeNative.speech.feeds.length, active: window.__fakeNative.speech.active }));
   check(!c.includes('wsOpen') && c.includes('speechStop') && a.fed === 0 && !a.active, '麦克风被拒时没去连云端、原生那一次也叫停了', { c: c.filter(x => /speech|ws/.test(x)), a });

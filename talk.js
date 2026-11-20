@@ -1371,7 +1371,11 @@
       D.eng = 'device'; D.fed = 0;
       const first = s => (s.split(' ')[0] || '').toLowerCase();
       const stopNative = () => { try { N.speechStop(++nid); } catch (e) { /* 不在 App 里 */ } };
-      const cleanup = () => { window.removeEventListener('echo-speech', onEv); clearInterval(tick); clearTimeout(tm); delete NWS[id]; if (SR.stop === userStop) SR.stop = null; };
+      // 收尾。原生还没回 speechStart 的（比如麦克风被拒得比原生开好还快）：等它回了 ok 再叫停一次，别让那一次一直开着
+      const cleanup = () => {
+        window.removeEventListener('echo-speech', onEv); clearInterval(tick); clearTimeout(tm); if (SR.stop === userStop) SR.stop = null;
+        if (NWS[id]) NWS[id] = type => { delete NWS[id]; if (type === 'ok') stopNative(); };
+      };
       // 有没有人声：网页量到的（响过 0.2 秒以上）或者原生说出过声
       const heardVoice = () => (mic && loudN >= mic.rate * 0.2) || D.voice != null;
       const vo = () => ((mic && loudN >= mic.rate * 0.2 ? 'w' : '') + (D.voice != null ? 'n' : '')) || '-';

@@ -18,3 +18,5 @@ server/debug/
 
 # 给家长下载的 APK（里面有密钥，不进仓库）
 dl/
+# wrangler / miniflare cache written by tests/account.test.js (request metadata incl. location; never commit)
+.wrangler/
