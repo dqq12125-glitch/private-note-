@@ -2322,7 +2322,13 @@
     dp.addEventListener('pointercancel', up);
     dp.addEventListener('pointerleave', up);
     dp.addEventListener('contextmenu', e => e.preventDefault());
-    window.addEventListener('resize', () => { if (running) resize(); });
+    // 手机转屏：iPhone 上 resize 事件来的时候版面还没排完（#w-view 的宽还是转之前的），只量这一次的话画布就按错的大小定住了——
+    // 2026-11-20 老板的截图：竖屏，主角跑到屏幕最右边（画布还是横屏的 750 宽）。所以：画面那一层自己变了大小就重算（ResizeObserver），
+    // 转屏以后隔一会儿再对两次（没有 ResizeObserver 的老浏览器靠这个）
+    const reFit = () => { if (running) resize(); };
+    window.addEventListener('resize', () => { reFit(); setTimeout(reFit, 250); setTimeout(reFit, 700); });
+    window.addEventListener('orientationchange', () => { setTimeout(reFit, 250); setTimeout(reFit, 700); });
+    try { const v = $('w-view'); if (v && window.ResizeObserver) new ResizeObserver(reFit).observe(v); } catch (e) { /* 忽略 */ }
     const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
     document.addEventListener('keydown', e => {
       if (!running || !$('modal').hidden || (e.target && e.target.tagName === 'INPUT') || $('tk-ov')) return;   // 正在和岛民聊天（空格是按住说话）：不动地图上的人

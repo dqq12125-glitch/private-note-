@@ -45,6 +45,16 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
     mem.push(await p.evaluate(() => { const i = EchoWorld._debug().R.info().memory; return i.geometries + i.textures; }));
   }
   check(mem[2] <= mem[0] + 2, '切换地图没有泄漏 ' + JSON.stringify(mem));
+  // 转屏：画面那一层的大小变了、但没有（或者先于它）resize 事件——iPhone 上转屏时事件来得比排版早，以前画布会按旧的宽定住，主角跑到屏幕边上
+  const fitOf = () => p.evaluate(() => { const v = document.getElementById('w-view'), c = v.querySelector('canvas'); return { vw: v.clientWidth, vh: v.clientHeight, cw: Math.round(parseFloat(c.style.width)), ch: Math.round(parseFloat(c.style.height)) }; });
+  await p.evaluate(() => { const v = document.getElementById('w-view'); v.dataset.css = v.style.cssText; v.style.right = 'auto'; v.style.width = '300px'; });
+  await p.waitForTimeout(400);
+  const fit1 = await fitOf();
+  check(fit1.vw === 300 && fit1.cw === 300 && fit1.ch === fit1.vh, '画面那一层自己变窄了（没有 resize 事件）：画布跟着重算 ' + JSON.stringify(fit1));
+  await p.evaluate(() => { const v = document.getElementById('w-view'); v.style.cssText = v.dataset.css || ''; });
+  await p.waitForTimeout(400);
+  const fit2 = await fitOf();
+  check(fit2.cw === fit2.vw && fit2.vw > 300, '变回来：画布也回来了 ' + JSON.stringify(fit2));
   // 设置里切成 2D，再切回 3D
   await p.evaluate(() => { const s = document.querySelector('[data-act=settings]'); });
   await p.evaluate(() => { const S = JSON.parse(localStorage.getItem('echo-island-v1')); });

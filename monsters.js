@@ -770,7 +770,10 @@
       '<div class="hp-foot">' + (extra || '') + '<div class="chips">' + chips(mon.sp) + '<span class="st-chip" id="b-' + id + 'st"></span><span class="stg" id="b-' + id + 'stg"></span></div></div></div>';
   }
   // 转屏（竖屏 ⇄ 横屏）后战斗画面跟着重新算大小
-  window.addEventListener('resize', () => { if (B && B3 && document.getElementById('b-arena')) { try { B3.resize(); } catch (e) { /* 忽略 */ } } });
+  // 对战画面跟着屏幕变大小。转屏以后隔一会儿再对两次：iPhone 上 resize 事件来的时候版面还没排完（和大地图一样，见 world.js）
+  const b3Fit = () => { if (B && B3 && document.getElementById('b-arena')) { try { B3.resize(); } catch (e) { /* 忽略 */ } } };
+  window.addEventListener('resize', () => { b3Fit(); setTimeout(b3Fit, 250); setTimeout(b3Fit, 700); });
+  window.addEventListener('orientationchange', () => { setTimeout(b3Fit, 250); setTimeout(b3Fit, 700); });
   function renderBattle() {
     const w = E.W[B.z], f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
     $('battle').innerHTML =
