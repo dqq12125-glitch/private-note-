@@ -168,6 +168,8 @@ npm test               # 打包 + 假上游 + 两个本机 Worker，约 30 秒
 npm run dev            # 本机跑（wrangler dev --local）：先 npm run migrate:local，秘密写在 cloud/.dev.vars（不进仓库），EMAIL_PROVIDER=console 时登录码打印在终端
 ```
 
+**对着真的阿里云实测别的语言的识别 / 合成**（会花钱，先问老板；跑一遍约几分钱）：`node scripts/live-speech.mjs [en es ja zh]`。本机起同一份程序、上游接真的阿里云，每门语言合成两句（女声、男声）再整段识别、实时识别，用游戏自己的打分算分；钥匙只在进程里从钥匙文件读（`ECHO_KEY_FILE`），不打印。线上的服务器只能从 iPhone 用 Apple 登录，所以不直接打线上。2026-11-21 跑过（北京区）：四门语言全部对上，Cherry / Ethan 两个音色西语、日语、中文都能用，说完到出字约 0.5–1.3 秒；当天把带 `lang` 的版本部署到了线上。换国际版（`DS_HTTP_BASE` / `DS_WS_BASE`）或换模型以后要重跑。
+
 `npm test`（`test/run.js`）：用 wrangler 打包（和部署的同一份 `dist/index.js`）→ 本机起假的阿里云（HTTP + WebSocket，记下服务器发了什么、回写好的事件）、假的 Resend（收邮件）、假的 Apple（JWKS、换 token、撤销）→ 自己造一套和 App Store 一样形状的证书链（用 Node 自带的 OpenSSL 核对过）→ 用 Miniflare（和线上一样的 workerd）起两个 Worker → 跑 `test/t-*.js`。仓库的全套测试里是 `tests/cloud.test.js`（照原样跑这个）。只跑几个：`node test/run.js talk iap`。
 
 测到的：两种登录、会话过期 / 往后推 / 退出、`/v1/me` 的修改规矩、计数和到上限、聊天额度快用完的提醒和到点收尾、免费 / 月付 / 年付的额度、本地零点重置、上游失败退回、孩子没同意被挡和整个同意流程、内购验签（正常、bundleId 不对、产品不对、环境不对、不认识的根、签名不对、叶子过期、内容被改、过期的交易、别人的订阅）和通知（宽限期、到期、退款、撤销退款、去重、按 appAccountToken 找主人）、删号删干净（含撤销 Apple 授权、没配钥匙时跳过）、举报和 90 天清理（定时任务）、和 `server/relay.js` 逐字比对 `session.update`、手机发的人设不用、限流、消息大小、正式环境的保护、cloud/ 里没有禁用词。
