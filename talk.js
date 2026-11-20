@@ -262,6 +262,9 @@
     if (cloudOn()) {
       const m = /"error"\s*:\s*"(auth|quota|consent|rate|provider|unavailable)"/.exec(t);
       if (m) return { auth: 'signin', quota: 'quota', consent: 'consent', rate: 'busy', provider: 'busy', unavailable: 'busy' }[m[1]];   // unavailable = 服务器答了、只是它那边没准备好（比如没配好密钥）：不是孩子没网，别说「没网」
+      // 等服务器等到超时（我们自己掐掉的请求）：手机是连着网的（上面查过），多半是服务器去连 AI 那一段慢——
+      // 2026-11-20 老板的 iPhone：整段识别等了 20 秒，界面写的是「没网」，其实网是好的。算「AI 有点忙」
+      if (/abort|timed? ?out/i.test(t)) return 'busy';
     }
     if (/"error"\s*:\s*"code"|家庭口令/.test(t)) return 'code';
     if (/Arrearage|AllocationQuota|quota|Insufficient|FreeTierOnly|exceeded your|overdue|欠费|额度/i.test(t)) return 'quota';
