@@ -3085,6 +3085,19 @@
     renderHome();
   }
 
+  // 从大地图的「📍 现在要做」直接去要学的那个课本单元（2026-11-20 老板：「现在要做点了可以直接跳到要做的事情那里」）：
+  // 和「回首页」走同一条路离开大地图（goHome：存档整份存好、冒险计时停下），打开闯关练习的课本单元，滚到这个单元的 BOSS 关并亮一下；
+  // BOSS 还没解锁就亮这个单元第一关没拿星的。不改「正在学」的单元
+  function goUnit(wi) {
+    if (!isUnit(wi) || !BK[wi - NB]) { goHome('quiz'); return; }
+    S.book.view = 'book'; S.book.vb = BK[wi - NB].book; save();
+    goHome('quiz');
+    let li = 6; if (!isUnlocked(wi, 6)) { li = 0; for (let k = 0; k < 7; k++) if (isUnlocked(wi, k) && !(S.stars[wi + '-' + k] > 0)) { li = k; break; } }
+    const n = $('#w' + wi + ' .node[data-l="' + li + '"]');
+    if (n) { n.classList.add('goal'); setTimeout(() => n.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' }), 250); setTimeout(() => n.classList.remove('goal'), 6000); }
+    return { wi, li };
+  }
+
   // ---------- 关卡详情 ----------
   function levelSheet(wi, li) {
     const w = WX[wi], r = RECIPES[li];
@@ -4538,7 +4551,7 @@
       save, say, recognize, bestScore, speakMode, stopListening, primeTTS, ac, toast, openModal, closeModal, confetti,
       // savePos：大地图走了一步，只记位置（不整份存）；flush：走路攒下的现在就整份存（开战前这种要紧的时候）
       savePos, flush: () => flushWalk(), walkTouch,
-      qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, esc, wordsHTML, aiTip, gate, gateCard, gateBlock, dayLog, parentOk, music, jingle, sceneMusic,
+      qProg, checkAch, addWrong, markToday, gainXp, renderTop, renderHome, show, goHome, goUnit, esc, wordsHTML, aiTip, gate, gateCard, gateBlock, dayLog, parentOk, music, jingle, sceneMusic,
       reduced, dayStr,
       // AI 打分用不了时（评估第 3 条）：aiDown() 现在该不该给「先跳过 / 听音选」；failHint(res) 没听到时的一行提示；
       // revLater(q 或 {en, zh}) 先跳过的题放进复习、联网后要补说；SKIP_TXT 跳过按钮上的字（按界面语言，和 world.js 的 w.aiskip 一样）
@@ -5251,7 +5264,7 @@
   }
 
   // 测试用：课本出题来源、每日复习
-  window.EchoGame = { src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
+  window.EchoGame = { goUnit: wi => goUnit(wi), src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
     // 走路只记位置、整份存档晚一点才存（见 savePos）：测试 / 工具要直接读 localStorage 里的位置、步数之前，先 flush() 一下
     flush: () => flushWalk() };
   // 测试用：打分（tests/review.test.js）、复习排期引擎、直接出指定的题（[题型, 编号, 第几条] 的列表）

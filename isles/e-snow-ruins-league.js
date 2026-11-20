@@ -912,8 +912,8 @@
     let ok = false;
     await C.talk([
       PNL('Beep! Security question. Please answer in English.', '哔！安全问题，请用英语回答。'),
-      L.ask(PNL, 'Is it cold there?', '控制台问：那里冷吗？看看窗外，选出正确的回答再说出来。', "Yes, it's snowing.", ['Yes, I am.', "It's my coat."],
-        { pass: () => { ok = true; return []; }, fail: () => [PNL('Wrong answer. Look out of the window and try again!', '回答错了。看看窗外，再试一次！')] }),
+      L.ask(PNL, 'Look out of the window. Is it cold outside?', '控制台问：看看窗外，外面冷吗？选出正确的回答再说出来。', "Yes, it's snowing.", ['Yes, I am.', "It's my coat."],
+        { pic: '🪟🌨️', pass: () => { ok = true; return []; }, fail: () => [PNL('Wrong answer. Look out of the window and try again!', '回答错了。看看窗外，再试一次！')] }),
     ]);
     if (!ok) return;
     C.openGate(0, true);

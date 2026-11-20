@@ -292,10 +292,12 @@
     },
   });
   // 门从下往上：早上 → 下午 → 晚上（机关门编号从上往下是 0、1、2）
+  // 2026-11-20（老板：「根本看不出来」）：答题那一页自己要带齐答题用的东西——三张一眼分得开的窗外的图（日出和公鸡 / 正午的大太阳 / 夕阳和路灯）、
+  // 图下面写钟点（cap），英文那句也念出钟点（英语界面没有中文那一行，以前钟点只写在上一页的中文里）
   const GREET = [
-    { gate: 0, pic: '🌇', time: '8:00 pm', en: 'Good evening!', zh: '晚上八点，太阳下山了。' },
-    { gate: 1, pic: '☀️', time: '3:00 pm', en: 'Good afternoon!', zh: '下午三点，太阳很大。' },
-    { gate: 2, pic: '🌅', time: '7:00 am', en: 'Good morning!', zh: '早上七点，太阳刚升起来。' },
+    { gate: 0, pic: '🌇🌙', time: '7:00 pm', en: 'Good evening!', zh: '晚上七点，太阳下山了。', ask: ['Squawk! It is seven p.m. now. Say the right greeting!', '嘎！现在是晚上七点，太阳下山了。选出正确的问候语，再大声说出来！'] },
+    { gate: 1, pic: '☀️🏖️', time: '3:00 pm', en: 'Good afternoon!', zh: '下午三点，太阳很大。', ask: ['Squawk! It is three p.m. now. Say the right greeting!', '嘎！现在是下午三点，太阳很大。选出正确的问候语，再大声说出来！'] },
+    { gate: 2, pic: '🌅🐓', time: '7:00 am', en: 'Good morning!', zh: '早上七点，太阳刚升起来。', ask: ['Squawk! It is seven a.m. now. Say the right greeting!', '嘎！现在是早上七点，太阳刚升起来。选出正确的问候语，再大声说出来！'] },
   ];
   const GREET_OPTS = ['Good morning!', 'Good afternoon!', 'Good evening!', 'Good night!'];
   const parrot = (en, zh, x) => Object.assign({ who: 'Parrot', emo: '🦜', en, zh }, x || {});
@@ -304,9 +306,9 @@
     if (C.gateOpen(g.gate)) return;
     let ok = false;
     await C.talk([
-      parrot('Squawk! Look at the window. What time is it?', '嘎！看看窗外。现在是什么时候？（' + g.time + '）'),
-      parrot('Squawk! Say the right greeting to open the gate!', '看窗外的天色，选出正确的问候语，再大声说出来！', {
-        kind: 'answer', pic: g.pic, opts: GREET_OPTS.map(t => ({ t, c: t === g.en })).sort(() => Math.random() - .5),
+      parrot('Squawk! Look at the window. What time is it?', '嘎！看看窗外。现在是什么时候？'),
+      parrot(g.ask[0], g.ask[1], {
+        kind: 'answer', pic: g.pic, cap: g.time, opts: GREET_OPTS.map(t => ({ t, c: t === g.en })).sort(() => Math.random() - .5),
         pass: () => { ok = true; return [parrot(g.en + ' Squawk!', '说对了！' + g.zh + '门开了！')]; },
         fail: () => [parrot('Squawk! Wrong greeting! Back to the door!', '嘎！说错啦！回到门口重来！')],
       }),
@@ -674,7 +676,7 @@
     await C.alert(k);
     await C.talk([
       K('Oh! A monster! What do I say? What do I say?', '啊！一只怪兽！我该说什么？该说什么？'),
-      L.speak(C, 'You can do it, Kai! Say it loudly!', '给小凯打气：大声说出来！'),
+      L.speak(C, 'Speak loudly, Kai! Your monster will hear you.', '给小凯打气：大声说，你的怪兽会听见的！'),   // 第 12 岛小凯会问起这一句（e-snow-ruins-league.js 的最后一战）
       K('O-okay! Echo Ball, fly!', '好、好的！回声球，飞吧！', { onShow: () => { E.SFX.hit(); } }),
     ]);
     C.remove(wild);
@@ -734,7 +736,7 @@
     const it = W[new Date().getDate() % W.length];
     await C.talk([
       T('Welcome to my art studio! I paint every day.', '欢迎来到我的画室！我每天都画画。'),
-      L.ask(T, 'Look at my picture. What is it?', '看看我的画。它用英语怎么说？（' + it[1] + '）', it[0], W.filter(w => w !== it).slice(0, 2).map(w => w[0]), { pic: it[2], pass: () => C.daily('studio1', () => C.give('potion', 1)) ? [T('Great! Here is a potion.', '答对了！送你一瓶药水。')] : [T('Great! Come back tomorrow.', '答对了！明天再来吧。')] }),
+      L.ask(T, 'Look at my picture. What is it?', '看看我的画。它用英语怎么说？（' + it[1] + '）', it[0], W.filter(w => w !== it && w[2] !== it[2] && !w[0].includes(it[0]) && !it[0].includes(w[0])).sort(() => Math.random() - .5).slice(0, 2).map(w => w[0]), { pic: it[2], pass: () => C.daily('studio1', () => C.give('potion', 1)) ? [T('Great! Here is a potion.', '答对了！送你一瓶药水。')] : [T('Great! Come back tomorrow.', '答对了！明天再来吧。')] }),
     ]);
   }
   // 小凯的舅舅

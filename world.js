@@ -79,7 +79,7 @@
       'w.fish.wait': '静静等着，浮标一动就注意听！', 'w.fish.bite': '<b>咬钩了！</b>它说了一个词，是什么意思？',
       'w.gfx.no3d': '这台设备不支持 3D，已切换成流畅模式', 'w.gfx.slow': '这台手机跑 3D 有点吃力，已切换成流畅模式（可以在设置里改）',
       'w.err.gl': '大地图 3D 画面丢了（{why}），已重建', 'w.err.reload': '重建后载入地图出错：{msg}',
-      'w.menu.title': '冒险菜单', 'w.menu.goal': '现在要做', 'w.menu.badges': '🏅 徽章 {a} / {b}', 'w.menu.spray': ' · 🧴 还剩 {n} 步',
+      'w.menu.title': '冒险菜单', 'w.menu.goal': '现在要做', 'w.goal.go.unit': '▶ 点这里去闯关练习：{u}', 'w.goal.go.map': '▶ 点这里回到地图，照左上角的 📍 走', 'w.goal.go.home': '去闯关练习：{u} ›', 'w.menu.badges': '🏅 徽章 {a} / {b}', 'w.menu.spray': ' · 🧴 还剩 {n} 步',
       'w.menu.team': '🐾 我的队伍', 'w.menu.bag': '🎒 背包', 'w.menu.dex': '📖 手册', 'w.menu.skills': '🌟 回声技能', 'w.menu.quests': '📋 委托',
       'w.menu.help': '❓ 怎么玩', 'w.menu.settings': '⚙️ 设置', 'w.menu.home': '🏠 回首页', 'w.menu.go': '继续冒险',
       'w.help.title': '怎么玩', 'w.help.pad': '◀▲▼▶ 左下角方向键走路', 'w.help.joy': '🕹️ 左半边屏幕按住拖动走路（设置里可以换成方向键）',
@@ -149,7 +149,7 @@
       'w.fish.wait': 'Wait quietly. When the float moves, listen!', 'w.fish.bite': '<b>A bite!</b> It said a word. Which one did you hear?',
       'w.gfx.no3d': 'This device cannot show 3D. Switched to Smooth mode (2D)', 'w.gfx.slow': '3D is too slow on this phone. Switched to Smooth mode (2D). You can change this in Settings',
       'w.err.gl': 'The 3D map view was lost ({why}) and has been rebuilt', 'w.err.reload': 'Error loading the map after the rebuild: {msg}',
-      'w.menu.title': 'Adventure Menu', 'w.menu.goal': 'What to do now', 'w.menu.badges': '🏅 Badges {a} / {b}', 'w.menu.spray': { one: ' · 🧴 {n} step left', other: ' · 🧴 {n} steps left' },
+      'w.menu.title': 'Adventure Menu', 'w.menu.goal': 'What to do now', 'w.goal.go.unit': '▶ Tap to go to Practice: {u}', 'w.goal.go.map': '▶ Tap to go back to the map and follow the 📍 at the top left', 'w.goal.go.home': 'Go to Practice: {u} ›', 'w.menu.badges': '🏅 Badges {a} / {b}', 'w.menu.spray': { one: ' · 🧴 {n} step left', other: ' · 🧴 {n} steps left' },
       'w.menu.team': '🐾 My Team', 'w.menu.bag': '🎒 Bag', 'w.menu.dex': '📖 Monsters', 'w.menu.skills': '🌟 Skills', 'w.menu.quests': '📋 Requests',
       'w.menu.help': '❓ Help', 'w.menu.settings': '⚙️ Settings', 'w.menu.home': '🏠 Home', 'w.menu.go': 'Keep exploring',
       'w.help.title': 'How to play', 'w.help.pad': '◀▲▼▶ Walk with the arrow pad at the bottom left', 'w.help.joy': '🕹️ Walk by holding and dragging on the left half of the screen (you can switch to arrow keys in Settings)',
@@ -372,7 +372,8 @@
     if (!fresh) banner();
     story('enter', 'begin');
     // 地名横幅收起以后，弹 3 秒「现在要做什么」（隔一天回来也知道主线该去哪）
-    if (!fresh) setTimeout(() => { if (!running || !adv.on) return; const o = objective(); if (o) E.toast(tx('w.goal.toast', { t: o.zh })); }, 2700);
+    // 对话 / 剧情开着时不弹（2026-11-20 细节检查：横屏里这条提示压在答题框和喇叭上；目标在 HUD 和冒险菜单里都看得到）
+    if (!fresh) setTimeout(() => { if (!running || !adv.on || dlg || busy || !$('modal').hidden) return; const o = objective(); if (o) E.toast(tx('w.goal.toast', { t: o.zh })); }, 2700);
     // 支线委托：第一次有委托可以接的时候提醒一次（以后看头上的「?」和菜单里的「📋 委托」）
     if (!fresh && !ws.flags.qtip) setTimeout(() => {
       if (!running || !adv.on || WS().flags.qtip || !questRows().some(r => r.seen && r.state === 'open')) return;
@@ -457,7 +458,19 @@
   function objective() {
     try { return window.EchoStory && EchoStory.objective ? EchoStory.objective(SC) : null; } catch (e) { console.error(e); return null; }
   }
-  // 地图左上角地名下面的一行「📍 …」，点一下打开冒险菜单看完整的目标
+  // 地图左上角地名下面的一行「📍 …」：要先学课本时点一下直接去那个单元，别的时候打开冒险菜单看完整的目标
+  // 「现在要做」点了去哪（2026-11-20 老板：「现在要做点了可以直接跳到要做的事情那里」）：
+  //   go === 'unit'（挑战馆的课本门槛）：和「回首页」走同一条路离开大地图（E.goUnit → goHome：存档、冒险计时照旧），打开那个单元、亮出 BOSS 关；
+  //   别的（去哪座岛、找谁、进挑战馆）：不传送——冒险菜单里点了就关上菜单，左上角那行目标亮几下（指向出口的箭头还没做）
+  const goalUnit = o => { const u = o && o.go === 'unit' && (E.WX || [])[o.wi]; return u ? (u.bshort ? u.bshort + ' ' : '') + 'Unit ' + u.n : ''; };
+  const goalGoLabel = o => (goalUnit(o) ? hx('w.goal.go.unit', { u: goalUnit(o) }) : hx('w.goal.go.map'));
+  function goalGo(from) {
+    const o = objective();
+    if (o && goalUnit(o) && E.goUnit) { E.closeModal(); E.goUnit(o.wi); return; }
+    if (from === 'hud') { menuSheet(); return; }
+    E.closeModal();
+    const g = $('w-goal'); if (g && !g.hidden) { g.classList.remove('flash'); void g.offsetWidth; g.classList.add('flash'); }
+  }
   function goalLine() {
     const g = $('w-goal'); if (!g) return;
     const o = objective();
@@ -589,6 +602,14 @@
     trainerTalk(n);
   }
 
+  // 看图说单词：两个词只靠图分不开（同一个图、一个词包着另一个、同一组时间 / 饭 / 家里人 / 生日的词）
+  const PIC_GROUPS = [/^good (morning|afternoon|evening|night)$/, /^(breakfast|lunch|dinner)$/, /^(get up|go to bed)$/, /^(birthday|cake|party)$/,
+    /^(father|mother|grandfather|grandmother|brother|sister|uncle|aunt|cousin|family|dad|mum|mom|parents?)$/, /^(friend|classmate|student)$/, /^(hello|goodbye|bye|hi)$/];
+  function picClash(a, b) {
+    const x = String(a[0]).toLowerCase(), y = String(b[0]).toLowerCase();
+    return a[2] === b[2] || x.includes(y) || y.includes(x) || PIC_GROUPS.some(g => g.test(x) && g.test(y));
+  }
+
   // ---------- 对话框 ----------
   // 台词里的 {name} {rival} 换成主角和对手的名字
   const pname = () => (E.S.player && E.S.player.name) || 'Trainer';
@@ -643,17 +664,21 @@
         // 中文先收起来：点「译」才显示（每点一次记进当天的学习记录，周报里能看到越来越少）
         ? '<button class="d-zh' + (typing ? ' wait' : '') + '" id="d-zh" data-act="wZh" aria-label="' + hx('w.dlg.zh.aria') + '" style="display:block;margin:4px 0 0 auto;padding:2px 14px;border:2px solid #1f8a9e;border-radius:999px;background:#e8f7f9;color:#16707f;font:inherit;font-size:15px;font-weight:800;cursor:pointer">' + hx('w.dlg.zh.btn') + '</button>'
         : '<div class="d-zh' + (typing ? ' wait' : '') + '" id="d-zh">' + esc(zl) + '</div>') + '</div></div>';
+    // 任务页（2026-11-20 老板在 iPhone 横屏上看鹦鹉门：「根本看不出来」「还要往下滑才能说」）：
+    // 图片和它的说明（pg.cap，比如钟点「3:00 pm」）在一块 .d-pic 里，话筒、提示、听到的话在一块 .d-act 里——
+    // 竖屏这两块 display: contents，和以前一样一列排；横屏 style.css 把 图片 | 选项 | 话筒 排成一行，不用往下滑就看得见话筒
+    const picHTML = pg.pic ? '<div class="d-pic"><div class="say-emoji">' + pg.pic + '</div>' + (pg.cap ? '<b class="d-cap">' + esc(pg.cap) + '</b>' : '') + '</div>' : '';
     if (pg.kind === 'speak') {
-      body += '<div class="d-task"><div class="say-text" id="w-say">' + E.wordsHTML(pg.target) + '</div>' +
+      body += '<div class="d-task' + (pg.pic ? ' has-pic' : '') + '">' + picHTML + '<div class="say-text" id="w-say">' + E.wordsHTML(pg.target) + '</div><div class="d-act">' +
         (sr ? '<button class="mic" id="w-mic" data-act="wMic" aria-label="' + hx('w.mic.aria') + '">' + E.MIC + '</button><div class="mic-hint" id="w-hint">' + hx(down ? 'w.mic.down' : 'w.mic.tap') + '</div><div class="heard" id="w-heard"></div>'
           : '<div class="mic-hint" id="w-hint">' + hx('w.self.hint') + '</div><button class="btn leaf" data-act="wSelfDone">' + hx('w.self.done') + '</button>') +
-        '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>' + hx('w.skip') + '</button>' + (sr ? aiSkip : '') + '</div>';
+        '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>' + hx('w.skip') + '</button>' + (sr ? aiSkip : '') + '</div></div>';
     } else if (pg.kind === 'answer') {
-      body += '<div class="d-task">' + (pg.pic ? '<div class="say-emoji">' + pg.pic + '</div>' : '') + '<div class="opts list">' + pg.opts.map((o, k) => '<button class="opt en" data-act="wOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>' +
+      body += '<div class="d-task' + (pg.pic ? ' has-pic' : '') + '">' + picHTML + '<div class="opts list" data-n="' + pg.opts.length + '">' + pg.opts.map((o, k) => '<button class="opt en" data-act="wOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div><div class="d-act">' +
         (dlg.aiTap ? '<small class="tip" id="w-hint">' + hx('w.ans.down') + '</small>'
           : sr ? '<small class="tip">' + hx('w.ans.sr') + '</small><button class="mic" id="w-mic" data-act="wMic" aria-label="' + hx('w.mic.aria') + '">' + E.MIC + '</button><div class="mic-hint" id="w-hint"></div><div class="heard" id="w-heard"></div>'
           : '<small class="tip" id="w-hint">' + hx('w.ans.self') + '</small>') +
-        '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>' + hx('w.skip') + '</button></div>';
+        '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>' + hx('w.skip') + '</button></div></div>';
     } else if (pg.kind === 'choice') {
       body += '<div class="d-task"><div class="d-choice">' + pg.opts.map((o, k) => '<button class="btn ' + (o.cls || 'ghost') + '" data-act="wPick" data-i="' + k + '">' + o.html + '</button>').join('') + '</div></div>';
     } else if (pg.kind === 'custom') body += '<div class="d-task" id="w-custom">' + pg.html + '</div>';
@@ -975,7 +1000,9 @@
     } else if (n.role === 'gift') {
       // 看图说单词，答对每天送一瓶药水
       const sr = E.src ? E.src(z) : { w: z, d: w }, L = sr.d.words, k = (n.seed + new Date().getDate()) % L.length, it = L[k];
-      const others = L.filter((x, j) => j !== k).sort(() => Math.random() - .5).slice(0, 2);
+      // 错的选项不能也对得上这张图（2026-11-20 细节检查：英语界面只有图，没有中文意思）：同一个图、一个词包着另一个（focus / focus on）、
+      // 同一组只靠图分不开的词（早上好 / 下午好 / 晚上好、三顿饭、家里人、起床 / 睡觉、生日 / 蛋糕 / 派对）都不当错的选项
+      const others = L.filter((x, j) => j !== k && !picClash(x, it)).sort(() => Math.random() - .5).slice(0, 2);
       const opts = [{ c: true, t: it[0] }, ...others.map(o => ({ t: o[0] }))].sort(() => Math.random() - .5);
       talk([
         P('Hi! What is this in English?', '你好！这个用英语怎么说？（' + it[1] + '）', {
@@ -1251,7 +1278,7 @@
     const miss = [];
     for (let i = from; i < from + need; i++) if (!((E.S.stars || {})[(NB + i) + '-6'] > 0)) miss.push(i);
     const ok = DEBUG || !miss.length;
-    return { z, need, done: need - miss.length, ok, unitLabel: ok ? '' : lab(miss[0]), target: need ? lab(from + need - 1) : '', unitN: need ? units[from + need - 1].n : 0, missing: ok ? [] : miss.map(lab) };
+    return { z, need, done: need - miss.length, ok, unitLabel: ok ? '' : lab(miss[0]), target: need ? lab(from + need - 1) : '', unitN: need ? units[from + need - 1].n : 0, missing: ok ? [] : miss.map(lab), wi: ok ? -1 : NB + miss[0] };   // wi：第一个没打败 BOSS 的单元（📍 点了直接去那里）
   }
   // 下一枚要拿的徽章是第几座岛的（13 枚都有了返回 -1）
   const nextGymZ = () => { for (let z = 0; z < E.W.length; z++) if (!E.S.mon.badges[z]) return z; return -1; };
@@ -2213,9 +2240,10 @@
   function ensureDom() {
     if ($('w-view')) return;
     const sec = $('world');
+    // 📍 目标那一行：字还是一行小字，上下各多 12px 能点的地方（padding + 负 margin），点得到又不把 HUD 撑高（2026-11-20 细节检查：原来只有 16px 高）
     sec.innerHTML =
       '<div class="w-hud"><button class="x" data-act="wExit" aria-label="' + hx('w.hud.home') + '">✕</button><div class="w-zone"><b id="w-zname"></b><small id="w-zsub"></small>' +
-      '<button id="w-goal" data-act="wGoal" aria-label="' + hx('w.hud.goal') + '" style="display:block;max-width:100%;margin-top:1px;padding:0;border:0;background:none;color:#ffe08a;font:inherit;font-size:12px;font-weight:800;line-height:1.3;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;pointer-events:auto;text-shadow:0 1px 3px rgba(0,0,0,.55)" hidden></button></div>' +
+      '<button id="w-goal" data-act="wGoal" aria-label="' + hx('w.hud.goal') + '" style="display:block;max-width:100%;margin:-11px 0 -12px;padding:12px 0;border:0;background:none;color:#ffe08a;font:inherit;font-size:12px;font-weight:800;line-height:1.3;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;pointer-events:auto;text-shadow:0 1px 3px rgba(0,0,0,.55)" hidden></button></div>' +
       '<span class="chip" id="w-badges"></span><span class="chip" id="w-balls"></span><button class="w-bike" id="w-bike" data-act="wBike" aria-label="' + hx('w.hud.bike') + '" hidden>🚲</button><button class="w-menu" data-act="wMenu" aria-label="' + hx('w.hud.menu') + '">☰</button></div>' +
       '<div class="w-view" id="w-view"><div class="w-note" id="w-note" hidden></div><div class="w-scene" id="w-scene" hidden></div><div class="w-banner" id="w-banner" hidden></div><div class="w-wipe" id="w-wipe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="w-dlg" id="w-dlg" data-act="wA" hidden></div></div>' +
       // 操作：浮在画面上——左边摇杆（手指按哪里就从哪里推），右边 A / B / 英语聊天（像手机上的动作游戏）；设置里可以换回方向键
@@ -2360,7 +2388,8 @@
     const m = E.S.mon, o = objective();
     const qn = questRows().filter(r => r.seen && r.state === 'open').length;   // 去过的岛上现在能接的委托有几条
     E.openModal('<h2>' + hx('w.menu.title') + '</h2>' +
-      (o ? '<div class="ach" id="w-goal-full"><span class="ae">📍</span><div style="flex:1"><b>' + hx('w.menu.goal') + '</b><small>' + E.esc(o.zh) + '</small></div></div>' : '') +
+      // 「现在要做」能点（2026-11-20 老板）：要先学课本 → 直接去那个单元；别的在地图上 → 关上菜单、左上角那行亮一下（不传送）
+      (o ? '<div class="ach" id="w-goal-full" data-act="wGoalGo" role="button" tabindex="0" style="cursor:pointer"><span class="ae">📍</span><div style="flex:1"><b>' + hx('w.menu.goal') + '</b><small>' + E.esc(o.zh) + '</small><small class="goal-go">' + goalGoLabel(o) + '</small></div><span style="color:var(--ink-3);font-weight:800">›</span></div>' : '') +
       (window.EchoSight ? EchoSight.menuRow() : '') +   // 今日目击（sighting.js）：「现在要做」下面的一行，点开是告示板
       '<p>' + hx('w.menu.badges', { a: Object.keys(m.badges).length, b: E.W.length }) + ' · 💰 ' + E.S.coins + (WS().repel > 0 ? hx('w.menu.spray', { n: WS().repel }) : '') + '</p>' +
       '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">' + hx('w.menu.team') + '</button><button class="btn ghost" data-act="mBag">' + hx('w.menu.bag') + '</button><button class="btn ghost" data-act="mDex">' + hx('w.menu.dex') + '</button><button class="btn ghost" data-act="wSkills">' + hx('w.menu.skills') + '</button><button class="btn ghost" data-act="wQuests">' + hx('w.menu.quests') + (qn ? ' <b style="color:#b36b00">' + qn + '</b>' : '') + '</button>' +
@@ -2386,7 +2415,9 @@
     wB: () => overlay ? overlay('B') : bButton(),
     wPick: t => { const pg = page(); if (!pg || pg.kind !== 'choice') return; const extra = pg.pick(+t.dataset.i); insertPages(extra); pg.kind = null; nextPage(); },
     wMenu: () => menuSheet(),
-    wGoal: () => { if (!dlg && !overlay) menuSheet(); },
+    wGoal: () => { if (!dlg && !overlay && !busy) goalGo('hud'); },
+    wGoalGo: () => { if (!dlg && !overlay && !busy) goalGo('menu'); },
+    wGoalHome: t => { if (E.goUnit) E.goUnit(+t.dataset.w); },   // 首页「继续冒险」下面那行 📍 的「去闯关练习」
     wZh: () => showZh(),
     // 剧情中文的设置按钮（EchoWorld.storyZhHTML() 给设置页用）：就地换高亮，不用重画整个设置页
     wZhMode: t => {

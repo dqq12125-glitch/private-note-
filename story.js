@@ -848,7 +848,8 @@
     const g = C.gymNeed ? C.gymNeed(z) : { ok: true };
     // 岛主的名字：中文界面是「鹦鹉船长 Captain Polly」，别的语言只写英文名
     const who = I18N ? I18N.label({ zh: E.W[z].boss.name + ' ' + LEADER_EN[z], en: LEADER_EN[z] }) : E.W[z].boss.name + ' ' + LEADER_EN[z];
-    if (!g.ok) return out(tx('st.obj.study', { who, unit: g.unitLabel, done: g.done, need: g.need }), z);
+    // go：点「📍 现在要做」能直接去的地方（2026-11-20）——'unit' 是闯关练习里那个课本单元（wi），离开大地图去学
+    if (!g.ok) return Object.assign(out(tx('st.obj.study', { who, unit: g.unitLabel, done: g.done, need: g.need }), z), g.wi >= 0 ? { go: 'unit', wi: g.wi } : {});
     return out(tx('st.obj.gym', { who, how: GYM_HOW(z) }), z);
   }
 

@@ -664,6 +664,18 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
 .d-en { min-height: 1.25em; }
 .d-zh { transition: opacity .25s; }
 .d-zh.wait { opacity: 0; }
+/* 任务页的图片和它的说明（world.js：pg.pic + pg.cap，比如窗外的天色 + 钟点「3:00 pm」）、话筒那一块（.d-act）。
+   竖屏：话筒那块 display: contents（和以前一样一列排），图和说明并排；横屏在下面「横屏」那段里排成一行 */
+.d-act { display: contents; }
+.d-pic { display: flex; align-items: center; justify-content: center; gap: 14px; }   /* 竖屏：图和钟点并排，不比以前高 */
+.d-cap { font-family: var(--f-display); font-size: 22px; line-height: 1.1; padding: 3px 12px; border-radius: 10px; background: var(--ink); color: #fff; letter-spacing: .02em; }
+/* 对话框 / 过场开着时，HUD（地名、📍 目标、徽章、✕、☰）整个淡出、不接手指——以前只藏摇杆和 A / B（.w-ctrl），
+   HUD 的 z-index（6）比对话框（4）高，横屏挑战馆里两行地名 + 目标那一行压在答题框和名字牌上（2026-11-20 老板的截图）。
+   进地图的横幅、指北针也让开；提示条在横屏答题时让开（横屏答题框用到屏幕顶上，见下面） */
+#world .w-hud { transition: opacity .15s; }
+#world:has(#w-dlg:not([hidden])) .w-hud, #world:has(#w-scene:not([hidden])) .w-hud { opacity: 0; pointer-events: none; }
+#world:has(#w-dlg:not([hidden])) .w-hud *, #world:has(#w-scene:not([hidden])) .w-hud * { pointer-events: none !important; }
+#world:has(#w-dlg:not([hidden])) .w-banner, #world:has(#w-dlg:not([hidden])) .w-compass { display: none; }
 
 /* ---------- 精致化：战斗 ---------- */
 .arena { background: #b5e399; border: 3px solid #2b3440; box-shadow: 0 5px 0 rgba(0, 0, 0, .18); }
@@ -720,6 +732,9 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
 .in-mon svg { width: 100%; height: auto; }
 .d-choice { display: flex; gap: 10px; width: 100%; }
 .d-choice .btn { flex: 1; padding: 8px 6px; }
+/* 四个以上的选项折成两排（2026-11-20 细节检查：一排放不下，后面几个挤出了屏幕） */
+.d-choice { flex-wrap: wrap; }
+.d-choice:has(> :nth-child(4)) > .btn { flex: 1 1 calc(50% - 10px); }
 .ch-card { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .ch-card img { height: 96px; }
 .ch-card b { font-family: var(--f-display); font-size: 18px; }
@@ -1033,18 +1048,40 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   /* 普通对话：「▼」放到右下角，不单独占一行 */
   #world .w-dlg:not(.task) { padding-bottom: 10px; }
   #world .w-dlg .d-next { position: absolute; right: 16px; bottom: 8px; }
-  /* 答题、跟读、钓鱼、剧情里的选择：用 HUD 下面的全部高度，排紧一点，按钮不用滚就看得见 */
-  #world .w-dlg.task { max-height: calc(100% - 64px - env(safe-area-inset-top, 0px)); width: min(820px, 88%); padding: 10px 14px; }
-  #world .w-dlg.task .d-face { width: 46px; height: 46px; }
-  #world .w-dlg.task .d-text { min-height: 46px; }
+  /* 答题、跟读、钓鱼、剧情里的选择（2026-11-20 重排）：对话框开着时 HUD 让开了（上面），答题框可以用到屏幕顶上；
+     宽度不进左右的安全区（灵动岛 / 圆角）；名字牌小一号（框能滚，挂在框外面会被裁掉）；
+     图片 | 选项 | 话筒 排成一行（.d-pic / .opts 或 .say-text / .d-act），最小的横屏手机（667×375）上也不用往下滑就点得到话筒 */
+  #world .w-dlg.task { max-height: calc(100% - 20px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    width: min(860px, calc(100% - 2 * max(12px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))); padding: 14px 14px 10px;
+    align-items: stretch; text-align: left; }   /* .task 是对战任务框的类，带着 align-items: center：横屏里一行排开就要铺满 */
+  #world .w-dlg.task .d-name { padding: 1px 12px; font-size: 14px; border-width: 2px; margin: 0; }
+  #world .w-dlg.task .d-face { width: 40px; height: 40px; }
+  #world .w-dlg.task .d-face.emo { font-size: 24px; }
+  #world .w-dlg.task .d-text { min-height: 40px; flex: 1; text-align: left; }
+  #world .w-dlg.task .d-row { justify-content: flex-start; }
+  #world .w-dlg.task .d-en { font-size: 19px; }
+  #world:has(#w-dlg.task:not([hidden])) .w-note { display: none; }
   #world .d-task { margin-top: 2px; gap: 6px; }
+  #world .d-task:has(> .d-act) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 14px; row-gap: 6px; }
+  #world .d-task.has-pic:has(> .d-act) { grid-template-columns: auto minmax(0, 1fr) auto; }
+  #world .d-task > .d-pic { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  #world .d-task > .d-act { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 168px; }
+  #world .d-task > .d-pic .say-emoji { font-size: 46px; }
+  #world .d-task > .say-text { text-align: center; }
+  #world .d-task > .d-act .mic { width: 64px; height: 64px; }
+  #world .d-task > .d-act .mic svg { width: 30px; height: 30px; }
+  #world .d-task > .d-act .tip, #world .d-task > .d-act .mic-hint { font-size: 14px; line-height: 1.3; }
+  #world .d-task > .d-act .heard { min-height: 0; font-size: 14px; }
   #world .d-task .opts.list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  #world .d-task:has(> .d-act) .opts.list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #world .d-task:has(> .d-act) .opts.list[data-n="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   #world .d-task .opts.list .opt { min-height: 50px; padding: 6px 10px; }
   #world .d-task .opt.en .o-t { font-size: 18px; }
   #world .w-dlg.task .fish .opt { min-height: 60px; }
   /* 钓鱼：「再听一遍」放在三个选项右边，不单独占一行 */
   #world .fish .opts { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; }
-  #world .d-task .d-choice { max-width: 600px; }
+  #world .d-task .d-choice { max-width: 760px; justify-content: center; }
+  #world .d-task .d-choice:has(> :nth-child(4)) > .btn { flex: 1 1 calc(33% - 10px); }
   #world .d-choice .btn { white-space: nowrap; min-height: 52px; padding-inline: 18px; }
   /* 提示条不要横贯整个屏幕 */
   #world .w-note { left: 50%; right: auto; transform: translateX(-50%); width: max-content; max-width: min(640px, 70%); }
@@ -1087,6 +1124,13 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   body.scr-battle #battle .task .opts:not(.list) .opt .o-e { font-size: 26px; }
   body.scr-battle #battle .task > [data-act=bBack] { order: 1; }
   body.scr-battle #battle .task-foot { order: 2; position: sticky; bottom: 0; z-index: 1; width: calc(100% + 24px); margin: 0 -12px; gap: 4px; padding: 6px 12px 8px; border-radius: 0 0 20px 20px; background: var(--card); box-shadow: 0 -10px 10px -10px rgba(9, 30, 45, .35); }
+  /* 出招任务开着时，上面的说明框让出地方给任务（任务框自己的标题已经说了要做什么）：横屏小手机上选项、话筒、「换一个招式」都不用滚 */
+  body.scr-battle #battle:has(#b-panel .task) .b-msg { display: none; }
+  body.scr-battle #battle:has(#b-panel .task) .b-panel { grid-row: 2 / 4; margin-top: 0; }
+  /* 话筒和提示排成一行（2026-11-20 细节检查：话筒那一块太高，「换一个招式」压在它下面，要往下滑） */
+  body.scr-battle #battle .task-foot { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; column-gap: 12px; }
+  body.scr-battle #battle .task-foot > .mic-hint, body.scr-battle #battle .task-foot > .heard { flex: 1 1 40%; text-align: left; }
+  body.scr-battle #battle .task-foot > :not(.mic):not(.mic-hint):not(.heard) { flex-basis: 100%; }
   body.scr-battle #battle .task-foot .mic { width: 60px; height: 60px; }
   body.scr-battle #battle .task-foot .mic svg { width: 30px; height: 30px; }
   body.scr-battle #battle .task-foot .mic-hint { font-size: 12px; min-height: 0; }
@@ -1104,6 +1148,8 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   /* 最后一排按钮（开始闯关、知道了……）贴在弹窗底部：预习列表打开、内容很长时也看得见 */
   /* （下面多画一截底色，盖住弹窗内边距里滚过去的内容） */
   .sheet > .row:last-child, .sheet > .btn.wide:last-child { position: sticky; bottom: 0; z-index: 2; }
+  /* 包在一层里面的最后一排（聊天须知的「知道了」、周报的「关闭」）也一样贴底（2026-11-20 细节检查：要往下滑才点得到） */
+  .sheet .tk-btns:last-child, .sheet .rp-end { position: sticky; bottom: 0; z-index: 2; margin-top: -6px; padding-top: 6px; background: var(--foam); box-shadow: 0 -8px 8px -8px rgba(9, 30, 45, .3), 0 14px 0 var(--foam); }
   .sheet > .row:last-child { margin-top: -6px; padding-top: 6px; background: var(--foam); box-shadow: 0 -8px 8px -8px rgba(9, 30, 45, .3), 0 14px 0 var(--foam); }
   .sheet > .btn.wide:last-child { box-shadow: 0 5px 0 var(--lagoon-d), 0 19px 0 8px var(--foam); }
   .sheet > .btn.wide.ghost:last-child { box-shadow: 0 5px 0 var(--line), 0 19px 0 8px var(--foam); }
@@ -1114,6 +1160,17 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   #sheet:has(> .mrow) > :not(.mrow), #sheet:has(> .ach) > :not(.ach), #sheet:has(> .set) > :not(.set) { grid-column: 1 / -1; }
   .set .seg button { min-height: 40px; }
   .w-menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  /* 冒险菜单（2026-11-20 细节检查：横屏 iPhone 上第二排按钮压在「继续冒险」下面，要往下滑）：「现在要做」和「今日目击」并排、按钮矮一点 */
+  #sheet:has(> #w-goal-full) { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 8px; padding-block: 10px; }
+  #sheet:has(> #w-goal-full) > #w-goal-full, #sheet:has(> #w-goal-full) > .ach[data-act=sgOpen] { grid-column: auto; margin: 0; }
+  #sheet:has(> #w-goal-full) > h2 { margin: 0; grid-column: 1; }
+  #sheet:has(> #w-goal-full) > p { margin: 0; font-size: 15px; grid-column: 2; grid-row: 1; align-self: center; text-align: right; }
+  #sheet:has(> #w-goal-full) > .btn.wide:last-child { min-height: 48px; padding-block: 8px; }
+  #sheet:has(> #w-goal-full) .w-menu-grid { gap: 8px; }
+  #sheet:has(> #w-goal-full) .w-menu-grid { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
+  #sheet:has(> #w-goal-full) .w-menu-grid .btn { min-height: 44px; padding: 6px 4px; font-size: 15px; white-space: nowrap; }
+  #sheet:has(> #w-goal-full) > .ach { padding: 8px 12px; gap: 10px; }
+  #sheet:has(> #w-goal-full) > .ach small { font-size: 14px; line-height: 1.35; }
   .grid3 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .dex { grid-template-columns: repeat(8, minmax(0, 1fr)); }
   .pre-list { max-height: 34vh; }
@@ -1151,6 +1208,8 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   #home > .tabs { grid-column: 1 / -1; }
   #home > .quests { grid-column: 1; grid-row: 2 / span 3; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 54px); max-height: calc(100vh - 62px); max-height: calc(100dvh - 62px - env(safe-area-inset-top, 0px)); overflow-y: auto; }
   #home > :is(#mon-home, #talk-home, #quiz-home, .foot) { grid-column: 2; }
+  /* 「继续冒险」和它下面那行 📍 放到怪兽卡片上面（2026-11-20 细节检查：横屏 iPhone 上要往下滑才看得到这个主按钮）；学习锁锁着时本来就在最上面 */
+  #mon-home > .world-go:not(.locked), #mon-home > .world-go:not(.locked) + .tip.obj { order: -1; }
   .quests { padding: 10px 14px; }
   .quests .rev-card { padding: 10px 12px; margin-bottom: 8px; }
   .q-row { padding-block: 4px; }
@@ -1212,9 +1271,10 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   /* BOSS：左边它说的话、下面是话筒 / 自评，右边三个回答 */
   #p-body[data-q=bt] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; column-gap: 16px; align-items: start; }
   #p-body[data-q=bt] > * { grid-column: 1 / -1; }
-  #p-body[data-q=bt] > .q-main { grid-column: 1; grid-row: 2; }
-  #p-body[data-q=bt] > .q-side { grid-column: 1; grid-row: 3; }
-  #p-body[data-q=bt] > .opts { grid-column: 2; grid-row: 2 / -1; grid-template-columns: 1fr; gap: 8px; }
+  #p-body[data-q=bt] > .q-main { grid-column: 1; grid-row: 2 / -1; }
+  /* 话筒放到右边选项下面（2026-11-20 细节检查：在左边题目下面时落到屏幕底下 / iPhone 底部横条上） */
+  #p-body[data-q=bt] > .q-side { grid-column: 2; grid-row: 3; }
+  #p-body[data-q=bt] > .opts { grid-column: 2; grid-row: 2; grid-template-columns: 1fr; gap: 8px; }
   #p-body[data-q=bt] .opt { min-height: 50px; padding: 6px 12px; }
   #p-body[data-q=bt] .opt.en .o-t { font-size: 18px; }
   #p-body[data-q=bt] .q-main > .say-zh { font-size: 14px; }
@@ -1233,9 +1293,14 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   .fb .btn { flex: none; padding: 10px 22px; }
 
   /* ===== 结算页：左边星星，右边奖励和按钮 ===== */
-  body.scr-result #result { min-height: calc(100vh - 52px); min-height: calc(100dvh - 52px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: 28px; padding-block: 8px; }
+  body.scr-result #result { min-height: calc(100vh - 52px); min-height: calc(100dvh - 52px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: 28px; padding-block: 8px calc(8px + env(safe-area-inset-bottom, 0px)); }
   #result .r-hero, #result .r-body { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
   #result .r-hero .big { font-size: 48px !important; line-height: 1; }
+  /* 三个数字排成一行矮条、间距小一点：横屏 iPhone 上「回地图 / 再玩一次」不落到底部横条上（2026-11-20 细节检查） */
+  #result .r-body { gap: 8px; }
+  #result .r-body .stat { display: flex; align-items: baseline; justify-content: center; gap: 6px; padding: 6px; }
+  #result .r-body .stat b { display: inline; font-size: 22px; }
+  #result .r-body .stat small { font-size: 14px; }
   .r-title { font-size: 28px; }
   .r-sub { margin: 0; }
   .r-stars { font-size: 46px; }
@@ -1274,7 +1339,10 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   .tk-eval { grid-column: 1 / -1; grid-row: 1 / -1; }
   .tk-eval:has(> .tk-tips) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); grid-template-rows: repeat(7, auto) 1fr; column-gap: 20px; row-gap: 6px; align-content: start; justify-items: center; }
   .tk-eval:has(> .tk-tips) > * { grid-column: 1; }
-  .tk-eval:has(> .tk-tips) > .tk-tips { grid-column: 2; grid-row: 1 / -1; align-self: start; }
+  .tk-eval:has(> .tk-tips) > .tk-tips { grid-column: 2; grid-row: 2 / -1; align-self: start; }
+  /* 「再聊一次 / 回去」放右边最上面、「更好的说法」在它下面（2026-11-20 细节检查：左边一列太长，按钮要往下滑才看得到）；没有「更好的说法」时贴在底下 */
+  .tk-eval:has(> .tk-tips) > .tk-btns { grid-column: 2; grid-row: 1; align-self: start; }
+  .tk-eval:not(:has(> .tk-tips)) > .tk-btns { position: sticky; bottom: 0; z-index: 1; padding: 6px 0; background: var(--bg, #f4fbf9); }
   .tk-eval img { width: 56px; height: 56px; }
   .tk-stars { font-size: 26px; }
 }
@@ -1612,6 +1680,19 @@ body.su-on .toasts { z-index: 95; }   /* 向导里的提示（密码设好了、
   .su-dev { display: grid; grid-template-columns: 1fr 1fr; }   /* 设备检查两列：结论不用滚就看得到 */
   .su-pin .pin-k { height: 40px; }
   .su-pin .pin-pad { gap: 6px; }
+  /* 家长密码这一页：说明在左、数字键盘在右边从顶上排下来（2026-11-20 细节检查：横屏 iPhone 上 7 8 9 0 要往下滑才点得到） */
+  .su-step:has(> .su-pin) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 18px; align-content: start; }
+  .su-step:has(> .su-pin) > * { grid-column: 1; }
+  .su-step > .su-pin { display: contents; }
+  .su-step > .su-pin > :not(.pin-pad) { grid-column: 1; text-align: center; }
+  .su-step > .su-pin > .pin-pad { grid-column: 2; grid-row: 1 / span 9; align-self: start; }
+  .su-step > h2 { margin: 0 0 4px; }
+  /* 云端模式的「AI 和账号」：说明在左、「现在登录」在右，不用往下滑 */
+  .su-step:has(> #su-ac-signin) { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); column-gap: 16px; row-gap: 8px; align-content: start; }
+  .su-step:has(> #su-ac-signin) > * { grid-column: 2; margin: 0; }
+  .su-step:has(> #su-ac-signin) > h2 { grid-column: 1 / -1; }
+  .su-step:has(> #su-ac-signin) > .su-card.ai { grid-column: 1; grid-row: 2 / span 4; }
+  .su-step p, .su-step .su-lead { font-size: 15px; line-height: 1.45; }
   .su-hero { display: none; }
   .su-mons { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
 }
@@ -1832,6 +1913,132 @@ html.echo-ios .ac-in { font-size: 16px; }   /* 小于 16px 的输入框一点就
 @media (orientation: landscape) and (max-height: 600px) {
   .ac { gap: 8px; }
   .ac .big { font-size: 36px; }
+  .ac > .big { display: none; }   /* 横屏不放大表情（2026-11-20 细节检查：小 iPhone 横屏上「以后再说 / 关闭」差一点就出了屏幕） */
   .ac-prod { padding: 6px 10px; }
   .ac-strip { margin-bottom: 6px; }
+  /* 登录页：左边标题和说明、右边按钮和表单；会员页：两种会员并排（2026-11-20 细节检查：横屏 iPhone 上「发验证码」「订阅」「关闭」要往下滑） */
+  .ac:has(> .ac-form) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 18px; row-gap: 6px; align-items: start; }
+  .ac:has(> .ac-form) > * { grid-column: 2; }
+  .ac:has(> .ac-form) > h2 { grid-column: 1; grid-row: 1; }
+  .ac:has(> .ac-form) > p:not(.ac-or):not(.ac-msg):not(.ac-legal) { grid-column: 1; grid-row: 2 / span 4; }
+  .ac:has(> .ac-form) > .tip { grid-column: 1; grid-row: 6; }
+  .ac:has(> .ac-form) > .ac-apple { grid-row: 1; }
+  .ac:has(> .ac-form) > .ac-or { grid-row: 2; }
+  .ac:has(> .ac-form) > .ac-form { grid-row: 3; }
+  .ac:has(> .ac-form) > .ac-msg { grid-row: 4; }
+  .ac:has(> .ac-form) > .ac-legal { grid-row: 5; }
+  .ac:has(> .ac-form) > .row { grid-row: 6; }
+  .ac:has(> .ac-prod) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 10px; }
+  .ac:has(> .ac-prod) > :not(.ac-prod) { grid-column: 1 / -1; }
+  .ac:has(> .ac-prod) > .ac-prod { flex-direction: column; align-items: stretch; text-align: center; }
 }
+
+/* ---------- 点得到（2026-11-20 细节检查 tools/ui-audit：能点的东西至少约 40×40；字不变小，只把能点的地方撑大） ---------- */
+.p-top .x { min-width: 40px; min-height: 40px; }
+.topbar .me { min-height: 40px; }
+.w-dlg .spk.mini { width: 40px; height: 40px; }
+.w-dlg .d-row { padding-right: 44px; }
+.sg-clue .spk.mini, .say-row .spk.mini { width: 40px; height: 40px; }
+.b-items .btn.small { min-height: 40px; }
+#tk-ov .tk-tools button { min-height: 40px; }
+#tk-ov .tk-x { min-height: 40px; min-width: 40px; }
+#tk-ov .tk-w { min-height: 32px; }
+#tk-ov .tk-steps li { min-height: 32px; align-items: center; }
+#tk-ov .tk-typeopen { min-height: 36px; }
+.place-card .pc-x { min-width: 40px; }
+@media (orientation: landscape) and (max-height: 600px) {
+  /* 对战顶上的名字：小手机横屏时战场窄，名字小一号、贴紧一点，不省略成「Emberp…」 */
+  .hp-top b { font-size: 15px; letter-spacing: 0; }
+  .hpcard { padding-inline: 8px; }
+  .hpcard.me { padding-left: 11px; }
+  .hpcard.foe { padding-right: 11px; }
+}
+
+/* ---------- 矮的竖屏手机（iPhone SE / 8 这一档，667 高；2026-11-20 细节检查）：要做的事（话筒、选项、「换一个招式」、数字键盘）不用往下滑 ---------- */
+@media (orientation: portrait) and (max-height: 740px) {
+  /* 大地图的答题 / 跟读框：四个选项排成两列，图和话筒小一点 */
+  #world .w-dlg.task { max-height: calc(100% - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); padding: 12px 12px 10px; }
+  #world .w-dlg.task .d-face { width: 44px; height: 44px; }
+  #world .w-dlg.task .d-text { min-height: 44px; }
+  #world .w-dlg.task .d-en { font-size: 19px; }
+  #world .d-task { gap: 6px; }
+  #world .d-task .say-emoji { font-size: 46px; }
+  #world .d-task .d-cap { font-size: 18px; }
+  #world .d-task .opts.list[data-n="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  #world .d-task .opts.list[data-n="4"] .opt { padding: 6px 10px; }
+  #world .d-task .opts.list[data-n="4"] .opt.en .o-t { font-size: 17px; }
+  #world .d-task .opt { min-height: 46px; }
+  #world .d-task .mic { width: 64px; height: 64px; }
+  #world .d-task .mic svg { width: 30px; height: 30px; }
+  #world .d-task .mic-hint, #world .d-task .heard { min-height: 0; }
+  /* 对战：出招任务开着时上面的说明框让出地方，战场矮一点 */
+  body.scr-battle #battle .arena { min-height: 170px; }
+  body.scr-battle #battle:has(#b-panel .task) .b-msg { display: none; }
+  body.scr-battle #battle:has(#b-panel .task) .b-panel { max-height: 68%; }
+  body.scr-battle #battle .task { gap: 6px; padding: 10px 12px; }
+  body.scr-battle #battle .task .say-emoji { font-size: 44px; }
+  body.scr-battle #battle .task .mic { width: 72px; height: 72px; }
+  body.scr-battle #battle .task .opts.list .opt { min-height: 46px; padding: 6px 12px; }
+  /* 闯关：岛主题的选项矮一点；结算页紧一点 */
+  #p-body[data-q=bt] .opt { min-height: 52px; padding: 6px 10px; }
+  body.scr-result #result { gap: 10px; padding-block: 12px; }
+  #result .big { font-size: 56px !important; }
+  /* 家长密码的数字键盘、冒险菜单 */
+  .su-pin .pin-k { height: 46px; }
+  .su-pin .pin-pad { gap: 8px; }
+  .w-menu-grid .btn { min-height: 48px; padding-block: 8px; }
+  #w-goal-full small, .sheet > .ach small { font-size: 14px; }
+}
+
+/* ---------- 弹窗最后一个按钮 / 最后一排贴在弹窗底部（竖屏也一样；2026-11-20 细节检查：设置、回声技能、怎么玩、电脑、手册这些长弹窗，「完成 / 关闭」要滑到最底下才点得到） ---------- */
+.sheet > .row:last-child, .sheet > .btn:last-child, .sheet .tk-btns:last-child { position: sticky; bottom: 0; z-index: 2; }
+.sheet > .row:last-child, .sheet .tk-btns:last-child { margin-top: -6px; padding-top: 6px; background: var(--foam); box-shadow: 0 -8px 8px -8px rgba(9, 30, 45, .3), 0 14px 0 var(--foam); }
+.sheet > .btn:last-child { box-shadow: 0 5px 0 var(--line), 0 19px 0 8px var(--foam); }
+.sheet > .btn:not(.ghost):not(.sun):last-child { box-shadow: 0 5px 0 var(--lagoon-d), 0 19px 0 8px var(--foam); }
+.sheet > .btn.sun:last-child { box-shadow: 0 5px 0 var(--sun-d), 0 19px 0 8px var(--foam); }
+
+/* ---------- 竖屏补充（2026-11-20 细节检查） ---------- */
+@media not all and (orientation: landscape) and (max-height: 600px) {
+  /* 对战：出招任务开着时说明框让出地方（任务框自己的标题已经说了要做什么），话筒和「换一个招式」不用滑 */
+  body.scr-battle #battle:has(#b-panel .task) .b-msg { display: none; }
+  body.scr-battle #battle:has(#b-panel .task) .b-panel { max-height: 66%; }
+  /* 聊完的评语页、登录 / 会员页：最后一排按钮贴底 */
+  .tk-eval > .tk-btns { position: sticky; bottom: 0; z-index: 1; padding: 6px 0; background: var(--bg, #f4fbf9); }
+  .sheet > .ac > .row:last-child { position: sticky; bottom: 0; z-index: 2; margin-top: -6px; padding-top: 6px; background: var(--foam); box-shadow: 0 -8px 8px -8px rgba(9, 30, 45, .3), 0 14px 0 var(--foam); }
+}
+@media (orientation: portrait) and (max-height: 740px) {
+  /* 冒险菜单：八个按钮排成两排四个，图在上、字在下 */
+  .w-menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .w-menu-grid .btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; padding: 6px 2px; font-size: 14px; line-height: 1.15; }
+  #p-body[data-q=bt] .opts { gap: 6px; }
+  #p-body[data-q=bt] .mic { width: 80px; height: 80px; }
+}
+
+/* ---------- 「📍 现在要做」能点（2026-11-20 老板）：菜单卡片下面一行写着点了去哪；回到地图时左上角那行亮几下；去到的课本单元那一关亮一圈 ---------- */
+#w-goal-full .goal-go { display: block; margin-top: 2px; color: var(--lagoon-d, #0d6b74); font-weight: 800; }
+#w-goal.flash { animation: goalFlash .5s ease-in-out 4; border-radius: 6px; }
+@keyframes goalFlash { 50% { background: rgba(255, 224, 138, .35); box-shadow: 0 0 0 4px rgba(255, 224, 138, .35); } }
+.node.goal { animation: nodeGoal 1s ease-in-out 5; }
+@keyframes nodeGoal { 50% { box-shadow: 0 0 0 6px var(--sun, #ffc83d), 0 6px 0 rgba(0, 0, 0, .15); } }
+.tip.obj .obj-go { display: inline-block; min-height: 40px; padding: 0 6px; font-weight: 800; color: var(--lagoon-d, #0d6b74); }
+@media (orientation: portrait) and (max-height: 740px) {
+  /* 冒险菜单在矮的竖屏上也不用滑：标题、卡片、间距都紧一点 */
+  #sheet:has(> #w-goal-full) { padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+  #sheet:has(> #w-goal-full) > h2 { margin: 0; font-size: 20px; }
+  #sheet:has(> #w-goal-full) > .ach { padding: 8px 12px; margin: 0; }
+  #sheet:has(> #w-goal-full) > p { margin: 0; font-size: 14px; }
+  #sheet:has(> #w-goal-full) > .btn.wide:last-child { min-height: 50px; padding-block: 10px; }
+  .ac > .big { display: none; }
+}
+/* 家长密码那一页：不放大钥匙图，数字键盘最下面一排不压在「上一步 / 下一步」下面（2026-11-20 细节检查：iPhone 竖屏上「0」被盖住） */
+.su-step:has(> .su-pin) > .su-hero { display: none; }
+@media not all and (orientation: landscape) and (max-height: 600px) {
+  /* 结算页：间距小一点，「回地图 / 再玩一次」不落到屏幕下面（2026-11-20 细节检查） */
+  body.scr-result #result { gap: 12px; padding-block: 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  /* 结算页的按钮贴在屏幕底部：奖励的小条多的时候（幸运翻倍、新岛、学习锁……）也不用往下滑（2026-11-20 细节检查） */
+  #result .r-actions { position: sticky; bottom: 0; z-index: 2; width: 100%; padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(transparent, var(--foam) 22%); }
+}
+/* 普通对话：名字牌挂在框的上沿，第一行字往下让一点，不贴着名字牌（2026-11-20 细节检查） */
+.w-dlg:not(.task) .d-row { padding-top: 6px; }

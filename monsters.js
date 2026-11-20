@@ -551,7 +551,9 @@
     const ws = E.S.world || {}, EW = window.EchoWorld, safe = f => { try { return f(); } catch (e) { return null; } };
     const obj = ws.started && EW && EW.objective ? safe(() => EW.objective()) : null;
     const objText = obj && (obj.text || obj.zh);   // story.js 的 objective()：text 是界面语言的那句（老的 zh 字段也是同一句）
-    const objLine = objText ? '<p class="tip obj" style="margin-top:-4px">📍 ' + esc(objText) + '</p>' : '';
+    // 要先学课本（挑战馆的门槛）时，后面跟一个「去闯关练习：七下 Unit 1 ›」，点了直接打开那个单元（world.js 的 wGoalHome → game.js goUnit）
+    const goU = obj && obj.go === 'unit' && (E.WX || [])[obj.wi], goLab = goU ? (goU.bshort ? goU.bshort + ' ' : '') + 'Unit ' + goU.n : '';
+    const objLine = objText ? '<p class="tip obj" style="margin-top:-4px">📍 ' + esc(objText) + (goLab && window.EchoI18n ? ' <button class="link obj-go" data-act="wGoalHome" data-w="' + obj.wi + '">' + EchoI18n.h('w.goal.go.home', { u: goLab }) + '</button>' : '') + '</p>' : '';
     let h = g.open ? '' : lock + lockedBtn + objLine;
     h += '<section class="mon-card lead" style="--tc:' + TYPES[s.type].color + '"><div class="lead-mon">' + svgMon(L) + '</div><div class="lead-info">' +
       '<div class="lead-name"><b>' + (L.shiny ? '✨' : '') + E.esc(nm(L)) + '</b><span>' + subName(L) + '</span> ' + heartsHTML(L) + '</div>' +
