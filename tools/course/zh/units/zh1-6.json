@@ -1,0 +1,1442 @@
+{
+ "book": "zh1",
+ "n": 6,
+ "t": "买衣服",
+ "zh": "",
+ "en": "Buying Clothes",
+ "icon": "👗",
+ "color": "#D1478C",
+ "key": {
+  "t": "你想买什么颜色的衣服？",
+  "r": "nǐ xiǎng mǎi shén me yán sè de yī fu?",
+  "zh": "",
+  "en": "What colour of clothes do you want to buy?"
+ },
+ "grammar": {
+  "title": {
+   "zh": "有点 和 一点，试一下",
+   "en": "A bit too… vs. a bit more…, and trying"
+  },
+  "tip": {
+   "zh": "「有点 + 形容词」放在形容词前面，说的是不太满意：这件外套有点大。「形容词 + 一点」放在后面，是想要比较一下、换一个：有小一点的吗？想试一试，可以说「试一下」或者「试试」：我可以试一下吗？",
+   "en": "有点 goes before an adjective and means \"a bit too…\", a mild complaint: 这件外套有点大 (zhè jiàn wài tào yǒu diǎn dà). 一点 goes after the adjective and asks for a little more or less: 有小一点的吗？ (yǒu xiǎo yì diǎn de ma?). To try something, say 试一下 or 试试: 我可以试一下吗？ (wǒ kě yǐ shì yí xià ma?)."
+  }
+ },
+ "boss": {
+  "emoji": "🦜",
+  "name": {
+   "zh": "花衣鹦鹉",
+   "en": "Pippa the Parrot"
+  },
+  "t": "你好！我是花衣鹦鹉。你看，我的衣服很漂亮，可是有点小。你想买什么衣服？",
+  "r": "nǐ hǎo! wǒ shì huā yī yīng wǔ. nǐ kàn, wǒ de yī fu hěn piào liang, kě shì yǒu diǎn xiǎo. nǐ xiǎng mǎi shén me yī fu?",
+  "zh": "",
+  "en": "Hello! I'm Pippa the colourful parrot. Look, my clothes are pretty, but a bit small. What clothes do you want to buy?"
+ },
+ "words": [
+  {
+   "t": "衣服",
+   "r": "yī fu",
+   "zh": "",
+   "en": "clothes",
+   "pic": "👚"
+  },
+  {
+   "t": "衬衫",
+   "r": "chèn shān",
+   "zh": "",
+   "en": "shirt",
+   "pic": "👔"
+  },
+  {
+   "t": "裤子",
+   "r": "kù zi",
+   "zh": "",
+   "en": "trousers",
+   "pic": "👖"
+  },
+  {
+   "t": "裙子",
+   "r": "qún zi",
+   "zh": "",
+   "en": "skirt, dress",
+   "pic": "👗"
+  },
+  {
+   "t": "外套",
+   "r": "wài tào",
+   "zh": "",
+   "en": "coat, jacket",
+   "pic": "🧥"
+  },
+  {
+   "t": "毛衣",
+   "r": "máo yī",
+   "zh": "",
+   "en": "jumper",
+   "pic": "🧶"
+  },
+  {
+   "t": "鞋子",
+   "r": "xié zi",
+   "zh": "",
+   "en": "shoes",
+   "pic": "👟"
+  },
+  {
+   "t": "袜子",
+   "r": "wà zi",
+   "zh": "",
+   "en": "socks",
+   "pic": "🧦"
+  },
+  {
+   "t": "帽子",
+   "r": "mào zi",
+   "zh": "",
+   "en": "hat",
+   "pic": "🧢"
+  },
+  {
+   "t": "件",
+   "r": "jiàn",
+   "zh": "",
+   "en": "for clothes"
+  },
+  {
+   "t": "条",
+   "r": "tiáo",
+   "zh": "",
+   "en": "for trousers, skirts"
+  },
+  {
+   "t": "双",
+   "r": "shuāng",
+   "zh": "",
+   "en": "pair"
+  },
+  {
+   "t": "大",
+   "r": "dà",
+   "zh": "",
+   "en": "big"
+  },
+  {
+   "t": "小",
+   "r": "xiǎo",
+   "zh": "",
+   "en": "small"
+  },
+  {
+   "t": "长",
+   "r": "cháng",
+   "zh": "",
+   "en": "long"
+  },
+  {
+   "t": "短",
+   "r": "duǎn",
+   "zh": "",
+   "en": "short"
+  },
+  {
+   "t": "贵",
+   "r": "guì",
+   "zh": "",
+   "en": "expensive",
+   "pic": "💸"
+  },
+  {
+   "t": "便宜",
+   "r": "pián yi",
+   "zh": "",
+   "en": "cheap",
+   "pic": "🏷️"
+  },
+  {
+   "t": "合适",
+   "r": "hé shì",
+   "zh": "",
+   "en": "fitting, suitable"
+  },
+  {
+   "t": "试",
+   "r": "shì",
+   "zh": "",
+   "en": "try"
+  },
+  {
+   "t": "买",
+   "r": "mǎi",
+   "zh": "",
+   "en": "buy",
+   "pic": "🛍️"
+  },
+  {
+   "t": "店",
+   "r": "diàn",
+   "zh": "",
+   "en": "shop",
+   "pic": "🏪"
+  },
+  {
+   "t": "漂亮",
+   "r": "piào liang",
+   "zh": "",
+   "en": "pretty",
+   "pic": "✨"
+  },
+  {
+   "t": "颜色",
+   "r": "yán sè",
+   "zh": "",
+   "en": "colour",
+   "pic": "🎨"
+  }
+ ],
+ "sents": [
+  {
+   "t": "我想买一件衬衫。",
+   "seg": [
+    "我",
+    "想",
+    "买",
+    "一件",
+    "衬衫。"
+   ],
+   "r": [
+    "wǒ",
+    "xiǎng",
+    "mǎi",
+    "yí jiàn",
+    "chèn shān"
+   ],
+   "zh": "",
+   "en": "I want to buy a shirt."
+  },
+  {
+   "t": "这条裤子太长了。",
+   "seg": [
+    "这条",
+    "裤子",
+    "太",
+    "长",
+    "了。"
+   ],
+   "r": [
+    "zhè tiáo",
+    "kù zi",
+    "tài",
+    "cháng",
+    "le"
+   ],
+   "zh": "",
+   "en": "These trousers are too long."
+  },
+  {
+   "t": "我要一双蓝色的鞋子。",
+   "seg": [
+    "我",
+    "要",
+    "一双",
+    "蓝色的",
+    "鞋子。"
+   ],
+   "r": [
+    "wǒ",
+    "yào",
+    "yì shuāng",
+    "lán sè de",
+    "xié zi"
+   ],
+   "zh": "",
+   "en": "I want a pair of blue shoes."
+  },
+  {
+   "t": "这件外套有点大。",
+   "seg": [
+    "这件",
+    "外套",
+    "有点",
+    "大。"
+   ],
+   "r": [
+    "zhè jiàn",
+    "wài tào",
+    "yǒu diǎn",
+    "dà"
+   ],
+   "zh": "",
+   "en": "This coat is a bit big."
+  },
+  {
+   "t": "有小一点的吗？",
+   "seg": [
+    "有",
+    "小",
+    "一点的",
+    "吗？"
+   ],
+   "r": [
+    "yǒu",
+    "xiǎo",
+    "yì diǎn de",
+    "ma"
+   ],
+   "zh": "",
+   "en": "Do you have a slightly smaller one?"
+  },
+  {
+   "t": "我可以试一下吗？",
+   "seg": [
+    "我",
+    "可以",
+    "试",
+    "一下",
+    "吗？"
+   ],
+   "r": [
+    "wǒ",
+    "kě yǐ",
+    "shì",
+    "yí xià",
+    "ma"
+   ],
+   "zh": "",
+   "en": "May I try it on?"
+  },
+  {
+   "t": "你试试这条裙子吧。",
+   "seg": [
+    "你",
+    "试试",
+    "这条",
+    "裙子",
+    "吧。"
+   ],
+   "r": [
+    "nǐ",
+    "shì shi",
+    "zhè tiáo",
+    "qún zi",
+    "ba"
+   ],
+   "zh": "",
+   "en": "Try this skirt."
+  },
+  {
+   "t": "这双鞋子太贵了。",
+   "seg": [
+    "这双",
+    "鞋子",
+    "太",
+    "贵",
+    "了。"
+   ],
+   "r": [
+    "zhè shuāng",
+    "xié zi",
+    "tài",
+    "guì",
+    "le"
+   ],
+   "zh": "",
+   "en": "These shoes are too expensive."
+  },
+  {
+   "t": "能不能便宜一点？",
+   "seg": [
+    "能不能",
+    "便宜",
+    "一点？"
+   ],
+   "r": [
+    "néng bu néng",
+    "pián yi",
+    "yì diǎn"
+   ],
+   "zh": "",
+   "en": "Can it be a bit cheaper?"
+  },
+  {
+   "t": "这件毛衣有点贵。",
+   "seg": [
+    "这件",
+    "毛衣",
+    "有点",
+    "贵。"
+   ],
+   "r": [
+    "zhè jiàn",
+    "máo yī",
+    "yǒu diǎn",
+    "guì"
+   ],
+   "zh": "",
+   "en": "This jumper is a bit expensive."
+  },
+  {
+   "t": "红色的太大了，蓝色的很合适。",
+   "seg": [
+    "红色的",
+    "太",
+    "大",
+    "了，",
+    "蓝色的",
+    "很",
+    "合适。"
+   ],
+   "r": [
+    "hóng sè de",
+    "tài",
+    "dà",
+    "le",
+    "lán sè de",
+    "hěn",
+    "hé shì"
+   ],
+   "zh": "",
+   "en": "The red one is too big; the blue one fits well."
+  },
+  {
+   "t": "你看看这件衬衫。",
+   "seg": [
+    "你",
+    "看看",
+    "这件",
+    "衬衫。"
+   ],
+   "r": [
+    "nǐ",
+    "kàn kan",
+    "zhè jiàn",
+    "chèn shān"
+   ],
+   "zh": "",
+   "en": "Have a look at this shirt."
+  },
+  {
+   "t": "我的袜子太小了。",
+   "seg": [
+    "我的",
+    "袜子",
+    "太",
+    "小",
+    "了。"
+   ],
+   "r": [
+    "wǒ de",
+    "wà zi",
+    "tài",
+    "xiǎo",
+    "le"
+   ],
+   "zh": "",
+   "en": "My socks are too small."
+  },
+  {
+   "t": "这条裙子多少钱？",
+   "seg": [
+    "这条",
+    "裙子",
+    "多少",
+    "钱？"
+   ],
+   "r": [
+    "zhè tiáo",
+    "qún zi",
+    "duō shao",
+    "qián"
+   ],
+   "zh": "",
+   "en": "How much is this skirt?"
+  },
+  {
+   "t": "我要这件，不要那件。",
+   "seg": [
+    "我",
+    "要",
+    "这件，",
+    "不要",
+    "那件。"
+   ],
+   "r": [
+    "wǒ",
+    "yào",
+    "zhè jiàn",
+    "bú yào",
+    "nà jiàn"
+   ],
+   "zh": "",
+   "en": "I'll take this one, not that one."
+  },
+  {
+   "t": "这件外套很漂亮，可是有点贵。",
+   "seg": [
+    "这件",
+    "外套",
+    "很",
+    "漂亮，",
+    "可是",
+    "有点",
+    "贵。"
+   ],
+   "r": [
+    "zhè jiàn",
+    "wài tào",
+    "hěn",
+    "piào liang",
+    "kě shì",
+    "yǒu diǎn",
+    "guì"
+   ],
+   "zh": "",
+   "en": "This coat is pretty, but a bit expensive."
+  }
+ ],
+ "dlgs": [
+  {
+   "q": {
+    "t": "你想买什么？",
+    "seg": [
+     "你",
+     "想",
+     "买",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "xiǎng",
+     "mǎi",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What do you want to buy?"
+   },
+   "a": {
+    "t": "我想买一件衬衫。",
+    "seg": [
+     "我",
+     "想",
+     "买",
+     "一件",
+     "衬衫。"
+    ],
+    "r": [
+     "wǒ",
+     "xiǎng",
+     "mǎi",
+     "yí jiàn",
+     "chèn shān"
+    ],
+    "zh": "",
+    "en": "I want to buy a shirt."
+   },
+   "wrong": [
+    {
+     "t": "这条裤子太长了。",
+     "seg": [
+      "这条",
+      "裤子",
+      "太",
+      "长",
+      "了。"
+     ],
+     "r": [
+      "zhè tiáo",
+      "kù zi",
+      "tài",
+      "cháng",
+      "le"
+     ],
+     "zh": "",
+     "en": "These trousers are too long."
+    },
+    {
+     "t": "我可以试一下吗？",
+     "seg": [
+      "我",
+      "可以",
+      "试",
+      "一下",
+      "吗？"
+     ],
+     "r": [
+      "wǒ",
+      "kě yǐ",
+      "shì",
+      "yí xià",
+      "ma"
+     ],
+     "zh": "",
+     "en": "May I try it on?"
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "这件外套多少钱？",
+    "seg": [
+     "这件",
+     "外套",
+     "多少",
+     "钱？"
+    ],
+    "r": [
+     "zhè jiàn",
+     "wài tào",
+     "duō shao",
+     "qián"
+    ],
+    "zh": "",
+    "en": "How much is this coat?"
+   },
+   "a": {
+    "t": "八十块。",
+    "seg": [
+     "八十块。"
+    ],
+    "r": [
+     "bā shí kuài"
+    ],
+    "zh": "",
+    "en": "Eighty yuan."
+   },
+   "wrong": [
+    {
+     "t": "红色的太大了。",
+     "seg": [
+      "红色的",
+      "太",
+      "大",
+      "了。"
+     ],
+     "r": [
+      "hóng sè de",
+      "tài",
+      "dà",
+      "le"
+     ],
+     "zh": "",
+     "en": "The red one is too big."
+    },
+    {
+     "t": "我想试一下。",
+     "seg": [
+      "我",
+      "想",
+      "试",
+      "一下。"
+     ],
+     "r": [
+      "wǒ",
+      "xiǎng",
+      "shì",
+      "yí xià"
+     ],
+     "zh": "",
+     "en": "I want to try it."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你喜欢什么颜色的？",
+    "seg": [
+     "你",
+     "喜欢",
+     "什么",
+     "颜色的？"
+    ],
+    "r": [
+     "nǐ",
+     "xǐ huan",
+     "shén me",
+     "yán sè de"
+    ],
+    "zh": "",
+    "en": "What colour do you like?"
+   },
+   "a": {
+    "t": "我喜欢蓝色的。",
+    "seg": [
+     "我",
+     "喜欢",
+     "蓝色的。"
+    ],
+    "r": [
+     "wǒ",
+     "xǐ huan",
+     "lán sè de"
+    ],
+    "zh": "",
+    "en": "I like blue."
+   },
+   "wrong": [
+    {
+     "t": "这条裙子太长了。",
+     "seg": [
+      "这条",
+      "裙子",
+      "太",
+      "长",
+      "了。"
+     ],
+     "r": [
+      "zhè tiáo",
+      "qún zi",
+      "tài",
+      "cháng",
+      "le"
+     ],
+     "zh": "",
+     "en": "This skirt is too long."
+    },
+    {
+     "t": "我要一双鞋子。",
+     "seg": [
+      "我",
+      "要",
+      "一双",
+      "鞋子。"
+     ],
+     "r": [
+      "wǒ",
+      "yào",
+      "yì shuāng",
+      "xié zi"
+     ],
+     "zh": "",
+     "en": "I want a pair of shoes."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "这件大不大？",
+    "seg": [
+     "这件",
+     "大",
+     "不大？"
+    ],
+    "r": [
+     "zhè jiàn",
+     "dà",
+     "bu dà"
+    ],
+    "zh": "",
+    "en": "Is this one big?"
+   },
+   "a": {
+    "t": "有点大。",
+    "seg": [
+     "有点",
+     "大。"
+    ],
+    "r": [
+     "yǒu diǎn",
+     "dà"
+    ],
+    "zh": "",
+    "en": "A bit big."
+   },
+   "wrong": [
+    {
+     "t": "我要一双鞋子。",
+     "seg": [
+      "我",
+      "要",
+      "一双",
+      "鞋子。"
+     ],
+     "r": [
+      "wǒ",
+      "yào",
+      "yì shuāng",
+      "xié zi"
+     ],
+     "zh": "",
+     "en": "I want a pair of shoes."
+    },
+    {
+     "t": "这件很贵。",
+     "seg": [
+      "这件",
+      "很",
+      "贵。"
+     ],
+     "r": [
+      "zhè jiàn",
+      "hěn",
+      "guì"
+     ],
+     "zh": "",
+     "en": "This one is expensive."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "我可以试一下吗？",
+    "seg": [
+     "我",
+     "可以",
+     "试",
+     "一下",
+     "吗？"
+    ],
+    "r": [
+     "wǒ",
+     "kě yǐ",
+     "shì",
+     "yí xià",
+     "ma"
+    ],
+    "zh": "",
+    "en": "May I try it on?"
+   },
+   "a": {
+    "t": "可以，你试试吧。",
+    "seg": [
+     "可以，",
+     "你",
+     "试试",
+     "吧。"
+    ],
+    "r": [
+     "kě yǐ",
+     "nǐ",
+     "shì shi",
+     "ba"
+    ],
+    "zh": "",
+    "en": "Sure, go ahead."
+   },
+   "wrong": [
+    {
+     "t": "我喜欢红色的。",
+     "seg": [
+      "我",
+      "喜欢",
+      "红色的。"
+     ],
+     "r": [
+      "wǒ",
+      "xǐ huan",
+      "hóng sè de"
+     ],
+     "zh": "",
+     "en": "I like red."
+    },
+    {
+     "t": "这双鞋子太贵了。",
+     "seg": [
+      "这双",
+      "鞋子",
+      "太",
+      "贵",
+      "了。"
+     ],
+     "r": [
+      "zhè shuāng",
+      "xié zi",
+      "tài",
+      "guì",
+      "le"
+     ],
+     "zh": "",
+     "en": "These shoes are too expensive."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "太贵了，能不能便宜一点？",
+    "seg": [
+     "太",
+     "贵",
+     "了，",
+     "能不能",
+     "便宜",
+     "一点？"
+    ],
+    "r": [
+     "tài",
+     "guì",
+     "le",
+     "néng bu néng",
+     "pián yi",
+     "yì diǎn"
+    ],
+    "zh": "",
+    "en": "It's too expensive. Can it be cheaper?"
+   },
+   "a": {
+    "t": "好，便宜十块。",
+    "seg": [
+     "好，",
+     "便宜",
+     "十块。"
+    ],
+    "r": [
+     "hǎo",
+     "pián yi",
+     "shí kuài"
+    ],
+    "zh": "",
+    "en": "OK, ten yuan off."
+   },
+   "wrong": [
+    {
+     "t": "我想买一条裤子。",
+     "seg": [
+      "我",
+      "想",
+      "买",
+      "一条",
+      "裤子。"
+     ],
+     "r": [
+      "wǒ",
+      "xiǎng",
+      "mǎi",
+      "yì tiáo",
+      "kù zi"
+     ],
+     "zh": "",
+     "en": "I want to buy a pair of trousers."
+    },
+    {
+     "t": "这件外套有点大。",
+     "seg": [
+      "这件",
+      "外套",
+      "有点",
+      "大。"
+     ],
+     "r": [
+      "zhè jiàn",
+      "wài tào",
+      "yǒu diǎn",
+      "dà"
+     ],
+     "zh": "",
+     "en": "This coat is a bit big."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "这双鞋子合适吗？",
+    "seg": [
+     "这双",
+     "鞋子",
+     "合适",
+     "吗？"
+    ],
+    "r": [
+     "zhè shuāng",
+     "xié zi",
+     "hé shì",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Do these shoes fit?"
+   },
+   "a": {
+    "t": "很合适，我要这双。",
+    "seg": [
+     "很",
+     "合适，",
+     "我",
+     "要",
+     "这双。"
+    ],
+    "r": [
+     "hěn",
+     "hé shì",
+     "wǒ",
+     "yào",
+     "zhè shuāng"
+    ],
+    "zh": "",
+    "en": "They fit well. I'll take them."
+   },
+   "wrong": [
+    {
+     "t": "我想买一件毛衣。",
+     "seg": [
+      "我",
+      "想",
+      "买",
+      "一件",
+      "毛衣。"
+     ],
+     "r": [
+      "wǒ",
+      "xiǎng",
+      "mǎi",
+      "yí jiàn",
+      "máo yī"
+     ],
+     "zh": "",
+     "en": "I want to buy a jumper."
+    },
+    {
+     "t": "那件是蓝色的。",
+     "seg": [
+      "那件",
+      "是",
+      "蓝色的。"
+     ],
+     "r": [
+      "nà jiàn",
+      "shì",
+      "lán sè de"
+     ],
+     "zh": "",
+     "en": "That one is blue."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "红色的有点小，有大一点的吗？",
+    "seg": [
+     "红色的",
+     "有点",
+     "小，",
+     "有",
+     "大",
+     "一点的",
+     "吗？"
+    ],
+    "r": [
+     "hóng sè de",
+     "yǒu diǎn",
+     "xiǎo",
+     "yǒu",
+     "dà",
+     "yì diǎn de",
+     "ma"
+    ],
+    "zh": "",
+    "en": "The red one is a bit small. Do you have a bigger one?"
+   },
+   "a": {
+    "t": "有，你试试这件。",
+    "seg": [
+     "有，",
+     "你",
+     "试试",
+     "这件。"
+    ],
+    "r": [
+     "yǒu",
+     "nǐ",
+     "shì shi",
+     "zhè jiàn"
+    ],
+    "zh": "",
+    "en": "Yes, try this one."
+   },
+   "wrong": [
+    {
+     "t": "我喜欢这条裙子。",
+     "seg": [
+      "我",
+      "喜欢",
+      "这条",
+      "裙子。"
+     ],
+     "r": [
+      "wǒ",
+      "xǐ huan",
+      "zhè tiáo",
+      "qún zi"
+     ],
+     "zh": "",
+     "en": "I like this skirt."
+    },
+    {
+     "t": "这双鞋子很贵。",
+     "seg": [
+      "这双",
+      "鞋子",
+      "很",
+      "贵。"
+     ],
+     "r": [
+      "zhè shuāng",
+      "xié zi",
+      "hěn",
+      "guì"
+     ],
+     "zh": "",
+     "en": "These shoes are expensive."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你要这件还是那件？",
+    "seg": [
+     "你",
+     "要",
+     "这件",
+     "还是",
+     "那件？"
+    ],
+    "r": [
+     "nǐ",
+     "yào",
+     "zhè jiàn",
+     "hái shi",
+     "nà jiàn"
+    ],
+    "zh": "",
+    "en": "Do you want this one or that one?"
+   },
+   "a": {
+    "t": "我要那件。",
+    "seg": [
+     "我",
+     "要",
+     "那件。"
+    ],
+    "r": [
+     "wǒ",
+     "yào",
+     "nà jiàn"
+    ],
+    "zh": "",
+    "en": "I'll take that one."
+   },
+   "wrong": [
+    {
+     "t": "我有两条裤子。",
+     "seg": [
+      "我",
+      "有",
+      "两条",
+      "裤子。"
+     ],
+     "r": [
+      "wǒ",
+      "yǒu",
+      "liǎng tiáo",
+      "kù zi"
+     ],
+     "zh": "",
+     "en": "I have two pairs of trousers."
+    },
+    {
+     "t": "这件有点贵。",
+     "seg": [
+      "这件",
+      "有点",
+      "贵。"
+     ],
+     "r": [
+      "zhè jiàn",
+      "yǒu diǎn",
+      "guì"
+     ],
+     "zh": "",
+     "en": "This one is a bit expensive."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "这条裙子怎么样？",
+    "seg": [
+     "这条",
+     "裙子",
+     "怎么样？"
+    ],
+    "r": [
+     "zhè tiáo",
+     "qún zi",
+     "zěn me yàng"
+    ],
+    "zh": "",
+    "en": "How is this skirt?"
+   },
+   "a": {
+    "t": "很漂亮，可是有点长。",
+    "seg": [
+     "很",
+     "漂亮，",
+     "可是",
+     "有点",
+     "长。"
+    ],
+    "r": [
+     "hěn",
+     "piào liang",
+     "kě shì",
+     "yǒu diǎn",
+     "cháng"
+    ],
+    "zh": "",
+    "en": "Very pretty, but a bit long."
+   },
+   "wrong": [
+    {
+     "t": "我想买一双鞋子。",
+     "seg": [
+      "我",
+      "想",
+      "买",
+      "一双",
+      "鞋子。"
+     ],
+     "r": [
+      "wǒ",
+      "xiǎng",
+      "mǎi",
+      "yì shuāng",
+      "xié zi"
+     ],
+     "zh": "",
+     "en": "I want to buy a pair of shoes."
+    },
+    {
+     "t": "我要小一点的。",
+     "seg": [
+      "我",
+      "要",
+      "小",
+      "一点的。"
+     ],
+     "r": [
+      "wǒ",
+      "yào",
+      "xiǎo",
+      "yì diǎn de"
+     ],
+     "zh": "",
+     "en": "I want a slightly smaller one."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你要什么颜色的？",
+    "seg": [
+     "你",
+     "要",
+     "什么",
+     "颜色的？"
+    ],
+    "r": [
+     "nǐ",
+     "yào",
+     "shén me",
+     "yán sè de"
+    ],
+    "zh": "",
+    "en": "What colour do you want?"
+   },
+   "a": {
+    "t": "我要白色的。",
+    "seg": [
+     "我",
+     "要",
+     "白色的。"
+    ],
+    "r": [
+     "wǒ",
+     "yào",
+     "bái sè de"
+    ],
+    "zh": "",
+    "en": "I want the white one."
+   },
+   "wrong": [
+    {
+     "t": "我要一件。",
+     "seg": [
+      "我",
+      "要",
+      "一件。"
+     ],
+     "r": [
+      "wǒ",
+      "yào",
+      "yí jiàn"
+     ],
+     "zh": "",
+     "en": "I want one."
+    },
+    {
+     "t": "这件有点大。",
+     "seg": [
+      "这件",
+      "有点",
+      "大。"
+     ],
+     "r": [
+      "zhè jiàn",
+      "yǒu diǎn",
+      "dà"
+     ],
+     "zh": "",
+     "en": "This one is a bit big."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "一共多少钱？",
+    "seg": [
+     "一共",
+     "多少",
+     "钱？"
+    ],
+    "r": [
+     "yí gòng",
+     "duō shao",
+     "qián"
+    ],
+    "zh": "",
+    "en": "How much is it altogether?"
+   },
+   "a": {
+    "t": "一共一百块。",
+    "seg": [
+     "一共",
+     "一百块。"
+    ],
+    "r": [
+     "yí gòng",
+     "yì bǎi kuài"
+    ],
+    "zh": "",
+    "en": "A hundred yuan altogether."
+   },
+   "wrong": [
+    {
+     "t": "我很喜欢这件衬衫。",
+     "seg": [
+      "我",
+      "很",
+      "喜欢",
+      "这件",
+      "衬衫。"
+     ],
+     "r": [
+      "wǒ",
+      "hěn",
+      "xǐ huan",
+      "zhè jiàn",
+      "chèn shān"
+     ],
+     "zh": "",
+     "en": "I really like this shirt."
+    },
+    {
+     "t": "我要小一点的。",
+     "seg": [
+      "我",
+      "要",
+      "小",
+      "一点的。"
+     ],
+     "r": [
+      "wǒ",
+      "yào",
+      "xiǎo",
+      "yì diǎn de"
+     ],
+     "zh": "",
+     "en": "I want a slightly smaller one."
+    }
+   ]
+  }
+ ],
+ "talk": {
+  "name": "Sister Yun",
+  "zh": "云姐",
+  "gender": "f",
+  "kid": true,
+  "topic": {
+   "zh": "在小店买衣服",
+   "en": "Buying clothes in a shop"
+  },
+  "persona": "You are Sister Yun, who runs a small clothes shop on the island's market street. You sell shirts, trousers, skirts, jumpers, coats, shoes, socks and hats in different colours and sizes. You help the learner choose something: ask what they want, what colour, let them try it on, and talk about size (big, small, long, short) and price (expensive, cheap, a bit cheaper?). Speak only simple level-1 Mandarin, short sentences, one question at a time. Never ask for the learner's real name, school, address, phone number or other personal details. You are a friendly game character, not a friend or companion; stay on the topic of buying clothes.",
+  "goal": {
+   "zh": "在云姐的店里买一件衣服：说想要什么、什么颜色，试一试，说大小，问价钱。",
+   "en": "Buy one piece of clothing in Yun's shop: say what and what colour, try it on, talk about size and ask the price."
+  },
+  "opener": {
+   "t": "你好！欢迎来到我的店。你想买什么？",
+   "r": "nǐ hǎo! huān yíng lái dào wǒ de diàn. nǐ xiǎng mǎi shén me?"
+  },
+  "steps": [
+   {
+    "zh": "说你想买什么衣服、什么颜色。",
+    "en": "Say what you want and what colour.",
+    "t": "我想买一件蓝色的衬衫。"
+   },
+   {
+    "zh": "问能不能试一下。",
+    "en": "Ask to try it on.",
+    "t": "我可以试一下吗？"
+   },
+   {
+    "zh": "说大小：太大、有点小或者很合适。",
+    "en": "Comment on the size.",
+    "t": "这件有点大，有小一点的吗？"
+   },
+   {
+    "zh": "问价钱，或者问能不能便宜一点。",
+    "en": "Ask the price or for a discount.",
+    "t": "多少钱？能不能便宜一点？"
+   }
+  ],
+  "words": [
+   {
+    "t": "衬衫",
+    "zh": "",
+    "en": "shirt"
+   },
+   {
+    "t": "裙子",
+    "zh": "",
+    "en": "skirt"
+   },
+   {
+    "t": "鞋子",
+    "zh": "",
+    "en": "shoes"
+   },
+   {
+    "t": "有点大",
+    "zh": "",
+    "en": "a bit big"
+   },
+   {
+    "t": "小一点",
+    "zh": "",
+    "en": "a bit smaller"
+   },
+   {
+    "t": "试一下",
+    "zh": "",
+    "en": "try"
+   },
+   {
+    "t": "便宜",
+    "zh": "",
+    "en": "cheap"
+   },
+   {
+    "t": "多少钱",
+    "zh": "",
+    "en": "how much"
+   }
+  ]
+ }
+}

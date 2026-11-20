@@ -1,0 +1,1452 @@
+{
+ "book": "zh1",
+ "n": 4,
+ "t": "在饭馆",
+ "zh": "",
+ "en": "At the Restaurant",
+ "icon": "🍜",
+ "color": "#C9484A",
+ "key": {
+  "t": "你想吃什么？你想喝什么？",
+  "r": "nǐ xiǎng chī shén me? nǐ xiǎng hē shén me?",
+  "zh": "",
+  "en": "What would you like to eat? What would you like to drink?"
+ },
+ "grammar": {
+  "title": {
+   "zh": "想 和 要；还是；太…了",
+   "en": "想 vs 要; 还是; 太…了"
+  },
+  "tip": {
+   "zh": "说想吃什么用「想」：我想吃饺子；点菜时更直接，常说「我要…」或者「请给我…」：请给我一杯水。问二选一用「还是」：你喝茶还是果汁？说「都可以」的句子里用「或者」：我吃饺子或者面条都可以。「太…了」表示过头了：这个汤太咸了。",
+   "en": "Use 想 (xiǎng) for what you feel like eating: 我想吃饺子 (wǒ xiǎng chī jiǎo zi). When ordering, 要 (yào) and 请给我… (qǐng gěi wǒ…, please give me…) are more direct: 请给我一杯水 (qǐng gěi wǒ yì bēi shuǐ). Ask \"A or B?\" with 还是 (hái shi): 你喝茶还是果汁？ (nǐ hē chá hái shi guǒ zhī?); in statements use 或者 (huò zhě). 太…了 (tài … le) means \"too …\": 这个汤太咸了 (zhè ge tāng tài xián le)."
+  }
+ },
+ "boss": {
+  "emoji": "🐧",
+  "name": {
+   "zh": "厨师企鹅",
+   "en": "Chef Pip the Penguin"
+  },
+  "t": "欢迎光临！我们有饺子、米饭和汤。你想吃什么？",
+  "r": "huān yíng guāng lín! wǒ men yǒu jiǎo zi, mǐ fàn hé tāng. nǐ xiǎng chī shén me?",
+  "zh": "",
+  "en": "Welcome! We have dumplings, rice and soup. What would you like to eat?"
+ },
+ "words": [
+  {
+   "t": "菜单",
+   "r": "cài dān",
+   "zh": "",
+   "en": "menu",
+   "pic": "📋"
+  },
+  {
+   "t": "点菜",
+   "r": "diǎn cài",
+   "zh": "",
+   "en": "to order food",
+   "pic": "📝"
+  },
+  {
+   "t": "服务员",
+   "r": "fú wù yuán",
+   "zh": "",
+   "en": "waiter, waitress",
+   "pic": "🛎️"
+  },
+  {
+   "t": "米饭",
+   "r": "mǐ fàn",
+   "zh": "",
+   "en": "rice",
+   "pic": "🍚"
+  },
+  {
+   "t": "饺子",
+   "r": "jiǎo zi",
+   "zh": "",
+   "en": "dumplings",
+   "pic": "🥟"
+  },
+  {
+   "t": "汤",
+   "r": "tāng",
+   "zh": "",
+   "en": "soup",
+   "pic": "🍲"
+  },
+  {
+   "t": "鸡蛋",
+   "r": "jī dàn",
+   "zh": "",
+   "en": "egg",
+   "pic": "🥚"
+  },
+  {
+   "t": "青菜",
+   "r": "qīng cài",
+   "zh": "",
+   "en": "green vegetables",
+   "pic": "🥬"
+  },
+  {
+   "t": "牛肉",
+   "r": "niú ròu",
+   "zh": "",
+   "en": "beef",
+   "pic": "🥩"
+  },
+  {
+   "t": "豆腐",
+   "r": "dòu fu",
+   "zh": "",
+   "en": "tofu"
+  },
+  {
+   "t": "果汁",
+   "r": "guǒ zhī",
+   "zh": "",
+   "en": "fruit juice",
+   "pic": "🧃"
+  },
+  {
+   "t": "茶",
+   "r": "chá",
+   "zh": "",
+   "en": "tea",
+   "pic": "🍵"
+  },
+  {
+   "t": "水",
+   "r": "shuǐ",
+   "zh": "",
+   "en": "water",
+   "pic": "💧"
+  },
+  {
+   "t": "筷子",
+   "r": "kuài zi",
+   "zh": "",
+   "en": "chopsticks",
+   "pic": "🥢"
+  },
+  {
+   "t": "勺子",
+   "r": "sháo zi",
+   "zh": "",
+   "en": "spoon",
+   "pic": "🥄"
+  },
+  {
+   "t": "盘子",
+   "r": "pán zi",
+   "zh": "",
+   "en": "plate",
+   "pic": "🍽️"
+  },
+  {
+   "t": "甜",
+   "r": "tián",
+   "zh": "",
+   "en": "sweet",
+   "pic": "🍬"
+  },
+  {
+   "t": "酸",
+   "r": "suān",
+   "zh": "",
+   "en": "sour",
+   "pic": "🍋"
+  },
+  {
+   "t": "辣",
+   "r": "là",
+   "zh": "",
+   "en": "spicy",
+   "pic": "🌶️"
+  },
+  {
+   "t": "咸",
+   "r": "xián",
+   "zh": "",
+   "en": "salty",
+   "pic": "🧂"
+  },
+  {
+   "t": "请给我",
+   "r": "qǐng gěi wǒ",
+   "zh": "",
+   "en": "please give me"
+  },
+  {
+   "t": "还是",
+   "r": "hái shi",
+   "zh": "",
+   "en": "or (in questions)"
+  },
+  {
+   "t": "想",
+   "r": "xiǎng",
+   "zh": "",
+   "en": "to want to, would like"
+  },
+  {
+   "t": "要",
+   "r": "yào",
+   "zh": "",
+   "en": "to want, to order"
+  }
+ ],
+ "sents": [
+  {
+   "t": "请给我菜单。",
+   "seg": [
+    "请",
+    "给",
+    "我",
+    "菜单。"
+   ],
+   "r": [
+    "qǐng",
+    "gěi",
+    "wǒ",
+    "cài dān"
+   ],
+   "zh": "",
+   "en": "Please give me the menu."
+  },
+  {
+   "t": "我想吃饺子。",
+   "seg": [
+    "我",
+    "想",
+    "吃",
+    "饺子。"
+   ],
+   "r": [
+    "wǒ",
+    "xiǎng",
+    "chī",
+    "jiǎo zi"
+   ],
+   "zh": "",
+   "en": "I would like to eat dumplings."
+  },
+  {
+   "t": "我要一碗米饭。",
+   "seg": [
+    "我",
+    "要",
+    "一碗",
+    "米饭。"
+   ],
+   "r": [
+    "wǒ",
+    "yào",
+    "yì wǎn",
+    "mǐ fàn"
+   ],
+   "zh": "",
+   "en": "I would like a bowl of rice."
+  },
+  {
+   "t": "请给我一杯果汁。",
+   "seg": [
+    "请",
+    "给",
+    "我",
+    "一杯",
+    "果汁。"
+   ],
+   "r": [
+    "qǐng",
+    "gěi",
+    "wǒ",
+    "yì bēi",
+    "guǒ zhī"
+   ],
+   "zh": "",
+   "en": "Please give me a glass of juice."
+  },
+  {
+   "t": "你想喝茶还是果汁？",
+   "seg": [
+    "你",
+    "想",
+    "喝",
+    "茶",
+    "还是",
+    "果汁？"
+   ],
+   "r": [
+    "nǐ",
+    "xiǎng",
+    "hē",
+    "chá",
+    "hái shi",
+    "guǒ zhī"
+   ],
+   "zh": "",
+   "en": "Would you like tea or juice?"
+  },
+  {
+   "t": "来一盘青菜，一份豆腐。",
+   "seg": [
+    "来",
+    "一盘",
+    "青菜，",
+    "一份",
+    "豆腐。"
+   ],
+   "r": [
+    "lái",
+    "yì pán",
+    "qīng cài",
+    "yí fèn",
+    "dòu fu"
+   ],
+   "zh": "",
+   "en": "I'll have a plate of greens and a serving of tofu."
+  },
+  {
+   "t": "这个汤太咸了。",
+   "seg": [
+    "这个",
+    "汤",
+    "太",
+    "咸",
+    "了。"
+   ],
+   "r": [
+    "zhè ge",
+    "tāng",
+    "tài",
+    "xián",
+    "le"
+   ],
+   "zh": "",
+   "en": "This soup is too salty."
+  },
+  {
+   "t": "这个菜太辣了。",
+   "seg": [
+    "这个",
+    "菜",
+    "太",
+    "辣",
+    "了。"
+   ],
+   "r": [
+    "zhè ge",
+    "cài",
+    "tài",
+    "là",
+    "le"
+   ],
+   "zh": "",
+   "en": "This dish is too spicy."
+  },
+  {
+   "t": "我不吃牛肉。",
+   "seg": [
+    "我",
+    "不吃",
+    "牛肉。"
+   ],
+   "r": [
+    "wǒ",
+    "bù chī",
+    "niú ròu"
+   ],
+   "zh": "",
+   "en": "I don't eat beef."
+  },
+  {
+   "t": "这个很甜，那个很酸。",
+   "seg": [
+    "这个",
+    "很",
+    "甜，",
+    "那个",
+    "很",
+    "酸。"
+   ],
+   "r": [
+    "zhè ge",
+    "hěn",
+    "tián",
+    "nà ge",
+    "hěn",
+    "suān"
+   ],
+   "zh": "",
+   "en": "This one is very sweet, and that one is very sour."
+  },
+  {
+   "t": "请给我一把勺子。",
+   "seg": [
+    "请",
+    "给",
+    "我",
+    "一把",
+    "勺子。"
+   ],
+   "r": [
+    "qǐng",
+    "gěi",
+    "wǒ",
+    "yì bǎ",
+    "sháo zi"
+   ],
+   "zh": "",
+   "en": "Please give me a spoon."
+  },
+  {
+   "t": "我还要一份饺子。",
+   "seg": [
+    "我",
+    "还",
+    "要",
+    "一份",
+    "饺子。"
+   ],
+   "r": [
+    "wǒ",
+    "hái",
+    "yào",
+    "yí fèn",
+    "jiǎo zi"
+   ],
+   "zh": "",
+   "en": "I'd like another serving of dumplings."
+  },
+  {
+   "t": "服务员，请给我一杯水。",
+   "seg": [
+    "服务员，",
+    "请",
+    "给",
+    "我",
+    "一杯",
+    "水。"
+   ],
+   "r": [
+    "fú wù yuán",
+    "qǐng",
+    "gěi",
+    "wǒ",
+    "yì bēi",
+    "shuǐ"
+   ],
+   "zh": "",
+   "en": "Waiter, please give me a glass of water."
+  },
+  {
+   "t": "你们吃米饭还是面条？",
+   "seg": [
+    "你们",
+    "吃",
+    "米饭",
+    "还是",
+    "面条？"
+   ],
+   "r": [
+    "nǐ men",
+    "chī",
+    "mǐ fàn",
+    "hái shi",
+    "miàn tiáo"
+   ],
+   "zh": "",
+   "en": "Will you have rice or noodles?"
+  },
+  {
+   "t": "我吃饺子或者面条都可以。",
+   "seg": [
+    "我",
+    "吃",
+    "饺子",
+    "或者",
+    "面条",
+    "都",
+    "可以。"
+   ],
+   "r": [
+    "wǒ",
+    "chī",
+    "jiǎo zi",
+    "huò zhě",
+    "miàn tiáo",
+    "dōu",
+    "kě yǐ"
+   ],
+   "zh": "",
+   "en": "I can eat dumplings or noodles, either is fine."
+  },
+  {
+   "t": "这个汤真好喝，谢谢！",
+   "seg": [
+    "这个",
+    "汤",
+    "真",
+    "好喝，",
+    "谢谢！"
+   ],
+   "r": [
+    "zhè ge",
+    "tāng",
+    "zhēn",
+    "hǎo hē",
+    "xiè xie"
+   ],
+   "zh": "",
+   "en": "This soup is really good, thank you!"
+  }
+ ],
+ "dlgs": [
+  {
+   "q": {
+    "t": "你想吃什么？",
+    "seg": [
+     "你",
+     "想",
+     "吃",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "xiǎng",
+     "chī",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What would you like to eat?"
+   },
+   "a": {
+    "t": "我想吃饺子。",
+    "seg": [
+     "我",
+     "想",
+     "吃",
+     "饺子。"
+    ],
+    "r": [
+     "wǒ",
+     "xiǎng",
+     "chī",
+     "jiǎo zi"
+    ],
+    "zh": "",
+    "en": "I would like dumplings."
+   },
+   "wrong": [
+    {
+     "t": "这个汤太咸了。",
+     "seg": [
+      "这个",
+      "汤",
+      "太",
+      "咸",
+      "了。"
+     ],
+     "r": [
+      "zhè ge",
+      "tāng",
+      "tài",
+      "xián",
+      "le"
+     ],
+     "zh": "",
+     "en": "This soup is too salty."
+    },
+    {
+     "t": "谢谢你！",
+     "seg": [
+      "谢谢",
+      "你！"
+     ],
+     "r": [
+      "xiè xie",
+      "nǐ"
+     ],
+     "zh": "",
+     "en": "Thank you!"
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你喝茶还是喝水？",
+    "seg": [
+     "你",
+     "喝",
+     "茶",
+     "还是",
+     "喝",
+     "水？"
+    ],
+    "r": [
+     "nǐ",
+     "hē",
+     "chá",
+     "hái shi",
+     "hē",
+     "shuǐ"
+    ],
+    "zh": "",
+    "en": "Do you drink tea or water?"
+   },
+   "a": {
+    "t": "我喝茶。",
+    "seg": [
+     "我",
+     "喝",
+     "茶。"
+    ],
+    "r": [
+     "wǒ",
+     "hē",
+     "chá"
+    ],
+    "zh": "",
+    "en": "I will have tea."
+   },
+   "wrong": [
+    {
+     "t": "我想吃饺子。",
+     "seg": [
+      "我",
+      "想",
+      "吃",
+      "饺子。"
+     ],
+     "r": [
+      "wǒ",
+      "xiǎng",
+      "chī",
+      "jiǎo zi"
+     ],
+     "zh": "",
+     "en": "I would like dumplings."
+    },
+    {
+     "t": "这个很酸。",
+     "seg": [
+      "这个",
+      "很",
+      "酸。"
+     ],
+     "r": [
+      "zhè ge",
+      "hěn",
+      "suān"
+     ],
+     "zh": "",
+     "en": "This one is very sour."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你要几碗米饭？",
+    "seg": [
+     "你",
+     "要",
+     "几碗",
+     "米饭？"
+    ],
+    "r": [
+     "nǐ",
+     "yào",
+     "jǐ wǎn",
+     "mǐ fàn"
+    ],
+    "zh": "",
+    "en": "How many bowls of rice do you want?"
+   },
+   "a": {
+    "t": "我要两碗。",
+    "seg": [
+     "我",
+     "要",
+     "两碗。"
+    ],
+    "r": [
+     "wǒ",
+     "yào",
+     "liǎng wǎn"
+    ],
+    "zh": "",
+    "en": "I want two bowls."
+   },
+   "wrong": [
+    {
+     "t": "这个菜太辣了。",
+     "seg": [
+      "这个",
+      "菜",
+      "太",
+      "辣",
+      "了。"
+     ],
+     "r": [
+      "zhè ge",
+      "cài",
+      "tài",
+      "là",
+      "le"
+     ],
+     "zh": "",
+     "en": "This dish is too spicy."
+    },
+    {
+     "t": "请给我菜单。",
+     "seg": [
+      "请",
+      "给",
+      "我",
+      "菜单。"
+     ],
+     "r": [
+      "qǐng",
+      "gěi",
+      "wǒ",
+      "cài dān"
+     ],
+     "zh": "",
+     "en": "Please give me the menu."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "这个菜辣不辣？",
+    "seg": [
+     "这个",
+     "菜",
+     "辣",
+     "不",
+     "辣？"
+    ],
+    "r": [
+     "zhè ge",
+     "cài",
+     "là",
+     "bu",
+     "là"
+    ],
+    "zh": "",
+    "en": "Is this dish spicy?"
+   },
+   "a": {
+    "t": "不辣，很好吃。",
+    "seg": [
+     "不",
+     "辣，",
+     "很",
+     "好吃。"
+    ],
+    "r": [
+     "bú",
+     "là",
+     "hěn",
+     "hǎo chī"
+    ],
+    "zh": "",
+    "en": "No, it's not spicy, and it's tasty."
+   },
+   "wrong": [
+    {
+     "t": "我要一碗米饭。",
+     "seg": [
+      "我",
+      "要",
+      "一碗",
+      "米饭。"
+     ],
+     "r": [
+      "wǒ",
+      "yào",
+      "yì wǎn",
+      "mǐ fàn"
+     ],
+     "zh": "",
+     "en": "I would like a bowl of rice."
+    },
+    {
+     "t": "我不吃牛肉。",
+     "seg": [
+      "我",
+      "不吃",
+      "牛肉。"
+     ],
+     "r": [
+      "wǒ",
+      "bù chī",
+      "niú ròu"
+     ],
+     "zh": "",
+     "en": "I don't eat beef."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "汤咸不咸？",
+    "seg": [
+     "汤",
+     "咸",
+     "不",
+     "咸？"
+    ],
+    "r": [
+     "tāng",
+     "xián",
+     "bu",
+     "xián"
+    ],
+    "zh": "",
+    "en": "Is the soup salty?"
+   },
+   "a": {
+    "t": "太咸了！",
+    "seg": [
+     "太",
+     "咸",
+     "了！"
+    ],
+    "r": [
+     "tài",
+     "xián",
+     "le"
+    ],
+    "zh": "",
+    "en": "It's too salty!"
+   },
+   "wrong": [
+    {
+     "t": "请给我一杯水。",
+     "seg": [
+      "请",
+      "给",
+      "我",
+      "一杯",
+      "水。"
+     ],
+     "r": [
+      "qǐng",
+      "gěi",
+      "wǒ",
+      "yì bēi",
+      "shuǐ"
+     ],
+     "zh": "",
+     "en": "Please give me a glass of water."
+    },
+    {
+     "t": "我想吃饺子。",
+     "seg": [
+      "我",
+      "想",
+      "吃",
+      "饺子。"
+     ],
+     "r": [
+      "wǒ",
+      "xiǎng",
+      "chī",
+      "jiǎo zi"
+     ],
+     "zh": "",
+     "en": "I would like dumplings."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你吃牛肉吗？",
+    "seg": [
+     "你",
+     "吃",
+     "牛肉",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "chī",
+     "niú ròu",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Do you eat beef?"
+   },
+   "a": {
+    "t": "不吃，我吃鸡蛋。",
+    "seg": [
+     "不吃，",
+     "我",
+     "吃",
+     "鸡蛋。"
+    ],
+    "r": [
+     "bù chī",
+     "wǒ",
+     "chī",
+     "jī dàn"
+    ],
+    "zh": "",
+    "en": "No, I eat eggs."
+   },
+   "wrong": [
+    {
+     "t": "我要一碗汤。",
+     "seg": [
+      "我",
+      "要",
+      "一碗",
+      "汤。"
+     ],
+     "r": [
+      "wǒ",
+      "yào",
+      "yì wǎn",
+      "tāng"
+     ],
+     "zh": "",
+     "en": "I would like a bowl of soup."
+    },
+    {
+     "t": "太甜了。",
+     "seg": [
+      "太",
+      "甜",
+      "了。"
+     ],
+     "r": [
+      "tài",
+      "tián",
+      "le"
+     ],
+     "zh": "",
+     "en": "It's too sweet."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你要筷子还是勺子？",
+    "seg": [
+     "你",
+     "要",
+     "筷子",
+     "还是",
+     "勺子？"
+    ],
+    "r": [
+     "nǐ",
+     "yào",
+     "kuài zi",
+     "hái shi",
+     "sháo zi"
+    ],
+    "zh": "",
+    "en": "Do you want chopsticks or a spoon?"
+   },
+   "a": {
+    "t": "我要筷子。",
+    "seg": [
+     "我",
+     "要",
+     "筷子。"
+    ],
+    "r": [
+     "wǒ",
+     "yào",
+     "kuài zi"
+    ],
+    "zh": "",
+    "en": "I want chopsticks."
+   },
+   "wrong": [
+    {
+     "t": "这个汤太咸了。",
+     "seg": [
+      "这个",
+      "汤",
+      "太",
+      "咸",
+      "了。"
+     ],
+     "r": [
+      "zhè ge",
+      "tāng",
+      "tài",
+      "xián",
+      "le"
+     ],
+     "zh": "",
+     "en": "This soup is too salty."
+    },
+    {
+     "t": "我想吃青菜。",
+     "seg": [
+      "我",
+      "想",
+      "吃",
+      "青菜。"
+     ],
+     "r": [
+      "wǒ",
+      "xiǎng",
+      "chī",
+      "qīng cài"
+     ],
+     "zh": "",
+     "en": "I would like some greens."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你还想吃什么？",
+    "seg": [
+     "你",
+     "还",
+     "想",
+     "吃",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "hái",
+     "xiǎng",
+     "chī",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What else would you like to eat?"
+   },
+   "a": {
+    "t": "我还想吃豆腐。",
+    "seg": [
+     "我",
+     "还",
+     "想",
+     "吃",
+     "豆腐。"
+    ],
+    "r": [
+     "wǒ",
+     "hái",
+     "xiǎng",
+     "chī",
+     "dòu fu"
+    ],
+    "zh": "",
+    "en": "I would like some tofu as well."
+   },
+   "wrong": [
+    {
+     "t": "这个菜太辣了。",
+     "seg": [
+      "这个",
+      "菜",
+      "太",
+      "辣",
+      "了。"
+     ],
+     "r": [
+      "zhè ge",
+      "cài",
+      "tài",
+      "là",
+      "le"
+     ],
+     "zh": "",
+     "en": "This dish is too spicy."
+    },
+    {
+     "t": "我喝茶。",
+     "seg": [
+      "我",
+      "喝",
+      "茶。"
+     ],
+     "r": [
+      "wǒ",
+      "hē",
+      "chá"
+     ],
+     "zh": "",
+     "en": "I will have tea."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你想喝什么？",
+    "seg": [
+     "你",
+     "想",
+     "喝",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "xiǎng",
+     "hē",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What would you like to drink?"
+   },
+   "a": {
+    "t": "请给我一杯果汁。",
+    "seg": [
+     "请",
+     "给",
+     "我",
+     "一杯",
+     "果汁。"
+    ],
+    "r": [
+     "qǐng",
+     "gěi",
+     "wǒ",
+     "yì bēi",
+     "guǒ zhī"
+    ],
+    "zh": "",
+    "en": "Please give me a glass of juice."
+   },
+   "wrong": [
+    {
+     "t": "我想吃饺子。",
+     "seg": [
+      "我",
+      "想",
+      "吃",
+      "饺子。"
+     ],
+     "r": [
+      "wǒ",
+      "xiǎng",
+      "chī",
+      "jiǎo zi"
+     ],
+     "zh": "",
+     "en": "I would like dumplings."
+    },
+    {
+     "t": "汤太咸了。",
+     "seg": [
+      "汤",
+      "太",
+      "咸",
+      "了。"
+     ],
+     "r": [
+      "tāng",
+      "tài",
+      "xián",
+      "le"
+     ],
+     "zh": "",
+     "en": "The soup is too salty."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "这个汤好喝吗？",
+    "seg": [
+     "这个",
+     "汤",
+     "好喝",
+     "吗？"
+    ],
+    "r": [
+     "zhè ge",
+     "tāng",
+     "hǎo hē",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Is this soup good?"
+   },
+   "a": {
+    "t": "真好喝！",
+    "seg": [
+     "真",
+     "好喝！"
+    ],
+    "r": [
+     "zhēn",
+     "hǎo hē"
+    ],
+    "zh": "",
+    "en": "It's really good!"
+   },
+   "wrong": [
+    {
+     "t": "请给我两碗米饭。",
+     "seg": [
+      "请",
+      "给",
+      "我",
+      "两碗",
+      "米饭。"
+     ],
+     "r": [
+      "qǐng",
+      "gěi",
+      "wǒ",
+      "liǎng wǎn",
+      "mǐ fàn"
+     ],
+     "zh": "",
+     "en": "Please give me two bowls of rice."
+    },
+    {
+     "t": "我不吃牛肉。",
+     "seg": [
+      "我",
+      "不吃",
+      "牛肉。"
+     ],
+     "r": [
+      "wǒ",
+      "bù chī",
+      "niú ròu"
+     ],
+     "zh": "",
+     "en": "I don't eat beef."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你喜欢吃甜的还是酸的？",
+    "seg": [
+     "你",
+     "喜欢",
+     "吃",
+     "甜的",
+     "还是",
+     "酸的？"
+    ],
+    "r": [
+     "nǐ",
+     "xǐ huan",
+     "chī",
+     "tián de",
+     "hái shi",
+     "suān de"
+    ],
+    "zh": "",
+    "en": "Do you like sweet things or sour things?"
+   },
+   "a": {
+    "t": "我喜欢吃甜的。",
+    "seg": [
+     "我",
+     "喜欢",
+     "吃",
+     "甜的。"
+    ],
+    "r": [
+     "wǒ",
+     "xǐ huan",
+     "chī",
+     "tián de"
+    ],
+    "zh": "",
+    "en": "I like sweet things."
+   },
+   "wrong": [
+    {
+     "t": "请给我菜单。",
+     "seg": [
+      "请",
+      "给",
+      "我",
+      "菜单。"
+     ],
+     "r": [
+      "qǐng",
+      "gěi",
+      "wǒ",
+      "cài dān"
+     ],
+     "zh": "",
+     "en": "Please give me the menu."
+    },
+    {
+     "t": "太辣了。",
+     "seg": [
+      "太",
+      "辣",
+      "了。"
+     ],
+     "r": [
+      "tài",
+      "là",
+      "le"
+     ],
+     "zh": "",
+     "en": "It's too spicy."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你吃米饭还是面条？",
+    "seg": [
+     "你",
+     "吃",
+     "米饭",
+     "还是",
+     "面条？"
+    ],
+    "r": [
+     "nǐ",
+     "chī",
+     "mǐ fàn",
+     "hái shi",
+     "miàn tiáo"
+    ],
+    "zh": "",
+    "en": "Do you eat rice or noodles?"
+   },
+   "a": {
+    "t": "都可以。",
+    "seg": [
+     "都",
+     "可以。"
+    ],
+    "r": [
+     "dōu",
+     "kě yǐ"
+    ],
+    "zh": "",
+    "en": "Either is fine."
+   },
+   "wrong": [
+    {
+     "t": "一杯茶。",
+     "seg": [
+      "一杯",
+      "茶。"
+     ],
+     "r": [
+      "yì bēi",
+      "chá"
+     ],
+     "zh": "",
+     "en": "A cup of tea."
+    },
+    {
+     "t": "汤太咸了。",
+     "seg": [
+      "汤",
+      "太",
+      "咸",
+      "了。"
+     ],
+     "r": [
+      "tāng",
+      "tài",
+      "xián",
+      "le"
+     ],
+     "zh": "",
+     "en": "The soup is too salty."
+    }
+   ]
+  }
+ ],
+ "talk": {
+  "name": "Ah Hai",
+  "zh": "阿海",
+  "gender": "m",
+  "kid": false,
+  "topic": {
+   "zh": "在饭馆点菜",
+   "en": "Ordering at a restaurant"
+  },
+  "persona": "You are Ah Hai, a patient, cheerful waiter at the little island noodle restaurant by the harbour. Your menu (all in play money, never discuss real prices) has: dumplings, rice, noodles, soup, green vegetables, tofu, beef, eggs; tea, water and fruit juice. Chopsticks and spoons are on request. You want to take the learner's order: what they want to eat, what they want to drink, whether they like spicy food, and how the food tastes afterwards. Speak only simple level-1 Mandarin, short sentences, one question at a time. If the learner uses a wrong measure word or order, just repeat the correct form naturally. Never ask for the learner's real name, school, address, phone number or other personal data. You are a friendly game character, not an emotional companion.",
+  "goal": {
+   "zh": "点一个菜、一个饮料，说你吃不吃辣，说说味道。",
+   "en": "Order a dish and a drink, say whether you eat spicy food, and comment on the taste."
+  },
+  "opener": {
+   "t": "欢迎光临！我是阿海。这是菜单。你想吃什么？",
+   "r": "huān yíng guāng lín! wǒ shì Ā Hǎi. zhè shì cài dān. nǐ xiǎng chī shén me?"
+  },
+  "steps": [
+   {
+    "zh": "点吃的",
+    "en": "Order food",
+    "t": "我想吃饺子，请给我一盘青菜。"
+   },
+   {
+    "zh": "点喝的",
+    "en": "Order a drink",
+    "t": "请给我一杯茶。"
+   },
+   {
+    "zh": "说你吃不吃辣",
+    "en": "Say whether you eat spicy food",
+    "t": "我不吃辣。"
+   },
+   {
+    "zh": "说说味道",
+    "en": "Say how it tastes",
+    "t": "这个汤真好喝！"
+   }
+  ],
+  "words": [
+   {
+    "t": "想",
+    "zh": "",
+    "en": "would like"
+   },
+   {
+    "t": "要",
+    "zh": "",
+    "en": "to want"
+   },
+   {
+    "t": "请给我",
+    "zh": "",
+    "en": "please give me"
+   },
+   {
+    "t": "还是",
+    "zh": "",
+    "en": "or"
+   },
+   {
+    "t": "辣",
+    "zh": "",
+    "en": "spicy"
+   },
+   {
+    "t": "甜",
+    "zh": "",
+    "en": "sweet"
+   },
+   {
+    "t": "好吃",
+    "zh": "",
+    "en": "tasty"
+   },
+   {
+    "t": "饺子",
+    "zh": "",
+    "en": "dumplings"
+   }
+  ]
+ }
+}

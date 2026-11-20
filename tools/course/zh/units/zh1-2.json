@@ -1,0 +1,1342 @@
+{
+ "book": "zh1",
+ "n": 2,
+ "t": "多少钱？",
+ "zh": "",
+ "en": "How Much Is It?",
+ "icon": "🍎",
+ "color": "#E8A317",
+ "key": {
+  "t": "你想买什么？一共多少钱？",
+  "r": "nǐ xiǎng mǎi shén me? yí gòng duō shao qián?",
+  "zh": "",
+  "en": "What do you want to buy? How much is it altogether?"
+ },
+ "grammar": {
+  "title": {
+   "zh": "几 和 多少；块；两 和 二",
+   "en": "几 vs 多少; 块; 两 vs 二"
+  },
+  "tip": {
+   "zh": "问十以内的数量用「几」：你买几个？问价钱用「多少」：一共多少钱？量词前面说「两」，数数和号码里说「二」：两个苹果，二十块。口语里钱说「块」：一块五，十二块。",
+   "en": "Use 几 (jǐ) for small numbers (under ten): 你买几个？ (nǐ mǎi jǐ gè?). Use 多少 (duō shao) for prices and big numbers: 一共多少钱？ (yí gòng duō shao qián?). Before a measure word say 两 (liǎng), but in counting and numbers say 二 (èr): 两个苹果 (liǎng gè píng guǒ), 二十块 (èr shí kuài). In speech, money is 块 (kuài): 一块五 (yí kuài wǔ)."
+  }
+ },
+ "boss": {
+  "emoji": "🐿️",
+  "name": {
+   "zh": "松鼠老板",
+   "en": "Nutmeg the Squirrel"
+  },
+  "t": "欢迎光临！苹果两块钱一个，香蕉三块钱一个。你想买什么？",
+  "r": "huān yíng guāng lín! píng guǒ liǎng kuài qián yí gè, xiāng jiāo sān kuài qián yí gè. nǐ xiǎng mǎi shén me?",
+  "zh": "",
+  "en": "Welcome! Apples are two yuan each and bananas are three yuan each. What would you like to buy?"
+ },
+ "words": [
+  {
+   "t": "钱",
+   "r": "qián",
+   "zh": "",
+   "en": "money",
+   "pic": "💰"
+  },
+  {
+   "t": "块",
+   "r": "kuài",
+   "zh": "",
+   "en": "yuan (spoken)",
+   "pic": "🪙"
+  },
+  {
+   "t": "毛",
+   "r": "máo",
+   "zh": "",
+   "en": "ten cents (spoken)"
+  },
+  {
+   "t": "多少",
+   "r": "duō shao",
+   "zh": "",
+   "en": "how many, how much"
+  },
+  {
+   "t": "一共",
+   "r": "yí gòng",
+   "zh": "",
+   "en": "altogether",
+   "pic": "🧮"
+  },
+  {
+   "t": "买",
+   "r": "mǎi",
+   "zh": "",
+   "en": "to buy",
+   "pic": "🛒"
+  },
+  {
+   "t": "贵",
+   "r": "guì",
+   "zh": "",
+   "en": "expensive",
+   "pic": "💎"
+  },
+  {
+   "t": "便宜",
+   "r": "pián yi",
+   "zh": "",
+   "en": "cheap",
+   "pic": "🏷️"
+  },
+  {
+   "t": "苹果",
+   "r": "píng guǒ",
+   "zh": "",
+   "en": "apple",
+   "pic": "🍎"
+  },
+  {
+   "t": "香蕉",
+   "r": "xiāng jiāo",
+   "zh": "",
+   "en": "banana",
+   "pic": "🍌"
+  },
+  {
+   "t": "西瓜",
+   "r": "xī guā",
+   "zh": "",
+   "en": "watermelon",
+   "pic": "🍉"
+  },
+  {
+   "t": "橘子",
+   "r": "jú zi",
+   "zh": "",
+   "en": "mandarin orange",
+   "pic": "🍊"
+  },
+  {
+   "t": "草莓",
+   "r": "cǎo méi",
+   "zh": "",
+   "en": "strawberry",
+   "pic": "🍓"
+  },
+  {
+   "t": "橡皮",
+   "r": "xiàng pí",
+   "zh": "",
+   "en": "eraser",
+   "pic": "🧽"
+  },
+  {
+   "t": "纸",
+   "r": "zhǐ",
+   "zh": "",
+   "en": "paper",
+   "pic": "📄"
+  },
+  {
+   "t": "张",
+   "r": "zhāng",
+   "zh": "",
+   "en": "measure word for sheets",
+   "pic": "🎫"
+  },
+  {
+   "t": "商店",
+   "r": "shāng diàn",
+   "zh": "",
+   "en": "shop",
+   "pic": "🏪"
+  },
+  {
+   "t": "老板",
+   "r": "lǎo bǎn",
+   "zh": "",
+   "en": "shopkeeper, boss",
+   "pic": "🧑‍🍳"
+  },
+  {
+   "t": "给",
+   "r": "gěi",
+   "zh": "",
+   "en": "to give",
+   "pic": "🤲"
+  },
+  {
+   "t": "两",
+   "r": "liǎng",
+   "zh": "",
+   "en": "two (before a measure word)"
+  },
+  {
+   "t": "二十",
+   "r": "èr shí",
+   "zh": "",
+   "en": "twenty"
+  },
+  {
+   "t": "五十",
+   "r": "wǔ shí",
+   "zh": "",
+   "en": "fifty"
+  },
+  {
+   "t": "一百",
+   "r": "yì bǎi",
+   "zh": "",
+   "en": "one hundred",
+   "pic": "💯"
+  },
+  {
+   "t": "水果",
+   "r": "shuǐ guǒ",
+   "zh": "",
+   "en": "fruit",
+   "pic": "🧺"
+  }
+ ],
+ "sents": [
+  {
+   "t": "这个多少钱？",
+   "seg": [
+    "这个",
+    "多少",
+    "钱？"
+   ],
+   "r": [
+    "zhè ge",
+    "duō shao",
+    "qián"
+   ],
+   "zh": "",
+   "en": "How much is this?"
+  },
+  {
+   "t": "一个苹果两块钱。",
+   "seg": [
+    "一个",
+    "苹果",
+    "两块",
+    "钱。"
+   ],
+   "r": [
+    "yí gè",
+    "píng guǒ",
+    "liǎng kuài",
+    "qián"
+   ],
+   "zh": "",
+   "en": "An apple is two yuan."
+  },
+  {
+   "t": "西瓜十二块一个。",
+   "seg": [
+    "西瓜",
+    "十二块",
+    "一个。"
+   ],
+   "r": [
+    "xī guā",
+    "shí èr kuài",
+    "yí gè"
+   ],
+   "zh": "",
+   "en": "A watermelon is twelve yuan each."
+  },
+  {
+   "t": "这个很贵，那个很便宜。",
+   "seg": [
+    "这个",
+    "很",
+    "贵，",
+    "那个",
+    "很",
+    "便宜。"
+   ],
+   "r": [
+    "zhè ge",
+    "hěn",
+    "guì",
+    "nà ge",
+    "hěn",
+    "pián yi"
+   ],
+   "zh": "",
+   "en": "This one is expensive, and that one is cheap."
+  },
+  {
+   "t": "你买几个？",
+   "seg": [
+    "你",
+    "买",
+    "几个？"
+   ],
+   "r": [
+    "nǐ",
+    "mǎi",
+    "jǐ gè"
+   ],
+   "zh": "",
+   "en": "How many do you want to buy?"
+  },
+  {
+   "t": "我买三个橘子。",
+   "seg": [
+    "我",
+    "买",
+    "三个",
+    "橘子。"
+   ],
+   "r": [
+    "wǒ",
+    "mǎi",
+    "sān gè",
+    "jú zi"
+   ],
+   "zh": "",
+   "en": "I am buying three oranges."
+  },
+  {
+   "t": "一共多少钱？",
+   "seg": [
+    "一共",
+    "多少",
+    "钱？"
+   ],
+   "r": [
+    "yí gòng",
+    "duō shao",
+    "qián"
+   ],
+   "zh": "",
+   "en": "How much is it altogether?"
+  },
+  {
+   "t": "一共二十块。",
+   "seg": [
+    "一共",
+    "二十",
+    "块。"
+   ],
+   "r": [
+    "yí gòng",
+    "èr shí",
+    "kuài"
+   ],
+   "zh": "",
+   "en": "It is twenty yuan altogether."
+  },
+  {
+   "t": "我有五十块钱。",
+   "seg": [
+    "我",
+    "有",
+    "五十",
+    "块",
+    "钱。"
+   ],
+   "r": [
+    "wǒ",
+    "yǒu",
+    "wǔ shí",
+    "kuài",
+    "qián"
+   ],
+   "zh": "",
+   "en": "I have fifty yuan."
+  },
+  {
+   "t": "我买两个苹果。",
+   "seg": [
+    "我",
+    "买",
+    "两个",
+    "苹果。"
+   ],
+   "r": [
+    "wǒ",
+    "mǎi",
+    "liǎng gè",
+    "píng guǒ"
+   ],
+   "zh": "",
+   "en": "I am buying two apples."
+  },
+  {
+   "t": "老板，这本书多少钱？",
+   "seg": [
+    "老板，",
+    "这本",
+    "书",
+    "多少",
+    "钱？"
+   ],
+   "r": [
+    "lǎo bǎn",
+    "zhè běn",
+    "shū",
+    "duō shao",
+    "qián"
+   ],
+   "zh": "",
+   "en": "Boss, how much is this book?"
+  },
+  {
+   "t": "这本书九块五。",
+   "seg": [
+    "这本",
+    "书",
+    "九块五。"
+   ],
+   "r": [
+    "zhè běn",
+    "shū",
+    "jiǔ kuài wǔ"
+   ],
+   "zh": "",
+   "en": "This book is nine fifty."
+  },
+  {
+   "t": "草莓三十块。",
+   "seg": [
+    "草莓",
+    "三十",
+    "块。"
+   ],
+   "r": [
+    "cǎo méi",
+    "sān shí",
+    "kuài"
+   ],
+   "zh": "",
+   "en": "Strawberries are thirty yuan."
+  },
+  {
+   "t": "这支铅笔一块五。",
+   "seg": [
+    "这支",
+    "铅笔",
+    "一块五。"
+   ],
+   "r": [
+    "zhè zhī",
+    "qiān bǐ",
+    "yí kuài wǔ"
+   ],
+   "zh": "",
+   "en": "This pencil is one fifty."
+  },
+  {
+   "t": "老板，我买一个西瓜。",
+   "seg": [
+    "老板，",
+    "我",
+    "买",
+    "一个",
+    "西瓜。"
+   ],
+   "r": [
+    "lǎo bǎn",
+    "wǒ",
+    "mǎi",
+    "yí gè",
+    "xī guā"
+   ],
+   "zh": "",
+   "en": "Boss, I will buy a watermelon."
+  },
+  {
+   "t": "给你一百块，谢谢老板！",
+   "seg": [
+    "给",
+    "你",
+    "一百块，",
+    "谢谢",
+    "老板！"
+   ],
+   "r": [
+    "gěi",
+    "nǐ",
+    "yì bǎi kuài",
+    "xiè xie",
+    "lǎo bǎn"
+   ],
+   "zh": "",
+   "en": "Here is one hundred yuan. Thanks, boss!"
+  }
+ ],
+ "dlgs": [
+  {
+   "q": {
+    "t": "这个苹果多少钱？",
+    "seg": [
+     "这个",
+     "苹果",
+     "多少",
+     "钱？"
+    ],
+    "r": [
+     "zhè ge",
+     "píng guǒ",
+     "duō shao",
+     "qián"
+    ],
+    "zh": "",
+    "en": "How much is this apple?"
+   },
+   "a": {
+    "t": "一个两块钱。",
+    "seg": [
+     "一个",
+     "两块",
+     "钱。"
+    ],
+    "r": [
+     "yí gè",
+     "liǎng kuài",
+     "qián"
+    ],
+    "zh": "",
+    "en": "Two yuan each."
+   },
+   "wrong": [
+    {
+     "t": "我有五十块。",
+     "seg": [
+      "我",
+      "有",
+      "五十",
+      "块。"
+     ],
+     "r": [
+      "wǒ",
+      "yǒu",
+      "wǔ shí",
+      "kuài"
+     ],
+     "zh": "",
+     "en": "I have fifty yuan."
+    },
+    {
+     "t": "谢谢老板！",
+     "seg": [
+      "谢谢",
+      "老板！"
+     ],
+     "r": [
+      "xiè xie",
+      "lǎo bǎn"
+     ],
+     "zh": "",
+     "en": "Thanks, boss!"
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "一共多少钱？",
+    "seg": [
+     "一共",
+     "多少",
+     "钱？"
+    ],
+    "r": [
+     "yí gòng",
+     "duō shao",
+     "qián"
+    ],
+    "zh": "",
+    "en": "How much is it altogether?"
+   },
+   "a": {
+    "t": "一共十二块。",
+    "seg": [
+     "一共",
+     "十二块。"
+    ],
+    "r": [
+     "yí gòng",
+     "shí èr kuài"
+    ],
+    "zh": "",
+    "en": "Twelve yuan altogether."
+   },
+   "wrong": [
+    {
+     "t": "我买两个。",
+     "seg": [
+      "我",
+      "买",
+      "两个。"
+     ],
+     "r": [
+      "wǒ",
+      "mǎi",
+      "liǎng gè"
+     ],
+     "zh": "",
+     "en": "I will buy two."
+    },
+    {
+     "t": "西瓜很贵。",
+     "seg": [
+      "西瓜",
+      "很",
+      "贵。"
+     ],
+     "r": [
+      "xī guā",
+      "hěn",
+      "guì"
+     ],
+     "zh": "",
+     "en": "Watermelons are expensive."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你买几个橘子？",
+    "seg": [
+     "你",
+     "买",
+     "几个",
+     "橘子？"
+    ],
+    "r": [
+     "nǐ",
+     "mǎi",
+     "jǐ gè",
+     "jú zi"
+    ],
+    "zh": "",
+    "en": "How many oranges are you buying?"
+   },
+   "a": {
+    "t": "我买四个。",
+    "seg": [
+     "我",
+     "买",
+     "四个。"
+    ],
+    "r": [
+     "wǒ",
+     "mǎi",
+     "sì gè"
+    ],
+    "zh": "",
+    "en": "I am buying four."
+   },
+   "wrong": [
+    {
+     "t": "一共二十块。",
+     "seg": [
+      "一共",
+      "二十",
+      "块。"
+     ],
+     "r": [
+      "yí gòng",
+      "èr shí",
+      "kuài"
+     ],
+     "zh": "",
+     "en": "Twenty yuan altogether."
+    },
+    {
+     "t": "西瓜很便宜。",
+     "seg": [
+      "西瓜",
+      "很",
+      "便宜。"
+     ],
+     "r": [
+      "xī guā",
+      "hěn",
+      "pián yi"
+     ],
+     "zh": "",
+     "en": "Watermelons are cheap."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "草莓贵不贵？",
+    "seg": [
+     "草莓",
+     "贵",
+     "不",
+     "贵？"
+    ],
+    "r": [
+     "cǎo méi",
+     "guì",
+     "bu",
+     "guì"
+    ],
+    "zh": "",
+    "en": "Are strawberries expensive?"
+   },
+   "a": {
+    "t": "不贵，很便宜。",
+    "seg": [
+     "不",
+     "贵，",
+     "很",
+     "便宜。"
+    ],
+    "r": [
+     "bú",
+     "guì",
+     "hěn",
+     "pián yi"
+    ],
+    "zh": "",
+    "en": "No, they're cheap."
+   },
+   "wrong": [
+    {
+     "t": "我买两个。",
+     "seg": [
+      "我",
+      "买",
+      "两个。"
+     ],
+     "r": [
+      "wǒ",
+      "mǎi",
+      "liǎng gè"
+     ],
+     "zh": "",
+     "en": "I am buying two."
+    },
+    {
+     "t": "老板在商店。",
+     "seg": [
+      "老板",
+      "在",
+      "商店。"
+     ],
+     "r": [
+      "lǎo bǎn",
+      "zài",
+      "shāng diàn"
+     ],
+     "zh": "",
+     "en": "The shopkeeper is in the shop."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你有多少钱？",
+    "seg": [
+     "你",
+     "有",
+     "多少",
+     "钱？"
+    ],
+    "r": [
+     "nǐ",
+     "yǒu",
+     "duō shao",
+     "qián"
+    ],
+    "zh": "",
+    "en": "How much money do you have?"
+   },
+   "a": {
+    "t": "我有五十块。",
+    "seg": [
+     "我",
+     "有",
+     "五十块。"
+    ],
+    "r": [
+     "wǒ",
+     "yǒu",
+     "wǔ shí kuài"
+    ],
+    "zh": "",
+    "en": "I have fifty yuan."
+   },
+   "wrong": [
+    {
+     "t": "这个很贵。",
+     "seg": [
+      "这个",
+      "很",
+      "贵。"
+     ],
+     "r": [
+      "zhè ge",
+      "hěn",
+      "guì"
+     ],
+     "zh": "",
+     "en": "This one is expensive."
+    },
+    {
+     "t": "我买香蕉。",
+     "seg": [
+      "我",
+      "买",
+      "香蕉。"
+     ],
+     "r": [
+      "wǒ",
+      "mǎi",
+      "xiāng jiāo"
+     ],
+     "zh": "",
+     "en": "I will buy bananas."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你买几张纸？",
+    "seg": [
+     "你",
+     "买",
+     "几张",
+     "纸？"
+    ],
+    "r": [
+     "nǐ",
+     "mǎi",
+     "jǐ zhāng",
+     "zhǐ"
+    ],
+    "zh": "",
+    "en": "How many sheets of paper are you buying?"
+   },
+   "a": {
+    "t": "我买两张。",
+    "seg": [
+     "我",
+     "买",
+     "两张。"
+    ],
+    "r": [
+     "wǒ",
+     "mǎi",
+     "liǎng zhāng"
+    ],
+    "zh": "",
+    "en": "I am buying two."
+   },
+   "wrong": [
+    {
+     "t": "九块五。",
+     "seg": [
+      "九块五。"
+     ],
+     "r": [
+      "jiǔ kuài wǔ"
+     ],
+     "zh": "",
+     "en": "Nine fifty."
+    },
+    {
+     "t": "我有一百块。",
+     "seg": [
+      "我",
+      "有",
+      "一百块。"
+     ],
+     "r": [
+      "wǒ",
+      "yǒu",
+      "yì bǎi kuài"
+     ],
+     "zh": "",
+     "en": "I have one hundred yuan."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "这本书多少钱？",
+    "seg": [
+     "这本",
+     "书",
+     "多少",
+     "钱？"
+    ],
+    "r": [
+     "zhè běn",
+     "shū",
+     "duō shao",
+     "qián"
+    ],
+    "zh": "",
+    "en": "How much is this book?"
+   },
+   "a": {
+    "t": "九块五。",
+    "seg": [
+     "九块五。"
+    ],
+    "r": [
+     "jiǔ kuài wǔ"
+    ],
+    "zh": "",
+    "en": "Nine fifty."
+   },
+   "wrong": [
+    {
+     "t": "我买三本。",
+     "seg": [
+      "我",
+      "买",
+      "三本。"
+     ],
+     "r": [
+      "wǒ",
+      "mǎi",
+      "sān běn"
+     ],
+     "zh": "",
+     "en": "I am buying three."
+    },
+    {
+     "t": "谢谢！",
+     "seg": [
+      "谢谢！"
+     ],
+     "r": [
+      "xiè xie"
+     ],
+     "zh": "",
+     "en": "Thank you!"
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "西瓜十二块，苹果呢？",
+    "seg": [
+     "西瓜",
+     "十二块，",
+     "苹果",
+     "呢？"
+    ],
+    "r": [
+     "xī guā",
+     "shí èr kuài",
+     "píng guǒ",
+     "ne"
+    ],
+    "zh": "",
+    "en": "A watermelon is twelve yuan. What about apples?"
+   },
+   "a": {
+    "t": "苹果两块。",
+    "seg": [
+     "苹果",
+     "两块。"
+    ],
+    "r": [
+     "píng guǒ",
+     "liǎng kuài"
+    ],
+    "zh": "",
+    "en": "Apples are two yuan."
+   },
+   "wrong": [
+    {
+     "t": "我买一个西瓜。",
+     "seg": [
+      "我",
+      "买",
+      "一个",
+      "西瓜。"
+     ],
+     "r": [
+      "wǒ",
+      "mǎi",
+      "yí gè",
+      "xī guā"
+     ],
+     "zh": "",
+     "en": "I will buy a watermelon."
+    },
+    {
+     "t": "老板是我的朋友。",
+     "seg": [
+      "老板",
+      "是",
+      "我的",
+      "朋友。"
+     ],
+     "r": [
+      "lǎo bǎn",
+      "shì",
+      "wǒ de",
+      "péng you"
+     ],
+     "zh": "",
+     "en": "The shopkeeper is my friend."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你买什么？",
+    "seg": [
+     "你",
+     "买",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "mǎi",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What are you buying?"
+   },
+   "a": {
+    "t": "我买苹果和香蕉。",
+    "seg": [
+     "我",
+     "买",
+     "苹果",
+     "和",
+     "香蕉。"
+    ],
+    "r": [
+     "wǒ",
+     "mǎi",
+     "píng guǒ",
+     "hé",
+     "xiāng jiāo"
+    ],
+    "zh": "",
+    "en": "I am buying apples and bananas."
+   },
+   "wrong": [
+    {
+     "t": "一共十块。",
+     "seg": [
+      "一共",
+      "十块。"
+     ],
+     "r": [
+      "yí gòng",
+      "shí kuài"
+     ],
+     "zh": "",
+     "en": "Ten yuan altogether."
+    },
+    {
+     "t": "香蕉很便宜。",
+     "seg": [
+      "香蕉",
+      "很",
+      "便宜。"
+     ],
+     "r": [
+      "xiāng jiāo",
+      "hěn",
+      "pián yi"
+     ],
+     "zh": "",
+     "en": "Bananas are cheap."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "水果商店里有什么？",
+    "seg": [
+     "水果",
+     "商店",
+     "里",
+     "有",
+     "什么？"
+    ],
+    "r": [
+     "shuǐ guǒ",
+     "shāng diàn",
+     "li",
+     "yǒu",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What is in the fruit shop?"
+   },
+   "a": {
+    "t": "有苹果、香蕉和西瓜。",
+    "seg": [
+     "有",
+     "苹果、",
+     "香蕉",
+     "和",
+     "西瓜。"
+    ],
+    "r": [
+     "yǒu",
+     "píng guǒ",
+     "xiāng jiāo",
+     "hé",
+     "xī guā"
+    ],
+    "zh": "",
+    "en": "There are apples, bananas and watermelons."
+   },
+   "wrong": [
+    {
+     "t": "一共二十块。",
+     "seg": [
+      "一共",
+      "二十",
+      "块。"
+     ],
+     "r": [
+      "yí gòng",
+      "èr shí",
+      "kuài"
+     ],
+     "zh": "",
+     "en": "Twenty yuan altogether."
+    },
+    {
+     "t": "我买两张纸。",
+     "seg": [
+      "我",
+      "买",
+      "两张",
+      "纸。"
+     ],
+     "r": [
+      "wǒ",
+      "mǎi",
+      "liǎng zhāng",
+      "zhǐ"
+     ],
+     "zh": "",
+     "en": "I will buy two sheets of paper."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "这支铅笔多少钱？",
+    "seg": [
+     "这支",
+     "铅笔",
+     "多少",
+     "钱？"
+    ],
+    "r": [
+     "zhè zhī",
+     "qiān bǐ",
+     "duō shao",
+     "qián"
+    ],
+    "zh": "",
+    "en": "How much is this pencil?"
+   },
+   "a": {
+    "t": "一块五。",
+    "seg": [
+     "一块五。"
+    ],
+    "r": [
+     "yí kuài wǔ"
+    ],
+    "zh": "",
+    "en": "One fifty."
+   },
+   "wrong": [
+    {
+     "t": "我有五十块钱。",
+     "seg": [
+      "我",
+      "有",
+      "五十块",
+      "钱。"
+     ],
+     "r": [
+      "wǒ",
+      "yǒu",
+      "wǔ shí kuài",
+      "qián"
+     ],
+     "zh": "",
+     "en": "I have fifty yuan."
+    },
+    {
+     "t": "我买三个。",
+     "seg": [
+      "我",
+      "买",
+      "三个。"
+     ],
+     "r": [
+      "wǒ",
+      "mǎi",
+      "sān gè"
+     ],
+     "zh": "",
+     "en": "I am buying three."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你有一百块吗？",
+    "seg": [
+     "你",
+     "有",
+     "一百块",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "yǒu",
+     "yì bǎi kuài",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Do you have one hundred yuan?"
+   },
+   "a": {
+    "t": "没有，我有五十块。",
+    "seg": [
+     "没有，",
+     "我",
+     "有",
+     "五十块。"
+    ],
+    "r": [
+     "méi yǒu",
+     "wǒ",
+     "yǒu",
+     "wǔ shí kuài"
+    ],
+    "zh": "",
+    "en": "No, I have fifty yuan."
+   },
+   "wrong": [
+    {
+     "t": "一共十二块。",
+     "seg": [
+      "一共",
+      "十二块。"
+     ],
+     "r": [
+      "yí gòng",
+      "shí èr kuài"
+     ],
+     "zh": "",
+     "en": "Twelve yuan altogether."
+    },
+    {
+     "t": "苹果很便宜。",
+     "seg": [
+      "苹果",
+      "很",
+      "便宜。"
+     ],
+     "r": [
+      "píng guǒ",
+      "hěn",
+      "pián yi"
+     ],
+     "zh": "",
+     "en": "Apples are cheap."
+    }
+   ]
+  }
+ ],
+ "talk": {
+  "name": "Auntie Guo",
+  "zh": "郭阿姨",
+  "gender": "f",
+  "kid": false,
+  "topic": {
+   "zh": "在水果摊买水果",
+   "en": "Buying fruit at a fruit stall"
+  },
+  "persona": "You are Auntie Guo, a warm, chatty islander who runs the fruit stall near the harbour. You sell apples (2 yuan each), bananas (3 yuan each), oranges (1.5 yuan each) and watermelons (12 yuan each), in play money. You want to chat with the learner about what fruit they want, how many, and the total price, then say thank you. Speak only simple level-1 Mandarin, short sentences, one question at a time, and gently repeat numbers slowly so the learner can follow. If they make a mistake, just say the correct form naturally. Never ask for the learner's real name, school, address, phone number or other personal data. You are a friendly game character, not an emotional companion.",
+  "goal": {
+   "zh": "问价钱，买三个水果，问一共多少钱，付钱。",
+   "en": "Ask a price, buy fruit, ask the total and pay."
+  },
+  "opener": {
+   "t": "欢迎光临！我是郭阿姨。苹果两块，香蕉三块。你想买什么？",
+   "r": "huān yíng guāng lín! wǒ shì Guō ā yí. píng guǒ liǎng kuài, xiāng jiāo sān kuài. nǐ xiǎng mǎi shén me?"
+  },
+  "steps": [
+   {
+    "zh": "问一个水果多少钱",
+    "en": "Ask the price of a fruit",
+    "t": "西瓜多少钱一个？"
+   },
+   {
+    "zh": "说你买几个什么水果",
+    "en": "Say what and how many you will buy",
+    "t": "我买三个苹果。"
+   },
+   {
+    "zh": "问一共多少钱",
+    "en": "Ask how much it is altogether",
+    "t": "一共多少钱？"
+   },
+   {
+    "zh": "付钱，说谢谢",
+    "en": "Pay and say thanks",
+    "t": "给你二十块，谢谢！"
+   }
+  ],
+  "words": [
+   {
+    "t": "多少钱",
+    "zh": "",
+    "en": "how much"
+   },
+   {
+    "t": "一共",
+    "zh": "",
+    "en": "altogether"
+   },
+   {
+    "t": "买",
+    "zh": "",
+    "en": "to buy"
+   },
+   {
+    "t": "贵",
+    "zh": "",
+    "en": "expensive"
+   },
+   {
+    "t": "便宜",
+    "zh": "",
+    "en": "cheap"
+   },
+   {
+    "t": "块",
+    "zh": "",
+    "en": "yuan"
+   },
+   {
+    "t": "苹果",
+    "zh": "",
+    "en": "apple"
+   },
+   {
+    "t": "西瓜",
+    "zh": "",
+    "en": "watermelon"
+   }
+  ]
+ }
+}

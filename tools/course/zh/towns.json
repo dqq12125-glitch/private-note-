@@ -1,0 +1,9387 @@
+[
+ {
+  "i": 0,
+  "t": "你好岛",
+  "boss": {
+   "t": "你好！我是这里的岛主。你是新朋友吗？",
+   "r": "nǐ hǎo! wǒ shì zhè lǐ de dǎo zhǔ. nǐ shì xīn péng you ma?",
+   "zh": "",
+   "en": "Hello! I'm the master of this island. Are you a new friend?"
+  },
+  "words": [
+   {
+    "t": "你好",
+    "r": "nǐ hǎo",
+    "zh": "",
+    "en": "hello",
+    "pic": "👋"
+   },
+   {
+    "t": "再见",
+    "r": "zài jiàn",
+    "zh": "",
+    "en": "goodbye",
+    "pic": "🚶"
+   },
+   {
+    "t": "谢谢",
+    "r": "xiè xie",
+    "zh": "",
+    "en": "thank you",
+    "pic": "🙏"
+   },
+   {
+    "t": "对不起",
+    "r": "duì bu qǐ",
+    "zh": "",
+    "en": "sorry",
+    "pic": "🙇"
+   },
+   {
+    "t": "没关系",
+    "r": "méi guān xi",
+    "zh": "",
+    "en": "that's OK",
+    "pic": "👌"
+   },
+   {
+    "t": "名字",
+    "r": "míng zi",
+    "zh": "",
+    "en": "name",
+    "pic": "🏷️"
+   },
+   {
+    "t": "老师",
+    "r": "lǎo shī",
+    "zh": "",
+    "en": "teacher",
+    "pic": "🧑‍🏫"
+   },
+   {
+    "t": "学生",
+    "r": "xué sheng",
+    "zh": "",
+    "en": "student",
+    "pic": "🧑‍🎓"
+   },
+   {
+    "t": "朋友",
+    "r": "péng you",
+    "zh": "",
+    "en": "friend",
+    "pic": "🧑‍🤝‍🧑"
+   },
+   {
+    "t": "同学",
+    "r": "tóng xué",
+    "zh": "",
+    "en": "classmate",
+    "pic": "🏫"
+   },
+   {
+    "t": "早上好",
+    "r": "zǎo shang hǎo",
+    "zh": "",
+    "en": "good morning",
+    "pic": "🌅"
+   },
+   {
+    "t": "晚安",
+    "r": "wǎn ān",
+    "zh": "",
+    "en": "good night",
+    "pic": "🌙"
+   }
+  ],
+  "sents": [
+   {
+    "t": "你叫什么名字？",
+    "seg": [
+     "你",
+     "叫",
+     "什么",
+     "名字？"
+    ],
+    "r": [
+     "nǐ",
+     "jiào",
+     "shén me",
+     "míng zi"
+    ],
+    "zh": "",
+    "en": "What's your name?"
+   },
+   {
+    "t": "我叫小明。",
+    "seg": [
+     "我",
+     "叫",
+     "小明。"
+    ],
+    "r": [
+     "wǒ",
+     "jiào",
+     "Xiǎo Míng"
+    ],
+    "zh": "",
+    "en": "My name is Xiaoming."
+   },
+   {
+    "t": "很高兴认识你。",
+    "seg": [
+     "很",
+     "高兴",
+     "认识",
+     "你。"
+    ],
+    "r": [
+     "hěn",
+     "gāo xìng",
+     "rèn shi",
+     "nǐ"
+    ],
+    "zh": "",
+    "en": "Nice to meet you."
+   },
+   {
+    "t": "我是学生。",
+    "seg": [
+     "我",
+     "是",
+     "学生。"
+    ],
+    "r": [
+     "wǒ",
+     "shì",
+     "xué sheng"
+    ],
+    "zh": "",
+    "en": "I am a student."
+   },
+   {
+    "t": "你是老师吗？",
+    "seg": [
+     "你",
+     "是",
+     "老师",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "shì",
+     "lǎo shī",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Are you a teacher?"
+   },
+   {
+    "t": "他是我的朋友。",
+    "seg": [
+     "他",
+     "是",
+     "我的",
+     "朋友。"
+    ],
+    "r": [
+     "tā",
+     "shì",
+     "wǒ de",
+     "péng you"
+    ],
+    "zh": "",
+    "en": "He is my friend."
+   },
+   {
+    "t": "王老师，早上好！",
+    "seg": [
+     "王老师，",
+     "早上好！"
+    ],
+    "r": [
+     "Wáng lǎo shī",
+     "zǎo shang hǎo"
+    ],
+    "zh": "",
+    "en": "Good morning, Teacher Wang!"
+   },
+   {
+    "t": "我们是同学。",
+    "seg": [
+     "我们",
+     "是",
+     "同学。"
+    ],
+    "r": [
+     "wǒ men",
+     "shì",
+     "tóng xué"
+    ],
+    "zh": "",
+    "en": "We are classmates."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "你叫什么名字？",
+     "seg": [
+      "你",
+      "叫",
+      "什么",
+      "名字？"
+     ],
+     "r": [
+      "nǐ",
+      "jiào",
+      "shén me",
+      "míng zi"
+     ],
+     "zh": "",
+     "en": "What's your name?"
+    },
+    "a": {
+     "t": "我叫丽丽。",
+     "seg": [
+      "我",
+      "叫",
+      "丽丽。"
+     ],
+     "r": [
+      "wǒ",
+      "jiào",
+      "Lì li"
+     ],
+     "zh": "",
+     "en": "I'm Lili."
+    },
+    "wrong": [
+     {
+      "t": "我是学生。",
+      "seg": [
+       "我",
+       "是",
+       "学生。"
+      ],
+      "r": [
+       "wǒ",
+       "shì",
+       "xué sheng"
+      ],
+      "zh": "",
+      "en": "I'm a student."
+     },
+     {
+      "t": "谢谢你！",
+      "seg": [
+       "谢谢",
+       "你！"
+      ],
+      "r": [
+       "xiè xie",
+       "nǐ"
+      ],
+      "zh": "",
+      "en": "Thank you!"
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "很高兴认识你！",
+     "seg": [
+      "很",
+      "高兴",
+      "认识",
+      "你！"
+     ],
+     "r": [
+      "hěn",
+      "gāo xìng",
+      "rèn shi",
+      "nǐ"
+     ],
+     "zh": "",
+     "en": "Nice to meet you!"
+    },
+    "a": {
+     "t": "我也很高兴认识你。",
+     "seg": [
+      "我",
+      "也",
+      "很",
+      "高兴",
+      "认识",
+      "你。"
+     ],
+     "r": [
+      "wǒ",
+      "yě",
+      "hěn",
+      "gāo xìng",
+      "rèn shi",
+      "nǐ"
+     ],
+     "zh": "",
+     "en": "Nice to meet you, too."
+    },
+    "wrong": [
+     {
+      "t": "不客气。",
+      "seg": [
+       "不客气。"
+      ],
+      "r": [
+       "bú kè qi"
+      ],
+      "zh": "",
+      "en": "You're welcome."
+     },
+     {
+      "t": "他是我的朋友。",
+      "seg": [
+       "他",
+       "是",
+       "我的",
+       "朋友。"
+      ],
+      "r": [
+       "tā",
+       "shì",
+       "wǒ de",
+       "péng you"
+      ],
+      "zh": "",
+      "en": "He is my friend."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "谢谢！",
+     "seg": [
+      "谢谢！"
+     ],
+     "r": [
+      "xiè xie"
+     ],
+     "zh": "",
+     "en": "Thanks!"
+    },
+    "a": {
+     "t": "不客气。",
+     "seg": [
+      "不客气。"
+     ],
+     "r": [
+      "bú kè qi"
+     ],
+     "zh": "",
+     "en": "You're welcome."
+    },
+    "wrong": [
+     {
+      "t": "我叫小明。",
+      "seg": [
+       "我",
+       "叫",
+       "小明。"
+      ],
+      "r": [
+       "wǒ",
+       "jiào",
+       "Xiǎo Míng"
+      ],
+      "zh": "",
+      "en": "I'm Xiaoming."
+     },
+     {
+      "t": "早上好！",
+      "seg": [
+       "早上好！"
+      ],
+      "r": [
+       "zǎo shang hǎo"
+      ],
+      "zh": "",
+      "en": "Good morning!"
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你是学生吗？",
+     "seg": [
+      "你",
+      "是",
+      "学生",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "shì",
+      "xué sheng",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Are you a student?"
+    },
+    "a": {
+     "t": "是，我是学生。",
+     "seg": [
+      "是，",
+      "我",
+      "是",
+      "学生。"
+     ],
+     "r": [
+      "shì",
+      "wǒ",
+      "shì",
+      "xué sheng"
+     ],
+     "zh": "",
+     "en": "Yes, I am."
+    },
+    "wrong": [
+     {
+      "t": "她是王老师。",
+      "seg": [
+       "她",
+       "是",
+       "王老师。"
+      ],
+      "r": [
+       "tā",
+       "shì",
+       "Wáng lǎo shī"
+      ],
+      "zh": "",
+      "en": "She is Teacher Wang."
+     },
+     {
+      "t": "很高兴认识你。",
+      "seg": [
+       "很",
+       "高兴",
+       "认识",
+       "你。"
+      ],
+      "r": [
+       "hěn",
+       "gāo xìng",
+       "rèn shi",
+       "nǐ"
+      ],
+      "zh": "",
+      "en": "Nice to meet you."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "他是谁？",
+     "seg": [
+      "他",
+      "是",
+      "谁？"
+     ],
+     "r": [
+      "tā",
+      "shì",
+      "shéi"
+     ],
+     "zh": "",
+     "en": "Who is he?"
+    },
+    "a": {
+     "t": "他是我的同学。",
+     "seg": [
+      "他",
+      "是",
+      "我的",
+      "同学。"
+     ],
+     "r": [
+      "tā",
+      "shì",
+      "wǒ de",
+      "tóng xué"
+     ],
+     "zh": "",
+     "en": "He's my classmate."
+    },
+    "wrong": [
+     {
+      "t": "我叫丽丽。",
+      "seg": [
+       "我",
+       "叫",
+       "丽丽。"
+      ],
+      "r": [
+       "wǒ",
+       "jiào",
+       "Lì li"
+      ],
+      "zh": "",
+      "en": "I'm Lili."
+     },
+     {
+      "t": "再见！",
+      "seg": [
+       "再见！"
+      ],
+      "r": [
+       "zài jiàn"
+      ],
+      "zh": "",
+      "en": "Goodbye!"
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "对不起！",
+     "seg": [
+      "对不起！"
+     ],
+     "r": [
+      "duì bu qǐ"
+     ],
+     "zh": "",
+     "en": "Sorry!"
+    },
+    "a": {
+     "t": "没关系。",
+     "seg": [
+      "没关系。"
+     ],
+     "r": [
+      "méi guān xi"
+     ],
+     "zh": "",
+     "en": "That's OK."
+    },
+    "wrong": [
+     {
+      "t": "早上好！",
+      "seg": [
+       "早上好！"
+      ],
+      "r": [
+       "zǎo shang hǎo"
+      ],
+      "zh": "",
+      "en": "Good morning!"
+     },
+     {
+      "t": "我们是朋友。",
+      "seg": [
+       "我们",
+       "是",
+       "朋友。"
+      ],
+      "r": [
+       "wǒ men",
+       "shì",
+       "péng you"
+      ],
+      "zh": "",
+      "en": "We are friends."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ],
+    [
+     "小明",
+     "👦",
+     "m"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "你好！我叫丽丽。你叫什么名字？",
+     "r": "nǐ hǎo! wǒ jiào Lì li. nǐ jiào shén me míng zi?",
+     "zh": "",
+     "en": "Hi! I'm Lili. What's your name?"
+    },
+    {
+     "who": 1,
+     "t": "你好，丽丽！我叫小明。",
+     "r": "nǐ hǎo, Lì li! wǒ jiào Xiǎo Míng.",
+     "zh": "",
+     "en": "Hi, Lili! I'm Xiaoming."
+    },
+    {
+     "who": 0,
+     "t": "很高兴认识你！",
+     "r": "hěn gāo xìng rèn shi nǐ!",
+     "zh": "",
+     "en": "Nice to meet you!"
+    },
+    {
+     "who": 1,
+     "t": "我也很高兴认识你。你是学生吗？",
+     "r": "wǒ yě hěn gāo xìng rèn shi nǐ. nǐ shì xué sheng ma?",
+     "zh": "",
+     "en": "Nice to meet you, too. Are you a student?"
+    },
+    {
+     "who": 0,
+     "t": "是，我是学生。你呢？",
+     "r": "shì, wǒ shì xué sheng. nǐ ne?",
+     "zh": "",
+     "en": "Yes, I am. And you?"
+    },
+    {
+     "who": 1,
+     "t": "我也是学生。",
+     "r": "wǒ yě shì xué sheng.",
+     "zh": "",
+     "en": "I'm a student, too."
+    },
+    {
+     "who": 0,
+     "t": "她是谁？是老师吗？",
+     "r": "tā shì shéi? shì lǎo shī ma?",
+     "zh": "",
+     "en": "Who is she? Is she a teacher?"
+    },
+    {
+     "who": 1,
+     "t": "对，她是王老师。",
+     "r": "duì, tā shì Wáng lǎo shī.",
+     "zh": "",
+     "en": "Yes, she's Teacher Wang."
+    },
+    {
+     "who": 0,
+     "t": "王老师，早上好！",
+     "r": "Wáng lǎo shī, zǎo shang hǎo!",
+     "zh": "",
+     "en": "Good morning, Teacher Wang!"
+    },
+    {
+     "who": 1,
+     "t": "王老师好！丽丽，我们是同学！",
+     "r": "Wáng lǎo shī hǎo! Lì li, wǒ men shì tóng xué!",
+     "zh": "",
+     "en": "Hello, Teacher Wang! Lili, we're classmates!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 1,
+  "t": "彩色文具岛",
+  "boss": {
+   "t": "你好！我的书包是红色的。你的书包是什么颜色？",
+   "r": "nǐ hǎo! wǒ de shū bāo shì hóng sè de. nǐ de shū bāo shì shén me yán sè?",
+   "zh": "",
+   "en": "Hi! My schoolbag is red. What colour is your schoolbag?"
+  },
+  "words": [
+   {
+    "t": "铅笔",
+    "r": "qiān bǐ",
+    "zh": "",
+    "en": "pencil",
+    "pic": "✏️"
+   },
+   {
+    "t": "笔",
+    "r": "bǐ",
+    "zh": "",
+    "en": "pen",
+    "pic": "🖊️"
+   },
+   {
+    "t": "书",
+    "r": "shū",
+    "zh": "",
+    "en": "book",
+    "pic": "📘"
+   },
+   {
+    "t": "本子",
+    "r": "běn zi",
+    "zh": "",
+    "en": "notebook",
+    "pic": "📓"
+   },
+   {
+    "t": "尺子",
+    "r": "chǐ zi",
+    "zh": "",
+    "en": "ruler",
+    "pic": "📏"
+   },
+   {
+    "t": "书包",
+    "r": "shū bāo",
+    "zh": "",
+    "en": "schoolbag",
+    "pic": "🎒"
+   },
+   {
+    "t": "剪刀",
+    "r": "jiǎn dāo",
+    "zh": "",
+    "en": "scissors",
+    "pic": "✂️"
+   },
+   {
+    "t": "红色",
+    "r": "hóng sè",
+    "zh": "",
+    "en": "red",
+    "pic": "🔴"
+   },
+   {
+    "t": "蓝色",
+    "r": "lán sè",
+    "zh": "",
+    "en": "blue",
+    "pic": "🔵"
+   },
+   {
+    "t": "绿色",
+    "r": "lǜ sè",
+    "zh": "",
+    "en": "green",
+    "pic": "🟢"
+   },
+   {
+    "t": "黄色",
+    "r": "huáng sè",
+    "zh": "",
+    "en": "yellow",
+    "pic": "🟡"
+   },
+   {
+    "t": "白色",
+    "r": "bái sè",
+    "zh": "",
+    "en": "white",
+    "pic": "⚪"
+   }
+  ],
+  "sents": [
+   {
+    "t": "这是什么？",
+    "seg": [
+     "这",
+     "是",
+     "什么？"
+    ],
+    "r": [
+     "zhè",
+     "shì",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What is this?"
+   },
+   {
+    "t": "这是一支铅笔。",
+    "seg": [
+     "这",
+     "是",
+     "一支",
+     "铅笔。"
+    ],
+    "r": [
+     "zhè",
+     "shì",
+     "yì zhī",
+     "qiān bǐ"
+    ],
+    "zh": "",
+    "en": "This is a pencil."
+   },
+   {
+    "t": "那是你的书包吗？",
+    "seg": [
+     "那",
+     "是",
+     "你的",
+     "书包",
+     "吗？"
+    ],
+    "r": [
+     "nà",
+     "shì",
+     "nǐ de",
+     "shū bāo",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Is that your schoolbag?"
+   },
+   {
+    "t": "我的尺子是蓝色的。",
+    "seg": [
+     "我的",
+     "尺子",
+     "是",
+     "蓝色的。"
+    ],
+    "r": [
+     "wǒ de",
+     "chǐ zi",
+     "shì",
+     "lán sè de"
+    ],
+    "zh": "",
+    "en": "My ruler is blue."
+   },
+   {
+    "t": "你的本子是什么颜色？",
+    "seg": [
+     "你的",
+     "本子",
+     "是",
+     "什么",
+     "颜色？"
+    ],
+    "r": [
+     "nǐ de",
+     "běn zi",
+     "shì",
+     "shén me",
+     "yán sè"
+    ],
+    "zh": "",
+    "en": "What colour is your notebook?"
+   },
+   {
+    "t": "书在桌子上。",
+    "seg": [
+     "书",
+     "在",
+     "桌子上。"
+    ],
+    "r": [
+     "shū",
+     "zài",
+     "zhuō zi shang"
+    ],
+    "zh": "",
+    "en": "The book is on the desk."
+   },
+   {
+    "t": "我有两本书。",
+    "seg": [
+     "我",
+     "有",
+     "两本",
+     "书。"
+    ],
+    "r": [
+     "wǒ",
+     "yǒu",
+     "liǎng běn",
+     "shū"
+    ],
+    "zh": "",
+    "en": "I have two books."
+   },
+   {
+    "t": "我们收拾一下桌子吧。",
+    "seg": [
+     "我们",
+     "收拾",
+     "一下",
+     "桌子",
+     "吧。"
+    ],
+    "r": [
+     "wǒ men",
+     "shōu shi",
+     "yí xià",
+     "zhuō zi",
+     "ba"
+    ],
+    "zh": "",
+    "en": "Let's tidy up the desk."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "那是什么？",
+     "seg": [
+      "那",
+      "是",
+      "什么？"
+     ],
+     "r": [
+      "nà",
+      "shì",
+      "shén me"
+     ],
+     "zh": "",
+     "en": "What is that?"
+    },
+    "a": {
+     "t": "那是一把剪刀。",
+     "seg": [
+      "那",
+      "是",
+      "一把",
+      "剪刀。"
+     ],
+     "r": [
+      "nà",
+      "shì",
+      "yì bǎ",
+      "jiǎn dāo"
+     ],
+     "zh": "",
+     "en": "It's a pair of scissors."
+    },
+    "wrong": [
+     {
+      "t": "是红色的。",
+      "seg": [
+       "是",
+       "红色的。"
+      ],
+      "r": [
+       "shì",
+       "hóng sè de"
+      ],
+      "zh": "",
+      "en": "It's red."
+     },
+     {
+      "t": "在书包里。",
+      "seg": [
+       "在",
+       "书包里。"
+      ],
+      "r": [
+       "zài",
+       "shū bāo li"
+      ],
+      "zh": "",
+      "en": "It's in the schoolbag."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你的书包是什么颜色？",
+     "seg": [
+      "你的",
+      "书包",
+      "是",
+      "什么",
+      "颜色？"
+     ],
+     "r": [
+      "nǐ de",
+      "shū bāo",
+      "shì",
+      "shén me",
+      "yán sè"
+     ],
+     "zh": "",
+     "en": "What colour is your schoolbag?"
+    },
+    "a": {
+     "t": "是黄色的。",
+     "seg": [
+      "是",
+      "黄色的。"
+     ],
+     "r": [
+      "shì",
+      "huáng sè de"
+     ],
+     "zh": "",
+     "en": "It's yellow."
+    },
+    "wrong": [
+     {
+      "t": "这是我的书包。",
+      "seg": [
+       "这",
+       "是",
+       "我的",
+       "书包。"
+      ],
+      "r": [
+       "zhè",
+       "shì",
+       "wǒ de",
+       "shū bāo"
+      ],
+      "zh": "",
+      "en": "This is my schoolbag."
+     },
+     {
+      "t": "书包在桌子上。",
+      "seg": [
+       "书包",
+       "在",
+       "桌子上。"
+      ],
+      "r": [
+       "shū bāo",
+       "zài",
+       "zhuō zi shang"
+      ],
+      "zh": "",
+      "en": "The schoolbag is on the desk."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "这是你的铅笔吗？",
+     "seg": [
+      "这",
+      "是",
+      "你的",
+      "铅笔",
+      "吗？"
+     ],
+     "r": [
+      "zhè",
+      "shì",
+      "nǐ de",
+      "qiān bǐ",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Is this your pencil?"
+    },
+    "a": {
+     "t": "不是，是丽丽的。",
+     "seg": [
+      "不是，",
+      "是",
+      "丽丽的。"
+     ],
+     "r": [
+      "bú shì",
+      "shì",
+      "Lì li de"
+     ],
+     "zh": "",
+     "en": "No, it's Lili's."
+    },
+    "wrong": [
+     {
+      "t": "是绿色的。",
+      "seg": [
+       "是",
+       "绿色的。"
+      ],
+      "r": [
+       "shì",
+       "lǜ sè de"
+      ],
+      "zh": "",
+      "en": "It's green."
+     },
+     {
+      "t": "我有两支笔。",
+      "seg": [
+       "我",
+       "有",
+       "两支",
+       "笔。"
+      ],
+      "r": [
+       "wǒ",
+       "yǒu",
+       "liǎng zhī",
+       "bǐ"
+      ],
+      "zh": "",
+      "en": "I have two pens."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "我的尺子在哪里？",
+     "seg": [
+      "我的",
+      "尺子",
+      "在",
+      "哪里？"
+     ],
+     "r": [
+      "wǒ de",
+      "chǐ zi",
+      "zài",
+      "nǎ lǐ"
+     ],
+     "zh": "",
+     "en": "Where is my ruler?"
+    },
+    "a": {
+     "t": "在书包里。",
+     "seg": [
+      "在",
+      "书包里。"
+     ],
+     "r": [
+      "zài",
+      "shū bāo li"
+     ],
+     "zh": "",
+     "en": "It's in your schoolbag."
+    },
+    "wrong": [
+     {
+      "t": "尺子是蓝色的。",
+      "seg": [
+       "尺子",
+       "是",
+       "蓝色的。"
+      ],
+      "r": [
+       "chǐ zi",
+       "shì",
+       "lán sè de"
+      ],
+      "zh": "",
+      "en": "The ruler is blue."
+     },
+     {
+      "t": "这是一把尺子。",
+      "seg": [
+       "这",
+       "是",
+       "一把",
+       "尺子。"
+      ],
+      "r": [
+       "zhè",
+       "shì",
+       "yì bǎ",
+       "chǐ zi"
+      ],
+      "zh": "",
+      "en": "This is a ruler."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你有几支笔？",
+     "seg": [
+      "你",
+      "有",
+      "几支",
+      "笔？"
+     ],
+     "r": [
+      "nǐ",
+      "yǒu",
+      "jǐ zhī",
+      "bǐ"
+     ],
+     "zh": "",
+     "en": "How many pens do you have?"
+    },
+    "a": {
+     "t": "我有三支。",
+     "seg": [
+      "我",
+      "有",
+      "三支。"
+     ],
+     "r": [
+      "wǒ",
+      "yǒu",
+      "sān zhī"
+     ],
+     "zh": "",
+     "en": "I have three."
+    },
+    "wrong": [
+     {
+      "t": "我的笔是红色的。",
+      "seg": [
+       "我的",
+       "笔",
+       "是",
+       "红色的。"
+      ],
+      "r": [
+       "wǒ de",
+       "bǐ",
+       "shì",
+       "hóng sè de"
+      ],
+      "zh": "",
+      "en": "My pen is red."
+     },
+     {
+      "t": "那是我的本子。",
+      "seg": [
+       "那",
+       "是",
+       "我的",
+       "本子。"
+      ],
+      "r": [
+       "nà",
+       "shì",
+       "wǒ de",
+       "běn zi"
+      ],
+      "zh": "",
+      "en": "That is my notebook."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "这本书是谁的？",
+     "seg": [
+      "这本",
+      "书",
+      "是",
+      "谁的？"
+     ],
+     "r": [
+      "zhè běn",
+      "shū",
+      "shì",
+      "shéi de"
+     ],
+     "zh": "",
+     "en": "Whose book is this?"
+    },
+    "a": {
+     "t": "是小明的。",
+     "seg": [
+      "是",
+      "小明的。"
+     ],
+     "r": [
+      "shì",
+      "Xiǎo Míng de"
+     ],
+     "zh": "",
+     "en": "It's Xiaoming's."
+    },
+    "wrong": [
+     {
+      "t": "是白色的。",
+      "seg": [
+       "是",
+       "白色的。"
+      ],
+      "r": [
+       "shì",
+       "bái sè de"
+      ],
+      "zh": "",
+      "en": "It's white."
+     },
+     {
+      "t": "书在桌子上。",
+      "seg": [
+       "书",
+       "在",
+       "桌子上。"
+      ],
+      "r": [
+       "shū",
+       "zài",
+       "zhuō zi shang"
+      ],
+      "zh": "",
+      "en": "The book is on the desk."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "小明",
+     "👦",
+     "m"
+    ],
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "丽丽，我的尺子呢？",
+     "r": "Lì li, wǒ de chǐ zi ne?",
+     "zh": "",
+     "en": "Lili, where's my ruler?"
+    },
+    {
+     "who": 1,
+     "t": "是蓝色的吗？",
+     "r": "shì lán sè de ma?",
+     "zh": "",
+     "en": "Is it the blue one?"
+    },
+    {
+     "who": 0,
+     "t": "对，是蓝色的。",
+     "r": "duì, shì lán sè de.",
+     "zh": "",
+     "en": "Yes, it's blue."
+    },
+    {
+     "who": 1,
+     "t": "你看，在桌子上。",
+     "r": "nǐ kàn, zài zhuō zi shang.",
+     "zh": "",
+     "en": "Look, it's on the desk."
+    },
+    {
+     "who": 0,
+     "t": "谢谢！那是什么？",
+     "r": "xiè xie! nà shì shén me?",
+     "zh": "",
+     "en": "Thanks! What's that?"
+    },
+    {
+     "who": 1,
+     "t": "那是我的新本子。",
+     "r": "nà shì wǒ de xīn běn zi.",
+     "zh": "",
+     "en": "That's my new notebook."
+    },
+    {
+     "who": 0,
+     "t": "真好看！是绿色的。",
+     "r": "zhēn hǎo kàn! shì lǜ sè de.",
+     "zh": "",
+     "en": "It's really nice! It's green."
+    },
+    {
+     "who": 1,
+     "t": "小明，你的书包很乱。",
+     "r": "Xiǎo Míng, nǐ de shū bāo hěn luàn.",
+     "zh": "",
+     "en": "Xiaoming, your schoolbag is messy."
+    },
+    {
+     "who": 0,
+     "t": "好，我现在收拾。",
+     "r": "hǎo, wǒ xiàn zài shōu shi.",
+     "zh": "",
+     "en": "OK, I'll tidy it now."
+    }
+   ]
+  }
+ },
+ {
+  "i": 2,
+  "t": "家人岛",
+  "boss": {
+   "t": "你好！你看，这是我家的照片。照片里有几个人？",
+   "r": "nǐ hǎo! nǐ kàn, zhè shì wǒ jiā de zhào piàn. zhào piàn li yǒu jǐ gè rén?",
+   "zh": "",
+   "en": "Hello! Look, this is my family photo. How many people are in it?"
+  },
+  "words": [
+   {
+    "t": "家",
+    "r": "jiā",
+    "zh": "",
+    "en": "home, family",
+    "pic": "🏠"
+   },
+   {
+    "t": "爸爸",
+    "r": "bà ba",
+    "zh": "",
+    "en": "dad",
+    "pic": "👨"
+   },
+   {
+    "t": "妈妈",
+    "r": "mā ma",
+    "zh": "",
+    "en": "mum",
+    "pic": "👩"
+   },
+   {
+    "t": "爷爷",
+    "r": "yé ye",
+    "zh": "",
+    "en": "grandpa (dad's side)",
+    "pic": "👴"
+   },
+   {
+    "t": "奶奶",
+    "r": "nǎi nai",
+    "zh": "",
+    "en": "grandma (dad's side)",
+    "pic": "👵"
+   },
+   {
+    "t": "哥哥",
+    "r": "gē ge",
+    "zh": "",
+    "en": "older brother",
+    "pic": "👦"
+   },
+   {
+    "t": "姐姐",
+    "r": "jiě jie",
+    "zh": "",
+    "en": "older sister",
+    "pic": "👱‍♀️"
+   },
+   {
+    "t": "弟弟",
+    "r": "dì di",
+    "zh": "",
+    "en": "younger brother",
+    "pic": "🧒"
+   },
+   {
+    "t": "妹妹",
+    "r": "mèi mei",
+    "zh": "",
+    "en": "younger sister",
+    "pic": "👧"
+   },
+   {
+    "t": "宝宝",
+    "r": "bǎo bao",
+    "zh": "",
+    "en": "baby",
+    "pic": "👶"
+   },
+   {
+    "t": "照片",
+    "r": "zhào piàn",
+    "zh": "",
+    "en": "photo",
+    "pic": "🖼️"
+   },
+   {
+    "t": "人",
+    "r": "rén",
+    "zh": "",
+    "en": "person",
+    "pic": "🧍"
+   }
+  ],
+  "sents": [
+   {
+    "t": "这是我爸爸。",
+    "seg": [
+     "这",
+     "是",
+     "我",
+     "爸爸。"
+    ],
+    "r": [
+     "zhè",
+     "shì",
+     "wǒ",
+     "bà ba"
+    ],
+    "zh": "",
+    "en": "This is my dad."
+   },
+   {
+    "t": "她是谁？",
+    "seg": [
+     "她",
+     "是",
+     "谁？"
+    ],
+    "r": [
+     "tā",
+     "shì",
+     "shéi"
+    ],
+    "zh": "",
+    "en": "Who is she?"
+   },
+   {
+    "t": "她是我奶奶。",
+    "seg": [
+     "她",
+     "是",
+     "我",
+     "奶奶。"
+    ],
+    "r": [
+     "tā",
+     "shì",
+     "wǒ",
+     "nǎi nai"
+    ],
+    "zh": "",
+    "en": "She is my grandma."
+   },
+   {
+    "t": "我有一个哥哥。",
+    "seg": [
+     "我",
+     "有",
+     "一个",
+     "哥哥。"
+    ],
+    "r": [
+     "wǒ",
+     "yǒu",
+     "yí gè",
+     "gē ge"
+    ],
+    "zh": "",
+    "en": "I have an older brother."
+   },
+   {
+    "t": "我没有妹妹。",
+    "seg": [
+     "我",
+     "没有",
+     "妹妹。"
+    ],
+    "r": [
+     "wǒ",
+     "méi yǒu",
+     "mèi mei"
+    ],
+    "zh": "",
+    "en": "I don't have a younger sister."
+   },
+   {
+    "t": "你家有几口人？",
+    "seg": [
+     "你家",
+     "有",
+     "几口",
+     "人？"
+    ],
+    "r": [
+     "nǐ jiā",
+     "yǒu",
+     "jǐ kǒu",
+     "rén"
+    ],
+    "zh": "",
+    "en": "How many people are in your family?"
+   },
+   {
+    "t": "我家有五口人。",
+    "seg": [
+     "我家",
+     "有",
+     "五口",
+     "人。"
+    ],
+    "r": [
+     "wǒ jiā",
+     "yǒu",
+     "wǔ kǒu",
+     "rén"
+    ],
+    "zh": "",
+    "en": "There are five people in my family."
+   },
+   {
+    "t": "爸爸和妈妈都是老师。",
+    "seg": [
+     "爸爸",
+     "和",
+     "妈妈",
+     "都",
+     "是",
+     "老师。"
+    ],
+    "r": [
+     "bà ba",
+     "hé",
+     "mā ma",
+     "dōu",
+     "shì",
+     "lǎo shī"
+    ],
+    "zh": "",
+    "en": "Dad and Mum are both teachers."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "他是谁？",
+     "seg": [
+      "他",
+      "是",
+      "谁？"
+     ],
+     "r": [
+      "tā",
+      "shì",
+      "shéi"
+     ],
+     "zh": "",
+     "en": "Who is he?"
+    },
+    "a": {
+     "t": "他是我哥哥。",
+     "seg": [
+      "他",
+      "是",
+      "我",
+      "哥哥。"
+     ],
+     "r": [
+      "tā",
+      "shì",
+      "wǒ",
+      "gē ge"
+     ],
+     "zh": "",
+     "en": "He's my older brother."
+    },
+    "wrong": [
+     {
+      "t": "我没有弟弟。",
+      "seg": [
+       "我",
+       "没有",
+       "弟弟。"
+      ],
+      "r": [
+       "wǒ",
+       "méi yǒu",
+       "dì di"
+      ],
+      "zh": "",
+      "en": "I don't have a younger brother."
+     },
+     {
+      "t": "这是我家的照片。",
+      "seg": [
+       "这",
+       "是",
+       "我家的",
+       "照片。"
+      ],
+      "r": [
+       "zhè",
+       "shì",
+       "wǒ jiā de",
+       "zhào piàn"
+      ],
+      "zh": "",
+      "en": "This is my family's photo."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你家有几口人？",
+     "seg": [
+      "你家",
+      "有",
+      "几口",
+      "人？"
+     ],
+     "r": [
+      "nǐ jiā",
+      "yǒu",
+      "jǐ kǒu",
+      "rén"
+     ],
+     "zh": "",
+     "en": "How many people are in your family?"
+    },
+    "a": {
+     "t": "我家有四口人。",
+     "seg": [
+      "我家",
+      "有",
+      "四口",
+      "人。"
+     ],
+     "r": [
+      "wǒ jiā",
+      "yǒu",
+      "sì kǒu",
+      "rén"
+     ],
+     "zh": "",
+     "en": "There are four of us."
+    },
+    "wrong": [
+     {
+      "t": "我有一个妹妹。",
+      "seg": [
+       "我",
+       "有",
+       "一个",
+       "妹妹。"
+      ],
+      "r": [
+       "wǒ",
+       "yǒu",
+       "yí gè",
+       "mèi mei"
+      ],
+      "zh": "",
+      "en": "I have a younger sister."
+     },
+     {
+      "t": "这是我爷爷。",
+      "seg": [
+       "这",
+       "是",
+       "我",
+       "爷爷。"
+      ],
+      "r": [
+       "zhè",
+       "shì",
+       "wǒ",
+       "yé ye"
+      ],
+      "zh": "",
+      "en": "This is my grandpa."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你有哥哥吗？",
+     "seg": [
+      "你",
+      "有",
+      "哥哥",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "yǒu",
+      "gē ge",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Do you have an older brother?"
+    },
+    "a": {
+     "t": "没有，我有一个姐姐。",
+     "seg": [
+      "没有，",
+      "我",
+      "有",
+      "一个",
+      "姐姐。"
+     ],
+     "r": [
+      "méi yǒu",
+      "wǒ",
+      "yǒu",
+      "yí gè",
+      "jiě jie"
+     ],
+     "zh": "",
+     "en": "No, I have an older sister."
+    },
+    "wrong": [
+     {
+      "t": "他是我爸爸。",
+      "seg": [
+       "他",
+       "是",
+       "我",
+       "爸爸。"
+      ],
+      "r": [
+       "tā",
+       "shì",
+       "wǒ",
+       "bà ba"
+      ],
+      "zh": "",
+      "en": "He's my dad."
+     },
+     {
+      "t": "我家有三口人。",
+      "seg": [
+       "我家",
+       "有",
+       "三口",
+       "人。"
+      ],
+      "r": [
+       "wǒ jiā",
+       "yǒu",
+       "sān kǒu",
+       "rén"
+      ],
+      "zh": "",
+      "en": "There are three of us."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "这是你妈妈吗？",
+     "seg": [
+      "这",
+      "是",
+      "你",
+      "妈妈",
+      "吗？"
+     ],
+     "r": [
+      "zhè",
+      "shì",
+      "nǐ",
+      "mā ma",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Is this your mum?"
+    },
+    "a": {
+     "t": "对，这是我妈妈。",
+     "seg": [
+      "对，",
+      "这",
+      "是",
+      "我",
+      "妈妈。"
+     ],
+     "r": [
+      "duì",
+      "zhè",
+      "shì",
+      "wǒ",
+      "mā ma"
+     ],
+     "zh": "",
+     "en": "Yes, this is my mum."
+    },
+    "wrong": [
+     {
+      "t": "我有一个弟弟。",
+      "seg": [
+       "我",
+       "有",
+       "一个",
+       "弟弟。"
+      ],
+      "r": [
+       "wǒ",
+       "yǒu",
+       "yí gè",
+       "dì di"
+      ],
+      "zh": "",
+      "en": "I have a younger brother."
+     },
+     {
+      "t": "我家有五口人。",
+      "seg": [
+       "我家",
+       "有",
+       "五口",
+       "人。"
+      ],
+      "r": [
+       "wǒ jiā",
+       "yǒu",
+       "wǔ kǒu",
+       "rén"
+      ],
+      "zh": "",
+      "en": "There are five of us."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你妹妹几岁？",
+     "seg": [
+      "你",
+      "妹妹",
+      "几岁？"
+     ],
+     "r": [
+      "nǐ",
+      "mèi mei",
+      "jǐ suì"
+     ],
+     "zh": "",
+     "en": "How old is your little sister?"
+    },
+    "a": {
+     "t": "她六岁。",
+     "seg": [
+      "她",
+      "六岁。"
+     ],
+     "r": [
+      "tā",
+      "liù suì"
+     ],
+     "zh": "",
+     "en": "She's six."
+    },
+    "wrong": [
+     {
+      "t": "她是我妹妹。",
+      "seg": [
+       "她",
+       "是",
+       "我",
+       "妹妹。"
+      ],
+      "r": [
+       "tā",
+       "shì",
+       "wǒ",
+       "mèi mei"
+      ],
+      "zh": "",
+      "en": "She's my little sister."
+     },
+     {
+      "t": "我没有哥哥。",
+      "seg": [
+       "我",
+       "没有",
+       "哥哥。"
+      ],
+      "r": [
+       "wǒ",
+       "méi yǒu",
+       "gē ge"
+      ],
+      "zh": "",
+      "en": "I don't have an older brother."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "照片里的宝宝是谁？",
+     "seg": [
+      "照片里的",
+      "宝宝",
+      "是",
+      "谁？"
+     ],
+     "r": [
+      "zhào piàn li de",
+      "bǎo bao",
+      "shì",
+      "shéi"
+     ],
+     "zh": "",
+     "en": "Who is the baby in the photo?"
+    },
+    "a": {
+     "t": "是我弟弟。",
+     "seg": [
+      "是",
+      "我",
+      "弟弟。"
+     ],
+     "r": [
+      "shì",
+      "wǒ",
+      "dì di"
+     ],
+     "zh": "",
+     "en": "It's my little brother."
+    },
+    "wrong": [
+     {
+      "t": "宝宝很可爱。",
+      "seg": [
+       "宝宝",
+       "很",
+       "可爱。"
+      ],
+      "r": [
+       "bǎo bao",
+       "hěn",
+       "kě ài"
+      ],
+      "zh": "",
+      "en": "The baby is cute."
+     },
+     {
+      "t": "那是我的照片。",
+      "seg": [
+       "那",
+       "是",
+       "我的",
+       "照片。"
+      ],
+      "r": [
+       "nà",
+       "shì",
+       "wǒ de",
+       "zhào piàn"
+      ],
+      "zh": "",
+      "en": "That's my photo."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ],
+    [
+     "小明",
+     "👦",
+     "m"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "小明，这是我家的照片。",
+     "r": "Xiǎo Míng, zhè shì wǒ jiā de zhào piàn.",
+     "zh": "",
+     "en": "Xiaoming, this is my family's photo."
+    },
+    {
+     "who": 1,
+     "t": "哇！你家有几口人？",
+     "r": "wā! nǐ jiā yǒu jǐ kǒu rén?",
+     "zh": "",
+     "en": "Wow! How many people are in your family?"
+    },
+    {
+     "who": 0,
+     "t": "我家有六口人。",
+     "r": "wǒ jiā yǒu liù kǒu rén.",
+     "zh": "",
+     "en": "There are six of us."
+    },
+    {
+     "who": 1,
+     "t": "这是你爸爸吗？",
+     "r": "zhè shì nǐ bà ba ma?",
+     "zh": "",
+     "en": "Is this your dad?"
+    },
+    {
+     "who": 0,
+     "t": "不是，这是我爷爷。",
+     "r": "bú shì, zhè shì wǒ yé ye.",
+     "zh": "",
+     "en": "No, this is my grandpa."
+    },
+    {
+     "who": 1,
+     "t": "那个宝宝是谁？",
+     "r": "nà ge bǎo bao shì shéi?",
+     "zh": "",
+     "en": "Who is that baby?"
+    },
+    {
+     "who": 0,
+     "t": "是我妹妹，她两岁。",
+     "r": "shì wǒ mèi mei, tā liǎng suì.",
+     "zh": "",
+     "en": "It's my little sister. She's two."
+    },
+    {
+     "who": 1,
+     "t": "她真可爱！",
+     "r": "tā zhēn kě ài!",
+     "zh": "",
+     "en": "She's so cute!"
+    },
+    {
+     "who": 0,
+     "t": "你有弟弟妹妹吗？",
+     "r": "nǐ yǒu dì di mèi mei ma?",
+     "zh": "",
+     "en": "Do you have any younger brothers or sisters?"
+    },
+    {
+     "who": 1,
+     "t": "没有，我有一个姐姐。",
+     "r": "méi yǒu, wǒ yǒu yí gè jiě jie.",
+     "zh": "",
+     "en": "No, I have an older sister."
+    }
+   ]
+  }
+ },
+ {
+  "i": 3,
+  "t": "我们的学校",
+  "boss": {
+   "t": "欢迎来到我们学校！这是操场，那是食堂。图书馆在哪里？",
+   "r": "huān yíng lái dào wǒ men xué xiào! zhè shì cāo chǎng, nà shì shí táng. tú shū guǎn zài nǎ lǐ?",
+   "zh": "",
+   "en": "Welcome to our school! This is the playground, and that's the canteen. Where's the library?"
+  },
+  "words": [
+   {
+    "t": "学校",
+    "r": "xué xiào",
+    "zh": "",
+    "en": "school",
+    "pic": "🏫"
+   },
+   {
+    "t": "教室",
+    "r": "jiào shì",
+    "zh": "",
+    "en": "classroom",
+    "pic": "🧑‍🏫"
+   },
+   {
+    "t": "图书馆",
+    "r": "tú shū guǎn",
+    "zh": "",
+    "en": "library",
+    "pic": "📚"
+   },
+   {
+    "t": "操场",
+    "r": "cāo chǎng",
+    "zh": "",
+    "en": "playground",
+    "pic": "🛝"
+   },
+   {
+    "t": "食堂",
+    "r": "shí táng",
+    "zh": "",
+    "en": "canteen",
+    "pic": "🍽️"
+   },
+   {
+    "t": "洗手间",
+    "r": "xǐ shǒu jiān",
+    "zh": "",
+    "en": "toilet",
+    "pic": "🚻"
+   },
+   {
+    "t": "体育馆",
+    "r": "tǐ yù guǎn",
+    "zh": "",
+    "en": "gym",
+    "pic": "🏀"
+   },
+   {
+    "t": "门",
+    "r": "mén",
+    "zh": "",
+    "en": "door",
+    "pic": "🚪"
+   },
+   {
+    "t": "窗户",
+    "r": "chuāng hu",
+    "zh": "",
+    "en": "window",
+    "pic": "🪟"
+   },
+   {
+    "t": "电脑",
+    "r": "diàn nǎo",
+    "zh": "",
+    "en": "computer",
+    "pic": "💻"
+   },
+   {
+    "t": "椅子",
+    "r": "yǐ zi",
+    "zh": "",
+    "en": "chair",
+    "pic": "🪑"
+   },
+   {
+    "t": "地图",
+    "r": "dì tú",
+    "zh": "",
+    "en": "map",
+    "pic": "🗺️"
+   }
+  ],
+  "sents": [
+   {
+    "t": "图书馆在哪里？",
+    "seg": [
+     "图书馆",
+     "在",
+     "哪里？"
+    ],
+    "r": [
+     "tú shū guǎn",
+     "zài",
+     "nǎ lǐ"
+    ],
+    "zh": "",
+    "en": "Where is the library?"
+   },
+   {
+    "t": "图书馆在食堂旁边。",
+    "seg": [
+     "图书馆",
+     "在",
+     "食堂",
+     "旁边。"
+    ],
+    "r": [
+     "tú shū guǎn",
+     "zài",
+     "shí táng",
+     "páng biān"
+    ],
+    "zh": "",
+    "en": "The library is next to the canteen."
+   },
+   {
+    "t": "我们去操场吧。",
+    "seg": [
+     "我们",
+     "去",
+     "操场",
+     "吧。"
+    ],
+    "r": [
+     "wǒ men",
+     "qù",
+     "cāo chǎng",
+     "ba"
+    ],
+    "zh": "",
+    "en": "Let's go to the playground."
+   },
+   {
+    "t": "洗手间在二楼。",
+    "seg": [
+     "洗手间",
+     "在",
+     "二楼。"
+    ],
+    "r": [
+     "xǐ shǒu jiān",
+     "zài",
+     "èr lóu"
+    ],
+    "zh": "",
+    "en": "The toilet is on the second floor."
+   },
+   {
+    "t": "王老师在办公室。",
+    "seg": [
+     "王老师",
+     "在",
+     "办公室。"
+    ],
+    "r": [
+     "Wáng lǎo shī",
+     "zài",
+     "bàn gōng shì"
+    ],
+    "zh": "",
+    "en": "Teacher Wang is in the office."
+   },
+   {
+    "t": "我们的教室很大。",
+    "seg": [
+     "我们的",
+     "教室",
+     "很",
+     "大。"
+    ],
+    "r": [
+     "wǒ men de",
+     "jiào shì",
+     "hěn",
+     "dà"
+    ],
+    "zh": "",
+    "en": "Our classroom is big."
+   },
+   {
+    "t": "教室里有一台电脑。",
+    "seg": [
+     "教室里",
+     "有",
+     "一台",
+     "电脑。"
+    ],
+    "r": [
+     "jiào shì li",
+     "yǒu",
+     "yì tái",
+     "diàn nǎo"
+    ],
+    "zh": "",
+    "en": "There is a computer in the classroom."
+   },
+   {
+    "t": "请开一下窗户。",
+    "seg": [
+     "请",
+     "开",
+     "一下",
+     "窗户。"
+    ],
+    "r": [
+     "qǐng",
+     "kāi",
+     "yí xià",
+     "chuāng hu"
+    ],
+    "zh": "",
+    "en": "Please open the window."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "食堂在哪里？",
+     "seg": [
+      "食堂",
+      "在",
+      "哪里？"
+     ],
+     "r": [
+      "shí táng",
+      "zài",
+      "nǎ lǐ"
+     ],
+     "zh": "",
+     "en": "Where is the canteen?"
+    },
+    "a": {
+     "t": "在图书馆后面。",
+     "seg": [
+      "在",
+      "图书馆",
+      "后面。"
+     ],
+     "r": [
+      "zài",
+      "tú shū guǎn",
+      "hòu miàn"
+     ],
+     "zh": "",
+     "en": "It's behind the library."
+    },
+    "wrong": [
+     {
+      "t": "食堂很大。",
+      "seg": [
+       "食堂",
+       "很",
+       "大。"
+      ],
+      "r": [
+       "shí táng",
+       "hěn",
+       "dà"
+      ],
+      "zh": "",
+      "en": "The canteen is big."
+     },
+     {
+      "t": "我们去操场吧。",
+      "seg": [
+       "我们",
+       "去",
+       "操场",
+       "吧。"
+      ],
+      "r": [
+       "wǒ men",
+       "qù",
+       "cāo chǎng",
+       "ba"
+      ],
+      "zh": "",
+      "en": "Let's go to the playground."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "王老师在哪里？",
+     "seg": [
+      "王老师",
+      "在",
+      "哪里？"
+     ],
+     "r": [
+      "Wáng lǎo shī",
+      "zài",
+      "nǎ lǐ"
+     ],
+     "zh": "",
+     "en": "Where is Teacher Wang?"
+    },
+    "a": {
+     "t": "她在办公室。",
+     "seg": [
+      "她",
+      "在",
+      "办公室。"
+     ],
+     "r": [
+      "tā",
+      "zài",
+      "bàn gōng shì"
+     ],
+     "zh": "",
+     "en": "She's in the office."
+    },
+    "wrong": [
+     {
+      "t": "她是我们的老师。",
+      "seg": [
+       "她",
+       "是",
+       "我们的",
+       "老师。"
+      ],
+      "r": [
+       "tā",
+       "shì",
+       "wǒ men de",
+       "lǎo shī"
+      ],
+      "zh": "",
+      "en": "She's our teacher."
+     },
+     {
+      "t": "教室里有电脑。",
+      "seg": [
+       "教室里",
+       "有",
+       "电脑。"
+      ],
+      "r": [
+       "jiào shì li",
+       "yǒu",
+       "diàn nǎo"
+      ],
+      "zh": "",
+      "en": "There are computers in the classroom."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "教室里有电脑吗？",
+     "seg": [
+      "教室里",
+      "有",
+      "电脑",
+      "吗？"
+     ],
+     "r": [
+      "jiào shì li",
+      "yǒu",
+      "diàn nǎo",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Is there a computer in the classroom?"
+    },
+    "a": {
+     "t": "有，有两台。",
+     "seg": [
+      "有，",
+      "有",
+      "两台。"
+     ],
+     "r": [
+      "yǒu",
+      "yǒu",
+      "liǎng tái"
+     ],
+     "zh": "",
+     "en": "Yes, there are two."
+    },
+    "wrong": [
+     {
+      "t": "在一楼。",
+      "seg": [
+       "在",
+       "一楼。"
+      ],
+      "r": [
+       "zài",
+       "yī lóu"
+      ],
+      "zh": "",
+      "en": "It's on the first floor."
+     },
+     {
+      "t": "我们的教室很大。",
+      "seg": [
+       "我们的",
+       "教室",
+       "很",
+       "大。"
+      ],
+      "r": [
+       "wǒ men de",
+       "jiào shì",
+       "hěn",
+       "dà"
+      ],
+      "zh": "",
+      "en": "Our classroom is big."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你去哪里？",
+     "seg": [
+      "你",
+      "去",
+      "哪里？"
+     ],
+     "r": [
+      "nǐ",
+      "qù",
+      "nǎ lǐ"
+     ],
+     "zh": "",
+     "en": "Where are you going?"
+    },
+    "a": {
+     "t": "我去图书馆。",
+     "seg": [
+      "我",
+      "去",
+      "图书馆。"
+     ],
+     "r": [
+      "wǒ",
+      "qù",
+      "tú shū guǎn"
+     ],
+     "zh": "",
+     "en": "I'm going to the library."
+    },
+    "wrong": [
+     {
+      "t": "图书馆很大。",
+      "seg": [
+       "图书馆",
+       "很",
+       "大。"
+      ],
+      "r": [
+       "tú shū guǎn",
+       "hěn",
+       "dà"
+      ],
+      "zh": "",
+      "en": "The library is big."
+     },
+     {
+      "t": "洗手间在二楼。",
+      "seg": [
+       "洗手间",
+       "在",
+       "二楼。"
+      ],
+      "r": [
+       "xǐ shǒu jiān",
+       "zài",
+       "èr lóu"
+      ],
+      "zh": "",
+      "en": "The toilet is on the second floor."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "洗手间在几楼？",
+     "seg": [
+      "洗手间",
+      "在",
+      "几楼？"
+     ],
+     "r": [
+      "xǐ shǒu jiān",
+      "zài",
+      "jǐ lóu"
+     ],
+     "zh": "",
+     "en": "Which floor is the toilet on?"
+    },
+    "a": {
+     "t": "在三楼。",
+     "seg": [
+      "在",
+      "三楼。"
+     ],
+     "r": [
+      "zài",
+      "sān lóu"
+     ],
+     "zh": "",
+     "en": "It's on the third floor."
+    },
+    "wrong": [
+     {
+      "t": "洗手间很干净。",
+      "seg": [
+       "洗手间",
+       "很",
+       "干净。"
+      ],
+      "r": [
+       "xǐ shǒu jiān",
+       "hěn",
+       "gān jìng"
+      ],
+      "zh": "",
+      "en": "The toilet is clean."
+     },
+     {
+      "t": "我去食堂。",
+      "seg": [
+       "我",
+       "去",
+       "食堂。"
+      ],
+      "r": [
+       "wǒ",
+       "qù",
+       "shí táng"
+      ],
+      "zh": "",
+      "en": "I'm going to the canteen."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "体育馆大不大？",
+     "seg": [
+      "体育馆",
+      "大不大？"
+     ],
+     "r": [
+      "tǐ yù guǎn",
+      "dà bu dà"
+     ],
+     "zh": "",
+     "en": "Is the gym big?"
+    },
+    "a": {
+     "t": "很大！",
+     "seg": [
+      "很",
+      "大！"
+     ],
+     "r": [
+      "hěn",
+      "dà"
+     ],
+     "zh": "",
+     "en": "It's very big!"
+    },
+    "wrong": [
+     {
+      "t": "体育馆在操场旁边。",
+      "seg": [
+       "体育馆",
+       "在",
+       "操场",
+       "旁边。"
+      ],
+      "r": [
+       "tǐ yù guǎn",
+       "zài",
+       "cāo chǎng",
+       "páng biān"
+      ],
+      "zh": "",
+      "en": "The gym is next to the playground."
+     },
+     {
+      "t": "我们去体育馆吧。",
+      "seg": [
+       "我们",
+       "去",
+       "体育馆",
+       "吧。"
+      ],
+      "r": [
+       "wǒ men",
+       "qù",
+       "tǐ yù guǎn",
+       "ba"
+      ],
+      "zh": "",
+      "en": "Let's go to the gym."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "小明",
+     "👦",
+     "m"
+    ],
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "丽丽，洗手间在哪里？",
+     "r": "Lì li, xǐ shǒu jiān zài nǎ lǐ?",
+     "zh": "",
+     "en": "Lili, where's the toilet?"
+    },
+    {
+     "who": 1,
+     "t": "在二楼，图书馆旁边。",
+     "r": "zài èr lóu, tú shū guǎn páng biān.",
+     "zh": "",
+     "en": "On the second floor, next to the library."
+    },
+    {
+     "who": 0,
+     "t": "谢谢！图书馆大吗？",
+     "r": "xiè xie! tú shū guǎn dà ma?",
+     "zh": "",
+     "en": "Thanks! Is the library big?"
+    },
+    {
+     "who": 1,
+     "t": "很大，有很多书。",
+     "r": "hěn dà, yǒu hěn duō shū.",
+     "zh": "",
+     "en": "Very big. It has lots of books."
+    },
+    {
+     "who": 0,
+     "t": "食堂呢？",
+     "r": "shí táng ne?",
+     "zh": "",
+     "en": "What about the canteen?"
+    },
+    {
+     "who": 1,
+     "t": "食堂在操场后面。",
+     "r": "shí táng zài cāo chǎng hòu miàn.",
+     "zh": "",
+     "en": "The canteen is behind the playground."
+    },
+    {
+     "who": 0,
+     "t": "王老师在哪里？",
+     "r": "Wáng lǎo shī zài nǎ lǐ?",
+     "zh": "",
+     "en": "Where's Teacher Wang?"
+    },
+    {
+     "who": 1,
+     "t": "她在办公室。我们一起去吧！",
+     "r": "tā zài bàn gōng shì. wǒ men yì qǐ qù ba!",
+     "zh": "",
+     "en": "She's in the office. Let's go together!"
+    },
+    {
+     "who": 0,
+     "t": "好！",
+     "r": "hǎo!",
+     "zh": "",
+     "en": "OK!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 4,
+  "t": "我喜欢的课",
+  "boss": {
+   "t": "你好！我教数学、科学和音乐。你最喜欢什么课？",
+   "r": "nǐ hǎo! wǒ jiāo shù xué, kē xué hé yīn yuè. nǐ zuì xǐ huan shén me kè?",
+   "zh": "",
+   "en": "Hello! I teach maths, science and music. Which subject do you like best?"
+  },
+  "words": [
+   {
+    "t": "数学",
+    "r": "shù xué",
+    "zh": "",
+    "en": "maths",
+    "pic": "🔢"
+   },
+   {
+    "t": "英语",
+    "r": "yīng yǔ",
+    "zh": "",
+    "en": "English",
+    "pic": "🔤"
+   },
+   {
+    "t": "美术",
+    "r": "měi shù",
+    "zh": "",
+    "en": "art",
+    "pic": "🎨"
+   },
+   {
+    "t": "音乐",
+    "r": "yīn yuè",
+    "zh": "",
+    "en": "music",
+    "pic": "🎵"
+   },
+   {
+    "t": "体育",
+    "r": "tǐ yù",
+    "zh": "",
+    "en": "PE",
+    "pic": "🤸"
+   },
+   {
+    "t": "科学",
+    "r": "kē xué",
+    "zh": "",
+    "en": "science",
+    "pic": "🔬"
+   },
+   {
+    "t": "历史",
+    "r": "lì shǐ",
+    "zh": "",
+    "en": "history",
+    "pic": "📜"
+   },
+   {
+    "t": "书法",
+    "r": "shū fǎ",
+    "zh": "",
+    "en": "calligraphy",
+    "pic": "🖌️"
+   },
+   {
+    "t": "课本",
+    "r": "kè běn",
+    "zh": "",
+    "en": "textbook",
+    "pic": "📖"
+   },
+   {
+    "t": "考试",
+    "r": "kǎo shì",
+    "zh": "",
+    "en": "test, exam",
+    "pic": "📝"
+   },
+   {
+    "t": "喜欢",
+    "r": "xǐ huan",
+    "zh": "",
+    "en": "to like",
+    "pic": "❤️"
+   },
+   {
+    "t": "难",
+    "r": "nán",
+    "zh": "",
+    "en": "difficult",
+    "pic": "😣"
+   }
+  ],
+  "sents": [
+   {
+    "t": "你喜欢什么课？",
+    "seg": [
+     "你",
+     "喜欢",
+     "什么",
+     "课？"
+    ],
+    "r": [
+     "nǐ",
+     "xǐ huan",
+     "shén me",
+     "kè"
+    ],
+    "zh": "",
+    "en": "Which subjects do you like?"
+   },
+   {
+    "t": "我喜欢音乐课。",
+    "seg": [
+     "我",
+     "喜欢",
+     "音乐课。"
+    ],
+    "r": [
+     "wǒ",
+     "xǐ huan",
+     "yīn yuè kè"
+    ],
+    "zh": "",
+    "en": "I like music class."
+   },
+   {
+    "t": "我最喜欢体育。",
+    "seg": [
+     "我",
+     "最",
+     "喜欢",
+     "体育。"
+    ],
+    "r": [
+     "wǒ",
+     "zuì",
+     "xǐ huan",
+     "tǐ yù"
+    ],
+    "zh": "",
+    "en": "I like PE best."
+   },
+   {
+    "t": "数学有点难。",
+    "seg": [
+     "数学",
+     "有点",
+     "难。"
+    ],
+    "r": [
+     "shù xué",
+     "yǒu diǎn",
+     "nán"
+    ],
+    "zh": "",
+    "en": "Maths is a bit hard."
+   },
+   {
+    "t": "美术课很有意思。",
+    "seg": [
+     "美术课",
+     "很",
+     "有意思。"
+    ],
+    "r": [
+     "měi shù kè",
+     "hěn",
+     "yǒu yì si"
+    ],
+    "zh": "",
+    "en": "Art class is interesting."
+   },
+   {
+    "t": "今天有什么课？",
+    "seg": [
+     "今天",
+     "有",
+     "什么",
+     "课？"
+    ],
+    "r": [
+     "jīn tiān",
+     "yǒu",
+     "shén me",
+     "kè"
+    ],
+    "zh": "",
+    "en": "What classes do we have today?"
+   },
+   {
+    "t": "我不喜欢考试。",
+    "seg": [
+     "我",
+     "不",
+     "喜欢",
+     "考试。"
+    ],
+    "r": [
+     "wǒ",
+     "bù",
+     "xǐ huan",
+     "kǎo shì"
+    ],
+    "zh": "",
+    "en": "I don't like tests."
+   },
+   {
+    "t": "李老师教我们科学。",
+    "seg": [
+     "李老师",
+     "教",
+     "我们",
+     "科学。"
+    ],
+    "r": [
+     "Lǐ lǎo shī",
+     "jiāo",
+     "wǒ men",
+     "kē xué"
+    ],
+    "zh": "",
+    "en": "Teacher Li teaches us science."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "你喜欢数学吗？",
+     "seg": [
+      "你",
+      "喜欢",
+      "数学",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "xǐ huan",
+      "shù xué",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Do you like maths?"
+    },
+    "a": {
+     "t": "喜欢，数学很有意思。",
+     "seg": [
+      "喜欢，",
+      "数学",
+      "很",
+      "有意思。"
+     ],
+     "r": [
+      "xǐ huan",
+      "shù xué",
+      "hěn",
+      "yǒu yì si"
+     ],
+     "zh": "",
+     "en": "Yes, maths is interesting."
+    },
+    "wrong": [
+     {
+      "t": "我有一本数学书。",
+      "seg": [
+       "我",
+       "有",
+       "一本",
+       "数学书。"
+      ],
+      "r": [
+       "wǒ",
+       "yǒu",
+       "yì běn",
+       "shù xué shū"
+      ],
+      "zh": "",
+      "en": "I have a maths book."
+     },
+     {
+      "t": "今天有美术课。",
+      "seg": [
+       "今天",
+       "有",
+       "美术课。"
+      ],
+      "r": [
+       "jīn tiān",
+       "yǒu",
+       "měi shù kè"
+      ],
+      "zh": "",
+      "en": "We have art today."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你最喜欢什么课？",
+     "seg": [
+      "你",
+      "最",
+      "喜欢",
+      "什么",
+      "课？"
+     ],
+     "r": [
+      "nǐ",
+      "zuì",
+      "xǐ huan",
+      "shén me",
+      "kè"
+     ],
+     "zh": "",
+     "en": "Which subject do you like best?"
+    },
+    "a": {
+     "t": "我最喜欢美术。",
+     "seg": [
+      "我",
+      "最",
+      "喜欢",
+      "美术。"
+     ],
+     "r": [
+      "wǒ",
+      "zuì",
+      "xǐ huan",
+      "měi shù"
+     ],
+     "zh": "",
+     "en": "I like art best."
+    },
+    "wrong": [
+     {
+      "t": "今天没有体育课。",
+      "seg": [
+       "今天",
+       "没有",
+       "体育课。"
+      ],
+      "r": [
+       "jīn tiān",
+       "méi yǒu",
+       "tǐ yù kè"
+      ],
+      "zh": "",
+      "en": "There's no PE today."
+     },
+     {
+      "t": "李老师教我们音乐。",
+      "seg": [
+       "李老师",
+       "教",
+       "我们",
+       "音乐。"
+      ],
+      "r": [
+       "Lǐ lǎo shī",
+       "jiāo",
+       "wǒ men",
+       "yīn yuè"
+      ],
+      "zh": "",
+      "en": "Teacher Li teaches us music."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "今天有什么课？",
+     "seg": [
+      "今天",
+      "有",
+      "什么",
+      "课？"
+     ],
+     "r": [
+      "jīn tiān",
+      "yǒu",
+      "shén me",
+      "kè"
+     ],
+     "zh": "",
+     "en": "What classes do we have today?"
+    },
+    "a": {
+     "t": "有中文课和数学课。",
+     "seg": [
+      "有",
+      "中文课",
+      "和",
+      "数学课。"
+     ],
+     "r": [
+      "yǒu",
+      "zhōng wén kè",
+      "hé",
+      "shù xué kè"
+     ],
+     "zh": "",
+     "en": "Chinese and maths."
+    },
+    "wrong": [
+     {
+      "t": "我喜欢英语。",
+      "seg": [
+       "我",
+       "喜欢",
+       "英语。"
+      ],
+      "r": [
+       "wǒ",
+       "xǐ huan",
+       "yīng yǔ"
+      ],
+      "zh": "",
+      "en": "I like English."
+     },
+     {
+      "t": "数学有点难。",
+      "seg": [
+       "数学",
+       "有点",
+       "难。"
+      ],
+      "r": [
+       "shù xué",
+       "yǒu diǎn",
+       "nán"
+      ],
+      "zh": "",
+      "en": "Maths is a bit hard."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "历史难吗？",
+     "seg": [
+      "历史",
+      "难",
+      "吗？"
+     ],
+     "r": [
+      "lì shǐ",
+      "nán",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Is history hard?"
+    },
+    "a": {
+     "t": "不难，很有意思。",
+     "seg": [
+      "不难，",
+      "很",
+      "有意思。"
+     ],
+     "r": [
+      "bù nán",
+      "hěn",
+      "yǒu yì si"
+     ],
+     "zh": "",
+     "en": "It's not hard. It's interesting."
+    },
+    "wrong": [
+     {
+      "t": "我们有历史课本。",
+      "seg": [
+       "我们",
+       "有",
+       "历史",
+       "课本。"
+      ],
+      "r": [
+       "wǒ men",
+       "yǒu",
+       "lì shǐ",
+       "kè běn"
+      ],
+      "zh": "",
+      "en": "We have history textbooks."
+     },
+     {
+      "t": "我喜欢体育。",
+      "seg": [
+       "我",
+       "喜欢",
+       "体育。"
+      ],
+      "r": [
+       "wǒ",
+       "xǐ huan",
+       "tǐ yù"
+      ],
+      "zh": "",
+      "en": "I like PE."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "谁教你们音乐？",
+     "seg": [
+      "谁",
+      "教",
+      "你们",
+      "音乐？"
+     ],
+     "r": [
+      "shéi",
+      "jiāo",
+      "nǐ men",
+      "yīn yuè"
+     ],
+     "zh": "",
+     "en": "Who teaches you music?"
+    },
+    "a": {
+     "t": "王老师教我们音乐。",
+     "seg": [
+      "王老师",
+      "教",
+      "我们",
+      "音乐。"
+     ],
+     "r": [
+      "Wáng lǎo shī",
+      "jiāo",
+      "wǒ men",
+      "yīn yuè"
+     ],
+     "zh": "",
+     "en": "Teacher Wang teaches us music."
+    },
+    "wrong": [
+     {
+      "t": "音乐课很有意思。",
+      "seg": [
+       "音乐课",
+       "很",
+       "有意思。"
+      ],
+      "r": [
+       "yīn yuè kè",
+       "hěn",
+       "yǒu yì si"
+      ],
+      "zh": "",
+      "en": "Music class is interesting."
+     },
+     {
+      "t": "我们明天有考试。",
+      "seg": [
+       "我们",
+       "明天",
+       "有",
+       "考试。"
+      ],
+      "r": [
+       "wǒ men",
+       "míng tiān",
+       "yǒu",
+       "kǎo shì"
+      ],
+      "zh": "",
+      "en": "We have a test tomorrow."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你喜欢书法吗？",
+     "seg": [
+      "你",
+      "喜欢",
+      "书法",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "xǐ huan",
+      "shū fǎ",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Do you like calligraphy?"
+    },
+    "a": {
+     "t": "喜欢，可是有点难。",
+     "seg": [
+      "喜欢，",
+      "可是",
+      "有点",
+      "难。"
+     ],
+     "r": [
+      "xǐ huan",
+      "kě shì",
+      "yǒu diǎn",
+      "nán"
+     ],
+     "zh": "",
+     "en": "Yes, but it's a bit hard."
+    },
+    "wrong": [
+     {
+      "t": "我有两支笔。",
+      "seg": [
+       "我",
+       "有",
+       "两支",
+       "笔。"
+      ],
+      "r": [
+       "wǒ",
+       "yǒu",
+       "liǎng zhī",
+       "bǐ"
+      ],
+      "zh": "",
+      "en": "I have two pens."
+     },
+     {
+      "t": "我的课本在书包里。",
+      "seg": [
+       "我的",
+       "课本",
+       "在",
+       "书包里。"
+      ],
+      "r": [
+       "wǒ de",
+       "kè běn",
+       "zài",
+       "shū bāo li"
+      ],
+      "zh": "",
+      "en": "My textbook is in my schoolbag."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ],
+    [
+     "小明",
+     "👦",
+     "m"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "小明，今天有什么课？",
+     "r": "Xiǎo Míng, jīn tiān yǒu shén me kè?",
+     "zh": "",
+     "en": "Xiaoming, what classes do we have today?"
+    },
+    {
+     "who": 1,
+     "t": "有数学、英语和美术。",
+     "r": "yǒu shù xué, yīng yǔ hé měi shù.",
+     "zh": "",
+     "en": "Maths, English and art."
+    },
+    {
+     "who": 0,
+     "t": "太好了！我最喜欢美术。",
+     "r": "tài hǎo le! wǒ zuì xǐ huan měi shù.",
+     "zh": "",
+     "en": "Great! I like art best."
+    },
+    {
+     "who": 1,
+     "t": "我也喜欢美术，很有意思。",
+     "r": "wǒ yě xǐ huan měi shù, hěn yǒu yì si.",
+     "zh": "",
+     "en": "I like art too. It's interesting."
+    },
+    {
+     "who": 0,
+     "t": "你喜欢数学吗？",
+     "r": "nǐ xǐ huan shù xué ma?",
+     "zh": "",
+     "en": "Do you like maths?"
+    },
+    {
+     "who": 1,
+     "t": "不太喜欢，数学有点难。",
+     "r": "bú tài xǐ huan, shù xué yǒu diǎn nán.",
+     "zh": "",
+     "en": "Not really. Maths is a bit hard."
+    },
+    {
+     "who": 0,
+     "t": "明天有数学考试！",
+     "r": "míng tiān yǒu shù xué kǎo shì!",
+     "zh": "",
+     "en": "There's a maths test tomorrow!"
+    },
+    {
+     "who": 1,
+     "t": "真的吗？我们一起复习吧！",
+     "r": "zhēn de ma? wǒ men yì qǐ fù xí ba!",
+     "zh": "",
+     "en": "Really? Let's revise together!"
+    },
+    {
+     "who": 0,
+     "t": "好啊！",
+     "r": "hǎo a!",
+     "zh": "",
+     "en": "OK!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 5,
+  "t": "爱好岛",
+  "boss": {
+   "t": "嗨！我会唱歌，也会打鼓。你会什么？",
+   "r": "hāi! wǒ huì chàng gē, yě huì dǎ gǔ. nǐ huì shén me?",
+   "zh": "",
+   "en": "Hi! I can sing, and I can play the drums too. What can you do?"
+  },
+  "words": [
+   {
+    "t": "唱歌",
+    "r": "chàng gē",
+    "zh": "",
+    "en": "to sing",
+    "pic": "🎤"
+   },
+   {
+    "t": "跳舞",
+    "r": "tiào wǔ",
+    "zh": "",
+    "en": "to dance",
+    "pic": "💃"
+   },
+   {
+    "t": "画画",
+    "r": "huà huà",
+    "zh": "",
+    "en": "to draw",
+    "pic": "🎨"
+   },
+   {
+    "t": "钢琴",
+    "r": "gāng qín",
+    "zh": "",
+    "en": "piano",
+    "pic": "🎹"
+   },
+   {
+    "t": "吉他",
+    "r": "jí tā",
+    "zh": "",
+    "en": "guitar",
+    "pic": "🎸"
+   },
+   {
+    "t": "鼓",
+    "r": "gǔ",
+    "zh": "",
+    "en": "drum",
+    "pic": "🥁"
+   },
+   {
+    "t": "游泳",
+    "r": "yóu yǒng",
+    "zh": "",
+    "en": "to swim",
+    "pic": "🏊"
+   },
+   {
+    "t": "篮球",
+    "r": "lán qiú",
+    "zh": "",
+    "en": "basketball",
+    "pic": "🏀"
+   },
+   {
+    "t": "足球",
+    "r": "zú qiú",
+    "zh": "",
+    "en": "football",
+    "pic": "⚽"
+   },
+   {
+    "t": "下棋",
+    "r": "xià qí",
+    "zh": "",
+    "en": "to play chess",
+    "pic": "♟️"
+   },
+   {
+    "t": "拍照",
+    "r": "pāi zhào",
+    "zh": "",
+    "en": "to take photos",
+    "pic": "📸"
+   },
+   {
+    "t": "看书",
+    "r": "kàn shū",
+    "zh": "",
+    "en": "to read",
+    "pic": "📖"
+   }
+  ],
+  "sents": [
+   {
+    "t": "你会弹钢琴吗？",
+    "seg": [
+     "你",
+     "会",
+     "弹",
+     "钢琴",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "huì",
+     "tán",
+     "gāng qín",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Can you play the piano?"
+   },
+   {
+    "t": "我会唱歌，也会跳舞。",
+    "seg": [
+     "我",
+     "会",
+     "唱歌，",
+     "也",
+     "会",
+     "跳舞。"
+    ],
+    "r": [
+     "wǒ",
+     "huì",
+     "chàng gē",
+     "yě",
+     "huì",
+     "tiào wǔ"
+    ],
+    "zh": "",
+    "en": "I can sing, and I can dance too."
+   },
+   {
+    "t": "我不会游泳。",
+    "seg": [
+     "我",
+     "不会",
+     "游泳。"
+    ],
+    "r": [
+     "wǒ",
+     "bú huì",
+     "yóu yǒng"
+    ],
+    "zh": "",
+    "en": "I can't swim."
+   },
+   {
+    "t": "你的爱好是什么？",
+    "seg": [
+     "你的",
+     "爱好",
+     "是",
+     "什么？"
+    ],
+    "r": [
+     "nǐ de",
+     "ài hào",
+     "shì",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What's your hobby?"
+   },
+   {
+    "t": "我喜欢画画。",
+    "seg": [
+     "我",
+     "喜欢",
+     "画画。"
+    ],
+    "r": [
+     "wǒ",
+     "xǐ huan",
+     "huà huà"
+    ],
+    "zh": "",
+    "en": "I like drawing."
+   },
+   {
+    "t": "我们一起打篮球吧！",
+    "seg": [
+     "我们",
+     "一起",
+     "打",
+     "篮球",
+     "吧！"
+    ],
+    "r": [
+     "wǒ men",
+     "yì qǐ",
+     "dǎ",
+     "lán qiú",
+     "ba"
+    ],
+    "zh": "",
+    "en": "Let's play basketball together!"
+   },
+   {
+    "t": "他每天弹吉他。",
+    "seg": [
+     "他",
+     "每天",
+     "弹",
+     "吉他。"
+    ],
+    "r": [
+     "tā",
+     "měi tiān",
+     "tán",
+     "jí tā"
+    ],
+    "zh": "",
+    "en": "He plays the guitar every day."
+   },
+   {
+    "t": "你想参加什么社团？",
+    "seg": [
+     "你",
+     "想",
+     "参加",
+     "什么",
+     "社团？"
+    ],
+    "r": [
+     "nǐ",
+     "xiǎng",
+     "cān jiā",
+     "shén me",
+     "shè tuán"
+    ],
+    "zh": "",
+    "en": "Which club do you want to join?"
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "你会下棋吗？",
+     "seg": [
+      "你",
+      "会",
+      "下棋",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "huì",
+      "xià qí",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Can you play chess?"
+    },
+    "a": {
+     "t": "会，我常常下棋。",
+     "seg": [
+      "会，",
+      "我",
+      "常常",
+      "下棋。"
+     ],
+     "r": [
+      "huì",
+      "wǒ",
+      "cháng cháng",
+      "xià qí"
+     ],
+     "zh": "",
+     "en": "Yes, I often play."
+    },
+    "wrong": [
+     {
+      "t": "我喜欢拍照。",
+      "seg": [
+       "我",
+       "喜欢",
+       "拍照。"
+      ],
+      "r": [
+       "wǒ",
+       "xǐ huan",
+       "pāi zhào"
+      ],
+      "zh": "",
+      "en": "I like taking photos."
+     },
+     {
+      "t": "他每天打篮球。",
+      "seg": [
+       "他",
+       "每天",
+       "打",
+       "篮球。"
+      ],
+      "r": [
+       "tā",
+       "měi tiān",
+       "dǎ",
+       "lán qiú"
+      ],
+      "zh": "",
+      "en": "He plays basketball every day."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你的爱好是什么？",
+     "seg": [
+      "你的",
+      "爱好",
+      "是",
+      "什么？"
+     ],
+     "r": [
+      "nǐ de",
+      "ài hào",
+      "shì",
+      "shén me"
+     ],
+     "zh": "",
+     "en": "What's your hobby?"
+    },
+    "a": {
+     "t": "我的爱好是唱歌。",
+     "seg": [
+      "我的",
+      "爱好",
+      "是",
+      "唱歌。"
+     ],
+     "r": [
+      "wǒ de",
+      "ài hào",
+      "shì",
+      "chàng gē"
+     ],
+     "zh": "",
+     "en": "My hobby is singing."
+    },
+    "wrong": [
+     {
+      "t": "音乐社团在三楼。",
+      "seg": [
+       "音乐",
+       "社团",
+       "在",
+       "三楼。"
+      ],
+      "r": [
+       "yīn yuè",
+       "shè tuán",
+       "zài",
+       "sān lóu"
+      ],
+      "zh": "",
+      "en": "The music club is on the third floor."
+     },
+     {
+      "t": "我们一起去吧。",
+      "seg": [
+       "我们",
+       "一起",
+       "去",
+       "吧。"
+      ],
+      "r": [
+       "wǒ men",
+       "yì qǐ",
+       "qù",
+       "ba"
+      ],
+      "zh": "",
+      "en": "Let's go together."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "我们一起踢足球，好吗？",
+     "seg": [
+      "我们",
+      "一起",
+      "踢",
+      "足球，",
+      "好吗？"
+     ],
+     "r": [
+      "wǒ men",
+      "yì qǐ",
+      "tī",
+      "zú qiú",
+      "hǎo ma"
+     ],
+     "zh": "",
+     "en": "Let's play football together, OK?"
+    },
+    "a": {
+     "t": "好啊，走吧！",
+     "seg": [
+      "好啊，",
+      "走吧！"
+     ],
+     "r": [
+      "hǎo a",
+      "zǒu ba"
+     ],
+     "zh": "",
+     "en": "Sure, let's go!"
+    },
+    "wrong": [
+     {
+      "t": "我会弹吉他。",
+      "seg": [
+       "我",
+       "会",
+       "弹",
+       "吉他。"
+      ],
+      "r": [
+       "wǒ",
+       "huì",
+       "tán",
+       "jí tā"
+      ],
+      "zh": "",
+      "en": "I can play the guitar."
+     },
+     {
+      "t": "他是我哥哥。",
+      "seg": [
+       "他",
+       "是",
+       "我",
+       "哥哥。"
+      ],
+      "r": [
+       "tā",
+       "shì",
+       "wǒ",
+       "gē ge"
+      ],
+      "zh": "",
+      "en": "He's my older brother."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你想参加音乐社团吗？",
+     "seg": [
+      "你",
+      "想",
+      "参加",
+      "音乐",
+      "社团",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "xiǎng",
+      "cān jiā",
+      "yīn yuè",
+      "shè tuán",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Do you want to join the music club?"
+    },
+    "a": {
+     "t": "想，我想学打鼓。",
+     "seg": [
+      "想，",
+      "我",
+      "想",
+      "学",
+      "打鼓。"
+     ],
+     "r": [
+      "xiǎng",
+      "wǒ",
+      "xiǎng",
+      "xué",
+      "dǎ gǔ"
+     ],
+     "zh": "",
+     "en": "Yes, I want to learn the drums."
+    },
+    "wrong": [
+     {
+      "t": "我的鼓很大。",
+      "seg": [
+       "我的",
+       "鼓",
+       "很",
+       "大。"
+      ],
+      "r": [
+       "wǒ de",
+       "gǔ",
+       "hěn",
+       "dà"
+      ],
+      "zh": "",
+      "en": "My drum is big."
+     },
+     {
+      "t": "我不喜欢考试。",
+      "seg": [
+       "我",
+       "不",
+       "喜欢",
+       "考试。"
+      ],
+      "r": [
+       "wǒ",
+       "bù",
+       "xǐ huan",
+       "kǎo shì"
+      ],
+      "zh": "",
+      "en": "I don't like tests."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你会游泳吗？",
+     "seg": [
+      "你",
+      "会",
+      "游泳",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "huì",
+      "yóu yǒng",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Can you swim?"
+    },
+    "a": {
+     "t": "不会，可是我想学。",
+     "seg": [
+      "不会，",
+      "可是",
+      "我",
+      "想",
+      "学。"
+     ],
+     "r": [
+      "bú huì",
+      "kě shì",
+      "wǒ",
+      "xiǎng",
+      "xué"
+     ],
+     "zh": "",
+     "en": "No, but I want to learn."
+    },
+    "wrong": [
+     {
+      "t": "我喜欢看书。",
+      "seg": [
+       "我",
+       "喜欢",
+       "看书。"
+      ],
+      "r": [
+       "wǒ",
+       "xǐ huan",
+       "kàn shū"
+      ],
+      "zh": "",
+      "en": "I like reading."
+     },
+     {
+      "t": "游泳馆在学校旁边。",
+      "seg": [
+       "游泳馆",
+       "在",
+       "学校",
+       "旁边。"
+      ],
+      "r": [
+       "yóu yǒng guǎn",
+       "zài",
+       "xué xiào",
+       "páng biān"
+      ],
+      "zh": "",
+      "en": "The pool is next to the school."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你姐姐会跳舞吗？",
+     "seg": [
+      "你",
+      "姐姐",
+      "会",
+      "跳舞",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "jiě jie",
+      "huì",
+      "tiào wǔ",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Can your older sister dance?"
+    },
+    "a": {
+     "t": "会，她每天都跳舞。",
+     "seg": [
+      "会，",
+      "她",
+      "每天",
+      "都",
+      "跳舞。"
+     ],
+     "r": [
+      "huì",
+      "tā",
+      "měi tiān",
+      "dōu",
+      "tiào wǔ"
+     ],
+     "zh": "",
+     "en": "Yes, she dances every day."
+    },
+    "wrong": [
+     {
+      "t": "她喜欢拍照。",
+      "seg": [
+       "她",
+       "喜欢",
+       "拍照。"
+      ],
+      "r": [
+       "tā",
+       "xǐ huan",
+       "pāi zhào"
+      ],
+      "zh": "",
+      "en": "She likes taking photos."
+     },
+     {
+      "t": "她是我姐姐。",
+      "seg": [
+       "她",
+       "是",
+       "我",
+       "姐姐。"
+      ],
+      "r": [
+       "tā",
+       "shì",
+       "wǒ",
+       "jiě jie"
+      ],
+      "zh": "",
+      "en": "She's my older sister."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "小明",
+     "👦",
+     "m"
+    ],
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "丽丽，你想参加什么社团？",
+     "r": "Lì li, nǐ xiǎng cān jiā shén me shè tuán?",
+     "zh": "",
+     "en": "Lili, which club do you want to join?"
+    },
+    {
+     "who": 1,
+     "t": "我想参加音乐社团。我会弹钢琴。",
+     "r": "wǒ xiǎng cān jiā yīn yuè shè tuán. wǒ huì tán gāng qín.",
+     "zh": "",
+     "en": "I want to join the music club. I can play the piano."
+    },
+    {
+     "who": 0,
+     "t": "真棒！",
+     "r": "zhēn bàng!",
+     "zh": "",
+     "en": "Awesome!"
+    },
+    {
+     "who": 1,
+     "t": "你呢？你会弹钢琴吗？",
+     "r": "nǐ ne? nǐ huì tán gāng qín ma?",
+     "zh": "",
+     "en": "What about you? Can you play the piano?"
+    },
+    {
+     "who": 0,
+     "t": "不会。可是我会打鼓！",
+     "r": "bú huì. kě shì wǒ huì dǎ gǔ!",
+     "zh": "",
+     "en": "No. But I can play the drums!"
+    },
+    {
+     "who": 1,
+     "t": "太好了！音乐社团也有鼓。",
+     "r": "tài hǎo le! yīn yuè shè tuán yě yǒu gǔ.",
+     "zh": "",
+     "en": "Great! The music club has drums too."
+    },
+    {
+     "who": 0,
+     "t": "那我们一起参加吧！",
+     "r": "nà wǒ men yì qǐ cān jiā ba!",
+     "zh": "",
+     "en": "Then let's join together!"
+    },
+    {
+     "who": 1,
+     "t": "好啊！星期五下午见！",
+     "r": "hǎo a! xīng qī wǔ xià wǔ jiàn!",
+     "zh": "",
+     "en": "OK! See you on Friday afternoon!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 6,
+  "t": "我的一天",
+  "boss": {
+   "t": "早上好！现在六点半。你每天几点起床？",
+   "r": "zǎo shang hǎo! xiàn zài liù diǎn bàn. nǐ měi tiān jǐ diǎn qǐ chuáng?",
+   "zh": "",
+   "en": "Good morning! It's half past six. What time do you get up every day?"
+  },
+  "words": [
+   {
+    "t": "起床",
+    "r": "qǐ chuáng",
+    "zh": "",
+    "en": "to get up",
+    "pic": "🛏️"
+   },
+   {
+    "t": "刷牙",
+    "r": "shuā yá",
+    "zh": "",
+    "en": "to brush teeth",
+    "pic": "🪥"
+   },
+   {
+    "t": "早饭",
+    "r": "zǎo fàn",
+    "zh": "",
+    "en": "breakfast",
+    "pic": "🍳"
+   },
+   {
+    "t": "上学",
+    "r": "shàng xué",
+    "zh": "",
+    "en": "to go to school",
+    "pic": "🚸"
+   },
+   {
+    "t": "午饭",
+    "r": "wǔ fàn",
+    "zh": "",
+    "en": "lunch",
+    "pic": "🍱"
+   },
+   {
+    "t": "作业",
+    "r": "zuò yè",
+    "zh": "",
+    "en": "homework",
+    "pic": "📝"
+   },
+   {
+    "t": "晚饭",
+    "r": "wǎn fàn",
+    "zh": "",
+    "en": "dinner",
+    "pic": "🍲"
+   },
+   {
+    "t": "洗澡",
+    "r": "xǐ zǎo",
+    "zh": "",
+    "en": "to take a bath",
+    "pic": "🛁"
+   },
+   {
+    "t": "睡觉",
+    "r": "shuì jiào",
+    "zh": "",
+    "en": "to sleep",
+    "pic": "😴"
+   },
+   {
+    "t": "闹钟",
+    "r": "nào zhōng",
+    "zh": "",
+    "en": "alarm clock",
+    "pic": "⏰"
+   },
+   {
+    "t": "早上",
+    "r": "zǎo shang",
+    "zh": "",
+    "en": "morning",
+    "pic": "🌅"
+   },
+   {
+    "t": "晚上",
+    "r": "wǎn shang",
+    "zh": "",
+    "en": "evening",
+    "pic": "🌃"
+   }
+  ],
+  "sents": [
+   {
+    "t": "现在几点？",
+    "seg": [
+     "现在",
+     "几点？"
+    ],
+    "r": [
+     "xiàn zài",
+     "jǐ diǎn"
+    ],
+    "zh": "",
+    "en": "What time is it now?"
+   },
+   {
+    "t": "现在七点半。",
+    "seg": [
+     "现在",
+     "七点",
+     "半。"
+    ],
+    "r": [
+     "xiàn zài",
+     "qī diǎn",
+     "bàn"
+    ],
+    "zh": "",
+    "en": "It's half past seven."
+   },
+   {
+    "t": "我每天六点起床。",
+    "seg": [
+     "我",
+     "每天",
+     "六点",
+     "起床。"
+    ],
+    "r": [
+     "wǒ",
+     "měi tiān",
+     "liù diǎn",
+     "qǐ chuáng"
+    ],
+    "zh": "",
+    "en": "I get up at six every day."
+   },
+   {
+    "t": "我七点吃早饭。",
+    "seg": [
+     "我",
+     "七点",
+     "吃",
+     "早饭。"
+    ],
+    "r": [
+     "wǒ",
+     "qī diǎn",
+     "chī",
+     "zǎo fàn"
+    ],
+    "zh": "",
+    "en": "I have breakfast at seven."
+   },
+   {
+    "t": "我们八点上课。",
+    "seg": [
+     "我们",
+     "八点",
+     "上课。"
+    ],
+    "r": [
+     "wǒ men",
+     "bā diǎn",
+     "shàng kè"
+    ],
+    "zh": "",
+    "en": "Our lessons start at eight."
+   },
+   {
+    "t": "我们下午四点放学。",
+    "seg": [
+     "我们",
+     "下午",
+     "四点",
+     "放学。"
+    ],
+    "r": [
+     "wǒ men",
+     "xià wǔ",
+     "sì diǎn",
+     "fàng xué"
+    ],
+    "zh": "",
+    "en": "School finishes at four in the afternoon."
+   },
+   {
+    "t": "晚上我做作业。",
+    "seg": [
+     "晚上",
+     "我",
+     "做",
+     "作业。"
+    ],
+    "r": [
+     "wǎn shang",
+     "wǒ",
+     "zuò",
+     "zuò yè"
+    ],
+    "zh": "",
+    "en": "I do my homework in the evening."
+   },
+   {
+    "t": "我九点睡觉。",
+    "seg": [
+     "我",
+     "九点",
+     "睡觉。"
+    ],
+    "r": [
+     "wǒ",
+     "jiǔ diǎn",
+     "shuì jiào"
+    ],
+    "zh": "",
+    "en": "I go to bed at nine."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "现在几点？",
+     "seg": [
+      "现在",
+      "几点？"
+     ],
+     "r": [
+      "xiàn zài",
+      "jǐ diǎn"
+     ],
+     "zh": "",
+     "en": "What time is it now?"
+    },
+    "a": {
+     "t": "现在八点十分。",
+     "seg": [
+      "现在",
+      "八点",
+      "十分。"
+     ],
+     "r": [
+      "xiàn zài",
+      "bā diǎn",
+      "shí fēn"
+     ],
+     "zh": "",
+     "en": "It's ten past eight."
+    },
+    "wrong": [
+     {
+      "t": "闹钟是红色的。",
+      "seg": [
+       "闹钟",
+       "是",
+       "红色的。"
+      ],
+      "r": [
+       "nào zhōng",
+       "shì",
+       "hóng sè de"
+      ],
+      "zh": "",
+      "en": "The alarm clock is red."
+     },
+     {
+      "t": "我在家吃早饭。",
+      "seg": [
+       "我",
+       "在",
+       "家",
+       "吃",
+       "早饭。"
+      ],
+      "r": [
+       "wǒ",
+       "zài",
+       "jiā",
+       "chī",
+       "zǎo fàn"
+      ],
+      "zh": "",
+      "en": "I have breakfast at home."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你几点起床？",
+     "seg": [
+      "你",
+      "几点",
+      "起床？"
+     ],
+     "r": [
+      "nǐ",
+      "jǐ diǎn",
+      "qǐ chuáng"
+     ],
+     "zh": "",
+     "en": "What time do you get up?"
+    },
+    "a": {
+     "t": "我六点半起床。",
+     "seg": [
+      "我",
+      "六点",
+      "半",
+      "起床。"
+     ],
+     "r": [
+      "wǒ",
+      "liù diǎn",
+      "bàn",
+      "qǐ chuáng"
+     ],
+     "zh": "",
+     "en": "I get up at half past six."
+    },
+    "wrong": [
+     {
+      "t": "我的闹钟很小。",
+      "seg": [
+       "我的",
+       "闹钟",
+       "很",
+       "小。"
+      ],
+      "r": [
+       "wǒ de",
+       "nào zhōng",
+       "hěn",
+       "xiǎo"
+      ],
+      "zh": "",
+      "en": "My alarm clock is small."
+     },
+     {
+      "t": "我晚上洗澡。",
+      "seg": [
+       "我",
+       "晚上",
+       "洗澡。"
+      ],
+      "r": [
+       "wǒ",
+       "wǎn shang",
+       "xǐ zǎo"
+      ],
+      "zh": "",
+      "en": "I take a bath in the evening."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你在哪里吃午饭？",
+     "seg": [
+      "你",
+      "在",
+      "哪里",
+      "吃",
+      "午饭？"
+     ],
+     "r": [
+      "nǐ",
+      "zài",
+      "nǎ lǐ",
+      "chī",
+      "wǔ fàn"
+     ],
+     "zh": "",
+     "en": "Where do you have lunch?"
+    },
+    "a": {
+     "t": "我在食堂吃午饭。",
+     "seg": [
+      "我",
+      "在",
+      "食堂",
+      "吃",
+      "午饭。"
+     ],
+     "r": [
+      "wǒ",
+      "zài",
+      "shí táng",
+      "chī",
+      "wǔ fàn"
+     ],
+     "zh": "",
+     "en": "I have lunch in the canteen."
+    },
+    "wrong": [
+     {
+      "t": "我十二点吃午饭。",
+      "seg": [
+       "我",
+       "十二点",
+       "吃",
+       "午饭。"
+      ],
+      "r": [
+       "wǒ",
+       "shí èr diǎn",
+       "chī",
+       "wǔ fàn"
+      ],
+      "zh": "",
+      "en": "I have lunch at twelve."
+     },
+     {
+      "t": "午饭很好吃。",
+      "seg": [
+       "午饭",
+       "很",
+       "好吃。"
+      ],
+      "r": [
+       "wǔ fàn",
+       "hěn",
+       "hǎo chī"
+      ],
+      "zh": "",
+      "en": "Lunch is tasty."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你们几点放学？",
+     "seg": [
+      "你们",
+      "几点",
+      "放学？"
+     ],
+     "r": [
+      "nǐ men",
+      "jǐ diǎn",
+      "fàng xué"
+     ],
+     "zh": "",
+     "en": "What time does school finish?"
+    },
+    "a": {
+     "t": "下午三点半。",
+     "seg": [
+      "下午",
+      "三点",
+      "半。"
+     ],
+     "r": [
+      "xià wǔ",
+      "sān diǎn",
+      "bàn"
+     ],
+     "zh": "",
+     "en": "At half past three."
+    },
+    "wrong": [
+     {
+      "t": "我不喜欢写作业。",
+      "seg": [
+       "我",
+       "不",
+       "喜欢",
+       "写",
+       "作业。"
+      ],
+      "r": [
+       "wǒ",
+       "bù",
+       "xǐ huan",
+       "xiě",
+       "zuò yè"
+      ],
+      "zh": "",
+      "en": "I don't like doing homework."
+     },
+     {
+      "t": "我们的学校很大。",
+      "seg": [
+       "我们的",
+       "学校",
+       "很",
+       "大。"
+      ],
+      "r": [
+       "wǒ men de",
+       "xué xiào",
+       "hěn",
+       "dà"
+      ],
+      "zh": "",
+      "en": "Our school is big."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你晚上做什么？",
+     "seg": [
+      "你",
+      "晚上",
+      "做",
+      "什么？"
+     ],
+     "r": [
+      "nǐ",
+      "wǎn shang",
+      "zuò",
+      "shén me"
+     ],
+     "zh": "",
+     "en": "What do you do in the evening?"
+    },
+    "a": {
+     "t": "我做作业，然后看书。",
+     "seg": [
+      "我",
+      "做",
+      "作业，",
+      "然后",
+      "看书。"
+     ],
+     "r": [
+      "wǒ",
+      "zuò",
+      "zuò yè",
+      "rán hòu",
+      "kàn shū"
+     ],
+     "zh": "",
+     "en": "I do my homework, then I read."
+    },
+    "wrong": [
+     {
+      "t": "闹钟在桌子上。",
+      "seg": [
+       "闹钟",
+       "在",
+       "桌子上。"
+      ],
+      "r": [
+       "nào zhōng",
+       "zài",
+       "zhuō zi shang"
+      ],
+      "zh": "",
+      "en": "The alarm clock is on the desk."
+     },
+     {
+      "t": "我的作业本是蓝色的。",
+      "seg": [
+       "我的",
+       "作业本",
+       "是",
+       "蓝色的。"
+      ],
+      "r": [
+       "wǒ de",
+       "zuò yè běn",
+       "shì",
+       "lán sè de"
+      ],
+      "zh": "",
+      "en": "My exercise book is blue."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你几点睡觉？",
+     "seg": [
+      "你",
+      "几点",
+      "睡觉？"
+     ],
+     "r": [
+      "nǐ",
+      "jǐ diǎn",
+      "shuì jiào"
+     ],
+     "zh": "",
+     "en": "What time do you go to bed?"
+    },
+    "a": {
+     "t": "我九点半睡觉。",
+     "seg": [
+      "我",
+      "九点",
+      "半",
+      "睡觉。"
+     ],
+     "r": [
+      "wǒ",
+      "jiǔ diǎn",
+      "bàn",
+      "shuì jiào"
+     ],
+     "zh": "",
+     "en": "I go to bed at half past nine."
+    },
+    "wrong": [
+     {
+      "t": "我在床上看书。",
+      "seg": [
+       "我",
+       "在",
+       "床上",
+       "看书。"
+      ],
+      "r": [
+       "wǒ",
+       "zài",
+       "chuáng shang",
+       "kàn shū"
+      ],
+      "zh": "",
+      "en": "I read in bed."
+     },
+     {
+      "t": "我每天洗澡。",
+      "seg": [
+       "我",
+       "每天",
+       "洗澡。"
+      ],
+      "r": [
+       "wǒ",
+       "měi tiān",
+       "xǐ zǎo"
+      ],
+      "zh": "",
+      "en": "I take a bath every day."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "妈妈",
+     "👩",
+     "f"
+    ],
+    [
+     "小明",
+     "👦",
+     "m"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "小明，起床了！",
+     "r": "Xiǎo Míng, qǐ chuáng le!",
+     "zh": "",
+     "en": "Xiaoming, time to get up!"
+    },
+    {
+     "who": 1,
+     "t": "妈妈，现在几点？",
+     "r": "mā ma, xiàn zài jǐ diǎn?",
+     "zh": "",
+     "en": "Mum, what time is it?"
+    },
+    {
+     "who": 0,
+     "t": "七点了！",
+     "r": "qī diǎn le!",
+     "zh": "",
+     "en": "It's already seven!"
+    },
+    {
+     "who": 1,
+     "t": "糟糕，我的闹钟没响！",
+     "r": "zāo gāo, wǒ de nào zhōng méi xiǎng!",
+     "zh": "",
+     "en": "Oh no, my alarm clock didn't go off!"
+    },
+    {
+     "who": 0,
+     "t": "快去刷牙，然后吃早饭。",
+     "r": "kuài qù shuā yá, rán hòu chī zǎo fàn.",
+     "zh": "",
+     "en": "Go and brush your teeth, then have breakfast."
+    },
+    {
+     "who": 1,
+     "t": "好！今天我八点上课。",
+     "r": "hǎo! jīn tiān wǒ bā diǎn shàng kè.",
+     "zh": "",
+     "en": "OK! My lessons start at eight today."
+    },
+    {
+     "who": 0,
+     "t": "别着急，还有一个小时。",
+     "r": "bié zháo jí, hái yǒu yí gè xiǎo shí.",
+     "zh": "",
+     "en": "Don't worry, there's still an hour."
+    },
+    {
+     "who": 1,
+     "t": "妈妈，今天晚上吃什么？",
+     "r": "mā ma, jīn tiān wǎn shang chī shén me?",
+     "zh": "",
+     "en": "Mum, what's for dinner tonight?"
+    },
+    {
+     "who": 0,
+     "t": "吃饺子！放学早点回家。",
+     "r": "chī jiǎo zi! fàng xué zǎo diǎn huí jiā.",
+     "zh": "",
+     "en": "Dumplings! Come home early after school."
+    },
+    {
+     "who": 1,
+     "t": "好，下午见！",
+     "r": "hǎo, xià wǔ jiàn!",
+     "zh": "",
+     "en": "OK, see you this afternoon!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 7,
+  "t": "生日快乐",
+  "boss": {
+   "t": "今天是我的生日！来，一起吃蛋糕吧！今天几月几号？",
+   "r": "jīn tiān shì wǒ de shēng rì! lái, yì qǐ chī dàn gāo ba! jīn tiān jǐ yuè jǐ hào?",
+   "zh": "",
+   "en": "Today is my birthday! Come and have some cake! What's the date today?"
+  },
+  "words": [
+   {
+    "t": "生日",
+    "r": "shēng rì",
+    "zh": "",
+    "en": "birthday",
+    "pic": "🎂"
+   },
+   {
+    "t": "蛋糕",
+    "r": "dàn gāo",
+    "zh": "",
+    "en": "cake",
+    "pic": "🍰"
+   },
+   {
+    "t": "礼物",
+    "r": "lǐ wù",
+    "zh": "",
+    "en": "present",
+    "pic": "🎁"
+   },
+   {
+    "t": "蜡烛",
+    "r": "là zhú",
+    "zh": "",
+    "en": "candle",
+    "pic": "🕯️"
+   },
+   {
+    "t": "气球",
+    "r": "qì qiú",
+    "zh": "",
+    "en": "balloon",
+    "pic": "🎈"
+   },
+   {
+    "t": "贺卡",
+    "r": "hè kǎ",
+    "zh": "",
+    "en": "greeting card",
+    "pic": "✉️"
+   },
+   {
+    "t": "日历",
+    "r": "rì lì",
+    "zh": "",
+    "en": "calendar",
+    "pic": "📅"
+   },
+   {
+    "t": "派对",
+    "r": "pài duì",
+    "zh": "",
+    "en": "party",
+    "pic": "🎉"
+   },
+   {
+    "t": "糖果",
+    "r": "táng guǒ",
+    "zh": "",
+    "en": "sweets",
+    "pic": "🍬"
+   },
+   {
+    "t": "冰淇淋",
+    "r": "bīng qí lín",
+    "zh": "",
+    "en": "ice cream",
+    "pic": "🍦"
+   },
+   {
+    "t": "生日帽",
+    "r": "shēng rì mào",
+    "zh": "",
+    "en": "party hat",
+    "pic": "🥳"
+   },
+   {
+    "t": "拍手",
+    "r": "pāi shǒu",
+    "zh": "",
+    "en": "to clap",
+    "pic": "👏"
+   }
+  ],
+  "sents": [
+   {
+    "t": "今天几月几号？",
+    "seg": [
+     "今天",
+     "几月",
+     "几号？"
+    ],
+    "r": [
+     "jīn tiān",
+     "jǐ yuè",
+     "jǐ hào"
+    ],
+    "zh": "",
+    "en": "What's the date today?"
+   },
+   {
+    "t": "今天五月十六号。",
+    "seg": [
+     "今天",
+     "五月",
+     "十六号。"
+    ],
+    "r": [
+     "jīn tiān",
+     "wǔ yuè",
+     "shí liù hào"
+    ],
+    "zh": "",
+    "en": "Today is the 16th of May."
+   },
+   {
+    "t": "丽丽的生日是几月几号？",
+    "seg": [
+     "丽丽的",
+     "生日",
+     "是",
+     "几月",
+     "几号？"
+    ],
+    "r": [
+     "Lì li de",
+     "shēng rì",
+     "shì",
+     "jǐ yuè",
+     "jǐ hào"
+    ],
+    "zh": "",
+    "en": "When is Lili's birthday?"
+   },
+   {
+    "t": "她的生日是十月八号。",
+    "seg": [
+     "她的",
+     "生日",
+     "是",
+     "十月",
+     "八号。"
+    ],
+    "r": [
+     "tā de",
+     "shēng rì",
+     "shì",
+     "shí yuè",
+     "bā hào"
+    ],
+    "zh": "",
+    "en": "Her birthday is the 8th of October."
+   },
+   {
+    "t": "祝你生日快乐！",
+    "seg": [
+     "祝你",
+     "生日",
+     "快乐！"
+    ],
+    "r": [
+     "zhù nǐ",
+     "shēng rì",
+     "kuài lè"
+    ],
+    "zh": "",
+    "en": "Happy birthday to you!"
+   },
+   {
+    "t": "弟弟今天七岁了。",
+    "seg": [
+     "弟弟",
+     "今天",
+     "七岁",
+     "了。"
+    ],
+    "r": [
+     "dì di",
+     "jīn tiān",
+     "qī suì",
+     "le"
+    ],
+    "zh": "",
+    "en": "My little brother turns seven today."
+   },
+   {
+    "t": "这是送给你的礼物。",
+    "seg": [
+     "这是",
+     "送给",
+     "你的",
+     "礼物。"
+    ],
+    "r": [
+     "zhè shì",
+     "sòng gěi",
+     "nǐ de",
+     "lǐ wù"
+    ],
+    "zh": "",
+    "en": "This is a present for you."
+   },
+   {
+    "t": "明天是星期六。",
+    "seg": [
+     "明天",
+     "是",
+     "星期六。"
+    ],
+    "r": [
+     "míng tiān",
+     "shì",
+     "xīng qī liù"
+    ],
+    "zh": "",
+    "en": "Tomorrow is Saturday."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "今天几号？",
+     "seg": [
+      "今天",
+      "几号？"
+     ],
+     "r": [
+      "jīn tiān",
+      "jǐ hào"
+     ],
+     "zh": "",
+     "en": "What's the date today?"
+    },
+    "a": {
+     "t": "今天十二号。",
+     "seg": [
+      "今天",
+      "十二号。"
+     ],
+     "r": [
+      "jīn tiān",
+      "shí èr hào"
+     ],
+     "zh": "",
+     "en": "It's the 12th."
+    },
+    "wrong": [
+     {
+      "t": "我有一个蛋糕。",
+      "seg": [
+       "我",
+       "有",
+       "一个",
+       "蛋糕。"
+      ],
+      "r": [
+       "wǒ",
+       "yǒu",
+       "yí gè",
+       "dàn gāo"
+      ],
+      "zh": "",
+      "en": "I have a cake."
+     },
+     {
+      "t": "我喜欢冰淇淋。",
+      "seg": [
+       "我",
+       "喜欢",
+       "冰淇淋。"
+      ],
+      "r": [
+       "wǒ",
+       "xǐ huan",
+       "bīng qí lín"
+      ],
+      "zh": "",
+      "en": "I like ice cream."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "明天星期几？",
+     "seg": [
+      "明天",
+      "星期几？"
+     ],
+     "r": [
+      "míng tiān",
+      "xīng qī jǐ"
+     ],
+     "zh": "",
+     "en": "What day is it tomorrow?"
+    },
+    "a": {
+     "t": "明天星期六。",
+     "seg": [
+      "明天",
+      "星期六。"
+     ],
+     "r": [
+      "míng tiān",
+      "xīng qī liù"
+     ],
+     "zh": "",
+     "en": "It's Saturday."
+    },
+    "wrong": [
+     {
+      "t": "我们明天吃蛋糕。",
+      "seg": [
+       "我们",
+       "明天",
+       "吃",
+       "蛋糕。"
+      ],
+      "r": [
+       "wǒ men",
+       "míng tiān",
+       "chī",
+       "dàn gāo"
+      ],
+      "zh": "",
+      "en": "We're having cake tomorrow."
+     },
+     {
+      "t": "我的生日在三月。",
+      "seg": [
+       "我的",
+       "生日",
+       "在",
+       "三月。"
+      ],
+      "r": [
+       "wǒ de",
+       "shēng rì",
+       "zài",
+       "sān yuè"
+      ],
+      "zh": "",
+      "en": "My birthday is in March."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "宝宝几岁了？",
+     "seg": [
+      "宝宝",
+      "几岁",
+      "了？"
+     ],
+     "r": [
+      "bǎo bao",
+      "jǐ suì",
+      "le"
+     ],
+     "zh": "",
+     "en": "How old is the baby now?"
+    },
+    "a": {
+     "t": "宝宝一岁了。",
+     "seg": [
+      "宝宝",
+      "一岁",
+      "了。"
+     ],
+     "r": [
+      "bǎo bao",
+      "yí suì",
+      "le"
+     ],
+     "zh": "",
+     "en": "The baby is one now."
+    },
+    "wrong": [
+     {
+      "t": "宝宝喜欢气球。",
+      "seg": [
+       "宝宝",
+       "喜欢",
+       "气球。"
+      ],
+      "r": [
+       "bǎo bao",
+       "xǐ huan",
+       "qì qiú"
+      ],
+      "zh": "",
+      "en": "The baby likes balloons."
+     },
+     {
+      "t": "这是宝宝的照片。",
+      "seg": [
+       "这",
+       "是",
+       "宝宝的",
+       "照片。"
+      ],
+      "r": [
+       "zhè",
+       "shì",
+       "bǎo bao de",
+       "zhào piàn"
+      ],
+      "zh": "",
+      "en": "This is the baby's photo."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "小明的生日是几月几号？",
+     "seg": [
+      "小明的",
+      "生日",
+      "是",
+      "几月",
+      "几号？"
+     ],
+     "r": [
+      "Xiǎo Míng de",
+      "shēng rì",
+      "shì",
+      "jǐ yuè",
+      "jǐ hào"
+     ],
+     "zh": "",
+     "en": "When is Xiaoming's birthday?"
+    },
+    "a": {
+     "t": "七月十号。",
+     "seg": [
+      "七月",
+      "十号。"
+     ],
+     "r": [
+      "qī yuè",
+      "shí hào"
+     ],
+     "zh": "",
+     "en": "The 10th of July."
+    },
+    "wrong": [
+     {
+      "t": "他十岁。",
+      "seg": [
+       "他",
+       "十岁。"
+      ],
+      "r": [
+       "tā",
+       "shí suì"
+      ],
+      "zh": "",
+      "en": "He's ten."
+     },
+     {
+      "t": "他想要一个足球。",
+      "seg": [
+       "他",
+       "想要",
+       "一个",
+       "足球。"
+      ],
+      "r": [
+       "tā",
+       "xiǎng yào",
+       "yí gè",
+       "zú qiú"
+      ],
+      "zh": "",
+      "en": "He wants a football."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "生日快乐！",
+     "seg": [
+      "生日",
+      "快乐！"
+     ],
+     "r": [
+      "shēng rì",
+      "kuài lè"
+     ],
+     "zh": "",
+     "en": "Happy birthday!"
+    },
+    "a": {
+     "t": "谢谢！",
+     "seg": [
+      "谢谢！"
+     ],
+     "r": [
+      "xiè xie"
+     ],
+     "zh": "",
+     "en": "Thank you!"
+    },
+    "wrong": [
+     {
+      "t": "不客气。",
+      "seg": [
+       "不客气。"
+      ],
+      "r": [
+       "bú kè qi"
+      ],
+      "zh": "",
+      "en": "You're welcome."
+     },
+     {
+      "t": "今天星期五。",
+      "seg": [
+       "今天",
+       "星期五。"
+      ],
+      "r": [
+       "jīn tiān",
+       "xīng qī wǔ"
+      ],
+      "zh": "",
+      "en": "It's Friday today."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "这是给我的吗？",
+     "seg": [
+      "这",
+      "是",
+      "给",
+      "我的",
+      "吗？"
+     ],
+     "r": [
+      "zhè",
+      "shì",
+      "gěi",
+      "wǒ de",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Is this for me?"
+    },
+    "a": {
+     "t": "对，送给你的！",
+     "seg": [
+      "对，",
+      "送给",
+      "你的！"
+     ],
+     "r": [
+      "duì",
+      "sòng gěi",
+      "nǐ de"
+     ],
+     "zh": "",
+     "en": "Yes, it's for you!"
+    },
+    "wrong": [
+     {
+      "t": "那是蜡烛。",
+      "seg": [
+       "那",
+       "是",
+       "蜡烛。"
+      ],
+      "r": [
+       "nà",
+       "shì",
+       "là zhú"
+      ],
+      "zh": "",
+      "en": "Those are candles."
+     },
+     {
+      "t": "我喜欢糖果。",
+      "seg": [
+       "我",
+       "喜欢",
+       "糖果。"
+      ],
+      "r": [
+       "wǒ",
+       "xǐ huan",
+       "táng guǒ"
+      ],
+      "zh": "",
+      "en": "I like sweets."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "小明",
+     "👦",
+     "m"
+    ],
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "丽丽，生日快乐！",
+     "r": "Lì li, shēng rì kuài lè!",
+     "zh": "",
+     "en": "Happy birthday, Lili!"
+    },
+    {
+     "who": 1,
+     "t": "谢谢你，小明！",
+     "r": "xiè xie nǐ, Xiǎo Míng!",
+     "zh": "",
+     "en": "Thank you, Xiaoming!"
+    },
+    {
+     "who": 0,
+     "t": "这是送给你的礼物。",
+     "r": "zhè shì sòng gěi nǐ de lǐ wù.",
+     "zh": "",
+     "en": "This is a present for you."
+    },
+    {
+     "who": 1,
+     "t": "哇！是什么？",
+     "r": "wā! shì shén me?",
+     "zh": "",
+     "en": "Wow! What is it?"
+    },
+    {
+     "who": 0,
+     "t": "是一盒彩色笔。",
+     "r": "shì yì hé cǎi sè bǐ.",
+     "zh": "",
+     "en": "It's a box of colouring pens."
+    },
+    {
+     "who": 1,
+     "t": "太好了！我很喜欢画画。",
+     "r": "tài hǎo le! wǒ hěn xǐ huan huà huà.",
+     "zh": "",
+     "en": "Great! I love drawing."
+    },
+    {
+     "who": 0,
+     "t": "你今天几岁了？",
+     "r": "nǐ jīn tiān jǐ suì le?",
+     "zh": "",
+     "en": "How old are you today?"
+    },
+    {
+     "who": 1,
+     "t": "我十岁了。来，我们吃蛋糕吧！",
+     "r": "wǒ shí suì le. lái, wǒ men chī dàn gāo ba!",
+     "zh": "",
+     "en": "I'm ten now. Come on, let's have cake!"
+    },
+    {
+     "who": 0,
+     "t": "好！先吹蜡烛！",
+     "r": "hǎo! xiān chuī là zhú!",
+     "zh": "",
+     "en": "OK! Blow out the candles first!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 8,
+  "t": "动物朋友",
+  "boss": {
+   "t": "你好！这个岛上有很多动物。你最喜欢什么动物？",
+   "r": "nǐ hǎo! zhè ge dǎo shang yǒu hěn duō dòng wù. nǐ zuì xǐ huan shén me dòng wù?",
+   "zh": "",
+   "en": "Hello! There are lots of animals on this island. Which animal do you like best?"
+  },
+  "words": [
+   {
+    "t": "猫",
+    "r": "māo",
+    "zh": "",
+    "en": "cat",
+    "pic": "🐱"
+   },
+   {
+    "t": "狗",
+    "r": "gǒu",
+    "zh": "",
+    "en": "dog",
+    "pic": "🐶"
+   },
+   {
+    "t": "鸟",
+    "r": "niǎo",
+    "zh": "",
+    "en": "bird",
+    "pic": "🐦"
+   },
+   {
+    "t": "鱼",
+    "r": "yú",
+    "zh": "",
+    "en": "fish",
+    "pic": "🐟"
+   },
+   {
+    "t": "熊猫",
+    "r": "xióng māo",
+    "zh": "",
+    "en": "panda",
+    "pic": "🐼"
+   },
+   {
+    "t": "兔子",
+    "r": "tù zi",
+    "zh": "",
+    "en": "rabbit",
+    "pic": "🐰"
+   },
+   {
+    "t": "猴子",
+    "r": "hóu zi",
+    "zh": "",
+    "en": "monkey",
+    "pic": "🐵"
+   },
+   {
+    "t": "老虎",
+    "r": "lǎo hǔ",
+    "zh": "",
+    "en": "tiger",
+    "pic": "🐯"
+   },
+   {
+    "t": "大象",
+    "r": "dà xiàng",
+    "zh": "",
+    "en": "elephant",
+    "pic": "🐘"
+   },
+   {
+    "t": "马",
+    "r": "mǎ",
+    "zh": "",
+    "en": "horse",
+    "pic": "🐴"
+   },
+   {
+    "t": "羊",
+    "r": "yáng",
+    "zh": "",
+    "en": "sheep",
+    "pic": "🐑"
+   },
+   {
+    "t": "鸭子",
+    "r": "yā zi",
+    "zh": "",
+    "en": "duck",
+    "pic": "🦆"
+   }
+  ],
+  "sents": [
+   {
+    "t": "我家有一只小狗。",
+    "seg": [
+     "我家",
+     "有",
+     "一只",
+     "小狗。"
+    ],
+    "r": [
+     "wǒ jiā",
+     "yǒu",
+     "yì zhī",
+     "xiǎo gǒu"
+    ],
+    "zh": "",
+    "en": "We have a puppy at home."
+   },
+   {
+    "t": "熊猫很可爱。",
+    "seg": [
+     "熊猫",
+     "很",
+     "可爱。"
+    ],
+    "r": [
+     "xióng māo",
+     "hěn",
+     "kě ài"
+    ],
+    "zh": "",
+    "en": "Pandas are cute."
+   },
+   {
+    "t": "你喜欢什么动物？",
+    "seg": [
+     "你",
+     "喜欢",
+     "什么",
+     "动物？"
+    ],
+    "r": [
+     "nǐ",
+     "xǐ huan",
+     "shén me",
+     "dòng wù"
+    ],
+    "zh": "",
+    "en": "What animals do you like?"
+   },
+   {
+    "t": "河里有三条鱼。",
+    "seg": [
+     "河里",
+     "有",
+     "三条",
+     "鱼。"
+    ],
+    "r": [
+     "hé li",
+     "yǒu",
+     "sān tiáo",
+     "yú"
+    ],
+    "zh": "",
+    "en": "There are three fish in the river."
+   },
+   {
+    "t": "大象的鼻子很长。",
+    "seg": [
+     "大象的",
+     "鼻子",
+     "很",
+     "长。"
+    ],
+    "r": [
+     "dà xiàng de",
+     "bí zi",
+     "hěn",
+     "cháng"
+    ],
+    "zh": "",
+    "en": "The elephant's trunk is long."
+   },
+   {
+    "t": "猴子喜欢吃香蕉。",
+    "seg": [
+     "猴子",
+     "喜欢",
+     "吃",
+     "香蕉。"
+    ],
+    "r": [
+     "hóu zi",
+     "xǐ huan",
+     "chī",
+     "xiāng jiāo"
+    ],
+    "zh": "",
+    "en": "Monkeys like eating bananas."
+   },
+   {
+    "t": "兔子跑得很快。",
+    "seg": [
+     "兔子",
+     "跑得",
+     "很",
+     "快。"
+    ],
+    "r": [
+     "tù zi",
+     "pǎo de",
+     "hěn",
+     "kuài"
+    ],
+    "zh": "",
+    "en": "Rabbits run fast."
+   },
+   {
+    "t": "那只鸟会说话！",
+    "seg": [
+     "那只",
+     "鸟",
+     "会",
+     "说话！"
+    ],
+    "r": [
+     "nà zhī",
+     "niǎo",
+     "huì",
+     "shuō huà"
+    ],
+    "zh": "",
+    "en": "That bird can talk!"
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "你最喜欢什么动物？",
+     "seg": [
+      "你",
+      "最",
+      "喜欢",
+      "什么",
+      "动物？"
+     ],
+     "r": [
+      "nǐ",
+      "zuì",
+      "xǐ huan",
+      "shén me",
+      "dòng wù"
+     ],
+     "zh": "",
+     "en": "Which animal do you like best?"
+    },
+    "a": {
+     "t": "我最喜欢熊猫。",
+     "seg": [
+      "我",
+      "最",
+      "喜欢",
+      "熊猫。"
+     ],
+     "r": [
+      "wǒ",
+      "zuì",
+      "xǐ huan",
+      "xióng māo"
+     ],
+     "zh": "",
+     "en": "I like pandas best."
+    },
+    "wrong": [
+     {
+      "t": "熊猫吃竹子。",
+      "seg": [
+       "熊猫",
+       "吃",
+       "竹子。"
+      ],
+      "r": [
+       "xióng māo",
+       "chī",
+       "zhú zi"
+      ],
+      "zh": "",
+      "en": "Pandas eat bamboo."
+     },
+     {
+      "t": "动物园在学校旁边。",
+      "seg": [
+       "动物园",
+       "在",
+       "学校",
+       "旁边。"
+      ],
+      "r": [
+       "dòng wù yuán",
+       "zài",
+       "xué xiào",
+       "páng biān"
+      ],
+      "zh": "",
+      "en": "The zoo is next to the school."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你家有狗吗？",
+     "seg": [
+      "你家",
+      "有",
+      "狗",
+      "吗？"
+     ],
+     "r": [
+      "nǐ jiā",
+      "yǒu",
+      "gǒu",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Do you have a dog at home?"
+    },
+    "a": {
+     "t": "没有，我家有一只猫。",
+     "seg": [
+      "没有，",
+      "我家",
+      "有",
+      "一只",
+      "猫。"
+     ],
+     "r": [
+      "méi yǒu",
+      "wǒ jiā",
+      "yǒu",
+      "yì zhī",
+      "māo"
+     ],
+     "zh": "",
+     "en": "No, we have a cat."
+    },
+    "wrong": [
+     {
+      "t": "狗很可爱。",
+      "seg": [
+       "狗",
+       "很",
+       "可爱。"
+      ],
+      "r": [
+       "gǒu",
+       "hěn",
+       "kě ài"
+      ],
+      "zh": "",
+      "en": "Dogs are cute."
+     },
+     {
+      "t": "小狗在门口。",
+      "seg": [
+       "小狗",
+       "在",
+       "门口。"
+      ],
+      "r": [
+       "xiǎo gǒu",
+       "zài",
+       "mén kǒu"
+      ],
+      "zh": "",
+      "en": "The puppy is at the door."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "河里有几条鱼？",
+     "seg": [
+      "河里",
+      "有",
+      "几条",
+      "鱼？"
+     ],
+     "r": [
+      "hé li",
+      "yǒu",
+      "jǐ tiáo",
+      "yú"
+     ],
+     "zh": "",
+     "en": "How many fish are in the river?"
+    },
+    "a": {
+     "t": "有四条。",
+     "seg": [
+      "有",
+      "四条。"
+     ],
+     "r": [
+      "yǒu",
+      "sì tiáo"
+     ],
+     "zh": "",
+     "en": "There are four."
+    },
+    "wrong": [
+     {
+      "t": "鱼在河里。",
+      "seg": [
+       "鱼",
+       "在",
+       "河里。"
+      ],
+      "r": [
+       "yú",
+       "zài",
+       "hé li"
+      ],
+      "zh": "",
+      "en": "The fish are in the river."
+     },
+     {
+      "t": "鱼喜欢水。",
+      "seg": [
+       "鱼",
+       "喜欢",
+       "水。"
+      ],
+      "r": [
+       "yú",
+       "xǐ huan",
+       "shuǐ"
+      ],
+      "zh": "",
+      "en": "Fish like water."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "猴子喜欢吃什么？",
+     "seg": [
+      "猴子",
+      "喜欢",
+      "吃",
+      "什么？"
+     ],
+     "r": [
+      "hóu zi",
+      "xǐ huan",
+      "chī",
+      "shén me"
+     ],
+     "zh": "",
+     "en": "What do monkeys like to eat?"
+    },
+    "a": {
+     "t": "猴子喜欢吃香蕉。",
+     "seg": [
+      "猴子",
+      "喜欢",
+      "吃",
+      "香蕉。"
+     ],
+     "r": [
+      "hóu zi",
+      "xǐ huan",
+      "chī",
+      "xiāng jiāo"
+     ],
+     "zh": "",
+     "en": "Monkeys like bananas."
+    },
+    "wrong": [
+     {
+      "t": "猴子很可爱。",
+      "seg": [
+       "猴子",
+       "很",
+       "可爱。"
+      ],
+      "r": [
+       "hóu zi",
+       "hěn",
+       "kě ài"
+      ],
+      "zh": "",
+      "en": "Monkeys are cute."
+     },
+     {
+      "t": "猴子会爬树。",
+      "seg": [
+       "猴子",
+       "会",
+       "爬树。"
+      ],
+      "r": [
+       "hóu zi",
+       "huì",
+       "pá shù"
+      ],
+      "zh": "",
+      "en": "Monkeys can climb trees."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "大象大不大？",
+     "seg": [
+      "大象",
+      "大不大？"
+     ],
+     "r": [
+      "dà xiàng",
+      "dà bu dà"
+     ],
+     "zh": "",
+     "en": "Are elephants big?"
+    },
+    "a": {
+     "t": "很大！",
+     "seg": [
+      "很",
+      "大！"
+     ],
+     "r": [
+      "hěn",
+      "dà"
+     ],
+     "zh": "",
+     "en": "Very big!"
+    },
+    "wrong": [
+     {
+      "t": "大象是灰色的。",
+      "seg": [
+       "大象",
+       "是",
+       "灰色的。"
+      ],
+      "r": [
+       "dà xiàng",
+       "shì",
+       "huī sè de"
+      ],
+      "zh": "",
+      "en": "Elephants are grey."
+     },
+     {
+      "t": "大象在动物园。",
+      "seg": [
+       "大象",
+       "在",
+       "动物园。"
+      ],
+      "r": [
+       "dà xiàng",
+       "zài",
+       "dòng wù yuán"
+      ],
+      "zh": "",
+      "en": "The elephant is at the zoo."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "那是什么动物？",
+     "seg": [
+      "那",
+      "是",
+      "什么",
+      "动物？"
+     ],
+     "r": [
+      "nà",
+      "shì",
+      "shén me",
+      "dòng wù"
+     ],
+     "zh": "",
+     "en": "What animal is that?"
+    },
+    "a": {
+     "t": "那是一只老虎。",
+     "seg": [
+      "那",
+      "是",
+      "一只",
+      "老虎。"
+     ],
+     "r": [
+      "nà",
+      "shì",
+      "yì zhī",
+      "lǎo hǔ"
+     ],
+     "zh": "",
+     "en": "It's a tiger."
+    },
+    "wrong": [
+     {
+      "t": "老虎跑得很快。",
+      "seg": [
+       "老虎",
+       "跑得",
+       "很",
+       "快。"
+      ],
+      "r": [
+       "lǎo hǔ",
+       "pǎo de",
+       "hěn",
+       "kuài"
+      ],
+      "zh": "",
+      "en": "Tigers run fast."
+     },
+     {
+      "t": "我不喜欢老虎。",
+      "seg": [
+       "我",
+       "不",
+       "喜欢",
+       "老虎。"
+      ],
+      "r": [
+       "wǒ",
+       "bù",
+       "xǐ huan",
+       "lǎo hǔ"
+      ],
+      "zh": "",
+      "en": "I don't like tigers."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ],
+    [
+     "小明",
+     "👦",
+     "m"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "小明，你看！那是什么动物？",
+     "r": "Xiǎo Míng, nǐ kàn! nà shì shén me dòng wù?",
+     "zh": "",
+     "en": "Xiaoming, look! What animal is that?"
+    },
+    {
+     "who": 1,
+     "t": "那是一只熊猫！",
+     "r": "nà shì yì zhī xióng māo!",
+     "zh": "",
+     "en": "It's a panda!"
+    },
+    {
+     "who": 0,
+     "t": "真可爱！熊猫吃什么？",
+     "r": "zhēn kě ài! xióng māo chī shén me?",
+     "zh": "",
+     "en": "So cute! What do pandas eat?"
+    },
+    {
+     "who": 1,
+     "t": "熊猫吃竹子。",
+     "r": "xióng māo chī zhú zi.",
+     "zh": "",
+     "en": "Pandas eat bamboo."
+    },
+    {
+     "who": 0,
+     "t": "我家有一只猫，它也很可爱。",
+     "r": "wǒ jiā yǒu yì zhī māo, tā yě hěn kě ài.",
+     "zh": "",
+     "en": "We have a cat at home. It's cute too."
+    },
+    {
+     "who": 1,
+     "t": "我没有猫，我有两条鱼。",
+     "r": "wǒ méi yǒu māo, wǒ yǒu liǎng tiáo yú.",
+     "zh": "",
+     "en": "I don't have a cat. I have two fish."
+    },
+    {
+     "who": 0,
+     "t": "你喜欢猴子吗？",
+     "r": "nǐ xǐ huan hóu zi ma?",
+     "zh": "",
+     "en": "Do you like monkeys?"
+    },
+    {
+     "who": 1,
+     "t": "喜欢！猴子很聪明。",
+     "r": "xǐ huan! hóu zi hěn cōng ming.",
+     "zh": "",
+     "en": "Yes! Monkeys are clever."
+    },
+    {
+     "who": 0,
+     "t": "你听！那只鸟会说你好！",
+     "r": "nǐ tīng! nà zhī niǎo huì shuō nǐ hǎo!",
+     "zh": "",
+     "en": "Listen! That bird can say hello!"
+    },
+    {
+     "who": 1,
+     "t": "哈哈，你好，小鸟！",
+     "r": "hā hā, nǐ hǎo, xiǎo niǎo!",
+     "zh": "",
+     "en": "Ha ha, hello, little bird!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 9,
+  "t": "规则岛",
+  "boss": {
+   "t": "这里有很多规则。在图书馆里要安静。在图书馆里可以跑吗？",
+   "r": "zhè lǐ yǒu hěn duō guī zé. zài tú shū guǎn li yào ān jìng. zài tú shū guǎn li kě yǐ pǎo ma?",
+   "zh": "",
+   "en": "There are lots of rules here. In the library you must be quiet. Can you run in the library?"
+  },
+  "words": [
+   {
+    "t": "红绿灯",
+    "r": "hóng lǜ dēng",
+    "zh": "",
+    "en": "traffic lights",
+    "pic": "🚦"
+   },
+   {
+    "t": "斑马线",
+    "r": "bān mǎ xiàn",
+    "zh": "",
+    "en": "zebra crossing",
+    "pic": "🦓"
+   },
+   {
+    "t": "垃圾桶",
+    "r": "lā jī tǒng",
+    "zh": "",
+    "en": "rubbish bin",
+    "pic": "🗑️"
+   },
+   {
+    "t": "安静",
+    "r": "ān jìng",
+    "zh": "",
+    "en": "quiet",
+    "pic": "🤫"
+   },
+   {
+    "t": "跑",
+    "r": "pǎo",
+    "zh": "",
+    "en": "to run",
+    "pic": "🏃"
+   },
+   {
+    "t": "手机",
+    "r": "shǒu jī",
+    "zh": "",
+    "en": "mobile phone",
+    "pic": "📱"
+   },
+   {
+    "t": "零食",
+    "r": "líng shí",
+    "zh": "",
+    "en": "snack",
+    "pic": "🍪"
+   },
+   {
+    "t": "洗手",
+    "r": "xǐ shǒu",
+    "zh": "",
+    "en": "to wash hands",
+    "pic": "🧼"
+   },
+   {
+    "t": "举手",
+    "r": "jǔ shǒu",
+    "zh": "",
+    "en": "to raise a hand",
+    "pic": "🙋"
+   },
+   {
+    "t": "排队",
+    "r": "pái duì",
+    "zh": "",
+    "en": "to line up",
+    "pic": "👥"
+   },
+   {
+    "t": "草地",
+    "r": "cǎo dì",
+    "zh": "",
+    "en": "grass, lawn",
+    "pic": "🌱"
+   },
+   {
+    "t": "规则",
+    "r": "guī zé",
+    "zh": "",
+    "en": "rule",
+    "pic": "📋"
+   }
+  ],
+  "sents": [
+   {
+    "t": "这里不可以跑。",
+    "seg": [
+     "这里",
+     "不可以",
+     "跑。"
+    ],
+    "r": [
+     "zhè lǐ",
+     "bù kě yǐ",
+     "pǎo"
+    ],
+    "zh": "",
+    "en": "No running here."
+   },
+   {
+    "t": "图书馆里要安静。",
+    "seg": [
+     "图书馆里",
+     "要",
+     "安静。"
+    ],
+    "r": [
+     "tú shū guǎn li",
+     "yào",
+     "ān jìng"
+    ],
+    "zh": "",
+    "en": "You must be quiet in the library."
+   },
+   {
+    "t": "我可以进来吗？",
+    "seg": [
+     "我",
+     "可以",
+     "进来",
+     "吗？"
+    ],
+    "r": [
+     "wǒ",
+     "kě yǐ",
+     "jìn lai",
+     "ma"
+    ],
+    "zh": "",
+    "en": "May I come in?"
+   },
+   {
+    "t": "上课的时候不要玩手机。",
+    "seg": [
+     "上课",
+     "的时候",
+     "不要",
+     "玩",
+     "手机。"
+    ],
+    "r": [
+     "shàng kè",
+     "de shí hou",
+     "bú yào",
+     "wán",
+     "shǒu jī"
+    ],
+    "zh": "",
+    "en": "Don't play on your phone in class."
+   },
+   {
+    "t": "红灯停，绿灯行。",
+    "seg": [
+     "红灯",
+     "停，",
+     "绿灯",
+     "行。"
+    ],
+    "r": [
+     "hóng dēng",
+     "tíng",
+     "lǜ dēng",
+     "xíng"
+    ],
+    "zh": "",
+    "en": "Stop on red, go on green."
+   },
+   {
+    "t": "吃饭以前要洗手。",
+    "seg": [
+     "吃饭",
+     "以前",
+     "要",
+     "洗手。"
+    ],
+    "r": [
+     "chī fàn",
+     "yǐ qián",
+     "yào",
+     "xǐ shǒu"
+    ],
+    "zh": "",
+    "en": "Wash your hands before you eat."
+   },
+   {
+    "t": "请排队上车。",
+    "seg": [
+     "请",
+     "排队",
+     "上车。"
+    ],
+    "r": [
+     "qǐng",
+     "pái duì",
+     "shàng chē"
+    ],
+    "zh": "",
+    "en": "Please line up to get on."
+   },
+   {
+    "t": "请不要踩草地。",
+    "seg": [
+     "请",
+     "不要",
+     "踩",
+     "草地。"
+    ],
+    "r": [
+     "qǐng",
+     "bú yào",
+     "cǎi",
+     "cǎo dì"
+    ],
+    "zh": "",
+    "en": "Please keep off the grass."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "老师，我可以进来吗？",
+     "seg": [
+      "老师，",
+      "我",
+      "可以",
+      "进来",
+      "吗？"
+     ],
+     "r": [
+      "lǎo shī",
+      "wǒ",
+      "kě yǐ",
+      "jìn lai",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Teacher, may I come in?"
+    },
+    "a": {
+     "t": "可以，请进。",
+     "seg": [
+      "可以，",
+      "请进。"
+     ],
+     "r": [
+      "kě yǐ",
+      "qǐng jìn"
+     ],
+     "zh": "",
+     "en": "Yes, come in."
+    },
+    "wrong": [
+     {
+      "t": "我有一个手机。",
+      "seg": [
+       "我",
+       "有",
+       "一个",
+       "手机。"
+      ],
+      "r": [
+       "wǒ",
+       "yǒu",
+       "yí gè",
+       "shǒu jī"
+      ],
+      "zh": "",
+      "en": "I have a mobile phone."
+     },
+     {
+      "t": "教室在二楼。",
+      "seg": [
+       "教室",
+       "在",
+       "二楼。"
+      ],
+      "r": [
+       "jiào shì",
+       "zài",
+       "èr lóu"
+      ],
+      "zh": "",
+      "en": "The classroom is on the second floor."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "这里可以拍照吗？",
+     "seg": [
+      "这里",
+      "可以",
+      "拍照",
+      "吗？"
+     ],
+     "r": [
+      "zhè lǐ",
+      "kě yǐ",
+      "pāi zhào",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Can I take photos here?"
+    },
+    "a": {
+     "t": "不可以，对不起。",
+     "seg": [
+      "不可以，",
+      "对不起。"
+     ],
+     "r": [
+      "bù kě yǐ",
+      "duì bu qǐ"
+     ],
+     "zh": "",
+     "en": "No, sorry."
+    },
+    "wrong": [
+     {
+      "t": "我会拍照。",
+      "seg": [
+       "我",
+       "会",
+       "拍照。"
+      ],
+      "r": [
+       "wǒ",
+       "huì",
+       "pāi zhào"
+      ],
+      "zh": "",
+      "en": "I can take photos."
+     },
+     {
+      "t": "照片很好看。",
+      "seg": [
+       "照片",
+       "很",
+       "好看。"
+      ],
+      "r": [
+       "zhào piàn",
+       "hěn",
+       "hǎo kàn"
+      ],
+      "zh": "",
+      "en": "The photo looks nice."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "我可以喝水吗？",
+     "seg": [
+      "我",
+      "可以",
+      "喝",
+      "水",
+      "吗？"
+     ],
+     "r": [
+      "wǒ",
+      "kě yǐ",
+      "hē",
+      "shuǐ",
+      "ma"
+     ],
+     "zh": "",
+     "en": "May I drink some water?"
+    },
+    "a": {
+     "t": "可以，喝吧。",
+     "seg": [
+      "可以，",
+      "喝吧。"
+     ],
+     "r": [
+      "kě yǐ",
+      "hē ba"
+     ],
+     "zh": "",
+     "en": "Sure, go ahead."
+    },
+    "wrong": [
+     {
+      "t": "我们要排队。",
+      "seg": [
+       "我们",
+       "要",
+       "排队。"
+      ],
+      "r": [
+       "wǒ men",
+       "yào",
+       "pái duì"
+      ],
+      "zh": "",
+      "en": "We have to line up."
+     },
+     {
+      "t": "洗手间在那里。",
+      "seg": [
+       "洗手间",
+       "在",
+       "那里。"
+      ],
+      "r": [
+       "xǐ shǒu jiān",
+       "zài",
+       "nà lǐ"
+      ],
+      "zh": "",
+      "en": "The toilet is over there."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "上课的时候可以吃零食吗？",
+     "seg": [
+      "上课",
+      "的时候",
+      "可以",
+      "吃",
+      "零食",
+      "吗？"
+     ],
+     "r": [
+      "shàng kè",
+      "de shí hou",
+      "kě yǐ",
+      "chī",
+      "líng shí",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Can we eat snacks in class?"
+    },
+    "a": {
+     "t": "不可以。",
+     "seg": [
+      "不可以。"
+     ],
+     "r": [
+      "bù kě yǐ"
+     ],
+     "zh": "",
+     "en": "No, you cannot."
+    },
+    "wrong": [
+     {
+      "t": "我喜欢吃零食。",
+      "seg": [
+       "我",
+       "喜欢",
+       "吃",
+       "零食。"
+      ],
+      "r": [
+       "wǒ",
+       "xǐ huan",
+       "chī",
+       "líng shí"
+      ],
+      "zh": "",
+      "en": "I like eating snacks."
+     },
+     {
+      "t": "我们八点上课。",
+      "seg": [
+       "我们",
+       "八点",
+       "上课。"
+      ],
+      "r": [
+       "wǒ men",
+       "bā diǎn",
+       "shàng kè"
+      ],
+      "zh": "",
+      "en": "Our lessons start at eight."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "现在可以过马路吗？",
+     "seg": [
+      "现在",
+      "可以",
+      "过",
+      "马路",
+      "吗？"
+     ],
+     "r": [
+      "xiàn zài",
+      "kě yǐ",
+      "guò",
+      "mǎ lù",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Can we cross the road now?"
+    },
+    "a": {
+     "t": "不行，现在是红灯。",
+     "seg": [
+      "不行，",
+      "现在",
+      "是",
+      "红灯。"
+     ],
+     "r": [
+      "bù xíng",
+      "xiàn zài",
+      "shì",
+      "hóng dēng"
+     ],
+     "zh": "",
+     "en": "No, the light is red now."
+    },
+    "wrong": [
+     {
+      "t": "马路很长。",
+      "seg": [
+       "马路",
+       "很",
+       "长。"
+      ],
+      "r": [
+       "mǎ lù",
+       "hěn",
+       "cháng"
+      ],
+      "zh": "",
+      "en": "The road is long."
+     },
+     {
+      "t": "我每天走路上学。",
+      "seg": [
+       "我",
+       "每天",
+       "走路",
+       "上学。"
+      ],
+      "r": [
+       "wǒ",
+       "měi tiān",
+       "zǒu lù",
+       "shàng xué"
+      ],
+      "zh": "",
+      "en": "I walk to school every day."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "垃圾要扔在哪里？",
+     "seg": [
+      "垃圾",
+      "要",
+      "扔在",
+      "哪里？"
+     ],
+     "r": [
+      "lā jī",
+      "yào",
+      "rēng zài",
+      "nǎ lǐ"
+     ],
+     "zh": "",
+     "en": "Where does the rubbish go?"
+    },
+    "a": {
+     "t": "扔进垃圾桶里。",
+     "seg": [
+      "扔进",
+      "垃圾桶里。"
+     ],
+     "r": [
+      "rēng jìn",
+      "lā jī tǒng li"
+     ],
+     "zh": "",
+     "en": "Into the rubbish bin."
+    },
+    "wrong": [
+     {
+      "t": "垃圾桶是绿色的。",
+      "seg": [
+       "垃圾桶",
+       "是",
+       "绿色的。"
+      ],
+      "r": [
+       "lā jī tǒng",
+       "shì",
+       "lǜ sè de"
+      ],
+      "zh": "",
+      "en": "The bin is green."
+     },
+     {
+      "t": "不要在这里跑。",
+      "seg": [
+       "不要",
+       "在",
+       "这里",
+       "跑。"
+      ],
+      "r": [
+       "bú yào",
+       "zài",
+       "zhè lǐ",
+       "pǎo"
+      ],
+      "zh": "",
+      "en": "Don't run here."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "小明",
+     "👦",
+     "m"
+    ],
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "丽丽，我们去图书馆吧！",
+     "r": "Lì li, wǒ men qù tú shū guǎn ba!",
+     "zh": "",
+     "en": "Lili, let's go to the library!"
+    },
+    {
+     "who": 1,
+     "t": "好啊。在图书馆里要安静。",
+     "r": "hǎo a. zài tú shū guǎn li yào ān jìng.",
+     "zh": "",
+     "en": "OK. We must be quiet in the library."
+    },
+    {
+     "who": 0,
+     "t": "我知道。我可以带零食吗？",
+     "r": "wǒ zhī dao. wǒ kě yǐ dài líng shí ma?",
+     "zh": "",
+     "en": "I know. Can I bring snacks?"
+    },
+    {
+     "who": 1,
+     "t": "不可以，图书馆里不能吃东西。",
+     "r": "bù kě yǐ, tú shū guǎn li bù néng chī dōng xi.",
+     "zh": "",
+     "en": "No, you can't eat in the library."
+    },
+    {
+     "who": 0,
+     "t": "好吧。可以喝水吗？",
+     "r": "hǎo ba. kě yǐ hē shuǐ ma?",
+     "zh": "",
+     "en": "OK. Can I drink water?"
+    },
+    {
+     "who": 1,
+     "t": "可以。小明，别跑！红灯！",
+     "r": "kě yǐ. Xiǎo Míng, bié pǎo! hóng dēng!",
+     "zh": "",
+     "en": "Yes. Xiaoming, don't run! It's red!"
+    },
+    {
+     "who": 0,
+     "t": "对不起！我们等一下。",
+     "r": "duì bu qǐ! wǒ men děng yí xià.",
+     "zh": "",
+     "en": "Sorry! Let's wait a moment."
+    },
+    {
+     "who": 1,
+     "t": "绿灯了，走吧！",
+     "r": "lǜ dēng le, zǒu ba!",
+     "zh": "",
+     "en": "It's green now. Let's go!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 10,
+  "t": "运动和美食",
+  "boss": {
+   "t": "你好！多运动，多吃蔬菜！你每天做什么运动？",
+   "r": "nǐ hǎo! duō yùn dòng, duō chī shū cài! nǐ měi tiān zuò shén me yùn dòng?",
+   "zh": "",
+   "en": "Hello! Move more and eat more vegetables! What sport do you do every day?"
+  },
+  "words": [
+   {
+    "t": "米饭",
+    "r": "mǐ fàn",
+    "zh": "",
+    "en": "rice",
+    "pic": "🍚"
+   },
+   {
+    "t": "面条",
+    "r": "miàn tiáo",
+    "zh": "",
+    "en": "noodles",
+    "pic": "🍜"
+   },
+   {
+    "t": "饺子",
+    "r": "jiǎo zi",
+    "zh": "",
+    "en": "dumplings",
+    "pic": "🥟"
+   },
+   {
+    "t": "鸡蛋",
+    "r": "jī dàn",
+    "zh": "",
+    "en": "egg",
+    "pic": "🥚"
+   },
+   {
+    "t": "牛奶",
+    "r": "niú nǎi",
+    "zh": "",
+    "en": "milk",
+    "pic": "🥛"
+   },
+   {
+    "t": "苹果",
+    "r": "píng guǒ",
+    "zh": "",
+    "en": "apple",
+    "pic": "🍎"
+   },
+   {
+    "t": "蔬菜",
+    "r": "shū cài",
+    "zh": "",
+    "en": "vegetables",
+    "pic": "🥦"
+   },
+   {
+    "t": "果汁",
+    "r": "guǒ zhī",
+    "zh": "",
+    "en": "juice",
+    "pic": "🧃"
+   },
+   {
+    "t": "筷子",
+    "r": "kuài zi",
+    "zh": "",
+    "en": "chopsticks",
+    "pic": "🥢"
+   },
+   {
+    "t": "跑步",
+    "r": "pǎo bù",
+    "zh": "",
+    "en": "to go running",
+    "pic": "🏃"
+   },
+   {
+    "t": "乒乓球",
+    "r": "pīng pāng qiú",
+    "zh": "",
+    "en": "table tennis",
+    "pic": "🏓"
+   },
+   {
+    "t": "自行车",
+    "r": "zì xíng chē",
+    "zh": "",
+    "en": "bicycle",
+    "pic": "🚲"
+   }
+  ],
+  "sents": [
+   {
+    "t": "你想吃什么？",
+    "seg": [
+     "你",
+     "想",
+     "吃",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "xiǎng",
+     "chī",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What would you like to eat?"
+   },
+   {
+    "t": "我想吃饺子。",
+    "seg": [
+     "我",
+     "想",
+     "吃",
+     "饺子。"
+    ],
+    "r": [
+     "wǒ",
+     "xiǎng",
+     "chī",
+     "jiǎo zi"
+    ],
+    "zh": "",
+    "en": "I'd like dumplings."
+   },
+   {
+    "t": "我要一碗面条。",
+    "seg": [
+     "我",
+     "要",
+     "一碗",
+     "面条。"
+    ],
+    "r": [
+     "wǒ",
+     "yào",
+     "yì wǎn",
+     "miàn tiáo"
+    ],
+    "zh": "",
+    "en": "I'll have a bowl of noodles."
+   },
+   {
+    "t": "早上我喝一杯牛奶。",
+    "seg": [
+     "早上",
+     "我",
+     "喝",
+     "一杯",
+     "牛奶。"
+    ],
+    "r": [
+     "zǎo shang",
+     "wǒ",
+     "hē",
+     "yì bēi",
+     "niú nǎi"
+    ],
+    "zh": "",
+    "en": "I drink a glass of milk in the morning."
+   },
+   {
+    "t": "这个饺子真好吃！",
+    "seg": [
+     "这个",
+     "饺子",
+     "真",
+     "好吃！"
+    ],
+    "r": [
+     "zhè ge",
+     "jiǎo zi",
+     "zhēn",
+     "hǎo chī"
+    ],
+    "zh": "",
+    "en": "This dumpling is really tasty!"
+   },
+   {
+    "t": "多吃蔬菜很健康。",
+    "seg": [
+     "多",
+     "吃",
+     "蔬菜",
+     "很",
+     "健康。"
+    ],
+    "r": [
+     "duō",
+     "chī",
+     "shū cài",
+     "hěn",
+     "jiàn kāng"
+    ],
+    "zh": "",
+    "en": "Eating lots of vegetables is healthy."
+   },
+   {
+    "t": "我每天跑步。",
+    "seg": [
+     "我",
+     "每天",
+     "跑步。"
+    ],
+    "r": [
+     "wǒ",
+     "měi tiān",
+     "pǎo bù"
+    ],
+    "zh": "",
+    "en": "I go running every day."
+   },
+   {
+    "t": "你会用筷子吗？",
+    "seg": [
+     "你",
+     "会",
+     "用",
+     "筷子",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "huì",
+     "yòng",
+     "kuài zi",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Can you use chopsticks?"
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "你想喝什么？",
+     "seg": [
+      "你",
+      "想",
+      "喝",
+      "什么？"
+     ],
+     "r": [
+      "nǐ",
+      "xiǎng",
+      "hē",
+      "shén me"
+     ],
+     "zh": "",
+     "en": "What would you like to drink?"
+    },
+    "a": {
+     "t": "我想喝果汁。",
+     "seg": [
+      "我",
+      "想",
+      "喝",
+      "果汁。"
+     ],
+     "r": [
+      "wǒ",
+      "xiǎng",
+      "hē",
+      "guǒ zhī"
+     ],
+     "zh": "",
+     "en": "I'd like some juice."
+    },
+    "wrong": [
+     {
+      "t": "我想吃米饭。",
+      "seg": [
+       "我",
+       "想",
+       "吃",
+       "米饭。"
+      ],
+      "r": [
+       "wǒ",
+       "xiǎng",
+       "chī",
+       "mǐ fàn"
+      ],
+      "zh": "",
+      "en": "I'd like some rice."
+     },
+     {
+      "t": "果汁在桌子上。",
+      "seg": [
+       "果汁",
+       "在",
+       "桌子上。"
+      ],
+      "r": [
+       "guǒ zhī",
+       "zài",
+       "zhuō zi shang"
+      ],
+      "zh": "",
+      "en": "The juice is on the table."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你喜欢什么运动？",
+     "seg": [
+      "你",
+      "喜欢",
+      "什么",
+      "运动？"
+     ],
+     "r": [
+      "nǐ",
+      "xǐ huan",
+      "shén me",
+      "yùn dòng"
+     ],
+     "zh": "",
+     "en": "What sports do you like?"
+    },
+    "a": {
+     "t": "我喜欢打乒乓球。",
+     "seg": [
+      "我",
+      "喜欢",
+      "打",
+      "乒乓球。"
+     ],
+     "r": [
+      "wǒ",
+      "xǐ huan",
+      "dǎ",
+      "pīng pāng qiú"
+     ],
+     "zh": "",
+     "en": "I like playing table tennis."
+    },
+    "wrong": [
+     {
+      "t": "我喜欢吃苹果。",
+      "seg": [
+       "我",
+       "喜欢",
+       "吃",
+       "苹果。"
+      ],
+      "r": [
+       "wǒ",
+       "xǐ huan",
+       "chī",
+       "píng guǒ"
+      ],
+      "zh": "",
+      "en": "I like eating apples."
+     },
+     {
+      "t": "我每天七点起床。",
+      "seg": [
+       "我",
+       "每天",
+       "七点",
+       "起床。"
+      ],
+      "r": [
+       "wǒ",
+       "měi tiān",
+       "qī diǎn",
+       "qǐ chuáng"
+      ],
+      "zh": "",
+      "en": "I get up at seven every day."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "饺子好吃吗？",
+     "seg": [
+      "饺子",
+      "好吃",
+      "吗？"
+     ],
+     "r": [
+      "jiǎo zi",
+      "hǎo chī",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Are the dumplings tasty?"
+    },
+    "a": {
+     "t": "很好吃！",
+     "seg": [
+      "很",
+      "好吃！"
+     ],
+     "r": [
+      "hěn",
+      "hǎo chī"
+     ],
+     "zh": "",
+     "en": "Very tasty!"
+    },
+    "wrong": [
+     {
+      "t": "我会做饺子。",
+      "seg": [
+       "我",
+       "会",
+       "做",
+       "饺子。"
+      ],
+      "r": [
+       "wǒ",
+       "huì",
+       "zuò",
+       "jiǎo zi"
+      ],
+      "zh": "",
+      "en": "I can make dumplings."
+     },
+     {
+      "t": "我们一起吃吧。",
+      "seg": [
+       "我们",
+       "一起",
+       "吃",
+       "吧。"
+      ],
+      "r": [
+       "wǒ men",
+       "yì qǐ",
+       "chī",
+       "ba"
+      ],
+      "zh": "",
+      "en": "Let's eat together."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你要几个鸡蛋？",
+     "seg": [
+      "你",
+      "要",
+      "几个",
+      "鸡蛋？"
+     ],
+     "r": [
+      "nǐ",
+      "yào",
+      "jǐ gè",
+      "jī dàn"
+     ],
+     "zh": "",
+     "en": "How many eggs would you like?"
+    },
+    "a": {
+     "t": "两个，谢谢。",
+     "seg": [
+      "两个，",
+      "谢谢。"
+     ],
+     "r": [
+      "liǎng gè",
+      "xiè xie"
+     ],
+     "zh": "",
+     "en": "Two, please."
+    },
+    "wrong": [
+     {
+      "t": "鸡蛋很健康。",
+      "seg": [
+       "鸡蛋",
+       "很",
+       "健康。"
+      ],
+      "r": [
+       "jī dàn",
+       "hěn",
+       "jiàn kāng"
+      ],
+      "zh": "",
+      "en": "Eggs are healthy."
+     },
+     {
+      "t": "我不喝牛奶。",
+      "seg": [
+       "我",
+       "不",
+       "喝",
+       "牛奶。"
+      ],
+      "r": [
+       "wǒ",
+       "bù",
+       "hē",
+       "niú nǎi"
+      ],
+      "zh": "",
+      "en": "I don't drink milk."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你怎么去学校？",
+     "seg": [
+      "你",
+      "怎么",
+      "去",
+      "学校？"
+     ],
+     "r": [
+      "nǐ",
+      "zěn me",
+      "qù",
+      "xué xiào"
+     ],
+     "zh": "",
+     "en": "How do you get to school?"
+    },
+    "a": {
+     "t": "我骑自行车去学校。",
+     "seg": [
+      "我",
+      "骑",
+      "自行车",
+      "去",
+      "学校。"
+     ],
+     "r": [
+      "wǒ",
+      "qí",
+      "zì xíng chē",
+      "qù",
+      "xué xiào"
+     ],
+     "zh": "",
+     "en": "I ride my bike to school."
+    },
+    "wrong": [
+     {
+      "t": "学校很大。",
+      "seg": [
+       "学校",
+       "很",
+       "大。"
+      ],
+      "r": [
+       "xué xiào",
+       "hěn",
+       "dà"
+      ],
+      "zh": "",
+      "en": "The school is big."
+     },
+     {
+      "t": "我八点上学。",
+      "seg": [
+       "我",
+       "八点",
+       "上学。"
+      ],
+      "r": [
+       "wǒ",
+       "bā diǎn",
+       "shàng xué"
+      ],
+      "zh": "",
+      "en": "I go to school at eight."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "我们去打乒乓球，好吗？",
+     "seg": [
+      "我们",
+      "去",
+      "打",
+      "乒乓球，",
+      "好吗？"
+     ],
+     "r": [
+      "wǒ men",
+      "qù",
+      "dǎ",
+      "pīng pāng qiú",
+      "hǎo ma"
+     ],
+     "zh": "",
+     "en": "Let's go and play table tennis, OK?"
+    },
+    "a": {
+     "t": "好，我们几点去？",
+     "seg": [
+      "好，",
+      "我们",
+      "几点",
+      "去？"
+     ],
+     "r": [
+      "hǎo",
+      "wǒ men",
+      "jǐ diǎn",
+      "qù"
+     ],
+     "zh": "",
+     "en": "OK, what time shall we go?"
+    },
+    "wrong": [
+     {
+      "t": "乒乓球很小。",
+      "seg": [
+       "乒乓球",
+       "很",
+       "小。"
+      ],
+      "r": [
+       "pīng pāng qiú",
+       "hěn",
+       "xiǎo"
+      ],
+      "zh": "",
+      "en": "A table tennis ball is small."
+     },
+     {
+      "t": "我想吃面条。",
+      "seg": [
+       "我",
+       "想",
+       "吃",
+       "面条。"
+      ],
+      "r": [
+       "wǒ",
+       "xiǎng",
+       "chī",
+       "miàn tiáo"
+      ],
+      "zh": "",
+      "en": "I'd like some noodles."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "小明",
+     "👦",
+     "m"
+    ],
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "丽丽，我饿了。我们去吃饭吧！",
+     "r": "Lì li, wǒ è le. wǒ men qù chī fàn ba!",
+     "zh": "",
+     "en": "Lili, I'm hungry. Let's go and eat!"
+    },
+    {
+     "who": 1,
+     "t": "好啊！你想吃什么？",
+     "r": "hǎo a! nǐ xiǎng chī shén me?",
+     "zh": "",
+     "en": "OK! What would you like to eat?"
+    },
+    {
+     "who": 0,
+     "t": "我想吃面条。你呢？",
+     "r": "wǒ xiǎng chī miàn tiáo. nǐ ne?",
+     "zh": "",
+     "en": "I'd like noodles. What about you?"
+    },
+    {
+     "who": 1,
+     "t": "我想吃饺子。",
+     "r": "wǒ xiǎng chī jiǎo zi.",
+     "zh": "",
+     "en": "I'd like dumplings."
+    },
+    {
+     "who": 0,
+     "t": "你想喝什么？果汁还是牛奶？",
+     "r": "nǐ xiǎng hē shén me? guǒ zhī hái shi niú nǎi?",
+     "zh": "",
+     "en": "What would you like to drink? Juice or milk?"
+    },
+    {
+     "who": 1,
+     "t": "我要一杯果汁。",
+     "r": "wǒ yào yì bēi guǒ zhī.",
+     "zh": "",
+     "en": "I'll have a glass of juice."
+    },
+    {
+     "who": 0,
+     "t": "饺子好吃吗？",
+     "r": "jiǎo zi hǎo chī ma?",
+     "zh": "",
+     "en": "Are the dumplings good?"
+    },
+    {
+     "who": 1,
+     "t": "真好吃！你也吃一个吧。",
+     "r": "zhēn hǎo chī! nǐ yě chī yí gè ba.",
+     "zh": "",
+     "en": "Really good! Have one too."
+    },
+    {
+     "who": 0,
+     "t": "谢谢！下午我们去跑步吧！",
+     "r": "xiè xie! xià wǔ wǒ men qù pǎo bù ba!",
+     "zh": "",
+     "en": "Thanks! Let's go running this afternoon!"
+    },
+    {
+     "who": 1,
+     "t": "好，多运动很健康！",
+     "r": "hǎo, duō yùn dòng hěn jiàn kāng!",
+     "zh": "",
+     "en": "OK, exercise is good for you!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 11,
+  "t": "天气和四季",
+  "boss": {
+   "t": "这里的天气变得很快！今天有太阳，明天会下雨。你喜欢晴天还是下雨天？",
+   "r": "zhè lǐ de tiān qì biàn de hěn kuài! jīn tiān yǒu tài yáng, míng tiān huì xià yǔ. nǐ xǐ huan qíng tiān hái shi xià yǔ tiān?",
+   "zh": "",
+   "en": "The weather here changes fast! Today it is sunny, tomorrow it will rain. Do you like sunny days or rainy days?"
+  },
+  "words": [
+   {
+    "t": "太阳",
+    "r": "tài yáng",
+    "zh": "",
+    "en": "sun",
+    "pic": "☀️"
+   },
+   {
+    "t": "云",
+    "r": "yún",
+    "zh": "",
+    "en": "cloud",
+    "pic": "☁️"
+   },
+   {
+    "t": "雨",
+    "r": "yǔ",
+    "zh": "",
+    "en": "rain",
+    "pic": "🌧️"
+   },
+   {
+    "t": "雪",
+    "r": "xuě",
+    "zh": "",
+    "en": "snow",
+    "pic": "❄️"
+   },
+   {
+    "t": "风",
+    "r": "fēng",
+    "zh": "",
+    "en": "wind",
+    "pic": "🌬️"
+   },
+   {
+    "t": "雨伞",
+    "r": "yǔ sǎn",
+    "zh": "",
+    "en": "umbrella",
+    "pic": "☂️"
+   },
+   {
+    "t": "春天",
+    "r": "chūn tiān",
+    "zh": "",
+    "en": "spring",
+    "pic": "🌸"
+   },
+   {
+    "t": "夏天",
+    "r": "xià tiān",
+    "zh": "",
+    "en": "summer",
+    "pic": "🍉"
+   },
+   {
+    "t": "秋天",
+    "r": "qiū tiān",
+    "zh": "",
+    "en": "autumn",
+    "pic": "🍂"
+   },
+   {
+    "t": "冬天",
+    "r": "dōng tiān",
+    "zh": "",
+    "en": "winter",
+    "pic": "⛄"
+   },
+   {
+    "t": "热",
+    "r": "rè",
+    "zh": "",
+    "en": "hot",
+    "pic": "🥵"
+   },
+   {
+    "t": "冷",
+    "r": "lěng",
+    "zh": "",
+    "en": "cold",
+    "pic": "🥶"
+   }
+  ],
+  "sents": [
+   {
+    "t": "今天天气怎么样？",
+    "seg": [
+     "今天",
+     "天气",
+     "怎么样？"
+    ],
+    "r": [
+     "jīn tiān",
+     "tiān qì",
+     "zěn me yàng"
+    ],
+    "zh": "",
+    "en": "What's the weather like today?"
+   },
+   {
+    "t": "今天是晴天。",
+    "seg": [
+     "今天",
+     "是",
+     "晴天。"
+    ],
+    "r": [
+     "jīn tiān",
+     "shì",
+     "qíng tiān"
+    ],
+    "zh": "",
+    "en": "It's sunny today."
+   },
+   {
+    "t": "外面下雨了。",
+    "seg": [
+     "外面",
+     "下雨",
+     "了。"
+    ],
+    "r": [
+     "wài miàn",
+     "xià yǔ",
+     "le"
+    ],
+    "zh": "",
+    "en": "It's started raining outside."
+   },
+   {
+    "t": "明天会下雪。",
+    "seg": [
+     "明天",
+     "会",
+     "下雪。"
+    ],
+    "r": [
+     "míng tiān",
+     "huì",
+     "xià xuě"
+    ],
+    "zh": "",
+    "en": "It will snow tomorrow."
+   },
+   {
+    "t": "夏天很热，冬天很冷。",
+    "seg": [
+     "夏天",
+     "很",
+     "热，",
+     "冬天",
+     "很",
+     "冷。"
+    ],
+    "r": [
+     "xià tiān",
+     "hěn",
+     "rè",
+     "dōng tiān",
+     "hěn",
+     "lěng"
+    ],
+    "zh": "",
+    "en": "Summer is hot and winter is cold."
+   },
+   {
+    "t": "我最喜欢秋天。",
+    "seg": [
+     "我",
+     "最",
+     "喜欢",
+     "秋天。"
+    ],
+    "r": [
+     "wǒ",
+     "zuì",
+     "xǐ huan",
+     "qiū tiān"
+    ],
+    "zh": "",
+    "en": "I like autumn best."
+   },
+   {
+    "t": "别忘了带雨伞！",
+    "seg": [
+     "别",
+     "忘了",
+     "带",
+     "雨伞！"
+    ],
+    "r": [
+     "bié",
+     "wàng le",
+     "dài",
+     "yǔ sǎn"
+    ],
+    "zh": "",
+    "en": "Don't forget your umbrella!"
+   },
+   {
+    "t": "春天很暖和。",
+    "seg": [
+     "春天",
+     "很",
+     "暖和。"
+    ],
+    "r": [
+     "chūn tiān",
+     "hěn",
+     "nuǎn huo"
+    ],
+    "zh": "",
+    "en": "Spring is warm."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "今天天气怎么样？",
+     "seg": [
+      "今天",
+      "天气",
+      "怎么样？"
+     ],
+     "r": [
+      "jīn tiān",
+      "tiān qì",
+      "zěn me yàng"
+     ],
+     "zh": "",
+     "en": "What's the weather like today?"
+    },
+    "a": {
+     "t": "今天很冷，风很大。",
+     "seg": [
+      "今天",
+      "很",
+      "冷，",
+      "风",
+      "很",
+      "大。"
+     ],
+     "r": [
+      "jīn tiān",
+      "hěn",
+      "lěng",
+      "fēng",
+      "hěn",
+      "dà"
+     ],
+     "zh": "",
+     "en": "It's cold and very windy."
+    },
+    "wrong": [
+     {
+      "t": "我喜欢冬天。",
+      "seg": [
+       "我",
+       "喜欢",
+       "冬天。"
+      ],
+      "r": [
+       "wǒ",
+       "xǐ huan",
+       "dōng tiān"
+      ],
+      "zh": "",
+      "en": "I like winter."
+     },
+     {
+      "t": "今天星期三。",
+      "seg": [
+       "今天",
+       "星期三。"
+      ],
+      "r": [
+       "jīn tiān",
+       "xīng qī sān"
+      ],
+      "zh": "",
+      "en": "It's Wednesday today."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "外面下雨了吗？",
+     "seg": [
+      "外面",
+      "下雨",
+      "了",
+      "吗？"
+     ],
+     "r": [
+      "wài miàn",
+      "xià yǔ",
+      "le",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Is it raining outside?"
+    },
+    "a": {
+     "t": "对，下雨了。",
+     "seg": [
+      "对，",
+      "下雨",
+      "了。"
+     ],
+     "r": [
+      "duì",
+      "xià yǔ",
+      "le"
+     ],
+     "zh": "",
+     "en": "Yes, it's raining."
+    },
+    "wrong": [
+     {
+      "t": "雨伞是蓝色的。",
+      "seg": [
+       "雨伞",
+       "是",
+       "蓝色的。"
+      ],
+      "r": [
+       "yǔ sǎn",
+       "shì",
+       "lán sè de"
+      ],
+      "zh": "",
+      "en": "The umbrella is blue."
+     },
+     {
+      "t": "我不喜欢夏天。",
+      "seg": [
+       "我",
+       "不",
+       "喜欢",
+       "夏天。"
+      ],
+      "r": [
+       "wǒ",
+       "bù",
+       "xǐ huan",
+       "xià tiān"
+      ],
+      "zh": "",
+      "en": "I don't like summer."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你喜欢哪个季节？",
+     "seg": [
+      "你",
+      "喜欢",
+      "哪个",
+      "季节？"
+     ],
+     "r": [
+      "nǐ",
+      "xǐ huan",
+      "nǎ ge",
+      "jì jié"
+     ],
+     "zh": "",
+     "en": "Which season do you like?"
+    },
+    "a": {
+     "t": "我喜欢春天。",
+     "seg": [
+      "我",
+      "喜欢",
+      "春天。"
+     ],
+     "r": [
+      "wǒ",
+      "xǐ huan",
+      "chūn tiān"
+     ],
+     "zh": "",
+     "en": "I like spring."
+    },
+    "wrong": [
+     {
+      "t": "今天很暖和。",
+      "seg": [
+       "今天",
+       "很",
+       "暖和。"
+      ],
+      "r": [
+       "jīn tiān",
+       "hěn",
+       "nuǎn huo"
+      ],
+      "zh": "",
+      "en": "It's warm today."
+     },
+     {
+      "t": "我有一把雨伞。",
+      "seg": [
+       "我",
+       "有",
+       "一把",
+       "雨伞。"
+      ],
+      "r": [
+       "wǒ",
+       "yǒu",
+       "yì bǎ",
+       "yǔ sǎn"
+      ],
+      "zh": "",
+      "en": "I have an umbrella."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "明天会下雪吗？",
+     "seg": [
+      "明天",
+      "会",
+      "下雪",
+      "吗？"
+     ],
+     "r": [
+      "míng tiān",
+      "huì",
+      "xià xuě",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Will it snow tomorrow?"
+    },
+    "a": {
+     "t": "会，明天很冷。",
+     "seg": [
+      "会，",
+      "明天",
+      "很",
+      "冷。"
+     ],
+     "r": [
+      "huì",
+      "míng tiān",
+      "hěn",
+      "lěng"
+     ],
+     "zh": "",
+     "en": "Yes, it'll be very cold tomorrow."
+    },
+    "wrong": [
+     {
+      "t": "我会堆雪人。",
+      "seg": [
+       "我",
+       "会",
+       "堆",
+       "雪人。"
+      ],
+      "r": [
+       "wǒ",
+       "huì",
+       "duī",
+       "xuě rén"
+      ],
+      "zh": "",
+      "en": "I can build a snowman."
+     },
+     {
+      "t": "雪是白色的。",
+      "seg": [
+       "雪",
+       "是",
+       "白色的。"
+      ],
+      "r": [
+       "xuě",
+       "shì",
+       "bái sè de"
+      ],
+      "zh": "",
+      "en": "Snow is white."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "外面冷不冷？",
+     "seg": [
+      "外面",
+      "冷不冷？"
+     ],
+     "r": [
+      "wài miàn",
+      "lěng bu lěng"
+     ],
+     "zh": "",
+     "en": "Is it cold outside?"
+    },
+    "a": {
+     "t": "有点冷。",
+     "seg": [
+      "有点",
+      "冷。"
+     ],
+     "r": [
+      "yǒu diǎn",
+      "lěng"
+     ],
+     "zh": "",
+     "en": "It's a bit cold."
+    },
+    "wrong": [
+     {
+      "t": "冬天有雪。",
+      "seg": [
+       "冬天",
+       "有",
+       "雪。"
+      ],
+      "r": [
+       "dōng tiān",
+       "yǒu",
+       "xuě"
+      ],
+      "zh": "",
+      "en": "There is snow in winter."
+     },
+     {
+      "t": "我们去公园吧。",
+      "seg": [
+       "我们",
+       "去",
+       "公园",
+       "吧。"
+      ],
+      "r": [
+       "wǒ men",
+       "qù",
+       "gōng yuán",
+       "ba"
+      ],
+      "zh": "",
+      "en": "Let's go to the park."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "夏天你喜欢做什么？",
+     "seg": [
+      "夏天",
+      "你",
+      "喜欢",
+      "做",
+      "什么？"
+     ],
+     "r": [
+      "xià tiān",
+      "nǐ",
+      "xǐ huan",
+      "zuò",
+      "shén me"
+     ],
+     "zh": "",
+     "en": "What do you like to do in summer?"
+    },
+    "a": {
+     "t": "我喜欢去游泳。",
+     "seg": [
+      "我",
+      "喜欢",
+      "去",
+      "游泳。"
+     ],
+     "r": [
+      "wǒ",
+      "xǐ huan",
+      "qù",
+      "yóu yǒng"
+     ],
+     "zh": "",
+     "en": "I like to go swimming."
+    },
+    "wrong": [
+     {
+      "t": "夏天很热。",
+      "seg": [
+       "夏天",
+       "很",
+       "热。"
+      ],
+      "r": [
+       "xià tiān",
+       "hěn",
+       "rè"
+      ],
+      "zh": "",
+      "en": "Summer is hot."
+     },
+     {
+      "t": "我的生日在夏天。",
+      "seg": [
+       "我的",
+       "生日",
+       "在",
+       "夏天。"
+      ],
+      "r": [
+       "wǒ de",
+       "shēng rì",
+       "zài",
+       "xià tiān"
+      ],
+      "zh": "",
+      "en": "My birthday is in summer."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "小明",
+     "👦",
+     "m"
+    ],
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "丽丽，你看，外面下雨了！",
+     "r": "Lì li, nǐ kàn, wài miàn xià yǔ le!",
+     "zh": "",
+     "en": "Lili, look, it's raining outside!"
+    },
+    {
+     "who": 1,
+     "t": "真的！可是我没带雨伞。",
+     "r": "zhēn de! kě shì wǒ méi dài yǔ sǎn.",
+     "zh": "",
+     "en": "It really is! But I didn't bring an umbrella."
+    },
+    {
+     "who": 0,
+     "t": "没关系，我有一把大雨伞。",
+     "r": "méi guān xi, wǒ yǒu yì bǎ dà yǔ sǎn.",
+     "zh": "",
+     "en": "It's OK, I have a big umbrella."
+    },
+    {
+     "who": 1,
+     "t": "谢谢！今天好冷啊。",
+     "r": "xiè xie! jīn tiān hǎo lěng a.",
+     "zh": "",
+     "en": "Thanks! It's so cold today."
+    },
+    {
+     "who": 0,
+     "t": "对，明天会更冷，可能会下雪。",
+     "r": "duì, míng tiān huì gèng lěng, kě néng huì xià xuě.",
+     "zh": "",
+     "en": "Yes, tomorrow will be colder. It might snow."
+    },
+    {
+     "who": 1,
+     "t": "太好了！我最喜欢冬天。",
+     "r": "tài hǎo le! wǒ zuì xǐ huan dōng tiān.",
+     "zh": "",
+     "en": "Great! Winter is my favourite."
+    },
+    {
+     "who": 0,
+     "t": "为什么？",
+     "r": "wèi shén me?",
+     "zh": "",
+     "en": "Why?"
+    },
+    {
+     "who": 1,
+     "t": "因为下雪的时候，可以堆雪人！",
+     "r": "yīn wèi xià xuě de shí hou, kě yǐ duī xuě rén!",
+     "zh": "",
+     "en": "Because when it snows, you can build a snowman!"
+    },
+    {
+     "who": 0,
+     "t": "哈哈，那明天我们一起堆雪人吧！",
+     "r": "hā hā, nà míng tiān wǒ men yì qǐ duī xuě rén ba!",
+     "zh": "",
+     "en": "Ha ha, then let's build a snowman together tomorrow!"
+    }
+   ]
+  }
+ },
+ {
+  "i": 12,
+  "t": "难忘的一天",
+  "boss": {
+   "t": "我去过很多地方，也看过很多东西。你去过动物园吗？",
+   "r": "wǒ qù guo hěn duō dì fang, yě kàn guo hěn duō dōng xi. nǐ qù guo dòng wù yuán ma?",
+   "zh": "",
+   "en": "I have been to many places and seen many things. Have you ever been to a zoo?"
+  },
+  "words": [
+   {
+    "t": "昨天",
+    "r": "zuó tiān",
+    "zh": "",
+    "en": "yesterday",
+    "pic": "⏪"
+   },
+   {
+    "t": "海边",
+    "r": "hǎi biān",
+    "zh": "",
+    "en": "seaside",
+    "pic": "🏖️"
+   },
+   {
+    "t": "公园",
+    "r": "gōng yuán",
+    "zh": "",
+    "en": "park",
+    "pic": "🏞️"
+   },
+   {
+    "t": "动物园",
+    "r": "dòng wù yuán",
+    "zh": "",
+    "en": "zoo",
+    "pic": "🦒"
+   },
+   {
+    "t": "博物馆",
+    "r": "bó wù guǎn",
+    "zh": "",
+    "en": "museum",
+    "pic": "🏛️"
+   },
+   {
+    "t": "照相机",
+    "r": "zhào xiàng jī",
+    "zh": "",
+    "en": "camera",
+    "pic": "📷"
+   },
+   {
+    "t": "火车",
+    "r": "huǒ chē",
+    "zh": "",
+    "en": "train",
+    "pic": "🚆"
+   },
+   {
+    "t": "船",
+    "r": "chuán",
+    "zh": "",
+    "en": "boat",
+    "pic": "🚢"
+   },
+   {
+    "t": "贝壳",
+    "r": "bèi ké",
+    "zh": "",
+    "en": "seashell",
+    "pic": "🐚"
+   },
+   {
+    "t": "风筝",
+    "r": "fēng zheng",
+    "zh": "",
+    "en": "kite",
+    "pic": "🪁"
+   },
+   {
+    "t": "野餐",
+    "r": "yě cān",
+    "zh": "",
+    "en": "picnic",
+    "pic": "🧺"
+   },
+   {
+    "t": "开心",
+    "r": "kāi xīn",
+    "zh": "",
+    "en": "happy",
+    "pic": "😄"
+   }
+  ],
+  "sents": [
+   {
+    "t": "昨天我去了海边。",
+    "seg": [
+     "昨天",
+     "我",
+     "去了",
+     "海边。"
+    ],
+    "r": [
+     "zuó tiān",
+     "wǒ",
+     "qù le",
+     "hǎi biān"
+    ],
+    "zh": "",
+    "en": "Yesterday I went to the seaside."
+   },
+   {
+    "t": "我捡了很多贝壳。",
+    "seg": [
+     "我",
+     "捡了",
+     "很多",
+     "贝壳。"
+    ],
+    "r": [
+     "wǒ",
+     "jiǎn le",
+     "hěn duō",
+     "bèi ké"
+    ],
+    "zh": "",
+    "en": "I picked up lots of shells."
+   },
+   {
+    "t": "我们玩得很开心。",
+    "seg": [
+     "我们",
+     "玩得",
+     "很",
+     "开心。"
+    ],
+    "r": [
+     "wǒ men",
+     "wán de",
+     "hěn",
+     "kāi xīn"
+    ],
+    "zh": "",
+    "en": "We had a great time."
+   },
+   {
+    "t": "你去过动物园吗？",
+    "seg": [
+     "你",
+     "去过",
+     "动物园",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "qù guo",
+     "dòng wù yuán",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Have you ever been to a zoo?"
+   },
+   {
+    "t": "我是坐火车去的。",
+    "seg": [
+     "我",
+     "是",
+     "坐",
+     "火车",
+     "去的。"
+    ],
+    "r": [
+     "wǒ",
+     "shì",
+     "zuò",
+     "huǒ chē",
+     "qù de"
+    ],
+    "zh": "",
+    "en": "I went by train."
+   },
+   {
+    "t": "那天我第一次放风筝。",
+    "seg": [
+     "那天",
+     "我",
+     "第一次",
+     "放",
+     "风筝。"
+    ],
+    "r": [
+     "nà tiān",
+     "wǒ",
+     "dì yī cì",
+     "fàng",
+     "fēng zheng"
+    ],
+    "zh": "",
+    "en": "That day I flew a kite for the first time."
+   },
+   {
+    "t": "上星期我们去公园野餐了。",
+    "seg": [
+     "上星期",
+     "我们",
+     "去",
+     "公园",
+     "野餐了。"
+    ],
+    "r": [
+     "shàng xīng qī",
+     "wǒ men",
+     "qù",
+     "gōng yuán",
+     "yě cān le"
+    ],
+    "zh": "",
+    "en": "Last week we had a picnic in the park."
+   },
+   {
+    "t": "我永远不会忘记那一天。",
+    "seg": [
+     "我",
+     "永远",
+     "不会",
+     "忘记",
+     "那一天。"
+    ],
+    "r": [
+     "wǒ",
+     "yǒng yuǎn",
+     "bú huì",
+     "wàng jì",
+     "nà yì tiān"
+    ],
+    "zh": "",
+    "en": "I'll never forget that day."
+   }
+  ],
+  "dlgs": [
+   {
+    "q": {
+     "t": "你昨天去哪里了？",
+     "seg": [
+      "你",
+      "昨天",
+      "去",
+      "哪里",
+      "了？"
+     ],
+     "r": [
+      "nǐ",
+      "zuó tiān",
+      "qù",
+      "nǎ lǐ",
+      "le"
+     ],
+     "zh": "",
+     "en": "Where did you go yesterday?"
+    },
+    "a": {
+     "t": "我去了博物馆。",
+     "seg": [
+      "我",
+      "去了",
+      "博物馆。"
+     ],
+     "r": [
+      "wǒ",
+      "qù le",
+      "bó wù guǎn"
+     ],
+     "zh": "",
+     "en": "I went to the museum."
+    },
+    "wrong": [
+     {
+      "t": "博物馆很大。",
+      "seg": [
+       "博物馆",
+       "很",
+       "大。"
+      ],
+      "r": [
+       "bó wù guǎn",
+       "hěn",
+       "dà"
+      ],
+      "zh": "",
+      "en": "The museum is big."
+     },
+     {
+      "t": "我明天去公园。",
+      "seg": [
+       "我",
+       "明天",
+       "去",
+       "公园。"
+      ],
+      "r": [
+       "wǒ",
+       "míng tiān",
+       "qù",
+       "gōng yuán"
+      ],
+      "zh": "",
+      "en": "I'm going to the park tomorrow."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你去过海边吗？",
+     "seg": [
+      "你",
+      "去过",
+      "海边",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "qù guo",
+      "hǎi biān",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Have you ever been to the seaside?"
+    },
+    "a": {
+     "t": "去过，我很喜欢海边。",
+     "seg": [
+      "去过，",
+      "我",
+      "很",
+      "喜欢",
+      "海边。"
+     ],
+     "r": [
+      "qù guo",
+      "wǒ",
+      "hěn",
+      "xǐ huan",
+      "hǎi biān"
+     ],
+     "zh": "",
+     "en": "Yes, I love the seaside."
+    },
+    "wrong": [
+     {
+      "t": "我们坐船吧。",
+      "seg": [
+       "我们",
+       "坐",
+       "船",
+       "吧。"
+      ],
+      "r": [
+       "wǒ men",
+       "zuò",
+       "chuán",
+       "ba"
+      ],
+      "zh": "",
+      "en": "Let's take a boat."
+     },
+     {
+      "t": "海边有很多贝壳。",
+      "seg": [
+       "海边",
+       "有",
+       "很多",
+       "贝壳。"
+      ],
+      "r": [
+       "hǎi biān",
+       "yǒu",
+       "hěn duō",
+       "bèi ké"
+      ],
+      "zh": "",
+      "en": "There are lots of shells at the seaside."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你们是怎么去的？",
+     "seg": [
+      "你们",
+      "是",
+      "怎么",
+      "去的？"
+     ],
+     "r": [
+      "nǐ men",
+      "shì",
+      "zěn me",
+      "qù de"
+     ],
+     "zh": "",
+     "en": "How did you get there?"
+    },
+    "a": {
+     "t": "我们是坐船去的。",
+     "seg": [
+      "我们",
+      "是",
+      "坐",
+      "船",
+      "去的。"
+     ],
+     "r": [
+      "wǒ men",
+      "shì",
+      "zuò",
+      "chuán",
+      "qù de"
+     ],
+     "zh": "",
+     "en": "We went by boat."
+    },
+    "wrong": [
+     {
+      "t": "我们去了动物园。",
+      "seg": [
+       "我们",
+       "去了",
+       "动物园。"
+      ],
+      "r": [
+       "wǒ men",
+       "qù le",
+       "dòng wù yuán"
+      ],
+      "zh": "",
+      "en": "We went to the zoo."
+     },
+     {
+      "t": "船很大。",
+      "seg": [
+       "船",
+       "很",
+       "大。"
+      ],
+      "r": [
+       "chuán",
+       "hěn",
+       "dà"
+      ],
+      "zh": "",
+      "en": "The boat is big."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你们玩得开心吗？",
+     "seg": [
+      "你们",
+      "玩得",
+      "开心",
+      "吗？"
+     ],
+     "r": [
+      "nǐ men",
+      "wán de",
+      "kāi xīn",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Did you have fun?"
+    },
+    "a": {
+     "t": "很开心！",
+     "seg": [
+      "很",
+      "开心！"
+     ],
+     "r": [
+      "hěn",
+      "kāi xīn"
+     ],
+     "zh": "",
+     "en": "Lots of fun!"
+    },
+    "wrong": [
+     {
+      "t": "我们是星期六去的。",
+      "seg": [
+       "我们",
+       "是",
+       "星期六",
+       "去的。"
+      ],
+      "r": [
+       "wǒ men",
+       "shì",
+       "xīng qī liù",
+       "qù de"
+      ],
+      "zh": "",
+      "en": "We went on Saturday."
+     },
+     {
+      "t": "我有一个照相机。",
+      "seg": [
+       "我",
+       "有",
+       "一个",
+       "照相机。"
+      ],
+      "r": [
+       "wǒ",
+       "yǒu",
+       "yí gè",
+       "zhào xiàng jī"
+      ],
+      "zh": "",
+      "en": "I have a camera."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你在动物园看到了什么？",
+     "seg": [
+      "你",
+      "在",
+      "动物园",
+      "看到了",
+      "什么？"
+     ],
+     "r": [
+      "nǐ",
+      "zài",
+      "dòng wù yuán",
+      "kàn dào le",
+      "shén me"
+     ],
+     "zh": "",
+     "en": "What did you see at the zoo?"
+    },
+    "a": {
+     "t": "我看到了两只熊猫。",
+     "seg": [
+      "我",
+      "看到了",
+      "两只",
+      "熊猫。"
+     ],
+     "r": [
+      "wǒ",
+      "kàn dào le",
+      "liǎng zhī",
+      "xióng māo"
+     ],
+     "zh": "",
+     "en": "I saw two pandas."
+    },
+    "wrong": [
+     {
+      "t": "我是坐火车去的。",
+      "seg": [
+       "我",
+       "是",
+       "坐",
+       "火车",
+       "去的。"
+      ],
+      "r": [
+       "wǒ",
+       "shì",
+       "zuò",
+       "huǒ chē",
+       "qù de"
+      ],
+      "zh": "",
+      "en": "I went by train."
+     },
+     {
+      "t": "动物园在公园旁边。",
+      "seg": [
+       "动物园",
+       "在",
+       "公园",
+       "旁边。"
+      ],
+      "r": [
+       "dòng wù yuán",
+       "zài",
+       "gōng yuán",
+       "páng biān"
+      ],
+      "zh": "",
+      "en": "The zoo is next to the park."
+     }
+    ]
+   },
+   {
+    "q": {
+     "t": "你放过风筝吗？",
+     "seg": [
+      "你",
+      "放过",
+      "风筝",
+      "吗？"
+     ],
+     "r": [
+      "nǐ",
+      "fàng guo",
+      "fēng zheng",
+      "ma"
+     ],
+     "zh": "",
+     "en": "Have you ever flown a kite?"
+    },
+    "a": {
+     "t": "没放过，我想试试。",
+     "seg": [
+      "没",
+      "放过，",
+      "我",
+      "想",
+      "试试。"
+     ],
+     "r": [
+      "méi",
+      "fàng guo",
+      "wǒ",
+      "xiǎng",
+      "shì shi"
+     ],
+     "zh": "",
+     "en": "No, never. I'd like to try."
+    },
+    "wrong": [
+     {
+      "t": "风筝在天上。",
+      "seg": [
+       "风筝",
+       "在",
+       "天上。"
+      ],
+      "r": [
+       "fēng zheng",
+       "zài",
+       "tiān shang"
+      ],
+      "zh": "",
+      "en": "The kite is in the sky."
+     },
+     {
+      "t": "昨天风很大。",
+      "seg": [
+       "昨天",
+       "风",
+       "很",
+       "大。"
+      ],
+      "r": [
+       "zuó tiān",
+       "fēng",
+       "hěn",
+       "dà"
+      ],
+      "zh": "",
+      "en": "It was very windy yesterday."
+     }
+    ]
+   }
+  ],
+  "scene": {
+   "cast": [
+    [
+     "丽丽",
+     "👧",
+     "f"
+    ],
+    [
+     "小明",
+     "👦",
+     "m"
+    ]
+   ],
+   "lines": [
+    {
+     "who": 0,
+     "t": "小明，周末你做了什么？",
+     "r": "Xiǎo Míng, zhōu mò nǐ zuò le shén me?",
+     "zh": "",
+     "en": "Xiaoming, what did you do at the weekend?"
+    },
+    {
+     "who": 1,
+     "t": "我和爸爸去了海边。",
+     "r": "wǒ hé bà ba qù le hǎi biān.",
+     "zh": "",
+     "en": "Dad and I went to the seaside."
+    },
+    {
+     "who": 0,
+     "t": "真的？你们是怎么去的？",
+     "r": "zhēn de? nǐ men shì zěn me qù de?",
+     "zh": "",
+     "en": "Really? How did you get there?"
+    },
+    {
+     "who": 1,
+     "t": "我们是坐火车去的。",
+     "r": "wǒ men shì zuò huǒ chē qù de.",
+     "zh": "",
+     "en": "We went by train."
+    },
+    {
+     "who": 0,
+     "t": "好玩吗？",
+     "r": "hǎo wán ma?",
+     "zh": "",
+     "en": "Was it fun?"
+    },
+    {
+     "who": 1,
+     "t": "很好玩！我捡了很多贝壳，还放了风筝。",
+     "r": "hěn hǎo wán! wǒ jiǎn le hěn duō bèi ké, hái fàng le fēng zheng.",
+     "zh": "",
+     "en": "Lots of fun! I picked up lots of shells, and I flew a kite too."
+    },
+    {
+     "who": 0,
+     "t": "我还没去过海边。",
+     "r": "wǒ hái méi qù guo hǎi biān.",
+     "zh": "",
+     "en": "I've never been to the seaside."
+    },
+    {
+     "who": 1,
+     "t": "下次我们一起去吧！",
+     "r": "xià cì wǒ men yì qǐ qù ba!",
+     "zh": "",
+     "en": "Let's go together next time!"
+    },
+    {
+     "who": 0,
+     "t": "好啊！你拍照片了吗？",
+     "r": "hǎo a! nǐ pāi zhào piàn le ma?",
+     "zh": "",
+     "en": "Great! Did you take any photos?"
+    },
+    {
+     "who": 1,
+     "t": "拍了！你看，这个贝壳是送给你的。",
+     "r": "pāi le! nǐ kàn, zhè ge bèi ké shì sòng gěi nǐ de.",
+     "zh": "",
+     "en": "I did! Look, this shell is for you."
+    }
+   ]
+  }
+ }
+]

@@ -1,0 +1,61 @@
+# 西班牙语课程自审（2026-11-20）
+
+写完以后把 `syllabus.json` 和 `towns.json` 当成母语老师从头读了一遍。这是作者自己的复读，**不能代替** SPEC §5 要求的「另一个没看过稿子的代理」通读，也不能代替对外卖之前找母语的人看。
+
+## 改了什么
+
+- 第 1 岛句子 `¿Qué es esto en español?` 是照英语 "What's this in English?" 硬翻的，母语者问说法时说 **¿Cómo se dice esto en español?**，已改。
+- 第 9 岛对话「¿Puedo ir al baño, por favor?」的错误选项原来是 `Sí, está al lado.`——「是的，就在旁边」其实可以当成同意 + 告诉位置，学的人会觉得也对。换成明显答非所问的 `Es muy grande.`。
+- 第 9 岛 `¿Hay que usar casco en la bicicleta?` 不太顺，改成 **¿Hay que usar casco para andar en bicicleta?**（andar en bicicleta 是拉美通用说法；西班牙说 montar en bicicleta）。
+- 第 8 岛动物园场景 `allí` 改成 `allá`（拉美口语里指远处更常用 allá）；猫的名字那句英文从 "Her name is" 改成 "It's called Nube (Cloud)"（原文没有说猫是公是母）。
+- 第 2 岛场景 `el señor de la gorra` 的中文原来写成「戴帽子的爷爷」，说话人当时还不知道是谁，改成「戴鸭舌帽的人」。
+- 大纲 3 级第 5 单元的话题原来写了一个禁用清单里的词，`check-banned` 拦下来了，改成「愿望和梦想旅行」。
+- 大纲 1 级第 5 单元的「一直走」原来写成 todo recto，这是西班牙的说法；改成拉美常用的 **todo derecho**，todo recto 只认不教。
+- 起草时就避开的地区词：蛋糕用 `pastel`（不用 torta / tarta / queque）；冰淇淋口味用 chocolate、mango（不用 fresa / frutilla）；猴子吃 `fruta`（不用 plátano / banana / banano）；「踢足球」只用名词 `el fútbol`；电脑 `computadora`、手机 `celular`、果汁 `jugo`、作业 `tarea`、科目 `materia`、坐车 `tomar el autobús`（西班牙的 coger 不用）；橡皮（goma / borrador）、圆珠笔（bolígrafo / pluma / lapicero）、游泳池（piscina / alberca / pileta）这几个各地说法不同的词干脆不教。
+
+## 拿不太准、请母语老师再看的
+
+1. **el salón de clases / el aula**：第 3 岛没有教「教室」，因为墨西哥、秘鲁说 salón，别处多说 aula 或 clase。学校里的地方只挑了各地都一样的词。
+2. **jugar al tenis / jugar tenis**：用了带 `al` 的标准说法（阿根廷、智利、西班牙）；墨西哥、中美洲、哥伦比亚口语常说 `jugar tenis`。两种都听得懂，听力题里如果遇到学生说不带 al 的，打分要宽松。
+3. **el autobús**：各国口语差别很大（camión 墨西哥、colectivo 阿根廷、bus 智利 / 哥伦比亚、guagua 加勒比），选了大家都认识的书面词。
+4. **el pícnic**：RAE 写 pícnic，很多拉美人写 picnic（重音在前，读音一样）。配音按 PÍC-nic 读。
+5. **la mesa**（第 1 岛「收拾桌子」）：学生课桌各地叫法不同（pupitre、banco、escritorio），用了最笼统的 mesa。
+6. **la regla 两个意思**：第 1 岛是「尺子」，第 9 岛是「规则」，检查器会提醒「第 1 岛教过」。这是故意的，大纲 notes 里写了；但看图题要分开两个图（📏 / 📜），游戏里同一个词两种意思会不会让孩子困惑，要看实际效果。
+7. **el amigo / la amiga 的中文**：写成「朋友（男生）」「朋友（女生）」，避开中文「男朋友 / 女朋友」的意思；英文 friend (boy) / friend (girl) 有点生硬，但 4 个词以内找不到更好的。
+8. **hermano / hermana / primo / tío / tía** 中文只能写成「哥哥；弟弟」「堂兄弟；表兄弟」「叔叔；舅舅」这种并列，西语不分长幼、不分父系母系；句子里用 mayor / menor 补。中文意思里的「姐姐」「表弟」是按上下文挑的一种。
+9. **la piñata** 中文写「皮纳塔彩罐」，中国孩子大多没见过，需要配图（🪅）；英文直接用 piñata。
+10. **¡Kikirikí!**（第 6 岛岛主）是西语的公鸡叫声，中文配「喔喔喔」；**¡Arriba!** 在第 6、10 岛岛主嘴里都出现（「起来！」「动起来！」），意思略有不同。
+11. **会被当成问个人信息的问题**：第 2 岛岛主问 `¿Tienes hermanos?`、第 6 岛问 `¿A qué hora te levantas?`、第 7 岛句子和对话里有 `¿Cuándo es tu cumpleaños?`、第 8 岛 `¿Tienes mascota?`。对话里的回答都是写好的（Es el tres de junio 等），不用说真的；但「生日」算不算 SPEC 说的个人信息，请老板定。要更保守的话，第 7 岛可以改成第三人称 `¿Cuándo es el cumpleaños de Ana?`。
+12. **故意的「性别 / 单复数」陷阱**：第 2 岛「¿Quién es él?」的错误选项 `Es mi mamá.`、「¿Ella es tu hermana?」的 `Sí, es mi hermano.`、「¿Quiénes son ellos?」的 `Es mi abuelo.`——语法都对，只是和问句的人对不上。英语版也这样出过题，用来练 él / ella、单复数；如果觉得对入门者太绕，可以换成完全无关的句子。
+13. **ll / y 的读音**：配音用拉美多数地区的读法（llueve 和 yo 的辅音一样）；阿根廷、乌拉圭读 sh 也对，口语题不扣分。
+14. **solo** 不带重音符号（RAE 2010 起的写法），老一点的老师可能习惯写 sólo。
+15. **Es que…**（第 6、9 岛场景：「Es que tomo el autobús…」「Es que llego tarde…」）是很口语的解释用法，中文译成「因为……」。小镇阶段不讲，只在场景里出现。
+
+## 第二轮（独立复查）
+
+复查人：没看过稿子的代理，按「西语母语老师（拉美中性西语）」的角度把 13 个小镇从头读了一遍：156 个词、104 句、78 段对话（每段 1 问 + 1 对 + 2 错）、13 段场景、13 句岛主。共约 364 条。结论：整体很干净，语法、重音、¿¡、tú、拉美用词都没有硬伤；只改了 3 处，其余是判断题。
+
+### 我改了什么
+
+1. 第 5 岛 对话「¿Tu hermano sabe cocinar?」的对的回答中文：「会，他做饭很好吃。」→「会，他做饭做得很好。」。原因：`cocina muy bien` 说的是「做饭做得好（手艺好）」，「做饭很好吃」是在说饭菜的味道，意思不对。
+2. 第 7 岛 词 `la tarjeta`（贺卡）的图：💌 → ✉️。原因：💌 是「情书」，有恋爱含义，不适合全年龄；✉️ 能认出是卡片 / 信封。
+3. 第 9 岛 场景第 3 句：「Tranquilo. Camina rápido, pero no corras.」→「Tranquilo. Se puede caminar rápido, pero no correr.」，中文「别急。可以走快点，但是不能跑。」，英文 "Relax. You can walk fast, but not run."。原因：`no corras` 是否定命令式（虚拟式），大纲放在 2 级第 7 单元，第 9 岛只学肯定命令；改成本岛的 se puede 句型，意思不变。
+
+改后 `node tools/course/check.js es` 退出码 0（0 处错、2 处提醒，都是老提醒：la regla 第 1 岛教过——故意的；units 还没写）；`node tools/check-banned.js` 退出码 0。
+
+### 没改、留给老板 / 母语老师定的判断题
+
+1. **encantar 提前出现**：第 5 岛对话「¡Sí! Me encanta bailar.」、第 7 岛场景「¡Me encanta!」。大纲把 encantar 放在 2 级第 2 单元。它是极常用的整块说法，学生听得懂，建议保留；要严格按大纲，改成 `Me gusta mucho bailar` / `¡Me gusta mucho!`。
+2. **命令式比大纲早**：第 1 岛 `Ordena tu mesa`、第 3 岛 `Cierra la puerta`、`Ven, vamos juntos`、第 7 岛场景 `Ábrelo y mira`（带 lo，且有重音位移）、第 10 岛 `Pásame la pelota`、第 12 岛岛主 `Cuéntame`。都是课堂 / 生活里的整块用语，可以当短语背；`Ábrelo`、`Pásame` 带代词，是最重的两处。
+3. **第 12 岛过去时超出「fui / fue / vimos / comí / saqué」**：还有 visitamos、hicimos、hiciste、nadé、gustó、viste。都是常见规则 / 高频不规则形，当整块用没问题；若要更严，可以换成大纲里那五个形式。
+4. **第 2 岛 `¿En qué trabaja tu mamá?`**：「职业」不在这一岛大纲里，trabaja 是新动词；句子本身自然、答案正确。可保留（句子里已有 Mi tía es doctora）。
+5. **ducharse**：第 6 岛 `Me ducho`（me ducho / la ducha）在西班牙、南美南部很常见，墨西哥、中美洲日常多说 `me baño`。两种都懂，大纲已定，保留；听力里遇到 `me baño` 要认。
+6. **第 10 岛 `¿Qué comes en el desayuno?`**：拉美有人说 `para el desayuno`（更接近 for breakfast），`en el desayuno` 也有人说、不算错。保留，母语老师可定。
+7. **第 10 岛 `debajo de`（对话 6 的对的回答）**：这个方位词大纲放在 1 级第 2 单元；这里当整块用。
+8. **第 4 岛场景 `¡La mía es la geografía!`**：所有格代词 la mía 超出本岛，但是口语里最自然的接话，建议保留。
+9. **图片偏弱（能认但不精确）**：第 9 岛 `el pasillo`（🚶）和 `la fila`（🧍）都是人，难区分，看图题里不要把这两个同时当选项；第 7 岛 `el mes`（🗓️）和 `el calendario`（📅）几乎一样，同理；第 5 岛 `el club`（🤝）更像「合作」；第 6 岛 `el almuerzo`（🍱）是便当盒，没问题但偏亚洲；🙏（gracias）在有些人眼里偏「祈祷」，不属于宗教内容，但如果要保守可以换成 😊。
+10. **同一岛内位置前后不一致**：第 3 岛句子写「图书馆在食堂旁边」，对话错误选项和场景里图书馆在体育馆旁边；食堂在操场旁边（对话）/ 操场对面（场景）。每段对话和场景单独看都对，不影响做题；若要让地图自洽，要统一。
+11. **正确答案偏「顺着说」的几处**：第 11 岛 `¿Cuál es tu estación favorita?` →「Me gusta el otoño.」用 gustar 回答「最喜欢」，可接受；第 6 岛 `¿Ya es hora de dormir?` →「Sí, ¡buenas noches!」略跳，但读得通。
+12. **错误选项检查**：78 段里没有发现会被当作合理回答的错误选项。最接近的是第 9 岛 `¿Se puede correr en el pasillo?` 的 `No, no sé correr.`（和对的 `No, no se puede.` 只差一个重音符号，语法对、意思答非所问）——这是 se / sé 的对比，当作故意的陷阱，保留；第 3 岛 `Perdón, ¿dónde está el baño?` 和第 6 岛 `Perdón, ¿qué hora es?` 里的 Perdón 是「打扰一下」，中文写成「请问」，正确。
+13. **地区词复核**：computadora、celular、jugo、pastel、maestra、pelota、tomar el autobús、sacar fotos、andar en bicicleta、afuera、allá、lindo 都是拉美通用；没有 vosotros、coger、ordenador、zumo、móvil。`¡Genial!`（第 3、5 岛）在拉美也通用。
+14. **安全 / 原创**：没有恋爱、暴力、烟酒、赌博、宗教、政治、身材评价；没有问真名、学校、住址、电话。生日问答按已有决定保留。

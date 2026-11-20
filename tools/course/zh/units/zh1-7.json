@@ -1,0 +1,1418 @@
+{
+ "book": "zh1",
+ "n": 7,
+ "t": "怎么去？",
+ "zh": "",
+ "en": "How Do You Get There?",
+ "icon": "🚌",
+ "color": "#2F9E6B",
+ "key": {
+  "t": "你怎么去学校？要多长时间？",
+  "r": "nǐ zěn me qù xué xiào? yào duō cháng shí jiān?",
+  "zh": "",
+  "en": "How do you get to school? How long does it take?"
+ },
+ "grammar": {
+  "title": {
+   "zh": "怎么去、离、从…到…要…",
+   "en": "How to go, how far, how long"
+  },
+  "tip": {
+   "zh": "问方式用「怎么 + 动词」：你怎么去学校？回答用「坐 / 骑 + 交通工具 + 去」，走路就说「走路去」：我骑自行车去。说远近用「A 离 B 远 / 近」，说花多长时间用「从 A 到 B 要 + 时间」：从车站到沙滩要二十分钟。",
+   "en": "To ask how, use 怎么 + verb: 你怎么去学校？ (nǐ zěn me qù xué xiào?). Answer with 坐 / 骑 + vehicle + 去, or 走路去 for walking: 我骑自行车去 (wǒ qí zì xíng chē qù). Distance: A 离 B 远 / 近. Time taken: 从 A 到 B 要 + time: 从车站到沙滩要二十分钟 (cóng chē zhàn dào shā tān yào èr shí fēn zhōng)."
+  }
+ },
+ "boss": {
+  "emoji": "🦀",
+  "name": {
+   "zh": "横行蟹",
+   "en": "Cleo the Crab"
+  },
+  "t": "你好！我是横行蟹。我每天走路去码头，要十分钟。你怎么去学校？",
+  "r": "nǐ hǎo! wǒ shì héng xíng xiè. wǒ měi tiān zǒu lù qù mǎ tóu, yào shí fēn zhōng. nǐ zěn me qù xué xiào?",
+  "zh": "",
+  "en": "Hello! I'm Cleo the crab. Every day I walk to the harbour; it takes ten minutes. How do you get to school?"
+ },
+ "words": [
+  {
+   "t": "怎么",
+   "r": "zěn me",
+   "zh": "",
+   "en": "how"
+  },
+  {
+   "t": "坐",
+   "r": "zuò",
+   "zh": "",
+   "en": "travel by, sit",
+   "pic": "💺"
+  },
+  {
+   "t": "骑",
+   "r": "qí",
+   "zh": "",
+   "en": "ride",
+   "pic": "🚴"
+  },
+  {
+   "t": "走路",
+   "r": "zǒu lù",
+   "zh": "",
+   "en": "walk",
+   "pic": "🚶"
+  },
+  {
+   "t": "公交车",
+   "r": "gōng jiāo chē",
+   "zh": "",
+   "en": "bus",
+   "pic": "🚌"
+  },
+  {
+   "t": "出租车",
+   "r": "chū zū chē",
+   "zh": "",
+   "en": "taxi",
+   "pic": "🚕"
+  },
+  {
+   "t": "码头",
+   "r": "mǎ tóu",
+   "zh": "",
+   "en": "harbour, pier",
+   "pic": "⚓"
+  },
+  {
+   "t": "车站",
+   "r": "chē zhàn",
+   "zh": "",
+   "en": "bus stop",
+   "pic": "🚏"
+  },
+  {
+   "t": "路",
+   "r": "lù",
+   "zh": "",
+   "en": "road",
+   "pic": "🛣️"
+  },
+  {
+   "t": "桥",
+   "r": "qiáo",
+   "zh": "",
+   "en": "bridge",
+   "pic": "🌉"
+  },
+  {
+   "t": "灯塔",
+   "r": "dēng tǎ",
+   "zh": "",
+   "en": "lighthouse"
+  },
+  {
+   "t": "山",
+   "r": "shān",
+   "zh": "",
+   "en": "hill, mountain",
+   "pic": "⛰️"
+  },
+  {
+   "t": "沙滩",
+   "r": "shā tān",
+   "zh": "",
+   "en": "sandy beach",
+   "pic": "🏖️"
+  },
+  {
+   "t": "市场",
+   "r": "shì chǎng",
+   "zh": "",
+   "en": "market",
+   "pic": "🛒"
+  },
+  {
+   "t": "远",
+   "r": "yuǎn",
+   "zh": "",
+   "en": "far"
+  },
+  {
+   "t": "近",
+   "r": "jìn",
+   "zh": "",
+   "en": "near"
+  },
+  {
+   "t": "离",
+   "r": "lí",
+   "zh": "",
+   "en": "away from"
+  },
+  {
+   "t": "从",
+   "r": "cóng",
+   "zh": "",
+   "en": "from"
+  },
+  {
+   "t": "到",
+   "r": "dào",
+   "zh": "",
+   "en": "to, arrive"
+  },
+  {
+   "t": "要",
+   "r": "yào",
+   "zh": "",
+   "en": "take (time)"
+  },
+  {
+   "t": "分钟",
+   "r": "fēn zhōng",
+   "zh": "",
+   "en": "minute",
+   "pic": "⏱️"
+  },
+  {
+   "t": "小时",
+   "r": "xiǎo shí",
+   "zh": "",
+   "en": "hour",
+   "pic": "⏳"
+  },
+  {
+   "t": "快",
+   "r": "kuài",
+   "zh": "",
+   "en": "fast",
+   "pic": "🐇"
+  },
+  {
+   "t": "慢",
+   "r": "màn",
+   "zh": "",
+   "en": "slow",
+   "pic": "🐌"
+  }
+ ],
+ "sents": [
+  {
+   "t": "你怎么去学校？",
+   "seg": [
+    "你",
+    "怎么",
+    "去",
+    "学校？"
+   ],
+   "r": [
+    "nǐ",
+    "zěn me",
+    "qù",
+    "xué xiào"
+   ],
+   "zh": "",
+   "en": "How do you get to school?"
+  },
+  {
+   "t": "我骑自行车去。",
+   "seg": [
+    "我",
+    "骑",
+    "自行车",
+    "去。"
+   ],
+   "r": [
+    "wǒ",
+    "qí",
+    "zì xíng chē",
+    "qù"
+   ],
+   "zh": "",
+   "en": "I go by bike."
+  },
+  {
+   "t": "我们坐公交车去市场。",
+   "seg": [
+    "我们",
+    "坐",
+    "公交车",
+    "去",
+    "市场。"
+   ],
+   "r": [
+    "wǒ men",
+    "zuò",
+    "gōng jiāo chē",
+    "qù",
+    "shì chǎng"
+   ],
+   "zh": "",
+   "en": "We take the bus to the market."
+  },
+  {
+   "t": "码头离学校很近。",
+   "seg": [
+    "码头",
+    "离",
+    "学校",
+    "很",
+    "近。"
+   ],
+   "r": [
+    "mǎ tóu",
+    "lí",
+    "xué xiào",
+    "hěn",
+    "jìn"
+   ],
+   "zh": "",
+   "en": "The harbour is very near the school."
+  },
+  {
+   "t": "灯塔离这里很远。",
+   "seg": [
+    "灯塔",
+    "离",
+    "这里",
+    "很",
+    "远。"
+   ],
+   "r": [
+    "dēng tǎ",
+    "lí",
+    "zhè lǐ",
+    "hěn",
+    "yuǎn"
+   ],
+   "zh": "",
+   "en": "The lighthouse is far from here."
+  },
+  {
+   "t": "从这里到码头怎么走？",
+   "seg": [
+    "从",
+    "这里",
+    "到",
+    "码头",
+    "怎么",
+    "走？"
+   ],
+   "r": [
+    "cóng",
+    "zhè lǐ",
+    "dào",
+    "mǎ tóu",
+    "zěn me",
+    "zǒu"
+   ],
+   "zh": "",
+   "en": "How do I get from here to the harbour?"
+  },
+  {
+   "t": "从车站到沙滩要二十分钟。",
+   "seg": [
+    "从车站",
+    "到沙滩",
+    "要",
+    "二十分钟。"
+   ],
+   "r": [
+    "cóng chē zhàn",
+    "dào shā tān",
+    "yào",
+    "èr shí fēn zhōng"
+   ],
+   "zh": "",
+   "en": "It takes twenty minutes from the bus stop to the beach."
+  },
+  {
+   "t": "走路去要一个小时。",
+   "seg": [
+    "走路",
+    "去",
+    "要",
+    "一个小时。"
+   ],
+   "r": [
+    "zǒu lù",
+    "qù",
+    "yào",
+    "yí gè xiǎo shí"
+   ],
+   "zh": "",
+   "en": "Walking there takes an hour."
+  },
+  {
+   "t": "坐船去要三十分钟。",
+   "seg": [
+    "坐船",
+    "去",
+    "要",
+    "三十分钟。"
+   ],
+   "r": [
+    "zuò chuán",
+    "qù",
+    "yào",
+    "sān shí fēn zhōng"
+   ],
+   "zh": "",
+   "en": "Going by boat takes thirty minutes."
+  },
+  {
+   "t": "你家离学校远不远？",
+   "seg": [
+    "你家",
+    "离",
+    "学校",
+    "远不远？"
+   ],
+   "r": [
+    "nǐ jiā",
+    "lí",
+    "xué xiào",
+    "yuǎn bu yuǎn"
+   ],
+   "zh": "",
+   "en": "Is your home far from school?"
+  },
+  {
+   "t": "我家离学校不远，走路五分钟。",
+   "seg": [
+    "我家",
+    "离",
+    "学校",
+    "不远，",
+    "走路",
+    "五分钟。"
+   ],
+   "r": [
+    "wǒ jiā",
+    "lí",
+    "xué xiào",
+    "bù yuǎn",
+    "zǒu lù",
+    "wǔ fēn zhōng"
+   ],
+   "zh": "",
+   "en": "My home isn't far from school; five minutes on foot."
+  },
+  {
+   "t": "我每天走路去学校。",
+   "seg": [
+    "我",
+    "每天",
+    "走路",
+    "去",
+    "学校。"
+   ],
+   "r": [
+    "wǒ",
+    "měi tiān",
+    "zǒu lù",
+    "qù",
+    "xué xiào"
+   ],
+   "zh": "",
+   "en": "I walk to school every day."
+  },
+  {
+   "t": "去山上怎么走？",
+   "seg": [
+    "去",
+    "山上",
+    "怎么",
+    "走？"
+   ],
+   "r": [
+    "qù",
+    "shān shang",
+    "zěn me",
+    "zǒu"
+   ],
+   "zh": "",
+   "en": "How do you get up the hill?"
+  },
+  {
+   "t": "先坐公交车，再走路。",
+   "seg": [
+    "先",
+    "坐",
+    "公交车，",
+    "再",
+    "走路。"
+   ],
+   "r": [
+    "xiān",
+    "zuò",
+    "gōng jiāo chē",
+    "zài",
+    "zǒu lù"
+   ],
+   "zh": "",
+   "en": "First take the bus, then walk."
+  },
+  {
+   "t": "我们坐出租车去车站吧。",
+   "seg": [
+    "我们",
+    "坐",
+    "出租车",
+    "去",
+    "车站",
+    "吧。"
+   ],
+   "r": [
+    "wǒ men",
+    "zuò",
+    "chū zū chē",
+    "qù",
+    "chē zhàn",
+    "ba"
+   ],
+   "zh": "",
+   "en": "Let's take a taxi to the bus stop."
+  },
+  {
+   "t": "这条路很长，要走半个小时。",
+   "seg": [
+    "这条路",
+    "很",
+    "长，",
+    "要",
+    "走",
+    "半个小时。"
+   ],
+   "r": [
+    "zhè tiáo lù",
+    "hěn",
+    "cháng",
+    "yào",
+    "zǒu",
+    "bàn gè xiǎo shí"
+   ],
+   "zh": "",
+   "en": "This road is long; it takes half an hour to walk."
+  }
+ ],
+ "dlgs": [
+  {
+   "q": {
+    "t": "你怎么去学校？",
+    "seg": [
+     "你",
+     "怎么",
+     "去",
+     "学校？"
+    ],
+    "r": [
+     "nǐ",
+     "zěn me",
+     "qù",
+     "xué xiào"
+    ],
+    "zh": "",
+    "en": "How do you get to school?"
+   },
+   "a": {
+    "t": "我骑自行车去。",
+    "seg": [
+     "我",
+     "骑",
+     "自行车",
+     "去。"
+    ],
+    "r": [
+     "wǒ",
+     "qí",
+     "zì xíng chē",
+     "qù"
+    ],
+    "zh": "",
+    "en": "I go by bike."
+   },
+   "wrong": [
+    {
+     "t": "我家有三口人。",
+     "seg": [
+      "我家",
+      "有",
+      "三口人。"
+     ],
+     "r": [
+      "wǒ jiā",
+      "yǒu",
+      "sān kǒu rén"
+     ],
+     "zh": "",
+     "en": "There are three people in my family."
+    },
+    {
+     "t": "学校很大。",
+     "seg": [
+      "学校",
+      "很",
+      "大。"
+     ],
+     "r": [
+      "xué xiào",
+      "hěn",
+      "dà"
+     ],
+     "zh": "",
+     "en": "The school is big."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "从这里到码头怎么走？",
+    "seg": [
+     "从",
+     "这里",
+     "到",
+     "码头",
+     "怎么",
+     "走？"
+    ],
+    "r": [
+     "cóng",
+     "zhè lǐ",
+     "dào",
+     "mǎ tóu",
+     "zěn me",
+     "zǒu"
+    ],
+    "zh": "",
+    "en": "How do I get from here to the harbour?"
+   },
+   "a": {
+    "t": "坐公交车去。",
+    "seg": [
+     "坐",
+     "公交车",
+     "去。"
+    ],
+    "r": [
+     "zuò",
+     "gōng jiāo chē",
+     "qù"
+    ],
+    "zh": "",
+    "en": "Take the bus."
+   },
+   "wrong": [
+    {
+     "t": "码头很漂亮。",
+     "seg": [
+      "码头",
+      "很",
+      "漂亮。"
+     ],
+     "r": [
+      "mǎ tóu",
+      "hěn",
+      "piào liang"
+     ],
+     "zh": "",
+     "en": "The harbour is pretty."
+    },
+    {
+     "t": "我星期一有数学课。",
+     "seg": [
+      "我",
+      "星期一",
+      "有",
+      "数学课。"
+     ],
+     "r": [
+      "wǒ",
+      "xīng qī yī",
+      "yǒu",
+      "shù xué kè"
+     ],
+     "zh": "",
+     "en": "I have maths on Monday."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "码头离这里远不远？",
+    "seg": [
+     "码头",
+     "离",
+     "这里",
+     "远不远？"
+    ],
+    "r": [
+     "mǎ tóu",
+     "lí",
+     "zhè lǐ",
+     "yuǎn bu yuǎn"
+    ],
+    "zh": "",
+    "en": "Is the harbour far from here?"
+   },
+   "a": {
+    "t": "不远，走路五分钟。",
+    "seg": [
+     "不远，",
+     "走路",
+     "五分钟。"
+    ],
+    "r": [
+     "bù yuǎn",
+     "zǒu lù",
+     "wǔ fēn zhōng"
+    ],
+    "zh": "",
+    "en": "Not far; five minutes on foot."
+   },
+   "wrong": [
+    {
+     "t": "我喜欢坐船。",
+     "seg": [
+      "我",
+      "喜欢",
+      "坐船。"
+     ],
+     "r": [
+      "wǒ",
+      "xǐ huan",
+      "zuò chuán"
+     ],
+     "zh": "",
+     "en": "I like going by boat."
+    },
+    {
+     "t": "今天星期三。",
+     "seg": [
+      "今天",
+      "星期三。"
+     ],
+     "r": [
+      "jīn tiān",
+      "xīng qī sān"
+     ],
+     "zh": "",
+     "en": "It's Wednesday today."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "去沙滩要多长时间？",
+    "seg": [
+     "去",
+     "沙滩",
+     "要",
+     "多长",
+     "时间？"
+    ],
+    "r": [
+     "qù",
+     "shā tān",
+     "yào",
+     "duō cháng",
+     "shí jiān"
+    ],
+    "zh": "",
+    "en": "How long does it take to get to the beach?"
+   },
+   "a": {
+    "t": "要二十分钟。",
+    "seg": [
+     "要",
+     "二十分钟。"
+    ],
+    "r": [
+     "yào",
+     "èr shí fēn zhōng"
+    ],
+    "zh": "",
+    "en": "Twenty minutes."
+   },
+   "wrong": [
+    {
+     "t": "我骑自行车去。",
+     "seg": [
+      "我",
+      "骑",
+      "自行车",
+      "去。"
+     ],
+     "r": [
+      "wǒ",
+      "qí",
+      "zì xíng chē",
+      "qù"
+     ],
+     "zh": "",
+     "en": "I go by bike."
+    },
+    {
+     "t": "沙滩很漂亮。",
+     "seg": [
+      "沙滩",
+      "很",
+      "漂亮。"
+     ],
+     "r": [
+      "shā tān",
+      "hěn",
+      "piào liang"
+     ],
+     "zh": "",
+     "en": "The beach is pretty."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你家离学校远吗？",
+    "seg": [
+     "你家",
+     "离",
+     "学校",
+     "远",
+     "吗？"
+    ],
+    "r": [
+     "nǐ jiā",
+     "lí",
+     "xué xiào",
+     "yuǎn",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Is your home far from school?"
+   },
+   "a": {
+    "t": "有点远，要半个小时。",
+    "seg": [
+     "有点",
+     "远，",
+     "要",
+     "半个小时。"
+    ],
+    "r": [
+     "yǒu diǎn",
+     "yuǎn",
+     "yào",
+     "bàn gè xiǎo shí"
+    ],
+    "zh": "",
+    "en": "A bit far; half an hour."
+   },
+   "wrong": [
+    {
+     "t": "我骑自行车去。",
+     "seg": [
+      "我",
+      "骑",
+      "自行车",
+      "去。"
+     ],
+     "r": [
+      "wǒ",
+      "qí",
+      "zì xíng chē",
+      "qù"
+     ],
+     "zh": "",
+     "en": "I go by bike."
+    },
+    {
+     "t": "我家有一只猫。",
+     "seg": [
+      "我家",
+      "有",
+      "一只",
+      "猫。"
+     ],
+     "r": [
+      "wǒ jiā",
+      "yǒu",
+      "yì zhī",
+      "māo"
+     ],
+     "zh": "",
+     "en": "We have a cat at home."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你坐公交车还是走路？",
+    "seg": [
+     "你",
+     "坐",
+     "公交车",
+     "还是",
+     "走路？"
+    ],
+    "r": [
+     "nǐ",
+     "zuò",
+     "gōng jiāo chē",
+     "hái shi",
+     "zǒu lù"
+    ],
+    "zh": "",
+    "en": "Do you take the bus or walk?"
+   },
+   "a": {
+    "t": "我走路。",
+    "seg": [
+     "我",
+     "走路。"
+    ],
+    "r": [
+     "wǒ",
+     "zǒu lù"
+    ],
+    "zh": "",
+    "en": "I walk."
+   },
+   "wrong": [
+    {
+     "t": "我星期三去。",
+     "seg": [
+      "我",
+      "星期三",
+      "去。"
+     ],
+     "r": [
+      "wǒ",
+      "xīng qī sān",
+      "qù"
+     ],
+     "zh": "",
+     "en": "I go on Wednesday."
+    },
+    {
+     "t": "这条路很长。",
+     "seg": [
+      "这条路",
+      "很",
+      "长。"
+     ],
+     "r": [
+      "zhè tiáo lù",
+      "hěn",
+      "cháng"
+     ],
+     "zh": "",
+     "en": "This road is long."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "灯塔离这里远吗？",
+    "seg": [
+     "灯塔",
+     "离",
+     "这里",
+     "远",
+     "吗？"
+    ],
+    "r": [
+     "dēng tǎ",
+     "lí",
+     "zhè lǐ",
+     "yuǎn",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Is the lighthouse far from here?"
+   },
+   "a": {
+    "t": "很远，要坐船去。",
+    "seg": [
+     "很",
+     "远，",
+     "要",
+     "坐船",
+     "去。"
+    ],
+    "r": [
+     "hěn",
+     "yuǎn",
+     "yào",
+     "zuò chuán",
+     "qù"
+    ],
+    "zh": "",
+    "en": "Very far; you have to go by boat."
+   },
+   "wrong": [
+    {
+     "t": "灯塔很漂亮。",
+     "seg": [
+      "灯塔",
+      "很",
+      "漂亮。"
+     ],
+     "r": [
+      "dēng tǎ",
+      "hěn",
+      "piào liang"
+     ],
+     "zh": "",
+     "en": "The lighthouse is pretty."
+    },
+    {
+     "t": "我们去山上吧。",
+     "seg": [
+      "我们",
+      "去",
+      "山上",
+      "吧。"
+     ],
+     "r": [
+      "wǒ men",
+      "qù",
+      "shān shang",
+      "ba"
+     ],
+     "zh": "",
+     "en": "Let's go up the hill."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "我们怎么去山上？",
+    "seg": [
+     "我们",
+     "怎么",
+     "去",
+     "山上？"
+    ],
+    "r": [
+     "wǒ men",
+     "zěn me",
+     "qù",
+     "shān shang"
+    ],
+    "zh": "",
+    "en": "How do we get up the hill?"
+   },
+   "a": {
+    "t": "坐出租车去吧。",
+    "seg": [
+     "坐",
+     "出租车",
+     "去",
+     "吧。"
+    ],
+    "r": [
+     "zuò",
+     "chū zū chē",
+     "qù",
+     "ba"
+    ],
+    "zh": "",
+    "en": "Let's take a taxi."
+   },
+   "wrong": [
+    {
+     "t": "山上很冷。",
+     "seg": [
+      "山上",
+      "很",
+      "冷。"
+     ],
+     "r": [
+      "shān shang",
+      "hěn",
+      "lěng"
+     ],
+     "zh": "",
+     "en": "It's cold up on the hill."
+    },
+    {
+     "t": "我要一双鞋子。",
+     "seg": [
+      "我",
+      "要",
+      "一双",
+      "鞋子。"
+     ],
+     "r": [
+      "wǒ",
+      "yào",
+      "yì shuāng",
+      "xié zi"
+     ],
+     "zh": "",
+     "en": "I want a pair of shoes."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "从学校到车站要多长时间？",
+    "seg": [
+     "从",
+     "学校",
+     "到",
+     "车站",
+     "要",
+     "多长",
+     "时间？"
+    ],
+    "r": [
+     "cóng",
+     "xué xiào",
+     "dào",
+     "chē zhàn",
+     "yào",
+     "duō cháng",
+     "shí jiān"
+    ],
+    "zh": "",
+    "en": "How long is it from school to the bus stop?"
+   },
+   "a": {
+    "t": "走路要十分钟。",
+    "seg": [
+     "走路",
+     "要",
+     "十分钟。"
+    ],
+    "r": [
+     "zǒu lù",
+     "yào",
+     "shí fēn zhōng"
+    ],
+    "zh": "",
+    "en": "Ten minutes on foot."
+   },
+   "wrong": [
+    {
+     "t": "我坐公交车。",
+     "seg": [
+      "我",
+      "坐",
+      "公交车。"
+     ],
+     "r": [
+      "wǒ",
+      "zuò",
+      "gōng jiāo chē"
+     ],
+     "zh": "",
+     "en": "I take the bus."
+    },
+    {
+     "t": "车站在桥旁边。",
+     "seg": [
+      "车站",
+      "在",
+      "桥",
+      "旁边。"
+     ],
+     "r": [
+      "chē zhàn",
+      "zài",
+      "qiáo",
+      "páng biān"
+     ],
+     "zh": "",
+     "en": "The bus stop is next to the bridge."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你每天怎么去学校？",
+    "seg": [
+     "你",
+     "每天",
+     "怎么",
+     "去",
+     "学校？"
+    ],
+    "r": [
+     "nǐ",
+     "měi tiān",
+     "zěn me",
+     "qù",
+     "xué xiào"
+    ],
+    "zh": "",
+    "en": "How do you go to school every day?"
+   },
+   "a": {
+    "t": "我每天走路去。",
+    "seg": [
+     "我",
+     "每天",
+     "走路",
+     "去。"
+    ],
+    "r": [
+     "wǒ",
+     "měi tiān",
+     "zǒu lù",
+     "qù"
+    ],
+    "zh": "",
+    "en": "I walk every day."
+   },
+   "wrong": [
+    {
+     "t": "学校从九点上课。",
+     "seg": [
+      "学校",
+      "从",
+      "九点",
+      "上课。"
+     ],
+     "r": [
+      "xué xiào",
+      "cóng",
+      "jiǔ diǎn",
+      "shàng kè"
+     ],
+     "zh": "",
+     "en": "School starts at nine."
+    },
+    {
+     "t": "我有两个哥哥。",
+     "seg": [
+      "我",
+      "有",
+      "两个",
+      "哥哥。"
+     ],
+     "r": [
+      "wǒ",
+      "yǒu",
+      "liǎng gè",
+      "gē ge"
+     ],
+     "zh": "",
+     "en": "I have two older brothers."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你们坐什么去市场？",
+    "seg": [
+     "你们",
+     "坐",
+     "什么",
+     "去",
+     "市场？"
+    ],
+    "r": [
+     "nǐ men",
+     "zuò",
+     "shén me",
+     "qù",
+     "shì chǎng"
+    ],
+    "zh": "",
+    "en": "What do you take to the market?"
+   },
+   "a": {
+    "t": "我们坐公交车。",
+    "seg": [
+     "我们",
+     "坐",
+     "公交车。"
+    ],
+    "r": [
+     "wǒ men",
+     "zuò",
+     "gōng jiāo chē"
+    ],
+    "zh": "",
+    "en": "We take the bus."
+   },
+   "wrong": [
+    {
+     "t": "市场很大。",
+     "seg": [
+      "市场",
+      "很",
+      "大。"
+     ],
+     "r": [
+      "shì chǎng",
+      "hěn",
+      "dà"
+     ],
+     "zh": "",
+     "en": "The market is big."
+    },
+    {
+     "t": "今天星期三。",
+     "seg": [
+      "今天",
+      "星期三。"
+     ],
+     "r": [
+      "jīn tiān",
+      "xīng qī sān"
+     ],
+     "zh": "",
+     "en": "It's Wednesday today."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "去灯塔坐船还是走路？",
+    "seg": [
+     "去",
+     "灯塔",
+     "坐船",
+     "还是",
+     "走路？"
+    ],
+    "r": [
+     "qù",
+     "dēng tǎ",
+     "zuò chuán",
+     "hái shi",
+     "zǒu lù"
+    ],
+    "zh": "",
+    "en": "Do you go to the lighthouse by boat or on foot?"
+   },
+   "a": {
+    "t": "坐船去。",
+    "seg": [
+     "坐船",
+     "去。"
+    ],
+    "r": [
+     "zuò chuán",
+     "qù"
+    ],
+    "zh": "",
+    "en": "By boat."
+   },
+   "wrong": [
+    {
+     "t": "灯塔很漂亮。",
+     "seg": [
+      "灯塔",
+      "很",
+      "漂亮。"
+     ],
+     "r": [
+      "dēng tǎ",
+      "hěn",
+      "piào liang"
+     ],
+     "zh": "",
+     "en": "The lighthouse is pretty."
+    },
+    {
+     "t": "我家离码头很近。",
+     "seg": [
+      "我家",
+      "离",
+      "码头",
+      "很",
+      "近。"
+     ],
+     "r": [
+      "wǒ jiā",
+      "lí",
+      "mǎ tóu",
+      "hěn",
+      "jìn"
+     ],
+     "zh": "",
+     "en": "My home is very near the harbour."
+    }
+   ]
+  }
+ ],
+ "talk": {
+  "name": "A Yuan",
+  "zh": "阿远",
+  "gender": "m",
+  "kid": true,
+  "topic": {
+   "zh": "问路和怎么去",
+   "en": "How to get somewhere"
+  },
+  "persona": "You are A Yuan, the friendly captain of a small passenger boat at the island harbour. You know every road, bus stop and beach on the island. You chat about how the learner gets to places (school, the market, the lighthouse, the beach): by bus, bike, taxi, boat or on foot, whether it is far or near, and how many minutes it takes. Speak only simple level-1 Mandarin, short sentences, one question at a time. Never ask for the learner's real name, school, address, phone number or other personal details; ask only about places on the island or made-up examples. You are a friendly game character, not a friend or companion; stay on the topic of getting around.",
+  "goal": {
+   "zh": "告诉阿远你怎么去一个地方、远不远、要多长时间。",
+   "en": "Tell A Yuan how you get to a place, whether it is far, and how long it takes."
+  },
+  "opener": {
+   "t": "你好！我是阿远。码头离这里很近。你想去哪里？",
+   "r": "nǐ hǎo! wǒ shì ā yuǎn. mǎ tóu lí zhè lǐ hěn jìn. nǐ xiǎng qù nǎ lǐ?"
+  },
+  "steps": [
+   {
+    "zh": "说你想去的地方。",
+    "en": "Say where you want to go.",
+    "t": "我想去沙滩。"
+   },
+   {
+    "zh": "问怎么去。",
+    "en": "Ask how to get there.",
+    "t": "去沙滩怎么走？"
+   },
+   {
+    "zh": "说你坐什么、骑什么或者走路去。",
+    "en": "Say how you go: bus, bike, boat or on foot.",
+    "t": "我坐公交车去。"
+   },
+   {
+    "zh": "问或者说要多长时间。",
+    "en": "Ask or say how long it takes.",
+    "t": "要二十分钟。"
+   }
+  ],
+  "words": [
+   {
+    "t": "怎么走",
+    "zh": "",
+    "en": "how to get there"
+   },
+   {
+    "t": "坐船",
+    "zh": "",
+    "en": "go by boat"
+   },
+   {
+    "t": "公交车",
+    "zh": "",
+    "en": "bus"
+   },
+   {
+    "t": "走路",
+    "zh": "",
+    "en": "walk"
+   },
+   {
+    "t": "远",
+    "zh": "",
+    "en": "far"
+   },
+   {
+    "t": "近",
+    "zh": "",
+    "en": "near"
+   },
+   {
+    "t": "分钟",
+    "zh": "",
+    "en": "minute"
+   }
+  ]
+ }
+}

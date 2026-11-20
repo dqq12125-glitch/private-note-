@@ -1,0 +1,1375 @@
+{
+ "book": "zh1",
+ "n": 3,
+ "t": "我的房间",
+ "zh": "",
+ "en": "My Room",
+ "icon": "🛏️",
+ "color": "#4F8FE0",
+ "key": {
+  "t": "你的房间里有什么？你的帽子在哪里？",
+  "r": "nǐ de fáng jiān li yǒu shén me? nǐ de mào zi zài nǎ lǐ?",
+  "zh": "",
+  "en": "What is in your room? Where is your hat?"
+ },
+ "grammar": {
+  "title": {
+   "zh": "有 和 在；方位词；的",
+   "en": "有 vs 在; location words; 的"
+  },
+  "tip": {
+   "zh": "说某个地方有什么，用「有」，地方放前面：桌子上有一本书。说一件已经知道的东西在哪里，用「在」，东西放前面：书在桌子上。问东西在哪里，可以说「我的杯子呢？」；「蓝色的」「我的」后面的东西可以不说：蓝色的是我的。",
+   "en": "To say what exists in a place, use 有 (yǒu) with the place first: 桌子上有一本书 (zhuō zi shang yǒu yì běn shū, there is a book on the desk). To say where a known thing is, use 在 (zài) with the thing first: 书在桌子上 (shū zài zhuō zi shang). To ask where something is you can say 我的杯子呢？ (wǒ de bēi zi ne?), and 的 (de) lets you drop the noun: 蓝色的是我的 (lán sè de shì wǒ de, the blue one is mine)."
+  }
+ },
+ "boss": {
+  "emoji": "🦥",
+  "name": {
+   "zh": "懒懒树懒",
+   "en": "Lazy Lou the Sloth"
+  },
+  "t": "这是我的房间。桌子上有一个杯子，床上有很多玩具。我的帽子在哪里？",
+  "r": "zhè shì wǒ de fáng jiān. zhuō zi shang yǒu yí gè bēi zi, chuáng shang yǒu hěn duō wán jù. wǒ de mào zi zài nǎ lǐ?",
+  "zh": "",
+  "en": "This is my room. There's a cup on the desk, and there are lots of toys on the bed. Where's my hat?"
+ },
+ "words": [
+  {
+   "t": "房间",
+   "r": "fáng jiān",
+   "zh": "",
+   "en": "room",
+   "pic": "🛋️"
+  },
+  {
+   "t": "床",
+   "r": "chuáng",
+   "zh": "",
+   "en": "bed",
+   "pic": "🛏️"
+  },
+  {
+   "t": "柜子",
+   "r": "guì zi",
+   "zh": "",
+   "en": "cupboard",
+   "pic": "🗄️"
+  },
+  {
+   "t": "书架",
+   "r": "shū jià",
+   "zh": "",
+   "en": "bookshelf",
+   "pic": "📚"
+  },
+  {
+   "t": "台灯",
+   "r": "tái dēng",
+   "zh": "",
+   "en": "desk lamp",
+   "pic": "💡"
+  },
+  {
+   "t": "钟",
+   "r": "zhōng",
+   "zh": "",
+   "en": "clock",
+   "pic": "⏰"
+  },
+  {
+   "t": "镜子",
+   "r": "jìng zi",
+   "zh": "",
+   "en": "mirror",
+   "pic": "🪞"
+  },
+  {
+   "t": "垃圾桶",
+   "r": "lā jī tǒng",
+   "zh": "",
+   "en": "bin",
+   "pic": "🗑️"
+  },
+  {
+   "t": "玩具",
+   "r": "wán jù",
+   "zh": "",
+   "en": "toy",
+   "pic": "🧸"
+  },
+  {
+   "t": "帽子",
+   "r": "mào zi",
+   "zh": "",
+   "en": "hat",
+   "pic": "🧢"
+  },
+  {
+   "t": "杯子",
+   "r": "bēi zi",
+   "zh": "",
+   "en": "cup",
+   "pic": "🥛"
+  },
+  {
+   "t": "花",
+   "r": "huā",
+   "zh": "",
+   "en": "flower",
+   "pic": "🌷"
+  },
+  {
+   "t": "上面",
+   "r": "shàng miàn",
+   "zh": "",
+   "en": "on top, above",
+   "pic": "⬆️"
+  },
+  {
+   "t": "下面",
+   "r": "xià miàn",
+   "zh": "",
+   "en": "under, below",
+   "pic": "⬇️"
+  },
+  {
+   "t": "里面",
+   "r": "lǐ miàn",
+   "zh": "",
+   "en": "inside"
+  },
+  {
+   "t": "外面",
+   "r": "wài miàn",
+   "zh": "",
+   "en": "outside",
+   "pic": "🌳"
+  },
+  {
+   "t": "前面",
+   "r": "qián miàn",
+   "zh": "",
+   "en": "in front"
+  },
+  {
+   "t": "中间",
+   "r": "zhōng jiān",
+   "zh": "",
+   "en": "in the middle"
+  },
+  {
+   "t": "找",
+   "r": "zhǎo",
+   "zh": "",
+   "en": "to look for",
+   "pic": "🔍"
+  },
+  {
+   "t": "东西",
+   "r": "dōng xi",
+   "zh": "",
+   "en": "thing, stuff",
+   "pic": "📦"
+  },
+  {
+   "t": "放",
+   "r": "fàng",
+   "zh": "",
+   "en": "to put"
+  },
+  {
+   "t": "粉色",
+   "r": "fěn sè",
+   "zh": "",
+   "en": "pink",
+   "pic": "🩷"
+  },
+  {
+   "t": "紫色",
+   "r": "zǐ sè",
+   "zh": "",
+   "en": "purple",
+   "pic": "🟣"
+  },
+  {
+   "t": "黑色",
+   "r": "hēi sè",
+   "zh": "",
+   "en": "black",
+   "pic": "⚫"
+  }
+ ],
+ "sents": [
+  {
+   "t": "我的房间里有一张床。",
+   "seg": [
+    "我的",
+    "房间里",
+    "有",
+    "一张",
+    "床。"
+   ],
+   "r": [
+    "wǒ de",
+    "fáng jiān li",
+    "yǒu",
+    "yì zhāng",
+    "chuáng"
+   ],
+   "zh": "",
+   "en": "There is a bed in my room."
+  },
+  {
+   "t": "床上有一个玩具。",
+   "seg": [
+    "床上",
+    "有",
+    "一个",
+    "玩具。"
+   ],
+   "r": [
+    "chuáng shang",
+    "yǒu",
+    "yí gè",
+    "wán jù"
+   ],
+   "zh": "",
+   "en": "There is a toy on the bed."
+  },
+  {
+   "t": "桌子上有杯子和台灯。",
+   "seg": [
+    "桌子上",
+    "有",
+    "杯子",
+    "和",
+    "台灯。"
+   ],
+   "r": [
+    "zhuō zi shang",
+    "yǒu",
+    "bēi zi",
+    "hé",
+    "tái dēng"
+   ],
+   "zh": "",
+   "en": "There are a cup and a lamp on the desk."
+  },
+  {
+   "t": "书在书架上。",
+   "seg": [
+    "书",
+    "在",
+    "书架上。"
+   ],
+   "r": [
+    "shū",
+    "zài",
+    "shū jià shang"
+   ],
+   "zh": "",
+   "en": "The book is on the bookshelf."
+  },
+  {
+   "t": "我的帽子在哪里？",
+   "seg": [
+    "我的",
+    "帽子",
+    "在",
+    "哪里？"
+   ],
+   "r": [
+    "wǒ de",
+    "mào zi",
+    "zài",
+    "nǎ lǐ"
+   ],
+   "zh": "",
+   "en": "Where is my hat?"
+  },
+  {
+   "t": "帽子在椅子下面。",
+   "seg": [
+    "帽子",
+    "在",
+    "椅子",
+    "下面。"
+   ],
+   "r": [
+    "mào zi",
+    "zài",
+    "yǐ zi",
+    "xià miàn"
+   ],
+   "zh": "",
+   "en": "The hat is under the chair."
+  },
+  {
+   "t": "钟在窗户旁边。",
+   "seg": [
+    "钟",
+    "在",
+    "窗户",
+    "旁边。"
+   ],
+   "r": [
+    "zhōng",
+    "zài",
+    "chuāng hu",
+    "páng biān"
+   ],
+   "zh": "",
+   "en": "The clock is next to the window."
+  },
+  {
+   "t": "垃圾桶在门后面。",
+   "seg": [
+    "垃圾桶",
+    "在",
+    "门",
+    "后面。"
+   ],
+   "r": [
+    "lā jī tǒng",
+    "zài",
+    "mén",
+    "hòu miàn"
+   ],
+   "zh": "",
+   "en": "The bin is behind the door."
+  },
+  {
+   "t": "柜子里面有很多东西。",
+   "seg": [
+    "柜子",
+    "里面",
+    "有",
+    "很多",
+    "东西。"
+   ],
+   "r": [
+    "guì zi",
+    "lǐ miàn",
+    "yǒu",
+    "hěn duō",
+    "dōng xi"
+   ],
+   "zh": "",
+   "en": "There are lots of things inside the cupboard."
+  },
+  {
+   "t": "我的玩具呢？",
+   "seg": [
+    "我的",
+    "玩具",
+    "呢？"
+   ],
+   "r": [
+    "wǒ de",
+    "wán jù",
+    "ne"
+   ],
+   "zh": "",
+   "en": "Where is my toy?"
+  },
+  {
+   "t": "蓝色的是我的，粉色的是你的。",
+   "seg": [
+    "蓝色的",
+    "是",
+    "我的，",
+    "粉色的",
+    "是",
+    "你的。"
+   ],
+   "r": [
+    "lán sè de",
+    "shì",
+    "wǒ de",
+    "fěn sè de",
+    "shì",
+    "nǐ de"
+   ],
+   "zh": "",
+   "en": "The blue one is mine, and the pink one is yours."
+  },
+  {
+   "t": "那个黑色的帽子是谁的？",
+   "seg": [
+    "那个",
+    "黑色的",
+    "帽子",
+    "是",
+    "谁的？"
+   ],
+   "r": [
+    "nà ge",
+    "hēi sè de",
+    "mào zi",
+    "shì",
+    "shéi de"
+   ],
+   "zh": "",
+   "en": "Whose is that black hat?"
+  },
+  {
+   "t": "镜子前面有一把椅子。",
+   "seg": [
+    "镜子",
+    "前面",
+    "有",
+    "一把",
+    "椅子。"
+   ],
+   "r": [
+    "jìng zi",
+    "qián miàn",
+    "yǒu",
+    "yì bǎ",
+    "yǐ zi"
+   ],
+   "zh": "",
+   "en": "There is a chair in front of the mirror."
+  },
+  {
+   "t": "窗户外面有很多花。",
+   "seg": [
+    "窗户",
+    "外面",
+    "有",
+    "很多",
+    "花。"
+   ],
+   "r": [
+    "chuāng hu",
+    "wài miàn",
+    "yǒu",
+    "hěn duō",
+    "huā"
+   ],
+   "zh": "",
+   "en": "There are lots of flowers outside the window."
+  },
+  {
+   "t": "你找什么？",
+   "seg": [
+    "你",
+    "找",
+    "什么？"
+   ],
+   "r": [
+    "nǐ",
+    "zhǎo",
+    "shén me"
+   ],
+   "zh": "",
+   "en": "What are you looking for?"
+  },
+  {
+   "t": "请放在桌子上。",
+   "seg": [
+    "请",
+    "放",
+    "在",
+    "桌子上。"
+   ],
+   "r": [
+    "qǐng",
+    "fàng",
+    "zài",
+    "zhuō zi shang"
+   ],
+   "zh": "",
+   "en": "Please put it on the desk."
+  }
+ ],
+ "dlgs": [
+  {
+   "q": {
+    "t": "你的房间里有什么？",
+    "seg": [
+     "你的",
+     "房间里",
+     "有",
+     "什么？"
+    ],
+    "r": [
+     "nǐ de",
+     "fáng jiān li",
+     "yǒu",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What is in your room?"
+   },
+   "a": {
+    "t": "有一张床，还有一个柜子。",
+    "seg": [
+     "有",
+     "一张",
+     "床，",
+     "还",
+     "有",
+     "一个",
+     "柜子。"
+    ],
+    "r": [
+     "yǒu",
+     "yì zhāng",
+     "chuáng",
+     "hái",
+     "yǒu",
+     "yí gè",
+     "guì zi"
+    ],
+    "zh": "",
+    "en": "There is a bed, and also a cupboard."
+   },
+   "wrong": [
+    {
+     "t": "在书架上。",
+     "seg": [
+      "在",
+      "书架上。"
+     ],
+     "r": [
+      "zài",
+      "shū jià shang"
+     ],
+     "zh": "",
+     "en": "It's on the bookshelf."
+    },
+    {
+     "t": "我找我的杯子。",
+     "seg": [
+      "我",
+      "找",
+      "我的",
+      "杯子。"
+     ],
+     "r": [
+      "wǒ",
+      "zhǎo",
+      "wǒ de",
+      "bēi zi"
+     ],
+     "zh": "",
+     "en": "I'm looking for my cup."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "我的帽子在哪里？",
+    "seg": [
+     "我的",
+     "帽子",
+     "在",
+     "哪里？"
+    ],
+    "r": [
+     "wǒ de",
+     "mào zi",
+     "zài",
+     "nǎ lǐ"
+    ],
+    "zh": "",
+    "en": "Where is my hat?"
+   },
+   "a": {
+    "t": "在椅子上。",
+    "seg": [
+     "在",
+     "椅子上。"
+    ],
+    "r": [
+     "zài",
+     "yǐ zi shang"
+    ],
+    "zh": "",
+    "en": "It's on the chair."
+   },
+   "wrong": [
+    {
+     "t": "桌子上有杯子。",
+     "seg": [
+      "桌子上",
+      "有",
+      "杯子。"
+     ],
+     "r": [
+      "zhuō zi shang",
+      "yǒu",
+      "bēi zi"
+     ],
+     "zh": "",
+     "en": "There is a cup on the desk."
+    },
+    {
+     "t": "蓝色的是我的。",
+     "seg": [
+      "蓝色的",
+      "是",
+      "我的。"
+     ],
+     "r": [
+      "lán sè de",
+      "shì",
+      "wǒ de"
+     ],
+     "zh": "",
+     "en": "The blue one is mine."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "桌子上有什么？",
+    "seg": [
+     "桌子上",
+     "有",
+     "什么？"
+    ],
+    "r": [
+     "zhuō zi shang",
+     "yǒu",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What is on the desk?"
+   },
+   "a": {
+    "t": "有杯子和台灯。",
+    "seg": [
+     "有",
+     "杯子",
+     "和",
+     "台灯。"
+    ],
+    "r": [
+     "yǒu",
+     "bēi zi",
+     "hé",
+     "tái dēng"
+    ],
+    "zh": "",
+    "en": "A cup and a lamp."
+   },
+   "wrong": [
+    {
+     "t": "在柜子里面。",
+     "seg": [
+      "在",
+      "柜子",
+      "里面。"
+     ],
+     "r": [
+      "zài",
+      "guì zi",
+      "lǐ miàn"
+     ],
+     "zh": "",
+     "en": "It's inside the cupboard."
+    },
+    {
+     "t": "我的帽子是黑色的。",
+     "seg": [
+      "我的",
+      "帽子",
+      "是",
+      "黑色的。"
+     ],
+     "r": [
+      "wǒ de",
+      "mào zi",
+      "shì",
+      "hēi sè de"
+     ],
+     "zh": "",
+     "en": "My hat is black."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "床上有玩具吗？",
+    "seg": [
+     "床上",
+     "有",
+     "玩具",
+     "吗？"
+    ],
+    "r": [
+     "chuáng shang",
+     "yǒu",
+     "wán jù",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Are there toys on the bed?"
+   },
+   "a": {
+    "t": "有，有两个。",
+    "seg": [
+     "有，",
+     "有",
+     "两个。"
+    ],
+    "r": [
+     "yǒu",
+     "yǒu",
+     "liǎng gè"
+    ],
+    "zh": "",
+    "en": "Yes, there are two."
+   },
+   "wrong": [
+    {
+     "t": "在书架上。",
+     "seg": [
+      "在",
+      "书架上。"
+     ],
+     "r": [
+      "zài",
+      "shū jià shang"
+     ],
+     "zh": "",
+     "en": "It's on the bookshelf."
+    },
+    {
+     "t": "紫色的是我的。",
+     "seg": [
+      "紫色的",
+      "是",
+      "我的。"
+     ],
+     "r": [
+      "zǐ sè de",
+      "shì",
+      "wǒ de"
+     ],
+     "zh": "",
+     "en": "The purple one is mine."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "柜子里有杯子吗？",
+    "seg": [
+     "柜子里",
+     "有",
+     "杯子",
+     "吗？"
+    ],
+    "r": [
+     "guì zi li",
+     "yǒu",
+     "bēi zi",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Is there a cup in the cupboard?"
+   },
+   "a": {
+    "t": "没有，杯子在桌子上。",
+    "seg": [
+     "没有，",
+     "杯子",
+     "在",
+     "桌子上。"
+    ],
+    "r": [
+     "méi yǒu",
+     "bēi zi",
+     "zài",
+     "zhuō zi shang"
+    ],
+    "zh": "",
+    "en": "No, the cup is on the desk."
+   },
+   "wrong": [
+    {
+     "t": "我有一个新玩具。",
+     "seg": [
+      "我",
+      "有",
+      "一个",
+      "新",
+      "玩具。"
+     ],
+     "r": [
+      "wǒ",
+      "yǒu",
+      "yí gè",
+      "xīn",
+      "wán jù"
+     ],
+     "zh": "",
+     "en": "I have a new toy."
+    },
+    {
+     "t": "床是蓝色的。",
+     "seg": [
+      "床",
+      "是",
+      "蓝色的。"
+     ],
+     "r": [
+      "chuáng",
+      "shì",
+      "lán sè de"
+     ],
+     "zh": "",
+     "en": "The bed is blue."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "书在哪里？",
+    "seg": [
+     "书",
+     "在",
+     "哪里？"
+    ],
+    "r": [
+     "shū",
+     "zài",
+     "nǎ lǐ"
+    ],
+    "zh": "",
+    "en": "Where is the book?"
+   },
+   "a": {
+    "t": "书在书架上。",
+    "seg": [
+     "书",
+     "在",
+     "书架上。"
+    ],
+    "r": [
+     "shū",
+     "zài",
+     "shū jià shang"
+    ],
+    "zh": "",
+    "en": "The book is on the bookshelf."
+   },
+   "wrong": [
+    {
+     "t": "我找我的杯子。",
+     "seg": [
+      "我",
+      "找",
+      "我的",
+      "杯子。"
+     ],
+     "r": [
+      "wǒ",
+      "zhǎo",
+      "wǒ de",
+      "bēi zi"
+     ],
+     "zh": "",
+     "en": "I'm looking for my cup."
+    },
+    {
+     "t": "蓝色的是你的。",
+     "seg": [
+      "蓝色的",
+      "是",
+      "你的。"
+     ],
+     "r": [
+      "lán sè de",
+      "shì",
+      "nǐ de"
+     ],
+     "zh": "",
+     "en": "The blue one is yours."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "这个紫色的帽子是谁的？",
+    "seg": [
+     "这个",
+     "紫色的",
+     "帽子",
+     "是",
+     "谁的？"
+    ],
+    "r": [
+     "zhè ge",
+     "zǐ sè de",
+     "mào zi",
+     "shì",
+     "shéi de"
+    ],
+    "zh": "",
+    "en": "Whose is this purple hat?"
+   },
+   "a": {
+    "t": "是我的。",
+    "seg": [
+     "是",
+     "我的。"
+    ],
+    "r": [
+     "shì",
+     "wǒ de"
+    ],
+    "zh": "",
+    "en": "It's mine."
+   },
+   "wrong": [
+    {
+     "t": "在床上。",
+     "seg": [
+      "在",
+      "床上。"
+     ],
+     "r": [
+      "zài",
+      "chuáng shang"
+     ],
+     "zh": "",
+     "en": "It's on the bed."
+    },
+    {
+     "t": "桌子上有一个杯子。",
+     "seg": [
+      "桌子上",
+      "有",
+      "一个",
+      "杯子。"
+     ],
+     "r": [
+      "zhuō zi shang",
+      "yǒu",
+      "yí gè",
+      "bēi zi"
+     ],
+     "zh": "",
+     "en": "There is a cup on the desk."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "我的杯子呢？",
+    "seg": [
+     "我的",
+     "杯子",
+     "呢？"
+    ],
+    "r": [
+     "wǒ de",
+     "bēi zi",
+     "ne"
+    ],
+    "zh": "",
+    "en": "Where is my cup?"
+   },
+   "a": {
+    "t": "在桌子上，你看。",
+    "seg": [
+     "在",
+     "桌子上，",
+     "你",
+     "看。"
+    ],
+    "r": [
+     "zài",
+     "zhuō zi shang",
+     "nǐ",
+     "kàn"
+    ],
+    "zh": "",
+    "en": "It's on the desk, look."
+   },
+   "wrong": [
+    {
+     "t": "有一个玩具。",
+     "seg": [
+      "有",
+      "一个",
+      "玩具。"
+     ],
+     "r": [
+      "yǒu",
+      "yí gè",
+      "wán jù"
+     ],
+     "zh": "",
+     "en": "There is a toy."
+    },
+    {
+     "t": "粉色的是你的。",
+     "seg": [
+      "粉色的",
+      "是",
+      "你的。"
+     ],
+     "r": [
+      "fěn sè de",
+      "shì",
+      "nǐ de"
+     ],
+     "zh": "",
+     "en": "The pink one is yours."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你找什么？",
+    "seg": [
+     "你",
+     "找",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "zhǎo",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What are you looking for?"
+   },
+   "a": {
+    "t": "我找我的玩具。",
+    "seg": [
+     "我",
+     "找",
+     "我的",
+     "玩具。"
+    ],
+    "r": [
+     "wǒ",
+     "zhǎo",
+     "wǒ de",
+     "wán jù"
+    ],
+    "zh": "",
+    "en": "I'm looking for my toy."
+   },
+   "wrong": [
+    {
+     "t": "在床上。",
+     "seg": [
+      "在",
+      "床上。"
+     ],
+     "r": [
+      "zài",
+      "chuáng shang"
+     ],
+     "zh": "",
+     "en": "It's on the bed."
+    },
+    {
+     "t": "桌子上有一本书。",
+     "seg": [
+      "桌子上",
+      "有",
+      "一本",
+      "书。"
+     ],
+     "r": [
+      "zhuō zi shang",
+      "yǒu",
+      "yì běn",
+      "shū"
+     ],
+     "zh": "",
+     "en": "There is a book on the desk."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "窗户外面有什么？",
+    "seg": [
+     "窗户",
+     "外面",
+     "有",
+     "什么？"
+    ],
+    "r": [
+     "chuāng hu",
+     "wài miàn",
+     "yǒu",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What is outside the window?"
+   },
+   "a": {
+    "t": "有很多花。",
+    "seg": [
+     "有",
+     "很多",
+     "花。"
+    ],
+    "r": [
+     "yǒu",
+     "hěn duō",
+     "huā"
+    ],
+    "zh": "",
+    "en": "There are lots of flowers."
+   },
+   "wrong": [
+    {
+     "t": "在床上。",
+     "seg": [
+      "在",
+      "床上。"
+     ],
+     "r": [
+      "zài",
+      "chuáng shang"
+     ],
+     "zh": "",
+     "en": "It's on the bed."
+    },
+    {
+     "t": "是紫色的。",
+     "seg": [
+      "是",
+      "紫色的。"
+     ],
+     "r": [
+      "shì",
+      "zǐ sè de"
+     ],
+     "zh": "",
+     "en": "It's purple."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "垃圾桶在哪里？",
+    "seg": [
+     "垃圾桶",
+     "在",
+     "哪里？"
+    ],
+    "r": [
+     "lā jī tǒng",
+     "zài",
+     "nǎ lǐ"
+    ],
+    "zh": "",
+    "en": "Where is the bin?"
+   },
+   "a": {
+    "t": "在门后面。",
+    "seg": [
+     "在",
+     "门",
+     "后面。"
+    ],
+    "r": [
+     "zài",
+     "mén",
+     "hòu miàn"
+    ],
+    "zh": "",
+    "en": "It's behind the door."
+   },
+   "wrong": [
+    {
+     "t": "有一个黑色的。",
+     "seg": [
+      "有",
+      "一个",
+      "黑色的。"
+     ],
+     "r": [
+      "yǒu",
+      "yí gè",
+      "hēi sè de"
+     ],
+     "zh": "",
+     "en": "There is a black one."
+    },
+    {
+     "t": "我的房间很大。",
+     "seg": [
+      "我的",
+      "房间",
+      "很",
+      "大。"
+     ],
+     "r": [
+      "wǒ de",
+      "fáng jiān",
+      "hěn",
+      "dà"
+     ],
+     "zh": "",
+     "en": "My room is big."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "桌子和床中间有什么？",
+    "seg": [
+     "桌子",
+     "和",
+     "床",
+     "中间",
+     "有",
+     "什么？"
+    ],
+    "r": [
+     "zhuō zi",
+     "hé",
+     "chuáng",
+     "zhōng jiān",
+     "yǒu",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What is between the desk and the bed?"
+   },
+   "a": {
+    "t": "有一把椅子。",
+    "seg": [
+     "有",
+     "一把",
+     "椅子。"
+    ],
+    "r": [
+     "yǒu",
+     "yì bǎ",
+     "yǐ zi"
+    ],
+    "zh": "",
+    "en": "There is a chair."
+   },
+   "wrong": [
+    {
+     "t": "在柜子里面。",
+     "seg": [
+      "在",
+      "柜子",
+      "里面。"
+     ],
+     "r": [
+      "zài",
+      "guì zi",
+      "lǐ miàn"
+     ],
+     "zh": "",
+     "en": "It's inside the cupboard."
+    },
+    {
+     "t": "蓝色的是我的。",
+     "seg": [
+      "蓝色的",
+      "是",
+      "我的。"
+     ],
+     "r": [
+      "lán sè de",
+      "shì",
+      "wǒ de"
+     ],
+     "zh": "",
+     "en": "The blue one is mine."
+    }
+   ]
+  }
+ ],
+ "talk": {
+  "name": "Tian Tian",
+  "zh": "甜甜",
+  "gender": "f",
+  "kid": true,
+  "topic": {
+   "zh": "帮甜甜找帽子",
+   "en": "Helping Tiantian find her hat"
+  },
+  "persona": "You are Tiantian, a lively eight-year-old islander. You are tidying your room on the island but you cannot find your red hat. Your room has: a bed (with a toy bear on it), a desk (with a cup and a lamp), a bookshelf, a cupboard, a mirror, a clock by the window, and a bin behind the door. The red hat is actually inside the cupboard, but do not say so until the learner has guessed one or two places or asked where things are. You want to chat about what is in your room and where things are, and ask the learner to help you look. Speak only simple level-1 Mandarin, short sentences, one question at a time. Say the correct form naturally if the learner slips. Never ask for the learner's real name, school, address, phone number or other personal data. You are a friendly game character, not an emotional companion.",
+  "goal": {
+   "zh": "问房间里有什么，猜帽子在哪里，帮甜甜找到红色的帽子。",
+   "en": "Ask what is in the room, guess where the hat is, and help Tiantian find her red hat."
+  },
+  "opener": {
+   "t": "你好！我是甜甜。这是我的房间。我的帽子在哪里？",
+   "r": "nǐ hǎo! wǒ shì Tián tian. zhè shì wǒ de fáng jiān. wǒ de mào zi zài nǎ lǐ?"
+  },
+  "steps": [
+   {
+    "zh": "问她的房间里有什么",
+    "en": "Ask what is in her room",
+    "t": "你的房间里有什么？"
+   },
+   {
+    "zh": "猜一个地方",
+    "en": "Guess a place",
+    "t": "帽子在床上吗？"
+   },
+   {
+    "zh": "问帽子是什么颜色的",
+    "en": "Ask what colour the hat is",
+    "t": "你的帽子是什么颜色的？"
+   },
+   {
+    "zh": "说出帽子在哪里",
+    "en": "Say where the hat is",
+    "t": "帽子在柜子里面。"
+   }
+  ],
+  "words": [
+   {
+    "t": "在",
+    "zh": "",
+    "en": "to be at"
+   },
+   {
+    "t": "有",
+    "zh": "",
+    "en": "to have, there is"
+   },
+   {
+    "t": "上面",
+    "zh": "",
+    "en": "on top"
+   },
+   {
+    "t": "下面",
+    "zh": "",
+    "en": "under"
+   },
+   {
+    "t": "里面",
+    "zh": "",
+    "en": "inside"
+   },
+   {
+    "t": "旁边",
+    "zh": "",
+    "en": "beside"
+   },
+   {
+    "t": "帽子",
+    "zh": "",
+    "en": "hat"
+   },
+   {
+    "t": "找",
+    "zh": "",
+    "en": "to look for"
+   }
+  ]
+ }
+}

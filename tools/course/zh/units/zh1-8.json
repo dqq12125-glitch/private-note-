@@ -1,0 +1,1443 @@
+{
+ "book": "zh1",
+ "n": 8,
+ "t": "上个周末",
+ "zh": "",
+ "en": "Last Weekend",
+ "icon": "🏖️",
+ "color": "#E08A1E",
+ "key": {
+  "t": "上个周末你去哪里了？做了什么？",
+  "r": "shàng gè zhōu mò nǐ qù nǎ lǐ le? zuò le shén me?",
+  "zh": "",
+  "en": "Where did you go last weekend? What did you do?"
+ },
+ "grammar": {
+  "title": {
+   "zh": "动作完成了：V + 了，没 + V",
+   "en": "Finished actions: V + 了, 没 + V"
+  },
+  "tip": {
+   "zh": "动作做完了，在动词后面加「了」：我去了海边。我们吃了很多水果。说「没做」，用「没 + 动词」，不加「了」：我没去海边。问做了没有：你看电影了吗？或者：你看电影了没有？猜别人的情况，句尾用「吧」：你累了吧？",
+   "en": "Add 了 right after the verb for a finished action: 我去了海边 (wǒ qù le hǎi biān). To say you did not do it, use 没 + verb and drop 了: 我没去海边 (wǒ méi qù hǎi biān). To ask: 你看电影了吗？ or 你看电影了没有？ To make a guess, end with 吧: 你累了吧？ (nǐ lèi le ba?)."
+  }
+ },
+ "boss": {
+  "emoji": "🦎",
+  "name": {
+   "zh": "爬墙壁虎",
+   "en": "Gigi the Gecko"
+  },
+  "t": "你好！我是爬墙壁虎。上个周末我去了海边，吃了很多水果。你上个周末做了什么？",
+  "r": "nǐ hǎo! wǒ shì pá qiáng bì hǔ. shàng gè zhōu mò wǒ qù le hǎi biān, chī le hěn duō shuǐ guǒ. nǐ shàng gè zhōu mò zuò le shén me?",
+  "zh": "",
+  "en": "Hello! I'm Gigi the wall-climbing gecko. Last weekend I went to the beach and ate lots of fruit. What did you do last weekend?"
+ },
+ "words": [
+  {
+   "t": "上个周末",
+   "r": "shàng gè zhōu mò",
+   "zh": "",
+   "en": "last weekend",
+   "pic": "📅"
+  },
+  {
+   "t": "上个星期",
+   "r": "shàng gè xīng qī",
+   "zh": "",
+   "en": "last week"
+  },
+  {
+   "t": "前天",
+   "r": "qián tiān",
+   "zh": "",
+   "en": "day before yesterday"
+  },
+  {
+   "t": "玩",
+   "r": "wán",
+   "zh": "",
+   "en": "play, have fun",
+   "pic": "🧩"
+  },
+  {
+   "t": "好玩",
+   "r": "hǎo wán",
+   "zh": "",
+   "en": "fun",
+   "pic": "🎡"
+  },
+  {
+   "t": "累",
+   "r": "lèi",
+   "zh": "",
+   "en": "tired",
+   "pic": "😴"
+  },
+  {
+   "t": "电影",
+   "r": "diàn yǐng",
+   "zh": "",
+   "en": "film",
+   "pic": "🎬"
+  },
+  {
+   "t": "游戏",
+   "r": "yóu xì",
+   "zh": "",
+   "en": "game",
+   "pic": "🎮"
+  },
+  {
+   "t": "面包",
+   "r": "miàn bāo",
+   "zh": "",
+   "en": "bread",
+   "pic": "🍞"
+  },
+  {
+   "t": "水果",
+   "r": "shuǐ guǒ",
+   "zh": "",
+   "en": "fruit",
+   "pic": "🍉"
+  },
+  {
+   "t": "花",
+   "r": "huā",
+   "zh": "",
+   "en": "flower",
+   "pic": "🌸"
+  },
+  {
+   "t": "花园",
+   "r": "huā yuán",
+   "zh": "",
+   "en": "garden",
+   "pic": "🏡"
+  },
+  {
+   "t": "帮忙",
+   "r": "bāng máng",
+   "zh": "",
+   "en": "help",
+   "pic": "🙌"
+  },
+  {
+   "t": "打扫",
+   "r": "dǎ sǎo",
+   "zh": "",
+   "en": "clean, sweep",
+   "pic": "🧹"
+  },
+  {
+   "t": "回家",
+   "r": "huí jiā",
+   "zh": "",
+   "en": "go home",
+   "pic": "🏠"
+  },
+  {
+   "t": "一起",
+   "r": "yì qǐ",
+   "zh": "",
+   "en": "together",
+   "pic": "🤝"
+  },
+  {
+   "t": "做",
+   "r": "zuò",
+   "zh": "",
+   "en": "do, make"
+  },
+  {
+   "t": "吃",
+   "r": "chī",
+   "zh": "",
+   "en": "eat",
+   "pic": "🍽️"
+  },
+  {
+   "t": "种",
+   "r": "zhòng",
+   "zh": "",
+   "en": "plant",
+   "pic": "🌱"
+  },
+  {
+   "t": "看见",
+   "r": "kàn jiàn",
+   "zh": "",
+   "en": "see"
+  },
+  {
+   "t": "很多",
+   "r": "hěn duō",
+   "zh": "",
+   "en": "a lot"
+  },
+  {
+   "t": "没",
+   "r": "méi",
+   "zh": "",
+   "en": "not (did not)"
+  },
+  {
+   "t": "已经",
+   "r": "yǐ jīng",
+   "zh": "",
+   "en": "already"
+  },
+  {
+   "t": "洗衣服",
+   "r": "xǐ yī fu",
+   "zh": "",
+   "en": "wash clothes",
+   "pic": "🧺"
+  }
+ ],
+ "sents": [
+  {
+   "t": "上个周末你去哪里了？",
+   "seg": [
+    "上个周末",
+    "你",
+    "去",
+    "哪里",
+    "了？"
+   ],
+   "r": [
+    "shàng gè zhōu mò",
+    "nǐ",
+    "qù",
+    "nǎ lǐ",
+    "le"
+   ],
+   "zh": "",
+   "en": "Where did you go last weekend?"
+  },
+  {
+   "t": "我去了海边。",
+   "seg": [
+    "我",
+    "去了",
+    "海边。"
+   ],
+   "r": [
+    "wǒ",
+    "qù le",
+    "hǎi biān"
+   ],
+   "zh": "",
+   "en": "I went to the beach."
+  },
+  {
+   "t": "我看了一个电影。",
+   "seg": [
+    "我",
+    "看了",
+    "一个",
+    "电影。"
+   ],
+   "r": [
+    "wǒ",
+    "kàn le",
+    "yí gè",
+    "diàn yǐng"
+   ],
+   "zh": "",
+   "en": "I watched a film."
+  },
+  {
+   "t": "我们吃了很多水果。",
+   "seg": [
+    "我们",
+    "吃了",
+    "很多",
+    "水果。"
+   ],
+   "r": [
+    "wǒ men",
+    "chī le",
+    "hěn duō",
+    "shuǐ guǒ"
+   ],
+   "zh": "",
+   "en": "We ate a lot of fruit."
+  },
+  {
+   "t": "我在花园里种了很多花。",
+   "seg": [
+    "我",
+    "在花园里",
+    "种了",
+    "很多",
+    "花。"
+   ],
+   "r": [
+    "wǒ",
+    "zài huā yuán li",
+    "zhòng le",
+    "hěn duō",
+    "huā"
+   ],
+   "zh": "",
+   "en": "I planted lots of flowers in the garden."
+  },
+  {
+   "t": "我星期六没去海边。",
+   "seg": [
+    "我",
+    "星期六",
+    "没",
+    "去",
+    "海边。"
+   ],
+   "r": [
+    "wǒ",
+    "xīng qī liù",
+    "méi",
+    "qù",
+    "hǎi biān"
+   ],
+   "zh": "",
+   "en": "I didn't go to the beach on Saturday."
+  },
+  {
+   "t": "我没做作业。",
+   "seg": [
+    "我",
+    "没",
+    "做",
+    "作业。"
+   ],
+   "r": [
+    "wǒ",
+    "méi",
+    "zuò",
+    "zuò yè"
+   ],
+   "zh": "",
+   "en": "I didn't do my homework."
+  },
+  {
+   "t": "你吃早饭了吗？",
+   "seg": [
+    "你",
+    "吃",
+    "早饭",
+    "了",
+    "吗？"
+   ],
+   "r": [
+    "nǐ",
+    "chī",
+    "zǎo fàn",
+    "le",
+    "ma"
+   ],
+   "zh": "",
+   "en": "Have you had breakfast?"
+  },
+  {
+   "t": "你看电影了没有？",
+   "seg": [
+    "你",
+    "看",
+    "电影",
+    "了",
+    "没有？"
+   ],
+   "r": [
+    "nǐ",
+    "kàn",
+    "diàn yǐng",
+    "le",
+    "méi yǒu"
+   ],
+   "zh": "",
+   "en": "Did you watch the film?"
+  },
+  {
+   "t": "你累了吧？",
+   "seg": [
+    "你",
+    "累",
+    "了",
+    "吧？"
+   ],
+   "r": [
+    "nǐ",
+    "lèi",
+    "le",
+    "ba"
+   ],
+   "zh": "",
+   "en": "You're tired, aren't you?"
+  },
+  {
+   "t": "周末我们一起打扫了花园。",
+   "seg": [
+    "周末",
+    "我们",
+    "一起",
+    "打扫了",
+    "花园。"
+   ],
+   "r": [
+    "zhōu mò",
+    "wǒ men",
+    "yì qǐ",
+    "dǎ sǎo le",
+    "huā yuán"
+   ],
+   "zh": "",
+   "en": "At the weekend we cleaned the garden together."
+  },
+  {
+   "t": "我帮妈妈洗了衣服。",
+   "seg": [
+    "我",
+    "帮",
+    "妈妈",
+    "洗了",
+    "衣服。"
+   ],
+   "r": [
+    "wǒ",
+    "bāng",
+    "mā ma",
+    "xǐ le",
+    "yī fu"
+   ],
+   "zh": "",
+   "en": "I helped Mum wash the clothes."
+  },
+  {
+   "t": "上个周末很好玩！",
+   "seg": [
+    "上个周末",
+    "很",
+    "好玩！"
+   ],
+   "r": [
+    "shàng gè zhōu mò",
+    "hěn",
+    "hǎo wán"
+   ],
+   "zh": "",
+   "en": "Last weekend was fun!"
+  },
+  {
+   "t": "他们已经回家了。",
+   "seg": [
+    "他们",
+    "已经",
+    "回家",
+    "了。"
+   ],
+   "r": [
+    "tā men",
+    "yǐ jīng",
+    "huí jiā",
+    "le"
+   ],
+   "zh": "",
+   "en": "They have already gone home."
+  },
+  {
+   "t": "前天我玩了一个游戏。",
+   "seg": [
+    "前天",
+    "我",
+    "玩了",
+    "一个",
+    "游戏。"
+   ],
+   "r": [
+    "qián tiān",
+    "wǒ",
+    "wán le",
+    "yí gè",
+    "yóu xì"
+   ],
+   "zh": "",
+   "en": "The day before yesterday I played a game."
+  },
+  {
+   "t": "我今天没吃面包。",
+   "seg": [
+    "我",
+    "今天",
+    "没",
+    "吃",
+    "面包。"
+   ],
+   "r": [
+    "wǒ",
+    "jīn tiān",
+    "méi",
+    "chī",
+    "miàn bāo"
+   ],
+   "zh": "",
+   "en": "I haven't eaten bread today."
+  }
+ ],
+ "dlgs": [
+  {
+   "q": {
+    "t": "上个周末你去哪里了？",
+    "seg": [
+     "上个周末",
+     "你",
+     "去",
+     "哪里",
+     "了？"
+    ],
+    "r": [
+     "shàng gè zhōu mò",
+     "nǐ",
+     "qù",
+     "nǎ lǐ",
+     "le"
+    ],
+    "zh": "",
+    "en": "Where did you go last weekend?"
+   },
+   "a": {
+    "t": "我去了海边。",
+    "seg": [
+     "我",
+     "去了",
+     "海边。"
+    ],
+    "r": [
+     "wǒ",
+     "qù le",
+     "hǎi biān"
+    ],
+    "zh": "",
+    "en": "I went to the beach."
+   },
+   "wrong": [
+    {
+     "t": "我没做作业。",
+     "seg": [
+      "我",
+      "没",
+      "做",
+      "作业。"
+     ],
+     "r": [
+      "wǒ",
+      "méi",
+      "zuò",
+      "zuò yè"
+     ],
+     "zh": "",
+     "en": "I didn't do my homework."
+    },
+    {
+     "t": "我很累。",
+     "seg": [
+      "我",
+      "很",
+      "累。"
+     ],
+     "r": [
+      "wǒ",
+      "hěn",
+      "lèi"
+     ],
+     "zh": "",
+     "en": "I'm very tired."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你看电影了吗？",
+    "seg": [
+     "你",
+     "看",
+     "电影",
+     "了",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "kàn",
+     "diàn yǐng",
+     "le",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Did you watch the film?"
+   },
+   "a": {
+    "t": "看了，很好玩。",
+    "seg": [
+     "看了，",
+     "很",
+     "好玩。"
+    ],
+    "r": [
+     "kàn le",
+     "hěn",
+     "hǎo wán"
+    ],
+    "zh": "",
+    "en": "Yes, it was fun."
+   },
+   "wrong": [
+    {
+     "t": "我星期六去游泳。",
+     "seg": [
+      "我",
+      "星期六",
+      "去",
+      "游泳。"
+     ],
+     "r": [
+      "wǒ",
+      "xīng qī liù",
+      "qù",
+      "yóu yǒng"
+     ],
+     "zh": "",
+     "en": "I go swimming on Saturday."
+    },
+    {
+     "t": "我每天七点起床。",
+     "seg": [
+      "我",
+      "每天",
+      "七点",
+      "起床。"
+     ],
+     "r": [
+      "wǒ",
+      "měi tiān",
+      "qī diǎn",
+      "qǐ chuáng"
+     ],
+     "zh": "",
+     "en": "I get up at seven every day."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你吃早饭了吗？",
+    "seg": [
+     "你",
+     "吃",
+     "早饭",
+     "了",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "chī",
+     "zǎo fàn",
+     "le",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Have you had breakfast?"
+   },
+   "a": {
+    "t": "吃了，我吃了面包。",
+    "seg": [
+     "吃了，",
+     "我",
+     "吃了",
+     "面包。"
+    ],
+    "r": [
+     "chī le",
+     "wǒ",
+     "chī le",
+     "miàn bāo"
+    ],
+    "zh": "",
+    "en": "Yes, I had bread."
+   },
+   "wrong": [
+    {
+     "t": "我星期三有数学课。",
+     "seg": [
+      "我",
+      "星期三",
+      "有",
+      "数学课。"
+     ],
+     "r": [
+      "wǒ",
+      "xīng qī sān",
+      "yǒu",
+      "shù xué kè"
+     ],
+     "zh": "",
+     "en": "I have maths on Wednesday."
+    },
+    {
+     "t": "我家离学校很近。",
+     "seg": [
+      "我家",
+      "离",
+      "学校",
+      "很",
+      "近。"
+     ],
+     "r": [
+      "wǒ jiā",
+      "lí",
+      "xué xiào",
+      "hěn",
+      "jìn"
+     ],
+     "zh": "",
+     "en": "My home is very near the school."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你做作业了没有？",
+    "seg": [
+     "你",
+     "做",
+     "作业",
+     "了",
+     "没有？"
+    ],
+    "r": [
+     "nǐ",
+     "zuò",
+     "zuò yè",
+     "le",
+     "méi yǒu"
+    ],
+    "zh": "",
+    "en": "Have you done your homework?"
+   },
+   "a": {
+    "t": "没有，我现在做。",
+    "seg": [
+     "没有，",
+     "我",
+     "现在",
+     "做。"
+    ],
+    "r": [
+     "méi yǒu",
+     "wǒ",
+     "xiàn zài",
+     "zuò"
+    ],
+    "zh": "",
+    "en": "Not yet, I'll do it now."
+   },
+   "wrong": [
+    {
+     "t": "我们坐船去吧。",
+     "seg": [
+      "我们",
+      "坐船",
+      "去",
+      "吧。"
+     ],
+     "r": [
+      "wǒ men",
+      "zuò chuán",
+      "qù",
+      "ba"
+     ],
+     "zh": "",
+     "en": "Let's go by boat."
+    },
+    {
+     "t": "我的衣服很大。",
+     "seg": [
+      "我的",
+      "衣服",
+      "很",
+      "大。"
+     ],
+     "r": [
+      "wǒ de",
+      "yī fu",
+      "hěn",
+      "dà"
+     ],
+     "zh": "",
+     "en": "My clothes are very big."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你们在花园里做了什么？",
+    "seg": [
+     "你们",
+     "在",
+     "花园里",
+     "做了",
+     "什么？"
+    ],
+    "r": [
+     "nǐ men",
+     "zài",
+     "huā yuán li",
+     "zuò le",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What did you do in the garden?"
+   },
+   "a": {
+    "t": "我们种了很多花。",
+    "seg": [
+     "我们",
+     "种了",
+     "很多",
+     "花。"
+    ],
+    "r": [
+     "wǒ men",
+     "zhòng le",
+     "hěn duō",
+     "huā"
+    ],
+    "zh": "",
+    "en": "We planted lots of flowers."
+   },
+   "wrong": [
+    {
+     "t": "我们明天去海边。",
+     "seg": [
+      "我们",
+      "明天",
+      "去",
+      "海边。"
+     ],
+     "r": [
+      "wǒ men",
+      "míng tiān",
+      "qù",
+      "hǎi biān"
+     ],
+     "zh": "",
+     "en": "We're going to the beach tomorrow."
+    },
+    {
+     "t": "花园很漂亮。",
+     "seg": [
+      "花园",
+      "很",
+      "漂亮。"
+     ],
+     "r": [
+      "huā yuán",
+      "hěn",
+      "piào liang"
+     ],
+     "zh": "",
+     "en": "The garden is pretty."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你累了吧？",
+    "seg": [
+     "你",
+     "累",
+     "了",
+     "吧？"
+    ],
+    "r": [
+     "nǐ",
+     "lèi",
+     "le",
+     "ba"
+    ],
+    "zh": "",
+    "en": "You're tired, aren't you?"
+   },
+   "a": {
+    "t": "对，我有点累。",
+    "seg": [
+     "对，",
+     "我",
+     "有点",
+     "累。"
+    ],
+    "r": [
+     "duì",
+     "wǒ",
+     "yǒu diǎn",
+     "lèi"
+    ],
+    "zh": "",
+    "en": "Yes, I'm a bit tired."
+   },
+   "wrong": [
+    {
+     "t": "我吃了很多水果。",
+     "seg": [
+      "我",
+      "吃了",
+      "很多",
+      "水果。"
+     ],
+     "r": [
+      "wǒ",
+      "chī le",
+      "hěn duō",
+      "shuǐ guǒ"
+     ],
+     "zh": "",
+     "en": "I ate a lot of fruit."
+    },
+    {
+     "t": "我们去公园吧。",
+     "seg": [
+      "我们",
+      "去",
+      "公园",
+      "吧。"
+     ],
+     "r": [
+      "wǒ men",
+      "qù",
+      "gōng yuán",
+      "ba"
+     ],
+     "zh": "",
+     "en": "Let's go to the park."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "周末你帮妈妈做什么了？",
+    "seg": [
+     "周末",
+     "你",
+     "帮",
+     "妈妈",
+     "做",
+     "什么",
+     "了？"
+    ],
+    "r": [
+     "zhōu mò",
+     "nǐ",
+     "bāng",
+     "mā ma",
+     "zuò",
+     "shén me",
+     "le"
+    ],
+    "zh": "",
+    "en": "What did you help Mum with at the weekend?"
+   },
+   "a": {
+    "t": "我帮妈妈洗了衣服。",
+    "seg": [
+     "我",
+     "帮",
+     "妈妈",
+     "洗了",
+     "衣服。"
+    ],
+    "r": [
+     "wǒ",
+     "bāng",
+     "mā ma",
+     "xǐ le",
+     "yī fu"
+    ],
+    "zh": "",
+    "en": "I helped Mum wash the clothes."
+   },
+   "wrong": [
+    {
+     "t": "我没去海边。",
+     "seg": [
+      "我",
+      "没",
+      "去",
+      "海边。"
+     ],
+     "r": [
+      "wǒ",
+      "méi",
+      "qù",
+      "hǎi biān"
+     ],
+     "zh": "",
+     "en": "I didn't go to the beach."
+    },
+    {
+     "t": "我要一件衬衫。",
+     "seg": [
+      "我",
+      "要",
+      "一件",
+      "衬衫。"
+     ],
+     "r": [
+      "wǒ",
+      "yào",
+      "yí jiàn",
+      "chèn shān"
+     ],
+     "zh": "",
+     "en": "I want a shirt."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你前天去哪里了？",
+    "seg": [
+     "你",
+     "前天",
+     "去",
+     "哪里",
+     "了？"
+    ],
+    "r": [
+     "nǐ",
+     "qián tiān",
+     "qù",
+     "nǎ lǐ",
+     "le"
+    ],
+    "zh": "",
+    "en": "Where did you go the day before yesterday?"
+   },
+   "a": {
+    "t": "我去了市场。",
+    "seg": [
+     "我",
+     "去了",
+     "市场。"
+    ],
+    "r": [
+     "wǒ",
+     "qù le",
+     "shì chǎng"
+    ],
+    "zh": "",
+    "en": "I went to the market."
+   },
+   "wrong": [
+    {
+     "t": "我骑自行车去。",
+     "seg": [
+      "我",
+      "骑",
+      "自行车",
+      "去。"
+     ],
+     "r": [
+      "wǒ",
+      "qí",
+      "zì xíng chē",
+      "qù"
+     ],
+     "zh": "",
+     "en": "I go by bike."
+    },
+    {
+     "t": "我很高兴。",
+     "seg": [
+      "我",
+      "很",
+      "高兴。"
+     ],
+     "r": [
+      "wǒ",
+      "hěn",
+      "gāo xìng"
+     ],
+     "zh": "",
+     "en": "I'm very happy."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "周末你玩游戏了吗？",
+    "seg": [
+     "周末",
+     "你",
+     "玩",
+     "游戏",
+     "了",
+     "吗？"
+    ],
+    "r": [
+     "zhōu mò",
+     "nǐ",
+     "wán",
+     "yóu xì",
+     "le",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Did you play games at the weekend?"
+   },
+   "a": {
+    "t": "没有，我去了花园。",
+    "seg": [
+     "没有，",
+     "我",
+     "去了",
+     "花园。"
+    ],
+    "r": [
+     "méi yǒu",
+     "wǒ",
+     "qù le",
+     "huā yuán"
+    ],
+    "zh": "",
+    "en": "No, I went to the garden."
+   },
+   "wrong": [
+    {
+     "t": "我吃了很多水果。",
+     "seg": [
+      "我",
+      "吃了",
+      "很多",
+      "水果。"
+     ],
+     "r": [
+      "wǒ",
+      "chī le",
+      "hěn duō",
+      "shuǐ guǒ"
+     ],
+     "zh": "",
+     "en": "I ate a lot of fruit."
+    },
+    {
+     "t": "学校离我家很近。",
+     "seg": [
+      "学校",
+      "离",
+      "我家",
+      "很",
+      "近。"
+     ],
+     "r": [
+      "xué xiào",
+      "lí",
+      "wǒ jiā",
+      "hěn",
+      "jìn"
+     ],
+     "zh": "",
+     "en": "The school is very near my home."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你们回家了吗？",
+    "seg": [
+     "你们",
+     "回家",
+     "了",
+     "吗？"
+    ],
+    "r": [
+     "nǐ men",
+     "huí jiā",
+     "le",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Have you gone home?"
+   },
+   "a": {
+    "t": "我们回家了。",
+    "seg": [
+     "我们",
+     "回家",
+     "了。"
+    ],
+    "r": [
+     "wǒ men",
+     "huí jiā",
+     "le"
+    ],
+    "zh": "",
+    "en": "Yes, we have."
+   },
+   "wrong": [
+    {
+     "t": "我们明天去海边。",
+     "seg": [
+      "我们",
+      "明天",
+      "去",
+      "海边。"
+     ],
+     "r": [
+      "wǒ men",
+      "míng tiān",
+      "qù",
+      "hǎi biān"
+     ],
+     "zh": "",
+     "en": "We're going to the beach tomorrow."
+    },
+    {
+     "t": "我没吃面包。",
+     "seg": [
+      "我",
+      "没",
+      "吃",
+      "面包。"
+     ],
+     "r": [
+      "wǒ",
+      "méi",
+      "chī",
+      "miàn bāo"
+     ],
+     "zh": "",
+     "en": "I didn't eat bread."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "上个周末好玩吗？",
+    "seg": [
+     "上个周末",
+     "好玩",
+     "吗？"
+    ],
+    "r": [
+     "shàng gè zhōu mò",
+     "hǎo wán",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Was last weekend fun?"
+   },
+   "a": {
+    "t": "很好玩，我很开心。",
+    "seg": [
+     "很",
+     "好玩，",
+     "我",
+     "很",
+     "开心。"
+    ],
+    "r": [
+     "hěn",
+     "hǎo wán",
+     "wǒ",
+     "hěn",
+     "kāi xīn"
+    ],
+    "zh": "",
+    "en": "Very fun; I was very happy."
+   },
+   "wrong": [
+    {
+     "t": "我没吃面包。",
+     "seg": [
+      "我",
+      "没",
+      "吃",
+      "面包。"
+     ],
+     "r": [
+      "wǒ",
+      "méi",
+      "chī",
+      "miàn bāo"
+     ],
+     "zh": "",
+     "en": "I didn't eat bread."
+    },
+    {
+     "t": "我们坐公交车去。",
+     "seg": [
+      "我们",
+      "坐",
+      "公交车",
+      "去。"
+     ],
+     "r": [
+      "wǒ men",
+      "zuò",
+      "gōng jiāo chē",
+      "qù"
+     ],
+     "zh": "",
+     "en": "We go by bus."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你吃了什么？",
+    "seg": [
+     "你",
+     "吃了",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "chī le",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What did you eat?"
+   },
+   "a": {
+    "t": "我吃了面包和水果。",
+    "seg": [
+     "我",
+     "吃了",
+     "面包",
+     "和",
+     "水果。"
+    ],
+    "r": [
+     "wǒ",
+     "chī le",
+     "miàn bāo",
+     "hé",
+     "shuǐ guǒ"
+    ],
+    "zh": "",
+    "en": "I ate bread and fruit."
+   },
+   "wrong": [
+    {
+     "t": "我去了海边。",
+     "seg": [
+      "我",
+      "去了",
+      "海边。"
+     ],
+     "r": [
+      "wǒ",
+      "qù le",
+      "hǎi biān"
+     ],
+     "zh": "",
+     "en": "I went to the beach."
+    },
+    {
+     "t": "我骑自行车去。",
+     "seg": [
+      "我",
+      "骑",
+      "自行车",
+      "去。"
+     ],
+     "r": [
+      "wǒ",
+      "qí",
+      "zì xíng chē",
+      "qù"
+     ],
+     "zh": "",
+     "en": "I go by bike."
+    }
+   ]
+  }
+ ],
+ "talk": {
+  "name": "Xiao Hua",
+  "zh": "小花",
+  "gender": "f",
+  "kid": true,
+  "topic": {
+   "zh": "上个周末做了什么",
+   "en": "What you did last weekend"
+  },
+  "persona": "You are Xiaohua, a gardener who looks after the flower garden near the island school. You love hearing what people did last weekend (went to the beach, watched a film, ate fruit, cleaned, played a game, helped at home). Ask where they went and what they did, react warmly (好玩！累了吧？), and use the completed-action 了 and the negative 没 in simple examples. Speak only simple level-1 Mandarin, short sentences, one question at a time. Never ask for the learner's real name, school, address, phone number or other personal details. You are a friendly game character, not a friend or companion; stay on the topic of last weekend.",
+  "goal": {
+   "zh": "告诉小花你上个周末去了哪里、做了什么，再说一件没做的事。",
+   "en": "Tell Xiaohua where you went and what you did last weekend, and one thing you did not do."
+  },
+  "opener": {
+   "t": "你好！我是小花。上个周末我在花园里种了很多花。你上个周末去哪里了？",
+   "r": "nǐ hǎo! wǒ shì xiǎo huā. shàng gè zhōu mò wǒ zài huā yuán li zhòng le hěn duō huā. nǐ shàng gè zhōu mò qù nǎ lǐ le?"
+  },
+  "steps": [
+   {
+    "zh": "说你上个周末去了哪里。",
+    "en": "Say where you went last weekend.",
+    "t": "我去了海边。"
+   },
+   {
+    "zh": "说你做了什么、吃了什么。",
+    "en": "Say what you did or ate.",
+    "t": "我们吃了很多水果。"
+   },
+   {
+    "zh": "说一件你没做的事。",
+    "en": "Say one thing you did not do.",
+    "t": "我没做作业。"
+   },
+   {
+    "zh": "问小花累不累，或者问她做了什么。",
+    "en": "Ask Xiaohua if she was tired or what she did.",
+    "t": "你累了吧？"
+   }
+  ],
+  "words": [
+   {
+    "t": "上个周末",
+    "zh": "",
+    "en": "last weekend"
+   },
+   {
+    "t": "去了",
+    "zh": "",
+    "en": "went"
+   },
+   {
+    "t": "海边",
+    "zh": "",
+    "en": "beach"
+   },
+   {
+    "t": "好玩",
+    "zh": "",
+    "en": "fun"
+   },
+   {
+    "t": "没",
+    "zh": "",
+    "en": "didn't"
+   },
+   {
+    "t": "一起",
+    "zh": "",
+    "en": "together"
+   },
+   {
+    "t": "累",
+    "zh": "",
+    "en": "tired"
+   }
+  ]
+ }
+}

@@ -1,0 +1,1456 @@
+{
+ "book": "zh1",
+ "n": 1,
+ "t": "你好，新朋友",
+ "zh": "",
+ "en": "Hello, New Friends",
+ "icon": "🤝",
+ "color": "#E0674F",
+ "key": {
+  "t": "你姓什么？你叫什么名字？",
+  "r": "nǐ xìng shén me? nǐ jiào shén me míng zi?",
+  "zh": "",
+  "en": "What's your family name, and what are you called?"
+ },
+ "grammar": {
+  "title": {
+   "zh": "姓 和 叫；也 和 都",
+   "en": "Surname and name; 也 and 都"
+  },
+  "tip": {
+   "zh": "「姓」后面只说姓，「叫」后面可以说全名：我姓林，叫林小雨。「也」和「都」要放在动词前面：我也是学生，我们都是学生。两个三声连在一起，前一个读成二声：「你好」写 nǐ hǎo，读 ní hǎo。",
+   "en": "姓 (xìng) is followed by the family name only, while 叫 (jiào) can take a full name: 我姓林，叫林小雨 (wǒ xìng Lín, jiào Lín Xiǎo Yǔ). 也 (yě, also) and 都 (dōu, all) go before the verb: 我也是学生 (wǒ yě shì xué sheng). When two third tones meet, the first is said as second tone: 你好 is written nǐ hǎo but said ní hǎo."
+  }
+ },
+ "boss": {
+  "emoji": "🦔",
+  "name": {
+   "zh": "刺猬小刺",
+   "en": "Spike the Hedgehog"
+  },
+  "t": "你好，新朋友！我叫小刺，我会说中文，也会说英语。你会说中文吗？",
+  "r": "nǐ hǎo, xīn péng you! wǒ jiào Xiǎo Cì, wǒ huì shuō zhōng wén, yě huì shuō yīng yǔ. nǐ huì shuō zhōng wén ma?",
+  "zh": "",
+  "en": "Hello, new friend! I'm Xiaoci. I can speak Chinese and English, too. Can you speak Chinese?"
+ },
+ "words": [
+  {
+   "t": "零",
+   "r": "líng",
+   "zh": "",
+   "en": "zero",
+   "pic": "0️⃣"
+  },
+  {
+   "t": "一",
+   "r": "yī",
+   "zh": "",
+   "en": "one",
+   "pic": "1️⃣"
+  },
+  {
+   "t": "二",
+   "r": "èr",
+   "zh": "",
+   "en": "two",
+   "pic": "2️⃣"
+  },
+  {
+   "t": "三",
+   "r": "sān",
+   "zh": "",
+   "en": "three",
+   "pic": "3️⃣"
+  },
+  {
+   "t": "四",
+   "r": "sì",
+   "zh": "",
+   "en": "four",
+   "pic": "4️⃣"
+  },
+  {
+   "t": "五",
+   "r": "wǔ",
+   "zh": "",
+   "en": "five",
+   "pic": "5️⃣"
+  },
+  {
+   "t": "六",
+   "r": "liù",
+   "zh": "",
+   "en": "six",
+   "pic": "6️⃣"
+  },
+  {
+   "t": "七",
+   "r": "qī",
+   "zh": "",
+   "en": "seven",
+   "pic": "7️⃣"
+  },
+  {
+   "t": "八",
+   "r": "bā",
+   "zh": "",
+   "en": "eight",
+   "pic": "8️⃣"
+  },
+  {
+   "t": "九",
+   "r": "jiǔ",
+   "zh": "",
+   "en": "nine",
+   "pic": "9️⃣"
+  },
+  {
+   "t": "十",
+   "r": "shí",
+   "zh": "",
+   "en": "ten",
+   "pic": "🔟"
+  },
+  {
+   "t": "姓",
+   "r": "xìng",
+   "zh": "",
+   "en": "family name is",
+   "pic": "📛"
+  },
+  {
+   "t": "中文",
+   "r": "zhōng wén",
+   "zh": "",
+   "en": "Chinese (language)",
+   "pic": "🏮"
+  },
+  {
+   "t": "英语",
+   "r": "yīng yǔ",
+   "zh": "",
+   "en": "English (language)",
+   "pic": "🔤"
+  },
+  {
+   "t": "说",
+   "r": "shuō",
+   "zh": "",
+   "en": "to speak",
+   "pic": "🗣️"
+  },
+  {
+   "t": "会",
+   "r": "huì",
+   "zh": "",
+   "en": "can, know how to"
+  },
+  {
+   "t": "也",
+   "r": "yě",
+   "zh": "",
+   "en": "also"
+  },
+  {
+   "t": "都",
+   "r": "dōu",
+   "zh": "",
+   "en": "all, both"
+  },
+  {
+   "t": "请问",
+   "r": "qǐng wèn",
+   "zh": "",
+   "en": "excuse me, may I ask",
+   "pic": "🙋"
+  },
+  {
+   "t": "你们",
+   "r": "nǐ men",
+   "zh": "",
+   "en": "you (plural)",
+   "pic": "👥"
+  },
+  {
+   "t": "同桌",
+   "r": "tóng zhuō",
+   "zh": "",
+   "en": "desk mate",
+   "pic": "🪑"
+  },
+  {
+   "t": "加",
+   "r": "jiā",
+   "zh": "",
+   "en": "plus, to add",
+   "pic": "➕"
+  },
+  {
+   "t": "新朋友",
+   "r": "xīn péng you",
+   "zh": "",
+   "en": "new friend",
+   "pic": "🆕"
+  },
+  {
+   "t": "欢迎",
+   "r": "huān yíng",
+   "zh": "",
+   "en": "welcome",
+   "pic": "🎉"
+  }
+ ],
+ "sents": [
+  {
+   "t": "你姓什么？",
+   "seg": [
+    "你",
+    "姓",
+    "什么？"
+   ],
+   "r": [
+    "nǐ",
+    "xìng",
+    "shén me"
+   ],
+   "zh": "",
+   "en": "What is your family name?"
+  },
+  {
+   "t": "我姓林，叫林小雨。",
+   "seg": [
+    "我",
+    "姓",
+    "林，",
+    "叫",
+    "林小雨。"
+   ],
+   "r": [
+    "wǒ",
+    "xìng",
+    "Lín",
+    "jiào",
+    "Lín Xiǎo Yǔ"
+   ],
+   "zh": "",
+   "en": "My surname is Lin, and my name is Lin Xiaoyu."
+  },
+  {
+   "t": "你会说中文吗？",
+   "seg": [
+    "你",
+    "会",
+    "说",
+    "中文",
+    "吗？"
+   ],
+   "r": [
+    "nǐ",
+    "huì",
+    "shuō",
+    "zhōng wén",
+    "ma"
+   ],
+   "zh": "",
+   "en": "Can you speak Chinese?"
+  },
+  {
+   "t": "我会说中文，也会说英语。",
+   "seg": [
+    "我",
+    "会",
+    "说",
+    "中文，",
+    "也",
+    "会",
+    "说",
+    "英语。"
+   ],
+   "r": [
+    "wǒ",
+    "huì",
+    "shuō",
+    "zhōng wén",
+    "yě",
+    "huì",
+    "shuō",
+    "yīng yǔ"
+   ],
+   "zh": "",
+   "en": "I can speak Chinese, and I can speak English, too."
+  },
+  {
+   "t": "我不会说中文。",
+   "seg": [
+    "我",
+    "不会",
+    "说",
+    "中文。"
+   ],
+   "r": [
+    "wǒ",
+    "bú huì",
+    "shuō",
+    "zhōng wén"
+   ],
+   "zh": "",
+   "en": "I can't speak Chinese."
+  },
+  {
+   "t": "我们都是学生。",
+   "seg": [
+    "我们",
+    "都",
+    "是",
+    "学生。"
+   ],
+   "r": [
+    "wǒ men",
+    "dōu",
+    "shì",
+    "xué sheng"
+   ],
+   "zh": "",
+   "en": "We are all students."
+  },
+  {
+   "t": "他不是老师，他是学生。",
+   "seg": [
+    "他",
+    "不是",
+    "老师，",
+    "他",
+    "是",
+    "学生。"
+   ],
+   "r": [
+    "tā",
+    "bú shì",
+    "lǎo shī",
+    "tā",
+    "shì",
+    "xué sheng"
+   ],
+   "zh": "",
+   "en": "He isn't a teacher; he is a student."
+  },
+  {
+   "t": "他也是我的同学。",
+   "seg": [
+    "他",
+    "也",
+    "是",
+    "我的",
+    "同学。"
+   ],
+   "r": [
+    "tā",
+    "yě",
+    "shì",
+    "wǒ de",
+    "tóng xué"
+   ],
+   "zh": "",
+   "en": "He is my classmate, too."
+  },
+  {
+   "t": "你们都会说英语吗？",
+   "seg": [
+    "你们",
+    "都",
+    "会",
+    "说",
+    "英语",
+    "吗？"
+   ],
+   "r": [
+    "nǐ men",
+    "dōu",
+    "huì",
+    "shuō",
+    "yīng yǔ",
+    "ma"
+   ],
+   "zh": "",
+   "en": "Can you all speak English?"
+  },
+  {
+   "t": "我是新同学，你呢？",
+   "seg": [
+    "我",
+    "是",
+    "新",
+    "同学，",
+    "你",
+    "呢？"
+   ],
+   "r": [
+    "wǒ",
+    "shì",
+    "xīn",
+    "tóng xué",
+    "nǐ",
+    "ne"
+   ],
+   "zh": "",
+   "en": "I am a new classmate. And you?"
+  },
+  {
+   "t": "他们是我的新朋友。",
+   "seg": [
+    "他们",
+    "是",
+    "我的",
+    "新",
+    "朋友。"
+   ],
+   "r": [
+    "tā men",
+    "shì",
+    "wǒ de",
+    "xīn",
+    "péng you"
+   ],
+   "zh": "",
+   "en": "They are my new friends."
+  },
+  {
+   "t": "一，二，三，四，五！",
+   "seg": [
+    "一，",
+    "二，",
+    "三，",
+    "四，",
+    "五！"
+   ],
+   "r": [
+    "yī",
+    "èr",
+    "sān",
+    "sì",
+    "wǔ"
+   ],
+   "zh": "",
+   "en": "One, two, three, four, five!"
+  },
+  {
+   "t": "六，七，八，九，十！",
+   "seg": [
+    "六，",
+    "七，",
+    "八，",
+    "九，",
+    "十！"
+   ],
+   "r": [
+    "liù",
+    "qī",
+    "bā",
+    "jiǔ",
+    "shí"
+   ],
+   "zh": "",
+   "en": "Six, seven, eight, nine, ten!"
+  },
+  {
+   "t": "请问，你是陈大山吗？",
+   "seg": [
+    "请问，",
+    "你",
+    "是",
+    "陈大山",
+    "吗？"
+   ],
+   "r": [
+    "qǐng wèn",
+    "nǐ",
+    "shì",
+    "Chén Dà Shān",
+    "ma"
+   ],
+   "zh": "",
+   "en": "Excuse me, are you Chen Dashan?"
+  },
+  {
+   "t": "不是，我姓林，叫林小雨。",
+   "seg": [
+    "不是，",
+    "我",
+    "姓",
+    "林，",
+    "叫",
+    "林小雨。"
+   ],
+   "r": [
+    "bú shì",
+    "wǒ",
+    "xìng",
+    "Lín",
+    "jiào",
+    "Lín Xiǎo Yǔ"
+   ],
+   "zh": "",
+   "en": "No, my surname is Lin and my name is Lin Xiaoyu."
+  },
+  {
+   "t": "十个同学都会说中文。",
+   "seg": [
+    "十个",
+    "同学",
+    "都",
+    "会",
+    "说",
+    "中文。"
+   ],
+   "r": [
+    "shí gè",
+    "tóng xué",
+    "dōu",
+    "huì",
+    "shuō",
+    "zhōng wén"
+   ],
+   "zh": "",
+   "en": "All ten classmates can speak Chinese."
+  }
+ ],
+ "dlgs": [
+  {
+   "q": {
+    "t": "你姓什么？",
+    "seg": [
+     "你",
+     "姓",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "xìng",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What is your family name?"
+   },
+   "a": {
+    "t": "我姓林。",
+    "seg": [
+     "我",
+     "姓",
+     "林。"
+    ],
+    "r": [
+     "wǒ",
+     "xìng",
+     "Lín"
+    ],
+    "zh": "",
+    "en": "My surname is Lin."
+   },
+   "wrong": [
+    {
+     "t": "我是学生。",
+     "seg": [
+      "我",
+      "是",
+      "学生。"
+     ],
+     "r": [
+      "wǒ",
+      "shì",
+      "xué sheng"
+     ],
+     "zh": "",
+     "en": "I'm a student."
+    },
+    {
+     "t": "谢谢你！",
+     "seg": [
+      "谢谢",
+      "你！"
+     ],
+     "r": [
+      "xiè xie",
+      "nǐ"
+     ],
+     "zh": "",
+     "en": "Thank you!"
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你会说中文吗？",
+    "seg": [
+     "你",
+     "会",
+     "说",
+     "中文",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "huì",
+     "shuō",
+     "zhōng wén",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Can you speak Chinese?"
+   },
+   "a": {
+    "t": "会，我会说中文。",
+    "seg": [
+     "会，",
+     "我",
+     "会",
+     "说",
+     "中文。"
+    ],
+    "r": [
+     "huì",
+     "wǒ",
+     "huì",
+     "shuō",
+     "zhōng wén"
+    ],
+    "zh": "",
+    "en": "Yes, I can speak Chinese."
+   },
+   "wrong": [
+    {
+     "t": "我姓陈。",
+     "seg": [
+      "我",
+      "姓",
+      "陈。"
+     ],
+     "r": [
+      "wǒ",
+      "xìng",
+      "Chén"
+     ],
+     "zh": "",
+     "en": "My surname is Chen."
+    },
+    {
+     "t": "我们都是同学。",
+     "seg": [
+      "我们",
+      "都",
+      "是",
+      "同学。"
+     ],
+     "r": [
+      "wǒ men",
+      "dōu",
+      "shì",
+      "tóng xué"
+     ],
+     "zh": "",
+     "en": "We are all classmates."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你们都会说英语吗？",
+    "seg": [
+     "你们",
+     "都",
+     "会",
+     "说",
+     "英语",
+     "吗？"
+    ],
+    "r": [
+     "nǐ men",
+     "dōu",
+     "huì",
+     "shuō",
+     "yīng yǔ",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Can you all speak English?"
+   },
+   "a": {
+    "t": "都会。",
+    "seg": [
+     "都",
+     "会。"
+    ],
+    "r": [
+     "dōu",
+     "huì"
+    ],
+    "zh": "",
+    "en": "Yes, all of us can."
+   },
+   "wrong": [
+    {
+     "t": "我是新同学。",
+     "seg": [
+      "我",
+      "是",
+      "新",
+      "同学。"
+     ],
+     "r": [
+      "wǒ",
+      "shì",
+      "xīn",
+      "tóng xué"
+     ],
+     "zh": "",
+     "en": "I am a new classmate."
+    },
+    {
+     "t": "不客气。",
+     "seg": [
+      "不",
+      "客气。"
+     ],
+     "r": [
+      "bú",
+      "kè qi"
+     ],
+     "zh": "",
+     "en": "You're welcome."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你是新同学吗？",
+    "seg": [
+     "你",
+     "是",
+     "新",
+     "同学",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "shì",
+     "xīn",
+     "tóng xué",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Are you a new classmate?"
+   },
+   "a": {
+    "t": "是，我是新同学，你呢？",
+    "seg": [
+     "是，",
+     "我",
+     "是",
+     "新",
+     "同学，",
+     "你",
+     "呢？"
+    ],
+    "r": [
+     "shì",
+     "wǒ",
+     "shì",
+     "xīn",
+     "tóng xué",
+     "nǐ",
+     "ne"
+    ],
+    "zh": "",
+    "en": "Yes, I am. And you?"
+   },
+   "wrong": [
+    {
+     "t": "我姓林。",
+     "seg": [
+      "我",
+      "姓",
+      "林。"
+     ],
+     "r": [
+      "wǒ",
+      "xìng",
+      "Lín"
+     ],
+     "zh": "",
+     "en": "My surname is Lin."
+    },
+    {
+     "t": "再见！",
+     "seg": [
+      "再见！"
+     ],
+     "r": [
+      "zài jiàn"
+     ],
+     "zh": "",
+     "en": "Goodbye!"
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你们有几个同学？",
+    "seg": [
+     "你们",
+     "有",
+     "几个",
+     "同学？"
+    ],
+    "r": [
+     "nǐ men",
+     "yǒu",
+     "jǐ gè",
+     "tóng xué"
+    ],
+    "zh": "",
+    "en": "How many classmates do you have?"
+   },
+   "a": {
+    "t": "我们有十个同学。",
+    "seg": [
+     "我们",
+     "有",
+     "十个",
+     "同学。"
+    ],
+    "r": [
+     "wǒ men",
+     "yǒu",
+     "shí gè",
+     "tóng xué"
+    ],
+    "zh": "",
+    "en": "We have ten classmates."
+   },
+   "wrong": [
+    {
+     "t": "我姓陈。",
+     "seg": [
+      "我",
+      "姓",
+      "陈。"
+     ],
+     "r": [
+      "wǒ",
+      "xìng",
+      "Chén"
+     ],
+     "zh": "",
+     "en": "My surname is Chen."
+    },
+    {
+     "t": "再见！",
+     "seg": [
+      "再见！"
+     ],
+     "r": [
+      "zài jiàn"
+     ],
+     "zh": "",
+     "en": "Goodbye!"
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "他是你的同桌吗？",
+    "seg": [
+     "他",
+     "是",
+     "你的",
+     "同桌",
+     "吗？"
+    ],
+    "r": [
+     "tā",
+     "shì",
+     "nǐ de",
+     "tóng zhuō",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Is he your desk mate?"
+   },
+   "a": {
+    "t": "不是，他是我的朋友。",
+    "seg": [
+     "不是，",
+     "他",
+     "是",
+     "我的",
+     "朋友。"
+    ],
+    "r": [
+     "bú shì",
+     "tā",
+     "shì",
+     "wǒ de",
+     "péng you"
+    ],
+    "zh": "",
+    "en": "No, he's my friend."
+   },
+   "wrong": [
+    {
+     "t": "我会说中文。",
+     "seg": [
+      "我",
+      "会",
+      "说",
+      "中文。"
+     ],
+     "r": [
+      "wǒ",
+      "huì",
+      "shuō",
+      "zhōng wén"
+     ],
+     "zh": "",
+     "en": "I can speak Chinese."
+    },
+    {
+     "t": "我姓林。",
+     "seg": [
+      "我",
+      "姓",
+      "林。"
+     ],
+     "r": [
+      "wǒ",
+      "xìng",
+      "Lín"
+     ],
+     "zh": "",
+     "en": "My surname is Lin."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "请问，你是陈大山吗？",
+    "seg": [
+     "请问，",
+     "你",
+     "是",
+     "陈大山",
+     "吗？"
+    ],
+    "r": [
+     "qǐng wèn",
+     "nǐ",
+     "shì",
+     "Chén Dà Shān",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Excuse me, are you Chen Dashan?"
+   },
+   "a": {
+    "t": "是，我是陈大山。",
+    "seg": [
+     "是，",
+     "我",
+     "是",
+     "陈大山。"
+    ],
+    "r": [
+     "shì",
+     "wǒ",
+     "shì",
+     "Chén Dà Shān"
+    ],
+    "zh": "",
+    "en": "Yes, I am Chen Dashan."
+   },
+   "wrong": [
+    {
+     "t": "我会说英语。",
+     "seg": [
+      "我",
+      "会",
+      "说",
+      "英语。"
+     ],
+     "r": [
+      "wǒ",
+      "huì",
+      "shuō",
+      "yīng yǔ"
+     ],
+     "zh": "",
+     "en": "I can speak English."
+    },
+    {
+     "t": "三加二是五。",
+     "seg": [
+      "三",
+      "加",
+      "二",
+      "是",
+      "五。"
+     ],
+     "r": [
+      "sān",
+      "jiā",
+      "èr",
+      "shì",
+      "wǔ"
+     ],
+     "zh": "",
+     "en": "Three plus two is five."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "欢迎你，新朋友！",
+    "seg": [
+     "欢迎",
+     "你，",
+     "新",
+     "朋友！"
+    ],
+    "r": [
+     "huān yíng",
+     "nǐ",
+     "xīn",
+     "péng you"
+    ],
+    "zh": "",
+    "en": "Welcome, new friend!"
+   },
+   "a": {
+    "t": "谢谢，很高兴认识你们。",
+    "seg": [
+     "谢谢，",
+     "很",
+     "高兴",
+     "认识",
+     "你们。"
+    ],
+    "r": [
+     "xiè xie",
+     "hěn",
+     "gāo xìng",
+     "rèn shi",
+     "nǐ men"
+    ],
+    "zh": "",
+    "en": "Thanks, nice to meet you all."
+   },
+   "wrong": [
+    {
+     "t": "我会说英语。",
+     "seg": [
+      "我",
+      "会",
+      "说",
+      "英语。"
+     ],
+     "r": [
+      "wǒ",
+      "huì",
+      "shuō",
+      "yīng yǔ"
+     ],
+     "zh": "",
+     "en": "I can speak English."
+    },
+    {
+     "t": "我姓林。",
+     "seg": [
+      "我",
+      "姓",
+      "林。"
+     ],
+     "r": [
+      "wǒ",
+      "xìng",
+      "Lín"
+     ],
+     "zh": "",
+     "en": "My surname is Lin."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "我会说英语，你呢？",
+    "seg": [
+     "我",
+     "会",
+     "说",
+     "英语，",
+     "你",
+     "呢？"
+    ],
+    "r": [
+     "wǒ",
+     "huì",
+     "shuō",
+     "yīng yǔ",
+     "nǐ",
+     "ne"
+    ],
+    "zh": "",
+    "en": "I can speak English. What about you?"
+   },
+   "a": {
+    "t": "我也会说英语。",
+    "seg": [
+     "我",
+     "也",
+     "会",
+     "说",
+     "英语。"
+    ],
+    "r": [
+     "wǒ",
+     "yě",
+     "huì",
+     "shuō",
+     "yīng yǔ"
+    ],
+    "zh": "",
+    "en": "I can speak English, too."
+   },
+   "wrong": [
+    {
+     "t": "我姓陈。",
+     "seg": [
+      "我",
+      "姓",
+      "陈。"
+     ],
+     "r": [
+      "wǒ",
+      "xìng",
+      "Chén"
+     ],
+     "zh": "",
+     "en": "My surname is Chen."
+    },
+    {
+     "t": "不客气。",
+     "seg": [
+      "不",
+      "客气。"
+     ],
+     "r": [
+      "bú",
+      "kè qi"
+     ],
+     "zh": "",
+     "en": "You're welcome."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你们是同学吗？",
+    "seg": [
+     "你们",
+     "是",
+     "同学",
+     "吗？"
+    ],
+    "r": [
+     "nǐ men",
+     "shì",
+     "tóng xué",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Are you classmates?"
+   },
+   "a": {
+    "t": "对，我们都是同学。",
+    "seg": [
+     "对，",
+     "我们",
+     "都",
+     "是",
+     "同学。"
+    ],
+    "r": [
+     "duì",
+     "wǒ men",
+     "dōu",
+     "shì",
+     "tóng xué"
+    ],
+    "zh": "",
+    "en": "Yes, we are all classmates."
+   },
+   "wrong": [
+    {
+     "t": "我会说中文。",
+     "seg": [
+      "我",
+      "会",
+      "说",
+      "中文。"
+     ],
+     "r": [
+      "wǒ",
+      "huì",
+      "shuō",
+      "zhōng wén"
+     ],
+     "zh": "",
+     "en": "I can speak Chinese."
+    },
+    {
+     "t": "我叫小雨。",
+     "seg": [
+      "我",
+      "叫",
+      "小雨。"
+     ],
+     "r": [
+      "wǒ",
+      "jiào",
+      "Xiǎo Yǔ"
+     ],
+     "zh": "",
+     "en": "I'm Xiaoyu."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "三加二是几？",
+    "seg": [
+     "三",
+     "加",
+     "二",
+     "是",
+     "几？"
+    ],
+    "r": [
+     "sān",
+     "jiā",
+     "èr",
+     "shì",
+     "jǐ"
+    ],
+    "zh": "",
+    "en": "What is three plus two?"
+   },
+   "a": {
+    "t": "是五。",
+    "seg": [
+     "是",
+     "五。"
+    ],
+    "r": [
+     "shì",
+     "wǔ"
+    ],
+    "zh": "",
+    "en": "It's five."
+   },
+   "wrong": [
+    {
+     "t": "我会说中文。",
+     "seg": [
+      "我",
+      "会",
+      "说",
+      "中文。"
+     ],
+     "r": [
+      "wǒ",
+      "huì",
+      "shuō",
+      "zhōng wén"
+     ],
+     "zh": "",
+     "en": "I can speak Chinese."
+    },
+    {
+     "t": "我姓林。",
+     "seg": [
+      "我",
+      "姓",
+      "林。"
+     ],
+     "r": [
+      "wǒ",
+      "xìng",
+      "Lín"
+     ],
+     "zh": "",
+     "en": "My surname is Lin."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你会说中文，也会说英语吗？",
+    "seg": [
+     "你",
+     "会",
+     "说",
+     "中文，",
+     "也",
+     "会",
+     "说",
+     "英语",
+     "吗？"
+    ],
+    "r": [
+     "nǐ",
+     "huì",
+     "shuō",
+     "zhōng wén",
+     "yě",
+     "huì",
+     "shuō",
+     "yīng yǔ",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Can you speak Chinese and English?"
+   },
+   "a": {
+    "t": "对，我都会。",
+    "seg": [
+     "对，",
+     "我",
+     "都",
+     "会。"
+    ],
+    "r": [
+     "duì",
+     "wǒ",
+     "dōu",
+     "huì"
+    ],
+    "zh": "",
+    "en": "Yes, I can speak both."
+   },
+   "wrong": [
+    {
+     "t": "他们是新同学。",
+     "seg": [
+      "他们",
+      "是",
+      "新",
+      "同学。"
+     ],
+     "r": [
+      "tā men",
+      "shì",
+      "xīn",
+      "tóng xué"
+     ],
+     "zh": "",
+     "en": "They are new classmates."
+    },
+    {
+     "t": "我姓陈。",
+     "seg": [
+      "我",
+      "姓",
+      "陈。"
+     ],
+     "r": [
+      "wǒ",
+      "xìng",
+      "Chén"
+     ],
+     "zh": "",
+     "en": "My surname is Chen."
+    }
+   ]
+  }
+ ],
+ "talk": {
+  "name": "Lin Xiaoyu",
+  "zh": "林小雨",
+  "gender": "f",
+  "kid": true,
+  "topic": {
+   "zh": "打招呼，说名字，数到十",
+   "en": "Greeting, names and counting to ten"
+  },
+  "persona": "You are Lin Xiaoyu, a cheerful nine-year-old islander who works as the junior greeter at the ferry dock of a small island. Your job is to welcome new friends who arrive by ferry. You love counting the ferry boats and the gulls. You want to chat about: saying hello, what the visitor wants to be called on the island (a game nickname they make up, never their real name), whether they speak Chinese or English, and counting from one to ten together. Speak only simple level-1 Mandarin, short sentences of three to six words, one question at a time, and wait for the learner to answer. Praise small successes. Never ask for the learner's real name, school, address, phone number or any other personal data; if they offer a real name, just say it is a nice name and carry on with the game nickname. You are a friendly game character, not a friend who needs emotional support.",
+  "goal": {
+   "zh": "用中文说你的游戏名字，问对方姓什么，说你会说什么语言，数到十。",
+   "en": "Say your game nickname in Chinese, ask the family name, say which languages you speak, and count to ten."
+  },
+  "opener": {
+   "t": "你好，新朋友！我姓林，叫林小雨。你叫什么名字？用游戏名字就可以。",
+   "r": "nǐ hǎo, xīn péng you! wǒ xìng Lín, jiào Lín Xiǎo Yǔ. nǐ jiào shén me míng zi? yòng yóu xì míng zi jiù kě yǐ."
+  },
+  "steps": [
+   {
+    "zh": "说你的游戏名字",
+    "en": "Say your game nickname",
+    "t": "我叫小云。"
+   },
+   {
+    "zh": "问对方姓什么",
+    "en": "Ask her family name",
+    "t": "你姓什么？"
+   },
+   {
+    "zh": "说你会说什么语言",
+    "en": "Say which languages you speak",
+    "t": "我会说英语，也会说中文。"
+   },
+   {
+    "zh": "数到十",
+    "en": "Count to ten",
+    "t": "一，二，三，四，五，六，七，八，九，十！"
+   }
+  ],
+  "words": [
+   {
+    "t": "姓",
+    "zh": "",
+    "en": "family name is"
+   },
+   {
+    "t": "叫",
+    "zh": "",
+    "en": "to be called"
+   },
+   {
+    "t": "会",
+    "zh": "",
+    "en": "can"
+   },
+   {
+    "t": "说",
+    "zh": "",
+    "en": "to speak"
+   },
+   {
+    "t": "也",
+    "zh": "",
+    "en": "also"
+   },
+   {
+    "t": "都",
+    "zh": "",
+    "en": "all"
+   },
+   {
+    "t": "中文",
+    "zh": "",
+    "en": "Chinese"
+   },
+   {
+    "t": "英语",
+    "zh": "",
+    "en": "English"
+   }
+  ]
+ }
+}

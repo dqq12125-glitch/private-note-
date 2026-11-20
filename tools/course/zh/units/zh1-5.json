@@ -1,0 +1,1393 @@
+{
+ "book": "zh1",
+ "n": 5,
+ "t": "这个星期",
+ "zh": "",
+ "en": "This Week",
+ "icon": "📅",
+ "color": "#2E86AB",
+ "key": {
+  "t": "你星期六上午在哪里，做什么？",
+  "r": "nǐ xīng qī liù shàng wǔ zài nǎ lǐ, zuò shén me?",
+  "zh": "",
+  "en": "Where are you on Saturday morning, and what do you do?"
+ },
+ "grammar": {
+  "title": {
+   "zh": "时间 + 地点 + 动作",
+   "en": "Time + Place + Action"
+  },
+  "tip": {
+   "zh": "时间词放在动词前面，不放在句子最后；地点用「在 + 地方」，也放在动词前。顺序是：谁 + 什么时候 + 在哪里 + 做什么：我星期一下午在图书馆看书。「…的时候」「以前」「以后」也一样放在动词前面：吃饭以前，我先洗手。",
+   "en": "Time words go before the verb, never at the end, and \"at a place\" (在 + place) also goes before the verb. The order is who + when + where + what: 我星期一下午在图书馆看书 (wǒ xīng qī yī xià wǔ zài tú shū guǎn kàn shū). 以前 / 以后 / 的时候 work the same way: 吃饭以前，我先洗手 (chī fàn yǐ qián, wǒ xiān xǐ shǒu)."
+  }
+ },
+ "boss": {
+  "emoji": "🐢",
+  "name": {
+   "zh": "日历龟",
+   "en": "Tilly the Turtle"
+  },
+  "t": "你好！我是日历龟。我星期六上午在海边晒太阳。你星期六上午做什么？",
+  "r": "nǐ hǎo! wǒ shì rì lì guī. wǒ xīng qī liù shàng wǔ zài hǎi biān shài tài yáng. nǐ xīng qī liù shàng wǔ zuò shén me?",
+  "zh": "",
+  "en": "Hello! I'm Tilly the calendar turtle. On Saturday morning I sunbathe at the beach. What do you do on Saturday morning?"
+ },
+ "words": [
+  {
+   "t": "星期几",
+   "r": "xīng qī jǐ",
+   "zh": "",
+   "en": "what day",
+   "pic": "📆"
+  },
+  {
+   "t": "星期一",
+   "r": "xīng qī yī",
+   "zh": "",
+   "en": "Monday",
+   "pic": "1️⃣"
+  },
+  {
+   "t": "星期二",
+   "r": "xīng qī èr",
+   "zh": "",
+   "en": "Tuesday",
+   "pic": "2️⃣"
+  },
+  {
+   "t": "星期三",
+   "r": "xīng qī sān",
+   "zh": "",
+   "en": "Wednesday",
+   "pic": "3️⃣"
+  },
+  {
+   "t": "星期四",
+   "r": "xīng qī sì",
+   "zh": "",
+   "en": "Thursday",
+   "pic": "4️⃣"
+  },
+  {
+   "t": "星期五",
+   "r": "xīng qī wǔ",
+   "zh": "",
+   "en": "Friday",
+   "pic": "5️⃣"
+  },
+  {
+   "t": "星期六",
+   "r": "xīng qī liù",
+   "zh": "",
+   "en": "Saturday",
+   "pic": "6️⃣"
+  },
+  {
+   "t": "星期天",
+   "r": "xīng qī tiān",
+   "zh": "",
+   "en": "Sunday",
+   "pic": "7️⃣"
+  },
+  {
+   "t": "周末",
+   "r": "zhōu mò",
+   "zh": "",
+   "en": "weekend",
+   "pic": "🎉"
+  },
+  {
+   "t": "每天",
+   "r": "měi tiān",
+   "zh": "",
+   "en": "every day",
+   "pic": "🔁"
+  },
+  {
+   "t": "每个星期",
+   "r": "měi gè xīng qī",
+   "zh": "",
+   "en": "every week"
+  },
+  {
+   "t": "上午",
+   "r": "shàng wǔ",
+   "zh": "",
+   "en": "morning",
+   "pic": "🌤️"
+  },
+  {
+   "t": "中午",
+   "r": "zhōng wǔ",
+   "zh": "",
+   "en": "noon",
+   "pic": "☀️"
+  },
+  {
+   "t": "下午",
+   "r": "xià wǔ",
+   "zh": "",
+   "en": "afternoon",
+   "pic": "🌇"
+  },
+  {
+   "t": "时候",
+   "r": "shí hou",
+   "zh": "",
+   "en": "time, when"
+  },
+  {
+   "t": "以前",
+   "r": "yǐ qián",
+   "zh": "",
+   "en": "before"
+  },
+  {
+   "t": "以后",
+   "r": "yǐ hòu",
+   "zh": "",
+   "en": "after"
+  },
+  {
+   "t": "时间",
+   "r": "shí jiān",
+   "zh": "",
+   "en": "time",
+   "pic": "⏰"
+  },
+  {
+   "t": "课",
+   "r": "kè",
+   "zh": "",
+   "en": "class, lesson",
+   "pic": "📖"
+  },
+  {
+   "t": "上课",
+   "r": "shàng kè",
+   "zh": "",
+   "en": "have class",
+   "pic": "🏫"
+  },
+  {
+   "t": "下课",
+   "r": "xià kè",
+   "zh": "",
+   "en": "class is over",
+   "pic": "🔔"
+  },
+  {
+   "t": "比赛",
+   "r": "bǐ sài",
+   "zh": "",
+   "en": "match, contest",
+   "pic": "🏆"
+  },
+  {
+   "t": "从…到…",
+   "r": "cóng … dào …",
+   "zh": "",
+   "en": "from … to …"
+  },
+  {
+   "t": "忙",
+   "r": "máng",
+   "zh": "",
+   "en": "busy",
+   "pic": "🐝"
+  }
+ ],
+ "sents": [
+  {
+   "t": "今天星期几？",
+   "seg": [
+    "今天",
+    "星期几？"
+   ],
+   "r": [
+    "jīn tiān",
+    "xīng qī jǐ"
+   ],
+   "zh": "",
+   "en": "What day is it today?"
+  },
+  {
+   "t": "今天星期三。",
+   "seg": [
+    "今天",
+    "星期三。"
+   ],
+   "r": [
+    "jīn tiān",
+    "xīng qī sān"
+   ],
+   "zh": "",
+   "en": "Today is Wednesday."
+  },
+  {
+   "t": "我星期一上午有数学课。",
+   "seg": [
+    "我",
+    "星期一",
+    "上午",
+    "有",
+    "数学课。"
+   ],
+   "r": [
+    "wǒ",
+    "xīng qī yī",
+    "shàng wǔ",
+    "yǒu",
+    "shù xué kè"
+   ],
+   "zh": "",
+   "en": "I have maths on Monday morning."
+  },
+  {
+   "t": "我每天早上七点起床。",
+   "seg": [
+    "我",
+    "每天",
+    "早上",
+    "七点",
+    "起床。"
+   ],
+   "r": [
+    "wǒ",
+    "měi tiān",
+    "zǎo shang",
+    "qī diǎn",
+    "qǐ chuáng"
+   ],
+   "zh": "",
+   "en": "I get up at seven every morning."
+  },
+  {
+   "t": "我星期二下午在图书馆看书。",
+   "seg": [
+    "我",
+    "星期二",
+    "下午",
+    "在图书馆",
+    "看书。"
+   ],
+   "r": [
+    "wǒ",
+    "xīng qī èr",
+    "xià wǔ",
+    "zài tú shū guǎn",
+    "kàn shū"
+   ],
+   "zh": "",
+   "en": "I read at the library on Tuesday afternoon."
+  },
+  {
+   "t": "他们星期六上午在操场踢足球。",
+   "seg": [
+    "他们",
+    "星期六",
+    "上午",
+    "在操场",
+    "踢足球。"
+   ],
+   "r": [
+    "tā men",
+    "xīng qī liù",
+    "shàng wǔ",
+    "zài cāo chǎng",
+    "tī zú qiú"
+   ],
+   "zh": "",
+   "en": "They play football on the playground on Saturday morning."
+  },
+  {
+   "t": "你星期五下午在哪里？",
+   "seg": [
+    "你",
+    "星期五",
+    "下午",
+    "在",
+    "哪里？"
+   ],
+   "r": [
+    "nǐ",
+    "xīng qī wǔ",
+    "xià wǔ",
+    "zài",
+    "nǎ lǐ"
+   ],
+   "zh": "",
+   "en": "Where are you on Friday afternoon?"
+  },
+  {
+   "t": "上课的时候，请安静。",
+   "seg": [
+    "上课的时候，",
+    "请",
+    "安静。"
+   ],
+   "r": [
+    "shàng kè de shí hou",
+    "qǐng",
+    "ān jìng"
+   ],
+   "zh": "",
+   "en": "Please be quiet during class."
+  },
+  {
+   "t": "吃饭以前，我先洗手。",
+   "seg": [
+    "吃饭以前，",
+    "我",
+    "先",
+    "洗手。"
+   ],
+   "r": [
+    "chī fàn yǐ qián",
+    "wǒ",
+    "xiān",
+    "xǐ shǒu"
+   ],
+   "zh": "",
+   "en": "Before eating, I wash my hands first."
+  },
+  {
+   "t": "下课以后，我们去操场玩。",
+   "seg": [
+    "下课以后，",
+    "我们",
+    "去",
+    "操场",
+    "玩。"
+   ],
+   "r": [
+    "xià kè yǐ hòu",
+    "wǒ men",
+    "qù",
+    "cāo chǎng",
+    "wán"
+   ],
+   "zh": "",
+   "en": "After class we go and play on the playground."
+  },
+  {
+   "t": "我们从星期一到星期五上学。",
+   "seg": [
+    "我们",
+    "从星期一",
+    "到星期五",
+    "上学。"
+   ],
+   "r": [
+    "wǒ men",
+    "cóng xīng qī yī",
+    "dào xīng qī wǔ",
+    "shàng xué"
+   ],
+   "zh": "",
+   "en": "We go to school from Monday to Friday."
+  },
+  {
+   "t": "图书馆从九点到五点开门。",
+   "seg": [
+    "图书馆",
+    "从九点",
+    "到五点",
+    "开门。"
+   ],
+   "r": [
+    "tú shū guǎn",
+    "cóng jiǔ diǎn",
+    "dào wǔ diǎn",
+    "kāi mén"
+   ],
+   "zh": "",
+   "en": "The library is open from nine to five."
+  },
+  {
+   "t": "我每个星期六都和朋友游泳。",
+   "seg": [
+    "我",
+    "每个星期六",
+    "都",
+    "和朋友",
+    "游泳。"
+   ],
+   "r": [
+    "wǒ",
+    "měi gè xīng qī liù",
+    "dōu",
+    "hé péng you",
+    "yóu yǒng"
+   ],
+   "zh": "",
+   "en": "I swim with friends every Saturday."
+  },
+  {
+   "t": "周末我们在海边野餐。",
+   "seg": [
+    "周末",
+    "我们",
+    "在海边",
+    "野餐。"
+   ],
+   "r": [
+    "zhōu mò",
+    "wǒ men",
+    "zài hǎi biān",
+    "yě cān"
+   ],
+   "zh": "",
+   "en": "At the weekend we have a picnic at the beach."
+  },
+  {
+   "t": "明天下午你有时间吗？",
+   "seg": [
+    "明天",
+    "下午",
+    "你",
+    "有",
+    "时间",
+    "吗？"
+   ],
+   "r": [
+    "míng tiān",
+    "xià wǔ",
+    "nǐ",
+    "yǒu",
+    "shí jiān",
+    "ma"
+   ],
+   "zh": "",
+   "en": "Do you have time tomorrow afternoon?"
+  },
+  {
+   "t": "星期天上午我有游泳比赛。",
+   "seg": [
+    "星期天",
+    "上午",
+    "我",
+    "有",
+    "游泳比赛。"
+   ],
+   "r": [
+    "xīng qī tiān",
+    "shàng wǔ",
+    "wǒ",
+    "yǒu",
+    "yóu yǒng bǐ sài"
+   ],
+   "zh": "",
+   "en": "I have a swimming contest on Sunday morning."
+  }
+ ],
+ "dlgs": [
+  {
+   "q": {
+    "t": "今天星期几？",
+    "seg": [
+     "今天",
+     "星期几？"
+    ],
+    "r": [
+     "jīn tiān",
+     "xīng qī jǐ"
+    ],
+    "zh": "",
+    "en": "What day is it today?"
+   },
+   "a": {
+    "t": "今天星期四。",
+    "seg": [
+     "今天",
+     "星期四。"
+    ],
+    "r": [
+     "jīn tiān",
+     "xīng qī sì"
+    ],
+    "zh": "",
+    "en": "It's Thursday."
+   },
+   "wrong": [
+    {
+     "t": "我们去操场吧。",
+     "seg": [
+      "我们",
+      "去",
+      "操场",
+      "吧。"
+     ],
+     "r": [
+      "wǒ men",
+      "qù",
+      "cāo chǎng",
+      "ba"
+     ],
+     "zh": "",
+     "en": "Let's go to the playground."
+    },
+    {
+     "t": "我每天七点起床。",
+     "seg": [
+      "我",
+      "每天",
+      "七点",
+      "起床。"
+     ],
+     "r": [
+      "wǒ",
+      "měi tiān",
+      "qī diǎn",
+      "qǐ chuáng"
+     ],
+     "zh": "",
+     "en": "I get up at seven every day."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你星期一上午有什么课？",
+    "seg": [
+     "你",
+     "星期一",
+     "上午",
+     "有",
+     "什么",
+     "课？"
+    ],
+    "r": [
+     "nǐ",
+     "xīng qī yī",
+     "shàng wǔ",
+     "yǒu",
+     "shén me",
+     "kè"
+    ],
+    "zh": "",
+    "en": "What class do you have on Monday morning?"
+   },
+   "a": {
+    "t": "我有数学课。",
+    "seg": [
+     "我",
+     "有",
+     "数学课。"
+    ],
+    "r": [
+     "wǒ",
+     "yǒu",
+     "shù xué kè"
+    ],
+    "zh": "",
+    "en": "I have maths."
+   },
+   "wrong": [
+    {
+     "t": "图书馆在二楼。",
+     "seg": [
+      "图书馆",
+      "在",
+      "二楼。"
+     ],
+     "r": [
+      "tú shū guǎn",
+      "zài",
+      "èr lóu"
+     ],
+     "zh": "",
+     "en": "The library is on the second floor."
+    },
+    {
+     "t": "我们去海边吧。",
+     "seg": [
+      "我们",
+      "去",
+      "海边",
+      "吧。"
+     ],
+     "r": [
+      "wǒ men",
+      "qù",
+      "hǎi biān",
+      "ba"
+     ],
+     "zh": "",
+     "en": "Let's go to the beach."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你每天几点起床？",
+    "seg": [
+     "你",
+     "每天",
+     "几点",
+     "起床？"
+    ],
+    "r": [
+     "nǐ",
+     "měi tiān",
+     "jǐ diǎn",
+     "qǐ chuáng"
+    ],
+    "zh": "",
+    "en": "What time do you get up every day?"
+   },
+   "a": {
+    "t": "我每天七点起床。",
+    "seg": [
+     "我",
+     "每天",
+     "七点",
+     "起床。"
+    ],
+    "r": [
+     "wǒ",
+     "měi tiān",
+     "qī diǎn",
+     "qǐ chuáng"
+    ],
+    "zh": "",
+    "en": "I get up at seven every day."
+   },
+   "wrong": [
+    {
+     "t": "我星期六去游泳。",
+     "seg": [
+      "我",
+      "星期六",
+      "去",
+      "游泳。"
+     ],
+     "r": [
+      "wǒ",
+      "xīng qī liù",
+      "qù",
+      "yóu yǒng"
+     ],
+     "zh": "",
+     "en": "I go swimming on Saturday."
+    },
+    {
+     "t": "今天星期五。",
+     "seg": [
+      "今天",
+      "星期五。"
+     ],
+     "r": [
+      "jīn tiān",
+      "xīng qī wǔ"
+     ],
+     "zh": "",
+     "en": "It's Friday today."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你星期六上午做什么？",
+    "seg": [
+     "你",
+     "星期六",
+     "上午",
+     "做",
+     "什么？"
+    ],
+    "r": [
+     "nǐ",
+     "xīng qī liù",
+     "shàng wǔ",
+     "zuò",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What do you do on Saturday morning?"
+   },
+   "a": {
+    "t": "我在操场踢足球。",
+    "seg": [
+     "我",
+     "在",
+     "操场",
+     "踢足球。"
+    ],
+    "r": [
+     "wǒ",
+     "zài",
+     "cāo chǎng",
+     "tī zú qiú"
+    ],
+    "zh": "",
+    "en": "I play football on the playground."
+   },
+   "wrong": [
+    {
+     "t": "今天星期五。",
+     "seg": [
+      "今天",
+      "星期五。"
+     ],
+     "r": [
+      "jīn tiān",
+      "xīng qī wǔ"
+     ],
+     "zh": "",
+     "en": "It's Friday today."
+    },
+    {
+     "t": "我有两本书。",
+     "seg": [
+      "我",
+      "有",
+      "两本",
+      "书。"
+     ],
+     "r": [
+      "wǒ",
+      "yǒu",
+      "liǎng běn",
+      "shū"
+     ],
+     "zh": "",
+     "en": "I have two books."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你们星期几有体育课？",
+    "seg": [
+     "你们",
+     "星期几",
+     "有",
+     "体育课？"
+    ],
+    "r": [
+     "nǐ men",
+     "xīng qī jǐ",
+     "yǒu",
+     "tǐ yù kè"
+    ],
+    "zh": "",
+    "en": "Which days do you have PE?"
+   },
+   "a": {
+    "t": "星期二和星期四。",
+    "seg": [
+     "星期二",
+     "和",
+     "星期四。"
+    ],
+    "r": [
+     "xīng qī èr",
+     "hé",
+     "xīng qī sì"
+    ],
+    "zh": "",
+    "en": "Tuesday and Thursday."
+   },
+   "wrong": [
+    {
+     "t": "体育课很有意思。",
+     "seg": [
+      "体育课",
+      "很",
+      "有意思。"
+     ],
+     "r": [
+      "tǐ yù kè",
+      "hěn",
+      "yǒu yì si"
+     ],
+     "zh": "",
+     "en": "PE is fun."
+    },
+    {
+     "t": "我们在教室上课。",
+     "seg": [
+      "我们",
+      "在",
+      "教室",
+      "上课。"
+     ],
+     "r": [
+      "wǒ men",
+      "zài",
+      "jiào shì",
+      "shàng kè"
+     ],
+     "zh": "",
+     "en": "We have class in the classroom."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "图书馆几点开门？",
+    "seg": [
+     "图书馆",
+     "几点",
+     "开门？"
+    ],
+    "r": [
+     "tú shū guǎn",
+     "jǐ diǎn",
+     "kāi mén"
+    ],
+    "zh": "",
+    "en": "What time does the library open?"
+   },
+   "a": {
+    "t": "九点开门。",
+    "seg": [
+     "九点",
+     "开门。"
+    ],
+    "r": [
+     "jiǔ diǎn",
+     "kāi mén"
+    ],
+    "zh": "",
+    "en": "It opens at nine."
+   },
+   "wrong": [
+    {
+     "t": "图书馆在食堂旁边。",
+     "seg": [
+      "图书馆",
+      "在",
+      "食堂",
+      "旁边。"
+     ],
+     "r": [
+      "tú shū guǎn",
+      "zài",
+      "shí táng",
+      "páng biān"
+     ],
+     "zh": "",
+     "en": "The library is next to the canteen."
+    },
+    {
+     "t": "我每天去操场。",
+     "seg": [
+      "我",
+      "每天",
+      "去",
+      "操场。"
+     ],
+     "r": [
+      "wǒ",
+      "měi tiān",
+      "qù",
+      "cāo chǎng"
+     ],
+     "zh": "",
+     "en": "I go to the playground every day."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "周末你在哪里？",
+    "seg": [
+     "周末",
+     "你",
+     "在",
+     "哪里？"
+    ],
+    "r": [
+     "zhōu mò",
+     "nǐ",
+     "zài",
+     "nǎ lǐ"
+    ],
+    "zh": "",
+    "en": "Where are you at the weekend?"
+   },
+   "a": {
+    "t": "我在海边玩。",
+    "seg": [
+     "我",
+     "在",
+     "海边",
+     "玩。"
+    ],
+    "r": [
+     "wǒ",
+     "zài",
+     "hǎi biān",
+     "wán"
+    ],
+    "zh": "",
+    "en": "I'm playing at the beach."
+   },
+   "wrong": [
+    {
+     "t": "我七点起床。",
+     "seg": [
+      "我",
+      "七点",
+      "起床。"
+     ],
+     "r": [
+      "wǒ",
+      "qī diǎn",
+      "qǐ chuáng"
+     ],
+     "zh": "",
+     "en": "I get up at seven."
+    },
+    {
+     "t": "今天星期三。",
+     "seg": [
+      "今天",
+      "星期三。"
+     ],
+     "r": [
+      "jīn tiān",
+      "xīng qī sān"
+     ],
+     "zh": "",
+     "en": "It's Wednesday today."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你们几点下课？",
+    "seg": [
+     "你们",
+     "几点",
+     "下课？"
+    ],
+    "r": [
+     "nǐ men",
+     "jǐ diǎn",
+     "xià kè"
+    ],
+    "zh": "",
+    "en": "What time does your class finish?"
+   },
+   "a": {
+    "t": "三点下课。",
+    "seg": [
+     "三点",
+     "下课。"
+    ],
+    "r": [
+     "sān diǎn",
+     "xià kè"
+    ],
+    "zh": "",
+    "en": "At three."
+   },
+   "wrong": [
+    {
+     "t": "我星期六有比赛。",
+     "seg": [
+      "我",
+      "星期六",
+      "有",
+      "比赛。"
+     ],
+     "r": [
+      "wǒ",
+      "xīng qī liù",
+      "yǒu",
+      "bǐ sài"
+     ],
+     "zh": "",
+     "en": "I have a contest on Saturday."
+    },
+    {
+     "t": "我们在教室上课。",
+     "seg": [
+      "我们",
+      "在",
+      "教室",
+      "上课。"
+     ],
+     "r": [
+      "wǒ men",
+      "zài",
+      "jiào shì",
+      "shàng kè"
+     ],
+     "zh": "",
+     "en": "We have class in the classroom."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "明天下午你有时间吗？",
+    "seg": [
+     "明天",
+     "下午",
+     "你",
+     "有",
+     "时间",
+     "吗？"
+    ],
+    "r": [
+     "míng tiān",
+     "xià wǔ",
+     "nǐ",
+     "yǒu",
+     "shí jiān",
+     "ma"
+    ],
+    "zh": "",
+    "en": "Do you have time tomorrow afternoon?"
+   },
+   "a": {
+    "t": "有，我们去公园吧。",
+    "seg": [
+     "有，",
+     "我们",
+     "去",
+     "公园",
+     "吧。"
+    ],
+    "r": [
+     "yǒu",
+     "wǒ men",
+     "qù",
+     "gōng yuán",
+     "ba"
+    ],
+    "zh": "",
+    "en": "Yes, let's go to the park."
+   },
+   "wrong": [
+    {
+     "t": "我星期三有数学课。",
+     "seg": [
+      "我",
+      "星期三",
+      "有",
+      "数学课。"
+     ],
+     "r": [
+      "wǒ",
+      "xīng qī sān",
+      "yǒu",
+      "shù xué kè"
+     ],
+     "zh": "",
+     "en": "I have maths on Wednesday."
+    },
+    {
+     "t": "我每天七点起床。",
+     "seg": [
+      "我",
+      "每天",
+      "七点",
+      "起床。"
+     ],
+     "r": [
+      "wǒ",
+      "měi tiān",
+      "qī diǎn",
+      "qǐ chuáng"
+     ],
+     "zh": "",
+     "en": "I get up at seven every day."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "吃饭以前，你做什么？",
+    "seg": [
+     "吃饭",
+     "以前，",
+     "你",
+     "做",
+     "什么？"
+    ],
+    "r": [
+     "chī fàn",
+     "yǐ qián",
+     "nǐ",
+     "zuò",
+     "shén me"
+    ],
+    "zh": "",
+    "en": "What do you do before eating?"
+   },
+   "a": {
+    "t": "我先洗手。",
+    "seg": [
+     "我",
+     "先",
+     "洗手。"
+    ],
+    "r": [
+     "wǒ",
+     "xiān",
+     "xǐ shǒu"
+    ],
+    "zh": "",
+    "en": "I wash my hands first."
+   },
+   "wrong": [
+    {
+     "t": "我星期五有比赛。",
+     "seg": [
+      "我",
+      "星期五",
+      "有",
+      "比赛。"
+     ],
+     "r": [
+      "wǒ",
+      "xīng qī wǔ",
+      "yǒu",
+      "bǐ sài"
+     ],
+     "zh": "",
+     "en": "I have a contest on Friday."
+    },
+    {
+     "t": "我们去操场玩。",
+     "seg": [
+      "我们",
+      "去",
+      "操场",
+      "玩。"
+     ],
+     "r": [
+      "wǒ men",
+      "qù",
+      "cāo chǎng",
+      "wán"
+     ],
+     "zh": "",
+     "en": "We go and play on the playground."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你们从星期一到星期五去哪里？",
+    "seg": [
+     "你们",
+     "从星期一",
+     "到星期五",
+     "去",
+     "哪里？"
+    ],
+    "r": [
+     "nǐ men",
+     "cóng xīng qī yī",
+     "dào xīng qī wǔ",
+     "qù",
+     "nǎ lǐ"
+    ],
+    "zh": "",
+    "en": "Where do you go from Monday to Friday?"
+   },
+   "a": {
+    "t": "我们去学校。",
+    "seg": [
+     "我们",
+     "去",
+     "学校。"
+    ],
+    "r": [
+     "wǒ men",
+     "qù",
+     "xué xiào"
+    ],
+    "zh": "",
+    "en": "We go to school."
+   },
+   "wrong": [
+    {
+     "t": "我星期六在家。",
+     "seg": [
+      "我",
+      "星期六",
+      "在",
+      "家。"
+     ],
+     "r": [
+      "wǒ",
+      "xīng qī liù",
+      "zài",
+      "jiā"
+     ],
+     "zh": "",
+     "en": "I'm at home on Saturday."
+    },
+    {
+     "t": "我很高兴。",
+     "seg": [
+      "我",
+      "很",
+      "高兴。"
+     ],
+     "r": [
+      "wǒ",
+      "hěn",
+      "gāo xìng"
+     ],
+     "zh": "",
+     "en": "I'm very happy."
+    }
+   ]
+  },
+  {
+   "q": {
+    "t": "你这个星期忙不忙？",
+    "seg": [
+     "你",
+     "这个",
+     "星期",
+     "忙",
+     "不忙？"
+    ],
+    "r": [
+     "nǐ",
+     "zhè ge",
+     "xīng qī",
+     "máng",
+     "bu máng"
+    ],
+    "zh": "",
+    "en": "Are you busy this week?"
+   },
+   "a": {
+    "t": "我很忙。",
+    "seg": [
+     "我",
+     "很",
+     "忙。"
+    ],
+    "r": [
+     "wǒ",
+     "hěn",
+     "máng"
+    ],
+    "zh": "",
+    "en": "I'm very busy."
+   },
+   "wrong": [
+    {
+     "t": "今天星期六。",
+     "seg": [
+      "今天",
+      "星期六。"
+     ],
+     "r": [
+      "jīn tiān",
+      "xīng qī liù"
+     ],
+     "zh": "",
+     "en": "Today is Saturday."
+    },
+    {
+     "t": "我有三本书。",
+     "seg": [
+      "我",
+      "有",
+      "三本",
+      "书。"
+     ],
+     "r": [
+      "wǒ",
+      "yǒu",
+      "sān běn",
+      "shū"
+     ],
+     "zh": "",
+     "en": "I have three books."
+    }
+   ]
+  }
+ ],
+ "talk": {
+  "name": "A Fu",
+  "zh": "阿福",
+  "gender": "m",
+  "kid": true,
+  "topic": {
+   "zh": "这个星期的安排",
+   "en": "Your plans this week"
+  },
+  "persona": "You are Afu, a cheerful man who runs a small drinks hut on the beach of a friendly island. You keep a big wall calendar and love asking visitors what they do in their week. You want to hear which day, what time, where and what the learner does (for example reading at the library, playing football, swimming). Speak only simple level-1 Mandarin, short sentences, one question at a time. Never ask for the learner's real name, school, address, phone number or other personal details. You are a friendly game character, not a friend or companion; keep to the topic of weekly plans.",
+  "goal": {
+   "zh": "告诉阿福你这个星期哪一天、什么时候、在哪里做什么。",
+   "en": "Tell Afu what you do on one day this week: which day, what time, where."
+  },
+  "opener": {
+   "t": "你好！我是阿福。今天星期几？你星期六上午做什么？",
+   "r": "nǐ hǎo! wǒ shì ā fú. jīn tiān xīng qī jǐ? nǐ xīng qī liù shàng wǔ zuò shén me?"
+  },
+  "steps": [
+   {
+    "zh": "说出你喜欢哪一天。",
+    "en": "Name a day of the week.",
+    "t": "我星期六有时间。"
+   },
+   {
+    "zh": "说你那天上午或下午做什么。",
+    "en": "Say what you do that morning or afternoon.",
+    "t": "我星期六上午游泳。"
+   },
+   {
+    "zh": "说你在哪里做。",
+    "en": "Say where you do it.",
+    "t": "我在海边游泳。"
+   },
+   {
+    "zh": "问阿福他周末做什么。",
+    "en": "Ask Afu what he does at the weekend.",
+    "t": "你周末做什么？"
+   }
+  ],
+  "words": [
+   {
+    "t": "星期六",
+    "zh": "",
+    "en": "Saturday"
+   },
+   {
+    "t": "上午",
+    "zh": "",
+    "en": "morning"
+   },
+   {
+    "t": "下午",
+    "zh": "",
+    "en": "afternoon"
+   },
+   {
+    "t": "每天",
+    "zh": "",
+    "en": "every day"
+   },
+   {
+    "t": "周末",
+    "zh": "",
+    "en": "weekend"
+   },
+   {
+    "t": "在",
+    "zh": "",
+    "en": "at, in"
+   },
+   {
+    "t": "忙",
+    "zh": "",
+    "en": "busy"
+   }
+  ]
+ }
+}
