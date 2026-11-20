@@ -59,6 +59,9 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   // 设置里切成 2D，再切回 3D
   await p.evaluate(() => { const s = document.querySelector('[data-act=settings]'); });
   await p.evaluate(() => { const S = JSON.parse(localStorage.getItem('echo-island-v1')); });
+  // 巡游时触发的剧情对话先点完：对话 / 过场开着时顶上的 HUD（菜单按钮在里面）会让开（2026-11-20 细节检查），点不到菜单
+  const closeDlg = async () => { for (let i = 0; i < 40 && await p.evaluate(() => !!EchoWorld._debug().dlg); i++) { if (await p.$('#w-dlg [data-act=wSkip]')) await p.click('#w-dlg [data-act=wSkip]').catch(() => {}); else if (await p.$('#w-dlg [data-act=wPick]')) await p.click('#w-dlg [data-act=wPick]').catch(() => {}); else await p.evaluate(() => document.querySelector('#world [data-act=wA].ba').click()).catch(() => {}); await p.waitForTimeout(200); } };
+  await closeDlg();
   await p.click('.w-menu'); await p.click('#sheet [data-act=settings]');
   await p.click('#sheet [data-act=setGfx][data-m="2d"]');
   check(await p.evaluate(() => EchoWorld._debug().R.kind) === '2d', '设置里切到 2D 流畅模式');
