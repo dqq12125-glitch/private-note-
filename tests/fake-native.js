@@ -14,6 +14,9 @@
 //   iPhone 版：platform: 'ios' 时 diag() 照 ios/App/Sources/Bridge.swift 的 diagJson() 回——没有 sdk / android，有 platform 'ios'、
 //   ios（系统版本，默认 '26.1'）、model（hw.machine，默认 'iPhone17,3'）、webview 'WebKit'、micLastDeny {}；剩余空间照旧用 storage。
 //   这三个也能在页面里改（window.__fakeNative.ios = '17.5'），下一次 diag() 就是新的。
+//   iPhone 才有的异步方法（订阅、通过 Apple 登录、口语题的本机识别 speechState / speechStart / speechStop + 事件 echo-speech）见下面 platform 'ios' 那一段；
+//   本机识别默认「这台手机没有」（和云上的模拟器一样），要用就传 speech: { state: {onDevice: true, …}, start: 'ok', script: [...] }。
+//   注意：网页只在 window.ECHO_IOS（真 App 里 echo-native.js 设的）时才用本机识别，测试要自己设。
 function installFakeEchoNative(opts) {
   opts = opts || {};
   const W = typeof window !== 'undefined' ? window : globalThis;
@@ -223,6 +226,46 @@ function installFakeEchoNative(opts) {
     });
     const d0 = W.EchoNative.diag;
     W.EchoNative.diag = function () { const o = JSON.parse(d0()); o.appleSignIn = !!S.apple.on; o.iapProducts = S.iap.products.map(p => p.id); return JSON.stringify(o); };
+
+    // ---------- 口语题的本机识别（ios/App/Sources/LocalSpeech.swift），照 ios/README.md「口语题的本机识别」 ----------
+    // 开关 S.speech（页面里随时能改）：
+    //   state：speechState 回的 {auth, mic, onDevice, available, locale, engine}。默认和云上的模拟器一样：没有本机识别（onDevice:false）
+    //   start：'ok' / 'fail:<代号>'（unavailable / denied / restricted / mic / audio / busy …）；默认 'fail:unavailable'
+    //   startMs：回 ok 之前等几毫秒（模拟开录音要的时间）
+    //   script：开始以后按时间发的事件 [[毫秒, 'partial' | 'final' | 'voice' | 'error' | 'end', 文字 / on / 代号]]
+    //   记录：log（每次调用：方法名、选项、时间）、sessions（开过几次）、active（正在听的编号）
+    S.speech = Object.assign({
+      state: { auth: 'notDetermined', mic: S.mic === 'granted' ? 'granted' : S.mic === 'blocked' ? 'blocked' : 'denied', onDevice: false, available: false, locale: 'en-US', engine: 'SFSpeechRecognizer' },
+      start: 'fail:unavailable', startMs: 30, script: [], log: [], sessions: 0, active: 0,
+    }, opts.speech || {});
+    let spT = [];
+    const spEmit = d => emit('echo-speech', d);
+    const spEnd = (sid, reason) => { spT.forEach(clearTimeout); spT = []; if (sid && S.speech.active === sid) { S.speech.active = 0; spEmit({ sid, kind: 'end', reason, t: 0 }); return true; } return false; };
+    Object.assign(W.EchoNative, {
+      speechState(id) { log('speechState'); S.speech.log.push({ m: 'speechState', at: Date.now() }); ok(id, Object.assign({ listening: !!S.speech.active }, S.speech.state)); },
+      speechStart(id, o) {
+        log('speechStart');
+        let op = {}; try { op = JSON.parse(o || '{}'); } catch (e) { op = {}; }
+        S.speech.log.push({ m: 'speechStart', id, opts: op, at: Date.now() });
+        const st = String(S.speech.start || 'ok');
+        if (/^fail:/.test(st)) return fail(id, st.slice(5), 'fake ' + st.slice(5));
+        if (S.speech.active) spEnd(S.speech.active, 'replaced');
+        setTimeout(() => {
+          S.speech.active = id; S.speech.sessions++;
+          ok(id, { listening: true, sid: id, ms: S.speech.startMs, locale: op.locale || 'en-US', short: !!op.short, engine: 'SFSpeechRecognizer' });
+          const t0 = Date.now();
+          (S.speech.script || []).forEach(([ms, kind, v]) => spT.push(setTimeout(() => {
+            if (S.speech.active !== id) return;
+            const d = { sid: id, kind, t: Date.now() - t0 };
+            if (kind === 'partial' || kind === 'final') d.text = v; else if (kind === 'voice') d.on = !!v; else if (kind === 'error') { d.code = v; d.message = 'fake'; } else if (kind === 'end') d.reason = v || 'final';
+            spEmit(d);
+            if (kind === 'final' || kind === 'error') spEnd(id, kind);
+            else if (kind === 'end') { spT.forEach(clearTimeout); spT = []; S.speech.active = 0; }
+          }, ms + 1)));
+        }, S.speech.startMs);
+      },
+      speechStop(id) { log('speechStop'); S.speech.log.push({ m: 'speechStop', at: Date.now() }); ok(id, { stopped: spEnd(S.speech.active, 'stop') }); },
+    });
   }
   W.ECHO_APP = 1;
   return S;

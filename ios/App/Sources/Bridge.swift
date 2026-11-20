@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 //   同步（要返回值、或者后面紧跟着要读结果的）：网页 window.prompt('__echo_native__:{…}') → GameViewController 的 prompt 回调 → callSync
 //   异步（连阿里云的四个，没有返回值）：webkit.messageHandlers.echo.postMessage({…}) → callAsync，结果用 window.__echoNative(...) 回
 // 网页拿不到密钥本身，只能请这里带着密钥去连阿里云。全部在主线程上跑。
-// iPhone 才有的方法（订阅 Store.swift、「通过 Apple 登录」AppleSignIn.swift）都是异步的，写在 iosOnlyMethods 里；
+// iPhone 才有的方法（订阅 Store.swift、「通过 Apple 登录」AppleSignIn.swift、口语题的本机识别 LocalSpeech.swift）都是异步的，写在 iosOnlyMethods 里；
 // 安卓那边以后接 Google Play 结算时再加对应的（tests/ios.test.js 的 IOS_ONLY 表核对这三处和自测页）。
 @MainActor
 final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
@@ -21,10 +21,12 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
                               "backupWrite", "backupList", "backupRead", "backupPick", "shareText", "shareFile"]
     static let asyncMethods = ["wsOpen", "wsSend", "wsClose", "post",
                                "iapProducts", "iapBuy", "iapRestore", "iapCurrent", "iapPending", "iapFinish", "iapManage",
-                               "appleSignIn", "appleCredentialState"]
+                               "appleSignIn", "appleCredentialState",
+                               "speechState", "speechStart", "speechStop"]
     // 上面这些里 iPhone 才有的（安卓的 MainActivity 里没有；以后安卓接 Google Play 结算再说）
     static let iosOnlyMethods = ["iapProducts", "iapBuy", "iapRestore", "iapCurrent", "iapPending", "iapFinish", "iapManage",
-                                 "appleSignIn", "appleCredentialState"]
+                                 "appleSignIn", "appleCredentialState",
+                                 "speechState", "speechStart", "speechStop"]
     // 销售版（公开发的版本，ECHO_EDITION 不写就是它）：没有打包的密钥和家长密码，家长在首次设置向导里设
     static let sales = BuildConfig.edition != "family"
     static let shareTextMax = 8000                       // 比这长的文字改成文件分享（整个存档当文字发不出去）
@@ -42,6 +44,10 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
     private(set) lazy var net = DashScope { [weak self] gen, id, type, data in self?.callback(gen, id, type, data) }
     // 「通过 Apple 登录」的面板挂在游戏画面的窗口上
     private lazy var apple = AppleSignIn { [weak self] in self?.host?.view.window }
+    // 口语题的本机识别（LocalSpeech.swift）：过程（边说边出的字、出声 / 不出声、停了）用事件 echo-speech 发给网页
+    private(set) lazy var speech = LocalSpeech(engine: AppleSpeechEngine()) { [weak self] detail in
+        self?.emit("echo-speech", "JSON.parse(" + Bridge.jsStr(Bridge.json(detail)) + ")")
+    }
 
     override init() {
         // 家长密码：家庭版用打包时的哈希；销售版打包时没有，家长在首次设置向导里设（setPin），哈希和随机盐存在 UserDefaults
@@ -271,6 +277,15 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
         case "appleCredentialState":
             let gen = h.gen, id = Bridge.int(a, 0)
             apple.credentialState(user: Bridge.str(a, 1)) { [weak self] ok, json in self?.callback(gen, id, ok ? "ok" : "fail", json) }
+        // ---- 口语题的本机识别（iPhone 才有，LocalSpeech.swift）：结果 window.__echoNative(id, 'ok' / 'fail', JSON)，过程是事件 echo-speech ----
+        case "speechState":
+            callback(h.gen, Bridge.int(a, 0), "ok", Bridge.json(speech.state()))
+        case "speechStart":
+            let gen = h.gen, id = Bridge.int(a, 0)
+            speech.start(sid: id, opts: Bridge.str(a, 1)) { [weak self] ok, body in self?.callback(gen, id, ok ? "ok" : "fail", Bridge.json(body)) }
+        case "speechStop":
+            let had = speech.stop(reason: "stop")
+            callback(h.gen, Bridge.int(a, 0), "ok", Bridge.json(["stopped": had]))
         default:
             break
         }
