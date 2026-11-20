@@ -10,6 +10,8 @@
 #   --out     输出目录（f/、m/、index.json）。英语默认 assets/voice，别的语言默认 dist/voice/<语言>；别的语言（或给了 --lines）时把句子表也存成 <out>/lines.json（打包排先后用）
 #   --g2p     日语的读法：ojt（默认，pyopenjtalk，见 _OjtG2P）/ ojtu / cutlet（misaki 默认，日期钟点会读错）
 #   --notrim  中文、日语默认剪掉首尾的长静音（见 trim），这个关掉
+#   --readings 日语：读音表 { 原文: 读音 }（node tools/course/build.js ja 会在 course.json 旁边写 readings.json，默认读它）；有读音表就让 TTS 念课程写的读音
+#             （见 fix_ja），并只重做 TTS 文字变了的配音（dist/voice/ja/inputs.json 记着每段当时的文字，fixes.json 是改了哪些）；--noreadfix 关掉
 #   --dry     只数一数还有多少段没合成，不合成、不写任何文件
 # 什么选项都不加 = 和以前一模一样（英语、af_heart / am_michael、assets/voice、tools/voice/lines.json）。
 # 文件名 key = 原文的哈希（tools/voice/key.js：去掉表情符号、引号规范化、空白合并，按 UTF-16 码元算 FNV-1a）；配音念的是原文，不是读音。
@@ -19,7 +21,7 @@ try: sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # Windows 控�
 except Exception: pass
 # 命令行：--k=v 和 --k v 都认
 def _argv():
-    VAL = {'--f', '--m', '--limit', '--speed', '--lang', '--lines', '--out', '--g2p'}
+    VAL = {'--f', '--m', '--limit', '--speed', '--lang', '--lines', '--out', '--g2p', '--readings'}
     a, out, i = sys.argv[1:], [], 0
     while i < len(a):
         if a[i] in VAL and i + 1 < len(a) and not a[i + 1].startswith('--'): out.append(a[i] + '=' + a[i + 1]); i += 2
@@ -98,6 +100,107 @@ def prep(t):   # 交给 Kokoro 的文字
     end = '。' if LANG in ('zh', 'ja') else '.'
     return t if t[-1:] in '.!?。！？…"”」』' else t + end
 
+# ---------- 日语：让 TTS 念课程里写的读音（--readings，默认 <句子表目录>/readings.json，tools/course/build.js 一起生成） ----------
+# pyopenjtalk 单看汉字猜读音，会猜错：何 + 量词 / 疑问（何時 なにじ、何日 なににち、何色 なにしょく）、十さい（じゅうさい，课程写じゅっさい）……
+# 课程给每句话一个读音 r（助词 は へ を 照写）。做法（通用，不是手写名单）：
+#   1. 把这句话交给 pyopenjtalk 的前端，得到每个词的读音（pron）；把它和课程的读音都「归一」成同一种写法（片假名 → 平假名、长音 ー / おう / えい 写成元音、
+#      助词 は へ を → わ え お、づ ぢ → ず じ，标点和重音符号去掉；都是一个字对一个字，所以位置能对回去）；
+#   2. 用 difflib 对齐两串；只处理「这几个字换成了别的几个字」（replace）。只多了或只少了字的（课程漏写助词之类）不动——那是读音表的毛病，不是读法的毛病，补上或删掉会改意思；
+#   3. 把读音不一样的那几个词（整词）换成课程的读音（平假名）交给 TTS，别的词原样；换完再过一遍前端，必须比换以前更接近课程的读音才收，不然这句不动。
+# 课程的读音当作对的；课程写错了，这里就跟着念错（reading-qa 里查）。
+_VOW = {}
+for _v, _ks in {'あ': 'あかがさざただなはばぱまやらわゃぁ', 'い': 'いきぎしじちぢにひびぴみりぃ', 'う': 'うくぐすずつづぬふぶぷむゆるゅぅゔ', 'え': 'えけげせぜてでねへべぺめれぇ', 'お': 'おこごそぞとどのほぼぽもよろをょぉ'}.items():
+    for _k in _ks: _VOW[_k] = _v
+_DROP = set(' 　\t\n、。！？!?,.…「」『』（）()・:：;；"“”‘’\'’〜~-—－ー_')
+_DROP.discard('ー')
+_DROP |= set('’')
+def _k2h(ch):
+    if 'ァ' <= ch <= 'ヶ': return chr(ord(ch) - 0x60)
+    return ch
+def _nrm(s):
+    """→ (归一后的字符串, 每个字符在原串里的位置)。一个字对一个字。"""
+    kept = [(i, _k2h(ch)) for i, ch in enumerate(s) if ch not in _DROP]
+    out = []
+    for i, ch in kept:
+        if ch == 'ー':
+            ch = _VOW.get(out[-1], 'ー') if out else 'ー'
+        elif out and ch == 'う' and _VOW.get(out[-1]) == 'お': ch = 'お'
+        elif out and ch == 'い' and _VOW.get(out[-1]) == 'え': ch = 'え'
+        ch = {'は': 'わ', 'へ': 'え', 'を': 'お', 'づ': 'ず', 'ぢ': 'じ', 'ゔ': 'ぶ'}.get(ch, ch)
+        out.append(ch)
+    return ''.join(out), [i for i, _ in kept]
+
+_OJT = None
+def _frontend(text):
+    global _OJT
+    if _OJT is None:
+        import pyopenjtalk as _OJT_M
+        _OJT = _OJT_M
+    return _OJT.run_frontend(text)
+
+def fix_ja(text, r):
+    """text：要念的原文；r：课程里这句的读音（一整串）。返回交给 TTS 的文字（没有要改的就是原文）。"""
+    import difflib
+    if not r or not text: return text
+    fe = _frontend(text)
+    if ''.join(w['string'] for w in fe) != ''.join(text.split()): return text   # 前端把字拆得和原文对不上：不动
+    raw, spans = '', []
+    for w in fe:
+        p = w['pron']
+        spans.append((len(raw), len(raw) + len(p))); raw += p
+    NA, ia = _nrm(raw)
+    NB, ib = _nrm(r)
+    if not NA or not NB or NA == NB: return text
+    sm = difflib.SequenceMatcher(None, NA, NB, autojunk=False)
+    if sm.ratio() < 0.6: return text
+    # 每个词在 NA 里占 [n0, n1)
+    import bisect
+    tk = [(bisect.bisect_left(ia, s0), bisect.bisect_left(ia, s1)) for s0, s1 in spans]
+    bkeep = [_k2h(r[i]) for i in ib]
+    groups = []   # [词下标起, 词下标止（含）, B 起, B 止]
+    for tag, a1, a2, b1, b2 in sm.get_opcodes():
+        if tag != 'replace': continue
+        hit = [k for k, (n0, n1) in enumerate(tk) if n1 > n0 and n0 < a2 and n1 > a1]
+        if not hit: continue
+        k0, k1 = hit[0], hit[-1]
+        ta1, ta2 = tk[k0][0], tk[k1][1]
+        gb1, gb2 = b1 - (a1 - ta1), b2 + (ta2 - a2)
+        if groups and k0 <= groups[-1][1]:   # 和上一处共用一个词：并成一处
+            g = groups[-1]
+            if k1 >= g[1]: g[1] = k1; g[3] = gb2
+        else: groups.append([k0, k1, gb1, gb2])
+    if not groups: return text
+    outp, k = [], 0
+    for k0, k1, gb1, gb2 in groups:
+        while k < k0: outp.append(fe[k]['string']); k += 1
+        rep = ''.join(bkeep[max(0, gb1):max(0, gb2)])
+        na = tk[k1][1] - tk[k0][0]
+        if not rep or len(rep) > 3 * na + 2 or na > 3 * len(rep) + 2:   # 对不上的（读音表缺一大段之类）：这一处不动
+            while k <= k1: outp.append(fe[k]['string']); k += 1
+        else:
+            outp.append(rep); k = k1 + 1
+    while k < len(fe): outp.append(fe[k]['string']); k += 1
+    new = ''.join(outp)
+    if new == text: return text
+    # 换完要更接近课程的读音，否则不收
+    fe2 = _frontend(new)
+    NA2, _ = _nrm(''.join(w['pron'] for w in fe2))
+    if difflib.SequenceMatcher(None, NA2, NB, autojunk=False).ratio() <= sm.ratio(): return text
+    return new
+
+READ = {}
+if LANG == 'ja' and '--noreadfix' not in ARGV:
+    _rf = os.path.abspath(opt['readings']) if 'readings' in opt else os.path.join(os.path.dirname(LINES), 'readings.json')
+    if os.path.exists(_rf): READ = json.load(open(_rf, encoding='utf-8'))
+def tts_text(t):
+    """这一句交给 Kokoro 的文字（日语有读音表时纠正读法；别的语言就是 prep）。"""
+    if READ:
+        n = norm(t)
+        return prep(fix_ja(n, READ.get(n)) if READ.get(n) else t)
+    return prep(t)
+INPUTS_FN = os.path.join(OUT, 'inputs.json')   # 每段配音当时交给 TTS 的文字（只有日语读音纠正开着时才记）：读音表改了，只重做文字变了的
+INPUTS = json.load(open(INPUTS_FN, encoding='utf-8')) if READ and os.path.exists(INPUTS_FN) else {}
+
 def load_lines(fn):
     d = json.load(open(fn, encoding='utf-8'))
     if isinstance(d, dict): d = d.get('VOICE')
@@ -106,9 +209,18 @@ def load_lines(fn):
 
 if not os.path.exists(LINES): sys.exit('找不到句子表 ' + LINES + '（--lines）；别的语言先 node tools/course/build.js <语言>')
 lines = load_lines(LINES)
+def _todo(e, g, inp):   # 这一段要不要（重新）合成
+    fn = os.path.join(OUT, g, key(e['t']) + '.ogg')
+    if not os.path.exists(fn): return True
+    return bool(READ) and INPUTS.get(g + '/' + key(e['t']), prep(e['t'])) != inp
 if DRY:
-    todo = sum(1 for e in lines for g in e['g'] if not os.path.exists(os.path.join(OUT, g, key(e['t']) + '.ogg')))
-    print('dry', LANG, 'lines', len(lines), 'clips', sum(len(e['g']) for e in lines), 'todo', todo, 'out', OUT)
+    todo = chg = 0
+    for e in lines:
+        inp = tts_text(e['t']) if READ else None
+        if READ and inp != prep(e['t']): chg += 1
+        for g in e['g']:
+            if _todo(e, g, inp): todo += 1
+    print('dry', LANG, 'lines', len(lines), 'clips', sum(len(e['g']) for e in lines), 'todo', todo, 'out', OUT + ('；读音纠正开着：' + str(chg) + ' 句的 TTS 文字和原文不一样' if READ else ''))
     sys.exit(0)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 try:
@@ -137,21 +249,30 @@ for g in 'fm': os.makedirs(os.path.join(OUT, g), exist_ok=True)
 if LANG != 'en' or 'lines' in opt:   # 句子表也存一份在配音旁边：tools/pack/build.js 按 p 排先后
     json.dump([{'t': e['t'], 'g': e['g'], 'p': e['p']} if 'p' in e else {'t': e['t'], 'g': e['g']} for e in lines], open(os.path.join(OUT, 'lines.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 done, t0, n = 0, time.time(), 0
+FIXES = {}
+def _save_inputs():
+    if not READ: return
+    json.dump(INPUTS, open(INPUTS_FN, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    json.dump(FIXES, open(os.path.join(OUT, 'fixes.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
 for e in lines:
+    inp = tts_text(e['t']) if READ else None
+    if READ and inp != prep(e['t']): FIXES[key(e['t'])] = [norm(e['t']), inp]
     for g in e['g']:
         fn = os.path.join(OUT, g, key(e['t']) + '.ogg')
-        if os.path.exists(fn) and not FORCE: continue
-        text = prep(e['t'])
+        if not FORCE and not _todo(e, g, inp): continue
+        text = inp if READ else prep(e['t'])
         parts = [a for _, _, a in pipe(text, voice=VOICES[g], speed=SPEED)]
         if not parts: print('empty', e['t']); continue
         wav = np.concatenate([p.cpu().numpy() if hasattr(p, 'cpu') else p for p in parts])
         if TRIM: wav = trim(wav)
         wav = np.concatenate([wav, np.zeros(2400, dtype=wav.dtype)])   # 结尾留 0.1 秒
         write_ogg(fn, wav)
+        if READ: INPUTS[g + '/' + key(e['t'])] = inp
         n += 1
-        if n % 100 == 0: print(n, 'clips', '%.0fs' % (time.time() - t0), flush=True)
+        if n % 100 == 0: print(n, 'clips', '%.0fs' % (time.time() - t0), flush=True); _save_inputs()
         if LIMIT and n >= LIMIT: break
     if LIMIT and n >= LIMIT: break
+_save_inputs()
 # --prune：删掉名单里已经没有的旧配音（改了台词、换了名字过滤之后）
 if '--prune' in ARGV:
     want = {g: {key(e['t']) for e in lines if g in e['g']} for g in 'fm'}

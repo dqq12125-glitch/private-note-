@@ -4774,6 +4774,7 @@
   const reWord = s => new RegExp('(^|[^A-Za-z])' + String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![A-Za-z])', 'g');
   const unfillNames = s => { let o = String(s); if (S.player && S.player.name) o = o.replace(reWord(S.player.name), '$1{name}'); return o.replace(reWord(RNAME()), '$1{rival}'); };
   // 模板里的怪兽名：手册里的名字，或者自己队伍 / 箱子里起的昵称
+  // （界面上的怪兽名已经换成这门课的写法时，lineFind 自己认得译名，见 packs.js 的 slotVal）
   const isMonName = v => !!(window.DEX && (DEX.all || DEX.list || []).some(sp => sp.en === v)) || ((S.mon && S.mon.box) || []).some(m => m && m.nick === v);
   function courseWord(s, ui) {
     if (typeof s !== 'string' || !s || !LANG || !I18N) return s;
@@ -4787,6 +4788,34 @@
     return s.replace(own, nm + ' (language arts)').replace(/\bEnglish name\b/g, 'name').replace(/\bEnglish\b/g, nm);
     // @i18n-content-end
   }
+  // ---------- 画面上的名字（台词翻译表的词：monster / move / item / place / skill / crystal / person / sign / ui，tools/course/SPEC.md §8.1）----------
+  // termRaw(类别, 英文) → { t, r } 或 null；英文前面的记号（地板字的「✓ 」、背景字的「♪ 」）不算，查到的译文前面照样加回去；
+  // 招牌、地板字不分大小写（MUSIC / Music 是同一条）。英语课、没有翻译表、没翻：null
+  function termRaw(cat, en) {
+    if (!LANG || !LTAB || en == null) return null;
+    const M = LTAB.M[cat];
+    if (!M || typeof M !== 'object') return null;
+    const s = String(en), pre = (/^[^A-Za-z]*/.exec(s) || [''])[0], core = s.slice(pre.length);
+    if (!core) return null;
+    let v = Object.prototype.hasOwnProperty.call(M, core) ? M[core] : null;
+    if (v == null) {
+      const lc = LTAB.lc || (LTAB.lc = {});
+      const low = lc[cat] || (lc[cat] = new Map(Object.keys(M).map(k => [k.toLowerCase(), k])));
+      const k = low.get(core.toLowerCase());
+      if (k != null) v = M[k];
+    }
+    const x = typeof v === 'string' ? { t: v } : v && typeof v.t === 'string' ? v : null;
+    return x ? { t: pre + x.t, r: typeof x.r === 'string' ? x.r : null, pre } : null;
+  }
+  // termOf(类别, 英文)：显示用的文字（没翻 / 英语课：英文原样）
+  const termOf = (cat, en) => { const x = termRaw(cat, en); return x ? x.t : en; };
+  // termHTML(类别, 英文)：显示用的 HTML——日语 / 中文有读音就标（「读音」设置关了不标），没翻的是转义过的英文
+  function termHTML(cat, en) {
+    const x = termRaw(cat, en);
+    if (!x) return esc(en == null ? '' : String(en));
+    if (!x.r || !rubyOn()) return esc(x.t);
+    return esc(x.pre) + rubyPiece(x.t.slice(x.pre.length), x.r);
+  }
   function lineOf(en, o) {
     if (!LANG || !LTAB || en == null || en === '') return null;
     o = o || {};
@@ -4798,7 +4827,7 @@
     const f = o.fill || fillNames;
     const t = f(res.t), seg = Array.isArray(res.seg) ? res.seg.map(f) : null, r = Array.isArray(res.r) ? res.r.map(f) : null, enF = f(en);
     let zh = o.zh != null ? f(String(o.zh)) : null;
-    if (zh) for (const [a, b] of (o.swap || []).concat([[enF, t]])) if (a && b && a !== b) zh = zh.split(a).join(b);
+    if (zh) for (const [a, b] of (o.swap || []).concat([[enF, t]], res.sv || [])) if (a && b && a !== b) zh = zh.split(a).join(b);
     const x = { en: courseWord(enF, 'en') };
     if (seg && r && seg.length === r.length && seg.join('') === t) { x.seg = seg; x.r = r; }
     entryAdd(t, x, zh ? courseWord(zh, 'zh') : '');
@@ -4851,6 +4880,8 @@
       lang: LANG, course: COURSE, entryOf, ruby: t => rb(t), meanText, learnLine,
       // 台词翻译表（tools/course/SPEC.md §8）：lineOf(英语原文, { zh, fill, swap }) → { t, seg, r, en, zh, mean } 或 null；courseWord(意思, 'zh'|'en') 把「英语」换成在学的语言
       lineOf, courseWord,
+      // 画面上的名字（SPEC §8.1）：termOf(类别, 英文) 文字、termHTML(类别, 英文) 带读音的 HTML；英语课 / 没翻：英文
+      termOf, termHTML,
       // courseList() 现在能学的课、courseGo(语言) 换课（新存档、重新打开页面）：packs.js 的「学这门」、placement.js 的「选语言」用
       courseList, courseGo,
       // 2026-11-19 按能力安排（placement.js / levels.js）：unitSpan() 挑战馆的课本门槛从哪个单元数到哪个单元（world.js gymNeed）、
@@ -5584,7 +5615,7 @@
   }
 
   // 测试用：课本出题来源、每日复习
-  window.EchoGame = { lineOf: (en, o) => lineOf(en, o), entryOf: t => entryOf(t), goUnit: wi => goUnit(wi), src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
+  window.EchoGame = { lineOf: (en, o) => lineOf(en, o), entryOf: t => entryOf(t), termOf: (c, en) => termOf(c, en), termHTML: (c, en) => termHTML(c, en), goUnit: wi => goUnit(wi), src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
     // 走路只记位置、整份存档晚一点才存（见 savePos）：测试 / 工具要直接读 localStorage 里的位置、步数之前，先 flush() 一下
     flush: () => flushWalk() };
   // 测试用：打分（tests/review.test.js）、复习排期引擎、直接出指定的题（[题型, 编号, 第几条] 的列表）

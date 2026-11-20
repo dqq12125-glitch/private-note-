@@ -72,7 +72,9 @@
   const window_ = (x, y) => '<rect x="' + x + '" y="' + y + '" width="64" height="72" rx="4" fill="#bfe9ff" stroke="#ffffff" stroke-width="6"/>' +
     '<line x1="' + (x + 32) + '" y1="' + y + '" x2="' + (x + 32) + '" y2="' + (y + 72) + '" stroke="#fff" stroke-width="4"/>' +
     '<line x1="' + x + '" y1="' + (y + 36) + '" x2="' + (x + 64) + '" y2="' + (y + 36) + '" stroke="#fff" stroke-width="4"/>';
-  const txt = (x, y, s, size, color) => '<text x="' + x + '" y="' + y + '" font-size="' + size + '" font-weight="700" fill="' + color + '" text-anchor="middle" font-family="Baloo 2, Nunito, sans-serif">' + s + '</text>';
+  // 背景上画的字：别的课按这门课的写法（台词翻译表的 terms.sign，tools/course/SPEC.md §8.1；英语课、没翻：原样）
+  const signT = s => { const t = window.EchoGame && EchoGame.termOf ? EchoGame.termOf('sign', s) : s; return t === s ? s : String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); };
+  const txt = (x, y, s, size, color) => '<text x="' + x + '" y="' + y + '" font-size="' + size + '" font-weight="700" fill="' + color + '" text-anchor="middle" font-family="Baloo 2, Nunito, sans-serif">' + signT(s) + '</text>';
 
   const SETS = {
     classroom: () => '<rect width="400" height="300" fill="#fff3d6"/>' + window_(24, 52) +

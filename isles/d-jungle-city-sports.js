@@ -13,6 +13,8 @@
   // 2026-11-19 搬进来：提示条、提示、门的名字、选项。台词（英文 + 中文意思）是内容，不在这里
   const I18N = window.EchoI18n;
   const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
+  // 别的课：按钮上的英语词（好呀 Sure!）换成这门语言的（台词翻译表的 terms.ui；英语课、没翻：英文原样，字表也没有 .c）
+  const uiW = en => (window.EchoGame && EchoGame.termOf ? EchoGame.termOf('ui', en) : en);
   // 旁白：world.js 的 whoLabel 认这个中文，显示时换成界面语言
   const NAR = () => (I18N ? I18N.t('w.who.nar', null, 'zh') : '');
   if (I18N) I18N.add({
@@ -20,6 +22,8 @@
       'id.note.door': '🔒 口令门：走到门前按 A，说出口令', 'id.who.door': '口令门', 'id.who.radio': '📢 广播',
       'id.opt.push': '🔴 按下去 Push it!', 'id.opt.notnow': '先不 Not now',
       'id.note.paw': '🐾 第 {k} / 3 个路口：听广播，跟着对的脚印走', 'id.note.pawgo': '🐾 往前走，听广播',
+      // 别的课（.c）：按钮上的英语词换成这门语言的（{w}，台词翻译表的 terms.ui）
+      'id.opt.push.c': '🔴 按下去 {w}', 'id.opt.notnow.c': '先不 {w}', 'id.light.go.c': '🚦 <b>🟢 {w}</b> 绿灯，可以走斑马线（还剩 {n} 秒）', 'id.light.stop.c': '🚦 <b>🔴 {w}</b> 红灯，请在人行道上等（{n} 秒后变绿）',
       'id.light.go': '🚦 <b>🟢 Green light — Walk!</b> 绿灯，可以走斑马线（还剩 {n} 秒）', 'id.light.stop': '🚦 <b>🔴 Red light — Stop!</b> 红灯，请在人行道上等（{n} 秒后变绿）',
       'id.toast.officer': '🎖️ 你成了小交警！', 'id.note.slide': '🧊 滑到健康食物上停下来：<b>{n} / 3</b>（停在垃圾食品上会滑回起点）',
     },
@@ -27,6 +31,9 @@
       'id.note.door': '🔒 Password door: walk up to the door, press A and say the password', 'id.who.door': 'Password Door', 'id.who.radio': '📢 Speaker',
       'id.opt.push': '🔴 Push it!', 'id.opt.notnow': 'Not now',
       'id.note.paw': '🐾 Fork {k} / 3: listen to the speaker and follow the right paw prints', 'id.note.pawgo': '🐾 Walk on and listen to the speaker',
+      'id.opt.push.c': '🔴 {w}', 'id.opt.notnow.c': '{w}',
+      'id.light.go.c': { one: '🚦 <b>🟢 {w}</b> You can cross the road ({n} second left)', other: '🚦 <b>🟢 {w}</b> You can cross the road ({n} seconds left)' },
+      'id.light.stop.c': { one: '🚦 <b>🔴 {w}</b> Wait on the pavement (green in {n} second)', other: '🚦 <b>🔴 {w}</b> Wait on the pavement (green in {n} seconds)' },
       'id.light.go': { one: '🚦 <b>🟢 Green light — Walk!</b> You can cross the road ({n} second left)', other: '🚦 <b>🟢 Green light — Walk!</b> You can cross the road ({n} seconds left)' },
       'id.light.stop': { one: '🚦 <b>🔴 Red light — Stop!</b> Wait on the pavement (green in {n} second)', other: '🚦 <b>🔴 Red light — Stop!</b> Wait on the pavement (green in {n} seconds)' },
       'id.toast.officer': '🎖️ You are a Junior Traffic Officer!', 'id.note.slide': '🧊 Slide and stop on healthy food: <b>{n} / 3</b> (If you stop on junk food, you slide back to the start)',
@@ -525,7 +532,7 @@
   async function redButton(C) {
     if (C.gateOpen(1)) { await C.talk([nar('The button is already pushed.', '按钮已经按下去了。')]); return; }
     let push = false;
-    await C.talk([nar('A machine with a big red button. Push it?', '一台机器，上面有个大大的红色按钮。要按吗？', { kind: 'choice', opts: [{ html: tx('id.opt.push'), cls: 'sun' }, { html: tx('id.opt.notnow') }], pick: i => { push = !i; return []; } })]);
+    await C.talk([nar('A machine with a big red button. Push it?', '一台机器，上面有个大大的红色按钮。要按吗？', { kind: 'choice', opts: [{ html: tx('id.opt.push', { w: uiW('Push it!') }), cls: 'sun' }, { html: tx('id.opt.notnow', { w: uiW('Not now') }) }], pick: i => { push = !i; return []; } })]);
     if (!push) return;
     C.openGate(1, true);
     await C.talk([nar('Click! The door of the storage room opened.', '咔嗒！仓库的门打开了。')]);
@@ -871,7 +878,7 @@
   let g9Timer = 0;
   function g9Note(C) {
     const l = lightNow();
-    C.note(tx(l.green ? 'id.light.go' : 'id.light.stop', { n: l.left }));
+    C.note(tx(l.green ? 'id.light.go' : 'id.light.stop', { n: l.left, w: uiW(l.green ? 'Green light — Walk!' : 'Red light — Stop!') }));
   }
   function g9Start(C) {
     clearInterval(g9Timer);

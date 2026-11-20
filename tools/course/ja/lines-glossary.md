@@ -222,6 +222,84 @@ People with English names are written in katakana. Isle Masters with animal titl
 | satellite dish | パラボラアンテナ |
 | password | あいことば |
 
+### Name plates, signs and buttons
+
+These live in `terms.person` / `terms.sign` / `terms.ui` (SPEC §8.1 「画面上的名字和字」).
+
+#### `terms.person` (name plates)
+
+- **Main characters** keep the forms used in the lines: エコーはかせ, ミスターミュート, ゲイル船長, アシカコーチ, かめおばあさん, にじいろガニ (the plates "Crabby" and "Rainbow Crab"), グレイ先生 (both Mr Grey plates), エイミーさん, カイ, ティム.
+- **Other Isle Masters:** フクロウ校長 (Principal Owl), ニワトリのレックス (Rooster Rex), ホエーリー (Whaley, Weather Island), 思い出ドラゴン.
+- **Title + name** becomes 〈role〉の〈name〉. The fixed roles are:
+
+| English role | Japanese role |
+| --- | --- |
+| Fisher | つり人 (つりびと) |
+| Hiker | 山登り |
+| Camper | キャンパー |
+| Swimmer | スイマー |
+| Skier | スキーヤー |
+| Sailor | 船乗り |
+| Student | 学生 |
+| Scientist | 科学者 |
+| Farmer | 農家 |
+| Artist | 画家 |
+| Painter | 絵かき |
+| Baker | パン屋 (Baker Sugar, who bakes cakes: ケーキ屋) |
+| Bug Kid | 虫とり |
+| Guard | 門番 |
+| Officer | けいさつかん (Traffic Officer: 交通けいさつかん) |
+| Ranger | レンジャー |
+| Miner | こうふ |
+| Ace Trainer | エース |
+| Veteran | ベテラン |
+| Admin | かんぶ |
+| Master | マスター |
+| Monitor | 学級委員 |
+| Librarian | 司書 |
+| MC | 司会 |
+| Club Leader | 部長 |
+| Clerk | 店員 |
+| Zookeeper | しいくいん |
+| Weather Man | お天気キャスター |
+| Monk | **番人** (temple keeper: no religious title) |
+| Psychic | **ふしぎな** (no fortune-telling words) |
+
+- **Polite titles:**
+  - Mr / Mrs / Ms + surname = 〈name〉さん; teachers = 〈name〉先生.
+  - Coach X = Xコーチ.
+  - Aunt / Uncle / Grandpa / Granny X = Xおばさん / Xおじさん / Xおじいさん / Xおばあさん.
+- **Plain personal names** (trainers on the roads) are bare katakana, with no さん or くん.
+- **The puzzle people** (Lady A/B, Man A, Girl A/B, Boy B) keep their letter: 女の人A (reading おんなのひとエー).
+- **Talking objects** use their object word: 黒板, ラジオ, パネル, 思い出のとびら, 天気マシン.
+
+#### `terms.sign` (signs and floor words)
+
+Signs are as short as possible:
+
+- きゅうけいじょ, お店, ホール (the Challenge Hall door).
+- School tiles use the island 3 words: 図書室, しょくどう, じむしつ, 教室, 出口, 理科室, コンピューター室.
+- Subject tiles use the same subject words as the lines (English → 日本語, Chinese → 中国語).
+- Memory Hall tiles use the same words as the memory-card lines.
+- The cartoon menu prices are in 元 (the scene is in China): 「ぎょうざ 12元」.
+
+#### `terms.ui` (bilingual buttons)
+
+Only the course-language half is shown, so keep it short:
+
+| English | Japanese | English | Japanese |
+| --- | --- | --- | --- |
+| YES | はい | Push it! | おす！ |
+| NO | いいえ | Green light — Walk! | 青信号 — 歩いてください！ |
+| Let's go! | 出発！ | Red light — Stop! | 赤信号 — 止まってください！ |
+| Not now | あとで | Turn it on! | スイッチオン！ |
+| Swim up | 上へ泳ぐ | Egg | たまご |
+| Thank you! | ありがとう！ | Box | ボックス |
+| Sure! | いいですよ！ | Honor Wall | 栄光のかべ |
+| Next time | また今度 | | |
+
+栄光のかべ deliberately avoids the big monster series' word for its champion list (でんどう…).
+
 ## 5. Places (full list in `terms.place`)
 
 - **Island names:** use the towns.json names.

@@ -511,6 +511,135 @@ const terms = { monster: [], move: [], item: [], place: [], skill: [], crystal: 
 }
 
 // ======================================================================
+//  5b. 别的名字（2026-11-21 第二批）：对话框上的名字牌 person、地图上画的字 sign、按钮上的英语词 ui
+//      词的格式和上面一样 { id, en, zh?, note? }；id 是英文名的小写连字符写法（同名的只一条）
+// ======================================================================
+const slug = s => String(s).toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'x';
+// 界面字表（I18N.add 的 zh 表）里「中文 English」挨着写的：给名字找中文（回声博士 Professor Echo、小凯 Kai、智者 Master Sage）
+const ZH_TABLE = [];
+for (const f of FILES.concat(['packs.js'])) {
+  const src = fs.readFileSync(path.join(ROOT, f), 'utf8'), T = tokenize(src);
+  T.forEach((k, i) => {
+    if (!(k.t === 'id' && k.v === 'add' && isP(T[i - 1], '.') && T[i - 2] && /I18N|EchoI18n/.test(T[i - 2].v) && isP(T[i + 1], '('))) return;
+    for (let j = i + 1; j < T[i + 1].close; j++) if (T[j].t === 'id' && T[j].v === 'zh' && isP(T[j + 1], ':') && isP(T[j + 2], '{')) {
+      for (let q = j + 3; q < T[j + 2].close; q++) if (T[q].t === 'str' && CJK.test(T[q].v)) ZH_TABLE.push(T[q].v);
+    }
+  });
+}
+// 「去港口坐盖尔船长 Captain Gale」：中文那截从最后一个动词 / 的 后面算起（盖尔船长）
+const ZH_CUT = /^.*(找|坐|去|的|阻止|问问|问|见|帮|邻居|里)/;
+const zhBefore = en => {
+  const re = new RegExp('([\\u4e00-\\u9fff·]{1,10})\\s?' + en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![A-Za-z])');
+  for (const s of ZH_TABLE) { const m = re.exec(s); if (m) { const z = m[1].replace(ZH_CUT, ''); if (z.length >= 1 && z.length <= 6) return z; } }
+  return null;
+};
+// 同一类词里 id 不重复：撞了的后面加 -2、-3（按英文名排好以后的先后，同一份源文件每次一样）
+const uniqIds = arr => { const seen = new Map(); for (const o of arr) { const n = (seen.get(o.id) || 0) + 1; seen.set(o.id, n); if (n > 1) o.id += '-' + n; } return arr; };
+const isName = s => typeof s === 'string' && /^[A-Z][A-Za-z.'’-]*( [A-Za-z.'’-]+){0,3}$/.test(s.trim()) && !CJK.test(s) && !/[!?]$/.test(s);
+{
+  terms.person = [];
+  const P = new Map();   // en → { en, zh, note }
+  const addP = (en, note, zh) => {
+    if (!isName(en) || /^(Narrator|Sign|Statue)$/.test(en)) return;
+    const e = P.get(en);
+    if (e) { if (!e.zh && zh) e.zh = zh; return; }
+    P.set(en, { en, zh: zh || null, note });
+  };
+  // 岛主（data.js）：英文名、中文名
+  const dctx = { window: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'data.js'), 'utf8'), dctx);
+  dctx.window.WORLDS.forEach((w, z) => { if (w.boss && w.boss.en) addP(w.boss.en, 'Isle Master of island ' + (z + 1), w.boss.name); });
+  // 台词里说话的人（对话框上的名字牌）
+  for (const f of found) if (f.who) addP(f.who, 'speaker in ' + f.file);
+  // 源码里人物的 name（临时出来的人、地图上的村民 / 训练师、嘘声团、擂主……）：带 look / g / role / emo 的对象
+  for (const file of FILES) {
+    const src = fs.readFileSync(path.join(ROOT, file), 'utf8'), T = tokenize(src);
+    T.forEach((k, o) => {
+      if (!isP(k, '{') || k.close == null) return;
+      const pr = objProps(T, src, o);
+      if (!pr.name || 'rows' in pr || !['look', 'g', 'role', 'emo', 'face'].some(x => x in pr)) return;
+      const nm = litOf(T, pr.name), role = litOf(T, pr.role);
+      if (nm) addP(nm, role === 'trainer' ? 'trainer (' + file + ')' : role ? role + ' (' + file + ')' : 'character (' + file + ')');
+    });
+    // sayer('Kai', …) / L.sayer('Officer Lee', …)
+    T.forEach((k, i) => { if (k.t === 'id' && k.v === 'sayer' && isP(T[i + 1], '(') && T[i + 2] && T[i + 2].t === 'str') addP(T[i + 2].v, 'speaker in ' + file); });
+  }
+  // 名单：路上训练师的名字（world.js TRAINER_NAMES）、村民（people.js VILLAGERS）、各岛岛主的英文名（story.js LEADER_EN）
+  const listOf = (file, name) => { const s = fs.readFileSync(path.join(ROOT, file), 'utf8'), m = new RegExp('const ' + name + ' = \\[([^\\]]*)\\]').exec(s); return m ? [...m[1].matchAll(/'([^']+)'/g)].map(x => x[1]) : []; };
+  listOf('world.js', 'TRAINER_NAMES').forEach(n => addP(n, 'trainer on the roads (world.js)'));
+  (SB.EchoPeople.VILLAGERS || []).forEach(v => addP(v[0], 'villager (people.js)'));
+  listOf('story.js', 'LEADER_EN').forEach((n, z) => addP(n.replace(/^the /, 'The '), 'Isle Master of island ' + (z + 1) + ' (objective line)'));
+  for (const e of P.values()) {
+    const o = { id: slug(e.en), en: e.en };
+    const zh = e.zh || zhBefore(e.en);
+    if (zh) o.zh = zh;
+    o.note = e.note;
+    terms.person.push(o);
+  }
+  terms.person.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : a.en < b.en ? -1 : a.en > b.en ? 1 : 0));
+  uniqIds(terms.person);
+}
+{
+  // 地图上画的字：房子的招牌（三种画法一样：world.js 的 2D、world3d.js、world3d-open.js）、挑战馆机关地板上的字、对话动画背景上的字（cartoon.js）
+  terms.sign = [];
+  const S = new Map();
+  // 同一个词不分大小写算一条（地板上的 MUSIC、背景上的 Music）；地板字前面的「✓ 」是做完的记号，不算；界面字表的键（ic.mon.5：日期按界面语言写）不收
+  const addS = (en, note, zh) => {
+    en = String(en).replace(/^[^A-Za-z]+/, '').trim();
+    if (!en || CJK.test(en) || !/[A-Za-z]{2,}/.test(en) || /^[a-z]+(\.[a-z0-9]+)+$/.test(en)) return;
+    const k = en.toLowerCase(), e = S.get(k);
+    if (e) { if (!e.note.includes(note)) e.note += '; ' + note; return; }
+    S.set(k, { id: slug(en), en, zh: zh || null, note });
+  };
+  // 房子的招牌由 world.js 的 signLabel 定（三种画法都问它）：挑战馆的那条英文写成 CHALLENGE HALL（画出来是 HALL），和学校地板上的 HALL（走廊）分开
+  const ws = fs.readFileSync(path.join(ROOT, 'world.js'), 'utf8');
+  if (!/T_\('sign', 'REST STOP'\)[\s\S]{0,80}T_\('sign', 'SHOP'\)[\s\S]{0,80}T_\('sign', 'CHALLENGE HALL'\)/.test(ws)) warn.push('world.js 的 signLabel 改了（招牌 REST STOP / SHOP / CHALLENGE HALL）：tools/course/lines.js 跟着改');
+  addS('REST STOP', 'sign above the Rest Stop door (all map renderers)', '休息站');
+  addS('SHOP', 'sign above the shop door (all map renderers)', '商店');
+  addS('CHALLENGE HALL', 'sign above the Challenge Hall door (all map renderers; drawn as "HALL" in English — keep it short, it is a door sign)', '挑战馆');
+  for (const m of EMAPS.all().map(id => EMAPS.get(id)).filter(Boolean)) {
+    const pt = m.def && m.def.paint;
+    if (!pt) continue;
+    for (const v of Object.values(pt)) { let t = null; try { t = v && typeof v === 'object' ? v.t : null; } catch (e) { t = null; } if (typeof t === 'string') addS(t, 'word on a floor tile in ' + (m.en || m.id)); }
+  }
+  const cs = fs.readFileSync(path.join(ROOT, 'cartoon.js'), 'utf8');
+  for (const m of cs.matchAll(/\btxt\(\s*\d+\s*,\s*\d+\s*,\s*'([^']+)'/g)) addS(m[1], 'painted in a cartoon scene background (cartoon.js)');
+  terms.sign = uniqIds([...S.values()].map(e => { const o = { id: e.id, en: e.en }; if (e.zh) o.zh = e.zh; o.note = e.note; return o; }));
+}
+{
+  // 按钮上的英语词：中文界面里「中文 + 英语」并排写的（是 YES / 不 NO、先不 Not now……），英语就是要学的那个词。
+  // [id, 字表的键, 英语, 中文, 在哪]：字表的中文那份里找得到这个英语才收（改了字表这里跟着改）
+  const UI = [
+    ['yes', 'st.bag.yes', 'YES', '是', 'button: take the monster in the starter shell (story.js)'],
+    ['no', 'st.bag.no', 'NO', '不', 'button: not this one (starter shells)'],
+    ['lets-go', 'w.ferry.go0', "Let's go!", '出发', 'ferry button (world.js; also w.ferry.go)'],
+    ['not-now', 'w.ferry.no', 'Not now', '先不', 'button: ferry, island puzzles (world.js, isles/d, isles/e)'],
+    ['swim-up', 'w.up.go', 'Swim up', '浮上去', 'button under the sea (world.js)'],
+    ['thank-you', 'w.shop.bye', 'Thank you!', '谢谢', 'shop farewell button / daycare (world.js, monsters.js)'],
+    ['sure', 'ib.opt.sure', 'Sure!', '好呀', 'button: accept a battle (isles/b)'],
+    ['next-time', 'ib.opt.next', 'Next time', '下次吧', 'button: decline a battle (isles/b)'],
+    ['push-it', 'id.opt.push', 'Push it!', '按下去', 'button: press the traffic-light button (isles/d)'],
+    ['green-light', 'id.light.go', 'Green light — Walk!', '绿灯，可以走', 'traffic light banner (isles/d)'],
+    ['red-light', 'id.light.stop', 'Red light — Stop!', '红灯，请等', 'traffic light banner (isles/d)'],
+    ['turn-it-on', 'ie.opt.on', 'Turn it on!', '打开', 'button: weather switch (isles/e)'],
+    ['egg', 'b.egg', 'Egg', '蛋', 'label of an egg in the team / box (monsters.js)'],
+    ['box', 'b.pc.box', 'Box', '箱子', 'monster box tab title (monsters.js)'],
+    ['honor-wall', 'st.fame.title', 'Honor Wall', '光荣榜', 'title of the champion screen (story.js)'],
+  ];
+  const zhOfKey = new Map();
+  for (const f of FILES.concat(['packs.js'])) {
+    const s = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    for (const [, key] of UI) { const m = new RegExp("'" + key.replace(/\./g, '\\.') + "':\\s*'((?:[^'\\\\]|\\\\.)*)'").exec(s); if (m && !zhOfKey.has(key)) zhOfKey.set(key, m[1].replace(/\\(.)/g, '$1')); }
+  }
+  terms.ui = [];
+  for (const [id, key, en, zh, note] of UI) {
+    const v = zhOfKey.get(key);
+    if (!v || !v.includes(en)) { warn.push('字表 ' + key + ' 里找不到「' + en + '」：tools/course/lines.js 的 UI 表跟着改'); continue; }
+    terms.ui.push({ id, en, zh, note: note + ' · i18n ' + key });
+  }
+}
+
+// ======================================================================
 //  6. 整理：台词（一句一条）、模板、统计
 // ======================================================================
 const FNV = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); };

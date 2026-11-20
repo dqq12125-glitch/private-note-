@@ -266,6 +266,32 @@ The radio-order options (Sol / Lluvia / Viento in different orders) stay as they
 
 **Handbook (dex.js).** Use two short sentences in the present tense, and start with the monster's English name (only Pinchy becomes **Pinzy**). Monster names are never translated, even when the story has a Spanish name for the same being: the monster Hushking stays "Hushking", while the legend's villain in the story is "el Rey del Silencio".
 
+### Name tags, map words and buttons (`terms.person` / `sign` / `ui`, 2026-11-21)
+
+- **Name tags (person):** the title comes first, with a capital letter, then the name unchanged.
+  - Profesora Echo, Capitana Polly, Capitán Gale, Pescador Bob, Estudiante Amy, Tía Mary, Abuela Tortuga, Entrenador Foca, Director Búho, Gallo Rex, Doctor Árbol, Oficial Lee, Maestra Bell, Maestro Grey, Sr. Callado, Sra. Park, Dra. Skye.
+  - The gender of each title comes from the character's `g` in the source.
+  - A tag that would be identical in Spanish is left out, so the game shows the English: plain names such as Kai, Amy, Orion, Echodrake; the Isle Masters' own names Crabby, Croc, Sharky, Whaley, Puffy, Flo; and Fan Nora, Fan Toby, Fan Tony.
+- **Gender-neutral titles where the gender is unknown or mixed:**
+  - Guardabosques (Ranger)
+  - Agente de tránsito (Traffic Officer)
+  - Turista (Tourist)
+  - Estudiante, Artista, Campista, Montañista (Hiker), Malabarista, Baterista (Drummer), Ayudante (Aide / Assistant), Cantante, Pianista
+  - Banda Silencio (Hush Crew, whose members are both boys and girls)
+- **Other tag decisions:**
+  - Ace Trainer → Experto / Experta.
+  - Admin Whisper → Susurro; Admin Rumble → Retumbo (names only).
+  - Monk → **Sabio** (keeps religion out).
+  - Club members → "Ken, club de arte", "Zoe, jefa del club".
+  - Descriptive names → Ben de los bichos, Bob de los globos, Mia desordenada, Tom dormilón.
+  - Talking objects → Pizarrón, Radio, Panel de control, Puerta del Recuerdo, Carta del Recuerdo, Máquina del clima, Interruptor del clima, Loro.
+- **Map words (sign):**
+  - Building signs: DESCANSO (Rest Stop), TIENDA (Shop), GIMNASIO (the GYM sign over the Challenge Hall door; the same word also labels a school gym in a cartoon background, so a challenge-only word would not fit there).
+  - School floor tiles: BIBLIOTECA, COMEDOR, PASILLO, OFICINA, SALÓN, SALIDA, CÓMPUTO, LAB, MÚSICA. These are kept short because a long word shrinks or spills over the tile. The matching option lines use the same words.
+  - Subject Hall tiles match the timetable lines: Matemáticas, Español, Ciencias, Arte, Ed. física, Chino, Historia, Geografía.
+  - Memory Hall tiles match the memory-card template: fui, vi, comí, compré, el viaje, la playa.
+- **Buttons (ui):** SÍ / NO, ¡Vamos!, Ahora no, Subir, ¡Gracias!, ¡Claro!, Otro día, ¡Apriétalo!, "Luz verde: ¡cruza!", "Luz roja: ¡alto!", ¡Enciéndelo!, Huevo, Caja, Muro de honor (keep this name; don't swap in the other series' name for a champions' wall).
+
 ## 10. Examples (tone and level)
 
 | English | Spanish | Why |

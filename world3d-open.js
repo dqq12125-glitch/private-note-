@@ -2293,9 +2293,9 @@
           });
           if (w >= 7 && b.door) [cx - 1.1, cx + 1.1].forEach(wx => { if (Math.abs(wx - (b.door.x + .5)) > .8 && Math.abs(wx - x0 - .86) > .9 && Math.abs(wx - x1 + .86) > .9) win3(wx); });
         }
-        // 招牌：REST STOP / SHOP / GYM，挂在门上面
+        // 招牌：REST STOP / SHOP / HALL，挂在门上面（字由 world.js 的 signLabel 定：别的课按这门课的写法）
         if (std || gym) {
-          const label = L === 'C' ? 'REST STOP' : L === 'M' ? 'SHOP' : 'GYM', rc = new T3.Color(roofC), ink = rc.r * .2126 + rc.g * .7152 + rc.b * .0722 > .45 ? (P.trim || '#37474f') : roofC;
+          const label = window.EchoWorld && EchoWorld.signLabel ? EchoWorld.signLabel(L) : L === 'C' ? 'REST STOP' : L === 'M' ? 'SHOP' : 'HALL', rc = new T3.Color(roofC), ink = rc.r * .2126 + rc.g * .7152 + rc.b * .0722 > .45 ? (P.trim || '#37474f') : roofC;
           const sc = atlasCell('sign:' + label + ink, 256, 64, g => {
             g.fillStyle = '#ffffff'; A.rr(g, 2, 2, 252, 60, 30); g.fill(); g.lineWidth = 5; g.strokeStyle = A.shade(ink, .7); g.stroke();
             g.fillStyle = ink; g.font = '800 ' + (label.length > 6 ? 40 : 46) + 'px "Baloo 2", Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(label, 144, 36, 180);

@@ -40,6 +40,11 @@ const ES = {
     item: { Potion: { t: 'poción', g: 'f' }, 'Echo Ball': { t: 'bola eco', g: 'f' }, 'Big Potion': { t: 'poción grande', g: 'f' }, 'Return Rope': 'cuerda de regreso' },
     type: { fire: 'fuego', water: 'agua', grass: 'planta', electric: 'eléctrico' },
     place: { 'Hello Island': 'Isla Hola' },
+    // 画面上的名字（SPEC §8.1）：对话框的名字牌、房子的招牌、按钮上的词、招式
+    person: { Mom: 'Mamá', 'Professor Echo': 'Profesora Echo' },
+    sign: { 'REST STOP': 'DESCANSO', SHOP: 'TIENDA', 'CHALLENGE HALL': 'SALA' },
+    ui: { YES: 'SÍ', NO: 'NO' },
+    move: { 'Bubble Shot': 'Disparo de burbujas', 'Body Bump': 'Empujón', 'Sweet Rest': 'Dulce descanso' },
   },
 };
 
@@ -75,6 +80,10 @@ const JA = {
     item: { Potion: { t: 'くすり', r: 'くすり' }, 'Echo Ball': { t: 'エコーボール', r: 'えこーぼーる' }, 'Big Potion': { t: 'いいくすり', r: 'いいくすり' } },
     type: { fire: { t: 'ほのお', r: 'ほのお' }, water: { t: 'みず', r: 'みず' }, grass: { t: 'くさ', r: 'くさ' }, electric: { t: 'でんき', r: 'でんき' } },
     place: { 'Hello Island': { t: 'ハロー島', r: 'はろーじま' } },
+    person: { Mom: { t: 'ママ', r: 'まま' }, 'Professor Echo': { t: 'エコー博士', r: 'えこーはかせ' } },
+    sign: { 'REST STOP': { t: 'やすみどころ', r: 'やすみどころ' }, SHOP: { t: 'ショップ', r: 'しょっぷ' }, 'CHALLENGE HALL': { t: 'チャレンジ館', r: 'ちゃれんじかん' } },
+    ui: { YES: { t: 'はい', r: 'はい' }, NO: { t: 'いいえ', r: 'いいえ' } },
+    move: { 'Bubble Shot': { t: 'あわ鉄砲', r: 'あわでっぽう' }, 'Body Bump': { t: 'ぶつかり', r: 'ぶつかり' }, 'Sweet Rest': { t: 'ひと休み', r: 'ひとやすみ' } },
   },
 };
 
@@ -110,6 +119,10 @@ const ZH = {
     item: { Potion: { t: '药水', r: 'yào shuǐ' }, 'Echo Ball': { t: '回声球', r: 'huí shēng qiú' }, 'Big Potion': { t: '大瓶药水', r: 'dà píng yào shuǐ' } },
     type: { fire: { t: '火', r: 'huǒ' }, water: { t: '水', r: 'shuǐ' }, grass: { t: '草', r: 'cǎo' }, electric: { t: '电', r: 'diàn' } },
     place: { 'Hello Island': { t: '你好岛', r: 'nǐ hǎo dǎo' } },
+    person: { Mom: { t: '妈妈', r: 'mā ma' }, 'Professor Echo': { t: '回声博士', r: 'huí shēng bó shì' } },
+    sign: { 'REST STOP': { t: '休息站', r: 'xiū xi zhàn' }, SHOP: { t: '商店', r: 'shāng diàn' }, 'CHALLENGE HALL': { t: '挑战馆', r: 'tiǎo zhàn guǎn' } },
+    ui: { YES: { t: '要', r: 'yào' }, NO: { t: '不要', r: 'bú yào' } },
+    move: { 'Bubble Shot': { t: '泡泡射击', r: 'pào pao shè jī' }, 'Body Bump': { t: '碰一碰', r: 'pèng yi pèng' }, 'Sweet Rest': { t: '甜甜休息', r: 'tián tian xiū xi' } },
   },
 };
 

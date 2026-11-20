@@ -22,6 +22,8 @@
   const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
   // 界面语言里有没有「英文内容的意思」（中文界面有；英语界面没有：英文本身就是内容）
   const glossOn = () => !I18N || I18N.gloss({ [I18N.lang()]: 1 }) != null;
+  // 别的课：按钮上的英语词（是 YES）换成这门语言的（台词翻译表的 terms.ui；英语课、没翻：英文原样）
+  const uiW = en => (window.EchoGame && EchoGame.termOf ? EchoGame.termOf('ui', en) : en);
   // 属性名（dex.js 的 TYPES 里有 zh / en）
   const typeName = t => { const T = window.DEX && DEX.TYPES[t]; return T ? (I18N ? I18N.label(T) : T.zh) : t; };
   if (I18N) I18N.add({
@@ -41,6 +43,8 @@
       'st.bag.ask': '要选{type}系的 {name}（{zh}）吗？',
       'st.bag.how': '◀ ▶ 选一个贝壳，按 <b>A</b> 看看里面是谁',
       'st.bag.yes': '是 YES', 'st.bag.no': '不 NO',
+      // 别的课（.c）：按钮上的英语词换成这门语言的（{w}，台词翻译表的 terms.ui）
+      'st.bag.yes.c': '是 {w}', 'st.bag.no.c': '不 {w}', 'st.fame.title.c': '🏆 光荣榜 {w}',
       // 提示条
       'st.toast.heal': '💖 怪兽们的体力都恢复了', 'st.toast.potion': '🧪 药水 +{n}', 'st.toast.headset': '🎧 得到了共学耳机！',
       'st.toast.gold': '💠 金回声球 +{n}（村民的谢礼）', 'st.toast.coins': '💰 金币 +{n}',
@@ -142,6 +146,7 @@
       'st.bag.ask': 'Take {name} ({zh}), a {type} type monster?',
       'st.bag.how': '◀ ▶ Choose a shell, then press <b>A</b> to look inside',
       'st.bag.yes': 'YES', 'st.bag.no': 'NO',
+      'st.bag.yes.c': '{w}', 'st.bag.no.c': '{w}', 'st.fame.title.c': '🏆 {w}',
       'st.toast.heal': '💖 Your monsters are all better now', 'st.toast.potion': '🧪 Potion +{n}', 'st.toast.headset': '🎧 You got the Team Headset!',
       'st.toast.gold': '💠 Gold Echo Ball +{n} (a thank-you gift from the villagers)', 'st.toast.coins': '💰 Coins +{n}',
       'st.fame.title': '🏆 Honor Wall', 'st.fame.line': 'English Champion · {date}',
@@ -344,18 +349,18 @@
         const fresh = render.last !== i; render.last = i;
         // 怪兽的中文名、「要选…吗？」是英文的意思：英语界面不显示（EchoI18n.gloss）；「选一个贝壳」是操作说明，每种界面语言都显示
         const zhName = I18N ? I18N.gloss(sp) : sp.zh;
-        $('bg-prev').innerHTML = '<div class="bg-circle' + (fresh ? ' new' : '') + '" style="--tc:' + ({ fire: '#f0642f', water: '#2f8fdd', grass: '#3fa34d', spark: '#d9a000' })[t] + '">' + Cartoon.monster(sp) + '</div><b>' + sp.en + '</b><small>' + (zhName ? zhName + ' · ' : '') + hx('st.bag.type', { type: typeName(t) }) + '</small>';
+        $('bg-prev').innerHTML = '<div class="bg-circle' + (fresh ? ' new' : '') + '" style="--tc:' + ({ fire: '#f0642f', water: '#2f8fdd', grass: '#3fa34d', spark: '#d9a000' })[t] + '">' + Cartoon.monster(sp) + '</div><b>' + (E.lang ? E.termHTML('monster', sp.en) : sp.en) + '</b><small>' + (zhName ? zhName + ' · ' : E.lang && E.termOf('monster', sp.en) !== sp.en ? esc(sp.en) + ' · ' : '') + hx('st.bag.type', { type: typeName(t) }) + '</small>';
         $('bg-box').innerHTML = E.lang ? langBox(sp, t, zhName)
           : asking
-          ? '<p class="bg-en">' + esc(sp.en) + ' is a ' + TYPE_EN[t] + ' monster. Will you take it?</p>' + (zhName ? '<p class="bg-zh">' + hx('st.bag.ask', { type: typeName(t), name: sp.en, zh: zhName }) + '</p>' : '') + '<div class="bg-yn"><button class="btn sun" id="bg-yes">' + hx('st.bag.yes') + '</button><button class="btn ghost" id="bg-no">' + hx('st.bag.no') + '</button></div>'
+          ? '<p class="bg-en">' + esc(sp.en) + ' is a ' + TYPE_EN[t] + ' monster. Will you take it?</p>' + (zhName ? '<p class="bg-zh">' + hx('st.bag.ask', { type: typeName(t), name: E.termOf ? E.termOf('monster', sp.en) : sp.en, zh: zhName }) + '</p>' : '') + '<div class="bg-yn"><button class="btn sun" id="bg-yes">' + hx('st.bag.yes', { w: uiW('YES') }) + '</button><button class="btn ghost" id="bg-no">' + hx('st.bag.no', { w: uiW('NO') }) + '</button></div>'
           : '<p class="bg-en">Which shell will you open?</p><p class="bg-zh">' + tx('st.bag.how') + '</p>';
       };
       // 别的课（台词翻译表 SPEC §8）：问的话显示翻好的那句（标读音），下面是界面语言的意思（中文界面：原来的中文；英语界面：英语原文）；
       // 没翻的（ENGINE.md §5）只显示界面语言那份。ask() 念的那句 say() 自己会换成译文（没翻的不念）
       const langBox = (sp, t, zhName) => {
-        const yn = '<div class="bg-yn"><button class="btn sun" id="bg-yes">' + hx('st.bag.yes') + '</button><button class="btn ghost" id="bg-no">' + hx('st.bag.no') + '</button></div>';
+        const yn = '<div class="bg-yn"><button class="btn sun" id="bg-yes">' + hx('st.bag.yes', { w: uiW('YES') }) + '</button><button class="btn ghost" id="bg-no">' + hx('st.bag.no', { w: uiW('NO') }) + '</button></div>';
         const en = asking ? sp.en + ' is a ' + TYPE_EN[t] + ' monster. Will you take it?' : 'Which shell will you open?', ln = E.lineOf ? E.lineOf(en) : null;
-        const sub = asking ? (zhName ? hx('st.bag.ask', { type: typeName(t), name: sp.en, zh: zhName }) : esc(ln ? ln.en : en)) : tx('st.bag.how');
+        const sub = asking ? (zhName ? hx('st.bag.ask', { type: typeName(t), name: E.termOf ? E.termOf('monster', sp.en) : sp.en, zh: zhName }) : esc(ln ? ln.en : en)) : tx('st.bag.how');
         return (ln ? '<p class="bg-en">' + E.ruby(ln.t) + '</p>' : '') + '<p class="bg-zh">' + sub + '</p>' + (asking ? yn : '');
       };
       const move = d => { if (asking || over) return; i = (i + d + ids.length) % ids.length; E.SFX.tap(); render(); E.say(MG.species(ids[i]).en); };
@@ -738,8 +743,8 @@
     const E = C.E, MG = C.MG, sc = C.scene(), team = E.S.mon.team.map(u => E.S.mon.box.find(m => m.uid === u)).filter(Boolean);
     sc.className = 'w-scene fame'; sc.hidden = false;
     const loc = (I18N && (I18N.LANGS.find(l => l.id === I18N.lang()) || {}).html) || 'zh-CN';   // 日期按界面语言写
-    sc.innerHTML = '<div class="fame-in"><h2>' + hx('st.fame.title') + '</h2><p class="fame-name">' + E.esc(C.pname()) + '</p><div class="fame-team">' +
-      team.map(m => { const s = MG.species(m.sp); return '<span class="fame-mon">' + Cartoon.monster(s) + '<b>' + s.en + '</b><small>Lv ' + m.lv + '</small></span>'; }).join('') + '</div><p>' + hx('st.fame.line', { date: new Date().toLocaleDateString(loc) }) + '</p></div>';
+    sc.innerHTML = '<div class="fame-in"><h2>' + hx('st.fame.title', { w: uiW('Honor Wall') }) + '</h2><p class="fame-name">' + E.esc(C.pname()) + '</p><div class="fame-team">' +
+      team.map(m => { const s = MG.species(m.sp); return '<span class="fame-mon">' + Cartoon.monster(s) + '<b>' + (E.lang ? E.termHTML('monster', s.en) : s.en) + '</b><small>Lv ' + m.lv + '</small></span>'; }).join('') + '</div><p>' + hx('st.fame.line', { date: new Date().toLocaleDateString(loc) }) + '</p></div>';
     E.SFX.win(); E.confetti(300);
     C.set('champion');
     E.S.coins += 500; E.renderTop();

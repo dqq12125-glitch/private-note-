@@ -54,10 +54,13 @@ for (const l of ['es', 'ja', 'zh']) {
   const b = pack(l, C[l]);
   CAT.packs[l] = { ver: VER, name: NAMES[l], bytes: b, core: b, course: true };
 }
-const MONS = (() => { const c = { window: {} }; require('vm').runInNewContext(fs.readFileSync(path.join(ROOT, 'dex.js'), 'utf8'), c); return c.window.DEX.all.map(s => s.en); })();
+const DEXN = (() => { const c = { window: {} }; require('vm').runInNewContext(fs.readFileSync(path.join(ROOT, 'dex.js'), 'utf8'), c); return c.window.DEX; })();
+const MONS = DEXN.all.map(s => s.en);
 // Node 里同一句翻译的样子 / 分数（和游戏里同一个 lineFind、同一套 lang-*.js）
 const tr = (l, en) => PK.lineFind(TAB[l], en, { isMon: v => MONS.includes(v) });
 const T = (l, en, name) => { const x = tr(l, en); return x ? x.t.split('{name}').join(name || 'Coco') : null; };
+// 画面上的名字（SPEC §8.1）：没翻的是英文；r 是读音
+const TM = (l, c, en) => { const m = C[l].TERMS && C[l].TERMS[c], v = m && m[en]; return v == null ? { t: en, r: null } : typeof v === 'string' ? { t: v, r: null } : { t: v.t, r: v.r || null }; };
 const nodeScore = (l, t, heard, x) => EL.get(l).score(t, heard, { entry: x ? Object.assign({ t }, x) : null, lex: null });
 
 // ---------- 本机小网站 ----------
@@ -121,7 +124,7 @@ const CJK = /[぀-ヿ㐀-鿿]/;
     const box = document.querySelector('#w-dlg'), en = box.querySelector('.d-en'), zh = box.querySelector('#d-zh'), d = EchoWorld._debug().dlg, pg = d && d.pages[d.i];
     return { en: en ? en.innerText.trim() : '', enHtml: en ? en.innerHTML : '', zh: zh ? zh.innerText.trim() : '', zhBtn: !!(zh && zh.tagName === 'BUTTON'), hear: !!box.querySelector('.d-hear'),
       say: (box.querySelector('#w-say') || {}).innerText || '', sayHtml: (box.querySelector('#w-say') || {}).innerHTML || '', mean: (box.querySelector('.say-zh') || {}).innerText || '',
-      target: pg && pg.target, kind: pg && pg.kind, txt: box.innerText };
+      target: pg && pg.target, kind: pg && pg.kind, txt: box.innerText, name: (box.querySelector('.d-name') || {}).innerHTML || '' };
   });
   // 换一下存档再打开：先离开游戏的页面（它离开时会存一次），在同一个网站的空白页里改好存档（obj 的每一项浅合并进去），再打开游戏
   const relaunch = async (p, l, obj) => {
@@ -143,6 +146,7 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       const zhUi = L !== 'zh', rubyL = L !== 'es', NAME = zhUi ? NAMES[L].zh : NAMES[L].en;
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
       await ctx.addInitScript(s => { if (!localStorage.getItem('echo-island-v1')) localStorage.setItem('echo-island-v1', s); }, JSON.stringify(SAVE()));
+      await ctx.addInitScript(() => { window.__fill = new Set(); const f = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t, ...a) { try { if (window.__fill.size < 8000) window.__fill.add(String(t)); } catch (e) { /* 记不下就算了 */ } return f.call(this, t, ...a); }; });
       const p = await ctx.newPage();
       p.setDefaultTimeout(9000);
       p.on('pageerror', e => { errs.push(e.message); console.log('  [err]', e.message, (e.stack || '').split('\n')[1]); });
@@ -214,6 +218,9 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       const tAsk = T(L, 'Bubbly is a water monster. Will you take it?');
       check(noRt(bag.en) === tAsk && bag.yes && (zhUi ? /泡泡鱼/.test(bag.zh) : bag.zh === 'Bubbly is a water monster. Will you take it?'), '问要不要它：译文（' + tAsk + '，属性名用翻好的词），下面是意思', bag);
       check((await keys(p)).includes(key(tAsk)), '问的这句念的是译文');
+      const yn = await p.evaluate(() => [document.querySelector('#bg-yes').innerText.trim(), document.querySelector('#bg-no').innerText.trim()]);
+      const tYes = TM(L, 'ui', 'YES').t, tNo = TM(L, 'ui', 'NO').t;
+      check(yn[0] === (zhUi ? '是 ' + tYes : tYes) && yn[1] === (zhUi ? '不 ' + tNo : tNo), '是 / 不 的按钮：' + (zhUi ? '中文 + ' : '') + NAME + '（' + yn.join(' / ') + '），不是 YES / NO', yn);
       await shot(p, L + '-bag');
       await p.click('#bg-yes', { force: true }); await W(p, 1500);
       check(await until(p, '#w-dlg #w-mic', 3), '对伙伴说那句（说话任务）');
@@ -244,6 +251,8 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       const tHi = T(L, 'Hello again, {name}! How is your monster?');
       check(noRt(d.enHtml) === tHi && d.hear && d.enHtml.includes('<ruby>') === rk(tHi) && d.zh === (zhUi ? '又见面了，Coco！你的怪兽还好吗？' : 'Hello again, Coco! How is your monster?') && (await keys(p)).includes(key(tHi)),
         '大地图的一页对话：译文（名字换好了：' + tHi + '），下面是' + (zhUi ? '中文' : '英语原文') + '，念的是译文', d);
+      const tMom = TM(L, 'person', 'Mom');
+      check(noRt(d.name) === tMom.t && d.name.includes('<ruby>') === !!(tMom.r && /[一-鿿]/.test(tMom.t)), '对话框上的名字牌：' + tMom.t + '（不是 Mom）' + (tMom.r && /[一-鿿]/.test(tMom.t) ? '，标了读音' : ''), d.name);
       await shot(p, L + '-world-talk');
       // 「剧情中文」点一下才显示：意思收成「译」
       await p.evaluate(() => { EchoGame.S.settings.storyZh = 'tap'; });
@@ -338,10 +347,45 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       for (let k = 0; k < 40 && !(await p.$('#b-panel [data-act=bMove]')); k++) { const b = await p.$('#b-panel [data-act=bDef]'); if (b) await b.click().catch(() => {}); await W(p, 300); }
       const foe = await p.evaluate(() => { const b = MonsterGame._b(); const f = b && (b.foes ? b.foes[b.fi || 0] : b.foe); return f ? f.sp : null; });
       const foeEn = await p.evaluate(sp => window.DEX && DEX.byId && DEX.byId[sp] ? DEX.byId[sp].en : sp, foe);
+      const plate = await p.evaluate(() => ({ me: (document.querySelector('.hpcard.me b') || {}).innerHTML || '', moves: [...document.querySelectorAll('#b-panel .move .mv-top b')].map(b => b.innerHTML), small: [...document.querySelectorAll('#b-panel .move small')].map(b => b.innerText) }));
+      const tFin = TM(L, 'monster', 'Tidalfin'), wantMv = ['Bubble Shot', 'Body Bump', 'Sweet Rest'].map(m => TM(L, 'move', m));
+      check(noRt(plate.me) === tFin.t && wantMv.every(m => plate.moves.some(h => noRt(h) === m.t)) && (L === 'es' || plate.moves.some(h => h.includes('<ruby>'))),
+        '对战的名牌（' + tFin.t + '）和招式按钮（' + wantMv.map(m => m.t).join('、') + '）是' + NAME + '的写法' + (L === 'es' ? '' : '，招式标了读音'), plate);
+      check(plate.small.some(x => x.includes(zhUi ? DEXN.MOVES.water[0][1] : 'Bubble Shot')), '招式按钮的小字：' + (zhUi ? '中文名（' + DEXN.MOVES.water[0][1] + '）' : '英语界面写英文原名（Bubble Shot）'), plate.small);
       const k2 = await keys(p), tLook = T(L, 'Look out! Here comes ' + foeEn + '!'), tTurn = T(L, 'Tidalfin, your turn!');
       check(!!tLook && k2.includes(key(tLook)) && k2.includes(key(tTurn)), '对战喊话：「Look out! Here comes ' + foeEn + '!」→ ' + tLook + '；「Tidalfin, your turn!」→ ' + tTurn, { foe, n: k2.length });
       await shot(p, L + '-battle');
       await p.evaluate(() => { if (window.MonsterGame && MonsterGame.stop) MonsterGame.stop(); });
+      // ---------- 5 画面上的名字：手册、背包、房子的招牌 ----------
+      await p.evaluate(() => { EchoGame.goHome(); EchoGame.S.mon.dex.tidalfin = 'caught'; document.body.insertAdjacentHTML('beforeend', '<button id="t-dex" data-act="mDexOne" data-sp="tidalfin" style="position:fixed;left:0;top:0;z-index:99999">dex</button>'); });
+      await W(p, 400);
+      await p.click('#t-dex', { force: true }); await W(p, 400);
+      const dex = await p.evaluate(() => (document.querySelector('#modal h2') || {}).innerHTML || '');
+      check(noRt(dex).includes(tFin.t) && (rk(tFin.t) ? dex.includes('<ruby>') : !/<ruby>/.test(dex)) && (zhUi ? dex.includes('潮汐鳍') : true), '手册那一页的标题：' + tFin.t + (rk(tFin.t) ? '（标了读音）' : '') + (zhUi ? '，后面是中文名' : ''), dex);
+      await shot(p, L + '-dex');
+      await p.evaluate(() => { EchoGame.closeModal(); MonsterGame.bagSheet(); }); await W(p, 400);
+      const bagRow = await p.evaluate(() => { const r = [...document.querySelectorAll('#modal .ach')].find(x => /🧪/.test(x.innerText)); return r ? { b: r.querySelector('b').innerText, small: r.querySelector('small').innerHTML } : null; });
+      const tPot = TM(L, 'item', 'Potion');
+      check(!!bagRow && noRt(bagRow.small).includes(' · ' + tPot.t) && !/ · Potion/.test(noRt(bagRow.small)), '背包：药水那一行的小字是' + NAME + '的写法（' + tPot.t + '），不是 Potion', bagRow);
+      await shot(p, L + '-bag-items');
+      await p.evaluate(() => EchoGame.closeModal());
+      // 招牌：2D（上面一直是 2D）、经典 3D、新画风，三种画法画的都是这门课的写法；挑战馆的英文招牌是 HALL（不再是 GYM）
+      const signs = ['REST STOP', 'SHOP', 'CHALLENGE HALL'].map(e => { const t = TM(L, 'sign', e).t; return t === 'CHALLENGE HALL' ? 'HALL' : t; });
+      const drawn = () => p.evaluate(() => [...window.__fill]);
+      let fills = await drawn();
+      check(signs.every(t => fills.includes(t)) && !fills.includes('GYM') && (signs[0] === 'REST STOP' || !fills.includes('REST STOP')), '2D 画法：房子的招牌是' + NAME + '的（' + signs.join(' / ') + '）', fills.filter(x => /[A-Z]{3}/.test(x)).slice(0, 10));
+      for (const [look, gfx, tag] of [['std', 'mid', '经典 3D'], ['new', 'mid', '新画风']]) {
+        await p.evaluate(lk => { localStorage.setItem('echo-look', lk); }, look);
+        await relaunch(p, L, { settings: { gfx }, world: { started: true, map: 't0', x: -1, y: -1 } });
+        await p.evaluate(() => { window.__fill = new Set(); });
+        await p.click('[data-act=wEnter]'); await W(p, 3500);
+        const info = await p.evaluate(() => { const R = EchoWorld._debug().R; return { using: R && R.using ? R.using() : (R ? 'std' : 'none') }; });
+        fills = await drawn();
+        check(signs.every(t => fills.includes(t)) && !fills.includes('GYM'), tag + '（' + info.using + '）：房子的招牌是' + NAME + '的', { info, fills: fills.filter(x => /[A-Za-z]{3}|[ぁ-ヿ一-鿿]/.test(x)).slice(0, 12) });
+        await shot(p, L + '-signs-' + look);
+        await p.evaluate(() => EchoGame.goHome());
+      }
+      await p.evaluate(() => localStorage.removeItem('echo-look'));
       await ctx.close();
     }
   } catch (e) {

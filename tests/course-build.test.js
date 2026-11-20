@@ -113,6 +113,21 @@ try {
     // ---- 4. 逐字节一样 ----
     CB.build(lang, { out: tmp2 });
     check(fs.readFileSync(file).equals(fs.readFileSync(path.join(tmp2, lang, 'course.json'))), '同一份输入生成两次：文件逐字节一样');
+
+    // ---- 4b. readings.json：每句配音的读音（course.json 旁边，不进课程包；tools/voice/gen.py 用它纠正日语的读法） ----
+    const rf = path.join(tmp, lang, 'readings.json');
+    check(fs.existsSync(rf), 'readings.json 写在 course.json 旁边');
+    const RD = JSON.parse(fs.readFileSync(rf, 'utf8'));
+    if (lang === 'es') check(Object.keys(RD).length === 0, '西语没有读音：readings.json 是空的');
+    else {
+      const isle = new Set(c.WORLDS.map(w => norm(w.en)));   // 岛名源文件里没有读音（town 的 t 只有原文）
+      const noR = V.filter(e => !RD[norm(e.t)] && !isle.has(norm(e.t)));
+      check(!noR.length, '每句配音都有读音（岛名除外：' + (V.length - Object.keys(RD).length) + ' 句没有）', noR.slice(0, 3).map(e => e.t));
+      const w0 = c.WORLDS[0].words[0];
+      check(RD[norm(w0[0])] === w0[3].r, '词的读音是源文件里的 r');
+      const s0 = c.WORLDS[0].sents[0];
+      check(RD[norm(s0[0])] === s0[2].r.join(lang === 'zh' ? ' ' : ''), '句子的读音是 seg 对应的 r 接起来（日语直接接、中文用空格）');
+    }
   }
 
   // ---- 5. 台词翻译表（tools/course/SPEC.md §8）：tests/course-lines-fixture.js 的小样 ----

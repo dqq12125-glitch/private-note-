@@ -232,3 +232,17 @@
 - 动态助词「过」读轻声：说过 shuō guo、见过 jiàn guo、去过 qù guo；过来、过去、过关、过马路里的「过」读 guò。
 - 地：做副词后缀时读 de（开心地 kāi xīn de、慢慢地），地方、地图、地上、基地里读 dì。
 - 一、不：照第 8 节；星期一、周一、一班、石板一、数「一、二、三」读 yī；「是不是」「看不清」这种中间的「不」轻声 bu。
+
+## 13. 名字牌、招牌、按钮（`terms.person` / `sign` / `ui`，2026-11-21）
+
+**名字牌（person，297 个）**：短，最好 2–6 个字，名字和台词里的写法一模一样。
+- 职业在前、名字在后：渔夫汤姆、学生安妮、画家里奥、巡林员罗莎、登山者小峰。称呼放后面：李警官、乔爷爷、玛丽阿姨、蒂克镇长、格雷老师、布朗先生、朴太太。
+- 职业词定下来的：Fisher 渔夫、Hiker 登山者、Camper 露营者、Swimmer 游泳者、Skier 滑雪者、Student 学生、Artist / Painter 画家、Scientist 科学家、Miner 矿工、Farmer 农民、Sailor 水手、Ranger 巡林员、Ace Trainer 高手、Veteran 老将、Fan 观众、Guest 客人、Aide / Assistant 助手、Bug Kid 捉虫小孩、Juggler 杂耍人、Drummer 鼓手、Singer 歌手、Pianist 钢琴手、Dancer 舞者、Coach …教练、Officer …警官、Traffic Officer 交警、Clerk 店员、Guard 守卫、Tourist 游客、Zookeeper 饲养员、Reporter 记者、Explorer 探险家、Monitor 班长、Club Leader 社长、MC 主持人、Keeper 管理员、Weather Man 气象员、Sea Patrol 巡逻员。
+- 不能用的说法要绕开：Diver → 潜泳者（不写那个两字老词）；Psychic Rin → 读心人凛；Monk Sen / Ren → 守护人阿森 / 阿任（不写宗教身份）；Hiker Rocky → 罗基（不写和外国电影角色撞名的写法）；Librarian Mrs Page → 佩吉老师（不用和动画角色一样的译名）。
+- 外国名字的音译（台词里也照这个）：Leo 里奥 Lǐ ào、Mia 米娅、Lily 莉莉 Lì li、Lucy 露西、Kate 凯特、Tom 汤姆、Sam 山姆（不用「萨姆」）、Ben 本、Dan 丹、Joe 乔、Max 麦克斯、Amy 艾米、Ann 安妮、Anna 安娜、Rosa 罗莎、Rose 罗丝、Sue 苏、Pat 帕特、Ray 雷、Gus 加斯、Jack 杰克、Pete 皮特、Finn 芬恩、Nina 妮娜、Nora 诺拉、Ivy 艾薇、Emma 艾玛、Ella 艾拉、Zoe 佐伊、Rita 丽塔、Ada 艾达、Iris 艾瑞斯、Owen 欧文、Toby 托比、Tony 托尼、Nick 尼克、Jay 杰伊、Rick 里克、Bob 鲍勃、Ken 肯、Kim 小金 / 金警官、Mei 小梅、May 梅、Park 朴 Piáo、Li 李、Wu 吴、Chen 陈、Lin 林、Tang 唐、Wang 王。双关的名字给个中文小名：Baker Bun 面包师阿邦、Baker Sugar 蛋糕师小糖、Hiker Summit 登山者小峰、Ranger Frost 巡林员阿霜。
+- 对手 Leo / Mia（`person.leo` / `person.mia`）照拉丁字母写，和台词里的 `{rival}` 一样（游戏填进去的是英文名）。
+- 擂主照第 5 节，只写名字：智者、露娜、冰霜、利爪（拼音大写）。会说话的东西：黑板、控制台、收音机（Radio）、广播（Hall Radio / Hall Speaker）、天气机、天气开关、回忆牌、回忆之门。
+
+**招牌和地板字（sign，41 个）**：越短越好。教室地板：图书馆、食堂、走廊、办公室、教室、出口、电脑室、实验室、音乐。学科地板：数学、**中文**（English）、科学、美术、体育、**语文**（Chinese）、历史、地理（照第 12 节的学科决定）。音符：哆、咪、嗦。回忆馆的牌：去了、看见了、吃了、买了、旅行、海滩。价钱照原样留 ¥：牛肉面 ¥15。
+
+**按钮（ui，15 个）**：双语按钮里这门语言的那一半，照它回答的那句话说：要 / 不要（选伙伴「你要它吗？」）、出发！、先不了、游上去、谢谢！、好啊！、下次吧、按下去！、绿灯，走！、红灯，停！、打开！、蛋、箱子、光荣榜。

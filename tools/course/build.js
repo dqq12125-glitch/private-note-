@@ -51,17 +51,18 @@ const dlg = d => [d.q.t, d.a.t, d.wrong.map(w => w.t), { q: xs(d.q), a: xs(d.a),
 
 // 配音名单：按先后收，同一句合并 g
 function voiceList() {
-  const by = new Map(), out = [];
-  const add = (t, gs) => {
+  const by = new Map(), out = [], rd = new Map();
+  const add = (t, gs, r) => {
     if (typeof t !== 'string' || !t.trim()) return;
     const k = norm(t);
     if (!k) return;
     let e = by.get(k);
     if (!e) { e = { t: t, g: [], p: out.length }; by.set(k, e); out.push(e); }
+    if (r && !rd.has(k)) rd.set(k, r);
     for (const g of gs) if (!e.g.includes(g)) e.g.push(g);
   };
   const fin = () => out.map(e => ({ t: e.t, g: ['f', 'm'].filter(g => e.g.includes(g)), p: e.p }));
-  return { add, fin };
+  return { add, fin, rd: () => Object.fromEntries(rd) };
 }
 
 function loadSources(lang) {
@@ -88,7 +89,11 @@ const VOICE_MON = new Set(['{mon}, your turn!', "Let's battle! {mon}, your turn!
   'Yes! {mon} is your new friend!', '{mon} joined your team!', '{mon} did not give up!', 'Look! {mon} is growing up!', '{mon}, use {move}!']);
 const EARLY = /^(story|setup|world|monsters|game)\.js$|^isles\/a-/;   // 开场和第 1 组岛：配音排在课本前面
 function linesFile(lang, o) { return o && o.lines === false ? null : o && o.lines ? path.resolve(o.lines) : path.join(__dirname, lang, 'lines.json'); }
+// 读音（r 是一列或一个字符串）→ 一个字符串：日语直接接，中文拼音用空格
+let RJ = '';
+const rjoin = r => (Array.isArray(r) ? r.map(String).join(RJ) : typeof r === 'string' ? r : undefined);
 function buildLines(lang, file) {
+  RJ = lang === 'zh' ? ' ' : '';
   if (!file || !fs.existsSync(file)) return null;
   const SRC = readJson(path.join(__dirname, 'lines-src.json')), J = readJson(file);
   const PK = require(path.join(ROOT, 'packs.js'))._;
@@ -107,7 +112,7 @@ function buildLines(lang, file) {
     if (!J.lines || !Object.prototype.hasOwnProperty.call(J.lines, s.id)) continue;
     LINES[s.en] = out(J.lines[s.id]);
     const t = typeof LINES[s.en] === 'string' ? LINES[s.en] : LINES[s.en].t;
-    if (!/\{(name|rival)\}/.test(t)) (s.src === 'dex.js' ? late : EARLY.test(s.src) ? early : late).push({ t, g: s.g, dex: s.src === 'dex.js' });
+    if (!/\{(name|rival)\}/.test(t)) (s.src === 'dex.js' ? late : EARLY.test(s.src) ? early : late).push({ t, g: s.g, dex: s.src === 'dex.js', r: rjoin(LINES[s.en].r) });
   }
   const TERMS = {}, termEn = {};
   for (const [ty, arr] of Object.entries(SRC.terms)) {
@@ -133,6 +138,7 @@ function buildLines(lang, file) {
   const V = { early, late, mon: [], dex: late.filter(x => x.dex) };
   V.late = late.filter(x => !x.dex);
   const tr = en => { const r = PK.lineFind(tab, en, { isMon }); return r ? r.t : null; };
+  const trr = en => { const r = PK.lineFind(tab, en, { isMon }); return r ? rjoin(r.r) : undefined; };
   const article = (en, tpl) => (tpl.an ? en.replace(/(^|\W)([aA]) ([AEIOUaeiou])/g, (a, p, x, v) => p + x + 'n ' + v) : en);
   for (const s of SRC.templates) {
     if (!LINES_T.some(t => t.en === s.en)) continue;
@@ -168,13 +174,13 @@ function buildLines(lang, file) {
     for (const c of combos) {
       const en = article(c.en, s), t = tr(en);
       if (!t) continue;
-      const e = { t, g: s.g, no: c.sp ? c.sp.no : -1 };
+      const e = { t, g: s.g, no: c.sp ? c.sp.no : -1, r: trr(en) };
       if (hasMon && s.dom !== 'starter') V.mon.push(e); else V.early.push(e);
     }
   }
   // 单独念的词：选伙伴时念三只的名字、横幅念地名
-  for (const sp of D.starters) { const t = tr(sp.en); if (t && t !== sp.en) V.early.push({ t, g: ['f', 'm'] }); }
-  for (const p of termEn.place || []) { const t = tr(p.en); if (t) V.early.push({ t, g: ['f', 'm'] }); }
+  for (const sp of D.starters) { const t = tr(sp.en); if (t && t !== sp.en) V.early.push({ t, g: ['f', 'm'], r: trr(sp.en) }); }
+  for (const p of termEn.place || []) { const t = tr(p.en); if (t) V.early.push({ t, g: ['f', 'm'], r: trr(p.en) }); }
   V.mon.sort((a, b) => a.no - b.no);   // 对战喊话按手册编号
   return { course: { LINES, LINES_T, TERMS }, voice: V };
 }
@@ -214,15 +220,15 @@ function buildCourse(lang, o) {
       lines: t.scene.lines.map(l => [l.who, l.t, l.zh || '', pickX(l, ['en', 'r'])]),
     });
     V.add(t.t, ['f']);
-    V.add(t.boss.t, ['f', 'm']);
-    t.words.forEach(e => V.add(e.t, ['f']));
-    t.sents.forEach(e => V.add(e.t, ['f']));
-    t.dlgs.forEach(x => { V.add(x.q.t, ['f', 'm']); V.add(x.a.t, ['f', 'm']); x.wrong.forEach(w => V.add(w.t, ['f', 'm'])); });
-    t.scene.lines.forEach(l => V.add(l.t, [t.scene.cast[l.who][2] === 'm' ? 'm' : 'f']));
+    V.add(t.boss.t, ['f', 'm'], rjoin(t.boss.r));
+    t.words.forEach(e => V.add(e.t, ['f'], rjoin(e.r)));
+    t.sents.forEach(e => V.add(e.t, ['f'], rjoin(e.r)));
+    t.dlgs.forEach(x => { V.add(x.q.t, ['f', 'm'], rjoin(x.q.r)); V.add(x.a.t, ['f', 'm'], rjoin(x.a.r)); x.wrong.forEach(w => V.add(w.t, ['f', 'm'], rjoin(w.r))); });
+    t.scene.lines.forEach(l => V.add(l.t, [t.scene.cast[l.who][2] === 'm' ? 'm' : 'f'], rjoin(l.r)));
   });
   // 台词翻译表：开场和第 1 组岛的剧情、选伙伴、拿到道具、地名排在小镇后面（一开始就用到），别的排在课本后面
   // （配音念的字不带表情符号：和英语一样按 key.js 的 norm，key 本来就不算表情）
-  if (LN) LN.voice.early.forEach(e => V.add(norm(e.t), e.g));
+  if (LN) LN.voice.early.forEach(e => V.add(norm(e.t), e.g, e.r));
 
   // ----- 课本：BOOKS、TALK，配音按册、按单元 -----
   const list = [], TALK = [], mapBooks = {};
@@ -233,11 +239,11 @@ function buildCourse(lang, o) {
       id: syl.id, level: syl.level, name: syl.name.zh, short, x: { en: { name: syl.name.en, short: 'L' + syl.level } },
       units: units.map(u => {
         const tk = u.talk;
-        V.add(u.boss.t, ['f', 'm']);
-        u.words.forEach(e => V.add(e.t, ['f']));
-        u.sents.forEach(e => V.add(e.t, ['f']));
-        u.dlgs.forEach(x => { V.add(x.q.t, ['f', 'm']); V.add(x.a.t, ['f', 'm']); x.wrong.forEach(w => V.add(w.t, ['f', 'm'])); });
-        V.add(tk.opener.t, [tk.gender === 'm' ? 'm' : 'f']);
+        V.add(u.boss.t, ['f', 'm'], rjoin(u.boss.r));
+        u.words.forEach(e => V.add(e.t, ['f'], rjoin(e.r)));
+        u.sents.forEach(e => V.add(e.t, ['f'], rjoin(e.r)));
+        u.dlgs.forEach(x => { V.add(x.q.t, ['f', 'm'], rjoin(x.q.r)); V.add(x.a.t, ['f', 'm'], rjoin(x.a.r)); x.wrong.forEach(w => V.add(w.t, ['f', 'm'], rjoin(w.r))); });
+        V.add(tk.opener.t, [tk.gender === 'm' ? 'm' : 'f'], rjoin(tk.opener.r));
         TALK.push({
           id: u.book + '-u' + u.n, book: u.book, unit: u.n, name: tk.name, zh: tk.zh || tk.name, gender: tk.gender, kid: !!tk.kid,
           topic: tk.topic.en, topicZh: tk.topic.zh, goal: tk.goal.en, goalZh: tk.goal.zh, persona: tk.persona, opener: tk.opener.t,
@@ -259,7 +265,7 @@ function buildCourse(lang, o) {
   }
 
   // 别的岛的剧情 → 对战喊话（按手册编号）→ 手册介绍
-  if (LN) [LN.voice.late, LN.voice.mon, LN.voice.dex].forEach(a => a.forEach(e => V.add(norm(e.t), e.g)));
+  if (LN) [LN.voice.late, LN.voice.mon, LN.voice.dex].forEach(a => a.forEach(e => V.add(norm(e.t), e.g, e.r)));
   const course = {
     fmt: 1, lang, name: src.syl.name,
     WORLDS, SCENES, BOOKS: { list }, TALK,
@@ -268,8 +274,13 @@ function buildCourse(lang, o) {
   // 有台词翻译表才有这三样（没有的时候 course.json 和以前一字不差）
   if (LN) Object.assign(course, LN.course);
   course.VOICE = V.fin();
+  READINGS = V.rd();
   return course;
 }
+
+// 每句配音的读音 { norm(t): 读音 }（course.json 里不放；tools/voice/gen.py --readings 读，纠正日语的读法）
+let READINGS = {};
+function readings(lang, o) { buildCourse(lang, o); return READINGS; }
 
 function stats(c) {
   const units = c.BOOKS.list.reduce((s, b) => s + b.units.length, 0);
@@ -297,6 +308,8 @@ function build(lang, o) {
     fs.mkdirSync(dir, { recursive: true });
     file = path.join(dir, 'course.json');
     fs.writeFileSync(file, data);
+    // 每句配音的读音表放在 course.json 旁边（不进课程包）：tools/voice/gen.py 读它，让日语 TTS 念课程写的读音
+    fs.writeFileSync(path.join(dir, 'readings.json'), JSON.stringify(READINGS));
   }
   return { course, bytes: data.length, file, stats: stats(course) };
 }
@@ -304,19 +317,21 @@ function build(lang, o) {
 if (require.main === module) {
   try {
     const a = process.argv.slice(2), lang = a[0];
-    if (!LANGS.includes(lang)) { console.error('用法：node tools/course/build.js <es|ja|zh> [--check] [--out dist/course]'); process.exit(2); }
+    if (!LANGS.includes(lang)) { console.error('用法：node tools/course/build.js <es|ja|zh> [--check] [--out dist/course] [--readings 读音表.json]'); process.exit(2); }
     const o = { check: false, out: '' };
     for (let i = 1; i < a.length; i++) {
       if (a[i] === '--check') o.check = true;
       else if (a[i] === '--out') { o.out = a[++i]; if (!o.out) throw new Error('--out 后面要跟一个目录'); }
+      else if (a[i] === '--readings') { o.readings = a[++i]; if (!o.readings) throw new Error('--readings 后面要跟一个文件'); }
       else if (a[i] === '--lines') { o.lines = a[++i]; if (!o.lines) throw new Error('--lines 后面要跟一个 lines.json'); }
       else throw new Error('不认识的参数 ' + a[i]);
     }
     const r = build(lang, o), s = r.stats;
+    if (o.readings) { fs.mkdirSync(path.dirname(path.resolve(o.readings)), { recursive: true }); fs.writeFileSync(path.resolve(o.readings), JSON.stringify(READINGS)); console.log('  读音表 ' + Object.keys(READINGS).length + ' 句 → ' + o.readings); }
     console.log((o.check ? '✓ ' + lang + ' 检查过了（没写文件）' : 'course ' + lang + ' → ' + path.relative(ROOT, r.file).replace(/\\/g, '/')) + '：' + s.towns + ' 个小镇、' + s.scenes + ' 段小剧场、' +
       s.books + ' 册 ' + s.units + ' 个单元、' + s.talk + ' 个聊天角色；' + r.bytes + ' 字节');
     if (r.course.LINES) console.log('  台词翻译表：整句 ' + s.lines + '、模板 ' + s.tpl + '、词 ' + s.terms);
     console.log('  配音 ' + s.voice + ' 句 → ' + s.clips + ' 段（女声 ' + s.f + '、男声 ' + s.m + '），一共 ' + s.chars + ' 个字符');
   } catch (e) { console.error('course: ' + e.message); process.exit(1); }
 }
-module.exports = { build, buildCourse, validate, stats, LANGS };
+module.exports = { build, buildCourse, readings, validate, stats, LANGS };

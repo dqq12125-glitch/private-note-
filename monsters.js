@@ -123,6 +123,8 @@
       'b.potion.hp': '用了{item}！<b>{name}</b> 恢复了体力。', 'b.potion.st': '用了{item}！<b>{name}</b> 恢复正常了。',
       // 进化、详情
       'b.evo.t': '看！{name} 在长大……', 'b.evo.p': '{name} 正在长大！', 'b.evo.ok': '太棒了！', 'b.evo.done': '太棒了！<b>{from}</b> 长成了 <b>{to}</b>{zh}！',
+      // 别的课（.c）：按钮上的英语词换成这门语言的（{w}，台词翻译表的 terms.ui）
+      'b.egg.c': '蛋 {w}', 'b.pc.box.c': '箱子 {n} {w} {n}（{have} / {cap}）', 'b.day.thanks.c': '谢谢 {w}',
       'b.egg': '蛋 Egg', 'b.egg.tip': '带着它一起走路，它就会慢慢长大、孵出来。',
       'b.egg.far': '它好像还要很久才会孵出来。', 'b.egg.mid': '里面有动静了！', 'b.egg.near': '快孵出来了！它在里面动来动去。',
       'b.sum.evoLv': 'Lv {lv} 进化成 {name}', 'b.sum.xp': '经验 {a} / {b}', 'b.sum.hp': '体力 HP', 'b.sum.atk': '攻击 ATK', 'b.sum.def': '防御 DEF', 'b.sum.spd': '速度 SPD',
@@ -262,6 +264,7 @@
       'b.lose.p': 'A Rest Stop brings back HP and cures status problems.<br>Tip: battle wild monsters in the grass to level up,<br>use moves that are <b>strong against</b> your opponent, or use a support move first to lower its attack.', 'b.lose.go': 'Go to the Rest Stop',
       'b.potion.hp': 'You used {item}! <b>{name}</b> got its HP back.', 'b.potion.st': 'You used {item}! <b>{name}</b> is back to normal.',
       'b.evo.t': 'Look! {name} is growing up…', 'b.evo.p': '{name} is growing!', 'b.evo.ok': 'Great!', 'b.evo.done': 'Great! <b>{from}</b> grew into <b>{to}</b>{zh}!',
+      'b.egg.c': '{w}', 'b.pc.box.c': '{w} {n} ({have} / {cap})', 'b.day.thanks.c': '{w}',
       'b.egg': 'Egg', 'b.egg.tip': 'Walk with it and it will slowly grow and hatch.',
       'b.egg.far': 'It looks like it will take a long time to hatch.', 'b.egg.mid': 'Something is moving inside!', 'b.egg.near': 'It will hatch soon! It is moving around inside.',
       'b.sum.evoLv': 'Lv {lv}: grows into {name}', 'b.sum.xp': 'XP {a} / {b}', 'b.sum.hp': 'HP', 'b.sum.atk': 'ATK', 'b.sum.def': 'DEF', 'b.sum.spd': 'SPD',
@@ -457,9 +460,20 @@
 
   // ---------- 养成：英文昵称、亲密度、稀有色、蛋 ----------
   const SHINY_RATE = 1 / 64;          // 野外遇到稀有色的机会（给孩子玩，故意定得高一点）
-  const nm = mon => (mon && mon.nick) || SPECIES[mon.sp].en;
-  // 名字后面的小字：起了昵称就写原来的英文名，再加中文名（中文界面才有）
-  const subName = mon => { const s = SPECIES[mon.sp]; return [mon.nick ? s.en : '', gloss(s) || ''].filter(Boolean).join(' · '); };
+  // ---------- 别的课：名字按这门课的写法（台词翻译表的词，tools/course/SPEC.md §8.1；没翻的照英文）；英语课一个字不变 ----------
+  // spN(种) 怪兽名的文字、spH(种) 显示用的 HTML（日语 / 中文标读音；英语课是原来的英文，没转义——和原来一样）、
+  // mvN(招式名 [英, 中]) / mvH、trN(英文名) 训练师 / 角色名、zhL(带 en 和 zh 的东西) 名字后面「界面语言的名字」那一小行：
+  // 英语课是中文意思（中文界面才有）；别的课中文界面是中文名，英语界面写英文原名（和这门课的写法不一样时）
+  const T_ = (c, en) => (E && E.lang && E.termOf ? E.termOf(c, en) : en);
+  const TH_ = (c, en) => (E && E.lang && E.termHTML ? E.termHTML(c, en) : en);
+  const spN = s => T_('monster', s.en), spH = s => TH_('monster', s.en);
+  const mvN = m => T_('move', m[0]), mvH = m => TH_('move', m[0]);
+  const trN = n => T_('person', n);
+  const zhL = o => { if (!(E && E.lang)) return gloss(o); const g = gloss(o); return g || (isZh() || !o.en || T_(o.c || 'monster', o.en) === o.en ? null : o.en); };
+  const zhOfL = o => { const g = zhL(o); return g ? tx('b.zhName', { zh: g }) : ''; };
+  const nm = mon => (mon && mon.nick) || spN(SPECIES[mon.sp]);
+  // 名字后面的小字：起了昵称就写原来的英文名，再加中文名（中文界面才有）；别的课写这门课里的名字
+  const subName = mon => { const s = SPECIES[mon.sp]; return [mon.nick ? spN(s) : '', zhL(s) || ''].filter(Boolean).join(' · '); };
   const frOf = mon => mon.fr == null ? 70 : mon.fr;
   const hearts = mon => Math.min(5, Math.floor(frOf(mon) / 51));
   const heartsHTML = mon => '<span class="frh" title="' + hx('b.fr') + '">' +[0, 1, 2, 3, 4].map(k => k < hearts(mon) ? '♥' : '♡').join('') + '</span>';
@@ -613,7 +627,7 @@
   function starterSheet(id) {
     const s = SPECIES[id], sr = E.speakMode() === 'sr';
     starterLn = learnL('be my partner', 0, s.en + ', be my partner!', s.en + '，做我的伙伴吧！');
-    E.openModal('<div class="evo-stage">' + svg(id) + '</div><h2>' + s.en + E.esc(zhOf(s)) + '</h2>' +
+    E.openModal('<div class="evo-stage">' + svg(id) + '</div><h2>' + spH(s) + E.esc(zhOfL(s)) + '</h2>' +
       '<p>' + hx('b.st.say') + '</p><div class="say-text" id="st-say">' + E.wordsHTML(starterLn ? starterLn.t : s.en + ', be my partner!') + '</div>' + meanHTML(starterLn) +
       (sr ? '<button class="mic" id="st-mic" data-act="mStarterMic" data-sp="' + id + '">' + E.MIC + '</button><div class="mic-hint" id="st-hint">' + hx('b.mic.say') + '</div>' +
           // AI 打分用不了（没网 / 额度 / 没密钥，评估第 3 条）：可以先跳过，这句放进复习、联网后要补说；说了 3 次还不行也能先跳过
@@ -657,7 +671,7 @@
     m.box.push(mon); m.team = [mon.uid]; m.dex[id] = 'caught';
     E.save(); E.closeModal(); E.confetti(160); E.SFX.win();
     E.say(SPECIES[id].en + ' joined your team!');
-    E.toast(tx('b.st.joined', { name: SPECIES[id].en }), 'gold');
+    E.toast(tx('b.st.joined', { name: spN(SPECIES[id]) }), 'gold');
     E.renderHome();
   }
 
@@ -802,14 +816,14 @@
   function renderBattle() {
     const w = E.W[B.z], f = foe(), m = me(), sf = SPECIES[f.sp], sm = SPECIES[m.sp];
     $('battle').innerHTML =
-      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="' + hx('b.leave') + '">✕</button><div class="th-title"><b>' + (B.tag && B.tag.title ? B.tag.title : B.kind === 'wild' ? hx('b.title.wild') : B.kind === 'trainer' ? hx('b.title.trainer', { name: B.trainer.name }) : hx('b.title.leader', { name: bossName(B.z) })) + '</b><small>' + (B.tag && B.tag.sub ? E.esc(B.tag.sub) : hx('b.title.zone', { n: B.z + 1, isle: isleName(B.z) })) + '</small></div><span class="b-energy" id="b-energy" title="' + hx('b.energy') + '"></span></div>' +
+      '<div class="p-top"><button class="x" data-act="bFlee" aria-label="' + hx('b.leave') + '">✕</button><div class="th-title"><b>' + (B.tag && B.tag.title ? B.tag.title : B.kind === 'wild' ? hx('b.title.wild') : B.kind === 'trainer' ? hx('b.title.trainer', { name: trN(B.trainer.name) }) : hx('b.title.leader', { name: bossName(B.z) })) + '</b><small>' + (B.tag && B.tag.sub ? E.esc(B.tag.sub) : hx('b.title.zone', { n: B.z + 1, isle: isleName(B.z) })) + '</small></div><span class="b-energy" id="b-energy" title="' + hx('b.energy') + '"></span></div>' +
       '<div class="arena" id="b-arena" style="--wc:' + w.color + '">' + arenaBG(B.z) +
       // 2D 画面：两只怪兽侧面对站在同一条地平线上，脚下是属性色的一圈圈水波（3D 画面在 battle3d.js 里同样处理）
       '<div class="pad me" style="--rc:' + TYPES[sm.types[0]].color + '"></div><div class="mon me' + (B.enter === 'both' || B.enter === 'me' ? ' enter' : '') + '" id="b-me">' + svgMon(m) + '</div>' +
       '<div class="pad foe" style="--rc:' + TYPES[sf.types[0]].color + '"></div><div class="mon foe' + (B.enter === 'both' || B.enter === 'foe' ? ' enter' : '') + '" id="b-foe">' + svgMon(f) + '</div>' +
-      '<div class="b-hud">' + plate('me', m, nm(m)) +
+      '<div class="b-hud">' + plate('me', m, E.lang ? (m.nick ? E.esc(m.nick) : spH(SPECIES[m.sp])) : nm(m)) +
       '<span class="b-vs">' + (B.kind !== 'wild' ? '<span class="trainer">' + (B.kind === 'trainer' && B.trainer.img ? '<img src="' + B.trainer.img + '" alt="">' : '<span>' + w.boss.emoji + '</span>') + '</span>' : 'VS') + '</span>' +
-      plate('foe', f, sf.en, (B.kind !== 'wild' ? '<div class="balls" title="' + hx('b.foeLeft') + '">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '"></span>').join('') + '</div>' : '')) + '</div>' +
+      plate('foe', f, E.lang ? spH(sf) : sf.en, (B.kind !== 'wild' ? '<div class="balls" title="' + hx('b.foeLeft') + '">' + B.foes.map((x, i) => '<span class="' + (i < B.fi ? 'down' : '') + '"></span>').join('') + '</div>' : '')) + '</div>' +
       '</div><div class="b-msg" id="b-msg"></div><div class="b-panel" id="b-panel"></div>';
     if (B3) {
       const ar = $('b-arena'); ar.classList.add('is3d'); B3.mount(ar);
@@ -883,13 +897,13 @@
     const f = foe(), sf = SPECIES[f.sp], w = E.W[b.z];
     $('b-foe').classList.add('appear');
     if (b.kind === 'wild') {
-      msg((b.tag && b.tag.msg ? b.tag.msg : '') + (f.shiny ? hx('b.in.shiny') : '') + hx('b.in.wild', { name: sf.en, zh: zhOf(sf) }));
-      if (f.shiny) { E.SFX.win(); E.toast(tx('b.in.shinyToast', { name: sf.en }), 'gold'); }
+      msg((b.tag && b.tag.msg ? b.tag.msg : '') + (f.shiny ? hx('b.in.shiny') : '') + hx('b.in.wild', { name: spN(sf), zh: zhOfL(sf) }));
+      if (f.shiny) { E.SFX.win(); E.toast(tx('b.in.shinyToast', { name: spN(sf) }), 'gold'); }
       if (B3) B3.enter('foe', false);
       await E.say('Look out! Here comes ' + sf.en + '!');
     } else {
-      const who = b.kind === 'trainer' ? b.trainer.name : bossName(b.z);
-      msg(hx('b.in.foe', { who, name: sf.en }));
+      const who = b.kind === 'trainer' ? trN(b.trainer.name) : bossName(b.z);
+      msg(hx('b.in.foe', { who, name: spN(sf) }));
       if (B3) B3.enter('foe', true);
       await E.say("Let's battle! " + sf.en + ', your turn!', undefined, 'm');
     }
@@ -920,8 +934,8 @@
       const lock = mv.tier === 2 && B.energy < 3, nm = mvName(mv), e = mv.sup ? 1 : eff(mv.type, f.sp);
       const tag = mv.sup ? E.esc(mv.sup.desc) : (e > 1 ? '<em class="mv-eff">' + hx('b.mv.strong') + '</em>' : e < 1 ? hx('b.mv.low') : E.esc(label(TYPES[mv.type])));
       // 小字：招式的中文名（中文界面才有）· 克制 / 属性 / 辅助说明 · 要做什么
-      const small = [E.esc(gloss({ zh: nm[1] }) || ''), tag, lock ? hx('b.mv.lock') : E.esc(TASK(mv.sup ? 1 : mv.tier))].filter(Boolean).join(' · ');
-      return '<button class="move' + (mv.tier === 2 ? ' ult' : '') + (mv.sup ? ' sup' : '') + (LIGHT[mv.type] ? ' lt' : '') + '" style="--tc:' + TYPES[mv.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><span class="mv-pow">' + (mv.sup ? '✦' : DOTS[mv.tier]) + '</span></span><small>' + small + '</small></button>';
+      const small = [E.esc(zhL({ zh: nm[1], en: nm[0], c: 'move' }) || ''), tag, lock ? hx('b.mv.lock') : E.esc(TASK(mv.sup ? 1 : mv.tier))].filter(Boolean).join(' · ');
+      return '<button class="move' + (mv.tier === 2 ? ' ult' : '') + (mv.sup ? ' sup' : '') + (LIGHT[mv.type] ? ' lt' : '') + '" style="--tc:' + TYPES[mv.type].color + '" data-act="bMove" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="mv-top"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + (E.lang ? mvH(nm) : nm[0]) + '</b><span class="mv-pow">' + (mv.sup ? '✦' : DOTS[mv.tier]) + '</span></span><small>' + small + '</small></button>';
     }).join('') + '</div>' +
       '<div class="b-items">' +
       (B.kind === 'wild' && !B.noCatch ? '<button class="btn small ' + (canCatch ? 'sun' : 'ghost') + '" data-act="bCatch"' + (canCatch ? '' : ' disabled') + '>' + hx('b.catch') + (canCatch ? '' : hx('b.catch.weak')) + '</button>' : '') +
@@ -957,7 +971,7 @@
     const rows = B.team.map((u, k) => {
       if (k === B.ti) return '';
       const mon = byUid(u), s = SPECIES[mon.sp], hp = Math.max(0, Math.round(B.hp[u]));
-      return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + s.en + '</b> <small>Lv ' + mon.lv + '</small><div class="chips">' + chips(mon.sp) + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + E.esc(label(STATUS[mon.st])) + '</span>' : '') + '</div><small>' + hx('b.hpOf', { hp, max: stats(mon).hp }) + '</small></div><div class="mrow-b"><button class="btn small sun" data-act="bSwitchTo" data-k="' + k + '"' + (hp > 0 ? '' : ' disabled') + '>' + hx('b.sw.go') + '</button></div></div>';
+      return '<div class="mrow"><span class="mrow-svg">' + svg(mon.sp) + '</span><div class="mrow-i"><b>' + spH(s) + '</b> <small>Lv ' + mon.lv + '</small><div class="chips">' + chips(mon.sp) + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + E.esc(label(STATUS[mon.st])) + '</span>' : '') + '</div><small>' + hx('b.hpOf', { hp, max: stats(mon).hp }) + '</small></div><div class="mrow-b"><button class="btn small sun" data-act="bSwitchTo" data-k="' + k + '"' + (hp > 0 ? '' : ' disabled') + '>' + hx('b.sw.go') + '</button></div></div>';
     }).join('');
     // pick-grid：竖屏不起作用（照常一行一只），横屏排成三列小卡片，点整张卡片就换上场
     E.openModal('<h2>' + hx('b.sw.t') + '</h2><p>' + hx('b.sw.p') + '</p><div class="pick-grid">' + rows + '</div><button class="btn ghost wide" data-act="close">' + hx('b.back') + '</button>');
@@ -969,14 +983,14 @@
     B.turn = 'busy';
     round(b, Object.assign(async () => {
       const old = SPECIES[me().sp];
-      msg(hx('b.rest', { name: old.en }));
+      msg(hx('b.rest', { name: spN(old) }));
       E.say(old.en + ', take a rest!');
       await Promise.all([sleep(700), prep([spOf(byUid(B.team[k]))])]);
       B.ti = k; B.used.add(B.team[k]); B.stg.me = newStages(); B.conf.me = 0;
       B.enter = 'me';
       renderBattle();
       const n = SPECIES[me().sp];
-      msg(hx('b.go', { name: n.en }));
+      msg(hx('b.go', { name: spN(n) }));
       $('b-me').classList.add('appear');
       if (B3) B3.enter('me', true);
       await E.say(n.en + ', your turn!');
@@ -1074,7 +1088,7 @@
         '<div class="opts list b-listen">' + t.lopts.map((o, k) => '<button class="opt en" data-act="bLOpt" data-i="' + k + '"><span class="o-t">' + rb(o.t) + '</span></button>').join('') + '</div>';
       panel('<div class="task"><div class="task-h">' + head + '</div>' + body + '<div class="task-foot"><div class="mic-hint" id="b-hint">' + (t.lv && I ? I.h('place.b.listen.foot') : hx('b.l.owe')) + '</div></div>' +
         (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">' + hx('b.back.move') + '</button>') + '</div>');
-      if (t.kind !== 'wake') msg(t.kind === 'catch' ? hx('b.l.catch', { name: SPECIES[foe().sp].en }) : hx('b.l.hit'));
+      if (t.kind !== 'wake') msg(t.kind === 'catch' ? hx('b.l.catch', { name: spN(SPECIES[foe().sp]) }) : hx('b.l.hit'));
       if (ult) E.say(t.prompt, undefined, 'm'); else E.say(t.target, 0.9);
       return;
     }
@@ -1111,7 +1125,7 @@
       (sr ? '<button class="mic" id="b-mic" data-act="bMic" aria-label="' + hx('b.mic.start') + '">' + E.MIC + '</button><div class="mic-hint" id="b-hint">' + hx('b.mic.read') + '</div><div class="heard" id="b-heard"></div>'
         : '<div class="mic-hint" id="b-hint">' + hx(t.kind === 'ult' ? 'b.self.ult' : 'b.self.rate') + '</div><div id="b-rate"' + (t.kind === 'ult' ? ' hidden' : '') + '>' + rate + '</div>') +
       '</div>' + (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">' + hx('b.back.move') + '</button>') + '</div>');
-    if (t.kind !== 'wake') msg(t.kind === 'catch' ? hx('b.tip.catch', { name: SPECIES[foe().sp].en }) : B.mv && B.mv.sup ? hx('b.tip.sup') : hx('b.tip.hit'));
+    if (t.kind !== 'wake') msg(t.kind === 'catch' ? hx('b.tip.catch', { name: spN(SPECIES[foe().sp]) }) : B.mv && B.mv.sup ? hx('b.tip.sup') : hx('b.tip.hit'));
     if (t.kind === 'ult') E.say(t.prompt, undefined, 'm');
   }
   async function onMic() {
@@ -1252,7 +1266,7 @@
   function spdOf(side) { const mon = monOf(side); let v = stats(mon).spd * stageMul(B.stg[side].spd); if (mon.st === 'par') v /= 2; return v; }
   async function round(b, mine) {
     const foeFirst = !(mine && mine.priority) && spdOf('foe') > spdOf('me');
-    if (foeFirst) { msg(hx('b.faster', { name: SPECIES[foe().sp].en })); await sleep(800); }
+    if (foeFirst) { msg(hx('b.faster', { name: spN(SPECIES[foe().sp]) })); await sleep(800); }
     for (const who of foeFirst ? ['foe', 'me'] : ['me', 'foe']) {
       if (!live(b)) return;
       if (who === 'me') { if (mine) { const r = await mine(); if (r === 'end') return; } }
@@ -1330,7 +1344,7 @@
   }
   // 让一方陷入异常状态（已经有状态的不叠加；火系不会烧伤、冰系不会冻住……）
   async function inflict(side, kind) {
-    const mon = monOf(side), s = SPECIES[mon.sp], name = s.en;
+    const mon = monOf(side), s = SPECIES[mon.sp], name = spN(s);
     if (kind === 'conf') {
       if (B.conf[side]) return false;
       B.conf[side] = 2 + rnd(3);
@@ -1460,7 +1474,7 @@
     if (rule('words') && mvo.tier === 0 && !mvo.sup) mult *= 1.5;
     mult *= hearts(m) >= 5 ? 1.1 : hearts(m) >= 3 ? 1.05 : 1;
     panel('');
-    msg(hx('b.used', { name: nm(m), mv: mv[0] }));
+    msg(hx('b.used', { name: nm(m), mv: mvN(mv) }));
     E.say(nm(m) + ', use ' + mv[0] + '!');
     if (mvo.sup) {
       if (score < 55) { msg(hx('b.supFail', { why: why || tx('b.why.unclear'), mv: mv[0] })); await sleep(1000); return; }
@@ -1515,7 +1529,7 @@
       addHp('foe', v); updHp();
       if (B3) B3.heal('foe');
       pop('b-foe', '+' + v, 'lbl');
-      msg(hx('b.foePotion', { who: B.kind === 'leader' ? bossName(B.z) : B.trainer.name, name: sf.en }));
+      msg(hx('b.foePotion', { who: B.kind === 'leader' ? bossName(B.z) : trN(B.trainer.name), name: spN(sf) }));
       E.say('Here, take this potion!', undefined, 'm');
       await sleep(1300);
       return;
@@ -1544,7 +1558,7 @@
     }
     d.mv = mv; d.mvo = mvo; d.type = mvo.type; B.def = d;
     const nm = mvName(mvo);
-    msg(hx(mvo.tier === 2 ? 'b.def.msgUlt' : 'b.def.msg', { name: sf.en, mv: nm[0], zh: zhOf({ zh: nm[1] }) }));
+    msg(hx(mvo.tier === 2 ? 'b.def.msgUlt' : 'b.def.msg', { name: spN(sf), mv: mvN(nm), zh: zhOfL({ zh: nm[1], en: nm[0], c: 'move' }) }));
     panel('<div class="task def"><div class="task-h">' + hx((E.lang ? d.byEn : byEn) ? 'b.def.hEn' : 'b.def.h') + '</div><div class="b-timer"><i id="b-timer"></i></div>' +
       '<div class="say-row"><button class="spk mini" data-act="bDefHear" aria-label="' + hx('b.hearAgain') + '">' + E.SPK + '</button></div>' +
       '<div class="opts' + (mv === 0 ? '' : ' list') + '">' + d.opts.map((o, k) => '<button class="opt" data-act="bDef" data-i="' + k + '">' + (o.e ? '<span class="o-e">' + o.e + '</span>' : '') + '<span class="o-t">' + (E.lang ? E.ruby(o.t) : esc(o.t)) + '</span></button>').join('') + '</div></div>');
@@ -1579,7 +1593,7 @@
     await sleep(700);
     if (!live(b)) return finish();
     panel('');
-    const fo = foe(), fn = mvName(d.mvo), fi = fo ? { name: fn[0], zh: gloss({ zh: fn[1] }) || '', sp: spOf(fo) } : null;   // 给 3D 战斗的招式名（中文名中文界面才有）和物种
+    const fo = foe(), fn = mvName(d.mvo), fi = fo ? { name: mvN(fn), zh: zhL({ zh: fn[1], en: fn[0], c: 'move' }) || '', sp: spOf(fo) } : null;   // 给 3D 战斗的招式名（中文名中文界面才有）和物种
     if (d.mvo.sup) {
       if (B3) await B3.attack('foe', d.type, 0, true, fi);
       if (!ok) await supEffect('foe', 'me', d.mvo.sup);
@@ -1619,7 +1633,7 @@
   function learnAt(mon, lv) {
     learnset(SPECIES[mon.sp]).filter(([l]) => l === lv).forEach(([, id]) => {
       if (mon.moves.includes(id)) return;
-      if (mon.moves.length < 4) { mon.moves.push(id); E.toast(tx('b.learned', { name: nm(mon), mv: mvName(parseMove(id))[0] }), 'gold'); }
+      if (mon.moves.length < 4) { mon.moves.push(id); E.toast(tx('b.learned', { name: nm(mon), mv: mvN(mvName(parseMove(id))) }), 'gold'); }
       else (M().pendingLearn || (M().pendingLearn = [])).push({ u: mon.uid, id });
     });
   }
@@ -1630,7 +1644,7 @@
     const it = q[0], mon = byUid(it.u);
     if (!mon || mon.moves.includes(it.id)) { q.shift(); E.save(); return learnNext(); }
     const s = SPECIES[mon.sp], nm = mvName(parseMove(it.id));
-    E.openModal('<h2>' + hx('b.learn.t', { name: s.en }) + '</h2><div class="learn-new">' + moveCard(parseMove(it.id)) + '</div><p>' + hx('b.learn.p', { mv: nm[0] }) + '</p>' +
+    E.openModal('<h2>' + hx('b.learn.t', { name: spN(s) }) + '</h2><div class="learn-new">' + moveCard(parseMove(it.id)) + '</div><p>' + hx('b.learn.p', { mv: mvN(nm) }) + '</p>' +
       '<div class="learn-old">' + mon.moves.map((id, k) => '<button class="btn ghost" data-act="mForget" data-k="' + k + '">' + moveCard(parseMove(id)) + '</button>').join('') + '</div>' +
       '<button class="btn ghost wide" data-act="mForget" data-k="-1">' + hx('b.learn.no') + '</button>', { locked: true });
     E.say(s.en + ' can learn ' + nm[0] + ' now!');
@@ -1640,7 +1654,7 @@
     const q = M().pendingLearn || [], it = q[0];
     if (!it) { E.closeModal(); return; }
     const mon = byUid(it.u), s = SPECIES[mon.sp], nm = mvName(parseMove(it.id));
-    if (k < 0) { q.shift(); E.save(); E.closeModal(); E.toast(tx('b.learn.skip', { name: s.en, mv: nm[0] })); setTimeout(afterBattleQueue, 300); return; }
+    if (k < 0) { q.shift(); E.save(); E.closeModal(); E.toast(tx('b.learn.skip', { name: spN(s), mv: mvN(nm) })); setTimeout(afterBattleQueue, 300); return; }
     const old = mvName(parseMove(mon.moves[k]));
     const ln = learnL('learn a move', null, s.en + ', learn ' + nm[0] + '!'), line = ln ? ln.t : s.en + ', learn ' + nm[0] + '!', sr = E.speakMode() === 'sr';   // 别的课：翻好的那句，没有就换成这座岛课程里的一句
     E.openModal('<h2>' + hx('b.learn.ok', { mv: old[0] }) + '</h2><p>' + hx('b.learn.say') + '</p><div class="say-text" id="lr-say">' + E.wordsHTML(line) + '</div>' + meanHTML(ln) +
@@ -1654,7 +1668,7 @@
     const mon = byUid(it.u);
     if (mon) mon.moves[k] = it.id;
     E.save(); E.closeModal(); E.SFX.win();
-    E.toast(tx('b.learned', { name: nm(mon), mv: mvName(parseMove(it.id))[0] }), 'gold');
+    E.toast(tx('b.learned', { name: nm(mon), mv: mvN(mvName(parseMove(it.id))) }), 'gold');
     setTimeout(afterBattleQueue, 400);
   }
   async function learnMic(k) {
@@ -1684,7 +1698,7 @@
     const f = foe(), sf = SPECIES[f.sp];
     $('b-foe').classList.add('faint');
     if (B3) B3.faint('foe');
-    msg(hx('b.tired', { name: sf.en }));
+    msg(hx('b.tired', { name: spN(sf) }));
     E.say(sf.en + ' is too tired to go on.');
     shareXp(10 + f.lv * 8);
     const eb = $('b-exp'), cm = me(); if (eb && cm) eb.style.width = (cm.xp / xpNeed(cm.lv) * 100) + '%';
@@ -1701,7 +1715,7 @@
       B.enter = 'foe';
       renderBattle();
       const n = SPECIES[foe().sp];
-      msg(hx('b.in.next', { who: B.kind === 'trainer' ? B.trainer.name : bossName(B.z), name: n.en }));
+      msg(hx('b.in.next', { who: B.kind === 'trainer' ? trN(B.trainer.name) : bossName(B.z), name: spN(n) }));
       $('b-foe').classList.add('appear');
       if (B3) B3.enter('foe', true);
       await E.say(n.en + ', your turn!', undefined, 'm');
@@ -1775,7 +1789,7 @@
       M().caught = (M().caught || 0) + 1;
       E.qProg('catch', 1);
       E.jingle('catch', E.SFX.win); E.confetti(140);
-      msg(hx('b.caught', { name: sf.en, zh: zhOf(sf) }));
+      msg(hx('b.caught', { name: spN(sf), zh: zhOfL(sf) }));
       E.say('Yes! ' + sf.en + ' is your new friend!');
       E.save();
       await sleep(1200);
@@ -1787,7 +1801,7 @@
     $('b-foe').classList.remove('caught-in');
     if (B3) B3.breakOut();
     E.SFX.bad();
-    msg(hx('b.free', { name: sf.en }) + hx(score < 55 ? 'b.free.say' : 'b.free.weak'));
+    msg(hx('b.free', { name: spN(sf) }) + hx(score < 55 ? 'b.free.say' : 'b.free.weak'));
     E.save();
     await sleep(1200);
   }
@@ -1819,7 +1833,7 @@
     E.save(); E.renderTop();
     if (!caught) { E.jingle(badge ? 'badge' : 'win', E.SFX.win); E.confetti(B.kind === 'leader' ? 200 : 90); }
     E.music('victory');   // 号角放完接着放结算画面的音乐
-    msg(caught ? hx(B.toBox ? 'b.win.box' : 'b.win.team') : B.kind === 'leader' ? hx('b.win.leader', { who: bossName(z) }) : B.kind === 'trainer' ? hx('b.win.trainer', { who: B.trainer.name }) : hx('b.win'));
+    msg(caught ? hx(B.toBox ? 'b.win.box' : 'b.win.team') : B.kind === 'leader' ? hx('b.win.leader', { who: bossName(z) }) : B.kind === 'trainer' ? hx('b.win.trainer', { who: trN(B.trainer.name) }) : hx('b.win'));
     // 经验条只在结算画面出现（对战时的状态栏不放）
     const xm = me(), xpBar = xm ? '<div class="res-exp"><span>' + E.esc(nm(xm)) + ' <small>Lv ' + xm.lv + '</small></span><div class="xpbar" title="' + hx('b.xp') + '"><i style="width:' + Math.min(100, xm.xp / xpNeed(xm.lv) * 100) + '%"></i></div></div>' : '';
     panel('<div class="b-result"><div class="big">' + (caught ? '🔮' : B.kind === 'leader' ? '🏅' : '🏆') + '</div><b>' + hx(caught ? 'b.res.caught' : B.kind === 'leader' ? 'b.res.leader' : 'b.win') + '</b><p>' + lines.join('<br>') + '</p>' + xpBar +
@@ -1871,7 +1885,7 @@
   function evolveTo(mon, toId) {
     const from = SPECIES[mon.sp], to = SPECIES[toId];
     if (window.Mon3D && Mon3D.preload) Mon3D.preload([toId]);
-    E.openModal('<h2>' + hx('b.evo.t', { name: from.en }) + '</h2><div class="evo-stage"><div class="evo-old">' + svg(mon.sp) + '</div><div class="evo-new">' + svg(toId) + '</div></div>' +
+    E.openModal('<h2>' + hx('b.evo.t', { name: spN(from) }) + '</h2><div class="evo-stage"><div class="evo-old">' + svg(mon.sp) + '</div><div class="evo-new">' + svg(toId) + '</div></div>' +
       '<p id="evo-t">' + hx('b.evo.p', { name: label(from) }) + '</p><button class="btn sun wide" data-act="mEvoOk" id="evo-ok" hidden>' + hx('b.evo.ok') + '</button>', { locked: true });
     E.say('Look! ' + from.en + ' is growing up!');
     E.music('evolve');
@@ -1881,7 +1895,7 @@
     E.save();
     setTimeout(() => {
       const st = document.querySelector('.evo-stage'); if (st) st.classList.add('done');
-      const t = $('evo-t'); if (t) t.innerHTML = hx('b.evo.done', { from: from.en, to: to.en, zh: zhOf(to) });
+      const t = $('evo-t'); if (t) t.innerHTML = hx('b.evo.done', { from: spN(from), to: spN(to), zh: zhOfL(to) });
       const ok = $('evo-ok'); if (ok) ok.hidden = false;
       E.jingle('levelup', E.SFX.win); E.confetti(180);
       E.say(from.en + ' has grown up! Say hello to ' + to.en + '!');
@@ -1893,16 +1907,16 @@
   function moveCard(mv) {
     const nm = mvName(mv);
     const tier = (I18N ? I18N.raw('b.tier') || [] : [])[mv.tier] || '';
-    return '<span class="mv-card" style="--tc:' + TYPES[mv.type].color + '"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + nm[0] + '</b><small>' + [gloss({ zh: nm[1] }) || '', label(TYPES[mv.type]), mv.sup ? mv.sup.desc : tier].filter(Boolean).map(x => E.esc(x)).join(' · ') + '</small></span>';
+    return '<span class="mv-card" style="--tc:' + TYPES[mv.type].color + '"><span class="mv-ico">' + TICON[mv.type] + '</span><b>' + (E.lang ? mvH(nm) : nm[0]) + '</b><small>' + [zhL({ zh: nm[1], en: nm[0], c: 'move' }) || '', label(TYPES[mv.type]), mv.sup ? mv.sup.desc : tier].filter(Boolean).map(x => E.esc(x)).join(' · ') + '</small></span>';
   }
   function summarySheet(u, back) {
     const mon = byUid(u); if (!mon) return;
-    if (mon.egg) { E.openModal('<div class="sum-top"><span class="sum-pic">' + EGG_SVG + '</span><div><h2>' + hx('b.egg') + '</h2><p>' + hx(eggHint(mon)) + '</p><p class="tip">' + hx('b.egg.tip') + '</p></div></div><button class="btn ghost wide" data-act="' + (back || 'mTeam') + '">' + hx('b.back') + '</button>'); return; }
+    if (mon.egg) { E.openModal('<div class="sum-top"><span class="sum-pic">' + EGG_SVG + '</span><div><h2>' + hx('b.egg', { w: T_('ui', 'Egg') }) + '</h2><p>' + hx(eggHint(mon)) + '</p><p class="tip">' + hx('b.egg.tip') + '</p></div></div><button class="btn ghost wide" data-act="' + (back || 'mTeam') + '">' + hx('b.back') + '</button>'); return; }
     ensureMoves(mon);
     const s = SPECIES[mon.sp], st = stats(mon), hp = curHp(mon), esc = E.esc;
     const bar = (k, v, max) => '<div class="sum-stat"><span>' + k + '</span><b>' + v + '</b><i><em style="width:' + Math.min(100, v / max * 100) + '%"></em></i></div>';
-    const nextEvo = (s.evo || []).map(e => e.lv ? tx('b.sum.evoLv', { lv: e.lv, name: SPECIES[e.to].en }) : label(D.STONES[e.item]) + ' → ' + SPECIES[e.to].en).join(tx('b.sep.semi'));
-    const nextMoves = learnset(s).filter(([l, id]) => l > mon.lv && !mon.moves.includes(id)).slice(0, 2).map(([l, id]) => 'Lv ' + l + ' ' + mvName(parseMove(id))[0]).join(tx('b.sep.comma'));
+    const nextEvo = (s.evo || []).map(e => e.lv ? tx('b.sum.evoLv', { lv: e.lv, name: spN(SPECIES[e.to]) }) : label(D.STONES[e.item]) + ' → ' + spN(SPECIES[e.to])).join(tx('b.sep.semi'));
+    const nextMoves = learnset(s).filter(([l, id]) => l > mon.lv && !mon.moves.includes(id)).slice(0, 2).map(([l, id]) => 'Lv ' + l + ' ' + mvN(mvName(parseMove(id)))).join(tx('b.sep.comma'));
     const talked = (M().talked || {})[mon.uid] === E.dayStr(), dz = gloss({ zh: s.dexZh });
     E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + (mon.shiny ? '✨' : '') + nm(mon) + ' <small>' + subName(mon) + '</small></h2>' +
       '<div class="sum-fr">' + hx('b.fr') + ' ' + heartsHTML(mon) + ' <button class="btn small ' + (talked ? 'ghost' : 'sun') + '" data-act="mTalk" data-u="' + mon.uid + '">' + hx(talked ? 'b.talk.done' : 'b.talk.go') + '</button> <button class="btn small ghost" data-act="mNick" data-u="' + mon.uid + '">' + hx('b.nick.btn') + '</button></div><div class="chips">' + chips(mon.sp) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (mon.st ? '<span class="st-chip" style="--sc:' + STATUS[mon.st].color + '">' + esc(label(STATUS[mon.st])) + '</span>' : '') + '</div>' +
@@ -1930,7 +1944,7 @@
     E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + hx('b.nick.t', { name: nm(mon) }) + '</h2><p>' + hx('b.nick.p') + '</p></div></div>' +
       '<div class="nm-grid">' + pool.map(n => '<button class="btn ghost nm" data-act="mNickPick" data-n="' + n + '">' + n + '</button>').join('') + '</div>' +
       '<div class="nm-own"><input id="nick-in" maxlength="10" placeholder="' + hx('b.nick.ph') + '" autocomplete="off" autocapitalize="words" spellcheck="false"><button class="btn sun" data-act="mNickOwn">' + hx('b.ok') + '</button></div><small class="tip" id="nick-tip">' + hx('b.nick.tip') + '</small>' +
-      '<div class="row"><button class="btn ghost" data-act="mNickSkip">' + (mon.nick ? hx('b.nick.keep') : hx('b.nick.use', { name: s.en })) + '</button>' + (mon.nick ? '<button class="btn ghost" data-act="mNickClear">' + hx('b.nick.clear', { name: s.en }) + '</button>' : '') + '</div>', { locked: true });
+      '<div class="row"><button class="btn ghost" data-act="mNickSkip">' + (mon.nick ? hx('b.nick.keep') : hx('b.nick.use', { name: spN(s) })) + '</button>' + (mon.nick ? '<button class="btn ghost" data-act="mNickClear">' + hx('b.nick.clear', { name: s.en }) + '</button>' : '') + '</div>', { locked: true });
     // 弹出软键盘以后（横屏时屏幕只剩一小条），输入框要留在看得见的地方
     const inp = $('nick-in'); if (inp) inp.addEventListener('focus', () => setTimeout(() => { if (inp.isConnected) inp.scrollIntoView({ block: 'center' }); }, 300));
   }
@@ -2037,7 +2051,7 @@
       (d.egg ? '<div class="ach"><span class="ae">🥚</span><div style="flex:1"><b>' + hx('b.day.egg') + '</b><small>' + hx('b.day.egg.s') + '</small></div><button class="btn small sun" data-act="mDayEgg">' + hx('b.day.eggTake') + '</button></div>' : '') +
       '<h3 class="pc-h">' + hx('b.day.in', { n: d.mons.length }) + '</h3>' + (slots || '<p class="tip">' + hx('b.day.none') + '</p>') + pair +
       (room ? '<h3 class="pc-h">' + hx('b.day.pick') + '</h3>' + (can ? '' : '<p class="tip">' + hx('b.day.keep') + '</p>') + pick : '') +
-      '<button class="btn ghost wide" data-act="close">' + hx('b.day.thanks') + '</button>');
+      '<button class="btn ghost wide" data-act="close">' + hx('b.day.thanks', { w: T_('ui', 'Thank you!') }) + '</button>');
   }
   function dayLeave(u) {
     const m = M(), d = day(), mon = byUid(u);
@@ -2109,7 +2123,7 @@
     if (L && L.length) txt = L.slice(0, 5).map(x => hx('b.hab.one', { name: x.name, how: x.how })).join(hx('b.sep.list')) + (L.length > 5 ? hx('b.hab.more', { n: L.length }) : '');
     else if (s.legend) txt = hx('b.hab.legend');
     else if (s.starter) txt = hx('b.hab.starter');
-    else if (s.from && SPECIES[s.from]) { const b = habitatsOf(baseOf(id)); txt = b.length ? hx('b.hab.fromAt', { from: SPECIES[s.from].en, base: SPECIES[baseOf(id)].en, place: b[0].name }) : hx('b.hab.from', { from: SPECIES[s.from].en }); }
+    else if (s.from && SPECIES[s.from]) { const b = habitatsOf(baseOf(id)); txt = b.length ? hx('b.hab.fromAt', { from: spN(SPECIES[s.from]), base: SPECIES[baseOf(id)].en, place: b[0].name }) : hx('b.hab.from', { from: SPECIES[s.from].en }); }
     else if (window.EchoSight && !E.lang && EchoSight.may(id)) txt = hx('b.hab.sight');
     else txt = hx('b.hab.none');
     return '<p class="dex-hab">' + hx('b.hab.t') + txt + '</p>';
@@ -2119,7 +2133,7 @@
   // 一只怪兽的信息行，btn 是右边的按钮
   function monRow(mon, btn, inTeam) {
     const s = SPECIES[mon.sp];
-    if (mon.egg) return '<div class="mrow"><span class="mrow-svg">' + EGG_SVG + '</span><div class="mrow-i"><b>' + hx('b.egg') + '</b> <small>' + hx(eggHint(mon)) + '</small>' + (inTeam ? '<div class="chips"><span class="lvchip in">' + hx('b.inTeam') + '</span></div>' : '') + '</div><div class="mrow-b">' + btn + '</div></div>';
+    if (mon.egg) return '<div class="mrow"><span class="mrow-svg">' + EGG_SVG + '</span><div class="mrow-i"><b>' + hx('b.egg', { w: T_('ui', 'Egg') }) + '</b> <small>' + hx(eggHint(mon)) + '</small>' + (inTeam ? '<div class="chips"><span class="lvchip in">' + hx('b.inTeam') + '</span></div>' : '') + '</div><div class="mrow-b">' + btn + '</div></div>';
     return '<div class="mrow"><span class="mrow-svg">' + svgMon(mon) + '</span><div class="mrow-i"><b>' + (mon.shiny ? '✨' : '') + nm(mon) + '</b> <small>' + subName(mon) + '</small> ' + heartsHTML(mon) + '<div class="chips">' + chips(mon.sp) + '<span class="lvchip">Lv ' + mon.lv + '</span>' + (inTeam ? '<span class="lvchip in">' + hx('b.inTeam') + '</span>' : '') + '</div>' +
       '<small>' + hx('b.hpOf', { hp: curHp(mon), max: stats(mon).hp }) + (curHp(mon) === 0 ? hx('b.tiredOut') : mon.st ? ' · ' + E.esc(label(STATUS[mon.st])) : '') + '</small>' +
       '<div class="xpbar"><i style="width:' + (mon.xp / xpNeed(mon.lv) * 100) + '%"></i></div></div><div class="mrow-b"><button class="btn small ghost" data-act="mSum" data-u="' + mon.uid + '">' + hx('b.more') + '</button>' + btn + '</div></div>';
@@ -2157,7 +2171,7 @@
     const tabs = '<div class="pc-tabs">' + Array.from({ length: BOXES }, (_, i) => '<button class="btn small ' + (i === cur ? 'sun' : 'ghost') + '" data-act="mBox" data-b="' + i + '">' + (i + 1) + '<small>' + inBox(i).length + '</small></button>').join('') + '</div>';
     const sorts = '<div class="pc-sort">' + hx('b.pc.sort') + ['lv', 'no', 'name'].map(k2 => '<button class="link' + (k2 === sortBy ? ' on' : '') + '" data-act="mPcSort" data-k="' + k2 + '">' + hx('b.pc.' + k2) + '</button>').join(' · ') + '</div>';
     E.openModal('<h2>' + hx('b.pc.t') + '</h2><p>' + hx('b.pc.p', { team: TEAM_MAX, boxes: BOXES, cap: BOX_CAP }) + (full ? hx('b.pc.full') : '') + '</p><h3 class="pc-h">' + hx('b.pc.team', { n: m.team.length, max: TEAM_MAX }) + '</h3>' + team +
-      '<h3 class="pc-h">' + hx('b.pc.box', { n: cur + 1, have: inBox(cur).length, cap: BOX_CAP }) + '</h3>' + tabs + sorts + (list || '<p class="tip">' + hx('b.pc.empty') + '</p>') +
+      '<h3 class="pc-h">' + hx('b.pc.box', { w: T_('ui', 'Box'), n: cur + 1, have: inBox(cur).length, cap: BOX_CAP }) + '</h3>' + tabs + sorts + (list || '<p class="tip">' + hx('b.pc.empty') + '</p>') +
       '<button class="btn ghost wide" data-act="close">' + hx('b.pc.close') + '</button>');
   }
   function moveAsk(u) {
@@ -2183,7 +2197,7 @@
       else if (id === 'rope') use = '<button class="btn small" data-act="mUse" data-id="rope"' + (n && FH && FH.canRope() ? '' : ' disabled') + '>' + useBtn + '</button>';
       // 名字按界面语言；小字里的英文名只在名字不是英文时才写（中文界面：说明 · Echo Ball）
       const name = label(it);
-      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + E.esc(name) + ' ×' + n + '</b><small>' + E.esc(it.desc) + (name !== it.en ? ' · ' + it.en : '') + '</small></div>' + use + '</div>';
+      return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + E.esc(name) + ' ×' + n + '</b><small>' + E.esc(it.desc) + (name !== T_('item', it.en) ? ' · ' + TH_('item', it.en) : '') + '</small></div>' + use + '</div>';
     }).join('');
     E.openModal('<h2>' + hx('b.bag.t') + '</h2><p>' + hx('b.bag.p', { n: E.S.coins }) + '</p>' + rows + '<button class="btn ghost wide" data-act="close">' + hx('b.close') + '</button>');
   }
@@ -2225,7 +2239,7 @@
     E.openModal('<h2>' + hx('b.dex.t', { a: caughtN(), b: D.total }) + '</h2><p>' + hx('b.dex.p') + '</p>' + nav + '<div class="dex">' + ids.map(id => {
       const s = SPECIES[id], st = m.dex[id];
       // 收服了：小字是中文名（中文界面）；英语界面没有中文名，写「Caught」
-      return '<button class="dex-i ' + (st || 'none') + '" data-act="mDexOne" data-sp="' + id + '"' + (st ? '' : ' disabled') + '><span class="dex-no">' + (s.dexNo ? String(s.dexNo).padStart(3, '0') : hx('b.dex.extra')) + ((m.shinyDex || {})[id] ? ' ✨' : '') + '</span><span class="dex-svg">' + (st ? svg(id) : '') + '</span><b>' + (st ? s.en : '???') + '</b><small>' + (st === 'caught' ? E.esc(gloss(s) || tx('b.dex.caught')) : hx(st ? 'b.dex.seen' : 'b.dex.none')) + '</small></button>';
+      return '<button class="dex-i ' + (st || 'none') + '" data-act="mDexOne" data-sp="' + id + '"' + (st ? '' : ' disabled') + '><span class="dex-no">' + (s.dexNo ? String(s.dexNo).padStart(3, '0') : hx('b.dex.extra')) + ((m.shinyDex || {})[id] ? ' ✨' : '') + '</span><span class="dex-svg">' + (st ? svg(id) : '') + '</span><b>' + (st ? spH(s) : '???') + '</b><small>' + (st === 'caught' ? E.esc(zhL(s) || tx('b.dex.caught')) : hx(st ? 'b.dex.seen' : 'b.dex.none')) + '</small></button>';
     }).join('') + '</div>' + nav + '<button class="btn ghost wide" data-act="close">' + hx('b.close') + '</button>');
   }
   function dexOne(id) {
@@ -2237,12 +2251,12 @@
     walk(root, 0);
     const how = x => { const f = x.from && (SPECIES[x.from].evo || []).find(e => e.to === x.id); return f ? (f.lv ? 'Lv ' + f.lv : D.STONES[f.item] ? E.esc(label(D.STONES[f.item])) : '') : ''; };
     // 标题：编号 + 英文名 +（中文名）；没收服时中文名写「？」；英语界面没有中文名，括号整个不要
-    const zp = gloss(s) ? zhOf({ zh: st === 'caught' ? gloss(s) : tx('b.q') }) : '', dz = gloss({ zh: s.dexZh });
-    E.openModal('<div class="dex-big">' + svg(id) + '</div><h2>' + (s.dexNo ? 'No.' + s.dexNo : hx('b.dex.extra')) + ' ' + s.en + E.esc(zp) + '</h2><div class="chips" style="justify-content:center">' + chips(id) + (s.legend ? '<span class="lvchip">' + hx('b.legend') + '</span>' : '') + '</div>' +
+    const zg = zhL(s), zp = zg ? zhOf({ zh: st === 'caught' ? zg : tx('b.q') }) : '', dz = gloss({ zh: s.dexZh });
+    E.openModal('<div class="dex-big">' + svg(id) + '</div><h2>' + (s.dexNo ? 'No.' + s.dexNo : hx('b.dex.extra')) + ' ' + spH(s) + E.esc(zp) + '</h2><div class="chips" style="justify-content:center">' + chips(id) + (s.legend ? '<span class="lvchip">' + hx('b.legend') + '</span>' : '') + '</div>' +
       (st === 'caught' ? dexText(s, ' <button class="spk mini" data-act="mSayDex" data-sp="' + id + '" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button>') +
-        (s.words && s.words.length ? '<p class="tip">' + hx('b.dex.words') + s.words.map(w => '<b>' + esc(w) + '</b>').join(' + ') + '</p>' : '') : '<p class="tip">' + hx('b.dex.lock') + '</p>') +
+        (s.words && s.words.length && !E.lang ? '<p class="tip">' + hx('b.dex.words') + s.words.map(w => '<b>' + esc(w) + '</b>').join(' + ') + '</p>' : '') : '<p class="tip">' + hx('b.dex.lock') + '</p>') +
       habitatHTML(id) +
-      (chain.length > 1 ? '<div class="dex-chain">' + chain.map(c => { const k = M().dex[c.x.id]; return '<span class="dc' + (c.x.id === id ? ' on' : '') + '">' + (c.depth ? '<i>' + how(c.x) + ' →</i>' : '') + '<span class="dc-svg">' + (k ? svg(c.x.id) : '') + '</span><small>' + (k ? c.x.en : '???') + '</small></span>'; }).join('') + '</div>' : '') +
+      (chain.length > 1 ? '<div class="dex-chain">' + chain.map(c => { const k = M().dex[c.x.id]; return '<span class="dc' + (c.x.id === id ? ' on' : '') + '">' + (c.depth ? '<i>' + how(c.x) + ' →</i>' : '') + '<span class="dc-svg">' + (k ? svg(c.x.id) : '') + '</span><small>' + (k ? spH(c.x) : '???') + '</small></span>'; }).join('') + '</div>' : '') +
       '<div class="row"><button class="btn ghost" data-act="mDex">' + hx('b.dex.back') + '</button><button class="btn ghost" data-act="close">' + hx('b.close') + '</button></div>');
     if (st === 'caught') E.say(s.en);
   }

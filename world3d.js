@@ -525,7 +525,7 @@
           if (tex) { const mt = texMat(wallTex(tex, texCol), Math.max(1, Math.round(w)), Math.max(1, Math.round(h * 1.4))); mesh(new T3.BoxGeometry(w - .24, h, d).translate(0, h / 2, 0), mt, cx, 0, cz, true); }
           else mesh(cbox(w - .24, h, d, wallC, wallC, A.shade(wallC, .84)), vcol, cx, 0, cz, true);
         };
-        // 有英文招牌（CENTER / SHOP / GYM）的房子：屋檐短一点。镜头从斜上方往下看，屋檐伸出去多少，前墙最上面就被挡住多少，
+        // 有英文招牌（REST STOP / SHOP / HALL）的房子：屋檐短一点。镜头从斜上方往下看，屋檐伸出去多少，前墙最上面就被挡住多少，
         // 招牌原来只露出下半截。lim：前墙上不被屋檐挡住的最高处（按画面下方、看得最斜的地方算）
         const signed = L === 'C' || L === 'M' || gym;
         let lim = 99, roundR = 0;
@@ -699,7 +699,7 @@
         const doorTop = (style === 'hut' ? .45 : 0) + .93;
         let signTop = doorTop;
         if (signed) {
-          const label = L === 'C' ? 'REST STOP' : L === 'M' ? 'SHOP' : 'GYM';
+          const label = window.EchoWorld && EchoWorld.signLabel ? EchoWorld.signLabel(L) : L === 'C' ? 'REST STOP' : L === 'M' ? 'SHOP' : 'HALL';   // 招牌的字由 world.js 定（挑战馆是 HALL；别的课按这门课的写法）
           // 字用屋顶的颜色；屋顶颜色太浅（雪岛的白屋顶、农场的黄屋顶、实验室的浅蓝圆顶）白底上看不清，就用岛上的点缀色
           const rc = new T3.Color(roofC), ink = rc.r * .2126 + rc.g * .7152 + rc.b * .0722 > .45 ? (P.trim || '#37474f') : roofC;
           const signT = canvasTex(256, 64, g => {

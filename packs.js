@@ -112,7 +112,11 @@
   function slotVal(tab, tp, nm, v, opt) {
     const ty = tp.s[nm];
     if (ty === 'num') return /^\d+$/.test(v) ? { t: v, r: v } : null;
-    if (ty === 'name') return /^[A-Z][A-Za-z .'-]{0,30}$/.test(v) ? { t: v, r: v } : null;
+    if (ty === 'name') {
+      if (!/^[A-Z][A-Za-z .'-]{0,30}$/.test(v)) return null;
+      const P = tab.M.person, x = own(P, v) ? lnVal(P[v]) : null;   // 人名有这门课的写法（terms.person）就用它
+      return x ? { t: x.t, r: flatR(x, tab.join) } : { t: v, r: v };
+    }
     if (ty === 'content') { const e = opt.content ? opt.content(v) : null; return { t: v, r: e && e.r ? flatR(e, tab.join) : v }; }
     if (ty === 'free') {
       const x = tp.vals && own(tp.vals, nm) && own(tp.vals[nm], v) ? lnVal(tp.vals[nm][v]) : own(tab.L, v) ? lnVal(tab.L[v]) : null;
@@ -120,6 +124,13 @@
     }
     const M = tab.M[ty];
     if (own(M, v)) { const x = lnVal(M[v]); return x ? { t: x.t, r: flatR(x, tab.join), g: x.g } : null; }
+    // 已经是这门课的写法（界面上的名字换成了译文，再拼进英语句子里找的：「メブキ, your turn!」）
+    if (M && typeof M === 'object') {
+      const rv = tab.rv || (tab.rv = {});
+      const R = rv[ty] || (rv[ty] = new Map(Object.values(M).map(lnVal).filter(Boolean).map(x => [x.t, x])));
+      const x = R.get(v);
+      if (x) return { t: x.t, r: flatR(x, tab.join), g: x.g };
+    }
     if (ty === 'monster' && opt.isMon && opt.isMon(v)) return { t: v, r: v };   // 没翻的怪兽名、起的昵称：专有名词，照原样
     return null;
   }
@@ -139,6 +150,9 @@
       const useF = !!(tp.f && gv && gv.g === 'f');
       const sub = s => String(s).replace(/\{([a-z0-9]+)\}/g, (all, k) => (vals[k] ? vals[k].t : all));
       const out = { t: sub(useF ? tp.f : tp.t) };
+      // 空里的英文 → 译文（游戏拿去把意思那一行里夹着的英文名也换掉：「这里的怪兽听英语。你说得越清楚，Sprouty 就越强。」）
+      const sv = names.map((nm, i) => [m[i + 1], vals[nm].t]).filter(([a, b]) => a && b && a !== b);
+      if (sv.length) out.sv = sv;
       if (!useF && Array.isArray(tp.seg) && Array.isArray(tp.r) && tp.seg.length === tp.r.length) {
         out.seg = tp.seg.map(sub);
         out.r = tp.r.map(r => String(r).replace(/\{([a-z0-9]+)\}/g, (all, k) => (vals[k] ? String(vals[k].r) : all)));

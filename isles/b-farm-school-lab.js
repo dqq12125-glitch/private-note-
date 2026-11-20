@@ -9,6 +9,8 @@
   // 2026-11-19 搬进来：提示条、提示、选项。台词（英文 + 中文意思）是内容，不在这里
   const I18N = window.EchoI18n;
   const tx = (k, p) => (I18N ? I18N.t(k, p) : k), hx = (k, p) => (I18N ? I18N.h(k, p) : k);
+  // 别的课：按钮上的英语词（好呀 Sure!）换成这门语言的（台词翻译表的 terms.ui；英语课、没翻：英文原样，字表也没有 .c）
+  const uiW = en => (window.EchoGame && EchoGame.termOf ? EchoGame.termOf('ui', en) : en);
   // 数据里有 zh / en 两个名字的：按界面语言取
   const lb = o => (I18N ? I18N.label(o) : (o && o.zh) || '');
   // 旁白：world.js 的 whoLabel 认这个中文，显示时换成界面语言
@@ -24,6 +26,8 @@
       'ib.n3g.now': '🧑‍🏫 教室换座：对着黑板按 A 答题，答对开门（{n}/3）', 'ib.n3g.done': '🦉 三间教室都过了！去见猫头鹰校长',
       'ib.n4.hall': '🐙 八爪博士在挑战馆等你', 'ib.n4.lab': '🧪 去八爪博士的实验室（镇子中间的玻璃圆顶）', 'ib.n4.dish': '📡 嘘声团在东边的卫星天线旁',
       'ib.n4g.done': '🐙 两张课程表都对了！去见八爪博士', 'ib.n4g.now': '📅 按广播的顺序踩学科开关：第 {k} 张课程表（{n}/4）<br><small>对着墙角的喇叭按 A 可以再听一遍</small>',
+      // 别的课（.c）：按钮上的英语词换成这门语言的（{w}，台词翻译表的 terms.ui）
+      'ib.opt.sure.c': '⚔️ 好呀 {w}', 'ib.opt.next.c': '下次吧 {w}',
       'ib.opt.sure': '⚔️ 好呀 Sure!', 'ib.opt.next': '下次吧 Next time', 'ib.toast.items': '🧪 超级药水 +2　✨ 复活药 +1',
     },
     en: {
@@ -36,6 +40,7 @@
       'ib.n3g.now': '🧑‍🏫 Seat swap: press A at the blackboard and answer. A right answer opens the door ({n}/3)', 'ib.n3g.done': '🦉 You passed all three classrooms! Go and see Principal Owl',
       'ib.n4.hall': '🐙 Doctor Octo is waiting in the Challenge Hall', 'ib.n4.lab': '🧪 Go to Doctor Octo\'s lab (the glass dome in the middle of town)', 'ib.n4.dish': '📡 Hush Crew is by the satellite dish in the east',
       'ib.n4g.done': '🐙 Both timetables are right! Go and see Doctor Octo', 'ib.n4g.now': '📅 Step on the subject switches in the order you hear: timetable {k} ({n}/4)<br><small>Press A at the speaker in the corner to hear it again</small>',
+      'ib.opt.sure.c': '⚔️ {w}', 'ib.opt.next.c': '{w}',
       'ib.opt.sure': '⚔️ Sure!', 'ib.opt.next': 'Next time', 'ib.toast.items': '🧪 Big Potion +2   ✨ Energy Fruit +1',
     },
   });
@@ -1423,7 +1428,7 @@
       K('I came to see your school. It\'s so big!', '我来看看你的学校，好大呀！'),
       L.ask(K, 'Is there a library in your school?', '你们学校有图书馆吗？', 'Yes, there is.', ['Yes, it is.', 'Yes, I am.']),
       K('Cool! I\'m training hard, too. My monsters are getting stronger.', '真棒！我也在努力训练，我的怪兽越来越强了。'),
-      K('Can we have a small battle? Just a little one...', '我们可以来一场小小的对战吗？就一小场……', { kind: 'choice', opts: [{ html: tx('ib.opt.sure'), cls: 'sun' }, { html: tx('ib.opt.next') }], pick: i => { fight = !i; return []; } }),
+      K('Can we have a small battle? Just a little one...', '我们可以来一场小小的对战吗？就一小场……', { kind: 'choice', opts: [{ html: tx('ib.opt.sure', { w: uiW('Sure!') }), cls: 'sun' }, { html: tx('ib.opt.next', { w: uiW('Next time') }) }], pick: i => { fight = !i; return []; } }),
     ]);
     if (!fight) { await C.talk([K('OK! I\'ll wait here on the playground.', '好！我就在操场这儿等你。')]); return; }
     const res = await C.battle('trainer', { foes: [C.MG.newMon('seedlet', 9), C.MG.newMon('songlet', 10)], trainer: { name: 'Kai', img: C.portrait(L.P.LOOKS.kai) }, noWhiteout: true });

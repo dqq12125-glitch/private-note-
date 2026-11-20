@@ -56909,6 +56909,1428 @@
     "t": "十三号路",
     "r": "shí sān hào lù"
    }
+  },
+  "person": {
+   "a-strange-bush": {
+    "t": "奇怪的灌木",
+    "r": "qí guài de guàn mù"
+   },
+   "ace-trainer-iris": {
+    "t": "高手艾瑞斯",
+    "r": "gāo shǒu Ài ruì sī"
+   },
+   "ace-trainer-leo": {
+    "t": "高手里奥",
+    "r": "gāo shǒu Lǐ ào"
+   },
+   "ace-trainer-mona": {
+    "t": "高手莫娜",
+    "r": "gāo shǒu Mò nà"
+   },
+   "ace-trainer-owen": {
+    "t": "高手欧文",
+    "r": "gāo shǒu Ōu wén"
+   },
+   "ace-trainer-rosa": {
+    "t": "高手罗莎",
+    "r": "gāo shǒu Luó shā"
+   },
+   "ace-trainer-sam": {
+    "t": "高手山姆",
+    "r": "gāo shǒu Shān mǔ"
+   },
+   "admin-rumble": {
+    "t": "干部闷雷",
+    "r": "gàn bù Mèn léi"
+   },
+   "admin-whisper": {
+    "t": "干部低语",
+    "r": "gàn bù Dī yǔ"
+   },
+   "aide-lily": {
+    "t": "助手莉莉",
+    "r": "zhù shǒu Lì li"
+   },
+   "aide-nick": {
+    "t": "助手尼克",
+    "r": "zhù shǒu Ní kè"
+   },
+   "amy": {
+    "t": "艾米",
+    "r": "Ài mǐ"
+   },
+   "anna": {
+    "t": "安娜",
+    "r": "Ān nà"
+   },
+   "art-club-ken": {
+    "t": "美术社的肯",
+    "r": "měi shù shè de Kěn"
+   },
+   "artist-leo": {
+    "t": "画家里奥",
+    "r": "huà jiā Lǐ ào"
+   },
+   "artist-mia": {
+    "t": "画家米娅",
+    "r": "huà jiā Mǐ yà"
+   },
+   "artist-paul": {
+    "t": "画家保罗",
+    "r": "huà jiā Bǎo luó"
+   },
+   "artist-zoe": {
+    "t": "画家佐伊",
+    "r": "huà jiā Zuǒ yī"
+   },
+   "assistant-nova": {
+    "t": "助手诺娃",
+    "r": "zhù shǒu Nuò wá"
+   },
+   "aunt-mary": {
+    "t": "玛丽阿姨",
+    "r": "Mǎ lì ā yí"
+   },
+   "aunt-rosa": {
+    "t": "罗莎阿姨",
+    "r": "Luó shā ā yí"
+   },
+   "baker-bella": {
+    "t": "面包师贝拉",
+    "r": "miàn bāo shī Bèi lā"
+   },
+   "baker-bun": {
+    "t": "面包师阿邦",
+    "r": "miàn bāo shī Ā Bāng"
+   },
+   "baker-sugar": {
+    "t": "蛋糕师小糖",
+    "r": "dàn gāo shī Xiǎo Táng"
+   },
+   "balloon-boy-bob": {
+    "t": "气球男孩鲍勃",
+    "r": "qì qiú nán hái Bào bó"
+   },
+   "balloon-clown": {
+    "t": "气球小丑",
+    "r": "qì qiú xiǎo chǒu"
+   },
+   "beach-boy-leo": {
+    "t": "海滩男孩里奥",
+    "r": "hǎi tān nán hái Lǐ ào"
+   },
+   "beach-girl-mia": {
+    "t": "海滩女孩米娅",
+    "r": "hǎi tān nǚ hái Mǐ yà"
+   },
+   "ben": {
+    "t": "本",
+    "r": "Běn"
+   },
+   "birdwatcher-sue": {
+    "t": "观鸟人苏",
+    "r": "guān niǎo rén Sū"
+   },
+   "black-belt-kenji": {
+    "t": "黑带健司",
+    "r": "hēi dài Jiàn sī"
+   },
+   "blackboard": {
+    "t": "黑板",
+    "r": "hēi bǎn"
+   },
+   "boy-b": {
+    "t": "男孩",
+    "r": "nán hái"
+   },
+   "bug-kid-ben": {
+    "t": "捉虫小孩本",
+    "r": "zhuō chóng xiǎo hái Běn"
+   },
+   "bug-kid-ivy": {
+    "t": "捉虫小孩艾薇",
+    "r": "zhuō chóng xiǎo hái Ài wēi"
+   },
+   "bug-kid-tony": {
+    "t": "捉虫小孩托尼",
+    "r": "zhuō chóng xiǎo hái Tuō ní"
+   },
+   "busy-ben": {
+    "t": "匆忙的本",
+    "r": "cōng máng de Běn"
+   },
+   "camper-blaze": {
+    "t": "露营者布雷兹",
+    "r": "lù yíng zhě Bù léi zī"
+   },
+   "camper-dan": {
+    "t": "露营者丹",
+    "r": "lù yíng zhě Dān"
+   },
+   "camper-lily": {
+    "t": "露营者莉莉",
+    "r": "lù yíng zhě Lì li"
+   },
+   "camper-nora": {
+    "t": "露营者诺拉",
+    "r": "lù yíng zhě Nuò lā"
+   },
+   "camper-rob": {
+    "t": "露营者罗布",
+    "r": "lù yíng zhě Luó bù"
+   },
+   "camper-tim": {
+    "t": "露营者蒂姆",
+    "r": "lù yíng zhě Dì mǔ"
+   },
+   "captain-gale": {
+    "t": "盖尔船长",
+    "r": "Gài ěr chuán zhǎng"
+   },
+   "captain-polly": {
+    "t": "鹦鹉船长",
+    "r": "yīng wǔ chuán zhǎng"
+   },
+   "champion-aria": {
+    "t": "冠军阿丽娅",
+    "r": "guàn jūn Ā lì yà"
+   },
+   "chef-mei": {
+    "t": "厨师小梅",
+    "r": "chú shī Xiǎo Méi"
+   },
+   "chess-club-amy": {
+    "t": "棋社的艾米",
+    "r": "qí shè de Ài mǐ"
+   },
+   "clerk-tom": {
+    "t": "店员汤姆",
+    "r": "diàn yuán Tāng mǔ"
+   },
+   "club-leader-zoe": {
+    "t": "社长佐伊",
+    "r": "shè zhǎng Zuǒ yī"
+   },
+   "coach-lee": {
+    "t": "李教练",
+    "r": "Lǐ jiào liàn"
+   },
+   "coach-seal": {
+    "t": "海狮教练",
+    "r": "hǎi shī jiào liàn"
+   },
+   "coach-tom": {
+    "t": "汤姆教练",
+    "r": "Tāng mǔ jiào liàn"
+   },
+   "control-panel": {
+    "t": "控制台",
+    "r": "kòng zhì tái"
+   },
+   "cook-dan": {
+    "t": "厨师丹",
+    "r": "chú shī Dān"
+   },
+   "cousin-amy": {
+    "t": "表妹艾米",
+    "r": "biǎo mèi Ài mǐ"
+   },
+   "cousin-kim": {
+    "t": "小金",
+    "r": "Xiǎo Jīn"
+   },
+   "crabby": {
+    "t": "彩虹蟹",
+    "r": "cǎi hóng xiè"
+   },
+   "croc": {
+    "t": "鳄鱼巡查员",
+    "r": "è yú xún chá yuán"
+   },
+   "dad": {
+    "t": "爸爸",
+    "r": "bà ba"
+   },
+   "dan": {
+    "t": "丹",
+    "r": "Dān"
+   },
+   "dance-club-rosa": {
+    "t": "舞蹈社的罗莎",
+    "r": "wǔ dǎo shè de Luó shā"
+   },
+   "dancer-lina": {
+    "t": "舞者莉娜",
+    "r": "wǔ zhě Lì nà"
+   },
+   "diver-dan": {
+    "t": "潜泳者丹",
+    "r": "qián yǒng zhě Dān"
+   },
+   "doctor-octo": {
+    "t": "八爪博士",
+    "r": "bā zhuǎ bó shì"
+   },
+   "dr-skye": {
+    "t": "斯凯博士",
+    "r": "Sī kǎi bó shì"
+   },
+   "drummer-dan": {
+    "t": "鼓手丹",
+    "r": "gǔ shǒu Dān"
+   },
+   "drummer-joe": {
+    "t": "鼓手乔",
+    "r": "gǔ shǒu Qiáo"
+   },
+   "early-bird-ella": {
+    "t": "早起的艾拉",
+    "r": "zǎo qǐ de Ài lā"
+   },
+   "early-bird-emma": {
+    "t": "早起的艾玛",
+    "r": "zǎo qǐ de Ài mǎ"
+   },
+   "echodrake": {
+    "t": "回声龙",
+    "r": "huí shēng lóng"
+   },
+   "emma": {
+    "t": "艾玛",
+    "r": "Ài mǎ"
+   },
+   "explorer-indy": {
+    "t": "探险家英迪",
+    "r": "tàn xiǎn jiā Yīng dí"
+   },
+   "explorer-max": {
+    "t": "探险家麦克斯",
+    "r": "tàn xiǎn jiā Mài kè sī"
+   },
+   "fan-nora": {
+    "t": "观众诺拉",
+    "r": "guān zhòng Nuò lā"
+   },
+   "fan-toby": {
+    "t": "观众托比",
+    "r": "guān zhòng Tuō bǐ"
+   },
+   "fan-tony": {
+    "t": "观众托尼",
+    "r": "guān zhòng Tuō ní"
+   },
+   "farmer-ben": {
+    "t": "农民本",
+    "r": "nóng mín Běn"
+   },
+   "farmer-joe": {
+    "t": "农民乔",
+    "r": "nóng mín Qiáo"
+   },
+   "farmer-rose": {
+    "t": "农民罗丝",
+    "r": "nóng mín Luó sī"
+   },
+   "farmer-sam": {
+    "t": "农民山姆",
+    "r": "nóng mín Shān mǔ"
+   },
+   "fisher-bob": {
+    "t": "渔夫鲍勃",
+    "r": "yú fū Bào bó"
+   },
+   "fisher-finn": {
+    "t": "渔夫芬恩",
+    "r": "yú fū Fēn ēn"
+   },
+   "fisher-gus": {
+    "t": "渔夫加斯",
+    "r": "yú fū Jiā sī"
+   },
+   "fisher-jack": {
+    "t": "渔夫杰克",
+    "r": "yú fū Jié kè"
+   },
+   "fisher-joe": {
+    "t": "渔夫乔",
+    "r": "yú fū Qiáo"
+   },
+   "fisher-leo": {
+    "t": "渔夫里奥",
+    "r": "yú fū Lǐ ào"
+   },
+   "fisher-pat": {
+    "t": "渔夫帕特",
+    "r": "yú fū Pà tè"
+   },
+   "fisher-pete": {
+    "t": "渔夫皮特",
+    "r": "yú fū Pí tè"
+   },
+   "fisher-ray": {
+    "t": "渔夫雷",
+    "r": "yú fū Léi"
+   },
+   "fisher-sam": {
+    "t": "渔夫山姆",
+    "r": "yú fū Shān mǔ"
+   },
+   "fisher-tom": {
+    "t": "渔夫汤姆",
+    "r": "yú fū Tāng mǔ"
+   },
+   "flo": {
+    "t": "火烈鸟乐手",
+    "r": "huǒ liè niǎo yuè shǒu"
+   },
+   "girl-a": {
+    "t": "女孩",
+    "r": "nǚ hái"
+   },
+   "girl-b": {
+    "t": "女孩",
+    "r": "nǚ hái"
+   },
+   "grandma-lin": {
+    "t": "林奶奶",
+    "r": "Lín nǎi nai"
+   },
+   "grandpa": {
+    "t": "老爷爷",
+    "r": "lǎo yé ye"
+   },
+   "grandpa-joe": {
+    "t": "乔爷爷",
+    "r": "Qiáo yé ye"
+   },
+   "grandpa-tang": {
+    "t": "唐爷爷",
+    "r": "Táng yé ye"
+   },
+   "grandpa-tom": {
+    "t": "汤姆爷爷",
+    "r": "Tāng mǔ yé ye"
+   },
+   "granny": {
+    "t": "老奶奶",
+    "r": "lǎo nǎi nai"
+   },
+   "granny-may": {
+    "t": "梅奶奶",
+    "r": "Méi nǎi nai"
+   },
+   "granny-rose": {
+    "t": "罗丝奶奶",
+    "r": "Luó sī nǎi nai"
+   },
+   "granny-snow": {
+    "t": "雪奶奶",
+    "r": "Xuě nǎi nai"
+   },
+   "granny-turtle": {
+    "t": "海龟奶奶",
+    "r": "hǎi guī nǎi nai"
+   },
+   "granny-wu": {
+    "t": "吴奶奶",
+    "r": "Wú nǎi nai"
+   },
+   "guard": {
+    "t": "守卫",
+    "r": "shǒu wèi"
+   },
+   "guard-hugo": {
+    "t": "守卫雨果",
+    "r": "shǒu wèi Yǔ guǒ"
+   },
+   "guard-leo": {
+    "t": "守卫里奥",
+    "r": "shǒu wèi Lǐ ào"
+   },
+   "guest-ann": {
+    "t": "客人安妮",
+    "r": "kè rén Ān nī"
+   },
+   "guest-lily": {
+    "t": "客人莉莉",
+    "r": "kè rén Lì li"
+   },
+   "guest-max": {
+    "t": "客人麦克斯",
+    "r": "kè rén Mài kè sī"
+   },
+   "guide-emma": {
+    "t": "向导艾玛",
+    "r": "xiàng dǎo Ài mǎ"
+   },
+   "hall-guide": {
+    "t": "向导",
+    "r": "xiàng dǎo"
+   },
+   "hall-radio": {
+    "t": "广播",
+    "r": "guǎng bō"
+   },
+   "hall-speaker": {
+    "t": "广播",
+    "r": "guǎng bō"
+   },
+   "hiker-ben": {
+    "t": "登山者本",
+    "r": "dēng shān zhě Běn"
+   },
+   "hiker-bob": {
+    "t": "登山者鲍勃",
+    "r": "dēng shān zhě Bào bó"
+   },
+   "hiker-glen": {
+    "t": "登山者格伦",
+    "r": "dēng shān zhě Gé lún"
+   },
+   "hiker-hal": {
+    "t": "登山者哈尔",
+    "r": "dēng shān zhě Hā ěr"
+   },
+   "hiker-hank": {
+    "t": "登山者汉克",
+    "r": "dēng shān zhě Hàn kè"
+   },
+   "hiker-ivan": {
+    "t": "登山者伊万",
+    "r": "dēng shān zhě Yī wàn"
+   },
+   "hiker-joe": {
+    "t": "登山者乔",
+    "r": "dēng shān zhě Qiáo"
+   },
+   "hiker-max": {
+    "t": "登山者麦克斯",
+    "r": "dēng shān zhě Mài kè sī"
+   },
+   "hiker-pat": {
+    "t": "登山者帕特",
+    "r": "dēng shān zhě Pà tè"
+   },
+   "hiker-rocky": {
+    "t": "登山者罗基",
+    "r": "dēng shān zhě Luó jī"
+   },
+   "hiker-sandy": {
+    "t": "登山者桑迪",
+    "r": "dēng shān zhě Sāng dí"
+   },
+   "hiker-summit": {
+    "t": "登山者小峰",
+    "r": "dēng shān zhě Xiǎo Fēng"
+   },
+   "hush-crew": {
+    "t": "嘘声团团员",
+    "r": "xū shēng tuán tuán yuán"
+   },
+   "ivy": {
+    "t": "艾薇",
+    "r": "Ài wēi"
+   },
+   "jack": {
+    "t": "杰克",
+    "r": "Jié kè"
+   },
+   "juggler-pip": {
+    "t": "杂耍人皮普",
+    "r": "zá shuǎ rén Pí pǔ"
+   },
+   "juggler-toby": {
+    "t": "杂耍人托比",
+    "r": "zá shuǎ rén Tuō bǐ"
+   },
+   "kai": {
+    "t": "小凯",
+    "r": "Xiǎo Kǎi"
+   },
+   "kate": {
+    "t": "凯特",
+    "r": "Kǎi tè"
+   },
+   "keeper-tock": {
+    "t": "管理员托克",
+    "r": "guǎn lǐ yuán Tuō kè"
+   },
+   "kite-boy-ken": {
+    "t": "风筝男孩肯",
+    "r": "fēng zheng nán hái Kěn"
+   },
+   "lady-a": {
+    "t": "阿姨",
+    "r": "ā yí"
+   },
+   "lady-b": {
+    "t": "阿姨",
+    "r": "ā yí"
+   },
+   "lady-in-red": {
+    "t": "红衣阿姨",
+    "r": "hóng yī ā yí"
+   },
+   "lass-amy": {
+    "t": "女孩艾米",
+    "r": "nǚ hái Ài mǐ"
+   },
+   "leo": {
+    "t": "Leo",
+    "r": "Leo"
+   },
+   "librarian-mrs-page": {
+    "t": "佩吉老师",
+    "r": "Pèi jí lǎo shī"
+   },
+   "lily": {
+    "t": "莉莉",
+    "r": "Lì li"
+   },
+   "little-amy": {
+    "t": "小艾米",
+    "r": "xiǎo Ài mǐ"
+   },
+   "little-lucy": {
+    "t": "小露西",
+    "r": "xiǎo Lù xī"
+   },
+   "little-sam": {
+    "t": "小山姆",
+    "r": "xiǎo Shān mǔ"
+   },
+   "lucy": {
+    "t": "露西",
+    "r": "Lù xī"
+   },
+   "man-a": {
+    "t": "叔叔",
+    "r": "shū shu"
+   },
+   "man-with-a-cap": {
+    "t": "戴帽子的叔叔",
+    "r": "dài mào zi de shū shu"
+   },
+   "master-frost": {
+    "t": "冰霜",
+    "r": "Bīng shuāng"
+   },
+   "master-luna": {
+    "t": "露娜",
+    "r": "Lù nà"
+   },
+   "master-sage": {
+    "t": "智者",
+    "r": "Zhì zhě"
+   },
+   "master-talon": {
+    "t": "利爪",
+    "r": "Lì zhǎo"
+   },
+   "max": {
+    "t": "麦克斯",
+    "r": "Mài kè sī"
+   },
+   "mayor-tick": {
+    "t": "蒂克镇长",
+    "r": "Dì kè zhèn zhǎng"
+   },
+   "mc-bobo": {
+    "t": "主持人波波",
+    "r": "zhǔ chí rén Bō bō"
+   },
+   "mei": {
+    "t": "小梅",
+    "r": "Xiǎo Méi"
+   },
+   "memory-card": {
+    "t": "回忆牌",
+    "r": "huí yì pái"
+   },
+   "memory-door": {
+    "t": "回忆之门",
+    "r": "huí yì zhī mén"
+   },
+   "memory-dragon": {
+    "t": "回忆巨龙",
+    "r": "huí yì jù lóng"
+   },
+   "messy-mia": {
+    "t": "乱丢的米娅",
+    "r": "luàn diū de Mǐ yà"
+   },
+   "mia": {
+    "t": "Mia",
+    "r": "Mia"
+   },
+   "mike": {
+    "t": "迈克",
+    "r": "Mài kè"
+   },
+   "miner-gus": {
+    "t": "矿工加斯",
+    "r": "kuàng gōng Jiā sī"
+   },
+   "miner-max": {
+    "t": "矿工麦克斯",
+    "r": "kuàng gōng Mài kè sī"
+   },
+   "miner-rita": {
+    "t": "矿工丽塔",
+    "r": "kuàng gōng Lì tǎ"
+   },
+   "mom": {
+    "t": "妈妈",
+    "r": "mā ma"
+   },
+   "monitor-jay": {
+    "t": "班长杰伊",
+    "r": "bān zhǎng Jié yī"
+   },
+   "monk-ren": {
+    "t": "守护人阿任",
+    "r": "shǒu hù rén Ā Rèn"
+   },
+   "monk-sen": {
+    "t": "守护人阿森",
+    "r": "shǒu hù rén Ā Sēn"
+   },
+   "mr-bell": {
+    "t": "贝尔先生",
+    "r": "Bèi ěr xiān sheng"
+   },
+   "mr-brown": {
+    "t": "布朗先生",
+    "r": "Bù lǎng xiān sheng"
+   },
+   "mr-brush": {
+    "t": "布拉什先生",
+    "r": "Bù lā shí xiān sheng"
+   },
+   "mr-costa": {
+    "t": "科斯塔先生",
+    "r": "Kē sī tǎ xiān sheng"
+   },
+   "mr-frost": {
+    "t": "弗罗斯特先生",
+    "r": "Fú luó sī tè xiān sheng"
+   },
+   "mr-grey": {
+    "t": "格雷老师",
+    "r": "Gé léi lǎo shī"
+   },
+   "mr-grey-2": {
+    "t": "格雷老师",
+    "r": "Gé léi lǎo shī"
+   },
+   "mr-mute": {
+    "t": "默先生",
+    "r": "Mò xiān sheng"
+   },
+   "mr-park": {
+    "t": "朴先生",
+    "r": "Piáo xiān sheng"
+   },
+   "mr-white": {
+    "t": "怀特先生",
+    "r": "Huái tè xiān sheng"
+   },
+   "mr-wise": {
+    "t": "怀斯先生",
+    "r": "Huái sī xiān sheng"
+   },
+   "mrs-brown": {
+    "t": "布朗太太",
+    "r": "Bù lǎng tài tai"
+   },
+   "mrs-green": {
+    "t": "格林太太",
+    "r": "Gé lín tài tai"
+   },
+   "mrs-hands": {
+    "t": "汉兹太太",
+    "r": "Hàn zī tài tai"
+   },
+   "mrs-park": {
+    "t": "朴太太",
+    "r": "Piáo tài tai"
+   },
+   "ms-bell": {
+    "t": "贝尔老师",
+    "r": "Bèi ěr lǎo shī"
+   },
+   "ms-li": {
+    "t": "李阿姨",
+    "r": "Lǐ ā yí"
+   },
+   "ms-pen": {
+    "t": "潘阿姨",
+    "r": "Pān ā yí"
+   },
+   "ms-rosa": {
+    "t": "罗莎女士",
+    "r": "Luó shā nǚ shì"
+   },
+   "music-club-lily": {
+    "t": "音乐社的莉莉",
+    "r": "yīn yuè shè de Lì li"
+   },
+   "music-teacher": {
+    "t": "音乐老师",
+    "r": "yīn yuè lǎo shī"
+   },
+   "night-owl-oscar": {
+    "t": "夜猫子奥斯卡",
+    "r": "yè māo zi Ào sī kǎ"
+   },
+   "night-worker-mo": {
+    "t": "夜班工人莫",
+    "r": "yè bān gōng rén Mò"
+   },
+   "nora": {
+    "t": "诺拉",
+    "r": "Nuò lā"
+   },
+   "officer-jay": {
+    "t": "杰伊警官",
+    "r": "Jié yī jǐng guān"
+   },
+   "officer-kim": {
+    "t": "金警官",
+    "r": "Jīn jǐng guān"
+   },
+   "officer-lee": {
+    "t": "李警官",
+    "r": "Lǐ jǐng guān"
+   },
+   "old-lady": {
+    "t": "老奶奶",
+    "r": "lǎo nǎi nai"
+   },
+   "orion": {
+    "t": "欧瑞",
+    "r": "Ōu ruì"
+   },
+   "owen": {
+    "t": "欧文",
+    "r": "Ōu wén"
+   },
+   "painter-iris": {
+    "t": "画家艾瑞斯",
+    "r": "huà jiā Ài ruì sī"
+   },
+   "painter-leo": {
+    "t": "画家里奥",
+    "r": "huà jiā Lǐ ào"
+   },
+   "painter-sue": {
+    "t": "画家苏",
+    "r": "huà jiā Sū"
+   },
+   "parrot": {
+    "t": "鹦鹉",
+    "r": "yīng wǔ"
+   },
+   "party-clown": {
+    "t": "派对小丑",
+    "r": "pài duì xiǎo chǒu"
+   },
+   "party-girl-pat": {
+    "t": "派对女孩帕特",
+    "r": "pài duì nǚ hái Pà tè"
+   },
+   "party-kid-nina": {
+    "t": "派对小孩妮娜",
+    "r": "pài duì xiǎo hái Nī nà"
+   },
+   "pianist-pam": {
+    "t": "钢琴手帕姆",
+    "r": "gāng qín shǒu Pà mǔ"
+   },
+   "picnic-kate": {
+    "t": "野餐的凯特",
+    "r": "yě cān de Kǎi tè"
+   },
+   "pip": {
+    "t": "皮普",
+    "r": "Pí pǔ"
+   },
+   "principal-owl": {
+    "t": "猫头鹰校长",
+    "r": "māo tóu yīng xiào zhǎng"
+   },
+   "professor-echo": {
+    "t": "回声博士",
+    "r": "huí shēng bó shì"
+   },
+   "psychic-rin": {
+    "t": "读心人凛",
+    "r": "dú xīn rén Lǐn"
+   },
+   "puffy": {
+    "t": "河豚派对王",
+    "r": "hé tún pài duì wáng"
+   },
+   "radio": {
+    "t": "收音机",
+    "r": "shōu yīn jī"
+   },
+   "rainbow-crab": {
+    "t": "彩虹蟹",
+    "r": "cǎi hóng xiè"
+   },
+   "ranger-frost": {
+    "t": "巡林员阿霜",
+    "r": "xún lín yuán Ā Shuāng"
+   },
+   "ranger-mo": {
+    "t": "巡林员莫",
+    "r": "xún lín yuán Mò"
+   },
+   "ranger-rosa": {
+    "t": "巡林员罗莎",
+    "r": "xún lín yuán Luó shā"
+   },
+   "ranger-sue": {
+    "t": "巡林员苏",
+    "r": "xún lín yuán Sū"
+   },
+   "ranger-tom": {
+    "t": "巡林员汤姆",
+    "r": "xún lín yuán Tāng mǔ"
+   },
+   "reporter-rita": {
+    "t": "记者丽塔",
+    "r": "jì zhě Lì tǎ"
+   },
+   "rooster-rex": {
+    "t": "闹钟公鸡",
+    "r": "nào zhōng gōng jī"
+   },
+   "ruby": {
+    "t": "露比",
+    "r": "Lù bǐ"
+   },
+   "rulers-rick": {
+    "t": "文具迷里克",
+    "r": "wén jù mí Lǐ kè"
+   },
+   "runner-kate": {
+    "t": "跑者凯特",
+    "r": "pǎo zhě Kǎi tè"
+   },
+   "running-rick": {
+    "t": "乱跑的里克",
+    "r": "luàn pǎo de Lǐ kè"
+   },
+   "sailor-jack": {
+    "t": "水手杰克",
+    "r": "shuǐ shǒu Jié kè"
+   },
+   "sailor-nina": {
+    "t": "水手妮娜",
+    "r": "shuǐ shǒu Nī nà"
+   },
+   "sailor-tim": {
+    "t": "水手蒂姆",
+    "r": "shuǐ shǒu Dì mǔ"
+   },
+   "sam": {
+    "t": "山姆",
+    "r": "Shān mǔ"
+   },
+   "scientist-ann": {
+    "t": "科学家安妮",
+    "r": "kē xué jiā Ān nī"
+   },
+   "scientist-ash": {
+    "t": "科学家阿什",
+    "r": "kē xué jiā Ā shí"
+   },
+   "scientist-ivy": {
+    "t": "科学家艾薇",
+    "r": "kē xué jiā Ài wēi"
+   },
+   "scientist-ray": {
+    "t": "科学家雷",
+    "r": "kē xué jiā Léi"
+   },
+   "sea-patrol-sam": {
+    "t": "巡逻员山姆",
+    "r": "xún luó yuán Shān mǔ"
+   },
+   "sharky": {
+    "t": "鲨鱼纪律官",
+    "r": "shā yú jì lǜ guān"
+   },
+   "singer-may": {
+    "t": "歌手梅",
+    "r": "gē shǒu Méi"
+   },
+   "singer-sue": {
+    "t": "歌手苏",
+    "r": "gē shǒu Sū"
+   },
+   "skier-amy": {
+    "t": "滑雪者艾米",
+    "r": "huá xuě zhě Ài mǐ"
+   },
+   "skier-lily": {
+    "t": "滑雪者莉莉",
+    "r": "huá xuě zhě Lì li"
+   },
+   "skier-max": {
+    "t": "滑雪者麦克斯",
+    "r": "huá xuě zhě Mài kè sī"
+   },
+   "skier-nora": {
+    "t": "滑雪者诺拉",
+    "r": "huá xuě zhě Nuò lā"
+   },
+   "skier-sam": {
+    "t": "滑雪者山姆",
+    "r": "huá xuě zhě Shān mǔ"
+   },
+   "sleepy-ann": {
+    "t": "爱睡的安妮",
+    "r": "ài shuì de Ān nī"
+   },
+   "sleepy-tom": {
+    "t": "爱睡的汤姆",
+    "r": "ài shuì de Tāng mǔ"
+   },
+   "strongman-max": {
+    "t": "大力士麦克斯",
+    "r": "dà lì shì Mài kè sī"
+   },
+   "student-amy": {
+    "t": "学生艾米",
+    "r": "xué sheng Ài mǐ"
+   },
+   "student-ann": {
+    "t": "学生安妮",
+    "r": "xué sheng Ān nī"
+   },
+   "student-anna": {
+    "t": "学生安娜",
+    "r": "xué sheng Ān nà"
+   },
+   "student-ben": {
+    "t": "学生本",
+    "r": "xué sheng Běn"
+   },
+   "student-dan": {
+    "t": "学生丹",
+    "r": "xué sheng Dān"
+   },
+   "student-jack": {
+    "t": "学生杰克",
+    "r": "xué sheng Jié kè"
+   },
+   "student-joy": {
+    "t": "学生乔伊",
+    "r": "xué sheng Qiáo yī"
+   },
+   "student-leo": {
+    "t": "学生里奥",
+    "r": "xué sheng Lǐ ào"
+   },
+   "student-lily": {
+    "t": "学生莉莉",
+    "r": "xué sheng Lì li"
+   },
+   "student-lucy": {
+    "t": "学生露西",
+    "r": "xué sheng Lù xī"
+   },
+   "student-max": {
+    "t": "学生麦克斯",
+    "r": "xué sheng Mài kè sī"
+   },
+   "student-mia": {
+    "t": "学生米娅",
+    "r": "xué sheng Mǐ yà"
+   },
+   "student-nick": {
+    "t": "学生尼克",
+    "r": "xué sheng Ní kè"
+   },
+   "student-rose": {
+    "t": "学生罗丝",
+    "r": "xué sheng Luó sī"
+   },
+   "student-sam": {
+    "t": "学生山姆",
+    "r": "xué sheng Shān mǔ"
+   },
+   "student-tony": {
+    "t": "学生托尼",
+    "r": "xué sheng Tuō ní"
+   },
+   "swim-club-coach": {
+    "t": "游泳教练",
+    "r": "yóu yǒng jiào liàn"
+   },
+   "swimmer-ben": {
+    "t": "游泳者本",
+    "r": "yóu yǒng zhě Běn"
+   },
+   "swimmer-joe": {
+    "t": "游泳者乔",
+    "r": "yóu yǒng zhě Qiáo"
+   },
+   "swimmer-joy": {
+    "t": "游泳者乔伊",
+    "r": "yóu yǒng zhě Qiáo yī"
+   },
+   "swimmer-kate": {
+    "t": "游泳者凯特",
+    "r": "yóu yǒng zhě Kǎi tè"
+   },
+   "swimmer-nina": {
+    "t": "游泳者妮娜",
+    "r": "yóu yǒng zhě Nī nà"
+   },
+   "swimmer-sally": {
+    "t": "游泳者莎莉",
+    "r": "yóu yǒng zhě Shā lì"
+   },
+   "swimmer-tom": {
+    "t": "游泳者汤姆",
+    "r": "yóu yǒng zhě Tāng mǔ"
+   },
+   "teacher-chen": {
+    "t": "陈老师",
+    "r": "Chén lǎo shī"
+   },
+   "teacher-wu": {
+    "t": "吴老师",
+    "r": "Wú lǎo shī"
+   },
+   "the-memory-dragon": {
+    "t": "回忆巨龙",
+    "r": "huí yì jù lóng"
+   },
+   "tim": {
+    "t": "蒂姆",
+    "r": "Dì mǔ"
+   },
+   "tims-dad": {
+    "t": "蒂姆的爸爸",
+    "r": "Dì mǔ de bà ba"
+   },
+   "tims-grandma": {
+    "t": "蒂姆的奶奶",
+    "r": "Dì mǔ de nǎi nai"
+   },
+   "tims-mom": {
+    "t": "蒂姆的妈妈",
+    "r": "Dì mǔ de mā ma"
+   },
+   "tony": {
+    "t": "托尼",
+    "r": "Tuō ní"
+   },
+   "tourist": {
+    "t": "游客",
+    "r": "yóu kè"
+   },
+   "traffic-officer": {
+    "t": "交警",
+    "r": "jiāo jǐng"
+   },
+   "tree-doctor": {
+    "t": "树医生",
+    "r": "shù yī shēng"
+   },
+   "twin-amy": {
+    "t": "双胞胎艾米",
+    "r": "shuāng bāo tāi Ài mǐ"
+   },
+   "twin-ann": {
+    "t": "双胞胎安妮",
+    "r": "shuāng bāo tāi Ān nī"
+   },
+   "uncle-bob": {
+    "t": "鲍勃叔叔",
+    "r": "Bào bó shū shu"
+   },
+   "uncle-leo": {
+    "t": "里奥叔叔",
+    "r": "Lǐ ào shū shu"
+   },
+   "uncle-wang": {
+    "t": "王叔叔",
+    "r": "Wáng shū shu"
+   },
+   "uncle-wu": {
+    "t": "吴叔叔",
+    "r": "Wú shū shu"
+   },
+   "veteran-ada": {
+    "t": "老将艾达",
+    "r": "lǎo jiàng Ài dá"
+   },
+   "veteran-gus": {
+    "t": "老将加斯",
+    "r": "lǎo jiàng Jiā sī"
+   },
+   "weather-machine": {
+    "t": "天气机",
+    "r": "tiān qì jī"
+   },
+   "weather-man-ken": {
+    "t": "气象员肯",
+    "r": "qì xiàng yuán Kěn"
+   },
+   "weather-switch": {
+    "t": "天气开关",
+    "r": "tiān qì kāi guān"
+   },
+   "whaley": {
+    "t": "天气鲸",
+    "r": "tiān qì jīng"
+   },
+   "youngster-tim": {
+    "t": "小男孩蒂姆",
+    "r": "xiǎo nán hái Dì mǔ"
+   },
+   "zookeeper-tom": {
+    "t": "饲养员汤姆",
+    "r": "sì yǎng yuán Tāng mǔ"
+   }
+  },
+  "sign": {
+   "rest-stop": {
+    "t": "休息站",
+    "r": "xiū xi zhàn"
+   },
+   "shop": {
+    "t": "商店",
+    "r": "shāng diàn"
+   },
+   "gym": {
+    "t": "体育馆",
+    "r": "tǐ yù guǎn"
+   },
+   "library": {
+    "t": "图书馆",
+    "r": "tú shū guǎn"
+   },
+   "dining": {
+    "t": "食堂",
+    "r": "shí táng"
+   },
+   "hall": {
+    "t": "走廊",
+    "r": "zǒu láng"
+   },
+   "office": {
+    "t": "办公室",
+    "r": "bàn gōng shì"
+   },
+   "class": {
+    "t": "教室",
+    "r": "jiào shì"
+   },
+   "exit": {
+    "t": "出口",
+    "r": "chū kǒu"
+   },
+   "computer": {
+    "t": "电脑室",
+    "r": "diàn nǎo shì"
+   },
+   "lab": {
+    "t": "实验室",
+    "r": "shí yàn shì"
+   },
+   "music": {
+    "t": "音乐",
+    "r": "yīn yuè"
+   },
+   "maths": {
+    "t": "数学",
+    "r": "shù xué"
+   },
+   "english": {
+    "t": "中文",
+    "r": "zhōng wén"
+   },
+   "science": {
+    "t": "科学",
+    "r": "kē xué"
+   },
+   "art": {
+    "t": "美术",
+    "r": "měi shù"
+   },
+   "pe": {
+    "t": "体育",
+    "r": "tǐ yù"
+   },
+   "chinese": {
+    "t": "语文",
+    "r": "yǔ wén"
+   },
+   "history": {
+    "t": "历史",
+    "r": "lì shǐ"
+   },
+   "geography": {
+    "t": "地理",
+    "r": "dì lǐ"
+   },
+   "do": {
+    "t": "哆",
+    "r": "duō"
+   },
+   "mi": {
+    "t": "咪",
+    "r": "mī"
+   },
+   "sol": {
+    "t": "嗦",
+    "r": "suō"
+   },
+   "went": {
+    "t": "去了",
+    "r": "qù le"
+   },
+   "saw": {
+    "t": "看见了",
+    "r": "kàn jiàn le"
+   },
+   "ate": {
+    "t": "吃了",
+    "r": "chī le"
+   },
+   "bought": {
+    "t": "买了",
+    "r": "mǎi le"
+   },
+   "trip": {
+    "t": "旅行",
+    "r": "lǚ xíng"
+   },
+   "beach": {
+    "t": "海滩",
+    "r": "hǎi tān"
+   },
+   "echo-middle-school": {
+    "t": "回声中学",
+    "r": "huí shēng zhōng xué"
+   },
+   "join-our-club": {
+    "t": "欢迎入社！",
+    "r": "huān yíng rù shè"
+   },
+   "music-chess-art": {
+    "t": "音乐  ♟ 象棋  🎨 美术",
+    "r": "yīn yuè xiàng qí měi shù"
+   },
+   "bus": {
+    "t": "公交车",
+    "r": "gōng jiāo chē"
+   },
+   "happy-birthday": {
+    "t": "生日快乐！",
+    "r": "shēng rì kuài lè"
+   },
+   "zoo": {
+    "t": "动物园",
+    "r": "dòng wù yuán"
+   },
+   "class-5": {
+    "t": "五班",
+    "r": "wǔ bān"
+   },
+   "menu": {
+    "t": "菜单",
+    "r": "cài dān"
+   },
+   "beef-noodles-15": {
+    "t": "牛肉面  ¥15",
+    "r": "niú ròu miàn"
+   },
+   "dumplings-12": {
+    "t": "饺子  ¥12",
+    "r": "jiǎo zi"
+   },
+   "beijing": {
+    "t": "北京",
+    "r": "běi jīng"
+   },
+   "harbin": {
+    "t": "哈尔滨",
+    "r": "hā ěr bīn"
+   },
+   "challenge-hall": {
+    "t": "挑战馆",
+    "r": "tiǎo zhàn guǎn"
+   }
+  },
+  "ui": {
+   "yes": {
+    "t": "要",
+    "r": "yào"
+   },
+   "no": {
+    "t": "不要",
+    "r": "bú yào"
+   },
+   "lets-go": {
+    "t": "出发！",
+    "r": "chū fā"
+   },
+   "not-now": {
+    "t": "先不了",
+    "r": "xiān bù le"
+   },
+   "swim-up": {
+    "t": "游上去",
+    "r": "yóu shàng qù"
+   },
+   "thank-you": {
+    "t": "谢谢！",
+    "r": "xiè xie"
+   },
+   "sure": {
+    "t": "好啊！",
+    "r": "hǎo a"
+   },
+   "next-time": {
+    "t": "下次吧",
+    "r": "xià cì ba"
+   },
+   "push-it": {
+    "t": "按下去！",
+    "r": "àn xià qù"
+   },
+   "green-light": {
+    "t": "绿灯，走！",
+    "r": "lǜ dēng zǒu"
+   },
+   "red-light": {
+    "t": "红灯，停！",
+    "r": "hóng dēng tíng"
+   },
+   "turn-it-on": {
+    "t": "打开！",
+    "r": "dǎ kāi"
+   },
+   "egg": {
+    "t": "蛋",
+    "r": "dàn"
+   },
+   "box": {
+    "t": "箱子",
+    "r": "xiāng zi"
+   },
+   "honor-wall": {
+    "t": "光荣榜",
+    "r": "guāng róng bǎng"
+   }
   }
  }
 }

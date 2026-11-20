@@ -48,6 +48,8 @@
       'w.ans.nomatch': '没对上任何一个回答，再说一次',
       'w.listening': '正在听……', 'w.sr.broken': '这里用不了语音识别，改成自己说、自己确认', 'w.sr.unheard': '没听清，大声一点再试一次',
       'w.try.skip': '{msg}，实在不行可以先跳过', 'w.heard': '我听到：“{t}”', 'w.score.ok': '<b>{n} 分</b> 说得好！', 'w.score.low': '{n} 分，红色的词再读准一点',
+      // 别的课（.c）：按钮上的英语词换成这门语言的（{w}，台词翻译表的 terms.ui）
+      'w.up.go.c': '🫧 浮上去 {w}', 'w.ferry.go.c': '⛴️ {to} {w}', 'w.ferry.go0.c': '⛴️ 出发 {w}', 'w.ferry.no.c': '先不 {w}', 'w.shop.bye.c': '{w} 谢谢',
       'w.up.go': '🫧 浮上去 Swim up', 'w.no': '先不', 'w.ferry.go': '⛴️ {to} Let\'s go!', 'w.ferry.go0': '⛴️ 出发 Let\'s go!', 'w.ferry.no': '先不 Not now',
       'w.coins': '💰 金币 +{n}', 'w.egg.got': '🥚 得到了一个蛋！放在队伍里走路就会孵出来', 'w.ball1': '🔮 回声球 +1', 'w.potion1': '🧪 药水 +1',
       'w.q.lock.pre': '先完成委托「{name}」', 'w.q.lock.badges': '要有 {n} 枚徽章（现在 {m} 枚）',
@@ -120,6 +122,7 @@
       'w.ans.nomatch': 'That did not match any answer. Say it again',
       'w.listening': 'Listening…', 'w.sr.broken': 'Speech recognition does not work here. Say it yourself and tap when you are done', 'w.sr.unheard': 'I didn\'t catch that. Say it louder and try again',
       'w.try.skip': '{msg}. If it still does not work, you can skip for now', 'w.heard': 'I heard: "{t}"', 'w.score.ok': '<b>{n} points</b> Well said!', 'w.score.low': '{n} points. Say the red words more clearly',
+      'w.up.go.c': '🫧 {w}', 'w.ferry.go.c': '⛴️ {to} · {w}', 'w.ferry.go0.c': '⛴️ {w}', 'w.ferry.no.c': '{w}', 'w.shop.bye.c': '{w}',
       'w.up.go': '🫧 Swim up', 'w.no': 'Not now', 'w.ferry.go': '⛴️ Let\'s go to {to}!', 'w.ferry.go0': '⛴️ Let\'s go!', 'w.ferry.no': 'Not now',
       'w.coins': '💰 +{n} coins', 'w.egg.got': '🥚 You got an egg! Keep it in your team and walk, and it will hatch', 'w.ball1': '🔮 Echo Ball +1', 'w.potion1': '🧪 Potion +1',
       'w.q.lock.pre': 'Finish the request "{name}" first', 'w.q.lock.badges': { one: 'You need {n} badge (you have {m})', other: 'You need {n} badges (you have {m})' },
@@ -172,6 +175,18 @@
   // 说话的人：剧情脚本（isles/*.js）里还写着中文的「旁白 / 告示牌 / 雕像」，显示时换成界面语言
   const WHO_KEYS = ['w.who.nar', 'w.who.sign', 'w.who.statue'];
   const whoLabel = w => { if (I18N && w) for (const k of WHO_KEYS) if (w === I18N.t(k, null, 'zh')) return tx(k); return w || ''; };
+  // 别的课：画面上的名字按这门课的写法（台词翻译表的词，tools/course/SPEC.md §8.1；没翻的照英文）。T_ 文字、TH_ 带读音的 HTML、uiW 按钮上的英语词。英语课原样
+  const T_ = (c, en) => (E && E.lang && E.termOf ? E.termOf(c, en) : en);
+  const TH_ = (c, en) => (E && E.lang && E.termHTML ? E.termHTML(c, en) : E.esc(en));
+  const uiW = en => T_('ui', en);
+  // 房子门上的招牌（2D、老 3D、新画风三种画法都问这里）：休息站 REST STOP、商店 SHOP、挑战馆 HALL（Challenge Hall 的招牌，不叫 GYM）。
+  // 别的课用台词翻译表的 sign（挑战馆那条的英文写成 CHALLENGE HALL，和学校地板上的 HALL「走廊」分开）
+  function signLabel(L) {
+    if (L === 'C') return T_('sign', 'REST STOP');
+    if (L === 'M') return T_('sign', 'SHOP');
+    const t = T_('sign', 'CHALLENGE HALL');
+    return t === 'CHALLENGE HALL' ? 'HALL' : t;
+  }
   // 小镇 / 岛主的名字：中文界面用中文名；别的语言用英文（小镇 = 这座岛小镇地图的英文名 Crayon Island……，和剧情台词里说的一样；
   // 地图没写英文名才用 data.js 的 en 去掉标点 + Town。岛主的英文名在他的开场白里：I'm Captain Polly.）
   const townName = w => { const z = E && E.W ? E.W.indexOf(w) : -1, m = z >= 0 && EM ? EM.get('t' + z) : null; return L({ zh: w.name, en: (m && m.en) || w.en.replace(/[!?]/g, '') + ' Town' }); };
@@ -749,7 +764,7 @@
     const face = pg.look ? '<img class="d-face" src="' + portrait(pg.look) + '" alt="">' : '<span class="d-face emo">' + (pg.emo || '💬') + '</span>';
     const zl = zhLine(pg);
     // 别的课里只给人看的台词（pg.plain，界面语言写的）：没有 🔊（不朗读）
-    let body = '<div class="d-name">' + esc(whoLabel(pg.who)) + '</div>' + (pg.plain ? '' : '<button class="spk mini d-hear" data-act="wHear" aria-label="' + hx('w.dlg.hear') + '">' + E.SPK + '</button>') +
+    let body = '<div class="d-name">' + (E.lang ? TH_('person', whoLabel(pg.who)) : esc(whoLabel(pg.who))) + '</div>' + (pg.plain ? '' : '<button class="spk mini d-hear" data-act="wHear" aria-label="' + hx('w.dlg.hear') + '">' + E.SPK + '</button>') +
       '<div class="d-row">' + face + '<div class="d-text">' +
       (pg.en ? '<div class="d-en' + (pg.hideEn ? ' hid' : '') + '" id="d-en">' + (pg.hideEn ? hx('w.dlg.listen') : typing ? '' : rb(pg.en)) + '</div>' : '') +
       (!zl ? '' : zhFolded(pg)
@@ -959,7 +974,7 @@
       // 站在深水上：潜下去；在海底的光圈上：浮上去
       const here = tile(PL.x, PL.y);
       if (PL.surf && here === 'D') { const d = M.dives.find(q => q.x === PL.x && q.y === PL.y); if (d) useSkill('dive', () => goMap(d.to, d.arrive)); else talk([{ who: tx('w.who.nar'), emo: '🌊', en: 'The sea is very deep here.', zh: '这里的海很深。' }]); return; }
-      if (here === 'U') { const u = M.surfaces.find(q => q.x === PL.x && q.y === PL.y); if (u) { talk([{ who: tx('w.who.nar'), emo: '🫧', en: 'Light is shining from above. Swim up?', zh: '上面有光照下来。要浮上去吗？', kind: 'choice', opts: [{ html: hx('w.up.go'), cls: 'sun' }, { html: hx('w.no') }], pick: i => { if (!i) setTimeout(() => goMap(u.to, u.arrive), 60); return []; } }]); } return; }
+      if (here === 'U') { const u = M.surfaces.find(q => q.x === PL.x && q.y === PL.y); if (u) { talk([{ who: tx('w.who.nar'), emo: '🫧', en: 'Light is shining from above. Swim up?', zh: '上面有光照下来。要浮上去吗？', kind: 'choice', opts: [{ html: hx('w.up.go', { w: uiW('Swim up') }), cls: 'sun' }, { html: hx('w.no') }], pick: i => { if (!i) setTimeout(() => goMap(u.to, u.arrive), 60); return []; } }]); } return; }
       if (f && f.falls) talk([{ who: tx('w.who.nar'), emo: '🌊', en: 'It is a big waterfall.', zh: '一道大瀑布。要先踏浪到瀑布下面。' }]);
       return;
     }
@@ -1026,7 +1041,7 @@
       const ok = (n.badge == null || nBadges() >= n.badge) && (!n.need || WS().flags['s:' + n.need]);
       if (!ok) { talk(keep(lines(n.no || [['Sorry, the boat is not ready yet.', '抱歉，船还不能开。']]))); return; }
       // @i18n-content 「要坐船去……吗？」是这一页台词的中文意思（括号里的「对面的岛」也是）
-      talk(lines(n.say || [['All aboard! Do you want to go?', '上船啦！要出发吗？']]).concat([P(n.ask || 'Where do you want to go?', '要坐船去' + (n.toName || '对面的岛') + '吗？', { kind: 'choice', opts: [{ html: n.toName ? hx('w.ferry.go', { to: ferryTo(n) }) : hx('w.ferry.go0'), cls: 'sun' }, { html: hx('w.ferry.no') }], pick: i => { if (!i) setTimeout(() => sail(n), 80); return []; } })]));
+      talk(lines(n.say || [['All aboard! Do you want to go?', '上船啦！要出发吗？']]).concat([P(n.ask || 'Where do you want to go?', '要坐船去' + (n.toName || '对面的岛') + '吗？', { kind: 'choice', opts: [{ html: n.toName ? hx('w.ferry.go', { to: ferryTo(n), w: uiW("Let's go!") }) : hx('w.ferry.go0', { w: uiW("Let's go!") }), cls: 'sun' }, { html: hx('w.ferry.no', { w: uiW('Not now') }) }], pick: i => { if (!i) setTimeout(() => sail(n), 80); return []; } })]));
       // @i18n-content-end
     } else if (n.say && n.role !== 'trainer') {
       const pg = lines(n.say);
@@ -1355,10 +1370,10 @@
       shopStock().map(([id, n], i) => {
         const it = MG.ITEMS[id], price = it.price * n, owned = it.key && MG.itemCount(id) > 0;
         // 中文界面：名字是中文，小字里带上英文名；英语界面名字已经是英文，不重复
-        return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + L(it) + (n > 1 ? ' ×' + n : '') + '</b><small>' + it.desc + (gloss(it) ? ' · ' + it.en : '') + (it.key ? '' : hx('w.shop.have', { n: MG.itemCount(id) })) + '</small></div>' +
+        return '<div class="ach"><span class="ae">' + it.icon + '</span><div style="flex:1"><b>' + L(it) + (n > 1 ? ' ×' + n : '') + '</b><small>' + it.desc + (gloss(it) || E.lang ? (L(it) !== T_('item', it.en) ? ' · ' + TH_('item', it.en) : '') : '') + (it.key ? '' : hx('w.shop.have', { n: MG.itemCount(id) })) + '</small></div>' +
           '<button class="btn small sun" data-act="wBuy" data-i="' + i + '"' + (owned || E.S.coins < price ? ' disabled' : '') + '>' + (owned ? hx('w.shop.owned') : hx('w.shop.price', { n: price })) + '</button></div>';
       }).join('') +
-      '<button class="btn ghost wide" data-act="close">' + hx('w.shop.bye') + '</button>');
+      '<button class="btn ghost wide" data-act="close">' + hx('w.shop.bye', { w: uiW('Thank you!') }) + '</button>');
   }
 
   // ---------- 挑战馆跟着课本进度开（家长 2026-10-07）：第 z 个岛主要先打败前 ceil((z+1)×16/13) 个课本单元的 BOSS 关 ----------
@@ -1434,11 +1449,11 @@
     talk([{ who: '{name}', look: playerLook(), g: E.S.player && E.S.player.gender === 'girl' ? 'f' : 'm', en: S.say(name), zh: '用「' + S.zh + '」：大声对 ' + name + ' 说出来！', kind: 'speak', target: S.say(name), lkey: 'skill:' + k, pass: () => { E.S.stats.spoken = (E.S.stats.spoken || 0); then(mon); return []; } }]);
   }
   function obstacle(f) {
-    if (f.obst === 'n') useSkill('cut', mon => { M._cleared.add(f.x + ',' + f.y); E.SFX.hit(); E.toast(tx('w.sk.cut.done', { name: MG.species(mon.sp).en }), 'gold'); if (R && R.fx) R.fx('cut', f.x, f.y); });
-    else if (f.obst === 'b') useSkill('smash', mon => { M._cleared.add(f.x + ',' + f.y); E.SFX.hit(); E.toast(tx('w.sk.smash.done', { name: MG.species(mon.sp).en }), 'gold'); if (R && R.fx) R.fx('smash', f.x, f.y); });
+    if (f.obst === 'n') useSkill('cut', mon => { M._cleared.add(f.x + ',' + f.y); E.SFX.hit(); E.toast(tx('w.sk.cut.done', { name: T_('monster', MG.species(mon.sp).en) }), 'gold'); if (R && R.fx) R.fx('cut', f.x, f.y); });
+    else if (f.obst === 'b') useSkill('smash', mon => { M._cleared.add(f.x + ',' + f.y); E.SFX.hit(); E.toast(tx('w.sk.smash.done', { name: T_('monster', MG.species(mon.sp).en) }), 'gold'); if (R && R.fx) R.fx('smash', f.x, f.y); });
     else if (f.obst === 'O') {
       if (M._strength) { talk([{ who: tx('w.who.nar'), emo: '💪', en: 'Walk into the rock to push it.', zh: '朝大石头走过去，就能把它推开。' }]); return; }
-      useSkill('strength', mon => { M._strength = true; E.toast(tx('w.sk.push.ok', { name: MG.species(mon.sp).en }), 'gold'); });
+      useSkill('strength', mon => { M._strength = true; E.toast(tx('w.sk.push.ok', { name: T_('monster', MG.species(mon.sp).en) }), 'gold'); });
     }
   }
   // 面对水：踏浪或者钓鱼
@@ -1498,7 +1513,7 @@
   function skillsSheet() {
     // 四种技能各一行标题，下面列出每一级（开路、水路有 3 级）
     // 技能名：中文界面「开路 Clear Way」两种都写；英语界面只写英文
-    const nm2 = o => (gloss(o) ? gloss(o) + ' ' : '') + o.en;
+    const nm2 = o => (gloss(o) ? gloss(o) + ' ' : '') + (E.lang ? TH_('skill', o.en) : o.en);
     E.openModal('<h2>' + hx('w.sk.title') + '</h2><p>' + hx('w.sk.intro') + '</p>' +
       GROUPS.map(G => '<h3 class="pc-h">' + G.icon + ' ' + nm2(G) + (G.lv.length > 1 ? '<small>' + hx('w.sk.lv', { a: G.lv.filter(hasHM).length, b: G.lv.length }) + '</small>' : '') + '</h3>' + G.lv.map(k => {
         const S = SKILLS[k];
@@ -1507,7 +1522,7 @@
         const btn = k === 'flash' ? '<button class="btn small sun" data-act="wUseSkill" data-k="flash"' + (open && mon && M.dark && !M._flash ? '' : ' disabled') + '>' + hx('w.sk.use') + '</button>'
           : k === 'fly' ? '<button class="btn small sun" data-act="wUseSkill" data-k="fly"' + (open && mon && M.kind !== 'inside' ? '' : ' disabled') + '>' + hx('w.sk.use') + '</button>'
             : '<small class="tip">' + hx(k === 'dive' ? 'w.sk.tip.dive' : k === 'falls' ? 'w.sk.tip.falls' : 'w.sk.tip.obst') + '</small>';
-        return '<div class="ach' + (open ? '' : ' locked') + '"><span class="ae">' + S.icon + '</span><div style="flex:1"><b>' + nm2(S) + '</b><small>' + S.what + ' · ' + (open ? (mon ? hx('w.sk.by', { name: MG.species(mon.sp).en }) : hx('w.sk.needtype', { types: S.types.slice(0, 3).map(t => L(DEX.TYPES[t])).join('/') })) : hx('w.sk.needbadge', { n: S.badge })) + '</small></div>' + (open ? btn : '<span class="lvchip">🔒</span>') + '</div>';
+        return '<div class="ach' + (open ? '' : ' locked') + '"><span class="ae">' + S.icon + '</span><div style="flex:1"><b>' + nm2(S) + '</b><small>' + S.what + ' · ' + (open ? (mon ? hx('w.sk.by', { name: T_('monster', MG.species(mon.sp).en) }) : hx('w.sk.needtype', { types: S.types.slice(0, 3).map(t => L(DEX.TYPES[t])).join('/') })) : hx('w.sk.needbadge', { n: S.badge })) + '</small></div>' + (open ? btn : '<span class="lvchip">🔒</span>') + '</div>';
       }).join('')).join('') + '<button class="btn ghost wide" data-act="close">' + hx('w.close') + '</button>');
   }
   function flyTo(z) {
@@ -1834,7 +1849,7 @@
       if (!d) continue;
       const o = typeof d === 'string' ? { c: d } : d, sx = x * T, sy = y * T;
       if (o.c) { g.fillStyle = shade(o.c, .8); rr(g, sx + T * .04, sy + T * .04, T * .92, T * .92, T * .14); g.fill(); g.fillStyle = o.c; rr(g, sx + T * .09, sy + T * .07, T * .82, T * .8, T * .12); g.fill(); }
-      if (o.t) { g.fillStyle = o.tc || '#2b2b3a'; g.font = '800 ' + Math.round(T * (o.t.length > 6 ? .2 : o.t.length > 3 ? .28 : .38)) + 'px "Baloo 2", Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(o.t, sx + T / 2, sy + T * .5); }
+      if (o.t) { const ot = T_('sign', o.t); g.fillStyle = o.tc || '#2b2b3a'; g.font = '800 ' + Math.round(T * (ot.length > 6 ? .2 : ot.length > 3 ? .28 : .38)) + 'px "Baloo 2", Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ot, sx + T / 2, sy + T * .5); }
     }
   }
   function paintGround(g, m, T, for3d) {
@@ -2170,7 +2185,7 @@
         g.fillStyle = 'rgba(255,255,255,.6)'; ell(g, bx - T * .07, by - T * .14, T * .03, T * .07); g.fill();
       }
       if (!house) {
-        const label = L === 'C' ? 'REST STOP' : L === 'M' ? 'SHOP' : 'GYM';
+        const label = signLabel(L);
         g.font = '800 ' + Math.round(T * .3) + 'px "Baloo 2", Nunito, "PingFang SC", sans-serif';
         const tw = g.measureText(label).width, pw = tw + T * .5, ph = T * .44, px = x + w / 2 - pw / 2, py = y + rh * .52 - ph / 2;
         g.fillStyle = '#ffffff'; rr(g, px, py, pw, ph, ph / 2); g.fill(); g.strokeStyle = shade(roofC, .7); g.stroke();
@@ -2576,7 +2591,7 @@
       const id = ids[Math.floor(r / .5 * ids.length) % ids.length], it = MG.ITEMS[id];
       MG.addItem(id, 1); E.save();
       // 中文界面在说明前面带上英文名；英语界面标题里已经是英文名
-      return { prize: it.icon, kind: 'stone', id, html: '<h2>' + hx('w.chest.stone', { name: L(it) }) + '</h2><p>' + (gloss(it) ? hx('w.chest.stone.en', { en: it.en }) : '') + hx('w.chest.stone.p') + '</p>' };
+      return { prize: it.icon, kind: 'stone', id, html: '<h2>' + hx('w.chest.stone', { name: L(it) }) + '</h2><p>' + (gloss(it) ? hx('w.chest.stone.en', { en: T_('item', it.en) }) : '') + hx('w.chest.stone.p') + '</p>' };
     }
     if (r < .9) {
       // 蛋：第一大区（dex.js 的 inRegion1）的幼年怪兽，优先手册里还没收服的（初始怪兽也会出，这样第一大区都能集齐）
@@ -2645,5 +2660,6 @@
       fakeDay: d => { adv.day = d; }, adv, skillOpen: k => skillOpen(k), hasBadge: z => hasBadge(z), recentSrc: () => !!srcBak, debug: DEBUG,
       talk: (pages, done) => talk(pages, done) }),   // 测试用：直接放一段对话（说话任务 / 选回答，tests/apk.test.js）
     _art: ART,
+    signLabel: L => signLabel(L),   // 房子的招牌（world3d.js、world3d-open.js 也用）
   };
 })();
