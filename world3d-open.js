@@ -35,7 +35,13 @@
 (function () {
   'use strict';
 
-  const LOOK = (() => { try { return new URLSearchParams(location.search).get('look') || localStorage.getItem('echo-look') || ''; } catch (e) { return ''; } })();
+  // 用不用新画风：网址 ?look=new / ?look=std，或者设置里选过的（localStorage['echo-look'] = 'new' / 'std'）。都没有时：
+  // 公开版（销售版，DEX.sales）默认就是新画风——2026-11-20 老板在 iPhone 上没去设置里切、以为转不了镜头；家庭版（弟弟在玩的）默认还是经典。
+  const LOOK = (() => {
+    let v = '';
+    try { v = new URLSearchParams(location.search).get('look') || localStorage.getItem('echo-look') || ''; } catch (e) { v = ''; }
+    return v || (window.DEX && DEX.sales ? 'new' : '');
+  })();
 
   // 三档画质。high 给性能好的手机（画面里可以到一百万个三角形上下），mid 约三十万，low 约十二万——三档差得开，world.js 的自动降档才有用。
   // dpr 是上限；shadow：影子图多大；sub：地面每格分成几段；det：圆的东西（树冠、石头）细分几次；grass / lawn：草丛、草坪的密度；
@@ -3503,8 +3509,10 @@
   // 给 world.js 用的渲染器：户外地图用上面的新渲染器，其余的地图（室内、挑战馆、洞穴、海底……）交给 world3d.js 的老渲染器。
   // 两个渲染器各有一张画布，用哪个就显示哪张；老的那个第一次进屋时才建，之后一直留着（进出房子不用每次重建）
   function create(view, tier, A) {
-    const open = createOpen(view, tier, A);
-    if (!open) return null;
+    // 建不出来（这台设备画不了）：记进出错记录再照原样报出去，world.js 会退回老的 3D——不记的话手机上只看到「还是经典画面」，不知道为什么
+    let open = null;
+    try { open = createOpen(view, tier, A); } catch (e) { try { if (window.EchoErr) EchoErr.log('look', (e && (e.stack || e.message)) || String(e), 'world3d-open create ' + tier); } catch (e2) { /* 忽略 */ } throw e; }
+    if (!open) { try { if (window.EchoErr) EchoErr.log('look', 'createOpen returned null', 'world3d-open create ' + tier); } catch (e2) { /* 忽略 */ } return null; }
     let old = null, oldCv = null, cur = open;
     const show = () => { open.canvas.style.display = cur === open ? '' : 'none'; if (oldCv) oldCv.style.display = cur === old ? '' : 'none'; };
     function pick(map) {

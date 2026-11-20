@@ -4429,7 +4429,7 @@
     setMode: t => { S.settings.mode = t.dataset.m; if (t.dataset.m === 'auto') { RT.srBroken = false; RT.noRec = false; if (!SRC) toast(tr('g.ev.nosr')); } save(); settingsSheet(); },
     setTts: t => { S.settings.tts = t.dataset.m; RT.ttsBroken = false; save(); settingsSheet(); primeTTS(); say('Hello! How are you?'); },
     setGfx: t => { S.settings.gfx = t.dataset.m; if (t.dataset.m === 'auto') S.settings.gfxAuto = ''; save(); settingsSheet(); if (window.EchoWorld) EchoWorld.setGfx(); },
-    setLook: t => { const on = t.dataset.m === 'new'; if (on === lookOn()) return; try { if (on) localStorage.setItem('echo-look', 'new'); else localStorage.removeItem('echo-look'); } catch (e) { /* 存不下：只管这一次 */ } lookApply(on); settingsSheet(); },
+    setLook: t => { const on = t.dataset.m === 'new'; if (on === lookOn()) return; try { localStorage.setItem('echo-look', on ? 'new' : 'std');   /* 选经典也记下来：公开版不选的时候默认是新画风 */ } catch (e) { /* 存不下：只管这一次 */ } lookApply(on); settingsSheet(); },
     sfx: t => { S.settings.sfx = t.dataset.v === '1'; save(); settingsSheet(); },
     setMusic: t => { S.settings.music = t.dataset.v; save(); musicVol(); sceneMusic(); settingsSheet(); },
     // 「全部关卡直接开放」只对闯关练习有效；打开要家长密码，关上不用

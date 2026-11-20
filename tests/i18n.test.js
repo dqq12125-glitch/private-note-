@@ -1019,7 +1019,7 @@ async function lookSetting(srv) {
   await p.click('#sheet [data-act=setLook][data-m=std]');
   for (let i = 0; i < 40 && (await using()).who !== 'std'; i++) await W(150);
   const u2 = await using();
-  check(u2.map === 't0' && u2.who === 'std' && u2.ls == null, 'look · 换回经典：又是老的 3D（using() = std），localStorage 的键删掉了', u2);
+  check(u2.map === 't0' && u2.who === 'std' && u2.ls === 'std', 'look · 换回经典：又是老的 3D（using() = std），localStorage 记成 std', u2);
   // 2D 流畅模式：没有这一行
   await p.click('#sheet [data-act=setGfx][data-m="2d"]'); await W(400);
   check(!(await row()), 'look · 2D 流畅模式时设置里没有「画面风格」这一行');
