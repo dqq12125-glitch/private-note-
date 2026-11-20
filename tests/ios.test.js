@@ -11,7 +11,8 @@
 //    ios-testflight.yml 只能手动点、先核对再传、密钥不进日志、只上传日志
 // 8. 工程（project.yml）、Swift 里几处容易出错的地方（WebKit 回调的写法、调试包才能被网页检查器连、被叫停的请求不再回）、自测页覆盖每个方法
 // 9. 订阅（Store.swift）和「通过 Apple 登录」（AppleSignIn.swift）：iPhone 才有的方法（IOS_ONLY 表）三处 + 自测页 + 两份 README 对得上、
-//    finish 只在网页确认以后、没带权限的包当场回 unavailable、本地 App Store（Store.storekit）的商品和打包设置一样
+//    finish 只在网页确认以后、没带权限的包当场回 unavailable、本地 App Store（Store.storekit）的商品和打包设置一样；
+//    口语题的本机识别（LocalSpeech.swift，也在 IOS_ONLY 里）：只在手机上识别、答案不交给识别、打断 / 后台当场停、Info.plist 有语音识别的说明
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -59,6 +60,8 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   const IOS_ONLY = {
     iapProducts: ['async', 2], iapBuy: ['async', 3], iapRestore: ['async', 1], iapCurrent: ['async', 1], iapPending: ['async', 1],
     iapFinish: ['async', 2], iapManage: ['async', 1], appleSignIn: ['async', 2], appleCredentialState: ['async', 2],
+    // 口语题的本机识别（LocalSpeech.swift，2026-11-20）
+    speechState: ['async', 1], speechStart: ['async', 2], speechStop: ['async', 1],
   };
   const IOSN = Object.keys(IOS_ONLY);
   const ALL = names.concat(IOSN);
@@ -123,6 +126,19 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(!prompts.length && r1 === undefined && r2 === undefined && posted.length === 5 && posted[0].m === 'iapProducts' && posted[0].a[0] === 11 && posted[0].a[1] === 'com.a.monthly,com.a.yearly' &&
     posted[1].a.length === 3 && posted[2].a[1] === '2000000123456789' && posted[3].m === 'appleSignIn' && posted[3].a[0] === 14 && posted[4].a.length === 1,
     'iPhone 才有的也走 messageHandlers.echo：编号转整数，iapProducts 的数组变成 "a,b"，交易编号按字符串传（不丢精度）', posted);
+  posted.length = 0;
+  const r3 = N.speechStart(21, JSON.stringify({ short: true })); N.speechState('22'); N.speechStop(23.7);
+  check(!prompts.length && r3 === undefined && posted.length === 3 && posted[0].m === 'speechStart' && posted[0].a[0] === 21 && posted[0].a[1] === '{"short":true}' &&
+    posted[1].m === 'speechState' && posted[1].a[0] === 22 && posted[2].m === 'speechStop' && posted[2].a[0] === 23,
+    '本机识别的三个也走 messageHandlers.echo：选项按 JSON 文字传', posted);
+  // 本机识别在听的时候，网页那一层的声音类别是「边录边放」，停了换回「播放」（navigator.audioSession，假的）
+  {
+    const as = { type: 'auto' }, c2 = Object.assign({}, ctx, { navigator: { audioSession: as } });
+    c2.window = c2; delete c2.EchoNative; delete c2.__echoIOS;
+    vm.createContext(c2); vm.runInContext(shimSrc, c2, { filename: 'echo-native.js' });
+    const t0 = as.type; c2.__echoIOS.speech(true); const t1 = as.type; c2.__echoIOS.speech(false); const t2 = as.type;
+    check(t0 === 'playback' && t1 === 'play-and-record' && t2 === 'playback', 'echo-native.js 的 __echoIOS.speech：听的时候 play-and-record，停了回 playback', [t0, t1, t2]);
+  }
   answer = () => null;
   check(N.edition() === 'sales' && N.micPermission() === 'denied' && N.backupList() === '[]' && N.storage() === '{}',
     '原生没回音时的默认值（edition = sales，最保守）');
@@ -151,6 +167,26 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(/"appleSignIn": AppleSignIn\.available/.test(bridge) && /"iapProducts": \[BuildConfig\.iapMonthly, BuildConfig\.iapYearly\]/.test(bridge),
     'diag() 还说这个包能不能通过 Apple 登录、订阅的两个商品编号（网页决定显不显示那个按钮）');
   check(/Store\.shared\.onEvent = \{[\s\S]{0,200}emit\("echo-iap"/.test(bridge), 'Transaction.updates 来的交易发事件 echo-iap 给网页（和 echo-mic、echo-backup-picked 一样的写法）');
+  // 口语题的本机识别（LocalSpeech.swift）：过程走事件 echo-speech，三个方法的结果和别的异步方法一样回 window.__echoNative
+  check(/lazy var speech = LocalSpeech\(engine: AppleSpeechEngine\(\)\) \{[\s\S]{0,120}emit\("echo-speech"/.test(bridge) &&
+    /case "speechStart":[\s\S]{0,200}speech\.start\(sid: id, opts: Bridge\.str\(a, 1\)\)[\s\S]{0,120}self\?\.callback\(gen, id, ok \? "ok" : "fail", Bridge\.json\(body\)\)/.test(bridge) &&
+    /case "speechState":[\s\S]{0,120}callback\(h\.gen, Bridge\.int\(a, 0\), "ok", Bridge\.json\(speech\.state\(\)\)\)/.test(bridge) &&
+    /case "speechStop":[\s\S]{0,160}speech\.stop\(reason: "stop"\)/.test(bridge),
+    '本机识别：speechState / speechStart / speechStop 回 window.__echoNative(id, ok / fail, JSON)，过程发事件 echo-speech');
+  {
+    const ls = fs.readFileSync(path.join(SRC, 'LocalSpeech.swift'), 'utf8');
+    const code = ls.split(/\r?\n/).map(l => l.replace(/\/\/.*$/, '')).join('\n');   // 不看注释
+    check(/req\.requiresOnDeviceRecognition = true/.test(code) && !/requiresOnDeviceRecognition = false/.test(code) && /supportsOnDeviceRecognition else/.test(code),
+      'LocalSpeech.swift：只在手机上识别（requiresOnDeviceRecognition = true），手机不支持就回 unavailable，不退回苹果的服务器');
+    check(!/contextualStrings|customizedLanguageModel|SFSpeechLanguageModel/.test(code), '诚实打分：识别不知道答案（代码里没有 contextualStrings、自定义语言模型）');
+    check(/req\.shouldReportPartialResults = true/.test(code) && /"partial"/.test(code) && /"voice"/.test(code) && /"end"/.test(code), '边说边出字（partial），出声 / 不出声（voice）、停了（end）都发事件');
+    check(/interruptionNotification[\s\S]{0,300}stop\(reason: "interrupted"\)/.test(code) && /didEnterBackgroundNotification[\s\S]{0,200}stop\(reason: "background"\)/.test(code) &&
+      /AVAudioEngineConfigurationChange[\s\S]{0,200}"audio-changed"/.test(code), '来电 / Siri 打断、切到后台、声音设备变了：当场停');
+    check(/AppAudio\.configure\(\)/.test(code) && !/setActive\(false/.test(code) && !/\.measurement|\.voiceChat|setVoiceProcessingEnabled/.test(code),
+      '录音用 AppAudio 的声音会话（边录边放 + 默认扬声器），停了不关会话、不用 measurement / voiceChat：接着放的声音还从扬声器出来、音量不变');
+    check(/protocol SpeechEngine/.test(code) && /final class AppleSpeechEngine: SpeechEngine/.test(code), '识别引擎单独一层（以后换 SpeechAnalyzer 只再写一个 SpeechEngine）');
+    check((fs.readFileSync(path.join(SRC, 'GameViewController.swift'), 'utf8').match(/bridge\.speech\.stop\(reason: "page"\)/g) || []).length === 2, '网页进程挂了重建时把本机识别停掉');
+  }
   check(IOSN.filter(n => n.startsWith('iap')).every(n => new RegExp('case "' + n + '":[\\s\\S]{0,240}storeCall\\(h\\.gen, Bridge\\.int\\(a, 0\\)\\)').test(bridge)) &&
     /case "appleSignIn":[\s\S]{0,200}apple\.signIn\(nonce: Bridge\.str\(a, 1\)\)/.test(bridge) && /case "appleCredentialState":[\s\S]{0,200}apple\.credentialState\(user: Bridge\.str\(a, 1\)\)/.test(bridge) &&
     /self\?\.callback\(gen, id, r\.ok \? "ok" : "fail", r\.json\)/.test(bridge),
@@ -161,6 +197,9 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   const pv = key => ((plist.match(new RegExp('<key>' + key + '</key>\\s*<(string|true|false)\\s*/?>([^<]*)')) || []).slice(1));
   const mic = pv('NSMicrophoneUsageDescription');
   check(mic[0] === 'string' && /[一-鿿]/.test(mic[1]) && mic[1].length >= 15, 'Info.plist 有中文的麦克风说明', mic[1]);
+  // 本机识别第一次要弹「语音识别」的权限框：没有这条说明，requestAuthorization 会让 App 直接崩
+  const spd = pv('NSSpeechRecognitionUsageDescription');
+  check(spd[0] === 'string' && /[一-鿿]/.test(spd[1]) && /手机上/.test(spd[1]) && /不会上传/.test(spd[1]), 'Info.plist 有中文的语音识别说明（在手机上识别、声音不上传）', spd[1]);
   check(!/NSAppTransportSecurity|NSAllowsArbitraryLoads|NSExceptionDomains|NSAllowsLocalNetworking/.test(plist), 'Info.plist 没有放开 http 的例外（App Transport Security 照默认：只许 https）');
   check(pv('ITSAppUsesNonExemptEncryption')[0] === 'false', '出口合规：ITSAppUsesNonExemptEncryption = false（只用系统的 HTTPS 和 SHA-256）');
   check(pv('CFBundleDisplayName')[1] === '回声岛' && pv('UIStatusBarHidden')[0] === 'true' && pv('UIFileSharingEnabled')[0] === 'true', 'App 名字「回声岛」、不显示状态栏、备份在「文件」App 里看得到');

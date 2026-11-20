@@ -257,6 +257,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         web = nil
         gen += 1
         bridge.net.closeAll()
+        bridge.speech.stop(reason: "page")           // 口语题的本机识别还开着：停掉（新网页不认它）
         if UIApplication.shared.applicationState != .active {
             pendingReopen = true
             return
@@ -301,6 +302,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
             web = nil
             gen += 1
             bridge.net.closeAll()
+            bridge.speech.stop(reason: "page")
         }
         reopen()
     }

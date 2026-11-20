@@ -70,6 +70,11 @@
       'tk.r.concern': '💛 如果你遇到了难过或者不安全的事，记得马上告诉爸爸妈妈或者老师。',
       // 口语题的识别
       'tk.asr.say': '🎤 请说……', 'tk.asr.busy': '🎧 识别中……',
+      // 口语题用的是哪个识别（iPhone 的本机识别 / 云端识别）：设置页、开口前的小检查、周报诊断一行、家长须知。不写是哪家的
+      'tk.sr.env': '✅ 口语自动打分：本机识别（用 iPhone 自带的语音识别在手机上听写，不用联网、不用登录；手机用不了时改用云端识别）',
+      'tk.sr.chk.dev': '麦克风没问题！口语题用本机识别：在这台手机上听写，不用联网。', 'tk.sr.chk.cloud': '（口语识别：云端，要联网）',
+      'tk.sr.rp': ' · 口语识别：本机 {a} 次、云端 {b} 次，本机说完约 {s} 秒出分',
+      'tk.pv.dev': '<li>iPhone 上的口语题先用 iPhone 自带的语音识别，<b>在这台手机上</b>把说的英语写成文字来打分，这段声音<b>不上传</b>；只有这台手机用不了本机识别（不支持、没允许）时，才按上面那样发出去识别。</li>',
       // 家长：设置服务、聊天记录、家长看看、家长须知
       'tk.cfg.why': '改 AI 密钥', 'tk.cfg.key': '家长设置：阿里云百炼 API Key（只存在这台手机里，用来和岛民聊天）\n已经设置过的话，留空就是不改；填 clear 删除',
       'tk.cfg.ok': '✅ 已连上阿里云，可以和岛民聊天了', 'tk.cfg.nokey': '还没有设置密钥',
@@ -131,6 +136,10 @@
       'tk.r.late.h': 'Chat over! This chat counts 👍', 'tk.r.late.p': 'There was no time to finish the comments (maybe the network is slow), but the lines you said have been saved.',
       'tk.r.concern': '💛 If something sad or unsafe is happening to you, tell a parent or a teacher right away.',
       'tk.asr.say': '🎤 Speak now…', 'tk.asr.busy': '🎧 Recognising…',
+      'tk.sr.env': '✅ Automatic speaking score: on-device recognition (the iPhone\'s own speech recognition writes down what you say on this phone; no internet or sign-in needed. If it can\'t be used, cloud recognition is used instead)',
+      'tk.sr.chk.dev': 'The microphone works! Speaking questions use on-device recognition: it all happens on this phone, no internet needed.', 'tk.sr.chk.cloud': ' (Speech recognition: cloud, needs internet)',
+      'tk.sr.rp': ' · Speech recognition: on device {a}, cloud {b}; on device the score comes about {s}s after you stop',
+      'tk.pv.dev': '<li>On iPhone, speaking questions first use the iPhone\'s own speech recognition to write down what was said <b>on this phone</b>; that audio is <b>not uploaded</b>. Only if this phone can\'t use on-device recognition (not supported, or not allowed) is it sent out for recognition as described above.</li>',
       'tk.cfg.why': 'Change the AI key', 'tk.cfg.key': 'Parent Settings: Alibaba Cloud Model Studio API key (kept only on this phone, used to chat with islanders)\nIf a key is already set, leave this empty to keep it; type clear to delete it',
       'tk.cfg.ok': '✅ Connected to Alibaba Cloud. You can chat with the islanders now', 'tk.cfg.nokey': 'No key set yet',
       'tk.cfg.url': 'Chat service address (for parents):\nfor example wss://your-server-domain ; to try it on this computer, use ws://localhost:8787\nLeave empty to go back to the default',
@@ -1148,6 +1157,8 @@
   // AI 点评：目标句子 + 识别出来的话 → 一句话（按界面语言写），指出最主要的差别、怎么读对。提示词在 talk-core 的 tipBody（中转服务用同一份）
   const TIPS = {};
   async function aiTip(target, heard) {
+    // iPhone 的本机识别不联网、不用登录也能打分：没网、云端模式没登录时点评就不要了（不白发一个请求、不挂「没网」的红条）
+    if ((typeof navigator !== 'undefined' && navigator.onLine === false) || (cloudOn() && !(ACC() && ACC().signed()))) return '';
     const ui = uiNow(), k = ui + '|' + target + '|' + heard, core = Core();
     if (TIPS[k] !== undefined) return TIPS[k];
     const body = core.tipBody(target, heard, ui);
@@ -1268,6 +1279,7 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && !LM.sink) lmShut();
     if (document.hidden && C && !C.ending && !C.done && (C.ready || C.turns.some(t => t.who === 'you'))) end('hidden');
+    if (!document.hidden) nspRefresh();   // iPhone：从「设置」里回来，本机识别的权限可能变了
   });
   // 浮点 → 16kHz 16 位 PCM（不是 16k 的设备按比例取样，跨块记住小数位置）
   function pcm16(f, rate, st) {
@@ -1316,14 +1328,157 @@
     }
     return r.ok ? { text, err: text ? null : 'no-speech' } : { text: '', err: 'network', why: noteAi('asr', r.text) };
   }
+  // ---------- iPhone：口语题先用手机自带的本机识别（2026-11-20 老板：「那个识别，还是太慢了，有时候还不准」） ----------
+  // 原生 ios/App/Sources/LocalSpeech.swift（SFSpeechRecognizer，只在手机上识别）：不联网、不用登录、不算 AI 额度，边说边出字。
+  // · 打分照样诚实：识别不知道答案（原生那边不设 contextualStrings），打分还是 game.js 的 scoreSpeech()。
+  // · 什么时候算说完由这里定，不等苹果的「最终结果」：有字以后字停住不变 0.4 秒（单词）/ 0.6 秒（句子）/ 1.5 秒（说几句话），
+  //   并且原生说人已经不出声了（voice 事件；一直「在出声」最多再等 1.2 秒，免得吵的地方停不下来）；对上答案（o.match）当场结束。
+  // · 本机开不起来（这台手机没有本机识别、没给语音识别的权限、正在弹框、录音开不起来、超时）：同一次里接着走云端识别，孩子不用再点一下；
+  //   「没有 / 不允许」（unavailable / denied / restricted）这次打开 App 记住，不再每题先试本机（回到前台再问一次原生，打开了就又用本机）。
+  //   麦克风被拒是例外：云端也要麦克风，直接按「麦克风被拒」回（game.js 弹「去打开」）。
+  // · 每次识别的计时（点了到开始听、第一个字、结束、最后一个字到结束）留在内存里：EchoTalk.lastSpeech() / speechLog()，不上传。
+  // · 想对比时可以临时关掉本机识别：localStorage['echo-sr'] = 'cloud'（只给调试用，界面上没有开关）。
+  const NSP = { st: null, off: '', fails: 0 };
+  const SRLOG = [];
+  const nspHas = () => { try { const N = window.EchoNative; return !!(window.ECHO_IOS && N && typeof N.speechStart === 'function' && typeof N.speechState === 'function' && typeof N.speechStop === 'function'); } catch (e) { return false; } };
+  const nspUsable = st => !!st && st.onDevice !== false && st.auth !== 'denied' && st.auth !== 'restricted';
+  // 现在口语题会不会先用本机识别（还没问到原生的状态时先当能用：开不起来同一次里就改走云端）
+  const localSR = () => nspHas() && !NSP.off && (!NSP.st || nspUsable(NSP.st)) && LS('echo-sr') !== 'cloud';
+  function nspRefresh() {
+    if (!nspHas()) return Promise.resolve(null);
+    return nativeCall('speechState', [], 4000).then(r => {
+      if (r.type !== 'ok') return NSP.st;
+      try { NSP.st = JSON.parse(r.data || '{}'); } catch (e) { return NSP.st; }
+      // 家长后来在「设置」里打开了语音识别 / 手机能用了：不再记着「用不了」
+      if (NSP.off && nspUsable(NSP.st) && NSP.st.auth === 'authorized' && NSP.st.available !== false) { NSP.off = ''; NSP.fails = 0; }
+      return NSP.st;
+    });
+  }
+  // 本机识别一次：→ { text, err, how }；本机开不起来、要改走云端时 → null（D.fell 写着原因）
+  function nativeListen(o, D) {
+    return new Promise(resolve => {
+      const N = window.EchoNative, id = ++nid, now = () => performance.now();
+      const short = !!o.short, need = o.long ? 1500 : short ? 400 : 600;
+      let done = false, started = 0, text = '', chg = 0, voice = false, tick = 0, tm = 0;
+      const io = window.__echoIOS;
+      const audio = on => { try { if (io && io.speech) io.speech(on); } catch (e) { /* 老的壳子 */ } };
+      const stopNative = () => { try { N.speechStop(++nid); } catch (e) { /* 不在 App 里 */ } };
+      const cleanup = () => { window.removeEventListener('echo-speech', onEv); clearInterval(tick); clearTimeout(tm); delete NWS[id]; if (SR.stop === userStop) SR.stop = null; audio(false); };
+      const finish = how => {
+        if (done) return; done = true;
+        stopNative(); cleanup();
+        const t = text.trim();
+        // 被来电 / Siri 打断、切到后台：说了一半的不拿去打分（不算一次尝试，孩子回来再说）
+        if (t && how !== 'interrupted') { NSP.fails = 0; resolve({ text: t, err: null, how, ms: Math.round(now() - D.t0) }); return; }
+        resolve({ text: '', err: how === 'user' || how === 'interrupted' ? 'aborted' : 'no-speech', how });
+      };
+      // 开不起来：改走云端（null）；「没有 / 不允许」记住
+      const fall = code => {
+        if (done) return; done = true;
+        cleanup();
+        D.fell = code || 'error';
+        if (code === 'unavailable' || code === 'denied' || code === 'restricted') NSP.off = code;
+        else if (code === 'audio' && ++NSP.fails >= 2) NSP.off = 'audio';
+        if (code === 'mic') { D.eng = 'device'; resolve({ text: '', err: 'not-allowed', why: 'NotAllowedError', how: 'mic' }); return; }
+        resolve(null);
+      };
+      // 孩子点了停：开始听了就拿已经听到的打分；还在等原生开起来（弹权限框）就整个不要了，也不改走云端
+      const userStop = () => {
+        if (started) { finish('user'); return; }
+        if (done) return;
+        done = true; stopNative(); cleanup();
+        resolve({ text: '', err: 'aborted', how: 'user' });
+      };
+      const onEv = e => {
+        const d = e && e.detail;
+        if (!d || d.sid !== id || done || !started) return;
+        if (d.kind === 'partial' || d.kind === 'final') {
+          const t = String(d.text || '').replace(/\s+/g, ' ').trim();
+          if (t && t !== text) {
+            text = t; chg = now();
+            D.chg = chg; if (D.first == null) D.first = chg - D.t0;
+            if (o.onState) o.onState(t);
+            if (o.match && o.match(t)) { finish('match'); return; }
+          }
+          if (d.kind === 'final') finish('final');
+        } else if (d.kind === 'voice') {
+          voice = !!d.on;
+          if (voice && D.voice == null) D.voice = now() - D.t0;
+        } else if (d.kind === 'error') {
+          D.nerr = String(d.code || '');
+          // 原生自己出错（不是「没听到声音」那种）：连着两次没拿到字就先不用本机了
+          if (!text && !/\b1110\b/.test(D.nerr) && ++NSP.fails >= 2) NSP.off = 'error';
+          finish('error');
+        } else if (d.kind === 'end') finish(d.reason === 'interrupted' || d.reason === 'background' || d.reason === 'audio-reset' ? 'interrupted' : 'end');
+      };
+      // 每 50 毫秒看一眼：说完了没有、太久没有
+      const check = () => {
+        if (done) return;
+        const t = now(), since = t - started;
+        if (since > (o.maxMs || 8000)) { finish('max'); return; }
+        if (!text) { if (since > (o.long ? 7000 : 5000) && !voice) finish('silence'); return; }
+        const still = t - chg;
+        if (still >= need && (!voice || still >= need + 1200)) finish('done');
+      };
+      lmShut();       // 云端识别预热着的网页麦克风先放掉：这次原生自己录
+      audio(true);
+      window.addEventListener('echo-speech', onEv);
+      SR.stop = userStop;
+      // 第一次要弹「语音识别」和麦克风的权限框：等久一点；平时 5 秒还没开起来就改走云端
+      const st = NSP.st, asks = !st || st.auth !== 'authorized' || st.mic !== 'granted';
+      tm = setTimeout(() => { if (!started) { stopNative(); fall('timeout'); } }, asks ? 60000 : 5000);
+      NWS[id] = (type, data) => {
+        delete NWS[id]; clearTimeout(tm);
+        let j = {}; try { j = JSON.parse(data || '{}') || {}; } catch (e) { j = {}; }
+        if (done) { if (type === 'ok') stopNative(); return; }
+        if (type !== 'ok') { fall(String(j.error || 'error')); return; }
+        started = now(); D.eng = 'device'; D.listen = started - D.t0; D.nms = j.ms;
+        NSP.st = Object.assign(NSP.st || { onDevice: true }, { auth: 'authorized', mic: 'granted' });   // 开起来了：权限都有了（下次不用等弹框那么久）
+        if (o.onState) o.onState(tx('tk.asr.say'));
+        tick = setInterval(check, 50);
+      };
+      try { N.speechStart(id, JSON.stringify({ short, long: !!o.long, locale: 'en-US' })); } catch (e) { fall('error'); }
+    });
+  }
+  // 记一次识别的计时（只在内存里，最近 20 次）：listen 点了到开始听、first 第一个字、end 结束、lag 最后一个字变了到结束（说完以后等了多久）
+  function srNote(D, r) {
+    const now = performance.now(), ms = v => (v == null ? null : Math.round(v));
+    const rec = { at: D.at, eng: D.eng || '', short: D.short, how: (r && r.how) || '', ok: !!(r && r.text), err: (r && r.err) || '', fell: D.fell || '',
+      listen: ms(D.listen), first: ms(D.first), voice: ms(D.voice), end: ms(now - D.t0), lag: D.chg ? ms(now - D.chg) : null, ready: ms(D.ready), nms: D.nms == null ? null : D.nms };
+    if (D.nerr) rec.nerr = D.nerr;
+    SRLOG.push(rec); if (SRLOG.length > 20) SRLOG.shift();
+    if (r) r.eng = rec.eng;
+    return r;
+  }
+  // 给 game.js 的几句话：设置页「口语自动打分：本机识别」、开口前小检查用的是哪个、周报诊断一行
+  function srText(k, p) {
+    if (k === 'env') return tx('tk.sr.env');
+    if (k === 'chk') return p === 'device' ? tx('tk.sr.chk.dev') : tx('tk.sr.chk.cloud');
+    if (k === 'rp') return tx('tk.sr.rp', p);
+    return '';
+  }
   // o.onState(文字)：「🎤 请说……」和边说边出来的文字；o.match(文字) → true 就立刻结束；o.short：单词/短语（停顿等得短一点）
+  // iPhone 上先试本机识别（nativeListen），不行再走下面的云端识别（cloudListen）。返回值多一个 eng：'device' 本机 / 'cloud' 云端
   async function listenOnce(o) {
     o = o || {};
+    const D = { at: Date.now(), t0: performance.now(), short: !!o.short, eng: '', fell: '' };
+    let r = null;
+    if (localSR() && !C) r = await nativeListen(o, D);
+    if (!r && D.fell) {
+      // 本机开不起来，云端又用不了（没有密钥 / 云端模式没登录）：和以前没有 AI 时一样（game.js 走「先跳过」、请他登录）
+      if (!cloudSR()) r = { text: '', err: 'nokey', why: 'nokey' };
+      else if (cloudOn() && !(ACC() && ACC().signed())) r = { text: '', err: 'nokey', why: 'signin' };
+    }
+    if (!r) { D.eng = 'cloud'; r = await cloudListen(o, D); }
+    return srNote(D, r);
+  }
+  async function cloudListen(o, D) {
     if (!cloudSR()) return { text: '', err: 'service-not-allowed' };
     if (cloudOn() && !(ACC() && ACC().signed())) return { text: '', err: 'network', why: noteAi('asr', '{"error":"auth"}') };   // 云端模式没登录：不开麦克风
     if (C) return { text: '', err: 'busy' };   // 正在和岛民聊天，麦克风被占着
     const mic = await lmOpen();
     if (mic.err) return { text: '', err: mic.err, why: mic.why };
+    D.listen = performance.now() - D.t0;
     const rate = mic.rate, chunks = [], st = { pos: 0 }, t0 = performance.now();
     let len = 0, voiced = 0, quiet = 0, done = false, over = false, ready = false, queue = [], pend = [], pendN = 0, texts = [], cur = '', grace = 0, inSpeech = false;
     let dead = RTA.fails >= 3;
@@ -1332,6 +1487,7 @@
       const fail = d => { if (dead) return; dead = true; RTA.fails++; if (d) noteAi('asr-rt', d); };
       const heard = () => {
         const t = full(); if (!t) return;
+        if (t !== D.lastT) { D.lastT = t; D.chg = performance.now(); if (D.first == null) D.first = D.chg - D.t0; }
         if (o.onState) o.onState(t);
         if (o.match && o.match(t)) finish('match');
       };
@@ -1340,7 +1496,7 @@
         if (type === 'open') {
           sock.send(JSON.stringify({ type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language: 'en' },
             turn_detection: { type: 'server_vad', threshold: 0.2, silence_duration_ms: o.short ? 400 : o.long ? 1000 : 600 } } }));
-          ready = true; queue.forEach(s => sock.send(s)); queue = [];
+          ready = true; D.ready = performance.now() - D.t0; queue.forEach(s => sock.send(s)); queue = [];
         } else if (type === 'message') {
           let m; try { m = JSON.parse(data); } catch (e) { return; }
           if (m.type === 'conversation.item.input_audio_transcription.text') { cur = (m.text || '') + (m.stash || ''); heard(); }
@@ -1457,23 +1613,24 @@
   function privacySheet() {
     if (cloudOn()) {   // 云端模式：经过回声岛的服务器，服务器不存聊天记录（举报的那几句存 90 天）
       G.openModal('<h2>' + hx('tk.pv.h') + '</h2><ul class="tk-notice">' +
-        hx('tk.pv.s1', { l: aiLabel() }) + hx('ac.pv.s2') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('ac.pv.s5') + hx('tk.pv.name') + '</ul>' +
+        hx('tk.pv.s1', { l: aiLabel() }) + hx('ac.pv.s2') + (nspHas() ? hx('tk.pv.dev') : '') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('ac.pv.s5') + hx('tk.pv.name') + '</ul>' +
         '<div class="tk-btns"><button class="btn ghost small" data-act="suDoc" data-doc="privacy">' + hx('tk.pv.doc') + '</button><button class="btn ghost small" data-act="talk_forget">' + hx('tk.pv.forget') + '</button><button class="btn" data-act="close">' + hx('g.ok') + '</button></div>');
       return;
     }
     if (window.EchoSetup && EchoSetup.sales && EchoSetup.sales()) {   // 销售版：没有中转服务，用的是家长自己的阿里云账号
       G.openModal('<h2>' + hx('tk.pv.h') + '</h2><ul class="tk-notice">' +
-        hx('tk.pv.s1', { l: aiLabel() }) + hx('tk.pv.s2') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('tk.pv.s5', { n: Math.round(DAILY_SEC / 60) }) + hx('tk.pv.name') + '</ul>' +
+        hx('tk.pv.s1', { l: aiLabel() }) + hx('tk.pv.s2') + (nspHas() ? hx('tk.pv.dev') : '') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('tk.pv.s5', { n: Math.round(DAILY_SEC / 60) }) + hx('tk.pv.name') + '</ul>' +
         '<div class="tk-btns"><button class="btn ghost small" data-act="suDoc" data-doc="privacy">' + hx('tk.pv.doc') + '</button><button class="btn ghost small" data-act="talk_forget">' + hx('tk.pv.forget') + '</button><button class="btn" data-act="close">' + hx('g.ok') + '</button></div>');
       return;
     }
     G.openModal('<h2>' + hx('tk.pv.h') + '</h2><ul class="tk-notice">' +
-      hx('tk.pv.w1') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('tk.pv.w4') + hx('tk.pv.w5') + hx('tk.pv.name') + '</ul>' +
+      hx('tk.pv.w1') + (nspHas() ? hx('tk.pv.dev') : '') + hx('tk.pv.role') + hx('tk.pv.safe') + hx('tk.pv.w4') + hx('tk.pv.w5') + hx('tk.pv.name') + '</ul>' +
       '<div class="tk-btns"><button class="btn ghost small" data-act="talk_forget">' + hx('tk.pv.forget') + '</button><button class="btn" data-act="close">' + hx('g.ok') + '</button></div>');
   }
 
   function init(api) {
     G = api;
+    nspRefresh();   // iPhone：本机识别能不能用（不弹框）
     return {
       talk_open: t => open(t.dataset.npc),
       // 委托没完成点「再试一次」：接着聊，先不告诉大地图结果（again）
@@ -1523,5 +1680,8 @@
   window.EchoTalk = {
     init, homeHTML, open, openPerson, openQuest, blocked, errText: errTxt, relayUrl, cloudSR, listenOnce, aiTip, placeJudge, cloudTTS, keyTest, get AI_LABEL() { return aiLabel(); }, stopListen: () => SR.stop && SR.stop(),
     today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG, nativeCall,
+    // iPhone 的本机识别：口语题现在会不会先用它、最近一次 / 最近 20 次识别的计时（只在内存里）、给设置页 / 小检查 / 周报的话
+    localSR, lastSpeech: () => (SRLOG.length ? Object.assign({}, SRLOG[SRLOG.length - 1]) : null), speechLog: () => SRLOG.map(x => Object.assign({}, x)),
+    speechState: () => (NSP.st ? Object.assign({ off: NSP.off }, NSP.st) : { off: NSP.off, has: nspHas() }), speechRefresh: nspRefresh, srText,
   };
 })();

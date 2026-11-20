@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>回声岛要听你说的英语，才能给口语打分、让你和岛民用英语聊天。声音只用来识别和打分。</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>口语题用 iPhone 自带的语音识别，在这台手机上把你说的英语写成文字来打分。识别在手机上完成，这段声音不会上传。</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIFileSharingEnabled</key>

@@ -502,7 +502,9 @@
   }
   function leftLine(me) {
     const q = me && me.quota; if (!q || !q.talk) return '';
-    return '<p class="ac-left">' + h('ac.m.left', { n: Math.floor((talkLeft() || 0) / 60), time: timeOf(q.resetsAt) }) + (q.asr ? '<br><small>' + h('ac.m.asr', { n: q.asr.left }) + '</small>' : '') + '</p>';
+    // iPhone 的口语题用本机识别（不算额度）：「口语打分今天还能用 n 次」就不写了，免得以为口语题也在扣次数
+    const local = (() => { try { return !!(W.EchoTalk && EchoTalk.localSR && EchoTalk.localSR()); } catch (e) { return false; } })();
+    return '<p class="ac-left">' + h('ac.m.left', { n: Math.floor((talkLeft() || 0) / 60), time: timeOf(q.resetsAt) }) + (q.asr && !local ? '<br><small>' + h('ac.m.asr', { n: q.asr.left }) + '</small>' : '') + '</p>';
   }
   function memberSheet() {
     const me = A.me, k = kid();

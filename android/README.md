@@ -148,6 +148,7 @@ APK 里没有家长密码时 `hasPin()` 是 false、`checkPin()` 一律 false—
 
 公开版的订阅和「通过 Apple 登录」只在 iPhone 版里有（`ios/README.md`「订阅和登录」）：`iapProducts`、`iapBuy`、`iapRestore`、`iapCurrent`、`iapPending`、`iapFinish`、`iapManage`、`appleSignIn`、`appleCredentialState`，都是异步的（第一个参数是编号，结果回 `window.__echoNative(id, 'ok' / 'fail', JSON)`），另有事件 `echo-iap`。
 **安卓对应的：以后**（Google Play 结算 + 安卓的登录）。到时候在 MainActivity 里加，把它们从 `tests/ios.test.js` 的 `IOS_ONLY` 表里拿掉、写进上面的表；在那之前网页先看 `EchoNative.iapProducts` 有没有再用。
+口语题的本机识别（2026-11-20，`ios/README.md`「口语题的本机识别」）也只在 iPhone 版里有：`speechState`、`speechStart`、`speechStop`，同样是异步的，过程走事件 `echo-speech`。安卓这边口语题照旧走阿里云识别（`talk.js` 只在 `window.ECHO_IOS` 并且有 `EchoNative.speechStart` 时才用本机识别），**安卓不做**。
 
 ## 在模拟器上看原生桥
 

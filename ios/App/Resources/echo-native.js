@@ -3,7 +3,7 @@
 // 所以 game.js / talk.js / setup.js 不用为 iPhone 改。安卓上这些方法是同步的，这里分两条路：
 //   同步（SYNC）：window.prompt('__echo_native__:' + JSON) → 原生在 prompt 回调里办完、把结果当 prompt 的返回值交回来；
 //   异步（ASYNC，连阿里云的四个，没有返回值）：webkit.messageHandlers.echo.postMessage(…)，结果由原生调 window.__echoNative(id, 类型, 数据)。
-// 另有 iPhone 才有的几个（IOS_ONLY：订阅、通过 Apple 登录），走同一条异步的路；安卓的 EchoNative 里没有它们。
+// 另有 iPhone 才有的几个（IOS_ONLY：订阅、通过 Apple 登录、口语题的本机识别），走同一条异步的路；安卓的 EchoNative 里没有它们。
 // 另外还管几件只有 iPhone 才要管的事（都在这个文件里，不动游戏的代码）：声音不被静音键关掉、开麦克风时切到「边录边放」、
 // 来电 / Siri 打断以后把声音接上、麦克风的 16kHz 声音通道在 iPhone 上会丢样本所以改用系统默认的（WebKit bug 251350）、不让长按选字 / 双指缩放、
 // <html> 上加 class="echo-ios"（style.css 末尾横屏让开灵动岛的几条认它）、请求持久存储。
@@ -75,9 +75,14 @@
     iapManage: ['async', 'i'],
     // 通过 Apple 登录
     appleSignIn: ['async', 'is'],      // (id, 网页生成的随机 nonce 原文)
-    appleCredentialState: ['async', 'is']
+    appleCredentialState: ['async', 'is'],
+    // 口语题的本机识别（LocalSpeech.swift，iPhone 自带的语音识别、只在手机上识别）：过程是事件 echo-speech；talk.js 的 listenOnce 用
+    speechState: ['async', 'i'],       // 能不能用（不弹框）
+    speechStart: ['async', 'is'],      // (id, 选项 JSON 文字)：第一次弹权限框；真的开始录了才回 ok
+    speechStop: ['async', 'i']
   };
-  var IOS_ONLY = ['iapProducts', 'iapBuy', 'iapRestore', 'iapCurrent', 'iapPending', 'iapFinish', 'iapManage', 'appleSignIn', 'appleCredentialState'];
+  var IOS_ONLY = ['iapProducts', 'iapBuy', 'iapRestore', 'iapCurrent', 'iapPending', 'iapFinish', 'iapManage', 'appleSignIn', 'appleCredentialState',
+    'speechState', 'speechStart', 'speechStop'];
 
   function make(name, spec) {
     var kind = spec[0], types = spec[1], hasRet = spec.length > 2, dflt = spec[2];
@@ -124,10 +129,19 @@
   sessionType('playback');
 
   var live = [];   // 还开着的麦克风声音轨道
+  // 口语题的本机识别（原生 LocalSpeech.swift 自己录音）在听：网页这一层也说「边录边放」——平时的 playback 下 WebKit 放声音时
+  // 可能把整个 App 的声音类别换成只放不录，原生的录音就断了。talk.js 开始听时 speech(true)、停了 speech(false)
+  var speechOn = false;
+  function speech(on) {
+    speechOn = !!on;
+    if (speechOn) sessionType('play-and-record');
+    else if (!live.length) sessionType('playback');
+    return speechOn;
+  }
   function trackGone(t) {
     var i = live.indexOf(t);
     if (i >= 0) live.splice(i, 1);
-    if (!live.length) sessionType('playback');
+    if (!live.length && !speechOn) sessionType('playback');
   }
   try {
     var MD = navigator.mediaDevices;
@@ -145,7 +159,7 @@
           } catch (e) { /* 忽略 */ }
           return stream;
         }, function (err) {
-          if (wantsAudio && !live.length) sessionType('playback');
+          if (wantsAudio && !live.length && !speechOn) sessionType('playback');
           throw err;
         });
       };
@@ -199,10 +213,10 @@
       try { c = r.deref(); } catch (e) { c = null; }
       if (c && c.state === 'interrupted') { n++; try { var p = c.resume(); if (p && p.catch) p.catch(function () {}); } catch (e) { /* 忽略 */ } }
     });
-    if (!live.length) sessionType('playback');
+    if (!live.length && !speechOn) sessionType('playback');
     return n;
   }
-  W.__echoIOS = { wake: wake, spec: SPEC, iosOnly: IOS_ONLY.slice(), live: function () { return live.length; } };
+  W.__echoIOS = { wake: wake, spec: SPEC, iosOnly: IOS_ONLY.slice(), live: function () { return live.length; }, speech: speech };
 
   // ---------- 触摸 ----------
   // 长按不弹「拷贝 / 查询」、不选中文字（输入框照常能选、能粘贴）；横屏时文字不自动放大；不让双指缩放、输入框聚焦时不放大页面

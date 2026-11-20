@@ -15,8 +15,10 @@
   run=share ：shareFile 弹分享面板；run=pick：backupPick 弹文件选择器。弹没弹出来由原生的状态行（UI 测试读）判断。
   run=store ：订阅：问一次商品（iapProducts）；有商品就开始买第一个（弹购买面板，UI 测试看它弹没弹出来，不点）。
               云上的模拟器没有本地 App Store（xcodebuild test 不把 Store.storekit 交给模拟器），多半一个商品都没有，只记下来。
-  iPhone 才有的 9 个（订阅、通过 Apple 登录）在 run=all 里只测「当场回」的几样（参数不对、这个包没有登录权限）和不弹界面的几样；
+  iPhone 才有的 12 个（订阅、通过 Apple 登录、口语题的本机识别）在 run=all 里只测「当场回」的几样（参数不对、这个包没有登录权限）和不弹界面的几样；
   iapRestore（可能要输 Apple 账户密码）、iapManage、真的 appleSignIn 只有按钮。
+  本机识别：speechState 一定要回、形状对；speechStart 带 ask:false（不弹权限框），模拟器多半回 unavailable（没有本机识别）/ not-asked（还没问过权限），
+  也算过——要证明的只是桥通、这几种情况网页认得；万一真的开起来了，马上 speechStop，要收到事件 echo-speech 的 end。
   结果：window.__echoTestResult = { run, done, pass, fail, warn, skip, items: [{ name, ok, got, note }], mic, ui, store }
         ok：true 过了 / false 没过（UI 测试判失败）/ 'warn' 看情况（和模拟器、系统版本有关的，只记下来）/ 'skip' 没测（写着为什么）
 -->
@@ -63,9 +65,11 @@
     backupPick: ['sync', 0], shareText: ['sync', 2], shareFile: ['sync', 3],
     // iPhone 才有的（tests/ios.test.js 的 IOS_ONLY）：订阅、通过 Apple 登录
     iapProducts: ['async', 2], iapBuy: ['async', 3], iapRestore: ['async', 1], iapCurrent: ['async', 1], iapPending: ['async', 1],
-    iapFinish: ['async', 2], iapManage: ['async', 1], appleSignIn: ['async', 2], appleCredentialState: ['async', 2]
+    iapFinish: ['async', 2], iapManage: ['async', 1], appleSignIn: ['async', 2], appleCredentialState: ['async', 2],
+    // 口语题的本机识别（LocalSpeech.swift）
+    speechState: ['async', 1], speechStart: ['async', 2], speechStop: ['async', 1]
   };
-  var IOS_ONLY = ['iapProducts', 'iapBuy', 'iapRestore', 'iapCurrent', 'iapPending', 'iapFinish', 'iapManage', 'appleSignIn', 'appleCredentialState'];
+  var IOS_ONLY = ['iapProducts', 'iapBuy', 'iapRestore', 'iapCurrent', 'iapPending', 'iapFinish', 'iapManage', 'appleSignIn', 'appleCredentialState', 'speechState', 'speechStart', 'speechStop'];
 
   function show(t) { try { return typeof t === 'string' ? t.slice(0, 140) : JSON.stringify(t).slice(0, 140); } catch (e) { return String(t); } }
   function add(name, ok, got, note) {
@@ -114,7 +118,7 @@
     check('env.kinds', function () {
       var spec = (window.__echoIOS && window.__echoIOS.spec) || {};
       var bad = Object.keys(WANT).filter(function (k) { return !spec[k] || spec[k][0] !== WANT[k][0] || spec[k][1].length !== WANT[k][1]; });
-      return { ok: !bad.length, got: bad.length ? bad : '同步 22 个 / 异步 4 个 + iPhone 才有的异步 9 个' };
+      return { ok: !bad.length, got: bad.length ? bad : '同步 22 个 / 异步 4 个 + iPhone 才有的异步 ' + IOS_ONLY.length + ' 个' };
     });
     check('env.iosOnly', function () {
       var mine = ((window.__echoIOS && window.__echoIOS.iosOnly) || []).slice().sort().join(',');
@@ -322,6 +326,37 @@
     check('iapRestore / iapManage', function () { return { ok: typeof N.iapRestore === 'function' && typeof N.iapManage === 'function', got: '在', note: '会弹系统界面：按按钮试' }; });
   }
 
+  // ---------- 六、口语题的本机识别（LocalSpeech.swift）：不弹权限框，只看桥通不通、回的话网页认不认得 ----------
+  var SPEECH_FAIL = ['unavailable', 'not-asked', 'denied', 'restricted', 'mic', 'audio', 'busy'];
+  async function speech() {
+    var r = await nativeCall(function (id) { return N.speechState(id); }, 6000);
+    var st = J(r.data);
+    add('speechState', r.type === 'ok' && !!st && ['authorized', 'notDetermined', 'denied', 'restricted'].indexOf(st.auth) >= 0 &&
+      typeof st.onDevice === 'boolean' && typeof st.available === 'boolean' && st.locale === 'en-US' && typeof st.engine === 'string' && st.listening === false, st || r);
+    add('speechState.onDevice', st && st.onDevice ? true : 'warn', st ? { onDevice: st.onDevice, available: st.available, auth: st.auth } : r, '模拟器多半没有本机识别；真 iPhone 上是 true');
+    r = await nativeCall(function (id) { return N.speechStop(id); });
+    var sp = J(r.data);
+    add('speechStop(没在听)', r.type === 'ok' && !!sp && sp.stopped === false, sp || r);
+    var events = [];
+    var onEv = function (e) { events.push(e.detail); };
+    window.addEventListener('echo-speech', onEv);
+    var sid = nextId + 1;
+    r = await nativeCall(function (id) { return N.speechStart(id, JSON.stringify({ short: true, ask: false })); }, 8000);
+    var j = J(r.data);
+    if (r.type === 'fail') {
+      add('speechStart(不弹框)', !!j && SPEECH_FAIL.indexOf(j.error) >= 0 && typeof j.message === 'string', j || r, '回了网页认得的原因（unavailable 等）：网页会改走云端识别');
+    } else if (r.type === 'ok') {
+      add('speechStart(不弹框)', !!j && j.listening === true && j.sid === sid && typeof j.ms === 'number', j);
+      await wait(600);
+      var s2 = await nativeCall(function (id) { return N.speechStop(id); });
+      await wait(300);
+      var end = events.filter(function (e) { return e && e.sid === sid && e.kind === 'end'; })[0];
+      add('speechStop(在听)', s2.type === 'ok' && (J(s2.data) || {}).stopped === true && !!end && end.reason === 'stop', { stop: J(s2.data), end: end, n: events.length });
+    } else add('speechStart(不弹框)', false, r, '没回');
+    window.removeEventListener('echo-speech', onEv);
+    R.speech = { state: st, start: j || r.type, events: events.length };
+  }
+
   // ---------- run=store：问商品，有就开始买第一个（弹购买面板，不等结果） ----------
   async function store() {
     // 先来一个一定当场回的（不是 UUID）：异步桥一路通到 Store.swift 再回来
@@ -339,7 +374,7 @@
     add('store.buy', true, list[0].id, '购买面板应该弹出来（UI 测试看）');
   }
 
-  // ---------- 六、要点界面的几样（UI 测试按启动参数分开跑，也可以手动按按钮） ----------
+  // ---------- 七、要点界面的几样（UI 测试按启动参数分开跑，也可以手动按按钮） ----------
   async function mic() {
     var out = { before: N.micPermission() };
     try {
@@ -375,7 +410,7 @@
   (async function () {
     if (!N) { add('env.native', false, '没有 window.EchoNative'); finish(); return; }
     try {
-      if (run === 'all') { await env(); await syncMethods(); await asyncMethods(); await account(); await media(); }
+      if (run === 'all') { await env(); await syncMethods(); await asyncMethods(); await account(); await speech(); await media(); }
       else if (run === 'store') await store();
       else if (run === 'mic') await mic();
       else if (run === 'share') share();
