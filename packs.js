@@ -76,7 +76,7 @@
   const okUrl = u => /^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u) ||
     /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u) || /^\/(?!\/)[A-Za-z0-9._~\/-]+$/.test(u);
   const normUrl = u => String(u || '').trim().replace(/\/+$/, '');
-  // 这一步引擎支持的「要学的语言」（SPEC §5：别的语言的引擎和内容在做；目录里有、这里没有的不显示）
+  // 一直能学的语言（英语的内容在安装包里）。别的语言（目录里 course: true、EchoLang 认得的）见下面的 learnable()（tools/course/ENGINE.md §1）
   const LANGS = ['en'];
   const RETRY = [1000, 3000, 8000];   // 一个文件失败了隔多久重试（3 次）；测试可以改小
   const BATCH = 300;                  // 拆包时一个事务写几段
@@ -188,15 +188,21 @@
   const hasClip = (k, g) => !!(KEYS[g] && KEYS[g].has(k));
 
   // ---------- 启动 ----------
-  let readyP = null;
+  let readyP = null, bootP = null;
   function ready() {
     if (!ON) return Promise.resolve();   // 老模式：立刻好
     if (!readyP) {
-      const b = boot();
+      const b = bootP = boot();
       // 有的 WebKit 第一次打开 IndexedDB 一直不回话：最多等 4 秒就让游戏先开起来（读好了 key 表再补上）
       readyP = Promise.race([b, sleep(4000)]);
     }
     return readyP;
+  }
+  // 别的语言的课要等这门课的 course.json 真的读出来（或者确定读不出来）才能开始：不赛跑那 4 秒（tools/course/ENGINE.md §2）
+  function courseReady() {
+    if (!ON) return Promise.resolve();
+    ready();
+    return bootP || Promise.resolve();
   }
   async function boot() {
     try { db = await idbOpen(); STORE = 'idb'; } catch (e) { STORE = 'none'; emitState(course()); return; }
@@ -487,8 +493,21 @@
       return lastUrl;
     }, () => null);
   }
+  // 能学的课（tools/course/ENGINE.md §1）：英语 + 目录里有、course: true、EchoLang 认得的（中文课在中文界面里不列，正在学的除外）；
+  // 没网拿不到目录时，装了 course.json 的也算
+  function learnable() {
+    const out = ['en'], L = root.EchoLang;
+    if (!ON || !L) return out;
+    const c = CAT && CAT.packs ? CAT.packs : {}, ls = new Set();
+    Object.keys(c).forEach(l => { if (c[l] && c[l].course === true) ls.add(l); });
+    Object.keys(M).forEach(l => { const m = M[l]; if (m && Array.isArray(m.list) && m.list.some(f => f.kind === 'course')) ls.add(l); });
+    if (course() !== 'en') ls.add(course());
+    [...ls].sort().forEach(l => { if (l !== 'en' && L.has(l) && (l !== 'zh' || uiLang() !== 'zh' || l === course())) out.push(l); });
+    return out;
+  }
+  const langOk = l => LANGS.includes(l) || learnable().includes(l);
   function setCourse(l) {
-    if (!LANGS.includes(l)) return false;
+    if (!(l === 'en' || (root.EchoLang && root.EchoLang.has(l)))) return false;
     LS('echo-course', l);
     try { location.reload(); } catch (e) { /* 测试里没有页面 */ }
     return true;
@@ -527,6 +546,11 @@
       'pk.first.core': '先下最要紧的一部分（约 {mb} MB），下好就能开始，其余的在后台接着下。',
       'pk.first.go': '下载（{mb} MB）', 'pk.first.wait': '正在下最要紧的部分……{pct}%', 'pk.first.ok': '可以开始了！其余的在后台接着下。',
       'pk.first.next': '继续', 'pk.first.skip': '先不下，继续', 'pk.first.back': '返回', 'pk.first.load': '正在看有哪些课程……', 'pk.first.later': '没有语音包也能玩，朗读会用备用的声音。以后在设置「📦 课程和语音包」里下载。',
+      // 换一门课、这门课的内容读不出来（tools/course/ENGINE.md §1、§2）
+      'pk.btn.learn': '学这门', 'pk.learn.wait': '正在下载，下好就换过去……',
+      'pk.learn.h': '改学{lang}？', 'pk.learn.p': '每门课有自己的一份进度：怪兽、金币、关卡不互通。第一次学这门课是从头开始（设置照现在的抄过去）；换回来的时候，原来的进度都还在。换好以后会重新打开。',
+      'pk.learn.dl': '这门课要先下载最要紧的那一部分，下好就换过去。', 'pk.learn.ok': '换过去', 'pk.learn.no': '先不换', 'pk.learn.why': '换一门要学的语言',
+      'pk.miss.p': '{lang}课程的内容还没有下载到这台设备上（或者被清掉了），下载好才能接着学。进度都还在。', 'pk.miss.en': '先学英语',
     },
     en: {
       'pk.name.en': 'English', 'pk.name.zh': 'Chinese', 'pk.name.ja': 'Japanese', 'pk.name.es': 'Spanish',
@@ -553,6 +577,10 @@
       'pk.first.core': 'The most important part (about {mb} MB) comes first; you can start as soon as it is ready, and the rest downloads in the background.',
       'pk.first.go': 'Download ({mb} MB)', 'pk.first.wait': 'Downloading the most important part… {pct}%', 'pk.first.ok': 'Ready to start! The rest keeps downloading in the background.',
       'pk.first.next': 'Continue', 'pk.first.skip': 'Skip for now', 'pk.first.back': 'Back', 'pk.first.load': 'Checking the course list…', 'pk.first.later': 'You can play without the voice pack; a backup voice reads aloud. Download it later in Settings, "📦 Courses and voice packs".',
+      'pk.btn.learn': 'Learn this', 'pk.learn.wait': 'Downloading; it switches when ready…',
+      'pk.learn.h': 'Switch to {lang}?', 'pk.learn.p': 'Each course has its own progress: monsters, coins and levels are not shared. The first time you learn this course you start from the beginning (your settings are copied over); when you switch back, your old progress is still there. The game reopens after switching.',
+      'pk.learn.dl': 'The most important part of this course is downloaded first; it switches as soon as that is ready.', 'pk.learn.ok': 'Switch', 'pk.learn.no': 'Not now', 'pk.learn.why': 'switch to another language',
+      'pk.miss.p': 'The {lang} course is not on this device yet (or it was cleared). Download it to keep learning. Your progress is safe.', 'pk.miss.en': 'Learn English for now',
     },
   });
   let G = null;            // game.js 给的工具（init）
@@ -581,12 +609,13 @@
     if (i.paused && i.state !== 'full') return t('pk.st.paused');
     return t('pk.st.' + i.state);
   }
-  // 这一页列哪几门：目录里有、引擎支持的，加上已经装了的
+  // 这一页列哪几门：目录里有、引擎支持的，加上已经装了的；别的语言的课（learnable）也列
   function shown() {
     const ls = new Set(LANGS.filter(l => !CAT || !CAT.packs || CAT.packs[l] || M[l]));
-    for (const l of Object.keys(M)) if (LANGS.includes(l)) ls.add(l);
+    for (const l of Object.keys(M)) if (langOk(l)) ls.add(l);
     ls.add(course());
-    return [...ls].filter(l => LANGS.includes(l));
+    learnable().forEach(l => { if (l !== 'en') ls.add(l); });
+    return [...ls].filter(langOk);
   }
 
   // 首页一条（game.js 的 homeBars）：没下 / 下了一部分 / 正在下 / 出错 / 有新版本；装好了就没有
@@ -620,6 +649,8 @@
       else if (i.update) b.push(btn('pkGet', 'pk.btn.upd', { mb: mbOf((CAT && CAT.packs[l] && CAT.packs[l].bytes) || 0) }));
       if (i.state !== 'none' && !i.busy) b.push(btn('pkDel', 'pk.btn.del', null, 'ghost'));
     }
+    // 别的语言的课（tools/course/ENGINE.md §1）：能学的、不是现在这门的，一行「学这门」（换课：每门课一份存档）
+    if (l !== course() && G && G.courseGo && learnable().includes(l)) b.push(LEARN === l ? '<span class="set-v">' + h('pk.learn.wait') + '</span>' : btn('pkLearn', 'pk.btn.learn', null, 'sun'));
     const prog = i.state !== 'none' || i.busy;
     return '<div class="pk-row" data-l="' + esc(l) + '"><div class="pk-top"><b>' + esc(langName(l)) + (l === course() ? ' ✓' : '') + '</b><span id="pk-st-' + esc(l) + '">' + esc(stText(i)) + '</span></div>' +
       (prog ? '<div class="pk-prog"><i id="pk-p-' + esc(l) + '" style="width:' + pctOf(i.done, i.bytes) + '%"></i></div><small id="pk-t-' + esc(l) + '">' + h('pk.size', { done: mbOf(i.done), all: mbOf(i.bytes) }) + '</small>'
@@ -642,6 +673,28 @@
       '<button class="btn wide" data-act="' + (fromSet ? 'setBack' : 'close') + '" data-focus>' + h('pk.btn.done') + '</button></div>');
     if (!CAT_FRESH) catalog().then(() => { if ($('#pk-sheet')) sheet(); }, () => {});
   }
+  // ---------- 换一门课（tools/course/ENGINE.md §1）：「学这门」→ 确认（孩子模式要家长密码）→ 这门课的 core 没装先装 → game.js 的 courseGo（新存档、重新打开页面） ----------
+  let LEARN = '';   // 点了「学这门」、正在等 core 下完的那门课
+  function learnAsk(l) {
+    const go = () => G.openModal('<div class="big">📚</div><h2>' + h('pk.learn.h', { lang: langName(l) }) + '</h2><p>' + h('pk.learn.p') + '</p>' +
+      (l !== 'en' && !(info(l).state === 'core' || info(l).state === 'full') ? '<p class="tip">' + h('pk.learn.dl') + '</p>' : '') +
+      '<div class="row"><button class="btn ghost" data-act="pkSheet" data-focus>' + h('pk.learn.no') + '</button><button class="btn sun" data-act="pkLearnGo" data-l="' + esc(l) + '">' + h('pk.learn.ok') + '</button></div>');
+    if (G.kidMode && G.kidMode()) G.parentOk(t('pk.learn.why'), go); else go();
+  }
+  function learnGo(l) {
+    const s = info(l).state;
+    if (l === 'en' || s === 'core' || s === 'full') { LEARN = ''; G.courseGo(l); return; }
+    LEARN = l;
+    install(l);
+    sheet();
+  }
+  // 「学这门」等着的那门课 core 下完了：换过去
+  function learnCheck(l) {
+    if (!LEARN || l !== LEARN || !G) return;
+    const s = info(l).state;
+    if (s === 'core' || s === 'full') { LEARN = ''; G.courseGo(l); }
+    else if (info(l).err) LEARN = '';   // 没下成：「学这门」按钮回来，那一行写着原因
+  }
   function delAsk(l) {
     const go = () => G.openModal('<div class="big">🗑️</div><h2>' + h('pk.del.h', { lang: langName(l) }) + '</h2><p>' + h('pk.del.p') + '</p>' +
       '<div class="row"><button class="btn ghost" data-act="pkSheet" data-focus>' + h('pk.del.no') + '</button><button class="btn" data-act="pkDelGo" data-l="' + esc(l) + '">' + h('pk.del.ok') + '</button></div>');
@@ -652,7 +705,7 @@
   // 全新的开始，能力检测「选语言」之后的那一页（placement.js 调）：要下就画出来、返回 true；老模式 / 已经能用了返回 false
   // ctx = { paint(html), live() 这一页还开着吗, next() 往下走 }
   function firstStep(l, ctx) {
-    if (!ON || !G || !LANGS.includes(l)) return false;
+    if (!ON || !G || !langOk(l)) return false;
     const i = info(l);
     if (STORE === 'idb' && (i.state === 'core' || i.state === 'full')) return false;
     FIRST = Object.assign({ lang: l }, ctx);
@@ -691,7 +744,7 @@
     if (tx) tx.textContent = t('pk.size', { done: mbOf(i.done), all: mbOf(i.bytes) });
     const st = document.getElementById('pk-st-' + d.lang);
     if (st) st.textContent = stText(i);
-    if (FIRST && FIRST.lang === d.lang && FIRST.live() && !(i.state === 'core' || i.state === 'full')) {
+    if (((FIRST && FIRST.lang === d.lang && FIRST.live()) || MISS === d.lang) && !(i.state === 'core' || i.state === 'full')) {
       const fp = $('#pk-first-p'), ft = $('#pk-first-t'), cp = pctOf(i.coreDone, i.core);
       if (fp) fp.style.width = cp + '%';
       if (ft) ft.textContent = t('pk.first.wait', { pct: cp });
@@ -699,9 +752,42 @@
   }
   function onState(d) {
     if (!G) return;
+    if (MISS) { paintMiss(); return; }   // 「这门课的内容读不出来」那一页开着：游戏还没开始
     if (G.refreshBars) G.refreshBars();
     if ($('#pk-sheet')) sheet();
     if (FIRST && FIRST.lang === d.lang) paintFirst();
+    learnCheck(d.lang);
+  }
+
+  // ---------- 这门课的内容读不出来（tools/course/ENGINE.md §2）：停在「下载课程」这一页，不拿英语内容配别的语言的存档往下走 ----------
+  // game.js 的 courseBoot 在 start() 之前调（存档还没读、不许存）。下好最要紧的那部分（core 里有 course.json）就重新打开页面；也可以先改学英语
+  let MISS = '', MISS_RUN = false;
+  function missing(l) {
+    if (!G) return;
+    MISS = l;
+    paintMiss();
+    if (!CAT_FRESH) catalog().then(paintMiss, paintMiss);
+  }
+  function paintMiss() {
+    const l = MISS; if (!l || !G) return;
+    const i = info(l), nm = langName(l), pct = pctOf(i.coreDone, i.core), ok = i.state === 'core' || i.state === 'full';
+    if (ok && MISS_RUN) { MISS = ''; try { location.reload(); } catch (e) { /* 测试里没有页面 */ } return; }   // 其余的重新打开以后在后台接着下
+    const err = STORE === 'none' ? { code: 'store' } : i.err;
+    let body = '<p>' + h('pk.miss.p', { lang: nm }) + '</p>' + (i.core ? '<p>' + h('pk.first.core', { mb: mbOf(i.core) }) + '</p>' : '');
+    let main;
+    if (err) { body += '<p class="pk-warn">' + esc(errText(err)) + '</p>'; main = STORE === 'idb' ? '<button class="btn sun" data-act="pkMissGet" data-focus>' + h('pk.btn.retry') + '</button>' : ''; }
+    else if (i.busy || MISS_RUN) { body += '<div class="pk-prog"><i id="pk-first-p" style="width:' + pct + '%"></i></div><p id="pk-first-t">' + h('pk.first.wait', { pct }) + '</p>'; main = '<button class="btn" disabled>' + h('pk.first.next') + '</button>'; }
+    else main = '<button class="btn sun" data-act="pkMissGet" data-focus' + (STORE === 'idb' ? '' : ' disabled') + '>' + (i.bytes ? h('pk.first.go', { mb: mbOf(i.bytes) }) : h('pk.bar.go')) + '</button>';
+    G.openModal('<div id="pk-miss"><div class="big">📦</div><h2>' + h('pk.first.h', { lang: nm }) + '</h2>' + body +
+      '<div class="row"><button class="btn ghost" data-act="pkMissEn">' + h('pk.miss.en') + '</button>' + main + '</div></div>', { locked: true });
+  }
+  // 下载这门课：装过的（meta 说装好了、可是 course.json 读不出来）先删掉再重新下
+  function missGet() {
+    const l = MISS; if (!l) return;
+    MISS_RUN = true;
+    const s = info(l).state;
+    (s === 'none' ? Promise.resolve() : remove(l)).then(() => install(l)).then(() => paintMiss(), () => paintMiss());
+    paintMiss();
   }
 
   // game.js 在课程包模式下调：拿工具、给按钮
@@ -722,15 +808,22 @@
       pkFirstGet: () => { if (FIRST) { install(FIRST.lang); paintFirst(); } },
       pkFirstGo: () => { const F = FIRST; if (!F) return; const s = info(F.lang).state; if (s === 'core' || s === 'full') { FIRST = null; F.next(); } },
       pkFirstSkip: () => { const F = FIRST; if (!F) return; FIRST = null; F.next(); },
+      // 换一门课、这门课的内容读不出来那一页（tools/course/ENGINE.md §1、§2）
+      pkLearn: el => learnAsk(el.dataset.l),
+      pkLearnGo: el => learnGo(el.dataset.l),
+      pkMissGet: () => missGet(),
+      pkMissEn: () => { MISS = ''; if (G.courseGo) G.courseGo('en'); },
     };
   }
 
   const api = {
     get on() { return ON; }, get base() { return BASE; }, get store() { return STORE; },
-    LANGS, course, ready, state, info, catalog, install, pause, remove, hasClip, clip, setCourse, on_,
+    LANGS, course, ready, courseReady, state, info, catalog, install, pause, remove, hasClip, clip, setCourse, on_, learnable,
     content: () => (course() === 'en' ? null : CONTENT),
+    // 写死的英语台词在这门课里的说法（台词翻译表，内容那一路以后放进 course.json 的 LINES：{ 英语原文: 这门语言的一句 }）；没有返回 null（tools/course/ENGINE.md §5）
+    line: en => (CONTENT && CONTENT.LINES && typeof CONTENT.LINES === 'object' && Object.prototype.hasOwnProperty.call(CONTENT.LINES, en) ? CONTENT.LINES[en] : null),
     // 界面（game.js / placement.js 调）
-    init, homeBar, settingsRow, sheet, firstStep,
+    init, homeBar, settingsRow, sheet, firstStep, missing,
     _: pure,
   };
   root.EchoPacks = api;

@@ -5,6 +5,8 @@
 // 3. tools/pack/build.js：排序（p 小的在前、一句里女声在前、句子表外的旧配音在最后按 key、--only 只要前 N 句）、切包（不超过 --bundle、
 //    core 和后面的不在一个包、core 在前）、同样的输入两次打出来逐字节一样、版本已经有了而且内容不一样就停下；
 //    --catalog 写 catalog.json 和 _headers；tools/pack/check.js 认得好的、挑得出坏的（crc、少文件、多文件）
+// 4. 别的语言（--course / --voice）：用假的小 course.json 和假的 .ogg 打一个包：course.json 排第一、标 core，配音按 lines.json 的 p 排，
+//    check.js 认得；course.json 里 VOICE 的某一段配音没有、语言对不上、没标 core 都挑得出来
 'use strict';
 const fs = require('fs');
 const os = require('os');
@@ -142,6 +144,58 @@ try {
   check(!C.check(tmp).bad.length, 'check.js：改回去又对得上');
 } finally {
   fs.rmSync(tmp, { recursive: true, force: true });
+}
+
+// ---------- 3b. 别的语言：--course / --voice ----------
+{
+  const t3 = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-pack-es-'));
+  try {
+    const fake = (n, tag) => Buffer.concat([Buffer.from('OggS'), Buffer.alloc(n, tag)]);
+    const vdir = path.join(t3, 'voice'), cdir = path.join(t3, 'course'), out = path.join(t3, 'out');
+    for (const g of ['f', 'm']) fs.mkdirSync(path.join(vdir, g), { recursive: true });
+    fs.mkdirSync(cdir, { recursive: true });
+    // p 故意和写的先后相反：先写的 p 大
+    const VOICE = [{ t: '¿Cómo te llamas?', g: ['f', 'm'], p: 2 }, { t: 'hola', g: ['f'], p: 1 }, { t: 'La casa', g: ['m'], p: 0 }];
+    for (const e of VOICE) for (const g of e.g) fs.writeFileSync(path.join(vdir, g, key(e.t) + '.ogg'), fake(100 + e.p, e.p + 1));
+    const idx = { v: { f: 'ef_dora', m: 'em_alex' }, fmt: 'ogg-opus', lang: 'es', f: VOICE.filter(e => e.g.includes('f')).map(e => key(e.t)).sort(), m: VOICE.filter(e => e.g.includes('m')).map(e => key(e.t)).sort() };
+    fs.writeFileSync(path.join(vdir, 'index.json'), JSON.stringify(idx));
+    fs.writeFileSync(path.join(vdir, 'lines.json'), JSON.stringify(VOICE));
+    const course = { fmt: 1, lang: 'es', name: { zh: '西班牙语', en: 'Spanish', self: 'Español' }, WORLDS: [], SCENES: [], BOOKS: { list: [] }, TALK: [], MAP: {}, VOICE };
+    const cfile = path.join(cdir, 'course.json');
+    fs.writeFileSync(cfile, JSON.stringify(course));
+    const mk = (extra, ver) => B.build(B.args(['--lang', 'es', '--ver', ver || '20261120.1', '--course', cfile, '--voice', vdir, '--out', out, '--quiet'].concat(extra || [])));
+    const r = mk();
+    const man = JSON.parse(fs.readFileSync(path.join(r.dir, 'manifest.json'), 'utf8'));
+    check(man.lang === 'es' && man.files[0].name === 'course.json' && man.files[0].kind === 'course' && man.files[0].core === true && man.files[0].bytes === fs.statSync(cfile).size &&
+      man.files[0].crc === _.crcHex(fs.readFileSync(cfile)), '别的语言：course.json 排第一、标 core、大小和 crc 对');
+    check(man.voice.f === 'ef_dora' && man.voice.m === 'em_alex' && man.voice.n.f === 2 && man.voice.n.m === 2, 'manifest 的声音是 index.json 里的（ef_dora / em_alex），女声 2 段、男声 2 段');
+    const items = _.readBundle(fs.readFileSync(path.join(r.dir, man.files[1].name))).items.map(x => x[0] + '/' + x[1]);
+    check(JSON.stringify(items) === JSON.stringify(['m/' + key('La casa'), 'f/' + key('hola'), 'f/' + key('¿Cómo te llamas?'), 'm/' + key('¿Cómo te llamas?')]), '配音按 lines.json 的 p 排（不管文件里写的先后），一句里女声在前', items);
+    check(!C.check(out).bad.length, 'check.js：这个别的语言的包对得上（课程内容 fmt / 语言 / VOICE 都有配音）', C.check(out).bad);
+    B.catalog(B.args(['--catalog', '--out', out]));
+    const cat = JSON.parse(fs.readFileSync(path.join(out, 'catalog.json'), 'utf8')).packs.es;
+    check(cat && cat.course === true && cat.name.self === 'Español' && cat.core === cat.bytes, 'catalog.json：es 有课程内容（course: true），都在 core 里（太小，不到 --core）', cat);
+    // 配音目录里没有 lines.json：句子表取 course.json 的 VOICE，先后一样
+    fs.rmSync(path.join(vdir, 'lines.json'));
+    const r5 = mk([], '20261120.2'), items5 = _.readBundle(fs.readFileSync(path.join(r5.dir, 'voice-000.bin'))).items.map(x => x[0] + '/' + x[1]);
+    check(r5.lines === 3 && JSON.stringify(items5) === JSON.stringify(items), '没有 lines.json 时用 --course 里的 VOICE 排先后（结果一样）', items5);
+    // 挑得出坏的
+    const badCourse = (what, mut, re) => {
+      const c2 = JSON.parse(JSON.stringify(course)); mut(c2);
+      const f2 = path.join(cdir, 'course2.json'); fs.writeFileSync(f2, JSON.stringify(c2));
+      const out2 = path.join(t3, 'out-' + what.length);
+      B.build(B.args(['--lang', 'es', '--ver', '20261120.1', '--course', f2, '--voice', vdir, '--out', out2, '--quiet']));
+      const bad = C.check(out2).bad;
+      return check(bad.some(b => re.test(b)), 'check.js 挑得出：' + what, bad);
+    };
+    badCourse('course.json 的语言和 manifest 对不上', c => { c.lang = 'ja'; }, /语言/);
+    badCourse('VOICE 名单里有一句配音包里没有', c => { c.VOICE.push({ t: 'no existe', g: ['f'], p: 3 }); }, /VOICE 名单里有 1 段/);
+    badCourse('course.json 缺 WORLDS', c => { delete c.WORLDS; }, /WORLDS/);
+    // 没标 core：把 manifest 里 course.json 的 core 改成 false（crc 不变）
+    const mf = path.join(r.dir, 'manifest.json'), m2 = JSON.parse(fs.readFileSync(mf, 'utf8'));
+    m2.files[0].core = false; fs.writeFileSync(mf, JSON.stringify(m2));
+    check(C.check(out).bad.some(b => /core/.test(b)), 'check.js 挑得出：course.json 没标 core');
+  } finally { fs.rmSync(t3, { recursive: true, force: true }); }
 }
 
 // ---------- 4. 真的英语课程包（有 dist/packs 才看：tools/pack/build.js --lang en 打过的） ----------

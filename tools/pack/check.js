@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const P = require(path.join(__dirname, '..', '..', 'packs.js'))._;
+const { key: keyOf } = require(path.join(__dirname, '..', 'voice', 'key.js'));
 
 function checkVersion(dir) {
   const bad = [], mf = path.join(dir, 'manifest.json');
@@ -18,7 +19,7 @@ function checkVersion(dir) {
   const files = Array.isArray(man.files) ? man.files : [];
   if (!files.length) bad.push('files 是空的');
   const seen = { f: new Set(), m: new Set() }, names = new Set();
-  let clips = 0, bytes = 0, coreEnded = false;
+  let clips = 0, bytes = 0, coreEnded = false, course = null;
   const n = { f: 0, m: 0 };
   for (const f of files) {
     if (names.has(f.name)) bad.push(f.name + ' 重复了');
@@ -30,7 +31,11 @@ function checkVersion(dir) {
     bytes += data.length;
     if (data.length !== f.bytes) bad.push(f.name + ' 大小是 ' + data.length + '，manifest 写的是 ' + f.bytes);
     if (P.crcHex(data) !== f.crc) bad.push(f.name + ' 的 crc 是 ' + P.crcHex(data) + '，manifest 写的是 ' + f.crc);
-    if (f.kind === 'course') { try { JSON.parse(data.toString('utf8')); } catch (e) { bad.push(f.name + ' 不是 JSON'); } continue; }
+    if (f.kind === 'course') {
+      try { course = JSON.parse(data.toString('utf8')); } catch (e) { bad.push(f.name + ' 不是 JSON'); }
+      if (!f.core) bad.push(f.name + ' 是课程内容，要标 core（先下它才能开始学）');
+      continue;
+    }
     if (f.kind !== 'voice') { bad.push(f.name + ' 的 kind 不认识：' + f.kind); continue; }
     if (data.length > 16 * 1048576) bad.push(f.name + ' 比 16 MiB 大');
     let r;
@@ -49,6 +54,18 @@ function checkVersion(dir) {
   const vn = man.voice && man.voice.n;
   if (!vn || vn.f !== n.f || vn.m !== n.m) bad.push('voice.n 写的是 ' + JSON.stringify(vn) + '，实际 ' + JSON.stringify(n));
   if (man.voice && man.voice.fmt !== 'ogg-opus') bad.push('voice.fmt 不是 ogg-opus');
+  // 课程内容：fmt、语言对得上，VOICE 里每句的每个声音在配音包里都有（tools/course/build.js 的名单）
+  if (course) {
+    if (course.fmt !== 1) bad.push('course.json 的 fmt 不是 1');
+    if (course.lang !== man.lang) bad.push('course.json 的语言 ' + course.lang + ' 和 manifest 的 ' + man.lang + ' 对不上');
+    for (const k of ['WORLDS', 'SCENES', 'TALK', 'VOICE']) if (!Array.isArray(course[k])) bad.push('course.json 里没有 ' + k + ' 数组');
+    if (!course.BOOKS || !Array.isArray(course.BOOKS.list)) bad.push('course.json 里没有 BOOKS.list');
+    if (Array.isArray(course.VOICE)) {
+      const miss = [];
+      for (const e of course.VOICE) for (const g of e.g || []) if (!seen[g] || !seen[g].has(keyOf(e.t))) miss.push(g + ' ' + e.t);
+      if (miss.length) bad.push('VOICE 名单里有 ' + miss.length + ' 段配音包里没有，比如：' + miss.slice(0, 3).join(' / '));
+    }
+  }
   const extra = fs.readdirSync(dir).filter(x => x !== 'manifest.json' && !names.has(x));
   if (extra.length) bad.push('目录里多了 manifest 没写的文件：' + extra.join(', '));
   return { dir, bad, clips, bytes, man };

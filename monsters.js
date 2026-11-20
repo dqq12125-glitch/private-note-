@@ -52,6 +52,9 @@
       'b.in.shiny': '✨ 闪闪发光的！', 'b.in.wild': '前面跳出来一只 <b>{name}</b>{zh}！', 'b.in.shinyToast': '✨ 是稀有色的 {name}！颜色和平常不一样，很少见哦',
       'b.in.foe': '{who}：“<b>{name}</b>，该你了！”', 'b.in.next': '{who}：“还没完！<b>{name}</b>，该你了！”', 'b.go': '<b>{name}</b>，上场！', 'b.rest': '<b>{name}</b>，先休息一下！',
       'b.selfWake': '{icon}{name} 自己恢复了！', 'b.menu': '念对英语，<b>{name}</b> 就出招！',
+      // 别的语言的课（tools/course/ENGINE.md）：写着「英语」的几句换成这门语言（i18n.js 的 variant，{lang} 是语言名）
+      'b.menu.c': '念对{lang}，<b>{name}</b> 就出招！', 'b.t.word.c': '🗣 说出图上的{lang}，发动 <b>{mv}</b>', 'b.talk.p.c': '每天用{lang}和它说一句，它会越来越喜欢你。亲密度 {h}',
+      'b.home.new.p.c': '你刚搬到回声群岛最南边的你好岛。这里的怪兽听得懂{lang}——话说得越清楚，怪兽就越强。<br>回声博士好像遇到麻烦了……',
       'b.mv.strong': '克制', 'b.mv.low': '不太管用', 'b.mv.lock': '攒满 3 格能量',
       'b.catch': '🔮 收服', 'b.catch.weak': ' · 先打虚弱', 'b.switch': '🔄 换怪兽', 'b.bag': '🎒 背包',
       'b.wake.slp': '<b>{name}</b> 睡着了💤！大声喊它，念得越准越容易叫醒。', 'b.wake.frz': '<b>{name}</b> 被冻住了🧊！大声喊它，念得越准越容易化开。',
@@ -194,6 +197,8 @@
       'b.in.shiny': '✨ It sparkles! ', 'b.in.wild': 'A wild <b>{name}</b>{zh} jumped out!', 'b.in.shinyToast': '✨ A rare-colour {name}! Its colours are different. That is very rare!',
       'b.in.foe': '{who}: "<b>{name}</b>, your turn!"', 'b.in.next': '{who}: "Not over yet! <b>{name}</b>, your turn!"', 'b.go': '<b>{name}</b>, your turn!', 'b.rest': '<b>{name}</b>, take a rest!',
       'b.selfWake': '{icon}{name} is fine again!', 'b.menu': 'Say the English right, and <b>{name}</b> makes a move!',
+      'b.menu.c': 'Say the {lang} right, and <b>{name}</b> makes a move!', 'b.t.word.c': '🗣 Say the {lang} for the picture to use <b>{mv}</b>', 'b.talk.p.c': 'Say one {lang} sentence to it every day, and it will like you more and more. Friendship {h}',
+      'b.home.new.p.c': 'You just moved to Hello Island, at the south end of the Echo Islands. The monsters here understand {lang}: the more clearly you speak, the stronger they are.<br>Professor Echo seems to need help…',
       'b.mv.strong': 'Strong', 'b.mv.low': 'Not great', 'b.mv.lock': 'Fill 3 energy first',
       'b.catch': '🔮 Catch', 'b.catch.weak': ' · weaken it first', 'b.switch': '🔄 Switch', 'b.bag': '🎒 Bag',
       'b.wake.slp': '<b>{name}</b> is asleep💤! Call it loudly. The clearer you say it, the easier it wakes up.', 'b.wake.frz': '<b>{name}</b> is frozen🧊! Call it loudly. The clearer you say it, the faster the ice melts.',
@@ -570,7 +575,7 @@
         '<button class="btn small" data-act="tab" data-t="quiz" style="margin-top:8px">' + hx('b.gym.go') + '</button></section>';
     }
     // 今日目击（sighting.js）：博士的告示板每天一条英文线索，读懂了去对的地方才遇得到稀有怪兽；收服了就收成一行
-    if (ws.started && window.EchoSight) h += safe(() => EchoSight.homeCard()) || '';
+    if (ws.started && window.EchoSight && !E.lang) h += safe(() => EchoSight.homeCard()) || '';   // 今日目击：别的语言的课先不出
     // 传说的线索：四只神兽是学习的里程碑
     const clues = ws.started && EW && EW.legendClues ? safe(() => EW.legendClues()) || [] : [];
     if (clues.length) {
@@ -587,25 +592,31 @@
     return h;
   }
 
+  // ---------- 别的语言的课（tools/course/ENGINE.md §5）：写死的英语里「要开口说的那句」----------
+  // 换成这座岛课程里的一句（game.js 的 learnLine：按 key 的哈希固定挑），题面给它的意思。英语课返回 null，调用的地方照旧
+  const learnL = (key, z) => (E.lang && E.learnLine ? E.learnLine(key, z == null ? ((E.S.world && E.S.world.z) | 0) : z, 'sent') : null);
+  const meanHTML = ln => (ln && ln.mean ? '<div class="say-zh">' + E.esc(ln.mean) + '</div>' : '');
   // ---------- 选初始怪兽：大声说 be my partner! ----------
+  let starterLn = null;   // 别的课：这次要说的那句（learnL）
   function starterSheet(id) {
     const s = SPECIES[id], sr = E.speakMode() === 'sr';
+    starterLn = learnL('be my partner', 0);
     E.openModal('<div class="evo-stage">' + svg(id) + '</div><h2>' + s.en + E.esc(zhOf(s)) + '</h2>' +
-      '<p>' + hx('b.st.say') + '</p><div class="say-text" id="st-say">' + E.wordsHTML(s.en + ', be my partner!') + '</div>' +
+      '<p>' + hx('b.st.say') + '</p><div class="say-text" id="st-say">' + E.wordsHTML(starterLn ? starterLn.t : s.en + ', be my partner!') + '</div>' + meanHTML(starterLn) +
       (sr ? '<button class="mic" id="st-mic" data-act="mStarterMic" data-sp="' + id + '">' + E.MIC + '</button><div class="mic-hint" id="st-hint">' + hx('b.mic.say') + '</div>' +
           // AI 打分用不了（没网 / 额度 / 没密钥，评估第 3 条）：可以先跳过，这句放进复习、联网后要补说；说了 3 次还不行也能先跳过
           '<button class="link ai-skip" data-act="mStarterSkip" data-sp="' + id + '" id="st-skip"' + (E.aiDown && E.aiDown() ? '' : ' hidden') + '>' + E.esc(skipTxt()) + '</button>'
         : '<button class="btn leaf wide" data-act="mStarterGo" data-sp="' + id + '">' + hx('b.said') + '</button>') +
       '<div class="row"><button class="btn ghost" data-act="close">' + hx('b.st.other') + '</button><button class="btn ghost" data-act="mSayName" data-sp="' + id + '">' + hx('b.listen') + '</button></div>');
     starterTries = 0;
-    E.say(s.en + ', be my partner!');
+    E.say(starterLn ? starterLn.t : s.en + ', be my partner!');
   }
   let starterTries = 0;
   async function starterMic(id) {
     const m = $('st-mic'); if (!m) return;
     if (E.RT.listening) { E.stopListening(); return; }
     m.classList.add('on'); m.innerHTML = E.STOP; $('st-hint').textContent = tx('b.mic.on');
-    const res = await E.recognize(null, ['be my partner']);
+    const res = await E.recognize(null, [starterLn ? starterLn.t : 'be my partner']);
     if (!$('st-mic')) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
     if (res.err && E.FATAL.includes(res.err)) { E.RT.srBroken = true; takeStarter(id); return; }
@@ -616,14 +627,14 @@
       if (starterTries >= 3 || (E.aiDown && E.aiDown())) skip();
       return;
     }
-    const r = E.bestScore('be my partner', res.alts);
+    const r = E.bestScore(starterLn ? starterLn.t : 'be my partner', res.alts);
     if (r.score >= 40) takeStarter(id);
     else { starterTries++; $('st-hint').textContent = tx('b.st.retry'); if (starterTries >= 3) skip(); }
   }
   // 先跳过：伙伴照样选好，这句放进复习（联网以后要补说）
   function starterSkip(id) {
     E.stopListening();
-    if (E.revLater) E.revLater({ en: SPECIES[id].en + ', be my partner!', zh: SPECIES[id].zh + '，做我的伙伴吧！' });
+    if (E.revLater) E.revLater(starterLn ? starterLn.q || { en: starterLn.t } : { en: SPECIES[id].en + ', be my partner!', zh: SPECIES[id].zh + '，做我的伙伴吧！' });
     const L = E.dayLog && E.dayLog(); if (L) L.aiSkip = (L.aiSkip || 0) + 1;
     takeStarter(id);
   }
@@ -910,6 +921,8 @@
     const m = me(), sm = SPECIES[m.sp], slp = m.st === 'slp';
     B.turn = 'task'; B.tries = 0; B.hinted = false;
     B.task = { kind: 'wake', target: (slp ? 'Wake up, ' : 'Warm up, ') + nm(m) + '!', zh: slp ? '快醒醒！' : '快暖和起来！' };
+    const ln = learnL(slp ? 'wake up' : 'warm up', B.z);   // 别的课：换成这座岛课程里的一句
+    if (ln) Object.assign(B.task, { target: ln.t, zh: '', mean: ln.mean, q: ln.q });
     listenIfDown(B.task);
     taskPanel();
     msg(hx(slp ? 'b.wake.slp' : 'b.wake.frz', { name: nm(m) }));
@@ -977,6 +990,7 @@
     else if (mv.tier === 1 || mv.sup) { const p = pickQ('sent'), it = p.it; B.task = { kind: 'sent', q: p.q, d: p.d, target: it[0], zh: it[1] }; }
     else { const p = pickQ('dlg'), it = p.it; B.task = { kind: 'ult', q: p.q, prompt: it[0], target: it[1], opts: shuffle([{ c: true, t: it[1] }, ...it[2].map(t => ({ t }))]) }; }
     const t = B.task;
+    if (E.lang && (t.kind === 'word' || t.kind === 'sent')) t.mean = E.meanText(t.target);   // 别的课：咒语下面的意思（英语界面给英文意思）
     t.fade = t.kind === 'word' ? 2 : E.fadeOf ? Math.min(2, E.fadeOf(t.q)) : 0;
     if (t.kind === 'sent' && t.fade >= 2 && canBlind()) B.blind = true;
     // 大招：掌握了以后先只播问题，凭记忆回答；说错一次（或者自己点「看选项」）才亮出选项，亮出来就不能暴击（只在 AI 打分时，自评要点选项）
@@ -999,6 +1013,7 @@
   function listenOpts(t) {
     let pool = [];
     if ((t.kind === 'word' || t.kind === 'sent') && t.d) pool = (t.kind === 'word' ? t.d.words : t.d.sents).map(x => x[0]);
+    else if (E.lang && (t.kind === 'catch' || t.kind === 'wake')) pool = ((E.W[B.z] || E.W[0]).sents || []).map(x => x[0]);   // 别的课：同一座岛课程里的句子
     else if (t.kind === 'catch') pool = CATCH_LINES.slice();
     else if (t.kind === 'wake') { const n = nm(me()); pool = ['Wake up, ' + n + '!', 'Warm up, ' + n + '!', n + ', your turn!', n + ', take a rest!']; }
     const others = shuffle([...new Set(pool.filter(x => x && x.toLowerCase() !== t.target.toLowerCase()))]).slice(0, 3);
@@ -1028,11 +1043,14 @@
     B.ball = ball || (nb > 0 ? 'ball' : 'superball');
     B.turn = 'task'; B.tries = 0; B.hinted = false;
     B.task = { kind: 'catch', target: pick(CATCH_LINES) };
+    const ln = learnL('catch:' + B.task.target, B.z);   // 别的课：换成这座岛课程里的一句（还是随机挑四句里的一句的样子）
+    if (ln) Object.assign(B.task, { target: ln.t, mean: ln.mean, q: ln.q });
     listenIfDown(B.task);
     taskPanel();
   }
   function taskPanel() {
-    const t = B.task, sr = E.speakMode() === 'sr', mv = B.mv ? mvName(B.mv) : ['', ''], esc = E.esc;
+    // rb：显示要学的那句话（别的课标读音；英语课就是 esc）
+    const t = B.task, sr = E.speakMode() === 'sr', mv = B.mv ? mvName(B.mv) : ['', ''], esc = E.esc, rb = s => (E.lang ? E.ruby(s) : esc(s));
     let head, body = '';
     if (t.listen) {   // AI 打分用不了：听音选招（不能暴击）
       const ult = t.kind === 'ult';
@@ -1041,18 +1059,18 @@
         : hx('b.l.down') + (ult ? hx('b.l.ult') : hx(t.kind === 'word' ? 'b.l.word' : 'b.l.sent')) + (B.mv && !B.mv.sup && t.kind !== 'catch' && t.kind !== 'wake' ? hx('b.l.use', { mv: mv[0] }) : '');
       body = (t.em ? '<div class="say-emoji">' + t.em + '</div>' : '') +
         '<div class="say-row"><button class="spk mini" data-act="' + (ult ? 'bHearQ' : 'bHear') + '" aria-label="' + hx('b.hearAgain') + '">' + E.SPK + '</button><span class="say-zh">' + hx(ult ? 'b.hearQ' : 'b.hearAgain') + '</span></div>' +
-        '<div class="opts list b-listen">' + t.lopts.map((o, k) => '<button class="opt en" data-act="bLOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>';
+        '<div class="opts list b-listen">' + t.lopts.map((o, k) => '<button class="opt en" data-act="bLOpt" data-i="' + k + '"><span class="o-t">' + rb(o.t) + '</span></button>').join('') + '</div>';
       panel('<div class="task"><div class="task-h">' + head + '</div>' + body + '<div class="task-foot"><div class="mic-hint" id="b-hint">' + (t.lv && I ? I.h('place.b.listen.foot') : hx('b.l.owe')) + '</div></div>' +
         (t.kind === 'wake' ? '' : '<button class="link" data-act="bBack">' + hx('b.back.move') + '</button>') + '</div>');
       if (t.kind !== 'wake') msg(t.kind === 'catch' ? hx('b.l.catch', { name: SPECIES[foe().sp].en }) : hx('b.l.hit'));
       if (ult) E.say(t.prompt, undefined, 'm'); else E.say(t.target, 0.9);
       return;
     }
-    // 英文下面的中文意思（中文界面才有；英语界面英文本身就是要学的内容）
-    const zhLine = () => { const g = gloss({ zh: t.zh }); return g ? '<div class="say-zh">' + esc(g) + '</div>' : ''; };
+    // 英文下面的中文意思（中文界面才有；英语界面英文本身就是要学的内容）。别的课：t.mean 是课程内容在界面语言里的意思（英语界面也有）
+    const zhLine = () => { const g = t.mean !== undefined ? t.mean : gloss({ zh: t.zh }); return g ? '<div class="say-zh">' + esc(g) + '</div>' : ''; };
     if (t.kind === 'word') {
       head = hx('b.t.word', { mv: mv[0] });
-      body = '<div class="say-emoji">' + t.em + '</div>' + zhLine() + '<div class="say-text mask" id="b-say">' + esc(t.target.replace(/[a-z]/gi, '_')) + '</div>' +
+      body = '<div class="say-emoji">' + t.em + '</div>' + zhLine() + '<div class="say-text mask" id="b-say">' + esc(E.lang ? E.cueText(t.target, 2) : t.target.replace(/[a-z]/gi, '_')) + '</div>' +
         '<button class="link" data-act="bHint">' + hx('b.hint.hear') + '</button>';
     } else if (t.kind === 'sent') {
       const lv = B.hinted ? 0 : B.blind ? 2 : t.fade || 0;
@@ -1065,15 +1083,15 @@
     } else if (t.kind === 'ult') {
       const hid = t.hid && sr && !t.shown;   // 自评模式要点选项：不藏
       head = hx(hid ? 'b.t.ult.mem' : sr ? 'b.t.ult.sr' : 'b.t.ult.self', { mv: mv[0] });
-      body = '<div class="say-row"><button class="spk mini" data-act="bHearQ" aria-label="' + hx('b.hearAgain') + '">' + E.SPK + '</button><span class="hidden-line blur" id="b-q">' + esc(t.prompt) + '</span></div>' +
-        '<div class="opts list" id="b-opts"' + (hid ? ' hidden' : '') + '>' + t.opts.map((o, k) => '<button class="opt en" data-act="bOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>' +
+      body = '<div class="say-row"><button class="spk mini" data-act="bHearQ" aria-label="' + hx('b.hearAgain') + '">' + E.SPK + '</button><span class="hidden-line blur" id="b-q">' + rb(t.prompt) + '</span></div>' +
+        '<div class="opts list" id="b-opts"' + (hid ? ' hidden' : '') + '>' + t.opts.map((o, k) => '<button class="opt en" data-act="bOpt" data-i="' + k + '"><span class="o-t">' + rb(o.t) + '</span></button>').join('') + '</div>' +
         (hid ? '<button class="link" data-act="bShowOpts" id="b-show">' + hx('b.showOpts') + '</button>' : sr ? '<small class="tip">' + hx('b.optHear') + '</small>' : '');
     } else if (t.kind === 'wake') {
       head = hx('b.t.wake');
       body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div>' + zhLine() + '<div class="say-row"><button class="spk mini" data-act="bHear" aria-label="' + hx('b.hearModel') + '">' + E.SPK + '</button></div>';
     } else {
       head = hx('b.t.catch');
-      body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div><div class="say-row"><button class="spk mini" data-act="bHear" aria-label="' + hx('b.hearModel') + '">' + E.SPK + '</button></div>';
+      body = '<div class="say-text" id="b-say">' + E.wordsHTML(t.target) + '</div>' + (t.mean ? zhLine() : '') + '<div class="say-row"><button class="spk mini" data-act="bHear" aria-label="' + hx('b.hearModel') + '">' + E.SPK + '</button></div>';
     }
     const rate = '<div class="rate"><button class="btn coral" data-act="bRate" data-v="0">' + hx('b.rate.0') + '</button><button class="btn sun" data-act="bRate" data-v="1">' + hx('b.rate.1') + '</button><button class="btn leaf" data-act="bRate" data-v="2">' + hx('b.rate.2') + '</button></div>';
     // 话筒 / 提示 / 打分按钮放在一起（task-foot）：横屏时贴在面板底部，题目再长也看得见
@@ -1502,7 +1520,8 @@
     // 听力防御也先出今天到期的复习题（pickQ），干扰项从同一个小岛 / 单元里挑
     // 选项是这句咒语的中文意思；界面语言里没有意思（英语界面）就改成「它念的是哪一句」，选项是英文原句（单词题照样带图）
     const mean = x => gloss({ zh: x[1] }), byEn = mean(['', '-']) == null;
-    if (mv === 0) {
+    if (E.lang) d = langDef(mv);   // 别的语言的课：意思按 E.meanOf（英语界面给英文意思），中文课的条目没有中文意思也挑得出干扰项
+    else if (mv === 0) {
       const p = pickQ('word'), it = p.it;
       const others = shuffle(p.d.words.filter(x => x !== it && x[1] !== it[1] && (!byEn || x[0] !== it[0]))).slice(0, 2);
       d = { q: p.q, spell: it[0], ans: it[0] + (byEn ? '' : ' = ' + it[1]), opts: shuffle([{ c: true, e: it[2], t: byEn ? it[0] : it[1] }, ...others.map(o => ({ e: o[2], t: byEn ? o[0] : o[1] }))]) };
@@ -1514,9 +1533,9 @@
     d.mv = mv; d.mvo = mvo; d.type = mvo.type; B.def = d;
     const nm = mvName(mvo);
     msg(hx(mvo.tier === 2 ? 'b.def.msgUlt' : 'b.def.msg', { name: sf.en, mv: nm[0], zh: zhOf({ zh: nm[1] }) }));
-    panel('<div class="task def"><div class="task-h">' + hx(byEn ? 'b.def.hEn' : 'b.def.h') + '</div><div class="b-timer"><i id="b-timer"></i></div>' +
+    panel('<div class="task def"><div class="task-h">' + hx((E.lang ? d.byEn : byEn) ? 'b.def.hEn' : 'b.def.h') + '</div><div class="b-timer"><i id="b-timer"></i></div>' +
       '<div class="say-row"><button class="spk mini" data-act="bDefHear" aria-label="' + hx('b.hearAgain') + '">' + E.SPK + '</button></div>' +
-      '<div class="opts' + (mv === 0 ? '' : ' list') + '">' + d.opts.map((o, k) => '<button class="opt" data-act="bDef" data-i="' + k + '">' + (o.e ? '<span class="o-e">' + o.e + '</span>' : '') + '<span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div></div>');
+      '<div class="opts' + (mv === 0 ? '' : ' list') + '">' + d.opts.map((o, k) => '<button class="opt" data-act="bDef" data-i="' + k + '">' + (o.e ? '<span class="o-e">' + o.e + '</span>' : '') + '<span class="o-t">' + (E.lang ? E.ruby(o.t) : esc(o.t)) + '</span></button>').join('') + '</div></div>');
     $('b-foe').classList.add('attack');
     await E.say(d.spell, undefined, 'm');
     if (!live(b) || B.def !== d || d.done) return;
@@ -1525,6 +1544,14 @@
     const dt = rule('listen') ? 8 : 12;
     if (bar) { bar.style.transition = 'none'; bar.style.width = '100%'; void bar.offsetWidth; bar.style.transition = 'width ' + dt + 's linear'; bar.style.width = '0%'; }
     B.defTimer = setTimeout(() => { if (live(b) && B.def === d) defend(-1); }, dt * 1000);
+  }
+  // 别的语言的课：对手念的咒语（课程里的词 / 句子），选它的意思；有一个选项没有意思（比如中文界面学中文）就选听到的原文
+  function langDef(mv) {
+    const p = pickQ(mv === 0 ? 'word' : 'sent'), it = p.it, L = mv === 0 ? p.d.words : p.d.sents, m = x => E.meanOf(x);
+    const others = shuffle(L.filter(x => x !== it && x[0] !== it[0] && (m(x) == null || m(x) !== m(it)))).slice(0, 2);
+    const byM = [it].concat(others).every(x => m(x) != null);
+    const opt = x => Object.assign(mv === 0 ? { e: x[2] } : {}, { t: byM ? m(x) : x[0] });
+    return { q: p.q, spell: it[0], ans: it[0] + (byM ? ' = ' + m(it) : ''), byEn: !byM, opts: shuffle([Object.assign(opt(it), { c: true })].concat(others.map(opt))) };
   }
   async function defend(i) {
     const d = B && B.def;
@@ -1603,8 +1630,8 @@
     const mon = byUid(it.u), s = SPECIES[mon.sp], nm = mvName(parseMove(it.id));
     if (k < 0) { q.shift(); E.save(); E.closeModal(); E.toast(tx('b.learn.skip', { name: s.en, mv: nm[0] })); setTimeout(afterBattleQueue, 300); return; }
     const old = mvName(parseMove(mon.moves[k]));
-    const line = s.en + ', learn ' + nm[0] + '!', sr = E.speakMode() === 'sr';
-    E.openModal('<h2>' + hx('b.learn.ok', { mv: old[0] }) + '</h2><p>' + hx('b.learn.say') + '</p><div class="say-text" id="lr-say">' + E.wordsHTML(line) + '</div>' +
+    const ln = learnL('learn a move'), line = ln ? ln.t : s.en + ', learn ' + nm[0] + '!', sr = E.speakMode() === 'sr';   // 别的课：换成这座岛课程里的一句
+    E.openModal('<h2>' + hx('b.learn.ok', { mv: old[0] }) + '</h2><p>' + hx('b.learn.say') + '</p><div class="say-text" id="lr-say">' + E.wordsHTML(line) + '</div>' + meanHTML(ln) +
       (sr ? '<button class="mic" id="lr-mic" data-act="mLearnMic" data-k="' + k + '">' + E.MIC + '</button><div class="mic-hint" id="lr-hint">' + hx('b.mic.say') + '</div>' : '<button class="btn leaf wide" data-act="mLearnGo" data-k="' + k + '">' + hx('b.said') + '</button>') +
       '<button class="btn ghost wide" data-act="mHearLearn">' + hx('b.listen') + '</button>', { locked: true });
     E.say(line);
@@ -1622,7 +1649,7 @@
     const m = $('lr-mic'); if (!m) return;
     if (E.RT.listening) { E.stopListening(); return; }
     m.classList.add('on'); m.innerHTML = E.STOP; $('lr-hint').textContent = tx('b.mic.on');
-    const it = (M().pendingLearn || [])[0], line = it ? nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] : '';
+    const it = (M().pendingLearn || [])[0], ln = learnL('learn a move'), line = ln ? ln.t : it ? nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] : '';
     const res = await E.recognize(null, [line]);
     if (!$('lr-mic')) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
@@ -1899,8 +1926,9 @@
     if (!nickCtx) return;
     const mon = byUid(nickCtx.u); if (!mon) return;
     nickCtx.name = name;
-    const line = 'Your name is ' + name + '!', sr = E.speakMode() === 'sr';
-    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + name + '</h2><p>' + hx('b.nick.say') + '</p></div></div><div class="say-text" id="nick-say">' + E.wordsHTML(line) + '</div>' +
+    const ln = learnL('your name is'), line = ln ? ln.t : 'Your name is ' + name + '!', sr = E.speakMode() === 'sr';   // 别的课：换成这座岛课程里的一句
+    nickCtx.line = line;
+    E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + name + '</h2><p>' + hx('b.nick.say') + '</p></div></div><div class="say-text" id="nick-say">' + E.wordsHTML(line) + '</div>' + meanHTML(ln) +
       '<button class="spk mini" data-act="mNickHear" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button>' +
       (sr ? '<button class="mic" id="nick-mic" data-act="mNickMic">' + E.MIC + '</button><div class="mic-hint" id="nick-hint">' + hx('b.mic.say') + '</div>' : '<button class="btn leaf wide" data-act="mNickGo">' + hx('b.said') + '</button>') +
       '<button class="link" data-act="mNickBack">' + hx('b.nick.back') + '</button>', { locked: true });
@@ -1925,7 +1953,7 @@
   async function nickMic() {
     if (!nickCtx) return;
     if (E.RT.listening) { E.stopListening(); return; }
-    const line = 'Your name is ' + nickCtx.name + '!', m = $('nick-mic'); m.classList.add('on');
+    const line = E.lang && nickCtx.line ? nickCtx.line : 'Your name is ' + nickCtx.name + '!', m = $('nick-mic'); m.classList.add('on');
     const res = await E.recognize(() => {}, [line]);
     m.classList.remove('on');
     if (!res.alts.length) {
@@ -1947,11 +1975,12 @@
     const mon = byUid(u); if (!mon || mon.egg) return;
     const today = E.dayStr(), done = (M().talked || {})[u] === today;
     if (done) { E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + nm(mon) + '</h2><p>' + E.esc(MOOD(hearts(mon))) + '</p><p>' + hx('b.fr') + ' ' + heartsHTML(mon) + '</p><p class="tip">' + hx('b.talk.later') + '</p></div></div><button class="btn ghost wide" data-act="' + (then ? 'mTalkBack' : 'close') + '" data-u="' + u + '">' + hx('b.okay') + '</button>'); talkCtx = { u, then }; return; }
-    const line = TALKS[(new Date().getDate() + (SPECIES[mon.sp].sd || 0)) % TALKS.length](nm(mon)), sr = E.speakMode() === 'sr';
+    const k = (new Date().getDate() + (SPECIES[mon.sp].sd || 0)) % TALKS.length, ln = learnL('talk:' + k);   // 别的课：换成这座岛课程里的一句
+    const line = ln ? ln.t : TALKS[k](nm(mon)), sr = E.speakMode() === 'sr';
     talkCtx = { u, then, line };
     // b.talk.p 的 {h} 是爱心的 HTML（heartsHTML），所以用 tx 不用 hx；字表里这句没有要转义的字
     E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + hx('b.talk.t', { name: nm(mon) }) + '</h2><p>' + tx('b.talk.p', { h: heartsHTML(mon) }) + '</p></div></div>' +
-      '<div class="say-text" id="talk-say">' + E.wordsHTML(line) + '</div><button class="spk mini" data-act="mTalkHear" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button>' +
+      '<div class="say-text" id="talk-say">' + E.wordsHTML(line) + '</div>' + meanHTML(ln) + '<button class="spk mini" data-act="mTalkHear" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button>' +
       (sr ? '<button class="mic" id="talk-mic" data-act="mTalkMic">' + E.MIC + '</button><div class="mic-hint" id="talk-hint">' + hx('b.mic.say') + '</div>' : '<button class="btn leaf wide" data-act="mTalkGo">' + hx('b.said') + '</button>') +
       '<button class="btn ghost wide" data-act="' + (then ? 'mTalkBack' : 'close') + '" data-u="' + u + '">' + hx('b.talk.no') + '</button>');
     E.say(line);
@@ -2069,7 +2098,7 @@
     else if (s.legend) txt = hx('b.hab.legend');
     else if (s.starter) txt = hx('b.hab.starter');
     else if (s.from && SPECIES[s.from]) { const b = habitatsOf(baseOf(id)); txt = b.length ? hx('b.hab.fromAt', { from: SPECIES[s.from].en, base: SPECIES[baseOf(id)].en, place: b[0].name }) : hx('b.hab.from', { from: SPECIES[s.from].en }); }
-    else if (window.EchoSight && EchoSight.may(id)) txt = hx('b.hab.sight');
+    else if (window.EchoSight && !E.lang && EchoSight.may(id)) txt = hx('b.hab.sight');
     else txt = hx('b.hab.none');
     return '<p class="dex-hab">' + hx('b.hab.t') + txt + '</p>';
   }
@@ -2247,7 +2276,7 @@
     mNickOwn: () => { const v = (($('nick-in') || {}).value || '').trim(); if (!/^[A-Za-z][A-Za-z]{0,9}$/.test(v)) { const tip = $('nick-tip'); if (tip) tip.textContent = tx('b.nick.bad'); return; } nickSay(v[0].toUpperCase() + v.slice(1).toLowerCase()); },
     mNickGo: () => nickDone(true),
     mNickMic: () => nickMic(),
-    mNickHear: () => nickCtx && E.say('Your name is ' + nickCtx.name + '!', .8),
+    mNickHear: () => nickCtx && E.say(E.lang && nickCtx.line ? nickCtx.line : 'Your name is ' + nickCtx.name + '!', .8),
     mNickBack: () => nickCtx && nickSheet(nickCtx.u, nickCtx.then),
     mNickSkip: () => nickDone(false),
     mNickClear: () => { if (nickCtx) { nickCtx.name = SPECIES[byUid(nickCtx.u).sp].en; nickDone(true); } },
@@ -2262,7 +2291,7 @@
     mForget: t => forget(+t.dataset.k),
     mLearnGo: t => learnDone(+t.dataset.k),
     mLearnMic: t => learnMic(+t.dataset.k),
-    mHearLearn: () => { const it = (M().pendingLearn || [])[0]; if (it) E.say(nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] + '!', .8); },
+    mHearLearn: () => { const it = (M().pendingLearn || [])[0], ln = learnL('learn a move'); if (ln) E.say(ln.t, .8); else if (it) E.say(nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] + '!', .8); },
     mExpShare: () => { M().expShareOn = M().expShareOn === false; E.save(); bagSheet(); },
     mDowse: () => { M().dowseOn = M().dowseOn === false; E.save(); bagSheet(); },
     bSwitch: switchSheet,

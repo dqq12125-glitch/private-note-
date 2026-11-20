@@ -10,8 +10,10 @@
 // 给 game.js 的接口：EchoTalk.today()（学习锁用）、EchoTalk.endIfOpen()（返回键用）、EchoTalk.concerns()（周报「有几段聊天需要家长看看」）
 (function () {
   'use strict';
-  const NPCS = window.TALK_NPCS;
+  let NPCS = window.TALK_NPCS;     // 别的语言的课：game.js 换成 course.json 的 TALK（useNpcs）
   const Core = () => window.TalkCore;
+  // 在学别的语言（tools/course/ENGINE.md §4）：服务器的人设、提示词还只会英语，和岛民聊天、委托这一步先关掉
+  const langOff = () => !!(G && G.lang);
   let G = null;                    // game.js 给的工具（S、save、toast、esc、openModal……）
   const $ = s => document.querySelector(s);
   const LS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) { return ''; } };
@@ -36,6 +38,8 @@
   const stepTxt = (s, k) => (zhUi() ? s.zh : s.task || tx('tk.step', { n: k + 1 }));
   if (I18N) I18N.add({
     zh: {
+      // 别的语言的课（tools/course/ENGINE.md §4）
+      'tk.lang.h': '这门语言的 AI 聊天还在做', 'tk.lang.p': '岛民现在还只会用英语聊天。这门语言的聊天做好以后会在这里打开；学习锁里「聊天」这一项先每天自动免掉。先去闯关练习、每日复习和怪兽冒险吧！',
       'tk.err.offline': '现在没网，连上网再来聊吧', 'tk.err.auth': 'AI 密钥不对，请告诉家长', 'tk.err.quota': 'AI 额度用完了，请告诉家长', 'tk.err.busy': 'AI 有点忙，过一会儿再试',
       'tk.err.code': '家庭口令不对，请告诉家长', 'tk.err.network': '连不上 AI 聊天，过一会儿再试；一直不行就告诉家长', 'tk.err.daily': '今天的聊天时间用完了，明天再来吧！',
       'tk.err.nonpc': '没有这个岛民', 'tk.err.log': '聊天：{raw}', 'tk.err.conn': '连不上对话服务 {url}', 'tk.err.up': '连不上对话服务（{msg}）',
@@ -96,6 +100,7 @@
       'tk.pv.doc': '📄 儿童隐私说明（全文）', 'tk.pv.forget': '🧹 让岛民忘掉以前聊过的事', 'tk.forgot': '岛民忘掉以前聊过的事了',
     },
     en: {
+      'tk.lang.h': 'AI chat in this language is still being built', 'tk.lang.p': 'For now the islanders can only chat in English. Chat in this language will open here when it is ready; until then the "chat" part of the study lock is skipped every day. Try Practice, Daily review and the Monster Adventure!',
       'tk.err.offline': 'You\'re offline. Connect to the internet, then come back to chat', 'tk.err.auth': 'The AI key is wrong. Please ask a parent or check Settings',
       'tk.err.quota': 'The AI credit has run out. Please ask a parent or check Settings', 'tk.err.busy': 'The AI is a bit busy. Try again in a moment',
       'tk.err.code': 'The family code is wrong. Please ask a parent', 'tk.err.network': 'Can\'t reach AI chat. Try again in a moment; if it keeps happening, ask a parent',
@@ -338,6 +343,7 @@
 
   // ---------- 首页的「和岛民聊天」 ----------
   function homeHTML() {
+    if (langOff()) return '<section class="tk-home"><div class="tk-intro"><b>' + hx('tk.lang.h') + '</b><p>' + hx('tk.lang.p') + '</p></div></section>';
     const esc = G.esc, T = state(), url = relayUrl(), core = Core(), t = today(), nc = concerns();
     const card = (n, now) => {
       const best = T.done[n.id], g = core.goalOf(n, core.goalIndex ? core.goalIndex(n, T.n[n.id] || 0, chatLv()) : T.n[n.id] || 0);
@@ -528,6 +534,7 @@
   // 现在能不能开聊（大地图上的委托先问一下）：能聊返回 ''；肯定聊不了就返回给孩子看的一句话（和聊天界面里连不上时说的一样）：
   // 没开通、手机说没网、今天的聊天时间用完了。密钥不对 / 额度用完由 game.js 的 chatKeyBad 判断，那一句用 errText('auth' / 'quota') 取
   function blocked() {
+    if (langOff()) return tx('tk.lang.h');
     if (!relayUrl()) return tx('w.q.noai');   // world.js 的字表：「AI 聊天还没开通，请告诉家长」
     if (typeof navigator !== 'undefined' && navigator.onLine === false) return errTxt('offline');
     // 云端模式：没登录、要家长同意的不拦（open() 会弹登录 / 请家长同意那一页）；只有账号说今天的时间用完了才拦
@@ -537,6 +544,7 @@
   }
   const b64 = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   async function open(id) {
+    if (langOff()) { if (G && G.toast) G.toast(tx('tk.lang.h')); return; }
     const npc = typeof id === 'object' ? id : NPCS.byId[id]; if (!npc) return;
     if (C) { if (C.ending || C.done) close(); else return; }
     lmShut();   // 口语题预热的麦克风先关掉，聊天自己开
@@ -1317,15 +1325,16 @@
     return { send: s => { if (ws.readyState === 1) ws.send(s); }, close: () => { try { ws.close(); } catch (e) {} } };
   }
   // 整段识别（原来的做法；实时识别不行时兜底）
-  async function wholeAsr(chunks, len, rate) {
-    const body = { model: 'qwen3-asr-flash', stream: false, asr_options: { language: 'en', enable_itn: false },
+  // lang：别的语言的课的识别语言（LANG.asr.cloud：es / ja / zh），英语不给（中转服务现在还写死英语，见 tools/course/ENGINE.md §6：带上了，服务器以后再认）
+  async function wholeAsr(chunks, len, rate, lang) {
+    const body = { model: 'qwen3-asr-flash', stream: false, asr_options: { language: lang || 'en', enable_itn: false },
       messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + wav16(chunks, len, rate) } }] }] };
     let text = '', r;
     if (direct()) {
       r = await nativePost('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', JSON.stringify(body), 12000);
       try { text = String(JSON.parse(r.text).choices[0].message.content || '').trim(); } catch (e) {}
     } else {
-      r = await relayPost('/asr', { audio: body.messages[0].content[0].input_audio.data.split(',')[1] }, 12000);
+      r = await relayPost('/asr', Object.assign({ audio: body.messages[0].content[0].input_audio.data.split(',')[1] }, lang ? { lang } : null), 12000);
       try { text = String(JSON.parse(r.text).text || '').trim(); } catch (e) {}
       if (!r.ok) r.text = 'HTTP ' + r.status + ' ' + r.text;
     }
@@ -1372,7 +1381,8 @@
       let pend = [], pendN = 0, q = [], preN = 0, loudN = 0;
       const segs = [], pre = [], st = { pos: 0 };
       D.eng = 'device'; D.fed = 0;
-      const first = s => (s.split(' ')[0] || '').toLowerCase();
+      // 别的语言的课：第一个词、有几个词交给 LANG（o.head / o.count；日语、中文没有空格）
+      const first = o.head || (s => (s.split(' ')[0] || '').toLowerCase()), nUnits = o.count || (s => s.split(' ').length);
       const stopNative = () => { try { N.speechStop(++nid); } catch (e) { /* 不在 App 里 */ } };
       // 收尾。原生还没回 speechStart 的（比如麦克风被拒得比原生开好还快）：等它回了 ok 再叫停一次，别让那一次一直开着
       const cleanup = () => {
@@ -1450,7 +1460,7 @@
           const p = String(d.text || '').replace(/\s+/g, ' ').trim();
           // 手机上的识别在人停顿一下以后，有时从头另起一段（新的字不接着前面的）：前面那段先留着、拼在一起。
           // 只在「停住 0.35 秒以上、第一个词变了、字变少了」时才算另起一段（平常的改字不是这样）
-          if (p && raw && p !== raw && now() - chg >= 350 && first(p) !== first(raw) && p.split(' ').length < raw.split(' ').length) segs.push(raw);
+          if (p && raw && p !== raw && now() - chg >= 350 && first(p) !== first(raw) && nUnits(p) < nUnits(raw)) segs.push(raw);
           if (p) raw = p;
           const t = segs.concat(raw ? [raw] : []).join(' ').trim();
           if (t && t !== text) {
@@ -1494,7 +1504,7 @@
         ready();
       };
       if (!asks) openMic();
-      try { N.speechStart(id, JSON.stringify({ short, long: !!o.long, locale: 'en-US', rate: 16000 })); } catch (e) { fall('error'); }
+      try { N.speechStart(id, JSON.stringify({ short, long: !!o.long, locale: o.lang ? o.lang.apple : 'en-US', rate: 16000 })); } catch (e) { fall('error'); }
     });
   }
   // 本机识别没认出字、云端又接不上：录好的声音不要了，麦克风照常预热着
@@ -1533,9 +1543,11 @@
       // 本机没认出字，云端又用不了（没有密钥 / 云端模式没登录）：
       //   本机这次打开 App 不用了（unavailable / denied / 连着两次）→ 和以前没有 AI 时一样（game.js 走「先跳过」、请他登录）；
       //   本机还能用（只是这一次没认出来）→ 按「没听清」回：有提示、算一次尝试，再说一次
-      const why = !cloudSR() ? 'nokey' : cloudOn() && !(ACC() && ACC().signed()) ? 'signin' : '';
+      // o.noCloud：别的语言的课在云端模式里（服务器的识别还写死英语，tools/course/ENGINE.md §6），也按「云端用不了」算
+      const why = o.noCloud ? 'lang' : !cloudSR() ? 'nokey' : cloudOn() && !(ACC() && ACC().signed()) ? 'signin' : '';
       if (why) { dropPre(D); r = NSP.off ? { text: '', err: 'nokey', why } : { text: '', err: 'no-speech', why: 'device', how: D.fell }; }
     }
+    if (!r && o.noCloud) { dropPre(D); r = { text: '', err: 'nokey', why: 'lang' }; }
     if (!r) { D.eng = 'cloud'; r = await cloudListen(o, D); }
     // 没拿到字：把「🎤 请说……」「🎧 识别中……」那一行清掉（每个调用的地方都显示这一行，不清就像卡住了；提示由调用的地方按 fail 写）
     if (r && !r.text && o.onState) { try { o.onState(''); } catch (e) { /* 页面已经换了 */ } }
@@ -1564,7 +1576,7 @@
       const sock = dead ? null : asrSock((type, data) => {
         if (over) return;
         if (type === 'open') {
-          sock.send(JSON.stringify({ type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language: 'en' },
+          sock.send(JSON.stringify({ type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language: o.lang ? o.lang.cloud : 'en' },
             turn_detection: { type: 'server_vad', threshold: 0.2, silence_duration_ms: o.short ? 400 : o.long ? 1000 : 600 } } }));
           ready = true; D.ready = performance.now() - D.t0; queue.forEach(s => sock.send(s)); queue = [];
         } else if (type === 'message') {
@@ -1596,7 +1608,7 @@
         if (voiced < 3 || len < rate * 0.3) return resolve(t ? { text: t, err: null, how: why } : { text: '', err: why === 'user' ? 'aborted' : 'no-speech' });
         // 实时识别没认完（或者没连上）：录好的整段重新识别；整段也失败就用手上的半句
         if (o.onState) o.onState(tx('tk.asr.busy'));
-        const w = await wholeAsr(chunks, len, rate);
+        const w = await wholeAsr(chunks, len, rate, o.lang && o.lang.cloud);
         resolve(w.text || !t ? Object.assign(w, { how: 'whole' }) : { text: t, err: null, how: 'partial' });
       };
       SR.stop = () => finish('user');
@@ -1756,5 +1768,7 @@
     // iPhone 的本机识别：口语题现在会不会先用它、最近一次 / 最近 20 次识别的计时（只在内存里）、给设置页 / 小检查 / 周报的话
     localSR, lastSpeech: () => (SRLOG.length ? Object.assign({}, SRLOG[SRLOG.length - 1]) : null), speechLog: () => SRLOG.map(x => Object.assign({}, x)),
     speechState: () => (NSP.st ? Object.assign({ off: NSP.off }, NSP.st) : { off: NSP.off, has: nspHas() }), speechRefresh: nspRefresh, srText,
+    // 别的语言的课：换上这门课的聊天角色（game.js 的 courseUse，课程的 TALK）
+    useNpcs: o => { if (o && o.list && o.byId) NPCS = o; },
   };
 })();

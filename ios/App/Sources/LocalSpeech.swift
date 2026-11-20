@@ -36,7 +36,8 @@ import Speech
 // 常数（不归哪个线程管）
 enum SpeechConst {
     static let locale = "en-US"
-    static let locales = ["en-US", "en-GB", "en-AU"]       // 网页可以要的；别的一律按 en-US
+    // 网页可以要的；别的一律按 en-US。es / ja / zh 是别的语言的课（tools/course/ENGINE.md §3，lang-*.js 的 asr.apple / appleAlt）
+    static let locales = ["en-US", "en-GB", "en-AU", "es-MX", "es-ES", "es-US", "ja-JP", "zh-CN"]
     static let rate = 16000.0                            // 网页送来的声音默认 16kHz（talk.js 的 pcm16，和云端识别一样）
 }
 

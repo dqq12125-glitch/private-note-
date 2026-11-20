@@ -30,6 +30,9 @@
       'w.room.1': '第一位擂主', 'w.room.2': '第二位擂主', 'w.room.3': '第三位擂主', 'w.room.4': '第四位擂主', 'w.room.5': '冠军的房间',
       'w.hud.wild': '野外 Lv {a}–{b}', 'w.hud.home': '回首页', 'w.hud.goal': '现在要做什么', 'w.hud.bike': '骑车', 'w.hud.menu': '菜单',
       'w.pad.up': '上', 'w.pad.left': '左', 'w.pad.right': '右', 'w.pad.down': '下', 'w.hud.chat': '英语聊天', 'w.hud.a': '对话',
+      // 别的语言的课（tools/course/ENGINE.md）：写着「英语」的几句换成这门语言（i18n.js 的 variant）；剧情里换掉的说话任务、选回答的说明
+      'w.hud.chat.c': '{lang}聊天', 'w.lang.say': '用{lang}说出来：', 'w.lang.ans': '听一听，选出合适的回答，用{lang}说出来。', 'w.lang.pic': '这个用{lang}怎么说？选出来，再说出来。',
+      'w.sk.intro.c': '一共四种回声技能。先从剧情里的人手上拿到回声贝，再拿够徽章才能用；后面拿到的回声贝会让技能升一级。队伍里要有合适属性的怪兽，用的时候要大声对它说一句{lang}。',
       'w.hud.north': '指北针：红尖指着北边，点一下转回正北', 'w.help.cam': '🧭 新画风的户外：在右半边屏幕上拖动可以转视角（转一整圈都行），双击回到自己身后；转了以后右上角有指北针，点一下转回正北。电脑上按住右键拖，或者按 Q / E。',
       'w.goal.toast': '📍 现在要做：{t}',
       'w.q.tip': '📋 新玩法「委托」：头上有金色 ? 的人有事请你帮忙——走过去按 A，用英语帮 TA，有稀有奖励！',
@@ -100,6 +103,8 @@
       'w.room.1': 'First Master', 'w.room.2': 'Second Master', 'w.room.3': 'Third Master', 'w.room.4': 'Fourth Master', 'w.room.5': 'Champion\'s Room',
       'w.hud.wild': 'Wild Lv {a}–{b}', 'w.hud.home': 'Home', 'w.hud.goal': 'What to do now', 'w.hud.bike': 'Ride the bike', 'w.hud.menu': 'Menu',
       'w.pad.up': 'Up', 'w.pad.left': 'Left', 'w.pad.right': 'Right', 'w.pad.down': 'Down', 'w.hud.chat': 'Chat', 'w.hud.a': 'Talk',
+      'w.hud.chat.c': '{lang} chat', 'w.lang.say': 'Say it in {lang}:', 'w.lang.ans': 'Listen, choose the right answer, and say it in {lang}.', 'w.lang.pic': 'How do you say this in {lang}? Choose it, then say it.',
+      'w.sk.intro.c': 'There are four Echo Skills. First get an Echo Shell from someone in the story, then win enough badges to use it. Later Echo Shells make a skill one level stronger. You need a monster of the right type in your team, and you say a {lang} sentence to it aloud.',
       'w.hud.north': 'Compass: the red tip points north. Tap to face north again', 'w.help.cam': '🧭 Outdoors in the new look: drag on the right half of the screen to turn the view (all the way round), and double-tap to get back behind yourself. Once you have turned, a compass shows at the top right: tap it to face north again. On a computer, drag with the right mouse button or press Q / E.',
       'w.goal.toast': '📍 What to do now: {t}',
       'w.q.tip': '📋 New: requests! People with a gold ? over their heads need your help. Walk up, press A and help them in English. You can get rare rewards!',
@@ -332,7 +337,7 @@
     // 回程绳回到最后一次待过的户外地图（先记好，下面整份存的时候一起存上）
     if ((M.kind === 'town' || M.kind === 'route') && !PL.surf) ws.lastOut = { map: M.id, x: PL.x, y: PL.y, dir: PL.dir };
     // 今日目击（sighting.js）：进过的野外地图记下来（跟着下面这次存档一起存）；这张图是今天的目击地点就提示一句
-    if (window.EchoSight) EchoSight.onMap(M);
+    if (sightOn()) EchoSight.onMap(M);
     savePos(true);
     hud();
     E.music(mapMusic());
@@ -559,7 +564,7 @@
     if (ws.repel > 0) { ws.repel--; if (!ws.repel) E.toast(tx('w.spray.off')); }
     const rate = slid ? 0 : PL.surf && isWater(PL.x, PL.y) ? .08 : EM.ENCOUNTER[t];
     // 今日目击（sighting.js）：在线索说的那张地图、那种地形里走够了步数，那只稀有怪兽一定出来——这一步就不再掷普通的遇怪
-    if (window.EchoSight && EchoSight.onStep({ map: M, hab: rate ? wildHab() : '', surf: !!PL.surf, spray: ws.repel > 0, idle: !dlg && !busy && !overlay })) return;
+    if (sightOn() && EchoSight.onStep({ map: M, hab: rate ? wildHab() : '', surf: !!PL.surf, spray: ws.repel > 0, idle: !dlg && !busy && !overlay })) return;
     if (rate && !(ws.repel > 0) && Math.random() < rate && MG.anyAlive()) encounter();
   }
   // 蛋孵出来了
@@ -617,7 +622,46 @@
   const fill = v => typeof v === 'string' ? v.split('{name}').join(pname()).split('{rival}').join(rivalInfo().name) : v;
   function talk(pages, onDone) {
     pages.forEach(p => ['en', 'zh', 'ui', 'target', 'who'].forEach(k => { p[k] = fill(p[k]); }));
+    if (E.lang) pages.forEach(langPage);
     dlg = { pages, i: 0, onDone, tries: 0 }; showPage();
+  }
+  // ---------- 别的语言的课：代码里写死的英语台词（tools/course/ENGINE.md §5，过渡办法；台词翻译表以后做）----------
+  // · 只是给人看的台词：正文换成界面语言那份（中文界面 = 原来的中文意思；英语界面 = 英语原文），没有「译」、不朗读（game.js 的 say 只念课程内容）；
+  //   正文本来就是课程内容的（村民念的课程句子）：照旧显示原文，下面一行是它的意思
+  // · 要开口说的（speak）、要选的（answer）：不是课程内容的，换成这座岛课程里的一句 / 一段对话（E.learnLine：按英语原文的哈希固定挑），
+  //   题面给它的意思；进复习本用课程里的编号（pg.q）。英语课不走这里
+  const langIsle = () => (M ? (M.isle != null ? M.isle : M.z) : 0) | 0;
+  // 今日目击：线索是英语拼的，别的课先不出（ENGINE.md §4）
+  const sightOn = () => !!window.EchoSight && !(E && E.lang);
+  const langName = () => tx('pk.name.' + E.course);
+  function langPage(pg) {
+    if (!pg || pg.kind === 'choice' || pg.kind === 'custom' || pg.lang) return;
+    pg.lang = true;
+    const zhUi = !I18N || I18N.lang() === 'zh', uiText = zhUi ? pg.zh || pg.en : pg.en || pg.zh;
+    if (pg.kind === 'speak') {
+      if (!E.entryOf(pg.target)) {
+        const ln = E.learnLine(pg.lkey || pg.target, langIsle(), 'sent');
+        if (ln) { pg.target = ln.t; pg.mean = ln.mean; if (ln.q) pg.q = ln.q; pg.en = tx('w.lang.say', { lang: langName() }); pg.ui = ''; pg.hideEn = false; return; }
+      }
+      pg.mean = E.meanText(pg.target);
+      pg.en = uiText && uiText !== pg.target ? uiText : tx('w.lang.say', { lang: langName() }); pg.ui = ''; pg.hideEn = false;
+      return;
+    }
+    if (pg.kind === 'answer') {
+      if (!(pg.opts || []).every(o => E.entryOf(o.t))) {
+        const d = E.learnLine(pg.lkey || (pg.opts.find(o => o.c) || {}).t || pg.en, langIsle(), 'dlg');
+        if (d) { pg.en = d.q; pg.opts = [{ c: true, t: d.a }].concat(d.wrong.map(t => ({ t }))).sort(() => Math.random() - 0.5); pg.q = d.rq; pg.pic = null; pg.cap = null; pg.ui = d.mean || tx('w.lang.ans', { lang: langName() }); pg.hideEn = false; return; }
+      }
+      // 选项是课程内容（村民出题、看图选词）：问句是课程内容就照旧（下面一行是意思）；不是（写死的英语 / 中文问法）就换成一句说明
+      const how = pg.pic ? 'w.lang.pic' : 'w.lang.ans';
+      pg.ui = E.entryOf(pg.en) ? (E.meanText(pg.en) || tx(how, { lang: langName() })) : tx(how, { lang: langName() });
+      if (!E.entryOf(pg.en)) pg.en = '';
+      pg.hideEn = false;
+      return;
+    }
+    if (!pg.en) return;
+    if (E.entryOf(pg.en)) { pg.ui = E.meanText(pg.en) || ''; return; }   // 村民念的课程句子：原文 + 意思
+    pg.en = uiText; pg.ui = ''; pg.hideEn = false; pg.plain = true;
   }
   const page = () => dlg && dlg.pages[dlg.i];
   // 剧情中文（家长 2026-10-07）：S.settings.storyZh = always 总是显示 / tap 点一下才显示 / auto 自动（默认）。
@@ -647,7 +691,8 @@
     const pg = page(), box = $('w-dlg');
     if (!pg) { closeDlg(); return; }
     dlg.tries = 0; dlg.picked = false;
-    const sr = E.speakMode() === 'sr', esc = E.esc, typing = !pg.kind && !!pg.en && !pg.hideEn;
+    // 别的课：课程内容的那句话不一个字一个字打出来（要整句标读音）；rb 显示要学的那句话（标读音，英语课就是 esc）
+    const sr = E.speakMode() === 'sr', esc = E.esc, typing = !pg.kind && !!pg.en && !pg.hideEn && !(E.lang && E.entryOf(pg.en)), rb = t => (E.lang ? E.ruby(t) : esc(t));
     // AI 打分用不了（没网 / 额度 / 没密钥，game.js 的 aiDown，评估第 3 条）：说话任务给「先跳过（已放进复习，联网后要补说）」，
     // 选回答的任务改成直接点出正确的回答（还是要听懂）
     const down = sr && (pg.kind === 'speak' || pg.kind === 'answer') && !!(E.aiDown && E.aiDown());
@@ -657,9 +702,10 @@
     clearInterval(dlg.tw);
     const face = pg.look ? '<img class="d-face" src="' + portrait(pg.look) + '" alt="">' : '<span class="d-face emo">' + (pg.emo || '💬') + '</span>';
     const zl = zhLine(pg);
-    let body = '<div class="d-name">' + esc(whoLabel(pg.who)) + '</div><button class="spk mini d-hear" data-act="wHear" aria-label="' + hx('w.dlg.hear') + '">' + E.SPK + '</button>' +
+    // 别的课里只给人看的台词（pg.plain，界面语言写的）：没有 🔊（不朗读）
+    let body = '<div class="d-name">' + esc(whoLabel(pg.who)) + '</div>' + (pg.plain ? '' : '<button class="spk mini d-hear" data-act="wHear" aria-label="' + hx('w.dlg.hear') + '">' + E.SPK + '</button>') +
       '<div class="d-row">' + face + '<div class="d-text">' +
-      (pg.en ? '<div class="d-en' + (pg.hideEn ? ' hid' : '') + '" id="d-en">' + (pg.hideEn ? hx('w.dlg.listen') : typing ? '' : esc(pg.en)) + '</div>' : '') +
+      (pg.en ? '<div class="d-en' + (pg.hideEn ? ' hid' : '') + '" id="d-en">' + (pg.hideEn ? hx('w.dlg.listen') : typing ? '' : rb(pg.en)) + '</div>' : '') +
       (!zl ? '' : zhFolded(pg)
         // 中文先收起来：点「译」才显示（每点一次记进当天的学习记录，周报里能看到越来越少）
         ? '<button class="d-zh' + (typing ? ' wait' : '') + '" id="d-zh" data-act="wZh" aria-label="' + hx('w.dlg.zh.aria') + '" style="display:block;margin:4px 0 0 auto;padding:2px 14px;border:2px solid #1f8a9e;border-radius:999px;background:#e8f7f9;color:#16707f;font:inherit;font-size:15px;font-weight:800;cursor:pointer">' + hx('w.dlg.zh.btn') + '</button>'
@@ -669,12 +715,12 @@
     // 竖屏这两块 display: contents，和以前一样一列排；横屏 style.css 把 图片 | 选项 | 话筒 排成一行，不用往下滑就看得见话筒
     const picHTML = pg.pic ? '<div class="d-pic"><div class="say-emoji">' + pg.pic + '</div>' + (pg.cap ? '<b class="d-cap">' + esc(pg.cap) + '</b>' : '') + '</div>' : '';
     if (pg.kind === 'speak') {
-      body += '<div class="d-task' + (pg.pic ? ' has-pic' : '') + '">' + picHTML + '<div class="say-text" id="w-say">' + E.wordsHTML(pg.target) + '</div><div class="d-act">' +
+      body += '<div class="d-task' + (pg.pic ? ' has-pic' : '') + '">' + picHTML + '<div class="say-text" id="w-say">' + E.wordsHTML(pg.target) + '</div>' + (pg.mean ? '<div class="say-zh">' + esc(pg.mean) + '</div>' : '') + '<div class="d-act">' +
         (sr ? '<button class="mic" id="w-mic" data-act="wMic" aria-label="' + hx('w.mic.aria') + '">' + E.MIC + '</button><div class="mic-hint" id="w-hint">' + hx(down ? 'w.mic.down' : 'w.mic.tap') + '</div><div class="heard" id="w-heard"></div>'
           : '<div class="mic-hint" id="w-hint">' + hx('w.self.hint') + '</div><button class="btn leaf" data-act="wSelfDone">' + hx('w.self.done') + '</button>') +
         '<button class="link" data-act="wSkip" id="w-skip"' + (sr ? ' hidden' : '') + '>' + hx('w.skip') + '</button>' + (sr ? aiSkip : '') + '</div></div>';
     } else if (pg.kind === 'answer') {
-      body += '<div class="d-task' + (pg.pic ? ' has-pic' : '') + '">' + picHTML + '<div class="opts list" data-n="' + pg.opts.length + '">' + pg.opts.map((o, k) => '<button class="opt en" data-act="wOpt" data-i="' + k + '"><span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div><div class="d-act">' +
+      body += '<div class="d-task' + (pg.pic ? ' has-pic' : '') + '">' + picHTML + '<div class="opts list" data-n="' + pg.opts.length + '">' + pg.opts.map((o, k) => '<button class="opt en" data-act="wOpt" data-i="' + k + '"><span class="o-t">' + rb(o.t) + '</span></button>').join('') + '</div><div class="d-act">' +
         (dlg.aiTap ? '<small class="tip" id="w-hint">' + hx('w.ans.down') + '</small>'
           : sr ? '<small class="tip">' + hx('w.ans.sr') + '</small><button class="mic" id="w-mic" data-act="wMic" aria-label="' + hx('w.mic.aria') + '">' + E.MIC + '</button><div class="mic-hint" id="w-hint"></div><div class="heard" id="w-heard"></div>'
           : '<small class="tip" id="w-hint">' + hx('w.ans.self') + '</small>') +
@@ -725,7 +771,7 @@
     E.stopListening();
     if (d && d.onDone) d.onDone();
   }
-  function insertPages(extra) { if (extra && extra.length) dlg.pages.splice(dlg.i + 1, 0, ...extra); }
+  function insertPages(extra) { if (extra && extra.length) { if (E.lang) extra.forEach(langPage); dlg.pages.splice(dlg.i + 1, 0, ...extra); } }
   function passTask(score) {
     const pg = page();
     E.S.stats.spoken++; E.qProg('spoken', 1);
@@ -890,7 +936,9 @@
   }
   function signTalk(s) {
     if (s.en) { talk([].concat(s.more ? [[s.en, s.zh]].concat(s.more) : [[s.en, s.zh]]).map(([en, zh]) => ({ who: tx('w.who.sign'), emo: '🪧', en, zh }))); return; }
-    const w = E.W[M.z], nx = E.W[M.z + 1], town = w.en.replace(/[!?]/g, '') + ' Town', next = nx ? nx.en.replace(/[!?]/g, '') + ' Town' : '';
+    // 别的语言的课：w.en 是那门语言的岛名，告示牌（英语界面显示英语原文）用小镇地图的英文名
+    const tn = (x, z) => (E.lang ? ((EM.get('t' + z) || {}).en || '') : x.en.replace(/[!?]/g, '') + ' Town');
+    const w = E.W[M.z], nx = E.W[M.z + 1], town = tn(w, M.z), next = nx ? tn(nx, M.z + 1) : '';
     const S = (en, zh) => ({ who: tx('w.who.sign'), emo: '🪧', en, zh });
     const pages = {
       town: [S('Welcome to ' + town + '!', '欢迎来到' + w.name + '！')],
@@ -1053,7 +1101,8 @@
   // 镇上的人有委托：走过去按 A → TA 说完请求 →「🗣️ 用英语帮 TA」→ 和 TA 用英语聊（talk.js 的 openQuest，人设和小步骤按委托 id 读 quests.js）
   // → 聊天目标完成了，回到地图上 TA 道谢、给奖励。完成的记在 world.flags['q:' + id] = 星数（1–3）。
   // 委托不挡主线；没完成随时能再来，什么都不丢；AI 聊不了时照样听 TA 说完请求，再用一句话告诉孩子为什么现在做不了。
-  const QL = () => (window.QUESTS && QUESTS.list) || [];
+  // 别的语言的课：委托要和岛民 AI 聊天，这门语言的还没有——委托一条都不出（头上没有「?」，ENGINE.md §4）
+  const QL = () => (window.QUESTS && !(E && E.lang) && QUESTS.list) || [];
   const questDone = q => WS().flags['q:' + q.id] | 0;
   // 这个人身上的委托（人物是跟着地图存的，查一次记在身上）
   const questOf = n => { if (n._q === undefined) n._q = QL().find(q => q.map === M.id && String(q.npc) === String(n.id)) || null; return n._q; };
@@ -1273,7 +1322,10 @@
     // 按能力走的学习者（game.js 的 unitSpan，2026-11-19）：门槛从他的起点单元数起（前面的已免修），只数开放的单元；
     // 按课本走是 { from: 0, end: 全部单元 }，和以前一样
     const NB = E.W.length, units = (E.WX || []).slice(NB), sp = E.unitSpan ? E.unitSpan() : { from: 0, end: units.length };
-    const from = Math.max(0, Math.min(sp.from | 0, units.length)), need = Math.max(0, Math.min(unitsFor(z), Math.min(sp.end, units.length) - from));
+    // 别的语言的课：单元没那么多（现在一册 8 个），门槛按现有的单元数摊到 13 座岛上，要求的不超过现有的（ENGINE.md §4）
+    const avail = Math.min(sp.end, units.length) - Math.max(0, Math.min(sp.from | 0, units.length));
+    const want = E.lang ? Math.ceil((z + 1) * Math.min(16, Math.max(0, avail)) / 13) : unitsFor(z);
+    const from = Math.max(0, Math.min(sp.from | 0, units.length)), need = Math.max(0, Math.min(want, Math.min(sp.end, units.length) - from));
     const lab = i => { const u = units[i]; return u ? (u.bshort ? u.bshort + ' ' : '') + 'Unit ' + u.n : ''; };
     const miss = [];
     for (let i = from; i < from + need; i++) if (!((E.S.stars || {})[(NB + i) + '-6'] > 0)) miss.push(i);
@@ -1333,7 +1385,7 @@
     if (!mon) { talk([nar('None of your monsters can use ' + S.en + '.', '队伍里要有' + S.types.map(t => DEX.TYPES[t].zh).join('、') + '系的怪兽，才能用「' + S.zh + '」。')]); return; }
     // @i18n-content-end
     const name = MG.nm(mon);
-    talk([{ who: '{name}', look: playerLook(), g: E.S.player && E.S.player.gender === 'girl' ? 'f' : 'm', en: S.say(name), zh: '用「' + S.zh + '」：大声对 ' + name + ' 说出来！', kind: 'speak', target: S.say(name), pass: () => { E.S.stats.spoken = (E.S.stats.spoken || 0); then(mon); return []; } }]);
+    talk([{ who: '{name}', look: playerLook(), g: E.S.player && E.S.player.gender === 'girl' ? 'f' : 'm', en: S.say(name), zh: '用「' + S.zh + '」：大声对 ' + name + ' 说出来！', kind: 'speak', target: S.say(name), lkey: 'skill:' + k, pass: () => { E.S.stats.spoken = (E.S.stats.spoken || 0); then(mon); return []; } }]);
   }
   function obstacle(f) {
     if (f.obst === 'n') useSkill('cut', mon => { M._cleared.add(f.x + ',' + f.y); E.SFX.hit(); E.toast(tx('w.sk.cut.done', { name: MG.species(mon.sp).en }), 'gold'); if (R && R.fx) R.fx('cut', f.x, f.y); });
@@ -1354,7 +1406,8 @@
   // 钓鱼：等浮标动了，听鱼说的英语，选出意思才能拉上来
   function fish() {
     const sr = E.src ? E.src(M.z) : { w: M.z, d: E.W[M.z] }, w = sr.d, k = Math.floor(Math.random() * w.words.length), it = w.words[k];
-    const others = w.words.filter((x, j) => j !== k && x[1] !== it[1]).sort(() => Math.random() - .5).slice(0, 2);
+    // 别的课：按界面语言里的意思去重（中文课的第 1 格是空的）
+    const others = w.words.filter((x, j) => j !== k && (E.lang ? x[0] !== it[0] && E.meanOf(x) !== E.meanOf(it) : x[1] !== it[1])).sort(() => Math.random() - .5).slice(0, 2);
     const opts = [{ c: true, t: it[1], e: it[2], w: it[0] }, ...others.map(o => ({ t: o[1], e: o[2], w: o[0] }))].sort(() => Math.random() - .5);
     // 选项：中文界面是「图 + 中文意思」（听英文选意思）；英语界面没有可用的意思，换成「图 + 英文词」（听出是哪个词）
     const optTxt = o => (gloss({ zh: o.t }) != null ? o.t : o.w);
@@ -2390,7 +2443,7 @@
     E.openModal('<h2>' + hx('w.menu.title') + '</h2>' +
       // 「现在要做」能点（2026-11-20 老板）：要先学课本 → 直接去那个单元；别的在地图上 → 关上菜单、左上角那行亮一下（不传送）
       (o ? '<div class="ach" id="w-goal-full" data-act="wGoalGo" role="button" tabindex="0" style="cursor:pointer"><span class="ae">📍</span><div style="flex:1"><b>' + hx('w.menu.goal') + '</b><small>' + E.esc(o.zh) + '</small><small class="goal-go">' + goalGoLabel(o) + '</small></div><span style="color:var(--ink-3);font-weight:800">›</span></div>' : '') +
-      (window.EchoSight ? EchoSight.menuRow() : '') +   // 今日目击（sighting.js）：「现在要做」下面的一行，点开是告示板
+      (sightOn() ? EchoSight.menuRow() : '') +   // 今日目击（sighting.js）：「现在要做」下面的一行，点开是告示板
       '<p>' + hx('w.menu.badges', { a: Object.keys(m.badges).length, b: E.W.length }) + ' · 💰 ' + E.S.coins + (WS().repel > 0 ? hx('w.menu.spray', { n: WS().repel }) : '') + '</p>' +
       '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">' + hx('w.menu.team') + '</button><button class="btn ghost" data-act="mBag">' + hx('w.menu.bag') + '</button><button class="btn ghost" data-act="mDex">' + hx('w.menu.dex') + '</button><button class="btn ghost" data-act="wSkills">' + hx('w.menu.skills') + '</button><button class="btn ghost" data-act="wQuests">' + hx('w.menu.quests') + (qn ? ' <b style="color:#b36b00">' + qn + '</b>' : '') + '</button>' +
       '<button class="btn ghost" data-act="wHelp">' + hx('w.menu.help') + '</button><button class="btn ghost" data-act="settings">' + hx('w.menu.settings') + '</button><button class="btn ghost" data-act="wExit">' + hx('w.menu.home') + '</button></div>' +

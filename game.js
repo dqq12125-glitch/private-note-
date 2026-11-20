@@ -15,6 +15,15 @@
   const lbl = o => (I18N ? I18N.label(o) : (o && o.zh) || '');
   // 内容在界面语言里的意思（{ zh: … }）：中文界面给 zh；英语界面（界面语言就是要学的语言）/ 内容没有这门语言的意思给 null（不显示那一行）
   const gloss = o => (I18N ? I18N.gloss(o) : (o && o.zh) || null);
+  // ---------- 在学哪门语言（tools/course/ENGINE.md，2026-11-20）----------
+  // 只有课程包模式才可能不是英语（EchoPacks.course()，localStorage['echo-course']）；lang-*.js 没登记的语言一律按英语。
+  // LANG = 这门语言的模块（lang.js 的接口），英语是 null：凡是「认定在学英语」的地方都看它——英语的路一个字不变，别的语言走 LANG 的打分、提示、词块、读音
+  const COURSE = (() => { try { const P = window.EchoPacks, c = P && P.on ? P.course() : 'en'; return c !== 'en' && window.EchoLang && EchoLang.has(c) ? c : 'en'; } catch (e) { return 'en'; } })();
+  const LANG = COURSE === 'en' ? null : EchoLang.get(COURSE);
+  // 界面上写着「英语」的那几句换成「.c」的写法（{lang} = 这门语言的名字，packs.js 的 pk.name.*），见 i18n.js 的 variant
+  if (LANG && I18N && I18N.variant) I18N.variant('.c', () => ({ lang: I18N.t('pk.name.' + COURSE) }));
+  // 课程内容（单词、句子、对话）的意思：要学的语言是 COURSE（英语课和 gloss 一样；别的课英语界面给 en 那份、中文界面给中文）
+  const glossC = o => (I18N ? I18N.gloss(o, COURSE) : (o && o.zh) || null);
   // ---------- 单词 / 句子的「意思」（规则只写在这里）----------
   // 条目是 data.js / book.js 的单词 [英文, 中文意思, 表情] 或句子 [英文, 中文意思]（对话 [问, 答, [错的答]] 没有意思）；
   // 复习本里聊天改过的句子是 { en, zh }。
@@ -22,9 +31,9 @@
   // meanOf(条目) = 现在的界面语言里的意思：中文界面给中文；英语界面给 null；别的界面语言有 gloss[界面语言] 就给，没有给 null（不退回中文）。
   // 拿到 null 时不显示意思那一行，也不拿「意思」出题——闯关 / 复习 / 对战换成什么题见 cueMode()
   const glossObj = it => { const g = Array.isArray(it) ? it[it.length - 1] : it && it.gloss; return g && typeof g === 'object' && !Array.isArray(g) ? g : null; };
-  const meanOf = it => (it ? gloss(Object.assign({ zh: Array.isArray(it) ? it[1] : it.zh }, glossObj(it))) : null);
-  // 课本的册名（七上……）：book.js 里只有中文的 short；别的界面语言用字表 g.book.<册 id>
-  const bookShort = b => { const k = 'g.book.' + (b && b.id); return I18N && I18N.lang() !== 'zh' && I18N.has(k) ? tr(k) : (b && b.short) || ''; };
+  const meanOf = it => (it ? glossC(Object.assign({ zh: Array.isArray(it) ? it[1] : it.zh }, glossObj(it))) : null);
+  // 课本的册名（七上……）：book.js 里只有中文的 short；别的界面语言用字表 g.book.<册 id>。别的课（course.json）的册自己带着英文的 x.en.short（L1）
+  const bookShort = b => { if (LANG && b && b.x) return lbl({ zh: b.short, en: b.x.en && b.x.en.short }); const k = 'g.book.' + (b && b.id); return I18N && I18N.lang() !== 'zh' && I18N.has(k) ? tr(k) : (b && b.short) || ''; };
   // 岛主 / 单元 BOSS 的名字：中文界面用中文名；别的语言用英文名（data.js 的 boss.en；课本单元的 BOSS 没有 en，从开场白里取：I'm Ollie.）
   const bossName = b => lbl({ zh: b && b.name, en: (b && b.en) || (/\bI(?:'m| am) ((?:the )?[A-Z][\w-]*(?: [A-Z][\w-]*)*)/.exec((b && b.hello) || '') || [])[1] });
   // 小岛的名字：中文界面用中文名（你好岛）；别的语言用这座岛小镇地图的英文名（Crayon Island……，和大地图、剧情里说的一样，world.js 的 townName）
@@ -616,6 +625,26 @@
       'g.shell.quit': '退出本关',
       'g.shell.next': '继续',
 
+      // —— 别的语言的课（tools/course/ENGINE.md，2026-11-20）——
+      'g.bak.other': '这份存档是另一门课的，不能用在这里',
+      'g.fail.lang': '🎤 这门语言的口语要用手机自带的识别，现在用不了：先跳过，句子放进每日复习',
+      'g.home.qv.course': '📗 课程单元',
+      'g.unit.head.c': '📗 课程单元', 'g.unit.all.c': '这门课的单元都开放：每个单元有单词、句子和对话，按单元的话题和语法编写。',
+      'g.gate.chat.lang': '和岛民聊天（这门语言的 AI 聊天还在做，今天先跳过）', 'g.rp.ex.lang': '这门语言的 AI 聊天还在做',
+      'g.set.ruby': '读音', 'g.set.ruby.on': '显示', 'g.set.ruby.off': '不显示', 'g.set.ruby.d': '题目、选项、对话上面标出读音（凭记忆说的提示不标）。',
+      'g.shell.foot.c': '回声岛 · {lang}听说闯关 · 进度只保存在这台设备上',
+      // 下面这些「.c」是原来写着「英语」的句子在别的课里的写法（i18n.js 的 variant）
+      'g.rc.1.d.c': '跟读单词，再看图说出{lang}。', 'g.type.sp.c': '🖼️ 看图说{lang}', 'g.tag.sp.c': '看图说{lang}',
+      'g.cue.pic.t.c': '看图，凭记忆用{lang}说出来', 'g.q.ls.t.c': '听一听，选出你听到的{lang}', 'g.q.fix.t.c': '这句话可以说得更好：直接说出正确的{lang}',
+      'g.q.mem.t.c': '看意思，凭记忆用{lang}说出来', 'g.q.sp.t.c': '看图，用{lang}说出来', 'g.q.bt.mem.c': '听懂它的话，<b>凭记忆用{lang}回答</b>攻击它！',
+      'g.play.mic.sr.c': '点麦克风，然后大声说{lang}', 'g.play.self.pic.c': '先看图<b>大声说出{lang}</b>，说完再看答案', 'g.th.en.c': '<span>Aa</span>原文',
+      'g.home.scene.new.c': '先看看这个话题的{lang}对话怎么说 · 第一次看完 +10 金币', 'g.th.tip.watch.c': '先完整看一遍。关掉原文字幕，就能练纯听力。点下面的对话记录可以单独再听一句。',
+      'g.mic.h.c': '要用麦克风才能开口说{lang}', 'g.mic.p.c': '<p>回声岛要<b>听你说的{lang}</b>，才能给你打分。声音只用来打分，不会存下来。</p>', 'g.mic.allok.c': '全都没问题，可以开口说{lang}了！',
+      'g.set.mix.c': '冒险里的{lang}题',
+      'g.mic.chk.p.c': '<p>回声岛要听你说{lang}。点话筒，大声说：<b class="chk-say">{word}</b></p>', 'g.mic.listen.c': '正在听……大声说 {word}',
+      'g.intro.c.p1': '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用{lang}念咒语攻击，听懂对手的{lang}来防御。收服新怪兽、升级进化，打败 13 个区域的岛主拿徽章。</p>',
+      'g.intro.c.p2': '<p><b>📚 闯关练习</b>：📗 课程单元和 13 座话题小岛。每通关一关送回声球，用来收服怪兽。</p>',
+      'g.intro.c.p3': '<p><b>🗣️ 和岛民聊天</b>：这门语言的 AI 聊天还在做，做好了会在这里打开。剧情里的对话先用界面的语言显示。</p>',
 
       // —— 字表结束 ——
     },
@@ -1205,18 +1234,108 @@
       'g.shell.quit': 'Leave this level',
       'g.shell.next': 'Continue',
 
+      // —— Courses in other languages (tools/course/ENGINE.md, 2026-11-20) ——
+      'g.bak.other': 'This save belongs to another course and cannot be used here',
+      'g.fail.lang': '🎤 Speaking in this language needs the phone\'s own speech recognition, which is not available now. Skip for now; the sentence goes into your daily review',
+      'g.home.qv.course': '📗 Course units',
+      'g.unit.head.c': '📗 Course units', 'g.unit.all.c': 'All units of this course are open: each has words, sentences and dialogues written for its topic and grammar.',
+      'g.gate.chat.lang': 'Chat with islanders (AI chat in this language is still being built, skipped today)', 'g.rp.ex.lang': 'AI chat in this language is still being built',
+      'g.set.ruby': 'Readings', 'g.set.ruby.on': 'Show', 'g.set.ruby.off': 'Hide', 'g.set.ruby.d': 'Show how to read the words above questions, options and dialogues (not on memory hints).',
+      'g.shell.foot.c': 'Echo Island · {lang} listening and speaking practice · Your progress is saved only on this device',
+      'g.rc.1.d.c': 'Repeat the words, then look at the pictures and say them in {lang}.', 'g.type.sp.c': '🖼️ Say it in {lang} from the picture', 'g.tag.sp.c': 'Picture → {lang}',
+      'g.cue.pic.t.c': 'Look at the picture and say it in {lang} from memory', 'g.q.ls.t.c': 'Listen and choose the {lang} you hear', 'g.q.fix.t.c': 'This can be said better: say the right {lang}',
+      'g.q.mem.t.c': 'Look at the meaning and say it in {lang} from memory', 'g.q.sp.t.c': 'Look at the picture and say it in {lang}', 'g.q.bt.mem.c': 'Understand what it says and <b>answer in {lang} from memory</b> to attack!',
+      'g.play.mic.sr.c': 'Tap the mic, then speak {lang} aloud', 'g.play.self.pic.c': 'Look at the picture and <b>say it aloud in {lang}</b> first, then see the answer', 'g.th.en.c': '<span>Aa</span>Text',
+      'g.home.scene.new.c': 'See how people talk about this topic in {lang} · +10 coins the first time', 'g.th.tip.watch.c': 'Watch it once all the way through. Turn off the text to practise listening only. Tap a line in the record below to hear it again.',
+      'g.mic.h.c': 'The microphone is needed to speak {lang}', 'g.mic.p.c': '<p>Echo Island needs to <b>hear your {lang}</b> to score it. Your voice is only used for scoring and is not saved.</p>', 'g.mic.allok.c': 'All good! You can speak {lang} now!',
+      'g.set.mix.c': '{lang} questions in the adventure',
+      'g.mic.chk.p.c': '<p>Echo Island needs to hear you speak {lang}. Tap the mic and say aloud: <b class="chk-say">{word}</b></p>', 'g.mic.listen.c': 'Listening… say {word} loudly!',
+      'g.intro.c.p1': '<p><b>🐲 Monster Adventure</b>: pick a monster as your partner. Say spells in {lang} to attack, and understand your rival\'s {lang} to defend. Catch new monsters, grow them up, and beat the Isle Masters of 13 areas to win badges.</p>',
+      'g.intro.c.p2': '<p><b>📚 Practice</b>: 📗 Course units and 13 topic islands. Each level you clear gives you Echo Balls to catch monsters.</p>',
+      'g.intro.c.p3': '<p><b>🗣️ Chat with islanders</b>: AI chat in this language is still being built; it will open here when it is ready. Story dialogues are shown in your interface language for now.</p>',
 
       // —— 字表结束 ——
     },
   });
 
-  const W = window.WORLDS;
+  // 内容的这几样（W / BOOKS / BK / NB / WX）英语课是加载时定下的；别的课在 start() 之前由 courseUse() 换成 course.json 里的（英语不换）
+  let W = window.WORLDS;
   // 课本单元（book.js）：课本的每个单元和小岛一样有单词/句子/对话，接在 13 座岛后面编号（第 NB 号起），
   // 闯关、错题本、冒险出题都用 WX[编号]；只有岛屿才有的东西（岛主、徽章、乘风、对话动画）还是用 W
-  const BOOKS = (window.BOOKS && window.BOOKS.list) || [];
+  let BOOKS = (window.BOOKS && window.BOOKS.list) || [];
   // bshort（七上……）是 getter：按界面语言给册名（world.js 的挑战馆门槛、talk.js 的课本话题也读它）
-  const BK = BOOKS.flatMap((b, bi) => b.units.map(u => Object.defineProperty(Object.assign(u, { book: b.id, bi }), 'bshort', { get: () => bookShort(b), enumerable: true, configurable: true })));   // 所有册的单元排成一列
-  const NB = W.length, WX = W.concat(BK);
+  const bkOf = list => list.flatMap((b, bi) => b.units.map(u => Object.defineProperty(Object.assign(u, { book: b.id, bi }), 'bshort', { get: () => bookShort(b), enumerable: true, configurable: true })));
+  let BK = bkOf(BOOKS);   // 所有册的单元排成一列
+  let NB = W.length, WX = W.concat(BK);
+  // ---------- 别的语言的课程内容（ENGINE.md §2）----------
+  // ENTRY：原文 → 条目 { t, seg, r, zh, en }（所有词、句子、对话的每一句、岛主的话、小剧场的每一句）；LEX：EchoLang.lexicon 的读音表。
+  // 打分、提示、标读音都靠它们从一句话找回 seg / r。英语课两个都是空的、不用
+  const ENTRY = new Map();
+  let LEX = null;
+  const entryOf = text => (LANG && text != null ? ENTRY.get(String(text)) || ENTRY.get(String(text).trim()) || null : null);
+  // 打分的 ctx：这句话的条目 + 整门课的读音表
+  const lctx = text => ({ entry: entryOf(text), lex: LEX });
+  function entryAdd(t, x, zh) {
+    if (typeof t !== 'string' || !t) return;
+    const old = ENTRY.get(t);
+    if (old && (old.seg || !(x && x.seg))) return;   // 先来的留着（同一句有 seg 的那份优先）
+    const e = { t };
+    if (x && typeof x === 'object') ['seg', 'r', 'en'].forEach(k => { if (x[k] != null) e[k] = x[k]; });
+    e.zh = zh != null ? zh : (x && x.zh) || '';
+    ENTRY.set(t, e);
+  }
+  function entriesOfWorld(w) {
+    (w.words || []).forEach(it => entryAdd(it[0], glossObj(it), it[1]));
+    (w.sents || []).forEach(it => entryAdd(it[0], glossObj(it), it[1]));
+    (w.dlgs || []).forEach(it => { const x = glossObj(it) || {}; entryAdd(it[0], x.q); entryAdd(it[1], x.a); (it[2] || []).forEach((t, k) => entryAdd(t, (x.wrong || [])[k])); });
+    if (w.boss && w.boss.hello) entryAdd(w.boss.hello, w.boss.x);
+    if (w.key && w.x && w.x.key) entryAdd(w.key, w.x.key);
+  }
+  // course.json（tools/course/SPEC.md §6）→ 游戏里的内容。在 start() 之前调一次；英语课不调
+  function courseUse(c) {
+    window.WORLDS = c.WORLDS; window.SCENES = c.SCENES;
+    window.BOOKS = c.BOOKS || { list: [] };
+    W = c.WORLDS; BOOKS = window.BOOKS.list || []; BK = bkOf(BOOKS); NB = W.length; WX = W.concat(BK);
+    // 和岛民聊天的角色（这一步聊天关着，换上是为了别处查得到这门课的角色、不拿英语的）
+    const tl = Array.isArray(c.TALK) ? c.TALK : [];
+    window.TALK_NPCS = { list: tl, byId: Object.fromEntries(tl.map(n => [n.id, n])) };
+    if (window.EchoTalk && EchoTalk.useNpcs) EchoTalk.useNpcs(window.TALK_NPCS);
+    if (window.EchoLevels && EchoLevels.addMap && c.MAP) EchoLevels.addMap(COURSE, c.MAP);
+    ENTRY.clear();
+    WX.forEach(entriesOfWorld);
+    (c.SCENES || []).forEach(sc => (sc.lines || []).forEach(L => entryAdd(L[1], L[3], L[2])));
+    LEX = EchoLang.lexicon(COURSE, [...ENTRY.values()]);
+  }
+  // ---------- 读音（日语、中文：ENGINE.md §3「读音」）----------
+  // E.ruby(原文) → HTML：找得到条目就按词块标读音（真的 <ruby>），找不到就原样（转义过）。西语、关掉了「读音」的、英语课都原样
+  const rubyOn = () => !!LANG && LANG.script !== 'latin' && S.settings.ruby !== false;
+  const TAILP = /[\s、。，．,.!！?？;；:：」』）)…〜～]+$/u;
+  function rubyPiece(p, r) {
+    p = String(p); const tail = (TAILP.exec(p) || [''])[0], base = p.slice(0, p.length - tail.length);
+    r = String(r || '').trim();
+    // 日语：全是假名的块不用标；读音和写法一样也不用标
+    if (!base || !r || r === base || (LANG.script === 'kana' && !/[㐀-鿿豈-﫿々]/.test(base))) return esc(p);
+    return '<ruby>' + esc(base) + '<rt>' + esc(r) + '</rt></ruby>' + esc(tail);
+  }
+  // 一句话的词块和每块的读音（没有读音的块给 ''）
+  function rubyParts(text) {
+    const e = entryOf(text), ps = LANG.pieces(text, e);
+    let rs = [];
+    if (e && Array.isArray(e.seg) && Array.isArray(e.r) && e.seg.length === ps.length) rs = e.r;
+    else if (e && typeof e.r === 'string' && ps.length === 1) rs = [e.r];
+    return ps.map((p, k) => [p, rs[k] || '']);
+  }
+  function ruby(text) {
+    if (!rubyOn() || !entryOf(text)) return esc(text);
+    return rubyParts(text).map(([p, r]) => rubyPiece(p, r)).join('');
+  }
+  // 显示要学的那句话：别的课标读音，英语课就是 esc（一字不变）
+  const rb = t => (LANG ? ruby(t) : esc(t));
+  // 排句子的块的读音（块和条目的 seg 一一对上时才有）
+  function tileR(text, toks) {
+    const e = entryOf(text);
+    return e && Array.isArray(e.seg) && Array.isArray(e.r) && e.r.length === toks.length ? e.r : null;
+  }
   const isUnit = wi => wi >= NB;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -1313,7 +1432,10 @@
   ];
 
   // ---------- 存档 ----------
-  const KEY = 'echo-island-v1';
+  // 一门课一份存档（ENGINE.md §1）：英语还是 echo-island-v1；别的语言 echo-island-v1@<语言>。下面从 KEY 派生的（-bak1..3、-pos、-pre、-bad、-bakmeta）都跟着走
+  const KEY = 'echo-island-v1' + (LANG ? '@' + COURSE : '');
+  // 这份存档是不是这门课的（导入的文件、手机「下载/EchoIsland」里的备份不分语言：别的课的不拿来用）。别的课的存档带 course，英语的没有
+  const mine = o => !!o && (LANG ? o.course === COURSE : !o.course);
   function fresh() {
     return {
       v: 1, xp: 0, coins: 50, stars: {}, streak: 0, lastDay: '', freeze: 0,
@@ -1467,7 +1589,7 @@
       try {
         for (const b of JSON.parse(EchoNative.backupList() || '[]').slice(0, 7)) {
           const txt = EchoNative.backupRead(b.name), o = parseSave(txt);
-          if (o) return { o, txt, get label() { return tr('g.save.phone', { d: b.date || b.name }); } };
+          if (o && mine(o)) return { o, txt, get label() { return tr('g.save.phone', { d: b.date || b.name }); } };
         }
       } catch (e) { /* 读不到就算了 */ }
     }
@@ -1580,7 +1702,8 @@
     nativeBackup(txt);
   }
   function nativeBackup(txt) {
-    if (!nat('backupWrite')) return;
+    // 别的课不往手机「下载/EchoIsland」写（文件名是原生按日期定的，分不出语言：同一天会把英语课的那份盖掉）。ENGINE.md 末尾「和规格不一样的地方」
+    if (!nat('backupWrite') || LANG) return;
     try { if (EchoNative.backupWrite(txt || JSON.stringify(S))) RT.natBakAt = Date.now(); } catch (e) { /* 写不了就算了，本机还有 3 份 */ }
   }
 
@@ -1805,7 +1928,7 @@
     if (!TTS.ok) return;
     const all = speechSynthesis.getVoices();
     if (all.length) TTS.loaded = true;
-    TTS.voices = all.filter(v => /^en([-_]|$)/i.test(v.lang));
+    TTS.voices = LANG ? all.filter(v => LANG.tts.web.test(v.lang)) : all.filter(v => /^en([-_]|$)/i.test(v.lang));   // 别的课：挑那门语言的本机声音
     pickVoice();
   }
   function pickVoice() {
@@ -1851,6 +1974,9 @@
   let duckTok = null;
   function say(text, rate, g) {
     if (!text) return Promise.resolve();
+    // 别的课（ENGINE.md §5）：只念这门课的内容（条目表里有的、课程包里有配音的）；代码里写死的英语台词、喊话只给人看、不念——
+    // 停一小会儿再算「读完」（和没有声音时一样），剧情、对战的节奏不变
+    if (LANG && !entryOf(text) && !(PK() && packClip(text, g))) return new Promise(res => setTimeout(res, Math.min(1500, 200 + String(text).length * 20)));
     const m = MUS(), tok = {};
     if (m) { if (!duckTok) m.duck(true); duckTok = tok; }
     return sayRaw(text, rate, g).then(() => { if (m && duckTok === tok) { duckTok = null; m.duck(false); } });
@@ -1864,12 +1990,14 @@
       const id = RT.sayId = (RT.sayId || 0) + 1;
       // 课程包模式：装好了的那段从数据库读出来（blob: 地址）再放；没装好 / 读不出来照旧往下走（阿里云 → 本机声音）
       if (PK()) {
+        // 别的课：没有配音就用本机声音（这一步不走云端合成：服务器的合成还写死英语，ENGINE.md §3 / §6）
+        const next = LANG ? () => sayDevice(text, rate, res, g) : () => sayCloud(text, rate, res, g, id);
         const pc = S.settings.tts === 'device' ? null : packClip(text, g);
-        if (!pc) { sayCloud(text, rate, res, g, id); return; }
+        if (!pc) { next(); return; }
         EchoPacks.clip(pc[0], pc[1]).then(url => {
           if (RT.sayId !== id) return res();   // 读的时候已经换了别的句子
-          if (url) playUrl(text, rate, res, g, url, () => sayCloud(text, rate, res, g, id));
-          else sayCloud(text, rate, res, g, id);
+          if (url) playUrl(text, rate, res, g, url, next);
+          else next();
         });
         return;
       }
@@ -1903,7 +2031,7 @@
     const u = new SpeechSynthesisUtterance(text);
     const v = g === 'f' ? (TTS.vf || TTS.v) : g === 'm' ? (TTS.vm || TTS.v) : TTS.v;
     if (v) u.voice = v;
-    u.lang = v ? v.lang : 'en-US';
+    u.lang = v ? v.lang : LANG ? LANG.asr.web : 'en-US';
     // 找不到对应性别的声音时，用音调区分两个角色
     if (g && genderOf(v) !== g) u.pitch = g === 'm' ? 0.75 : 1.3;
     u.rate = rate || S.settings.rate;
@@ -1953,6 +2081,7 @@
   }
   // AI 老师点评：没说好（低于 90 分）时，把目标句子和听到的话交给 AI，给一句中文建议，接在「我听到」后面
   function aiTip(target, heard, el) {
+    if (LANG) return;   // 别的课：AI 发音点评的提示词还只会英语，这一步先关掉（ENGINE.md §4）
     if (!heard || !el || !window.EchoTalk || !EchoTalk.aiTip) return;
     try { const L = dayLog(); L.tipN = (L.tipN || 0) + 1; } catch (e) { /* 周报用的计数 */ }
     EchoTalk.aiTip(target, heard).then(tip => { if (tip && el.isConnected && !el.querySelector('.ai-tip')) el.insertAdjacentHTML('beforeend', '<span class="ai-tip">💡 ' + esc(tip) + ' <i class="ai-mark" title="' + esc(tr('g.sr.aimark')) + '">AI</i></span>'); });   // AI 生成的点评标上「AI」
@@ -1999,20 +2128,25 @@
     if (r.err === 'aborted') return 'stop';
     return 'unheard';
   }
+  // 别的课在云端模式里：服务器的识别还写死英语（ENGINE.md §6），iPhone 的本机识别用不了时口语题按「AI 用不了」走（先跳过、进复习）
+  const langNoCloud = () => !!LANG && cloudOn() && !localSR();
   function recognizeRaw(onInterim, targets, opts) {
+    if (langNoCloud() && S.settings.mode !== 'self') { aiNote('nokey'); return Promise.resolve({ alts: [], err: 'nokey', fail: 'nokey', why: 'lang' }); }
     // 云端模式还没登录：不开麦克风，走「AI 用不了」那条路；第一次碰到时弹一次「登录，每天免费用 AI」（不是报错）
     // iPhone 的本机识别能用（localSR）：不登录、没网也能打分，不走这条
     if (cloudOn() && S.settings.mode !== 'self' && aiNoKey() && !localSR()) { RT.cloudAsked = true; aiNote('nokey'); if (ACC()) ACC().nudge(); return Promise.resolve({ alts: [], err: 'nokey', fail: 'nokey', why: 'signin' }); }
     if (cloudSR() || localSR()) {
       RT.listening = true;
       const tg = (targets || []).filter(Boolean);
-      return EchoTalk.listenOnce(Object.assign({ onState: onInterim, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => x.trim().split(/\s+/).length <= 2) },
-        opts && opts.maxMs ? { maxMs: opts.maxMs } : null, opts && opts.long ? { long: true } : null)).then(r => {
+      // 别的课：识别的语言（本机 / 云端）、「短的」怎么算、聊天里数词的办法都交给 LANG；云端模式不许改走云端识别（noCloud）
+      const lo = LANG ? { lang: LANG.asr, head: LANG.head, count: LANG.countUnits, noCloud: cloudOn() } : null;
+      return EchoTalk.listenOnce(Object.assign({ onState: onInterim, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => (LANG ? LANG.short(x, entryOf(x)) : x.trim().split(/\s+/).length <= 2)) },
+        opts && opts.maxMs ? { maxMs: opts.maxMs } : null, opts && opts.long ? { long: true } : null, lo)).then(r => {
         RT.listening = false;
         r = r || {};
         const fail = failOf(r);
         // 本机识别开不起来、云端又用不了（没有密钥 / 没登录）：和上面没有 AI 时一样（先跳过；云端模式请他登录一次）
-        if (fail === 'nokey') { if (cloudOn()) { RT.cloudAsked = true; if (ACC()) ACC().nudge(); } aiNote('nokey'); return { alts: [], err: 'nokey', fail, why: r.why || 'nokey' }; }
+        if (fail === 'nokey') { if (cloudOn() && r.why !== 'lang') { RT.cloudAsked = true; if (ACC()) ACC().nudge(); } aiNote('nokey'); return { alts: [], err: 'nokey', fail, why: r.why || 'nokey' }; }
         if (fail === 'mic') {
           if (window.ECHO_APP) { micBlocked(r.why); return { alts: [], err: 'mic', fail, why: r.why || '' }; }   // APK 必须开口：说明为什么要麦克风 +「去打开」
           RT.cloudBroken = true;   // 网页版：退回浏览器识别 / 录音自评
@@ -2032,7 +2166,7 @@
     return new Promise(resolve => {
       let r;
       try { r = new SRC(); } catch (e) { return resolve({ alts: [], err: 'service-not-allowed' }); }
-      r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
+      r.lang = LANG ? LANG.asr.web : 'en-US'; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
       let alts = [], err = null, finished = false;
       const end = () => {
         if (finished) return;
@@ -2074,6 +2208,7 @@
   const aiNoKey = () => cloudOn() ? S.settings.mode !== 'self' && !(ACC() && ACC().signed()) : !!window.ECHO_APP && S.settings.mode !== 'self' && !cloudSR();
   function aiDown() {
     if (speakMode() !== 'sr') return false;
+    if (langNoCloud()) return true;             // 别的课在云端模式里，本机识别又用不了（ENGINE.md §6）
     if (aiNoKey() && !localSR()) return true;   // iPhone 的本机识别不要密钥、不要登录
     if (!cloudSR() && !localSR()) return false;
     return RT.aiFails >= 2 && Date.now() - RT.aiFailAt < AI_DOWN_MS;
@@ -2100,6 +2235,7 @@
   // 没听到的时候，话筒下面那一行提示（练习 / 剧情 / 战斗 / 对话剧场共用）
   function failHint(res) {
     const f = res && res.fail, w = res && res.why;
+    if (f === 'nokey' && w === 'lang') return tr('g.fail.lang');   // 别的课：这门语言要用手机自带的识别（ENGINE.md §6）
     if (f !== 'mic' && cloudOn() && ACC()) { const c = ACC().failText(f, w); if (c) return c; }   // 云端模式：没登录 / 今天的免费 AI 用完了
     if (f === 'mic') return tr('g.fail.mic');
     if (f === 'nokey') return tr('g.fail.nokey');
@@ -2198,7 +2334,7 @@
   function checkSheet() {
     const nokey = aiNoKey();
     RT.chk = { mic: '', net: navigator.onLine === false ? 'bad' : '', key: nokey ? 'bad' : '', keyWhy: nokey ? (cloudOn() ? tr('ac.chk.nokey') : tr('g.mic.nokey')) : '' };
-    openModal('<div class="big">🩺</div><h2>' + tr('g.mic.chk.h') + '</h2>' + trh('g.mic.chk.p') +
+    openModal('<div class="big">🩺</div><h2>' + tr('g.mic.chk.h') + '</h2>' + trh('g.mic.chk.p', LANG ? { word: chkWord() } : undefined) +
       '<ul class="chk" id="chk">' + chkRows() + '</ul>' +
       '<div class="mic-wrap"><button class="mic" id="chk-mic" data-act="chkMic" aria-label="' + esc(tr('w.mic.aria')) + '">' + MIC + '</button><div class="mic-hint" id="chk-hint">' + tr('g.mic.chk.hint') + '</div><div class="heard" id="chk-heard"></div></div>' +
       '<div class="row"><button class="btn ghost" data-act="chkSkip">' + tr('w.skip') + '</button><button class="btn" data-act="chkDone" id="chk-done" hidden>' + tr('g.mic.chk.go') + '</button></div>');
@@ -2223,12 +2359,14 @@
     } catch (e) { return { ok: true, loud: true }; }
     finally { try { stream.getTracks().forEach(t => t.stop()); } catch (e) { /* 忽略 */ } try { if (ctx) ctx.close(); } catch (e) { /* 忽略 */ } }
   }
+  // 小检查要说的那个词：英语 Hello；别的课用第一座岛的第一个词（「你好」那一类）
+  const chkWord = () => (LANG && W[0] && W[0].words && W[0].words[0] ? W[0].words[0][0] : 'Hello');
   async function chkMic() {
     if (RT.listening || RT.chkBusy) { stopListening(); return; }
     const m = $('#chk-mic'), hint = $('#chk-hint'), heard = $('#chk-heard'); if (!m) return;
     const c = RT.chk = RT.chk || {};
     const upd = () => { const ul = $('#chk'); if (ul) ul.innerHTML = chkRows(); };
-    m.classList.add('on'); m.innerHTML = STOP; hint.textContent = tr('g.mic.listen'); heard.textContent = '';
+    m.classList.add('on'); m.innerHTML = STOP; hint.textContent = tr('g.mic.listen', LANG ? { word: chkWord() } : undefined); heard.textContent = '';
     if ((aiNoKey() || !cloudSR()) && !localSR()) {   // 没有密钥：只能看麦克风有没有声音（iPhone 的本机识别能用就真的识别一次）
       RT.chkBusy = true;
       const r = await micProbe(2500);
@@ -2241,7 +2379,7 @@
       if (r.loud) { S.micCheck = dayStr(); save(); const d = $('#chk-done'); if (d) d.hidden = false; }
       return;
     }
-    const res = await recognize(t => { const h = $('#chk-heard'); if (h) h.textContent = t; }, ['Hello']);
+    const res = await recognize(t => { const h = $('#chk-heard'); if (h) h.textContent = t; }, [chkWord()]);
     if (!$('#chk-mic')) return;
     m.classList.remove('on'); m.innerHTML = MIC;
     if (res.alts.length) {
@@ -2415,6 +2553,7 @@
   }
   // 返回 0–100 分；marks：每个原始单词是否说对；last：最后一个词有没有按顺序对上（秒出分要用）；full：每个词都说对了
   function scoreSpeech(target, heard) {
+    if (LANG) return LANG.score(target, heard, lctx(target));   // 别的课：lang-*.js 打分（同一套分数线，规矩见 lang.js 开头）
     const words = String(target || '').split(/\s+/).filter(Boolean), names = nameIdx(words);
     const flat = [], owner = [];
     words.forEach((w, k) => norm(w).forEach(t => { flat.push(t); owner.push(k); }));
@@ -2458,28 +2597,35 @@
     return { score: Math.round(Math.max(0, Math.min(1, s)) * 100), marks, last: same || got[flat.length - 1] === 4, full };
   }
   function bestScore(target, alts) {
+    if (LANG) return LANG.best(target, alts || [], lctx(target));
     let best = { score: -1, marks: [], heard: '', last: false, full: false };
     alts.forEach(a => { const r = scoreSpeech(target, a); if (r.score > best.score) best = { ...r, heard: a }; });
     return best;
   }
   // 秒出分：实时识别的结果 90 分以上，而且目标的最后一个词已经按顺序说出来了，才立刻结束（不然孩子还在说最后一个词就被截断）
   function earlyMatch(target, heard) {
+    if (LANG) return LANG.early(target, heard, lctx(target));
     const r = scoreSpeech(target, heard);
     return r.score >= 90 && r.last;
   }
 
   // ---------- 出题 ----------
+  // keyIdx：按条目的第几格去重（英语：0 原文 / 1 中文意思）；别的课按意思去重时用 meanKey（中文课的第 1 格是空的）
   function distract(list, i, n, keyIdx) {
-    const seen = new Set([list[i][keyIdx]]);
+    const kf = typeof keyIdx === 'function' ? keyIdx : x => x[keyIdx];
+    const seen = new Set([kf(list[i])]);
     const out = [];
     for (const j of shuffle(range(list.length))) {
-      if (j === i || seen.has(list[j][keyIdx])) continue;
-      seen.add(list[j][keyIdx]); out.push(list[j]);
+      if (j === i || seen.has(kf(list[j]))) continue;
+      seen.add(kf(list[j])); out.push(list[j]);
       if (out.length === n) break;
     }
     return out;
   }
-  const tokens = s => s.split(/\s+/).map(t => t.replace(/[.,!?]+$/g, '')).filter(Boolean);
+  // 别的课：按界面语言里的意思去重（没有意思就按原文）
+  const meanKey = x => { const m = meanOf(x); return m != null && m !== '' ? m : x[0]; };
+  // 排句子的块：英语按空格切；别的课交给 LANG.tiles（日语、中文按 seg）
+  const tokens = s => (LANG ? LANG.tiles(s, entryOf(s)) : s.split(/\s+/).map(t => t.replace(/[.,!?]+$/g, '')).filter(Boolean));
 
   function makeQ(type, wi, i) {
     const w = WX[wi];
@@ -2490,7 +2636,7 @@
       q.en = it[0]; q.zh = it[1]; q.em = it[2]; q.mean = meanOf(it);
       if (type === 'lw') {
         q.audio = it[0];
-        const ds = distract(w.words, i, 3, q.mean != null ? 1 : 0), ms = ds.map(meanOf), ear = q.mean == null || ms.some(m => m == null);
+        const ds = distract(w.words, i, 3, q.mean != null ? (LANG ? meanKey : 1) : 0), ms = ds.map(meanOf), ear = q.mean == null || ms.some(m => m == null);
         if (ear) q.ear = true;
         q.opts = shuffle([{ c: true, e: it[2], t: ear ? it[0] : q.mean }, ...ds.map((o, k) => ({ e: o[2], t: ear ? o[0] : ms[k] }))]);
       }
@@ -2502,11 +2648,11 @@
       q.en = it[0]; q.zh = it[1]; q.mean = meanOf(it);
       if (type === 'lm') {
         q.audio = it[0];
-        const ds = distract(w.sents, i, 3, q.mean != null ? 1 : 0), ms = ds.map(meanOf), ear = q.mean == null || ms.some(m => m == null);
+        const ds = distract(w.sents, i, 3, q.mean != null ? (LANG ? meanKey : 1) : 0), ms = ds.map(meanOf), ear = q.mean == null || ms.some(m => m == null);
         if (ear) q.ear = true;
         q.opts = shuffle([{ c: true, t: ear ? it[0] : q.mean }, ...ds.map((o, k) => ({ t: ear ? o[0] : ms[k] }))]);
       }
-      if (type === 'lo') { q.audio = it[0]; q.tokens = tokens(it[0]); q.bank = shuffle(range(q.tokens.length)); }
+      if (type === 'lo') { q.audio = it[0]; q.tokens = tokens(it[0]); q.bank = shuffle(range(q.tokens.length)); if (LANG) q.tokR = tileR(it[0], q.tokens); }
       if (type === 'sr_s') { q.audio = it[0]; q.target = it[0]; }
     } else {
       const it = w.dlgs[i];
@@ -2605,9 +2751,11 @@
   }
   // AI 打分用不了时「先跳过」（家长 2026-10-07，评估第 3 条）：放进复习、今天到期（格子不变、不算答错），标上 owe——
   // 联网以后复习里这题一定出开口题（buildReview），开口说对了才去掉。没有编号的句子（剧情里要说的话）用 revAddFree 的格式
+  // 没有编号的句子在复习本里的键：英语照旧；别的课用 LANG.key（日语、中文去掉了字母以外的就什么都不剩了）
+  const freeKey = en => 'free:' + (LANG ? LANG.key(en) : String(en).toLowerCase().replace(/[^a-z' ]/g, '').trim());
   function revLater(q) {
     if (!q) return;
-    if (!q.kind && q.en) q = { kind: 'sent', free: 'free:' + String(q.en).toLowerCase().replace(/[^a-z' ]/g, '').trim(), en: q.en, zh: q.zh || '' };
+    if (!q.kind && q.en) q = { kind: 'sent', free: freeKey(q.en), en: q.en, zh: q.zh || '' };
     if (!q.kind || (q.free && !q.en)) return;
     const k = revKey(q), today = dayStr();
     let e = S.rev.items[k];
@@ -2651,7 +2799,7 @@
   // talk.js 现在只传 (better, zh)；以后传第 3 个参数 said 就会用上
   function revAddFree(en, zh, said) {
     en = String(en || '').trim(); if (!en || en.split(/\s+/).length > 14) return;
-    const k = 'free:' + en.toLowerCase().replace(/[^a-z' ]/g, '').trim();
+    const k = freeKey(en);
     said = String(said || '').trim();
     if (said.toLowerCase() === en.toLowerCase() || said.split(/\s+/).length > 20) said = '';
     const old = S.rev.items[k];
@@ -2755,6 +2903,7 @@
   }
   // 提示文字：1 = 每个词留首字母（I u____ g__ u_）；2 = 字母全遮住（first：对话的回答留下第一个词）
   function cueText(text, lv, first) {
+    if (LANG) return LANG.cue(String(text), lv, entryOf(text), first);   // 别的课：每门语言自己的遮法（日语留读音的第一拍、中文留拼音首字母……）
     const initial = w => { let seen = false; return w.replace(/[a-z]/gi, c => (seen ? '_' : (seen = true, c))); };
     return String(text).split(/\s+/).filter(Boolean).map((w, k) => lv >= 2 ? (first && k === 0 ? w : w.replace(/[a-z]/gi, '_')) : initial(w)).join('  ');
   }
@@ -2787,7 +2936,8 @@
   function fadeFor(q, live) {
     const f = fadeRaw(q);
     if (!f) return f;
-    const it = itemOfQ(q), m = cueMode(live ? meanOf(it) : gloss({ zh: it && (Array.isArray(it) ? it[1] : it.zh) }), it, q.kind, live);
+    // 别的课：对战里咒语下面那行也是 meanOf（monsters.js 的 t.mean，英语界面给英文意思）
+    const it = itemOfQ(q), m = cueMode(live || LANG ? meanOf(it) : gloss({ zh: it && (Array.isArray(it) ? it[1] : it.zh) }), it, q.kind, live);
     return m === 'mean' || m === 'pic' ? f : live && f === 3 ? 3 : m === 'hear' ? 1 : 0;
   }
   // 对战（monsters.js 的 E.fadeOf）、EchoGame.rev.fade、place.fade 用这个：对战里咒语下面的意思那行只认 zh（gloss({ zh })），也不先念——
@@ -2804,7 +2954,7 @@
     const t = dayStr();
     if (S.quests.day === t && S.quests.list.length) return;
     const r = seeded(t);
-    const talkOn = !!(window.EchoTalk && EchoTalk.relayUrl());
+    const talkOn = !LANG && !!(window.EchoTalk && EchoTalk.relayUrl());   // 别的课：AI 聊天还没有，不出「和岛民聊天」（ENGINE.md §4）
     const pool = QPOOL.filter(q => (q.key !== 'review' || dueList().length >= 5) && q.key !== 'talk');
     // 连得上 AI 对话服务时，每天固定有一个「和岛民聊天」的任务：每天都真的开口用英语交流
     const picked = talkOn ? [{ id: 'tk1', p: 0, claimed: false }] : [], keys = new Set(talkOn ? ['talk'] : []);
@@ -2957,7 +3107,7 @@
   // 销售版只开放买了的那个学年的册（2026-10-08 评审：卖的是「本学年」，下一学年的内容包另买）：
   // 打包时 -PECHO_BOOKS=hj7a,hj7b 写进原生（EchoNative.books()），没有就是七上、七下。家庭版全部开放
   const BOOK_OPEN = (() => {
-    if (!(window.DEX && DEX.sales)) return null;
+    if (LANG || !(window.DEX && DEX.sales)) return null;   // 别的课：所有单元都开放（ENGINE.md §4）
     let v = ''; try { if (nat('books')) v = String(EchoNative.books() || ''); } catch (e) { v = ''; }
     const ids = v.split(',').map(x => x.trim()).filter(Boolean);
     return new Set(ids.length ? ids : ['hj7a', 'hj7b']);
@@ -2967,6 +3117,7 @@
   // 正在学哪个单元：家长/孩子在闯关页选；没选过就按日期猜——七上从 BOOKS.start 那年秋天开始，
   // 秋季学期 9 月到次年 1 月、春季学期 2 月到 8 月，一个学期 8 个单元，一个单元两周多
   function guessIdx() {
+    if (LANG) return 0;   // 按日期猜学到哪只属于英语课（课本跟着学校走）；别的课从第一个单元开始
     const d = new Date(), y = d.getFullYear(), m = d.getMonth() + 1, start = (window.BOOKS && window.BOOKS.start) || y;
     const sem = Math.max(0, (y - start) * 2 + (m >= 9 ? 0 : m >= 2 ? -1 : -2));
     const b = BOOKS[Math.min(sem, BOOKS.length - 1)];
@@ -3050,15 +3201,16 @@
     const now = wi - NB === curIdx();
     const free = unitFree(wi - NB) ? ' <span class="u-free" title="' + trh('place.unit.free.tip') + '">✓ ' + trh('place.unit.free') + '</span>' : '';   // 按能力走：起点前面的单元
     // 单元的中文标题、语法讲解是内容（gloss）：界面语言里没有就不显示（语法弹窗整段是中文，按钮也收起来）
-    const zt = gloss({ zh: u.zh }), gt = gloss({ zh: u.grammar.title });
+    // 别的课：单元的英文标题在 x.en、语法的英文在 grammar.en（course.json），意思按 glossC 取
+    const zt = LANG ? glossC({ zh: u.zh, en: u.x && u.x.en }) : gloss({ zh: u.zh }), gt = LANG ? glossC({ zh: u.grammar.title, en: u.grammar.en && u.grammar.en.title }) : gloss({ zh: u.grammar.title });
     return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · Unit ' + u.n + (now ? trh('g.unit.now') : '') + free + '</div><h2>' + esc(u.en) + (zt != null ? ' <small>' + esc(zt) + '</small>' : '') + '</h2><p class="w-en">' + esc(u.key) + '</p></div>' +
       '<span class="w-stars">★ ' + tot + '/21</span></div>' +
       '<div class="u-bar">' + (gt != null ? '<button class="link" data-act="bookGram" data-w="' + wi + '">' + trh('g.unit.gram', { t: gt }) + '</button>' : '') +
       (unitTalk(u) ? '<button class="btn small sun" data-act="talk_open" data-npc="' + unitTalk(u).id + '">' + trh('g.unit.talk', { name: unitTalk(u).name }) + '</button>' : '') +
       (now ? '' : '<button class="btn small ghost" data-act="bookAt" data-i="' + (wi - NB) + '">' + trh('g.unit.setnow') + '</button>') + '</div>';
   }
-  function unitTalk(u) {   // 这个单元的 AI 聊天角色（连不上对话服务就不显示）
-    if (!window.EchoTalk || !EchoTalk.relayUrl() || !window.TALK_NPCS) return null;
+  function unitTalk(u) {   // 这个单元的 AI 聊天角色（连不上对话服务就不显示；别的课 AI 聊天还没有）
+    if (LANG || !window.EchoTalk || !EchoTalk.relayUrl() || !window.TALK_NPCS) return null;
     return window.TALK_NPCS.byId[u.book + '-u' + u.n] || null;
   }
   function bookNode() {   // 「开始」标在正在学的单元里第一关没拿星的地方
@@ -3069,9 +3221,10 @@
   function bookHTML() {
     const cu = curUnit(), vb = viewBook();
     const chips = '<div class="seg books">' + BOOKS.map(b => '<button class="' + (b === vb ? 'on' : '') + (bookOpen(b.id) ? '' : ' locked') + '" data-act="bookView" data-b="' + b.id + '">' + (bookOpen(b.id) ? '' : '🔒') + esc(bookShort(b)) + (b.id === cu.book ? ' 📍' : '') + '</button>').join('') + '</div>';
-    return '<div class="book-head"><b>' + trh('g.unit.head') + '</b>' +
-      '<p>' + (BOOK_OPEN ? trh('g.unit.open', { list: BOOKS.filter(b => bookOpen(b.id)).map(bookShort).join(tr('g.unit.sep')) }) : trh('g.unit.all')) + trh('g.unit.what') + '</p>' +
-      '<p>' + trh('g.unit.cur', { u: cu.bshort + ' Unit ' + cu.n + ' ' + cu.en }) + (S.book.at >= 0 ? '' : trh('g.unit.guess')) + ' <button class="link" data-act="bookPick">' + trh('g.unit.change') + '</button></p>' + chips +
+    // 别的课：叫「课程单元」，没有「适用于沪教版词汇」、没有「按日期猜的」（ENGINE.md §4）
+    return '<div class="book-head"><b>' + trh(LANG ? 'g.unit.head.c' : 'g.unit.head') + '</b>' +
+      '<p>' + (LANG ? trh('g.unit.all.c') : (BOOK_OPEN ? trh('g.unit.open', { list: BOOKS.filter(b => bookOpen(b.id)).map(bookShort).join(tr('g.unit.sep')) }) : trh('g.unit.all')) + trh('g.unit.what')) + '</p>' +
+      '<p>' + trh('g.unit.cur', { u: cu.bshort + ' Unit ' + cu.n + ' ' + cu.en }) + (S.book.at >= 0 || LANG ? '' : trh('g.unit.guess')) + ' <button class="link" data-act="bookPick">' + trh('g.unit.change') + '</button></p>' + chips +
       (vb.old ? '<p class="tip">' + trh('g.unit.old', { b: bookShort(vb) }) + '</p>' : '') + '</div>' +
       BK.map((x, j) => x.book === vb.id ? worldHTML(x, NB + j, bookNode()) : '').join('');
   }
@@ -3090,7 +3243,7 @@
     if (tab === 'talk') { $('#talk-home').innerHTML = EchoTalk.homeHTML(); return; }
     if (tab === 'mon') { $('#mon-home').innerHTML = MonsterGame.homeHTML(); MonsterGame.afterHome(); return; }
     const book = BK.length && S.book.view !== 'isle';
-    const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">' + trh('g.home.qv.book') + '</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">' + trh('g.home.qv.isle') + '</button></div>' : '';
+    const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">' + trh(LANG ? 'g.home.qv.course' : 'g.home.qv.book') + '</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">' + trh('g.home.qv.isle') + '</button></div>' : '';
     const cur = currentNode();
     $('#map').innerHTML = seg + (book ? bookHTML() : W.map((w, wi) => worldHTML(w, wi, cur)).join(''));
     if (RT.scrollCur) {
@@ -3151,7 +3304,7 @@
     if (li <= 1) items = w.words.map(x => { const m = meanOf(x); return [x[0], x[2] + (m != null ? ' ' + m : '')]; });
     else if (li <= 3) items = w.sents.map(x => [x[0], meanOf(x) || '']);
     else items = w.dlgs.map(x => [x[0] + ' → ' + x[1], '']);
-    const pre = items.map(([en, zh]) => '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + esc(en) + '</b><span>' + esc(zh) + '</span></button>').join('');
+    const pre = items.map(([en, zh]) => '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + rb(en) + '</b><span>' + esc(zh) + '</span></button>').join('');
     openModal(
       '<div class="big">' + (r.boss ? w.boss.emoji : r.icon) + '</div>' +
       '<h2>' + esc(wxName(wi)) + ' · ' + (r.boss ? 'BOSS ' + esc(bossName(w.boss)) : r.name) + '</h2>' +
@@ -3181,7 +3334,7 @@
       const b = WX[wi].boss;
       hideFb();
       $('#p-prog').style.width = '0%';
-      $('#p-body').innerHTML = '<div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="hidden-line">' + esc(b.hello) + '</div></div></div>' +
+      $('#p-body').innerHTML = '<div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="hidden-line">' + rb(b.hello) + '</div></div></div>' +
         '<p class="say-zh" style="text-align:center">' + trh('g.play.boss', { name: bossName(b) }) + '</p>' +
         '<button class="btn sun wide" data-act="bossGo" data-focus>' + trh('g.play.fight') + '</button>';
       $('#p-body').dataset.q = 'intro';
@@ -3210,7 +3363,7 @@
   function optsHTML(q, cls, list) {
     return '<div class="opts ' + (list ? 'list' : '') + '">' + q.opts.map((o, i) =>
       '<button class="opt ' + (cls || '') + '" data-act="' + (q.type === 'bt' ? 'btOpt' : 'pick') + '" data-i="' + i + '"><span class="k">' + (i + 1) + '</span>' +
-      (o.e ? '<span class="o-e">' + o.e + '</span>' : '') + '<span class="o-t">' + esc(o.t) + '</span></button>').join('') + '</div>';
+      (o.e ? '<span class="o-e">' + o.e + '</span>' : '') + '<span class="o-t">' + rb(o.t) + '</span></button>').join('') + '</div>';
   }
   function micHTML(q) {
     const mode = speakMode();
@@ -3229,7 +3382,13 @@
   }
   // 口语题分两块：q-main 是题目卡片，q-side 是话筒 / 自评 / 跳过（竖屏照常上下排，横屏左右两栏）
   const qSide = h => '<div class="q-side">' + h + '</div>';
-  function wordsHTML(text) { return text.split(/\s+/).map(w => '<span class="w">' + esc(w) + '</span>').join(' '); }
+  function wordsHTML(text) {
+    // 别的课：按 LANG.pieces 的词块（和打分的 marks 一一对应），日语、中文每块标读音
+    if (LANG) { const e = entryOf(text), ps = LANG.pieces(String(text), e), rs = rubyOn() && e ? rubyParts(text) : null; return ps.map((w, k) => '<span class="w">' + (rs && rs[k] ? rubyPiece(rs[k][0], rs[k][1]) : esc(w)) + '</span>').join(LANG.script === 'latin' ? ' ' : ''); }
+    return text.split(/\s+/).map(w => '<span class="w">' + esc(w) + '</span>').join(' ');
+  }
+  // 排句子的一块（别的课标读音）
+  const tileTxt = (q, i) => (LANG && rubyOn() && q.tokR ? rubyPiece(q.tokens[i], q.tokR[i]) : esc(q.tokens[i]));
 
   function renderQ() {
     const q = P.qs[P.idx];
@@ -3257,9 +3416,9 @@
     else if (t === 'ls') h += '<h2 class="q-title">' + trh('g.q.ls.t') + '</h2>' + audioBlock() + optsHTML(q, 'en');
     else if (t === 'lm') h += '<h2 class="q-title">' + trh(q.ear ? 'g.cue.lm.t' : 'g.q.lm.t') + '</h2>' + audioBlock() + optsHTML(q, q.ear ? 'en' : '', true);
     else if (t === 'lr') h += '<h2 class="q-title">' + trh('g.q.lr.t') + '</h2>' + audioBlock() +
-      '<div class="hidden-line blur" id="hl">' + esc(q.prompt) + '</div><div style="text-align:center"><button class="link" data-act="reveal">' + trh('g.q.see.long') + '</button></div>' + optsHTML(q, 'en', true);
+      '<div class="hidden-line blur" id="hl">' + rb(q.prompt) + '</div><div style="text-align:center"><button class="link" data-act="reveal">' + trh('g.q.see.long') + '</button></div>' + optsHTML(q, 'en', true);
     else if (t === 'lo') h += '<h2 class="q-title">' + trh('g.q.lo.t') + '</h2>' + audioBlock() +
-      '<div class="lo-ans" id="lo-ans"></div><div class="lo-bank" id="lo-bank">' + q.bank.map(i => '<button class="tile" data-act="tile" data-i="' + i + '">' + esc(q.tokens[i]) + '</button>').join('') + '</div>' +
+      '<div class="lo-ans" id="lo-ans"></div><div class="lo-bank" id="lo-bank">' + q.bank.map(i => '<button class="tile" data-act="tile" data-i="' + i + '">' + tileTxt(q, i) + '</button>').join('') + '</div>' +
       '<button class="btn wide" data-act="loCheck" id="lo-check" disabled>' + trh('g.q.check') + '</button>';
     else if ((t === 'sr_w' || t === 'sr_s') && !P.fade) h += '<h2 class="q-title">' + trh('g.q.rep.t') + '</h2>' +
       '<div class="q-main"><div class="say-card">' + (q.em ? '<div class="say-emoji">' + q.em + '</div>' : '') + '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div>' + meanDiv +
@@ -3269,7 +3428,7 @@
       (said ? '<div class="say-zh">' + trh('g.q.said', { s: said }) + '</div>' : '') + (mean ? meanDiv : '') +
       '<div class="say-text mask" id="st">' + esc(cueText(q.target, P.fade === 1 ? 1 : 2)) + '</div>' + hintRow + '</div></div>' + qSide(micHTML(q));
     else if (t === 'sr_d') h += '<h2 class="q-title">' + trh(P.fade >= 2 ? 'g.q.dlg.mem' : 'g.q.dlg.t') + '</h2>' +
-      '<div class="q-main"><div class="bubble-row"><span class="be">🧑‍🏫</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.hearq') + '">' + SPK + '</button><span>' + esc(q.prompt) + '</span></div></div></div>' +
+      '<div class="q-main"><div class="bubble-row"><span class="be">🧑‍🏫</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.hearq') + '">' + SPK + '</button><span>' + rb(q.prompt) + '</span></div></div></div>' +
       '<div class="say-card"><div class="say-zh">' + trh('g.q.you') + '</div>' + (P.fade
         ? '<div class="say-text mask" id="st">' + esc(cueText(q.target, P.fade, true)) + '</div>' + hintRow
         : '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div><div class="say-row"><button class="spk mini" data-act="sayT" aria-label="' + trh('g.play.model') + '">' + SPK + '</button><button class="slow" data-act="sayTSlow">' + slow + '</button></div>') + '</div></div>' + qSide(micHTML(q));
@@ -3279,7 +3438,7 @@
     else if (t === 'bt') {
       const b = WX[P.wi].boss, hide = P.fade >= 1;
       h += '<div class="q-main"><div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.again') + '">' + SPK + '</button><button class="slow" data-act="saySlow">' + slow + '</button></div>' +
-        '<div class="hidden-line blur" id="hl">' + esc(q.prompt) + '</div><button class="link" data-act="reveal">' + trh('g.q.see') + '</button></div></div>' +
+        '<div class="hidden-line blur" id="hl">' + rb(q.prompt) + '</div><button class="link" data-act="reveal">' + trh('g.q.see') + '</button></div></div>' +
         '<p class="say-zh" style="text-align:center;margin:0">' + trh(hide ? 'g.q.bt.mem' : srm ? 'g.q.bt.sr' : 'g.q.bt.self') + '</p></div>' +
         (hide ? optsHTML(q, 'en', true).replace('<div class="opts', '<div id="bt-opts" hidden class="opts') + '<div style="text-align:center"><button class="link" data-act="btShow" id="bt-show">' + trh('g.q.bt.show') + '</button></div>' : optsHTML(q, 'en', true)) +
         qSide(srm ? micHTML(q) : '<div class="self" id="self" hidden></div>');
@@ -3376,9 +3535,9 @@
     bar.appendChild(d);
   }
   function detailOf(q) {
-    if (q.kind === 'dlg') return '<b>' + esc(q.prompt) + '</b> → ' + esc(q.en);
+    if (q.kind === 'dlg') return '<b>' + rb(q.prompt) + '</b> → ' + rb(q.en);
     const m = qMean(q);   // 界面语言里没有意思：只给英文
-    return '<b>' + esc(q.en) + '</b>' + (m != null ? ' · ' + esc(m) : '');
+    return '<b>' + rb(q.en) + '</b>' + (m != null ? ' · ' + esc(m) : '');
   }
 
   // 选择题
@@ -3406,7 +3565,7 @@
     if (fromAns) P.lo = P.lo.filter(x => x !== i);
     else if (!P.lo.includes(i)) P.lo.push(i);
     SFX.tap();
-    $('#lo-ans').innerHTML = P.lo.map(k => '<button class="tile" data-act="untile" data-i="' + k + '">' + esc(q.tokens[k]) + '</button>').join('');
+    $('#lo-ans').innerHTML = P.lo.map(k => '<button class="tile" data-act="untile" data-i="' + k + '">' + tileTxt(q, k) + '</button>').join('');
     $$('#lo-bank .tile').forEach(b => b.classList.toggle('used', P.lo.includes(+b.dataset.i)));
     $('#lo-check').disabled = P.lo.length !== q.tokens.length;
   }
@@ -3763,8 +3922,10 @@
   let T = null;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   // 台词的中文意思（内容）：英语界面给 null，不显示、也不出「中」开关
-  const thZh = L2 => (T && T.zh ? gloss({ zh: L2 }) : null);
-  const glossOn = () => gloss({ zh: '·' }) != null;
+  // 小剧场一句的意思：英语课是 L[2]（中文）按 gloss；别的课 L[3] 里还有 en，按 glossC（英语界面也有意思）
+  const lineMean = L => (LANG ? glossC(Object.assign({ zh: L[2] }, L[3] && typeof L[3] === 'object' ? L[3] : null)) : gloss({ zh: L[2] }));
+  const thZh = L => (T && T.zh ? lineMean(L) : null);
+  const glossOn = () => (LANG ? glossC({ zh: '·', en: '·' }) : gloss({ zh: '·' })) != null;
   // 日期、时间按界面语言的写法
   const loc = () => (I18N && I18N.lang() !== 'zh' ? 'en-GB' : 'zh-CN');
   function gainXp(n) {
@@ -3829,15 +3990,15 @@
     if (!L) { sub.className = 'stage-sub'; sub.innerHTML = T.done ? '<span class="ss-en">The End</span><span class="ss-zh">' + tr('g.th.end') + '</span>' : '<span class="ss-zh">' + tr('g.th.idle') + '</span>'; return; }
     sub.className = 'stage-sub ' + (L[0] === 0 ? 'l' : 'r');
     sub.innerHTML = '<span class="ss-who">' + esc(T.sc.cast[L[0]][0]) + '</span>' +
-      (T.en ? '<span class="ss-en">' + esc(L[1]) + '</span>' : '<span class="ss-en muted">' + tr('g.th.ear') + '</span>') +
-      (thZh(L[2]) != null ? '<span class="ss-zh">' + esc(thZh(L[2])) + '</span>' : '');
+      (T.en ? '<span class="ss-en">' + rb(L[1]) + '</span>' : '<span class="ss-en muted">' + tr('g.th.ear') + '</span>') +
+      (thZh(L) != null ? '<span class="ss-zh">' + esc(thZh(L)) + '</span>' : '');
   }
   function renderLog() {
     const log = $('#th-log'); if (!log) return;
     const n = T.done ? T.sc.lines.length : Math.max(0, T.idx);
     log.innerHTML = (n ? '<div class="th-lab">' + tr('g.th.logh') + '</div>' : '') + T.sc.lines.slice(0, n).map((L, i) => {
       const c = T.sc.cast[L[0]];
-      return '<button class="lg lg' + L[0] + '" data-act="thLine" data-i="' + i + '"><span class="lg-e">' + c[1] + '</span><span class="lg-b"><b>' + esc(L[1]) + '</b>' + (gloss({ zh: L[2] }) != null ? '<small>' + esc(gloss({ zh: L[2] })) + '</small>' : '') + '</span></button>';
+      return '<button class="lg lg' + L[0] + '" data-act="thLine" data-i="' + i + '"><span class="lg-e">' + c[1] + '</span><span class="lg-b"><b>' + rb(L[1]) + '</b>' + (lineMean(L) != null ? '<small>' + esc(lineMean(L)) + '</small>' : '') + '</span></button>';
     }).join('');
   }
   // 关掉或切换模式后，还在等待的旧播放流程要安静退出
@@ -3883,7 +4044,7 @@
       const L = T.sc.lines[T.idx], sr = speakMode() === 'sr';
       const a = $('#actor' + L[0]); if (a) a.classList.add('talk');
       $('#th-turn').innerHTML = '<div class="say-card th-you"><div class="say-zh">' + tr('g.th.turn.' + (T.mode === 'role' ? 'role' : 'shadow')) + '</div>' +
-        '<div class="say-text" id="th-say">' + wordsHTML(L[1]) + '</div>' + (thZh(L[2]) != null ? '<div class="say-zh">' + esc(thZh(L[2])) + '</div>' : '') +
+        '<div class="say-text" id="th-say">' + wordsHTML(L[1]) + '</div>' + (thZh(L) != null ? '<div class="say-zh">' + esc(thZh(L)) + '</div>' : '') +
         (sr ? '<button class="mic" id="th-mic" data-act="thMic" aria-label="' + tr('w.mic.aria') + '">' + MIC + '</button>' : '') +
         '<div class="mic-hint" id="th-hint">' + (sr ? tr('g.th.taps') : tr('w.self.hint')) + '</div><div class="heard" id="th-heard"></div>' +
         '<div class="say-row"><button class="btn small ghost" data-act="thHear">' + tr('g.th.hear') + '</button><button class="btn small ' + (sr ? 'ghost' : 'leaf') + '" id="th-done" data-act="thDone">' + (sr ? tr('g.th.skip') : tr('w.self.done')) + '</button></div></div>';
@@ -4068,6 +4229,8 @@
       // 2026-11-19（给所有人用）：能力检测和分级（placement.js）、界面语言（i18n.js）、谁在学（孩子 / 自己学）
       (window.EchoPlace ? EchoPlace.settingsRow() : '') +
       (PK() ? EchoPacks.settingsRow() : '') +   // 课程包模式：「📦 课程和语音包」
+      // 日语、中文课：读音显示 / 不显示（默认显示；西语没有这一项，ENGINE.md §3）
+      (LANG && LANG.script !== 'latin' ? '<div class="set" id="set-ruby"><label>' + trh('g.set.ruby') + '</label><div class="seg"><button class="' + (st.ruby !== false ? 'on' : '') + '" data-act="setRuby" data-v="1">' + trh('g.set.ruby.on') + '</button><button class="' + (st.ruby !== false ? '' : 'on') + '" data-act="setRuby" data-v="0">' + trh('g.set.ruby.off') + '</button></div><small>' + trh('g.set.ruby.d') + '</small></div>' : '') +
       (window.EchoI18n ? '<div class="set" id="set-ui"><label>' + trh('place.set.ui') + '</label><div class="seg">' + EchoI18n.LANGS.map(l => '<button class="' + ((st.ui || 'zh') === l.id ? 'on' : '') + '" data-act="setUi" data-l="' + l.id + '">' + esc(l.name) + '</button>').join('') + '</div>' +
         (tr('place.lang.partial') ? '<small>' + trh('place.lang.partial') + '</small>' : '') + '</div>' : '') +
       '<div class="set" id="set-learner"><label>' + trh('place.set.learner') + '</label><div class="seg">' + [['kid', 'place.learner.kid'], ['open', 'place.learner.open']].map(([m, k]) => '<button class="' + ((kidMode() ? 'kid' : 'open') === m ? 'on' : '') + '" data-act="setLearner" data-m="' + m + '">' + trh(k) + '</button>').join('') +
@@ -4180,7 +4343,7 @@
   }
 
   // ---------- 导出存档 / 从备份恢复（评估第 7 条）----------
-  const saveName = () => 'echo-save-' + dayStr().replace(/-/g, '') + '.json';
+  const saveName = () => 'echo-save-' + (LANG ? COURSE + '-' : '') + dayStr().replace(/-/g, '') + '.json';
   function exportSave() {
     save();
     const txt = JSON.stringify(S), name = saveName();
@@ -4222,6 +4385,7 @@
   function restoreConfirm(txt, label) {
     const o = parseSave(txt);
     if (!o) { toast(tr('g.bak.bad')); return; }
+    if (!mine(o)) { toast(tr('g.bak.other')); return; }   // 别的课的存档（一门课一份，ENGINE.md §1）
     RT.restoreTxt = txt; RT.restoreLabel = label || tr('g.bak.label');
     openModal('<div class="big">🗂️</div><h2>' + tr('g.bak.use.h') + '</h2><p><b>' + esc(label || '') + '</b><br>' + esc(saveSum(o)) + '</p>' +
       '<p>' + tr('g.bak.use.p', { cur: saveSum(S) }) + '</p>' +
@@ -4230,6 +4394,7 @@
   function doRestore(txt, label) {
     const o = parseSave(txt);
     if (!o) { toast(tr('g.bak.bad')); return false; }
+    if (!mine(o)) { toast(tr('g.bak.other')); return false; }
     save();
     txt = lzUnpack(txt);   // 存档本身一直是原样的 JSON（压着存的只有备份）
     const meta = bakMeta(), cur = packBig(JSON.stringify(S)); meta.pre = dayStr(); delete meta.preWhy;
@@ -4275,8 +4440,9 @@
     else if (window.ECHO_APP && !S.micCheck && speakMode() === 'sr') setTimeout(checkSheet, 300);
   }
   function introSheet() {
+    const ln = LANG ? { lang: tr('pk.name.' + COURSE) } : null;   // 别的课：说的是那门语言、没有课本和 AI 聊天
     openModal('<div class="big">🏝️</div><h2>' + tr('g.intro.h') + '</h2>' +
-      trh('g.intro.p1') + trh('g.intro.p2') + trh('g.intro.p3') + trh('g.intro.p4') +
+      (LANG ? trh('g.intro.c.p1', ln) + trh('g.intro.c.p2') + trh('g.intro.c.p3') : trh('g.intro.p1') + trh('g.intro.p2') + trh('g.intro.p3')) + trh('g.intro.p4') +
       envHTML() +
       '<div class="row"><button class="btn ghost" data-act="testVoice">' + tr('g.intro.voice') + '</button><button class="btn" data-act="introGo" data-focus>' + tr('g.intro.go') + '</button></div>', { locked: true });
   }
@@ -4303,7 +4469,7 @@
         '<button class="btn ghost wide" data-act="close">' + trh('g.cancel') + '</button>');
     },
     // 语法提示的标题和说明是中文写的内容：英语界面没有可显示的翻译，只给个标题
-    bookGram: t => { const u = WX[num(t, 'w')], gt = gloss({ zh: u.grammar.title }), gp = gloss({ zh: u.grammar.tip }); openModal('<div class="big">📐</div><h2>' + (gt == null ? trh('g.ev.gram.h0', { n: u.n }) : trh('g.ev.gram.h', { n: u.n, t: gt })) + '</h2>' + (gp == null ? '' : '<p>' + esc(gp) + '</p>') + '<button class="btn wide" data-act="close" data-focus>' + trh('g.ok') + '</button>'); },
+    bookGram: t => { const u = WX[num(t, 'w')], ge = (LANG && u.grammar.en) || {}, gt = LANG ? glossC({ zh: u.grammar.title, en: ge.title }) : gloss({ zh: u.grammar.title }), gp = LANG ? glossC({ zh: u.grammar.tip, en: ge.tip }) : gloss({ zh: u.grammar.tip }); openModal('<div class="big">📐</div><h2>' + (gt == null ? trh('g.ev.gram.h0', { n: u.n }) : trh('g.ev.gram.h', { n: u.n, t: gt })) + '</h2>' + (gp == null ? '' : '<p>' + esc(gp) + '</p>') + '<button class="btn wide" data-act="close" data-focus>' + trh('g.ok') + '</button>'); },
     setBookMix: t => { const m = +t.dataset.m; if (m === S.book.mix) return; parentOk(tr('g.ev.why.mix'), () => { S.book.mix = m; save(); settingsSheet(); }); },
     setGate: t => {
       const on = t.dataset.m === '1';
@@ -4350,6 +4516,7 @@
     setCtl: t => { S.settings.ctl = t.dataset.m; save(); if (window.EchoWorld && EchoWorld.ctlMode) EchoWorld.ctlMode(); settingsSheet(); },
     // 界面语言（i18n.js）
     setUi: t => { if (t.classList.contains('on')) return; setUi(t.dataset.l); settingsSheet(); if (!$('#home').hidden) renderHome(); },
+    setRuby: t => { S.settings.ruby = t.dataset.v === '1'; save(); settingsSheet(); },
     // 谁在学：孩子 → 自己学（没有学习锁、不限时、设置不要家长密码）要输家长密码；换回「孩子」不用
     setLearner: t => {
       const m = t.dataset.m === 'open' ? 'open' : 'kid';
@@ -4458,7 +4625,7 @@
       const r = revSummary(), all = Object.values(S.rev.items);
       const wrongs = all.filter(e => e.x > 0 && e.due).sort((a, b) => b.x - a.x).slice(0, 30);
       const txt = e => e.k === 'free' ? [e.en, meanTxt(e)] : (() => { const w = WX[e.w], it = e.k === 'word' ? w.words[e.i] : e.k === 'sent' ? w.sents[e.i] : w.dlgs[e.i]; return e.k === 'dlg' ? [it[0] + ' → ' + it[1], ''] : [it[0], meanTxt(it)]; })();
-      const list = wrongs.map(e => { const [en, zh] = txt(e), miss = e.x > 1 ? tr('g.ev.rv.miss', { n: e.x }) : ''; return '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + esc(en) + '</b><span>' + (zh == null ? esc(miss.slice(3)) : esc(zh) + esc(miss)) + '</span></button>'; }).join('');
+      const list = wrongs.map(e => { const [en, zh] = txt(e), miss = e.x > 1 ? tr('g.ev.rv.miss', { n: e.x }) : ''; return '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + rb(en) + '</b><span>' + (zh == null ? esc(miss.slice(3)) : esc(zh) + esc(miss)) + '</span></button>'; }).join('');
       const mastered = revMastered(), waiting = all.filter(e => e.due && e.due > dayStr()).length;
       openModal('<div class="big">📕</div><h2>' + trh('g.ev.rv.h') + '</h2>' +
         '<p>' + (r.n ? trh('g.ev.rv.today', { n: r.n, list: [r.wrong ? tr('g.ev.rv.wrong', { n: r.wrong }) : '', r.old ? tr('g.ev.rv.old', { n: r.old }) : '', r.chat ? tr('g.ev.rv.chat', { n: r.chat }) : ''].filter(Boolean).join(tr('g.ev.sep')) }) : trh('g.ev.rv.done')) +
@@ -4578,13 +4745,55 @@
     }
     return { w: NB + i, d: BK[i] };
   }
+  // ---------- 别的课：写死的英语句子怎么办（ENGINE.md §5，过渡办法）----------
+  // 课程内容一句话的意思（界面语言里的：英语界面 en、中文界面 zh；没有是 null）
+  function meanText(t) { const e = entryOf(t); return e ? glossC({ zh: e.zh, en: e.en }) : null; }
+  const hashOf = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h; };
+  // 代码里写死的英语，凡是「要学的人开口说的 / 要选的」（剧情的 speak / answer 页、回声技能的指令、收服念的句子、唤醒、选伙伴、学招、起名、和怪兽说话）：
+  // 别的课换成这座岛（小镇）课程里的一句（kind 'sent'）或一段对话（'dlg'）——按英语原文的哈希固定挑（同一个地方每次问同一句），题面给它的意思。
+  // 以后有了台词翻译表（EchoPacks.line(英语原文)）先用它。返回 sent：{ t, mean, q }；dlg：{ q 问, a 答, wrong, mean 问句的意思, rq }。英语课返回 null
+  function learnLine(en, z, kind) {
+    if (!LANG) return null;
+    const hook = PK() && EchoPacks.line ? EchoPacks.line(en) : null, ht = hook && (typeof hook === 'string' ? hook : hook.t);
+    if (ht && kind !== 'dlg') return { t: ht, mean: meanText(ht), q: null };
+    const zi = Math.max(0, Math.min(W.length - 1, z | 0)), w = W[zi] || W[0], L = w && (kind === 'dlg' ? w.dlgs : w.sents);
+    if (!L || !L.length) return null;
+    const i = hashOf(String(en)) % L.length, it = L[i];
+    if (kind === 'dlg') { const x = glossObj(it) || {}, xq = x.q || {}; return { q: it[0], a: it[1], wrong: (it[2] || []).slice(), mean: glossC({ zh: xq.zh, en: xq.en }), rq: { kind: 'dlg', w: zi, i } }; }
+    return { t: it[0], mean: meanOf(it), q: { kind: 'sent', w: zi, i } };
+  }
+  // ---------- 换一门课（ENGINE.md §1）----------
+  // 现在能学的课：英语 + 课程包目录里有、course: true、EchoLang 认得的（中文课在中文界面里不列）。老模式只有英语
+  const courseList = () => (PK() && EchoPacks.learnable ? EchoPacks.learnable() : ['en']);
+  // 换成 l 这门课：那门课还没有存档就新建一份（fresh() + 现在这份存档的设置：界面语言、谁在学、学习锁、限时、音乐、画质、方向、操作方式、家长密码……；
+  // 本机英语声音的名字不抄；别的课 track 固定 'level'），现在这份先存好，再交给 EchoPacks.setCourse 重新打开页面
+  function courseGo(l) {
+    if (!PK() || l === COURSE || !courseList().includes(l)) return false;
+    const key = 'echo-island-v1' + (l === 'en' ? '' : '@' + l);
+    if (!lsGet(key)) {
+      const s = fresh(), keep = JSON.parse(JSON.stringify(S.settings || {}));
+      delete keep.voice;
+      Object.assign(s.settings, keep, { track: l === 'en' ? 'book' : 'level' });
+      s.place.lang = l; s.place.who = (S.place && S.place.who) || '';
+      if (l !== 'en') s.course = l;
+      lsSet(key, JSON.stringify(s));
+    }
+    if (!RT.preStart) { flushWalk(); save(); }
+    return EchoPacks.setCourse(l);
+  }
   // 按能力走：对战里要开口的招式，这一回合要不要换成「听一听、点出来」（monsters.js 的 listenIfDown 问；0–1 级有几成这样，别的级别不会）
   const lvListen = () => { const pl = PLV(); return pl != null && !!window.EchoLevels && Math.random() < EchoLevels.profile(S.place.lang, pl).listen; };
 
   // ---------- 怪兽对战模块（monsters.js）用到的工具 ----------
   if (window.MonsterGame) {
     const api = {
-      get S() { return S; }, W, WX, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit, curIdx, revRight, revAddFree, revMiss, revPick, fadeOf, cueText,
+      // W / WX 是 getter：别的课在 start() 之前换成 course.json 的（courseUse），各模块用的时候再读
+      get S() { return S; }, get W() { return W; }, get WX() { return WX; }, RT, FATAL, SFX, MIC, STOP, SPK, src, curUnit, curIdx, revRight, revAddFree, revMiss, revPick, fadeOf, cueText,
+      // 在学的语言（ENGINE.md）：lang = LANG（英语课 null，各模块看它决定走不走别的语言的路）、course 语言代码、entryOf(原文) 条目、
+      // ruby(原文) 标了读音的 HTML、meanText(原文) 课程内容的意思、learnLine(英语原文, 第几岛, 'sent'|'dlg') 写死的英语换成的课程句子（§5）
+      lang: LANG, course: COURSE, entryOf, ruby: t => rb(t), meanText, learnLine,
+      // courseList() 现在能学的课、courseGo(语言) 换课（新存档、重新打开页面）：packs.js 的「学这门」、placement.js 的「选语言」用
+      courseList, courseGo,
       // 2026-11-19 按能力安排（placement.js / levels.js）：unitSpan() 挑战馆的课本门槛从哪个单元数到哪个单元（world.js gymNeed）、
       // lvListen() 这一回合换不换成听音选（monsters.js）、chatLevel() 岛民按第几级说话（没做检测 / 按课本走 = null）、uiLang() 界面语言（talk.js）、
       // kidMode() 是不是「孩子」（false = 青少年 / 成人自己学）、stopSay() 停掉正在放的朗读、recognize 的第三个参数见上面
@@ -4751,7 +4960,7 @@
     const today = dayStr(), on = kidMode() && S.settings.gate !== false, L = dayLog();   // 「自己学」没有学习锁
     const back = !!(S.maxDay && today < S.maxDay);
     const due = dueList().length, revDone = due === 0 || (L.revSess || 0) > 0;
-    const tk = talkToday(), chatOn = !!(window.EchoTalk && EchoTalk.relayUrl());
+    const tk = talkToday(), chatOn = !LANG && !!(window.EchoTalk && EchoTalk.relayUrl());   // 别的课：AI 聊天还没有，聊天这一项整天免（lang）
     // 没网：手机说没网；或者 Wi-Fi 连着但上不了网（最近 10 分钟 AI 报过「找不到服务器」、今天聊天也没连上过）
     const le = window.EchoTalk && EchoTalk.lastErr ? EchoTalk.lastErr() : null;
     const offline = navigator.onLine === false || (!!le && le.why === 'offline' && Date.now() - le.at < 10 * 60e3 && !L.chatConn);
@@ -4759,7 +4968,7 @@
     const chatFail = !!L.chatFail, chatDaily = !!L.chatDaily || cw === 'quota', chatDone = !!tk.done;
     // 今天的聊天时间用完了：真的开口说过 3 句以上才整天免；一直不说话把时间耗完的，只临时放行 30 分钟
     const dailyFull = chatDaily && (tk.voiceLines || 0) >= 3;
-    const exWhy = chatDone ? '' : !chatOn ? 'noai' : cw === 'nosign' || cw === 'consent' ? cw : dailyFull ? 'daily' : '';
+    const exWhy = chatDone ? '' : LANG ? 'lang' : !chatOn ? 'noai' : cw === 'nosign' || cw === 'consent' ? cw : dailyFull ? 'daily' : '';
     const passWhy = chatDone || exWhy ? '' : offline ? 'offline' : chatFail ? 'fail' : chatDaily ? 'daily' : '';
     // 真的做完了就记下（学习锁关着也记：周报的 ✅ 和「学习日」看这个）
     if (!back && revDone && chatDone && !L.gateOpen) L.gateOpen = 1;
@@ -4787,6 +4996,7 @@
     const prog = { a: Math.min(g.voice, g.need), b: g.need };
     const chatTxt = g.chatDone ? (g.goals ? trh('g.gate.chat.goal') : trh('g.gate.chat.said', { n: g.voice }))
       : g.exWhy === 'noai' ? trh('g.gate.chat.noai')
+      : g.exWhy === 'lang' ? trh('g.gate.chat.lang')
       : g.exWhy === 'nosign' || g.exWhy === 'consent' ? trh('ac.gate.' + g.exWhy) + ' <button class="link" data-act="' + (g.exWhy === 'nosign' ? 'ac_signin' : 'ac_consent') + '">' + trh(g.exWhy === 'nosign' ? 'ac.btn.signin' : 'ac.btn.consent') + '</button>'
       : g.exWhy === 'daily' ? trh('g.gate.chat.daily')
       : g.pass ? trh('g.gate.chat.pass', { r: tr('g.gate.why.' + (g.passWhy === 'offline' ? 'offline' : g.passWhy === 'daily' ? 'daily' : 'fail')), n: g.passMin })
@@ -5113,7 +5323,7 @@
   // 每天的标记：✅ 学习任务真做完了 🟡 聊天这一项整天免了 📵 断网放行 🔓 关过学习锁 ⏰ 手机日期被改过 / 家长重设 🌙 很晚还在冒险
   const dayMarks = x => (x.gateOpen ? '✅' : x.gateEx ? '🟡' : '') + (x.passAt ? '📵' : '') + (x.gateOff ? '🔓' : '') + (x.clockBack || x.clockReset ? '⏰' : '') + (x.night ? '🌙' : '');
   // 聊天这一项为什么免了（日志里存的是代码 noai / daily，显示时按界面语言翻）
-  const EX_TXT = { get noai() { return tr('g.rp.ex.noai'); }, get daily() { return tr('g.rp.ex.daily'); }, get nosign() { return tr('ac.rp.ex.nosign'); }, get consent() { return tr('ac.rp.ex.consent'); } };
+  const EX_TXT = { get noai() { return tr('g.rp.ex.noai'); }, get lang() { return tr('g.rp.ex.lang'); }, get daily() { return tr('g.rp.ex.daily'); }, get nosign() { return tr('ac.rp.ex.nosign'); }, get consent() { return tr('ac.rp.ex.consent'); } };
   const arrow = (a, b, eps) => (a == null || b == null ? '' : a > b + eps ? '<i class="up">↑</i>' : a < b - eps ? '<i class="dn">↓</i>' : '<i class="eq">→</i>');
   // 诊断一行：AI 失败几次（没网 / 密钥和额度）、聊天连不上几天、程序出错几条（EchoErr）、画面重开过几次（原生 diag）、版本号
   function diagLine(W0) {
@@ -5309,7 +5519,7 @@
       const tn = key && Array.from(b.childNodes).find(n => n.nodeType === 3 && n.nodeValue.trim());
       if (tn) tn.nodeValue = tr(key);
     });
-    const foot = $('#home .foot'); if (foot) foot.textContent = tr('g.shell.foot');
+    const foot = $('#home .foot'); if (foot) foot.textContent = LANG ? tr('g.shell.foot.c', { lang: tr('pk.name.' + COURSE) }) : tr('g.shell.foot');
     // 「继续」按钮：做题时 game.js 会按情况改它的字，这里只在它还是默认的「继续」时换
     const fb = $('#fb-btn'); if (fb && ['zh', 'en'].some(l => fb.textContent === (I18N ? I18N.t('g.shell.next', null, l) : ''))) fb.textContent = tr('g.shell.next');
   }
@@ -5353,6 +5563,8 @@
   function start(data) {
     RT.preStart = false;
     S = load(data && data.S);
+    if (LANG) S.course = COURSE;   // 别的课的存档带着自己是哪门课（导入、恢复时认）
+    if (S.place && S.place.lang !== COURSE) S.place.lang = COURSE;   // 能力检测、分级按在学的这门课（英语的老存档本来就是 en）
     revMigrate();
     revTrim();   // 老存档里攒了很多掌握了的聊天句子：打开时理一次
     if (S.book.cur && S.book.at < 0) { S.book.at = S.book.cur - 1; delete S.book.cur; }
@@ -5425,10 +5637,28 @@
     if (!PK()) { start(d); return; }
     RT.preStart = true;
     const hm = $('#home'); if (hm) hm.hidden = true;
+    if (LANG) { courseBoot(d); return; }
     let go = false;
     const run = () => { if (!go) { go = true; start(d); } };
     EchoPacks.ready().then(run, run);
     setTimeout(run, 5000);
+  }
+  // 别的课（ENGINE.md §2）：等课程包把这门课的 course.json 读出来（不只等 4 秒：内容没读出来就开始等于拿英语内容配这门课的存档），
+  // 换上内容再 start()；读不出来（包被清了、没下完）就停在「下载课程」那一页，不往下走
+  function courseBoot(d) {
+    let done = false;
+    const go = () => {
+      if (done) return; done = true;
+      const c = EchoPacks.content();
+      if (c && Array.isArray(c.WORLDS) && c.WORLDS.length) { courseUse(c); start(d); return; }
+      // 存档还没读：界面语言先照这门课的存档（没有就照英语那份）
+      try { const o = parseSave(lsGet(KEY)) || parseSave(lsGet('echo-island-v1')); if (o && o.settings && o.settings.ui) S.settings.ui = o.settings.ui; } catch (e) { /* 读不到就是中文 */ }
+      if (window.EchoI18n) EchoI18n.set(S.settings.ui || 'zh');
+      shellUi();
+      if (EchoPacks.missing) EchoPacks.missing(COURSE);
+    };
+    (EchoPacks.courseReady ? EchoPacks.courseReady() : EchoPacks.ready()).then(go, go);
+    setTimeout(go, 15000);
   }
   if (hot && typeof hot.ready === 'function') hot.ready(boot);
   else boot((hot && hot.data) || {});

@@ -6,7 +6,8 @@
 //       → <out>/catalog.json（每门语言最新的那个版本）和 <out>/_headers（Cloudflare 静态文件的跨域和缓存设置）
 //   别的语言（等课程内容那一路落地再接）：--lang ja --course <course.json> --voice <目录>
 //       <目录> 和 assets/voice 一样：index.json（{ v: { f, m }, fmt, f: [key…], m: [key…] }）、f/<key>.ogg、m/<key>.ogg，
-//       句子表（排先后用）放 <目录>/lines.json，或者 --lines <文件>（和 tools/voice/lines.json 一样的格式：[{ t, g, p }]）
+//       句子表（排先后用）：--lines <文件>（[{ t, g, p }]，或者 course.json 取里面的 VOICE）> <目录>/lines.json > --course 的 VOICE
+//       course.json 排在第一个文件、标 core；tools/voice/gen.py 合成出来的目录可以直接用
 //
 // 配音按「先用到的在前」排：tools/voice/lines.json 的 p（collect.js 记的来源顺序）从小到大，一句里女声在前；
 // 句子表里没有、但 index.json 里有的（以前的台词留下的）排在最后（按声音、key）。--only N 只要前 N 句（给测试做小样，不带后面那些）。
@@ -65,8 +66,13 @@ function clipOrder(o) {
   const idx = JSON.parse(fs.readFileSync(idxFile, 'utf8'));
   if (idx.fmt && idx.fmt !== 'ogg-opus') throw new Error('配音格式是 ' + idx.fmt + '，课程包只收 ogg-opus');
   const have = { f: new Set(idx.f || []), m: new Set(idx.m || []) };
-  const linesFile = o.lines || (o.voice ? path.join(vdir, 'lines.json') : path.join(ROOT, 'tools', 'voice', 'lines.json'));
-  const lines = fs.existsSync(linesFile) ? JSON.parse(fs.readFileSync(linesFile, 'utf8')) : [];
+  // 句子表：--lines > <配音目录>/lines.json > --course 的 VOICE（tools/course/build.js 的名单）> tools/voice/lines.json（英语）
+  let linesFile = o.lines;
+  if (!linesFile && o.voice) linesFile = fs.existsSync(path.join(vdir, 'lines.json')) ? path.join(vdir, 'lines.json') : o.course || '';
+  if (!linesFile && !o.voice) linesFile = path.join(ROOT, 'tools', 'voice', 'lines.json');
+  let lines = linesFile && fs.existsSync(linesFile) ? JSON.parse(fs.readFileSync(linesFile, 'utf8')) : [];
+  if (lines && !Array.isArray(lines)) lines = lines.VOICE;   // 给的是 course.json
+  if (!Array.isArray(lines)) throw new Error(linesFile + ' 不是句子表（[{ t, g, p }]）也不是带 VOICE 的 course.json');
   // p 从小到大（没有 p 的老句子表：照文件里的先后），一样的按文字
   const ord = lines.map((e, i) => ({ e, p: Number.isInteger(e.p) ? e.p : 1e9 + i })).sort((a, b) => a.p - b.p || (a.e.t < b.e.t ? -1 : a.e.t > b.e.t ? 1 : 0));
   const out = [], seen = new Set();

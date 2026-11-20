@@ -54,7 +54,12 @@
   function fill(s, p, safe) {
     return String(s).replace(/\{(\w+)\}/g, (m, k) => (p && p[k] != null ? (safe ? esc(p[k]) : String(p[k])) : m));
   }
+  // 别的语言的课（tools/course/ENGINE.md）：界面上写着「英语」的那几句另有一份「.c」的写法（{lang} = 在学的语言名），
+  // game.js 在学别的语言时 variant('.c', () => ({ lang })) 打开：键有 .c 版本就用它。英语课不打开，一切照旧
+  let VAR = '', VARP = null;
+  function variant(sfx, params) { VAR = sfx || ''; VARP = params || null; return api; }
   function text(key, p, l, safe) {
+    if (VAR && find(key + VAR, known(l) ? l : lang())) { key = key + VAR; p = Object.assign({}, typeof VARP === 'function' ? VARP() : VARP, p); }
     const f = find(key, known(l) ? l : lang());
     if (!f) return key;
     let v = f.v;
@@ -113,7 +118,7 @@
     return out;
   }
   const api = {
-    BASE, LANGS, add, t, h, raw, pick, gloss, label, lang, set, use, missing, esc,
+    BASE, LANGS, add, t, h, raw, pick, gloss, label, lang, set, use, missing, esc, variant,
     has: (key, l) => !!(T[l || lang()] && Object.prototype.hasOwnProperty.call(T[l || lang()], key)),
     keys: l => Object.keys(T[l || BASE] || {}),
     name: l => (LANGS.find(x => x.id === l) || {}).name || l,     // 这门语言自己的写法

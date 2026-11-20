@@ -159,6 +159,8 @@
       'place.resume.title': '接着做能力检测？', 'place.resume.p': '上次做到第 {n} 题，进度还留着。', 'place.resume.go': '接着做', 'place.resume.new': '重新开始',
       'place.res.title': '检测完成！', 'place.res.your': '你现在的级别', 'place.res.skills': '各项能力',
       'place.res.note': 'ℹ️ 这是为了安排内容做的估计，不是考试成绩，也不是证书。',
+      // 还没有检测题的语言（别的语言的课，tools/course/ENGINE.md §4）
+      'place.res.title.self': '准备好了！', 'place.res.self': 'ℹ️ {lang}的能力检测题还在做：先按你选的「学过多少」从这一级开始。觉得太难或太简单，可以在下面调，以后在设置里也能改。',
       'place.res.unchecked': '未测',
       'place.res.nospeak': '口语未测（{why}）。综合级别按另外三项定；能用麦克风和 AI 的时候可以重新检测。',
       'place.res.plan': '接下来这样安排',
@@ -236,6 +238,7 @@
       'place.resume.title': 'Carry on with the level check?', 'place.resume.p': 'Last time you reached question {n}. Your progress is still here.', 'place.resume.go': 'Carry on', 'place.resume.new': 'Start again',
       'place.res.title': 'All done!', 'place.res.your': 'Your level now', 'place.res.skills': 'By skill',
       'place.res.note': 'ℹ️ This is an estimate used to arrange your content. It is not an exam score or a certificate.',
+      'place.res.title.self': 'Ready!', 'place.res.self': 'ℹ️ The level check for {lang} is still being built. For now you start at the level that matches what you told us. If it feels too hard or too easy, change it below (you can also change it later in Settings).',
       'place.res.unchecked': 'not checked',
       'place.res.nospeak': 'Speaking was not checked ({why}). Your level comes from the other three skills. You can redo the check when the microphone and the AI are available.',
       'place.res.plan': 'What happens next',
@@ -369,7 +372,8 @@
   // ---------- 打开 ----------
   // first(done)：全新的开始（game.js 启动时）——选语言 → 谁在学 → 检测 → 结果，最后调 done()；
   // open(step, done)：首页卡片 / 设置里点进来（老存档）——从「谁在学」开始，不问界面语言
-  function first(done) { begin('lang', done, true); }
+  // 别的语言的课（G.lang，tools/course/ENGINE.md §1）：语言是在「选语言」那一步选好、换了课程重新打开的，直接从「谁在学」开始（还能返回去改）
+  function first(done) { begin(G && G.lang ? 'who' : 'lang', done, true); }
   function open(step, done) { begin(step || 'who', done, false); }
   function begin(step, done, isFirst) {
     if (!G) return;
@@ -393,10 +397,18 @@
       '<p class="pl-lbl">' + both('place.lang.ui') + '</p>' +
       '<div class="pl-choices two">' + I18N.LANGS.map(l => '<button class="pl-choice' + (l.id === cur ? ' on' : '') + '" data-act="plUi" data-l="' + l.id + '"><b>' + esc(l.name) + '</b></button>').join('') + '</div>' +
       '<p class="pl-lbl">' + both('place.lang.learn') + '</p>' +
-      '<div class="pl-choices two">' + Object.keys(TARGETS).map(l => '<button class="pl-choice' + (l === st().lang ? ' on' : '') + '" data-act="plTarget" data-l="' + l + '"><b>' + esc(t('lv.lang.' + l, null, 'en')) + '</b><small>' + esc(t('lv.lang.' + l, null, 'zh')) + '</small></button>').join('') + '</div>' +
+      '<div class="pl-choices two">' + targets().map(l => '<button class="pl-choice' + (l === st().lang ? ' on' : '') + '" data-act="plTarget" data-l="' + l + '"><b>' + esc(t('lv.lang.' + l, null, 'en')) + '</b><small>' + esc(t('lv.lang.' + l, null, 'zh')) + '</small></button>').join('') + '</div>' +
       '<p class="tip">' + both('place.lang.soon') + '</p>' +
       (t('place.lang.partial') ? '<p class="pl-note">' + h('place.lang.partial') + '</p>' : '') +
       '</div><div class="pl-nav"><span></span><button class="btn" data-act="plGo" data-to="who" data-focus>' + h('place.next') + '</button></div>', 'lang');
+  }
+
+  // 能选的「要学的语言」：有题库的（TARGETS）+ 课程包模式里能学的课（game.js 的 courseList：目录里有、引擎认得的；中文课在中文界面里不列）
+  const targets = () => { const out = Object.keys(TARGETS); ((G && G.courseList && G.courseList()) || []).forEach(l => { if (!out.includes(l)) out.push(l); }); return out; };
+  // 选的语言不是现在这门课：换课（那门课没有存档就新建一份、重新打开页面，game.js 的 courseGo）。换了返回 true
+  function switchCourse() {
+    const want = st().lang;
+    return !!(G && G.course && G.courseGo && want !== G.course && G.courseGo(want));
   }
 
   // ---------- 课程包模式（packs.js，tools/pack/SPEC.md §5）：选好语言以后先下这门课（最要紧的那部分下好才能「继续」，其余在后台下） ----------
@@ -404,7 +416,7 @@
   function pPack() {
     const pk = root.EchoPacks;
     if (!pk || !pk.on || !pk.firstStep) return false;
-    return pk.firstStep(st().lang, { paint: html => paint(html, 'pack'), live: () => !!U && U.step === 'pack' && isOpen(), next: () => { if (U) pWho(); } });
+    return pk.firstStep(st().lang, { paint: html => paint(html, 'pack'), live: () => !!U && U.step === 'pack' && isOpen(), next: () => { if (U && !switchCourse()) pWho(); } });
   }
 
   // ---------- 谁在学、学过多少（只用来定从哪儿开始测；只存年龄段） ----------
@@ -443,6 +455,7 @@
     return '';
   }
   function pReady() {
+    if (!data(st().lang)) { pNoTest(); return; }   // 这门语言还没有检测题（别的语言的课）
     const why = speakWhy(), part = (s, em) => '<li><i>' + em + '</i><b>' + esc(LV.skill(s)) + '</b>' + (s === 'speak' && why ? '<small>' + h('place.ready.off', { why: t('place.why.' + why) }) + '</small>' : '') + '</li>';
     paint('<div class="pl-step">' + tmpBar() +
       '<div class="pl-hero">🧭</div><h2>' + h('place.ready.title') + '</h2>' +
@@ -459,6 +472,21 @@
     G.save();
     try { G.primeTTS(); G.ac(); } catch (e) { /* 忽略 */ }
     nextItem();
+  }
+
+  // ---------- 还没有检测题的语言（别的语言的课，tools/course/ENGINE.md §4）----------
+  // 不测：按「学过多少」直接定级（0 刚开始 / 1 学过一点 / 2 能简单对话 / 3 比较自如 = 第 0–3 级，自己选的级别），
+  // 结果页写明检测题在做、可以自己调；聊天级别跟着走。记一条历史（self: 1，各项都是「未测」）
+  function pNoTest() {
+    const P0 = st(), lv = clamp(P0.know >= 0 ? P0.know : 0, 0, LV.TOP), d = G.dayStr();
+    Object.assign(P0, { sk: {}, auto: lv, talk: lv, cap: 0, adj: 0, lv, at: d, run: null, skip: '', card: '' });
+    P0.hist.unshift({ d, lv, talk: lv, n: 0, v: -1, l: -1, r: -1, s: -1, ui: ui(), self: 1 });
+    P0.hist = P0.hist.slice(0, 6);
+    G.S.settings.track = 'level';
+    if (G.placeApply) G.placeApply('test');
+    G.save();
+    U.fresh = true;
+    pResult();
   }
 
   // ---------- 接着做 ----------
@@ -673,7 +701,7 @@
       if (a && a.fit === 'beyond') li.push(h('place.plan.beyond'));
       if (a && a.fit === 'locked') li.push(h('place.plan.locked'));
       li.push(h('place.plan.kinds.' + (lv <= 1 ? 'low' : lv === 2 ? 'mid' : 'high')));
-      li.push(h('place.plan.chat', { name: LV.name(talk), how: t('place.chat.' + talk) }));
+      if (!(G && G.lang)) li.push(h('place.plan.chat', { name: LV.name(talk), how: t('place.chat.' + talk) }));   // 别的语言的课：AI 聊天还没有，不说岛民怎么聊
     }
     if (P0.cap && !P0.adj) li.push(h('place.plan.cap'));
     return '<ul class="pl-plan">' + li.map(x => '<li>' + x + '</li>').join('') + '</ul>';
@@ -687,6 +715,8 @@
   }
   function resultBody(P0) {
     const sp = P0.sk.speak || {};
+    // 还没有检测题的语言：没有「各项能力」，写明是按自己选的级别开始的
+    if (!data(P0.lang)) return levelCard(P0.lv) + '<p class="pl-note">' + h('place.res.self', { lang: langName(P0.lang) }) + '</p>' + '<h3>' + h('place.res.plan') + '</h3>' + planHTML(P0) + adjustHTML(P0);
     return levelCard(P0.lv) + '<p class="pl-note">' + h('place.res.note') + '</p>' +
       '<h3>' + h('place.res.skills') + '</h3>' + skillsHTML(P0) +
       (sp.skip ? '<p class="pl-note warn" id="pl-nospeak">' + h('place.res.nospeak', { why: t('place.why.' + sp.skip) }) + '</p>' : '') +
@@ -694,7 +724,7 @@
   }
   function pResult() {
     const P0 = st();
-    paint('<div class="pl-step res">' + tmpBar() + '<div class="pl-hero">🎉</div><h2>' + h('place.res.title') + '</h2>' + resultBody(P0) + '</div>' +
+    paint('<div class="pl-step res">' + tmpBar() + '<div class="pl-hero">🎉</div><h2>' + h(data(P0.lang) ? 'place.res.title' : 'place.res.title.self') + '</h2>' + resultBody(P0) + '</div>' +
       '<div class="pl-nav"><button class="btn sun" data-act="plFinish" data-focus>' + h(U.first || !hasProgress() ? 'place.res.go' : 'place.done') + '</button></div>', 'result');
   }
   function adjust(d) {
@@ -710,8 +740,10 @@
   // =====================================================================================
   // ③ 首页卡片、设置里的那一页
   // =====================================================================================
+  // 别的语言的课没有检测题，也给卡片和设置里那一行（点进去是「学过多少」→ 自己定级）
+  const hasPlace = () => !!(data(st().lang) || (G && G.lang));
   function homeCard() {
-    if (!G || !data(st().lang)) return '';
+    if (!G || !hasPlace()) return '';
     const P0 = st();
     if (P0.run) return '<div class="place-card" id="place-card"><button class="pc-main" data-act="plOpen"><span>🧭</span><div><b>' + h('place.card.resume', { n: (P0.run.n || 0) + 1 }).replace(/^🧭\s*/, '') + '</b><small>' + h('place.card.resume.sub') + '</small></div><em>' + h('place.card.resume.go') + '</em></button></div>';
     if (placed() || P0.card) return '';
@@ -720,7 +752,7 @@
   }
   // 设置页里的一行（game.js 的 settingsSheet 调）
   function settingsRow() {
-    if (!G || !data(st().lang)) return '';
+    if (!G || !hasPlace()) return '';
     const P0 = st();
     return '<div class="set" id="set-place"><label>' + h('place.set.row') + '</label><div class="say-row"><span class="set-v">' + (placed() ? esc(LV.tag(P0.lv)) + ' · ' + h('lv.cefr', { c: LV.cefr(P0.lv) }) : h('place.set.none')) + '</span>' +
       '<button class="btn small ghost" data-act="plSheet">' + h(placed() ? 'place.set.open' : 'place.set.start') + '</button></div><small>' + h('place.set.note') + '</small></div>';
@@ -735,7 +767,7 @@
     const tr = G.S.settings.track === 'level' ? 'level' : 'book';
     const hist = P0.hist.map(x => '<li><b>' + esc(x.d) + '</b> · ' + esc(LV.tag(x.lv)) + ' <small>' + ['v', 'l', 'r', 's'].map((k, i) => SK_ICON[SKILLS[i]] + (x[k] >= 0 ? x[k] : '–')).join(' ') + (x.adj ? ' · ' + h('place.hist.adj') : '') + '</small></li>').join('');
     G.openModal('<h2>' + h('place.sheet.title') + '</h2><div class="pl-sheet">' +
-      '<h3>' + h('place.sheet.lv') + '</h3>' + levelCard(P0.lv) + skillsHTML(P0) +
+      '<h3>' + h('place.sheet.lv') + '</h3>' + levelCard(P0.lv) + (data(P0.lang) ? skillsHTML(P0) : '<p class="pl-note">' + h('place.res.self', { lang: langName(P0.lang) }) + '</p>') +
       ((P0.sk.speak || {}).skip ? '<p class="pl-note warn">' + h('place.res.nospeak', { why: t('place.why.' + P0.sk.speak.skip) }) + '</p>' : '') +
       '<p class="pl-note">' + h('place.res.note') + '</p>' +
       '<div class="set"><label>' + h('place.sheet.track') + '</label><div class="seg">' +
@@ -772,8 +804,9 @@
     try { document.addEventListener('visibilitychange', () => { if (document.hidden && isOpen() && U && U.step === 'q' && !U.listening) pause(); }); } catch (e) { /* 没有页面 */ }
     return {
       plUi: el => { if (G.setUi) G.setUi(el.dataset.l); pLang(); },
-      plTarget: el => { if (TARGETS[el.dataset.l]) { st().lang = el.dataset.l; G.save(); pLang(); } },
-      plGo: el => { if (!U) return; if (el.dataset.to === 'lang') pLang(); else if (U.first && U.step === 'lang' && pPack()) return; else pWho(); },
+      plTarget: el => { if (targets().includes(el.dataset.l)) { st().lang = el.dataset.l; G.save(); pLang(); } },
+      // 选好语言往下走：课程包模式先下这门课（pPack）；选的不是现在这门课就换课（重新打开页面）；不然到「谁在学」
+      plGo: el => { if (!U) return; if (el.dataset.to === 'lang') pLang(); else if (U.first && U.step === 'lang' && pPack()) return; else if (U.first && U.step === 'lang' && switchCourse()) return; else pWho(); },
       plWho: el => { if (!U) return; U.who = el.dataset.v; if (U.know == null && st().know >= 0) U.know = st().know; pWho(); },
       plKnow: el => { if (!U) return; U.know = +el.dataset.v; if (!U.who && st().who) U.who = st().who; pWho(); },
       plWhoNext: () => whoNext(),

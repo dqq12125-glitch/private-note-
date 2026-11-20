@@ -67,13 +67,15 @@ private func pcmB64(_ samples: [Int16]) -> String {
 }
 
 final class SpeechLogicTests: XCTestCase {
-    // speechStart 的选项：读不懂就用默认的；只认英语的几个地区
+    // speechStart 的选项：读不懂就用默认的；只认白名单里的地区（英语的几个 + 别的语言的课的 es / ja / zh，tools/course/ENGINE.md §3）
     func testOptions() {
         let d = LocalSpeech.opts("")
         XCTAssertFalse(d.short); XCTAssertFalse(d.long); XCTAssertTrue(d.ask); XCTAssertEqual(d.locale, "en-US")
         let o = LocalSpeech.opts(#"{"short":true,"long":false,"ask":false,"locale":"en-GB"}"#)
         XCTAssertTrue(o.short); XCTAssertFalse(o.long); XCTAssertFalse(o.ask); XCTAssertEqual(o.locale, "en-GB")
-        XCTAssertEqual(LocalSpeech.opts(#"{"locale":"zh-CN"}"#).locale, "en-US", "只认英语的几个")
+        for l in ["es-MX", "es-ES", "es-US", "ja-JP", "zh-CN"] { XCTAssertEqual(LocalSpeech.opts(#"{"locale":""# + l + #""}"#).locale, l, "别的语言的课") }
+        XCTAssertEqual(LocalSpeech.opts(#"{"locale":"fr-FR"}"#).locale, "en-US", "白名单以外的按 en-US")
+        XCTAssertEqual(LocalSpeech.opts(#"{"locale":"zh-TW"}"#).locale, "en-US", "繁体中文不在白名单（lang-zh.js：拼音表认不得繁体字）")
         XCTAssertEqual(LocalSpeech.opts("not json").locale, "en-US")
         XCTAssertEqual(LocalSpeech.fail("busy", "x")["error"] as? String, "busy")
         // 送来的声音的采样率：默认 16k，只认 8k–48k

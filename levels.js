@@ -38,6 +38,17 @@
     },
   };
   const mapOf = lang => MAP[lang] || MAP.en;
+  // 别的语言的课（tools/course/ENGINE.md §2）：内容对照表在课程包的 course.json 里（MAP），game.js 换内容时登记进来。
+  // 只收形状对的（towns 级别、books 每册的级别、mix 6 个数、kinds 6 项）；不对的不收，照旧按英语的表
+  function addMap(lang, m) {
+    if (!lang || lang === 'en' || !m || typeof m !== 'object') return false;
+    const ok = okLv(m.towns) && m.books && typeof m.books === 'object' && Object.values(m.books).every(okLv) &&
+      Array.isArray(m.mix) && m.mix.length === CEFR.length && m.mix.every(x => typeof x === 'number' && x >= 0 && x <= 1) &&
+      Array.isArray(m.kinds) && m.kinds.length === CEFR.length && m.kinds.every(k => k && typeof k.listen === 'number' && Array.isArray(k.fade) && k.fade.length === 2);
+    if (!ok) return false;
+    MAP[lang] = { towns: m.towns, books: Object.assign({}, m.books), mix: m.mix.slice(), kinds: m.kinds.map(k => ({ listen: k.listen, fade: k.fade.slice() })) };
+    return true;
+  }
   // 一册书（或者以后的一个课程包）是第几级：数据里自己写了 level 就用它——以后做 4、5 级的课程包，
   // 在 BOOKS.list 里加一册、写上 level: 4，下面的 startAt 就会把 4 级的人排到它那里，这个文件不用改
   function bookLevel(lang, book) {
@@ -116,7 +127,7 @@
       'lv.cefr': '约相当于 CEFR {c}',
       'lv.tag': '{l} 级 · {n}',
       'lv.sk.vocab': '词汇', 'lv.sk.listen': '听力', 'lv.sk.read': '语法与阅读', 'lv.sk.speak': '口语',
-      'lv.lang.en': '英语',
+      'lv.lang.en': '英语', 'lv.lang.es': '西班牙语', 'lv.lang.ja': '日语', 'lv.lang.zh': '中文',
     },
     en: {
       'lv.n0': 'Starter', 'lv.n1': 'Beginner', 'lv.n2': 'Elementary', 'lv.n3': 'Intermediate', 'lv.n4': 'Upper-intermediate', 'lv.n5': 'Advanced',
@@ -129,7 +140,7 @@
       'lv.cefr': 'roughly CEFR {c}',
       'lv.tag': 'Level {l} · {n}',
       'lv.sk.vocab': 'Vocabulary', 'lv.sk.listen': 'Listening', 'lv.sk.read': 'Grammar & reading', 'lv.sk.speak': 'Speaking',
-      'lv.lang.en': 'English',
+      'lv.lang.en': 'English', 'lv.lang.es': 'Spanish', 'lv.lang.ja': 'Japanese', 'lv.lang.zh': 'Chinese (Mandarin)',
     },
   };
   if (I18N) I18N.add(STR);
@@ -137,7 +148,7 @@
   const name = (lv, l) => (okLv(lv) ? tr('lv.n' + lv, null, l) : '');
 
   const api = {
-    N: CEFR.length, TOP, CEFR, SKILLS, MAP, levelOf, okLv, bookLevel, topLevel, startAt, profile, fade, overall,
+    N: CEFR.length, TOP, CEFR, SKILLS, MAP, addMap, levelOf, okLv, bookLevel, topLevel, startAt, profile, fade, overall,
     name, desc: (lv, l) => (okLv(lv) ? tr('lv.d' + lv, null, l) : ''), cefr: lv => (okLv(lv) ? CEFR[lv] : ''),
     tag: (lv, l) => (okLv(lv) ? tr('lv.tag', { l: lv, n: name(lv, l) }, l) : ''),
     skill: (s, l) => tr('lv.sk.' + s, null, l),
