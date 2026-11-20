@@ -389,14 +389,15 @@ function keepFake() {
   await W(500);
   a = await E(() => { const c = document.querySelector('#w-view canvas.w-canvas'); return { dpr: c ? c.width / c.clientWidth : 0 }; });
   check(a.dpr > 1.9 && a.dpr <= 2.01, '3 倍屏上精美档最多按 2 倍像素画', a);
-  // 丢了又恢复
-  await E(() => { window.__R0 = EchoWorld._debug().R; const gl = document.querySelector('#w-view canvas.w-canvas').getContext('webgl2'); window.__lose = gl.getExtension('WEBGL_lose_context'); window.__lose.loseContext(); });
+  // 丢了又恢复。这两次丢都是「切去微信再回来」那一类（先发一个页面切后台 / 回前台的事件）：world.js 的 rebuildGL 不把它算成「这个渲染器不行」，原地重建；
+  // 一直在前台、刚建好就丢、连着两次才往下退（新画风 → 经典 3D → 2D，tests/look.test.js 第 10 节）
+  await E(() => { document.dispatchEvent(new Event('visibilitychange')); window.__R0 = EchoWorld._debug().R; const gl = document.querySelector('#w-view canvas.w-canvas').getContext('webgl2'); window.__lose = gl.getExtension('WEBGL_lose_context'); window.__lose.loseContext(); });
   await W(400);
   check(await E(() => EchoWorld._debug().R.glState() === 'lost'), '画面丢了：先不画（lost）');
   await E(() => window.__lose.restoreContext());
   check(await until(() => E(() => { const R = EchoWorld._debug().R; return R !== window.__R0 && R.kind === '3d' && R.glState() === 'ok' && R.info().render.calls > 0; }), 40), '恢复了：整个重建，接着画');
   // 丢了一直不恢复：2.5 秒后换一张新画布
-  await E(() => { window.__R1 = EchoWorld._debug().R; document.querySelector('#w-view canvas.w-canvas').getContext('webgl2').getExtension('WEBGL_lose_context').loseContext(); });
+  await E(() => { document.dispatchEvent(new Event('visibilitychange')); window.__R1 = EchoWorld._debug().R; document.querySelector('#w-view canvas.w-canvas').getContext('webgl2').getExtension('WEBGL_lose_context').loseContext(); });
   check(await until(() => E(() => { const R = EchoWorld._debug().R; return R !== window.__R1 && R.glState && R.glState() === 'ok' && R.info().render.calls > 0; }), 50, 150), '一直不恢复：2.5 秒后换新画布重建');
   a = await E(() => ({ n: window.EchoGame.dayLog().glLost, errs: window.EchoErr.list().filter(x => x.k === 'gl').length, canvases: document.querySelectorAll('#w-view canvas.w-canvas').length }));
   check(a.n === 2 && a.errs >= 2 && a.canvases === 1, '记进日志和出错记录；只剩一张画布', a);

@@ -11,8 +11,13 @@
 //     摇杆 / 方向键 / 键盘的「上」朝镜头看过去的方向走（0° / 90° / 180° / 270°，停在 45° 不来回跳）；双击回到主角身后、点指北针回正北；
 //     不和 A / B 键、摇杆抢手指；对话框开着、进了屋、老画风、2D 都不能转；四面转过去主角都不被房子和树挡住、头上的牌子朝着镜头；
 //     转着镜头换地图显存不涨、角度留着
+//   · 画面丢了自己恢复（第 10 节，world.js 的 rebuildGL / glWatch）：画着的时候丢了 → 重建、镜头角度留着、摇杆方向和画面一致；重建以后进屋、换地图、显存都正常；
+//     没显示的那张画布丢了（屋里那张悄悄拆掉、户外那张整个重建）；一建好就丢（像 iPhone 那样编译着色器时抛异常）→ 没有没接住的错误、出错记录只有一条；
+//     新画风连着两次没画成 → 退到经典 3D，经典也不行 → 2D；draw 每帧都抛异常循环不停、不刷屏；退下来以后隔一阵再进大地图 / 改设置会从头再试；
+//     事件没到页面、或者一直在画可是帧数不动，靠每秒一次的体检发现
 // 运行：node tests/look.test.js（自己起一个本机小网站，这样怪兽的模型读得到；无头浏览器用软件渲染，慢，所以大多数检查用标准档）
 //   node tests/look.test.js --only=orbit 只跑第 9 节（转镜头，约 3 分钟）
+//   node tests/look.test.js --only=lost  只跑第 10 节（画面丢了自己恢复，约 5 分钟）
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const ROOT = path.join(__dirname, '..'), out = path.join(__dirname, 'screenshots');
@@ -41,7 +46,7 @@ const SAVE = (gfx, extra) => ({
     const ctx = await b.newContext({ viewport: o.vp || { width: 390, height: 844 }, hasTouch: !!o.touch }), p = await ctx.newPage(), errs = [];
     p.setDefaultTimeout(20000);
     p.on('pageerror', e => { errs.push(e.message); allErrs.push(e.message); console.log('  [err]', e.message.slice(0, 200)); });
-    if (o.init) await ctx.addInitScript(o.init);
+    if (o.init) await ctx.addInitScript(o.init, o.initArg);
     if (o.block) await ctx.route(o.block, r => r.abort());
     await p.goto((o.file ? 'file://' + path.join(ROOT, 'index.html') : base + '/index.html') + (query || ''));
     await p.evaluate(([sv, ls]) => { localStorage.setItem('echo-island-v1', JSON.stringify(sv)); if (ls) localStorage.setItem('echo-look', ls); else localStorage.removeItem('echo-look'); }, [SAVE(gfx, o.save), o.ls || '']);
@@ -67,7 +72,7 @@ const SAVE = (gfx, extra) => ({
   let t, st, pr;
   // 来回切地图用：到这张图，记显存里的东西有多少
   const memOf = async id => { await t.go(id, id === 'r0' ? 'from:t0' : 'from:r0'); await t.frames(3); const q = await t.st(); return { mem: q.mem, prog: q.prog, using: q.using }; };
-  if (ONLY !== 'orbit') {
+  if (ONLY !== 'orbit' && ONLY !== 'lost') {
 
   // ---------- 1. 不带开关：一切照旧 ----------
   t = await open('', 'mid', { file: true });
@@ -360,7 +365,7 @@ const SAVE = (gfx, extra) => ({
   }
 
   // ---------- 9. 转镜头（新画风的户外地图才有）----------
-  {
+  if (ONLY !== 'lost') {
     t = await open('?look=new', 'mid', { touch: true });
     const cdp = await t.ctx.newCDPSession(t.p);
     // 真的触摸事件（CDP 发的）。事件自己带着时间（tc，秒）：软件渲染慢，两次调用之间真的隔了多久说不准，「点了多久」「两下隔了多久」world.js 是按事件的时间算的；gap = 离上一个事件多少毫秒
@@ -520,6 +525,229 @@ const SAVE = (gfx, extra) => ({
     c = await cam();
     check(c.on && D(c.to) === 135 && c.compass, '出来：还是进屋之前的角度（' + D(c.to) + '°），指北针亮着');
     check(!t.errs.length, '转镜头这一圈没有报错' + (t.errs.length ? '：' + t.errs.slice(0, 2).join(' | ') : ''));
+    await t.ctx.close();
+  }
+
+  // ---------- 10. 画面丢了 / 画不出来以后自己恢复，不卡在一张死画布上 ----------
+  // 2026-11-20 iPhone 模拟器里：新画风的画面一建好就丢了，three 编译着色器抛 TypeError，world.js 的循环停了，再也不画、也不退回经典 3D / 2D
+  if (ONLY !== 'orbit') {
+    // 进页面之前注入：给大地图画布的 WebGL 捣乱。plan[n] 管第 n 张大地图画布（按建的先后从 1 数），plan['*'] 管每一张；__sab.made 记着每一张是怎么对付的
+    //   'wk'   像 iPhone 那样：第一次编译着色器时画面真的丢了，丢了以后 createShader 给 null，three 接着就抛 TypeError
+    //          （电脑上的 Chromium 画面丢了照样给一个空壳、不抛，所以要装一下）
+    //   'null' 画面不算丢了，可是 createShader 一直给 null：一画就抛，「画面丢了」的事件永远不来
+    //   'dead' 一建出来就丢：three 的渲染器建不出来
+    //   'mute' 别的都不动，只把「画面丢了」的事件吃掉（页面收不到）
+    const sab = plan => {
+      const S = window.__sab = { n: 0, made: [], plan: plan || {} }, g0 = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (kind) {
+        const gl = g0.apply(this, arguments);
+        if (!gl || !/^webgl/i.test(kind) || gl.__sab || !/\bw-canvas\b/.test(this.className)) return gl;
+        const how = S.plan[++S.n] || S.plan['*'] || '';
+        gl.__sab = S.n; S.made.push(how || '-');
+        const cs = gl.createShader.bind(gl), lose = () => { const x = gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); };
+        if (how === 'dead') lose();
+        else if (how === 'wk') { let lost = false; gl.createShader = ty => { if (!lost) { lost = true; lose(); } return gl.isContextLost() ? null : cs(ty); }; }
+        else if (how === 'null') gl.createShader = () => null;
+        else if (how === 'mute') this.addEventListener('webglcontextlost', e => { e.stopImmediatePropagation(); }, true);
+        return gl;
+      };
+    };
+    const glOf = () => t.E(() => { const g = EchoWorld._debug().gl; return { ban: g.ban, fails: g.fails, good: g.good, made: window.__sab ? window.__sab.made.join(',') : '' }; });
+    const logOf = async () => { const l = await t.E(() => ({ list: EchoErr.list().map(x => ({ k: x.k, n: x.n || 1, m: x.m })), lost: EchoGame.dayLog().glLost || 0 })); return { all: l.list, gl: l.list.filter(x => x.k === 'gl'), lost: l.lost, txt: l.list.map(x => x.k + (x.n > 1 ? '×' + x.n : '') + ':' + x.m.slice(0, 28)).join(' | ') }; };
+    // 等画面稳下来：同一个渲染器、画面没丢，world.js 数的「画成的帧」又多了 8 帧（2D 也数）。循环停了、画面死了都等不到
+    const steady = async () => { await t.E(() => { window.__sd = null; }); return t.p.waitForFunction(() => { const d = EchoWorld._debug(), R = d.R, g = d.gl, s = window.__sd; if (g.bad || (R.glState && R.glState() !== 'ok')) { window.__sd = null; return false; } if (!s || s.R !== R) { window.__sd = { R, good: g.good }; return false; } return g.good >= s.good + 8; }, null, { timeout: 90000 }).then(() => true, () => false); };
+    // 等这个渲染器「好好画过一阵」（world.js 的 GL_OK_FRAMES / GL_OK_MS）：之后再丢不算它不行
+    const settled = () => t.p.waitForFunction(() => { const g = EchoWorld._debug().gl; return g.good >= 60 && performance.now() - g.born >= 8000; }, null, { timeout: 120000 }).then(() => true, () => false);
+    // 把一张画布的画面丢掉（hidden：丢没显示的那张）；swapped：world.js 换了一个新的渲染器
+    const lose = hidden => t.E(hidden => { window.__R0 = EchoWorld._debug().R; const c = [...document.querySelectorAll('#w-view canvas.w-canvas')].find(c => (c.style.display === 'none') === hidden); c.getContext('webgl2').getExtension('WEBGL_lose_context').loseContext(); }, !!hidden);
+    const swapped = () => t.p.waitForFunction(() => EchoWorld._debug().R !== window.__R0, null, { timeout: 30000 }).then(() => true, () => false);
+    const sameR = () => t.E(() => EchoWorld._debug().R === window.__R0);
+    // 画面上真的有东西：把正在显示的那张画布缩小了读回来，数有多少种颜色（死画布只有一种）。WebGL 的画布画完这一帧才读得到，多试几帧
+    const pic = () => t.E(() => new Promise(res => {
+      const c2 = document.createElement('canvas'); c2.width = c2.height = 48;
+      const g = c2.getContext('2d', { willReadFrequently: true });
+      let tries = 0, best = 0;
+      const step = () => {
+        const c = [...document.querySelectorAll('#w-view canvas.w-canvas')].find(c => c.style.display !== 'none');
+        g.clearRect(0, 0, 48, 48);
+        try { g.drawImage(c, 0, 0, 48, 48); } catch (e) { /* 读不了算没有 */ }
+        const d = g.getImageData(0, 0, 48, 48).data, seen = new Set();
+        for (let i = 0; i < d.length; i += 4) seen.add((d[i] >> 4) + ',' + (d[i + 1] >> 4) + ',' + (d[i + 2] >> 4));
+        best = Math.max(best, seen.size);
+        if (++tries < 40 && best < 12) requestAnimationFrame(step); else res(best);
+      };
+      requestAnimationFrame(step);
+    }));
+    // 按一下「上」：主角朝哪边、往哪边走了。走完一步的收尾在 world.js 的循环里，循环停了主角就一直是「在走」
+    const stepUp = async () => {
+      await t.tp(14, 14, 'down'); await t.W(80);
+      await t.p.keyboard.down('ArrowUp'); await t.W(60); await t.p.keyboard.up('ArrowUp');
+      for (let i = 0; i < 80 && await t.E(() => EchoWorld._debug().PL.moving); i++) await t.W(50);
+      return t.E(() => { const d = EchoWorld._debug(); return d.PL.dir + ' ' + Math.sign(d.PL.x - 14) + ',' + Math.sign(d.PL.y - 14) + (d.PL.moving ? '（还在走）' : ''); });
+    };
+    const camOf = () => t.E(() => { const R = EchoWorld._debug().R, o = R.orbit ? R.orbit() : null, c = document.getElementById('w-compass'); return o ? { to: o.to, tilt: o.tilt, q: R.quarter(), compass: !c.hidden } : null; });
+    const noCam = () => t.E(() => { const d = EchoWorld._debug(), c = document.getElementById('w-compass'); return !(d.R.orbit && d.R.orbit()) && !document.getElementById('world').classList.contains('cam-on') && c.hidden; });
+    // 回首页再进大地图
+    const reenter = async () => { await t.E(() => document.querySelector('[data-act=wExit]').click()); await t.p.waitForSelector('[data-act=wEnter]'); await t.W(300); await t.p.click('[data-act=wEnter]'); await t.W(600); await t.closeDlg(); };
+    let lg, g, ok;
+
+    // 10.1 画着的时候丢了（事件照常来）：重建以后还是新画风，镜头还在原来的角度，摇杆的方向和画面一致
+    t = await open('?look=new', 'mid', { init: sab });
+    await t.tp(14, 14, 'up'); await t.frames(3);
+    // 镜头：俯角多一点，再从正北按一下 Q 转到 45°——这时候摇杆的「上」还算北（过了 45° 再多 12° 才换边），照「set」重新算的话会变成西
+    await t.E(() => { EchoWorld._debug().R.orbit('set', 0, .2); }); await t.p.keyboard.press('q');
+    await t.p.waitForFunction(() => { const o = EchoWorld._debug().R.orbit(); return o && o.yaw === o.to; }, null, { timeout: 30000 }).catch(() => {});
+    await t.W(600); await t.frames(4);
+    const c0 = await camOf(), m0 = (await t.st()).mem;
+    await lose(false);
+    ok = await swapped() && await steady();
+    st = await t.st(); lg = await logOf();
+    let c1 = await camOf();
+    check(ok && st.using === 'open' && st.calls > 8 && st.canv === 1 && await pic() >= 12, '新画风画着的时候画面丢了：重建以后还是新画风，画面回来了 ' + JSON.stringify({ using: st.using, calls: st.calls, canv: st.canv }));
+    check(c0 && c1 && near(c0.to, Math.PI / 4, 1e-6) && near(c0.tilt, .2, 1e-6) && c0.q === 0 && near(c1.to, c0.to, 1e-9) && near(c1.tilt, c0.tilt, 1e-9) && c1.q === 0 && c1.compass, '重建以后镜头还在原来的角度（45°、俯角多 0.2），摇杆的「上」还算北，指北针亮着 ' + JSON.stringify(c1));
+    check(await stepUp() === 'up 0,-1', '重建以后按「上」：朝北走，和丢之前一样');
+    check(lg.gl.length === 1 && lg.gl[0].n === 1 && lg.lost === 1 && lg.all.length === 1, '出错记录里记了一条（' + lg.txt + '）');
+    check(st.mem <= m0 + 2, '重建以后显存里的东西没有变多（' + m0 + ' → ' + st.mem + '）');
+
+    // 10.2 重建以后：换地图、进屋再出来都正常，显存里的东西不越攒越多
+    {
+      const a0 = await memOf('t0'), a1 = await memOf('r0');
+      for (let k = 0; k < 2; k++) { await memOf('t0'); await memOf('r0'); }
+      const b0 = await memOf('t0'), b1 = await memOf('r0');
+      check(b1.using === 'open' && b0.mem <= a0.mem + 2 && b1.mem <= a1.mem + 2 && b1.prog <= a1.prog + 1, '重建以后小镇 ⇄ 1 号路来回 3 趟：都是新画风，显存里的东西没有变多 ' + JSON.stringify([a0, a1, b0, b1].map(q => q.mem + '/' + q.prog)));
+      await t.go('t0', 'from:r0'); await t.go('i0C', 'mat'); st = await t.st();
+      check(st.using === 'std' && st.calls > 3 && await t.E(() => { const cs = [...document.querySelectorAll('#w-view canvas.w-canvas')]; return cs.length === 2 && cs.filter(c => c.style.display !== 'none').length === 1; }), '重建以后进屋：交给老渲染器，两张画布只显示一张');
+      await t.go('t0', 'door:C'); st = await t.st(); c1 = await camOf();
+      check(st.using === 'open' && st.calls > 8 && c1 && near(c1.to, c0.to, 1e-9), '出来：换回新画风，镜头还是那个角度');
+      const q = await t.E(() => ({ p3: EchoWorld._debug().R.probe().p3, st: EchoPeople3D.stats() }));
+      check(q.p3.live === q.p3.people + 1 && q.p3.paper === 0 && q.st.geos <= 48, '重建以后 3D 小人没有越攒越多 ' + JSON.stringify({ live: q.p3.live, people: q.p3.people, geos: q.st.geos }));
+    }
+
+    // 10.3 没显示的那张画布丢了
+    // 人在户外，屋里那张（老渲染器）丢了：悄悄拆掉，户外照常画、不重建；下次进屋重新建一张
+    await lose(true);
+    await t.p.waitForFunction(() => document.querySelectorAll('#w-view canvas.w-canvas').length === 1, null, { timeout: 15000 }).catch(() => {});
+    ok = await steady(); st = await t.st(); lg = await logOf();
+    check(ok && st.canv === 1 && st.using === 'open' && await sameR() && lg.gl.length === 1 && lg.all.some(x => x.k === 'look' && /indoor canvas lost/.test(x.m)), '人在户外、屋里那张画布丢了：悄悄拆掉，户外照常画，渲染器没重建（' + lg.txt + '）');
+    await t.go('i0C', 'mat'); st = await t.st();
+    check(st.using === 'std' && st.calls > 3 && st.canv === 2 && await pic() >= 12, '再进屋：重新建了一张，画得出来');
+    // 人在屋里，户外那张（新画风）丢了：屋里照常画；等不到它恢复（2.5 秒）就整个重建，出门还是新画风、镜头还是那个角度
+    check(await settled(), '（这个渲染器已经好好画过一阵）');
+    g = await glOf();
+    await lose(true);
+    // 丢了以后 0.9 秒在页面里记一下（机器忙的时候从外面问会晚）：渲染器还是原来那个、屋里又画了好几帧
+    await t.E(() => { window.__mid = null; setTimeout(() => { const d = EchoWorld._debug(); window.__mid = { same: d.R === window.__R0, good: d.gl.good }; }, 900); });
+    await t.p.waitForFunction(() => !!window.__mid, null, { timeout: 15000 }).catch(() => {});
+    { const mid = await t.E(() => window.__mid) || {}; check(mid.same === true && mid.good > g.good, '人在屋里、户外那张画布丢了：屋里照常画（先不重建） ' + JSON.stringify(mid)); }
+    ok = await swapped() && await steady(); st = await t.st();
+    check(ok && st.using === 'std' && st.map === 'i0C' && st.calls > 3 && st.canv === 2, '等不到它恢复：整个重建，屋里接着画 ' + JSON.stringify({ using: st.using, calls: st.calls, canv: st.canv }));
+    await t.go('t0', 'door:C'); st = await t.st(); c1 = await camOf(); lg = await logOf(); g = await glOf();
+    check(st.using === 'open' && st.calls > 8 && await pic() >= 12 && c1 && near(c1.to, c0.to, 1e-9) && c1.q === 0, '出门：新画风画得出来，镜头还是那个角度');
+    check(lg.gl.length === 2 && lg.lost === 2 && g.ban === 0 && g.fails <= 1, '一共重建了两次，没有往下退（' + lg.txt + '）');
+    check(!t.errs.length, '画着的时候丢、没显示的那张丢：没有没接住的错误' + (t.errs.length ? '：' + t.errs.slice(0, 2).join(' | ') : ''));
+    // 这一帧的逻辑抛了异常（不是画面的事）：照原样报成没接住的错误，可是循环不停
+    await t.E(() => { const s = EchoStory.step; EchoStory.step = function () { EchoStory.step = s; throw new Error('step-boom'); }; });
+    { const mv = await stepUp(); await t.W(300);
+      ok = t.errs.length === 1 && /step-boom/.test(t.errs[0]);
+      check(ok && !/还在走/.test(mv) && await steady() && await stepUp() === 'up 0,-1', '走一步的时候逻辑抛了异常：报了一条没接住的错误，循环没停，接着能走 ' + JSON.stringify(t.errs.map(m => m.slice(0, 40))));
+      const i = allErrs.findIndex(m => /step-boom/.test(m)); if (i >= 0) allErrs.splice(i, 1); }
+    await t.ctx.close();
+
+    // 10.4 一建好就丢（像 iPhone 那样，编译着色器时抛异常）：自己重建，没有没接住的错误，出错记录里只有一条
+    t = await open('?look=new', 'mid', { init: sab, initArg: { 1: 'wk' } });
+    ok = await steady(); st = await t.st(); lg = await logOf(); g = await glOf();
+    check(ok && st.using === 'open' && st.calls > 8 && st.tris > 20000 && st.canv === 1 && await pic() >= 12, '第一张画布一建好就丢了：重建以后是新画风，有画面 ' + JSON.stringify({ using: st.using, calls: st.calls, canv: st.canv, made: g.made }));
+    check(g.made === 'wk,-' && g.ban === 0 && lg.gl.length === 1 && lg.gl[0].n === 1 && lg.all.length === 1 && lg.lost === 1, '只重建了一次，出错记录里只有一条（' + lg.txt + '）');
+    check(await stepUp() === 'up 0,-1' && !t.errs.length, '能走路，没有没接住的错误' + (t.errs.length ? '：' + t.errs.slice(0, 2).join(' | ') : ''));
+    await t.ctx.close();
+    // 画面不算丢了、可是一画就抛异常（createShader 一直给 null）：连着 3 帧画不出来就重建；每帧都抛也只记一条
+    t = await open('?look=new', 'mid', { init: sab, initArg: { 1: 'null' } });
+    ok = await steady(); st = await t.st(); lg = await logOf(); g = await glOf();
+    check(ok && st.using === 'open' && st.calls > 8 && st.canv === 1 && g.made === 'null,-' && await pic() >= 12, '第一张画布一画就抛异常：重建以后是新画风，有画面 ' + JSON.stringify({ using: st.using, calls: st.calls, made: g.made }));
+    check(lg.gl.length === 2 && lg.gl.every(x => x.n === 1) && lg.lost === 1 && !t.errs.length, '出错记录两条（画不出来 + 重建），没有没接住的错误（' + lg.txt + '）');
+    await t.ctx.close();
+    // 一建出来就丢（渲染器建不出来）：当场改用经典 3D
+    t = await open('?look=new', 'mid', { init: sab, initArg: { 1: 'dead' } });
+    ok = await steady(); st = await t.st(); lg = await logOf();
+    check(ok && st.kind === '3d' && !st.look && st.calls > 3 && st.canv === 1 && await pic() >= 12, '新画风的渲染器建不出来：当场改用经典 3D，有画面，没有留下多余的画布');
+    check(lg.all.length === 1 && lg.all[0].k === 'look' && !t.errs.length, '出错记录一条，没有没接住的错误（' + lg.txt + '）');
+    await t.ctx.close();
+
+    // 10.5 新画风连着两次没画成：退到经典 3D（不再原地重建个没完）；镜头回正北，摇杆的方向和画面一致
+    t = await open('?look=new', 'mid', { init: sab, initArg: { 1: 'wk', 2: 'wk' } });
+    ok = await steady(); st = await t.st(); lg = await logOf(); g = await glOf();
+    check(ok && st.kind === '3d' && !st.look && st.calls > 3 && st.canv === 1 && g.ban === 1 && g.made === 'wk,wk,-' && await pic() >= 12, '新画风连着两次一建好就丢：退到经典 3D，有画面 ' + JSON.stringify({ kind: st.kind, look: st.look, calls: st.calls, canv: st.canv, ban: g.ban, made: g.made }));
+    check(lg.gl.length <= 3 && lg.gl.some(x => /经典/.test(x.m)) && lg.lost === 2 && !t.errs.length, '出错记录没有刷屏（' + lg.all.length + ' 条：' + lg.txt + '），没有没接住的错误');
+    check(await noCam() && await stepUp() === 'up 0,-1', '经典 3D 不能转镜头、没有指北针；按「上」往北走');
+    await t.go('i0C', 'mat'); st = await t.st(); ok = st.calls > 3;
+    await t.go('t0', 'door:C'); await t.go('r0', 'from:t0'); st = await t.st();
+    check(ok && st.kind === '3d' && !st.look && st.calls > 3 && !t.errs.length, '退下来以后进屋、出来、换地图都正常');
+    // 回首页马上再进：还是经典（没到再试的时候）；过了那段时间再进：从头试，又是新画风
+    await t.go('t0', 'from:r0');
+    await reenter(); ok = await steady(); st = await t.st(); g = await glOf();
+    check(ok && !st.look && g.ban === 1 && g.made === 'wk,wk,-', '回首页马上再进大地图：还是经典 3D，没有重新试');
+    await t.E(() => { EchoWorld._debug().gl.banT = -1e9; });
+    await reenter(); ok = await steady(); st = await t.st(); g = await glOf();
+    check(ok && st.using === 'open' && st.calls > 8 && g.ban === 0 && st.canv === 1 && !t.errs.length, '过了一阵再从首页进大地图：从头再试，又是新画风 ' + JSON.stringify({ using: st.using, ban: g.ban, made: g.made }));
+    await t.ctx.close();
+
+    // 10.6 经典 3D 也连着两次没画成：退到 2D 流畅模式，游戏照常能玩
+    t = await open('?look=new', 'mid', { init: sab, initArg: { '*': 'wk' } });
+    ok = await steady(); st = await t.st(); lg = await logOf(); g = await glOf();
+    check(ok && st.kind === '2d' && st.canv === 1 && g.ban === 2 && g.made === 'wk,wk,wk,wk' && await pic() >= 12, '新画风、经典 3D 都画不成：退到 2D 流畅模式，有画面 ' + JSON.stringify({ kind: st.kind, canv: st.canv, ban: g.ban, made: g.made }));
+    check(lg.all.length <= 6 && lg.gl.some(x => /流畅/.test(x.m)) && lg.lost === 4 && !t.errs.length, '出错记录没有刷屏（' + lg.all.length + ' 条：' + lg.txt + '），没有没接住的错误');
+    check(await noCam() && await stepUp() === 'up 0,-1', '2D 里能走路，按「上」往北');
+    await t.go('r0', 'from:t0'); check((await t.st()).kind === '2d' && !t.errs.length, '2D 里照样能换地图');
+    await t.go('t0', 'from:r0');
+    // draw 每一帧都抛异常（2D 没有可以再退的了）：循环不停、不重建，出错记录只多一条
+    {
+      const n0 = (await logOf()).all.length;
+      await t.E(() => { const R = EchoWorld._debug().R; window.__R0 = R; window.__draw = R.draw; window.__boom = 0; R.draw = () => { window.__boom++; throw new Error('draw-boom'); }; });
+      await t.p.waitForFunction(() => window.__boom >= 30, null, { timeout: 30000 }).catch(() => {});
+      const mv = await stepUp(); lg = await logOf();
+      const boom = await t.E(() => window.__boom);
+      check(boom >= 30 && mv === 'up 0,-1' && await sameR() && lg.all.length === n0 + 1 && /draw-boom/.test(lg.all[lg.all.length - 1].m) && !t.errs.length, 'draw 连着抛了 ' + boom + ' 帧：循环没停、还能走路，出错记录只多了一条，没有没接住的错误（' + lg.txt + '）');
+      await t.E(() => { EchoWorld._debug().R.draw = window.__draw; });
+      check(await steady(), 'draw 好了以后接着画');
+    }
+    // 在设置里改画质 / 画面风格 = 从头再试（这时候画布不再出事）：又是新画风
+    await t.E(() => { window.__sab.plan = {}; EchoWorld.setGfx(); });
+    ok = await steady(); st = await t.st(); g = await glOf();
+    check(ok && st.using === 'open' && st.calls > 8 && g.ban === 0 && st.canv === 1 && await pic() >= 12 && !t.errs.length, '设置里重新选一次画质：从头再试，回到新画风 ' + JSON.stringify({ using: st.using, ban: g.ban }));
+    await t.ctx.close();
+
+    // 10.7 不开新画风（经典 3D）也一样：一建好就丢、连着两次 → 2D；只丢一次 → 重建还是经典 3D
+    t = await open('', 'mid', { init: sab, initArg: { 1: 'wk' } });
+    ok = await steady(); st = await t.st(); lg = await logOf(); g = await glOf();
+    check(ok && st.kind === '3d' && !st.look && st.calls > 3 && st.canv === 1 && g.made === 'wk,-' && g.ban === 0 && lg.gl.length === 1 && !t.errs.length, '经典 3D 一建好就丢了一次：重建还是经典 3D，出错记录一条，没有没接住的错误（' + lg.txt + '）');
+    await t.ctx.close();
+    t = await open('', 'mid', { init: sab, initArg: { '*': 'wk' } });
+    ok = await steady(); st = await t.st(); lg = await logOf(); g = await glOf();
+    check(ok && st.kind === '2d' && st.canv === 1 && g.made === 'wk,wk' && g.ban === 2 && lg.all.length <= 3 && await stepUp() === 'up 0,-1' && !t.errs.length, '经典 3D 连着两次没画成：退到 2D，能走路，出错记录 ' + lg.all.length + ' 条（' + lg.txt + '）');
+    await t.ctx.close();
+
+    // 10.8 新画风画着画着 draw 一直抛异常（不是画面丢了），重建了还抛：退到经典 3D；每帧都抛也不刷屏
+    t = await open('?look=new', 'mid', { init: () => { let v; Object.defineProperty(window, 'EchoWorldOpen', { configurable: true, get: () => v, set: x => { v = x; if (!x) return; const c = x.create; x.create = function () { const R = c.apply(this, arguments); if (R && window.__boomOn) R.draw = () => { throw new Error('draw-boom'); }; return R; }; } }); } });
+    check(await settled(), '（先好好画一阵）');
+    await t.E(() => { window.__boomOn = true; EchoWorld._debug().R.draw = () => { throw new Error('draw-boom'); }; });
+    await t.p.waitForFunction(() => { const R = EchoWorld._debug().R; return R.look !== 'new'; }, null, { timeout: 60000 }).catch(() => {});
+    ok = await steady(); st = await t.st(); lg = await logOf(); g = await glOf();
+    check(ok && st.kind === '3d' && !st.look && st.calls > 3 && st.canv === 1 && g.ban === 1 && await pic() >= 12, '新画风的 draw 一直抛、重建了还抛：退到经典 3D，有画面 ' + JSON.stringify({ kind: st.kind, look: st.look, ban: g.ban }));
+    check(lg.all.length <= 4 && lg.gl.filter(x => /draw-boom/.test(x.m)).length === 1 && !t.errs.length, '出错记录没有刷屏（' + lg.all.length + ' 条：' + lg.txt + '），没有没接住的错误');
+    await t.ctx.close();
+
+    // 10.9 每秒一次的体检（world.js 的 glWatch）：事件没来、也不抛异常的时候靠它
+    // 画着的时候画面真的丢了，可是「画面丢了」的事件没到页面（电脑上的 Chromium 这时候画也不抛异常）：自己问出来，照样重建
+    t = await open('?look=new', 'mid', { init: sab, initArg: { 1: 'mute' } });
+    check(await settled(), '（先好好画一阵）');
+    await lose(false);
+    ok = await swapped() && await steady(); st = await t.st(); lg = await logOf(); g = await glOf();
+    check(ok && st.using === 'open' && st.calls > 8 && st.canv === 1 && g.made === 'mute,-' && g.ban === 0 && lg.gl.length === 1 && /dead/.test(lg.gl[0].m) && !t.errs.length, '画面丢了、事件没到页面：体检问出来了，重建以后还是新画风（' + lg.txt + '）');
+    // draw 被调用了、不抛异常，可是什么都没画（three 的帧数 3 秒没动）：也重建
+    check(await settled(), '（再好好画一阵）');
+    await t.E(() => { window.__R0 = EchoWorld._debug().R; window.__R0.draw = () => {}; });
+    ok = await swapped() && await steady(); st = await t.st(); lg = await logOf(); g = await glOf();
+    check(ok && st.using === 'open' && st.calls > 8 && st.canv === 1 && g.ban === 0 && lg.gl.some(x => /stuck/.test(x.m)) && await pic() >= 12 && !t.errs.length, '一直在画可是帧数不动：体检发现了，重建以后有画面（' + lg.txt + '）');
     await t.ctx.close();
   }
 

@@ -31,6 +31,9 @@
     canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); gl.lost = performance.now(); gl.restored = false; }, false);
     canvas.addEventListener('webglcontextrestored', () => { gl.restored = true; }, false);
     const glState = () => (!gl.lost ? 'ok' : gl.restored ? 'restored' : performance.now() - gl.lost > 2500 ? 'dead' : 'lost');
+    // 「画面丢了」的事件晚一拍才到：这中间 three 去编译着色器，iPhone 上 createShader 给的是 null，接着抛 TypeError（2026-11-20）。
+    // draw 接住异常时、world.js 每秒一次的体检都来问一下：画面其实已经丢了就当场记上，和收到事件一样。返回现在算不算丢了
+    const glCheck = () => { if (!gl.lost && renderer.getContext().isContextLost()) { gl.lost = performance.now(); gl.restored = false; } return !!gl.lost; };
     renderer.shadowMap.enabled = !!Q.shadow;
     renderer.shadowMap.type = T3.PCFShadowMap;   // three r186 起没有 PCFSoftShadowMap 了（要了也是退回这个，还每次打一行警告）；软硬靠 shadow.radius
     renderer.shadowMap.autoUpdate = false;
@@ -1161,6 +1164,10 @@
     const tmp = new T3.Vector3();
     function draw(now, V) {
       if (gl.lost) return;   // 画面丢了：等 world.js 重建
+      // 画到一半抛了异常：画面其实已经丢了（事件还没到，见 glCheck）就记成丢了、不往外抛；别的错照原样交给 world.js（它记一笔，连着几帧都这样就重建）
+      try { drawFrame(now, V); } catch (e) { if (!glCheck()) throw e; }
+    }
+    function drawFrame(now, V) {
       const dt = lastT ? Math.min(.1, (now - lastT) / 1000) : .016; lastT = now;
       U.uTime.value = now / 1000;
       renderer.info.reset();
@@ -1275,19 +1282,23 @@
       } else renderer.render(scene, camera);
     }
     function destroy() {
-      clear();
-      scene.remove(world);
-      Object.values(atlasCache).forEach(t => t.dispose());
-      Object.values(ROCKTEX).forEach(t => t.dispose());
-      [vcol, vcolFlat, grassMat, leafMat, trunkMat, blobMat].forEach(x => x.dispose());
-      shadowTex.dispose(); blobGeo.dispose();
-      if (rt) rt.dispose();
-      renderer.dispose();
-      try { renderer.forceContextLoss(); } catch (e) { /* 忽略 */ }
-      canvas.remove();
+      // 拆到一半出了错（画面已经丢了的时候可能）也要把画布拿掉：旧画布留在页面上会盖住后面新建的那张
+      try {
+        clear();
+        scene.remove(world);
+        Object.values(atlasCache).forEach(t => t.dispose());
+        Object.values(ROCKTEX).forEach(t => t.dispose());
+        [vcol, vcolFlat, grassMat, leafMat, trunkMat, blobMat].forEach(x => x.dispose());
+        shadowTex.dispose(); blobGeo.dispose();
+        if (rt) rt.dispose();
+        renderer.dispose();
+      } finally {
+        try { renderer.forceContextLoss(); } catch (e) { /* 忽略 */ }
+        canvas.remove();
+      }
     }
     // marks：现在画着几块委托的「?」牌子（tests/quests.test.js 用）
-    return { kind: '3d', load, resize, draw, destroy, glState, info: () => renderer.info, marks: () => sprites.filter(s => s.quest && s.quest.visible && s.root.visible).length };
+    return { kind: '3d', load, resize, draw, destroy, glState, glCheck, info: () => renderer.info, marks: () => sprites.filter(s => s.quest && s.quest.visible && s.root.visible).length };
   }
 
   window.EchoWorld3D = { create };

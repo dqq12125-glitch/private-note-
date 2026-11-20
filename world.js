@@ -84,6 +84,9 @@
       'w.fish.wait': '静静等着，浮标一动就注意听！', 'w.fish.bite': '<b>咬钩了！</b>它说了一个词，是什么意思？',
       'w.gfx.no3d': '这台设备不支持 3D，已切换成流畅模式', 'w.gfx.slow': '这台手机跑 3D 有点吃力，已切换成流畅模式（可以在设置里改）',
       'w.err.gl': '大地图 3D 画面丢了（{why}），已重建', 'w.err.reload': '重建后载入地图出错：{msg}',
+      'w.err.load': '大地图的画面载入出错：{msg}', 'w.err.draw': '大地图的画面画不出来：{msg}',
+      'w.err.fall1': '新画风连着两次没画成，这一次先用经典画面', 'w.err.fall2': '3D 画面连着两次没画成，这一次先用流畅模式',
+      'w.gfx.fall1': '新画风出了点问题，先换成经典画面', 'w.gfx.fall2': '3D 画面出了点问题，先换成流畅模式',
       'w.menu.title': '冒险菜单', 'w.menu.goal': '现在要做', 'w.goal.go.unit': '▶ 点这里去闯关练习：{u}', 'w.goal.go.map': '▶ 点这里回到地图，照左上角的 📍 走', 'w.goal.go.home': '去闯关练习：{u} ›', 'w.menu.badges': '🏅 徽章 {a} / {b}', 'w.menu.spray': ' · 🧴 还剩 {n} 步',
       'w.menu.team': '🐾 我的队伍', 'w.menu.bag': '🎒 背包', 'w.menu.dex': '📖 手册', 'w.menu.skills': '🌟 回声技能', 'w.menu.quests': '📋 委托',
       'w.menu.help': '❓ 怎么玩', 'w.menu.settings': '⚙️ 设置', 'w.menu.home': '🏠 回首页', 'w.menu.go': '继续冒险',
@@ -157,6 +160,9 @@
       'w.fish.wait': 'Wait quietly. When the float moves, listen!', 'w.fish.bite': '<b>A bite!</b> It said a word. Which one did you hear?',
       'w.gfx.no3d': 'This device cannot show 3D. Switched to Smooth mode (2D)', 'w.gfx.slow': '3D is too slow on this phone. Switched to Smooth mode (2D). You can change this in Settings',
       'w.err.gl': 'The 3D map view was lost ({why}) and has been rebuilt', 'w.err.reload': 'Error loading the map after the rebuild: {msg}',
+      'w.err.load': 'Error loading the map view: {msg}', 'w.err.draw': 'The map view could not be drawn: {msg}',
+      'w.err.fall1': 'The new look failed twice in a row. Using the classic look for now', 'w.err.fall2': 'The 3D view failed twice in a row. Using Smooth mode (2D) for now',
+      'w.gfx.fall1': 'The new look had a problem. Switched to the classic look for now', 'w.gfx.fall2': 'The 3D view had a problem. Switched to Smooth mode (2D) for now',
       'w.menu.title': 'Adventure Menu', 'w.menu.goal': 'What to do now', 'w.goal.go.unit': '▶ Tap to go to Practice: {u}', 'w.goal.go.map': '▶ Tap to go back to the map and follow the 📍 at the top left', 'w.goal.go.home': 'Go to Practice: {u} ›', 'w.menu.badges': '🏅 Badges {a} / {b}', 'w.menu.spray': { one: ' · 🧴 {n} step left', other: ' · 🧴 {n} steps left' },
       'w.menu.team': '🐾 My Team', 'w.menu.bag': '🎒 Bag', 'w.menu.dex': '📖 Monsters', 'w.menu.skills': '🌟 Skills', 'w.menu.quests': '📋 Requests',
       'w.menu.help': '❓ Help', 'w.menu.settings': '⚙️ Settings', 'w.menu.home': '🏠 Home', 'w.menu.go': 'Keep exploring',
@@ -358,7 +364,7 @@
     const bx = p.x - dx, by = p.y - dy, ok = EM.WALK.includes(tile(bx, by)) && !warpAt(bx, by);
     FL.x = FL.fx = ok ? bx : p.x;
     FL.y = FL.fy = ok ? by : p.y;
-    if (R) R.load(M, api3d);
+    if (R) loadR();
     // 回程绳回到最后一次待过的户外地图（先记好，下面整份存的时候一起存上）
     if ((M.kind === 'town' || M.kind === 'route') && !PL.surf) ws.lastOut = { map: M.id, x: PL.x, y: PL.y, dir: PL.dir };
     // 今日目击（sighting.js）：进过的野外地图记下来（跟着下面这次存档一起存）；这张图是今天的目击地点就提示一句
@@ -385,6 +391,8 @@
     ensureDom();
     migrate();
     const ws = WS();
+    // 上次画不出来退到了经典 3D / 流畅模式（见 rebuildGL）：隔了一阵再从首页进来，从头试一次原来的画面
+    if (GL.ban && performance.now() - GL.banT > GL_BAN_MS) { GL.ban = 0; GL.fails = 0; }
     ensureRenderer();
     // 还没有怪兽：新游戏，从开场剧情开始（在自己家里醒来）
     const fresh = !E.S.mon.box.length;
@@ -1635,7 +1643,7 @@
     closeGate: i => { (M.gates || []).forEach(g => { if (i === 'all' || g.i === i) { M._open.delete(g.x + ',' + g.y); delete WS().flags['gate:' + M.id + ':' + g.i]; } }); E.save(); },
     gateOpen: i => { const g = (M.gates || [])[i]; return !!g && M._open.has(g.x + ',' + g.y); },
     teleport: (x, y, dir) => { PL.x = PL.fx = x; PL.y = PL.fy = y; PL.moving = false; if (dir) PL.dir = dir; FL.x = FL.fx = x; FL.y = FL.fy = y; savePos(); },
-    refresh: () => { if (R) R.load(M, api3d); },
+    refresh: () => { if (R) loadR(); },
     tile: (x, y) => tile(x, y),
     skillReady: k => skillReady(k),
     hasHM: k => hasHM(k),
@@ -1673,21 +1681,51 @@
     } catch (e) { strong = false; }
     return strong;
   }
+  // 画面丢了 / 画不出来以后怎么恢复（rebuildGL、frame 用）。ban：现在最多用到哪一种渲染器（0 新画风也行 / 1 只用经典 3D / 2 只用 2D），banT 什么时候退下来的；
+  // fails：同一种连着几次「建好了却没画成」；born / good：现在这个渲染器什么时候建的、好好画了几帧；strikes：draw 连着抛了几帧异常；
+  // bad：已经知道它坏了，下一帧重建（'draw' 连着画不出来 / 'load' 载入地图出错 / 'resize' / 'stuck' 帧数不动）；lostT：从什么时候开始等它恢复；
+  // awayT：上一次「没在画大地图」是什么时候——页面切到后台 / 回到前台，或者大地图的循环停下来（开战、回首页，见 stopLoop）；
+  // w*：每秒一次的体检（glWatch）；logM / logT、errM / errT：出错记录限频
+  const GL = { ban: 0, banT: 0, fails: 0, born: 0, good: 0, strikes: 0, bad: '', lostT: 0, awayT: -1, wT: 0, wN: 0, wF: -1, wStuck: 0, logM: '', logT: 0, errM: '', errT: 0 };
+  document.addEventListener('visibilitychange', () => { GL.awayT = performance.now(); });
+  const GL_OK_FRAMES = 60, GL_OK_MS = 8000;   // 一个渲染器画了这么多帧、活了这么久才算「它是行的」（之后再丢不算它不行，原地重建）
+  const GL_BAN_MS = 300000;                   // 退下来以后至少过这么久，下次从首页进大地图才再试原来的画面
+  const DRAW_STRIKES = 3;                     // draw 连着这么多帧抛异常（画面又不算丢了）就重建
+  // 没建成、或者拆到一半出了错的渲染器可能把画布留在页面上：画布是一张叠一张的，留下的死画布会盖住后面新建的那张。
+  // 建新的之前、每次没建成之后都扫一遍（这时候页面上不该有任何一张大地图画布）
+  function dropCanvases(view) {
+    view.querySelectorAll('canvas.w-canvas').forEach(c => {
+      try { const g = c.getContext('webgl2'), x = g && g.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) { /* 忽略 */ }
+      c.remove();
+    });
+  }
   function ensureRenderer() {
     const tier = gfxTier();
-    if (R && R.tier === tier) return;
-    if (R) { R.destroy(); R = null; }
+    if (R && R.tier === tier && R.ban === GL.ban) return;
     const view = $('w-view');
-    if (tier !== '2d' && window.EchoWorld3D) {
+    if (R) { try { R.destroy(); } catch (e) { /* 丢了的画面释放不干净也没关系 */ } R = null; }
+    dropCanvases(view);
+    if (tier !== '2d' && window.EchoWorld3D && GL.ban < 2) {
       // 新画风的样品（网址带 ?look=new 才打开，见 world3d-open.js）：户外地图换成新渲染器，它自己会把室内 / 洞穴交回 world3d.js；建不出来就照旧
-      if (window.EchoWorldOpen && EchoWorldOpen.on) { try { R = EchoWorldOpen.create(view, tier, ART); } catch (e) { R = null; } }
-      if (!R) { try { R = EchoWorld3D.create(view, tier, ART); } catch (e) { R = null; } }
+      if (window.EchoWorldOpen && EchoWorldOpen.on && GL.ban < 1) { try { R = EchoWorldOpen.create(view, tier, ART); } catch (e) { R = null; } if (!R) dropCanvases(view); }
+      if (!R) { try { R = EchoWorld3D.create(view, tier, ART); } catch (e) { R = null; } if (!R) dropCanvases(view); }
       if (!R) { E.toast(tx('w.gfx.no3d')); }
     }
     if (!R) R = create2D(view);
     R.tier = R.kind === '2d' ? '2d' : tier;
+    R.ban = GL.ban;
     perf.n = 0; perf.sum = 0; perf.t0 = 0;
+    GL.born = performance.now(); GL.good = 0; GL.strikes = 0; GL.bad = ''; GL.lostT = 0; GL.wT = 0; GL.wN = 0; GL.wF = -1; GL.wStuck = 0;
   }
+  // 载入地图的画面。出了错（多半是画面刚丢）不让它把进大地图、换地图那一串带崩：记一笔，下一帧 frame() 重建
+  function loadR(key) {
+    try { R.load(M, api3d); return true; } catch (e) {
+      if (window.EchoErr) EchoErr.log('gl', tx(key || 'w.err.load', { msg: (e && e.message) || String(e) }), glSrc());
+      if (R.kind !== '2d' && !GL.bad) GL.bad = 'load';
+      return false;
+    }
+  }
+  const glSrc = () => (R && R.look === 'new' ? 'world3d-open' : R && R.kind === '2d' ? 'world2d' : 'world3d');
   // 自动画质：进地图后量 3 秒帧率，太慢就降一档；之后每 30 秒再量一次（玩久了手机发烫降频，也能降下来，评估第 15 条）
   // 量的那几秒不按「站着不动 30 帧」限速（见 frame）。超过 250ms 的帧（页面在后台、被系统限流、正在切地图）不算；有效帧太少就过一会儿重新量
   const perf = { n: 0, sum: 0, t0: 0, on: true, checks: 0 };
@@ -1710,30 +1748,93 @@
     const cur = R.tier, next = cur === 'high' ? (avg > 20 ? 'mid' : null) : cur === 'mid' ? (avg > 24 ? 'low' : null) : (avg > 45 ? '2d' : null);
     if (!next) { st.gfxAuto = cur; E.save(); return; }
     st.gfxAuto = next; E.save();
-    ensureRenderer(); R.load(M, api3d); resize();
+    ensureRenderer(); loadR(); resize();
     if (next === '2d') E.toast(tx('w.gfx.slow'));
   }
   // 画布按画面那一层（#w-view）的大小排。排完记下当时量到的宽高；frame() 每画一帧之前再量一次（fitCheck），不一样就重排——
   // 手机转屏时系统的 resize 事件、ResizeObserver 和版面排好谁先谁后靠不住（2026-11-20 老板的 iPhone：竖屏主角在屏幕最右边、
   // 横屏只看得到天和屋顶），自己每帧核对最稳：量一次宽高很便宜，大小没变什么都不做
   const fitted = { w: 0, h: 0 };
-  function resize() { if (R) R.resize(); const v = $('w-view'); if (v) { fitted.w = v.clientWidth; fitted.h = v.clientHeight; } }
+  function resize() {
+    if (R) { try { R.resize(); } catch (e) { if (R.kind !== '2d' && !GL.bad) GL.bad = 'resize'; } }   // 排不了（画面坏了）：下一帧重建
+    const v = $('w-view'); if (v) { fitted.w = v.clientWidth; fitted.h = v.clientHeight; }
+  }
   function fitCheck() { const v = $('w-view'); if (!v) return; const w = v.clientWidth, h = v.clientHeight; if (w > 0 && h > 0 && (w !== fitted.w || h !== fitted.h)) resize(); }
-  // 3D 画面丢了以后整个重建（换一张新画布、新的 WebGL）；建不出 3D 就退回 2D 流畅模式（ensureRenderer 会提示）
+  // ---------- 画面丢了 / 画不出来以后的恢复（评估第 15 条）----------
+  // 2026-11-20 iPhone 模拟器里：新画风的画面一建好就丢了，three 编译着色器抛 TypeError，从 draw 里冒出来把 frame() 的循环带停，画面永远卡在一张死画布上。
+  // 现在 frame() 这一帧里出什么错都照样约下一帧，下面三道保险哪一道发现了都走 rebuildGL：
+  //   ① 渲染器的 glState()：收到了「画面丢了」的事件（world3d.js / world3d-open.js）——等它恢复，恢复了、或者等不到，就重建；
+  //   ② draw / load / resize 抛了异常：画面其实已经丢了（事件晚一拍才到）渲染器自己会记成丢了，回到 ①；不算丢了、可是 draw 连着 DRAW_STRIKES 帧都抛，也重建；
+  //   ③ 每秒一次的体检 glWatch：直接问一次画面丢没丢（事件万一没来），再看 three 的帧数——一直在调 draw、帧数却 3 秒没动，也重建。
+  // 重建了还不行就往下退：新画风 → 经典 3D → 2D 流畅模式（GL.ban）。一个渲染器从建好到出事没有好好画过（不到 GL_OK_FRAMES 帧 / GL_OK_MS）算一次「没画成」，
+  // 同一种连着两次没画成就退一种。不算的两种，都是原地重建：好好画过一阵再丢的；这个渲染器在的时候页面切到过后台、或者大地图停下来过的
+  // （切去微信再回来、打了一场对战回来：画面是在没画大地图的时候丢的，不是它画不了，GL.awayT）。
+  // 退下来以后这一次就一直用它：过了 GL_BAN_MS 再从首页进大地图（enter）、或者在设置里改了画质 / 画面风格（setGfx），才从头再试。
+  // 镜头转到哪了（新画风）跟着带到新的渲染器里；退到经典 3D / 2D 就是朝正北，摇杆的方向跟着渲染器走（camQ），和画面一致。
   function rebuildGL(why) {
+    const now = performance.now(), src = glSrc(), view = $('w-view');
     const L = E.dayLog && E.dayLog(); if (L) L.glLost = (L.glLost || 0) + 1;
-    if (window.EchoErr) EchoErr.log('gl', tx('w.err.gl', { why }), 'world3d');
+    if (window.EchoErr) EchoErr.log('gl', tx('w.err.gl', { why }), src);
+    if (GL.good >= GL_OK_FRAMES && now - GL.born >= GL_OK_MS) GL.fails = 0;
+    else if (GL.awayT < GL.born && ++GL.fails >= 2 && R.kind !== '2d') {
+      GL.fails = 0; GL.ban = R.look === 'new' ? 1 : 2; GL.banT = now;
+      if (window.EchoErr) EchoErr.log('gl', tx('w.err.fall' + GL.ban), src);
+      E.toast(tx('w.gfx.fall' + GL.ban));
+    }
+    let cam = null, filter = '';
+    try { cam = R.camState ? R.camState() : null; } catch (e) { cam = null; }
+    try { const c = view.querySelector('canvas.w-canvas'); filter = (c && c.style.filter) || ''; } catch (e) { filter = ''; }   // 剧情给画面加的滤镜（SC.filter）也带过去
     try { R.destroy(); } catch (e) { /* 丢了的画面释放不干净也没关系 */ }
     R = null;
-    ensureRenderer();
-    try { R.load(M, api3d); } catch (e) { if (window.EchoErr) EchoErr.log('gl', tx('w.err.reload', { msg: e.message }), 'world3d'); }
+    try { ensureRenderer(); } catch (e) { loopErr(e); }
+    if (!R) { R = create2D(view); R.tier = '2d'; R.ban = GL.ban; }   // 万一连建都没建成：不能没有渲染器，先用 2D 顶上
+    if (cam && R.camState) { try { R.camState(cam); } catch (e) { /* 留不住就是正北 */ } }
+    loadR('w.err.reload');
     resize();
+    if (filter) view.querySelectorAll('canvas').forEach(c => { c.style.filter = filter; });
+  }
+  // ① 的等法：刚丢的时候等它恢复，最多 2.5 秒（渲染器自己算，到时候它说 'dead'）；这个渲染器从建好还没好好画过一帧的话只等 1.5 秒——多半是现在画不了，早点换
+  // （不再短：浏览器自己会隔 1 秒左右再试着恢复一次，给它留一次机会）
+  function glNow(now) {
+    const gs = R.glState();
+    if (gs !== 'lost') { GL.lostT = 0; return gs; }
+    if (!GL.lostT) GL.lostT = now;
+    return !GL.good && now - GL.lostT > 1500 ? 'dead' : 'lost';
+  }
+  // ② draw 抛了异常（渲染器自己没接住的那种：画面不算丢了）。记一笔——同一句话 30 秒里只记一次，每帧都抛也不刷屏；2D 没有可以再退的，只记
+  function drawFail(e) {
+    const msg = tx('w.err.draw', { msg: (e && e.message) || String(e) }), now = performance.now();
+    if (msg !== GL.logM || now - GL.logT > 30000) { GL.logM = msg; GL.logT = now; if (window.EchoErr) EchoErr.log('gl', msg, glSrc()); }
+    if (++GL.strikes >= DRAW_STRIKES && R.kind !== '2d' && !GL.bad) GL.bad = 'draw';
+  }
+  // ③ 每秒一次的体检（每帧只加一个数；一秒到了才真的查）
+  function glWatch(now) {
+    GL.wN++;
+    if (now - GL.wT < 1000) return;
+    const n = GL.wN; GL.wT = now; GL.wN = 0;
+    if (R.kind === '2d') return;
+    if (R.glCheck) R.glCheck();   // 画面其实丢了：渲染器记上，下一帧 glState() 就不是 'ok' 了
+    let f = -1;
+    try { f = R.info().render.frame; } catch (e) { f = -1; }
+    if (f >= 0 && f === GL.wF && n >= 3) { if (++GL.wStuck >= 3 && !GL.bad) GL.bad = 'stuck'; } else GL.wStuck = 0;
+    GL.wF = f;
+  }
+  // 这一帧的逻辑（走路、剧情触发、量帧率……）抛了异常：循环照样往下跑；错误照原样当「没接住的错误」报出去（出错记录、测试都看得到），同一句 5 秒里只报一次
+  function loopErr(e) {
+    const m = String((e && e.message) || e), now = performance.now();
+    if (m === GL.errM && now - GL.errT < 5000) return;
+    GL.errM = m; GL.errT = now;
+    setTimeout(() => { throw e; }, 0);
   }
   let nextDraw = 0;
   function startLoop() { if (running) return; running = true; lastNow = 0; nextDraw = 0; raf = requestAnimationFrame(frame); }
-  function stopLoop() { running = false; cancelAnimationFrame(raf); held = null; }
+  function stopLoop() { running = false; cancelAnimationFrame(raf); held = null; GL.awayT = performance.now(); }
   function frame(now) {
     if (!running) return;
+    try { tick(now); } catch (e) { loopErr(e); }
+    raf = requestAnimationFrame(frame);   // 不管这一帧出了什么事，下一帧照样约好：循环一停，画面就永远定在那里了
+  }
+  function tick(now) {
     if (PL.moving && now - PL.t0 >= PL.dur) { PL.moving = false; PL.jump = false; PL.fx = PL.x; PL.fy = PL.y; FL.fx = FL.x; FL.fy = FL.y; onStep(); }
     if (!PL.moving && held && !dlg && !busy) tryMove(camDir(held));
     // 镇上的人会时不时转头看看四周
@@ -1742,10 +1843,11 @@
       if (!n.nextTurn) n.nextTurn = now + 1500 + Math.random() * 3000;
       if (now > n.nextTurn && !dlg) { n.face = ['up', 'down', 'left', 'right', 'down'][Math.floor(Math.random() * 5)]; n.nextTurn = now + 2000 + Math.random() * 3500; }
     });
-    // 3D 画面丢了（webglcontextlost：切去微信再回来、系统收回显存）：先不画；恢复了、或者 2.5 秒还没恢复，就整个重建，不留黑屏（评估第 15 条）
-    if (R.glState) {
-      const gs = R.glState();
-      if (gs === 'lost') { raf = requestAnimationFrame(frame); return; }
+    // 3D 画面丢了（webglcontextlost：切去微信再回来、系统收回显存）：先不画；恢复了、或者 2.5 秒还没恢复，就整个重建，不留黑屏（评估第 15 条）。
+    // 已经知道它坏了（GL.bad：连着画不出来、载入出错、帧数不动）也在这里重建——见上面「恢复」那一段
+    if (GL.bad || R.glState) {
+      const gs = GL.bad || glNow(now);
+      if (gs === 'lost') return;
       if (gs !== 'ok') rebuildGL(gs);
     }
     // 所有画质每秒最多画 60 次：120Hz 的屏幕每秒画 120 次只会更烫更费电，看不出区别；
@@ -1756,14 +1858,17 @@
     const co = R.orbit ? R.orbit() : null;
     if (co && (co.yaw !== camUi.y0 || co.tilt !== camUi.t0 || co.to !== co.yaw)) { camUi.y0 = co.yaw; camUi.t0 = co.tilt; camUi.until = now + 300; nextDraw = Math.min(nextDraw, lastNow + 1000 / 60); }
     const gap = 1000 / (!PL.moving && !held && !busy && !tuning && now >= camUi.until ? 30 : 60);
-    if (now < nextDraw - 2) { raf = requestAnimationFrame(frame); return; }
+    if (now < nextDraw - 2) return;
     nextDraw = Math.max(nextDraw + gap, now + gap - 6);
     const dt = lastNow ? now - lastNow : 16; lastNow = now;
     fitCheck();
-    R.draw(now, view(now));
+    const V = view(now);
+    // 画这一帧。抛了异常不往外冒（见 drawFail）；画成了就把「连着几帧画不出来」清掉、记一帧好的
+    // （头一帧好的要再问一次渲染器：画到一半发现画面其实丢了的那种不算——「从建好就没画成过」的只等 1.5 秒，见 glNow）
+    try { R.draw(now, V); GL.strikes = 0; if (GL.good || !R.glState || R.glState() === 'ok') GL.good++; } catch (e) { drawFail(e); }
+    glWatch(now);
     camHud();
     autoTune(now, dt);
-    raf = requestAnimationFrame(frame);
   }
   // ---------- 和面前的人用英语自由聊天（talk.js + AI 语音）：原来的剧情对话不动，另加一个按钮 ----------
   let chatNpc = null;
@@ -2670,12 +2775,13 @@
     // 支线委托（quests.js）的进度：[{ id, z, seen 去过那座岛, state: 'open' 能接 / 'locked' 还不能接 / 'done' 做完了, stars, lock 不能接的原因 }]
     quests: () => (E ? questRows().map(r => ({ id: r.q.id, z: r.q.z, seen: r.seen, state: r.state, stars: r.stars, lock: r.lock })) : []),
     // 设置里改了画质
-    setGfx: () => { if (!M || !$('w-view')) return; ensureRenderer(); R.load(M, api3d); resize(); },
+    // （画不出来退下来过的话，改设置 = 从头再试：见 rebuildGL）
+    setGfx: () => { if (!M || !$('w-view')) return; GL.ban = 0; GL.fails = 0; ensureRenderer(); loadR(); resize(); },
     // 现在用哪一档画质（自动档按设备和量出来的帧率；战斗画面也按这个）
     gfxTier: () => gfxTier(),
     ctlMode: () => ctlMode(),
     placeLabel: () => { const ws = E.S.world; if (!ws.started || !ws.map || !window.EchoMaps) return null; const m = EchoMaps.get(ws.map); return m ? placeName(m) : null; },
-    _debug: () => ({ M, PL, FL, dlg, busy, R, perf, goMap: (id, how) => goMap(id, how), battle: (kind, o) => battle(kind, o || {}),
+    _debug: () => ({ M, PL, FL, dlg, busy, R, perf, gl: GL, goMap: (id, how) => goMap(id, how), battle: (kind, o) => battle(kind, o || {}),
       // 测试用：假装进大地图是在 d 这一天（检查过了零点回首页）；回声技能 / 徽章判断；重赛出题有没有换成课本
       fakeDay: d => { adv.day = d; }, adv, skillOpen: k => skillOpen(k), hasBadge: z => hasBadge(z), recentSrc: () => !!srcBak, debug: DEBUG,
       talk: (pages, done) => talk(pages, done) }),   // 测试用：直接放一段对话（说话任务 / 选回答，tests/apk.test.js）

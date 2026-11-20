@@ -147,6 +147,10 @@
     canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); gl.lost = performance.now(); gl.restored = false; }, false);
     canvas.addEventListener('webglcontextrestored', () => { gl.restored = true; }, false);
     const glState = () => (!gl.lost ? 'ok' : gl.restored ? 'restored' : performance.now() - gl.lost > 2500 ? 'dead' : 'lost');
+    // 「画面丢了」的事件晚一拍才到（显存被收走的那一刻页面还不知道）。这中间 three 一去编译着色器，iPhone 上 createShader 给的是 null，
+    // 接着就抛 TypeError（2026-11-20 模拟器里就是这样：异常从 draw 里冒出去，world.js 的循环停了，画面卡死）。所以接住异常的地方
+    // （开机自检、load 里的预热、draw）和 world.js 每秒一次的体检都来问一下：画面其实已经丢了就当场记上，和收到事件一样。返回现在算不算丢了
+    const glCheck = () => { if (!gl.lost && renderer.getContext().isContextLost()) { gl.lost = performance.now(); gl.restored = false; } return !!gl.lost; };
     renderer.shadowMap.enabled = !!Q.shadow;
     renderer.shadowMap.type = T3.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;
@@ -3060,7 +3064,7 @@
           const px = new Uint8Array(16 * 16 * 4); renderer.readRenderTargetPixels(out, 0, 0, 16, 16, px);
           const near = px[(8 * 16 + 3) * 4], far = px[(8 * 16 + 12) * 4];
           ok = far > 245 && near > 70 && near < 190;
-        } catch (e) { ok = false; }
+        } catch (e) { ok = false; glCheck(); }   // 试到一半画面丢了：记上，world.js 第一帧就知道要重建
         renderer.setRenderTarget(null); quad.material = comp;
         [out, dm, tm, tg].forEach(x => x && x.dispose());
         post.line = ok; comp.uniforms.uLine.value = ok ? 1 : 0;
@@ -3111,20 +3115,21 @@
       resize();
       geoMs = Math.round(performance.now() - t0);
       // 着色器先编译好，再从高处把整张地图画一遍（什么都不裁掉）：所有网格的数据这时候就传给显卡了，走到新地方时不会因为头一次画某一块而卡一下
+      const fc = [];
       try {
         if (rt) renderer.setRenderTarget(rt);
         renderer.compile(scene, camera);
-        const fc = [];
         world.traverse(o => { if (o.isMesh && o.frustumCulled) { fc.push(o); o.frustumCulled = false; } });
         grassChunks.forEach(ch => ch.parts.forEach(pt => { pt.im.count = pt.n; pt.im.visible = true; }));
         treeBands.forEach(b => b.coarse.forEach(o => { o.visible = true; }));
         camera.position.set(m.W / 2, 40, m.H / 2 + 30); camera.lookAt(m.W / 2, 0, m.H / 2); camera.updateMatrixWorld();
         if (Q.shadow) renderer.shadowMap.needsUpdate = true;
         renderer.render(scene, camera);
-        fc.forEach(o => { o.frustumCulled = true; });
-        treeBands.forEach(b => { b.near = true; b.coarse.forEach(o => { o.visible = false; }); b.fine.forEach(o => { o.visible = true; }); });
-        renderer.setRenderTarget(null);
-      } catch (e) { /* 画不了就等真画的时候再说 */ }
+      } catch (e) { glCheck(); }   // 画不了就等真画的时候再说；画面其实已经丢了的话这里就记上（world.js 下一帧重建）
+      // 预热时改过的东西不管画没画成都放回去（半路抛了异常也一样，不然整张图一直不裁、树一直两套都画）
+      fc.forEach(o => { o.frustumCulled = true; });
+      treeBands.forEach(b => { b.near = true; b.coarse.forEach(o => { o.visible = false; }); b.fine.forEach(o => { o.visible = true; }); });
+      try { renderer.setRenderTarget(null); } catch (e) { /* 忽略 */ }
       buildMs = Math.round(performance.now() - t0);
     }
 
@@ -3163,6 +3168,12 @@
       else if (op === 'set') { CAM.orbT = CAM.orb = wrapA(a || 0); CAM.tilt = clamp(b || 0, tLo, tHi); CAM.q = ((Math.round(CAM.orbT / (Math.PI / 2)) % 4) + 4) % 4; }
       return { yaw: CAM.orb, to: CAM.orbT, tilt: CAM.tilt, q: quarter() };
     }
+    // 画面丢了、world.js 整个重建的时候，镜头转到哪了要带到新的渲染器里去：不带参数 = 取，带参数 = 照原样放回去
+    // （不按「set」那样重新算 q：停在 45° 附近时摇杆的「上」算哪边要和丢之前一样；俯角也不重新夹，画面多大没变）
+    function camState(s) {
+      if (s) { CAM.orbT = CAM.orb = wrapA(+s.to || 0); CAM.tilt = +s.tilt || 0; CAM.q = (s.q | 0) & 3; }
+      return { to: CAM.orbT, tilt: CAM.tilt, q: CAM.q };
+    }
     const camT = new T3.Vector3(-999, 0, 0), look = new T3.Vector2(), _v = new T3.Vector3();
     const DIRV = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }, DIRYAW = { down: 0, up: Math.PI, left: -Math.PI / 2, right: Math.PI / 2 };
     let VW = 1, VH = 1, bufW = 1, bufH = 1, lastT = 0, snapKey = '', camLift = 0, seenTick = 0, bloomPx = [1, 1];
@@ -3199,6 +3210,10 @@
     }
     function draw(now, V) {
       if (gl.lost) return;   // 画面丢了：等 world.js 重建
+      // 画到一半抛了异常：画面其实已经丢了（事件还没到，见 glCheck）就记成丢了、不往外抛；别的错照原样交给 world.js（它记一笔，连着几帧都这样就重建）
+      try { drawFrame(now, V); } catch (e) { if (!glCheck()) throw e; }
+    }
+    function drawFrame(now, V) {
       const dt = lastT ? Math.max(0, Math.min(.1, (now - lastT) / 1000)) : .016; lastT = now;
       const t = now / 1000, L = LAND, M3 = window.Mon3D;
       U.uTime.value = t;
@@ -3434,17 +3449,21 @@
     const GRASS_NEAR = tier === 'high' ? 7 : tier === 'mid' ? 4 : 0;
     const TREE_NEAR = tier === 'high' ? 16 : tier === 'mid' ? 10 : 6;   // 树：离主角南北方向多远以内用细的                // 草：离这么近的那几块用细的零件，再远用省的（省电档只有省的）
     function destroy() {
-      clear();
-      scene.remove(world);
-      folDrop(); dropMesh(fol.icon); dropMesh(player);
-      if (window.EchoPeople3D && EchoPeople3D.release) { try { EchoPeople3D.release(); } catch (e) { /* 忽略 */ } }   // 3D 小人共用的网格、脸的贴图、材质
-      Object.values(atlasCache).forEach(t => t.dispose());
-      Object.values(spriteMats).forEach(x => x.dispose());
-      keep.forEach(x => x.dispose && x.dispose());
-      if (rt) { rt.dispose(); if (post.dtex) post.dtex.dispose(); if (post.a) { post.a.dispose(); post.b.dispose(); } post.bright.dispose(); post.blur.dispose(); post.comp.dispose(); post.quad.geometry.dispose(); }
-      renderer.dispose();
-      try { renderer.forceContextLoss(); } catch (e) { /* 忽略 */ }
-      canvas.remove();
+      // 拆到一半出了错（画面已经丢了的时候可能）也要把画布拿掉：旧画布留在页面上会盖住后面新建的那张
+      try {
+        clear();
+        scene.remove(world);
+        folDrop(); dropMesh(fol.icon); dropMesh(player);
+        if (window.EchoPeople3D && EchoPeople3D.release) { try { EchoPeople3D.release(); } catch (e) { /* 忽略 */ } }   // 3D 小人共用的网格、脸的贴图、材质
+        Object.values(atlasCache).forEach(t => t.dispose());
+        Object.values(spriteMats).forEach(x => x.dispose());
+        keep.forEach(x => x.dispose && x.dispose());
+        if (rt) { rt.dispose(); if (post.dtex) post.dtex.dispose(); if (post.a) { post.a.dispose(); post.b.dispose(); } post.bright.dispose(); post.blur.dispose(); post.comp.dispose(); post.quad.geometry.dispose(); }
+        renderer.dispose();
+      } finally {
+        try { renderer.forceContextLoss(); } catch (e) { /* 忽略 */ }
+        canvas.remove();
+      }
     }
     // 贴图和画面缓冲大约占多少显存（MB，按尺寸估的：影子图、树叶 / 地面细节 / 云 / 噪声贴图、这张地图的遮罩和房子贴画、人物的图、抗锯齿的画面缓冲）
     function texMB() {
@@ -3483,7 +3502,7 @@
       } catch (e) { post.quad.material = post.comp; renderer.setRenderTarget(null); return null; }
     }
     return {
-      kind: '3d', canvas, load, resize, draw, destroy, glState, info: () => renderer.info, orbit, quarter,
+      kind: '3d', canvas, load, resize, draw, destroy, glState, glCheck, info: () => renderer.info, orbit, quarter, camState,
       // marks：现在画着几块委托的「?」牌子；probe：测试和 tools/look 用（地面多高、人站在哪、跟着走的是模型还是纸片）
       marks: () => spriteList.filter(s => s.quest && s.quest.visible && s.root.visible).length,
       // 场景里每种东西（按材质分）有几个网格、多少三角形（按多到少），查「哪样东西最费」用；只算现在画着的
@@ -3509,24 +3528,55 @@
   // 给 world.js 用的渲染器：户外地图用上面的新渲染器，其余的地图（室内、挑战馆、洞穴、海底……）交给 world3d.js 的老渲染器。
   // 两个渲染器各有一张画布，用哪个就显示哪张；老的那个第一次进屋时才建，之后一直留着（进出房子不用每次重建）
   function create(view, tier, A) {
+    const note = (msg, where) => { try { if (window.EchoErr) EchoErr.log('look', msg, 'world3d-open ' + where + ' ' + tier); } catch (e2) { /* 忽略 */ } };
+    // 没建成的渲染器可能已经把画布放进页面了（放进去以后才出的错）：拿掉。画布是一张叠一张的，留下的死画布会盖住后面新建的那张
+    const canvases = () => new Set(view.querySelectorAll('canvas.w-canvas'));
+    const sweep = had => view.querySelectorAll('canvas.w-canvas').forEach(c => {
+      if (had.has(c)) return;
+      try { const g = c.getContext('webgl2'), x = g && g.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) { /* 忽略 */ }
+      c.remove();
+    });
     // 建不出来（这台设备画不了）：记进出错记录再照原样报出去，world.js 会退回老的 3D——不记的话手机上只看到「还是经典画面」，不知道为什么
     let open = null;
-    try { open = createOpen(view, tier, A); } catch (e) { try { if (window.EchoErr) EchoErr.log('look', (e && (e.stack || e.message)) || String(e), 'world3d-open create ' + tier); } catch (e2) { /* 忽略 */ } throw e; }
-    if (!open) { try { if (window.EchoErr) EchoErr.log('look', 'createOpen returned null', 'world3d-open create ' + tier); } catch (e2) { /* 忽略 */ } return null; }
+    const had0 = canvases();
+    try { open = createOpen(view, tier, A); } catch (e) { sweep(had0); note((e && (e.stack || e.message)) || String(e), 'create'); throw e; }
+    if (!open) { sweep(had0); note('createOpen returned null', 'create'); return null; }
     let old = null, oldCv = null, cur = open;
     const show = () => { open.canvas.style.display = cur === open ? '' : 'none'; if (oldCv) oldCv.style.display = cur === old ? '' : 'none'; };
     function pick(map) {
       if (supports(map) || !window.EchoWorld3D) return open;
-      if (!old) { try { old = EchoWorld3D.create(view, tier, A); } catch (e) { old = null; } oldCv = old ? view.querySelector('canvas.w-canvas') : null; }
+      if (!old) {
+        const had = canvases();
+        try { old = EchoWorld3D.create(view, tier, A); } catch (e) { old = null; }
+        oldCv = old ? [...view.querySelectorAll('canvas.w-canvas')].find(c => !had.has(c)) || null : null;
+        if (!old) sweep(had);
+      }
       return old || open;   // 老渲染器建不出来（不该发生）：新的硬着头皮画
     }
+    const dropOld = () => { const o = old; old = null; oldCv = null; try { o.destroy(); } catch (e) { /* 丢了的画面拆不干净也没关系 */ } };
     return {
       kind: '3d', look: 'new',
       load(map, api) { cur = pick(map); show(); cur.load(map, api); },
       resize() { cur.resize(); },
       draw(now, V) { cur.draw(now, V); },
-      destroy() { open.destroy(); if (old) old.destroy(); },
-      glState: () => cur.glState(),
+      destroy() { try { open.destroy(); } finally { if (old) old.destroy(); } },
+      // 两张画布各有各的 WebGL。正在显示的那张丢了：照老规矩报 'lost' / 'restored' / 'dead'（world.js 整个重建）。
+      // 没显示的那张丢了，等它恢复了、或者 2.5 秒没恢复（这中间显示着的那张照常画）：是屋里那张（老渲染器）→ 悄悄拆掉，下次进屋重新建；
+      // 是户外这张（人在屋里）→ 也报给 world.js 整个重建，不然一出门就是一张死画布
+      glState() {
+        const s = cur.glState();
+        if (s !== 'ok') return s;
+        const other = cur === open ? old : open;
+        if (other) {
+          const o = other.glState();
+          if (o === 'restored' || o === 'dead') { if (other !== old) return o; dropOld(); note('indoor canvas lost (' + o + '), dropped; rebuilt on next indoor map', 'hidden'); }
+        }
+        return 'ok';
+      },
+      // world.js 每秒一次的体检：两张都问一下画面是不是其实已经丢了（事件没到的时候），返回正在显示的那张算不算丢了
+      glCheck() { const a = open.glCheck(), b = old && old.glCheck ? old.glCheck() : false; return cur === open ? a : b; },
+      // 镜头转到哪了（world.js 重建渲染器时带过去；人在屋里、老渲染器在画的时候也取得到）
+      camState: s => open.camState(s),
       info: () => cur.info(),
       marks: () => cur.marks(),
       using: () => (cur === open ? 'open' : 'std'),     // 现在这张地图是谁在画（测试用）
