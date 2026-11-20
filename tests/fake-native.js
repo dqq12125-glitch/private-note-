@@ -228,19 +228,23 @@ function installFakeEchoNative(opts) {
     W.EchoNative.diag = function () { const o = JSON.parse(d0()); o.appleSignIn = !!S.apple.on; o.iapProducts = S.iap.products.map(p => p.id); return JSON.stringify(o); };
 
     // ---------- 口语题的本机识别（ios/App/Sources/LocalSpeech.swift），照 ios/README.md「口语题的本机识别」 ----------
+    // 麦克风归网页：网页录到的声音用 speechFeed(编号, base64 的 16 位 PCM) 一段段送来，原生不回话。
     // 开关 S.speech（页面里随时能改）：
     //   state：speechState 回的 {auth, mic, onDevice, available, locale, engine}。默认和云上的模拟器一样：没有本机识别（onDevice:false）
-    //   start：'ok' / 'fail:<代号>'（unavailable / denied / restricted / mic / audio / busy …）；默认 'fail:unavailable'
-    //   startMs：回 ok 之前等几毫秒（模拟开录音要的时间）
+    //   start：'ok' / 'fail:<代号>'（unavailable / denied / restricted / busy / background …）；默认 'fail:unavailable'
+    //   startMs：回 ok 之前等几毫秒（模拟建识别任务要的时间）
     //   script：开始以后按时间发的事件 [[毫秒, 'partial' | 'final' | 'voice' | 'error' | 'end', 文字 / on / 代号]]
-    //   记录：log（每次调用：方法名、选项、时间）、sessions（开过几次）、active（正在听的编号）
+    //   记录：log（每次调用：方法名、选项、时间）、sessions（开过几次）、active（正在听的编号）、
+    //         feeds（每段声音：{sid, at 收到的时间, bytes 解出来几个字节, okAt 那一次回 ok 的时间（还没回是 0）, s0 第一个样本}）、
+    //         early（回 ok 以前、或者编号不对 / 已经停了还送来的段数：原生一律不管）、okAt（编号 → 回 ok 的时间）
     S.speech = Object.assign({
       state: { auth: 'notDetermined', mic: S.mic === 'granted' ? 'granted' : S.mic === 'blocked' ? 'blocked' : 'denied', onDevice: false, available: false, locale: 'en-US', engine: 'SFSpeechRecognizer' },
-      start: 'fail:unavailable', startMs: 30, script: [], log: [], sessions: 0, active: 0,
+      start: 'fail:unavailable', startMs: 30, script: [], log: [], sessions: 0, active: 0, feeds: [], early: 0, okAt: {},
     }, opts.speech || {});
     let spT = [];
+    const spFed = {};
     const spEmit = d => emit('echo-speech', d);
-    const spEnd = (sid, reason) => { spT.forEach(clearTimeout); spT = []; if (sid && S.speech.active === sid) { S.speech.active = 0; spEmit({ sid, kind: 'end', reason, t: 0 }); return true; } return false; };
+    const spEnd = (sid, reason) => { spT.forEach(clearTimeout); spT = []; if (sid && S.speech.active === sid) { S.speech.active = 0; spEmit({ sid, kind: 'end', reason, t: 0, fed: spFed[sid] || 0 }); return true; } return false; };
     Object.assign(W.EchoNative, {
       speechState(id) { log('speechState'); S.speech.log.push({ m: 'speechState', at: Date.now() }); ok(id, Object.assign({ listening: !!S.speech.active }, S.speech.state)); },
       speechStart(id, o) {
@@ -251,8 +255,8 @@ function installFakeEchoNative(opts) {
         if (/^fail:/.test(st)) return fail(id, st.slice(5), 'fake ' + st.slice(5));
         if (S.speech.active) spEnd(S.speech.active, 'replaced');
         setTimeout(() => {
-          S.speech.active = id; S.speech.sessions++;
-          ok(id, { listening: true, sid: id, ms: S.speech.startMs, locale: op.locale || 'en-US', short: !!op.short, engine: 'SFSpeechRecognizer' });
+          S.speech.active = id; S.speech.sessions++; S.speech.okAt[id] = Date.now();
+          ok(id, { listening: true, sid: id, ms: S.speech.startMs, locale: op.locale || 'en-US', short: !!op.short, rate: op.rate || 16000, engine: 'SFSpeechRecognizer' });
           const t0 = Date.now();
           (S.speech.script || []).forEach(([ms, kind, v]) => spT.push(setTimeout(() => {
             if (S.speech.active !== id) return;
@@ -263,6 +267,14 @@ function installFakeEchoNative(opts) {
             else if (kind === 'end') { spT.forEach(clearTimeout); spT = []; S.speech.active = 0; }
           }, ms + 1)));
         }, S.speech.startMs);
+      },
+      // 一段声音：只认正在听的那一次（回 ok 以后）；不回话
+      speechFeed(sid, b64) {
+        let bytes = 0, s0 = null;
+        try { const s = atob(String(b64 || '')); bytes = s.length; if (bytes >= 2) { const v = s.charCodeAt(0) | (s.charCodeAt(1) << 8); s0 = v >= 0x8000 ? v - 0x10000 : v; } } catch (e) { bytes = -1; }
+        if (!sid || S.speech.active !== sid) { S.speech.early++; return; }
+        spFed[sid] = (spFed[sid] || 0) + 1;
+        S.speech.feeds.push({ sid, at: Date.now(), bytes, okAt: S.speech.okAt[sid] || 0, s0 });
       },
       speechStop(id) { log('speechStop'); S.speech.log.push({ m: 'speechStop', at: Date.now() }); ok(id, { stopped: spEnd(S.speech.active, 'stop') }); },
     });

@@ -29,7 +29,7 @@
 | `Tests/AccountLogicTests.swift` | 单元测试：订阅和登录里不碰 App Store 的那一层（参数不对当场回、买的四种结果、取消、没带权限的包说 unavailable） |
 | `Tests/StoreKitTests.swift` | 订阅的真流程（用 `Store.storekit`）：商品、买（带账号 UUID）、请求购买、恢复、续费、过期、退款 → 事件。云上单独一步、挑 iOS 26.2 的模拟器 |
 | `UITests/SmokeUITests.swift` | UI 测试：打开到首页（竖屏、横屏截图）、原生桥自测页一个都不能没过、麦克风弹窗、分享面板和文件选择器、订阅的商品问得到 |
-| `www-test/selftest.html` | 原生桥自测页（**只打进调试包**）：把 26 个方法和 iPhone 才有的 12 个都调一遍，再看几样 WebKit 的本事 |
+| `www-test/selftest.html` | 原生桥自测页（**只打进调试包**）：把 26 个方法和 iPhone 才有的 13 个都调一遍，再看几样 WebKit 的本事 |
 | `scripts/prepare.mjs` | 打包前一条命令做完：`make-config.mjs` → `copy-web.mjs` → 没有图标时 `make-icons.mjs` |
 | `scripts/make-config.mjs` | 生成 `Generated/BuildConfig.swift`、`Generated/Echo.xcconfig`（版本、构建号、订阅的两个商品编号、带不带「通过 Apple 登录」；家庭版另有密钥和家长密码的**哈希**） |
 | `scripts/copy-web.mjs` | 把游戏网页复制进 `www/`：和安卓 `copyWeb` 同一份白名单，销售版不带保留怪兽 |
@@ -110,7 +110,7 @@ cd ios && xcodegen generate && open EchoIsland.xcodeproj
 
 ## 原生桥：和安卓不一样的地方
 
-26 个方法都有，名字、参数个数、返回值的类型、同步 / 异步（异步 = 连阿里云的四个）都和安卓一样（`tests/ios.test.js` 核对三处：README、`echo-native.js`、`Bridge.swift`）。另有 iPhone 才有的 12 个（「订阅和登录」的 9 个、「口语题的本机识别」的 3 个，`tests/ios.test.js` 的 `IOS_ONLY` 表）。不一样的：
+26 个方法都有，名字、参数个数、返回值的类型、同步 / 异步（异步 = 连阿里云的四个）都和安卓一样（`tests/ios.test.js` 核对三处：README、`echo-native.js`、`Bridge.swift`）。另有 iPhone 才有的 13 个（「订阅和登录」的 9 个、「口语题的本机识别」的 4 个，`tests/ios.test.js` 的 `IOS_ONLY` 表）。不一样的：
 
 | 方法 | iPhone 上 |
 | --- | --- |
@@ -177,29 +177,32 @@ TestFlight 的工作流先带着它签；苹果不肯（App ID 上没勾「Sign 
 
 老板在 iPhone 上试：口语题「识别还是太慢，有时候还不准」。以前 iPhone 上的口语题也是网页开麦克风 → 连服务器 → 阿里云实时识别（北京），每题新连一次、要登录、算每天的 AI 额度。现在口语题（闯关、每日复习、对战、大地图的说话任务、能力检测的朗读题——凡是走 `game.js` 的 `recognize()` → `EchoTalk.listenOnce` 的）**先用手机自带的语音识别在手机上听写**：不联网、不用登录、不算额度，边说边出字。和岛民自由聊天还是实时语音模型，不变；安卓不变。
 
-`LocalSpeech.swift`：`SFSpeechRecognizer`（`en-US`、`requiresOnDeviceRecognition = true`、边说边出字）+ 自己用 `AVAudioEngine` 录音（网页不另开麦克风）。
+`LocalSpeech.swift`：`SFSpeechRecognizer`（`en-US`、`requiresOnDeviceRecognition = true`、边说边出字），**只管识别**；麦克风归网页（第二版，2026-11-20 晚）：`talk.js` 用和云端识别同一个 `lmOpen`（`getUserMedia` + AudioWorklet）录音，换成 16kHz 16 位 PCM，每 0.1 秒一段 `speechFeed` 送过来。
+
+第一版是原生自己用 `AVAudioEngine` 录音（`AppAudio.configure()` 打开 App 自己的声音会话、自己要麦克风权限、听来电打断和声音设备变了）。在老板的 iPhone 16 Pro（iOS 26.6）上一点话筒就停在「🎤 请说……」、什么都认不出来：App 进程的声音会话和网页那一层（WebKit 在另一个进程里放声音）的声音会话互相打断，原生收到「被打断」就停了，网页把它当成「自己点了停」，没有提示（这是按代码推的，没有真机日志）。云上的模拟器没有本机识别，碰不到这一步。所以第二版原生一点声音会话都不碰（不录音、不 `setActive`、不改类别、不要麦克风权限）。
 
 - **只在手机上识别**：这台手机这门语言没有本机识别就回 `unavailable`，网页同一次里改走云端，**不退回苹果的服务器识别**。
 - **打分照样诚实**：不把答案交给识别（不设 `contextualStrings`、不用自定义语言模型），打分还是网页的 `scoreSpeech()`。
 - **什么时候算说完由网页定**（`talk.js` 的 `nativeListen`），不等苹果的「最终结果」：有字以后字停住不变 0.4 秒（单词）/ 0.6 秒（句子），并且原生说人已经不出声了（`voice` 事件；一直「在出声」最多再等 1.2 秒）；对上答案当场结束；最长 8 秒。
-- **声音**：录音前 `AppAudio.configure()`（边录边放 + 默认扬声器 + 模式 default，不用 measurement / voiceChat），停了不关会话：接着放的配乐、朗读还从扬声器出来、音量不变。网页那一层在听的时候 `navigator.audioSession` 是 `play-and-record`（`echo-native.js` 的 `__echoIOS.speech`），停了换回 `playback`。
-- 来电 / Siri 打断、切到后台、声音设备变了（插拔耳机）、网页重建：当场停，发 `end`。
-- 识别引擎是单独一层（`SpeechEngine`）：以后换 iOS 26 的 `SpeechAnalyzer` / `SpeechTranscriber` 再写一个，权限顺序、录音、事件不用动。
-- 权限：第一次弹「语音识别」（说明在 `Info.plist` 的 `NSSpeechRecognitionUsageDescription`，中文）和麦克风。拒绝了网页就安静地改走云端，不再问。
+- **声音**：和云端识别完全一样，网页 `getUserMedia` 时 `echo-native.js` 把 `navigator.audioSession` 换成 `play-and-record`，麦克风的轨道都停了换回 `playback`。原生不碰。
+- 切到后台、网页重建：当场停，发 `end`。来电 / Siri 打断由 WebKit 管网页的麦克风（声音断了原生就收不到 `speechFeed`，网页按计时结束）。
+- 识别引擎是单独一层（`SpeechEngine`）：以后换 iOS 26 的 `SpeechAnalyzer` / `SpeechTranscriber` 再写一个，权限顺序、收声音、事件不用动。
+- 权限：原生只弹「语音识别」（说明在 `Info.plist` 的 `NSSpeechRecognitionUsageDescription`，中文）；麦克风是网页的 `getUserMedia` 弹的。第一次（语音识别还没允许）网页等原生问完、回了 `ok` 才开麦克风，两个框不一起弹；平时两边一起开。拒绝了语音识别网页就安静地改走云端，不再问。
 
 都是异步的，第一个参数是网页给的编号，结果回 `window.__echoNative(编号, 'ok' / 'fail', JSON 文字)`；`'fail'` 一律是 `{"error":"短代号","message":"英文说明"}`。网页先看 `window.ECHO_IOS` 和 `typeof EchoNative.speechStart === 'function'`。
 
 | 方法 | 说明 |
 | --- | --- |
 | `speechState(id)` | 现在能不能用，**不弹任何框**：`ok {auth:'authorized'/'notDetermined'/'denied'/'restricted', mic:'granted'/'denied'/'blocked', onDevice, available, locale:'en-US', engine:'SFSpeechRecognizer', listening}` |
-| `speechStart(id, opts)` | 开始听。`opts` 是 JSON 文字 `{short, long, ask, locale}`（`ask:false` 不弹权限框，自测页用）。真的开始录了才回 `ok {listening:true, sid:id, ms, locale, short, engine}`；不行回 `fail`：`unavailable`（没有本机识别）/ `denied`、`restricted`（语音识别没允许）/ `mic`（麦克风没允许）/ `audio`（录音开不起来）/ `busy`（正在弹权限框）/ `not-asked`（`ask:false` 又还没问过）/ `cancelled`（弹框时网页叫停了）。上一次没停的先停掉（`end`，`replaced`） |
+| `speechStart(id, opts)` | 开始一次识别。`opts` 是 JSON 文字 `{short, long, ask, locale, rate}`（`ask:false` 不弹权限框，自测页用；`rate` 是送来的声音的采样率，默认 16000）。识别任务建好了就回 `ok {listening:true, sid:id, ms, locale, short, rate, engine}`；不行回 `fail`：`unavailable`（没有本机识别）/ `denied`、`restricted`（语音识别没允许）/ `busy`（正在弹权限框）/ `not-asked`（`ask:false` 又还没问过）/ `cancelled`（弹框时网页叫停了）/ `background`（App 在后台）。上一次没停的先停掉（`end`，`replaced`） |
+| `speechFeed(sid, base64)` | 一段声音：16 位有符号、小端、单声道 PCM（采样率是 `speechStart` 的 `rate`），base64。一秒约 10 段，**不回话**（和 `wsSend` 一样）；编号不对、已经停了、解不开的一律不管。原生换成 32 位浮点单声道交给识别，顺便量出声 / 不出声 |
 | `speechStop(id)` | 停：`ok {stopped:true/false}`。正在弹权限框的，答完了也不开 |
 
-**事件** `echo-speech`（`e.detail.sid` = `speechStart` 的编号，`t` = 开始以后几毫秒）：`partial` / `final` `{text}`（到目前为止听到的整句）、`voice` `{on}`（开始 / 停止出声，只在变的时候发）、`error` `{code, message}`、`end` `{reason: stop / final / error / interrupted / background / audio-changed / audio-reset / page / replaced}`。
+**事件** `echo-speech`（`e.detail.sid` = `speechStart` 的编号，`t` = 开始以后几毫秒）：`partial` / `final` `{text}`（到目前为止听到的整句）、`voice` `{on}`（送来的声音开始 / 停止出声，只在变的时候发）、`error` `{code, message, fed}`、`end` `{reason: stop / final / error / background / page / replaced, fed}`（`fed` = 收到几段声音）。
 
-网页那边（`talk.js`）：本机开不起来（`unavailable` / `denied` / `restricted` / `audio` / `busy` / 超时）同一次里改走云端识别，孩子不用再点一次；`unavailable` / `denied` / `restricted` 这次打开 App 记住（回到前台再问一次 `speechState`，打开了就又用本机）；麦克风被拒直接按「麦克风被拒」回（云端也要麦克风）。每次识别的计时（点了到开始听、第一个字、结束、最后一个字到结束、用的哪个）留在内存里：`EchoTalk.lastSpeech()` / `EchoTalk.speechLog()`（最近 20 次，不上传）；周报诊断一行有「口语识别：本机 n 次、云端 m 次，本机说完约 x 秒出分」。调试时 `localStorage['echo-sr'] = 'cloud'` 可以临时只用云端（界面上没有开关）。
+网页那边（`talk.js` 的 `nativeListen`）：麦克风和 `speechStart` 一起开（第一次要弹语音识别的框时，等原生回了再开麦克风），原生回 `ok` 以前录到的先存着、回了一起补发，之后边录边送。**不让学的人卡住**：本机这一次没认出字，除了学的人自己点了停（`aborted`，提示「停了」）和真的没说话（网页没量到人声、原生也没说出声 → 「没听清」），一律同一次里接着走云端识别——用同一个麦克风，录好的声音一起交过去，不用再说一遍；云端也用不了（没有密钥 / 没登录）就按「没听清」回（本机已经记成用不了时照旧走「先跳过 / 请登录」）。原因记在 `fell`（`unavailable` / `denied` / `restricted` / `busy` / `timeout` / `error` / `notext` / `end-<reason>`……）。`unavailable` / `denied` / `restricted` 这次打开 App 记住（回到前台再问一次 `speechState`，打开了就又用本机）；别的原因连着两次也记住（`off = 'fails'`，这次打开 App 不再试本机）。麦克风被拒和云端一样弹「去打开」。每次识别的计时（点了到开始听、第一个字、结束、最后一个字到结束、用的哪个）和本机那几样（送了几段 `fed`、原生说收到几段 `nfed`、有没有人声 `vo`、`off`）留在内存里：`EchoTalk.lastSpeech()` / `EchoTalk.speechLog()`（最近 20 次，不上传），TestFlight 包的版本角标显示最近一次的；周报诊断一行有「口语识别：本机 n 次、云端 m 次，本机说完约 x 秒出分」。调试时 `localStorage['echo-sr'] = 'cloud'` 可以临时只用云端（界面上没有开关；第一版出事那晚的临时包每次打开都写这个值，`echo-native.js` 第一次打开时清掉一次，记号 `echo-sr-v2`）。
 
-云上的模拟器多半没有本机识别：自测页只证明桥通、`unavailable` / `not-asked` 网页认得（`speechStart` 带 `ask:false`，不弹框）。准不准、快不快、权限框、问完以后声音从哪里出来，要在真 iPhone 上看。
+云上的模拟器多半没有本机识别：自测页只证明桥通、`unavailable` / `not-asked` 网页认得（`speechStart` 带 `ask:false`，不弹框），单元测试用假引擎走一遍 `speechFeed`（PCM 换算、编号不对不管、出声事件、`end` 带 `fed`）。准不准、快不快、权限框、和配乐 / 朗读一起时声音对不对，要在真 iPhone 上看。
 
 ## iPhone 上才要管的（都在壳子里，安卓不变）
 

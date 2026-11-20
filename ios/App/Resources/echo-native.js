@@ -78,11 +78,12 @@
     appleCredentialState: ['async', 'is'],
     // 口语题的本机识别（LocalSpeech.swift，iPhone 自带的语音识别、只在手机上识别）：过程是事件 echo-speech；talk.js 的 listenOnce 用
     speechState: ['async', 'i'],       // 能不能用（不弹框）
-    speechStart: ['async', 'is'],      // (id, 选项 JSON 文字)：第一次弹权限框；真的开始录了才回 ok
+    speechStart: ['async', 'is'],      // (id, 选项 JSON 文字)：第一次弹「语音识别」的权限框；识别任务建好了就回 ok
+    speechFeed: ['async', 'is'],       // (speechStart 的编号, base64 的 16 位 PCM)：网页录到的声音一段段送过去，不回话（麦克风归网页）
     speechStop: ['async', 'i']
   };
   var IOS_ONLY = ['iapProducts', 'iapBuy', 'iapRestore', 'iapCurrent', 'iapPending', 'iapFinish', 'iapManage', 'appleSignIn', 'appleCredentialState',
-    'speechState', 'speechStart', 'speechStop'];
+    'speechState', 'speechStart', 'speechFeed', 'speechStop'];
 
   function make(name, spec) {
     var kind = spec[0], types = spec[1], hasRet = spec.length > 2, dflt = spec[2];
@@ -128,20 +129,11 @@
   function sessionType(t) { try { if (AS && AS.type !== t) AS.type = t; } catch (e) { /* 老系统没有 / 不让设 */ } }
   sessionType('playback');
 
-  var live = [];   // 还开着的麦克风声音轨道
-  // 口语题的本机识别（原生 LocalSpeech.swift 自己录音）在听：网页这一层也说「边录边放」——平时的 playback 下 WebKit 放声音时
-  // 可能把整个 App 的声音类别换成只放不录，原生的录音就断了。talk.js 开始听时 speech(true)、停了 speech(false)
-  var speechOn = false;
-  function speech(on) {
-    speechOn = !!on;
-    if (speechOn) sessionType('play-and-record');
-    else if (!live.length) sessionType('playback');
-    return speechOn;
-  }
+  var live = [];   // 还开着的麦克风声音轨道（口语题的本机识别也是网页开的麦克风，和云端识别一样走这里）
   function trackGone(t) {
     var i = live.indexOf(t);
     if (i >= 0) live.splice(i, 1);
-    if (!live.length && !speechOn) sessionType('playback');
+    if (!live.length) sessionType('playback');
   }
   try {
     var MD = navigator.mediaDevices;
@@ -159,7 +151,7 @@
           } catch (e) { /* 忽略 */ }
           return stream;
         }, function (err) {
-          if (wantsAudio && !live.length && !speechOn) sessionType('playback');
+          if (wantsAudio && !live.length) sessionType('playback');
           throw err;
         });
       };
@@ -213,10 +205,10 @@
       try { c = r.deref(); } catch (e) { c = null; }
       if (c && c.state === 'interrupted') { n++; try { var p = c.resume(); if (p && p.catch) p.catch(function () {}); } catch (e) { /* 忽略 */ } }
     });
-    if (!live.length && !speechOn) sessionType('playback');
+    if (!live.length) sessionType('playback');
     return n;
   }
-  W.__echoIOS = { wake: wake, spec: SPEC, iosOnly: IOS_ONLY.slice(), live: function () { return live.length; }, speech: speech };
+  W.__echoIOS = { wake: wake, spec: SPEC, iosOnly: IOS_ONLY.slice(), live: function () { return live.length; } };
 
   // ---------- 触摸 ----------
   // 长按不弹「拷贝 / 查询」、不选中文字（输入框照常能选、能粘贴）；横屏时文字不自动放大；不让双指缩放、输入框聚焦时不放大页面
@@ -258,13 +250,15 @@
         'font:600 9px/1 -apple-system,system-ui,sans-serif;letter-spacing:.3px;color:#fff;opacity:.5;text-shadow:0 0 2px #000,0 0 2px #000;pointer-events:none;white-space:nowrap';
       document.body.appendChild(d);
       // 版本号后面跟上最近一次口语识别的情况（talk.js 的 EchoTalk.lastSpeech()）：哪个引擎、怎么结束的、为什么改走云端、原生的错误代号、
-      // 点了到开始听 / 第一个字 / 结束各多少毫秒。老板截图里带着它，不用连电脑也知道识别卡在哪一步
+      // 点了到开始听 / 第一个字 / 结束各多少毫秒；本机识别那几样：fed 送过去几段声音 / 原生说收到几段，v: 有没有人声（w 网页量到、n 原生说出声、- 都没有），
+      // off: 这次打开 App 不再用本机识别的原因。老板截图里带着它，不用连电脑也知道识别卡在哪一步
       setInterval(function () {
         try {
           var s = W.EchoTalk && W.EchoTalk.lastSpeech ? W.EchoTalk.lastSpeech() : null, t = String(BOOT.beta);
           if (s) {
             t += ' · ' + (s.eng || '?') + ' ' + (s.how || s.err || (s.ok ? 'ok' : '')) + (s.fell ? ' fell:' + s.fell : '') + (s.nerr ? ' ' + String(s.nerr).slice(0, 40) : '') +
-              ' ' + [s.listen, s.first, s.end].map(function (v) { return v == null ? '-' : v; }).join('/');
+              ' ' + [s.listen, s.first, s.end].map(function (v) { return v == null ? '-' : v; }).join('/') +
+              (s.fed != null ? ' fed' + s.fed + (s.nfed != null ? '/' + s.nfed : '') : '') + (s.vo ? ' v:' + s.vo : '') + (s.off ? ' off:' + s.off : '');
           }
           if (d.textContent !== t) d.textContent = t;
         } catch (e) { /* 只是给人看的一行字 */ }
@@ -272,14 +266,17 @@
       return true;
     } catch (e) { return true; }
   }
-  // ---------- 口语题的本机识别：先关着 ----------
+  // ---------- 口语题的本机识别：第二版重新打开 ----------
   // 2026-11-20 第一版（原生自己用 AVAudioEngine 录音）在老板的 iPhone 上一开始听就停：App 自己的声音会话和网页那一层（WebKit 另一个进程）的
-  // 声音会话互相打断，识别被掐掉，界面停在「请说……」。在改成「网页录音、原生只管识别」之前，口语题照旧走云端识别：
-  // talk.js 的 localSR() 看 localStorage['echo-sr']，这里一打开就写成 'cloud'。要在手机上单独试本机识别：localStorage['echo-sr-try'] = '1'
+  // 声音会话互相打断（没在真机上看到日志，是按代码推的），界面停在「请说……」。当晚的临时版在这里每次打开都写 localStorage['echo-sr'] = 'cloud'。
+  // 第二版改成「网页录音、原生只管识别」（speechFeed），把临时版写的值清掉——只清一次（记号 echo-sr-v2），以后调试时自己设的 'cloud' 照样管用
   try {
-    if (W.localStorage.getItem('echo-sr-try') === '1') W.localStorage.removeItem('echo-sr');
-    else W.localStorage.setItem('echo-sr', 'cloud');
-  } catch (e) { /* 没有存储就算了：talk.js 那边默认会试本机识别 */ }
+    if (!W.localStorage.getItem('echo-sr-v2')) {
+      if (W.localStorage.getItem('echo-sr') === 'cloud') W.localStorage.removeItem('echo-sr');
+      W.localStorage.removeItem('echo-sr-try');
+      W.localStorage.setItem('echo-sr-v2', '1');
+    }
+  } catch (e) { /* 没有存储就算了 */ }
   if (!addStyle()) document.addEventListener('DOMContentLoaded', addStyle);
   document.addEventListener('DOMContentLoaded', function () { addStyle(); fixViewport(); addBeta(); });
   document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });

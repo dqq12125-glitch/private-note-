@@ -12,7 +12,8 @@
 // 8. 工程（project.yml）、Swift 里几处容易出错的地方（WebKit 回调的写法、调试包才能被网页检查器连、被叫停的请求不再回）、自测页覆盖每个方法
 // 9. 订阅（Store.swift）和「通过 Apple 登录」（AppleSignIn.swift）：iPhone 才有的方法（IOS_ONLY 表）三处 + 自测页 + 两份 README 对得上、
 //    finish 只在网页确认以后、没带权限的包当场回 unavailable、本地 App Store（Store.storekit）的商品和打包设置一样；
-//    口语题的本机识别（LocalSpeech.swift，也在 IOS_ONLY 里）：只在手机上识别、答案不交给识别、打断 / 后台当场停、Info.plist 有语音识别的说明
+//    口语题的本机识别（LocalSpeech.swift，也在 IOS_ONLY 里）：只在手机上识别、答案不交给识别、声音由网页送来（speechFeed，原生不碰声音会话、不录音）、
+//    后台当场停、Info.plist 有语音识别的说明、临时版写的 echo-sr = 'cloud' 只清一次
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -61,8 +62,8 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   const IOS_ONLY = {
     iapProducts: ['async', 2], iapBuy: ['async', 3], iapRestore: ['async', 1], iapCurrent: ['async', 1], iapPending: ['async', 1],
     iapFinish: ['async', 2], iapManage: ['async', 1], appleSignIn: ['async', 2], appleCredentialState: ['async', 2],
-    // 口语题的本机识别（LocalSpeech.swift，2026-11-20）
-    speechState: ['async', 1], speechStart: ['async', 2], speechStop: ['async', 1],
+    // 口语题的本机识别（LocalSpeech.swift，2026-11-20；第二版声音由网页 speechFeed 送来）
+    speechState: ['async', 1], speechStart: ['async', 2], speechFeed: ['async', 2], speechStop: ['async', 1],
   };
   const IOSN = Object.keys(IOS_ONLY);
   const ALL = names.concat(IOSN);
@@ -128,17 +129,24 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
     posted[1].a.length === 3 && posted[2].a[1] === '2000000123456789' && posted[3].m === 'appleSignIn' && posted[3].a[0] === 14 && posted[4].a.length === 1,
     'iPhone 才有的也走 messageHandlers.echo：编号转整数，iapProducts 的数组变成 "a,b"，交易编号按字符串传（不丢精度）', posted);
   posted.length = 0;
-  const r3 = N.speechStart(21, JSON.stringify({ short: true })); N.speechState('22'); N.speechStop(23.7);
-  check(!prompts.length && r3 === undefined && posted.length === 3 && posted[0].m === 'speechStart' && posted[0].a[0] === 21 && posted[0].a[1] === '{"short":true}' &&
-    posted[1].m === 'speechState' && posted[1].a[0] === 22 && posted[2].m === 'speechStop' && posted[2].a[0] === 23,
-    '本机识别的三个也走 messageHandlers.echo：选项按 JSON 文字传', posted);
-  // 本机识别在听的时候，网页那一层的声音类别是「边录边放」，停了换回「播放」（navigator.audioSession，假的）
+  const r3 = N.speechStart(21, JSON.stringify({ short: true })); N.speechState('22'); const r4 = N.speechFeed(21.2, 'AAD/fw=='); N.speechStop(23.7);
+  check(!prompts.length && r3 === undefined && r4 === undefined && posted.length === 4 && posted[0].m === 'speechStart' && posted[0].a[0] === 21 && posted[0].a[1] === '{"short":true}' &&
+    posted[1].m === 'speechState' && posted[1].a[0] === 22 && posted[2].m === 'speechFeed' && posted[2].a[0] === 21 && posted[2].a[1] === 'AAD/fw==' &&
+    posted[3].m === 'speechStop' && posted[3].a[0] === 23,
+    '本机识别的四个也走 messageHandlers.echo：选项按 JSON 文字传，speechFeed 带 speechStart 的编号和 base64 的声音、没有返回值', posted);
+  // 第二版：声音归网页（getUserMedia 那一套），echo-native.js 不再有「原生在录音」的声音类别开关
+  check(!('speech' in ctx.__echoIOS) && !/speechOn/.test(shimSrc), 'echo-native.js 没有 __echoIOS.speech 了（本机识别也是网页开麦克风，和云端一样走 getUserMedia 的那一套）');
+  // 临时版（只用云端）写的 localStorage['echo-sr'] = 'cloud'：只清一次（记号 echo-sr-v2），以后自己设的 'cloud' 照样管用
   {
-    const as = { type: 'auto' }, c2 = Object.assign({}, ctx, { navigator: { audioSession: as } });
-    c2.window = c2; delete c2.EchoNative; delete c2.__echoIOS;
-    vm.createContext(c2); vm.runInContext(shimSrc, c2, { filename: 'echo-native.js' });
-    const t0 = as.type; c2.__echoIOS.speech(true); const t1 = as.type; c2.__echoIOS.speech(false); const t2 = as.type;
-    check(t0 === 'playback' && t1 === 'play-and-record' && t2 === 'playback', 'echo-native.js 的 __echoIOS.speech：听的时候 play-and-record，停了回 playback', [t0, t1, t2]);
+    const run = store => {
+      const ls = { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } };
+      const c3 = Object.assign({}, ctx, { localStorage: ls }); c3.window = c3; delete c3.EchoNative; delete c3.__echoIOS;
+      vm.createContext(c3); vm.runInContext(shimSrc, c3, { filename: 'echo-native.js' });
+      return store;
+    };
+    const a1 = run({ 'echo-sr': 'cloud', 'echo-sr-try': '1' }), a2 = run({ 'echo-sr': 'cloud', 'echo-sr-v2': '1' }), a3 = run({});
+    check(!('echo-sr' in a1) && !('echo-sr-try' in a1) && a1['echo-sr-v2'] === '1' && a2['echo-sr'] === 'cloud' && a3['echo-sr-v2'] === '1' && !('echo-sr' in a3),
+      'echo-native.js：第一次打开清掉临时版写的 echo-sr = cloud（记下 echo-sr-v2），之后自己设的 cloud 不动、也不再写', { a1, a2, a3 });
   }
   answer = () => null;
   check(N.edition() === 'sales' && N.micPermission() === 'denied' && N.backupList() === '[]' && N.storage() === '{}',
@@ -172,8 +180,9 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(/lazy var speech = LocalSpeech\(engine: AppleSpeechEngine\(\)\) \{[\s\S]{0,120}emit\("echo-speech"/.test(bridge) &&
     /case "speechStart":[\s\S]{0,200}speech\.start\(sid: id, opts: Bridge\.str\(a, 1\)\)[\s\S]{0,120}self\?\.callback\(gen, id, ok \? "ok" : "fail", Bridge\.json\(body\)\)/.test(bridge) &&
     /case "speechState":[\s\S]{0,120}callback\(h\.gen, Bridge\.int\(a, 0\), "ok", Bridge\.json\(speech\.state\(\)\)\)/.test(bridge) &&
-    /case "speechStop":[\s\S]{0,160}speech\.stop\(reason: "stop"\)/.test(bridge),
-    '本机识别：speechState / speechStart / speechStop 回 window.__echoNative(id, ok / fail, JSON)，过程发事件 echo-speech');
+    /case "speechStop":[\s\S]{0,160}speech\.stop\(reason: "stop"\)/.test(bridge) &&
+    /case "speechFeed":\s*\n\s*speech\.feed\(sid: Bridge\.int\(a, 0\), b64: Bridge\.str\(a, 1\)\)\s*\n\s*case /.test(bridge),
+    '本机识别：speechState / speechStart / speechStop 回 window.__echoNative(id, ok / fail, JSON)，过程发事件 echo-speech；speechFeed 只把声音交给 LocalSpeech、不回话');
   {
     const ls = fs.readFileSync(path.join(SRC, 'LocalSpeech.swift'), 'utf8');
     const code = ls.split(/\r?\n/).map(l => l.replace(/\/\/.*$/, '')).join('\n');   // 不看注释
@@ -181,10 +190,13 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
       'LocalSpeech.swift：只在手机上识别（requiresOnDeviceRecognition = true），手机不支持就回 unavailable，不退回苹果的服务器');
     check(!/contextualStrings|customizedLanguageModel|SFSpeechLanguageModel/.test(code), '诚实打分：识别不知道答案（代码里没有 contextualStrings、自定义语言模型）');
     check(/req\.shouldReportPartialResults = true/.test(code) && /"partial"/.test(code) && /"voice"/.test(code) && /"end"/.test(code), '边说边出字（partial），出声 / 不出声（voice）、停了（end）都发事件');
-    check(/interruptionNotification[\s\S]{0,300}stop\(reason: "interrupted"\)/.test(code) && /didEnterBackgroundNotification[\s\S]{0,200}stop\(reason: "background"\)/.test(code) &&
-      /AVAudioEngineConfigurationChange[\s\S]{0,200}"audio-changed"/.test(code), '来电 / Siri 打断、切到后台、声音设备变了：当场停');
-    check(/AppAudio\.configure\(\)/.test(code) && !/setActive\(false/.test(code) && !/\.measurement|\.voiceChat|setVoiceProcessingEnabled/.test(code),
-      '录音用 AppAudio 的声音会话（边录边放 + 默认扬声器），停了不关会话、不用 measurement / voiceChat：接着放的声音还从扬声器出来、音量不变');
+    check(/didEnterBackgroundNotification[\s\S]{0,200}stop\(reason: "background"\)/.test(code), '切到后台：当场停');
+    // 第二版：声音归网页。第一版自己用 AVAudioEngine 录音、动 App 的声音会话，在老板的 iPhone 上和网页那一层的声音互相打断
+    check(!/AVAudioEngine|installTap|AppAudio|AVAudioSession|AVCaptureDevice|setActive|setCategory|interruptionNotification|mediaServicesWereReset/.test(code),
+      'LocalSpeech.swift 不录音、不碰声音会话（没有 AVAudioEngine / AppAudio / AVAudioSession / 麦克风权限 / 打断的监听）：声音由网页 speechFeed 送来');
+    check(/func feed\(sid: Int, b64: String\)\s*\{\s*\n\s*guard let run = cur, run\.sid == sid, let buf = LocalSpeech\.pcmBuffer\(b64, rate: run\.rate\) else \{ return \}/.test(code) &&
+      /static func pcmBuffer\(_ b64: String, rate: Double\) -> AVAudioPCMBuffer\?/.test(code) && /\.pcmFormatFloat32/.test(code),
+      'speechFeed：编号不对 / 已经停了 / 解不开的不管；16 位 PCM 换成 32 位浮点单声道交给识别');
     check(/protocol SpeechEngine/.test(code) && /final class AppleSpeechEngine: SpeechEngine/.test(code), '识别引擎单独一层（以后换 SpeechAnalyzer 只再写一个 SpeechEngine）');
     check((fs.readFileSync(path.join(SRC, 'GameViewController.swift'), 'utf8').match(/bridge\.speech\.stop\(reason: "page"\)/g) || []).length === 2, '网页进程挂了重建时把本机识别停掉');
   }

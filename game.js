@@ -102,7 +102,7 @@
       'g.fail.key.other': 'AI 打分用不了', 'g.fail.key.line': '{why}，没法打分：请告诉家长',
       'g.fail.mic': '🎤 要先允许回声岛用麦克风，才能开口说', 'g.fail.nokey': '🔑 还没有 AI 密钥，没法自动打分：请家长在设置里粘贴',
       'g.fail.net': '📶 没网，没法打分：连上网再说一次', 'g.fail.busy': '⏳ AI 有点忙，过一会儿再说一次',
-      'g.fail.unheard': '没听清，靠近一点、大声一点再试一次',
+      'g.fail.unheard': '没听清，靠近一点、大声一点再试一次', 'g.fail.stop': '⏹ 停了。准备好了再点话筒说',
       'g.bar.nokey': '🔑 还没有 AI 密钥：口语没法自动打分，请家长在设置里粘贴', 'g.bar.net': '📶 连不上网：口语打分和聊天要联网',
       'g.bar.quota': '💳 AI 额度用完了，请告诉家长', 'g.bar.busy': '⏳ AI 太忙了，过一会儿再试', 'g.bar.code': '🔑 家庭口令不对，请告诉家长',
       'g.bar.auth': '🔑 AI 密钥不对：口语打分和聊天用不了，请告诉家长',
@@ -691,7 +691,7 @@
       'g.fail.key.other': 'AI scoring is not working', 'g.fail.key.line': '{why}, so I cannot score you. Please tell a parent',
       'g.fail.mic': '🎤 Allow Echo Island to use the microphone first, so you can speak', 'g.fail.nokey': '🔑 There is no AI key yet, so I cannot score you automatically. A parent can paste one in Settings',
       'g.fail.net': '📶 No internet, so I cannot score you. Connect and say it again', 'g.fail.busy': '⏳ The AI is a bit busy. Say it again in a moment',
-      'g.fail.unheard': 'I didn\'t catch that. Move closer, speak louder and try again',
+      'g.fail.unheard': 'I didn\'t catch that. Move closer, speak louder and try again', 'g.fail.stop': '⏹ Stopped. Tap the mic when you are ready',
       'g.bar.nokey': '🔑 No AI key yet: speaking cannot be scored automatically. A parent can paste one in Settings', 'g.bar.net': '📶 No connection: scoring and Chat need the internet',
       'g.bar.quota': '💳 The AI credit has run out. Please tell a parent', 'g.bar.busy': '⏳ The AI is too busy. Try again in a moment', 'g.bar.code': '🔑 The family code is wrong. Please tell a parent',
       'g.bar.auth': '🔑 The AI key is wrong: scoring and Chat do not work. Please tell a parent',
@@ -2085,7 +2085,7 @@
     if (f === 'nokey') return tr('g.fail.nokey');
     if (f === 'net') return tr('g.fail.net');
     if (f === 'key') return w === 'busy' ? tr('g.fail.busy') : (w === 'quota' ? '💳 ' : '🔑 ') + tr('g.fail.key.line', { why: KEY_TXT[w] || tr('g.fail.key.other') });
-    if (f === 'stop') return '';
+    if (f === 'stop') return tr('g.fail.stop');   // 自己点了停：也写一句，别让「正在听……」那一行一直留着（对战、大地图的提示只在有字时才换）
     return tr('g.fail.unheard');
   }
   // 「先跳过」按钮上的字：和大地图（world.js）的 w.aiskip 是同一句，字表里只有一份

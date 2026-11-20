@@ -22,11 +22,11 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
     static let asyncMethods = ["wsOpen", "wsSend", "wsClose", "post",
                                "iapProducts", "iapBuy", "iapRestore", "iapCurrent", "iapPending", "iapFinish", "iapManage",
                                "appleSignIn", "appleCredentialState",
-                               "speechState", "speechStart", "speechStop"]
+                               "speechState", "speechStart", "speechFeed", "speechStop"]
     // 上面这些里 iPhone 才有的（安卓的 MainActivity 里没有；以后安卓接 Google Play 结算再说）
     static let iosOnlyMethods = ["iapProducts", "iapBuy", "iapRestore", "iapCurrent", "iapPending", "iapFinish", "iapManage",
                                  "appleSignIn", "appleCredentialState",
-                                 "speechState", "speechStart", "speechStop"]
+                                 "speechState", "speechStart", "speechFeed", "speechStop"]
     // 销售版（公开发的版本，ECHO_EDITION 不写就是它）：没有打包的密钥和家长密码，家长在首次设置向导里设
     static let sales = BuildConfig.edition != "family"
     static let shareTextMax = 8000                       // 比这长的文字改成文件分享（整个存档当文字发不出去）
@@ -44,7 +44,7 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
     private(set) lazy var net = DashScope { [weak self] gen, id, type, data in self?.callback(gen, id, type, data) }
     // 「通过 Apple 登录」的面板挂在游戏画面的窗口上
     private lazy var apple = AppleSignIn { [weak self] in self?.host?.view.window }
-    // 口语题的本机识别（LocalSpeech.swift）：过程（边说边出的字、出声 / 不出声、停了）用事件 echo-speech 发给网页
+    // 口语题的本机识别（LocalSpeech.swift，只管识别，声音由网页录了送来）：过程（边说边出的字、出声 / 不出声、停了）用事件 echo-speech 发给网页
     private(set) lazy var speech = LocalSpeech(engine: AppleSpeechEngine()) { [weak self] detail in
         self?.emit("echo-speech", "JSON.parse(" + Bridge.jsStr(Bridge.json(detail)) + ")")
     }
@@ -277,12 +277,15 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
         case "appleCredentialState":
             let gen = h.gen, id = Bridge.int(a, 0)
             apple.credentialState(user: Bridge.str(a, 1)) { [weak self] ok, json in self?.callback(gen, id, ok ? "ok" : "fail", json) }
-        // ---- 口语题的本机识别（iPhone 才有，LocalSpeech.swift）：结果 window.__echoNative(id, 'ok' / 'fail', JSON)，过程是事件 echo-speech ----
+        // ---- 口语题的本机识别（iPhone 才有，LocalSpeech.swift）：结果 window.__echoNative(id, 'ok' / 'fail', JSON)，过程是事件 echo-speech。
+        //      麦克风归网页：网页录到的声音用 speechFeed 一段段送来（不回话，和 wsSend 一样） ----
         case "speechState":
             callback(h.gen, Bridge.int(a, 0), "ok", Bridge.json(speech.state()))
         case "speechStart":
             let gen = h.gen, id = Bridge.int(a, 0)
             speech.start(sid: id, opts: Bridge.str(a, 1)) { [weak self] ok, body in self?.callback(gen, id, ok ? "ok" : "fail", Bridge.json(body)) }
+        case "speechFeed":
+            speech.feed(sid: Bridge.int(a, 0), b64: Bridge.str(a, 1))
         case "speechStop":
             let had = speech.stop(reason: "stop")
             callback(h.gen, Bridge.int(a, 0), "ok", Bridge.json(["stopped": had]))

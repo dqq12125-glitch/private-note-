@@ -319,8 +319,8 @@ final class ShellLogicTests: XCTestCase {
     @MainActor
     func testBridgeMethodTables() {
         XCTAssertEqual(Bridge.syncMethods.count, 22)
-        XCTAssertEqual(Bridge.asyncMethods.count, 4 + 12)
-        XCTAssertEqual(Bridge.iosOnlyMethods.count, 12, "订阅、登录 9 个 + 口语题的本机识别 3 个")
+        XCTAssertEqual(Bridge.asyncMethods.count, 4 + 13)
+        XCTAssertEqual(Bridge.iosOnlyMethods.count, 13, "订阅、登录 9 个 + 口语题的本机识别 4 个")
         XCTAssertTrue(Set(Bridge.iosOnlyMethods).isSubset(of: Bridge.asyncMethods), "iPhone 才有的都是异步的")
         XCTAssertTrue(Set(Bridge.syncMethods).isDisjoint(with: Bridge.asyncMethods))
         let b = Bridge()

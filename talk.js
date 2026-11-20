@@ -1333,10 +1333,15 @@
   // · 打分照样诚实：识别不知道答案（原生那边不设 contextualStrings），打分还是 game.js 的 scoreSpeech()。
   // · 什么时候算说完由这里定，不等苹果的「最终结果」：有字以后字停住不变 0.4 秒（单词）/ 0.6 秒（句子）/ 1.5 秒（说几句话），
   //   并且原生说人已经不出声了（voice 事件；一直「在出声」最多再等 1.2 秒，免得吵的地方停不下来）；对上答案（o.match）当场结束。
-  // · 本机开不起来（这台手机没有本机识别、没给语音识别的权限、正在弹框、录音开不起来、超时）：同一次里接着走云端识别，孩子不用再点一下；
-  //   「没有 / 不允许」（unavailable / denied / restricted）这次打开 App 记住，不再每题先试本机（回到前台再问一次原生，打开了就又用本机）。
-  //   麦克风被拒是例外：云端也要麦克风，直接按「麦克风被拒」回（game.js 弹「去打开」）。
-  // · 每次识别的计时（点了到开始听、第一个字、结束、最后一个字到结束）留在内存里：EchoTalk.lastSpeech() / speechLog()，不上传。
+  // · 麦克风归网页（第二版，2026-11-20 晚）：和云端识别同一套 lmOpen 开麦克风，录到的声音换成 16kHz 16 位 PCM，每 0.1 秒一段用 speechFeed 送给原生；
+  //   原生还没说「开好了」之前录到的先存着，一说好就补发。原生一点声音会话都不碰（第一版原生自己录音，在老板的 iPhone 上和网页那一层的声音互相打断，
+  //   一点话筒就停在「请说……」）。麦克风的权限也是网页的（getUserMedia），被拒了和云端一样弹「去打开」。
+  // · 不让学的人卡住：本机这一次没认出字，除了 ① 学的人自己点了停、② 真的没说话（网页没量到人声、原生也没说出声），
+  //   一律同一次里接着走云端识别（录好的声音一起交过去，不用再说一遍）；云端用不了就按「没听清」回（有提示、算一次尝试）。
+  //   原因记在 D.fell。「没有 / 不允许」（unavailable / denied / restricted）这次打开 App 记住，不再每题先试本机（回到前台再问一次原生，打开了就又用本机）；
+  //   别的原因（原生出错、没认出字、开不起来、超时）连着两次也记住（off = 'fails'），这次打开 App 不再试本机。
+  // · 每次识别的计时（点了到开始听、第一个字、结束、最后一个字到结束）和本机那几样（送了几段声音、有没有人声）留在内存里：
+  //   EchoTalk.lastSpeech() / speechLog()，不上传；测试版的版本角标显示最近一次的（echo-native.js 的 addBeta）。
   // · 想对比时可以临时关掉本机识别：localStorage['echo-sr'] = 'cloud'（只给调试用，界面上没有开关）。
   const NSP = { st: null, off: '', fails: 0 };
   const SRLOG = [];
@@ -1349,51 +1354,91 @@
     return nativeCall('speechState', [], 4000).then(r => {
       if (r.type !== 'ok') return NSP.st;
       try { NSP.st = JSON.parse(r.data || '{}'); } catch (e) { return NSP.st; }
-      // 家长后来在「设置」里打开了语音识别 / 手机能用了：不再记着「用不了」
-      if (NSP.off && nspUsable(NSP.st) && NSP.st.auth === 'authorized' && NSP.st.available !== false) { NSP.off = ''; NSP.fails = 0; }
+      // 家长后来在「设置」里打开了语音识别 / 手机能用了：不再记着「用不了」（连着两次没认出来的 'fails' 这次打开 App 一直记着）
+      if (NSP.off && NSP.off !== 'fails' && nspUsable(NSP.st) && NSP.st.auth === 'authorized' && NSP.st.available !== false) { NSP.off = ''; NSP.fails = 0; }
       return NSP.st;
     });
   }
-  // 本机识别一次：→ { text, err, how }；本机开不起来、要改走云端时 → null（D.fell 写着原因）
+  // 本机识别一次：→ { text, err, how }；本机没认出字、要改走云端时 → null（D.fell 写着原因；D.micP 是开麦克风的那一次、D.pre 是已经录好的声音，云端接着用）
+  const PRE_SEC = 20;   // 给云端接着用的声音最多存多少秒
   function nativeListen(o, D) {
     return new Promise(resolve => {
       const N = window.EchoNative, id = ++nid, now = () => performance.now();
       const short = !!o.short, need = o.long ? 1500 : short ? 400 : 600;
-      let done = false, started = 0, text = '', chg = 0, voice = false, tick = 0, tm = 0, raw = '';
-      const segs = [];
+      let done = false, nok = false, mic = null, started = 0, text = '', chg = 0, voice = false, tick = 0, tm = 0, raw = '';
+      let pend = [], pendN = 0, q = [], preN = 0, loudN = 0;
+      const segs = [], pre = [], st = { pos: 0 };
+      D.eng = 'device'; D.fed = 0;
       const first = s => (s.split(' ')[0] || '').toLowerCase();
-      const io = window.__echoIOS;
-      const audio = on => { try { if (io && io.speech) io.speech(on); } catch (e) { /* 老的壳子 */ } };
       const stopNative = () => { try { N.speechStop(++nid); } catch (e) { /* 不在 App 里 */ } };
-      const cleanup = () => { window.removeEventListener('echo-speech', onEv); clearInterval(tick); clearTimeout(tm); delete NWS[id]; if (SR.stop === userStop) SR.stop = null; audio(false); };
-      const finish = how => {
+      const cleanup = () => { window.removeEventListener('echo-speech', onEv); clearInterval(tick); clearTimeout(tm); delete NWS[id]; if (SR.stop === userStop) SR.stop = null; };
+      // 有没有人声：网页量到的（响过 0.2 秒以上）或者原生说出过声
+      const heardVoice = () => (mic && loudN >= mic.rate * 0.2) || D.voice != null;
+      const vo = () => ((mic && loudN >= mic.rate * 0.2 ? 'w' : '') + (D.voice != null ? 'n' : '')) || '-';
+      // 结束、不改走云端：麦克风照云端那样预热着（15 秒内再点不用重开）
+      const end = r => {
         if (done) return; done = true;
-        stopNative(); cleanup();
-        const t = text.trim();
-        // 被来电 / Siri 打断、切到后台：说了一半的不拿去打分（不算一次尝试，孩子回来再说）
-        if (t && how !== 'interrupted') { NSP.fails = 0; resolve({ text: t, err: null, how, ms: Math.round(now() - D.t0) }); return; }
-        resolve({ text: '', err: how === 'user' || how === 'interrupted' ? 'aborted' : 'no-speech', how });
+        stopNative(); cleanup(); D.vo = vo();
+        if (mic) lmRelease();
+        resolve(r);
       };
-      // 开不起来：改走云端（null）；「没有 / 不允许」记住
+      // 本机没认出字：改走云端（null）。麦克风接着录，录到的存进 D.pre（cloudListen 接手时一起交过去）；「没有 / 不允许」、连着两次没认出来记住
       const fall = code => {
         if (done) return; done = true;
-        cleanup();
-        D.fell = code || 'error';
+        stopNative(); cleanup();
+        D.fell = code || 'error'; D.vo = vo(); D.pre = pre;
         if (code === 'unavailable' || code === 'denied' || code === 'restricted') NSP.off = code;
-        else if (code === 'audio' && ++NSP.fails >= 2) NSP.off = 'audio';
-        if (code === 'mic') { D.eng = 'device'; resolve({ text: '', err: 'not-allowed', why: 'NotAllowedError', how: 'mic' }); return; }
+        else if (code !== 'end-background' && ++NSP.fails >= 2) NSP.off = 'fails';
         resolve(null);
       };
-      // 孩子点了停：开始听了就拿已经听到的打分；还在等原生开起来（弹权限框）就整个不要了，也不改走云端
-      const userStop = () => {
-        if (started) { finish('user'); return; }
+      // 怎么结束的：有字就打分；学的人点了停 → aborted；按计时结束（silence / max / done）又真的没说话 → 没听清；别的一律改走云端
+      const QUIET = { silence: 1, max: 1, done: 1 };
+      const finish = how => {
         if (done) return;
-        done = true; stopNative(); cleanup();
-        resolve({ text: '', err: 'aborted', how: 'user' });
+        const t = text.trim();
+        if (t) { NSP.fails = 0; end({ text: t, err: null, how, ms: Math.round(now() - D.t0) }); return; }
+        if (how === 'user') { end({ text: '', err: 'aborted', how }); return; }
+        if (!heardVoice() && (QUIET[how] || (how === 'error' && /\b1110\b/.test(D.nerr || '')))) { end({ text: '', err: 'no-speech', how }); return; }
+        fall(QUIET[how] ? 'notext' : how);
+      };
+      const userStop = () => finish('user');
+      const feed = b => { D.fed++; try { N.speechFeed(id, b); } catch (e) { /* 老的壳子没有 speechFeed */ } };
+      // 麦克风的每一小块（AudioWorklet，浮点）：先存一份（改走云端时用），量一下响不响，攒够 0.1 秒换成 16kHz 16 位 PCM 送给原生（原生还没开好就先排着）
+      const sink = d => {
+        if (preN < mic.rate * PRE_SEC) { pre.push(d); preN += d.length; }
+        if (done) return;   // 已经改走云端：只存着，等 cloudListen 接手
+        let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
+        if (Math.sqrt(sum / d.length) > 0.02) loudN += d.length;
+        pend.push(d); pendN += d.length;
+        if (pendN >= mic.rate * 0.1) {
+          const f = new Float32Array(pendN); let p = 0; pend.forEach(c => { f.set(c, p); p += c.length; });
+          pend = []; pendN = 0;
+          const b = u8b64((x => new Uint8Array(x.buffer, x.byteOffset, x.byteLength))(pcm16(f, mic.rate, st)));
+          if (nok) feed(b); else if (q.length < 150) q.push(b);
+        }
+      };
+      // 原生开好了、麦克风也开好了：开始计时
+      const ready = () => {
+        if (done || !nok || !mic || started) return;
+        started = now(); D.listen = started - D.t0;
+        if (o.onState) o.onState(tx('tk.asr.say'));
+        tick = setInterval(check, 50);
+      };
+      // 开麦克风（和云端识别同一个 lmOpen）。被拒 → not-allowed（game.js 弹「去打开」）
+      const openMic = () => {
+        D.micP = lmOpen();
+        D.micP.then(m => {
+          if (m.err) { if (!done) end({ text: '', err: m.err, why: m.why, how: 'mic' }); return; }
+          if (done && !D.pre) { lmRelease(); return; }   // 麦克风开好以前就结束了
+          mic = m; D.mic = now() - D.t0;
+          m.sink = sink;   // 已经改走云端的：sink 只往 D.pre 里存
+          ready();
+        });
       };
       const onEv = e => {
         const d = e && e.detail;
-        if (!d || d.sid !== id || done || !started) return;
+        if (!d || d.sid !== id || done) return;
+        if (d.fed != null) D.nfed = d.fed;
         if (d.kind === 'partial' || d.kind === 'final') {
           const p = String(d.text || '').replace(/\s+/g, ' ').trim();
           // 手机上的识别在人停顿一下以后，有时从头另起一段（新的字不接着前面的）：前面那段先留着、拼在一起。
@@ -1412,11 +1457,9 @@
           voice = !!d.on;
           if (voice && D.voice == null) D.voice = now() - D.t0;
         } else if (d.kind === 'error') {
-          D.nerr = String(d.code || '');
-          // 原生自己出错（不是「没听到声音」那种）：连着两次没拿到字就先不用本机了
-          if (!text && !/\b1110\b/.test(D.nerr) && ++NSP.fails >= 2) NSP.off = 'error';
+          D.nerr = String(d.code || '');   // 比如 kAFAssistantErrorDomain 1101（手机上没有识别模型）；1110 是「没听到说话」
           finish('error');
-        } else if (d.kind === 'end') finish(d.reason === 'interrupted' || d.reason === 'background' || d.reason === 'audio-reset' ? 'interrupted' : 'end');
+        } else if (d.kind === 'end') finish('end-' + (d.reason || 'end'));   // 原生自己停了（切后台、最终结果是空的……）
       };
       // 每 50 毫秒看一眼：说完了没有、太久没有
       const check = () => {
@@ -1427,25 +1470,31 @@
         const still = t - chg;
         if (still >= need && (!voice || still >= need + 1200)) finish('done');
       };
-      lmShut();       // 云端识别预热着的网页麦克风先放掉：这次原生自己录
-      audio(true);
       window.addEventListener('echo-speech', onEv);
       SR.stop = userStop;
-      // 第一次要弹「语音识别」和麦克风的权限框：等久一点；平时 5 秒还没开起来就改走云端
-      const st = NSP.st, asks = !st || st.auth !== 'authorized' || st.mic !== 'granted';
-      tm = setTimeout(() => { if (!started) { stopNative(); fall('timeout'); } }, asks ? 60000 : 5000);
+      // 第一次要弹「语音识别」的权限框：等久一点，而且等原生问完再开麦克风（两个系统框不一起弹）；平时麦克风和原生一起开，5 秒原生还没开好就改走云端
+      const ns = NSP.st, asks = !ns || ns.auth !== 'authorized';
+      tm = setTimeout(() => { if (!nok) fall('timeout'); }, asks ? 60000 : 5000);
       NWS[id] = (type, data) => {
         delete NWS[id]; clearTimeout(tm);
         let j = {}; try { j = JSON.parse(data || '{}') || {}; } catch (e) { j = {}; }
         if (done) { if (type === 'ok') stopNative(); return; }
         if (type !== 'ok') { fall(String(j.error || 'error')); return; }
-        started = now(); D.eng = 'device'; D.listen = started - D.t0; D.nms = j.ms;
-        NSP.st = Object.assign(NSP.st || { onDevice: true }, { auth: 'authorized', mic: 'granted' });   // 开起来了：权限都有了（下次不用等弹框那么久）
-        if (o.onState) o.onState(tx('tk.asr.say'));
-        tick = setInterval(check, 50);
+        nok = true; D.nok = now() - D.t0; D.nms = j.ms;
+        NSP.st = Object.assign(NSP.st || { onDevice: true }, { auth: 'authorized' });   // 开起来了：语音识别的权限有了（下次不用等弹框那么久）
+        q.forEach(feed); q = [];   // 开好以前录到的补发
+        if (!D.micP) openMic();
+        ready();
       };
-      try { N.speechStart(id, JSON.stringify({ short, long: !!o.long, locale: 'en-US' })); } catch (e) { fall('error'); }
+      if (!asks) openMic();
+      try { N.speechStart(id, JSON.stringify({ short, long: !!o.long, locale: 'en-US', rate: 16000 })); } catch (e) { fall('error'); }
     });
+  }
+  // 本机识别没认出字、云端又接不上：录好的声音不要了，麦克风照常预热着
+  function dropPre(D) {
+    if (!D || !D.pre) return;
+    D.pre = null;
+    lmRelease();
   }
   // 记一次识别的计时（只在内存里，最近 20 次）：listen 点了到开始听、first 第一个字、end 结束、lag 最后一个字变了到结束（说完以后等了多久）
   function srNote(D, r) {
@@ -1453,6 +1502,8 @@
     const rec = { at: D.at, eng: D.eng || '', short: D.short, how: (r && r.how) || '', ok: !!(r && r.text), err: (r && r.err) || '', fell: D.fell || '',
       listen: ms(D.listen), first: ms(D.first), voice: ms(D.voice), end: ms(now - D.t0), lag: D.chg ? ms(now - D.chg) : null, ready: ms(D.ready), nms: D.nms == null ? null : D.nms };
     if (D.nerr) rec.nerr = D.nerr;
+    // 本机识别那几样（试过本机才有）：开麦克风 / 原生开好用了几毫秒、送过去几段声音、原生说收到几段、有没有人声（w 网页 / n 原生 / - 没有）、这次打开 App 还用不用本机
+    if (D.fed != null) Object.assign(rec, { mic: ms(D.mic), nok: ms(D.nok), fed: D.fed, nfed: D.nfed == null ? null : D.nfed, vo: D.vo || '', off: NSP.off || '' });
     SRLOG.push(rec); if (SRLOG.length > 20) SRLOG.shift();
     if (r) r.eng = rec.eng;
     return r;
@@ -1472,18 +1523,23 @@
     let r = null;
     if (localSR() && !C) r = await nativeListen(o, D);
     if (!r && D.fell) {
-      // 本机开不起来，云端又用不了（没有密钥 / 云端模式没登录）：和以前没有 AI 时一样（game.js 走「先跳过」、请他登录）
-      if (!cloudSR()) r = { text: '', err: 'nokey', why: 'nokey' };
-      else if (cloudOn() && !(ACC() && ACC().signed())) r = { text: '', err: 'nokey', why: 'signin' };
+      // 本机没认出字，云端又用不了（没有密钥 / 云端模式没登录）：
+      //   本机这次打开 App 不用了（unavailable / denied / 连着两次）→ 和以前没有 AI 时一样（game.js 走「先跳过」、请他登录）；
+      //   本机还能用（只是这一次没认出来）→ 按「没听清」回：有提示、算一次尝试，再说一次
+      const why = !cloudSR() ? 'nokey' : cloudOn() && !(ACC() && ACC().signed()) ? 'signin' : '';
+      if (why) { dropPre(D); r = NSP.off ? { text: '', err: 'nokey', why } : { text: '', err: 'no-speech', why: 'device', how: D.fell }; }
     }
     if (!r) { D.eng = 'cloud'; r = await cloudListen(o, D); }
+    // 没拿到字：把「🎤 请说……」「🎧 识别中……」那一行清掉（每个调用的地方都显示这一行，不清就像卡住了；提示由调用的地方按 fail 写）
+    if (r && !r.text && o.onState) { try { o.onState(''); } catch (e) { /* 页面已经换了 */ } }
     return srNote(D, r);
   }
   async function cloudListen(o, D) {
-    if (!cloudSR()) return { text: '', err: 'service-not-allowed' };
-    if (cloudOn() && !(ACC() && ACC().signed())) return { text: '', err: 'network', why: noteAi('asr', '{"error":"auth"}') };   // 云端模式没登录：不开麦克风
-    if (C) return { text: '', err: 'busy' };   // 正在和岛民聊天，麦克风被占着
-    const mic = await lmOpen();
+    if (!cloudSR()) { dropPre(D); return { text: '', err: 'service-not-allowed' }; }
+    if (cloudOn() && !(ACC() && ACC().signed())) { dropPre(D); return { text: '', err: 'network', why: noteAi('asr', '{"error":"auth"}') }; }   // 云端模式没登录：不开麦克风
+    if (C) { dropPre(D); return { text: '', err: 'busy' }; }   // 正在和岛民聊天，麦克风被占着
+    // iPhone 的本机识别没认出字、接着走这里：用它开着的那个麦克风，它录好的声音（D.pre）先补进来
+    const mic = D.micP ? await D.micP : await lmOpen();
     if (mic.err) return { text: '', err: mic.err, why: mic.why };
     D.listen = performance.now() - D.t0;
     const rate = mic.rate, chunks = [], st = { pos: 0 }, t0 = performance.now();
@@ -1557,7 +1613,10 @@
         if (now - t0 > (o.maxMs || 8000)) finish('max');
         else if (voiced < 3 && now - t0 > 5000) finish('silence');
       };
-      if (o.onState) o.onState(tx('tk.asr.say'));
+      // 本机识别录好的声音（没认出字才到这里）：先按原来的顺序补进来，再接着录。里面已经有人声就显示「识别中」，不叫人再说一遍
+      const pre = D.pre; D.pre = null;
+      if (pre) pre.forEach(d => mic.sink(d));
+      if (o.onState && !done) o.onState(tx(pre && voiced >= 3 ? 'tk.asr.busy' : 'tk.asr.say'));
     });
   }
 

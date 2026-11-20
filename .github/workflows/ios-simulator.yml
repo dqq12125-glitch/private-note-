@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - 'echo-island/next'
+      - 'echo-island/speech2'
     paths:
       - 'ios/**'
       - '.github/workflows/ios-simulator.yml'

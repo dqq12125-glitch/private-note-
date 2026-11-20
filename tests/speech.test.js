@@ -1,10 +1,14 @@
 // iPhone 口语题的本机识别（2026-11-20，老板：「那个识别，还是太慢了，有时候还不准」）：
 // 原生 ios/App/Sources/LocalSpeech.swift（手机自带的语音识别，只在手机上识别）+ talk.js 的 nativeListen。这里用假的原生桥
-// （tests/fake-native.js 的 platform 'ios'，S.speech 按时间发 echo-speech 事件）走一遍网页这一侧：
-//  1. iPhone 上口语题先用本机识别（没网、云端连不上也行）：边说边出字、对上答案当场结束、不连阿里云、不算 AI 用量、计时记录
+// （tests/fake-native.js 的 platform 'ios'，S.speech 按时间发 echo-speech 事件、记下 speechFeed 送来的每段声音）走一遍网页这一侧。
+// 第二版（2026-11-20 晚）：麦克风归网页（和云端识别同一个 lmOpen），声音一段段 speechFeed 给原生；原生只管识别。
+//  1. iPhone 上口语题先用本机识别（没网、云端连不上也行）：边说边出字、对上答案当场结束、不连阿里云、不算 AI 用量、计时记录；
+//     网页开了麦克风，原生回 ok 以前录到的先存着、回了一起补发、之后接着送（16 位 PCM）；第一次要弹权限框时等原生问完再开麦克风
 //  2. 读错了不给过（识别不知道答案，打分照样按 scoreSpeech）
-//  3. 什么时候算说完：字停住 0.4 秒（单词）/ 0.6 秒（句子）、还在出声多等（最多 1.2 秒）、不出声了就结束、一直没说话 5 秒、被打断不打分
-//  4. 本机开不起来（unavailable / denied / audio）同一次里改走云端识别，孩子不用再点；unavailable / denied 记住；麦克风被拒直接弹「去打开」
+//  3. 什么时候算说完：字停住 0.4 秒（单词）/ 0.6 秒（句子）、还在出声多等（最多 1.2 秒）、不出声了就结束、真的没说话 5 秒、原生自己停了有字就打分；
+//     没拿到字时「请说……」那一行清掉，每种结果 game.js 都有一句提示（只有学的人自己点了停是「停了」）
+//  4. 本机开不起来（unavailable / denied / busy）、原生出错、没认出字但有人声：同一次里接着走云端识别（用同一个麦克风、录好的声音一起交过去），孩子不用再点；
+//     unavailable / denied 记住；别的原因连着两次也记住；麦克风被拒直接弹「去打开」；云端又用不了时按「没听清」回
 //  5. 云端模式不登录、没网也能做口语题（本机）；本机用不了时照旧请他登录、先跳过
 //  6. 开口前的小检查、设置页、周报诊断一行写着「本机识别」；家长须知多一句「声音不上传」
 //  7. 安卓（没有本机识别）、网页版：和以前一样走云端识别
@@ -55,13 +59,19 @@ function applyFake() {
   new MutationObserver(() => { const h = document.getElementById('heard'); const t = h ? h.textContent : ''; if (t && window.__heard[window.__heard.length - 1] !== t) window.__heard.push(t); })
     .observe(document, { subtree: true, childList: true, characterData: true });
 }
-// 假麦克风（云端识别那条路要用）：一直有 320Hz 的声音
+// 假麦克风（本机、云端识别都用网页的麦克风）：一直有 320Hz 的声音；window.__micLevel(0) 变成没声音（「真的没说话」）
 function fakeMic() {
   const md = navigator.mediaDevices; if (!md) return;
+  const gains = [];
+  let level = 0.3;
+  window.__micLevel = v => { level = v; gains.forEach(g => { g.gain.value = v; }); };
   md.getUserMedia = async () => {
+    window.__micAt = window.__micAt || [];
+    window.__micAt.push(Date.now());
     if (localStorage.getItem('__mic') === 'deny') throw new DOMException('Permission denied', 'NotAllowedError');
     const ac = new AudioContext(), dest = ac.createMediaStreamDestination(), osc = ac.createOscillator(), g = ac.createGain();
-    osc.frequency.value = 320; g.gain.value = 0.3; osc.connect(g); g.connect(dest); osc.start();
+    osc.frequency.value = 320; g.gain.value = level; osc.connect(g); g.connect(dest); osc.start();
+    gains.push(g);
     window.__micOpens = (window.__micOpens || 0) + 1;
     return dest.stream;
   };
@@ -141,7 +151,8 @@ function fakeCloud() {
   await p.goto(PAGE);
 
   // ---------- 1. 本机识别：边说边出字、对上答案当场结束、不连阿里云 ----------
-  await load(BASE(), { fake: { speech: { state: ON, start: 'ok', script: [] } } });
+  // 原生建识别任务用 0.3 秒（startMs）：这段时间网页的麦克风已经在录，录到的要先存着、回 ok 时一起补发
+  await load(BASE(), { fake: { speech: { state: ON, start: 'ok', startMs: 300, script: [] } } });
   check(await E(() => window.ECHO_IOS === 1 && window.EchoTalk.localSR() && window.EchoTalk.speechState().onDevice === true),
     'iPhone + 本机识别能用：EchoTalk.localSR() 是 true（开机时问过一次 speechState，不弹框）', await E(() => window.EchoTalk.speechState()));
   let target = await question(0);
@@ -164,8 +175,24 @@ function fakeCloud() {
   check(c.includes('speechStart') && !c.includes('wsOpen') && !c.includes('post'), '用的是原生的本机识别：没连阿里云（wsOpen / post 都没调），云端连不上也不要紧', c.filter(x => /speech|ws|post/.test(x)));
   let l = await L();
   check((l.asrN || 0) === asr0 && l.srDev === 1 && !l.srCloud, '本机识别不算 AI 用量（asrN 没变），周报的计数记了本机 1 次', l);
-  check(await E(() => window.__micOpens || 0) === 0, '网页没有另开麦克风（录音是原生自己录的）');
+  // 麦克风归网页：开了一次麦克风，声音一段段送给原生（回 ok 以前录到的先存着、回了一起补发、之后接着送）
+  a = await E(() => { const F = window.__fakeNative.speech; return { feeds: F.feeds.slice(), early: F.early, okAt: Object.assign({}, F.okAt), mics: window.__micOpens || 0, opts: F.log.filter(x => x.m === 'speechStart').map(x => x.opts) }; });
+  const sid1 = Object.keys(a.okAt).map(Number)[0], f1 = a.feeds.filter(f => f.sid === sid1), ok1 = a.okAt[sid1];
+  check(a.mics === 1, '网页开了一次麦克风（和云端识别同一个 lmOpen），不是原生自己录', a.mics);
+  check(a.early === 0 && f1.length >= 3 && f1.every(f => f.at >= ok1), '原生回 ok 以前一段都没送（先存着），回 ok 以后才送：' + f1.length + ' 段', { early: a.early, n: f1.length });
+  check(f1.filter(f => f.at - ok1 < 40).length >= 1 && f1.some(f => f.at - ok1 >= 150), '回 ok 那一下把存着的补发了，之后接着一段段送', f1.map(f => f.at - ok1));
+  check(f1.every(f => f.bytes >= 3000 && f.bytes % 2 === 0) && f1.some(f => Math.abs(f.s0) > 50), '每段约 0.1 秒的 16kHz 16 位 PCM（3000 多字节、偶数），有声音', f1.slice(0, 3));
+  check(a.opts.every(x => x.rate === 16000 && x.locale === 'en-US'), 'speechStart 告诉原生送来的声音是 16kHz', a.opts);
+  check(s.fed === f1.length && s.vo && s.vo !== '-' && s.off === '' && s.mic != null && s.nok != null, 'lastSpeech() 记着送了几段（fed）、有没有人声、开麦克风 / 原生开好用了多久（版本角标显示这些）', s);
   await p.screenshot({ path: out + '/speech-native-pass.png' });
+  // 第一次要弹「语音识别」的权限框（还没问过）：等原生问完（回 ok）再开麦克风，两个系统框不一起弹
+  await load(BASE(), { fake: { speech: { state: Object.assign({}, ON, { auth: 'notDetermined' }), start: 'ok', startMs: 250, script: [] } } });
+  target = await question(0);
+  await fake({ speech: { script: [[600, 'partial', target]] } });
+  await p.click('#mic');
+  check(await until(() => E(() => window.EchoGame.P().answered), 40, 50), '第一次（要弹权限框）：照样说对就过');
+  a = await E(() => { const F = window.__fakeNative.speech; return { okAt: Object.values(F.okAt)[0], micAt: (window.__micAt || [])[0], fed: F.feeds.length }; });
+  check(a.micAt >= a.okAt && a.fed >= 1, '第一次：原生问完权限、回了 ok 才开麦克风', a);
 
   // ---------- 2. 读错了不给过 ----------
   target = await question(1); w = words(target);
@@ -185,9 +212,10 @@ function fakeCloud() {
   await E(() => { window.EchoGame.closeModal(); window.EchoGame.goHome(); });
   const listen = (script, o) => E(async ([script, o]) => {
     Object.assign(window.__fakeNative.speech, { script });
-    const t0 = performance.now();
-    const r = await window.EchoTalk.listenOnce(Object.assign({ match: () => false }, o));
-    return { r, ms: Math.round(performance.now() - t0), s: window.EchoTalk.lastSpeech() };
+    const t0 = performance.now(), states = [];
+    const r = await window.EchoTalk.listenOnce(Object.assign({ match: () => false, onState: t => states.push(t) }, o));
+    const A = window.EchoGame.A;
+    return { r, ms: Math.round(performance.now() - t0), s: window.EchoTalk.lastSpeech(), last: states[states.length - 1], hint: A.hint({ fail: A.failOf(r), why: r.why }) };
   }, [script, o || {}]);
   let x = await listen([[100, 'partial', 'apple']], { short: true });
   check(x.r.text === 'apple' && x.r.eng === 'device' && x.s.lag >= 380 && x.s.lag < 650, '单词：字停住 0.4 秒就结束（' + x.s.lag + ' 毫秒）', x);
@@ -203,18 +231,33 @@ function fakeCloud() {
   check(x.r.text === 'I like to apples', '停顿以后手机的识别从头另起一段（「apples」）：前面那段留着、拼在一起', x.r);
   x = await listen([[100, 'partial', 'I lie'], [500, 'partial', 'I like']], {});
   check(x.r.text === 'I like', '平常的改字（第一个词没变）：不当成另起一段', x.r);
-  x = await listen([[100, 'partial', 'I like'], [250, 'end', 'interrupted']], {});
-  check(x.r.err === 'aborted' && !x.r.text, '被来电 / Siri 打断：说了一半的不拿去打分（aborted，不算一次尝试）', x.r);
+  x = await listen([[100, 'partial', 'I like'], [250, 'end', 'background']], {});
+  check(x.r.text === 'I like' && x.s.how === 'end-background', '原生自己停了（切后台）：已经听到的字照样打分，不会停在「请说……」', x);
   x = await listen([[100, 'partial', 'Hello'], [200, 'final', 'Hello there']], {});
   check(x.r.text === 'Hello there' && x.s.how === 'final', '原生给了最终结果：用它', x);
+  await E(() => window.__micLevel(0));
   x = await listen([], { short: true });
-  check(x.r.err === 'no-speech' && x.s.how === 'silence' && x.ms >= 4900 && x.ms < 6500, '一直没说话：5 秒结束，算「没听清」', { r: x.r, ms: x.ms });
+  check(x.r.err === 'no-speech' && x.s.how === 'silence' && x.s.vo === '-' && !x.s.fell && x.ms >= 4900 && x.ms < 6500, '真的没说话（网页没量到人声、原生也没说出声）：5 秒结束，算「没听清」，不改走云端', { r: x.r, s: x.s, ms: x.ms });
+  check(x.last === '' && x.hint && x.hint.length > 3, '没拿到字：「请说……」那一行清掉了，有一句提示：' + x.hint, x);
+  await E(() => window.__micLevel(0.3));
+  // 学的人自己点了停：只有这一种是 aborted（game.js 写「停了」，也不留「正在听」）
+  x = await E(async () => {
+    Object.assign(window.__fakeNative.speech, { script: [] });
+    const states = [], pr = window.EchoTalk.listenOnce({ match: () => false, onState: t => states.push(t) });
+    await new Promise(r => setTimeout(r, 400)); window.EchoTalk.stopListen();
+    const A = window.EchoGame.A, r = await pr;
+    return { r, last: states[states.length - 1], hint: A.hint({ fail: A.failOf(r) }), s: window.EchoTalk.lastSpeech() };
+  });
+  check(x.r.err === 'aborted' && x.s.how === 'user' && x.last === '' && /停/.test(x.hint), '自己点了停：aborted，那一行清掉，提示「' + x.hint + '」', x);
+  // listenOnce 没拿到字时可能回的每一种：game.js 都有一句提示（对战、大地图、闯关、能力检测都按这个写）
+  x = await E(() => ['no-speech', 'aborted', 'nokey', 'not-allowed', 'audio-capture', 'network'].map(err => ({ err, f: window.EchoGame.A.failOf({ text: '', err, why: err === 'network' ? 'offline' : '' }), h: window.EchoGame.A.hint({ fail: window.EchoGame.A.failOf({ text: '', err, why: err === 'network' ? 'offline' : '' }) }) })));
+  check(x.every(o => o.h && o.h.length > 3), '没拿到字的每一种结果都有提示（不会只剩「正在听……」）', x);
   c = await E(() => window.__fakeNative.speech.log.filter(x => x.m === 'speechStart').length - window.__fakeNative.speech.log.filter(x => x.m === 'speechStop').length);
   check(c <= 0, '每次结束都叫原生停下（speechStop）', c);
   check(await E(() => window.EchoTalk.speechLog().length >= 8 && window.EchoTalk.speechLog().every(r => r.eng === 'device')), '最近几次的计时都留着（EchoTalk.speechLog()，只在内存里）');
 
   // ---------- 4. 本机开不起来：同一次里改走云端，不用再点 ----------
-  for (const why of ['unavailable', 'denied', 'audio']) {
+  for (const why of ['unavailable', 'denied', 'busy']) {
     await load(BASE(), { fake: { net: 'ok', speech: { state: ON, start: 'fail:' + why, script: [] } } });
     target = await question(0);
     await E(t => localStorage.setItem('__cloudSay', t), target);
@@ -222,8 +265,9 @@ function fakeCloud() {
     const ok = await until(() => E(() => window.EchoGame.P().answered), 80, 100);
     s = await last(); c = await calls();
     check(ok && s.eng === 'cloud' && s.fell === why && c.includes('speechStart') && c.includes('wsOpen'), why + '：只点了一次话筒，本机开不起来就接着走云端识别，过了', { ok, s, c: c.filter(x => /speech|ws/.test(x)) });
+    check(await E(() => window.__micOpens || 0) === 1, why + '：云端接着用本机那次开的麦克风（只开了一次）');
     const ls = await E(() => window.EchoTalk.localSR());
-    check(why === 'audio' ? ls === true : ls === false, why + (why === 'audio' ? '：录音出错不记住（下一题还先试本机）' : '：记住了，这次打开 App 不再每题先试本机'), ls);
+    check(why === 'busy' ? ls === true : ls === false, why + (why === 'busy' ? '：一次开不起来不记住（下一题还先试本机）' : '：记住了，这次打开 App 不再每题先试本机'), ls);
     if (why === 'unavailable') {
       await question(1);
       await E(() => { window.__fakeNative.calls.length = 0; });
@@ -238,13 +282,48 @@ function fakeCloud() {
       check(await E(() => window.EchoTalk.localSR()), '回到前台问一次 speechState：能用了就又用本机');
     }
   }
-  // 麦克风被拒：云端也要麦克风，直接弹「去打开」
-  await load(BASE(), { fake: { net: 'ok', mic: 'blocked', speech: { state: ON, start: 'fail:mic', script: [] } } });
+  // 原生开好了，但这一次没认出字（有人声）/ 原生出错 / 原生自己停了：同一次里接着走云端（同一个麦克风，录好的声音一起交过去）；连着两次以后这次打开 App 不再试本机
+  await load(BASE(), { fake: { net: 'ok', speech: { state: ON, start: 'ok', script: [] } } });
+  const cases = [
+    ['error', [[50, 'voice', 1], [200, 'error', 'kAFAssistantErrorDomain 1101']], 'error'],
+    ['notext', [[50, 'voice', 1], [300, 'voice', 0]], 'notext'],
+  ];
+  for (const [name, script, fell] of cases) {
+    target = await question(0);
+    await E(t => localStorage.setItem('__cloudSay', t), target);
+    await fake({ speech: { script } });
+    await E(() => { window.__fakeNative.calls.length = 0; });
+    await p.click('#mic');
+    const ok = await until(() => E(() => window.EchoGame.P().answered), 100, 100);
+    s = await last(); c = await calls();
+    check(ok && s.eng === 'cloud' && s.fell === fell && s.fed > 0 && c.includes('speechStart') && c.includes('wsOpen'),
+      name + '：本机没认出字（有人声）→ 同一次里接着走云端，过了；记着 fell:' + fell + (s.nerr ? '、' + s.nerr : ''), { ok, s, c: c.filter(x => /speech|ws/.test(x)) });
+    check(await E(() => window.__micOpens || 0) === 1, name + '：云端接着用同一个麦克风（没重开）');
+  }
+  check(s.nerr === undefined && (await E(() => window.EchoTalk.speechLog().slice(-2)[0].nerr)) === 'kAFAssistantErrorDomain 1101', '原生的错误代号记在计时里（版本角标显示）');
+  check(await E(() => !window.EchoTalk.localSR() && window.EchoTalk.speechState().off === 'fails'), '连着两次本机没认出来：这次打开 App 不再试本机（off = fails）', await E(() => window.EchoTalk.speechState()));
+  await E(() => window.EchoTalk.speechRefresh());
+  check(await E(() => !window.EchoTalk.localSR()), '回到前台问一次 speechState：连着失败的照样记着（不像「没给权限」那样一打开就恢复）');
+  target = await question(1);
+  await E(t => localStorage.setItem('__cloudSay', t), target);
+  await E(() => { window.__fakeNative.calls.length = 0; });
+  await p.click('#mic');
+  check(await until(() => E(() => window.EchoGame.P().answered), 80, 100) && !(await calls()).includes('speechStart'), '第三题直接走云端（不再先试本机）');
+  // 本机这一次没认出字、云端又用不了（没有密钥）：按「没听清」回，有提示、算一次尝试，不停在「请说……」
+  await load(BASE(), { fake: { key: '', speech: { state: ON, start: 'ok', script: [[100, 'voice', 1], [250, 'end', 'final']] } } });
+  await question(0);
+  await p.click('#mic');
+  check(await until(() => E(() => !!window.EchoTalk.lastSpeech() && /没听清/.test(document.querySelector('#mic-hint').textContent)), 40), '本机没认出字、云端没有密钥：提示「没听清」', await p.textContent('#mic-hint'));
+  a = await E(() => ({ heard: document.querySelector('#heard').textContent, miss: window.EchoGame.P().miss, s: window.EchoTalk.lastSpeech(), ls: window.EchoTalk.localSR() }));
+  check(!/请说/.test(a.heard) && a.miss === 1 && a.s.fell === 'end-final' && a.s.err === 'no-speech' && a.ls, '「请说……」那一行清掉了、算一次没听清；本机下一题还先试（只失败了一次）', a);
+  // 麦克风被拒（网页的 getUserMedia）：云端也要麦克风，直接弹「去打开」
+  await load(BASE(), { fake: { net: 'ok', mic: 'blocked', speech: { state: ON, start: 'ok', script: [] } }, ls: { __mic: 'deny' } });
   await question(0);
   await p.click('#mic');
   check(await until(() => E(() => !document.querySelector('#modal').hidden && /麦克风/.test(document.querySelector('#sheet').textContent)), 40), '麦克风被拒：弹「为什么要用麦克风 / 去打开」（不白白再去连云端）');
   c = await calls();
-  check(!c.includes('wsOpen') && await E(() => (window.__micOpens || 0) === 0), '麦克风被拒时没去连云端、网页没开麦克风', c.filter(x => /speech|ws/.test(x)));
+  a = await E(() => ({ fed: window.__fakeNative.speech.feeds.length, active: window.__fakeNative.speech.active }));
+  check(!c.includes('wsOpen') && c.includes('speechStop') && a.fed === 0 && !a.active, '麦克风被拒时没去连云端、原生那一次也叫停了', { c: c.filter(x => /speech|ws/.test(x)), a });
   // 本机开不起来、云端又没有密钥：和以前没有 AI 时一样（先跳过）
   await load(BASE(), { fake: { key: '', speech: { state: ON, start: 'fail:unavailable', script: [] } } });
   await question(0);
