@@ -267,9 +267,7 @@ final class SmokeUITests: XCTestCase {
             print("EchoIsland world: \(step.0) \(r.0 ? "ok" : "BAD " + r.2)")
             if !r.0 { problems.append(step.0 + "：" + r.2) }
         }
-        XCTAssertTrue(problems.isEmpty, "转屏以后大地图的画布和屏幕对不上：
-" + problems.joined(separator: "
-"))
+        XCTAssertTrue(problems.isEmpty, "转屏以后大地图的画布和屏幕对不上：" + problems.joined(separator: "；"))
         app.terminate()
     }
 }
