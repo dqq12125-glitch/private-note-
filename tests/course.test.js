@@ -43,7 +43,8 @@ const C = {};
 let viaBuilder = true;
 function courseOf(lang) {
   // 用 tools/course/build.js（先过 check.js，不写文件）；check 没过就直接用它的 buildCourse，并在这里说一声
-  try { return CB.build(lang, { check: true }).course; } catch (e) { viaBuilder = false; console.log('  ⚠ ' + lang + '：tools/course/check.js 没过，用 buildCourse 直接转：' + String(e.message).split('\n')[0]); return CB.buildCourse(lang); }
+  // lines: false：这一套测的是没有台词翻译表时的过渡办法（ENGINE.md §5），正式的 lines.json 来了也不带；有翻译表的在 tests/course-lines.test.js
+  try { return CB.build(lang, { check: true, lines: false }).course; } catch (e) { viaBuilder = false; console.log('  ⚠ ' + lang + '：tools/course/check.js 没过，用 buildCourse 直接转：' + String(e.message).split('\n')[0]); return CB.buildCourse(lang, { lines: false }); }
 }
 function pack(lang, texts, course) {
   const dir = path.join(TMP, lang, VER); fs.mkdirSync(dir, { recursive: true });

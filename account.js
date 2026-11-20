@@ -301,6 +301,8 @@
     if (q.resetsAt && Date.now() >= Date.parse(q.resetsAt)) return q.talk.limitSec;
     return Math.max(0, q.talk.leftSec | 0);
   }
+  // 服务器能不能识别 / 合成这门语言（GET /v1/me 的 speechLangs，API.md §4）：老服务器没有这个字段、还没拿到账号信息 = 只当英语能用
+  const speechLang = c => !!(A.me && Array.isArray(A.me.speechLangs) && A.me.speechLangs.includes(String(c || '')));
   const freeMin = () => FREE_MIN;
   const planName = me => t('ac.plan.' + (me && /^(monthly|yearly)$/.test(me.plan) ? me.plan : 'free'));
 
@@ -794,7 +796,7 @@
   }
 
   W.EchoAccount = {
-    init, cfg: CFG, token, signed, me: () => A.me, refresh, talkLeft, need, ask, nudge, fix, post, noteQuota, lost,
+    init, cfg: CFG, token, signed, me: () => A.me, refresh, talkLeft, speechLang, need, ask, nudge, fix, post, noteQuota, lost,
     strip, settingsRow, gateWhy, failText, barText, barInfo, setupPage, setupSum, reportSheet, memberSheet, signInSheet, accountSheet,
     reconcile, planName: () => planName(A.me), MIN_START,
   };

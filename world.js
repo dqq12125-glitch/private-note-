@@ -430,8 +430,10 @@
   }
   function banner() {
     const b = $('w-banner'), p = placeName();
+    // 别的课：下面那行是这门语言的地名（台词翻译表的地名，SPEC §8；没翻的照旧是英文地名）；念的「Welcome to …!」say() 自己会换
+    const pl = E.lang && E.lineOf ? E.lineOf(p.en) : null;
     // 英语界面：名字已经是英文的，下面那行英文地名一样就不重复
-    b.innerHTML = '<small>' + E.esc(p.sub) + (M.kind === 'town' && E.S.mon.badges[M.z] ? ' · 🏅' : '') + '</small><b>' + E.esc(p.name) + '</b>' + (sameLang() && p.en === p.name ? '' : '<span>' + E.esc(p.en) + '</span>');
+    b.innerHTML = '<small>' + E.esc(p.sub) + (M.kind === 'town' && E.S.mon.badges[M.z] ? ' · 🏅' : '') + '</small><b>' + E.esc(p.name) + '</b>' + (pl ? '<span>' + E.ruby(pl.t) + '</span>' : sameLang() && p.en === p.name ? '' : '<span>' + E.esc(p.en) + '</span>');
     b.hidden = false; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
     clearTimeout(b._t); b._t = setTimeout(() => { b.hidden = true; }, 2600);
     E.say(M.kind === 'town' ? 'Welcome to ' + p.en + '!' : p.en);
@@ -621,27 +623,61 @@
   const rivalInfo = () => (E.S.player && E.S.player.gender === 'girl') ? { name: 'Leo', g: 'm', look: LOOKS.leo } : { name: 'Mia', g: 'f', look: LOOKS.mia };
   const fill = v => typeof v === 'string' ? v.split('{name}').join(pname()).split('{rival}').join(rivalInfo().name) : v;
   function talk(pages, onDone) {
+    // 别的课：先记下还没换名字的英语原文（台词翻译表按原文找，tools/course/SPEC.md §8）
+    if (E.lang) pages.forEach(p => { if (p.en0 === undefined) { p.en0 = p.en; p.target0 = p.target; } });
     pages.forEach(p => ['en', 'zh', 'ui', 'target', 'who'].forEach(k => { p[k] = fill(p[k]); }));
     if (E.lang) pages.forEach(langPage);
     dlg = { pages, i: 0, onDone, tries: 0 }; showPage();
   }
-  // ---------- 别的语言的课：代码里写死的英语台词（tools/course/ENGINE.md §5，过渡办法；台词翻译表以后做）----------
-  // · 只是给人看的台词：正文换成界面语言那份（中文界面 = 原来的中文意思；英语界面 = 英语原文），没有「译」、不朗读（game.js 的 say 只念课程内容）；
-  //   正文本来就是课程内容的（村民念的课程句子）：照旧显示原文，下面一行是它的意思
+  // ---------- 别的语言的课：代码里写死的英语台词（tools/course/ENGINE.md §5）----------
+  // 有台词翻译表（E.lineOf，tools/course/SPEC.md §8）的：
+  // · 台词显示、朗读翻好的那句（日语 / 中文标读音），下面一行是界面语言的意思（中文界面 = 原来的中文，英语界面 = 英语原文；
+  //   「译」照「剧情中文」的设置收起来，和英语课一样）；
+  // · 要开口说的（speak）：要说的那句换成翻好的，按这门语言打分；台词那一行就是要说的那句时（技能指令、选伙伴），上面换成界面语言的说明；
+  // · 要选的（answer）：选项都有翻好的才换（问句也换），不然整页走下面的过渡办法。
+  // 没翻的（ENGINE.md §5 过渡办法）：
+  // · 只是给人看的台词：正文换成界面语言那份（中文界面 = 原来的中文意思；英语界面 = 英语原文），没有「译」、不朗读；
+  //   说到「英语」的换成在学的语言（E.courseWord）；正文本来就是课程内容的（村民念的课程句子）：照旧显示原文，下面一行是它的意思
   // · 要开口说的（speak）、要选的（answer）：不是课程内容的，换成这座岛课程里的一句 / 一段对话（E.learnLine：按英语原文的哈希固定挑），
   //   题面给它的意思；进复习本用课程里的编号（pg.q）。英语课不走这里
   const langIsle = () => (M ? (M.isle != null ? M.isle : M.z) : 0) | 0;
   // 今日目击：线索是英语拼的，别的课先不出（ENGINE.md §4）
   const sightOn = () => !!window.EchoSight && !(E && E.lang);
   const langName = () => tx('pk.name.' + E.course);
+  const cw = (s, zhUi) => (E.courseWord ? E.courseWord(s, zhUi ? 'zh' : 'en') : s);
   function langPage(pg) {
-    if (!pg || pg.kind === 'choice' || pg.kind === 'custom' || pg.lang) return;
+    if (!pg || pg.lang) return;
     pg.lang = true;
-    const zhUi = !I18N || I18N.lang() === 'zh', uiText = zhUi ? pg.zh || pg.en : pg.en || pg.zh;
+    const zhUi = !I18N || I18N.lang() === 'zh', uiText = cw(zhUi ? pg.zh || pg.en : pg.en || pg.zh, zhUi);
+    const en0 = pg.en0 !== undefined ? pg.en0 : pg.en, t0 = pg.target0 !== undefined ? pg.target0 : pg.target;
+    const tl = (en, x) => (E.lineOf && en ? E.lineOf(en, Object.assign({ fill }, x)) : null);
+    // 台词这一行：课程内容（原文 + 意思）或者翻好的（译文 + 意思）→ true；都不是 → false
+    const main = swap => {
+      if (!pg.en) return false;
+      if (E.entryOf(pg.en)) { pg.ui = E.meanText(pg.en) || ''; return true; }
+      const ln = tl(en0, { zh: pg.zh, swap });
+      if (!ln) return false;
+      pg.en = ln.t; pg.gl = ln.mean || null; pg.tl = true;
+      return true;
+    };
+    const plain = () => { pg.en = uiText; pg.ui = ''; pg.hideEn = false; pg.plain = true; };
+    if (pg.kind === 'choice' || pg.kind === 'custom') { if (pg.en && !main()) plain(); return; }
     if (pg.kind === 'speak') {
+      const same = en0 === t0;   // 台词那一行就是要说的那句（技能指令、选伙伴、孵蛋）
       if (!E.entryOf(pg.target)) {
-        const ln = E.learnLine(pg.lkey || pg.target, langIsle(), 'sent');
-        if (ln) { pg.target = ln.t; pg.mean = ln.mean; if (ln.q) pg.q = ln.q; pg.en = tx('w.lang.say', { lang: langName() }); pg.ui = ''; pg.hideEn = false; return; }
+        const ln = tl(t0);
+        if (ln) {
+          const enT = pg.target;
+          pg.target = ln.t; pg.tl = true;
+          // 要说的那句下面的意思：英语界面是英语原文；中文界面这一页的中文（说明里带着意思）在上面那一行
+          pg.mean = zhUi ? null : ln.mean;
+          // 说明这一行是界面语言（🔊 念的是要说的那句，wHear）
+          if (same || !main([[enT, ln.t]])) { pg.en = zhUi && pg.zh ? cw(pg.zh.split(enT).join(ln.t), true) : tx('w.lang.say', { lang: langName() }); pg.ui = ''; }
+          pg.hideEn = false;
+          return;
+        }
+        const lk = E.learnLine(pg.lkey || pg.target, langIsle(), 'sent');
+        if (lk) { pg.target = lk.t; pg.mean = lk.mean; if (lk.q) pg.q = lk.q; pg.en = tx('w.lang.say', { lang: langName() }); pg.ui = ''; pg.hideEn = false; return; }
       }
       pg.mean = E.meanText(pg.target);
       pg.en = uiText && uiText !== pg.target ? uiText : tx('w.lang.say', { lang: langName() }); pg.ui = ''; pg.hideEn = false;
@@ -649,31 +685,41 @@
     }
     if (pg.kind === 'answer') {
       if (!(pg.opts || []).every(o => E.entryOf(o.t))) {
+        // 选项都翻好了：换成译文（问句有翻好的也换）
+        const tr = (pg.opts || []).map(o => tl(o.t));
+        if (tr.length && tr.every(Boolean)) {
+          pg.opts.forEach((o, k) => { o.t = tr[k].t; });
+          if (!main()) { pg.ui = tx('w.lang.ans', { lang: langName() }); pg.en = ''; }
+          pg.hideEn = false;
+          return;
+        }
         const d = E.learnLine(pg.lkey || (pg.opts.find(o => o.c) || {}).t || pg.en, langIsle(), 'dlg');
         if (d) { pg.en = d.q; pg.opts = [{ c: true, t: d.a }].concat(d.wrong.map(t => ({ t }))).sort(() => Math.random() - 0.5); pg.q = d.rq; pg.pic = null; pg.cap = null; pg.ui = d.mean || tx('w.lang.ans', { lang: langName() }); pg.hideEn = false; return; }
       }
-      // 选项是课程内容（村民出题、看图选词）：问句是课程内容就照旧（下面一行是意思）；不是（写死的英语 / 中文问法）就换成一句说明
+      // 选项是课程内容（村民出题、看图选词）：问句是课程内容或者翻好了就照旧（下面一行是意思）；不是（写死的英语 / 中文问法）就换成一句说明
       const how = pg.pic ? 'w.lang.pic' : 'w.lang.ans';
+      if (!E.entryOf(pg.en) && main()) { pg.hideEn = false; return; }
       pg.ui = E.entryOf(pg.en) ? (E.meanText(pg.en) || tx(how, { lang: langName() })) : tx(how, { lang: langName() });
       if (!E.entryOf(pg.en)) pg.en = '';
       pg.hideEn = false;
       return;
     }
     if (!pg.en) return;
-    if (E.entryOf(pg.en)) { pg.ui = E.meanText(pg.en) || ''; return; }   // 村民念的课程句子：原文 + 意思
-    pg.en = uiText; pg.ui = ''; pg.hideEn = false; pg.plain = true;
+    if (!main()) plain();
   }
   const page = () => dlg && dlg.pages[dlg.i];
   // 剧情中文（家长 2026-10-07）：S.settings.storyZh = always 总是显示 / tap 点一下才显示 / auto 自动（默认）。
   // 自动：第 1–4 座岛总是显示；从第 5 座岛起，人说的普通台词先只给英文，中文收成「译」按钮。
   // 一直显示中文的：任务页（说 / 选）、只听不看的页、旁白和机关（没有人物头像的页）、挑战馆里（机关规则）、标了 zhKeep 的页
   // 2026-11-19（界面语言）：英文下面那行是 zhLine(pg)——台词的意思用 gloss（中文界面给 zh，英语界面没有，这一行和「译」都不出）；
-  // 页面带 ui 的（委托的说明、奖励这种界面文字，已经是界面语言）照样显示，不收起来
-  const zhLine = pg => (pg.ui != null ? pg.ui : gloss(pg));
+  // 页面带 ui 的（委托的说明、奖励这种界面文字，已经是界面语言）照样显示，不收起来。
+  // 别的课里翻好的台词（langPage 的 pg.gl）：下面那行是 pg.gl（界面语言的意思，英语界面也有），照样按设置收成「译」
+  const glOf = pg => (pg.gl !== undefined ? pg.gl : gloss(pg));
+  const zhLine = pg => (pg.ui != null ? pg.ui : glOf(pg));
   const zhMode = () => { const m = E.S.settings.storyZh; return m === 'always' || m === 'tap' ? m : 'auto'; };
   function zhFolded(pg) {
     const m = zhMode();
-    if (m === 'always' || pg.ui != null || !gloss(pg) || !pg.en || pg.kind || pg.hideEn || pg.zhKeep || !pg.look) return false;
+    if (m === 'always' || pg.ui != null || !glOf(pg) || !pg.en || pg.kind || pg.hideEn || pg.zhKeep || !pg.look) return false;
     if (M && M.kind === 'inside' && M.room === 'G') return false;
     if (m === 'tap') return true;
     return (M ? (M.isle != null ? M.isle : M.z) : 0) >= 4;

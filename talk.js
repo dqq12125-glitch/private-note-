@@ -1205,20 +1205,40 @@
     } catch (e) { /* 判不了 */ }
     return null;
   }
-  // 朗读没有提前配音的句子：阿里云语音合成，返回音频地址（同一句话这次打开游戏里只合成一次）。lang 默认 English（AI 提示用 Chinese）
+  // ---------- 别的语言的课（es / ja / zh）的 AI 识别、合成：能不能带上这门语言（API.md §8 的 lang） ----------
+  // 语言代码 ↔ 合成的 language_type（LANG.asr.cloud 'es' 和 LANG.tts.cloud 'Spanish' 两种写法都认）
+  const SPL = { en: 'English', es: 'Spanish', ja: 'Japanese', zh: 'Chinese' };
+  const splCode = v => Object.keys(SPL).find(c => c === v || SPL[c] === v) || '';
+  // 云端模式：看服务器说它认哪些（GET /v1/me 的 speechLangs；老服务器没有这个字段 = 不认 → 口语题照旧「先跳过」、朗读用本机声音）；
+  // APK 直连阿里云：直接带上语言；网页版的家庭中转服务：识别带上语言（老的中转服务不认，照旧当英语听——和以前一样），
+  // 合成不走（不知道它认不认，老的会用英语的声音念别的语言），用本机声音
+  function speechLang(v, kind) {
+    const c = splCode(v);
+    if (!c) return false;
+    if (c === 'en') return true;
+    if (cloudOn()) return !!(ACC() && ACC().speechLang && ACC().speechLang(c));
+    if (direct()) return true;
+    return kind !== 'tts';
+  }
+  // 朗读没有提前配音的句子：阿里云语音合成，返回音频地址（同一句话这次打开游戏里只合成一次）。
+  // lang 默认英语（发出去的和以前一字不差）；别的语言的课给 LANG.tts.cloud（'Spanish' …），服务器不认就不发、回空（game.js 用本机声音）
   const TTSC = {};
+  const TTS_V = { f: 'Cherry', m: 'Ethan' };   // APK 直连时别的语言的音色（和 cloud/ 的默认一样；上线前对着阿里云的音色表核对）
   async function cloudTTS(text, g, lang) {
-    lang = lang === 'Chinese' ? 'Chinese' : 'English';
+    const code = splCode(lang) || 'en';
+    lang = SPL[code];
+    if (code !== 'en' && !speechLang(code, 'tts')) return '';
     const k = (g || 'f') + '|' + lang + '|' + text;
     if (TTSC[k]) return TTSC[k];
     let url = '';
     try {
       if (direct()) {
-        const body = { model: 'qwen3-tts-flash', input: { text: String(text).slice(0, 300), voice: g === 'm' ? 'Aiden' : 'Jennifer', language_type: lang } };
+        const V = code === 'en' ? { f: 'Jennifer', m: 'Aiden' } : TTS_V;
+        const body = { model: 'qwen3-tts-flash', input: { text: String(text).slice(0, 300), voice: g === 'm' ? V.m : V.f, language_type: lang } };
         const r = await nativePost('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', JSON.stringify(body), 6000);
         if (r.ok) url = JSON.parse(r.text).output.audio.url; else noteAi('tts', r.text);
       } else if (relayHttp()) {
-        const r = await relayPost('/tts', lang === 'English' ? { text, g } : { text, g, lang }, 6000);
+        const r = await relayPost('/tts', code === 'en' ? { text, g } : { text, g, lang: code }, 6000);
         if (r.ok) url = JSON.parse(r.text).url; else noteAi('tts', 'HTTP ' + r.status + ' ' + r.text);
       }
     } catch (e) { url = ''; }
@@ -1302,7 +1322,8 @@
   }
   function u8b64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
   // 实时识别的连接：APK 走原生桥（带密钥），网页版走中转服务的 /asr-rt
-  function asrSock(on) {
+  // lang：别的语言的课（es / ja / zh）放进网址 ?lang=（服务器只认这个，API.md §8）；英语不给，网址和以前一样。APK 直连时语言在 session.update 里
+  function asrSock(on, lang) {
     if (direct()) {
       const id = ++nid, N = window.EchoNative;
       NWS[id] = on;
@@ -1314,7 +1335,8 @@
     const tok = cloudOn() && ACC() ? ACC().token() : '';
     if (cloudOn() && !tok) { setTimeout(() => on('error', '{"error":"auth"}'), 0); return { send() {}, close() {} }; }
     let ws;
-    try { ws = new WebSocket(url + '/asr-rt' + (code ? '?code=' + encodeURIComponent(code) : '')); } catch (e) { setTimeout(() => on('error', e.message), 0); return { send() {}, close() {} }; }
+    const qs = [code ? 'code=' + encodeURIComponent(code) : '', lang && lang !== 'en' ? 'lang=' + encodeURIComponent(lang) : ''].filter(Boolean).join('&');
+    try { ws = new WebSocket(url + '/asr-rt' + (qs ? '?' + qs : '')); } catch (e) { setTimeout(() => on('error', e.message), 0); return { send() {}, close() {} }; }
     ws.onopen = () => { if (tok) try { ws.send(JSON.stringify({ type: 'auth', token: tok })); } catch (e) { /* 断了 */ } on('open'); };
     ws.onmessage = e => {
       // 云端模式：服务器自己的错误（没登录、额度用完……）和阿里云的事件走同一条连接：认出来交给 noteAi（listenOnce 的 fail 只看阿里云的 error）
@@ -1325,7 +1347,8 @@
     return { send: s => { if (ws.readyState === 1) ws.send(s); }, close: () => { try { ws.close(); } catch (e) {} } };
   }
   // 整段识别（原来的做法；实时识别不行时兜底）
-  // lang：别的语言的课的识别语言（LANG.asr.cloud：es / ja / zh），英语不给（中转服务现在还写死英语，见 tools/course/ENGINE.md §6：带上了，服务器以后再认）
+  // lang：别的语言的课的识别语言（LANG.asr.cloud：es / ja / zh），英语不给（请求体和以前一样）。服务器（cloud/ 和新的中转服务）按它听；
+  // 云端模式只在服务器的 speechLangs 里有这门语言时才走到这里（game.js 的 noCloud）
   async function wholeAsr(chunks, len, rate, lang) {
     const body = { model: 'qwen3-asr-flash', stream: false, asr_options: { language: lang || 'en', enable_itn: false },
       messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + wav16(chunks, len, rate) } }] }] };
@@ -1543,7 +1566,7 @@
       // 本机没认出字，云端又用不了（没有密钥 / 云端模式没登录）：
       //   本机这次打开 App 不用了（unavailable / denied / 连着两次）→ 和以前没有 AI 时一样（game.js 走「先跳过」、请他登录）；
       //   本机还能用（只是这一次没认出来）→ 按「没听清」回：有提示、算一次尝试，再说一次
-      // o.noCloud：别的语言的课在云端模式里（服务器的识别还写死英语，tools/course/ENGINE.md §6），也按「云端用不了」算
+      // o.noCloud：别的语言的课在云端模式里、服务器不认这门语言（GET /v1/me 没有 speechLangs 或者里面没有它，game.js 看），也按「云端用不了」算
       const why = o.noCloud ? 'lang' : !cloudSR() ? 'nokey' : cloudOn() && !(ACC() && ACC().signed()) ? 'signin' : '';
       if (why) { dropPre(D); r = NSP.off ? { text: '', err: 'nokey', why } : { text: '', err: 'no-speech', why: 'device', how: D.fell }; }
     }
@@ -1573,7 +1596,7 @@
         if (o.onState) o.onState(t);
         if (o.match && o.match(t)) finish('match');
       };
-      const sock = dead ? null : asrSock((type, data) => {
+      const sock = dead ? null : asrSock((type, data) => {   // 别的语言的课：网址带上 ?lang=（第二个参数，在这个回调后面）
         if (over) return;
         if (type === 'open') {
           sock.send(JSON.stringify({ type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language: o.lang ? o.lang.cloud : 'en' },
@@ -1589,7 +1612,7 @@
           } else if (m.type === 'input_audio_buffer.speech_started') { inSpeech = true; clearTimeout(grace); }
           else if (m.type === 'error') fail(JSON.stringify(m.error || m).slice(0, 200));
         } else if (type === 'error' || type === 'closed') fail(type === 'error' ? String(data || '') : '');
-      });
+      }, o.lang && o.lang.cloud);
       const finish = async why => {
         if (done) return; done = true;
         clearTimeout(grace); SR.stop = null; lmRelease();
@@ -1763,7 +1786,7 @@
     });
   }
   window.EchoTalk = {
-    init, homeHTML, open, openPerson, openQuest, blocked, errText: errTxt, relayUrl, cloudSR, listenOnce, aiTip, placeJudge, cloudTTS, keyTest, get AI_LABEL() { return aiLabel(); }, stopListen: () => SR.stop && SR.stop(),
+    init, homeHTML, open, openPerson, openQuest, blocked, errText: errTxt, relayUrl, cloudSR, listenOnce, aiTip, placeJudge, cloudTTS, speechLang, keyTest, get AI_LABEL() { return aiLabel(); }, stopListen: () => SR.stop && SR.stop(),
     today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG, nativeCall,
     // iPhone 的本机识别：口语题现在会不会先用它、最近一次 / 最近 20 次识别的计时（只在内存里）、给设置页 / 小检查 / 周报的话
     localSR, lastSpeech: () => (SRLOG.length ? Object.assign({}, SRLOG[SRLOG.length - 1]) : null), speechLog: () => SRLOG.map(x => Object.assign({}, x)),

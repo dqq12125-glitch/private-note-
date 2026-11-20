@@ -17,6 +17,7 @@ export default async function (C) {
   const env = Object.assign({}, process.env, {
     PORT: String(port), DASHSCOPE_API_KEY: 'sk-fake-relay-key', KEY_FILE: path.join(tmp, 'none.env'),   // 不读 server/.env
     TALK_URL: F.url.replace(/^http/, 'ws') + '/api-ws/v1/realtime', EVAL_BASE_URL: F.url + '/compatible-mode/v1',
+    ASR_URL: F.url + '/compatible-mode/v1/chat/completions', TTS_URL: F.url + '/api/v1/services/aigc/multimodal-generation/generation', ASR_RT_URL: F.url.replace(/^http/, 'ws') + '/api-ws/v1/realtime',
     LOG_DIR: path.join(tmp, 'logs'), USAGE_FILE: path.join(tmp, 'usage.json'), DEBUG_DIR: path.join(tmp, 'debug'), ACCESS_CODE: '', ADMIN_TOKEN: '',
   });
   const srv = spawn(process.execPath, [relay], { env, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -71,6 +72,47 @@ export default async function (C) {
   ok(said && said.item.content[0].text.startsWith('Student typed: '), '打的字照 talk-core 的规矩加上 Student typed:（冒充不了 [Game] 提示）', said && said.item.content[0].text);
   ws.send(JSON.stringify({ type: 'end' }));
   await new Promise(r => { ws.on('close', r); setTimeout(r, 3000); });
+
+  // ---------- 口语题的识别、现场合成（别的语言的课的 lang）：两边发给阿里云的一字不差；没给 lang = 英语 ----------
+  const RELAY = 'http://127.0.0.1:' + port;
+  const V = await C.signup(A, { age: 'adult' });
+  const audio = 'UklGR' + 'C'.repeat(2000);
+  // 发一次 HTTP，拿假阿里云收到的请求体（原文）
+  async function upBody(url, body, token) {
+    const h0 = F.http.length;
+    const r = await fetch(url, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}), body: JSON.stringify(body) });
+    const j = await r.json().catch(() => null);
+    return { status: r.status, json: j, raw: F.http.length > h0 ? F.http[h0].raw : null };
+  }
+  for (const [what, extra] of [['没给 lang', {}], ['lang es', { lang: 'es' }], ['lang ja', { lang: 'ja' }], ['lang zh', { lang: 'zh' }]]) {
+    const a = await upBody(RELAY + '/asr', Object.assign({ audio }, extra));
+    const b = await upBody(A.url + '/v1/asr', Object.assign({ audio }, extra), V.token);
+    ok(a.status === 200 && b.status === 200 && a.raw && a.raw === b.raw && JSON.parse(a.raw).asr_options.language === (extra.lang || 'en'), '识别 /asr（' + what + '）：中转服务和公开版服务器发给阿里云的一字不差', { a: a.status, b: b.status, same: a.raw === b.raw });
+    const t = { text: 'Hola, buenos días', g: 'm' }, c = await upBody(RELAY + '/tts', Object.assign({}, t, extra)), d = await upBody(A.url + '/v1/tts', Object.assign({}, t, extra), V.token);
+    ok(c.status === 200 && d.status === 200 && c.raw && c.raw === d.raw, '合成 /tts（' + what + '）：两边发给阿里云的一字不差', { c: c.raw, d: d.raw });
+  }
+  const ra = await upBody(RELAY + '/asr', { audio, lang: 'fr' }), rt = await upBody(RELAY + '/tts', { text: 'Bonjour', lang: 'French' });
+  ok(ra.status === 400 && ra.json.error === 'lang' && !ra.raw && rt.status === 400 && rt.json.error === 'lang' && !rt.raw, '中转服务：不认得的 lang → 400 lang，不连阿里云', { ra, rt });
+  // 实时识别：同样的 session.update
+  async function rtSu(url, auth) {
+    const n0 = F.ws.length;
+    const s = new WS(url);
+    await new Promise(r => { s.on('open', r); s.on('error', r); });
+    if (auth) s.send(JSON.stringify({ type: 'auth', token: auth }));
+    s.send(JSON.stringify({ type: 'session.update', session: { input_audio_transcription: { language: 'fr' }, turn_detection: { silence_duration_ms: 400 } } }));
+    s.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: 'AAAA' }));
+    const su = await until(() => { const c = F.ws.slice(n0).find(x => x.msgs.some(m => m.type === 'session.update')); return c && c.msgs.find(m => m.type === 'session.update'); }, 4000);
+    s.send(JSON.stringify({ type: 'session.finish' }));
+    await new Promise(r => { s.on('close', r); setTimeout(r, 3000); });
+    return { su, opened: F.ws.length - n0 };
+  }
+  for (const q of ['', '?lang=es', '?lang=ja', '?lang=zh']) {
+    const a = await rtSu('ws://127.0.0.1:' + port + '/asr-rt' + q), b = await rtSu(A.url.replace(/^http/, 'ws') + '/v1/asr-rt' + q, V.token);
+    ok(a.su && b.su && JSON.stringify(a.su) === JSON.stringify(b.su) && a.su.session.input_audio_transcription.language === (q.slice(6) || 'en'),
+      '实时识别 /asr-rt' + (q || '（没给 lang）') + '：两边发给阿里云的 session.update 一字不差（手机写的语言不看）', { a: a.su, b: b.su });
+  }
+  const bad = await rtSu('ws://127.0.0.1:' + port + '/asr-rt?lang=fr');
+  ok(!bad.su && bad.opened === 0, '中转服务的实时识别 ?lang=fr：直接断开，不连阿里云', bad);
   srv.kill();
   try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) {}
 }

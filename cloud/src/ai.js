@@ -6,6 +6,7 @@ import { dsPost, EVAL_PATH, TTS_PATH, ProviderError } from './upstream.js';
 import { take, refund } from './quota.js';
 import { aiLimit } from './ratelimit.js';
 import { requireConsent } from './me.js';
+import { speechLang, SPEECH_KNOWN } from './config.js';
 
 const METER = { asr: 'asr', tip: 'aux', tts: 'aux', zh: 'aux', steps: 'aux', place: 'aux' };
 const GATE = { steps: 'steps', place: 'place' };
@@ -14,8 +15,9 @@ const GATE = { steps: 'steps', place: 'place' };
 const H = {
   async asr(R, j) {
     if (typeof j.audio !== 'string' || j.audio.length < 1000) throw bad('audio');
+    const language = speechLang(R.cfg, j.lang);   // 别的语言的课：es / ja / zh；没给 = en（和以前一字不差）
     return async () => {
-      const r = await dsPost(R, EVAL_PATH, { model: R.cfg.ds.asrModel, stream: false, asr_options: { language: 'en', enable_itn: false }, messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + j.audio } }] }] });
+      const r = await dsPost(R, EVAL_PATH, { model: R.cfg.ds.asrModel, stream: false, asr_options: { language, enable_itn: false }, messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + j.audio } }] }] });
       return { text: String((r.choices && r.choices[0] && r.choices[0].message && r.choices[0].message.content) || '').trim() };
     };
   },
@@ -27,9 +29,10 @@ const H = {
   },
   async tts(R, j) {
     const text = clean(j.text, 300); if (!text) throw bad('text');
-    const lang = j.lang === 'Chinese' ? 'Chinese' : 'English';
+    // lang：en / es / ja / zh（以前的 "English" / "Chinese" 照样认）；英语用原来的音色，别的语言用 TTS_VOICES 里那门语言的
+    const code = speechLang(R.cfg, j.lang, true), voices = code === 'en' ? R.cfg.ds.ttsVoice : R.cfg.ds.ttsVoices[code];
     return async () => {
-      const o = await dsPost(R, TTS_PATH, { model: R.cfg.ds.ttsModel, input: { text, voice: j.g === 'm' ? R.cfg.ds.ttsVoice.m : R.cfg.ds.ttsVoice.f, language_type: lang } });
+      const o = await dsPost(R, TTS_PATH, { model: R.cfg.ds.ttsModel, input: { text, voice: j.g === 'm' ? voices.m : voices.f, language_type: SPEECH_KNOWN[code] } });
       const url = o.output && o.output.audio && o.output.audio.url;
       if (!url) throw new ProviderError(o.code || 'no-url');
       return { url: String(url).replace(/^http:/, 'https:') };

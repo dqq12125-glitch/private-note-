@@ -32,6 +32,10 @@
       'st.name.ph': '自己输入英文名', 'st.name.ok': '好了',
       'st.name.tip': '只能用英文字母，比如 Kevin、Coco。起个游戏昵称就好，不用写真名',
       'st.name.bad': '要用英文字母写哦，比如 Kevin',
+      // 别的课（i18n 的 .c 版本）：名字暂时还只能用拉丁字母（A–Z），不说「英文名」
+      'st.name.ph.c': '自己输入名字（拉丁字母）', 'st.name.tip.c': '名字暂时只能用拉丁字母 A–Z，比如 Kevin、Coco。起个游戏昵称就好，不用写真名',
+      'st.name.bad.c': '名字暂时只能用拉丁字母 A–Z，比如 Kevin',
+      'st.fame.line.c': '冠军 · {date}',
       // 选伙伴的贝壳
       'st.bag.shell': '第 {n} 个贝壳', 'st.bag.type': '{type}系',
       'st.bag.ask': '要选{type}系的 {name}（{zh}）吗？',
@@ -131,6 +135,9 @@
       'st.name.ph': 'Type an English name', 'st.name.ok': 'OK',
       'st.name.tip': 'English letters only, like Kevin or Coco. Use a game nickname, not your real name',
       'st.name.bad': 'Please use English letters, like Kevin',
+      'st.name.ph.c': 'Type a name (Latin letters)', 'st.name.tip.c': 'For now names use Latin letters A–Z only, like Kevin or Coco. Use a game nickname, not your real name',
+      'st.name.bad.c': 'For now please use Latin letters A–Z, like Kevin',
+      'st.fame.line.c': 'Champion · {date}',
       'st.bag.shell': 'Shell {n}', 'st.bag.type': '{type} type',
       'st.bag.ask': 'Take {name} ({zh}), a {type} type monster?',
       'st.bag.how': '◀ ▶ Choose a shell, then press <b>A</b> to look inside',
@@ -241,7 +248,8 @@
     const S = E.S;
     S.player = S.player || {};
     // 照片下面：界面语言的「男孩 / 女孩」，下面一行小字是英文（英语界面只写一遍英文）
-    const card = (g, en) => '<span class="ch-card"><img alt="" src="' + P.standing(P.LOOKS[g], 120, 170) + '"><b>' + hx('st.pass.' + g) + '</b>' + (glossOn() ? '<small>' + en + '</small>' : '') + '</span>';
+    // 别的课（E.lang）：不写这行英文（要学的不是英语）
+    const card = (g, en) => '<span class="ch-card"><img alt="" src="' + P.standing(P.LOOKS[g], 120, 170) + '"><b>' + hx('st.pass.' + g) + '</b>' + (glossOn() && !E.lang ? '<small>' + en + '</small>' : '') + '</span>';
     await C.talk([who('Which photo is you?', '通行证上贴哪张照片？选一张像你的。', {
       kind: 'choice',
       opts: [{ html: card('boy', 'Boy') }, { html: card('girl', 'Girl') }],
@@ -337,9 +345,18 @@
         // 怪兽的中文名、「要选…吗？」是英文的意思：英语界面不显示（EchoI18n.gloss）；「选一个贝壳」是操作说明，每种界面语言都显示
         const zhName = I18N ? I18N.gloss(sp) : sp.zh;
         $('bg-prev').innerHTML = '<div class="bg-circle' + (fresh ? ' new' : '') + '" style="--tc:' + ({ fire: '#f0642f', water: '#2f8fdd', grass: '#3fa34d', spark: '#d9a000' })[t] + '">' + Cartoon.monster(sp) + '</div><b>' + sp.en + '</b><small>' + (zhName ? zhName + ' · ' : '') + hx('st.bag.type', { type: typeName(t) }) + '</small>';
-        $('bg-box').innerHTML = asking
+        $('bg-box').innerHTML = E.lang ? langBox(sp, t, zhName)
+          : asking
           ? '<p class="bg-en">' + esc(sp.en) + ' is a ' + TYPE_EN[t] + ' monster. Will you take it?</p>' + (zhName ? '<p class="bg-zh">' + hx('st.bag.ask', { type: typeName(t), name: sp.en, zh: zhName }) + '</p>' : '') + '<div class="bg-yn"><button class="btn sun" id="bg-yes">' + hx('st.bag.yes') + '</button><button class="btn ghost" id="bg-no">' + hx('st.bag.no') + '</button></div>'
           : '<p class="bg-en">Which shell will you open?</p><p class="bg-zh">' + tx('st.bag.how') + '</p>';
+      };
+      // 别的课（台词翻译表 SPEC §8）：问的话显示翻好的那句（标读音），下面是界面语言的意思（中文界面：原来的中文；英语界面：英语原文）；
+      // 没翻的（ENGINE.md §5）只显示界面语言那份。ask() 念的那句 say() 自己会换成译文（没翻的不念）
+      const langBox = (sp, t, zhName) => {
+        const yn = '<div class="bg-yn"><button class="btn sun" id="bg-yes">' + hx('st.bag.yes') + '</button><button class="btn ghost" id="bg-no">' + hx('st.bag.no') + '</button></div>';
+        const en = asking ? sp.en + ' is a ' + TYPE_EN[t] + ' monster. Will you take it?' : 'Which shell will you open?', ln = E.lineOf ? E.lineOf(en) : null;
+        const sub = asking ? (zhName ? hx('st.bag.ask', { type: typeName(t), name: sp.en, zh: zhName }) : esc(ln ? ln.en : en)) : tx('st.bag.how');
+        return (ln ? '<p class="bg-en">' + E.ruby(ln.t) + '</p>' : '') + '<p class="bg-zh">' + sub + '</p>' + (asking ? yn : '');
       };
       const move = d => { if (asking || over) return; i = (i + d + ids.length) % ids.length; E.SFX.tap(); render(); E.say(MG.species(ids[i]).en); };
       const ask = () => { if (over) return; asking = true; render(); const sp = MG.species(ids[i]); E.say(sp.en + ' is a ' + TYPE_EN[sp.type] + ' monster. Will you take it?', undefined, 'f'); };

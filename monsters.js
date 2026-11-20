@@ -594,13 +594,25 @@
 
   // ---------- 别的语言的课（tools/course/ENGINE.md §5）：写死的英语里「要开口说的那句」----------
   // 换成这座岛课程里的一句（game.js 的 learnLine：按 key 的哈希固定挑），题面给它的意思。英语课返回 null，调用的地方照旧
-  const learnL = (key, z) => (E.lang && E.learnLine ? E.learnLine(key, z == null ? ((E.S.world && E.S.world.z) | 0) : z, 'sent') : null);
+  // en：英语原文（台词翻译表里有就用翻好的那句，tools/course/SPEC.md §8）；key：没翻的时候按它的哈希挑课程句子（同一个地方每次同一句）
+  // zh：这句的中文意思（有的话，中文界面显示在下面；是内容，不进字表）
+  // @i18n-content-calls learnL:3
+  const learnL =(key, z, en, zh) => (E.lang && E.learnLine ? E.learnLine(en || key, z == null ? ((E.S.world && E.S.world.z) | 0) : z, 'sent', key, zh) : null);
   const meanHTML = ln => (ln && ln.mean ? '<div class="say-zh">' + E.esc(ln.mean) + '</div>' : '');
+  // 手册介绍（dexEn）：英语课照旧（英文 + 下面的中文意思）；别的课有翻好的（台词翻译表，SPEC §8）显示那句（标读音）+ 界面语言的意思，
+  // 没翻的只显示界面语言那份（中文界面中文、英语界面英文，不朗读，ENGINE.md §5）。spk：跟在句子后面的 🔊 按钮
+  function dexText(s, spk) {
+    const dz = gloss({ zh: s.dexZh });
+    if (!E.lang) return '<p class="dex-en">' + E.esc(s.dexEn) + spk + '</p>' + (dz ? '<p class="dex-zh">' + E.esc(dz) + '</p>' : '');
+    const ln = E.lineOf ? E.lineOf(s.dexEn, { zh: s.dexZh }) : null;
+    if (ln) return '<p class="dex-en">' + E.ruby(ln.t) + spk + '</p>' + (ln.mean ? '<p class="dex-zh">' + E.esc(ln.mean) + '</p>' : '');
+    return '<p class="dex-zh">' + E.esc(dz || s.dexEn) + '</p>';
+  }
   // ---------- 选初始怪兽：大声说 be my partner! ----------
   let starterLn = null;   // 别的课：这次要说的那句（learnL）
   function starterSheet(id) {
     const s = SPECIES[id], sr = E.speakMode() === 'sr';
-    starterLn = learnL('be my partner', 0);
+    starterLn = learnL('be my partner', 0, s.en + ', be my partner!', s.en + '，做我的伙伴吧！');
     E.openModal('<div class="evo-stage">' + svg(id) + '</div><h2>' + s.en + E.esc(zhOf(s)) + '</h2>' +
       '<p>' + hx('b.st.say') + '</p><div class="say-text" id="st-say">' + E.wordsHTML(starterLn ? starterLn.t : s.en + ', be my partner!') + '</div>' + meanHTML(starterLn) +
       (sr ? '<button class="mic" id="st-mic" data-act="mStarterMic" data-sp="' + id + '">' + E.MIC + '</button><div class="mic-hint" id="st-hint">' + hx('b.mic.say') + '</div>' +
@@ -921,7 +933,7 @@
     const m = me(), sm = SPECIES[m.sp], slp = m.st === 'slp';
     B.turn = 'task'; B.tries = 0; B.hinted = false;
     B.task = { kind: 'wake', target: (slp ? 'Wake up, ' : 'Warm up, ') + nm(m) + '!', zh: slp ? '快醒醒！' : '快暖和起来！' };
-    const ln = learnL(slp ? 'wake up' : 'warm up', B.z);   // 别的课：换成这座岛课程里的一句
+    const ln = learnL(slp ? 'wake up' : 'warm up', B.z, B.task.target, B.task.zh);   // 别的课：翻好的那句，没有就换成这座岛课程里的一句
     if (ln) Object.assign(B.task, { target: ln.t, zh: '', mean: ln.mean, q: ln.q });
     listenIfDown(B.task);
     taskPanel();
@@ -1043,7 +1055,7 @@
     B.ball = ball || (nb > 0 ? 'ball' : 'superball');
     B.turn = 'task'; B.tries = 0; B.hinted = false;
     B.task = { kind: 'catch', target: pick(CATCH_LINES) };
-    const ln = learnL('catch:' + B.task.target, B.z);   // 别的课：换成这座岛课程里的一句（还是随机挑四句里的一句的样子）
+    const ln = learnL('catch:' + B.task.target, B.z, B.task.target);   // 别的课：翻好的那句，没有就换成这座岛课程里的一句（还是随机挑四句里的一句的样子）
     if (ln) Object.assign(B.task, { target: ln.t, mean: ln.mean, q: ln.q });
     listenIfDown(B.task);
     taskPanel();
@@ -1630,7 +1642,7 @@
     const mon = byUid(it.u), s = SPECIES[mon.sp], nm = mvName(parseMove(it.id));
     if (k < 0) { q.shift(); E.save(); E.closeModal(); E.toast(tx('b.learn.skip', { name: s.en, mv: nm[0] })); setTimeout(afterBattleQueue, 300); return; }
     const old = mvName(parseMove(mon.moves[k]));
-    const ln = learnL('learn a move'), line = ln ? ln.t : s.en + ', learn ' + nm[0] + '!', sr = E.speakMode() === 'sr';   // 别的课：换成这座岛课程里的一句
+    const ln = learnL('learn a move', null, s.en + ', learn ' + nm[0] + '!'), line = ln ? ln.t : s.en + ', learn ' + nm[0] + '!', sr = E.speakMode() === 'sr';   // 别的课：翻好的那句，没有就换成这座岛课程里的一句
     E.openModal('<h2>' + hx('b.learn.ok', { mv: old[0] }) + '</h2><p>' + hx('b.learn.say') + '</p><div class="say-text" id="lr-say">' + E.wordsHTML(line) + '</div>' + meanHTML(ln) +
       (sr ? '<button class="mic" id="lr-mic" data-act="mLearnMic" data-k="' + k + '">' + E.MIC + '</button><div class="mic-hint" id="lr-hint">' + hx('b.mic.say') + '</div>' : '<button class="btn leaf wide" data-act="mLearnGo" data-k="' + k + '">' + hx('b.said') + '</button>') +
       '<button class="btn ghost wide" data-act="mHearLearn">' + hx('b.listen') + '</button>', { locked: true });
@@ -1649,7 +1661,7 @@
     const m = $('lr-mic'); if (!m) return;
     if (E.RT.listening) { E.stopListening(); return; }
     m.classList.add('on'); m.innerHTML = E.STOP; $('lr-hint').textContent = tx('b.mic.on');
-    const it = (M().pendingLearn || [])[0], ln = learnL('learn a move'), line = ln ? ln.t : it ? nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] : '';
+    const it = (M().pendingLearn || [])[0], ln = learnL('learn a move', null, it ? SPECIES[byUid(it.u).sp].en + ', learn ' + mvName(parseMove(it.id))[0] + '!' : ''), line = ln ? ln.t : it ? nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] : '';
     const res = await E.recognize(null, [line]);
     if (!$('lr-mic')) return;
     m.classList.remove('on'); m.innerHTML = E.MIC;
@@ -1898,7 +1910,7 @@
       '<div class="sum-stats">' + bar(hx('b.sum.hp'), hp + '/' + st.hp, st.hp) + bar(hx('b.sum.atk'), st.atk, 250) + bar(hx('b.sum.def'), st.def, 250) + bar(hx('b.sum.spd'), st.spd, 250) + '</div>' +
       '<h3 class="pc-h">' + hx('b.sum.moves') + '</h3><div class="sum-moves">' + mon.moves.map(id => moveCard(parseMove(id))).join('') + '</div>' +
       (nextMoves ? '<p class="tip">' + hx('b.sum.next', { list: nextMoves }) + '</p>' : '') + (nextEvo ? '<p class="tip">' + hx('b.sum.evo', { list: nextEvo }) + '</p>' : '') +
-      '<p class="dex-en">' + esc(s.dexEn) + '</p>' + (dz ? '<p class="dex-zh">' + esc(dz) + '</p>' : '') +
+      dexText(s, '') +
       '<button class="btn ghost wide" data-act="' + (back || 'mTeam') + '">' + hx('b.back') + '</button>');
   }
 
@@ -1926,7 +1938,7 @@
     if (!nickCtx) return;
     const mon = byUid(nickCtx.u); if (!mon) return;
     nickCtx.name = name;
-    const ln = learnL('your name is'), line = ln ? ln.t : 'Your name is ' + name + '!', sr = E.speakMode() === 'sr';   // 别的课：换成这座岛课程里的一句
+    const ln = learnL('your name is', null, 'Your name is ' + name + '!'), line = ln ? ln.t : 'Your name is ' + name + '!', sr = E.speakMode() === 'sr';   // 别的课：翻好的那句，没有就换成这座岛课程里的一句
     nickCtx.line = line;
     E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + name + '</h2><p>' + hx('b.nick.say') + '</p></div></div><div class="say-text" id="nick-say">' + E.wordsHTML(line) + '</div>' + meanHTML(ln) +
       '<button class="spk mini" data-act="mNickHear" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button>' +
@@ -1975,7 +1987,7 @@
     const mon = byUid(u); if (!mon || mon.egg) return;
     const today = E.dayStr(), done = (M().talked || {})[u] === today;
     if (done) { E.openModal('<div class="sum-top"><span class="sum-pic">' + svgMon(mon) + '</span><div><h2>' + nm(mon) + '</h2><p>' + E.esc(MOOD(hearts(mon))) + '</p><p>' + hx('b.fr') + ' ' + heartsHTML(mon) + '</p><p class="tip">' + hx('b.talk.later') + '</p></div></div><button class="btn ghost wide" data-act="' + (then ? 'mTalkBack' : 'close') + '" data-u="' + u + '">' + hx('b.okay') + '</button>'); talkCtx = { u, then }; return; }
-    const k = (new Date().getDate() + (SPECIES[mon.sp].sd || 0)) % TALKS.length, ln = learnL('talk:' + k);   // 别的课：换成这座岛课程里的一句
+    const k = (new Date().getDate() + (SPECIES[mon.sp].sd || 0)) % TALKS.length, ln = learnL('talk:' + k, null, TALKS[k](nm(mon)));   // 别的课：翻好的那句，没有就换成这座岛课程里的一句
     const line = ln ? ln.t : TALKS[k](nm(mon)), sr = E.speakMode() === 'sr';
     talkCtx = { u, then, line };
     // b.talk.p 的 {h} 是爱心的 HTML（heartsHTML），所以用 tx 不用 hx；字表里这句没有要转义的字
@@ -2227,7 +2239,7 @@
     // 标题：编号 + 英文名 +（中文名）；没收服时中文名写「？」；英语界面没有中文名，括号整个不要
     const zp = gloss(s) ? zhOf({ zh: st === 'caught' ? gloss(s) : tx('b.q') }) : '', dz = gloss({ zh: s.dexZh });
     E.openModal('<div class="dex-big">' + svg(id) + '</div><h2>' + (s.dexNo ? 'No.' + s.dexNo : hx('b.dex.extra')) + ' ' + s.en + E.esc(zp) + '</h2><div class="chips" style="justify-content:center">' + chips(id) + (s.legend ? '<span class="lvchip">' + hx('b.legend') + '</span>' : '') + '</div>' +
-      (st === 'caught' ? '<p class="dex-en">' + esc(s.dexEn) + ' <button class="spk mini" data-act="mSayDex" data-sp="' + id + '" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button></p>' + (dz ? '<p class="dex-zh">' + esc(dz) + '</p>' : '') +
+      (st === 'caught' ? dexText(s, ' <button class="spk mini" data-act="mSayDex" data-sp="' + id + '" aria-label="' + hx('b.hear') + '">' + E.SPK + '</button>') +
         (s.words && s.words.length ? '<p class="tip">' + hx('b.dex.words') + s.words.map(w => '<b>' + esc(w) + '</b>').join(' + ') + '</p>' : '') : '<p class="tip">' + hx('b.dex.lock') + '</p>') +
       habitatHTML(id) +
       (chain.length > 1 ? '<div class="dex-chain">' + chain.map(c => { const k = M().dex[c.x.id]; return '<span class="dc' + (c.x.id === id ? ' on' : '') + '">' + (c.depth ? '<i>' + how(c.x) + ' →</i>' : '') + '<span class="dc-svg">' + (k ? svg(c.x.id) : '') + '</span><small>' + (k ? c.x.en : '???') + '</small></span>'; }).join('') + '</div>' : '') +
@@ -2291,7 +2303,7 @@
     mForget: t => forget(+t.dataset.k),
     mLearnGo: t => learnDone(+t.dataset.k),
     mLearnMic: t => learnMic(+t.dataset.k),
-    mHearLearn: () => { const it = (M().pendingLearn || [])[0], ln = learnL('learn a move'); if (ln) E.say(ln.t, .8); else if (it) E.say(nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] + '!', .8); },
+    mHearLearn: () => { const it = (M().pendingLearn || [])[0], ln = learnL('learn a move', null, it ? SPECIES[byUid(it.u).sp].en + ', learn ' + mvName(parseMove(it.id))[0] + '!' : ''); if (ln) E.say(ln.t, .8); else if (it) E.say(nm(byUid(it.u)) + ', learn ' + mvName(parseMove(it.id))[0] + '!', .8); },
     mExpShare: () => { M().expShareOn = M().expShareOn === false; E.save(); bagSheet(); },
     mDowse: () => { M().dowseOn = M().dowseOn === false; E.save(); bagSheet(); },
     bSwitch: switchSheet,

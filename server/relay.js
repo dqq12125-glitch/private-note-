@@ -45,6 +45,20 @@ const MAX_LIVE = +(cfg('MAX_LIVE') || 4);           // 同时最多几段对话
 const ACCESS_CODE = cfg('ACCESS_CODE') || '';       // 设了就要在游戏设置里填同样的家庭口令
 const ADMIN_TOKEN = cfg('ADMIN_TOKEN') || '';       // 看对话记录用；没设只允许本机看
 const ORIGINS = (cfg('ALLOWED_ORIGINS') || 'http://localhost,http://127.0.0.1,https://dqq12125-glitch.github.io,.ts.net,.trycloudflare.com').split(',').map(s => s.trim()).filter(Boolean);
+// 口语题的识别、现场合成连哪里：默认就是阿里云（和以前一样）；测试时指到假的上游（cloud/test/t-05-relay.js）
+const ASR_URL = cfg('ASR_URL') || CORE.EVAL_URL;
+const TTS_URL = cfg('TTS_URL') || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation';
+// 识别 / 合成的语言（别的语言的课，和公开版服务器 cloud/ 同一套，API.md §8 的 lang）：代码 → 合成的 language_type。没给 = 英语，发给阿里云的和以前一字不差
+const SPEECH = { en: 'English', es: 'Spanish', ja: 'Japanese', zh: 'Chinese' };
+// 别的语言合成用的音色（英语照旧 Jennifer / Aiden）：TTS_VOICES='{"es":{"f":"…","m":"…"}}' 可改；默认值要对着阿里云的音色表核对
+const TTS_VOICES = (() => { let o = {}; try { o = JSON.parse(cfg('TTS_VOICES') || '{}') || {}; } catch (e) { o = {}; } const d = { f: 'Cherry', m: 'Ethan' }; return { es: Object.assign({}, d, o.es), ja: Object.assign({}, d, o.ja), zh: Object.assign({}, d, o.zh) }; })();
+// lang → 代码；不认得 → null。names：/tts 也认 "Spanish" 这种写法
+function speechLang(v, names) {
+  if (v === undefined || v === null || v === '') return 'en';
+  let s = String(v);
+  if (names) { const k = Object.keys(SPEECH).find(x => SPEECH[x] === s); if (k) s = k; }
+  return Object.prototype.hasOwnProperty.call(SPEECH, s) ? s : null;
+}
 if (!KEY) { console.error('没有找到 DASHSCOPE_API_KEY（环境变量或 KEY_FILE / server/.env）'); process.exit(1); }
 
 // ---------- 用量（每台设备每天的秒数），存盘防重启清零 ----------
@@ -210,15 +224,18 @@ function cloudHelp(u, req, res) {
       }
       if (u.pathname === '/asr') {
         if (typeof j.audio !== 'string' || j.audio.length < 1000) return bad(400, 'audio');
-        const r = await call({ model: 'qwen3-asr-flash', stream: false, asr_options: { language: 'en', enable_itn: false }, messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + j.audio } }] }] });
+        const language = speechLang(j.lang); if (!language) return bad(400, 'lang');   // 别的语言的课：es / ja / zh
+        const r = await call({ model: 'qwen3-asr-flash', stream: false, asr_options: { language, enable_itn: false }, messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'data:audio/wav;base64,' + j.audio } }] }] }, ASR_URL);
         res.writeHead(200, cors); return res.end(JSON.stringify({ text: String((r.choices && r.choices[0].message.content) || '').trim() }));
       }
       if (u.pathname === '/tts') {   // 网页版：没有提前配音的句子现场合成
         const text = clean(j.text, 300); if (!text) return bad(400, 'text');
+        const lang = speechLang(j.lang, true); if (!lang) return bad(400, 'lang');
+        const V = lang === 'en' ? { f: 'Jennifer', m: 'Aiden' } : TTS_VOICES[lang];
         const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
         try {
-          const r = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: 'qwen3-tts-flash', input: { text, voice: j.g === 'm' ? 'Aiden' : 'Jennifer', language_type: 'English' } }), signal: ctl.signal });
+          const r = await fetch(TTS_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'qwen3-tts-flash', input: { text, voice: j.g === 'm' ? V.m : V.f, language_type: SPEECH[lang] } }), signal: ctl.signal });
           const o = await r.json(), url = o.output && o.output.audio && o.output.audio.url;
           res.writeHead(url ? 200 : 502, cors); return res.end(JSON.stringify(url ? { url } : { url: '', error: 'upstream', up: String(o.code || r.status).slice(0, 40) }));
         } finally { clearTimeout(tm); }
@@ -284,12 +301,15 @@ server.on('upgrade', (req, socket, head) => {
 // ---------- WebSocket：口语题的实时识别（网页版；APK 用原生桥直连） ----------
 // 带着密钥连阿里云 qwen3-asr-flash-realtime，边说边回文字。只转发听写要用的几种消息（设置里只认停顿长度），
 // 一次最多 15 秒、最多 15 秒的声音，同一个地址每分钟最多 40 次（和 /asr 一起算）
-const ASR_RT_URL = CORE.REALTIME_URL + '?model=qwen3-asr-flash-realtime';
+// 听哪种语言看网址里的 ?lang=（en / es / ja / zh，没给 = en；不认得的直接断开）
+const ASR_RT_URL = (cfg('ASR_RT_URL') || CORE.REALTIME_URL) + '?model=qwen3-asr-flash-realtime';
 asrWss.on('connection', (cli, req) => {
   const u = new URL(req.url, 'http://x');
   const bye = () => { try { cli.close(); } catch (e) {} };
   try { if (req.headers.origin && !okOrigin(req.headers.origin)) return bye(); } catch (e) { return bye(); }
   if (ACCESS_CODE && u.searchParams.get('code') !== ACCESS_CODE) return bye();
+  const language = speechLang(u.searchParams.get('lang'));
+  if (!language) return bye();
   const ip = req.headers['cf-connecting-ip'] || req.socket.remoteAddress || '?', now = Date.now(), h = (hits.get(ip) || []).filter(t => now - t < 60000);
   if (h.length >= 40) return bye(); h.push(now); hits.set(ip, h);
   const up = new WebSocket(ASR_RT_URL, { headers: { Authorization: 'Bearer ' + KEY } });
@@ -305,7 +325,7 @@ asrWss.on('connection', (cli, req) => {
     let out = null;
     if (m.type === 'session.update') {
       const td = (m.session && m.session.turn_detection) || {};
-      out = { type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language: 'en' },
+      out = { type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language },
         turn_detection: { type: 'server_vad', threshold: 0.2, silence_duration_ms: Math.max(300, Math.min(1200, +td.silence_duration_ms || 600)) } } };
     } else if (m.type === 'input_audio_buffer.append' && typeof m.audio === 'string') {
       bytes += m.audio.length; if (bytes > 700000) return end();   // 15 秒 16kHz PCM 的 base64 ≈ 640KB

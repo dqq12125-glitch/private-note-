@@ -24,6 +24,11 @@ const DEF_RATE = {
   consentPerUserDay: 5,    // 每个账号每天最多发几次家长同意邮件
 };
 
+// 识别 / 合成认的语言（API.md §8 的 lang）：代码 → 阿里云合成的 language_type。只认这几种；SPEECH_LANGS 能关掉其中几种（英语一直在）
+export const SPEECH_KNOWN = { en: 'English', es: 'Spanish', ja: 'Japanese', zh: 'Chinese' };
+// 别的语言合成用的音色（英语照旧用 TTS_VOICE_F / TTS_VOICE_M）。默认值上线前要对着阿里云国际版的音色表核对（README），TTS_VOICES 可改
+const DEF_TTS_VOICES = { es: { f: 'Cherry', m: 'Ethan' }, ja: { f: 'Cherry', m: 'Ethan' }, zh: { f: 'Cherry', m: 'Ethan' } };
+
 const num = (v, d) => (v === undefined || v === null || v === '' || !isFinite(+v) ? d : +v);
 const list = (v, d) => String(v == null || v === '' ? d : v).split(',').map(s => s.trim()).filter(Boolean);
 function obj(v, d) {
@@ -42,6 +47,8 @@ export function config(env) {
   const plans = {};
   for (const k of Object.keys(DEF_PLANS)) plans[k] = Object.assign({}, DEF_PLANS[k], plansIn[k] || {});
   const bundleId = String(env.APPLE_BUNDLE_ID || '');
+  const voicesIn = obj(env.TTS_VOICES, {}), ttsVoices = {};
+  for (const k of Object.keys(DEF_TTS_VOICES)) ttsVoices[k] = Object.assign({}, DEF_TTS_VOICES[k], voicesIn[k] || {});
   c = {
     env: ENV, prod,
     // 测试钩子（x-test-now 请求头改「现在」、上游不限主机）：只在 TEST_HOOKS=1 且不是正式环境时打开
@@ -78,6 +85,8 @@ export function config(env) {
       authWaitSec: num(env.WS_AUTH_WAIT_SEC, 10),          // 等第一条 auth 消息几秒
     },
     asrRt: { maxSec: num(env.ASR_RT_MAX_SEC, 15), maxB64: num(env.ASR_RT_MAX_B64, 700000) },
+    // 识别（/v1/asr、/v1/asr-rt）和合成（/v1/tts）能用哪些语言：英语打头，只留 SPEECH_KNOWN 里有的；GET /v1/me 的 speechLangs 就是它
+    speechLangs: ['en'].concat(list(env.SPEECH_LANGS, 'en,es,ja,zh').filter((l, i, a) => l !== 'en' && Object.prototype.hasOwnProperty.call(SPEECH_KNOWN, l) && a.indexOf(l) === i)),
     // 阿里云百炼国际版（新加坡）。模型名、地址都是配置：国际版和北京区的模型列表不一样，上线前对着控制台核对（README）
     ds: {
       key: String(env.DASHSCOPE_API_KEY || ''),
@@ -90,6 +99,7 @@ export function config(env) {
       evalModel: String(env.EVAL_MODEL || 'qwen-plus'),
       ttsModel: String(env.TTS_MODEL || 'qwen3-tts-flash'),
       ttsVoice: { f: String(env.TTS_VOICE_F || 'Jennifer'), m: String(env.TTS_VOICE_M || 'Aiden') },
+      ttsVoices,                               // 别的语言的合成音色：{ es: { f, m }, ja: …, zh: … }
       voiceMap: obj(env.TALK_VOICE_MAP, {}),   // 岛民音色改名：{ "talk-npcs 里的名字": "国际版有的名字" }，默认不改
     },
     apple: {
@@ -125,6 +135,16 @@ export function config(env) {
   };
   cache.set(env, c);
   return c;
+}
+
+// 识别 / 合成的语言（API.md §8 的 lang）：没给 = 英语（发给上游的和以前一字不差）；不认得的、服务器关掉的 → 400 bad_request
+// （field lang、reason unsupported_lang、supported 列出能用的）。names：/v1/tts 以前收 "English" / "Chinese"，这种写法照样认
+export function speechLang(c, v, names) {
+  if (v === undefined || v === null || v === '') return 'en';
+  let s = String(v);
+  if (names) { const k = Object.keys(SPEECH_KNOWN).find(x => SPEECH_KNOWN[x] === s); if (k) s = k; }
+  if (!c.speechLangs.includes(s)) throw new HttpError(400, 'bad_request', 'Unsupported language', { field: 'lang', reason: 'unsupported_lang', supported: c.speechLangs.slice() });
+  return s;
 }
 
 // 一定要有的秘密：没有就 503（部署了但没配好时，别带着默认值跑）

@@ -81,7 +81,75 @@
   const RETRY = [1000, 3000, 8000];   // 一个文件失败了隔多久重试（3 次）；测试可以改小
   const BATCH = 300;                  // 拆包时一个事务写几段
 
-  const pure = { crc32, crcHex, hex8, packBundle, readBundle, verCmp, okVer, okUrl, normUrl, RETRY, BATCH };
+  // ---------- 台词翻译表（tools/course/SPEC.md §8、ENGINE.md §5）----------
+  // course.json 的 LINES { 英语原文: 译文 }、LINES_T 模板、TERMS 词 → 查表用的结构 { L, T, M, join }。没有翻译表返回 null
+  // 译文：字符串（西语）或 { t, seg?, r?, g? }
+  const own = (o, k) => !!o && typeof o === 'object' && Object.prototype.hasOwnProperty.call(o, k);
+  const lnVal = v => (typeof v === 'string' ? { t: v } : v && typeof v === 'object' && typeof v.t === 'string' ? v : null);
+  const reEsc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  function lineTable(c) {
+    if (!c || typeof c !== 'object') return null;
+    const L = c.LINES && typeof c.LINES === 'object' ? c.LINES : {}, M = c.TERMS && typeof c.TERMS === 'object' ? c.TERMS : {};
+    const T = (Array.isArray(c.LINES_T) ? c.LINES_T : []).map(tp => {
+      if (!tp || typeof tp.en !== 'string' || typeof tp.t !== 'string') return null;
+      const names = [];
+      let src = '^';
+      tp.en.split(/(\{[a-z0-9]+\})/).forEach(p => {
+        const m = /^\{([a-z0-9]+)\}$/.exec(p);
+        if (m && own(tp.s, m[1])) { names.push(m[1]); src += '(.+?)'; return; }
+        let lit = reEsc(p);
+        if (tp.an) lit = lit.replace(/(^|\W)([aA]) $/, '$1$2n? ');   // 英语的 a / an 跟着后面的词变
+        src += lit;
+      });
+      return names.length ? { tp, names, re: new RegExp(src + '$') } : null;
+    }).filter(Boolean);
+    if (!Object.keys(L).length && !T.length && !Object.keys(M).length) return null;
+    return { L, T, M, join: c.lang === 'zh' ? ' ' : '' };
+  }
+  // 一个译文的读音拼成一个字符串（填进模板里的一个空）
+  const flatR = (x, join) => (Array.isArray(x.r) ? x.r.join(join) : typeof x.r === 'string' ? x.r : x.t);
+  // 模板里一个空的值 → { t, r, g? }；对不上返回 null。opt：isMon(值) 是不是怪兽名 / 昵称（没翻的照原样）、content(值) 课程条目
+  function slotVal(tab, tp, nm, v, opt) {
+    const ty = tp.s[nm];
+    if (ty === 'num') return /^\d+$/.test(v) ? { t: v, r: v } : null;
+    if (ty === 'name') return /^[A-Z][A-Za-z .'-]{0,30}$/.test(v) ? { t: v, r: v } : null;
+    if (ty === 'content') { const e = opt.content ? opt.content(v) : null; return { t: v, r: e && e.r ? flatR(e, tab.join) : v }; }
+    if (ty === 'free') {
+      const x = tp.vals && own(tp.vals, nm) && own(tp.vals[nm], v) ? lnVal(tp.vals[nm][v]) : own(tab.L, v) ? lnVal(tab.L[v]) : null;
+      return x ? { t: x.t, r: flatR(x, tab.join), g: x.g } : null;
+    }
+    const M = tab.M[ty];
+    if (own(M, v)) { const x = lnVal(M[v]); return x ? { t: x.t, r: flatR(x, tab.join), g: x.g } : null; }
+    if (ty === 'monster' && opt.isMon && opt.isMon(v)) return { t: v, r: v };   // 没翻的怪兽名、起的昵称：专有名词，照原样
+    return null;
+  }
+  // 英语原文（游戏里拼好的那一句，{name} / {rival} 可以还没换）→ 这门语言的 { t, seg?, r? }，没有返回 null。
+  // 先整句找，再一个个模板对（LINES_T 已经按具体程度排好），最后看是不是单独一个词（地名、怪兽名）
+  function lineFind(tab, en, opt) {
+    if (!tab || typeof en !== 'string' || !en) return null;
+    opt = opt || {};
+    if (own(tab.L, en)) { const x = lnVal(tab.L[en]); if (x) return x; }
+    for (const { tp, names, re } of tab.T) {
+      const m = re.exec(en);
+      if (!m) continue;
+      const vals = {};
+      if (!names.every((nm, i) => (vals[nm] = slotVal(tab, tp, nm, m[i + 1], opt)))) continue;
+      // 西语的阴性：第一个带 g 的空是 f 就用 f 那一句
+      const gv = names.map(nm => vals[nm]).find(v => v && v.g);
+      const useF = !!(tp.f && gv && gv.g === 'f');
+      const sub = s => String(s).replace(/\{([a-z0-9]+)\}/g, (all, k) => (vals[k] ? vals[k].t : all));
+      const out = { t: sub(useF ? tp.f : tp.t) };
+      if (!useF && Array.isArray(tp.seg) && Array.isArray(tp.r) && tp.seg.length === tp.r.length) {
+        out.seg = tp.seg.map(sub);
+        out.r = tp.r.map(r => String(r).replace(/\{([a-z0-9]+)\}/g, (all, k) => (vals[k] ? String(vals[k].r) : all)));
+      }
+      return out;
+    }
+    for (const ty of Object.keys(tab.M)) if (own(tab.M[ty], en)) { const x = lnVal(tab.M[ty][en]); if (x) return typeof x.r === 'string' ? { t: x.t, seg: [x.t], r: [x.r] } : { t: x.t }; }
+    return null;
+  }
+
+  const pure = { crc32, crcHex, hex8, packBundle, readBundle, verCmp, okVer, okUrl, normUrl, RETRY, BATCH, lineTable, lineFind };
   if (inNode) {
     module.exports = { on: false, LANGS, _: pure };
     return;
@@ -816,12 +884,14 @@
     };
   }
 
+  const LTAB = { c: null, t: null };   // line() 用的查表结构（course.json 换了重建）
   const api = {
     get on() { return ON; }, get base() { return BASE; }, get store() { return STORE; },
     LANGS, course, ready, courseReady, state, info, catalog, install, pause, remove, hasClip, clip, setCourse, on_, learnable,
     content: () => (course() === 'en' ? null : CONTENT),
-    // 写死的英语台词在这门课里的说法（台词翻译表，内容那一路以后放进 course.json 的 LINES：{ 英语原文: 这门语言的一句 }）；没有返回 null（tools/course/ENGINE.md §5）
-    line: en => (CONTENT && CONTENT.LINES && typeof CONTENT.LINES === 'object' && Object.prototype.hasOwnProperty.call(CONTENT.LINES, en) ? CONTENT.LINES[en] : null),
+    // 写死的英语台词在这门课里的说法（course.json 的 LINES / LINES_T / TERMS，tools/course/SPEC.md §8）→ { t, seg?, r? }，没有返回 null。
+    // 怪兽昵称、玩家名字这种要游戏里的存档才认得：game.js 的 lineOf 自己带上 opt 调 _.lineFind
+    line: (en, opt) => { const c = course() === 'en' ? null : CONTENT; if (!c) return null; if (LTAB.c !== c) { LTAB.c = c; LTAB.t = lineTable(c); } return lineFind(LTAB.t, en, opt); },
     // 界面（game.js / placement.js 调）
     init, homeBar, settingsRow, sheet, firstStep, missing,
     _: pure,

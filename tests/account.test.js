@@ -267,6 +267,9 @@ function serve() {
     check(!!(await T.until(() => T.p.$('#tk-ov'))), '选好以后自动接着开刚才那段聊天');
     await T.until(() => T.E(() => !document.querySelector('#tk-mic').disabled), 8000);
     check(await T.E(() => /AI 今天还剩 5 分钟/.test(document.querySelector('#tk-min').textContent)), '聊天顶上：「AI 今天还剩 5 分钟」（服务器 ready 里的 leftSec）');
+    // 别的语言的课：服务器认哪些识别 / 合成的语言（GET /v1/me 的 speechLangs），account.js 记下、talk.js 照着决定走不走服务器
+    const sl = await T.E(() => ({ me: (EchoAccount.me() || {}).speechLangs, es: EchoAccount.speechLang('es'), fr: EchoAccount.speechLang('fr'), talkEs: EchoTalk.speechLang('Spanish', 'tts'), talkEn: EchoTalk.speechLang('en', 'asr') }));
+    check(JSON.stringify(sl.me) === '["en","es","ja","zh"]' && sl.es && !sl.fr && sl.talkEs && sl.talkEn, '登录后账号信息里有服务器的 speechLangs：西语能走服务器、不认得的不能', sl);
     await T.E(() => EchoTalk.endIfOpen()); await T.W(300);
     await T.E(() => document.querySelector('[data-act=talk_close]') && document.querySelector('[data-act=talk_close]').click());
     await T.W(400);

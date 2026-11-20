@@ -1305,7 +1305,10 @@
     WX.forEach(entriesOfWorld);
     (c.SCENES || []).forEach(sc => (sc.lines || []).forEach(L => entryAdd(L[1], L[3], L[2])));
     LEX = EchoLang.lexicon(COURSE, [...ENTRY.values()]);
+    // 台词翻译表（course.json 的 LINES / LINES_T / TERMS，tools/course/SPEC.md §8）：没有就是 null，写死的英语照 ENGINE.md §5 的过渡办法
+    LTAB = window.EchoPacks && EchoPacks._ && EchoPacks._.lineTable ? EchoPacks._.lineTable(c) : null;
   }
+  let LTAB = null;
   // ---------- 读音（日语、中文：ENGINE.md §3「读音」）----------
   // E.ruby(原文) → HTML：找得到条目就按词块标读音（真的 <ruby>），找不到就原样（转义过）。西语、关掉了「读音」的、英语课都原样
   const rubyOn = () => !!LANG && LANG.script !== 'latin' && S.settings.ruby !== false;
@@ -1315,6 +1318,8 @@
     r = String(r || '').trim();
     // 日语：全是假名的块不用标；读音和写法一样也不用标
     if (!base || !r || r === base || (LANG.script === 'kana' && !/[㐀-鿿豈-﫿々]/.test(base))) return esc(p);
+    // 台词里的名字（拉丁字母，读音就是它自己，后面可能跟着引号）：不标
+    if (/^[A-Za-z][A-Za-z .'-]*$/.test(r) && base.replace(/[^A-Za-z .'-]/g, '') === r) return esc(p);
     return '<ruby>' + esc(base) + '<rt>' + esc(r) + '</rt></ruby>' + esc(tail);
   }
   // 一句话的词块和每块的读音（没有读音的块给 ''）
@@ -1976,7 +1981,12 @@
     if (!text) return Promise.resolve();
     // 别的课（ENGINE.md §5）：只念这门课的内容（条目表里有的、课程包里有配音的）；代码里写死的英语台词、喊话只给人看、不念——
     // 停一小会儿再算「读完」（和没有声音时一样），剧情、对战的节奏不变
-    if (LANG && !entryOf(text) && !(PK() && packClip(text, g))) return new Promise(res => setTimeout(res, Math.min(1500, 200 + String(text).length * 20)));
+    // 有台词翻译表（SPEC §8）的：念翻好的那句（课程包里有配音就放配音，没有用本机声音）
+    if (LANG && !entryOf(text) && !(PK() && packClip(text, g))) {
+      const ln = lineOf(text);
+      if (!ln) return new Promise(res => setTimeout(res, Math.min(1500, 200 + String(text).length * 20)));
+      text = ln.t;
+    }
     const m = MUS(), tok = {};
     if (m) { if (!duckTok) m.duck(true); duckTok = tok; }
     return sayRaw(text, rate, g).then(() => { if (m && duckTok === tok) { duckTok = null; m.duck(false); } });
@@ -1990,8 +2000,8 @@
       const id = RT.sayId = (RT.sayId || 0) + 1;
       // 课程包模式：装好了的那段从数据库读出来（blob: 地址）再放；没装好 / 读不出来照旧往下走（阿里云 → 本机声音）
       if (PK()) {
-        // 别的课：没有配音就用本机声音（这一步不走云端合成：服务器的合成还写死英语，ENGINE.md §3 / §6）
-        const next = LANG ? () => sayDevice(text, rate, res, g) : () => sayCloud(text, rate, res, g, id);
+        // 没有配音：现场合成（别的课只在服务器认这门语言时，见 sayCloud），不行再用本机声音
+        const next = () => sayCloud(text, rate, res, g, id);
         const pc = S.settings.tts === 'device' ? null : packClip(text, g);
         if (!pc) { next(); return; }
         EchoPacks.clip(pc[0], pc[1]).then(url => {
@@ -2008,14 +2018,16 @@
     });
   }
   // 没有提前配音的句子（带名字的台词等）：能连阿里云就现场合成（约 1–2 秒，同一句只合成一次），不行再用本机声音
+  // 别的课：合成带上这门语言（LANG.tts.cloud）；服务器不认这门语言（云端模式看 GET /v1/me 的 speechLangs、网页版的中转服务一律不走）就直接用本机声音
   function sayCloud(text, rate, res, g, id) {
+    if (LANG && cloudOk() && !(EchoTalk.speechLang && EchoTalk.speechLang(LANG.tts.cloud, 'tts'))) { sayDevice(text, rate, res, g); return; }
     if (!cloudOk()) {
       // 自动化测试时记下没有配音的句子（tools/voice/misshook.js 收集，再补合成）
       if (navigator.webdriver && S.settings.tts !== 'device') { try { console.log('[voice-miss]' + JSON.stringify([text, g || ''])); } catch (e) {} }
       sayDevice(text, rate, res, g);
       return;
     }
-    EchoTalk.cloudTTS(text, g).then(url => {
+    EchoTalk.cloudTTS(text, g, LANG ? LANG.tts.cloud : undefined).then(url => {
       if (RT.sayId !== id) return res();   // 等合成的时候已经换了别的句子
       if (url) { RT.cloudTTSFails = 0; playUrl(text, rate, res, g, url, () => sayDevice(text, rate, res, g)); return; }
       RT.cloudTTSFails = (RT.cloudTTSFails || 0) + 1; if (RT.cloudTTSFails >= 3) RT.cloudTTSBroken = true;
@@ -2128,8 +2140,10 @@
     if (r.err === 'aborted') return 'stop';
     return 'unheard';
   }
-  // 别的课在云端模式里：服务器的识别还写死英语（ENGINE.md §6），iPhone 的本机识别用不了时口语题按「AI 用不了」走（先跳过、进复习）
-  const langNoCloud = () => !!LANG && cloudOn() && !localSR();
+  // 别的课在云端模式里：服务器认这门语言（GET /v1/me 的 speechLangs，account.js）就走服务器的识别（带上 LANG.asr.cloud）；
+  // 不认（老服务器、还没登录拿不到账号信息）时 iPhone 的本机识别又用不了，口语题按「AI 用不了」走（先跳过、进复习，ENGINE.md §6）
+  const langSrv = () => !!LANG && !!(window.EchoTalk && EchoTalk.speechLang && EchoTalk.speechLang(LANG.asr.cloud, 'asr'));
+  const langNoCloud = () => !!LANG && cloudOn() && !localSR() && !langSrv();
   function recognizeRaw(onInterim, targets, opts) {
     if (langNoCloud() && S.settings.mode !== 'self') { aiNote('nokey'); return Promise.resolve({ alts: [], err: 'nokey', fail: 'nokey', why: 'lang' }); }
     // 云端模式还没登录：不开麦克风，走「AI 用不了」那条路；第一次碰到时弹一次「登录，每天免费用 AI」（不是报错）
@@ -2138,8 +2152,8 @@
     if (cloudSR() || localSR()) {
       RT.listening = true;
       const tg = (targets || []).filter(Boolean);
-      // 别的课：识别的语言（本机 / 云端）、「短的」怎么算、聊天里数词的办法都交给 LANG；云端模式不许改走云端识别（noCloud）
-      const lo = LANG ? { lang: LANG.asr, head: LANG.head, count: LANG.countUnits, noCloud: cloudOn() } : null;
+      // 别的课：识别的语言（本机 / 云端）、「短的」怎么算、聊天里数词的办法都交给 LANG；云端模式里服务器不认这门语言就不许改走云端识别（noCloud）
+      const lo = LANG ? { lang: LANG.asr, head: LANG.head, count: LANG.countUnits, noCloud: cloudOn() && !langSrv() } : null;
       return EchoTalk.listenOnce(Object.assign({ onState: onInterim, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => (LANG ? LANG.short(x, entryOf(x)) : x.trim().split(/\s+/).length <= 2)) },
         opts && opts.maxMs ? { maxMs: opts.maxMs } : null, opts && opts.long ? { long: true } : null, lo)).then(r => {
         RT.listening = false;
@@ -4745,20 +4759,63 @@
     }
     return { w: NB + i, d: BK[i] };
   }
-  // ---------- 别的课：写死的英语句子怎么办（ENGINE.md §5，过渡办法）----------
+  // ---------- 别的课：写死的英语句子（台词翻译表 tools/course/SPEC.md §8；没翻的按 ENGINE.md §5 的过渡办法）----------
   // 课程内容一句话的意思（界面语言里的：英语界面 en、中文界面 zh；没有是 null）
   function meanText(t) { const e = entryOf(t); return e ? glossC({ zh: e.zh, en: e.en }) : null; }
+  // lineOf(英语原文, { zh, fill, swap }) → { t, seg, r, en, zh, mean }，没有（英语课、没有翻译表、这句没翻）返回 null。
+  //   原文可以带着 {name} / {rival}，也可以是已经换好名字的（换回占位符再找）；模板里的怪兽名可以是起的昵称（照原样，packs.js 的 lineFind）。
+  //   t / seg / r 里的 {name} / {rival} 换成名字（fill：world.js 用自己的换法），en 是换好名字的英语原文。
+  //   查到的这句登记进条目表 ENTRY：标读音（ruby）、逐块标色、打分（LANG.score 按 seg / r）、say() 都认得它，就像课程内容。
+  //   zh：这句的中文意思（剧情页面的 zh），swap：[[英语, 译文]] 意思里夹着的英语原句换成译文；
+  //   mean：界面语言里的意思（中文界面 = zh，英语界面 = 英语原文），说到「英语 / English」的换成在学的语言（翻译表的台词就是这么翻的，SPEC §8.2）
+  const PNAME = () => (S.player && S.player.name) || 'Trainer';
+  const RNAME = () => (S.player && S.player.gender === 'girl' ? 'Leo' : 'Mia');
+  const fillNames = s => (typeof s === 'string' ? s.split('{name}').join(PNAME()).split('{rival}').join(RNAME()) : s);
+  const reWord = s => new RegExp('(^|[^A-Za-z])' + String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![A-Za-z])', 'g');
+  const unfillNames = s => { let o = String(s); if (S.player && S.player.name) o = o.replace(reWord(S.player.name), '$1{name}'); return o.replace(reWord(RNAME()), '$1{rival}'); };
+  // 模板里的怪兽名：手册里的名字，或者自己队伍 / 箱子里起的昵称
+  const isMonName = v => !!(window.DEX && (DEX.all || DEX.list || []).some(sp => sp.en === v)) || ((S.mon && S.mon.box) || []).some(m => m && m.nick === v);
+  function courseWord(s, ui) {
+    if (typeof s !== 'string' || !s || !LANG || !I18N) return s;
+    const nm = I18N.t('pk.name.' + COURSE, null, ui);
+    // 「英文名」「English name」：名字暂时还是拉丁字母，说「名字」就好
+    // @i18n-content 改写的是台词的意思（内容），不是界面文字
+    if (ui === 'zh') return s.replace(/英文名/g, '名字').replace(/英语|英文/g, nm);
+    // 英语界面：原文本来就说到这门语言（学科岛的课程表里「English」旁边还有学科「Chinese」，学中文时它翻成「语文」）：
+    // 先改成「Chinese (language arts)」，不然「English → Chinese」以后两门课的意思一样了
+    const own = new RegExp('\\b' + nm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b(?! \\(language arts\\))', 'g');
+    return s.replace(own, nm + ' (language arts)').replace(/\bEnglish name\b/g, 'name').replace(/\bEnglish\b/g, nm);
+    // @i18n-content-end
+  }
+  function lineOf(en, o) {
+    if (!LANG || !LTAB || en == null || en === '') return null;
+    o = o || {};
+    en = String(en);
+    const opt = { isMon: isMonName, content: v => entryOf(v) };
+    let res = EchoPacks._.lineFind(LTAB, en, opt);
+    if (!res) { const u = unfillNames(en); if (u !== en) res = EchoPacks._.lineFind(LTAB, u, opt); }
+    if (!res) return null;
+    const f = o.fill || fillNames;
+    const t = f(res.t), seg = Array.isArray(res.seg) ? res.seg.map(f) : null, r = Array.isArray(res.r) ? res.r.map(f) : null, enF = f(en);
+    let zh = o.zh != null ? f(String(o.zh)) : null;
+    if (zh) for (const [a, b] of (o.swap || []).concat([[enF, t]])) if (a && b && a !== b) zh = zh.split(a).join(b);
+    const x = { en: courseWord(enF, 'en') };
+    if (seg && r && seg.length === r.length && seg.join('') === t) { x.seg = seg; x.r = r; }
+    entryAdd(t, x, zh ? courseWord(zh, 'zh') : '');
+    const ui = I18N ? I18N.lang() : 'zh';
+    return { t, seg: x.seg || null, r: x.r || null, en: enF, zh, mean: glossC({ zh: zh ? courseWord(zh, 'zh') : '', en: x.en }) || (ui === 'zh' ? null : x.en) };
+  }
   const hashOf = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h; };
   // 代码里写死的英语，凡是「要学的人开口说的 / 要选的」（剧情的 speak / answer 页、回声技能的指令、收服念的句子、唤醒、选伙伴、学招、起名、和怪兽说话）：
   // 别的课换成这座岛（小镇）课程里的一句（kind 'sent'）或一段对话（'dlg'）——按英语原文的哈希固定挑（同一个地方每次问同一句），题面给它的意思。
-  // 以后有了台词翻译表（EchoPacks.line(英语原文)）先用它。返回 sent：{ t, mean, q }；dlg：{ q 问, a 答, wrong, mean 问句的意思, rq }。英语课返回 null
-  function learnLine(en, z, kind) {
+  // 台词翻译表里有这句（lineOf）就用翻好的那句；没有才按 key（不给就是英语原文）的哈希挑。返回 sent：{ t, mean, q }；dlg：{ q 问, a 答, wrong, mean 问句的意思, rq }。英语课返回 null
+  function learnLine(en, z, kind, key, zh) {
     if (!LANG) return null;
-    const hook = PK() && EchoPacks.line ? EchoPacks.line(en) : null, ht = hook && (typeof hook === 'string' ? hook : hook.t);
-    if (ht && kind !== 'dlg') return { t: ht, mean: meanText(ht), q: null };
+    const ln = kind !== 'dlg' ? lineOf(en, { zh }) : null;
+    if (ln) return { t: ln.t, mean: ln.mean, q: null, tl: true };
     const zi = Math.max(0, Math.min(W.length - 1, z | 0)), w = W[zi] || W[0], L = w && (kind === 'dlg' ? w.dlgs : w.sents);
     if (!L || !L.length) return null;
-    const i = hashOf(String(en)) % L.length, it = L[i];
+    const i = hashOf(String(key || en)) % L.length, it = L[i];
     if (kind === 'dlg') { const x = glossObj(it) || {}, xq = x.q || {}; return { q: it[0], a: it[1], wrong: (it[2] || []).slice(), mean: glossC({ zh: xq.zh, en: xq.en }), rq: { kind: 'dlg', w: zi, i } }; }
     return { t: it[0], mean: meanOf(it), q: { kind: 'sent', w: zi, i } };
   }
@@ -4792,6 +4849,8 @@
       // 在学的语言（ENGINE.md）：lang = LANG（英语课 null，各模块看它决定走不走别的语言的路）、course 语言代码、entryOf(原文) 条目、
       // ruby(原文) 标了读音的 HTML、meanText(原文) 课程内容的意思、learnLine(英语原文, 第几岛, 'sent'|'dlg') 写死的英语换成的课程句子（§5）
       lang: LANG, course: COURSE, entryOf, ruby: t => rb(t), meanText, learnLine,
+      // 台词翻译表（tools/course/SPEC.md §8）：lineOf(英语原文, { zh, fill, swap }) → { t, seg, r, en, zh, mean } 或 null；courseWord(意思, 'zh'|'en') 把「英语」换成在学的语言
+      lineOf, courseWord,
       // courseList() 现在能学的课、courseGo(语言) 换课（新存档、重新打开页面）：packs.js 的「学这门」、placement.js 的「选语言」用
       courseList, courseGo,
       // 2026-11-19 按能力安排（placement.js / levels.js）：unitSpan() 挑战馆的课本门槛从哪个单元数到哪个单元（world.js gymNeed）、
@@ -5525,7 +5584,7 @@
   }
 
   // 测试用：课本出题来源、每日复习
-  window.EchoGame = { goUnit: wi => goUnit(wi), src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
+  window.EchoGame = { lineOf: (en, o) => lineOf(en, o), entryOf: t => entryOf(t), goUnit: wi => goUnit(wi), src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
     // 走路只记位置、整份存档晚一点才存（见 savePos）：测试 / 工具要直接读 localStorage 里的位置、步数之前，先 flush() 一下
     flush: () => flushWalk() };
   // 测试用：打分（tests/review.test.js）、复习排期引擎、直接出指定的题（[题型, 编号, 第几条] 的列表）

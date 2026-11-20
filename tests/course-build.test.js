@@ -31,7 +31,10 @@ try {
 
     // ---- 1. 形状和个数 ----
     check(c.fmt === 1 && c.lang === lang && JSON.stringify(c.name) === JSON.stringify(syl.name), 'fmt、lang、name 照大纲');
-    check(Object.keys(c).join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,VOICE', '顶层字段：fmt lang name WORLDS SCENES BOOKS TALK MAP VOICE', Object.keys(c));
+    // 有正式的台词翻译表（tools/course/<语言>/lines.json）时 MAP 后面多 LINES / LINES_T / TERMS（下面「台词翻译表」那一段专门测）
+    const LN3 = ['LINES', 'LINES_T', 'TERMS'];
+    check(Object.keys(c).filter(k => !LN3.includes(k)).join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,VOICE' && (fs.existsSync(path.join(ROOT, 'tools', 'course', lang, 'lines.json')) ? LN3.every(k => k in c) : !LN3.some(k => k in c)),
+      '顶层字段：fmt lang name WORLDS SCENES BOOKS TALK MAP VOICE（有 lines.json 才有 LINES / LINES_T / TERMS）', Object.keys(c));
     check(c.WORLDS.length === 13 && c.SCENES.length === 13, '13 个小镇、13 段小剧场');
     const ctx = { window: {} };
     require('vm').runInNewContext(fs.readFileSync(path.join(ROOT, 'data.js'), 'utf8'), ctx);
@@ -110,6 +113,120 @@ try {
     // ---- 4. 逐字节一样 ----
     CB.build(lang, { out: tmp2 });
     check(fs.readFileSync(file).equals(fs.readFileSync(path.join(tmp2, lang, 'course.json'))), '同一份输入生成两次：文件逐字节一样');
+  }
+
+  // ---- 5. 台词翻译表（tools/course/SPEC.md §8）：tests/course-lines-fixture.js 的小样 ----
+  {
+    const FX = require(path.join(__dirname, 'course-lines-fixture.js'));
+    const PK = require(path.join(ROOT, 'packs.js'))._;
+    const SRC = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'course', 'lines-src.json'), 'utf8'));
+    const ctxD = { window: {} };
+    require('vm').runInNewContext(fs.readFileSync(path.join(ROOT, 'dex.js'), 'utf8'), ctxD);
+    const MONS = ctxD.window.DEX.all.map(s => s.en), isMon = v => MONS.includes(v);
+    const tmpL = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-lines-'));
+    try {
+      for (const lang of CB.LANGS) {
+        console.log('\n— 台词翻译表 ' + lang + ' —');
+        const F = FX.FIX[lang], file = FX.write(lang, tmpL);
+        const r = CB.build(lang, { out: tmpL, lines: file }), c = r.course;
+        check(Object.keys(c).join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,LINES,LINES_T,TERMS,VOICE', '有翻译表：MAP 后面多 LINES / LINES_T / TERMS', Object.keys(c));
+        const val = v => (typeof v === 'string' ? { t: v } : v);
+        // LINES：键是英语原文（带 {name}），西语是字符串，日语 / 中文 { t, seg, r }
+        check(JSON.stringify(Object.keys(c.LINES).sort()) === JSON.stringify(Object.keys(F.lines).sort()) &&
+          Object.entries(F.lines).every(([en, v]) => (lang === 'es' ? c.LINES[en] === v : JSON.stringify(c.LINES[en]) === JSON.stringify({ t: v.t, seg: v.seg, r: v.r }))),
+        'LINES：{ 英语原文: 译文 }（' + Object.keys(c.LINES).length + ' 句，' + (lang === 'es' ? '西语是字符串' : '{ t, seg, r }') + '）');
+        check(c.LINES_T.length === Object.keys(F.templates).length && c.LINES_T.every(t => t.en && t.t && t.s && Object.keys(t.s).length) &&
+          c.LINES_T.every((t, i) => !i || c.LINES_T[i - 1].en.replace(/\{[a-z0-9]+\}/g, '').length >= t.en.replace(/\{[a-z0-9]+\}/g, '').length),
+        'LINES_T：模板 { en, t, s }，字面越长越靠前（越具体越先对）');
+        const nTerms = Object.values(F.terms).reduce((s, m) => s + Object.keys(m).length, 0);
+        check(Object.values(c.TERMS).reduce((s, m) => s + Object.keys(m).length, 0) === nTerms && Object.entries(F.terms).every(([ty, m]) => Object.keys(m).every(en => c.TERMS[ty] && en in c.TERMS[ty])),
+          'TERMS：{ 类别: { 英文词: 译文 } }（' + nTerms + ' 个）');
+        const tab = PK.lineTable(c);
+        // 英语游戏拼得出的每一句都对得上：模板 × 这一类的每个词（怪兽：手册里每一只；没翻的怪兽名照原样），自己按译文拼一遍比对
+        let n = 0, bad = null;
+        for (const [en, v0] of Object.entries(F.templates)) {
+          const v = val(v0), src = SRC.templates.find(t => t.en === en), names = Object.keys(src.slots);
+          const pool = nm => { const ty = src.slots[nm]; if (ty === 'monster') return MONS.map(m => [m, (F.terms.monster && F.terms.monster[m]) || m]); return Object.entries(F.terms[ty] || {}); };
+          const rec = (i, eng, out) => {
+            if (i === names.length) {
+              let e2 = eng;
+              if (src.an) e2 = e2.replace(/(^|\W)([aA]) ([AEIOUaeiou])/g, (a, p, x, y) => p + x + 'n ' + y);
+              const got = PK.lineFind(tab, e2, { isMon });
+              n++;
+              if (!got || got.t !== out.t) bad = bad || { en: e2, got, want: out.t };
+              return;
+            }
+            const nm = names[i];
+            for (const [ten, tv] of pool(nm)) {
+              const x = val(tv), useF = v.f && x.g === 'f';
+              const tmpl = i === 0 ? (useF ? v.f : v.t) : out.tmpl;
+              rec(i + 1, eng.split('{' + nm + '}').join(ten), { tmpl, t: (i === 0 ? tmpl : out.t).split('{' + nm + '}').join(x.t) });
+            }
+          };
+          rec(0, en, { t: v.t });
+        }
+        check(n > 386 && !bad, '模板 × 词展开的每一句英语（' + n + ' 句）都查得到、和按译文拼的一字不差（西语阴性用 f 那句；冠词 a / an 都认）', bad);
+        // 日语 / 中文：拼出来的 seg 接起来等于 t，r 一样多，空那块的读音是词的读音
+        if (lang !== 'es') {
+          const x = PK.lineFind(tab, 'Look out! Here comes Tidalfin!', { isMon }), mon = F.terms.monster.Tidalfin;
+          check(x && x.seg.join('') === x.t && x.r.length === x.seg.length && x.r.includes(mon.r) && x.seg.includes(mon.t), '拼出来的句子：seg 接起来就是 t、r 对齐、怪兽名那块是它的读音（' + (x && x.t) + '）', x);
+        }
+        // 名字：{name} 留着，游戏里换；没翻的句子查不到
+        check(PK.lineFind(tab, 'My name is {name}.', {}).t.includes('{name}') && PK.lineFind(tab, 'Hello there!', {}) === null && PK.lineFind(tab, 'Zzz, your turn!', { isMon }) === null,
+          '{name} 留在译文里；没翻的句子、不认识的怪兽名查不到（游戏里走过渡办法）');
+        // 昵称：游戏给的 isMon 认得就照原样
+        check((PK.lineFind(tab, 'Momo, your turn!', { isMon: v => v === 'Momo' }) || {}).t === val(F.templates['{mon}, your turn!']).t.split('{mon}').join('Momo'), '起的昵称（Momo）照原样填进模板');
+        // VOICE：翻好的台词（不带 {name}）、对战喊话按每只怪兽展开、选伙伴念三只的名字；p 还是连着的
+        const V = c.VOICE, vt = new Set(V.map(e => e.t));
+        const plain = Object.entries(F.lines).filter(([en]) => !/\{(name|rival)\}/.test(en)).map(([, v]) => val(v).t);
+        const look = MONS.map(m => PK.lineFind(tab, 'Look out! Here comes ' + m + '!', { isMon }).t);
+        check(plain.every(t => vt.has(norm(t))) && look.every(t => vt.has(norm(t))) && !V.some(e => /\{(name|rival)\}/.test(e.t)) && V.every((e, i) => e.p === i),
+          'VOICE 加上了翻好的台词（' + plain.length + ' 句）和「Look out! Here comes …!」× ' + MONS.length + ' 只；带 {name} 的不配；p 连着', { miss: plain.find(t => !vt.has(norm(t))) });
+        const pTown = V.findIndex(e => e.t === c.WORLDS[12].sents[7][0]), pOpen = V.findIndex(e => e.t === norm(val(F.lines["I'm a boy."]).t)), pBook = V.findIndex(e => e.t === c.BOOKS.list[0].units[0].words[0][0]);
+        const pBattle = V.findIndex(e => e.t === norm(look[0]));
+        check(pTown >= 0 && pTown < pOpen && pOpen < pBook && pBook < pBattle, '配音的先后：小镇 → 开场的台词 → 课本 → 对战喊话', { pTown, pOpen, pBook, pBattle });
+        // 同一份输入两次：逐字节一样
+        const a1 = fs.readFileSync(r.file);
+        CB.build(lang, { out: tmpL, lines: file });
+        check(a1.equals(fs.readFileSync(r.file)), '有翻译表：同一份输入生成两次逐字节一样');
+        check(!('LINES' in CB.buildCourse(lang, { lines: false })), 'lines: false：不带翻译表（和没有 lines.json 一样）');
+      }
+      // check.js 拦下坏的翻译表
+      console.log('\n— 台词翻译表的检查 —');
+      const bad = (lang, mut, what, re) => {
+        const j = FX.toLines(lang);
+        mut(j);
+        const f = path.join(tmpL, 'bad-' + lang + '.json');
+        fs.writeFileSync(f, JSON.stringify(j));
+        const rr = spawnSync(NODE, [path.join(ROOT, 'tools', 'course', 'check.js'), lang, '--lines', f, '--quiet'], { encoding: 'utf8' });
+        check(rr.status === 1 && re.test(rr.stdout), 'check.js 拦下：' + what, rr.stdout.slice(0, 400));
+        check(throws(() => CB.build(lang, { check: true, lines: f })) !== '', 'build 也不生成（' + what + '）');
+      };
+      const idOf = (arr, en) => arr.find(x => x.en === en).id;
+      const L = en => idOf(SRC.lines, en), T = en => idOf(SRC.templates, en);
+      bad('es', j => { delete j.lines[L('My name is {name}.')]; j.lines[L('My name is {name}.')] = 'Me llamo.'; }, '{name} 丢了', /\{name\}/);
+      bad('es', j => { j.templates[T('{mon}, your turn!')] = '¡Te toca!'; }, '模板的空丢了', /\{mon\} 要正好出现一次/);
+      bad('es', j => { j.lines[L("I'm a boy.")] = 'Soy the boy.'; }, '西语里剩下英语', /还有英语/);
+      // 只提醒、不拦的：原文删了的 id（翻译表跟上之前照样生成，不带它）、和英语一样的一个词（音符 Sol、人名）
+      {
+        const j = FX.toLines('es');
+        j.lines.l_nope = 'Hola.';
+        const sol = SRC.lines.find(x => /^[A-Z][a-z]{2,}$/.test(x.en));
+        if (sol) j.lines[sol.id] = sol.en;
+        const f = path.join(tmpL, 'warn-es.json');
+        fs.writeFileSync(f, JSON.stringify(j));
+        const rr = spawnSync(NODE, [path.join(ROOT, 'tools', 'course', 'check.js'), 'es', '--lines', f], { encoding: 'utf8' });
+        const c2 = rr.status === 0 ? CB.build('es', { check: true, lines: f }).course : null;
+        check(rr.status === 0 && /提醒.*l_nope.*没有这个 id/.test(rr.stdout) && (!sol || new RegExp('提醒.*' + sol.id + '.*一个词').test(rr.stdout)) && c2 && !Object.values(c2.LINES).includes('Hola.'),
+          '只提醒不拦：lines-src.json 里没有的 id（生成时不带）、和英语一样的一个词（' + (sol ? sol.en : '—') + '）', rr.stdout.slice(-600));
+      }
+      bad('ja', j => { j.lines[L("I'm a boy.")].seg = ['ぼくは', '男の子']; }, 'seg 接起来不等于 t', /seg 接起来/);
+      bad('ja', j => { j.lines[L("I'm a boy.")].r = ['ぼくは', '男の子', 'です']; }, '读音里有汉字', /汉字/);
+      bad('ja', j => { j.templates[T('{mon}, your turn!')].seg = ['{mon}、きみの', '番だ！']; j.templates[T('{mon}, your turn!')].r = ['{mon}', 'ばんだ']; }, '空没有自己一块', /要自己一块/);
+      bad('ja', j => { j.lines[L("I'm a boy.")] = { t: 'I am a boy.', seg: ['I am a boy.'], r: ['あい'] }; }, '日语里剩下英文词', /英文词/);
+      bad('zh', j => { j.lines[L("I'm a boy.")].r = ['wǒ', 'shì']; }, 'r 和 seg 不一样多', /r 要和 seg 一样多/);
+      bad('zh', j => { j.terms.item[idOf(SRC.terms.item, 'Potion')] = { t: '药水' }; }, '中文的词没有读音', /缺读音/);
+    } finally { fs.rmSync(tmpL, { recursive: true, force: true }); }
   }
 
   console.log('\n— 命令行 —');

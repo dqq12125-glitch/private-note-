@@ -1,5 +1,6 @@
 // 把课程源文件（tools/course/<语言>/）生成课程包里的 course.json（格式见 tools/course/SPEC.md §6）
-//   node tools/course/build.js <es|ja|zh> [--check] [--out dist/course]
+//   node tools/course/build.js <es|ja|zh> [--check] [--out dist/course] [--lines 别的 lines.json]
+//   有 tools/course/<语言>/lines.json（台词翻译表，SPEC §8）就并进 LINES / LINES_T / TERMS 和配音名单；--lines 换一份（测试的小样），build(lang, { lines: false }) 不带
 //   → <out>/<语言>/course.json：WORLDS / SCENES / BOOKS / TALK / MAP / VOICE，形状和 data.js、book.js 的数组一样，
 //     多出来的读音、词块、英文意思放在每条最后那个对象里（game.js 的 meanOf 读它）。
 //   先跑一遍 tools/course/check.js（同一份检查），有一处错就不生成。--check 只检查、不写。
@@ -80,9 +81,121 @@ function loadSources(lang) {
   return { syl, towns, books };
 }
 
-function buildCourse(lang) {
+// ---------- 台词翻译表（SPEC §8）：lines-src.json + <语言>/lines.json → LINES / LINES_T / TERMS 和要配音的句子 ----------
+// 配音只拼这些带怪兽名的模板（和 tools/voice/collect.js 给英语配的一样：对战喊话、选伙伴、收服、进化、出招），
+// 别的带怪兽名的（技能指令、和怪兽说话、学招……多半是起的昵称）游戏里用本机声音念
+const VOICE_MON = new Set(['{mon}, your turn!', "Let's battle! {mon}, your turn!", 'Look out! Here comes {mon}!', '{mon}, take a rest!', '{mon} is too tired to go on.',
+  'Yes! {mon} is your new friend!', '{mon} joined your team!', '{mon} did not give up!', 'Look! {mon} is growing up!', '{mon}, use {move}!']);
+const EARLY = /^(story|setup|world|monsters|game)\.js$|^isles\/a-/;   // 开场和第 1 组岛：配音排在课本前面
+function linesFile(lang, o) { return o && o.lines === false ? null : o && o.lines ? path.resolve(o.lines) : path.join(__dirname, lang, 'lines.json'); }
+function buildLines(lang, file) {
+  if (!file || !fs.existsSync(file)) return null;
+  const SRC = readJson(path.join(__dirname, 'lines-src.json')), J = readJson(file);
+  const PK = require(path.join(ROOT, 'packs.js'))._;
+  const kana = lang !== 'es';
+  // 译文：西语写成字符串（没有 g 的话），日语 / 中文 { t, seg, r }
+  const out = x => {
+    const v = typeof x === 'string' ? { t: x } : x;
+    if (!kana) return v.g ? { t: v.t, g: v.g } : v.t;
+    const o = { t: v.t };
+    if (Array.isArray(v.seg)) o.seg = v.seg;
+    if (v.r != null) o.r = v.r;
+    return o;
+  };
+  const LINES = {}, early = [], late = [];
+  for (const s of SRC.lines) {
+    if (!J.lines || !Object.prototype.hasOwnProperty.call(J.lines, s.id)) continue;
+    LINES[s.en] = out(J.lines[s.id]);
+    const t = typeof LINES[s.en] === 'string' ? LINES[s.en] : LINES[s.en].t;
+    if (!/\{(name|rival)\}/.test(t)) (s.src === 'dex.js' ? late : EARLY.test(s.src) ? early : late).push({ t, g: s.g, dex: s.src === 'dex.js' });
+  }
+  const TERMS = {}, termEn = {};
+  for (const [ty, arr] of Object.entries(SRC.terms)) {
+    termEn[ty] = arr;
+    const m = J.terms && J.terms[ty] || {};
+    for (const x of arr) if (Object.prototype.hasOwnProperty.call(m, x.id)) (TERMS[ty] = TERMS[ty] || {})[x.en] = out(m[x.id]);
+  }
+  const lit = en => en.replace(/\{[a-z0-9]+\}/g, '').length;
+  const LINES_T = SRC.templates.filter(s => J.templates && Object.prototype.hasOwnProperty.call(J.templates, s.id)).map(s => {
+    const v = typeof J.templates[s.id] === 'string' ? { t: J.templates[s.id] } : J.templates[s.id];
+    const o = { en: s.en, t: v.t };
+    if (kana && Array.isArray(v.seg)) { o.seg = v.seg; o.r = v.r; }
+    o.s = s.slots;
+    if (s.an) o.an = true;
+    if (v.f != null) o.f = v.f;
+    if (v.vals) o.vals = Object.fromEntries(Object.entries(v.vals).map(([k, m]) => [k, Object.fromEntries(Object.entries(m).map(([e, x]) => [e, out(x)]))]));
+    return o;
+  }).sort((a, b) => lit(b.en) - lit(a.en) || (a.en < b.en ? -1 : a.en > b.en ? 1 : 0));   // 越具体的（字面越长）越先对
+  const course = { lang, LINES, LINES_T, TERMS };
+  // 要配音的：模板 × 词展开，译文用游戏里同一个 lineFind 拼（拼不出来的——词没翻——就不配）
+  const tab = PK.lineTable(course), D = dexInfo();
+  const isMon = v => D.names.has(v);
+  const V = { early, late, mon: [], dex: late.filter(x => x.dex) };
+  V.late = late.filter(x => !x.dex);
+  const tr = en => { const r = PK.lineFind(tab, en, { isMon }); return r ? r.t : null; };
+  const article = (en, tpl) => (tpl.an ? en.replace(/(^|\W)([aA]) ([AEIOUaeiou])/g, (a, p, x, v) => p + x + 'n ' + v) : en);
+  for (const s of SRC.templates) {
+    if (!LINES_T.some(t => t.en === s.en)) continue;
+    const ty = Object.values(s.slots), names = Object.keys(s.slots);
+    if (ty.some(x => x === 'num' || x === 'name' || x === 'content')) continue;
+    const hasMon = ty.includes('monster');
+    if (hasMon && !VOICE_MON.has(s.en) && s.dom !== 'starter') continue;
+    // 自由变量：翻译里给了 vals 才拼；两个以上自由变量的（{x1} = {x2} 这种）各自的值不是随便配的，不配音（游戏里用本机声音）
+    if (ty.includes('free') && (!(J.templates[s.id] && J.templates[s.id].vals) || ty.filter(x => x === 'free').length > 1)) continue;
+    // 每个空的取值（英文）
+    const vals = names.map(nm => {
+      const k = s.slots[nm];
+      if (k === 'monster') return null;   // 怪兽另外按 dom 拼
+      if (k === 'free') return Object.keys((J.templates[s.id].vals || {})[nm] || {});
+      return (termEn[k] || []).map(x => x.en);
+    });
+    const combos = [];
+    const monList = s.dom === 'starter' ? D.starters : s.dom && s.dom.types ? D.all.filter(sp => sp.types.some(t => s.dom.types.includes(t))) : D.all;
+    const rec = (i, acc, sp) => {
+      if (i === names.length) { combos.push({ en: acc, sp }); return; }
+      const nm = names[i], k = s.slots[nm];
+      if (k === 'monster') {
+        if (s.dom === 'learnset' || s.dom === 'evo') return;   // 下面单独拼
+        if (nm === 'mon2') return;
+        for (const m of (sp ? [sp] : monList)) rec(i + 1, acc.split('{' + nm + '}').join(m.en), m);
+        return;
+      }
+      for (const v of vals[i]) rec(i + 1, acc.split('{' + nm + '}').join(v), sp);
+    };
+    if (s.dom === 'learnset') { for (const sp of D.all) for (const mv of D.learn(sp)) combos.push({ en: s.en.split('{mon}').join(sp.en).split('{move}').join(mv), sp }); }
+    else if (s.dom === 'evo') { for (const sp of D.all) for (const to of D.evo(sp)) combos.push({ en: s.en.split('{mon}').join(sp.en).split('{mon2}').join(to.en), sp }); }
+    else rec(0, s.en, null);
+    for (const c of combos) {
+      const en = article(c.en, s), t = tr(en);
+      if (!t) continue;
+      const e = { t, g: s.g, no: c.sp ? c.sp.no : -1 };
+      if (hasMon && s.dom !== 'starter') V.mon.push(e); else V.early.push(e);
+    }
+  }
+  // 单独念的词：选伙伴时念三只的名字、横幅念地名
+  for (const sp of D.starters) { const t = tr(sp.en); if (t && t !== sp.en) V.early.push({ t, g: ['f', 'm'] }); }
+  for (const p of termEn.place || []) { const t = tr(p.en); if (t) V.early.push({ t, g: ['f', 'm'] }); }
+  V.mon.sort((a, b) => a.no - b.no);   // 对战喊话按手册编号
+  return { course: { LINES, LINES_T, TERMS }, voice: V };
+}
+// 怪兽：手册的顺序、选伙伴的三只、学招表（monsters.js）、进化（在沙箱里加载，和 tools/course/lines.js 一样）
+function dexInfo() {
+  const SB = require('./lines.js').sandbox();
+  const DEX = SB.DEX, MG = SB.MonsterGame;
+  const all = DEX.all.map((sp, i) => ({ id: sp.id, en: sp.en, types: sp.types, no: i, sp }));
+  const byId = new Map(all.map(x => [x.id, x]));
+  const mvName = id => { const m = MG.parseMove(id); return m.sup ? m.sup.en : ((DEX.MOVES[m.type] || [])[m.tier] || [])[0]; };
+  return {
+    all, names: new Set(all.map(x => x.en)), starters: MG.STARTERS.map(id => byId.get(id)).filter(Boolean),
+    learn: x => [...new Set(MG.learnset(x.sp).map(([, id]) => mvName(id)).filter(Boolean))],
+    evo: x => (x.sp.evo || []).map(e => byId.get(e.to)).filter(Boolean),
+  };
+}
+
+function buildCourse(lang, o) {
   if (!LANGS.includes(lang)) throw new Error('语言要写 es / ja / zh');
   const src = loadSources(lang), isl = readIslands(), V = voiceList();
+  const LN = buildLines(lang, linesFile(lang, o));
   if (!Array.isArray(src.towns) || src.towns.length !== 13) throw new Error('towns.json 要 13 个小镇');
   const cn = lang === 'zh';
 
@@ -107,6 +220,9 @@ function buildCourse(lang) {
     t.dlgs.forEach(x => { V.add(x.q.t, ['f', 'm']); V.add(x.a.t, ['f', 'm']); x.wrong.forEach(w => V.add(w.t, ['f', 'm'])); });
     t.scene.lines.forEach(l => V.add(l.t, [t.scene.cast[l.who][2] === 'm' ? 'm' : 'f']));
   });
+  // 台词翻译表：开场和第 1 组岛的剧情、选伙伴、拿到道具、地名排在小镇后面（一开始就用到），别的排在课本后面
+  // （配音念的字不带表情符号：和英语一样按 key.js 的 norm，key 本来就不算表情）
+  if (LN) LN.voice.early.forEach(e => V.add(norm(e.t), e.g));
 
   // ----- 课本：BOOKS、TALK，配音按册、按单元 -----
   const list = [], TALK = [], mapBooks = {};
@@ -142,12 +258,17 @@ function buildCourse(lang) {
     });
   }
 
-  return {
+  // 别的岛的剧情 → 对战喊话（按手册编号）→ 手册介绍
+  if (LN) [LN.voice.late, LN.voice.mon, LN.voice.dex].forEach(a => a.forEach(e => V.add(norm(e.t), e.g)));
+  const course = {
     fmt: 1, lang, name: src.syl.name,
     WORLDS, SCENES, BOOKS: { list }, TALK,
     MAP: { towns: 1, books: mapBooks, mix: MAP_MIX, kinds: MAP_KINDS },
-    VOICE: V.fin(),
   };
+  // 有台词翻译表才有这三样（没有的时候 course.json 和以前一字不差）
+  if (LN) Object.assign(course, LN.course);
+  course.VOICE = V.fin();
+  return course;
 }
 
 function stats(c) {
@@ -155,14 +276,20 @@ function stats(c) {
   const g = { f: 0, m: 0 };
   for (const e of c.VOICE) for (const x of e.g) g[x]++;
   const chars = c.VOICE.reduce((s, e) => s + [...e.t].length, 0);
-  return { towns: c.WORLDS.length, scenes: c.SCENES.length, books: c.BOOKS.list.length, units, talk: c.TALK.length, voice: c.VOICE.length, clips: g.f + g.m, f: g.f, m: g.m, chars };
+  const lines = c.LINES ? Object.keys(c.LINES).length : 0, tpl = c.LINES_T ? c.LINES_T.length : 0, terms = c.TERMS ? Object.values(c.TERMS).reduce((s, m) => s + Object.keys(m).length, 0) : 0;
+  return { towns: c.WORLDS.length, scenes: c.SCENES.length, books: c.BOOKS.list.length, units, talk: c.TALK.length, voice: c.VOICE.length, clips: g.f + g.m, f: g.f, m: g.m, chars, lines, tpl, terms };
 }
 
 function build(lang, o) {
   o = o || {};
   const v = validate(lang);
   if (!v.ok) throw new Error('课程源文件没过 tools/course/check.js，先改好再生成：\n' + v.out.trim());
-  const course = buildCourse(lang);
+  // 另外给的台词翻译表（测试的小样）：一样先过检查
+  if (o.lines) {
+    const r = spawnSync(process.execPath, [path.join(__dirname, 'check.js'), lang, '--lines', path.resolve(o.lines), '--quiet'], { encoding: 'utf8' });
+    if (r.status !== 0) throw new Error('台词翻译表没过 tools/course/check.js：\n' + ((r.stdout || '') + (r.stderr || '')).trim());
+  }
+  const course = buildCourse(lang, o);
   const data = Buffer.from(JSON.stringify(course) + '\n', 'utf8');
   let file = '';
   if (!o.check) {
@@ -182,11 +309,13 @@ if (require.main === module) {
     for (let i = 1; i < a.length; i++) {
       if (a[i] === '--check') o.check = true;
       else if (a[i] === '--out') { o.out = a[++i]; if (!o.out) throw new Error('--out 后面要跟一个目录'); }
+      else if (a[i] === '--lines') { o.lines = a[++i]; if (!o.lines) throw new Error('--lines 后面要跟一个 lines.json'); }
       else throw new Error('不认识的参数 ' + a[i]);
     }
     const r = build(lang, o), s = r.stats;
     console.log((o.check ? '✓ ' + lang + ' 检查过了（没写文件）' : 'course ' + lang + ' → ' + path.relative(ROOT, r.file).replace(/\\/g, '/')) + '：' + s.towns + ' 个小镇、' + s.scenes + ' 段小剧场、' +
       s.books + ' 册 ' + s.units + ' 个单元、' + s.talk + ' 个聊天角色；' + r.bytes + ' 字节');
+    if (r.course.LINES) console.log('  台词翻译表：整句 ' + s.lines + '、模板 ' + s.tpl + '、词 ' + s.terms);
     console.log('  配音 ' + s.voice + ' 句 → ' + s.clips + ' 段（女声 ' + s.f + '、男声 ' + s.m + '），一共 ' + s.chars + ' 个字符');
   } catch (e) { console.error('course: ' + e.message); process.exit(1); }
 }

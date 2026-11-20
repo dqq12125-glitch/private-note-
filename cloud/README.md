@@ -64,6 +64,9 @@
    - 实时语音模型名（默认 `qwen3.8-omni-flash-realtime`；文档说这个模型在新加坡要用工作空间专属域名 `{WorkspaceId}.ap-southeast-1.maas.aliyuncs.com`——那就把 `DS_HTTP_BASE` 设成 `https://{WorkspaceId}.ap-southeast-1.maas.aliyuncs.com`、`DS_WS_BASE` 设成 `wss://` 开头的同一个地址；也可以换文档里列的 `qwen3.5-omni-flash-realtime` 等）；
    - `qwen3-asr-flash-realtime`、`qwen3-asr-flash`、`qwen-plus`、`qwen3-tts-flash` 在新加坡都有；
    - `talk-npcs.js` 里岛民用的音色（Serena、Tina、Aiden……）在国际版的实时模型里都有，没有的写进 `TALK_VOICE_MAP`（`{"老名字":"新名字"}`），不用改游戏文件；合成用的 `Cherry` / `Ethan` 同理（`TTS_VOICE_F` / `TTS_VOICE_M`）。
+   - 别的语言的课（西语 / 日语 / 中文）：`qwen3-asr-flash` 和 `qwen3-asr-flash-realtime` 认不认 `es` / `ja` / `zh` 这几个语言代码（实时识别的 `input_audio_transcription.language` 也是）、
+     `qwen3-tts-flash` 的 `language_type` 认不认 `Spanish` / `Japanese` / `Chinese`、`TTS_VOICES` 里的默认音色在国际版有没有、合不合适——**都还没在真的阿里云上试过**，
+     上线前每种语言各试一句识别、一句合成；哪门不行就先从 `SPEECH_LANGS` 去掉（App 会照旧让那门课用手机自带的识别 / 声音）。
    - 每月预算和余额提醒（测试会花钱：先用少量额度在 TestFlight 上试）。
 5. **发邮件的服务：Resend**（resend.com）。验证发信域名（加 SPF / DKIM 记录，Cloudflare DNS 里点几下），建 API Key，`EMAIL_FROM` 设成 `Echo Island <no-reply@你的域名>`。换别家要改 `src/email.js`（加一个同样参数的函数）。
 6. **App Store Connect**（等苹果开发者账号批下来）：
@@ -105,6 +108,8 @@
 | `EVAL_MODEL` | `qwen-plus` | 评价、打勾、点评、翻译、检测判分 |
 | `TTS_MODEL` / `TTS_VOICE_F` / `TTS_VOICE_M` | `qwen3-tts-flash` / `Cherry` / `Ethan` | 现场合成 |
 | `TALK_VOICE_MAP` | `{}` | 岛民音色改名 |
+| `SPEECH_LANGS` | `en,es,ja,zh` | 口语题识别（`/v1/asr`、`/v1/asr-rt`）和现场合成（`/v1/tts`）认哪些语言（API.md §8 的 `lang`）。只认这四种，写别的会被忽略，英语一直在；`GET /v1/me` 的 `speechLangs` 就是它——App 看这个决定别的语言的课走不走服务器。某门语言的识别 / 合成上线后发现不行，从这里去掉即可（改 `[vars]`，不用改 App） |
+| `TTS_VOICES` | `{"es":{"f":"Cherry","m":"Ethan"},"ja":{"f":"Cherry","m":"Ethan"},"zh":{"f":"Cherry","m":"Ethan"}}` | 别的语言现场合成用的音色（女 `f` / 男 `m`；只写要改的那几个就行，英语照旧 `TTS_VOICE_F` / `TTS_VOICE_M`）。**默认值上线前要对着阿里云国际版 `qwen3-tts-flash` 的音色表核对**：这个音色在国际版有没有、支不支持这门语言、听起来合不合适，都还没验证 |
 | `TALK_SESSION_MAX_SEC` | 600 | 每段聊天最长几秒 |
 | `TALK_WARN_SEC` | 60 | 还剩几秒时提醒 |
 | `TALK_MIN_START_SEC` | 20 | 今天剩下不到几秒就不让开新的一段 |

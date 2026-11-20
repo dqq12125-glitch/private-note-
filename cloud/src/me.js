@@ -38,6 +38,7 @@ export async function meView(R, U) {
     id: U.id, email: U.email || null, apple: !!U.apple_sub, ageGroup: U.age_group || null, ui: U.ui || null,
     level: U.level == null ? null : U.level, tzOffsetMin: U.tz_min | 0, iapToken: U.iap_token, createdAt: isoOrNull(U.created_at),
     consent: consentView(U, R.now), features: features(R, U),
+    speechLangs: R.cfg.speechLangs.slice(),   // 识别 / 合成认哪些语言（lang）；App 看这个决定别的语言的课走不走服务器，老服务器没有这个字段
     plan: pick.plan, subscription: subView(pick.ent, R.now),
     quota: quotaView(R.cfg, U, row, R.now),
   };

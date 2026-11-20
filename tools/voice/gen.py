@@ -8,15 +8,18 @@
 #   --lang    en（默认）/ es / zh / ja。Kokoro 的语言代码：en 'a'、es 'e'、zh 'z'、ja 'j'；每门语言默认一个女声一个男声（--f / --m 可换）
 #   --lines   句子表：tools/voice/lines.json 那样的 [{ t, g, p }]，或者 course.json（取里面的 VOICE）。别的语言一定要有（默认 dist/course/<语言>/course.json）
 #   --out     输出目录（f/、m/、index.json）。英语默认 assets/voice，别的语言默认 dist/voice/<语言>；别的语言（或给了 --lines）时把句子表也存成 <out>/lines.json（打包排先后用）
+#   --g2p     日语的读法：ojt（默认，pyopenjtalk，见 _OjtG2P）/ ojtu / cutlet（misaki 默认，日期钟点会读错）
 #   --notrim  中文、日语默认剪掉首尾的长静音（见 trim），这个关掉
 #   --dry     只数一数还有多少段没合成，不合成、不写任何文件
 # 什么选项都不加 = 和以前一模一样（英语、af_heart / am_michael、assets/voice、tools/voice/lines.json）。
 # 文件名 key = 原文的哈希（tools/voice/key.js：去掉表情符号、引号规范化、空白合并，按 UTF-16 码元算 FNV-1a）；配音念的是原文，不是读音。
 import os, sys, json, time, subprocess, re
 
+try: sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # Windows 控制台是 GBK，打印中日文不要崩
+except Exception: pass
 # 命令行：--k=v 和 --k v 都认
 def _argv():
-    VAL = {'--f', '--m', '--limit', '--speed', '--lang', '--lines', '--out'}
+    VAL = {'--f', '--m', '--limit', '--speed', '--lang', '--lines', '--out', '--g2p'}
     a, out, i = sys.argv[1:], [], 0
     while i < len(a):
         if a[i] in VAL and i + 1 < len(a) and not a[i + 1].startswith('--'): out.append(a[i] + '=' + a[i + 1]); i += 2
@@ -112,6 +115,23 @@ try:
     pipe = KPipeline(lang_code=LANGS[LANG][0], repo_id='hexgrad/Kokoro-82M', device=dev)
 except ModuleNotFoundError as ex:   # 日语要 pyopenjtalk 等：不装，说清楚缺什么
     sys.exit('missing component for lang ' + LANG + ' (not synthesized): ' + str(ex) + ' | 这门语言缺组件，没法合成')
+# 日语：misaki 默认的 cutlet 读法会把日期、钟点、数字读错（四月 → よんがつ、七時 → ななじ、九月 → きゅうがつ）；
+# pyopenjtalk 的读法是对的（しがつ、しちじ、くがつ），但它返回的是「音素 + 同样长的音高串」（_ - ^ j），Kokoro 会把音高串当音素念，
+# 每句末尾多出一串「い / イ」（实测女声 35% 的词被识别器听出多余的 い）。所以只取前半（音素），丢掉音高串。
+# 它还用了 Kokoro 词表里没有的符号（ASCII 的 g、拼出来的 ᶄ ᶀ ᶃ ᶉ ᶈ），模型会直接丢掉——が行全部念成没有辅音（ごはん → おはん）。换成词表里有的写法
+# （g → ɡ U+0261，ᶄ → kʲ …，和 cutlet 的一样）。--g2p=cutlet 退回默认；--g2p=ojtu 另外把 u 换成 cutlet 用的 ɯ
+_OJT_FIX = {'g': 'ɡ', 'ᶄ': 'kʲ', 'ᶀ': 'bʲ', 'ᶃ': 'ɡʲ', 'ᶉ': 'ɾʲ', 'ᶈ': 'pʲ'}
+class _OjtG2P:
+    def __init__(self, u=False):
+        from misaki import ja as _ja
+        self.g = _ja.JAG2P(version='pyopenjtalk'); self.u = u
+    def __call__(self, text):
+        s, toks = self.g(text)
+        s = ''.join(_OJT_FIX.get(c, c) for c in s[:len(s) // 2])
+        if self.u: s = s.replace('u', 'ɯ')
+        return s, toks
+if LANG == 'ja' and opt.get('g2p', 'ojt') in ('ojt', 'ojtu'):
+    pipe.g2p = _OjtG2P(opt.get('g2p') == 'ojtu')
 print('device', dev, 'lang', LANG, 'voices', VOICES, 'lines', len(lines), flush=True)
 for g in 'fm': os.makedirs(os.path.join(OUT, g), exist_ok=True)
 if LANG != 'en' or 'lines' in opt:   # 句子表也存一份在配音旁边：tools/pack/build.js 按 p 排先后

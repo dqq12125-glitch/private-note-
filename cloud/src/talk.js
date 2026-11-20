@@ -12,6 +12,7 @@ import { requireConsent } from './me.js';
 import { wsLimit } from './ratelimit.js';
 import { take, refund, talkOpen, talkBeat, talkClose, talkDrop, resetAt } from './quota.js';
 import { dsSocket, dsPost, EVAL_PATH } from './upstream.js';
+import { speechLang } from './config.js';
 
 // 给学习者看的一句话（按这段的界面语言；没有的语言用英文）
 const SAY = {
@@ -26,6 +27,7 @@ const SAY = {
   timeout: { zh: '连接超时了，再试一次', en: 'The connection timed out. Try again.' },
   server: { zh: '服务器出了点问题', en: 'Something went wrong on the server.' },
   unavailable: { zh: '服务还没准备好', en: 'The service is not ready yet.' },
+  lang: { zh: '服务器还不能识别这种语言', en: 'The server cannot recognise this language yet.' },
 };
 const CLOSE = { 400: 4400, 401: 4401, 402: 4402, 403: 4403, 408: 4408, 409: 4409, 413: 4413, 429: 4429, 503: 4503 };
 
@@ -47,7 +49,7 @@ function conn(R, ws, uiRaw) {
   C.fail = e => {
     if (C.closed) return;
     if (!(e instanceof HttpError)) { console.log('ws error', e && e.stack || e); e = new HttpError(500, 'server', 'Server error'); }
-    const say = SAY[e.code] || SAY.server;
+    const say = (e.extra && e.extra.reason === 'unsupported_lang' && SAY.lang) || SAY[e.code] || SAY.server;
     C.send(Object.assign({ type: 'error', code: e.code, status: e.status, zh: say[C.ui] || say.en, message: e.message }, e.extra));
     C.close(CLOSE[e.status] || 4500);
   };
@@ -171,6 +173,7 @@ async function talkRun(R, C, qs) {
 
 // ---------- /v1/asr-rt ----------
 // 和 relay.js 的 /asr-rt 一样：只转发听写要用的三种消息，一次最多 ASR_RT_MAX_SEC 秒、约 15 秒的声音；每次连接算一次识别
+// 听哪种语言看网址里的 ?lang=（en / es / ja / zh，没给 = en，和以前一字不差）；手机 session.update 里写的语言不看
 async function asrRun(R, C, qs) {
   const q = []; let qn = 0;
   // 登录、连上游之前发来的先存着（最多存一次识别那么多的声音）
@@ -178,6 +181,7 @@ async function asrRun(R, C, qs) {
   const U = await authUser(R, await getToken(R, C, qs));
   if (C.closed) return;
   await wsLimit(R, U);
+  const language = speechLang(R.cfg, qs.get('lang'));   // 不认得的语言：400（不扣次数、不连上游）
   const t = await take(R, U, 'asr');
   let up;
   try { up = await dsSocket(R, R.cfg.ds.asrRtModel); }
@@ -194,7 +198,7 @@ async function asrRun(R, C, qs) {
     let out = null;
     if (m.type === 'session.update') {
       const td = (m.session && m.session.turn_detection) || {};
-      out = { type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language: 'en' },
+      out = { type: 'session.update', session: { modalities: ['text'], input_audio_format: 'pcm', sample_rate: 16000, input_audio_transcription: { language },
         turn_detection: { type: 'server_vad', threshold: 0.2, silence_duration_ms: Math.max(300, Math.min(1200, +td.silence_duration_ms || 600)) } } };
     } else if (m.type === 'input_audio_buffer.append' && typeof m.audio === 'string') {
       bytes += m.audio.length; if (bytes > R.cfg.asrRt.maxB64) return end();

@@ -135,6 +135,7 @@ Response `200`:
     "grantedAt": null
   },
   "features": { "talk": false, "place": false, "steps": false },
+  "speechLangs": ["en", "es", "ja", "zh"],
   "plan": "free",
   "subscription": { "state": "none", "plan": null, "productId": null, "expiresAt": null, "graceUntil": null, "environment": null },
   "quota": {
@@ -156,6 +157,9 @@ Response `200`:
 - `consent.state`: `"none"` · `"pending"` (mail sent, parent has not agreed) · `"granted"` · `"revoked"`.
   `consent.required` is `true` when `ageGroup` is `"child"` or `null`.
 - `features.<name>` is `true` when that voice-AI feature may be used now (see §5).
+- `speechLangs`: the languages this server accepts as `lang` on `/v1/asr`, `/v1/asr-rt` and `/v1/tts` (§8), always starting
+  with `"en"`. A server without this field (older version) only does English: the app must then not send `lang` and must not use
+  server recognition / synthesis for other courses.
 - `plan`: the plan in effect now: `"free"`, `"monthly"` or `"yearly"`. `subscription`: see §7.
 - `quota`: see §6.
 
@@ -347,8 +351,12 @@ One live talk session per account at a time. Maximum session length `TALK_SESSIO
 
 ### `WS /v1/asr-rt` — realtime transcription for speaking questions
 
+URL: `wss://<host>/v1/asr-rt` or `wss://<host>/v1/asr-rt?lang=<es|ja|zh|en>` (see **Speech language** below; absent = English,
+the provider request is exactly as before). Any language written by the client inside `session.update` is ignored.
 Auth as in §1 (send `auth` first, then the messages below; they are queued until the provider is connected).
 Each connection counts 1 on the `asr` meter (refunded if the provider cannot be reached).
+Checks in this order: auth → rate → `lang` (unsupported → `error` `bad_request`, `status` 400, `field: "lang"`,
+`reason: "unsupported_lang"`, `supported: [...]`, close `4400`; not counted, provider not contacted) → quota → provider.
 Client → server: `session.update` (only `session.turn_detection.silence_duration_ms` is read, 300–1200),
 `input_audio_buffer.append` `{audio}` (base64 PCM16 16 kHz), `session.finish`. Everything else is dropped.
 Server → client: the provider's realtime-ASR events, unchanged (as the relay). Limits: 15 seconds per connection,
@@ -360,9 +368,9 @@ All need a session, are metered (§6) and answer `503 provider` (not counted) wh
 
 | Endpoint | Request | Response `200` | Meter | Gated |
 | --- | --- | --- | --- | --- |
-| `POST /v1/asr` | `{ "audio": "<base64 WAV, 16 kHz mono 16-bit>" }` (≤ 1.5 MB) | `{ "text": "…" }` | asr | no |
+| `POST /v1/asr` | `{ "audio": "<base64 WAV, 16 kHz mono 16-bit>", "lang": "es" }` (≤ 1.5 MB; `lang` optional) | `{ "text": "…" }` | asr | no |
 | `POST /v1/tip` | `{ "target": "…", "heard": "…", "ui": "en" }` | `{ "tip": "…" }` | aux | no |
-| `POST /v1/tts` | `{ "text": "…", "g": "f"\|"m", "lang": "English"\|"Chinese" }` | `{ "url": "https://…" }` (provider's audio URL, expires within hours) | aux | no |
+| `POST /v1/tts` | `{ "text": "…", "g": "f"\|"m", "lang": "es" }` (`lang` optional) | `{ "url": "https://…" }` (provider's audio URL, expires within hours) | aux | no |
 | `POST /v1/zh` | `{ "text": "…" }` | `{ "zh": "…" }` | aux | no |
 | `POST /v1/steps` | `{ "npc": "…", "nm": "…", "q": "…", "g": 0, "ui": "en", "turns": [{ "who": "you"\|"npc", "text": "…", "typed": false }] }` | `{ "done": [0, 2] }` | aux | yes |
 | `POST /v1/place` | `{ "id": "<placement item id>", "lang": "en", "heard": "…" }` | `{ "score": 0\|1\|2 }` | aux | yes |
@@ -371,6 +379,24 @@ Every `200` also has `"quota": { "meter": "…", "left": n }`. Field meanings an
 (`server/relay.js`): texts are cleaned and cut (`target`/`heard` 200, `zh` 400, `place.heard` 500, turns 30 × 300).
 `/v1/place` looks the question and rubric up by `id`; unknown id → `400 bad_request` (`field: "id"`).
 `/v1/steps` with no spoken (non-typed) learner turn answers `{ "done": [] }` without calling the AI and without counting (as the relay).
+
+### Speech language (`lang`) — `/v1/asr`, `/v1/asr-rt`, `/v1/tts`
+
+For courses in other languages. `lang` is one of the codes in `me.speechLangs` (§4): `"en"` English, `"es"` Spanish,
+`"ja"` Japanese, `"zh"` Chinese (server config `SPEECH_LANGS` may switch some off; `"en"` is always on).
+
+- **Absent (or `"en"`) = English, and the request sent to the provider is byte-for-byte the same as before this field existed.**
+- `/v1/asr`: the recognition language (`asr_options.language`). `/v1/asr-rt`: query parameter `?lang=`, the realtime
+  recognition language (`input_audio_transcription.language`).
+- `/v1/tts`: the synthesis language (`language_type` `English` / `Spanish` / `Japanese` / `Chinese`) and a voice for that
+  language from server config (English keeps `TTS_VOICE_F` / `TTS_VOICE_M`; others `TTS_VOICES`). For compatibility `/v1/tts`
+  also accepts the language names `"English"`, `"Spanish"`, `"Japanese"`, `"Chinese"` (the old `"Chinese"` now uses the
+  Chinese voice from `TTS_VOICES`).
+- Anything else (another code, wrong case, a name on `/v1/asr`) → `400 bad_request` with `field: "lang"`,
+  `reason: "unsupported_lang"`, `supported: ["en", …]`. Checked before counting: not counted, the provider is not contacted.
+- Metering, rate limits, auth and consent rules are the same for every language (one call = one count on its meter).
+- Only recognition and synthesis take this `lang`. Chat (`/v1/talk`), `tip`, `zh`, `steps` are unchanged (English prompts);
+  `/v1/place` keeps its own `lang` (which question bank), as before.
 
 ## 9. Reporting an AI message
 

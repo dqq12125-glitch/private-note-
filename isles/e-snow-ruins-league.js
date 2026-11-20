@@ -525,7 +525,9 @@
   const G12_PAINT = { '?': { c: '#6a5acd', t: '?', tc: '#ffe082' } };
   // 意思牌的牌面：界面语言里有这个词的意思就写意思（中文界面 = 中文），没有（英语界面）就画图——和闯关「选意思」换成别的题是同一条规矩
   const memMean = p => (I18N ? I18N.gloss({ zh: p[1] }) : p[1]);
-  const memFace = c => { const p = MEM_PAIRS[c.pair]; return c.side === 'en' ? p[0] : memMean(p) || p[2]; };
+  // 别的课（台词翻译表，tools/course/SPEC.md §8）：词牌写这门语言的那个词（went → fue / 行った / 去了）；英语课、没翻的照旧是英文
+  const memWord = p => { const ln = window.EchoGame && EchoGame.lineOf ? EchoGame.lineOf(p[0], { zh: p[1] }) : null; return ln ? ln.t : p[0]; };
+  const memFace = c => { const p = MEM_PAIRS[c.pair]; return c.side === 'en' ? memWord(p) : memMean(p) || p[2]; };
   // 牌面写成 getter：world.js 每次重画都读 paint[字].t，换了界面语言也跟着变
   MEM_CARDS.forEach(c => {
     G12_PAINT['abcdefghijkl'[c.i]] = { c: '#fff8e1', get t() { return memFace(c); }, tc: '#4e342e' };
@@ -1234,7 +1236,11 @@
       C.set('mem12:' + c.pair);
       C.setOver(a.x, a.y, memChar(a, true)); C.setOver(c.x, c.y, memChar(c, true)); C.refresh();
       C.E.SFX.ok(3);
-      await C.talk([mean ? CARD(p[0] + ' = ' + p[1] + '. It\'s a pair!', '配对成功！' + p[0] + ' 就是“' + p[1] + '”。') : CARD('It\'s a pair: ' + p[0] + '!', '', { emo: p[2] }), L.speak(C, p[0], '把这个词大声读一遍')]);
+      // 别的课：配好的这一页正文就是这个词（world.js 换成这门语言的那个词，标读音、念它），下面一行是意思（中文界面「配对成功！fue 就是“去了”。」，
+      // 英语界面是英文原词）；不走「went = 去了」那个模板（第二个空是中文意思，翻不成这门语言）
+      const pairPg = C.E.lang ? CARD(p[0], '配对成功！' + p[0] + ' 就是“' + p[1] + '”。', mean ? {} : { emo: p[2] })
+        : mean ? CARD(p[0] + ' = ' + p[1] + '. It\'s a pair!', '配对成功！' + p[0] + ' 就是“' + p[1] + '”。') : CARD('It\'s a pair: ' + p[0] + '!', '', { emo: p[2] });
+      await C.talk([pairPg, L.speak(C, p[0], '把这个词大声读一遍')]);
       const sec = MEM_SECTIONS[c.sec];
       if (sec.cards.every(([pi]) => C.flag('mem12:' + pi)) && !C.gateOpen(sec.gate)) {
         C.openGate(sec.gate, true);
