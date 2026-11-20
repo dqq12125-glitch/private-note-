@@ -188,9 +188,9 @@ function fakeCloud() {
   // 第一次要弹「语音识别」的权限框（还没问过）：等原生问完（回 ok）再开麦克风，两个系统框不一起弹
   await load(BASE(), { fake: { speech: { state: Object.assign({}, ON, { auth: 'notDetermined' }), start: 'ok', startMs: 250, script: [] } } });
   target = await question(0);
-  await fake({ speech: { script: [[600, 'partial', target]] } });
+  await fake({ speech: { script: [[1500, 'partial', target]] } });
   await p.click('#mic');
-  check(await until(() => E(() => window.EchoGame.P().answered), 40, 50), '第一次（要弹权限框）：照样说对就过');
+  check(await until(() => E(() => window.EchoGame.P().answered), 80, 50), '第一次（要弹权限框）：照样说对就过');
   a = await E(() => { const F = window.__fakeNative.speech; return { okAt: Object.values(F.okAt)[0], micAt: (window.__micAt || [])[0], fed: F.feeds.length }; });
   check(a.micAt >= a.okAt && a.fed >= 1, '第一次：原生问完权限、回了 ok 才开麦克风', a);
 
@@ -285,7 +285,7 @@ function fakeCloud() {
   // 原生开好了，但这一次没认出字（有人声）/ 原生出错 / 原生自己停了：同一次里接着走云端（同一个麦克风，录好的声音一起交过去）；连着两次以后这次打开 App 不再试本机
   await load(BASE(), { fake: { net: 'ok', speech: { state: ON, start: 'ok', script: [] } } });
   const cases = [
-    ['error', [[50, 'voice', 1], [200, 'error', 'kAFAssistantErrorDomain 1101']], 'error'],
+    ['error', [[50, 'voice', 1], [900, 'error', 'kAFAssistantErrorDomain 1101']], 'error'],   // 900 毫秒：机器忙时麦克风的第一段声音要过几百毫秒才出来，太早出错就一段都还没送
     ['notext', [[50, 'voice', 1], [300, 'voice', 0]], 'notext'],
   ];
   for (const [name, script, fell] of cases) {
