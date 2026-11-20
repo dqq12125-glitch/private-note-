@@ -286,6 +286,37 @@
     R.packs.install = { ok: ok, ms: Date.now() - t0, info: i };
     add('packs.install', ok === true && i.state === 'full' && i.done === i.bytes && !i.err, { ok: ok, state: i.state, done: i.done, bytes: i.bytes, err: i.err, ms: Date.now() - t0 }, '从 www-test/packs 装一遍小样');
     await packsPlay(P, 'packs');
+    await packsLive();
+  }
+  // 真的那个放课程包的网址：从 echoisland:// 这个来源跨域取得到吗（目录、清单，再流着读第一个配音包的前 256 KB）。
+  // 小样是同一个来源的，证明不了跨域这一条。连不上只算提醒（云上的机器没网、网站临时不通），结果记在 R.packs.live 里给人看
+  var LIVE = 'https://echo-island-packs.dqq12125-study.workers.dev';
+  async function packsLive() {
+    var r = { base: LIVE }, t0 = Date.now();
+    try {
+      var c = await fetch(LIVE + '/catalog.json', { cache: 'no-store' });
+      r.catalog = c.status;
+      var cat = await c.json(), en = cat && cat.packs && cat.packs.en;
+      r.ver = en && en.ver; r.bytes = en && en.bytes;
+      var m = await fetch(LIVE + '/en/' + en.ver + '/manifest.json');
+      r.manifest = m.status;
+      var man = await m.json(), f0 = man.files.filter(function (f) { return f.kind === 'voice'; })[0];
+      r.files = man.files.length;
+      var b = await fetch(LIVE + '/en/' + en.ver + '/' + f0.name), n = 0;
+      r.bundle = b.status;
+      r.stream = !!(b.body && b.body.getReader);
+      if (r.stream) {
+        var rd = b.body.getReader();
+        while (n < 262144) { var x = await rd.read(); if (x.done) break; n += x.value.length; }
+        try { await rd.cancel(); } catch (e) { /* 忽略 */ }
+      } else n = (await b.arrayBuffer()).byteLength;
+      r.read = n; r.ms = Date.now() - t0;
+      add('packs.liveCors', r.catalog === 200 && r.manifest === 200 && r.bundle === 200 && n >= 262144 ? true : 'warn', r, '从 echoisland:// 跨域取线上的课程包');
+    } catch (e) {
+      r.err = String(e && e.message || e); r.ms = Date.now() - t0;
+      add('packs.liveCors', 'warn', r, '从 echoisland:// 跨域取线上的课程包（没取到：没网、网站不通，或者跨域被拦）');
+    }
+    R.packs.live = r;
   }
   async function packs2() {
     R.packs = {};

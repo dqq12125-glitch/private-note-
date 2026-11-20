@@ -239,17 +239,40 @@ final class SmokeUITests: XCTestCase {
     // -EchoWorldTest：放一份现成的存档、替人点进大地图（GameViewController 的 worldDriver）；-EchoOrient auto：跟着手机转。
     // 每个方向都拍一张（world-*.png），对不上也拍，最后一起判
     @MainActor
-    func test7WorldSurvivesRotation() {
+    func test7WorldSurvivesRotation() throws {
         XCUIDevice.shared.orientation = .portrait
         defer { XCUIDevice.shared.orientation = .portrait }
         let app = launch(["-EchoOrient", "auto", "-EchoWorldTest"])
-        // 进了大地图、画过几帧、对话框点掉了
-        let s0 = waitStatus(app, timeout: 240, "world") { _, p in
-            guard let w = p["world"] as? [String: Any] else { return false }
-            return (w["frame"] as? Int ?? 0) > 5 && (w["dlg"] as? Bool) == false
+        // 进了大地图、画过几帧、对话框点掉了。2D 的画面没有帧数（frame 是 -1）：进了地图、对话框点掉了就算。
+        // 云上的模拟器有时候 WebGL 不好用（2026-11-20 连着三次：一次根本建不出来、退到 2D；两次建出来了又丢，着色器建不了、一帧都没画）：
+        // 3D 画面一帧都画不出来、页面又报了 WebGL 的错 → 这次验证不了转屏，记成「跳过」并写明原因，不算转屏坏了；别的原因照样判失败
+        var s0: [String: Any] = [:]
+        var ready = false
+        let end = Date().addingTimeInterval(240)
+        while Date() < end {
+            s0 = status(app)
+            if let w = (s0["page"] as? [String: Any])?["world"] as? [String: Any], (w["dlg"] as? Bool) == false {
+                let using = w["using"] as? String ?? "", map = w["map"] as? String ?? ""
+                if (w["frame"] as? Int ?? 0) > 5 || (using == "2d" && !map.isEmpty) { ready = true; break }
+            }
+            Thread.sleep(forTimeInterval: 0.5)
         }
-        let w0 = (s0["page"] as? [String: Any])?["world"] as? [String: Any] ?? [:]
-        print("EchoIsland world: renderer = \(w0["using"] ?? "") map = \(w0["map"] ?? "")")
+        let p0 = s0["page"] as? [String: Any] ?? [:]
+        let w0 = p0["world"] as? [String: Any] ?? [:]
+        print("EchoIsland world: renderer = \(w0["using"] ?? "") map = \(w0["map"] ?? "") frame = \(w0["frame"] ?? "")")
+        if !ready {
+            attachJSON(s0, "status-timeout-world")
+            shot("world-timeout")
+            let err = p0["lastErr"] as? String ?? ""
+            if !(w0["map"] as? String ?? "").isEmpty && err.contains("WebGL") {
+                print("EchoIsland world: SKIPPED, simulator WebGL unusable: \(err)")
+                app.terminate()
+                throw XCTSkip("这台模拟器的 WebGL 用不了（\(err)），大地图一帧都没画出来：转屏这一项这次验证不了")
+            }
+            XCTFail("等了 240 秒还没到：world（\(w0)，最后一个错：\(err)）")
+            app.terminate()
+            return
+        }
         var problems: [String] = []
         let steps: [(String, UIDeviceOrientation, Bool)] = [
             ("1-portrait", .portrait, false),

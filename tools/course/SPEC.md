@@ -91,6 +91,46 @@
 
 ## 5. 检查
 
+（下面第 6 节是源文件怎么变成课程包里的 `course.json`。）
+
+## 6. 生成 `course.json`（`node tools/course/build.js <语言>`）
+
+游戏里的代码读的是和英语一样的数组格式（`data.js` 的 `WORLDS` / `SCENES`、`book.js` 的 `BOOKS`），所以 `course.json` 就是「另一门语言的这几样东西」，多出来的读音、词块、英文意思放在每条最后那个对象里（game.js 的 `meanOf` 本来就读它）：
+
+```json
+{ "fmt": 1, "lang": "ja", "name": { "zh": "日语", "en": "Japanese", "self": "日本語" },
+  "WORLDS": [ { "name": "你好岛", "en": "あいさつの島", "icon": "👋", "color": "#…",
+      "boss": { "emoji": "🦜", "name": "鹦鹉船长", "en": "Captain Polly", "hello": "こんにちは！…", "x": { "r": "…", "zh": "…", "en": "…" } },
+      "words": [ ["名前", "名字", "🏷️", { "en": "name", "r": "なまえ" }], … ],
+      "sents": [ ["お名前は何ですか？", "你叫什么名字？", { "en": "What is your name?", "seg": ["お名前は","何","ですか？"], "r": ["おなまえは","なん","ですか"] }], … ],
+      "dlgs":  [ ["问", "答", ["错 1", "错 2"], { "q": { "zh","en","seg","r" }, "a": { … }, "wrong": [ { … }, { … } ] }], … ] }, … 13 个 ],
+  "SCENES": [ { "cast": [["ゆい","👧","f"],["はると","👦","m"]], "lines": [ [0, "…", "中文", { "en": "…", "r": "…" }], … ] }, … 13 段 ],
+  "BOOKS": { "list": [ { "id": "ja1", "level": 1, "name": "日语 1 级", "short": "1 级", "x": { "en": { "name": "Japanese Level 1", "short": "L1" } },
+      "units": [ { "n": 1, "en": "わたしの家族と友だち", "zh": "介绍自己和身边的人", "icon": "…", "color": "#…", "key": "…",
+                   "grammar": { "title": "…中文…", "tip": "…中文…", "en": { "title": "…", "tip": "…" } },
+                   "boss": { "emoji": "🐇", "name": "…中文名…", "en": "Pyonta the Rabbit", "hello": "…", "x": { "r", "zh", "en" } },
+                   "words": […], "sents": […], "dlgs": […], "x": { "en": "英文标题", "key": { "r", "zh", "en" } } }, … ] }, … ] },
+  "TALK": [ { "id": "ja1-u1", "book": "ja1", "unit": 1, "name": "Haruka", "zh": "…", "gender": "f", "kid": true,
+              "topic": "…英文…", "topicZh": "…", "goal": "…英文…", "goalZh": "…", "persona": "…", "opener": "…目标语言…",
+              "words": ["…目标语言…"], "wordsZh": ["…"], "wordsEn": ["…"],
+              "goals": [ { "goal": "…", "goalZh": "…", "opener": "…", "steps": [["中文", "能照着说的一句", { "en": "…" }]] } ] }, … ],
+  "MAP": { "towns": 1, "books": { "ja1": 1, "ja2": 2, "ja3": 3 }, "mix": [0.6,0.6,0.8,0.9,1,1],
+           "kinds": [ { "listen": 0.5, "fade": [4,6] }, { "listen": 0.3, "fade": [3,5] }, { "listen": 0, "fade": [2,4] }, { "listen": 0, "fade": [1,3] }, { "listen": 0, "fade": [1,2] }, { "listen": 0, "fade": [1,2] } ] },
+  "VOICE": [ { "t": "要配音的一句（目标语言原文）", "g": ["f"], "p": 0 }, … ] }
+```
+- 小镇的中文岛名、图标、颜色、岛主的表情和名字照 `data.js` 第 i 个岛的（岛还是那座岛）；目标语言的岛名是源文件的 `t`。
+- 中文课的 `zh` 是空的：条目第 2 格放空字符串。
+- 大纲里有、还没写的册不进 `BOOKS`（先有 1 级就只出 1 级）。
+- `VOICE`：这门课里所有要提前配音的句子（词、句子、对话的问 / 答 / 错的选项、小剧场每一句、岛主的话、聊天开场白），`g` 和英语的规矩一样（词和句子女声、对话和岛主两种、小剧场按角色的性别），`p` 是先后（小镇在前、按岛，再按册、按单元）。**配音念的是 `t` 原文，不是读音 `r`**（日语的「は」念 wa 靠原文）。
+- 同一份输入生成的文件逐字节一样。`--check` 只检查不写。输出到 `dist/course/<语言>/course.json`（不进仓库）。
+
+## 7. 配音和打包
+
+- `tools/voice/gen.py --lang <语言> --lines dist/course/<语言>/course.json --out dist/voice/<语言>`：本机 Kokoro（英语照旧，默认参数不变）。西语 `lang_code='e'`、中文 `'z'`、日语 `'j'`；声音用 Kokoro 自带的那门语言的男女声各一个。key 还是 `tools/voice/key.js` 的哈希（对目标语言的原文算）。
+- `node tools/pack/build.js --lang <语言> --course dist/course/<语言>/course.json --voice dist/voice/<语言>` 出课程包（`course.json` 标 core，配音照 `p` 排）。
+- 合成完要抽查听得清不清：每门语言抽 60 段以上，用本机的识别模型转成字，和原文比（西语按词、日语和中文用 `lang-*.js` 的 `score()`），把通过率和没过的句子列出来。**对不上的不要硬收**：读错的（多音字、数字、外来语）换个写法重新合成，或者记下来。
+
+
 `node tools/course/check.js <语言>`：字段齐不齐、个数、重复、`seg` 接起来等不等于 `t`、`r` 和 `seg` 一样多、日语读音里有没有混进汉字、拼音有没有声调、西语倒问号感叹号成对、图重复、意思重复、禁用词。**有一条不过就不算写完。**
 
 另外每门语言写完要找一个没看过稿子的人（另一个代理）从头读一遍：有没有不地道、有错、超出这一级的，改完记在 `tools/course/<语言>/review.md`。日语和西班牙语对外卖之前还要找母语的人看（老板知道）。
