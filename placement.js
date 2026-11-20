@@ -399,6 +399,14 @@
       '</div><div class="pl-nav"><span></span><button class="btn" data-act="plGo" data-to="who" data-focus>' + h('place.next') + '</button></div>', 'lang');
   }
 
+  // ---------- 课程包模式（packs.js，tools/pack/SPEC.md §5）：选好语言以后先下这门课（最要紧的那部分下好才能「继续」，其余在后台下） ----------
+  // 老模式、或者这门课已经能用了：没有这一页（EchoPacks.firstStep 返回 false），直接到「谁在学」
+  function pPack() {
+    const pk = root.EchoPacks;
+    if (!pk || !pk.on || !pk.firstStep) return false;
+    return pk.firstStep(st().lang, { paint: html => paint(html, 'pack'), live: () => !!U && U.step === 'pack' && isOpen(), next: () => { if (U) pWho(); } });
+  }
+
   // ---------- 谁在学、学过多少（只用来定从哪儿开始测；只存年龄段） ----------
   const WHO = [['child', '🧒'], ['teen', '🧑‍🎓'], ['adult', '🧑']];
   function pWho() {
@@ -743,6 +751,7 @@
     if (U.step === 'q') { pause(); return true; }
     if (U.step === 'pause') { nextItem(); return true; }
     if (U.step === 'who' && U.first) { pLang(); return true; }
+    if (U.step === 'pack') { pLang(); return true; }
     if (U.step === 'ready') { pWho(); return true; }
     if (U.step === 'result') { finishFlow('done'); return true; }
     if (U.step === 'lang') return true;   // 第一页：不退出
@@ -764,7 +773,7 @@
     return {
       plUi: el => { if (G.setUi) G.setUi(el.dataset.l); pLang(); },
       plTarget: el => { if (TARGETS[el.dataset.l]) { st().lang = el.dataset.l; G.save(); pLang(); } },
-      plGo: el => { if (!U) return; if (el.dataset.to === 'lang') pLang(); else pWho(); },
+      plGo: el => { if (!U) return; if (el.dataset.to === 'lang') pLang(); else if (U.first && U.step === 'lang' && pPack()) return; else pWho(); },
       plWho: el => { if (!U) return; U.who = el.dataset.v; if (U.know == null && st().know >= 0) U.know = st().know; pWho(); },
       plKnow: el => { if (!U) return; U.know = +el.dataset.v; if (!U.who && st().who) U.who = st().who; pWho(); },
       plWhoNext: () => whoNext(),

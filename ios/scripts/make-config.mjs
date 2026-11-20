@@ -20,6 +20,9 @@
 //   ECHO_CLOUD_URL=https://…            公开版服务器（cloud/）的地址（只到域名，不带 /v1）。给了 = 「云端模式」：网页不问密钥，
 //                                       登录账号、每天免费几分钟 AI、买会员（account.js）；不给 = 和以前一样（家长粘贴密钥 / 家庭版打包的密钥）。
 //                                       网址不是秘密，销售版也能给；只认 https://（本机试的 http://localhost、127.0.0.1 也认）
+//   ECHO_PACKS_URL=https://…            课程包放在网上的地址（tools/pack/SPEC.md）。给了 = 「课程包模式」：配音不进安装包（copy-web.mjs 不复制
+//                                       assets/voice/f、m 和 index.json），要学哪门语言再下载（packs.js）；不给 = 和以前一样配音打进包里。
+//                                       → BuildConfig.packsUrl → 启动对象 window.__ECHO_BOOT.packsUrl（和 cloudUrl 同一条路）。不是秘密
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -56,6 +59,14 @@ export function cloudUrlOf(v) {
   u = u.replace(/\/+$/, '').replace(/\/v1$/, '');
   if (!/^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u))
     throw new Error('ECHO_CLOUD_URL 要写成 https://域名（本机试可以是 http://localhost:端口），不要带查询参数');
+  return u;
+}
+// 课程包的地址：https://域名[:端口][/路径]，本机试的 http://localhost / 127.0.0.1 也行；末尾的 / 去掉（和 packs.js 的 okUrl 一样认法）
+export function packsUrlOf(v) {
+  const u = String(v || '').trim().replace(/\/+$/, '');
+  if (!u) return '';
+  if (!/^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u))
+    throw new Error('ECHO_PACKS_URL 要写成 https://域名[/路径]（本机试可以是 http://localhost:端口），不要带查询参数');
   return u;
 }
 
@@ -159,6 +170,8 @@ export function compute(o) {
   if (appleSignIn && !team) warn.push('ECHO_APPLE_SIGNIN 开着但没有 ECHO_TEAM_ID：这个权限要签名，不签名的包装不上 / 编不过');
   // 云端模式：两个版本都能给（销售版就是公开发、走服务器的那个）；家庭版的配置文件里也可以写 CLOUD_URL
   const cloudUrl = cloudUrlOf(env.ECHO_CLOUD_URL || (sales ? '' : props.CLOUD_URL) || '');
+  // 课程包模式：两个版本都能给（只认环境变量；copy-web.mjs 看同一个 ECHO_PACKS_URL 决定配音进不进包）
+  const packsUrl = packsUrlOf(env.ECHO_PACKS_URL || '');
 
   const cfg = {
     edition,
@@ -180,6 +193,8 @@ export function compute(o) {
     appleSignIn,
     // 公开版服务器（cloud/API.md）：GameViewController 的启动对象里交给网页（account.js 的 EchoCloud）；空 = 不是云端模式
     cloudUrl,
+    // 课程包放在网上的地址（tools/pack/SPEC.md）：GameViewController 的启动对象里交给网页（packs.js 的 EchoPacks）；空 = 配音在包里（老模式）
+    packsUrl,
     // 测试版（TestFlight 的工作流给 ECHO_BETA=1）：屏幕最下面显示一行很小的版本号（echo-native.js 的 addBeta），截图上看得出是哪一版。
     // 提交审核的那一版不给
     beta: ['1', 'true', 'yes', 'on'].includes(String(env.ECHO_BETA || '').trim().toLowerCase()),
@@ -204,7 +219,7 @@ export function compute(o) {
   ].filter(Boolean).join('\n') + '\n';
   return { cfg, swift, xcconfig: xc, warn, summary: 'edition ' + edition + '，版本 ' + name + '（' + code + '）' +
     '，密钥：' + (key ? '有' : '没有') + '，家长密码：' + (hash ? '有（只存哈希）' : '没有') + (sales ? '，课本 ' + cfg.books : '') +
-    '，订阅 ' + iapMonthly + ' / ' + iapYearly + '，通过 Apple 登录：' + (appleSignIn ? '带' : '不带') + '，服务器：' + (cloudUrl || '没有（不是云端模式）') };
+    '，订阅 ' + iapMonthly + ' / ' + iapYearly + '，通过 Apple 登录：' + (appleSignIn ? '带' : '不带') + '，服务器：' + (cloudUrl || '没有（不是云端模式）') + '，课程包：' + (packsUrl || '没有（配音打进包里）') };
 }
 
 function main(argv) {

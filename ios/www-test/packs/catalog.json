@@ -1,0 +1,16 @@
+{
+ "fmt": 1,
+ "packs": {
+  "en": {
+   "ver": "20261120.1",
+   "name": {
+    "zh": "英语",
+    "en": "English",
+    "self": "English"
+   },
+   "bytes": 34927,
+   "core": 32587,
+   "course": false
+  }
+ }
+}

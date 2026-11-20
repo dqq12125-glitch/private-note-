@@ -28,11 +28,12 @@
 | `Tests/LogicTests.swift` | 单元测试（模拟器里跑）：家长密码、备份轮换、Range、类型、只连阿里云、原生桥的入口 |
 | `Tests/AccountLogicTests.swift` | 单元测试：订阅和登录里不碰 App Store 的那一层（参数不对当场回、买的四种结果、取消、没带权限的包说 unavailable） |
 | `Tests/StoreKitTests.swift` | 订阅的真流程（用 `Store.storekit`）：商品、买（带账号 UUID）、请求购买、恢复、续费、过期、退款 → 事件。云上单独一步、挑 iOS 26.2 的模拟器 |
-| `UITests/SmokeUITests.swift` | UI 测试：打开到首页（竖屏、横屏截图）、原生桥自测页一个都不能没过、麦克风弹窗、分享面板和文件选择器、订阅的商品问得到 |
+| `UITests/SmokeUITests.swift` | UI 测试：打开到首页（竖屏、横屏截图）、原生桥自测页一个都不能没过、麦克风弹窗、分享面板和文件选择器、订阅的商品问得到、大地图转屏、课程包装一遍 + 重开还在 |
 | `www-test/selftest.html` | 原生桥自测页（**只打进调试包**）：把 26 个方法和 iPhone 才有的 13 个都调一遍，再看几样 WebKit 的本事 |
 | `scripts/prepare.mjs` | 打包前一条命令做完：`make-config.mjs` → `copy-web.mjs` → 没有图标时 `make-icons.mjs` |
-| `scripts/make-config.mjs` | 生成 `Generated/BuildConfig.swift`、`Generated/Echo.xcconfig`（版本、构建号、订阅的两个商品编号、带不带「通过 Apple 登录」；家庭版另有密钥和家长密码的**哈希**） |
-| `scripts/copy-web.mjs` | 把游戏网页复制进 `www/`：和安卓 `copyWeb` 同一份白名单，销售版不带保留怪兽 |
+| `scripts/make-config.mjs` | 生成 `Generated/BuildConfig.swift`、`Generated/Echo.xcconfig`（版本、构建号、订阅的两个商品编号、带不带「通过 Apple 登录」、服务器地址 `ECHO_CLOUD_URL`、课程包地址 `ECHO_PACKS_URL`；家庭版另有密钥和家长密码的**哈希**） |
+| `scripts/copy-web.mjs` | 把游戏网页复制进 `www/`：和安卓 `copyWeb` 同一份白名单，销售版不带保留怪兽；给了 `ECHO_PACKS_URL` 时不带英语配音（见「课程包」） |
+| `www-test/packs/` | 课程包的小样（`tools/pack/build.js --only 12` 打的，几十 KB），自测页 `run=packs` / `packs2` 从这里装 |
 | `scripts/make-icons.mjs` | 从 `android/icon-512.png` 生成 1024 的图标（垫底色、去透明） |
 | `scripts/pick-simulator.mjs` | 云上挑一台 iPhone 模拟器（可以指定 iOS 版本，StoreKit 测试要 26.2） |
 | `../.github/workflows/ios-simulator.yml` | 云上的 Mac 编译、跑测试 |
@@ -55,6 +56,12 @@
 | 存档备份跟不跟 iCloud 备份走 | 不跟（和安卓销售版 `allowBackup=false` 一个意思） | 跟 |
 
 销售版里给了密钥、家长密码或者地址（环境变量 `ECHO_DASHSCOPE_KEY` 等）`make-config.mjs` 直接停下；`echo.properties` 销售版根本不打开，所以同一份文件两个版本都能用（和安卓一样）。
+
+## 课程包（2026-11-20，`tools/pack/SPEC.md`）
+
+- 打包时给 `ECHO_PACKS_URL=https://…`（课程包放在网上的地址，不是秘密）：`make-config.mjs` → `BuildConfig.packsUrl` → 启动对象 `window.__ECHO_BOOT.packsUrl`（和 `cloudUrl` 同一条路）→ 网页的 `packs.js`；`copy-web.mjs` 不复制 `assets/voice/f/**`、`assets/voice/m/**`、`assets/voice/index.json`（包小约 100 MB），配音在 App 里选了语言再下载、存在 IndexedDB。不给 = 和以前一样配音打进包里。
+- 云上：两个工作流都从**仓库变量** `vars.ECHO_PACKS_URL` 取（GitHub → Settings → Secrets and variables → Actions → Variables）；空 = 老模式。TestFlight 工作流只给销售版。
+- 自测页 `run=packs`（UI 测试第 8 个）：`echoisland://` 能用 IndexedDB 存 ArrayBuffer；从 `www-test/packs/` 的小样装一遍；装好的那段 `blob:` 地址在 WKWebView 里 `play()` 不报错、`ended` 来了。然后关掉 App 再开 `run=packs2`：还在、照样放得出声，最后删掉小样。小样重新打：`node tools/pack/build.js --lang en --ver 20261120.1 --only 12 --bundle 20000 --core 30000 --out ios/www-test/packs` 再 `--catalog --out ios/www-test/packs`。
 
 ## 云上怎么编（GitHub Actions，不用自己有 Mac）
 
@@ -365,6 +372,7 @@ git push origin testflight-20261119-1
 
 - 第一次在云上编译：这台电脑编不了 Swift，Swift 的写法是对着苹果的文档和 WebKit 的头文件核过的，但还没真编过。
 - 订阅和登录（2026-11-19 加的 `Store.swift`、`AppleSignIn.swift`、StoreKit 测试、TestFlight 工作流）：还没在云上编过、没传过 TestFlight；`-allowProvisioningUpdates` 能不能自己给 App ID 加上「通过 Apple 登录」没试过（工作流不行就不带它再签一次）；沙盒里真的买要等「付费 App 协议」签好、App Store Connect 里建好两个订阅。
+- 课程包（2026-11-20）：自测页 `run=packs` / `packs2`、UI 测试第 8 个还没在云上跑过——`echoisland://` 的 IndexedDB 存 ArrayBuffer、重开还在、`blob:` 的 Ogg Opus 在 WKWebView 里放不放得出声，只有云上的模拟器 / 真 iPhone 能证明（Windows 上的 WebKit 连 WAV 都放不了，证明不了）。真 iPhone 上 100 MB 下载切后台、断网、杀进程以后接着下，也要实际试。
 - 口语题的本机识别（2026-11-20）：真 iPhone 上孩子的口音认得准不准、说完到出分多快（周报诊断一行、`EchoTalk.lastSpeech()`）、第一次的两个权限框、问完以后配乐和朗读是不是还从扬声器出来、音量照旧、来电打断以后。
 - 真 iPhone 上：麦克风录音和阿里云实时识别、AI 聊天（直连）、配音的 Ogg Opus、静音键、来电打断以后声音接不接得上、横屏的灵动岛、长按会不会出放大镜、存档在 WebKit 里能放多少、内存大的 3D 场景会不会把网页进程挤掉。
 - 销售版的首次设置向导第 ② 步「设备检查」是按安卓写的（系统版本那一行、「iPhone 装不上」那句说明），iPhone 上要改成认 `diag().platform === 'ios'`（`setup.js`，见交接说明）。

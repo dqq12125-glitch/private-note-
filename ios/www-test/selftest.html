@@ -20,7 +20,12 @@
   本机识别：speechState 一定要回、形状对；speechStart 带 ask:false（不弹权限框），模拟器多半回 unavailable（没有本机识别）/ not-asked（还没问过权限），
   也算过——要证明的只是桥通、这几种情况网页认得；speechFeed 对着没在听的编号送一段（原生不管、不回话、不崩）；
   万一真的开起来了，送 3 段静音（speechFeed），马上 speechStop，要收到事件 echo-speech 的 end，fed 是 3。
-  结果：window.__echoTestResult = { run, done, pass, fail, warn, skip, items: [{ name, ok, got, note }], mic, ui, store }
+  run=packs ：课程包（tools/pack/SPEC.md §6）。① echoisland:// 这个来源能用 IndexedDB 存一个 ArrayBuffer、读回来一样，并留一个记号给下一次；
+              ② 用游戏的 packs.js 从 www-test/packs/（tools/pack/build.js --only 打的小样）装一遍英语（地址换成 /__test/packs）：
+              下完、每一段都在；③ 装好的第一段在 WKWebView 里放得出声：blob: 地址给 <audio>，play() 不报错、ended 来了。
+  run=packs2：UI 测试把 App 关掉再开（-EchoSelfTest packs2）：①的记号和 ArrayBuffer 还在；英语还是装好的（不联网也认得），那一段照样放得出声。
+              最后删掉小样（别让同一个调试包里的游戏以为英语装好了）。
+  结果：window.__echoTestResult = { run, done, pass, fail, warn, skip, items: [{ name, ok, got, note }], mic, ui, store, packs }
         ok：true 过了 / false 没过（UI 测试判失败）/ 'warn' 看情况（和模拟器、系统版本有关的，只记下来）/ 'skip' 没测（写着为什么）
 -->
 <style>
@@ -134,16 +139,29 @@
       return { ok: ed === 'sales' || ed === 'family', got: ed };
     });
     try {
+      // 课程包模式的包（打包时给了 ECHO_PACKS_URL）：配音不在包里（copy-web.mjs 不复制），Range 改拿课程包小样的配音包来试
+      var packsMode = !!(window.__ECHO_BOOT && window.__ECHO_BOOT.packsUrl);
       var r = await fetch('/assets/voice/index.json');
       var ct = r.headers.get('content-type') || '', j = r.ok ? await r.json() : null;
-      add('assets.json', r.status === 200 && /application\/json/.test(ct) && !!j && Array.isArray(j.f), { status: r.status, type: ct, clips: j && j.f ? j.f.length : 0 });
-      var clip = j && j.f && j.f[0] ? '/assets/voice/f/' + j.f[0] + '.ogg' : '';
-      R.clip = clip;
-      var rr = await fetch(clip, { headers: { Range: 'bytes=0-15' } });
-      var buf = new Uint8Array(await rr.arrayBuffer());
-      var magic = String.fromCharCode(buf[0], buf[1], buf[2], buf[3]);
-      add('assets.range', rr.status === 206 && /^bytes 0-15\/\d+$/.test(rr.headers.get('content-range') || '') && buf.length === 16 && magic === 'OggS' &&
-        /audio\/ogg/.test(rr.headers.get('content-type') || ''), { status: rr.status, range: rr.headers.get('content-range'), len: buf.length, magic: magic });
+      var rr, buf, magic, ctype;
+      if (packsMode) {
+        add('assets.json', r.status === 404 ? 'skip' : false, { status: r.status }, '课程包模式：配音不在包里（要是 200，就是 copy-web.mjs 还把配音打进去了）');
+        var pc = await (await fetch('/__test/packs/catalog.json')).json();
+        rr = await fetch('/__test/packs/en/' + pc.packs.en.ver + '/voice-000.bin', { headers: { Range: 'bytes=0-15' } });
+        buf = new Uint8Array(await rr.arrayBuffer());
+        magic = String.fromCharCode(buf[0], buf[1], buf[2], buf[3]);
+        ctype = /application\/octet-stream/.test(rr.headers.get('content-type') || '') && magic === 'EPK1';
+      } else {
+        add('assets.json', r.status === 200 && /application\/json/.test(ct) && !!j && Array.isArray(j.f), { status: r.status, type: ct, clips: j && j.f ? j.f.length : 0 });
+        var clip = j && j.f && j.f[0] ? '/assets/voice/f/' + j.f[0] + '.ogg' : '';
+        R.clip = clip;
+        rr = await fetch(clip, { headers: { Range: 'bytes=0-15' } });
+        buf = new Uint8Array(await rr.arrayBuffer());
+        magic = String.fromCharCode(buf[0], buf[1], buf[2], buf[3]);
+        ctype = magic === 'OggS' && /audio\/ogg/.test(rr.headers.get('content-type') || '');
+      }
+      add('assets.range', rr.status === 206 && /^bytes 0-15\/\d+$/.test(rr.headers.get('content-range') || '') && buf.length === 16 && ctype,
+        { status: rr.status, range: rr.headers.get('content-range'), len: buf.length, magic: magic });
       var mon = await (await fetch('/assets/mon3d/index.json')).json();
       var g = await fetch('/assets/mon3d/' + mon[0] + '.glb');
       var gb = new Uint8Array(await g.arrayBuffer());
@@ -162,7 +180,14 @@
     var c = '';
     try { c = new Audio().canPlayType('audio/ogg; codecs="opus"'); } catch (e) { c = 'threw'; }
     add('media.canPlayOggOpus', c ? true : 'warn', c || '(空)', 'iOS 18.4 起才放得了 Ogg 里的 Opus；game.js 的 OGG_OK 看的就是它');
-    if (!R.clip) { add('media.audioElement', 'skip', '', '没找到配音文件'); return; }
+    if (R.clip) await mediaClip();
+    else add('media.audioElement', 'skip', '', '没有打包的配音（课程包模式）：run=packs 测课程包里的那段');
+    var as = null; try { as = navigator.audioSession ? navigator.audioSession.type : null; } catch (e) { as = 'threw'; }
+    add('media.audioSession', as ? true : 'warn', as || '没有 navigator.audioSession', 'echo-native.js 平时设成 playback（静音键不关声音）');
+    var gl = null; try { gl = document.createElement('canvas').getContext('webgl2'); } catch (e) { gl = null; }
+    add('media.webgl2', gl ? true : 'warn', gl ? gl.getParameter(gl.VERSION) : '没有', '模拟器的 WebGL2 和真机不一样');
+  }
+  async function mediaClip() {
     var a = new Audio(R.clip);
     var got = await new Promise(function (res) {
       var t = setTimeout(function () { res('timeout ' + a.readyState); }, 8000);
@@ -181,10 +206,105 @@
       add('media.decodeAudioData', /^ok/.test(dec) ? true : 'warn', dec + ' · ctx ' + ctx.sampleRate + 'Hz ' + ctx.state);
       ctx.close();
     } catch (e) { add('media.decodeAudioData', 'warn', 'threw ' + (e && e.message)); }
-    var as = null; try { as = navigator.audioSession ? navigator.audioSession.type : null; } catch (e) { as = 'threw'; }
-    add('media.audioSession', as ? true : 'warn', as || '没有 navigator.audioSession', 'echo-native.js 平时设成 playback（静音键不关声音）');
-    var gl = null; try { gl = document.createElement('canvas').getContext('webgl2'); } catch (e) { gl = null; }
-    add('media.webgl2', gl ? true : 'warn', gl ? gl.getParameter(gl.VERSION) : '没有', '模拟器的 WebGL2 和真机不一样');
+  }
+
+  // ---------- 课程包（run=packs / packs2）：IndexedDB 存 ArrayBuffer、重开还在；从 www-test/packs 装一遍；装好的那段放得出声 ----------
+  var PROBE_N = 4096;
+  function probeBytes() { var a = new Uint8Array(PROBE_N); for (var i = 0; i < PROBE_N; i++) a[i] = (i * 37 + 11) & 255; return a; }
+  function idb(fn) {
+    return new Promise(function (res, rej) {
+      var r = indexedDB.open('echo-selftest', 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('kv'); };
+      r.onerror = function () { rej(r.error); };
+      r.onsuccess = function () { var d = r.result; Promise.resolve(fn(d)).then(function (v) { d.close(); res(v); }, function (e) { d.close(); rej(e); }); };
+    });
+  }
+  function kv(d, mode, k, v) {
+    return new Promise(function (res, rej) {
+      var tx = d.transaction('kv', mode), st = tx.objectStore('kv'), q = mode === 'readonly' ? st.get(k) : st.put(v, k);
+      tx.oncomplete = function () { res(q.result); }; tx.onerror = function () { rej(tx.error); };
+    });
+  }
+  // 游戏的 packs.js，地址换成自测页的小样（__ECHO_BOOT.packsUrl 最先认；原生给的真地址先放一边）
+  function loadPacks() {
+    return new Promise(function (res, rej) {
+      if (window.EchoPacks) { res(window.EchoPacks); return; }
+      window.__ECHO_BOOT = Object.assign({}, window.__ECHO_BOOT || {}, { packsUrl: '/__test/packs' });
+      var s = document.createElement('script');
+      s.src = '/packs.js';
+      s.onload = function () { res(window.EchoPacks); };
+      s.onerror = function () { rej(new Error('packs.js 没加载出来')); };
+      document.head.appendChild(s);
+    });
+  }
+  // 放一段：blob: 地址给 <audio>，play() 不报错、ended 来了（15 秒）
+  function playBlob(url) {
+    return new Promise(function (res) {
+      var a = new Audio(), out = { url: url.slice(0, 5), play: '', ended: false, t: 0 };
+      var t = setTimeout(function () { out.t = a.currentTime; res(out); }, 15000);
+      a.addEventListener('ended', function () { clearTimeout(t); out.ended = true; out.t = a.currentTime; res(out); });
+      a.addEventListener('error', function () { clearTimeout(t); out.play = out.play || 'error ' + (a.error && a.error.code); res(out); });
+      a.src = url;
+      var p = a.play();
+      if (p && p.then) p.then(function () { out.play = 'ok'; }, function (e) { out.play = 'rejected ' + (e && e.name); clearTimeout(t); res(out); });
+      else out.play = 'no promise';
+    });
+  }
+  async function packsPlay(P, label) {
+    var first = null;
+    try {
+      var cat = await (await fetch('/__test/packs/catalog.json')).json();
+      var man = await (await fetch('/__test/packs/en/' + cat.packs.en.ver + '/manifest.json')).json();
+      var b = new Uint8Array(await (await fetch('/__test/packs/en/' + cat.packs.en.ver + '/' + man.files[0].name)).arrayBuffer());
+      first = P._.readBundle(b).items[0];
+      R.packs.n = man.files.reduce(function (s, f) { return s + f.n; }, 0);
+    } catch (e) { add(label + '.fixture', false, 'threw ' + (e && e.message), '读不出小样的第一段'); return; }
+    add(label + '.hasClip', P.hasClip(first[1], first[0]) === true, first);
+    var url = await P.clip(first[1], first[0]);
+    if (!url) { add(label + '.clip', false, url, '读不出这一段'); return; }
+    add(label + '.clip', url.indexOf('blob:') === 0, url.slice(0, 5));
+    var r = await playBlob(url);
+    R.packs[label + 'Play'] = r;
+    // 不报错、ended 来了 = 过；play() 没报错但 15 秒没等到 ended、也放到了一点：看情况（云上的 Mac 有没有声音输出）；报错 / 一点都没放：没过
+    add(label + '.play', r.play === 'ok' && r.ended ? true : r.play === 'ok' && r.t > 0 ? 'warn' : false, r, '课程包里的那段在 WKWebView 里放得出声');
+  }
+  async function packs() {
+    R.packs = {};
+    try {
+      await idb(function (d) { return kv(d, 'readwrite', 'probe', probeBytes().buffer).then(function () { return kv(d, 'readwrite', 'mark', Date.now()); }); });
+      var back = await idb(function (d) { return kv(d, 'readonly', 'probe'); });
+      var u = back instanceof ArrayBuffer ? new Uint8Array(back) : null, want = probeBytes();
+      add('packs.idbArrayBuffer', !!u && u.length === PROBE_N && want.every(function (x, i) { return u[i] === x; }), u ? u.length + ' 字节' : String(back), 'echoisland:// 这个来源能用 IndexedDB 存 ArrayBuffer');
+    } catch (e) { add('packs.idbArrayBuffer', false, 'threw ' + (e && e.message)); }
+    var P;
+    try { P = await loadPacks(); } catch (e) { add('packs.load', false, e.message); return; }
+    add('packs.on', P.on === true && P.base === '/__test/packs', { on: P.on, base: P.base });
+    await P.ready();
+    add('packs.store', P.store === 'idb', P.store);
+    await P.remove('en');   // 从头装（上一次留下的先删掉）
+    var t0 = Date.now(), ok = await P.install('en'), i = P.info('en');
+    R.packs.install = { ok: ok, ms: Date.now() - t0, info: i };
+    add('packs.install', ok === true && i.state === 'full' && i.done === i.bytes && !i.err, { ok: ok, state: i.state, done: i.done, bytes: i.bytes, err: i.err, ms: Date.now() - t0 }, '从 www-test/packs 装一遍小样');
+    await packsPlay(P, 'packs');
+  }
+  async function packs2() {
+    R.packs = {};
+    try {
+      var got = await idb(function (d) { return Promise.all([kv(d, 'readonly', 'probe'), kv(d, 'readonly', 'mark')]); });
+      var u = got[0] instanceof ArrayBuffer ? new Uint8Array(got[0]) : null, want = probeBytes();
+      add('packs2.idbKept', !!u && u.length === PROBE_N && want.every(function (x, i) { return u[i] === x; }) && got[1] > 0, { bytes: u ? u.length : String(got[0]), mark: got[1] }, '关掉 App 重开：IndexedDB 里的 ArrayBuffer 还在');
+    } catch (e) { add('packs2.idbKept', false, 'threw ' + (e && e.message)); }
+    var P;
+    try { P = await loadPacks(); } catch (e) { add('packs2.load', false, e.message); return; }
+    await P.ready();
+    var i = P.info('en');
+    add('packs2.installed', P.store === 'idb' && i.state === 'full' && !i.busy, { store: P.store, state: i.state, ver: i.ver }, '重开以后英语还是装好的');
+    await packsPlay(P, 'packs2');
+    // 收尾：删掉小样、目录的缓存（同一个调试包里的游戏别以为英语装好了）
+    await P.remove('en');
+    try { localStorage.removeItem('echo-packs-cat'); } catch (e) { /* 忽略 */ }
+    await idb(function (d) { return kv(d, 'readwrite', 'mark', 0); }).catch(function () {});
+    add('packs2.cleanup', P.state('en') === 'none', P.state('en'));
   }
 
   // ---------- 三、原生桥：同步的方法 ----------
@@ -420,6 +540,8 @@
     try {
       if (run === 'all') { await env(); await syncMethods(); await asyncMethods(); await account(); await speech(); await media(); }
       else if (run === 'store') await store();
+      else if (run === 'packs') await packs();
+      else if (run === 'packs2') await packs2();
       else if (run === 'mic') await mic();
       else if (run === 'share') share();
       else if (run === 'pick') pick();

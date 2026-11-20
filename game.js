@@ -1540,7 +1540,7 @@
   // 整份存档：JSON.stringify + localStorage.setItem，当场写完（收服、徽章、复习、聊天、买东西……都走这里，一调用就存好了）。
   // 存档大了以后这一下不便宜（3 年的存档约 97 万字，在慢 4 倍的 CPU 上 50–110 毫秒），所以走路不走这里，见 savePos
   function save() {
-    if (RT.noSave) return;
+    if (RT.noSave || RT.preStart) return;   // preStart：课程包模式下 start() 还没读存档（boot），这时的 S 是空白的，存了会盖掉真的存档
     let txt;
     try { txt = JSON.stringify(S); } catch (e) { if (window.EchoErr) EchoErr.log('app', tr('g.save.wlog', { msg: e.message }), 'save'); return; }
     const d = dayStr();
@@ -1772,6 +1772,8 @@
   // ---------- 自然配音：tools/voice/gen.py 用本机开源模型 Kokoro（Apache-2.0）提前合成的固定句子（assets/voice/{f,m}/<key>.ogg，Opus） ----------
   // 文件名是规范化文本的 FNV-1a 哈希，和 tools/voice/key.js 一样；没合成的句子（拼了名字的）联网时用阿里云现场合成，再不行用本机声音
   const CLIP = { f: new Set(), m: new Set() };
+  // 课程包模式（packs.js，tools/pack/SPEC.md §5）：配音不在安装包里，问 EchoPacks（下载到这台设备上的）；老模式（EchoPacks.on 是 false）这一段一个字没变
+  const PK = () => !!(window.EchoPacks && EchoPacks.on);
   function clipKey(t) {
     // 和 tools/voice/key.js 一样：表情符号不念，去掉再算
     const s = String(t).replace(/[\p{Extended_Pictographic}\u200D\uFE0F]/gu, '').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
@@ -1782,12 +1784,19 @@
   // 配音是 Opus/Ogg：老 iOS Safari 放不了，就当没有打包配音（走阿里云 → 本机声音）
   const OGG_OK = (() => { try { return !!new Audio().canPlayType('audio/ogg; codecs="opus"'); } catch (e) { return false; } })();
   try {
-    if (OGG_OK && location.protocol !== 'file:') fetch('assets/voice/index.json').then(r => (r.ok ? r.json() : null)).then(j => { if (j) { CLIP.f = new Set(j.f || []); CLIP.m = new Set(j.m || []); } }).catch(() => {});
+    if (OGG_OK && location.protocol !== 'file:' && !PK()) fetch('assets/voice/index.json').then(r => (r.ok ? r.json() : null)).then(j => { if (j) { CLIP.f = new Set(j.f || []); CLIP.m = new Set(j.m || []); } }).catch(() => {});
   } catch (e) { /* file:// 打开时读不了，就不用配音 */ }
   function clipUrl(text, g) {
     const k = clipKey(text);
     for (const x of g === 'm' ? ['m', 'f'] : ['f', 'm']) if (CLIP[x].has(k)) return 'assets/voice/' + x + '/' + k + '.ogg';
     return '';
+  }
+  // 课程包模式：这句装好了没有（先要的那个声音，没有就另一个）→ [key, 声音] 或 null
+  function packClip(text, g) {
+    if (!OGG_OK) return null;
+    const k = clipKey(text);
+    for (const x of g === 'm' ? ['m', 'f'] : ['f', 'm']) if (EchoPacks.hasClip(k, x)) return [k, x];
+    return null;
   }
   const FEM = /female|samantha|aria|jenny|ava|emma|zira|karen|moira|tessa|serena|victoria|allison|susan|libby|sonia|natasha|michelle|joanna|salli|kendra|fiona|kate/i;
   const MALE = /\bmale|daniel|david|guy|alex|fred|mark|ryan|aaron|arthur|george|thomas|oliver|christopher|eric|roger|brian|matthew|justin|rishi/i;
@@ -1853,6 +1862,17 @@
       if (TTS.ok) speechSynthesis.cancel();
       if (RT.audio) RT.audio.pause();
       const id = RT.sayId = (RT.sayId || 0) + 1;
+      // 课程包模式：装好了的那段从数据库读出来（blob: 地址）再放；没装好 / 读不出来照旧往下走（阿里云 → 本机声音）
+      if (PK()) {
+        const pc = S.settings.tts === 'device' ? null : packClip(text, g);
+        if (!pc) { sayCloud(text, rate, res, g, id); return; }
+        EchoPacks.clip(pc[0], pc[1]).then(url => {
+          if (RT.sayId !== id) return res();   // 读的时候已经换了别的句子
+          if (url) playUrl(text, rate, res, g, url, () => sayCloud(text, rate, res, g, id));
+          else sayCloud(text, rate, res, g, id);
+        });
+        return;
+      }
       const clip = S.settings.tts === 'device' ? '' : clipUrl(text, g);
       // 配音文件没加载出来（APK 里不会，网页版断网时可能）：当成没有配音的句子
       if (clip) { playUrl(text, rate, res, g, clip, () => sayCloud(text, rate, res, g, id)); return; }
@@ -2120,11 +2140,12 @@
     let box = $('#home-bars');
     if (!box) { box = document.createElement('div'); box.id = 'home-bars'; tabs.parentNode.insertBefore(box, tabs.nextSibling); }
     const st = aiBarState(), up = updNew(), full = RT.store && RT.store.warn ? RT.store : null;
-    box.innerHTML = (st ? '<button class="ai-bar" data-act="aiBarInfo" data-cls="' + st.cls + '">' + esc(barText(st)) + '<em>' + esc(tr('g.bar.how')) + '</em></button>' : '') +
+    const pk = PK() ? EchoPacks.homeBar() : '';   // 课程包模式：这门课的语音包没下 / 没下完 / 正在下（packs.js）
+    box.innerHTML = pk + (st ? '<button class="ai-bar" data-act="aiBarInfo" data-cls="' + st.cls + '">' + esc(barText(st)) + '<em>' + esc(tr('g.bar.how')) + '</em></button>' : '') +
       // 存档空间快满了（storeCheck）：还存得进去的时候就说，请家长导出
       (full ? '<button class="ai-bar" data-act="storeInfo" data-cls="store">' + trh('g.store.bar', { pct: full.pct }) + '<em>' + esc(tr('g.bar.how')) + '</em></button>' : '') +
       (up ? '<button class="upd-bar" data-act="updInfo">' + (S.upd.name ? trh('g.bar.upd.n', { name: S.upd.name }) : trh('g.bar.upd')) + '<em>' + esc(tr('g.bar.see')) + '</em></button>' : '');
-    box.hidden = !st && !up && !full;
+    box.hidden = !st && !up && !full && !pk;
   }
   function refreshBars() { try { if (!$('#home').hidden) homeBars(); } catch (e) { /* 还没启动 */ } }
   function aiBarInfo() {
@@ -4046,6 +4067,7 @@
       '<div class="set"><label>' + tr('g.set.mu') + '</label><div class="seg">' + ['off', 'low', 'mid', 'high'].map(v => '<button class="' + ((st.music || 'mid') === v ? 'on' : '') + '" data-act="setMusic" data-v="' + v + '">' + tr('g.set.mu.' + v) + '</button>').join('') + '</div></div>' +
       // 2026-11-19（给所有人用）：能力检测和分级（placement.js）、界面语言（i18n.js）、谁在学（孩子 / 自己学）
       (window.EchoPlace ? EchoPlace.settingsRow() : '') +
+      (PK() ? EchoPacks.settingsRow() : '') +   // 课程包模式：「📦 课程和语音包」
       (window.EchoI18n ? '<div class="set" id="set-ui"><label>' + trh('place.set.ui') + '</label><div class="seg">' + EchoI18n.LANGS.map(l => '<button class="' + ((st.ui || 'zh') === l.id ? 'on' : '') + '" data-act="setUi" data-l="' + l.id + '">' + esc(l.name) + '</button>').join('') + '</div>' +
         (tr('place.lang.partial') ? '<small>' + trh('place.lang.partial') + '</small>' : '') + '</div>' : '') +
       '<div class="set" id="set-learner"><label>' + trh('place.set.learner') + '</label><div class="seg">' + [['kid', 'place.learner.kid'], ['open', 'place.learner.open']].map(([m, k]) => '<button class="' + ((kidMode() ? 'kid' : 'open') === m ? 'on' : '') + '" data-act="setLearner" data-m="' + m + '">' + trh(k) + '</button>').join('') +
@@ -4595,6 +4617,8 @@
     }
     // 云端模式的账号、会员、家长同意、举报、删号（account.js）：不是云端模式时 init 只记下工具，不加按钮
     if (window.EchoAccount) Object.assign(ACT, EchoAccount.init(Object.assign(Object.create(api), { refreshBars })));
+    // 课程包（packs.js）：只有课程包模式才接上（老模式不加按钮、不听下载进度）
+    if (PK()) Object.assign(ACT, EchoPacks.init(Object.assign(Object.create(api), { refreshBars })));
     // 能力检测（placement.js）：和向导一样拿一份带 S 的工具
     if (window.EchoPlace) {
       Object.assign(ACT, EchoPlace.init(Object.assign(Object.create(api), {
@@ -5327,6 +5351,7 @@
 
   // ---------- 启动 ----------
   function start(data) {
+    RT.preStart = false;
     S = load(data && data.S);
     revMigrate();
     revTrim();   // 老存档里攒了很多掌握了的聊天句子：打开时理一次
@@ -5393,6 +5418,18 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden && S && !RT.noSave && RT.bakDay && nat('backupWrite') && Date.now() - RT.natBakAt > 60 * 60e3) nativeBackup(); });
   const hot = window.claude && window.claude.hot;
   if (hot && typeof hot.snapshot === 'function') { try { hot.snapshot(() => ({ S })); } catch (e) { /* 忽略 */ } }
-  if (hot && typeof hot.ready === 'function') hot.ready(start);
-  else start((hot && hot.data) || {});
+  // 课程包模式：先等 EchoPacks.ready()（装好的配音有哪些；别的语言的课程内容），最多等 5 秒；老模式照旧当场 start。
+  // 等的这一会儿存档还没读（S 是 fresh() 的空白存档）：不许存（save 看 RT.preStart），首页先藏起来（别的模块加载完来重画首页、孩子点按钮，
+  // 都会碰到空白的 S——2026-11-20 试的时候 mon3d-ready 重画首页顺手 save()，把测试存档盖成了空白的）；start 里 show('home') 再露出来
+  function boot(d) {
+    if (!PK()) { start(d); return; }
+    RT.preStart = true;
+    const hm = $('#home'); if (hm) hm.hidden = true;
+    let go = false;
+    const run = () => { if (!go) { go = true; start(d); } };
+    EchoPacks.ready().then(run, run);
+    setTimeout(run, 5000);
+  }
+  if (hot && typeof hot.ready === 'function') hot.ready(boot);
+  else boot((hot && hot.data) || {});
 })();

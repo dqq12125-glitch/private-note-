@@ -111,8 +111,9 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     private func bootScript() -> String {
         // cloudUrl：公开版服务器（make-config.mjs 的 ECHO_CLOUD_URL）；不是空的 = 云端模式（网页的 account.js 读 window.__ECHO_BOOT.cloudUrl）
         // beta：测试版（TestFlight 的工作流给了 ECHO_BETA）屏幕最下面那一行很小的版本号，空 = 不显示（echo-native.js 的 addBeta）
+        // packsUrl：课程包放在网上的地址（make-config.mjs 的 ECHO_PACKS_URL）；不是空的 = 配音不在包里、要学哪门语言再下载（网页的 packs.js 读它）
         let beta = BuildConfig.beta ? BuildConfig.versionName + " (" + String(BuildConfig.versionCode) + ")" : ""
-        let boot: [String: Any] = ["talkUrl": BuildConfig.talkUrl, "talkCode": BuildConfig.talkCode, "cloudUrl": BuildConfig.cloudUrl, "beta": beta]
+        let boot: [String: Any] = ["talkUrl": BuildConfig.talkUrl, "talkCode": BuildConfig.talkCode, "cloudUrl": BuildConfig.cloudUrl, "packsUrl": BuildConfig.packsUrl, "beta": beta]
         var shim = ""
         if let u = Bundle.main.url(forResource: "echo-native", withExtension: "js"), let s = try? String(contentsOf: u, encoding: .utf8) { shim = s }
         return "window.__ECHO_BOOT=" + Bridge.json(boot) + ";\n" + shim

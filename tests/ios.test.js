@@ -273,7 +273,7 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   const knownVectors = new Set([sha('abc'), sha(PIN_SALT + '2468')]);   // 测试里公开的两个已知答案
   const leaks = [];
   for (const f of tracked) {
-    if (/\.(png|jpg|jpeg|webp|glb|ogg|car)$/i.test(f) || !fs.existsSync(path.join(ROOT, f))) continue;
+    if (/\.(png|jpg|jpeg|webp|glb|ogg|car|bin)$/i.test(f) || !fs.existsSync(path.join(ROOT, f))) continue;   // .bin：自测页的课程包小样（配音）
     const s = fs.readFileSync(path.join(ROOT, f), 'utf8');
     for (const m of s.matchAll(/sk-[A-Za-z0-9]{16,}/g)) leaks.push(f + ': sk-…（' + m[0].length + ' 字）');
     for (const m of s.matchAll(/\b[0-9a-f]{64}\b/g)) if (!knownVectors.has(m[0])) leaks.push(f + ': 64 位十六进制');
@@ -310,6 +310,19 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
     check(JSON.stringify(mine) === JSON.stringify(g), ed + '：copy-web.mjs 复制的文件和 Gradle 的 copyWeb 一模一样（' + mine.length + ' 个）', diff(mine, g));
   }
   check(ids.length > 0 && ids.every(id => /^[a-z]+$/.test(id)), '保留怪兽的 id 从 tools/mon3d/lookalike.txt 读得出来（' + ids.length + ' 只）');
+  // 课程包模式（tools/pack/SPEC.md §6）：给了 ECHO_PACKS_URL，配音（assets/voice/f、m、index.json）不进包，别的一个不少；packs.js 在包里
+  {
+    const plain = CW.webFiles('sales', { salesDir: path.join(IOS, '.sales-web') }).map(f => f.rel);
+    const pk = CW.webFiles('sales', { salesDir: path.join(IOS, '.sales-web'), packs: true }).map(f => f.rel);
+    const voice = plain.filter(r => /^assets\/voice\/(f|m)\//.test(r) || r === 'assets/voice/index.json');
+    check(voice.length > 10000 && !pk.some(r => CW.packsExcluded(r)) && JSON.stringify(plain.filter(r => !voice.includes(r))) === JSON.stringify(pk),
+      '课程包模式：copy-web.mjs 不复制 assets/voice/f、m 和 index.json（少了 ' + voice.length + ' 个），别的文件一样', diff(plain.filter(r => !voice.includes(r)), pk));
+    check(pk.includes('packs.js') && plain.includes('packs.js') && CW.requiredFiles(true).includes('packs.js') && !CW.requiredFiles(true).includes('assets/voice/index.json') &&
+      CW.requiredFiles(false).includes('assets/voice/index.json'), '必备文件：老模式要 assets/voice/index.json；课程包模式不要它、要 packs.js');
+    check(pk.includes('assets/voice/zh/ai-notice.ogg') === plain.includes('assets/voice/zh/ai-notice.ogg'), '课程包模式只拿掉英语配音那三样（assets/voice/zh 照旧）');
+    const cwSrc = read('ios/scripts/copy-web.mjs');
+    check(/process\.env\.ECHO_PACKS_URL/.test(cwSrc) && /requiredFiles\(packs\)/.test(cwSrc), 'copy-web.mjs 看环境变量 ECHO_PACKS_URL（和 make-config.mjs 同一个）决定配音进不进包');
+  }
 
   // ---------- 6. make-config.mjs ----------
   const MC = await import(pathToFileURL(path.join(IOS, 'scripts', 'make-config.mjs')).href);
@@ -390,6 +403,38 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(/"cloudUrl":\s*BuildConfig\.cloudUrl/.test(gvcSrc) && /window\.__ECHO_BOOT=/.test(gvcSrc), 'GameViewController 的启动对象里有 cloudUrl（网页的 account.js 从 window.__ECHO_BOOT 读）');
   const acSrc = read('account.js');
   check(/__ECHO_BOOT/.test(acSrc) && /cloudUrl/.test(acSrc), 'account.js 读启动对象里的 cloudUrl');
+  // 课程包（packs.js）：ECHO_PACKS_URL → BuildConfig.packsUrl → 启动对象 packsUrl（和 cloudUrl 同一条路）
+  check(auto.cfg.packsUrl === '' && /static let packsUrl = ""/.test(auto.swift) && /课程包：没有/.test(auto.summary), '没给 ECHO_PACKS_URL：packsUrl 是空的（配音打进包里，和以前一样）');
+  const pu = MC.compute({ edition: 'sales', env: { ECHO_PACKS_URL: 'https://packs.example.com/' } });
+  check(pu.cfg.packsUrl === 'https://packs.example.com' && /static let packsUrl = "https:\/\/packs\.example\.com"/.test(pu.swift) && pu.cfg.dashscopeKey === '',
+    '销售版可以给 ECHO_PACKS_URL（不是秘密），末尾的 / 去掉');
+  check(MC.compute({ edition: 'family', env: { ECHO_PARENT_PIN: '2468', ECHO_PACKS_URL: 'https://p.example.com/packs' } }).cfg.packsUrl === 'https://p.example.com/packs' && !MC.SECRET_ENV.includes('ECHO_PACKS_URL'),
+    '家庭版也认 ECHO_PACKS_URL（带路径也行），它不在「只有家庭版能给」的名单里');
+  for (const bad of ['http://packs.example.com', 'ftp://x', 'https://x.example/?v=1', 'javascript:alert(1)']) {
+    let t = '';
+    try { MC.compute({ edition: 'sales', env: { ECHO_PACKS_URL: bad } }); } catch (e) { t = e.message; }
+    check(/ECHO_PACKS_URL/.test(t), 'ECHO_PACKS_URL 写错就停下：' + bad, t);
+  }
+  check(/"packsUrl":\s*BuildConfig\.packsUrl/.test(gvcSrc), 'GameViewController 的启动对象里有 packsUrl（网页的 packs.js 从 window.__ECHO_BOOT 读）');
+  const pkSrc = read('packs.js');
+  check(/boot\.packsUrl/.test(pkSrc) && /__ECHO_BOOT/.test(pkSrc) && /ECHO_PACKS_URL/.test(pkSrc), 'packs.js 读启动对象里的 packsUrl，再看 window.ECHO_PACKS_URL、?packs=');
+  {
+    const wfs = read('.github/workflows/ios-simulator.yml'), wtf = read('.github/workflows/ios-testflight.yml');
+    check(/^\s+ECHO_PACKS_URL: \$\{\{ vars\.ECHO_PACKS_URL \}\}$/m.test(wfs), '模拟器工作流：ECHO_PACKS_URL 从仓库变量 vars.ECHO_PACKS_URL 取（空 = 配音打进包里）');
+    check(/^\s+ECHO_PACKS_URL: \$\{\{ \(inputs\.edition \|\| 'sales'\) == 'sales' && vars\.ECHO_PACKS_URL \|\| '' \}\}$/m.test(wtf), 'TestFlight 工作流：只有销售版从仓库变量取 ECHO_PACKS_URL，家庭版一直打进包里');
+  }
+  // 自测页、UI 测试、小样（ios/www-test/packs）
+  {
+    const st = read('ios/www-test/selftest.html'), ui = read('ios/UITests/SmokeUITests.swift');
+    check(/run === 'packs'\) await packs\(\)/.test(st) && /run === 'packs2'\) await packs2\(\)/.test(st) && /packsUrl: '\/__test\/packs'/.test(st) && /idbArrayBuffer/.test(st) && /idbKept/.test(st) && /'ended'/.test(st),
+      '自测页 run=packs / packs2：IndexedDB 存 ArrayBuffer、重开还在；从 /__test/packs 装小样；blob: 地址放得出声（ended）');
+    check(/test8CoursePackInstallAndRelaunch/.test(ui) && /\["packs", "packs2"\]/.test(ui) && /app\.terminate\(\)/.test(ui), 'UI 测试第 8 个：run=packs 装、关掉 App、run=packs2 再看');
+    const fx = path.join(IOS, 'www-test', 'packs');
+    let cat = null, man = null;
+    try { cat = JSON.parse(read('ios/www-test/packs/catalog.json')); man = JSON.parse(read('ios/www-test/packs/en/' + cat.packs.en.ver + '/manifest.json')); } catch (e) { cat = null; }
+    check(!!man && man.files.length >= 2 && man.files.some(f => f.core) && man.files.every(f => fs.existsSync(path.join(fx, 'en', cat.packs.en.ver, f.name))) &&
+      fs.readdirSync(fx).length <= 3 && man.files.reduce((s, f) => s + f.bytes, 0) < 200000, 'ios/www-test/packs：tools/pack/build.js --only 打的小样（几十 KB，有 core 有后面的）', man && man.files.map(f => f.name + ' ' + f.bytes));
+  }
 
   // ---------- 7. 云上的工作流 ----------
   const wfText = read('.github/workflows/ios-simulator.yml');

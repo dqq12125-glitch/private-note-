@@ -32,6 +32,8 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       SIM_DEST: 'platform=iOS Simulator,name=iPhone 17,OS=latest'
       ECHO_EDITION: sales
+      # 课程包的地址（tools/pack/SPEC.md §6）：仓库变量 ECHO_PACKS_URL；空 = 配音照旧打进包里（老模式）。给了：配音不进包、App 里要学哪门语言再下载
+      ECHO_PACKS_URL: ${{ vars.ECHO_PACKS_URL }}
       OUT: ${{ github.workspace }}/ios-ci
       DERIVED: ${{ github.workspace }}/ios-ci/DerivedData
     steps:

@@ -1,0 +1,40 @@
+{
+ "fmt": 1,
+ "lang": "en",
+ "ver": "20261120.1",
+ "voice": {
+  "fmt": "ogg-opus",
+  "f": "af_heart",
+  "m": "am_michael",
+  "n": {
+   "f": 12,
+   "m": 2
+  }
+ },
+ "files": [
+  {
+   "name": "voice-000.bin",
+   "kind": "voice",
+   "core": true,
+   "bytes": 17172,
+   "crc": "9746aeb2",
+   "n": 7
+  },
+  {
+   "name": "voice-001.bin",
+   "kind": "voice",
+   "core": true,
+   "bytes": 15415,
+   "crc": "752b7820",
+   "n": 6
+  },
+  {
+   "name": "voice-002.bin",
+   "kind": "voice",
+   "core": false,
+   "bytes": 2340,
+   "crc": "596ff790",
+   "n": 1
+  }
+ ]
+}

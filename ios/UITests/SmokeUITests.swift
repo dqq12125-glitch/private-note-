@@ -270,4 +270,25 @@ final class SmokeUITests: XCTestCase {
         XCTAssertTrue(problems.isEmpty, "转屏以后大地图的画布和屏幕对不上：" + problems.joined(separator: "；"))
         app.terminate()
     }
+
+    // ---------- 8. 课程包（tools/pack/SPEC.md §6）：echoisland:// 能用 IndexedDB 存 ArrayBuffer；从 www-test/packs 的小样装一遍、放得出声；关掉重开还在 ----------
+    // 自测页 run=packs 装、放；App 关掉再开 run=packs2 看还在不在、再放一次，最后删掉小样。没过的、看情况的都列出来
+    @MainActor
+    func test8CoursePackInstallAndRelaunch() {
+        for (i, mode) in ["packs", "packs2"].enumerated() {
+            let app = launch(["-EchoSelfTest", mode])
+            let s = waitStatus(app, timeout: 120, mode) { _, p in ((p["test"] as? [String: Any])?["done"] as? Bool) == true }
+            let t = (s["page"] as? [String: Any])?["test"] as? [String: Any] ?? [:]
+            attachJSON(t, mode + "-result")
+            shot(mode)
+            let items = t["items"] as? [[String: Any]] ?? []
+            let bad = items.filter { ($0["ok"] as? Bool) == false }.map { "\($0["name"] ?? "?")：\($0["got"] ?? "")" }
+            let warns = items.filter { ($0["ok"] as? String) == "warn" }.map { "\($0["name"] ?? "?")：\($0["got"] ?? "")" }
+            if !warns.isEmpty { print("EchoIsland \(mode) warnings:\n" + warns.joined(separator: "\n")) }
+            print("EchoIsland \(mode): \(t["packs"] ?? "")")
+            XCTAssertEqual(t["fail"] as? Int, 0, "课程包自测（\(mode)）没过的：\n" + bad.joined(separator: "\n"))
+            XCTAssertGreaterThanOrEqual(t["pass"] as? Int ?? 0, i == 0 ? 6 : 5, "课程包自测（\(mode)）真的跑了")
+            app.terminate()
+        }
+    }
 }

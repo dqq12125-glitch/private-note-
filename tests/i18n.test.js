@@ -21,6 +21,7 @@ const check = (ok, what, more) => { console.log((ok ? '✓ ' : '✗ ') + what + 
 const FILES = {
   'world.js': ['w.'], 'monsters.js': ['b.'], 'setup.js': ['su.'], 'story.js': ['st.'], 'sighting.js': ['si.'],
   'game.js': ['g.'], 'talk.js': ['tk.'], 'talk-core.js': ['tc.'],
+  'packs.js': ['pk.'],   // 课程包（2026-11-20，tools/pack/SPEC.md §5）
   'isles/a-hello-crayon.js': ['ia.'], 'isles/b-farm-school-lab.js': ['ib.'], 'isles/c-circus-clock-party.js': ['ic.'], 'isles/d-jungle-city-sports.js': ['id.'], 'isles/e-snow-ruins-league.js': ['ie.'],
 };
 const CJK = /[　-〿㐀-䶿一-鿿豈-﫿＀-￯]/;

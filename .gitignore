@@ -18,5 +18,7 @@ server/debug/
 
 # 给家长下载的 APK（里面有密钥，不进仓库）
 dl/
+# 课程包（tools/pack/build.js 生成，发到网上，不进仓库；见 tools/pack/SPEC.md）
+dist/
 # wrangler / miniflare cache written by tests/account.test.js (request metadata incl. location; never commit)
 .wrangler/
