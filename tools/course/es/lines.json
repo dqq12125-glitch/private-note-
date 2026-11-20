@@ -772,7 +772,11 @@
   "l1mytdud": "¡Vamos a buscarla juntos!",
   "lpg9drj": "¡Vamos al edificio de la escuela!",
   "l7krfmq": "¡{name}! ¡Mira, Susurro dejó caer una nota!",
-  "lz28wuh": "La nota dice: “Nos vemos en la biblioteca. — S”",
+  "lz28wuh": {
+   "t": "La nota dice: “Nos vemos en la biblioteca. — S”",
+   "zh": "纸条上写着：“图书馆见。——S”",
+   "en": "The note says: \"Meet me in the library. — S\""
+  },
   "l1sqte72": "¿La biblioteca? ¿Dónde está la biblioteca? Vamos a preguntarle a alguien.",
   "l5hldg8": "Perdón, ¿dónde está la biblioteca?",
   "lagufln": "Está al lado del comedor.",
@@ -1089,17 +1093,27 @@
   "lb2i6z3": "¡Do, mi, sol! ¿Puedes cantar como yo?",
   "lg4fwqm": "¡Flo sabe cantar, bailar y tocar el tambor!",
   "l11i3tck": "¡Tu voz es más fuerte que la mía!",
-  "lst5v18": "Las seis y media son las seis treinta.",
+  "lst5v18": {
+   "t": "Las seis y media son las seis treinta.",
+   "zh": "六点半就是六点三十分。"
+  },
   "l1leia1m": "¡Me levanto a las cinco y media todos los días!",
   "l16zq71w": "Necesito dormir más...",
-  "l1oinmip": "Las cuatro y cuarto son las cuatro quince.",
+  "l1oinmip": {
+   "t": "Las cuatro y cuarto son las cuatro quince.",
+   "zh": "四点一刻就是四点十五分。"
+  },
   "l1nhs8jd": "Me acuesto a las doce. Muy tarde, ¿verdad?",
   "l14rg7gx": "Aaah... Debo acostarme temprano.",
   "l1i9gogr": "Mi cumpleaños es el dos de mayo. ¿Cuándo es el tuyo?",
   "l183hzb7": "¡Ay! ¡Se me cayó el pastel!",
   "lgjzkn5": "¡Tengo trece globos, uno por cada año!",
   "l19do34b": "¡Pum! ¡Pum! ¡Pum!",
-  "lf69mnv": "Trece y treinta suenan diferente. ¡Escucha bien!",
+  "lf69mnv": {
+   "t": "Trece y treinta suenan diferente. ¡Escucha bien!",
+   "zh": "十三和三十听起来不一样，要听清楚！",
+   "en": "Thirteen and thirty sound different. Listen carefully!"
+  },
   "lab5jqw": "¡Hola! Soy Lily, del club de música.",
   "l83ghdg": "Cantamos y tocamos la guitarra todos los viernes.",
   "lu62r26": "¿Sabes cantar?",
@@ -2021,7 +2035,11 @@
   "l1knt91j": "Hay nieve y hace frío.",
   "l1c4kokt": "¿Qué hiciste en Isla Clima?",
   "l1aowhvn": "Decimos “paré”. “Paré” es el pasado de “parar”.",
-  "lpm08tv": "Bien. En esta isla hablamos del pasado: fui, vi, paré, aprendí.",
+  "lpm08tv": {
+   "t": "Bien. En esta isla hablamos del pasado: fui, vi, paré, aprendí.",
+   "zh": "很好。在这座岛上，我们讲过去的事：我去了、我看见了、我停下了、我学会了。",
+   "en": "Good. On this island, we talk about the past: I went, I saw, I stopped, I learned."
+  },
   "l1rnfysi": "Lee las placas antiguas de adentro. La Puerta del Recuerdo va a preguntar sobre ellas.",
   "ligk3ge": "¡Ve! {rival} y yo vamos detrás de ti.",
   "ldud9t8": "Recuerda: hace mucho, la gente habló junta y Echodrake despertó.",
@@ -2465,7 +2483,11 @@
   "lojh504": "Bricklet parece un ladrillo rojo. A veces los niños hacen muros con él.",
   "llw8pwe": "Castlewall se queda quieto por muchos años. Los pájaros hacen nidos en su cabeza.",
   "lj48fve": "Castlelord es grande como un castillo. Adentro viven monstruos pequeños.",
-  "l1n6si50": "Cliffkid salta de roca en roca sin miedo. Es un cabrito muy valiente.",
+  "l1n6si50": {
+   "t": "Cliffkid salta de roca en roca sin miedo. Es un cabrito muy valiente.",
+   "zh": "崖羊仔毫不害怕地在岩石间跳来跳去。它是一只很勇敢的小山羊。",
+   "en": "Cliffkid jumps from rock to rock without fear. It is a very brave little goat."
+  },
   "l9euc1l": "Cliffram empuja las rocas con sus cuernos grandes. Cuida el camino de la montaña.",
   "l23q9d2": "Meteorhawk baja del cielo como una estrella fugaz. Su cuerpo es de roca dura.",
   "l1v7xsay": "Runelet tiene letras antiguas en el cuerpo. Todavía nadie las puede leer.",

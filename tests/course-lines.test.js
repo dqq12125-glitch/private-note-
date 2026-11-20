@@ -321,8 +321,11 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       await talk([{ who: 'Tock', emo: '🕰️', en: enHalf, zh: 'half past six 就是六点半。' }]);
       await W(p, 200); await typed(p);
       d = await dlgNow(p);
-      check(noRt(d.enHtml) === T(L, enHalf) && (zhUi ? d.zh === '' && !d.zhBtn : d.zh === enHalf),
-        zhUi ? '意思是讲英语的（half past six 就是六点半）：不显示，也没有「译」——不拿英语当意思' : '英语界面：意思是英语原文', d);
+      // 翻译表给这句另写了意思（SPEC §8.2 的 zh / en；正式的西语、日语表里有）就显示那一句
+      const ownHalf = tr(L, enHalf) || {};
+      check(noRt(d.enHtml) === T(L, enHalf) && (zhUi ? (ownHalf.zh ? d.zh === ownHalf.zh : d.zh === '' && !d.zhBtn) : d.zh === (ownHalf.en || enHalf)),
+        zhUi ? (ownHalf.zh ? '意思是讲英语的（half past six 就是六点半）：显示翻译表另写的那句（' + ownHalf.zh + '）'
+          : '意思是讲英语的（half past six 就是六点半）：不显示，也没有「译」——不拿英语当意思') : '英语界面：意思是英语原文', d);
       await A(p);
       const tLeo = TM(L, 'person', 'Leo').t, enRiv = '{rival} wants to be the English Champion!';
       await talk([{ who: 'Pip', emo: '🧒', en: enRiv, zh: '{rival} 想当英语冠军！' }]);
