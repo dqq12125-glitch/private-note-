@@ -924,7 +924,7 @@
      "wán"
     ],
     "zh": "",
-    "en": "I'm playing at the beach."
+    "en": "I play at the beach."
    },
    "wrong": [
     {
@@ -1155,21 +1155,17 @@
      "en": "I have a contest on Friday."
     },
     {
-     "t": "我们去操场玩。",
+     "t": "今天星期三。",
      "seg": [
-      "我们",
-      "去",
-      "操场",
-      "玩。"
+      "今天",
+      "星期三。"
      ],
      "r": [
-      "wǒ men",
-      "qù",
-      "cāo chǎng",
-      "wán"
+      "jīn tiān",
+      "xīng qī sān"
      ],
      "zh": "",
-     "en": "We go and play on the playground."
+     "en": "It's Wednesday today."
     }
    ]
   },
@@ -1250,15 +1246,13 @@
      "你",
      "这个",
      "星期",
-     "忙",
-     "不忙？"
+     "忙不忙？"
     ],
     "r": [
      "nǐ",
      "zhè ge",
      "xīng qī",
-     "máng",
-     "bu máng"
+     "máng bu máng"
     ],
     "zh": "",
     "en": "Are you busy this week?"
@@ -1313,10 +1307,10 @@
   }
  ],
  "talk": {
-  "name": "A Fu",
+  "name": "Afu",
   "zh": "阿福",
   "gender": "m",
-  "kid": true,
+  "kid": false,
   "topic": {
    "zh": "这个星期的安排",
    "en": "Your plans this week"
@@ -1328,12 +1322,12 @@
   },
   "opener": {
    "t": "你好！我是阿福。今天星期几？你星期六上午做什么？",
-   "r": "nǐ hǎo! wǒ shì ā fú. jīn tiān xīng qī jǐ? nǐ xīng qī liù shàng wǔ zuò shén me?"
+   "r": "nǐ hǎo! wǒ shì Ā Fú. jīn tiān xīng qī jǐ? nǐ xīng qī liù shàng wǔ zuò shén me?"
   },
   "steps": [
    {
-    "zh": "说出你喜欢哪一天。",
-    "en": "Name a day of the week.",
+    "zh": "说你星期几有时间。",
+    "en": "Say which day you are free.",
     "t": "我星期六有时间。"
    },
    {

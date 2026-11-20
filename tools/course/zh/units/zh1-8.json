@@ -161,7 +161,7 @@
    "t": "种",
    "r": "zhòng",
    "zh": "",
-   "en": "plant",
+   "en": "to plant",
    "pic": "🌱"
   },
   {
@@ -576,19 +576,19 @@
     "en": "Did you watch the film?"
    },
    "a": {
-    "t": "看了，很好玩。",
+    "t": "看了，很有意思。",
     "seg": [
      "看了，",
      "很",
-     "好玩。"
+     "有意思。"
     ],
     "r": [
      "kàn le",
      "hěn",
-     "hǎo wán"
+     "yǒu yì si"
     ],
     "zh": "",
-    "en": "Yes, it was fun."
+    "en": "Yes, it was interesting."
    },
    "wrong": [
     {
@@ -1363,7 +1363,7 @@
   }
  ],
  "talk": {
-  "name": "Xiao Hua",
+  "name": "Xiaohua",
   "zh": "小花",
   "gender": "f",
   "kid": true,
@@ -1378,7 +1378,7 @@
   },
   "opener": {
    "t": "你好！我是小花。上个周末我在花园里种了很多花。你上个周末去哪里了？",
-   "r": "nǐ hǎo! wǒ shì xiǎo huā. shàng gè zhōu mò wǒ zài huā yuán li zhòng le hěn duō huā. nǐ shàng gè zhōu mò qù nǎ lǐ le?"
+   "r": "nǐ hǎo! wǒ shì Xiǎo Huā. shàng gè zhōu mò wǒ zài huā yuán li zhòng le hěn duō huā. nǐ shàng gè zhōu mò qù nǎ lǐ le?"
   },
   "steps": [
    {

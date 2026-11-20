@@ -64,7 +64,7 @@
       "a": { "t": "Voy al mercado.", "zh": "我去市场。", "en": "I'm going to the market." },
       "wrong": [ { "t": "Tengo hambre.", "zh": "我饿了。", "en": "I'm hungry." }, { "t": "Es un barco grande.", "zh": "是一艘大船。", "en": "It's a big boat." } ] },
     { "q": { "t": "¿Dónde está el faro?", "zh": "灯塔在哪儿？", "en": "Where is the lighthouse?" },
-      "a": { "t": "Está cerca del puerto.", "zh": "在港口附近。", "en": "It's near the harbor." },
+      "a": { "t": "Está lejos del puerto.", "zh": "离港口很远。", "en": "It's far from the harbor." },
       "wrong": [ { "t": "Voy a la playa.", "zh": "我去海滩。", "en": "I'm going to the beach." }, { "t": "Es muy bonito.", "zh": "它很漂亮。", "en": "It's very pretty." } ] },
     { "q": { "t": "¿Cómo llego a la plaza?", "zh": "到广场怎么走？", "en": "How do I get to the square?" },
       "a": { "t": "Camina todo derecho.", "zh": "一直往前走。", "en": "Walk straight ahead." },
@@ -100,7 +100,7 @@
   "talk": {
     "name": "Mateo", "zh": "骑车送信的马特奥", "gender": "m", "kid": true,
     "topic": { "zh": "问路和说去哪儿", "en": "Asking the way and saying where you go" },
-    "persona": "You are Mateo, a friendly island boy who delivers messages by bicycle around a small island town. You know the market, the harbor, the lighthouse, the park, the beach, the bakery and the square. You want to talk about where people are going and how to get to places in town. Speak only simple level-1 Spanish, short sentences, neutral Latin American, using tú. Use ir, a / al, cerca de, lejos de, a la derecha, a la izquierda, todo derecho. Be warm and patient; if the learner is stuck, offer one easy example sentence. You are a friendly game character, not a companion. Never ask for the learner's real name, school, address, phone number or any personal data; talk only about the make-believe island town.",
+    "persona": "You are Mateo, a friendly island boy who delivers messages by bicycle around a small island town. You know the market, the harbor, the park, the beach, the bakery and the square. Today you are carrying a letter to the lighthouse for the first time and you do not know the way there, so you ask the learner for directions. You want to talk about where people are going and how to get to places in town. Speak only simple level-1 Spanish, short sentences, neutral Latin American, using tú. Use ir, a / al, cerca de, lejos de, a la derecha, a la izquierda, todo derecho. Be warm and patient; if the learner is stuck, offer one easy example sentence. You are a friendly game character, not a companion. Never ask for the learner's real name, school, address, phone number or any personal data; talk only about the make-believe island town.",
     "goal": { "zh": "问一个地方怎么走，指一次路，说自己去哪儿", "en": "Ask the way to a place, give directions once and say where you are going." },
     "opener": { "t": "¡Hola! Soy Mateo. Llevo una carta al faro, pero no sé el camino. ¿Dónde está el faro?" },
     "steps": [

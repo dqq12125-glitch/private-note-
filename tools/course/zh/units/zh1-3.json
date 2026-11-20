@@ -725,17 +725,21 @@
    },
    "wrong": [
     {
-     "t": "在书架上。",
+     "t": "我的房间很大。",
      "seg": [
-      "在",
-      "书架上。"
+      "我的",
+      "房间",
+      "很",
+      "大。"
      ],
      "r": [
-      "zài",
-      "shū jià shang"
+      "wǒ de",
+      "fáng jiān",
+      "hěn",
+      "dà"
      ],
      "zh": "",
-     "en": "It's on the bookshelf."
+     "en": "My room is big."
     },
     {
      "t": "紫色的是我的。",
@@ -1008,19 +1012,19 @@
      "en": "There is a toy."
     },
     {
-     "t": "粉色的是你的。",
+     "t": "床是蓝色的。",
      "seg": [
-      "粉色的",
+      "床",
       "是",
-      "你的。"
+      "蓝色的。"
      ],
      "r": [
-      "fěn sè de",
+      "chuáng",
       "shì",
-      "nǐ de"
+      "lán sè de"
      ],
      "zh": "",
-     "en": "The pink one is yours."
+     "en": "The bed is blue."
     }
    ]
   },
@@ -1290,7 +1294,7 @@
   }
  ],
  "talk": {
-  "name": "Tian Tian",
+  "name": "Tiantian",
   "zh": "甜甜",
   "gender": "f",
   "kid": true,

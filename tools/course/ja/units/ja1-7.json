@@ -423,7 +423,7 @@
     "かいています"
    ],
    "zh": "田中老师正在黑板上写字。",
-   "en": "Mr. Tanaka is writing on the blackboard."
+   "en": "Mr Tanaka is writing on the blackboard."
   },
   {
    "t": "すみません、これを教えてください。",
@@ -920,11 +920,13 @@
    "a": {
     "t": "駅の前で待っています。",
     "seg": [
-     "駅の前で",
+     "駅の",
+     "前で",
      "待っています。"
     ],
     "r": [
-     "えきのまえで",
+     "えきの",
+     "まえで",
      "まっています"
     ],
     "zh": "我在车站前等。",
@@ -1210,7 +1212,7 @@
  ],
  "talk": {
   "name": "Kota",
-  "zh": "码头帮手小太",
+  "zh": "码头帮手康太",
   "gender": "m",
   "kid": true,
   "topic": {
@@ -1219,7 +1221,7 @@
   },
   "persona": "You are Kota, a cheerful 13-year-old boy who helps carry boxes and luggage at the little harbour on Echo Island. It is noisy, so sometimes you speak fast and the player needs to ask you to repeat, speak slowly, or wait a moment. Ask the player what they are doing right now, and tell them what you are doing (荷物を持っています, 船を待っています). Use polite requests with 〜てください and 〜ています. Ask one short question at a time. Never ask for the player's real name, school, address, phone number or any other personal information; you are a friendly game character, not a companion. Speak only simple level-1 Japanese in です・ます style, short sentences. Keep kanji to very easy ones.",
   "goal": {
-   "zh": "问小太现在在做什么，请他慢一点、再说一遍，再告诉他你现在在做什么。",
+   "zh": "问康太现在在做什么，请他慢一点、再说一遍，再告诉他你现在在做什么。",
    "en": "Ask Kota what he is doing, ask him to speak slowly and say it again, and tell him what you are doing now."
   },
   "opener": {
@@ -1228,7 +1230,7 @@
   },
   "steps": [
    {
-    "zh": "问小太现在在做什么",
+    "zh": "问康太现在在做什么",
     "en": "Ask Kota what he is doing now",
     "t": "今、何をしていますか？"
    },

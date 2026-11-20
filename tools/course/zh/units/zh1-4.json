@@ -595,7 +595,7 @@
      "shuǐ"
     ],
     "zh": "",
-    "en": "Do you drink tea or water?"
+    "en": "Will you have tea or water?"
    },
    "a": {
     "t": "我喝茶。",
@@ -725,16 +725,12 @@
     "seg": [
      "这个",
      "菜",
-     "辣",
-     "不",
-     "辣？"
+     "辣不辣？"
     ],
     "r": [
      "zhè ge",
      "cài",
-     "là",
-     "bu",
-     "là"
+     "là bu là"
     ],
     "zh": "",
     "en": "Is this dish spicy?"
@@ -796,15 +792,11 @@
     "t": "汤咸不咸？",
     "seg": [
      "汤",
-     "咸",
-     "不",
-     "咸？"
+     "咸不咸？"
     ],
     "r": [
      "tāng",
-     "xián",
-     "bu",
-     "xián"
+     "xián bu xián"
     ],
     "zh": "",
     "en": "Is the soup salty?"
@@ -826,23 +818,21 @@
    },
    "wrong": [
     {
-     "t": "请给我一杯水。",
+     "t": "请给我菜单。",
      "seg": [
       "请",
       "给",
       "我",
-      "一杯",
-      "水。"
+      "菜单。"
      ],
      "r": [
       "qǐng",
       "gěi",
       "wǒ",
-      "yì bēi",
-      "shuǐ"
+      "cài dān"
      ],
      "zh": "",
-     "en": "Please give me a glass of water."
+     "en": "Please give me the menu."
     },
     {
      "t": "我想吃饺子。",
@@ -1317,7 +1307,7 @@
      "miàn tiáo"
     ],
     "zh": "",
-    "en": "Do you eat rice or noodles?"
+    "en": "Will you have rice or noodles?"
    },
    "a": {
     "t": "都可以。",

@@ -31,7 +31,7 @@
   "t": "你好，新朋友！我叫小刺，我会说中文，也会说英语。你会说中文吗？",
   "r": "nǐ hǎo, xīn péng you! wǒ jiào Xiǎo Cì, wǒ huì shuō zhōng wén, yě huì shuō yīng yǔ. nǐ huì shuō zhōng wén ma?",
   "zh": "",
-  "en": "Hello, new friend! I'm Xiaoci. I can speak Chinese and English, too. Can you speak Chinese?"
+  "en": "Hello, new friend! I'm Spike. I can speak Chinese and English, too. Can you speak Chinese?"
  },
  "words": [
   {
@@ -707,12 +707,10 @@
     {
      "t": "不客气。",
      "seg": [
-      "不",
-      "客气。"
+      "不客气。"
      ],
      "r": [
-      "bú",
-      "kè qi"
+      "bú kè qi"
      ],
      "zh": "",
      "en": "You're welcome."
@@ -1137,12 +1135,10 @@
     {
      "t": "不客气。",
      "seg": [
-      "不",
-      "客气。"
+      "不客气。"
      ],
      "r": [
-      "bú",
-      "kè qi"
+      "bú kè qi"
      ],
      "zh": "",
      "en": "You're welcome."

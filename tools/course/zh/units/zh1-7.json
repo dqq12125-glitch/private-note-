@@ -29,7 +29,7 @@
    "en": "Cleo the Crab"
   },
   "t": "你好！我是横行蟹。我每天走路去码头，要十分钟。你怎么去学校？",
-  "r": "nǐ hǎo! wǒ shì héng xíng xiè. wǒ měi tiān zǒu lù qù mǎ tóu, yào shí fēn zhōng. nǐ zěn me qù xué xiào?",
+  "r": "nǐ hǎo! wǒ shì héng xíng xiè. wǒ měi tiān zǒu lù qù mǎ tou, yào shí fēn zhōng. nǐ zěn me qù xué xiào?",
   "zh": "",
   "en": "Hello! I'm Cleo the crab. Every day I walk to the harbour; it takes ten minutes. How do you get to school?"
  },
@@ -77,7 +77,7 @@
   },
   {
    "t": "码头",
-   "r": "mǎ tóu",
+   "r": "mǎ tou",
    "zh": "",
    "en": "harbour, pier",
    "pic": "⚓"
@@ -259,7 +259,7 @@
     "近。"
    ],
    "r": [
-    "mǎ tóu",
+    "mǎ tou",
     "lí",
     "xué xiào",
     "hěn",
@@ -301,7 +301,7 @@
     "cóng",
     "zhè lǐ",
     "dào",
-    "mǎ tóu",
+    "mǎ tou",
     "zěn me",
     "zǒu"
    ],
@@ -453,13 +453,13 @@
    "en": "First take the bus, then walk."
   },
   {
-   "t": "我们坐出租车去车站吧。",
+   "t": "我们坐出租车去码头吧。",
    "seg": [
     "我们",
     "坐",
     "出租车",
     "去",
-    "车站",
+    "码头",
     "吧。"
    ],
    "r": [
@@ -467,11 +467,11 @@
     "zuò",
     "chū zū chē",
     "qù",
-    "chē zhàn",
+    "mǎ tou",
     "ba"
    ],
    "zh": "",
-   "en": "Let's take a taxi to the bus stop."
+   "en": "Let's take a taxi to the harbour."
   },
   {
    "t": "这条路很长，要走半个小时。",
@@ -537,12 +537,14 @@
      "seg": [
       "我家",
       "有",
-      "三口人。"
+      "三口",
+      "人。"
      ],
      "r": [
       "wǒ jiā",
       "yǒu",
-      "sān kǒu rén"
+      "sān kǒu",
+      "rén"
      ],
      "zh": "",
      "en": "There are three people in my family."
@@ -579,7 +581,7 @@
      "cóng",
      "zhè lǐ",
      "dào",
-     "mǎ tóu",
+     "mǎ tou",
      "zěn me",
      "zǒu"
     ],
@@ -610,7 +612,7 @@
       "漂亮。"
      ],
      "r": [
-      "mǎ tóu",
+      "mǎ tou",
       "hěn",
       "piào liang"
      ],
@@ -646,7 +648,7 @@
      "远不远？"
     ],
     "r": [
-     "mǎ tóu",
+     "mǎ tou",
      "lí",
      "zhè lǐ",
      "yuǎn bu yuǎn"
@@ -1074,7 +1076,7 @@
      "shí jiān"
     ],
     "zh": "",
-    "en": "How long is it from school to the bus stop?"
+    "en": "How long does it take from school to the bus stop?"
    },
    "a": {
     "t": "走路要十分钟。",
@@ -1165,16 +1167,14 @@
    },
    "wrong": [
     {
-     "t": "学校从九点上课。",
+     "t": "学校九点上课。",
      "seg": [
       "学校",
-      "从",
       "九点",
       "上课。"
      ],
      "r": [
       "xué xiào",
-      "cóng",
       "jiǔ diǎn",
       "shàng kè"
      ],
@@ -1327,7 +1327,7 @@
      "r": [
       "wǒ jiā",
       "lí",
-      "mǎ tóu",
+      "mǎ tou",
       "hěn",
       "jìn"
      ],
@@ -1341,7 +1341,7 @@
   "name": "A Yuan",
   "zh": "阿远",
   "gender": "m",
-  "kid": true,
+  "kid": false,
   "topic": {
    "zh": "问路和怎么去",
    "en": "How to get somewhere"
@@ -1353,7 +1353,7 @@
   },
   "opener": {
    "t": "你好！我是阿远。码头离这里很近。你想去哪里？",
-   "r": "nǐ hǎo! wǒ shì ā yuǎn. mǎ tóu lí zhè lǐ hěn jìn. nǐ xiǎng qù nǎ lǐ?"
+   "r": "nǐ hǎo! wǒ shì Ā Yuǎn. mǎ tou lí zhè lǐ hěn jìn. nǐ xiǎng qù nǎ lǐ?"
   },
   "steps": [
    {

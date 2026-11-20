@@ -244,7 +244,7 @@
     "yí gè"
    ],
    "zh": "",
-   "en": "A watermelon is twelve yuan each."
+   "en": "Watermelons are twelve yuan each."
   },
   {
    "t": "这个很贵，那个很便宜。",
@@ -318,13 +318,11 @@
    "t": "一共二十块。",
    "seg": [
     "一共",
-    "二十",
-    "块。"
+    "二十块。"
    ],
    "r": [
     "yí gòng",
-    "èr shí",
-    "kuài"
+    "èr shí kuài"
    ],
    "zh": "",
    "en": "It is twenty yuan altogether."
@@ -334,15 +332,13 @@
    "seg": [
     "我",
     "有",
-    "五十",
-    "块",
+    "五十块",
     "钱。"
    ],
    "r": [
     "wǒ",
     "yǒu",
-    "wǔ shí",
-    "kuài",
+    "wǔ shí kuài",
     "qián"
    ],
    "zh": "",
@@ -403,13 +399,11 @@
    "t": "草莓三十块。",
    "seg": [
     "草莓",
-    "三十",
-    "块。"
+    "三十块。"
    ],
    "r": [
     "cǎo méi",
-    "sān shí",
-    "kuài"
+    "sān shí kuài"
    ],
    "zh": "",
    "en": "Strawberries are thirty yuan."
@@ -508,14 +502,12 @@
      "seg": [
       "我",
       "有",
-      "五十",
-      "块。"
+      "五十块。"
      ],
      "r": [
       "wǒ",
       "yǒu",
-      "wǔ shí",
-      "kuài"
+      "wǔ shí kuài"
      ],
      "zh": "",
      "en": "I have fifty yuan."
@@ -635,13 +627,11 @@
      "t": "一共二十块。",
      "seg": [
       "一共",
-      "二十",
-      "块。"
+      "二十块。"
      ],
      "r": [
       "yí gòng",
-      "èr shí",
-      "kuài"
+      "èr shí kuài"
      ],
      "zh": "",
      "en": "Twenty yuan altogether."
@@ -668,15 +658,11 @@
     "t": "草莓贵不贵？",
     "seg": [
      "草莓",
-     "贵",
-     "不",
-     "贵？"
+     "贵不贵？"
     ],
     "r": [
      "cǎo méi",
-     "guì",
-     "bu",
-     "guì"
+     "guì bu guì"
     ],
     "zh": "",
     "en": "Are strawberries expensive?"
@@ -1056,15 +1042,13 @@
     "t": "水果商店里有什么？",
     "seg": [
      "水果",
-     "商店",
-     "里",
+     "商店里",
      "有",
      "什么？"
     ],
     "r": [
      "shuǐ guǒ",
-     "shāng diàn",
-     "li",
+     "shāng diàn li",
      "yǒu",
      "shén me"
     ],
@@ -1095,13 +1079,11 @@
      "t": "一共二十块。",
      "seg": [
       "一共",
-      "二十",
-      "块。"
+      "二十块。"
      ],
      "r": [
       "yí gòng",
-      "èr shí",
-      "kuài"
+      "èr shí kuài"
      ],
      "zh": "",
      "en": "Twenty yuan altogether."
@@ -1268,7 +1250,7 @@
   "persona": "You are Auntie Guo, a warm, chatty islander who runs the fruit stall near the harbour. You sell apples (2 yuan each), bananas (3 yuan each), oranges (1.5 yuan each) and watermelons (12 yuan each), in play money. You want to chat with the learner about what fruit they want, how many, and the total price, then say thank you. Speak only simple level-1 Mandarin, short sentences, one question at a time, and gently repeat numbers slowly so the learner can follow. If they make a mistake, just say the correct form naturally. Never ask for the learner's real name, school, address, phone number or other personal data. You are a friendly game character, not an emotional companion.",
   "goal": {
    "zh": "问价钱，买三个水果，问一共多少钱，付钱。",
-   "en": "Ask a price, buy fruit, ask the total and pay."
+   "en": "Ask a price, buy three pieces of fruit, ask the total and pay."
   },
   "opener": {
    "t": "欢迎光临！我是郭阿姨。苹果两块，香蕉三块。你想买什么？",

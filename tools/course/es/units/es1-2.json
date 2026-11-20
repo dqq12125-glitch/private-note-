@@ -5,7 +5,7 @@
   "grammar": {
     "title": { "zh": "hay 和 estar 的区别；方位词", "en": "Hay vs. estar; place words" },
     "tip": {
-      "zh": "说「有什么」用 hay，形状不变：Hay una lámpara en la sala。说「某个已经知道的东西在哪儿」用 estar：La lámpara está encima de la mesa。方位词：encima de（上面）、debajo de（下面）、dentro de（里面）、detrás de（后面）、delante de（前面）、entre A y B（A 和 B 之间）。de 遇到 el 合写成 del：dentro del armario。",
+      "zh": "说「有什么」用 hay，形式不变：Hay una lámpara en la sala。说「某个已经知道的东西在哪儿」用 estar：La lámpara está encima de la mesa。方位词：encima de（上面）、debajo de（下面）、dentro de（里面）、detrás de（后面）、delante de（前面）、entre A y B（A 和 B 之间）。de 遇到 el 合写成 del：dentro del armario。",
       "en": "Use hay to say what exists, and it never changes: Hay una lámpara en la sala. Use estar to say where a known thing is: La lámpara está encima de la mesa. Place words: encima de (on top of), debajo de (under), dentro de (inside), detrás de (behind), delante de (in front of), entre A y B (between). De + el becomes del: dentro del armario."
     }
   },
@@ -103,7 +103,7 @@
     { "q": { "t": "¿Cómo es tu casa?", "zh": "你的家是什么样的？", "en": "What is your home like?" },
       "a": { "t": "Es pequeña, pero muy bonita.", "zh": "不大，但很漂亮。", "en": "It's small, but very pretty." },
       "wrong": [ { "t": "Está en la isla.", "zh": "在岛上。", "en": "It's on the island." },
-                 { "t": "Hay un sofá.", "zh": "有一个沙发。", "en": "There is a sofa." } ] },
+                 { "t": "Voy en autobús.", "zh": "我坐公共汽车去。", "en": "I go by bus." } ] },
     { "q": { "t": "¿Qué hay dentro del armario?", "zh": "柜子里有什么？", "en": "What is inside the wardrobe?" },
       "a": { "t": "Hay libros y un espejo.", "zh": "有书和一面镜子。", "en": "There are books and a mirror." },
       "wrong": [ { "t": "Está en el jardín.", "zh": "在花园里。", "en": "It's in the garden." },

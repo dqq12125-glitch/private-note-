@@ -54,8 +54,8 @@
     { "t": "Prefiero los calcetines blancos.", "zh": "我更喜欢白袜子。", "en": "I prefer the white socks." },
     { "t": "Los niños llevan sombreros grandes.", "zh": "孩子们戴着大帽子。", "en": "The kids are wearing big hats." },
     { "t": "Este suéter marrón es nuevo.", "zh": "这件棕色毛衣是新的。", "en": "This brown sweater is new." },
-    { "t": "Ustedes llevan botas para caminar.", "zh": "你们穿着靴子走路。", "en": "You all wear boots for walking." },
-    { "t": "Mi hermano lleva lentes negros.", "zh": "我哥哥戴着黑色眼镜。", "en": "My brother wears black glasses." },
+    { "t": "Ustedes llevan botas para caminar.", "zh": "你们穿着适合走路的靴子。", "en": "You all wear boots for walking." },
+    { "t": "Mi hermano lleva lentes rojos.", "zh": "我哥哥戴着红色眼镜。", "en": "My brother wears red glasses." },
     { "t": "¿Me prestas esa camiseta verde?", "zh": "你的那件绿T恤借我穿一下好吗？", "en": "Can I borrow that green T-shirt?" },
     { "t": "Llevamos sandalias y traje de baño a la playa.", "zh": "我们穿着凉鞋、带着泳衣去海滩。", "en": "We take sandals and swimsuits to the beach." }
   ],
@@ -84,7 +84,7 @@
     { "q": { "t": "¿Los pantalones son negros o grises?", "zh": "裤子是黑的还是灰的？", "en": "Are the pants black or gray?" },
       "a": { "t": "Son grises.", "zh": "是灰色的。", "en": "They're gray." },
       "wrong": [ { "t": "Sí, me gusta.", "zh": "是的，我喜欢。", "en": "Yes, I like it." }, { "t": "Voy al mercado.", "zh": "我去市场。", "en": "I'm going to the market." } ] },
-    { "q": { "t": "¿Qué lleva el abuelo en la cabeza?", "zh": "爷爷头上戴着什么？", "en": "What does grandpa wear on his head?" },
+    { "q": { "t": "¿Qué lleva el abuelo en la cabeza?", "zh": "爷爷头上戴着什么？", "en": "What is grandpa wearing on his head?" },
       "a": { "t": "Lleva un sombrero.", "zh": "他戴着一顶帽子。", "en": "He's wearing a hat." },
       "wrong": [ { "t": "Es muy simpático.", "zh": "他很和善。", "en": "He's very nice." }, { "t": "Está en el parque.", "zh": "他在公园。", "en": "He's in the park." } ] },
     { "q": { "t": "¿Me prestas tu suéter?", "zh": "你的毛衣借我穿一下好吗？", "en": "Can I borrow your sweater?" },
@@ -102,7 +102,7 @@
     "topic": { "zh": "聊穿什么衣服、选哪一件", "en": "Talking about clothes and choosing one" },
     "persona": "You are Marisol, a cheerful clothes-stall keeper at the island market. You sell caps, hats, scarves, sandals, swimsuits, sweaters and jackets in many colors. You love chatting about what people wear and helping them pick which one they prefer. Speak only simple level-1 Spanish, short sentences, neutral Latin American, using tú. Use llevar, colors after the noun (una camiseta azul), este / ese and ¿Cuál prefieres? Keep it playful; if the learner is stuck, offer one easy example sentence. You are a friendly game character, not a companion. Never ask for the learner's real name, school, address, phone number or any personal data. Do not comment on anyone's body; talk only about clothes and colors.",
     "goal": { "zh": "说你穿什么、颜色，并选出你更喜欢的一件", "en": "Say what you are wearing and its color, and choose which one you prefer." },
-    "opener": { "t": "¡Hola! Bienvenido a mi puesto. Hoy llevo un sombrero amarillo. ¿Qué ropa llevas tú?" },
+    "opener": { "t": "¡Hola! Soy Marisol. Este es mi puesto. Hoy llevo un sombrero amarillo. ¿Qué ropa llevas tú?" },
     "steps": [
       { "zh": "说你穿了什么", "en": "Say what you are wearing", "t": "Llevo una camiseta azul." },
       { "zh": "说一件衣服的颜色", "en": "Say the color of a piece of clothing", "t": "Mis zapatos son negros." },

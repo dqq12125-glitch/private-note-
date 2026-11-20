@@ -18,14 +18,14 @@
    "en": "A は B です / じゃないです, も, の; Inside vs. Outside the Family"
   },
   "tip": {
-   "zh": "「AはBです」是“A是B”，否定说「じゃないです」（书面里是「ではありません」），问句在句尾加「か」；「も」是“也”：あおいさんも一年生です。对外人介绍自己的家人用「父・母・兄・姉」，当面叫家人、说别人家的人用「お父さん・お兄さん」「弟さん・妹さん」：父は船長です。／ゆいさんの弟さんは何年生ですか？",
-   "en": "「AはBです」 means \"A is B\"; the negative is 「じゃないです」 (「ではありません」 in writing), and 「か」 at the end makes a question. 「も」 means \"also\": あおいさんも一年生です。(Aoi-san is also a first-year.) When you talk about your own family to others, use 父・母・兄・姉 (chichi, haha, ani, ane); for someone else's family, or when you call your own, use お父さん・弟さん…: 父は船長です。[Chichi wa senchō desu.] / ゆいさんの弟さんは何年生ですか？[Yui-san no otōto-san wa nannensei desu ka?]"
+   "zh": "「AはBです」是“A是B”，否定说「じゃないです」（书面里是「ではありません」），问句在句尾加「か」；「も」是“也”：あおいさんも一年生です。对外人介绍自己的家人用「父・母・兄・姉」，说别人家的人用「お父さん・お兄さん・弟さん・妹さん」，当面叫自己的爸爸妈妈、哥哥姐姐也用「お父さん・お兄さん」：父は船長です。／ゆいさんの弟さんは何年生ですか？",
+   "en": "「AはBです」 means \"A is B\"; the negative is 「じゃないです」 (「ではありません」 in writing), and 「か」 at the end makes a question. 「も」 means \"also\": あおいさんも一年生です。(Aoi-san is also a first-year.) When you talk about your own family to others, use 父・母・兄・姉 (chichi, haha, ani, ane); for someone else's family use お父さん・お兄さん・弟さん・妹さん; you also call your own parents and older siblings お父さん, お兄さん…: 父は船長です。[Chichi wa senchō desu.] / ゆいさんの弟さんは何年生ですか？[Yui-san no otōto-san wa nannensei desu ka?]"
   }
  },
  "boss": {
   "emoji": "🐰",
   "name": {
-   "zh": "家族写真兔 ぴょんた",
+   "zh": "全家福兔子彭太",
    "en": "Pyonta the Rabbit"
   },
   "t": "こんにちは！ぼくはうさぎのぴょんたです。これはぼくの家族の写真です。この人はだれですか？",
@@ -73,8 +73,7 @@
    "t": "中国語",
    "r": "ちゅうごくご",
    "zh": "中文",
-   "en": "Chinese language",
-   "pic": "🀄"
+   "en": "Chinese language"
   },
   {
    "t": "父",
@@ -277,7 +276,7 @@
     "ひなさん",
     "です"
    ],
-   "zh": "这位是我的朋友小雏。",
+   "zh": "这位是我的朋友阳菜。",
    "en": "This is my friend Hina."
   },
   {
@@ -465,18 +464,20 @@
  "dlgs": [
   {
    "q": {
-    "t": "こちらはだれですか？",
+    "t": "この人はだれですか？",
     "seg": [
-     "こちらは",
+     "この",
+     "人は",
      "だれ",
      "ですか？"
     ],
     "r": [
-     "こちらは",
+     "この",
+     "ひとは",
      "だれ",
      "ですか"
     ],
-    "zh": "这位是谁？",
+    "zh": "这个人是谁？",
     "en": "Who is this?"
    },
    "a": {
@@ -575,19 +576,19 @@
      "en": "This is my older sister."
     },
     {
-     "t": "日本語の先生です。",
+     "t": "父は船長です。",
      "seg": [
-      "日本語の",
-      "先生",
+      "父は",
+      "船長",
       "です。"
      ],
      "r": [
-      "にほんごの",
-      "せんせい",
+      "ちちは",
+      "せんちょう",
       "です"
      ],
-     "zh": "是日语老师。",
-     "en": "He's the Japanese teacher."
+     "zh": "我爸爸是船长。",
+     "en": "My father is a ship captain."
     }
    ]
   },
@@ -826,10 +827,12 @@
     {
      "t": "ゆいです。",
      "seg": [
-      "ゆいです。"
+      "ゆい",
+      "です。"
      ],
      "r": [
-      "ゆいです"
+      "ゆい",
+      "です"
      ],
      "zh": "我是由衣。",
      "en": "I'm Yui."
@@ -1101,20 +1104,20 @@
   },
   {
    "q": {
-    "t": "船長はあの人ですか？",
+    "t": "あの人は船長ですか？",
     "seg": [
-     "船長は",
      "あの",
-     "人",
+     "人は",
+     "船長",
      "ですか？"
     ],
     "r": [
-     "せんちょうは",
      "あの",
-     "ひと",
+     "ひとは",
+     "せんちょう",
      "ですか"
     ],
-    "zh": "船长是那个人吗？",
+    "zh": "那个人是船长吗？",
     "en": "Is that person the ship captain?"
    },
    "a": {
@@ -1184,7 +1187,7 @@
      "いちねんせい",
      "ですか"
     ],
-    "zh": "小雏的哥哥也是一年级吗？",
+    "zh": "阳菜的哥哥也是一年级吗？",
     "en": "Is Hina's older brother a first-year, too?"
    },
    "a": {
@@ -1242,7 +1245,7 @@
  ],
  "talk": {
   "name": "Haruka",
-  "zh": "面包店的はるか",
+  "zh": "面包店的遥",
   "gender": "f",
   "kid": true,
   "topic": {

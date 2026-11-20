@@ -6,7 +6,7 @@
     "title": { "zh": "现在时：-ar / -er / -ir 动词和变干动词", "en": "Present tense: -ar / -er / -ir verbs and stem-changing verbs" },
     "tip": {
       "zh": "规则动词去掉词尾再加：-ar（estudio、estudias、estudia、estudiamos、estudian）、-er（aprendo、aprendes、aprende、aprendemos、aprenden）、-ir（escribo、escribes、escribe、escribimos、escriben）；ustedes 和 ellos 用同一个词尾（van、comen）。jugar、poder、empezar 这类动词除了 nosotros 以外，词干里的元音会变：juego / jugamos、puedo / podemos、empiezo / empezamos。说多久一次用 siempre、a veces、nunca 和 los lunes：Los lunes estudio. Nunca juego tarde.",
-      "en": "Regular verbs drop the ending and add new ones: -ar (estudio, estudias, estudia, estudiamos, estudian), -er (aprendo, aprendes, aprende, aprendemos, aprenden), -ir (escribo, escribes, escribe, escribimos, escriben); ustedes and ellos use the same ending (van, comen). Verbs like jugar, poder and empezar change the vowel in the stem in every form except nosotros: juego / jugamos, puedo / podemos, empiezo / empezamos. Say how often with siempre, a veces, nunca and los lunes: Los lunes estudio."
+      "en": "Regular verbs drop the ending and add new ones: -ar (estudio, estudias, estudia, estudiamos, estudian), -er (aprendo, aprendes, aprende, aprendemos, aprenden), -ir (escribo, escribes, escribe, escribimos, escriben); ustedes and ellos use the same ending (van, comen). Verbs like jugar, poder and empezar change the vowel in the stem in every form except nosotros: juego / jugamos, puedo / podemos, empiezo / empezamos. Say how often with siempre, a veces, nunca and los lunes: Los lunes estudio. Nunca juego tarde."
     }
   },
   "boss": {
@@ -30,7 +30,7 @@
     { "t": "escribir", "zh": "写；写字", "en": "to write", "pic": "✍️" },
     { "t": "aprender", "zh": "学会；学到", "en": "to learn", "pic": "🧠" },
     { "t": "visitar", "zh": "拜访；参观", "en": "to visit", "pic": "🏡" },
-    { "t": "jugar", "zh": "玩；比赛", "en": "to play", "pic": "🎮" },
+    { "t": "jugar", "zh": "玩；打（球）", "en": "to play", "pic": "🎮" },
     { "t": "empezar", "zh": "开始", "en": "to start", "pic": "🏁" },
     { "t": "poder", "zh": "能；可以", "en": "can; to be able", "pic": "💪" },
     { "t": "siempre", "zh": "总是", "en": "always", "pic": "♾️" },
@@ -62,7 +62,7 @@
   "dlgs": [
     { "q": { "t": "¿Qué estudias los lunes?", "zh": "你星期一学什么？", "en": "What do you study on Mondays?" },
       "a": { "t": "Estudio matemáticas.", "zh": "我学数学。", "en": "I study math." },
-      "wrong": [ { "t": "Voy al puerto.", "zh": "我去港口。", "en": "I'm going to the harbor." }, { "t": "Es el domingo.", "zh": "是星期天。", "en": "It's Sunday." } ] },
+      "wrong": [ { "t": "Voy al puerto.", "zh": "我去港口。", "en": "I'm going to the harbor." }, { "t": "Es el domingo.", "zh": "在星期天。", "en": "It's on Sunday." } ] },
     { "q": { "t": "¿Cuándo practicas el piano?", "zh": "你什么时候练钢琴？", "en": "When do you practice the piano?" },
       "a": { "t": "Los martes y los jueves.", "zh": "星期二和星期四。", "en": "On Tuesdays and Thursdays." },
       "wrong": [ { "t": "Es un piano grande.", "zh": "是一架大钢琴。", "en": "It's a big piano." }, { "t": "Tengo un hermano.", "zh": "我有一个兄弟。", "en": "I have a brother." } ] },
@@ -73,7 +73,7 @@
       "a": { "t": "Hoy es miércoles.", "zh": "今天星期三。", "en": "Today is Wednesday." },
       "wrong": [ { "t": "Llevo una gorra roja.", "zh": "我戴一顶红帽子。", "en": "I'm wearing a red cap." }, { "t": "Son las nueve.", "zh": "九点了。", "en": "It's nine o'clock." } ] },
     { "q": { "t": "¿Puedes venir a mi casa hoy?", "zh": "你今天能来我家吗？", "en": "Can you come to my house today?" },
-      "a": { "t": "Lo siento, no puedo. Tengo clase.", "zh": "抱歉，我不行。我有课。", "en": "Sorry, I can't. I have class." },
+      "a": { "t": "Lo siento, no puedo. Tengo clase.", "zh": "抱歉，我去不了。我有课。", "en": "Sorry, I can't. I have class." },
       "wrong": [ { "t": "Es mi casa.", "zh": "这是我的家。", "en": "It's my house." }, { "t": "Me gusta la playa.", "zh": "我喜欢海滩。", "en": "I like the beach." } ] },
     { "q": { "t": "¿A qué hora empieza la clase?", "zh": "课几点开始？", "en": "What time does class start?" },
       "a": { "t": "Empieza a las ocho.", "zh": "八点开始。", "en": "It starts at eight." },

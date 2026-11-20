@@ -5,8 +5,8 @@
   "grammar": {
     "title": { "zh": "ser 的变位和形容词性数一致", "en": "Ser and adjective agreement" },
     "tip": {
-      "zh": "ser 用来说「是什么样的人」：soy、eres、es、somos、son（ustedes 也用 son，在拉美是「你们」）。形容词要跟着人变：男生 simpático，女生 simpática，很多人 simpáticos / simpáticas；amable、valiente 男女同形，只在复数加 s。否定时 no 放在动词前面：No soy tímido。用 y 连接，用 pero 转折：Soy tímido, pero soy valiente.",
-      "en": "Ser tells what someone is like: soy, eres, es, somos, son (ustedes also takes son; in Latin America it means \"you all\"). Adjectives change with the person: simpático (boy), simpática (girl), simpáticos / simpáticas (plural); amable and valiente are the same for both and only add -s. Put no before the verb: No soy tímido. Join ideas with y and contrast with pero: Soy tímido, pero soy valiente."
+      "zh": "ser 用来说「是什么样的人」：soy、eres、es、somos、son（ustedes 也用 son，在拉美是「你们」）。形容词要跟着人变：男生 simpático，女生 simpática，很多人 simpáticos / simpáticas；amable、valiente 男女同形，只在复数加 s。否定时 no 放在动词前面：No soy tímido。用 y 连接（后面的词以 i- 开头时 y 变成 e：amable e inteligente），用 pero 转折：Soy tímido, pero soy valiente.",
+      "en": "Ser tells what someone is like: soy, eres, es, somos, son (ustedes also takes son; in Latin America it means \"you all\"). Adjectives change with the person: simpático (boy), simpática (girl), simpáticos / simpáticas (plural); amable and valiente are the same for both and only add -s. Put no before the verb: No soy tímido. Join ideas with y (before a word starting with i-, y becomes e: amable e inteligente) and contrast with pero: Soy tímido, pero soy valiente."
     }
   },
   "boss": {
@@ -29,7 +29,7 @@
     { "t": "corto", "zh": "短的", "en": "short", "pic": "✂️" },
     { "t": "rizado", "zh": "卷的", "en": "curly", "pic": "🌀" },
     { "t": "rubio", "zh": "金色头发的", "en": "blond", "pic": "👱" },
-    { "t": "castaño", "zh": "栗色的", "en": "brown", "pic": "🌰" },
+    { "t": "castaño", "zh": "栗色的", "en": "brown (hair, eyes)", "pic": "🌰" },
     { "t": "los ojos", "zh": "眼睛", "en": "eyes", "pic": "👀" },
     { "t": "nuevo", "zh": "新的；新来的", "en": "new", "pic": "🆕" },
     { "t": "el mejor amigo", "zh": "最好的朋友（男）", "en": "best friend (boy)", "pic": "🫂" },

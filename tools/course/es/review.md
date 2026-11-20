@@ -59,3 +59,24 @@
 12. **错误选项检查**：78 段里没有发现会被当作合理回答的错误选项。最接近的是第 9 岛 `¿Se puede correr en el pasillo?` 的 `No, no sé correr.`（和对的 `No, no se puede.` 只差一个重音符号，语法对、意思答非所问）——这是 se / sé 的对比，当作故意的陷阱，保留；第 3 岛 `Perdón, ¿dónde está el baño?` 和第 6 岛 `Perdón, ¿qué hora es?` 里的 Perdón 是「打扰一下」，中文写成「请问」，正确。
 13. **地区词复核**：computadora、celular、jugo、pastel、maestra、pelota、tomar el autobús、sacar fotos、andar en bicicleta、afuera、allá、lindo 都是拉美通用；没有 vosotros、coger、ordenador、zumo、móvil。`¡Genial!`（第 3、5 岛）在拉美也通用。
 14. **安全 / 原创**：没有恋爱、暴力、烟酒、赌博、宗教、政治、身材评价；没有问真名、学校、住址、电话。生日问答按已有决定保留。
+
+## 1 级单元的独立复核（2026-11-21）
+
+没看过稿子的复核把 es1-1 … es1-8 逐条读了一遍（每个单元 24 词、16 句、12 段对话、语法提示、岛主、聊天角色）。没有硬伤：重音、¿¡、性数一致、ser / estar、gustar、tú、拉美用词都对。只有机器复核，**不能代替**对外卖之前找母语的人看。
+
+### 改了的
+
+- `así así` → `más o menos`（课本腔，拉美日常不说）。
+- es1-3「Mi hermano está enojado, pero ya está mejor.」（又生气又好些了，别扭）→「Mi hermano está enojado porque tiene hambre.」
+- es1-2「¿Cómo es tu casa?」的错误选项 `Hay un sofá.`（也说得通）→ `Voy en autobús.`
+- es1-5 灯塔的位置前后矛盾：对话答句 `Está cerca del puerto.` → `Está lejos del puerto.`；聊天角色 Mateo 的人设写明「今天第一次送信去灯塔、不认识路」。
+- es1-6 开场白 `Bienvenido a mi puesto`（只对男生说得通）→ `Soy Marisol. Este es mi puesto.`；`lentes negros`（很多地方听成墨镜）→ `lentes rojos`。
+- 意思：`castaño` 英文 brown (hair, eyes)；`Es el domingo.` 是「在星期天 / It's on Sunday」；`Lo siento, no puedo.` 中文「抱歉，我去不了」；`jugar` 中文「玩；打（球）」；`invitar` 的图 💌 → ✉️；es1-1 语法提示补了「y 在 i- 前变 e」。
+
+### 没改、留给母语的人看的
+
+1. 地区差别大的词：`la cometa`（风筝：papalote / barrilete / volantín / papagayo）、`el armario`、`los calcetines`、`marrón`、`la chaqueta`、`la camiseta`、`doblar`、`el limón` 配 🍋。
+2. es1-4 的 caro / barato 一会儿 ser 一会儿 estar，语法提示没讲。
+3. es1-6 标题词 `la ropa` 不在词表里；es1-5 岛主是鹈鹕，表情是 🦢（没有鹈鹕的表情）。
+4. 词表里有、本单元句子和对话没用到的词：el garaje、el estante、sorprendido、ahora、mal、reír、llorar、la zanahoria、el maíz、pagar、la calle、los guantes、nunca。
+5. 「来我家」「你家里有什么」这类话题算不算问个人信息（人设里已写只聊虚构的家），请老板定。

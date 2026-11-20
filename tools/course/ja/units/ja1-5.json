@@ -203,12 +203,14 @@
   {
    "t": "このラーメンはとてもおいしいです。",
    "seg": [
-    "このラーメンは",
+    "この",
+    "ラーメンは",
     "とても",
     "おいしいです。"
    ],
    "r": [
-    "このラーメンは",
+    "この",
+    "ラーメンは",
     "とても",
     "おいしいです"
    ],
@@ -265,12 +267,14 @@
   {
    "t": "この町はにぎやかです。",
    "seg": [
-    "この町は",
+    "この",
+    "町は",
     "にぎやか",
     "です。"
    ],
    "r": [
-    "このまちは",
+    "この",
+    "まちは",
     "にぎやか",
     "です"
    ],
@@ -291,7 +295,7 @@
     "きれい",
     "じゃなかったです"
    ],
-   "zh": "昨天的海不太干净。",
+   "zh": "昨天的海不干净。",
    "en": "The sea wasn't clean yesterday."
   },
   {
@@ -380,12 +384,14 @@
   {
    "t": "このスープはちょっと冷たいです。",
    "seg": [
-    "このスープは",
+    "この",
+    "スープは",
     "ちょっと",
     "冷たいです。"
    ],
    "r": [
-    "このスープは",
+    "この",
+    "スープは",
     "ちょっと",
     "つめたいです"
    ],
@@ -413,13 +419,15 @@
    "t": "古いお店ですが、とてもおいしいです。",
    "seg": [
     "古い",
-    "お店ですが、",
+    "お店",
+    "ですが、",
     "とても",
     "おいしいです。"
    ],
    "r": [
     "ふるい",
-    "おみせですが",
+    "おみせ",
+    "ですが",
     "とても",
     "おいしいです"
    ],
@@ -497,12 +505,14 @@
      "seg": [
       "昨日は",
       "いい",
-      "天気でした。"
+      "天気",
+      "でした。"
      ],
      "r": [
       "きのうは",
       "いい",
-      "てんきでした"
+      "てんき",
+      "でした"
      ],
      "zh": "昨天天气很好。",
      "en": "The weather was nice yesterday."
@@ -1239,7 +1249,7 @@
  ],
  "talk": {
   "name": "Hina",
-  "zh": "饭团铺的日菜",
+  "zh": "饭团铺的阳菜",
   "gender": "f",
   "kid": true,
   "topic": {
@@ -1248,7 +1258,7 @@
   },
   "persona": "You are Hina, a cheerful 12-year-old girl who runs a tiny rice-ball stand (おにぎりの店) on Echo Island. You love food and want to hear what the player likes to eat, how it tastes (sweet, spicy, sour, delicious, cheap, expensive) and what they ate yesterday. Ask one short question at a time and react warmly to the answers. Never ask for the player's real name, school, address, phone number or any other personal information; you are a friendly game character, not a companion. Speak only simple level-1 Japanese in です・ます style, short sentences, using the adjective forms おいしいです / からくないです / おいしかったです and words like とても, ちょっと, あまり. Keep kanji to very easy ones.",
   "goal": {
-   "zh": "告诉日菜你喜欢吃什么、是什么味道、有什么不太喜欢的，再说说昨天吃的东西。",
+   "zh": "告诉阳菜你喜欢吃什么、是什么味道、有什么不太喜欢的，再说说昨天吃的东西。",
    "en": "Tell Hina what food you like and how it tastes, what you do not like, and what you ate yesterday."
   },
   "opener": {

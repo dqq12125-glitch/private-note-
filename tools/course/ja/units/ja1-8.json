@@ -80,7 +80,7 @@
    "t": "おべんとう",
    "r": "おべんとう",
    "zh": "便当",
-   "en": "lunch box",
+   "en": "packed lunch",
    "pic": "🍱"
   },
   {
@@ -351,7 +351,7 @@
     "のぼりました"
    ],
    "zh": "早上做了便当，然后爬了山。",
-   "en": "In the morning I made a lunch box and climbed the mountain."
+   "en": "In the morning I made a packed lunch and climbed the mountain."
   },
   {
    "t": "港まで歩いて、船に乗りました。",
@@ -371,21 +371,19 @@
    "en": "I walked to the harbour and got on a boat."
   },
   {
-   "t": "博物館で昔の道具を見学しました。",
+   "t": "昨日、博物館を見学しました。",
    "seg": [
-    "博物館で",
-    "昔の",
-    "道具を",
+    "昨日、",
+    "博物館を",
     "見学しました。"
    ],
    "r": [
-    "はくぶつかんで",
-    "むかしの",
-    "どうぐを",
+    "きのう",
+    "はくぶつかんを",
     "けんがくしました"
    ],
-   "zh": "我在博物馆参观了以前的工具。",
-   "en": "I looked at old tools at the museum."
+   "zh": "昨天我参观了博物馆。",
+   "en": "Yesterday I looked around the museum."
   },
   {
    "t": "まず売店へ行って、それから公園で休みました。",
@@ -440,7 +438,7 @@
     "いいですか"
    ],
    "zh": "可以在这里吃便当吗？",
-   "en": "May I eat my lunch box here?"
+   "en": "May I eat my packed lunch here?"
   },
   {
    "t": "駅に着いてから、電話してください。",
@@ -474,7 +472,7 @@
     "やすみます"
    ],
    "zh": "休息日我在家好好休息。",
-   "en": "On my day off I rest slowly at home."
+   "en": "On my day off I have a good rest at home."
   }
  ],
  "dlgs": [
@@ -889,7 +887,7 @@
      "たべました"
     ],
     "zh": "我吃了便当。",
-    "en": "I ate my lunch box."
+    "en": "I ate my packed lunch."
    },
    "wrong": [
     {
@@ -1135,28 +1133,30 @@
    },
    "wrong": [
     {
-     "t": "ぞうが二ひきいました。",
+     "t": "今日は水曜日です。",
      "seg": [
-      "ぞうが",
-      "二ひき",
-      "いました。"
+      "今日は",
+      "水曜日",
+      "です。"
      ],
      "r": [
-      "ぞうが",
-      "にひき",
-      "いました"
+      "きょうは",
+      "すいようび",
+      "です"
      ],
-     "zh": "有两头大象。",
-     "en": "There were two elephants."
+     "zh": "今天是星期三。",
+     "en": "Today is Wednesday."
     },
     {
      "t": "駅の前で会いましょう。",
      "seg": [
-      "駅の前で",
+      "駅の",
+      "前で",
       "会いましょう。"
      ],
      "r": [
-      "えきのまえで",
+      "えきの",
+      "まえで",
       "あいましょう"
      ],
      "zh": "在车站前见面吧。",
@@ -1253,7 +1253,7 @@
    },
    {
     "zh": "问可不可以在这里吃便当",
-    "en": "Ask if you may eat your lunch box here",
+    "en": "Ask if you may eat your packed lunch here",
     "t": "ここでおべんとうを食べてもいいですか？"
    },
    {
