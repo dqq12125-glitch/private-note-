@@ -1359,7 +1359,9 @@
     return new Promise(resolve => {
       const N = window.EchoNative, id = ++nid, now = () => performance.now();
       const short = !!o.short, need = o.long ? 1500 : short ? 400 : 600;
-      let done = false, started = 0, text = '', chg = 0, voice = false, tick = 0, tm = 0;
+      let done = false, started = 0, text = '', chg = 0, voice = false, tick = 0, tm = 0, raw = '';
+      const segs = [];
+      const first = s => (s.split(' ')[0] || '').toLowerCase();
       const io = window.__echoIOS;
       const audio = on => { try { if (io && io.speech) io.speech(on); } catch (e) { /* 老的壳子 */ } };
       const stopNative = () => { try { N.speechStop(++nid); } catch (e) { /* 不在 App 里 */ } };
@@ -1393,7 +1395,12 @@
         const d = e && e.detail;
         if (!d || d.sid !== id || done || !started) return;
         if (d.kind === 'partial' || d.kind === 'final') {
-          const t = String(d.text || '').replace(/\s+/g, ' ').trim();
+          const p = String(d.text || '').replace(/\s+/g, ' ').trim();
+          // 手机上的识别在人停顿一下以后，有时从头另起一段（新的字不接着前面的）：前面那段先留着、拼在一起。
+          // 只在「停住 0.35 秒以上、第一个词变了、字变少了」时才算另起一段（平常的改字不是这样）
+          if (p && raw && p !== raw && now() - chg >= 350 && first(p) !== first(raw) && p.split(' ').length < raw.split(' ').length) segs.push(raw);
+          if (p) raw = p;
+          const t = segs.concat(raw ? [raw] : []).join(' ').trim();
           if (t && t !== text) {
             text = t; chg = now();
             D.chg = chg; if (D.first == null) D.first = chg - D.t0;

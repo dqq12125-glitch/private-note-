@@ -199,6 +199,10 @@ function fakeCloud() {
   check(x.s.lag >= 1700 && x.s.lag < 2200, '原生说「还在出声」（慢慢说、句子中间停一下）：多等，最多再等 1.2 秒（' + x.s.lag + ' 毫秒）', x.s);
   x = await listen([[100, 'partial', 'I like'], [350, 'partial', 'I like apples']], {});
   check(x.r.text === 'I like apples' && x.s.lag >= 580, '字还在变：从最后一次变了开始算', x);
+  x = await listen([[50, 'voice', 1], [100, 'partial', 'I like'], [200, 'partial', 'I like to'], [900, 'partial', 'apples'], [950, 'voice', 0]], {});
+  check(x.r.text === 'I like to apples', '停顿以后手机的识别从头另起一段（「apples」）：前面那段留着、拼在一起', x.r);
+  x = await listen([[100, 'partial', 'I lie'], [500, 'partial', 'I like']], {});
+  check(x.r.text === 'I like', '平常的改字（第一个词没变）：不当成另起一段', x.r);
   x = await listen([[100, 'partial', 'I like'], [250, 'end', 'interrupted']], {});
   check(x.r.err === 'aborted' && !x.r.text, '被来电 / Siri 打断：说了一半的不拿去打分（aborted，不算一次尝试）', x.r);
   x = await listen([[100, 'partial', 'Hello'], [200, 'final', 'Hello there']], {});
@@ -263,8 +267,9 @@ function fakeCloud() {
   a = await E(() => ({ modal: !document.querySelector('#modal').hidden, sheet: (document.querySelector('#sheet') || {}).textContent || '', L: window.EchoGame.dayLog() }));
   check(!a.modal && cloudHits === hits0 && !a.L.aiNoKey, '没弹「登录」、没去连服务器、不算「没有 AI」', { a: a.modal, sheet: a.sheet.slice(0, 80), hits: cloudHits - hits0 });
   // 复习里没网也出开口题（本机识别不用网）
-  a = await E(today => { const G = window.EchoGame; G.S.rev.items['sent:13:2'] = { k: 'sent', w: 13, i: 2, b: 1, due: today, x: 1, c: today }; return G.rev.build().map(q => q.type); }, TODAY);
-  check(a.some(t => /^sr_/.test(t)), '没网时每日复习照样出开口题（本机识别不用网）', a);
+  // （每道题开口还是排句子有一半是随机的：多出几次，开口题一次都没有才算错——没网又不能识别时一次都不会有）
+  a = await E(today => { const G = window.EchoGame; G.S.rev.items['sent:13:2'] = { k: 'sent', w: 13, i: 2, b: 1, due: today, x: 1, c: today }; let t = []; for (let i = 0; i < 40; i++) t = t.concat(G.rev.build().map(q => q.type)); return t; }, TODAY);
+  check(a.some(t => /^sr_/.test(t)), '没网时每日复习照样出开口题（本机识别不用网）', [...new Set(a)]);
   await ctx.setOffline(false);
   await W(200);
   // 本机用不了：照旧请他登录、先跳过

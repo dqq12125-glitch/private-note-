@@ -308,19 +308,21 @@ final class LocalSpeech {
             reply(false, LocalSpeech.fail("unavailable", "no on-device speech recognition for " + o.locale + " on this device"))
             return
         }
-        step(sid: sid, o: o, t0: Date(), asked: false, reply: reply)
+        step(sid: sid, o: o, t0: Date(), asked: [], reply: reply)
     }
 
-    // 权限一步步来：语音识别 → 麦克风 → 开始录。要弹框的那一步弹完再回到这里
-    private func step(sid: Int, o: SpeechOpts, t0: Date, asked: Bool, reply: @escaping Reply) {
+    // 权限一步步来：语音识别 → 麦克风 → 开始录。要弹框的那一步弹完再回到这里（asked：这一次已经弹过哪几个框，同一个框不弹第二次）
+    private func step(sid: Int, o: SpeechOpts, t0: Date, asked: Set<String>, reply: @escaping Reply) {
         switch engine.authorization() {
         case "authorized":
             break
         case "notDetermined":
-            if !o.ask || asked { reply(false, LocalSpeech.fail(asked ? "denied" : "not-asked", "speech recognition permission has not been given")); return }
+            let done = asked.contains("speech")
+            if !o.ask || done { reply(false, LocalSpeech.fail(done ? "denied" : "not-asked", "speech recognition permission has not been given")); return }
             asking = sid
             askStopped = false
-            engine.requestAuthorization { [weak self] in self?.resume(sid: sid, o: o, t0: t0, reply: reply) }
+            let next = asked.union(["speech"])
+            engine.requestAuthorization { [weak self] in self?.resume(sid: sid, o: o, t0: t0, asked: next, reply: reply) }
             return
         case "restricted":
             reply(false, LocalSpeech.fail("restricted", "speech recognition is restricted on this device"))
@@ -333,10 +335,12 @@ final class LocalSpeech {
         case .authorized:
             break
         case .notDetermined:
-            if !o.ask || asked { reply(false, LocalSpeech.fail(asked ? "mic" : "not-asked", "microphone permission has not been given")); return }
+            let done = asked.contains("mic")
+            if !o.ask || done { reply(false, LocalSpeech.fail(done ? "mic" : "not-asked", "microphone permission has not been given")); return }
             asking = sid
             askStopped = false
-            AVCaptureDevice.requestAccess(for: .audio, completionHandler: LocalSpeech.micAsked { [weak self] in self?.resume(sid: sid, o: o, t0: t0, reply: reply) })
+            let next = asked.union(["mic"])
+            AVCaptureDevice.requestAccess(for: .audio, completionHandler: LocalSpeech.micAsked { [weak self] in self?.resume(sid: sid, o: o, t0: t0, asked: next, reply: reply) })
             return
         default:
             reply(false, LocalSpeech.fail("mic", "microphone permission was denied"))
@@ -350,7 +354,7 @@ final class LocalSpeech {
     }
 
     // 权限框答完了：网页这期间叫停了就不开；不然再看一遍权限（这一次不再弹框）
-    private func resume(sid: Int, o: SpeechOpts, t0: Date, reply: @escaping Reply) {
+    private func resume(sid: Int, o: SpeechOpts, t0: Date, asked: Set<String>, reply: @escaping Reply) {
         guard asking == sid else { return }
         asking = 0
         if askStopped {
@@ -358,7 +362,7 @@ final class LocalSpeech {
             reply(false, LocalSpeech.fail("cancelled", "stopped while asking for permission"))
             return
         }
-        step(sid: sid, o: o, t0: t0, asked: true, reply: reply)
+        step(sid: sid, o: o, t0: t0, asked: asked, reply: reply)
     }
 
     private func begin(sid: Int, o: SpeechOpts, t0: Date, reply: @escaping Reply) {
