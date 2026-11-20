@@ -188,15 +188,16 @@
 - `free` 的空：在这个模板里写 `vals: { 空: { 英文值: 译文 } }`（值和词一样写法）。没写 `vals` 的，游戏里先看这个英文值本身是不是一句翻好的台词（lines 里有，比如剧情自己的问答选项），都不是就当这句没翻。
 - **西语的性和数**：先想办法写成不跟词变的说法（`¡Conseguiste: {item}!`、`{mon}, ¡usa {move}!`）。实在要变的：词写 `g: "f"`（阴性；不写算阳性），模板另写一个 `f`（阴性的那一句，`t` 是阳性的）；一个模板里看第一个有 `g` 的空。复数（商店「`{n} {item}s`」这种）不按数变，写成不用变的说法（`Aquí tienes: {item} ×{n}.`）。
 - 说到 **English / 英语** 的台词（「他们会教你英语」「这些怪兽听得懂英语」「英文名」），翻成在学的这门语言（或者去掉），游戏会把下面那行意思里的「英语 / English」也换成这门语言的名字；`{name}` 起名那句：名字现在只能用拉丁字母，别写「英文名」。
+- **这句自己的意思（可选，2026-11-21 第三批）**：整句（`lines`，不是模板）可以多写 `zh` / `en`，是这句译文在中文界面 / 英语界面下面那行的意思。只在译文改写过、原来的意思对不上时写（讲英语语法、英语读音的句子：原文「Thirteen and thirty sound different. Listen for "-teen"!」、中文意思「thirteen 和 thirty 听起来不一样，注意听 “-teen”！」，译成「Trece y treinta suenan diferente. ¡Escucha bien!」以后，原来的意思就不对了）。不写的话游戏用原来的意思，里面夹着的英语自己换成译文（整句、引号里一一对应的、名字）；换完还剩英语单词的那句意思**不显示**（ENGINE.md §5）。`zh` 要写中文、`en` 里不能有中文，`{name}` / `{rival}` 和原文一样多。例：`"lf69mnv": { "t": "Trece y treinta suenan diferente. ¡Escucha bien!", "zh": "十三和三十听起来不一样，要听清楚！" }`。
 - 要开口说的（`kind: "speak"`、`ask`、`opt`）：短、自然、这一级能说出口；同一个问答里对的回答和错的选项意思不能一样。
 - 不能出现的词（`tools/banned-terms.txt`）照样查（`node tools/check-banned.js` 会扫这个文件）。
 
 ### 8.3 检查和生成
 
-- `node tools/course/check.js <语言>`（`--lines <文件>` 只查一份翻译表）：有 lines.json 就一起查——`{name}` / `{rival}` 和模板的空一个不少、`seg` 接起来等于 `t`、`r` 和 `seg` 对齐（空那一块的 `r` 是空本身）、读音（同 §1）、`vals` 只给 `free` 的空、日语 / 中文里没有剩下的英文词（原文里大写开头的专有名词除外）、西语里没有剩下的英语虚词（the / you / your / is / and…）、和英语原文一模一样的西语句子。**只提醒、不算错的**：没翻的（按 kind 数）、lines-src.json 里已经没有的 id（原文改了或删了，生成时不带它）、和英语一样的一个词（音符 Sol、人名）。
+- `node tools/course/check.js <语言>`（`--lines <文件>` 只查一份翻译表）：有 lines.json 就一起查——`{name}` / `{rival}` 和模板的空一个不少、`seg` 接起来等于 `t`、`r` 和 `seg` 对齐（空那一块的 `r` 是空本身）、读音（同 §1）、`vals` 只给 `free` 的空、`zh` / `en`（这句的意思）只给整句（zh 写中文、en 没有中文、占位符和原文一样多）、日语 / 中文里没有剩下的英文词（原文里大写开头的专有名词除外）、西语里没有剩下的英语虚词（the / you / your / is / and…）、和英语原文一模一样的西语句子。**只提醒、不算错的**：没翻的（按 kind 数）、lines-src.json 里已经没有的 id（原文改了或删了，生成时不带它）、和英语一样的一个词（音符 Sol、人名）。
 - `node tools/course/build.js <语言>`：有 lines.json 就往 course.json 里加三样：
-  - `LINES`：`{ 英语原文: 译文 }`（原文就是游戏里 lines-src.json 的 `en`，带 `{name}` / `{rival}`）；译文西语是字符串，日语 / 中文是 `{ t, seg, r }`；
+  - `LINES`：`{ 英语原文: 译文 }`（原文就是游戏里 lines-src.json 的 `en`，带 `{name}` / `{rival}`）；译文西语是字符串（写了 `g` / `zh` / `en` 时是对象），日语 / 中文是 `{ t, seg, r, zh?, en? }`；
   - `LINES_T`：模板 `[ { en, t, seg?, r?, s: { 空: 类别 }, an?, f?, vals? } ]`（按字面长短排好，越具体的越靠前）；
-  - `TERMS`：`{ 类别: { 英文词: 译文（同 terms 的写法） } }`。
+  - `TERMS`：`{ 类别: { 英文词: 译文（同 terms 的写法） } }`。西语没写的人名（`person`）照英文填上（和英文一样的名字不写是西语译者的约定，lines-glossary.md；游戏靠它认出提示、意思里的「Kai」「Sam」是人名）。
   游戏里（packs.js 的 `lineFind`）先按原文整句找，找不到再一个个模板对：怪兽名可以是起的昵称（照原样）、`num` / `name` / `content` 照原样。英语游戏能拼出来的每一句都对得上（`tests/course-build.test.js` 把模板 × 词展开一遍核对）。
   - `VOICE` 里加上翻好的台词（不带 `{name}` / `{rival}` 的）、模板按 `dom` 展开的每一句、单独念的词（怪兽名、地名）；`g` 照 lines-src.json，`p`：小镇的课程内容 → 开场和第 1 组岛的剧情、选伙伴 → 课本 → 别的岛的剧情 → 对战喊话（按手册编号）→ 手册介绍。

@@ -129,6 +129,17 @@
       'st.step.12.fog': '在回忆岛的雾里走走，{rival} 在等你',
       'st.step.12.orion': '去镇子北边的回忆神殿 Memory Temple 门口找欧瑞 Orion',
       'st.step.12.temple': '进回忆神殿：读石板 tablets、回答记忆之门，到最里面阻止默先生 Mr. Mute',
+      // 别的课（i18n 的 .c）：说到「英语」的提示换成在学的语言（冠军赛在翻译表里也叫「西班牙语杯」这种）
+      'st.gym.0.c': '问候之门：看窗外的天色，用{lang}说对问候语', 'st.gym.12.c': '回忆牌：翻牌，把{lang}的词和它的意思配成对',
+      'st.obj.champ.c': '🏆 你是{lang}冠军了！回各岛找岛主重赛（更强，还会考最近学的课本单元），也去找找「传说的线索」',
+      'st.obj.brave.c': '从回忆岛北边走勇气之路 Brave Road，去冠军高原参加{lang}冠军赛（小凯 Kai 在洞窟 2 楼等你）',
+      'st.obj.master.c': '{lang}冠军赛：挑战第 {k} 位擂主 {name}（{role}）', 'st.obj.final.c': '{lang}冠军赛：挑战{name}，赢了就是{lang}冠军！',
+      'st.step.9.rules.c': '当小交警：在马路上找到不守规矩的人，用{lang}提醒他们（{n}/3）', 'st.mile.recall.c': '不看字说对 300 句{lang}',
+      // 别的课里引着的那句英语没有译文时的说法（game.js 的 hintTx：不引英语；{lang} 在学的语言）
+      'st.gym.1.q': '彩色地板：听广播说的颜色，只踩那种颜色', 'st.gym.2.q': '家族树迷宫：听描述找到奶奶、爸爸、妹妹，用{lang}问对方是不是奶奶',
+      'st.step.2.fam.q': '帮蒂姆 Tim 找家人：用{lang}问问他们是不是蒂姆的家人（还差{left}）',
+      'st.step.3.lib.q': '找人用{lang}问一问图书馆在哪儿（走廊里的艾米 Amy）', 'st.step.3.c5.q': '用{lang}问问二楼的萨姆 Sam：五班在哪儿？',
+      'st.step.6.ask.q': '用{lang}问面包师、学生和镇长几点起床（{n}/3）', 'st.step.7.ask.q': '用{lang}问罗丝奶奶、艾米和蛋糕师的生日是哪天（{n}/3）',
       // 传说的线索：四个学习里程碑
       'st.mile.book': '七上 8 个单元的 BOSS 全部打败', 'st.mile.chat': '和岛民用英语聊天，完成目标 30 次',
       'st.mile.streak': '连续打卡 30 天', 'st.mile.recall': '不看字说对 300 句英语',
@@ -225,6 +236,15 @@
       'st.step.12.fog': '{rival} is waiting for you in the fog on Memory Island',
       'st.step.12.orion': 'Find Orion at the door of the Memory Temple, north of town',
       'st.step.12.temple': 'Go into the Memory Temple: read the stone tablets, answer the memory doors and stop Mr. Mute at the very end',
+      'st.gym.0.c': 'Greeting doors: look at the sky through the window and say the right greeting in {lang}', 'st.gym.12.c': 'Memory cards: turn the cards over and match each {lang} word with its meaning',
+      'st.obj.champ.c': '🏆 You are the {lang} Champion! Visit the Isle Masters again for rematches (they are stronger and ask about your latest textbook units), and look at the "Legend Clues"',
+      'st.obj.brave.c': 'Take Brave Road north of Memory Island to the Champion Plateau for the {lang} Championship (Kai is waiting on the second floor of the cave)',
+      'st.obj.master.c': '{lang} Championship: challenge {name}, master {k} of 4 ({role})', 'st.obj.final.c': '{lang} Championship: challenge {name}. Win, and you are the {lang} Champion!',
+      'st.step.9.rules.c': 'Be a little traffic helper: find people breaking the rules on the street and remind them in {lang} ({n}/3)', 'st.mile.recall.c': 'Say 300 {lang} sentences right without looking',
+      'st.gym.1.q': 'Colour floor: listen for the colour and step only on that colour', 'st.gym.2.q': 'Family tree maze: listen and find the grandma, the dad and the little sister. Ask in {lang} if she is the grandma',
+      'st.step.2.fam.q': 'Help Tim find his family. Ask them in {lang} if they are Tim\'s family (still to find: {left})',
+      'st.step.3.lib.q': 'Ask someone in {lang} where the library is (Amy in the hallway)', 'st.step.3.c5.q': 'Ask Sam on the second floor in {lang} where Class Five is',
+      'st.step.6.ask.q': 'Ask the baker, the student and the mayor in {lang} what time they get up ({n}/3)', 'st.step.7.ask.q': 'Ask Granny Rose, Amy and the cake maker in {lang} when their birthday is ({n}/3)',
       'st.mile.book': 'Beat all 8 unit bosses of Grade 7 Book 1', 'st.mile.chat': 'Finish 30 chat goals with the islanders in English',
       'st.mile.streak': 'Study 30 days in a row', 'st.mile.recall': 'Say 300 English sentences right without looking',
     },
@@ -773,29 +793,33 @@
   // ---------- 现在该去哪、做什么（大地图顶上的 📍、冒险菜单、首页「继续冒险」下面、进地图时的提示）----------
   // 只看徽章、去过的岛和剧情旗标，不看当前地图（首页也能用）。返回 { zh, z }：一句中文目标，带上关键的英文
   const LEADER_EN = ['Captain Polly', 'Crabby', 'Granny Turtle', 'Principal Owl', 'Doctor Octo', 'Flo', 'Rooster Rex', 'Puffy', 'Croc', 'Sharky', 'Coach Seal', 'Whaley', 'the Memory Dragon'];
-  const GYM_HOW = z => tx('st.gym.' + z);   // 第 z 座岛挑战馆的机关怎么玩（字表 st.gym.0–12）
+  // 别的课：提示里引着的英语原句、夹着的英文名字换成这门课的（game.js 的 hintTx，ENGINE.md §5）；英语课就是 tx，一个字不变
+  const ot = (k, p) => (window.EchoGame && EchoGame.hintTx ? EchoGame.hintTx(k, p) : tx(k, p));
+  // 人名（岛主、对手）这门课怎么写（名字牌那份 terms.person；英语课 / 没翻：英文）
+  const nameC = en => (window.EchoGame && EchoGame.personOf ? EchoGame.personOf(en) : en);
+  const GYM_HOW = z => ot('st.gym.' + z);   // 第 z 座岛挑战馆的机关怎么玩（字表 st.gym.0–12）
   const HM_OK = (C, k) => C.MG.itemCount('hm_' + k) > 0;
   // 去第 z 座岛的路（还没去过那座岛时）：有回声贝的走 st.go.z，没有的先去拿（st.go.z.get）
-  const goHm = (C, z, k) => tx('st.go.' + z + (HM_OK(C, k) ? '' : '.get'));
+  const goHm = (C, z, k) => ot('st.go.' + z + (HM_OK(C, k) ? '' : '.get'));
   const TRAVEL = {
-    1: C => tx('st.go.1') + (C.flag('rival1') ? '' : tx('st.go.1.rival')),
-    2: () => tx('st.go.2'),
+    1: C => ot('st.go.1') + (C.flag('rival1') ? '' : ot('st.go.1.rival')),
+    2: () => ot('st.go.2'),
     3: C => goHm(C, 3, 'cut'),
     4: C => goHm(C, 4, 'smash'),
-    5: () => tx('st.go.5'),
+    5: () => ot('st.go.5'),
     6: C => goHm(C, 6, 'strength'),
-    7: () => tx('st.go.7'),
+    7: () => ot('st.go.7'),
     8: C => goHm(C, 8, 'surf'),
-    9: () => tx('st.go.9'),
+    9: () => ot('st.go.9'),
     10: C => goHm(C, 10, 'dive'),
-    11: () => tx('st.go.11'),
+    11: () => ot('st.go.11'),
     12: C => goHm(C, 12, 'falls'),
   };
   // 各岛的剧情还没做完时：下一步做什么（做完了返回 null）
   const n3 = (C, ks) => ks.filter(k => C.flag(k)).length;
   // 字表里的一步（st.step.<岛>.<名字>）、「在某某岛走走看看」
-  const step = (z, k, p) => tx('st.step.' + z + '.' + k, p);
-  const lookAround = z => tx('st.step.look', { isle: tx('st.isle.' + z) });
+  const step = (z, k, p) => ot('st.step.' + z + '.' + k, p);
+  const lookAround = z => ot('st.step.look', { isle: ot('st.isle.' + z) });
   const STEPS = {
     0: C => !C.flag('mom') ? step(0, 'mom') : !C.flag('starter') ? step(0, 'prof') : null,
     1: C => C.flag('ch1') ? null : !C.flag('z1intro') ? lookAround(1) : step(1, 'hush', { n: n3(C, ['z1h0', 'z1h1']) }),
@@ -855,24 +879,25 @@
   // 返回 { zh, z }：zh 是老名字（首页、HUD、冒险菜单都读它），现在放的是界面语言的那句；text 是同一句
   function objective(C) {
     const E = C.E, S = E.S, b = (S.mon && S.mon.badges) || {}, vis = (S.world && S.world.visited) || {};
-    const out = (zh, z) => { const s = zh.split('{rival}').join(C.rivalInfo().name); return { zh: s, text: s, z }; };
-    if (S.mon && S.mon.box && S.mon.box.length && C.MG.anyAlive && !C.MG.anyAlive()) return out(tx('st.obj.tired'), -1);
+    const out = (zh, z) => { const s = zh.split('{rival}').join(nameC(C.rivalInfo().name)); return { zh: s, text: s, z }; };
+    if (S.mon && S.mon.box && S.mon.box.length && C.MG.anyAlive && !C.MG.anyAlive()) return out(ot('st.obj.tired'), -1);
     let z = 0; while (z < E.W.length && b[z]) z++;
     if (z >= E.W.length) {
-      if (C.flag('champion')) return out(tx('st.obj.champ'), 13);
+      if (C.flag('champion')) return out(ot('st.obj.champ'), 13);
       const k = [1, 2, 3, 4, 5].find(i => !C.flag('lg' + i)) || 5;
-      if (k === 1 && !C.flag('kai_final')) return out(tx('st.obj.brave'), 13);
-      return out(k < 5 ? tx('st.obj.master', { k, name: tx('st.master.' + k), role: tx('st.master.' + k + '.role') }) : tx('st.obj.final', { name: tx('st.master.5') }), 13);
+      if (k === 1 && !C.flag('kai_final')) return out(ot('st.obj.brave'), 13);
+      return out(k < 5 ? ot('st.obj.master', { k, name: ot('st.master.' + k), role: ot('st.master.' + k + '.role') }) : ot('st.obj.final', { name: ot('st.master.5') }), 13);
     }
     if (z > 0 && !vis[z]) return out(TRAVEL[z](C), z);
     const st = STEPS[z] && STEPS[z](C);
     if (st) return out(st, z);
     const g = C.gymNeed ? C.gymNeed(z) : { ok: true };
-    // 岛主的名字：中文界面是「鹦鹉船长 Captain Polly」，别的语言只写英文名
-    const who = I18N ? I18N.label({ zh: E.W[z].boss.name + ' ' + LEADER_EN[z], en: LEADER_EN[z] }) : E.W[z].boss.name + ' ' + LEADER_EN[z];
+    // 岛主的名字：中文界面是「鹦鹉船长 Captain Polly」，别的语言只写英文名（别的课：英文名换成这门课的写法；中文课和中文名一样就写一个）
+    const lw = nameC(LEADER_EN[z]), zw = lw === E.W[z].boss.name ? lw : E.W[z].boss.name + ' ' + lw;
+    const who = I18N ? I18N.label({ zh: zw, en: lw }) : zw;
     // go：点「📍 现在要做」能直接去的地方（2026-11-20）——'unit' 是闯关练习里那个课本单元（wi），离开大地图去学
-    if (!g.ok) return Object.assign(out(tx('st.obj.study', { who, unit: g.unitLabel, done: g.done, need: g.need }), z), g.wi >= 0 ? { go: 'unit', wi: g.wi } : {});
-    return out(tx('st.obj.gym', { who, how: GYM_HOW(z) }), z);
+    if (!g.ok) return Object.assign(out(ot('st.obj.study', { who, unit: g.unitLabel, done: g.done, need: g.need }), z), g.wi >= 0 ? { go: 'unit', wi: g.wi } : {});
+    return out(ot('st.obj.gym', { who, how: GYM_HOW(z) }), z);
   }
 
   // ---------- 传说的线索：四只神兽是学习的里程碑（七上全过、聊天完成 30 次、连续打卡 30 天、不看字说对 300 句）----------

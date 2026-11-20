@@ -246,6 +246,15 @@ function linesJson(fileArg) {
         if (lower(t.replace(/\{[a-z0-9]+\}/g, '')) === lower(bareEn) && /[a-z]{2,}/.test(bareEn)) (/\s/.test(bareEn) ? E : Wn)(w, '和英语原文一样' + (/\s/.test(bareEn) ? '，没翻' : '（一个词，确认一下是不是本来就一样）') + '：' + t);
       }
     }
+    // 这句自己的意思（可选，SPEC §8.2）：译文改写过、原来的意思对不上了才写；只给整句（模板的意思游戏里跟着空换）
+    for (const k of ['zh', 'en']) {
+      if (x[k] == null) continue;
+      if (holes.length) { E(w, k + '（这句的意思）只给整句写，模板不写'); continue; }
+      if (!str(x[k])) { E(w, k + '（这句的意思）要写成一句话'); continue; }
+      if (k === 'zh' && !HAN.test(x[k])) E(w, 'zh 要写中文：' + x[k]);
+      if (k === 'en' && HAN.test(x[k])) E(w, 'en 里不能有中文：' + x[k]);
+      for (const p of new Set(vars)) if (PHS(x[k]).filter(g => g === p).length !== vars.filter(g => g === p).length) E(w, k + ' 里的 ' + p + ' 要和原文一样多：' + x[k]);
+    }
     if (!kana) { if (x.seg != null || x.r != null) Wn(w, '西语不用写 seg / r'); return; }
     if (!Array.isArray(x.seg) || !x.seg.every(str)) { E(w, '缺 seg（把 t 切成词块，§1）'); return; }
     if (x.seg.join('') !== x.t) E(w, 'seg 接起来和 t 不一样：' + x.seg.join('|') + ' ≠ ' + x.t);

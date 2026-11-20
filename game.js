@@ -178,6 +178,8 @@
       'g.unit.head': '📗 课本单元 · 适用于沪教版词汇', 'g.unit.open': '这个学年的课本单元（{list}）', 'g.unit.sep': '、', 'g.unit.all': '七年级到九年级六册书',
       'g.unit.what': '：每个单元要学的单词和短语，加上按单元的话题和语法自己编写的句子和对话（不是课文）。',
       'g.unit.cur': '正在学：<b>{u}</b>', 'g.unit.guess': '（按日期猜的）', 'g.unit.change': '改',
+      // 别的课的单元号（英语课照课本写 Unit 3，不走这个键）
+      'g.unit.no': '第 {n} 单元', 'g.ev.bookat.c': '📍 现在学 {b} 第 {n} 单元，冒险里会多出它的题', 'g.ev.gram.h.c': '第 {n} 单元语法：{t}', 'g.ev.gram.h0.c': '第 {n} 单元语法',
       'g.unit.old': '{b}的新教材还没出版（预计 2027 年春季），现在先用旧版教材的单元，新书出来后会换掉。',
       'g.det.count': ' 共 {n} 题，3 颗心。', 'g.det.best': '最好成绩：', 'g.det.scene': '🎬 先看对话动画', 'g.det.pre': '📖 先预习一下（点一句就能听）',
       'g.det.later': '再想想', 'g.det.go': '开始闯关',
@@ -642,6 +644,11 @@
       'g.mic.h.c': '要用麦克风才能开口说{lang}', 'g.mic.p.c': '<p>回声岛要<b>听你说的{lang}</b>，才能给你打分。声音只用来打分，不会存下来。</p>', 'g.mic.allok.c': '全都没问题，可以开口说{lang}了！',
       'g.set.mix.c': '冒险里的{lang}题',
       'g.mic.chk.p.c': '<p>回声岛要听你说{lang}。点话筒，大声说：<b class="chk-say">{word}</b></p>', 'g.mic.listen.c': '正在听……大声说 {word}',
+      // 夸奖里的英语词（Perfect / Good / Great!）：别的课换成中文
+      'g.fb.perfect.c': '完美！每个词都说对了', 'g.fb.good.c': '不错！说得很好', 'g.th.perfect.c': '<b>{n} 分</b> 完美！', 'g.th.good.c': '<b>{n} 分</b> 不错！',
+      'g.praise.c': ['太棒了！', '真棒！', '很好！', '答对了！', '好极了！', '做得好！', '厉害！'],
+      'g.mic.chk.hint.c': '点话筒，说 {word}', 'g.mic.quiet.c': '没听到声音：靠近一点、大声说 {word}，再点一次话筒',
+      'g.mic.covered.c': '没听到声音：麦克风是不是被挡住了？靠近一点、大声说 {word}，再点一次话筒', 'g.set.mic.btn.c': '检查一下（说一句 {word}）',
       'g.intro.c.p1': '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用{lang}念咒语攻击，听懂对手的{lang}来防御。收服新怪兽、升级进化，打败 13 个区域的岛主拿徽章。</p>',
       'g.intro.c.p2': '<p><b>📚 闯关练习</b>：📗 课程单元和 13 座话题小岛。每通关一关送回声球，用来收服怪兽。</p>',
       'g.intro.c.p3': '<p><b>🗣️ 和岛民聊天</b>：这门语言的 AI 聊天还在做，做好了会在这里打开。剧情里的对话先用界面的语言显示。</p>',
@@ -786,6 +793,7 @@
       'g.unit.head': '📗 Textbook units · for Hujiao-edition vocabulary', 'g.unit.open': 'Textbook units for this school year ({list})', 'g.unit.sep': ', ', 'g.unit.all': 'Six books, from Year 7 to Year 9',
       'g.unit.what': ': the words and phrases to learn in each unit, plus our own sentences and dialogues written for its topic and grammar (not the textbook texts).',
       'g.unit.cur': 'Learning now: <b>{u}</b>', 'g.unit.guess': ' (guessed from the date)', 'g.unit.change': 'Change',
+      'g.unit.no': 'Unit {n}', 'g.ev.bookat.c': '📍 Now studying {b} Unit {n}. Its questions will also show up in Monster Adventure.', 'g.ev.gram.h.c': 'Unit {n} grammar: {t}', 'g.ev.gram.h0.c': 'Unit {n} grammar',
       'g.unit.old': 'The new {b} textbook is not out yet (expected in spring 2027). For now these are the units of the old textbook. They will change when the new book comes out.',
       'g.det.count': { one: ' {n} question, 3 hearts.', other: ' {n} questions, 3 hearts.' }, 'g.det.best': 'Best: ', 'g.det.scene': '🎬 Watch the Theatre first', 'g.det.pre': '📖 Preview first (tap a line to hear it)',
       'g.det.later': 'Not now', 'g.det.go': 'Start',
@@ -1250,6 +1258,10 @@
       'g.mic.h.c': 'The microphone is needed to speak {lang}', 'g.mic.p.c': '<p>Echo Island needs to <b>hear your {lang}</b> to score it. Your voice is only used for scoring and is not saved.</p>', 'g.mic.allok.c': 'All good! You can speak {lang} now!',
       'g.set.mix.c': '{lang} questions in the adventure',
       'g.mic.chk.p.c': '<p>Echo Island needs to hear you speak {lang}. Tap the mic and say aloud: <b class="chk-say">{word}</b></p>', 'g.mic.listen.c': 'Listening… say {word} loudly!',
+      'g.fb.perfect.c': 'Perfect! Every word was right', 'g.fb.good.c': 'Good! Well said', 'g.th.perfect.c': '<b>{n} points</b> Perfect!', 'g.th.good.c': '<b>{n} points</b> Good!',
+      'g.praise.c': ['Great!', 'Nice!', 'Excellent!', 'Well done!', 'Super!', 'Correct!', 'Awesome!'],
+      'g.mic.chk.hint.c': 'Tap the mic and say {word}', 'g.mic.quiet.c': 'No sound heard. Move closer, say {word} loudly and tap the mic again',
+      'g.mic.covered.c': 'No sound heard. Is the microphone covered? Move closer, say {word} loudly and tap the mic again', 'g.set.mic.btn.c': 'Check now (say "{word}")',
       'g.intro.c.p1': '<p><b>🐲 Monster Adventure</b>: pick a monster as your partner. Say spells in {lang} to attack, and understand your rival\'s {lang} to defend. Catch new monsters, grow them up, and beat the Isle Masters of 13 areas to win badges.</p>',
       'g.intro.c.p2': '<p><b>📚 Practice</b>: 📗 Course units and 13 topic islands. Each level you clear gives you Echo Balls to catch monsters.</p>',
       'g.intro.c.p3': '<p><b>🗣️ Chat with islanders</b>: AI chat in this language is still being built; it will open here when it is ready. Story dialogues are shown in your interface language for now.</p>',
@@ -1375,9 +1387,9 @@
   const TYPE_LABEL = lazyMap('g.type.', ['lw', 'ls', 'lm', 'lr', 'lo', 'sr_w', 'sr_s', 'sr_d', 'sp', 'bt']);
   const TYPE_TAG = lazyMap('g.tag.', ['lw', 'ls', 'lm', 'lr', 'lo', 'sr_w', 'sr_s', 'sr_d', 'sp', 'bt']);
   const SPEAK_TYPES = ['sr_w', 'sr_s', 'sr_d', 'sp'];
-  // 表扬的话：数组的每一格是 getter（g.praise 在两门语言里一样长），pick(PRAISE) 照旧能用
+  // 表扬的话：数组的每一格是 getter（g.praise 在两门语言里一样长），pick(PRAISE) 照旧能用；别的课用 g.praise.c（中文界面里没有英语的夸奖）
   const PRAISE = [];
-  for (let i = 0; i < 7; i++) Object.defineProperty(PRAISE, i, { get: () => { const a = I18N ? I18N.raw('g.praise') : null; return a ? a[i] : ''; }, enumerable: true, configurable: true });
+  for (let i = 0; i < 7; i++) Object.defineProperty(PRAISE, i, { get: () => { const a = I18N ? I18N.raw(LANG ? 'g.praise.c' : 'g.praise') : null; return a ? a[i] : ''; }, enumerable: true, configurable: true });
 
   const TITLES = [1, 3, 5, 7, 10, 13, 16, 20, 25, 30].map(n => lazy([n, ''], 1, 'g.title.' + n));
   const PETS = [['🐣', 0, 'chick'], ['🐱', 60, 'cat'], ['🐶', 60, 'dog'], ['🐰', 80, 'rabbit'], ['🐸', 80, 'frog'], ['🦊', 120, 'fox'], ['🐼', 150, 'panda'], ['🐧', 150, 'penguin'], ['🦉', 200, 'owl'], ['🐬', 250, 'dolphin'], ['🦄', 400, 'unicorn'], ['🐲', 600, 'dragon']]
@@ -2350,7 +2362,7 @@
     RT.chk = { mic: '', net: navigator.onLine === false ? 'bad' : '', key: nokey ? 'bad' : '', keyWhy: nokey ? (cloudOn() ? tr('ac.chk.nokey') : tr('g.mic.nokey')) : '' };
     openModal('<div class="big">🩺</div><h2>' + tr('g.mic.chk.h') + '</h2>' + trh('g.mic.chk.p', LANG ? { word: chkWord() } : undefined) +
       '<ul class="chk" id="chk">' + chkRows() + '</ul>' +
-      '<div class="mic-wrap"><button class="mic" id="chk-mic" data-act="chkMic" aria-label="' + esc(tr('w.mic.aria')) + '">' + MIC + '</button><div class="mic-hint" id="chk-hint">' + tr('g.mic.chk.hint') + '</div><div class="heard" id="chk-heard"></div></div>' +
+      '<div class="mic-wrap"><button class="mic" id="chk-mic" data-act="chkMic" aria-label="' + esc(tr('w.mic.aria')) + '">' + MIC + '</button><div class="mic-hint" id="chk-hint">' + tr('g.mic.chk.hint', { word: chkWord() }) + '</div><div class="heard" id="chk-heard"></div></div>' +
       '<div class="row"><button class="btn ghost" data-act="chkSkip">' + tr('w.skip') + '</button><button class="btn" data-act="chkDone" id="chk-done" hidden>' + tr('g.mic.chk.go') + '</button></div>');
   }
   // 没有 AI 密钥时只能测麦克风：开 2.5 秒，看声音够不够大
@@ -2389,7 +2401,7 @@
       m.classList.remove('on'); m.innerHTML = MIC;
       if (r.err) { c.mic = 'bad'; upd(); if (window.ECHO_APP) micBlocked(r.why); else hint.textContent = tr('g.mic.nobrowser'); return; }
       c.mic = r.loud ? 'ok' : 'quiet'; upd();
-      hint.textContent = r.loud ? tr(c.key === 'bad' ? 'g.mic.ok.key' : 'g.mic.ok') : tr('g.mic.quiet');
+      hint.textContent = r.loud ? tr(c.key === 'bad' ? 'g.mic.ok.key' : 'g.mic.ok') : tr('g.mic.quiet', { word: chkWord() });
       if (r.loud) { S.micCheck = dayStr(); save(); const d = $('#chk-done'); if (d) d.hidden = false; }
       return;
     }
@@ -2412,7 +2424,7 @@
     else if (res.fail === 'unheard') c.mic = 'quiet';
     heard.textContent = '';   // 没认出来：把「识别中……」收掉（以前失败了它还挂在话筒下面）
     upd();
-    hint.textContent = res.fail === 'unheard' ? tr('g.mic.covered') : failHint(res);
+    hint.textContent = res.fail === 'unheard' ? tr('g.mic.covered', { word: chkWord() }) : failHint(res);
   }
 
   const ONES = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
@@ -3161,7 +3173,7 @@
   function placePlan(lv) {
     if (!window.EchoLevels || !BK.length) return null;
     const a = EchoLevels.startAt(S.place.lang, lv, BK, unitOpen), u = BK[a.i];
-    return u ? { i: a.i, fit: a.fit, free: a.i, unit: u.bshort + ' Unit ' + u.n + ' · ' + u.en, top: EchoLevels.topLevel(S.place.lang, BK) } : null;
+    return u ? { i: a.i, fit: a.fit, free: a.i, unit: u.bshort + ' ' + unitNo(u.n) + ' · ' + u.en, top: EchoLevels.topLevel(S.place.lang, BK) } : null;
   }
   // 按现在的级别把课程排好。why：'test' 刚测完——有进度的老存档不往回挪（按课本已经学到后面的，「正在学」留在那儿，只是前面的标成已免修）；
   // 'adjust' 自己调了级别、'track' 换回「按能力」：就按这一级的起点来
@@ -3217,7 +3229,7 @@
     // 单元的中文标题、语法讲解是内容（gloss）：界面语言里没有就不显示（语法弹窗整段是中文，按钮也收起来）
     // 别的课：单元的英文标题在 x.en、语法的英文在 grammar.en（course.json），意思按 glossC 取
     const zt = LANG ? glossC({ zh: u.zh, en: u.x && u.x.en }) : gloss({ zh: u.zh }), gt = LANG ? glossC({ zh: u.grammar.title, en: u.grammar.en && u.grammar.en.title }) : gloss({ zh: u.grammar.title });
-    return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · Unit ' + u.n + (now ? trh('g.unit.now') : '') + free + '</div><h2>' + esc(u.en) + (zt != null ? ' <small>' + esc(zt) + '</small>' : '') + '</h2><p class="w-en">' + esc(u.key) + '</p></div>' +
+    return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · ' + esc(unitNo(u.n)) + (now ? trh('g.unit.now') : '') + free + '</div><h2>' + esc(u.en) + (zt != null ? ' <small>' + esc(zt) + '</small>' : '') + '</h2><p class="w-en">' + esc(u.key) + '</p></div>' +
       '<span class="w-stars">★ ' + tot + '/21</span></div>' +
       '<div class="u-bar">' + (gt != null ? '<button class="link" data-act="bookGram" data-w="' + wi + '">' + trh('g.unit.gram', { t: gt }) + '</button>' : '') +
       (unitTalk(u) ? '<button class="btn small sun" data-act="talk_open" data-npc="' + unitTalk(u).id + '">' + trh('g.unit.talk', { name: unitTalk(u).name }) + '</button>' : '') +
@@ -3238,7 +3250,7 @@
     // 别的课：叫「课程单元」，没有「适用于沪教版词汇」、没有「按日期猜的」（ENGINE.md §4）
     return '<div class="book-head"><b>' + trh(LANG ? 'g.unit.head.c' : 'g.unit.head') + '</b>' +
       '<p>' + (LANG ? trh('g.unit.all.c') : (BOOK_OPEN ? trh('g.unit.open', { list: BOOKS.filter(b => bookOpen(b.id)).map(bookShort).join(tr('g.unit.sep')) }) : trh('g.unit.all')) + trh('g.unit.what')) + '</p>' +
-      '<p>' + trh('g.unit.cur', { u: cu.bshort + ' Unit ' + cu.n + ' ' + cu.en }) + (S.book.at >= 0 || LANG ? '' : trh('g.unit.guess')) + ' <button class="link" data-act="bookPick">' + trh('g.unit.change') + '</button></p>' + chips +
+      '<p>' + trh('g.unit.cur', { u: cu.bshort + ' ' + unitNo(cu.n) + ' ' + cu.en }) + (S.book.at >= 0 || LANG ? '' : trh('g.unit.guess')) + ' <button class="link" data-act="bookPick">' + trh('g.unit.change') + '</button></p>' + chips +
       (vb.old ? '<p class="tip">' + trh('g.unit.old', { b: bookShort(vb) }) + '</p>' : '') + '</div>' +
       BK.map((x, j) => x.book === vb.id ? worldHTML(x, NB + j, bookNode()) : '').join('');
   }
@@ -4193,7 +4205,9 @@
       ACH.map(([id, e, name, desc]) => '<div class="ach ' + (S.ach[id] ? '' : 'no') + '"><span class="ae">' + e + '</span><div><b>' + name + '</b><small>' + desc + '</small></div></div>').join('') +
       '<button class="btn ghost wide" data-act="close">' + tr('g.close') + '</button>');
   }
-  const unitTxt = u => (u ? lbl({ zh: u.name, en: u.bshort + ' Unit ' + u.n + ' ' + u.en }) : '');
+  // 单元号：英语课照课本写「Unit 3」；别的课按界面语言（中文界面「第 3 单元」，g.unit.no）
+  function unitNo(n) { return LANG ? tr('g.unit.no', { n }) : 'Unit ' + n; }
+  const unitTxt = u => (u ? lbl({ zh: u.name, en: u.bshort + ' ' + unitNo(u.n) + ' ' + u.en }) : '');
   function envHTML(inSet) {   // inSet：在设置页里（上面已经有「请家长粘贴 AI 密钥」的提示）
     if (window.ECHO_APP) {   // 安卓 APK：不用讲浏览器的事
       return '<div class="env">' + tr('g.set.env.app') + '<br>' +
@@ -4215,7 +4229,7 @@
     const noKey = cloudOn() ? (ACC() ? ACC().settingsRow() : '') : aiNoKey() ? '<div class="set-warn"><b>' + tr('g.set.nokey.h') + '</b><small>' + tr('g.set.nokey.d') + '</small><button class="btn small" data-act="talk_cfg">' + tr('g.set.ai.paste') + '</button></div>' : '';
     openModal('<h2>' + tr('g.set.h') + '</h2>' + noKey + envHTML(true) +
       '<h3 class="set-h">' + tr('g.set.mine') + '</h3>' +
-      (speakMode() === 'sr' ? '<div class="set"><label>' + tr('g.set.mic') + '</label><div class="say-row"><button class="btn small ghost" data-act="micCheck">' + tr('g.set.mic.btn') + '</button></div></div>' : '') +
+      (speakMode() === 'sr' ? '<div class="set"><label>' + tr('g.set.mic') + '</label><div class="say-row"><button class="btn small ghost" data-act="micCheck">' + tr('g.set.mic.btn', { word: chkWord() }) + '</button></div></div>' : '') +
       '<div class="set"><label for="set-rate">' + tr('g.set.rate') + ' <span id="rate-v">' + st.rate.toFixed(2) + '</span></label><input type="range" id="set-rate" min="0.6" max="1.1" step="0.05" value="' + st.rate + '"><div class="say-row"><button class="btn small ghost" data-act="testVoice">' + tr('g.set.try') + '</button></div></div>' +
       '<div class="set"><label>' + tr('g.set.tts') + '</label><div class="seg">' +
       ['auto', 'device', 'online'].map(m => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + tr('g.set.tts.' + m) + '</button>').join('') +
@@ -4816,6 +4830,11 @@
     if (!x.r || !rubyOn()) return esc(x.t);
     return esc(x.pre) + rubyPiece(x.t.slice(x.pre.length), x.r);
   }
+  // 对手（Leo / Mia）是游戏里的人物，不是起的名字：这门课的名字牌怎么写（terms.person），台词里的 {rival} 就怎么写（读音 r 照名字牌的）
+  const rivalTerm = () => termRaw('person', RNAME());
+  const rivalIn = (s, r) => { const x = typeof s === 'string' ? rivalTerm() : null; return x ? s.split('{rival}').join(r ? x.r || x.t : x.t) : s; };
+  // 台词意思里照留的英文：主角的名字、起的昵称、这门课不翻的怪兽名（西语照英文写）
+  const glossKeep = v => v === PNAME() || ((S.mon && S.mon.box) || []).some(m => m && m.nick === v) || (isMonName(v) && !termRaw('monster', v));
   function lineOf(en, o) {
     if (!LANG || !LTAB || en == null || en === '') return null;
     o = o || {};
@@ -4824,16 +4843,73 @@
     let res = EchoPacks._.lineFind(LTAB, en, opt);
     if (!res) { const u = unfillNames(en); if (u !== en) res = EchoPacks._.lineFind(LTAB, u, opt); }
     if (!res) return null;
-    const f = o.fill || fillNames;
-    const t = f(res.t), seg = Array.isArray(res.seg) ? res.seg.map(f) : null, r = Array.isArray(res.r) ? res.r.map(f) : null, enF = f(en);
-    let zh = o.zh != null ? f(String(o.zh)) : null;
-    if (zh) for (const [a, b] of (o.swap || []).concat([[enF, t]], res.sv || [])) if (a && b && a !== b) zh = zh.split(a).join(b);
-    const x = { en: courseWord(enF, 'en') };
+    const f = o.fill || fillNames, fT = s => f(rivalIn(s)), fR = s => f(rivalIn(s, true));
+    const t = fT(res.t), seg = Array.isArray(res.seg) ? res.seg.map(fT) : null, r = Array.isArray(res.r) ? res.r.map(fR) : null, enF = f(en);
+    // 中文意思：翻译表给了这句自己的意思（译文改写过，SPEC §8.2 的 zh）就用它；不然用原来的中文意思，里面夹着的英语换成译文——
+    // 整句、模板的空、英语原文和译文里一一对应的引号（“What time do you get up?” → “¿A qué hora te levantas?”）、名字（termOf）；
+    // 换完还剩英语单词的（「thirteen 和 thirty 听起来不一样」：是讲英语的话）这句意思靠不住，不显示（packs.js 的 glossFix）
+    let zh = typeof res.zh === 'string' && res.zh ? fT(res.zh) : o.zh != null ? f(String(o.zh)) : null;
+    if (zh && !res.zh) {
+      const pairs = (o.swap || []).concat([[enF, t]], res.sv || []);
+      const qa = EchoPacks._.quotes(enF), qb = EchoPacks._.quotes(t);
+      if (qa.length && qa.length === qb.length) qa.forEach((q, i) => pairs.push([q, qb[i]]));
+      zh = EchoPacks._.glossFix(zh, pairs, { term: hintTerm, keep: glossKeep });
+    }
+    const x = { en: courseWord(typeof res.en === 'string' && res.en ? f(res.en) : enF, 'en') };
     if (seg && r && seg.length === r.length && seg.join('') === t) { x.seg = seg; x.r = r; }
     entryAdd(t, x, zh ? courseWord(zh, 'zh') : '');
     const ui = I18N ? I18N.lang() : 'zh';
     return { t, seg: x.seg || null, r: x.r || null, en: enF, zh, mean: glossC({ zh: zh ? courseWord(zh, 'zh') : '', en: x.en }) || (ui === 'zh' ? null : x.en) };
   }
+  // ---------- 界面提示里夹着的英语（「📍 现在要做」、挑战馆的玩法、提示条……ENGINE.md §5 第三批）----------
+  // hintTx(键, 参数)：英语课就是 I18N.t(键, 参数)，一个字不变。别的课：句子里引着的英语原句换成这门课的那一句（整句表、模板、
+  // 剧情台词里引着的同一句），名字换成这门课的写法（人、地方、水晶、回声技能、道具、怪兽、招式），中文界面里不是名字的英文拿掉
+  // （packs.js 的 hintFix）；引着的那句没有译文：有「键.q」就用它（不引原句的说法），没有就连引号一起拿掉——不引英语。
+  // 参数原样放进去（要改的参数调用的人自己先过 hintTx / termOf）
+  const HINT_CATS = ['person', 'place', 'crystal', 'skill', 'item', 'monster', 'move'];
+  function hintTerm(en) {
+    if (!LTAB) return null;
+    for (const c of HINT_CATS) {
+      const M = LTAB.M[c], v = M && Object.prototype.hasOwnProperty.call(M, en) ? M[en] : null, t = typeof v === 'string' ? v : v && v.t;
+      if (t) return t;
+    }
+    // 这门课不翻的怪兽名（西语照英文写，SPEC §8.2）：是名字，照留
+    return isMonName(en) ? en : null;
+  }
+  function hintLine(q) {
+    if (!LTAB) return null;
+    q = String(q).trim();
+    const opt = { isMon: isMonName, content: v => entryOf(v) }, qm = EchoPacks._.quoteMap(LTAB), u = unfillNames(q);
+    const res = EchoPacks._.lineFind(LTAB, q, opt) || (u !== q ? EchoPacks._.lineFind(LTAB, u, opt) : null);
+    const t = res ? res.t : qm.get(q) || qm.get(u);
+    return t ? fillNames(rivalIn(t)) : null;
+  }
+  function hintNames() {
+    if (!LTAB) return null;
+    if (LTAB.hn !== undefined) return LTAB.hn;
+    const pairs = [];
+    for (const c of ['person', 'place', 'crystal', 'skill', 'monster']) for (const [a, v] of Object.entries(LTAB.M[c] || {})) pairs.push([a, typeof v === 'string' ? v : v && v.t]);
+    return (LTAB.hn = EchoPacks._.namesRe(pairs));
+  }
+  const hintFixC = s => EchoPacks._.hintFix(s, { ui: I18N ? I18N.lang() : 'zh', line: hintLine, term: hintTerm, names: hintNames(), keep: glossKeep });
+  // 别的课：一句中文说明（剧情页面的 zh）里夹着的英语换成译文——pairs 是 [[英语, 译文]]，名字换成这门课的写法；
+  // 换完还剩英语单词：null（调用的人换一句不引英语的说法）。英语课：原样
+  const glossText = (zh, pairs) => (LANG && window.EchoPacks && EchoPacks._.glossFix ? EchoPacks._.glossFix(zh, pairs || [], { term: hintTerm, keep: glossKeep }) : zh);
+  function hintTx(key, p) {
+    if (!I18N) return key;
+    if (!LANG || !(window.EchoPacks && EchoPacks._ && EchoPacks._.hintFix)) return I18N.t(key, p);
+    const vals = [], tp = { lang: I18N.t('pk.name.' + COURSE) };   // {lang}：「键.q」的说法里用（在学的语言名）
+    for (const k of Object.keys(p || {})) {
+      const v = p[k];
+      if (typeof v === 'number') tp[k] = v;
+      else { tp[k] = '' + vals.length + ''; vals.push(v == null ? '' : String(v)); }
+    }
+    let r = hintFixC(I18N.t(key, tp));
+    if (r.miss.length && I18N.has(key + '.q')) r = hintFixC(I18N.t(key + '.q', tp));
+    return r.s.replace(/(\d+)/g, (m, i) => vals[+i]);
+  }
+  // 名字（人）在这门课里怎么写；对手的名字也走这里（英语课：英文原样）
+  const personOf = en => termOf('person', en);
   const hashOf = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h; };
   // 代码里写死的英语，凡是「要学的人开口说的 / 要选的」（剧情的 speak / answer 页、回声技能的指令、收服念的句子、唤醒、选伙伴、学招、起名、和怪兽说话）：
   // 别的课换成这座岛（小镇）课程里的一句（kind 'sent'）或一段对话（'dlg'）——按英语原文的哈希固定挑（同一个地方每次问同一句），题面给它的意思。
@@ -4882,6 +4958,10 @@
       lineOf, courseWord,
       // 画面上的名字（SPEC §8.1）：termOf(类别, 英文) 文字、termHTML(类别, 英文) 带读音的 HTML；英语课 / 没翻：英文
       termOf, termHTML,
+      // 界面提示（ENGINE.md §5 第三批）：hintTx(键, 参数) 引着的英语原句、夹着的英文名字换成这门课的（英语课就是 I18N.t）；personOf(英文名) 人名
+      hintTx, personOf, glossText,
+      // 单元号：英语课「Unit 3」，别的课按界面语言（world.js 挑战馆的课本门槛、「📍 现在要做」用）
+      unitNo,
       // courseList() 现在能学的课、courseGo(语言) 换课（新存档、重新打开页面）：packs.js 的「学这门」、placement.js 的「选语言」用
       courseList, courseGo,
       // 2026-11-19 按能力安排（placement.js / levels.js）：unitSpan() 挑战馆的课本门槛从哪个单元数到哪个单元（world.js gymNeed）、
@@ -5489,7 +5569,7 @@
       '<div class="rp-tiles">' + tile(Math.max(0, sum('levels') - sum('revSess')), trh('g.rp.t.levels')) + tile(sum('spoken'), trh('g.rp.t.spoken')) + tile(sum('review'), trh('g.rp.t.review')) +
       tile(chats.length, trh('g.rp.t.chat', { m: chatMin }) + (avg ? ' · ' + avg + '★' : '')) + tile(sum('fresh'), trh('g.rp.t.fresh')) + tile(mastered, trh('g.rp.t.mastered')) + '</div>' +
       habit +
-      (cu ? trh('g.rp.cu', { u: cu.bshort + ' Unit ' + cu.n + ' ' + cu.en, s: ustars, n: sum('wrongs') }) : '') +
+      (cu ? trh('g.rp.cu', { u: cu.bshort + ' ' + unitNo(cu.n) + ' ' + cu.en, s: ustars, n: sum('wrongs') }) : '') +
       '<div class="rp-more">' +
       (top ? '<h3>' + trh('g.rp.top') + '</h3><ul class="rp-list">' + top + '</ul>' : '') +
       (tips.length ? '<h3>' + trh('g.rp.tips') + '</h3><ul class="rp-list">' + tips.map(t => '<li><s>' + esc(t.said) + '</s> → <b>' + esc(t.better) + '</b></li>').join('') + '</ul>' : '') +
@@ -5615,7 +5695,7 @@
   }
 
   // 测试用：课本出题来源、每日复习
-  window.EchoGame = { lineOf: (en, o) => lineOf(en, o), entryOf: t => entryOf(t), termOf: (c, en) => termOf(c, en), termHTML: (c, en) => termHTML(c, en), goUnit: wi => goUnit(wi), src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
+  window.EchoGame = { lineOf: (en, o) => lineOf(en, o), entryOf: t => entryOf(t), termOf: (c, en) => termOf(c, en), termHTML: (c, en) => termHTML(c, en), hintTx: (k, p) => hintTx(k, p), personOf: en => personOf(en),goUnit: wi => goUnit(wi), src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
     // 走路只记位置、整份存档晚一点才存（见 savePos）：测试 / 工具要直接读 localStorage 里的位置、步数之前，先 flush() 一下
     flush: () => flushWalk() };
   // 测试用：打分（tests/review.test.js）、复习排期引擎、直接出指定的题（[题型, 编号, 第几条] 的列表）

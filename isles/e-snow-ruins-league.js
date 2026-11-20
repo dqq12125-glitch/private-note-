@@ -17,13 +17,13 @@
     zh: {
       'ie.note.weather': '📻 按天气预报的顺序打开天气开关 · 已打开 <b>{n}/3</b>（听不清就去问收音机）',
       // 别的课（.c）：按钮上的英语词换成这门语言的（{w}，台词翻译表的 terms.ui）
-      'ie.opt.on.c': ' {w} 打开', 'ie.opt.notnow.c': '{w} 先不',
+      'ie.opt.on.c': ' {w} 打开', 'ie.opt.notnow.c': '{w} 先不', 'ie.note.cards.c': '🃏 踩在牌上翻开它：一张{lang}、一张中文，配成一对',
       'ie.opt.on': ' Turn it on! 打开', 'ie.opt.notnow': 'Not now 先不',
       'ie.toast.thanks': '💠 金回声球 +3（默先生还回来的谢礼）', 'ie.note.cards': '🃏 踩在牌上翻开它：一张英文、一张中文，配成一对',
     },
     en: {
       'ie.note.weather': '📻 Turn on the weather switches in the order of the forecast · On: <b>{n}/3</b> (If you cannot hear it, ask the radio)',
-      'ie.opt.on.c': ' {w}', 'ie.opt.notnow.c': '{w}',
+      'ie.opt.on.c': ' {w}', 'ie.opt.notnow.c': '{w}', 'ie.note.cards.c': '🃏 Step on a card to flip it. Match each {lang} word with its picture',
       'ie.opt.on': ' Turn it on!', 'ie.opt.notnow': 'Not now',
       'ie.toast.thanks': '💠 Gold Echo Ball +3 (a thank-you from Mr. Mute)', 'ie.note.cards': '🃏 Step on a card to flip it. Match each English word with its picture',
     },

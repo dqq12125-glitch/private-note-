@@ -99,13 +99,15 @@ function buildLines(lang, file) {
   const PK = require(path.join(ROOT, 'packs.js'))._;
   const kana = lang !== 'es';
   // 译文：西语写成字符串（没有 g 的话），日语 / 中文 { t, seg, r }
+  // 整句可以另写自己的意思 zh / en（译文改写过、原来的意思对不上时，SPEC §8.2），原样带上
   const out = x => {
     const v = typeof x === 'string' ? { t: x } : x;
-    if (!kana) return v.g ? { t: v.t, g: v.g } : v.t;
+    const gl = o => { for (const k of ['zh', 'en']) if (typeof v[k] === 'string' && v[k]) o[k] = v[k]; return o; };
+    if (!kana) return v.g || v.zh || v.en ? gl(v.g ? { t: v.t, g: v.g } : { t: v.t }) : v.t;
     const o = { t: v.t };
     if (Array.isArray(v.seg)) o.seg = v.seg;
     if (v.r != null) o.r = v.r;
-    return o;
+    return gl(o);
   };
   const LINES = {}, early = [], late = [];
   for (const s of SRC.lines) {
@@ -118,7 +120,12 @@ function buildLines(lang, file) {
   for (const [ty, arr] of Object.entries(SRC.terms)) {
     termEn[ty] = arr;
     const m = J.terms && J.terms[ty] || {};
-    for (const x of arr) if (Object.prototype.hasOwnProperty.call(m, x.id)) (TERMS[ty] = TERMS[ty] || {})[x.en] = out(m[x.id]);
+    for (const x of arr) {
+      if (Object.prototype.hasOwnProperty.call(m, x.id)) (TERMS[ty] = TERMS[ty] || {})[x.en] = out(m[x.id]);
+      // 西语的名字牌：和英文一样的人名（Kai、Amy、Orion……）不写（lines-glossary.md），这里照英文填上——
+      // 游戏才知道它是人名（界面提示里夹着的「小凯 Kai」留着，不当成英语单词拿掉，ENGINE.md §5）
+      else if (ty === 'person' && !kana) (TERMS[ty] = TERMS[ty] || {})[x.en] = x.en;
+    }
   }
   const lit = en => en.replace(/\{[a-z0-9]+\}/g, '').length;
   const LINES_T = SRC.templates.filter(s => J.templates && Object.prototype.hasOwnProperty.call(J.templates, s.id)).map(s => {

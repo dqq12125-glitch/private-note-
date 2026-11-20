@@ -680,7 +680,7 @@
       K('O-okay! Echo Ball, fly!', '好、好的！回声球，飞吧！', { onShow: () => { E.SFX.hit(); } }),
     ]);
     C.remove(wild);
-    E.SFX.win(); E.toast(tx('ia.toast.kai'), 'gold');
+    E.SFX.win(); E.toast(E.hintTx ? E.hintTx('ia.toast.kai') : tx('ia.toast.kai'), 'gold');   // 别的课：怪兽名换成这门课的写法
     await C.talk([
       K('I did it! I caught Owlet! It came to me because I spoke clearly!', '我做到了！我收服了 Owlet！因为我说得很清楚，它才过来的！'),
       K('Thank you, {name}. I want to be strong, like you.', '谢谢你，{name}。我想变得像你一样强。'),

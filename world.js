@@ -190,7 +190,14 @@
   // 小镇 / 岛主的名字：中文界面用中文名；别的语言用英文（小镇 = 这座岛小镇地图的英文名 Crayon Island……，和剧情台词里说的一样；
   // 地图没写英文名才用 data.js 的 en 去掉标点 + Town。岛主的英文名在他的开场白里：I'm Captain Polly.）
   const townName = w => { const z = E && E.W ? E.W.indexOf(w) : -1, m = z >= 0 && EM ? EM.get('t' + z) : null; return L({ zh: w.name, en: (m && m.en) || w.en.replace(/[!?]/g, '') + ' Town' }); };
-  const bossName = b => L({ zh: b.name, en: b.en || (/\bI(?:'m| am) ((?:the )?[A-Z][\w-]*(?: [A-Z][\w-]*)*)/.exec(b.hello || '') || [])[1] });
+  // 别的课：地名这门课怎么写（台词翻译表的 terms.place）；英语课、没翻（或和英文一样）：null
+  const placeC = en => { if (!E || !E.lang || !en) return null; const t = T_('place', en); return t && t !== en ? t : null; };
+  // 别的课的地名牌：这门课的地名做大字（日语 / 中文标读音），界面语言的名字做小字（和英语课「英文 + 中文」一样的排法）。没翻：null
+  const placeTag = (en, ui) => (placeC(en) ? '<span class="pl-c"><b>' + TH_('place', en) + '</b><small>' + E.esc(ui) + '</small></span>' : null);
+  // 第 z 座岛（小镇地图）的地名牌：飞行菜单、首页「飞去哪」
+  const townTag = z => { const m = EM && E && E.W[z] ? EM.get('t' + z) : null; return m && m.en ? placeTag(m.en, townName(E.W[z])) : null; };
+  // 岛主的名字（英文名在别的课里换成这门课名字牌的写法，T_）
+  const bossName = b => L({ zh: b.name, en: T_('person', b.en || (/\bI(?:'m| am) ((?:the )?[A-Z][\w-]*(?: [A-Z][\w-]*)*)/.exec(b.hello || '') || [])[1]) });
   // 渡轮去哪：岛上的人物数据（isles/*.js）只写了中文的 toName，英语界面用目的地地图的英文名
   const ferryTo = n => { const m = n.to && EM.get(n.to); return L({ zh: n.toName, en: m ? placeName(m).en : undefined }); };
 
@@ -277,7 +284,10 @@
     const w = E.W[m.z];
     // name / sub 按界面语言（地图自己写的中文名、副标题在 isles/*.js 里，英语界面用它的英文名、通用的副标题）；en 是英文地名（横幅、朗读用）
     const isle = () => tx('w.place.isle', { n: m.z + 1 });
-    if (m.name) return { icon: m.icon || { town: w.icon, route: '🛤️', cave: '🕳️', under: '🌊', inside: '🏠' }[m.kind] || '📍', name: L({ zh: m.name, en: m.en }), en: m.en || m.name, sub: m.sub ? L({ zh: m.sub, en: m.kind === 'town' ? isle() : townName(w) }) : (m.kind === 'town' ? isle() : townName(w)) };
+    // 别的课：地图名里的 {rival}（「{rival} 的家」）换成对手的名字（这门课名字牌的写法）。
+    // 英语课这里没动：中文界面的 HUD 一直显示「{rival} 的家」（老问题，2026-11-21 第三批扫查时发现，要不要改等定）
+    const nmC = s => (E.lang && typeof s === 'string' ? s.split('{rival}').join(T_('person', rivalInfo().name)) : s);
+    if (m.name) return { icon: m.icon || { town: w.icon, route: '🛤️', cave: '🕳️', under: '🌊', inside: '🏠' }[m.kind] || '📍', name: nmC(L({ zh: m.name, en: m.en })), en: m.en || m.name, sub: m.sub ? L({ zh: m.sub, en: m.kind === 'town' ? isle() : townName(w) }) : (m.kind === 'town' ? isle() : townName(w)) };
     if (m.kind === 'town') return { icon: w.icon, name: townName(w), en: w.en.replace(/[!?]/g, '') + ' Town', sub: tx('w.place.town', { n: m.z + 1 }) };
     if (m.kind === 'route') return { icon: '🛤️', name: tx('w.place.route', { n: m.z + 1 }), en: 'Route ' + (m.z + 1), sub: townName(w) + ' → ' + townName(E.W[m.z + 1]) };
     if (m.kind === 'cave') return { icon: '🕳️', name: tx('w.place.cave', { n: EM.caves.indexOf(m.route) + 1 }), en: 'Echo Cave', sub: tx('w.place.cave.sub', { n: m.route + 1 }) };
@@ -445,18 +455,21 @@
   }
   function banner() {
     const b = $('w-banner'), p = placeName();
-    // 别的课：下面那行是这门语言的地名（台词翻译表的地名，SPEC §8；没翻的照旧是英文地名）；念的「Welcome to …!」say() 自己会换
+    // 别的课：大字是这门语言的地名（台词翻译表的地名，SPEC §8，标读音），下面那行是界面语言的名字；没翻的照旧（界面语言 + 英文地名）。
+    // 念的「Welcome to …!」say() 自己会换
     const pl = E.lang && E.lineOf ? E.lineOf(p.en) : null;
     // 英语界面：名字已经是英文的，下面那行英文地名一样就不重复
-    b.innerHTML = '<small>' + E.esc(p.sub) + (M.kind === 'town' && E.S.mon.badges[M.z] ? ' · 🏅' : '') + '</small><b>' + E.esc(p.name) + '</b>' + (pl ? '<span>' + E.ruby(pl.t) + '</span>' : sameLang() && p.en === p.name ? '' : '<span>' + E.esc(p.en) + '</span>');
+    b.innerHTML = '<small>' + E.esc(p.sub) + (M.kind === 'town' && E.S.mon.badges[M.z] ? ' · 🏅' : '') + '</small>' + (pl ? '<b>' + E.ruby(pl.t) + '</b><span>' + E.esc(p.name) + '</span>' : '<b>' + E.esc(p.name) + '</b>' + (sameLang() && p.en === p.name ? '' : '<span>' + E.esc(p.en) + '</span>'));
     b.hidden = false; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
     clearTimeout(b._t); b._t = setTimeout(() => { b.hidden = true; }, 2600);
     E.say(M.kind === 'town' ? 'Welcome to ' + p.en + '!' : p.en);
   }
   function hud() {
     const p = placeName();
-    $('w-zname').textContent = p.icon + ' ' + p.name;
-    $('w-zsub').textContent = M.kind === 'route' || M.kind === 'cave' || M.kind === 'under' ? tx('w.hud.wild', { a: MG.zoneLv(M.z) + (M.lvBonus || 0), b: MG.zoneLv(M.z) + (M.lvBonus || 0) + 2 }) : p.sub;
+    // 别的课：地名这门课有写法的，大字写它，小字是界面语言的名字（野外再接上怪兽等级）
+    const pc = placeC(p.en), wild = M.kind === 'route' || M.kind === 'cave' || M.kind === 'under' ? tx('w.hud.wild', { a: MG.zoneLv(M.z) + (M.lvBonus || 0), b: MG.zoneLv(M.z) + (M.lvBonus || 0) + 2 }) : null;
+    $('w-zname').textContent = p.icon + ' ' + (pc || p.name);
+    $('w-zsub').textContent = pc ? p.name + (wild ? ' · ' + wild : '') : wild || p.sub;
     relabel();
     $('w-badges').textContent = '🏅 ' + Object.keys(E.S.mon.badges).length;
     // 回声球个数：前面画一只小海螺（Cartoon.shell，和战斗里扔的是同一个样子）
@@ -484,7 +497,9 @@
   // 「现在要做」点了去哪（2026-11-20 老板：「现在要做点了可以直接跳到要做的事情那里」）：
   //   go === 'unit'（挑战馆的课本门槛）：和「回首页」走同一条路离开大地图（E.goUnit → goHome：存档、冒险计时照旧），打开那个单元、亮出 BOSS 关；
   //   别的（去哪座岛、找谁、进挑战馆）：不传送——冒险菜单里点了就关上菜单，左上角那行目标亮几下（指向出口的箭头还没做）
-  const goalUnit = o => { const u = o && o.go === 'unit' && (E.WX || [])[o.wi]; return u ? (u.bshort ? u.bshort + ' ' : '') + 'Unit ' + u.n : ''; };
+  // 单元号（英语课「Unit 3」；别的课按界面语言，game.js 的 unitNo）
+  const unitNo = n => (E && E.unitNo ? E.unitNo(n) : 'Unit ' + n);
+  const goalUnit = o => { const u = o && o.go === 'unit' && (E.WX || [])[o.wi]; return u ? (u.bshort ? u.bshort + ' ' : '') + unitNo(u.n) : ''; };
   const goalGoLabel = o => (goalUnit(o) ? hx('w.goal.go.unit', { u: goalUnit(o) }) : hx('w.goal.go.map'));
   function goalGo(from) {
     const o = objective();
@@ -687,7 +702,12 @@
           // 要说的那句下面的意思：英语界面是英语原文；中文界面这一页的中文（说明里带着意思）在上面那一行
           pg.mean = zhUi ? null : ln.mean;
           // 说明这一行是界面语言（🔊 念的是要说的那句，wHear）
-          if (same || !main([[enT, ln.t]])) { pg.en = zhUi && pg.zh ? cw(pg.zh.split(enT).join(ln.t), true) : tx('w.lang.say', { lang: langName() }); pg.ui = ''; }
+          // 中文界面用这一页的中文：夹着的英语换成译文、名字换成这门课的写法（「对它大声说：Bubbly，做我的伙伴吧！」的怪兽名，E.glossText）；
+          // 换不干净（还剩英语单词）就用「用…说：」
+          if (same || !main([[enT, ln.t]])) {
+            const zs = zhUi && pg.zh ? (E.glossText ? E.glossText(pg.zh, [[enT, ln.t]]) : pg.zh.split(enT).join(ln.t)) : null;
+            pg.en = zs ? cw(zs, true) : tx('w.lang.say', { lang: langName() }); pg.ui = '';
+          }
           pg.hideEn = false;
           return;
         }
@@ -1387,7 +1407,7 @@
     const avail = Math.min(sp.end, units.length) - Math.max(0, Math.min(sp.from | 0, units.length));
     const want = E.lang ? Math.ceil((z + 1) * Math.min(16, Math.max(0, avail)) / 13) : unitsFor(z);
     const from = Math.max(0, Math.min(sp.from | 0, units.length)), need = Math.max(0, Math.min(want, Math.min(sp.end, units.length) - from));
-    const lab = i => { const u = units[i]; return u ? (u.bshort ? u.bshort + ' ' : '') + 'Unit ' + u.n : ''; };
+    const lab = i => { const u = units[i]; return u ? (u.bshort ? u.bshort + ' ' : '') + unitNo(u.n) : ''; };
     const miss = [];
     for (let i = from; i < from + need; i++) if (!((E.S.stars || {})[(NB + i) + '-6'] > 0)) miss.push(i);
     const ok = DEBUG || !miss.length;
@@ -2550,7 +2570,7 @@
       if (k === 'flash') useSkill('flash', () => { M._flash = true; E.toast(tx('w.flash.ok'), 'gold'); });
       else if (k === 'fly') {
         const v = Object.keys(WS().visited || {}).map(Number).sort((a, b) => a - b);
-        E.openModal('<h2>' + hx('w.fly.title') + '</h2><div class="fly-list">' + v.map(z => '<button class="btn small ghost" data-act="wFlyTo" data-z="' + z + '">' + E.W[z].icon + ' ' + E.esc(townName(E.W[z])) + '</button>').join('') + '</div><button class="btn ghost wide" data-act="close">' + hx('w.cancel') + '</button>');
+        E.openModal('<h2>' + hx('w.fly.title') + '</h2><div class="fly-list">' + v.map(z => '<button class="btn small ghost" data-act="wFlyTo" data-z="' + z + '">' + E.W[z].icon + ' ' + (townTag(z) || E.esc(townName(E.W[z]))) + '</button>').join('') + '</div><button class="btn ghost wide" data-act="close">' + hx('w.cancel') + '</button>');
       }
     },
     wFlyTo: t => { const z = +t.dataset.z; E.closeModal(); useSkill('fly', () => flyTo(z)); },
@@ -2661,5 +2681,6 @@
       talk: (pages, done) => talk(pages, done) }),   // 测试用：直接放一段对话（说话任务 / 选回答，tests/apk.test.js）
     _art: ART,
     signLabel: L => signLabel(L),   // 房子的招牌（world3d.js、world3d-open.js 也用）
+    townTag: z => townTag(z),       // 别的课：第 z 座岛的地名牌 HTML（这门课的地名 + 界面语言的小字；没翻 / 英语课 null）——monsters.js 首页「飞去哪」
   };
 })();

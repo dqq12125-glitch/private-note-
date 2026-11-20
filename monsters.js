@@ -125,6 +125,10 @@
       'b.evo.t': '看！{name} 在长大……', 'b.evo.p': '{name} 正在长大！', 'b.evo.ok': '太棒了！', 'b.evo.done': '太棒了！<b>{from}</b> 长成了 <b>{to}</b>{zh}！',
       // 别的课（.c）：按钮上的英语词换成这门语言的（{w}，台词翻译表的 terms.ui）
       'b.egg.c': '蛋 {w}', 'b.pc.box.c': '箱子 {n} {w} {n}（{have} / {cap}）', 'b.day.thanks.c': '谢谢 {w}',
+      // 选伙伴没念准：别的课给要说的那一句（{w}）
+      'b.st.retry.c': '再试一次：{w}',
+      // 起昵称：昵称暂时还只能用拉丁字母，不说「英文名」
+      'b.nick.t.c': '给 {name} 起个名字吧！', 'b.nick.ph.c': '自己输入名字（拉丁字母）', 'b.nick.tip.c': '名字暂时只能用拉丁字母 A–Z，最多 10 个', 'b.nick.bad.c': '名字暂时只能用拉丁字母 A–Z，比如 Kiki',
       'b.egg': '蛋 Egg', 'b.egg.tip': '带着它一起走路，它就会慢慢长大、孵出来。',
       'b.egg.far': '它好像还要很久才会孵出来。', 'b.egg.mid': '里面有动静了！', 'b.egg.near': '快孵出来了！它在里面动来动去。',
       'b.sum.evoLv': 'Lv {lv} 进化成 {name}', 'b.sum.xp': '经验 {a} / {b}', 'b.sum.hp': '体力 HP', 'b.sum.atk': '攻击 ATK', 'b.sum.def': '防御 DEF', 'b.sum.spd': '速度 SPD',
@@ -264,7 +268,8 @@
       'b.lose.p': 'A Rest Stop brings back HP and cures status problems.<br>Tip: battle wild monsters in the grass to level up,<br>use moves that are <b>strong against</b> your opponent, or use a support move first to lower its attack.', 'b.lose.go': 'Go to the Rest Stop',
       'b.potion.hp': 'You used {item}! <b>{name}</b> got its HP back.', 'b.potion.st': 'You used {item}! <b>{name}</b> is back to normal.',
       'b.evo.t': 'Look! {name} is growing up…', 'b.evo.p': '{name} is growing!', 'b.evo.ok': 'Great!', 'b.evo.done': 'Great! <b>{from}</b> grew into <b>{to}</b>{zh}!',
-      'b.egg.c': '{w}', 'b.pc.box.c': '{w} {n} ({have} / {cap})', 'b.day.thanks.c': '{w}',
+      'b.egg.c': '{w}', 'b.pc.box.c': '{w} {n} ({have} / {cap})', 'b.day.thanks.c': '{w}', 'b.st.retry.c': 'Try again: {w}',
+      'b.nick.t.c': 'Give {name} a name!', 'b.nick.ph.c': 'Type a name (Latin letters)', 'b.nick.tip.c': 'For now names use Latin letters A–Z only, up to 10', 'b.nick.bad.c': 'For now please use Latin letters A–Z, like Kiki',
       'b.egg': 'Egg', 'b.egg.tip': 'Walk with it and it will slowly grow and hatch.',
       'b.egg.far': 'It looks like it will take a long time to hatch.', 'b.egg.mid': 'Something is moving inside!', 'b.egg.near': 'It will hatch soon! It is moving around inside.',
       'b.sum.evoLv': 'Lv {lv}: grows into {name}', 'b.sum.xp': 'XP {a} / {b}', 'b.sum.hp': 'HP', 'b.sum.atk': 'ATK', 'b.sum.def': 'DEF', 'b.sum.spd': 'SPD',
@@ -300,8 +305,8 @@
       'b.flee.wild': 'Run away?', 'b.flee.t': 'Give up this battle?', 'b.flee.p': 'You get no reward from this battle.', 'b.flee.go': 'Leave', 'b.flee.stay': 'Keep battling',
     },
   });
-  // 岛主的名字：数据里只有中文名（data.js 的 boss.name），别的界面语言用字表里的英文名
-  const bossName = z => { const L = !isZh() && I18N.raw('b.boss'); return (L && L[z]) || E.W[z].boss.name; };
+  // 岛主的名字：数据里只有中文名（data.js 的 boss.name），别的界面语言用字表里的英文名（别的课换成这门课名字牌的写法，T_）
+  const bossName = z => { const L = !isZh() && I18N.raw('b.boss'); return L && L[z] ? T_('person', L[z]) : E.W[z].boss.name; };
   // 小岛的名字：中文界面用 data.js 的名字（和以前一样），别的语言用小镇地图的英文名（Hello Island……）
   const isleName = z => { if (isZh() || !window.EchoMaps) return E.W[z].name; const m = EchoMaps.get('t' + z); return (m && m.en) || E.W[z].name; };
   // 「先跳过」：中文界面照旧用 game.js 的那句（phase B 以后 game.js 自己换语言）
@@ -571,7 +576,7 @@
     const obj = ws.started && EW && EW.objective ? safe(() => EW.objective()) : null;
     const objText = obj && (obj.text || obj.zh);   // story.js 的 objective()：text 是界面语言的那句（老的 zh 字段也是同一句）
     // 要先学课本（挑战馆的门槛）时，后面跟一个「去闯关练习：七下 Unit 1 ›」，点了直接打开那个单元（world.js 的 wGoalHome → game.js goUnit）
-    const goU = obj && obj.go === 'unit' && (E.WX || [])[obj.wi], goLab = goU ? (goU.bshort ? goU.bshort + ' ' : '') + 'Unit ' + goU.n : '';
+    const goU = obj && obj.go === 'unit' && (E.WX || [])[obj.wi], goLab = goU ? (goU.bshort ? goU.bshort + ' ' : '') + (E.unitNo ? E.unitNo(goU.n) : 'Unit ' + goU.n) : '';   // 单元号：别的课按界面语言
     const objLine = objText ? '<p class="tip obj" style="margin-top:-4px">📍 ' + esc(objText) + (goLab && window.EchoI18n ? ' <button class="link obj-go" data-act="wGoalHome" data-w="' + obj.wi + '">' + EchoI18n.h('w.goal.go.home', { u: goLab }) + '</button>' : '') + '</p>' : '';
     let h = g.open ? '' : lock + lockedBtn + objLine;
     h += '<section class="mon-card lead" style="--tc:' + TYPES[s.type].color + '"><div class="lead-mon">' + svgMon(L) + '</div><div class="lead-info">' +
@@ -600,7 +605,8 @@
     const visited = Object.keys(ws.visited || {}).map(Number).sort((a, b) => a - b);
     if (visited.length > 1) {
       h += '<section class="mon-card fly"><h3>' + hx('b.home.fly') + '</h3><div class="fly-list">' + visited.map(z =>
-        '<button class="btn small ghost" data-act="wFly" data-z="' + z + '">' + E.W[z].icon + ' ' + isleName(z) + (m.badges[z] ? ' 🏅' : '') + '</button>').join('') + '</div></section>';
+        // 别的课：这门课的地名做大字、界面语言的名字做小字（world.js 的 townTag；英语课 / 没翻：照旧）
+        '<button class="btn small ghost" data-act="wFly" data-z="' + z + '">' + E.W[z].icon + ' ' + ((EW && EW.townTag && safe(() => EW.townTag(z))) || isleName(z)) + (m.badges[z] ? ' 🏅' : '') + '</button>').join('') + '</div></section>';
     }
     h += '<p class="tip">' + hx('b.home.foot', { a: Object.keys(m.badges).length, b: E.W.length }) + '</p>';
     return h;
@@ -655,7 +661,7 @@
     }
     const r = E.bestScore(starterLn ? starterLn.t : 'be my partner', res.alts);
     if (r.score >= 40) takeStarter(id);
-    else { starterTries++; $('st-hint').textContent = tx('b.st.retry'); if (starterTries >= 3) skip(); }
+    else { starterTries++; $('st-hint').textContent = tx('b.st.retry', { w: starterLn ? starterLn.t : '' }); if (starterTries >= 3) skip(); }
   }
   // 先跳过：伙伴照样选好，这句放进复习（联网以后要补说）
   function starterSkip(id) {

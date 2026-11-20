@@ -153,9 +153,12 @@ try {
         check(c.LINES_T.length === Object.keys(F.templates).length && c.LINES_T.every(t => t.en && t.t && t.s && Object.keys(t.s).length) &&
           c.LINES_T.every((t, i) => !i || c.LINES_T[i - 1].en.replace(/\{[a-z0-9]+\}/g, '').length >= t.en.replace(/\{[a-z0-9]+\}/g, '').length),
         'LINES_T：模板 { en, t, s }，字面越长越靠前（越具体越先对）');
-        const nTerms = Object.values(F.terms).reduce((s, m) => s + Object.keys(m).length, 0);
-        check(Object.values(c.TERMS).reduce((s, m) => s + Object.keys(m).length, 0) === nTerms && Object.entries(F.terms).every(([ty, m]) => Object.keys(m).every(en => c.TERMS[ty] && en in c.TERMS[ty])),
-          'TERMS：{ 类别: { 英文词: 译文 } }（' + nTerms + ' 个）');
+        // 西语没写的人名 = 和英文一样（lines-glossary.md 的约定），生成时照英文填进 TERMS.person（2026-11-21 第三批：游戏才认得出它是人名）
+        const same = lang === 'es' ? SRC.terms.person.filter(x => !(F.terms.person && x.en in F.terms.person)) : [];
+        const nTerms = Object.values(F.terms).reduce((s, m) => s + Object.keys(m).length, 0) + same.length;
+        check(Object.values(c.TERMS).reduce((s, m) => s + Object.keys(m).length, 0) === nTerms && Object.entries(F.terms).every(([ty, m]) => Object.keys(m).every(en => c.TERMS[ty] && en in c.TERMS[ty])) &&
+          same.every(x => c.TERMS.person[x.en] === x.en),
+          'TERMS：{ 类别: { 英文词: 译文 } }（' + nTerms + ' 个' + (same.length ? '，其中 ' + same.length + ' 个西语没写的人名照英文填上' : '') + '）');
         const tab = PK.lineTable(c);
         // 英语游戏拼得出的每一句都对得上：模板 × 这一类的每个词（怪兽：手册里每一只；没翻的怪兽名照原样），自己按译文拼一遍比对
         let n = 0, bad = null;
@@ -241,6 +244,44 @@ try {
       bad('ja', j => { j.lines[L("I'm a boy.")] = { t: 'I am a boy.', seg: ['I am a boy.'], r: ['あい'] }; }, '日语里剩下英文词', /英文词/);
       bad('zh', j => { j.lines[L("I'm a boy.")].r = ['wǒ', 'shì']; }, 'r 和 seg 不一样多', /r 要和 seg 一样多/);
       bad('zh', j => { j.terms.item[idOf(SRC.terms.item, 'Potion')] = { t: '药水' }; }, '中文的词没有读音', /缺读音/);
+      // 第三批：整句可以另写自己的意思 zh / en（SPEC §8.2）——带进 course.json；模板不写、zh 要中文、en 不能有中文
+      bad('es', j => { j.templates[T('{mon}, your turn!')] = { t: '¡{mon}, te toca!', zh: '轮到你了' }; }, '模板写了 zh（意思只给整句）', /只给整句/);
+      bad('es', j => { j.lines[L("I'm a boy.")] = { t: 'Soy un chico.', en: '我是男孩。' }; }, 'en 里有中文', /en 里不能有中文/);
+      {
+        const j = FX.toLines('ja'), en = 'Half past six means six thirty.';
+        j.lines[L(en)] = Object.assign({}, j.lines[L(en)], { zh: '六点半就是六点三十分。', en: 'Half past six is six thirty.' });
+        const f = path.join(tmpL, 'gloss-ja.json');
+        fs.writeFileSync(f, JSON.stringify(j));
+        const c3 = CB.build('ja', { check: true, lines: f }).course, x = c3.LINES[en];
+        check(x && x.zh === '六点半就是六点三十分。' && x.en === 'Half past six is six thirty.' && x.t === j.lines[L(en)].t, '整句自己的意思 zh / en：带进 course.json（游戏里用它当下面那行意思）', x);
+        const fe = FX.toLines('es'); fe.lines[L(en)] = { t: 'Las seis y media son las seis treinta.', zh: '六点半就是六点三十分。' };
+        const f2 = path.join(tmpL, 'gloss-es.json');
+        fs.writeFileSync(f2, JSON.stringify(fe));
+        const y = CB.build('es', { check: true, lines: f2 }).course.LINES[en];
+        check(y && typeof y === 'object' && y.t === 'Las seis y media son las seis treinta.' && y.zh === '六点半就是六点三十分。', '西语写了 zh：这一句成了对象 { t, zh }（平时还是字符串）', y);
+      }
+      // 界面提示、台词意思里夹着的英语（packs.js 的纯函数，ENGINE.md §5 第三批）
+      {
+        const term = x => ({ Tim: 'ティム', 'Graffiti Woods': 'らくがきの森', 'Captain Gale': 'ゲイル船長', Mom: 'ママ' })[x] || null;
+        const line = q => ({ "Are you Tim's mom?": 'ティムのお母さんですか？' })[q] || null;
+        const z = (s, o) => PK.hintFix(s, Object.assign({ ui: 'zh', term, line }, o)).s;
+        check(z('帮蒂姆 Tim 找家人：问 "Are you Tim\'s mom?"（还差{left}）') === '帮蒂姆 ティム 找家人：问 "ティムのお母さんですか？"（还差{left}）', 'hintFix：引着的原句换成译文、名字换成这门课的写法、{占位符}不动');
+        check(z('找人问一问："Where is the library?"（走廊里的艾米 Amy）') === '找人问一问（走廊里的艾米）', 'hintFix：没有译文的引号连引号拿掉，不是名字的英文拿掉，多出来的冒号收拾掉');
+        check(z('去港口坐盖尔船长 Captain Gale 的渡轮 ferry，去社团岛') === '去港口坐盖尔船长 ゲイル船長 的渡轮，去社团岛' && z('喷泉旁边：red cap（红帽子）、bag（背包），找出他') === '喷泉旁边：红帽子、背包，找出他',
+          'hintFix：「渡轮 ferry」拿掉英文，「red cap（红帽子）」只留意思');
+        check(z('去气象台 Weather Station（玻璃圆顶的房子）') === '去气象台（玻璃圆顶的房子）' && z('打败 BOSS（课本 BOSS {done}/{need}），按 A') === '打败 BOSS（课本 BOSS {done}/{need}），按 A', 'hintFix：中文名后面的英文 + 说明括号：括号照留；BOSS、A 这种界面记号照留');
+        const names = PK.namesRe([['Route 9', 'ルート9'], ['Clear Way', 'みちひらき'], ['Mom', 'ママ']]);
+        const e = s => PK.hintFix(s, { ui: 'en', term, line, names }).s;
+        check(e('Talk to Mom. Use Clear Way, then cross Sea Route 9 and get the Clear Way Echo Shell') === 'Talk to ママ. Use みちひらき, then cross Sea Route 9 and get the Clear Way Echo Shell' && e('in "📚 Practice", beat the boss') === 'in "📚 Practice", beat the boss',
+          'hintFix 英语界面：只换整个名字（「Sea Route 9」「Clear Way Echo Shell」里的不换），引号里不是一句话的（界面上的名字）照留');
+        const g = (zh, pairs) => PK.glossFix(zh, pairs, { term, keep: v => v === 'Coco' });
+        check(g('“ate”是“eat”的过去式。', [['"Ate" is the past of "eat".', '「食べた」は「食べる」の過去。'], ['Ate', '食べた'], ['eat', '食べる']]) === '“食べた”是“食べる”的过去式。' &&
+          g('在你好岛，大家先说“Hello！”', [['Hello!', 'こんにちは！']]) === '在你好岛，大家先说“こんにちは！”' && g('我叫 Tim，Coco 你好！', []) === '我叫 ティム，Coco 你好！',
+          'glossFix：意思里的英语换成译文（不分大小写、句末标点对不上也认）、名字换成这门课的写法、主角名字照留');
+        check(g('half past six 就是六点半。', []) === null, 'glossFix：换完还剩英语单词 → null（这句意思不显示）');
+        const qm = PK.quoteMap(PK.lineTable({ LINES: { 'Ask them: "Are you Tim\'s mom?"': 'Pregúntales: “¿Eres la mamá de Tim?”', 'Say "Hi" and "Bye".': 'Di «Hola».' } }));
+        check(qm.get("Are you Tim's mom?") === '¿Eres la mamá de Tim?' && !qm.has('Hi'), 'quoteMap：剧情台词里引着的原句 ↔ 译文里同一个位置的引号（引号个数对不上的不认）');
+      }
     } finally { fs.rmSync(tmpL, { recursive: true, force: true }); }
   }
 

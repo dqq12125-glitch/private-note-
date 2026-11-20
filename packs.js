@@ -163,7 +163,137 @@
     return null;
   }
 
-  const pure = { crc32, crcHex, hex8, packBundle, readBundle, verCmp, okVer, okUrl, normUrl, RETRY, BATCH, lineTable, lineFind };
+  // ---------- 界面提示、台词意思里夹着的英语（ENGINE.md §5 第三批）----------
+  // 别的课里，「现在要做」这种界面句子、剧情台词的中文意思，原来是给学英语的人写的，里面引着英语原句、夹着英文名字。
+  // 这里只做字符串的改写（纯函数，Node 里测得到）；查表（这句有没有译文、这个名字这门课怎么写）由调用的人给（game.js 的 hintTx / lineOf）。
+  // 记号：n = 保护起来不动的一段（参数、{占位符}、HTML、已经换好的译文）
+  const LAT = /[A-Za-z]/, CJKR = /[぀-ヿ㐀-鿿豈-﫿]/;
+  // 不算「英语」的界面记号：A / B 键、单个字母（纸条的署名 W）、BOSS、AI、等级这些（英语课的中文界面里也是这样写的）
+  const CHROME = /^(?:[A-Z]|AI|BOSS|Boss|HP|Lv|VS|OK|PE)$/;
+  // 一段拉丁字母（几个词，中间可以是空格、/、&、→、逗号）：Graffiti Woods、Route 1、Dr. Skye、sunny → rainy → windy、red cap
+  const RUN = /(?<![A-Za-z0-9'’])[A-Za-z][A-Za-z0-9'’.\-]*(?:(?: ?[/&→,] ?| )(?:[A-Za-z][A-Za-z0-9'’.\-]*|[0-9]+))*[!?]?/g;
+  const QUOTE = /["“「]([^"“”「」\n]*)["”」]/g;
+  function protect(s) {
+    const keep = [];
+    const tok = v => '' + (keep.push(v) - 1) + '';
+    const back = x => String(x).replace(/(\d+)/g, (m, i) => keep[+i]);
+    return { tok, back, s: String(s).replace(/\{\w+\}|<[^>]*>|&#?\w+;|\d+/g, tok) };
+  }
+  const bare = s => s.replace(/\d+/g, '');
+  // 拿掉东西以后收拾标点：空括号、引号拿掉后剩下的冒号、多出来的空格
+  function tidy(s) {
+    return s.replace(/[（(]\s*[)）]/g, '').replace(/「\s*」|“\s*”|""/g, '')
+      .replace(/\s*[：:]\s*(?=[（(，。,.；;]|$)/g, '')
+      .replace(/ {2,}/g, ' ')
+      .replace(/ +(?=[，。、；：！？）」』”])/g, '').replace(/(?<=[（「『“]) +/g, '')
+      .replace(/^ +| +$/g, '');
+  }
+  // hintFix(界面句子, o) → { s, miss: [没有译文的引号里的英语], dropped: [拿掉的英文] }
+  //   o.ui：界面语言（'zh' / 'en'）；o.line(英语原句) → 译文或 null；o.term(英文) → 这门课的写法或 null；
+  //   o.names：英语界面里要换的名字 { re, map }（game.js 按这门课的 terms 建好、缓存）；o.keep(英文) 照留的（主角名字、起的昵称）
+  // ① 引号里的英语（"Are you Tim's mom?"）→ 这门课的那一句；查不到就连引号一起拿掉（不引英语）
+  // ② 中文界面：夹着的英文（颜色水晶 Color Crystal、井边 well）→ 名字换成这门课的写法；不是名字的拿掉；
+  //    「red cap（红帽子）」这种英文后面跟着中文括号的，留下括号里的中文
+  // ③ 英语界面：名字（人、地方、水晶、回声技能、怪兽）换成这门课的写法，别的英文是界面语言本身，照旧
+  function hintFix(s, o) {
+    o = o || {};
+    const P = protect(s), miss = [], dropped = [];
+    let x = P.s;
+    x = x.replace(/( ?)(["“「])([^"“”「」\n]*)(["”」])/g, (m, sp, a, q, b) => {
+      if (!LAT.test(bare(q)) || CJKR.test(q)) return m;
+      const tr = o.line ? o.line(P.back(q)) : null;
+      if (tr) return sp + a + P.tok(tr) + b;
+      // 英语界面里引号也用来指界面上的名字（in "📚 Practice"）：不是一句话（没有句末的 . ! ?）的照留
+      if (o.ui !== 'zh' && !/[.!?]$/.test(q.trim())) return m;
+      miss.push(P.back(q));
+      return '';
+    });
+    if (o.ui === 'zh') {
+      x = x.replace(new RegExp('( ?)(' + RUN.source + ')( ?)(\\uFF08[^\\uFF08\\uFF09]*\\uFF09)?', 'g'), (m, s1, run, s2, par, off, all) => {   // （ ）：全角括号
+        if (CHROME.test(run) || (o.keep && o.keep(run))) return m;
+        // 「团员：red cap（红帽子）」：英文前面不是汉字（冒号、顿号、开头），括号里就是它的意思 → 只留意思；
+        // 「气象台 Weather Station（玻璃圆顶的房子）」前面是汉字：括号是说明，照留
+        if (par && CJKR.test(par) && !CJKR.test(bare(all.slice(0, off)).trimEnd().slice(-1))) { dropped.push(run); return s1 + par.slice(1, -1); }
+        const t = o.term ? o.term(run) : null;
+        if (t) {
+          // 中文课：前面的中文就是这个名字（「鹦鹉船长 鹦鹉船长」）→ 只留一个
+          if (bare(all.slice(0, off)).trimEnd().endsWith(t)) return s2 + (par || '');
+          return s1 + P.tok(t) + s2 + (par || '');
+        }
+        dropped.push(run);
+        // 两边都是字母 / 数字时留一个空格，不然连在一起
+        const l = all.slice(0, off), r = all.slice(off + m.length);
+        return (/[A-Za-z0-9]$/.test(l) && /^[A-Za-z0-9]/.test(r) ? ' ' : '') + (par || '');
+      });
+    } else if (o.names && o.names.re) {
+      // 只换整个名字：是更长的英文名字的一截时不换（「Sea Route 9」里的 Route 9、「Clear Way Echo Shell」里的 Clear Way）
+      x = x.replace(o.names.re, (m, pre, nm, off, all) => {
+        if (!o.names.map.has(nm)) return m;
+        const l = all.slice(0, off + pre.length), r = all.slice(off + m.length);
+        if (/[a-z,;:] [A-Z][A-Za-z'’.\-]* $/.test(l) || /^ [A-Z][a-z]/.test(r)) return m;
+        return pre + P.tok(o.names.map.get(nm));
+      });
+    }
+    if (miss.length || dropped.length) x = tidy(x);
+    return { s: P.back(x), miss, dropped };
+  }
+  // 英语界面要换的名字：[[英文, 译文]] → { re, map }（长的先配，整词）
+  function namesRe(pairs) {
+    const map = new Map(pairs.filter(([a, b]) => a && b && a !== b && a.length >= 3));
+    if (!map.size) return null;
+    const keys = [...map.keys()].sort((a, b) => b.length - a.length).map(reEsc);
+    return { map, re: new RegExp('(^|[^A-Za-z0-9\'’])(' + keys.join('|') + ')(?![A-Za-z0-9])', 'g') };
+  }
+  // 台词意思（中文界面）里的英语：quotes(字符串) → 引号里的几段
+  const quotes = s => [...String(s).matchAll(/["“«「『]([^"“”«»「」『』]+)["”»」』]/g)].map(m => m[1].trim()).filter(Boolean);
+  // 引着的英语原句 → 译文：从整句翻译表里来（英语原文和译文里引号一样多的，一一对应：
+  // 'Ask them: "Are you Tim's mom?"' / 'Pregúntales: “¿Eres la mamá de Tim?”' → "Are you Tim's mom?" ↔ "¿Eres la mamá de Tim?"）
+  function quoteMap(tab) {
+    if (!tab) return new Map();
+    if (tab.qm) return tab.qm;
+    const qm = new Map();
+    for (const en of Object.keys(tab.L)) {
+      const x = lnVal(tab.L[en]);
+      if (!x || !/["“]/.test(en)) continue;
+      const a = quotes(en), b = quotes(x.t);
+      if (a.length && a.length === b.length) a.forEach((q, i) => { if (!qm.has(q)) qm.set(q, b[i]); });
+    }
+    tab.qm = qm;
+    return qm;
+  }
+  // glossFix(中文意思, pairs, o) → 换好的意思，或者 null（换完还剩英语单词：这句意思是给学英语的人写的，靠不住，不显示）
+  //   pairs：[[英语, 译文]]，按顺序换（整句、模板的空、英语原文和译文里一一对应的引号）；英文的那一边不分大小写、整词，
+  //   句末标点对不上（"Hello!" / “Hello！”）也认；o.term(英文) 名字的写法；o.keep(英文) 照留的（主角名字、起的昵称）
+  function glossFix(zh, pairs, o) {
+    o = o || {};
+    const P = protect(zh);
+    let x = P.s;
+    for (const [a0, b0] of pairs || []) {
+      if (!a0 || !b0 || a0 === b0) continue;
+      const a = String(a0), b = String(b0);
+      if (x.includes(a)) { x = x.split(a).join(P.tok(b)); continue; }
+      if (!LAT.test(a)) continue;
+      const tries = [[a, b]];
+      const tail = /[.!?。！？]+$/;
+      if (tail.test(a)) tries.push([a.replace(tail, '').replace(/^[¡¿]/, ''), b.replace(/[.!?。！？]+$/, '').replace(/^[¡¿]/, '')]);
+      for (const [p, q] of tries) {
+        if (!p) continue;
+        const re = new RegExp('(^|[^A-Za-z0-9])' + reEsc(p) + '(?![A-Za-z0-9])', 'gi');
+        if (re.test(x)) { x = x.replace(re, (m, pre) => pre + P.tok(q)); break; }
+      }
+    }
+    let bad = false;
+    x = x.replace(RUN, run => {
+      if (CHROME.test(run) || (o.keep && o.keep(run))) return run;
+      const t = o.term ? o.term(run) : null;
+      if (t) return P.tok(t);
+      bad = true;
+      return run;
+    });
+    return bad ? null : P.back(x);
+  }
+
+  const pure = { crc32, crcHex, hex8, packBundle, readBundle, verCmp, okVer, okUrl, normUrl, RETRY, BATCH, lineTable, lineFind, hintFix, namesRe, quotes, quoteMap, glossFix };
   if (inNode) {
     module.exports = { on: false, LANGS, _: pure };
     return;

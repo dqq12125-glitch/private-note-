@@ -8,6 +8,9 @@
 //   3 大地图：一页对话（带名字、「译」照「剧情中文」的设置收起来）、告示牌（意思里的「英语」换成这门语言）、说话任务（念对过、念错不过，分数和 Node 里一样）、
 //     回声技能的指令、拿到 / 捡到道具（模板 + 词；西语阴性；英语的 a / an）、没翻的台词照过渡办法
 //   4 对战：喊话「Look out! Here comes …!」「…, your turn!」念的是译文（配音的 key 是译文的）
+//   5 画面上的名字：对战名牌、招式按钮、手册、背包、房子的招牌（三种画法）
+//   6 第三批：「📍 现在要做」（HUD、冒险菜单）引着的原句是译文、名字按这门课的写法，没译文的换成「键.q」的说法；
+//     地名（HUD、横幅、首页「飞去哪」、乘风的菜单）是这门课的地名 + 界面语言的小字；3 里另有台词意思里的英语、对手名字
 'use strict';
 const fs = require('fs');
 const os = require('os');
@@ -226,8 +229,9 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       check(await until(p, '#w-dlg #w-mic', 3), '对伙伴说那句（说话任务）');
       d = await dlgNow(p);
       const tPartner = T(L, 'Bubbly, be my partner!');
-      check(d.target === tPartner && !enLeft(d, /be my partner/) && (zhUi ? /做我的伙伴/.test(d.en) : d.en === 'Say it in ' + NAME + ':') && (zhUi ? !d.mean : d.mean === 'Bubbly, be my partner!'),
-        '对伙伴说：要说的是译文（' + tPartner + '），上面是' + (zhUi ? '中文说明' : '「Say it in …:」，下面是英语原文'), d);
+      const tBub = TM(L, 'monster', 'Bubbly').t;
+      check(d.target === tPartner && !enLeft(d, /be my partner/) && (zhUi ? /做我的伙伴/.test(d.en) && d.en.includes(tBub) : d.en === 'Say it in ' + NAME + ':') && (zhUi ? !d.mean : d.mean === 'Bubbly, be my partner!'),
+        '对伙伴说：要说的是译文（' + tPartner + '），上面是' + (zhUi ? '中文说明（怪兽名是' + tBub + '）' : '「Say it in …:」，下面是英语原文'), d);
       await heard(p, tPartner); await p.click('#w-mic'); await W(p, 1200);
       const got = await p.evaluate(() => EchoGame.S.mon.box.map(m => m.sp));
       check(got.includes('bubbly'), '念对了：伙伴选好了', got);
@@ -304,6 +308,28 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       await W(p, 200); await typed(p);
       d = await dlgNow(p);
       if (!REAL || !tr(L, 'Hello there!')) check(!d.hear && d.en === (zhUi ? '你好呀！' : 'Hello there!'), '没翻的台词：正文是界面语言那份，没有 🔊', d);
+      await A(p);
+      // 第三批：台词里的提示——中文意思里引着的英语原句换成译文；意思是讲英语的（half past six 就是六点半）不显示；对手的名字按这门课的名字牌
+      const enAsk = 'Please ask the baker, the student and the mayor: "What time do you get up?"', tAsk6 = T(L, enAsk), q6 = PK.quotes(tAsk6 || '')[0];
+      await talk([{ who: 'Tock', emo: '🕰️', en: enAsk, zh: '请你去问面包师、学生和镇长：“What time do you get up?”' }]);
+      await W(p, 200); await typed(p);
+      d = await dlgNow(p);
+      check(!!q6 && noRt(d.enHtml) === tAsk6 && (zhUi ? d.zh === '请你去问面包师、学生和镇长：“' + q6 + '”' : d.zh === enAsk),
+        '台词里的提示：' + (zhUi ? '中文意思里引着的英语原句换成了译文（“' + q6 + '”）' : '英语界面的意思是英语原文'), d);
+      await A(p);
+      const enHalf = 'Half past six means six thirty.';
+      await talk([{ who: 'Tock', emo: '🕰️', en: enHalf, zh: 'half past six 就是六点半。' }]);
+      await W(p, 200); await typed(p);
+      d = await dlgNow(p);
+      check(noRt(d.enHtml) === T(L, enHalf) && (zhUi ? d.zh === '' && !d.zhBtn : d.zh === enHalf),
+        zhUi ? '意思是讲英语的（half past six 就是六点半）：不显示，也没有「译」——不拿英语当意思' : '英语界面：意思是英语原文', d);
+      await A(p);
+      const tLeo = TM(L, 'person', 'Leo').t, enRiv = '{rival} wants to be the English Champion!';
+      await talk([{ who: 'Pip', emo: '🧒', en: enRiv, zh: '{rival} 想当英语冠军！' }]);
+      await W(p, 200); await typed(p);
+      d = await dlgNow(p);
+      check(noRt(d.enHtml) === tr(L, enRiv).t.split('{rival}').join(tLeo) && (zhUi ? d.zh === tLeo + ' 想当' + NAMES[L].zh + '冠军！' : d.zh === 'Leo wants to be the ' + NAMES[L].en + ' Champion!'),
+        '对手的名字（' + tLeo + '）：台词' + (zhUi ? '和中文意思' : '') + '里都按这门课的名字牌写', d);
       await A(p);
       // 学科岛的课程表：English 和 Chinese 是两门课——意思那一行把「英语 / English」换成在学的语言以后，两门课也不能变成同一个名字
       const subj = [];
@@ -386,6 +412,48 @@ const CJK = /[぀-ヿ㐀-鿿]/;
         await p.evaluate(() => EchoGame.goHome());
       }
       await p.evaluate(() => localStorage.removeItem('echo-look'));
+      // ---------- 6 「📍 现在要做」和地名（第三批）----------
+      const FL0 = { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1 };
+      const goal = () => p.evaluate(() => ({ hud: (document.getElementById('w-goal') || {}).innerText || '', zname: (document.getElementById('w-zname') || {}).innerText || '', zsub: (document.getElementById('w-zsub') || {}).innerText || '' }));
+      const shut = async () => { for (let i = 0; i < 8 && (await p.evaluate(() => !!EchoWorld._debug().dlg)); i++) await A(p); };
+      // 6a 第 2 座岛「帮蒂姆找家人」：引着的原句从剧情台词的引号里拿到译文，名字按这门课的名字牌
+      await relaunch(p, L, { settings: { gfx: '2d' }, world: { started: true, map: 't0', x: -1, y: -1, visited: { 0: 1, 1: 1, 2: 1 }, flags: Object.assign({ 's:f2call': 1, 's:f2tim': 1 }, FL0) }, mon: { badges: { 0: 1, 1: 1 } } });
+      await p.click('[data-act=wEnter]'); await W(p, 1200); await shut();
+      let g = await goal();
+      const qTim = PK.quoteMap(TAB[L]).get("Are you Tim's mom?"), tTim = TM(L, 'person', 'Tim').t;
+      check(!!qTim && g.hud.includes('"' + qTim + '"') && !/Are you|mom\?/.test(g.hud) && (zhUi ? g.hud.includes('帮蒂姆') && g.hud.includes(tTim) : g.hud.includes('Help ' + tTim + ' find')),
+        'HUD 的「📍 现在要做」：引着的原句是译文（' + qTim + '），名字是' + NAME + '的写法（' + tTim + '）', g);
+      await p.evaluate(() => document.querySelector('#world .w-menu').click()); await W(p, 300);
+      const card = await p.evaluate(() => { const c = document.querySelector('#w-goal-full small'); return c ? c.innerText : ''; });
+      check(!!card && g.hud === '📍 ' + card, '冒险菜单最上面的「📍 现在要做」：和 HUD 那一行一样', { card, hud: g.hud });
+      await shot(p, L + '-goal');
+      await p.evaluate(() => EchoGame.closeModal());
+      // 地名：HUD、进地图的横幅、首页「飞去哪」、乘风的菜单——大字是这门课的地名（横幅、菜单标读音），小字是界面语言的名字
+      const tIsle = TM(L, 'place', 'Hello Island'), uiIsle = zhUi ? '你好岛' : 'Hello Island';
+      check(g.zname.includes(tIsle.t) && g.zsub === uiIsle, 'HUD 的地名：大字是' + NAME + '的地名（' + tIsle.t + '），小字是界面语言的名字（' + uiIsle + '）', g);
+      const ban = await p.evaluate(() => { const b = document.getElementById('w-banner'); return { b: (b.querySelector('b') || {}).innerHTML || '', span: (b.querySelector('span') || {}).innerText || '' }; });
+      check(noRt(ban.b) === tIsle.t && ban.span === uiIsle && ban.b.includes('<ruby>') === rk(tIsle.t), '进地图的横幅：大字是' + NAME + '的地名' + (rk(tIsle.t) ? '（标读音）' : '') + '，下面一行是界面语言的名字', ban);
+      const flyHome = await p.evaluate(() => { const box = document.createElement('div'); box.innerHTML = MonsterGame.homeHTML(); const b = box.querySelector('.fly-list [data-z="0"]'); return b ? { b: (b.querySelector('.pl-c b') || {}).innerHTML || '', small: (b.querySelector('.pl-c small') || {}).innerText || '' } : null; });
+      check(!!flyHome && noRt(flyHome.b) === tIsle.t && flyHome.small === uiIsle, '首页「飞去哪」：' + tIsle.t + ' + 小字 ' + uiIsle, flyHome);
+      await p.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<button id="t-fly" data-act="wUseSkill" data-k="fly" style="position:fixed;left:0;top:0;z-index:99999">fly</button>'));
+      await p.click('#t-fly', { force: true }); await W(p, 300);
+      const flyW = await p.evaluate(() => { const b = document.querySelector('#modal .fly-list [data-z="0"]'); return b ? { b: (b.querySelector('.pl-c b') || {}).innerHTML || '', small: (b.querySelector('.pl-c small') || {}).innerText || '' } : null; });
+      check(!!flyW && noRt(flyW.b) === tIsle.t && flyW.small === uiIsle && flyW.b.includes('<ruby>') === rk(tIsle.t), '乘风「飞到哪里？」：' + tIsle.t + ' + 小字 ' + uiIsle, flyW);
+      await shot(p, L + '-fly');
+      await p.evaluate(() => { EchoGame.closeModal(); const b = document.getElementById('t-fly'); if (b) b.remove(); });
+      // 选伙伴没念准的提示：给的是要说的那一句，不是 be my partner!
+      check(await p.evaluate(() => EchoI18n.t('b.st.retry', { w: '¡Sprouty, sé mi compañero!' })) === (zhUi ? '再试一次：' : 'Try again: ') + '¡Sprouty, sé mi compañero!', '选伙伴没念准：「再试一次」后面是要说的那一句（b.st.retry.c）');
+      // 6b 第 3 座岛「找人问一问 "Where is the library?"」：小样里这句没翻 → 不引英语，换成「键.q」的说法（正式翻译里有就引译文）
+      await p.evaluate(() => EchoGame.goHome());
+      await relaunch(p, L, { world: { started: true, map: 't0', x: -1, y: -1, visited: { 0: 1, 1: 1, 2: 1, 3: 1 }, flags: Object.assign({ 's:f3in': 1, 's:f3note': 1 }, FL0) }, mon: { badges: { 0: 1, 1: 1, 2: 1 } } });
+      await p.click('[data-act=wEnter]'); await W(p, 1200); await shut();
+      g = await goal();
+      const qLib = PK.quoteMap(TAB[L]).get('Where is the library?') || T(L, 'Where is the library?');
+      if (qLib) check(g.hud.includes('"' + qLib + '"') && !/Where is/.test(g.hud), 'HUD：「Where is the library?」引的是译文（' + qLib + '）', g);
+      else check(!/["“”]/.test(g.hud) && !/Where is|library\?/.test(g.hud) && (zhUi ? g.hud.includes('用' + NAMES[L].zh + '问一问图书馆在哪儿') : g.hud.includes('in ' + NAMES[L].en + ' where the library is')),
+        'HUD：引着的原句没有译文 → 不引英语，换成「用' + NAME + '问一问」的说法（st.step.3.lib.q）', g);
+      await shot(p, L + '-goal-q');
+      await p.evaluate(() => EchoGame.goHome());
       await ctx.close();
     }
   } catch (e) {

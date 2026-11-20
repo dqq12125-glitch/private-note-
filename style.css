@@ -639,6 +639,9 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
 .world-go { font-size: 20px; padding-block: 16px; }
 .fly h3 { margin: 0 0 10px; font-family: var(--f-display); font-size: 18px; }
 .fly-list { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 别的课的地名牌（world.js 的 placeTag）：这门课的地名一行、界面语言的名字小字一行 */
+.pl-c { display: inline-flex; flex-direction: column; align-items: flex-start; vertical-align: middle; line-height: 1.15; text-align: left; }
+.pl-c small { font-size: 11px; font-weight: 400; opacity: .75; }
 .b-items { display: flex; gap: 8px; }
 .b-items .btn { flex: 1; }
 @keyframes bannerIn { 0% { opacity: 0; transform: translate(-50%, -20px); } 12%, 82% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
