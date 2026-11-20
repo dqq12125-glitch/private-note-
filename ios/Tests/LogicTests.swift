@@ -258,7 +258,14 @@ final class ShellLogicTests: XCTestCase {
         let h = WebAssetHandler()
         XCTAssertNotNil(h.fileURL(for: URL(string: "echoisland://localhost/index.html")!), "游戏网页打包进来了")
         XCTAssertNotNil(h.fileURL(for: URL(string: "echoisland://localhost/")!))
-        XCTAssertNotNil(h.fileURL(for: URL(string: "echoisland://localhost/assets/voice/index.json")!))
+        // 配音：老模式打在包里；课程包模式（BuildConfig.packsUrl 不是空的）不带英语配音那三样，带的是 packs.js
+        if BuildConfig.packsUrl.isEmpty {
+            XCTAssertNotNil(h.fileURL(for: URL(string: "echoisland://localhost/assets/voice/index.json")!), "老模式：配音清单在包里")
+        } else {
+            XCTAssertNil(h.fileURL(for: URL(string: "echoisland://localhost/assets/voice/index.json")!), "课程包模式：英语配音不进包")
+            XCTAssertNotNil(h.fileURL(for: URL(string: "echoisland://localhost/packs.js")!), "课程包模式：packs.js 在包里")
+        }
+        XCTAssertNotNil(h.fileURL(for: URL(string: "echoisland://localhost/assets/mon3d/index.json")!), "美术资源在包里")
         XCTAssertNotNil(h.fileURL(for: URL(string: "echoisland://localhost/vendor/three.min.js?v=1")!))
         XCTAssertNotNil(h.fileURL(for: URL(string: "echoisland://localhost/__test/selftest.html")!), "调试包带原生桥自测页")
         XCTAssertNil(h.fileURL(for: URL(string: "echoisland://localhost/../Info.plist")!))
