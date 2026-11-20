@@ -1552,7 +1552,12 @@
     ensureRenderer(); R.load(M, api3d); resize();
     if (next === '2d') E.toast(tx('w.gfx.slow'));
   }
-  function resize() { if (R) R.resize(); }
+  // 画布按画面那一层（#w-view）的大小排。排完记下当时量到的宽高；frame() 每画一帧之前再量一次（fitCheck），不一样就重排——
+  // 手机转屏时系统的 resize 事件、ResizeObserver 和版面排好谁先谁后靠不住（2026-11-20 老板的 iPhone：竖屏主角在屏幕最右边、
+  // 横屏只看得到天和屋顶），自己每帧核对最稳：量一次宽高很便宜，大小没变什么都不做
+  const fitted = { w: 0, h: 0 };
+  function resize() { if (R) R.resize(); const v = $('w-view'); if (v) { fitted.w = v.clientWidth; fitted.h = v.clientHeight; } }
+  function fitCheck() { const v = $('w-view'); if (!v) return; const w = v.clientWidth, h = v.clientHeight; if (w > 0 && h > 0 && (w !== fitted.w || h !== fitted.h)) resize(); }
   // 3D 画面丢了以后整个重建（换一张新画布、新的 WebGL）；建不出 3D 就退回 2D 流畅模式（ensureRenderer 会提示）
   function rebuildGL(why) {
     const L = E.dayLog && E.dayLog(); if (L) L.glLost = (L.glLost || 0) + 1;
@@ -1593,6 +1598,7 @@
     if (now < nextDraw - 2) { raf = requestAnimationFrame(frame); return; }
     nextDraw = Math.max(nextDraw + gap, now + gap - 6);
     const dt = lastNow ? now - lastNow : 16; lastNow = now;
+    fitCheck();
     R.draw(now, view(now));
     camHud();
     autoTune(now, dt);

@@ -33,6 +33,10 @@ on:
         description: Build with Sign in with Apple (if Apple refuses the capability, this run builds once more without it and says so)
         type: boolean
         default: true
+      build_label:
+        description: Show the tiny build number at the bottom of the screen (for TestFlight testing). Untick for the build that goes to App Review
+        type: boolean
+        default: true
 
 # 同一个分支一次只传一个，后来的排队；不取消正在传的
 concurrency:
@@ -83,6 +87,8 @@ jobs:
       # 公开版服务器（cloud/，2026-11-20 部署在老板的 Cloudflare 账号上）：给了这个地址，App 就是「云端模式」——不问密钥，登录后 AI 走服务器。
       # 地址不是秘密。只有销售版用；家庭版照旧用打进包里的密钥。以后换成自己的域名改这里
       ECHO_CLOUD_URL: ${{ (inputs.edition || 'sales') == 'sales' && 'https://echo-island-cloud.dqq12125-study.workers.dev' || '' }}
+      # 测试版角标：屏幕最下面一行很小的版本号（截图上看得出是哪一版）。推标签的一律带；手动点的可以去掉勾——提交审核的那一版不带
+      ECHO_BETA: ${{ (github.event_name == 'push' || inputs.build_label) && '1' || '' }}
       OUT: ${{ github.workspace }}/ios-ci
     steps:
       - name: Check out (shallow)

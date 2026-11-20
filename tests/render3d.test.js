@@ -23,6 +23,7 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
     mon: { v: 2, box: [{ uid: 'm1', sp: 'emberpup', lv: 5, xp: 0 }], team: ['m1'], dex: { emberpup: 'caught' } },
     world: { v: 2, started: true, map: 't0', x: 8, y: 22, dir: 'up', flags: Object.assign({ 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1 }, Object.fromEntries([...Array(13).keys()].map(i => ['s:ch' + i, 1]))) },
   })));
+  const sv0 = await p.evaluate(() => localStorage.getItem('echo-island-v1'));   // 最后「没有 ResizeObserver」那一段再用一次
   await p.reload(); await p.waitForTimeout(400);
   await p.click('[data-act=wEnter]');
   await p.waitForTimeout(1500);
@@ -93,6 +94,30 @@ const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!o
   // 手册：总数不算保留的那几只（tests/dex-edition.test.js 细查），翻页
   const dx = await p.evaluate(() => ({ total: DEX.total, main: DEX.main.length }));
   check(dx.total === dx.main && dx.total !== 386, '手册 ' + dx.total + ' 只（不是 386）');
+  // 画面那一层变了大小，可是既没有 resize 事件、浏览器也没有 ResizeObserver（或者它的通知没来）：world.js 每画一帧之前自己核对（fitCheck），画布照样跟上。
+  // 2026-11-20 老板的 iPhone 转屏以后画布还是转之前的大小；不能只靠系统的通知
+  {
+    const p2 = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+    p2.setDefaultTimeout(8000);
+    p2.on('pageerror', e => errs.push('无 ResizeObserver：' + e.message));
+    await p2.addInitScript(() => { try { window.ResizeObserver = undefined; } catch (e) { /* 忽略 */ } });
+    await p2.goto(PAGE);
+    await p2.evaluate(s => localStorage.setItem('echo-island-v1', s), sv0);
+    await p2.reload(); await p2.waitForTimeout(400);
+    await p2.click('[data-act=wEnter]');
+    await p2.waitForTimeout(1500);
+    const fit = () => p2.evaluate(() => { const v = document.getElementById('w-view'), c = v.querySelector('canvas'); return { ro: typeof window.ResizeObserver, vw: v.clientWidth, vh: v.clientHeight, cw: Math.round(parseFloat(c.style.width)), ch: Math.round(parseFloat(c.style.height)), bw: c.width }; });
+    const f0 = await fit();
+    await p2.evaluate(() => { const v = document.getElementById('w-view'); v.dataset.css = v.style.cssText; v.style.right = 'auto'; v.style.bottom = 'auto'; v.style.width = '300px'; v.style.height = '500px'; });
+    await p2.waitForTimeout(500);
+    const f1 = await fit();
+    check(f1.ro === 'undefined' && f1.vw === 300 && f1.vh === 500 && f1.cw === 300 && f1.ch === 500 && f1.bw < f0.bw, '没有 ResizeObserver、没有 resize 事件：画面那一层变小，画布每帧自己核对跟上 ' + JSON.stringify(f1));
+    await p2.evaluate(() => { const v = document.getElementById('w-view'); v.style.cssText = v.dataset.css || ''; });
+    await p2.waitForTimeout(500);
+    const f2 = await fit();
+    check(f2.cw === f2.vw && f2.ch === f2.vh && f2.vw === f0.vw && f2.vh === f0.vh, '变回来：画布也回来了 ' + JSON.stringify(f2));
+    await p2.close();
+  }
   check(!errs.length, '没有报错' + (errs.length ? '：' + errs.slice(0, 3).join(' | ') : ''));
   console.log(fails ? 'FAIL ' + fails : 'PASS');
   if (fails) process.exitCode = 1;

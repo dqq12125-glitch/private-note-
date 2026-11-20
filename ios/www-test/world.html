@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>大地图转屏检查</title>
+<!--
+  回声岛 iPhone 版 · 给自动化测试用的入口（只打进调试包，和 selftest.html 一样）。
+  打开方式：调试包带启动参数 -EchoWorldTest（ios/UITests 的 test7WorldSurvivesRotation），地址是 echoisland://localhost/__test/world.html
+  做的事：放一份现成的存档（开场剧情过了、首次设置向导做完了、学习锁关着、没有声音、新画风），再打开游戏的首页。
+  「去冒险」和对话框由原生调试包里的 worldDriver 替人点（GameViewController.swift），这一页不碰游戏的代码。
+  只在调试包的测试里用：会盖掉这台模拟器上的存档。
+-->
+<style>
+  body { margin: 0; padding: 40px 16px; font: 14px/1.4 -apple-system, "PingFang SC", sans-serif; background: #12304a; color: #fff; }
+</style>
+</head>
+<body>
+<p id="msg">正在准备存档……</p>
+<script>
+(function () {
+  var d = new Date(), today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  var save = {
+    seenIntro: true, coins: 500, micCheck: today, homeTab: 'mon',
+    settings: {
+      tts: 'online', mode: 'self', gfx: 'mid', sfx: false, gate: false, music: 'off', ctl: 'joy', orient: 'auto', learner: 'open',
+      family: { done: today, step: 'done', who: 'open', consent: { at: Date.now(), v: 'test' } }
+    },
+    player: { gender: 'girl', name: 'Coco' },
+    mon: { v: 2, box: [{ uid: 'm1', sp: 'emberpup', lv: 14, xp: 0 }, { uid: 'm2', sp: 'bubbly', lv: 12, xp: 0 }], team: ['m1', 'm2'], dex: { emberpup: 'caught', bubbly: 'caught' }, balls: 10, potions: 10, bag: {}, badges: {} },
+    world: { v: 3, started: true, map: 't0', x: 14, y: 9, dir: 'up', visited: { 0: 1 }, flags: { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:expshare': 1, qtip: 1 }, daily: {}, repel: 99999 },
+    book: { view: 'isle', at: 0, mix: 0 }, rev: { v: 1, items: {} }
+  };
+  try {
+    localStorage.setItem('echo-island-v1', JSON.stringify(save));
+    localStorage.setItem('echo-look', 'new');
+    document.getElementById('msg').textContent = '存档放好了，打开游戏……';
+    location.replace('/index.html');
+  } catch (e) {
+    document.getElementById('msg').textContent = '存档没放进去：' + e;
+  }
+})();
+</script>
+</body>
+</html>

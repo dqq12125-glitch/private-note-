@@ -227,7 +227,26 @@
       if (m && !/user-scalable/.test(m.content)) m.content += ',maximum-scale=1,user-scalable=no';
     } catch (e) { /* 忽略 */ }
   }
+  // ---------- 测试版的版本角标 ----------
+  // TestFlight 的包（打包时给了 ECHO_BETA，启动对象里的 beta 就是「1.0.0 (465143)」这样的字）在屏幕最下面正中放一行很小的半透明版本号：
+  // 老板截图发过来，一眼看得出手机上装的是哪一版（2026-11-20：修好的版本传上去了，手机还没更新，截图看着像「没修」）。
+  // 不接触摸、不挡东西；提交审核的包不给 ECHO_BETA，就没有这一行
+  function addBeta() {
+    try {
+      if (!BOOT.beta) return true;
+      if (document.getElementById('echo-beta')) return true;
+      if (!document.body) return false;
+      var d = document.createElement('div');
+      d.id = 'echo-beta';
+      d.setAttribute('aria-hidden', 'true');
+      d.textContent = String(BOOT.beta);
+      d.style.cssText = 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom, 0px) + 1px);transform:translateX(-50%);z-index:2147483000;' +
+        'font:600 9px/1 -apple-system,system-ui,sans-serif;letter-spacing:.3px;color:#fff;opacity:.5;text-shadow:0 0 2px #000,0 0 2px #000;pointer-events:none;white-space:nowrap';
+      document.body.appendChild(d);
+      return true;
+    } catch (e) { return true; }
+  }
   if (!addStyle()) document.addEventListener('DOMContentLoaded', addStyle);
-  document.addEventListener('DOMContentLoaded', function () { addStyle(); fixViewport(); });
+  document.addEventListener('DOMContentLoaded', function () { addStyle(); fixViewport(); addBeta(); });
   document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
 })();

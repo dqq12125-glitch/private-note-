@@ -110,7 +110,9 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     // 页面一开始就执行的脚本：原生告诉网页的几个值 + echo-native.js（EchoNative 那一层）
     private func bootScript() -> String {
         // cloudUrl：公开版服务器（make-config.mjs 的 ECHO_CLOUD_URL）；不是空的 = 云端模式（网页的 account.js 读 window.__ECHO_BOOT.cloudUrl）
-        let boot: [String: Any] = ["talkUrl": BuildConfig.talkUrl, "talkCode": BuildConfig.talkCode, "cloudUrl": BuildConfig.cloudUrl]
+        // beta：测试版（TestFlight 的工作流给了 ECHO_BETA）屏幕最下面那一行很小的版本号，空 = 不显示（echo-native.js 的 addBeta）
+        let beta = BuildConfig.beta ? BuildConfig.versionName + " (" + String(BuildConfig.versionCode) + ")" : ""
+        let boot: [String: Any] = ["talkUrl": BuildConfig.talkUrl, "talkCode": BuildConfig.talkCode, "cloudUrl": BuildConfig.cloudUrl, "beta": beta]
         var shim = ""
         if let u = Bundle.main.url(forResource: "echo-native", withExtension: "js"), let s = try? String(contentsOf: u, encoding: .utf8) { shim = s }
         return "window.__ECHO_BOOT=" + Bridge.json(boot) + ";\n" + shim
@@ -157,6 +159,9 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         // 自动化测试：打开原生桥自测页（ios/www-test/selftest.html，只有调试包里有）。值是要跑的那一组：all / mic / share / pick / store
         if let mode = GameViewController.launchArg("-EchoSelfTest"),
            let t = URL(string: WebAssets.origin + WebAssets.testPrefix + "selftest.html?run=" + (mode.isEmpty ? "all" : mode)) { url = t }
+        // 自动化测试：放一份现成的存档再打开游戏（ios/www-test/world.html），pollStatus 里的 worldDriver 替人点「去冒险」、点掉对话框——转屏的检查用
+        if GameViewController.launchArg("-EchoWorldTest") != nil,
+           let t = URL(string: WebAssets.origin + WebAssets.testPrefix + "world.html") { url = t }
         #endif
         web?.load(URLRequest(url: url))
     }
@@ -412,9 +417,50 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
               lastErr: (function () { try { var l = window.EchoErr && EchoErr.list ? EchoErr.list() : []; var e = l && l.length ? l[l.length - 1] : null; return e ? String(e.msg || e.m || JSON.stringify(e)).slice(0, 160) : ''; } catch (e) { return ''; } })(),
               ogg: (function () { try { return new Audio().canPlayType('audio/ogg; codecs="opus"'); } catch (e) { return 'err'; } })(),
               vw: window.innerWidth, vh: window.innerHeight,
+              world: (function () {
+                try {
+                  var el = document.getElementById('world'), v = document.getElementById('w-view');
+                  if (!el || el.hidden || !v || !window.EchoWorld || !EchoWorld._debug) return null;
+                  var d = EchoWorld._debug(), R = d.R, cs = v.querySelectorAll('canvas'), c = null, i;
+                  for (i = 0; i < cs.length; i++) { if (getComputedStyle(cs[i]).display !== 'none') c = cs[i]; }
+                  var b = c ? c.getBoundingClientRect() : null, fr = -1, pr = null;
+                  try { fr = R.info().render.frame; } catch (e) { fr = -1; }
+                  try { pr = R.probe ? R.probe() : null; } catch (e) { pr = null; }
+                  return {
+                    map: d.M ? d.M.id : '', using: R ? (R.using ? R.using() : R.kind) : '', dlg: !!d.dlg, frame: fr,
+                    vw: v.clientWidth, vh: v.clientHeight,
+                    cx: b ? Math.round(b.left) : -1, cy: b ? Math.round(b.top) : -1, cw: b ? Math.round(b.width) : -1, ch: b ? Math.round(b.height) : -1,
+                    bw: c ? c.width : -1, bh: c ? c.height : -1, fov: pr && pr.fov ? pr.fov : -1
+                  };
+                } catch (e) { return { err: String(e) }; }
+              })(),
               test: window.__echoTestResult || null
             });
           } catch (e) { return JSON.stringify({ probeError: String(e) }); }
+        })()
+        """#
+
+    // -EchoWorldTest：每半秒跑一次——还没进大地图就点「去冒险」（隔几秒没进去再点一次），进去以后有对话框就点掉
+    //（要选的时候选最后一个：「以后再说」）。和 tools/ios/lib.js 的 enterWorld / closeDlg 做的一样
+    private static let worldDriver = #"""
+        (function () {
+          try {
+            if (!window.EchoGame || !window.EchoWorld || !EchoWorld._debug) return;
+            var el = document.getElementById('world');
+            if (!el || el.hidden) {
+              window.__echoWT = (window.__echoWT || 0) + 1;
+              if (window.__echoWT % 8 !== 1) return;
+              var go = document.querySelector('[data-act=wEnter]');
+              if (go) go.click(); else window.__echoWT = 0;
+              return;
+            }
+            var d = EchoWorld._debug();
+            if (d && d.dlg) {
+              var pk = document.querySelectorAll('#w-dlg [data-act=wPick]');
+              var a = pk.length ? pk[pk.length - 1] : (document.querySelector('#w-dlg [data-act=wSkip]:not([hidden])') || document.querySelector('#w-dlg [data-act=wSelfDone]') || document.querySelector('#world [data-act=wA].ba'));
+              if (a) a.click();
+            }
+          } catch (e) { /* 下一拍再来 */ }
         })()
         """#
 
@@ -465,6 +511,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         placeStatus()
         let native = nativeStatus()
         guard let w = web else { statusLabel?.text = "{\"native\":" + native + ",\"page\":null}"; return }
+        if GameViewController.launchArg("-EchoWorldTest") != nil { w.evaluateJavaScript(GameViewController.worldDriver, completionHandler: nil) }
         w.evaluateJavaScript(GameViewController.statusProbe) { [weak self] value, error in
             var page = "null"
             if let s = value as? String { page = s }

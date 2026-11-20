@@ -180,6 +180,9 @@ export function compute(o) {
     appleSignIn,
     // 公开版服务器（cloud/API.md）：GameViewController 的启动对象里交给网页（account.js 的 EchoCloud）；空 = 不是云端模式
     cloudUrl,
+    // 测试版（TestFlight 的工作流给 ECHO_BETA=1）：屏幕最下面显示一行很小的版本号（echo-native.js 的 addBeta），截图上看得出是哪一版。
+    // 提交审核的那一版不给
+    beta: ['1', 'true', 'yes', 'on'].includes(String(env.ECHO_BETA || '').trim().toLowerCase()),
   };
   // 兜底：销售版里不许有密钥、家长密码、中转服务（和安卓的 checkReleaseConfig 一样）；商品编号要有（公开发的版本靠它收费）
   if (sales && (cfg.dashscopeKey || cfg.parentPinHash || cfg.talkUrl || cfg.talkCode || cfg.verUrl)) throw new Error('Sales edition must not contain a DashScope key, a baked parent PIN, a relay or an update URL.');

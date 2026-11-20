@@ -65,6 +65,38 @@ final class SmokeUITests: XCTestCase {
         add(a)
     }
 
+    // 大地图的画布是不是和画面那一层、和屏幕都对得上（wide：这时候应该是横的）。对得上返回空字符串，不然说哪里不对
+    @MainActor
+    private func worldFit(_ s: [String: Any], wide: Bool) -> String {
+        let n = s["native"] as? [String: Any] ?? [:], p = s["page"] as? [String: Any] ?? [:]
+        guard let w = p["world"] as? [String: Any] else { return "没有大地图" }
+        func num(_ d: [String: Any], _ k: String) -> Int { return d[k] as? Int ?? -1 }
+        let nw = num(n, "w"), nh = num(n, "h"), pw = num(p, "vw"), ph = num(p, "vh")
+        let vw = num(w, "vw"), vh = num(w, "vh"), cw = num(w, "cw"), ch = num(w, "ch"), cx = num(w, "cx"), cy = num(w, "cy")
+        let all = "屏幕 \(nw)×\(nh)，网页 \(pw)×\(ph)，画面层 \(vw)×\(vh)，画布 \(cw)×\(ch) 在 \(cx),\(cy)"
+        if (nw > nh) != wide { return "屏幕还没转过来（" + all + "）" }
+        if (pw > ph) != wide { return "网页还没转过来（" + all + "）" }
+        if (vw > vh) != wide { return "画面那一层还是另一个方向的（" + all + "）" }
+        if vw > pw || vh > ph { return "画面那一层比屏幕大（" + all + "）" }
+        if cw != vw || ch != vh || cx != 0 || cy != 0 { return "画布和画面那一层对不上（" + all + "）" }
+        return ""
+    }
+
+    // 等大地图的画布对上（每半秒看一次）。返回（对上没有，最后读到的状态，哪里不对）——对不上也不当场判失败，让调用的人先把截图拍了
+    @MainActor
+    private func settleWorld(_ app: XCUIApplication, wide: Bool, timeout: TimeInterval) -> (Bool, [String: Any], String) {
+        let end = Date().addingTimeInterval(timeout)
+        var last: [String: Any] = [:]
+        var why = "读不到状态"
+        while Date() < end {
+            last = status(app)
+            why = worldFit(last, wide: wide)
+            if why.isEmpty { return (true, last, "") }
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        return (false, last, why)
+    }
+
     // ---------- 1. 打开 App，网页到了首页（销售版第一次打开是家长首次设置向导，盖在首页上面） ----------
     @MainActor
     func test1LaunchReachesHomePortrait() {
@@ -198,6 +230,46 @@ final class SmokeUITests: XCTestCase {
         }
         shot("buy-sheet")
         print("EchoIsland store: buy sheet = \(seen.isEmpty ? "not seen" : seen)")
+        app.terminate()
+    }
+
+    // ---------- 7. 大地图里转屏：画布一直和屏幕一样大 ----------
+    // 老板 2026-11-20 在 iPhone 上：从横屏转回竖屏主角跑到屏幕最右边，从竖屏转到横屏只看得到天和屋顶（主角在屏幕下面外头）——
+    // 画布还是转之前量的大小。电脑上的浏览器模拟不出 iPhone 转屏时「通知先到、版面后排」，所以在这里用真的 WKWebView 转。
+    // -EchoWorldTest：放一份现成的存档、替人点进大地图（GameViewController 的 worldDriver）；-EchoOrient auto：跟着手机转。
+    // 每个方向都拍一张（world-*.png），对不上也拍，最后一起判
+    @MainActor
+    func test7WorldSurvivesRotation() {
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let app = launch(["-EchoOrient", "auto", "-EchoWorldTest"])
+        // 进了大地图、画过几帧、对话框点掉了
+        let s0 = waitStatus(app, timeout: 240, "world") { _, p in
+            guard let w = p["world"] as? [String: Any] else { return false }
+            return (w["frame"] as? Int ?? 0) > 5 && (w["dlg"] as? Bool) == false
+        }
+        let w0 = (s0["page"] as? [String: Any])?["world"] as? [String: Any] ?? [:]
+        print("EchoIsland world: renderer = \(w0["using"] ?? "") map = \(w0["map"] ?? "")")
+        var problems: [String] = []
+        let steps: [(String, UIDeviceOrientation, Bool)] = [
+            ("1-portrait", .portrait, false),
+            ("2-landscape-left", .landscapeLeft, true),
+            ("3-portrait-again", .portrait, false),
+            ("4-landscape-right", .landscapeRight, true),
+            ("5-portrait-last", .portrait, false),
+        ]
+        for step in steps {
+            XCUIDevice.shared.orientation = step.1
+            let r = settleWorld(app, wide: step.2, timeout: 25)
+            Thread.sleep(forTimeInterval: 2)             // 等这一帧画完再拍
+            shot("world-" + step.0)
+            attachJSON(r.1, "status-world-" + step.0)
+            print("EchoIsland world: \(step.0) \(r.0 ? "ok" : "BAD " + r.2)")
+            if !r.0 { problems.append(step.0 + "：" + r.2) }
+        }
+        XCTAssertTrue(problems.isEmpty, "转屏以后大地图的画布和屏幕对不上：
+" + problems.joined(separator: "
+"))
         app.terminate()
     }
 }
