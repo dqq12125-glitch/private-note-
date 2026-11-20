@@ -148,7 +148,7 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
   check(N.edition() === 'family', '网页换掉 window.prompt 也不影响桥（先留了一份）');
 
   // Bridge.swift：同步 / 异步两张表 + switch 里的 case
-  const bridge = fs.readFileSync(path.join(SRC, 'Bridge.swift'), 'utf8');
+  const bridge = fs.readFileSync(path.join(SRC, 'Bridge.swift'), 'utf8').replace(/\r\n/g, '\n');
   const arr = name => ((bridge.match(new RegExp('static let ' + name + ' = \\[([\\s\\S]*?)\\]')) || [])[1] || '').match(/"(\w+)"/g).map(s => s.slice(1, -1));
   const fnBody = name => { const i = bridge.indexOf('func ' + name + '('); const j = bridge.indexOf('\n    }\n', i); return bridge.slice(i, j); };
   const cases = body => [...body.matchAll(/case "(\w+)":/g)].map(m => m[1]);
