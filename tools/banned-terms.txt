@@ -121,6 +121,11 @@ re:/\bnot very effective\b/i
 焰羽鸟
 re:/\b(Frostwing|Stormwing|Blazewing|Articuno|Zapdos|Moltres)\b/
 
+# ---- 2026-11-21 改名的三只（和别家作品的角色重名；英文老名字只在 id 里留着，小写） ----
+# thunderwing 现在叫 Zapwing，stormeagle 现在叫 Thundereagle，owlet 的中文名现在是「聪聪枭」
+小智
+re:/\b(Thunderwing|Stormeagle)\b/
+
 # ---- 和那套系列一样的数字：手册总数、第一大区 ----
 re:/(386|151)\s*(只|种|號|号)/
 re:/(图鉴|手册)\D{0,3}(386|151)\b/

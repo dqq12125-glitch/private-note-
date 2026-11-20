@@ -18,6 +18,7 @@ const SKIP_DIR = [
   'tools/blender',    // Blender 的接口名（Strength 之类）
   'ios/www', 'ios/Generated', 'ios/.sales-web',   // iPhone 版打包时生成的网页拷贝和配置（不进仓库）
   'cloud/dist',       // 公开版服务器打包出来的（wrangler 生成，不进仓库）
+  'dist',             // 课程包、课程内容、别的语言的配音：都是从源文件生成的（不进仓库）；发过的旧版本课程包留着当时的文字，不能改
 ];
 // 不管在哪一层，叫这些名字的目录都是第三方库或工具的缓存（2026-11-19：cloud/ 装了 wrangler，它的 node_modules 里有 11 处误报）
 const SKIP_ANY = ['node_modules', '.wrangler', '.claude'];   // .claude：代理干活用的临时检出（.claude/worktrees/…），不是这份代码

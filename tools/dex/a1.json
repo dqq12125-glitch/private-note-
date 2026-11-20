@@ -241,7 +241,7 @@
  {
   "no": 16,
   "id": "thunderwing",
-  "en": "Thunderwing",
+  "en": "Zapwing",
   "zh": "雷翼",
   "types": [
    "spark",
@@ -268,11 +268,12 @@
   ],
   "rarity": 2,
   "words": [
-   "thunder",
+   "zap",
    "wing"
   ],
-  "dexEn": "Thunderwing flies very fast. Its wings shine in storms.",
-  "dexZh": "雷翼飞得很快，暴风雨里它的翅膀会发光。"
+  "dexEn": "Zapwing flies very fast. Its wings shine in storms.",
+  "dexZh": "雷翼飞得很快，暴风雨里它的翅膀会发光。",
+  "keepId": true
  },
  {
   "no": 17,
@@ -1642,7 +1643,7 @@
   "no": 52,
   "id": "owlet",
   "en": "Owlet",
-  "zh": "小智枭",
+  "zh": "聪聪枭",
   "types": [
    "psychic"
   ],
@@ -1676,7 +1677,7 @@
    "-let"
   ],
   "dexEn": "Owlet stays up all night. Its big eyes can see in the dark.",
-  "dexZh": "小智枭整夜不睡，大眼睛在黑暗中也能看见。"
+  "dexZh": "聪聪枭整夜不睡，大眼睛在黑暗中也能看见。"
  },
  {
   "no": 53,

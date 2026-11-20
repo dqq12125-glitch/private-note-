@@ -635,7 +635,7 @@
  {
   "no": 331,
   "id": "stormeagle",
-  "en": "Stormeagle",
+  "en": "Thundereagle",
   "zh": "风暴雕",
   "types": [
    "flying",
@@ -664,11 +664,12 @@
   ],
   "rarity": 4,
   "words": [
-   "storm",
+   "thunder",
    "eagle"
   ],
-  "dexEn": "Stormeagle flies into big storms for fun. Lightning follows its wings.",
-  "dexZh": "风暴雕喜欢飞进大风暴里玩，闪电跟着它的翅膀走。"
+  "dexEn": "Thundereagle flies into big storms for fun. Lightning follows its wings.",
+  "dexZh": "风暴雕喜欢飞进大风暴里玩，闪电跟着它的翅膀走。",
+  "keepId": true
  },
  {
   "no": 332,
