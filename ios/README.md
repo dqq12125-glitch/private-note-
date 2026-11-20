@@ -10,6 +10,7 @@
 - 家长密码 `PinGuard.swift`、备份文件名 `BackupNames.swift` 是照着安卓的 Java 一条一条写的（同一个盐、同样的 SHA-256、错 5 次锁 10 分钟、改手机时钟解不开）。
 - 网页进程没了（内存不够被系统收掉）：重建网页、重新打开首页，存档还在，网页能用 `takeRecovered()` 知道刚恢复过；前台 2 分钟里连挂 3 次显示一句话，等孩子点一下。
 - 公开版的**订阅**（App 内购买，StoreKit 2）和**通过 Apple 登录**：iPhone 才有的 9 个异步方法（`Store.swift`、`AppleSignIn.swift`），见「订阅和登录」。安卓以后接 Google Play 结算。
+- **口语题的本机识别**（2026-11-20）：iPhone 才有的 3 个异步方法 + 事件 `echo-speech`（`LocalSpeech.swift`，手机自带的语音识别，只在手机上识别），见「口语题的本机识别」。
 
 方法全表、哪些和安卓不完全一样，见下面「原生桥：和安卓不一样的地方」。
 
@@ -19,16 +20,16 @@
 | --- | --- |
 | `project.yml` | XcodeGen 的工程定义（不手写 `.xcodeproj`）：App、单元测试、UI 测试三个 target；最低 iOS 18.4；Swift 语言版本钉在 5 |
 | `Config/Base.xcconfig` | 进仓库的默认打包设置：App 标识 `ECHO_BUNDLE_ID` = **`com.echoisland.app`**（和安卓的包名一样，只写在这一处，`make-config.mjs` 也从这里读）、版本号、开发者团队。`Generated/Echo.xcconfig` 盖掉同名的 |
-| `App/Info.plist` | App 名「回声岛」、麦克风说明（中文）、竖屏 + 横屏、不显示状态栏、`ITSAppUsesNonExemptEncryption = false`、备份在「文件」App 里看得到 |
+| `App/Info.plist` | App 名「回声岛」、麦克风说明和语音识别说明（中文）、竖屏 + 横屏、不显示状态栏、`ITSAppUsesNonExemptEncryption = false`、备份在「文件」App 里看得到 |
 | `App/Resources/` | `echo-native.js`（EchoNative 那一层 + iPhone 才要管的声音、触摸、横屏标记）、`PrivacyInfo.xcprivacy`（隐私清单）、图标 |
-| `App/Sources/` | `AppDelegate`（场景、屏幕常亮、一开 App 就听订阅的交易）、`GameViewController`（网页、prompt/alert、麦克风放行、方向、后台前存档、进程挂了重建）、`WebAssetHandler`、`Bridge`、`DashScope`、`PinGuard`、`BackupNames`、`Stores`（钥匙串里的密钥、「文稿」里的备份）、`AppAudio`（声音会话）、`Store`（订阅，StoreKit 2）、`AppleSignIn`（通过 Apple 登录） |
+| `App/Sources/` | `AppDelegate`（场景、屏幕常亮、一开 App 就听订阅的交易）、`GameViewController`（网页、prompt/alert、麦克风放行、方向、后台前存档、进程挂了重建）、`WebAssetHandler`、`Bridge`、`DashScope`、`PinGuard`、`BackupNames`、`Stores`（钥匙串里的密钥、「文稿」里的备份）、`AppAudio`（声音会话）、`Store`（订阅，StoreKit 2）、`AppleSignIn`（通过 Apple 登录）、`LocalSpeech`（口语题的本机识别） |
 | `App/EchoIsland.entitlements` | 「通过 Apple 登录」的权限。**只有签名的包带**（`make-config.mjs` 的 `ECHO_APPLE_SIGNIN`），见「通过 Apple 登录的权限」 |
 | `App/Store.storekit` | 本地的 App Store（测试用）：一个订阅组、月度 US$8.99、年度 US$59.99（年度 7 天免费试用是**例子**，真的在 App Store Connect 里定） |
 | `Tests/LogicTests.swift` | 单元测试（模拟器里跑）：家长密码、备份轮换、Range、类型、只连阿里云、原生桥的入口 |
 | `Tests/AccountLogicTests.swift` | 单元测试：订阅和登录里不碰 App Store 的那一层（参数不对当场回、买的四种结果、取消、没带权限的包说 unavailable） |
 | `Tests/StoreKitTests.swift` | 订阅的真流程（用 `Store.storekit`）：商品、买（带账号 UUID）、请求购买、恢复、续费、过期、退款 → 事件。云上单独一步、挑 iOS 26.2 的模拟器 |
 | `UITests/SmokeUITests.swift` | UI 测试：打开到首页（竖屏、横屏截图）、原生桥自测页一个都不能没过、麦克风弹窗、分享面板和文件选择器、订阅的商品问得到 |
-| `www-test/selftest.html` | 原生桥自测页（**只打进调试包**）：把 26 个方法和 iPhone 才有的 9 个都调一遍，再看几样 WebKit 的本事 |
+| `www-test/selftest.html` | 原生桥自测页（**只打进调试包**）：把 26 个方法和 iPhone 才有的 12 个都调一遍，再看几样 WebKit 的本事 |
 | `scripts/prepare.mjs` | 打包前一条命令做完：`make-config.mjs` → `copy-web.mjs` → 没有图标时 `make-icons.mjs` |
 | `scripts/make-config.mjs` | 生成 `Generated/BuildConfig.swift`、`Generated/Echo.xcconfig`（版本、构建号、订阅的两个商品编号、带不带「通过 Apple 登录」；家庭版另有密钥和家长密码的**哈希**） |
 | `scripts/copy-web.mjs` | 把游戏网页复制进 `www/`：和安卓 `copyWeb` 同一份白名单，销售版不带保留怪兽 |
@@ -109,7 +110,7 @@ cd ios && xcodegen generate && open EchoIsland.xcodeproj
 
 ## 原生桥：和安卓不一样的地方
 
-26 个方法都有，名字、参数个数、返回值的类型、同步 / 异步（异步 = 连阿里云的四个）都和安卓一样（`tests/ios.test.js` 核对三处：README、`echo-native.js`、`Bridge.swift`）。另有 iPhone 才有的 9 个（下一节「订阅和登录」，`tests/ios.test.js` 的 `IOS_ONLY` 表）。不一样的：
+26 个方法都有，名字、参数个数、返回值的类型、同步 / 异步（异步 = 连阿里云的四个）都和安卓一样（`tests/ios.test.js` 核对三处：README、`echo-native.js`、`Bridge.swift`）。另有 iPhone 才有的 12 个（「订阅和登录」的 9 个、「口语题的本机识别」的 3 个，`tests/ios.test.js` 的 `IOS_ONLY` 表）。不一样的：
 
 | 方法 | iPhone 上 |
 | --- | --- |
@@ -172,9 +173,38 @@ TestFlight 的工作流先带着它签；苹果不肯（App ID 上没勾「Sign 
 - Xcode 本地 App Store 的交易是 Xcode 的证书签的：手机上算核对过，**服务器那边会拒**（`cloud/API.md`：只认 Apple Root CA – G3），这是对的。
 - UI 测试（`-EchoSelfTest store`）只要求异步桥一路通（网页 → `Store.swift` → `window.__echoNative`，用一个当场回的 `bad-token`）；问商品、有商品时弹不弹购买面板只记下来：`xcodebuild test` 不把配置文件交给模拟器（UI 测试里 `SKTestSession` 也管不到被测的 App），云上多半一个商品都没有。
 
+## 口语题的本机识别（iPhone 才有，2026-11-20）
+
+老板在 iPhone 上试：口语题「识别还是太慢，有时候还不准」。以前 iPhone 上的口语题也是网页开麦克风 → 连服务器 → 阿里云实时识别（北京），每题新连一次、要登录、算每天的 AI 额度。现在口语题（闯关、每日复习、对战、大地图的说话任务、能力检测的朗读题——凡是走 `game.js` 的 `recognize()` → `EchoTalk.listenOnce` 的）**先用手机自带的语音识别在手机上听写**：不联网、不用登录、不算额度，边说边出字。和岛民自由聊天还是实时语音模型，不变；安卓不变。
+
+`LocalSpeech.swift`：`SFSpeechRecognizer`（`en-US`、`requiresOnDeviceRecognition = true`、边说边出字）+ 自己用 `AVAudioEngine` 录音（网页不另开麦克风）。
+
+- **只在手机上识别**：这台手机这门语言没有本机识别就回 `unavailable`，网页同一次里改走云端，**不退回苹果的服务器识别**。
+- **打分照样诚实**：不把答案交给识别（不设 `contextualStrings`、不用自定义语言模型），打分还是网页的 `scoreSpeech()`。
+- **什么时候算说完由网页定**（`talk.js` 的 `nativeListen`），不等苹果的「最终结果」：有字以后字停住不变 0.4 秒（单词）/ 0.6 秒（句子），并且原生说人已经不出声了（`voice` 事件；一直「在出声」最多再等 1.2 秒）；对上答案当场结束；最长 8 秒。
+- **声音**：录音前 `AppAudio.configure()`（边录边放 + 默认扬声器 + 模式 default，不用 measurement / voiceChat），停了不关会话：接着放的配乐、朗读还从扬声器出来、音量不变。网页那一层在听的时候 `navigator.audioSession` 是 `play-and-record`（`echo-native.js` 的 `__echoIOS.speech`），停了换回 `playback`。
+- 来电 / Siri 打断、切到后台、声音设备变了（插拔耳机）、网页重建：当场停，发 `end`。
+- 识别引擎是单独一层（`SpeechEngine`）：以后换 iOS 26 的 `SpeechAnalyzer` / `SpeechTranscriber` 再写一个，权限顺序、录音、事件不用动。
+- 权限：第一次弹「语音识别」（说明在 `Info.plist` 的 `NSSpeechRecognitionUsageDescription`，中文）和麦克风。拒绝了网页就安静地改走云端，不再问。
+
+都是异步的，第一个参数是网页给的编号，结果回 `window.__echoNative(编号, 'ok' / 'fail', JSON 文字)`；`'fail'` 一律是 `{"error":"短代号","message":"英文说明"}`。网页先看 `window.ECHO_IOS` 和 `typeof EchoNative.speechStart === 'function'`。
+
+| 方法 | 说明 |
+| --- | --- |
+| `speechState(id)` | 现在能不能用，**不弹任何框**：`ok {auth:'authorized'/'notDetermined'/'denied'/'restricted', mic:'granted'/'denied'/'blocked', onDevice, available, locale:'en-US', engine:'SFSpeechRecognizer', listening}` |
+| `speechStart(id, opts)` | 开始听。`opts` 是 JSON 文字 `{short, long, ask, locale}`（`ask:false` 不弹权限框，自测页用）。真的开始录了才回 `ok {listening:true, sid:id, ms, locale, short, engine}`；不行回 `fail`：`unavailable`（没有本机识别）/ `denied`、`restricted`（语音识别没允许）/ `mic`（麦克风没允许）/ `audio`（录音开不起来）/ `busy`（正在弹权限框）/ `not-asked`（`ask:false` 又还没问过）/ `cancelled`（弹框时网页叫停了）。上一次没停的先停掉（`end`，`replaced`） |
+| `speechStop(id)` | 停：`ok {stopped:true/false}`。正在弹权限框的，答完了也不开 |
+
+**事件** `echo-speech`（`e.detail.sid` = `speechStart` 的编号，`t` = 开始以后几毫秒）：`partial` / `final` `{text}`（到目前为止听到的整句）、`voice` `{on}`（开始 / 停止出声，只在变的时候发）、`error` `{code, message}`、`end` `{reason: stop / final / error / interrupted / background / audio-changed / audio-reset / page / replaced}`。
+
+网页那边（`talk.js`）：本机开不起来（`unavailable` / `denied` / `restricted` / `audio` / `busy` / 超时）同一次里改走云端识别，孩子不用再点一次；`unavailable` / `denied` / `restricted` 这次打开 App 记住（回到前台再问一次 `speechState`，打开了就又用本机）；麦克风被拒直接按「麦克风被拒」回（云端也要麦克风）。每次识别的计时（点了到开始听、第一个字、结束、最后一个字到结束、用的哪个）留在内存里：`EchoTalk.lastSpeech()` / `EchoTalk.speechLog()`（最近 20 次，不上传）；周报诊断一行有「口语识别：本机 n 次、云端 m 次，本机说完约 x 秒出分」。调试时 `localStorage['echo-sr'] = 'cloud'` 可以临时只用云端（界面上没有开关）。
+
+云上的模拟器多半没有本机识别：自测页只证明桥通、`unavailable` / `not-asked` 网页认得（`speechStart` 带 `ask:false`，不弹框）。准不准、快不快、权限框、问完以后声音从哪里出来，要在真 iPhone 上看。
+
 ## iPhone 上才要管的（都在壳子里，安卓不变）
 
 - **声音**：App 的声音会话一开始就是「边录边放」+ 默认扬声器 + 蓝牙耳机（`AppAudio.swift`），静音键关不掉配音和岛民说话；网页那一层另外用 `navigator.audioSession` 平时设 `playback`、开麦克风时 `play-and-record`（`echo-native.js`）。来电、闹钟、Siri 打断以后：原生重新打开声音会话，网页把 `interrupted` 的 AudioContext 接上。
+- **口语题的本机识别**：录音是原生自己录的（`LocalSpeech.swift`），见上一节「口语题的本机识别」。
 - **麦克风**：第一次开口弹系统的「允许使用麦克风」（说明文字在 `Info.plist`）；之后壳子直接放行自己的网页（`requestMediaCapturePermissionFor`），不会每次打开都再问。麦克风用的 16kHz AudioContext 在 iPhone 上会丢四分之一的样本（WebKit bug 251350），`echo-native.js` 去掉这个选项用系统默认的采样率，`talk.js` 本来就会换算成 16k。
 - **横屏和刘海 / 灵动岛**：网页铺满整个屏幕。竖屏的上下原来就让开了；横屏时左右两边各约 59px、下面约 21px：`style.css` 末尾只给 iPhone 版的几条（`<html class="echo-ios">`）让开（首页、做题、能力检测、家长首次设置、反馈条、弹窗、聊天、对战）。
 - **存档的空间**：iPhone 的 WebKit 一个网站只给 5MB localStorage，值里只要有一个中文字就按一个字 2 字节算（约 262 万字，安卓约 524 万字），`game.js` 的「存档空间快满了」在 iPhone 上按一半算。WebKit 自己的规矩：手机空间紧张时可能清掉不常用网站的数据——壳子请求了「持久存储」，原生每天另存一份备份到「文件」App。
@@ -257,6 +287,7 @@ git push origin testflight-20261119-1
   （家长密码锁定用的 `clock_gettime` 和 `kern.bootsessionuuid` 不在苹果的清单上，值也不离开手机。）App Store Connect 里的「App 隐私」问卷要和这里一致，再加上隐私政策的网址（可以用 `pages/privacy.html` 的内容放到公司网站上）。
 - **出口合规**：只用系统的 HTTPS / WSS 和 CryptoKit 的 SHA-256，`Info.plist` 写了 `ITSAppUsesNonExemptEncryption = false`，上传时不用再填加密文件。
 - **麦克风说明**（`NSMicrophoneUsageDescription`）：「回声岛要听你说的英语，才能给口语打分、让你和岛民用英语聊天。声音只用来识别和打分。」——要和真实用途一致，审核会看。
+- **语音识别说明**（`NSSpeechRecognitionUsageDescription`，2026-11-20）：「口语题用 iPhone 自带的语音识别，在这台手机上把你说的英语写成文字来打分。识别在手机上完成，这段声音不会上传。」——代码里只用本机识别（`requiresOnDeviceRecognition = true`），和说明一致。
 - **年龄分级**（2025 年起是 4+ / 9+ / 13+ / 16+ / 18+，问卷里新加了「家长控制」「年龄验证」「AI 聊天」这类问题）：如实答；有家长密码、学习锁、冒险时间这些「App 内的控制」。AI 岛民说什么由云上的模型决定，审核会关心它会不会说出不合适的话——岛民的人设和安全规则（`talk-core.js` 的 `instructions()`）、本机的关键词标记、家长能看全文，在审核备注里写清楚。
 - **AI 内容**（审核指南 1.2、5.1.2(i)）：用第三方 AI 时要在用之前清楚告诉用户数据发给了谁（阿里云）、征得同意（销售版向导的第 ① 步和聊天页「家长须知」就是这个）；要有举报不合适内容的办法和联系方式。
 - **不要放进「儿童」分类**（Kids Category，指南 1.3 / 5.1.4）：「儿童」分类不许把孩子的个人信息（包括声音）发给第三方，而这个 App 的核心就是把孩子的声音发给阿里云识别、和 AI 自由对话；一旦进了「儿童」分类，以后每次更新都要守它的规矩。面向所有年龄、按普通 App 上架。
@@ -331,5 +362,6 @@ git push origin testflight-20261119-1
 
 - 第一次在云上编译：这台电脑编不了 Swift，Swift 的写法是对着苹果的文档和 WebKit 的头文件核过的，但还没真编过。
 - 订阅和登录（2026-11-19 加的 `Store.swift`、`AppleSignIn.swift`、StoreKit 测试、TestFlight 工作流）：还没在云上编过、没传过 TestFlight；`-allowProvisioningUpdates` 能不能自己给 App ID 加上「通过 Apple 登录」没试过（工作流不行就不带它再签一次）；沙盒里真的买要等「付费 App 协议」签好、App Store Connect 里建好两个订阅。
+- 口语题的本机识别（2026-11-20）：真 iPhone 上孩子的口音认得准不准、说完到出分多快（周报诊断一行、`EchoTalk.lastSpeech()`）、第一次的两个权限框、问完以后配乐和朗读是不是还从扬声器出来、音量照旧、来电打断以后。
 - 真 iPhone 上：麦克风录音和阿里云实时识别、AI 聊天（直连）、配音的 Ogg Opus、静音键、来电打断以后声音接不接得上、横屏的灵动岛、长按会不会出放大镜、存档在 WebKit 里能放多少、内存大的 3D 场景会不会把网页进程挤掉。
 - 销售版的首次设置向导第 ② 步「设备检查」是按安卓写的（系统版本那一行、「iPhone 装不上」那句说明），iPhone 上要改成认 `diag().platform === 'ios'`（`setup.js`，见交接说明）。

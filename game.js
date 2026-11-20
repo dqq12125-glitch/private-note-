@@ -1921,6 +1921,8 @@
   const canRecord = () => !RT.noRec && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
   // 安卓 APK：WebView 里没有能用的浏览器语音识别 → 有阿里云密钥就录一句交给阿里云识别（talk.js listenOnce），连不上两次就改回录音自评
   const cloudSR = () => !!(window.EchoTalk && EchoTalk.cloudSR && EchoTalk.cloudSR()) && !RT.cloudBroken;
+  // iPhone：口语题先用手机自带的本机识别（talk.js localSR，2026-11-20）——不联网、不用登录、不算 AI 额度；开不起来同一次里改走云端
+  const localSR = () => !!(window.EchoTalk && EchoTalk.localSR && EchoTalk.localSR());
   // 口语默认「开口 + AI 打分」：APK 一律开口（没网就提示联网后再说，不会改成自评）；
   // 网页版连得上中转服务就用阿里云识别，否则用浏览器自带的识别，都没有才退回录音自评。「录音自评」只留给 ?quiet 测试链接
   function speakMode() {
@@ -1946,7 +1948,19 @@
     if (TTS.ok) speechSynthesis.cancel();
     if (RT.audio) RT.audio.pause();
     const t0 = Date.now(), cloud = cloudSR();
-    return recognizeRaw(onInterim, targets, opts).then(r => { if (m) m.hold(false); if (cloud) logAsr(t0); return r; });
+    return recognizeRaw(onInterim, targets, opts).then(r => { if (m) m.hold(false); const s = srDay(t0); if (cloud && !(s && s.eng === 'device')) logAsr(t0); return r; });
+  }
+  // 这一次用的是本机还是云端识别（talk.js 的计时记录）：周报诊断一行。本机识别不算 AI 用量（上面的 logAsr 只记云端的）
+  function srDay(t0) {
+    try {
+      const s = window.EchoTalk && EchoTalk.lastSpeech ? EchoTalk.lastSpeech() : null;
+      if (!s || s.at < t0) return null;
+      const L = dayLog();
+      if (s.eng === 'device') { L.srDev = (L.srDev || 0) + 1; if (s.ok && s.lag != null) { L.srLag = (L.srLag || 0) + s.lag; L.srLagN = (L.srLagN || 0) + 1; } }
+      else if (s.eng === 'cloud') L.srCloud = (L.srCloud || 0) + 1;
+      if (s.fell) L.srFell = (L.srFell || 0) + 1;
+      return s;
+    } catch (e) { return null; }
   }
   // 周报的 AI 用量：用阿里云识别了几次、大约几秒（估算花费）。失败的次数和原因在 aiNote 里记
   function logAsr(t0) {
@@ -1959,6 +1973,7 @@
   // listenOnce 的结果 → fail 的种类（talk.js 的 why：offline / network 算没网；auth / quota / busy / code 算密钥和额度）
   function failOf(r) {
     if (!r || r.text) return '';
+    if (r.err === 'nokey') return 'nokey';   // iPhone 的本机识别开不起来、云端又没有密钥 / 没登录
     if (r.err === 'not-allowed' || r.err === 'audio-capture') return 'mic';
     if (r.err === 'network') return r.why === 'offline' || r.why === 'network' || !r.why ? 'net' : 'key';
     if (r.err === 'aborted') return 'stop';
@@ -1966,8 +1981,9 @@
   }
   function recognizeRaw(onInterim, targets, opts) {
     // 云端模式还没登录：不开麦克风，走「AI 用不了」那条路；第一次碰到时弹一次「登录，每天免费用 AI」（不是报错）
-    if (cloudOn() && S.settings.mode !== 'self' && aiNoKey()) { RT.cloudAsked = true; aiNote('nokey'); if (ACC()) ACC().nudge(); return Promise.resolve({ alts: [], err: 'nokey', fail: 'nokey', why: 'signin' }); }
-    if (cloudSR()) {
+    // iPhone 的本机识别能用（localSR）：不登录、没网也能打分，不走这条
+    if (cloudOn() && S.settings.mode !== 'self' && aiNoKey() && !localSR()) { RT.cloudAsked = true; aiNote('nokey'); if (ACC()) ACC().nudge(); return Promise.resolve({ alts: [], err: 'nokey', fail: 'nokey', why: 'signin' }); }
+    if (cloudSR() || localSR()) {
       RT.listening = true;
       const tg = (targets || []).filter(Boolean);
       return EchoTalk.listenOnce(Object.assign({ onState: onInterim, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => x.trim().split(/\s+/).length <= 2) },
@@ -1975,6 +1991,8 @@
         RT.listening = false;
         r = r || {};
         const fail = failOf(r);
+        // 本机识别开不起来、云端又用不了（没有密钥 / 没登录）：和上面没有 AI 时一样（先跳过；云端模式请他登录一次）
+        if (fail === 'nokey') { if (cloudOn()) { RT.cloudAsked = true; if (ACC()) ACC().nudge(); } aiNote('nokey'); return { alts: [], err: 'nokey', fail, why: r.why || 'nokey' }; }
         if (fail === 'mic') {
           if (window.ECHO_APP) { micBlocked(r.why); return { alts: [], err: 'mic', fail, why: r.why || '' }; }   // APK 必须开口：说明为什么要麦克风 +「去打开」
           RT.cloudBroken = true;   // 网页版：退回浏览器识别 / 录音自评
@@ -1986,7 +2004,7 @@
           return { alts: [], err: 'no-speech', fail, why: r.why || '' };
         }
         if (r.text) { aiNote('ok'); RT.cloudFails = 0; }
-        return { alts: r.text ? [r.text] : [], err: r.err === 'network' || r.err === 'busy' ? 'no-speech' : r.err || null, fail };
+        return { alts: r.text ? [r.text] : [], err: r.err === 'network' || r.err === 'busy' ? 'no-speech' : r.err || null, fail, eng: r.eng || '' };
       });
     }
     // APK 里没有 AI 密钥：WebView 没有能用的浏览器识别，也不退回自评——走「AI 用不了」的出路（先跳过、放进复习）
@@ -2036,8 +2054,8 @@
   const aiNoKey = () => cloudOn() ? S.settings.mode !== 'self' && !(ACC() && ACC().signed()) : !!window.ECHO_APP && S.settings.mode !== 'self' && !cloudSR();
   function aiDown() {
     if (speakMode() !== 'sr') return false;
-    if (aiNoKey()) return true;
-    if (!cloudSR()) return false;
+    if (aiNoKey() && !localSR()) return true;   // iPhone 的本机识别不要密钥、不要登录
+    if (!cloudSR() && !localSR()) return false;
     return RT.aiFails >= 2 && Date.now() - RT.aiFailAt < AI_DOWN_MS;
   }
   // cls：'ok' 识别成功 / 'net' / 'key' / 'nokey'；why：talk.js 的细分原因（offline / network / auth / quota / busy / code）
@@ -2190,7 +2208,7 @@
     const c = RT.chk = RT.chk || {};
     const upd = () => { const ul = $('#chk'); if (ul) ul.innerHTML = chkRows(); };
     m.classList.add('on'); m.innerHTML = STOP; hint.textContent = tr('g.mic.listen'); heard.textContent = '';
-    if (aiNoKey() || !cloudSR()) {   // 没有密钥：只能看麦克风有没有声音
+    if ((aiNoKey() || !cloudSR()) && !localSR()) {   // 没有密钥：只能看麦克风有没有声音（iPhone 的本机识别能用就真的识别一次）
       RT.chkBusy = true;
       const r = await micProbe(2500);
       RT.chkBusy = false;
@@ -2206,9 +2224,11 @@
     if (!$('#chk-mic')) return;
     m.classList.remove('on'); m.innerHTML = MIC;
     if (res.alts.length) {
-      Object.assign(c, { mic: 'ok', net: 'ok', key: 'ok', keyWhy: '' }); upd();
+      // 本机识别（iPhone）没用到网络和 AI：只说麦克风没问题，网络 / AI 那两行照原样；再说一句这次用的是本机还是云端
+      const dev = res.eng === 'device', sr = window.EchoTalk && EchoTalk.srText ? EchoTalk.srText('chk', res.eng) : '';
+      Object.assign(c, dev ? { mic: 'ok' } : { mic: 'ok', net: 'ok', key: 'ok', keyWhy: '' }); upd();
       heard.textContent = tr('w.heard', { t: res.alts[0] });
-      hint.textContent = tr('g.mic.allok');
+      hint.textContent = dev && sr ? sr : tr('g.mic.allok') + (res.eng === 'cloud' && window.ECHO_IOS ? sr : '');   // 安卓、网页版和以前一字不差
       S.micCheck = dayStr(); save();
       const d = $('#chk-done'); if (d) d.hidden = false;
       return;
@@ -2676,7 +2696,7 @@
     return q;
   }
   function buildReview() {
-    const off = (navigator.onLine === false || aiDown()) && speakMode() === 'sr';   // 没网 / AI 用不了就打不了分：只出听力题
+    const off = ((navigator.onLine === false && !localSR()) || aiDown()) && speakMode() === 'sr';   // 没网 / AI 用不了就打不了分：只出听力题（iPhone 的本机识别没网也行）
     return shuffle(dueList().slice(0, REV_N).map(([k, e]) => {
       // 聊天里改过的句子：有原话的让他直接说出对的（开口），没有原话的跟读或排句子；AI 用不了时先跳过的（owe）联网后一定开口
       if (e.k === 'free') return freeQ(e.en.split(/\s+/).length >= 3 && (off || (!e.said && !e.owe && Math.random() < .5)) ? 'lo' : 'sr_s', e, k);
@@ -3980,7 +4000,7 @@
   function envHTML(inSet) {   // inSet：在设置页里（上面已经有「请家长粘贴 AI 密钥」的提示）
     if (window.ECHO_APP) {   // 安卓 APK：不用讲浏览器的事
       return '<div class="env">' + tr('g.set.env.app') + '<br>' +
-        (cloudOn() && aiNoKey() ? tr('ac.env.signin') : cloudSR() ? tr('g.set.env.sr.ok') : tr('g.set.env.sr.nokey') + (inSet ? tr('g.set.env.see') : tr('g.set.env.paste'))) + '</div>';
+        (localSR() && EchoTalk.srText ? esc(EchoTalk.srText('env')) : cloudOn() && aiNoKey() ? tr('ac.env.signin') : cloudSR() ? tr('g.set.env.sr.ok') : tr('g.set.env.sr.nokey') + (inSet ? tr('g.set.env.see') : tr('g.set.env.paste'))) + '</div>';
     }
     const st = S.settings.tts || 'auto';
     const tts = st === 'device' ? (TTS.voices.length ? trh('g.set.env.dev', { name: TTS.v ? TTS.v.name : '' }) : tr('g.set.env.nodev'))
@@ -5075,7 +5095,13 @@
     const fails = W0.sum('aiFail'), chatErr = W0.n('chatErr'), errs = window.EchoErr ? EchoErr.count(7) : 0;
     let gone = 0; try { if (nat('diag')) gone = +(JSON.parse(EchoNative.diag() || '{}').renderGone || 0); } catch (e) { /* 老版本的原生没有 diag() */ }
     return tr('g.rp.dg.ai', { n: fails }) + (fails ? tr('g.rp.dg.aiwhy', { a: W0.sum('aiNet'), b: W0.sum('aiKey') }) : '') + (chatErr ? tr('g.rp.dg.chat', { n: chatErr }) : '') +
-      tr('g.rp.dg.err', { n: errs }) + (W0.sum('glLost') ? tr('g.rp.dg.gl', { n: W0.sum('glLost') }) : '') + (gone ? tr('g.rp.dg.gone', { n: gone }) : '') + ' · ' + verText();
+      tr('g.rp.dg.err', { n: errs }) + (W0.sum('glLost') ? tr('g.rp.dg.gl', { n: W0.sum('glLost') }) : '') + (gone ? tr('g.rp.dg.gone', { n: gone }) : '') + srDiag(W0) + ' · ' + verText();
+  }
+  // iPhone 的本机识别用过才有这一截：本机 / 云端各几次、本机说完到出分平均几秒（srDay 记的）
+  function srDiag(W0) {
+    const a = W0.sum('srDev'), n = W0.sum('srLagN');
+    if (!a || !window.EchoTalk || !EchoTalk.srText) return '';
+    return EchoTalk.srText('rp', { a, b: W0.sum('srCloud'), s: n ? (W0.sum('srLag') / n / 1000).toFixed(1) : '–' });
   }
   function reportSheet() {
     weeklyRoll();
