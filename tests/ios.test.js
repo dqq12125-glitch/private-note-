@@ -25,7 +25,8 @@ const IOS = path.join(ROOT, 'ios');
 const SRC = path.join(IOS, 'App', 'Sources');
 let fails = 0;
 const check = (ok, what, extra) => { console.log((ok ? '✓ ' : '✗ ') + what + (!ok && extra !== undefined ? '\n    ' + JSON.stringify(extra).slice(0, 600) : '')); if (!ok) fails++; return ok; };
-const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
+// 读源码一律按 LF 看：Windows 上 git 会把合并碰过的文件写成 CRLF，按行写的那些核对（Bridge.callSync 的 case）就对不上了
+const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8').replace(/\r\n/g, '\n');
 const sha = s => crypto.createHash('sha256').update(s, 'utf8').digest('hex');
 const same = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
 const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRight: [...b].filter(x => !a.includes(x)) });
