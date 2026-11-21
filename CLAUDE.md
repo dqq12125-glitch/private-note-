@@ -138,7 +138,7 @@
 
 ## 公开版服务器（2026-11-19）
 
-- 公开版（App Store）不带密钥：App 连 `cloud/` 的服务器，照 `cloud/API.md`。家庭版的 `server/` 照旧。2026-11-20 起部署在老板的 Cloudflare 账号上（见上面「账号和会员」那一条；2026-11-21 又发了一版，带别的语言的识别 / 合成）；老板要开的账号（Cloudflare Workers Paid、域名、阿里云国际版、Resend、App Store Connect 的订阅和通知地址、Sign in with Apple 密钥）、秘密、部署命令、成本在 `cloud/README.md`。App 这边（登录、会员页、额度显示、走服务器聊天、举报按钮、删号）还没接。
+- 公开版（App Store）不带密钥：App 连 `cloud/` 的服务器，照 `cloud/API.md`。家庭版的 `server/` 照旧。2026-11-20 起部署在老板的 Cloudflare 账号上（见上面「账号和会员」那一条；2026-11-21 又发了一版，带别的语言的识别 / 合成）。**服务器固定在东京的机房跑（`cloud/wrangler.toml` 的 `[placement]`，2026-11-21）**：默认跑在离用户最近的机房（老板在悉尼），从悉尼机房连阿里云（北京）丢包很厉害，老板 iPhone 上口语题等 20 秒后报「AI 有点忙」（11-20 的「识别太慢」也是它）；本机起的服务器测不出来，要量线上——做法和数字在 `cloud/README.md`「放在哪个机房」（`scripts/placement-probe/`、`scripts/live-prod-probe.mjs`）。**换阿里云国际版或换供应商时要重新量、改这一行**。老板发来「识别慢 / AI 有点忙」先看屏幕底下那行小字是不是 `cloud`、再量线上；老板要开的账号（Cloudflare Workers Paid、域名、阿里云国际版、Resend、App Store Connect 的订阅和通知地址、Sign in with Apple 密钥）、秘密、部署命令、成本在 `cloud/README.md`。App 这边（登录、会员页、额度显示、走服务器聊天、举报按钮、删号）还没接。
 - 额度（老板 11-19 定，在 `wrangler.toml` 的 PLANS，改了不用发版）：免费每天聊 5 分钟、月付 US$8.99 30 分钟、年付 US$59.99 20 分钟；识别 400 / 1500 次，别的 AI 调用 300 / 1500 次。App 显示 `GET /v1/me` 的数，不自己算。按标价算，年付用户天天用满 20 分钟时 AI 成本约等于扣掉苹果抽成后的收入，要看实际用量再调。
 - 孩子只存年龄段；child 没有家长同意时聊天、检测自由回答判分、聊天打勾回 403（CONSENT_GATED）。服务器不存聊天记录，只有「举报」的那段存 90 天。
 - 不用 Durable Object：实时语音在普通 Worker 里转发（只按 CPU 计费，一段 10 分钟约 0.2 秒 CPU）；同一账号同时一段、断了也记账靠 D1 的 `talk_live`。

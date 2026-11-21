@@ -1,0 +1,15 @@
+# 量「从哪个机房去连 AI 供应商最快」用的临时 Worker：不带任何钥匙，量完就删。做法见 cloud/README.md「放在哪个机房」。
+# 一定带 --config 跑（别在 cloud/ 里不带参数跑 wrangler，会动到正式的服务器）：
+#   cd cloud
+#   npx wrangler deploy --config scripts/placement-probe/wrangler.toml --dry-run
+#   npx wrangler deploy --config scripts/placement-probe/wrangler.toml
+#   curl -s -D - "https://echo-island-probe.<账号的子域>.workers.dev/?n=3&ws=0"     # 看 cf-placement 和三个数：get（每次来回）、post（传 300KB）
+#   npx wrangler delete --config scripts/placement-probe/wrangler.toml
+# 换一个地区：改下面 [placement] 那一行再 deploy（不写 [placement] = 离你最近的机房）。?intl=1 量阿里云国际版（新加坡）。
+name = "echo-island-probe"
+main = "index.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[placement]
+region = "aws:ap-northeast-1"

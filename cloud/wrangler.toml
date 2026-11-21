@@ -6,6 +6,14 @@ main = "src/index.js"
 compatibility_date = "2026-11-01"
 workers_dev = true
 
+# 这个程序在哪个机房跑：固定在东京附近（Cloudflare 把 aws:ap-northeast-1 对到离它最近的机房，回应头 cf-placement: remote-NRT）。
+# 为什么：不指定时程序跑在离用户最近的机房，老板在悉尼就是悉尼机房——从那里去连阿里云（北京）丢包很厉害：
+# 2026-11-21 实测，传一段 300KB 的录音悉尼要 40 秒还失败，实时识别说完八九秒才出字（老板的 iPhone 上口语题等 20 秒后报「AI 有点忙」）；
+# 东京 0.6–0.9 秒、每次都稳（香港约 2 秒，新加坡 1–2 秒，首尔时快时慢）。手机到东京这一段走 Cloudflare 自己的网，不慢。
+# **换成阿里云国际版（新加坡）时这里要跟着改成 aws:ap-southeast-1**；换别的供应商也要重新量（做法见 cloud/README.md「放在哪个机房」）。
+[placement]
+region = "aws:ap-northeast-1"
+
 # 一个请求（包括一整段 WebSocket 对话）最多用多少 CPU 毫秒。转发一段 10 分钟的语音聊天实测约 1 秒以内，这里给足
 [limits]
 cpu_ms = 60000

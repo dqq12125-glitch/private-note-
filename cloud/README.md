@@ -155,6 +155,28 @@ curl https://api.你的域名/v1/health                       # {"ok":true,...}
 以后改了表结构：在 `migrations/` 加 `0002_….sql`，`npx wrangler d1 migrations apply DB --remote`，再 `npx wrangler deploy`。
 看日志：`npx wrangler tail`。看举报：`curl -H "Authorization: Bearer <ADMIN_TOKEN>" https://api.你的域名/v1/admin/reports`。
 
+## 放在哪个机房（`wrangler.toml` 的 `[placement]`）
+
+Cloudflare 默认让程序跑在离用户最近的机房。这样**从机房去连 AI 供应商**那一段就看运气：2026-11-21 老板在悉尼，程序跑在悉尼机房，从那里连阿里云（北京）丢包很厉害——iPhone 上口语题等 20 秒后报「AI 有点忙」，11-20 说的「识别太慢」也是它。本机起的服务器（`live-speech.mjs`）完全正常，只有线上才看得出来。
+
+量出来的数（不带钥匙的测量程序，往 `dashscope.aliyuncs.com` 传 300KB / 每次来回）：
+
+| 程序跑在 | 传 300KB | 来回一趟 |
+| --- | --- | --- |
+| 悉尼（默认） | 40 秒，还失败 | 1.4–5 秒 |
+| 东京 `aws:ap-northeast-1` | 0.6–0.9 秒 | 0.1–0.6 秒 |
+| 香港 `aws:ap-east-1` | 1.9–2.8 秒 | 0.1–0.8 秒（偶尔 7 秒） |
+| 新加坡 `aws:ap-southeast-1` | 1.0–2.3 秒 | 0.2–1.2 秒 |
+| 首尔 `aws:ap-northeast-2` | 2–9.5 秒 | 0.2–2.3 秒 |
+
+所以现在固定在东京。改完以后用真的登录态量线上（三遍都一样）：整段识别 0.7–1.7 秒，实时识别说完 0.4–0.6 秒出字；改之前实时识别不出字或晚八九秒，整段识别时好时坏（1–5 秒，或者 12 秒超时）。
+
+- 回应头 `cf-placement: remote-NRT` 说明在东京跑；`local-XXX` 就是没生效。
+- **换成阿里云国际版（新加坡）、或者换供应商以后要重新量、改 `[placement]`**：
+  1. `scripts/placement-probe/`（不带钥匙的测量程序，用法写在它的 `wrangler.toml` 开头，**一定带 `--config`**，量完 `wrangler delete`）——比几个地区；
+  2. `scripts/live-prod-probe.mjs`（用法写在文件开头：先把同一份程序以预览方式跑在 Cloudflare 上、邮件改成打印来拿登录态，再打线上；会花几分钱、会在线上的库里建一个测试账号再删掉）——确认线上真的快了。
+- `hostname = "dashscope.aliyuncs.com"`（让 Cloudflare 自己找近的机房）试过，部署后没有马上生效（还是 `local-SYD`），所以写死地区。
+
 ## App 怎么接
 
 App 里设一个服务器地址 `https://api.你的域名`，照 `API.md` 调：登录拿 token → 每个请求带 `Authorization: Bearer <token>`；实时聊天 `wss://api.你的域名/v1/talk?npc=…`，连上后第一条消息发 `{"type":"auth","token":"…"}`，后面的消息和家庭版中转服务的 `/talk` 一样（区别写在 API.md §8：`daily` 改叫 `quota`，多了 `quota` 提醒消息）。买订阅时把 `me.iapToken` 当 `appAccountToken`，买完、恢复购买、`Transaction.updates` 来了都把 `jwsRepresentation` 发给 `POST /v1/iap/apple`。额度、几点重置、订阅状态都以 `GET /v1/me` 为准。
