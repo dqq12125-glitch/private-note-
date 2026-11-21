@@ -1,0 +1,42 @@
+# TestFlight 的测试员：看状态、开带公开链接（邀请码）的外部测试组并送测试版审核（ios/scripts/asc-beta.mjs）。
+# 怎么跑：推一个标签——
+#   asc-status-<随便什么>   只看现在的状态，不改任何东西
+#   asc-link-<随便什么>     建外部测试组「Friends」+ 公开链接，把最新的包加进去，送测试版审核（要老板点头才推这个标签）
+# 用的仓库密钥：ASC_KEY_ID、ASC_ISSUER_ID、ASC_KEY_P8（和上传 TestFlight 是同一把）；
+# 可选 ASC_REVIEW_FIRST / ASC_REVIEW_LAST / ASC_REVIEW_PHONE / ASC_REVIEW_EMAIL / ASC_FEEDBACK_EMAIL（苹果审核要的联系人，后台已经填过就不用）。
+# 这个仓库是公开的，日志谁都看得到：脚本不打印联系人、邮箱、公开链接的原文（公开链接加密成 SEALED 一行，只有老板电脑上解得开）。
+name: iOS testers
+
+on:
+  push:
+    tags: ['asc-status-*', 'asc-link-*']
+
+permissions:
+  contents: read
+
+jobs:
+  asc:
+    name: App Store Connect (TestFlight testers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out (shallow)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_REVIEW_FIRST: ${{ secrets.ASC_REVIEW_FIRST }}
+          ASC_REVIEW_LAST: ${{ secrets.ASC_REVIEW_LAST }}
+          ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
+          ASC_REVIEW_EMAIL: ${{ secrets.ASC_REVIEW_EMAIL }}
+          ASC_FEEDBACK_EMAIL: ${{ secrets.ASC_FEEDBACK_EMAIL }}
+        run: |
+          case "$GITHUB_REF_NAME" in
+            asc-link-*) act=link ;;
+            *) act=status ;;
+          esac
+          node ios/scripts/asc-beta.mjs "$act"

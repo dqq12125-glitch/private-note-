@@ -63,6 +63,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const A = await startWorker(script, {
     ENVIRONMENT: 'test', TEST_HOOKS: '1', AUTH_PEPPER: 'live-test-pepper',
     DASHSCOPE_API_KEY: KEY, DS_HTTP_BASE: DS_HTTP, DS_WS_BASE: DS_WS,
+    ...(process.env.TTS_VOICES ? { TTS_VOICES: process.env.TTS_VOICES } : {}),   // 试别的合成音色：TTS_VOICES='{"es":{"f":"…","m":"…"}}'
     ASR_MODEL: 'qwen3-asr-flash', ASR_RT_MODEL: 'qwen3-asr-flash-realtime', TTS_MODEL: 'qwen3-tts-flash',
     EMAIL_PROVIDER: 'resend', RESEND_API_KEY: 're_fake_key', RESEND_API_URL: F.url + '/resend/emails', EMAIL_FROM: 'Echo Island <noreply@example.test>',
     RATE: JSON.stringify({ emailPerAddrHour: 3, emailPerIpHour: 10000, signinPerIpHour: 10000, reportPerUserDay: 3, consentPerUserDay: 5 }),
