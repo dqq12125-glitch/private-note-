@@ -3,10 +3,14 @@
 #   cd cloud && npx wrangler deploy --config ../tools/pack/wrangler.toml --dry-run     先看一眼：只该有 assets，没有 main
 #   cd cloud && npx wrangler deploy --config ../tools/pack/wrangler.toml
 # 一定要带 --config：2026-11-20 在 cloud/ 里没带配置跑「建项目」的命令，结果把服务器程序用新名字多发了一份（已删）。
-# 网址：https://echo-island-packs.dqq12125-study.workers.dev
+# 网址：https://echo-packs.restaurantweb.com.au（自己的域名，打包用这个；绑它是为了国内能打开——2026-11-21 还没有从国内实测过）和老的 https://echo-island-packs.dqq12125-study.workers.dev（照旧开着）
 # 限制：单个文件 ≤ 25 MiB（配音包每个约 8 MiB），一个版本最多 2 万个文件。
 name = "echo-island-packs"
 compatibility_date = "2026-11-01"
+workers_dev = true
+# 自己的域名（2026-11-21）：workers.dev 的网址在中国大陆一般打不开；绑 restaurantweb.com.au 的子域名（和 cloud/wrangler.toml 一样的缘故）。
+# workers.dev 那个网址照旧开着：已经装出去的包（466560 和以前的）还从那里下课程包。
+routes = [{ pattern = "echo-packs.restaurantweb.com.au", custom_domain = true }]
 
 [assets]
 directory = "../../dist/packs"

@@ -121,6 +121,11 @@ async function link(app) {
   // 6) 把包加进组
   try { await api('POST', '/v1/betaGroups/' + g.id + '/relationships/builds', { data: [{ type: 'builds', id: b.id }] }); console.log('包已加进「' + GROUP + '」'); }
   catch (e) { console.log('把包加进组：' + e.message); }
+  // 组里只留这一个包：更早的包拿出去（比如 466560 连的是老网址，国内打不开——别让朋友装到它）。它们在内部测试组里照旧
+  try {
+    const old = (await get('/v1/betaGroups/' + g.id + '/builds?limit=50&fields[builds]=version')).data.filter(x => x.id !== b.id);
+    if (old.length) { await api('DELETE', '/v1/betaGroups/' + g.id + '/relationships/builds', { data: old.map(x => ({ type: 'builds', id: x.id })) }); console.log('从「' + GROUP + '」拿掉了更早的包：' + old.map(x => x.attributes.version).join('、')); }
+  } catch (e) { console.log('拿掉更早的包：' + e.message); }
   // 7) 送测试版审核（已经在审 / 已通过的不重复送）
   const st = b.beta.externalBuildState;
   if (st === 'READY_FOR_BETA_SUBMISSION' || st === 'BETA_REJECTED') {

@@ -5,6 +5,9 @@ name = "echo-island-cloud"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
 workers_dev = true
+# 自己的域名（2026-11-21）：workers.dev 的网址在中国大陆一般打不开，老板的朋友在国内要玩。restaurantweb.com.au 在同一个 Cloudflare 账号里，
+# 绑一个子域名（玩家看不到这个网址）。workers.dev 那个网址照旧开着：已经装出去的包（466560 和以前的）还在用它。
+routes = [{ pattern = "echo-api.restaurantweb.com.au", custom_domain = true }]
 
 # 这个程序在哪个机房跑：固定在东京附近（Cloudflare 把 aws:ap-northeast-1 对到离它最近的机房，回应头 cf-placement: remote-NRT）。
 # 为什么：不指定时程序跑在离用户最近的机房，老板在悉尼就是悉尼机房——从那里去连阿里云（北京）丢包很厉害：
@@ -49,7 +52,7 @@ simple = { limit = 12, period = 60 }
 ENVIRONMENT = "production"
 COMPANY_NAME = "Echo of Forest Pty Ltd"
 # 公开地址（家长同意邮件里的链接用）：换成真的域名，例如 https://api.example.com
-PUBLIC_URL = "https://echo-island-cloud.dqq12125-study.workers.dev"
+PUBLIC_URL = "https://echo-api.restaurantweb.com.au"
 PRIVACY_URL = ""
 # App 的 Bundle ID（Sign in with Apple 的 aud、App Store 交易的 bundleId）——和 App Store Connect 里的一样
 APPLE_BUNDLE_ID = "com.echoisland.app"
