@@ -33,9 +33,11 @@ try {
     // ---- 1. 形状和个数 ----
     check(c.fmt === 1 && c.lang === lang && JSON.stringify(c.name) === JSON.stringify(syl.name), 'fmt、lang、name 照大纲');
     // 有正式的台词翻译表（tools/course/<语言>/lines.json）时 MAP 后面多 LINES / LINES_T / TERMS（下面「台词翻译表」那一段专门测）
-    const LN3 = ['LINES', 'LINES_T', 'TERMS'];
-    check(Object.keys(c).filter(k => !LN3.includes(k)).join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,VOICE' && (fs.existsSync(path.join(ROOT, 'tools', 'course', lang, 'lines.json')) ? LN3.every(k => k in c) : !LN3.some(k => k in c)),
-      '顶层字段：fmt lang name WORLDS SCENES BOOKS TALK MAP VOICE（有 lines.json 才有 LINES / LINES_T / TERMS）', Object.keys(c));
+    // 第二轮：有正式的委托译文（quests.json）时 VOICE 前面多 QUESTS；只有 quests.json / sight.json、没有 lines.json 时 LINES 也有（下面「委托和今日目击」那一段专门测）
+    const LN3 = ['LINES', 'LINES_T', 'TERMS'], has = f => fs.existsSync(path.join(ROOT, 'tools', 'course', lang, f));
+    check(Object.keys(c).filter(k => !LN3.includes(k) && k !== 'QUESTS').join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,VOICE' && (has('lines.json') ? LN3.every(k => k in c) : !['LINES_T', 'TERMS'].some(k => k in c)) &&
+      ('QUESTS' in c) === has('quests.json') && (has('lines.json') || has('quests.json') || has('sight.json') || !('LINES' in c)),
+      '顶层字段：fmt lang name WORLDS SCENES BOOKS TALK MAP VOICE（有 lines.json 才有 LINES / LINES_T / TERMS，有 quests.json 才有 QUESTS）', Object.keys(c));
     check(c.WORLDS.length === 13 && c.SCENES.length === 13, '13 个小镇、13 段小剧场');
     const ctx = { window: {} };
     require('vm').runInNewContext(fs.readFileSync(path.join(ROOT, 'data.js'), 'utf8'), ctx);
@@ -137,8 +139,32 @@ try {
     console.log('\n— talk-courses.js（聊天角色表） —');
     const file = path.join(ROOT, 'talk-courses.js');
     const text = fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n') : '';
-    check(text !== '' && text === CB.emitTalk(CB.talkCourses()) && CB.talkFresh(), 'talk-courses.js 就是 build.js --talk 现在会生成的那一份（没手改、没过期）；不是的话跑 node tools/course/build.js --talk');
+    check(text !== '' && text === CB.emitTalk(CB.talkCourses()) && text === CB.emitTalk(CB.talkCourses(), CB.talkQuests()) && CB.talkFresh(), 'talk-courses.js 就是 build.js --talk 现在会生成的那一份（没手改、没过期）；不是的话跑 node tools/course/build.js --talk');
     const TC = text ? require(file) : { langs: [], list: [], byId: {} };
+    // 第二轮：quests = 每门语言正式的 quests.json 里的委托（纯文字：开场白、每一步的示范句、词），还没有译文的语言没有那个键
+    {
+      const QS = require(path.join(ROOT, 'quests.js')), real = CB.talkQuests();
+      const withFile = CB.LANGS.filter(l => fs.existsSync(path.join(ROOT, 'tools', 'course', l, 'quests.json')));
+      check(TC.quests && typeof TC.quests === 'object' && JSON.stringify(TC.quests) === JSON.stringify(real) && JSON.stringify(Object.keys(TC.quests)) === JSON.stringify(withFile) &&
+        Object.entries(TC.quests).every(([l, m]) => CB.LANGS.includes(l) && Object.entries(m).every(([id, x]) => { const q = QS.byId[id]; return q && typeof x.opener === 'string' && x.opener && /^opener,steps,words(,names)?$/.test(Object.keys(x).join()) &&
+          x.steps.length === q.steps.length && x.steps.every(s => typeof s === 'string' && s) && x.words.length === q.words.length && x.words.every(s => typeof s === 'string' && s); })),
+        'talk-courses.js 的 quests：{ 语言: { 委托 id: { opener, steps, words[, names] } } }，纯文字、和 quests.js 一步对一步；只有交了 quests.json 的语言（现在：' + (withFile.join('、') || '还没有') + '）', Object.keys(TC.quests || {}));
+      // 名字表 names：这条委托的英文原文里出现的、这门课的台词翻译表（lines.json 的 terms）里定了写法的名字 → [[英语名, 这门语言的写法]…]
+      const SRCT = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'course', 'lines-src.json'), 'utf8')).terms;
+      let nNames = 0, badName = '';
+      for (const [l, m] of Object.entries(TC.quests || {})) {
+        const lj = path.join(ROOT, 'tools', 'course', l, 'lines.json'), T = fs.existsSync(lj) ? JSON.parse(fs.readFileSync(lj, 'utf8')).terms || {} : {};
+        const tr = en => { for (const ty of ['person', 'place', 'monster', 'item']) { const s = (SRCT[ty] || []).find(x => x.en === en), v = s && T[ty] && T[ty][s.id]; if (v) return typeof v === 'string' ? v : v.t; } return null; };
+        for (const [id, x] of Object.entries(m)) {
+          const q = QS.byId[id], src = [q.who, q.place, q.role, q.persona, q.goal, q.opener].join('\n');
+          for (const p of x.names || []) { nNames++; if (!(Array.isArray(p) && p.length === 2 && src.includes(p[0]) && tr(p[0]) === p[1] && p[1] !== p[0])) badName = badName || l + ' ' + id + ' ' + JSON.stringify(p); }
+          if (x.names && (!x.names.length || new Set(x.names.map(p => p[0])).size !== x.names.length)) badName = badName || l + ' ' + id + ' 空的或者有重复';
+          // 委托人自己的名字、岛名在 terms 里有（而且写法和英语不一样）就一定在表里
+          for (const en of [q.who, q.place]) if (tr(en) && tr(en) !== en && !(x.names || []).some(p => p[0] === en)) badName = badName || l + ' ' + id + ' 少了 ' + en;
+        }
+      }
+      check(!badName, 'talk-courses.js 的名字表（' + nNames + ' 个）：每个英语名都出自这条委托的英文原文，写法就是这门课 lines.json 的 terms 里那个（和英语一样的不列）；委托人和岛名有译名的都在', badName);
+    }
     const all = CB.LANGS.flatMap(l => (talkOf[l] || []).map(t => ({ lang: l, t })));
     check(JSON.stringify(TC.langs) === JSON.stringify(CB.LANGS) && TC.list.length === all.length && all.length >= 24 &&
       TC.list.every((n, i) => n.id === all[i].t.id && n.lang === all[i].lang && n.goals.length === all[i].t.goals.length && n.goals.every((g, k) => g.steps.length === all[i].t.goals[k].steps.length)),
@@ -159,12 +185,15 @@ try {
       fs.mkdirSync(path.join(fake, 'tools', 'voice'), { recursive: true });
       fs.copyFileSync(path.join(ROOT, 'tools', 'voice', 'key.js'), path.join(fake, 'tools', 'voice', 'key.js'));
       fs.copyFileSync(path.join(ROOT, 'data.js'), path.join(fake, 'data.js'));
+      fs.copyFileSync(path.join(ROOT, 'quests.js'), path.join(fake, 'quests.js'));   // 委托的英语原文（quests.json 对着它查、对着它生成）
       fs.mkdirSync(cdir, { recursive: true });
-      for (const f of ['check.js', 'build.js']) fs.copyFileSync(path.join(ROOT, 'tools', 'course', f), path.join(cdir, f));
+      for (const f of ['check.js', 'build.js', 'lines-src.json']) fs.copyFileSync(path.join(ROOT, 'tools', 'course', f), path.join(cdir, f));
       for (const l of CB.LANGS) {
         const real = path.join(ROOT, 'tools', 'course', l);
         fs.mkdirSync(path.join(cdir, l, 'units'), { recursive: true });
         for (const f of ['syllabus.json', 'towns.json']) fs.copyFileSync(path.join(real, f), path.join(cdir, l, f));
+        // 正式的委托译文和台词翻译表（有的话）：talk-courses.js 的 quests 从 quests.json 来，每条的名字表查 lines.json 的 terms
+        for (const f of ['quests.json', 'lines.json']) if (fs.existsSync(path.join(real, f))) fs.copyFileSync(path.join(real, f), path.join(cdir, l, f));
         for (const f of fs.readdirSync(path.join(real, 'units'))) fs.copyFileSync(path.join(real, 'units', f), path.join(cdir, l, 'units', f));
       }
       const out = path.join(fake, 'talk-courses.js');
@@ -175,6 +204,8 @@ try {
       const uf = path.join(cdir, 'ja', 'units', 'ja1-3.json'), u = JSON.parse(fs.readFileSync(uf, 'utf8'));
       u.talk.persona += ' She likes green tea.';
       fs.writeFileSync(uf, JSON.stringify(u));
+      // 这份拷出来的只有课程源文件，没有整个游戏：带着台词翻译表生成 course.json 要加载游戏的怪兽表，这里生成不了——日语的那份拿掉（名字表跟着没有，反正要重新生成）
+      fs.rmSync(path.join(cdir, 'ja', 'lines.json'), { force: true });
       const c1 = run(fake, ['--talk', '--check']), c2 = run(fake, ['ja', '--check']);
       check(c1.status === 1 && /不是最新的/.test(c1.stderr) && fs.readFileSync(out, 'utf8') === text && c2.status === 0 && /提醒：talk-courses\.js 不是最新的/.test(c2.stdout),
         '聊天角色的源文件改过：--talk --check 退出码 1（不动文件）；平常生成 course.json 时提醒一句', (c1.stderr + c2.stdout).slice(-300));
@@ -341,6 +372,181 @@ try {
         check(qm.get("Are you Tim's mom?") === '¿Eres la mamá de Tim?' && !qm.has('Hi'), 'quoteMap：剧情台词里引着的原句 ↔ 译文里同一个位置的引号（引号个数对不上的不认）');
       }
     } finally { fs.rmSync(tmpL, { recursive: true, force: true }); }
+  }
+
+  // ---- 6. 支线委托、今日目击的译文（tools/course/TALK.md 第二轮）：cloud/test/quests-sample.cjs 的小样 ----
+  {
+    const QF = require(path.join(ROOT, 'cloud', 'test', 'quests-sample.cjs'));
+    const FX = require(path.join(__dirname, 'course-lines-fixture.js'));
+    const QS = require(path.join(ROOT, 'quests.js')), SS = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'course', 'sight-src.json'), 'utf8')).lines;
+    const tmpQ = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-quests-'));
+    const txt = v => (typeof v === 'string' ? v : v.t);
+    const chk = (lang, a) => spawnSync(NODE, [path.join(ROOT, 'tools', 'course', 'check.js'), lang, ...a], { encoding: 'utf8' });
+    try {
+      for (const lang of CB.LANGS) {
+        console.log('\n— 委托和今日目击 ' + lang + ' —');
+        const f = QF.write(lang, tmpQ), J = QF.QUESTS[lang].quests, SJ = QF.SIGHT[lang].lines, ids = Object.keys(J);
+        const base = CB.build(lang, { check: true, lines: false }).course;
+        const r = CB.build(lang, { check: true, lines: false, quests: f.quests, sight: f.sight }), c = r.course;
+        check(Object.keys(base).join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,VOICE' && Object.keys(c).join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,LINES,QUESTS,VOICE' && r.stats.quests === ids.length && r.stats.sight === Object.keys(SJ).length,
+          'lines: false 又没给 quests / sight：不带正式的（和以前一样）；给了小样：多 LINES、QUESTS（没有翻译表就没有 LINES_T / TERMS）', Object.keys(c));
+        // LINES：键是英语原文——委托的 ask / note / thanks / bye、每一句线索；写法和台词翻译表的整句一样
+        const want = {};
+        for (const id of ids) { const q = QS.byId[id], x = J[id]; q.ask.forEach((a, i) => { want[a[0]] = x.ask[i]; }); if (q.note) want[q.note[0]] = x.note; q.thanks.forEach((a, i) => { want[a[0]] = x.thanks[i]; }); want[q.bye[0]] = x.bye; }
+        for (const [en, v] of Object.entries(SJ)) want[en] = v;
+        check(JSON.stringify(Object.keys(c.LINES).sort()) === JSON.stringify(Object.keys(want).sort()) && Object.entries(want).every(([en, v]) => (lang === 'es' ? c.LINES[en] === v : JSON.stringify(c.LINES[en]) === JSON.stringify({ t: v.t, seg: v.seg, r: v.r }))),
+          'LINES：{ 英语原文: 译文 }——委托的请求 / 旁白 / 感谢 / 做完以后那一句和每句线索（' + Object.keys(c.LINES).length + ' 句，' + (lang === 'es' ? '西语是字符串' : '{ t, seg, r }') + '）；开场白、示范句不进 LINES');
+        const tab = require(path.join(ROOT, 'packs.js'))._.lineTable(c), find = en => require(path.join(ROOT, 'packs.js'))._.lineFind(tab, en, {});
+        check(find(QS.byId['q0-cap'].ask[0][0]).t === txt(J['q0-cap'].ask[0]) && find(Object.keys(SJ)[0]).t === txt(Object.values(SJ)[0]) && find(QS.byId['q0-cap'].opener) === null,
+          '游戏里现成的查法（packs.js 的 lineFind(英语原文)）直接查得到请求和线索');
+        // QUESTS：聊天页显示用
+        check(JSON.stringify(Object.keys(c.QUESTS)) === JSON.stringify(QS.list.map(q => q.id).filter(id => ids.includes(id))) && ids.every(id => {
+          const q = QS.byId[id], x = J[id], y = c.QUESTS[id];
+          return Object.keys(y).join() === 'opener,steps,words' && JSON.stringify(y.opener) === JSON.stringify(x.opener) && y.steps.length === q.steps.length && y.steps.every((s, i) => JSON.stringify(s) === JSON.stringify(x.steps[i])) &&
+            y.words.length === q.words.length && y.words.every((w, i) => w.length === 3 && JSON.stringify(w[0]) === JSON.stringify(x.words[i]) && w[1] === q.words[i][1] && w[2] === q.words[i][0]);
+        }), 'QUESTS：{ 委托 id: { opener, steps: [示范句…], words: [[这门语言的词, 中文, 英文]…] } }，按 quests.js 的先后；' + (lang === 'es' ? '西语都是字符串' : '开场白 / 示范句 { t, seg, r }，词 { t, r }') + '；词的中文、英文意思照 quests.js', c.QUESTS[ids[0]]);
+        // VOICE：委托人按 TA 的性别、旁白男女声都配、线索是女声旁白；排在课本后面；p 连着
+        const V = c.VOICE, vk = new Map(V.map(e => [norm(e.t), e])), needV = [];
+        for (const id of ids) { const q = QS.byId[id], x = J[id], g = [q.g === 'f' ? 'f' : 'm']; x.ask.concat(x.thanks, [x.bye]).forEach(v => needV.push([txt(v), g])); if (q.note) needV.push([txt(x.note), ['f', 'm']]); }
+        for (const v of Object.values(SJ)) needV.push([txt(v), ['f']]);
+        const missV = needV.filter(([t, g]) => { const e = vk.get(norm(t)); return !e || e.g.join() !== g.join(); });
+        const pNew = V.findIndex(e => e.t === norm(needV[0][0])), pTalk = V.findIndex(e => e.t === c.TALK[c.TALK.length - 1].opener);
+        check(!missV.length && V.length === base.VOICE.length + needV.length && V.every((e, i) => e.p === i) && pTalk >= 0 && pNew === pTalk + 1 && !vk.has(norm(txt(J[ids[0]].opener))) && !vk.has(norm(txt(J[ids[0]].steps[0]))),
+          'VOICE 多了 ' + needV.length + ' 句：委托人的话按 TA 的性别、旁白两种声音、线索女声；排在课本后面；开场白和示范句不配（AI 现场说）；p 连着', { missV: missV.slice(0, 2), pNew, pTalk });
+        if (lang !== 'es') check(fs.existsSync(path.join(tmpQ, 'x')) === false && (() => { CB.build(lang, { out: tmpQ, lines: false, quests: f.quests, sight: f.sight }); const RD = JSON.parse(fs.readFileSync(path.join(tmpQ, lang, 'readings.json'), 'utf8')); const a = J['q0-cap'].ask[0]; return RD[norm(a.t)] === a.r.join(lang === 'zh' ? ' ' : ''); })(),
+          'readings.json 里有委托台词的读音（seg 对应的 r 接起来）');
+        const strip = x => { const o = Object.assign({}, x); delete o.LINES; delete o.QUESTS; delete o.VOICE; return JSON.stringify(o); };
+        check(strip(c) === strip(base) && JSON.stringify(CB.build(lang, { check: true, lines: false, quests: f.quests, sight: f.sight }).course) === JSON.stringify(c), '别的字段一个字没变；同一份输入两次一样');
+        // 和台词翻译表一起：LINES 里两样都有，QUESTS 排在 TERMS 后面
+        const lf = FX.write(lang, tmpQ), both = CB.build(lang, { check: true, lines: lf, quests: f.quests, sight: f.sight }).course, only = CB.build(lang, { check: true, lines: lf }).course;
+        check(Object.keys(both).join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,LINES,LINES_T,TERMS,QUESTS,VOICE' && Object.keys(only).join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,LINES,LINES_T,TERMS,VOICE' &&
+          Object.keys(both.LINES).length === Object.keys(only.LINES).length + Object.keys(want).length && Object.keys(only.LINES).every(en => JSON.stringify(both.LINES[en]) === JSON.stringify(only.LINES[en])) && Object.keys(want).every(en => en in both.LINES),
+          '有翻译表的小样又给了委托 / 目击：并进同一个 LINES，QUESTS 排在 TERMS 后面；只给翻译表的小样：不带正式的委托 / 目击');
+        const one = CB.build(lang, { check: true, lines: false, quests: f.quests, sight: false }).course, two = CB.build(lang, { check: true, lines: false, quests: false, sight: f.sight }).course;
+        check('QUESTS' in one && !Object.keys(SJ).some(en => en in one.LINES) && !('QUESTS' in two) && Object.keys(two.LINES).length === Object.keys(SJ).length, 'quests / sight 各管各的：给 false 就不带那一样');
+        // 服务器用的纯文字（talk-courses.js 的 quests）
+        const pl = CB.questsPlain(lang, f.quests, { lines: false });
+        check(JSON.stringify(pl) === JSON.stringify(QF.plain(lang)) && ids.every(id => pl[id].steps.every(s => typeof s === 'string') && pl[id].words.every(s => typeof s === 'string')), 'questsPlain(语言, 文件, { lines: false })：{ 委托 id: { opener, steps, words } } 纯文字（和小样自己算的一样；没有翻译表就没有名字表）');
+        // 名字表：台词翻译表（这里是小样，另加几个人名）的 terms 里有的名字，按在英文原文里出现的先后；写法和英语一样的不列；两处（QUESTS、纯文字）一样
+        const SRCL = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'course', 'lines-src.json'), 'utf8')), pid = en => SRCL.terms.person.find(x => x.en === en).id;
+        const jl = FX.toLines(lang), P = lang === 'es' ? { 'Ms Rosa': 'Sra. Rosa', Ben: 'Ben', 'Fisher Tom': 'Pescador Tom', 'Ms Pen': 'Sra. Pen' }
+          : lang === 'ja' ? { 'Ms Rosa': { t: 'ロサさん', r: 'ロサさん' }, Ben: { t: 'ベン', r: 'ベン' }, 'Fisher Tom': { t: 'つり人のトム', r: 'つりびとのトム' } }
+            : { 'Ms Rosa': { t: '罗莎女士', r: 'Luó shā nǚ shì' }, Ben: { t: '本', r: 'Běn' }, 'Fisher Tom': { t: '渔夫汤姆', r: 'yú fū Tāng mǔ' } };
+        for (const [en, v] of Object.entries(P)) jl.terms.person[pid(en)] = v;
+        const lnf = path.join(tmpQ, 'names-lines-' + lang + '.json');
+        fs.writeFileSync(lnf, JSON.stringify(jl));
+        const cn = CB.build(lang, { check: true, lines: lnf, quests: f.quests, sight: false }).course, hello = txt(FX.FIX[lang].terms.place['Hello Island']);
+        const wantN = [['Ms Rosa', txt(P['Ms Rosa'])], ['Hello Island', hello]].concat(lang === 'es' ? [] : [['Ben', txt(P.Ben)]], [['Fisher Tom', txt(P['Fisher Tom'])]]);
+        const pn = CB.questsPlain(lang, f.quests, { lines: lnf });
+        check(JSON.stringify(cn.QUESTS['q0-cap'].names) === JSON.stringify(wantN) && Object.keys(cn.QUESTS['q0-cap']).join() === 'opener,steps,words,names' && JSON.stringify(pn['q0-cap'].names) === JSON.stringify(wantN) &&
+          (lang !== 'es' || JSON.stringify(pn['q1-stock'].names) === '[["Ms Pen","Sra. Pen"]]') && JSON.stringify(Object.assign({}, pn['q0-cap'], { names: undefined })) === JSON.stringify(pl['q0-cap']) && !('names' in c.QUESTS['q0-cap']),
+          '名字表 names：' + wantN.map(p => p[0] + ' = ' + p[1]).join('; ') + '（委托人、岛名、人设里的人；' + (lang === 'es' ? '西语里和英语一样的 Ben 不列；' : '') + 'course.json 的 QUESTS 和服务器用的纯文字里一样）', cn.QUESTS['q0-cap'].names);
+      }
+      // 名字怎么配：整词、分大小写；长的先配、配上的那一段不再给短的配；按在原文里第一次出现的先后
+      {
+        const T = [['Fisher Tom', 'A'], ['Tom', 'B'], ['Ben', 'C'], ['Echo Ball', 'D'], ['Hello Island', 'E']].sort((a, b) => b[0].length - a[0].length);
+        const q = t => ({ who: '', place: '', role: '', persona: t, goal: '', opener: '' });
+        check(JSON.stringify(CB.questNames(QS.byId['q0-cap'], T)) === '[["Hello Island","E"],["Ben","C"],["Fisher Tom","A"]]' &&
+          JSON.stringify(CB.questNames(q('Tom and Fisher Tom met Tommy, Benny and ben. Fisher Tom has an Echo Ball.'), T)) === '[["Tom","B"],["Fisher Tom","A"],["Echo Ball","D"]]' &&
+          JSON.stringify(CB.questNames(q('Nobody is here.'), T)) === '[]' && JSON.stringify(CB.questNames(q("It is Ben's cap. (Tom) Hello Island!"), T)) === '[["Ben","C"],["Tom","B"],["Hello Island","E"]]',
+          'questNames：「Fisher Tom」先于「Tom」（它里面的 Tom 不再单独配）、单独出现的 Tom 照样配、Tommy / Benny / 小写的 ben 不配、按出现的先后');
+      }
+      // talk-courses.js 带上委托：一条委托一行，浏览器里、Node 里都读得出来；没有委托译文的语言没有键
+      {
+        const files = { es: path.join(tmpQ, 'quests-es.json'), ja: path.join(tmpQ, 'quests-ja.json') };
+        const tq = CB.talkQuests(files, { lines: false }), text2 = CB.emitTalk(CB.talkCourses(), tq), none = CB.emitTalk(CB.talkCourses(), {});
+        const win = {}, tf = path.join(tmpQ, 'talk-courses-sample.js');
+        require('vm').runInNewContext(text2, { window: win });
+        fs.writeFileSync(tf, text2);
+        const mod = require(tf), win0 = {};
+        require('vm').runInNewContext(none, { window: win0 });
+        check(JSON.stringify(Object.keys(tq)) === '["es","ja"]' && JSON.stringify(win.TALK_COURSES.quests) === JSON.stringify({ es: QF.plain('es'), ja: QF.plain('ja') }) && JSON.stringify(mod.quests) === JSON.stringify(win.TALK_COURSES.quests) &&
+          mod.list.length === CB.talkCourses().length && text2.split('\n').filter(l => /^ {6}"q\d/.test(l)).length === 3 && JSON.stringify(win0.TALK_COURSES.quests) === '{}' && win0.TALK_COURSES.list.length === mod.list.length,
+          'emitTalk(角色, 委托)：quests 写进 talk-courses.js（一条委托一行；window.TALK_COURSES 和模块都读得出来）；一门都没有时是 {}', Object.keys(tq));
+      }
+      // check.js：小样可以不全（只提醒）；写法不对的拦下
+      console.log('\n— 委托和今日目击的检查 —');
+      const okS = chk('ja', ['--quests', path.join(tmpQ, 'quests-ja.json'), '--sight', path.join(tmpQ, 'sight-ja.json')]);
+      check(okS.status === 0 && /提醒.*小样里没有的委托 16 条/.test(okS.stdout) && /提醒.*小样里没有的线索 \d+ 句/.test(okS.stdout) && /ja quests\.json \/ sight\.json：0 处错/.test(okS.stdout), 'check.js --quests 文件 --sight 文件：小样缺的只提醒，退出码 0', okS.stdout.slice(-300));
+      const badQ = (lang, mut, what, re) => {
+        const j = JSON.parse(JSON.stringify(QF.QUESTS[lang])); mut(j.quests, j);
+        const f = path.join(tmpQ, 'bad-quests-' + lang + '.json'); fs.writeFileSync(f, JSON.stringify(j));
+        const rr = chk(lang, ['--quests', f, '--quiet']);
+        check(rr.status === 1 && re.test(rr.stdout), 'check.js 拦下委托：' + what, rr.stdout.slice(0, 400));
+        check(throws(() => CB.build(lang, { check: true, lines: false, quests: f })) !== '', 'build 也不生成（' + what + '）');
+      };
+      badQ('es', q => { q['q0-cap'].steps.pop(); }, '示范句少了一步', /steps 要 3 条/);
+      badQ('es', q => { q['q0-cap'].ask.push('¡Hola!'); }, '请求多了一句', /ask 要 3 条/);
+      badQ('es', q => { delete q['q1-stock'].note; }, '有旁白的委托没写 note', /缺 note/);
+      badQ('es', q => { delete q['q0-cap'].opener; }, '没有开场白', /缺 opener/);
+      badQ('es', q => { q['q0-cap'].bye = 'Hello again, dear! Ben wears his cap every day now.'; }, '西语里是英语原文', /没翻|还有英语/);
+      badQ('es', q => { q['q0-cap'].ask[0] = '¡Ay, no! Alguien dejó una gorra azul en la playa?'; }, '¿ ? 不成对', /不成对/);
+      badQ('es', (q, j) => { j.lang = 'ja'; }, 'lang 写错', /lang 要是 es/);
+      badQ('ja', q => { q['q0-cap'].steps[0].seg = ['かれの', '名前は']; }, '示范句的 seg 接起来不等于 t', /seg 接起来/);
+      badQ('ja', q => { q['q0-cap'].words[2] = { t: '名前' }; }, '词没有读音', /缺读音/);
+      badQ('zh', q => { q['q0-cap'].thanks[1].r = ['xiè xie', 'nǐ']; }, 'r 和 seg 不一样多', /r 要和 seg 一样多/);
+      badQ('zh', q => { q['q0-cap'].opener = { t: 'Thank you! 你想知道什么？', seg: ['Thank you!', '你', '想', '知道', '什么？'], r: ['x', 'nǐ', 'xiǎng', 'zhī dào', 'shén me'] }; }, '中文里剩下英文词', /英文词/);
+      const badS = (lang, mut, what, re) => {
+        const j = JSON.parse(JSON.stringify(QF.SIGHT[lang])); mut(j.lines, j);
+        const f = path.join(tmpQ, 'bad-sight-' + lang + '.json'); fs.writeFileSync(f, JSON.stringify(j));
+        const rr = chk(lang, ['--sight', f, '--quiet']);
+        check(rr.status === 1 && re.test(rr.stdout), 'check.js 拦下线索：' + what, rr.stdout.slice(0, 400));
+        check(throws(() => CB.build(lang, { check: true, lines: false, sight: f })) !== '', 'build 也不生成（' + what + '）');
+      };
+      badS('es', l => { l['It hides in the tall grass. It is blue.'] = 'It hides in the tall grass. It is blue.'; }, '没翻', /没翻|还有英语/);
+      badS('ja', l => { l['It hides in the tall grass. It is blue.'].r.pop(); }, 'r 和 seg 不一样多', /r 要和 seg 一样多/);
+      badS('zh', l => { l['It hides in the tall grass. It is blue.'].r[2] = '高高的'; }, '拼音里有汉字', /汉字/);
+      // 只提醒的：方向 / 颜色没找到、sight-src.json 里没有的句子、quests.js 里没有的 id（生成时不带）
+      {
+        const j = JSON.parse(JSON.stringify(QF.SIGHT.es));
+        j.lines['It is in the woods. Go north from the town.'] = 'Está en el bosque. Ve al sur desde el pueblo.';
+        j.lines['It hides in the tall grass. It is blue.'] = 'Se esconde en la hierba alta. Es verde.';
+        j.lines['It is on the moon.'] = 'Está en la luna.';
+        const f = path.join(tmpQ, 'warn-sight-es.json'); fs.writeFileSync(f, JSON.stringify(j));
+        const q = JSON.parse(JSON.stringify(QF.QUESTS.es)); q.quests['q99-nope'] = q.quests['q0-cap'];
+        const f2 = path.join(tmpQ, 'warn-quests-es.json'); fs.writeFileSync(f2, JSON.stringify(q));
+        const rr = chk('es', ['--sight', f, '--quests', f2]), c2 = rr.status === 0 ? CB.build('es', { check: true, lines: false, sight: f, quests: f2 }).course : null;
+        check(rr.status === 0 && /提醒.*往 north 走.*没找到这个方向/.test(rr.stdout) && /提醒.*颜色 blue.*没找到/.test(rr.stdout) && /提醒.*sight-src\.json 里没有这一句.*It is on the moon\./.test(rr.stdout) && /提醒.*q99-nope.*没有这条委托/.test(rr.stdout) &&
+          c2 && !('It is on the moon.' in c2.LINES) && !('q99-nope' in c2.QUESTS), '只提醒不拦：方向 / 颜色在译文里没找到（请人确认）、原句表里没有的句子和 quests.js 里没有的 id（生成时不带）', rr.stdout.slice(-500));
+      }
+      // 正式的那份要翻全、同一句英语原文的译文要一样：在拷出来的一份上试（自己写的 quests.js：两条委托有同一句请求）
+      {
+        const fake = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-quests-fake-'));
+        try {
+          const cdir = path.join(fake, 'tools', 'course'), real = path.join(ROOT, 'tools', 'course', 'es');
+          fs.mkdirSync(path.join(cdir, 'es', 'units'), { recursive: true });
+          fs.mkdirSync(path.join(fake, 'tools', 'voice'), { recursive: true });
+          for (const f of ['check.js', 'build.js', 'sight-src.json']) fs.copyFileSync(path.join(ROOT, 'tools', 'course', f), path.join(cdir, f));
+          fs.copyFileSync(path.join(ROOT, 'tools', 'voice', 'key.js'), path.join(fake, 'tools', 'voice', 'key.js'));
+          fs.copyFileSync(path.join(ROOT, 'data.js'), path.join(fake, 'data.js'));
+          for (const f of ['syllabus.json', 'towns.json']) fs.copyFileSync(path.join(real, f), path.join(cdir, 'es', f));
+          for (const f of fs.readdirSync(path.join(real, 'units'))) fs.copyFileSync(path.join(real, 'units', f), path.join(cdir, 'es', 'units', f));
+          const q0 = QS.byId['q0-cap'], mk = (id, g) => ({ id, who: 'Ms Rosa', g, ask: [['Can you help me?', '你能帮帮我吗？']], opener: q0.opener, steps: q0.steps.slice(0, 1), words: q0.words.slice(0, 1), thanks: [['Thank you so much!', '太谢谢你了！']], bye: ['See you!', '再见！'] });
+          const two = [mk('qa', 'f'), mk('qb', 'm')];
+          fs.writeFileSync(path.join(fake, 'quests.js'), 'const L = ' + JSON.stringify(two) + ';\nmodule.exports = { list: L, byId: Object.fromEntries(L.map(q => [q.id, q])) };\n');
+          const tr = ask => ({ ask: [ask], opener: '¡Gracias! ¿Qué quieres saber?', steps: ['¿Cómo se llama?'], words: ['De quién'], thanks: ['¡Muchas gracias!'], bye: '¡Nos vemos!' });
+          const runF = a => spawnSync(NODE, [path.join(cdir, a[0]), ...a.slice(1)], { encoding: 'utf8' });
+          const put = (name, j) => fs.writeFileSync(path.join(cdir, 'es', name), JSON.stringify(j));
+          put('quests.json', { lang: 'es', quests: { qa: tr('¿Me puedes ayudar?') } });
+          const m1 = runF(['check.js', 'es']), m2 = runF(['build.js', 'es', '--check']);
+          check(m1.status === 1 && /错.*还没翻的委托 1 条.*qb/.test(m1.stdout) && m2.status === 1 && /没过 tools\/course\/check\.js/.test(m2.stderr), '正式的 quests.json 少一条委托：算错、列出来是哪条，build 不生成', m1.stdout.slice(-300));
+          put('quests.json', { lang: 'es', quests: { qa: tr('¿Me puedes ayudar?'), qb: tr('¿Puedes ayudarme?') } });
+          const d1 = runF(['check.js', 'es']);
+          check(d1.status === 1 && /同一句英语原文，译文却不一样/.test(d1.stdout) && runF(['build.js', 'es', '--check']).status === 1, '两条委托里同一句英语原文、译文不一样：算错（并不进同一个 LINES）', d1.stdout.slice(-300));
+          put('quests.json', { lang: 'es', quests: { qa: tr('¿Me puedes ayudar?'), qb: tr('¿Me puedes ayudar?') } });
+          const outF = path.join(fake, 'o'), s1 = runF(['build.js', 'es', '--out', outF]);
+          const cF = s1.status === 0 ? JSON.parse(fs.readFileSync(path.join(outF, 'es', 'course.json'), 'utf8')) : null, vF = cF && cF.VOICE.find(e => e.t === '¿Me puedes ayudar?');
+          check(s1.status === 0 && /支线委托的译文 2 条、今日目击的线索 0 句/.test(s1.stdout) && cF && Object.keys(cF.LINES).length === 3 && cF.LINES['Can you help me?'] === '¿Me puedes ayudar?' && vF && vF.g.join() === 'f,m' && Object.keys(cF.QUESTS).join() === 'qa,qb',
+            '译文一样就算了：LINES 里一条、配音合成两种声音（两个委托人一男一女）；命令行说带了几条委托、几句线索', (s1.stdout + s1.stderr).slice(-300));
+          put('sight.json', { lang: 'es', lines: { [SS[0]]: 'Se esconde en la cueva.' } });
+          const g1 = runF(['check.js', 'es']);
+          check(g1.status === 1 && new RegExp('错.*还没翻的线索 ' + (SS.length - 1) + ' 句').test(g1.stdout), '正式的 sight.json 没翻全：算错（每一句都要有）', g1.stdout.slice(-200));
+          fs.rmSync(path.join(cdir, 'es', 'sight.json')); fs.rmSync(path.join(cdir, 'es', 'quests.json'));
+          const n1 = runF(['check.js', 'es']), n2 = runF(['build.js', 'es', '--check']);
+          check(n1.status === 0 && /提醒  quests\.json：还没有/.test(n1.stdout) && /提醒  sight\.json：还没有/.test(n1.stdout) && n2.status === 0 && !/支线委托的译文/.test(n2.stdout), '两个文件都还没有：只提醒「还没有」，照旧能生成（没有这几样）', n1.stdout.slice(-200));
+        } finally { fs.rmSync(fake, { recursive: true, force: true }); }
+      }
+    } finally { fs.rmSync(tmpQ, { recursive: true, force: true }); }
   }
 
   console.log('\n— 命令行 —');

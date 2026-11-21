@@ -64,6 +64,10 @@
       'w.q.title': '📋 委托',
       'w.q.intro': '岛上的人有事请你帮忙：走到头上有金色 <b style="color:#b36b00">?</b> 的人面前按 A，再用英语和 TA 聊出结果。完成了有稀有道具，有的还送怪兽蛋！',
       'w.q.count': '已完成 {a} / {b}', 'w.q.none': '这里还没有委托。', 'w.q.unseen': '还有 {n} 条委托在你没去过的岛上。', 'w.menu.back': '返回菜单',
+      // 别的语言的课里委托也开了（TALK.md 第二轮 C）：写着「英语」的那几句的「.c」写法（{lang} = 在学的语言）
+      'w.q.tip.c': '📋 新玩法「委托」：头上有金色 ? 的人有事请你帮忙——走过去按 A，用{lang}帮 TA，有稀有奖励！',
+      'w.q.help.c': '🗣️ 用{lang}帮 TA', 'w.q.st.open.c': '走过去按 A，用{lang}帮 TA · ',
+      'w.q.intro.c': '岛上的人有事请你帮忙：走到头上有金色 <b style="color:#b36b00">?</b> 的人面前按 A，再用{lang}和 TA 聊出结果。完成了有稀有道具，有的还送怪兽蛋！',
       'w.sail': '⛴️ 船开了……',
       'w.shop.title': '小镇商店', 'w.shop.coins': '你有 <b>{n}</b> 金币', 'w.shop.have': ' · 有 {n}', 'w.shop.owned': '已有', 'w.shop.price': '{n} 金币', 'w.shop.bye': 'Thank you! 谢谢',
       'w.sk.cut.what': '砍掉挡路的小树', 'w.sk.cut.who': '温馨家庭岛的树医生',
@@ -140,6 +144,9 @@
       'w.q.title': '📋 Requests',
       'w.q.intro': 'People on the islands need your help. Walk up to someone with a gold <b style="color:#b36b00">?</b> over their head, press A and talk it through in English. You get rare items, and sometimes a monster egg!',
       'w.q.count': 'Done: {a} / {b}', 'w.q.none': 'No requests here yet.', 'w.q.unseen': { one: '{n} more request is on islands you have not visited.', other: '{n} more requests are on islands you have not visited.' }, 'w.menu.back': 'Back to menu',
+      'w.q.tip.c': '📋 New: requests! People with a gold ? over their heads need your help. Walk up, press A and help them in {lang}. You can get rare rewards!',
+      'w.q.help.c': '🗣️ Help in {lang}', 'w.q.st.open.c': 'Walk up, press A and help in {lang} · ',
+      'w.q.intro.c': 'People on the islands need your help. Walk up to someone with a gold <b style="color:#b36b00">?</b> over their head, press A and talk it through in {lang}. You get rare items, and sometimes a monster egg!',
       'w.sail': '⛴️ The boat is leaving…',
       'w.shop.title': 'Town Shop', 'w.shop.coins': 'You have <b>{n}</b> coins', 'w.shop.have': ' · You have {n}', 'w.shop.owned': 'Owned', 'w.shop.price': '{n} coins', 'w.shop.bye': 'Thank you!',
       'w.sk.cut.what': 'Cut down small trees in the way', 'w.sk.cut.who': 'the Tree Doctor on Family Island',
@@ -679,8 +686,9 @@
   // · 要开口说的（speak）、要选的（answer）：不是课程内容的，换成这座岛课程里的一句 / 一段对话（E.learnLine：按英语原文的哈希固定挑），
   //   题面给它的意思；进复习本用课程里的编号（pg.q）。英语课不走这里
   const langIsle = () => (M ? (M.isle != null ? M.isle : M.z) : 0) | 0;
-  // 今日目击：线索是英语拼的，别的课先不出（ENGINE.md §4）
-  const sightOn = () => !!window.EchoSight && !(E && E.lang);
+  // 今日目击：线索是英语拼的。别的课里这门课有线索的译文（course.json 的 LINES，sighting.js 的 EchoSight.on()）才出；
+  // 老的课程包没有 = 和以前一样不出。今天那三条里有查不到译文的，这一天也不出（sighting.js 的 state().st === 'off'，TALK.md 第二轮 C）
+  const sightOn = () => !!window.EchoSight && (!(E && E.lang) || !!(EchoSight.on && EchoSight.on()));
   const langName = () => tx('pk.name.' + E.course);
   const cw = (s, zhUi) => (E.courseWord ? E.courseWord(s, zhUi ? 'zh' : 'en') : s);
   function langPage(pg) {
@@ -695,7 +703,9 @@
       if (E.entryOf(pg.en)) { pg.ui = E.meanText(pg.en) || ''; return true; }
       const ln = tl(en0, { zh: pg.zh, swap });
       if (!ln) return false;
-      pg.en = ln.t; pg.gl = ln.mean || null; pg.tl = true;
+      // zhOwn（支线委托的请求 / 感谢，TALK.md 第二轮：意思用 quests.js 里原来的那一份）：中文意思里夹着委托里的人名（Ben、Finn……，名字牌的词表里没有），
+      // lineOf 分不出它是名字还是英语单词、把这句意思拿掉了——这种页照用这一页自己的中文（说到「英语」的照样换成这门语言）
+      pg.en = ln.t; pg.gl = ln.mean || (pg.zhOwn && zhUi && pg.zh ? cw(pg.zh, true) : null); pg.tl = true;
       return true;
     };
     const plain = () => { pg.en = uiText; pg.ui = ''; pg.hideEn = false; pg.plain = true; };
@@ -1190,11 +1200,30 @@
   // 镇上的人有委托：走过去按 A → TA 说完请求 →「🗣️ 用英语帮 TA」→ 和 TA 用英语聊（talk.js 的 openQuest，人设和小步骤按委托 id 读 quests.js）
   // → 聊天目标完成了，回到地图上 TA 道谢、给奖励。完成的记在 world.flags['q:' + id] = 星数（1–3）。
   // 委托不挡主线；没完成随时能再来，什么都不丢；AI 聊不了时照样听 TA 说完请求，再用一句话告诉孩子为什么现在做不了。
-  // 别的语言的课：委托要和岛民 AI 聊天，这门语言的还没有——委托一条都不出（头上没有「?」，ENGINE.md §4）
-  const QL = () => (window.QUESTS && !(E && E.lang) && QUESTS.list) || [];
+  // 别的语言的课（tools/course/TALK.md 第二轮 C、ENGINE.md §4）：和英语课一样出，只要三样都有——
+  // 服务器会用这门语言做委托（talk.js 的 questOk：能聊 + 它的 questLangs 里有这门语言）、课程包里有这条委托的开场白 / 示范句 / 词卡
+  // （course.json 的 QUESTS，questOk(id)）、TA 按 A 时说的请求每一句都有译文（台词翻译表，E.lineOf）。
+  // 条件不够（老的课程包、老服务器、APK 直连、没登录又问不到）：一条都不出，头上没有「?」，和以前一样。
+  // 做没做完照旧记在这门课自己的存档里（world.flags['q:' + id]）：不能重做刷星、奖励只给一次，规矩和英语课同一套代码
+  // 别的课里能出的委托（课程包的内容不会变，算出来有就记着；一条都没有的隔 1 秒再算一次——课程内容是开场以后才换上的，太早算到的「没有」不能记一辈子）
+  let QLC = null, QLT = -1e9;
+  const QOK = { at: -1e9, v: false };   // 服务器会不会：画每一帧都要问（头上的「?」），半秒问一次 talk.js 就够了
+  const QL = () => {
+    if (!window.QUESTS) return [];
+    if (!(E && E.lang)) return QUESTS.list;
+    const T = window.EchoTalk, now = performance.now();
+    if (now - QOK.at > 500) { QOK.at = now; QOK.v = !!(T && T.questOk && T.questOk()); }
+    if (!QOK.v) return [];
+    if (!QLC || (!QLC.length && now - QLT > 1000)) { QLT = now; QLC = QUESTS.list.filter(q => T.questOk(q.id) && !!E.lineOf && q.ask.every(a => !!E.lineOf(a[0]))); }
+    return QLC;
+  };
   const questDone = q => WS().flags['q:' + q.id] | 0;
-  // 这个人身上的委托（人物是跟着地图存的，查一次记在身上）
-  const questOf = n => { if (n._q === undefined) n._q = QL().find(q => q.map === M.id && String(q.npc) === String(n.id)) || null; return n._q; };
+  // 这个人身上的委托（人物是跟着地图存的，查一次记在身上；别的课里委托开不开要看服务器，每次现查）
+  const questOf = n => {
+    if (E.lang) return QL().find(q => q.map === M.id && String(q.npc) === String(n.id)) || null;
+    if (n._q === undefined) n._q = QL().find(q => q.map === M.id && String(q.npc) === String(n.id)) || null;
+    return n._q;
+  };
   // 现在还不能接的原因（能接返回 ''）：要先完成另一条委托 / 徽章不够
   function questLock(q) {
     const nd = q.need || {}, pre = nd.quest && QUESTS.byId[nd.quest];
@@ -1233,7 +1262,8 @@
   function questTalk(n) {
     const q = n.mon ? null : questOf(n);
     if (!q) return false;
-    const info = npcLook(n), P = (en, zh) => ({ who: info.name, look: info.look, g: info.g, en, zh });
+    // zhOwn（别的课才看，见 langPage）：这句的意思用 quests.js 里原来的那一份
+    const info = npcLook(n), P = (en, zh) => (E.lang ? { who: info.name, look: info.look, g: info.g, en, zh, zhOwn: true } : { who: info.name, look: info.look, g: info.g, en, zh });
     if (questDone(q)) {
       if (questOwe.has(q.id)) { questThanks(n, q); return true; }
       talk([P(q.bye[0], q.bye[1])], () => npcTalk(n));   // 做完以后：先说一句近况，再接 TA 平常的话
@@ -1245,14 +1275,24 @@
     // （没有 AI 的孩子照样能和这些人说话、做每天的跟读），等能聊了又回到委托
     if (why && !why.retry && questTold.has(told)) return false;
     const pages = q.ask.map(a => P(a[0], a[1]));
-    if (q.note) pages.push({ who: tx('w.who.nar'), emo: '📝', en: q.note[0], zh: q.note[1] });
+    if (q.note) pages.push(E.lang ? { who: tx('w.who.nar'), emo: '📝', en: q.note[0], zh: q.note[1], zhOwn: true } : { who: tx('w.who.nar'), emo: '📝', en: q.note[0], zh: q.note[1] });
     // 这两页英文下面那行是界面文字（为什么现在做不了、目标、奖励），用 ui（界面语言），不是台词的翻译：英语界面也要显示
-    if (why && !why.retry) { questTold.add(told); pages.push({ who: tx('w.q.who', { name: L(q) }), emo: '📋', en: Q_LATER[0], ui: tx('w.q.why', { t: why.msg }) + (gloss({ zh: Q_LATER[1] }) || '') }); }
+    // 别的课（cl）：这两页上面那行不放英语——「以后再来」那句有译文就放译文（下面是原因 + 它的意思），没有就只有下面那行界面文字；
+    // 选项那一页上面本来是委托的英文名，别的课里不写（名字牌上已经是界面语言的委托名），也没有 🔊
+    const cl = !!E.lang;
+    if (why && !why.retry) {
+      questTold.add(told);
+      if (cl) {
+        const ln = E.lineOf ? E.lineOf(Q_LATER[0], { zh: Q_LATER[1] }) : null;
+        pages.push({ who: tx('w.q.who', { name: L(q) }), emo: '📋', en: ln ? Q_LATER[0] : '', plain: !ln, ui: tx('w.q.why', { t: why.msg }) + (ln ? ln.mean || '' : cw(I18N && I18N.lang() !== 'zh' ? Q_LATER[0] : Q_LATER[1], !I18N || I18N.lang() === 'zh')) });
+      } else pages.push({ who: tx('w.q.who', { name: L(q) }), emo: '📋', en: Q_LATER[0], ui: tx('w.q.why', { t: why.msg }) + (gloss({ zh: Q_LATER[1] }) || '') });
+    }
     else {
       const bonus = questBonus();
       pages.push({
-        who: tx('w.q.who', { name: L(q) }), emo: '📋', en: q.en,
-        ui: (why ? tx('w.q.why', { t: why.msg }) : '') + tx('w.q.ask', { goal: L({ zh: q.goalZh, en: q.goal }), rw: questReward(q) }) + (bonus && bonus.bonus < bonus.max ? tx('w.q.bonus') : ''),
+        who: tx('w.q.who', { name: L(q) }), emo: '📋', en: cl ? '' : q.en, plain: cl || undefined,
+        // （别的课：目标说明里的名字换成这门课的写法，game.js 的 questNames；英语课原样）
+        ui: (why ? tx('w.q.why', { t: why.msg }) : '') + tx('w.q.ask', { goal: cl && E.questNames ? E.questNames(q.id, L({ zh: q.goalZh, en: q.goal })) : L({ zh: q.goalZh, en: q.goal }), rw: questReward(q) }) + (bonus && bonus.bonus < bonus.max ? tx('w.q.bonus') : ''),
         // 按钮上的字小一号、不换行：竖屏两个按钮并排时「🗣️ 用英语帮 TA」正好一行
         kind: 'choice', opts: [{ html: '<span style="font-size:16px;white-space:nowrap">' + hx(why ? 'w.q.retry' : 'w.q.help') + '</span>', cls: 'sun' }, { html: '<span style="font-size:16px;white-space:nowrap">' + hx('w.q.later') + '</span>' }],
         pick: i => { if (!i) setTimeout(() => questChat(n, q), 60); return []; },
@@ -1284,7 +1324,7 @@
     }
     const info = npcLook(n);
     if (here) talk([{ who: info.name, look: info.look, g: info.g, en: Q_RETRY[0], zh: Q_RETRY[1], zhKeep: true }]);
-    else E.toast(tx('w.q.kept', { name: L(q), who: info.name }));
+    else E.toast(tx('w.q.kept', { name: L(q), who: T_('person', info.name) }));   // 别的课：名字按这门课的名字牌写（英语课 T_ 就是原样）
   }
   // 完成：先把结果和奖励都存好（不等对话框，半路退出也不会丢），再去演道谢
   function questGrant(q, stars) {
@@ -1304,7 +1344,7 @@
   }
   function questThanks(n, q) {
     questOwe.delete(q.id);
-    const info = npcLook(n), P = (en, zh, extra) => Object.assign({ who: info.name, look: info.look, g: info.g, en, zh }, extra || {});
+    const info = npcLook(n), P = (en, zh, extra) => Object.assign({ who: info.name, look: info.look, g: info.g, en, zh }, E.lang ? { zhOwn: true } : null, extra || {});
     const r = q.reward || {}, stars = questDone(q), got = [];
     if (r.egg) got.push(r.shiny ? P('You got a shining monster egg!', '得到了一个闪闪发光的怪兽蛋！孵出来会是稀有色的，放在队伍里多走路就会孵出来。') : P('You got a monster egg!', '得到了一个怪兽蛋！放在队伍里多走路就会孵出来（队伍满了就在电脑箱子里）。'));
     (r.items || []).forEach(([id, k]) => { const it = MG.ITEMS[id]; if (it) got.push(P('You got ' + it.en + '!', '得到了' + it.zh + (k > 1 ? ' ×' + k : '') + '！')); });
@@ -1325,7 +1365,7 @@
       const q = r.q, w = E.W[q.z];
       return '<div class="ach' + (r.state === 'locked' ? ' no' : '') + '" data-q="' + q.id + '" data-st="' + r.state + '"><span class="ae">' + (r.state === 'done' ? '✅' : r.state === 'locked' ? '🔒' : QMARK) + '</span><div style="flex:1;min-width:0">' +
         '<b>' + esc(L(q)) + (r.stars ? ' <span style="color:#f5a623">' + '★'.repeat(r.stars) + '</span>' : '') + '</b>' +
-        '<small style="display:block">' + w.icon + ' ' + esc(townName(w)) + hx('w.q.find', { who: q.who }) + hx(M && M.id === q.map ? 'w.q.here' : 'w.q.town') + '</small>' +
+        '<small style="display:block">' + w.icon + ' ' + esc(townName(w)) + hx('w.q.find', { who: T_('person', q.who) }) + hx(M && M.id === q.map ? 'w.q.here' : 'w.q.town') + '</small>' +
         '<small style="display:block">' + (r.state === 'done' ? hx('w.q.st.done') : r.state === 'locked' ? hx('w.q.st.lock', { why: r.lock }) : hx('w.q.st.open')) + '🎁 ' + esc(questReward(q)) + '</small></div></div>';
     };
     // 能接的：和地图上头顶的牌子一个样（金色圆牌子上一个「?」）

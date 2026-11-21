@@ -246,3 +246,153 @@
 **招牌和地板字（sign，41 个）**：越短越好。教室地板：图书馆、食堂、走廊、办公室、教室、出口、电脑室、实验室、音乐。学科地板：数学、**中文**（English）、科学、美术、体育、**语文**（Chinese）、历史、地理（照第 12 节的学科决定）。音符：哆、咪、嗦。回忆馆的牌：去了、看见了、吃了、买了、旅行、海滩。价钱照原样留 ¥：牛肉面 ¥15。
 
 **按钮（ui，15 个）**：双语按钮里这门语言的那一半，照它回答的那句话说：要 / 不要（选伙伴「你要它吗？」）、出发！、先不了、游上去、谢谢！、好啊！、下次吧、按下去！、绿灯，走！、红灯，停！、打开！、蛋、箱子、光荣榜。
+
+## 14. 支线委托和今日目击（`quests.json`、`sight.json`，2026-11-21 第二轮）
+
+格式看 `tools/course/TALK.md` 第二轮 A1 / A2：整句 `{ t, seg, r }`，词卡 `{ t, r }`。委托 17 条（185 句、121 个词卡），线索 157 句。检查：`node tools/course/check.js zh --quests --sight`。拿不准的地方和改了做法的地方记在 `review.md` 末尾。
+
+### 14.1 属性名（线索里的 "It is a X monster."）
+
+主会话 2026-11-21 定的规矩：属性名是这个游戏自己起的，中文课用 `dex.js` 的 `TYPES` 里游戏自己的中文名 + 「系」，**不用别的现成怪兽系列的中文属性叫法**（Kungfu / Mind / Shadow 这三个最容易顺手写错）。句式全文一个：「它是X系的怪兽。」，切成 `它|是|X系的|怪兽。`。
+
+| 英文 | 中文 | 拼音 | | 英文 | 中文 | 拼音 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Normal | 普通系 | pǔ tōng xì | | Flying | 飞行系 | fēi xíng xì |
+| Fire | 火系 | huǒ xì | | Mind | 心灵系 | xīn líng xì |
+| Water | 水系 | shuǐ xì | | Bug | 虫系 | chóng xì |
+| Grass | 草系 | cǎo xì | | Rock | 岩石系 | yán shí xì |
+| Spark | 电系 | diàn xì | | Ghost | 幽灵系 | yōu líng xì |
+| Ice | 冰系 | bīng xì | | Dragon | 龙系 | lóng xì |
+| Kungfu | 功夫系 | gōng fu xì | | Shadow | 暗系 | àn xì |
+| Poison | 毒系 | dú xì | | Steel | 钢系 | gāng xì |
+| Earth | 大地系 | dà dì xì | | | | |
+
+「功夫」的「夫」读轻声（gōng fu）；「飞行」的「行」读 xíng。157 句里带属性的 50 句，对着 `dex.js` 逐句核对过。
+
+### 14.2 委托里的人和名字
+
+名字牌照 `terms.person`，句子里用到的：
+
+| 英文 | 中文 | 拼音 | 在哪 |
+| --- | --- | --- | --- |
+| Ben（丢帽子的男孩） | 本 | Běn | q0-cap 的感谢 |
+| Bobo（小露西的弟弟） | 波波 | Bō bō | q2-photo；和主持人波波同一个写法 |
+| Mayor Tick / the mayor | 蒂克镇长 / 镇长 | Dì kè zhèn zhǎng | q6-tea |
+| **Pop**（气球小丑的小怪兽，新定） | 波普 | Bō pǔ | q7-party；是起的名字，拼音大写 |
+| Nightpaw | 夜爪狸 | yè zhǎo lí | q8-missing；照 `terms.monster` |
+| Coach Tom's team | 汤姆教练的运动队 | Tāng mǔ jiào liàn de yùn dòng duì | q10-order |
+| dear（老太太叫主角） | 孩子 | hái zi | 和海龟奶奶一样 |
+| young trainer / a good trainer | 小训练师 / 好训练师 | | |
+
+只在服务器的英文人设里出现、译文里没写到的名字，岛民说中文时该这样叫（给拼人设的人参考）：Fisher Tom 渔夫汤姆、Finn 芬恩（科斯塔先生扮的客人，从彩色文具岛来）、Lucy 露西、Farmer Joe 农民乔。
+
+### 14.3 委托里的东西、地方、说法
+
+| 英文 | 中文 | 拼音 |
+| --- | --- | --- |
+| You remember:（旁白） | 你记得： | nǐ jì de |
+| the owner | 帽子的主人 / 帽子是谁的 | zhǔ rén |
+| take it back | 送回去（不用「把」） | sòng huí qù |
+| visitor | 客人 | kè rén |
+| the island greeter | 不用名词：我在岛上欢迎客人 | |
+| the stationery store | 文具店 | wén jù diàn |
+| the list / the team's note | 单子 / 纸条 | dān zi / zhǐ tiáo |
+| the lost and found | 不说地方：有人捡到了三个书包（照第 12 节，不用那个五字词） | |
+| eraser / pencil box | 橡皮 / 铅笔盒 | xiàng pí / qiān bǐ hé |
+| gate（农场、学校的） | 大门 | dà mén |
+| windmill / cow / little pig | 风车 / 牛（一头牛）/ 小猪 | fēng chē / niú / xiǎo zhū |
+| These fruits（奖励的道具） | 元气果（照 `terms.item`） | yuán qì guǒ |
+| across from / next to | 对面 / 旁边 | duì miàn / páng biān |
+| the English classroom | **教室**（为什么不写是哪门课的，见 review.md） | jiào shì |
+| the school shop / the PE room | 学校商店 / 体育室 | tǐ yù shì |
+| sports day / the plan / notice board | 运动会 / 计划 / 公告栏 | yùn dòng huì / jì huà / gōng gào lán |
+| meet（集合） | 集合 | jí hé |
+| the maths club / chess club / art club | 数学社 / 国际象棋社 / 美术社 | shù xué shè |
+| join（社团） | 参加（第 5 岛教的；台词里已有的「加入」不动） | cān jiā |
+| free（有空） | 有时间（不用「有空」：空 kòng 是多音字，「有时间」1 级教过） | yǒu shí jiān |
+| the club show | 社团的画展 | huà zhǎn |
+| come for tea / tea time | 来喝茶 / 喝茶的时间 | hē chá |
+| surprise party / party bag | 惊喜派对 / 派对礼包 | jīng xǐ pài duì / lǐ bāo |
+| the Animal Park / the tree house / bin | 动物公园 / 树屋 / 垃圾桶 | shù wū |
+| a black mask on its face | 脸上有黑色的面具 | miàn jù |
+| the City Garden | 城市花园 | chéng shì huā yuán |
+| politely / polite | 有礼貌地 / 有礼貌 | yǒu lǐ mào de |
+| reason | 理由 | lǐ yóu |
+| food stall | 小吃摊 | xiǎo chī tān |
+| order（点吃的） | 点菜 | diǎn cài |
+| beef noodles / orange juice | 牛肉面（三碗）/ 橙汁（两杯） | niú ròu miàn / chéng zhī |
+| Snow Mountain / the ice lake / the station | 雪山 / 冰湖 / 气象台 | xuě shān / bīng hú / qì xiàng tái |
+| the weather report / heavy snow | 天气预报 / 下大雪 | tiān qì yù bào / xià dà xuě |
+| warm coat / gloves | 暖和的外套 / 手套 | nuǎn huo de wài tào / shǒu tào |
+| photo album / the fog / memories / trip | 相册 / 雾 / 回忆 / 旅行 | xiàng cè / wù / huí yì / lǚ xíng |
+| waterfall / rainbow / little dragon | 瀑布 / 彩虹 / 小龙 | pù bù / cǎi hóng |
+| went / saw / took photos | 去了 / 看见了 / 拍了照片（和回忆馆的牌子一样） | qù le / kàn jiàn le |
+| egg | 怪兽蛋 | guài shòu dàn |
+| Take these / This is for you | 这些送给你 / 这个送给你 | sòng gěi |
+| Hello again | 又见面了 | yòu jiàn miàn le |
+| Hmm...（犹豫） | 不用「嗯」：哎…… / 直接去掉（照第 12 节） | āi |
+| Psst! / Shh! | 嘘！ | xū |
+| Ahem! | 咳咳！ | ké ké |
+
+- 示范句不用「把」、不用可能补语，尽量是小镇和 1 级教过的句型：有 / 没有 + 数量、在 + 方位、你会 / 喜欢做什么、星期几、几点、是……的、了。
+- 词卡片要整词出现在学的人说的话里才变绿，所以词卡照示范句里的原样写（「长什么样子」「你的书包里」「有一头」「在吃」），不照英文逐词写；"Let's" 写「吧」，"o'clock" 写「点」。
+
+### 14.4 线索的对照表（英语的每个半句只有一个译法）
+
+线索是模板拼的，译文也是一个半句一个半句对着拼的；以后改哪个半句，带这个半句的每一句都要一起改（一共 98 种半句，读音看 `sight.json`）。
+
+| 英语半句 | 中文 |
+| --- | --- |
+| It hides in the tall grass. | 它躲在高高的草丛里。 |
+| It hides in the cave. Walk around inside. | 它躲在山洞里。在里面多走走。 |
+| It swims on top of the water. Ride on the water to find it. | 它在水面上游泳。去水上找它。 |
+| It hides in the seaweed. | 它躲在海草里。 |
+| It is a X monster. | 它是X系的怪兽。（14.1） |
+| It is blue / green / grey / orange / red / white / yellow. | 它是蓝色的 / 绿色的 / 灰色的 / 橙色的 / 红色的 / 白色的 / 黄色的。 |
+| It is big. / It is very small. | 它很大。/ 它非常小。 |
+| It is round like a ball. | 它圆圆的，像一个球。 |
+| It has a long body like a snake. | 它的身体长长的，像一条蛇。 |
+| It has a shell on its back. | 它背上有一个壳。 |
+| It looks like a bird / a bug / a fish / a little ghost / a plant. | 它看起来像一只鸟 / 一只虫子 / 一条鱼 / 一个小幽灵 / 一棵植物。 |
+| It stands on two legs. / It walks on four legs. | 它用两条腿站着。/ 它用四条腿走路。 |
+| It is on a road. / on a sandy road. | 它在一条路上。/ 它在一条全是沙子的路上。 |
+| It is on a road by the sea / by a river / around the farms. | 它在海边的 / 河边的 / 绕着农田的一条路上。 |
+| It is in the woods. / on a beach. / on a cliff by the sea. | 它在树林里。/ 它在一片沙滩上。/ 它在海边的悬崖上。 |
+| It is high on a mountain. / in a field of snow. | 它在高高的山上。/ 它在一片雪地里。 |
+| It is on a path in the jungle. | 它在丛林里的一条小路上。 |
+| It is in a dark cave. / in a cave of ice. / in a tunnel. | 它在一个很黑的山洞里。/ 它在一个冰洞里。/ 它在一条隧道里。 |
+| It is in a hot cave inside a mountain. | 它在山里面的一个很热的山洞里。 |
+| It is out at sea. / under the sea. / on an island. | 它在海上。/ 它在海底。/ 它在一座岛上。 |
+| Go north / south / east / west from the town. | 从小镇往北 / 往南 / 往东 / 往西走。 |
+| The way in is in the town. | 入口就在小镇里。 |
+| It is far from the town. | 它离小镇很远。 |
+| Walk along a road first. / Walk along a cliff first. | 要先走过一条路。/ 要先沿着悬崖走一段。 |
+| Climb a mountain first. | 要先爬上一座山。 |
+| Walk through the woods / a tunnel / a hot cave / a cave of ice first. | 要先穿过树林 / 一条隧道 / 一个很热的山洞 / 一个冰洞。 |
+| Go out to sea and dive down. | 先到海上去，再潜下去。 |
+| People there say hello and good morning to everyone. | 那里的人对大家说“你好”和“早上好”。 |
+| … love pens, pencils and rulers in every colour. | 那里的人很喜欢各种颜色的钢笔、铅笔和尺子。 |
+| … love to talk about their father, mother and family. | 那里的人很喜欢聊爸爸、妈妈和家人。 |
+| … talk about the classroom, the library and the playground. | 那里的人常常聊教室、图书馆和操场。 |
+| … love English, maths and science. | 那里的人很喜欢**中文**、数学和科学。（照第 3 节） |
+| … sing, dance and play chess in their clubs. | 那里的人在社团里唱歌、跳舞、下棋。 |
+| … always get up and have breakfast on time. | 那里的人总是准时起床、准时吃早饭。 |
+| … love birthday parties, cakes and balloons. | 那里的人很喜欢生日派对、蛋糕和气球。 |
+| … talk about pandas, tigers and monkeys. | 那里的人常常聊熊猫、老虎和猴子。 |
+| … must follow many rules and be quiet. | 那里的人要守很多规则，还要安静。 |
+| … play basketball and eat healthy food. | 那里的人打篮球、吃健康的食物。 |
+| … talk about sunny, rainy and snowy weather. | 那里的人常常聊晴天、下雨天和下雪天。 |
+| There are palm trees and white houses with red roofs there. | 那里有棕榈树和红屋顶的白房子。 |
+| … trees like big pencils and houses in bright colours … | 那里有像大铅笔一样的树和彩色的房子。 |
+| … orange autumn trees and wooden farm houses … | 那里有橙色的秋天的树和农场的木头房子。 |
+| … round green trees and red brick buildings / tall buildings … | 那里有圆圆的绿树和红砖楼 / 高楼。 |
+| … tall thin trees and round glass houses … | 那里有又高又细的树和圆圆的玻璃房子。 |
+| … palm trees and big tents … | 那里有棕榈树和大帐篷。 |
+| … dark green pine trees and stone towers with clocks … | 那里有深绿色的松树和有钟的石塔。 |
+| … trees like lollipops and houses like cakes … | 那里有像棒棒糖一样的树和像蛋糕一样的房子。 |
+| … big jungle trees and tree houses … | 那里有丛林大树和树屋。 |
+| … fruit trees and small shops … | 那里有果树和小商店。 |
+| … pine trees with snow on them and wooden houses with snow on the roofs … | 那里的松树上有雪，木头房子的屋顶上也有雪。 |
+
+- 方向、地形、颜色、大小一个字都不能含糊：north 北、south 南、east 东、west 西；"hides" 一律「躲在」；水上去找不用那个两字老词，潜下去照第 6 节。
+- 新写到的读音：棕榈树 zōng lǘ shù、悬崖 xuán yá、隧道 suì dào、丛林 cóng lín、入口 rù kǒu、植物 zhí wù、壳 ké、背上 bèi shang（背 bèi）、长长的 cháng cháng de、看起来 kàn qǐ lái、走走 zǒu zou、穿过 / 走过 chuān guò / zǒu guò（「过」是「经过」，不是轻声的「过」）、各种 gè zhǒng、准时 zhǔn shí、木头 mù tou、玻璃 bō li、帐篷 zhàng peng。

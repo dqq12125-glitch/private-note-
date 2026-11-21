@@ -30,7 +30,10 @@ KEY_FILE=D:/path/to/.env node relay.js    # 或者把 DASHSCOPE_API_KEY=... 写�
 | `ALLOWED_ORIGINS` | 本机、GitHub Pages、*.ts.net | 允许哪些网页连 |
 | `TTS_VOICES` | 西语 `Sonrisa` / `Bodega`，日语 `Ono Anna` / `Ryan`，中文 `Serena` / `Ryan`（女 / 男） | 别的语言的课现场合成（`/tts` 带 `lang`）用的音色，`{"es":{"f":"…","m":"…"}}`；英语照旧 Jennifer / Aiden。默认是说这门语言地道的那几个，2026-11-21 对着真的阿里云实测过 |
 | `TALK_LANGS` | `en,es,ja,zh` | 和岛民聊天会用哪些语言（别的语言的课，见下面）。只认 `talk-core.js` 认得的，英语一直在；`/health` 的 `talkLangs` 就是它 |
+| `QUEST_LANGS` | 和 `TALK_LANGS` 一样 | 别的语言的课里的支线委托会用哪些语言。还要 `TALK_LANGS` 里开着、这里真有这门语言的委托译文（`../talk-courses.js` 的 `quests`）才算，英语一直在；`/health` 的 `questLangs` 就是它 |
+| `TIP_LANGS` | 和 `TALK_LANGS` 一样 | AI 发音点评（`/tip` 的 `lang`）会用哪些语言。只认 `talk-core.js` 认得的，英语一直在；`/health` 的 `tipLangs` 就是它 |
 | `ASR_URL` / `TTS_URL` / `ASR_RT_URL` | 阿里云的地址 | 只给测试指到假的上游（`cloud/test/t-05-relay.js`），平时不用设 |
+| `TEST_HOOKS` / `TEST_QUESTS` | 空 | 只给测试用：`TEST_HOOKS=1` 时把 `TEST_QUESTS`（JSON，形状和 `talk-courses.js` 的 `quests` 一样）并到委托的译文上，测试不用等正式的译文（`cloud/test/quests-sample.cjs` 是现成的小样）。平时不用设 |
 
 口语题的识别（`/asr`、`/asr-rt?lang=`）和现场合成（`/tts`）可以带 `lang`：`es` / `ja` / `zh`（别的语言的课；`/tts` 也认 `Spanish` 这种写法），
 没带就是英语，发给阿里云的和以前一字不差；不认得的 `/asr`、`/tts` 回 400 `lang`，`/asr-rt` 直接断开。和公开版服务器 `cloud/` 同一套（`cloud/API.md` §8）。
@@ -43,6 +46,15 @@ KEY_FILE=D:/path/to/.env node relay.js    # 或者把 DASHSCOPE_API_KEY=... 写�
 - `/steps`：`npc` 可以是课程角色的 id；`npc=dyn` 时多带 `lang`。`/zh`：多收 `lang`（这句话是哪门语言）和 `ui`（翻成 `zh` 中文 / `en` 英文），都不带 = 以前的行为（英文 → 中文）；已经是那门语言了回 400 `ui`。
 - `/health` 的 JSON 多一个 `talkLangs`（比如 `["en","es","ja","zh"]`）：游戏看它决定别的语言的课开不开聊天；老的中转服务没有这个字段 = 只会英语。
 - 没有 lang 的（英语的岛民、课本角色、委托、老的 dyn）发给阿里云的和以前一字不差。
+
+**别的语言的课里的支线委托、AI 发音点评**（第二轮，2026-11-21，合同 `tools/course/TALK.md` 末尾；和 `cloud/` 同一套，`cloud/API.md` §8「Quests and pronunciation tips in other languages」）：
+
+- `/talk?quest=<id>&lang=<es|ja|zh>`：人设、事实、目标还是 `../quests.js` 的英文原文；开场白、每一步的示范句、有用的词、名字表用 `../talk-courses.js` 的 `quests[语言][id]`
+  （`node tools/course/build.js --talk` 从 `tools/course/<语言>/quests.json` 生成——**翻译改了要重新生成，中转服务要带着新的 `talk-courses.js` 重启**）。规矩、音色由 `talk-core.js` 的 `questNpc(q, lang, loc)` 按这门语言拼。
+  不带 `lang`（或者 `lang=en`）就是英语的委托，一字不差。`/steps` 带 `q` 时多收 `lang`，一个道理。
+- `/tip` 多收 `lang`（这句话是哪门语言；日语、中文按读音比，点评用 `ui` 那门界面语言写）。不带就是英语的点评，一字不差。
+- 这门语言这里不会（`QUEST_LANGS` / `TIP_LANGS`）、`lang` 不认得、这条委托没有这门语言的译文：`/talk` 回 `{"type":"error","code":"lang"}` 后断开，不连阿里云；`/steps`、`/tip` 回 400 `lang`。没有这条委托照旧是 `npc` 的错。
+- `/health` 的 JSON 多两个：`questLangs`（会做委托的语言，只列真有译文的）、`tipLangs`（会点评的语言）。老的中转服务没有这两个字段 = 只有英语的。
 
 ## 放到服务器上给手机用
 

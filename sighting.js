@@ -51,6 +51,12 @@
       'si.sheet.how2': '。<br>🏃 跑掉了、打倒了也没关系，在那里多走一会儿它还会出来；明天会换一只。',
       'si.sheet.spray': '<br>🧴 悄悄喷雾还有效：这时候它不会出来。',
       'si.ok': '知道了',
+      // 别的语言的课（线索是这门语言的，tools/course/TALK.md 第二轮 C）：写着「英文」「看中文」的句子的「.c」写法（i18n.js 的 variant，{lang} = 在学的语言）
+      'si.card.none.c': '：走出小镇、去过第一条路以后，回声博士的告示板每天会贴一条<b>{lang}线索</b>，读懂了就能找到稀有怪兽。',
+      'si.row.new.c': '3 条{lang}线索 · 还没找到', 'si.zh.aria.c': '看意思', 'si.caught.read.c': '（没看意思就读懂了，多 {n}）',
+      'si.tag.sub.c': '稀有怪兽', 'si.sheet.sub.c': '回声博士的告示板',
+      'si.sheet.none.c': '告示板还是空的。先走出小镇、去第一条路上看看——以后每天这里会贴一条<b>{lang}线索</b>，读懂了就能找到一只稀有怪兽。',
+      'si.sheet.new.c': '📋 <b>有人看到了一只稀有怪兽！</b>读懂三条{lang}线索，去那个地方找它。',
     },
     en: {
       'si.title': 'Today\'s Sighting', 'si.title.sub': '',
@@ -76,11 +82,64 @@
       'si.sheet.how2': '.<br>🏃 If it runs away or you beat it, don\'t worry: walk there a bit more and it will come back. There is a new one every day.',
       'si.sheet.spray': '<br>🧴 Your Quiet Spray is on: it will not come out now.',
       'si.ok': 'Got it',
+      'si.card.none.c': ': once you leave the town and visit the first road, Professor Echo\'s notice board shows <b>{lang} clues</b> every day. Understand them and you can find a rare monster.',
+      'si.row.new.c': '3 {lang} clues · not found yet', 'si.zh.aria.c': 'Show the meaning', 'si.caught.read.c': ' (+{n} for reading the clues without help)',
+      'si.tag.sub.c': 'A rare monster', 'si.sheet.sub.c': 'Professor Echo\'s notice board',
+      'si.sheet.none.c': 'The notice board is empty. First leave the town and visit the first road. After that, there will be <b>{lang} clues</b> here every day. Understand them and you can find a rare monster.',
+      'si.sheet.new.c': '📋 <b>Someone saw a rare monster!</b> Read the three {lang} clues and go to that place to find it.',
     },
   });
   // 线索在界面语言里的意思（中文界面 = zh；英语界面没有，英文就是要读的内容）。glossy()：现在的界面语言有没有线索的意思（线索只写了中文意思）
   const glossOf = c => (I18N ? I18N.gloss(c) : (c && c.zh) || null);
-  const glossy = () => !!glossOf({ zh: '·' });
+  // ---------- 别的语言的课（tools/course/TALK.md 第二轮 C、ENGINE.md §4）----------
+  // 线索是英语拼的。别的课里要有这门课的译文才出：译文在 course.json 的 LINES 里，键就是线索的英语原文，用 game.js 的 E.lineOf 查——
+  // 显示的是查出来的整句（这里不自己拼译文，线索才一定是真的）。
+  // · langOn()：这门课有没有线索的译文——拿模板一定拼得出来的两句试（第 1 座岛的「什么样的岛」）。没有 = 老的课程包：和以前一样整个不出；
+  // · 今天的三条线索有一条查不到译文：这一天按「这门课还没有目击」算（state().st === 'off'：不显示半英半译，那只怪兽也不出来）；
+  // · 三条线索显示译文（日语 / 中文标读音），「译」里是界面语言的意思（lineOf 的 mean：中文界面 = 线索自己的中文、说到「英语」的换成这门语言，
+  //   英语界面 = 英语原文；中文意思里夹着英语被拿掉的，退回线索自己的那句），🔊 念译文（课程包里的配音）。
+  // 英语课（E.lang 是 null）：CL() 是 false，下面每一处走的都是原来那一行
+  const CL = () => !!(E && E.lang);
+  // （查到了就记住；没查到隔 1 秒才再查一次——课程内容是开场以后才换上的，太早问到的「没有」不能记一辈子，每走一步都查又太费）
+  const LON = { v: false, at: -1e9 };
+  function langOn() {
+    if (!CL()) return true;
+    if (LON.v) return true;
+    const now = Date.now();
+    if (now - LON.at < 1000) return false;
+    LON.at = now;
+    try { LON.v = !!(E.lineOf && (E.lineOf(isleClue(0, 0).en) || E.lineOf(isleClue(0, 1).en))); } catch (e) { LON.v = false; }
+    return LON.v;
+  }
+  const uiZh = () => !I18N || I18N.lang() === 'zh';
+  const cw = (s, ui) => (E.courseWord ? E.courseWord(s, ui) : s);
+  // 三条线索 → 带上这门课的译文 t 和界面语言的意思 mean；有一条没有译文返回 null
+  function locClues(list) {
+    const out = [];
+    for (const c of list) {
+      const ln = E.lineOf ? E.lineOf(c.en, { zh: c.zh }) : null;
+      if (!ln || !ln.t) return null;
+      out.push(Object.assign({}, c, { t: ln.t, mean: ln.mean || (uiZh() ? cw(c.zh, 'zh') : cw(c.en, 'en')) }));
+    }
+    return out.length ? out : null;
+  }
+  // 今天这个目标的三条线索（别的课：换成译文的；查不全是 null）。按目标和界面语言记着，走路时每一步都要问
+  const DAYC = { k: '', list: null };
+  function cluesNow(sg) {
+    const raw = clues(sg);
+    if (!CL()) return raw;
+    const k = [sg.day, sg.map, sg.sp, sg.shiny ? 1 : 0, (sg.cv || []).join(','), I18N ? I18N.lang() : ''].join('|');
+    if (DAYC.k !== k) { DAYC.k = k; DAYC.list = raw.length ? locClues(raw) : null; }
+    return DAYC.list;
+  }
+  // 别的课里今天有没有目击（目标定了、三条线索都有译文）
+  const dayOn = sg => !CL() || (langOn() && !!sg && !!sg.map && !!cluesNow(sg));
+  // 怪兽的名字：别的课按这门课的写法（台词翻译表的词），没翻就是英文名
+  const monName = sp => (CL() && E.termOf ? E.termOf('monster', sp.en) : sp.en);
+  // glossy()：现在的界面语言有没有线索的意思（英语课：线索只写了中文意思；别的课两种界面语言都有）
+  const glossy = () => CL() || !!glossOf({ zh: '·' });
+  // 这条线索在界面语言里的意思（别的课用 locClues 给的 mean）
+  const meanOf = c => (CL() ? (c && c.mean) || null : glossOf(c));
 
   // ---------- 数值 ----------
   const SHINY = 1 / 8;                   // 稀有色的机会
@@ -396,20 +455,24 @@
     const c3 = { k: 'mon', trait: one.k, v: one.v, en: ter[0] + ' ' + one.en, zh: ter[1] + one.zh };
     return [isleClue(m.isle, cv[0] ? 1 : 0), placeClue(m), c3];
   }
-  // 模板能拼出来的全部线索句子（tools/voice/collect.js 用来提前配音；两个版本的怪兽不一样，那边两个版本各跑一遍）
-  function lines() {
+  // 模板能拼出来的全部线索句子和它们的中文意思：[{ en, zh }]，按英文排好（一句英文只有一条）。
+  // 别的语言的课翻译线索用（tools/course/sight-src.json 的键就是这里的 en；中文意思给译者看语境、给检查用）
+  function linePairs() {
     const EM = EMaps(), D = DX(), out = {}, byTer = {};
     if (!EM || !D) return [];
+    const put = c => { out[c.en] = c.zh; };
     EM.all().forEach(id => {
       const m = EM.get(id), ter = terrainOf(m);
       if (!ter) return;
-      [0, 1].forEach(v => { out[isleClue(m.isle, v).en] = 1; });
-      out[placeClue(m).en] = 1;
+      [0, 1].forEach(v => put(isleClue(m.isle, v)));
+      put(placeClue(m));
       fitPool(m).forEach(s => { (byTer[ter] = byTer[ter] || {})[s.id] = s; });
     });
-    Object.keys(byTer).forEach(ter => Object.keys(byTer[ter]).forEach(id => traits(byTer[ter][id], false).forEach(t => { out[TERRAIN[ter][0] + ' ' + t.en] = 1; })));
-    return Object.keys(out).sort();
+    Object.keys(byTer).forEach(ter => Object.keys(byTer[ter]).forEach(id => traits(byTer[ter][id], false).forEach(t => put({ en: TERRAIN[ter][0] + ' ' + t.en, zh: TERRAIN[ter][1] + t.zh }))));
+    return Object.keys(out).sort().map(en => ({ en, zh: out[en] }));
   }
+  // 模板能拼出来的全部线索句子（tools/voice/collect.js 用来提前配音；两个版本的怪兽不一样，那边两个版本各跑一遍）
+  const lines = () => linePairs().map(x => x.en);
 
   // ---------- 大地图（world.js 调用） ----------
   const run = { prev: false, tm: 0 };   // prev：上一步也踩在对的地形上（刚下水、刚进地图的那一步不出来）
@@ -423,9 +486,15 @@
     const sg = rec(E.S);
     if (terrainOf(M)) E.S.world.been[M.id] = 1;
     clearTimeout(run.tm);
-    if (!sg.map || sg.map !== M.id || sg.st === 'caught' || sg.day < E.dayStr()) return;
+    if (!sg.map || sg.map !== M.id || sg.st === 'caught' || sg.day < E.dayStr() || !dayOn(sg)) return;
     run.tm = setTimeout(() => {
       if (!WH || WH.map() !== M || !WH.running()) return;
+      // 别的课：这句提示有译文就写译文 + 界面语言的意思；没有就只写界面语言那一句（不夹英语）
+      if (CL()) {
+        const ln = E.lineOf ? E.lineOf(NOTE[0], { zh: NOTE[1] }) : null, own = uiZh() ? NOTE[1] : NOTE[0];
+        E.toast('🔎 ' + (ln ? ln.t + (ln.mean ? ' ' + ln.mean : '') : own) + (WH.spray() ? tx('si.note.spray') : ''), 'gold');
+        return;
+      }
       const g = glossOf({ zh: NOTE[1] });
       E.toast('🔎 ' + NOTE[0] + (g ? ' ' + g : '') + (WH.spray() ? tx('si.note.spray') : ''), 'gold');
     }, 900);
@@ -437,6 +506,7 @@
     if (!sg || !sg.map || sg.st === 'caught' || !c || !c.map || c.map.id !== sg.map) { run.prev = false; return false; }
     const here = !c.hab ? '' : c.map.kind === 'under' ? 'weed' : c.surf ? 'sea' : c.map.kind === 'cave' ? 'cave' : 'grass';
     if (here !== sg.hab) { run.prev = false; return false; }
+    if (!dayOn(sg)) { run.prev = false; return false; }   // 别的课：今天的线索没有译文 = 今天没有目击，它不出来
     const was = run.prev;
     run.prev = true;
     if (sg.steps < sg.need) sg.steps++;
@@ -456,7 +526,7 @@
   }
   function ended(res, sp) {
     if (res === 'caught') { caught(sp); return; }
-    if (res === 'win' || res === 'flee') E.toast(tx(res === 'win' ? 'si.end.win' : 'si.end.flee', { name: sp.en }));
+    if (res === 'win' || res === 'flee') E.toast(tx(res === 'win' ? 'si.end.win' : 'si.end.flee', { name: monName(sp) }));
   }
   const zhMode = () => { const m = E.S.settings.storyZh; return m === 'always' || m === 'tap' ? m : 'auto'; };
   function caught(sp) {
@@ -470,7 +540,7 @@
     S.coins += coins;
     E.save();
     if (E.SFX && E.SFX.coin) E.SFX.coin();
-    E.toast(tx('si.caught', { name: sp.en, n: coins }) + (read && glossy() ? tx('si.caught.read', { n: COINS_READ }) : '') + (sg.streak > 1 ? tx('si.streak', { n: sg.streak }) : ''), 'gold');
+    E.toast(tx('si.caught', { name: monName(sp), n: coins }) + (read && glossy() ? tx('si.caught.read', { n: COINS_READ }) : '') + (sg.streak > 1 ? tx('si.streak', { n: sg.streak }) : ''), 'gold');
     setTimeout(() => { if (E.checkAch) E.checkAch(); }, 1500);
   }
 
@@ -482,32 +552,47 @@
   const ZH_TXT = 'display:block;font-size:13px;font-weight:400;color:var(--ink-2);line-height:1.4';
   // 界面语言没有线索的意思（英语界面）：只有英文，没有「译」也没有中文那一行
   function clueRows(sg, list) {
+    // 别的课（list 是 cluesNow 给的，带着 t / mean）：显示的、🔊 念的都是这门课的译文（日语 / 中文标读音，行距放开一点给读音留地方），
+    // 「译」里是界面语言的意思。英语课：英文 + 中文意思，和以前一样
+    const cl = CL();
+    // 读音：每块之间留一点空（中文的拼音比字宽，挨着会连成一串）。只在别的课里、要画线索的时候才加这条样式（加载时不碰 DOM）
+    if (cl && typeof document !== 'undefined' && !document.getElementById('sg-css')) {
+      const s = document.createElement('style'); s.id = 'sg-css';
+      s.textContent = '.sg-en ruby{margin:0 .12em}.sg-en rt{font-weight:400}';
+      (document.head || document.documentElement).appendChild(s);
+    }
     return '<div class="sg-clues" style="display:grid;gap:8px;margin:8px 0 2px">' + list.map((c, i) => {
-      const g = glossOf(c);
+      const g = meanOf(c), say = cl ? c.t : c.en, body = cl ? (E.ruby ? E.ruby(c.t) : E.esc(c.t)) : E.esc(c.en), lh = cl && body.includes('<ruby>') ? '1.9' : '1.35';
       return '<div class="sg-clue" style="display:flex;gap:6px;align-items:flex-start;text-align:left">' +
-      '<b style="flex:none;width:1.3em;color:var(--lagoon);line-height:1.35">' + '①②③'[i] + '</b>' +
-      '<div style="flex:1;min-width:0;font-size:15px;font-weight:700;line-height:1.35;color:var(--ink)"><span class="sg-en">' + E.esc(c.en) + '</span>' +
+      '<b style="flex:none;width:1.3em;color:var(--lagoon);line-height:' + lh + '">' + '①②③'[i] + '</b>' +
+      '<div style="flex:1;min-width:0;font-size:15px;font-weight:700;line-height:' + lh + ';color:var(--ink)"><span class="sg-en">' + body + '</span>' +
       (!g ? '' : folded(sg, i) ? '<button class="sg-zh" data-act="sgZh" data-i="' + i + '" aria-label="' + hx('si.zh.aria') + '" style="' + ZH_BTN + '">' + hx('si.zh.btn') + '</button>'
         : '<span class="sg-zh" data-i="' + i + '" style="' + ZH_TXT + '">' + E.esc(g) + '</span>') + '</div>' +
-      '<button class="spk mini" data-act="sayText" data-t="' + E.esc(c.en) + '" aria-label="' + hx('si.hear') + '" style="flex:none;width:34px;height:34px;border-radius:10px;box-shadow:0 3px 0 var(--lagoon-d)">' + E.SPK + '</button></div>';
+      '<button class="spk mini" data-act="sayText" data-t="' + E.esc(say) + '" aria-label="' + hx('si.hear') + '" style="flex:none;width:34px;height:34px;border-radius:10px;box-shadow:0 3px 0 var(--lagoon-d)">' + E.SPK + '</button></div>';
     }).join('') + '</div>';
   }
   // 现在的样子（首页、菜单、测试都用这个）：st = none 还没有地方可去 / new 还没找到 / seen 见过了 / caught 收服了
+  // 别的课另有 off：这门课没有线索的译文，或者今天这三条里有查不到译文的——今天没有目击（卡片、菜单那一行、告示板都不出）
   function state() {
+    if (CL() && !langOn()) return { st: 'off', total: 0, streak: 0, clues: [] };
     const sg = ensure();
     if (!sg) return { st: 'none', total: 0, streak: 0, clues: [] };
     const sp = sg.sp ? DX().byId[sg.sp] : null, day = E.dayStr();
-    return { st: !sg.map || !sp ? 'none' : sg.st === 'caught' ? 'caught' : sg.st === 'seen' ? 'seen' : 'new', sg, sp, clues: sg.map && sp ? clues(sg) : [], total: sg.total || 0, streak: streakNow(sg, day) };
+    const list = sg.map && sp ? cluesNow(sg) : [];
+    if (!list) return { st: 'off', sg, sp, clues: [], total: sg.total || 0, streak: streakNow(sg, day) };
+    return { st: !sg.map || !sp ? 'none' : sg.st === 'caught' ? 'caught' : sg.st === 'seen' ? 'seen' : 'new', sg, sp, clues: list, total: sg.total || 0, streak: streakNow(sg, day) };
   }
   const tally = (st, short) => (st.total ? '⭐ ' + hx(short ? 'si.tally.s' : 'si.tally', { n: st.total }) + (st.streak > 1 ? hx('si.streak', { n: st.streak }) : '') : '');
   // 标题：中文界面后面跟一行小字英文名；英语界面标题本身就是英文
-  const HEAD = () => { const sub = tx('si.title.sub'); return '🔎 ' + hx('si.title') + (sub ? ' <small style="font-weight:700;color:var(--ink-3);font-size:12px">' + E.esc(sub) + '</small>' : ''); };
+  // （别的课：标题后面那行英文小字不写）
+  const HEAD = () => { const sub = CL() ? '' : tx('si.title.sub'); return '🔎 ' + hx('si.title') + (sub ? ' <small style="font-weight:700;color:var(--ink-3);font-size:12px">' + E.esc(sub) + '</small>' : ''); };
   // 首页「怪兽冒险」里的卡片：没找到时摆出三条线索，收服了就收成一行
   function homeCard() {
     if (!E || !DX() || !EMaps()) return '';
     const st = state(), one = 'padding:10px 16px';
+    if (st.st === 'off') return '';
     if (st.st === 'none') return '<section class="mon-card sight none" style="' + one + '"><p>' + HEAD() + hx('si.card.none') + '</p></section>';
-    if (st.st === 'caught') return '<section class="mon-card sight done" style="' + one + '"><p style="display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline"><span>' + hx('si.card.done', { name: (st.sg.shiny ? '✨' : '') + st.sp.en }) + '</span>' +
+    if (st.st === 'caught') return '<section class="mon-card sight done" style="' + one + '"><p style="display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline"><span>' + hx('si.card.done', { name: (st.sg.shiny ? '✨' : '') + monName(st.sp) }) + '</span>' +
       '<span style="margin-left:auto;font-size:13px;color:var(--ink-3)">' + tally(st, true) + '</span></p></section>';
     return '<section class="mon-card sight" style="padding:12px 16px"><h3 style="margin:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:17px">' + HEAD() +
       '<span class="lvchip" style="margin-left:auto">' + hx(st.st === 'seen' ? 'si.st.seen' : 'si.st.new') + '</span></h3>' +
@@ -517,18 +602,21 @@
   // 冒险菜单里「现在要做」下面的一行：现在的状态，点开是告示板（做成 .ach 一行：横屏时和「现在要做」并排，不多占一排按钮）
   function menuRow() {
     if (!E) return '';
-    const st = state(), txt = hx({ none: 'si.row.none', new: 'si.row.new', seen: 'si.st.seen', caught: 'si.row.caught' }[st.st]);
+    const st = state();
+    if (st.st === 'off') return '';
+    const txt = hx({ none: 'si.row.none', new: 'si.row.new', seen: 'si.st.seen', caught: 'si.row.caught' }[st.st]);
     return '<div class="ach" data-act="sgOpen" role="button" tabindex="0" style="cursor:pointer"><span class="ae">🔎</span><div style="flex:1"><b>' + hx('si.title') + '</b><small>' + txt + '</small></div><span style="color:var(--ink-3);font-weight:800">›</span></div>';
   }
   // 告示板（首页卡片的「怎么找？」、冒险菜单里的「今日目击」）
   function sheet() {
     if (!E) return;
     const st = state(), spray = WH && WH.running() && WH.spray();
+    if (st.st === 'off') return;
     let h = '<h2>🔎 ' + hx('si.title') + '</h2><p class="tip">' + hx('si.sheet.sub') + '</p>';
     if (st.st === 'none') h += '<p>' + hx('si.sheet.none') + '</p>';
     // （状态写成一段话，不用 .ach 那种卡片：横屏的弹窗里它只占三分之一宽，三条线索就被挤到下面去了）
-    // 怪兽的中文名是它英文名的意思：英语界面不跟在后面
-    else if (st.st === 'caught') { const n = (st.sg.shiny ? '✨' : '') + st.sp.en, g = glossOf(st.sp); h += '<p class="sg-st">' + hx('si.sheet.done', { name: g ? tx('si.paren', { name: n, zh: g }) : n }) + '</p>' + clueRows(st.sg, st.clues); }
+    // 怪兽的中文名是它英文名的意思：英语界面不跟在后面（别的课：名字是这门课的写法，和中文名一样就不重复）
+    else if (st.st === 'caught') { const nm = monName(st.sp), n = (st.sg.shiny ? '✨' : '') + nm, g0 = glossOf(st.sp), g = g0 && g0 !== nm ? g0 : null; h += '<p class="sg-st">' + hx('si.sheet.done', { name: g ? tx('si.paren', { name: n, zh: g }) : n }) + '</p>' + clueRows(st.sg, st.clues); }
     else {
       // 界面语言有线索的意思（中文界面）：收服 +30，一条都不点「译」再 +20；没有（英语界面）：只能读英文，直接写一共多少
       const gl = glossy();
@@ -544,7 +632,7 @@
     sgOpen: () => sheet(),
     // 点「译」看这一条的中文：记进今天的学习记录（周报「看中文 X 次」），今天这条就一直开着
     sgZh: t => {
-      const sg = rec(E.S), i = +t.dataset.i, c = clues(sg)[i], g = c && glossOf(c);
+      const sg = rec(E.S), i = +t.dataset.i, c = (cluesNow(sg) || [])[i], g = c && meanOf(c);
       if (!g) return;
       sg.zh = (sg.zh || 0) | (1 << i);
       const L = E.dayLog && E.dayLog();
@@ -563,8 +651,10 @@
     menuRow: () => { try { return menuRow(); } catch (e) { console.error(e); return ''; } },
     onMap: M => { try { onMap(M); } catch (e) { console.error(e); } },
     onStep: c => { try { return onStep(c); } catch (e) { console.error(e); return false; } },
-    // 下面这些也给测试和 tools/voice/collect.js 用
-    pick, roll, reach, cands, clues, lines, terrainOf, pathFrom, placeKey, colourOf, traits, extraHab,
+    // 别的语言的课：这门课有没有线索的译文（world.js 的 sightOn、game.js 首页的卡片问；英语课一直 true）。今天出不出看 state().st（'off' = 不出）
+    on: () => { try { return langOn(); } catch (e) { console.error(e); return false; } },
+    // 下面这些也给测试和 tools/voice/collect.js 用；linePairs()：模板拼得出来的每一句和它的中文意思 [{ en, zh }]
+    pick, roll, reach, cands, clues, lines, linePairs, terrainOf, pathFrom, placeKey, colourOf, traits, extraHab,
     K: { SHINY, NEED, AGAIN, COINS, COINS_READ, SKIP, HAB3, FIT, TERRAIN, NOTE, get TAG() { return TAG(); } },
     _run: run,
   };

@@ -314,7 +314,7 @@
     return call('GET', '/health', undefined, { noAuth: true, ms: 8000 }).then(r => {
       if (!r.ok || !r.json) return;
       const ok = v => (Array.isArray(v) ? v.map(String).filter(x => /^[a-z]{2,3}$/.test(x)).slice(0, 12) : null);
-      const pub = { speechLangs: ok(r.json.speechLangs), talkLangs: ok(r.json.talkLangs) }, before = JSON.stringify(A.pub);
+      const pub = { speechLangs: ok(r.json.speechLangs), talkLangs: ok(r.json.talkLangs), questLangs: ok(r.json.questLangs), tipLangs: ok(r.json.tipLangs) }, before = JSON.stringify(A.pub);
       A.pub = pub; LS(K.pub, JSON.stringify(pub));
       if (JSON.stringify(pub) !== before) changed();
     }, () => { /* 连不上：上次问到的先留着 */ });
@@ -323,6 +323,10 @@
   // 服务器会不会用这门语言和岛民聊天（GET /v1/me 的 talkLangs，tools/course/TALK.md §3）：英语一直会；
   // 老服务器没有这个字段、还没拿到账号信息（没登录）= 只会英语，别的课照旧写「这门语言的 AI 聊天还在做」
   const talkLang = c => { const l = String(c || ''); return l === 'en' || langList('talkLangs').includes(l); };
+  // 第二轮（TALK.md「第二轮」B / C）：服务器会不会用这门语言做支线委托（questLangs）、口语题的 AI 发音点评（tipLangs）——
+  // 和 talkLangs 一样的规矩：英语一直会；老服务器没有这两个字段 = 只会英语（别的课里委托人头上没有「?」、没有点评，和以前一样）
+  const questLang = c => { const l = String(c || ''); return l === 'en' || langList('questLangs').includes(l); };
+  const tipLang = c => { const l = String(c || ''); return l === 'en' || langList('tipLangs').includes(l); };
   const freeMin = () => FREE_MIN;
   const planName = me => t('ac.plan.' + (me && /^(monthly|yearly)$/.test(me.plan) ? me.plan : 'free'));
 
@@ -816,7 +820,7 @@
   }
 
   W.EchoAccount = {
-    init, cfg: CFG, token, signed, me: () => A.me, refresh, talkLeft, speechLang, talkLang, need, ask, nudge, fix, post, noteQuota, lost,
+    init, cfg: CFG, token, signed, me: () => A.me, refresh, talkLeft, speechLang, talkLang, questLang, tipLang, need, ask, nudge, fix, post, noteQuota, lost,
     strip, settingsRow, gateWhy, failText, barText, barInfo, setupPage, setupSum, reportSheet, memberSheet, signInSheet, accountSheet,
     reconcile, planName: () => planName(A.me), MIN_START,
   };

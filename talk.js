@@ -15,18 +15,39 @@
   let G = null;                    // game.js 给的工具（S、save、toast、esc、openModal……）
   // 在学别的语言（tools/course/ENGINE.md §4、tools/course/TALK.md §4）：这门语言能不能和岛民聊，看服务器会不会——
   // 云端模式看 GET /v1/me 的 talkLangs（account.js 的 talkLang），网页版的中转服务看它 /health 回的 talkLangs（relayLangs，见下面）；
-  // 老服务器、APK 直连阿里云 = 不会：照旧写「这门语言的 AI 聊天还在做」，学习锁里聊天那一项整天免。支线委托、AI 发音点评这一轮照旧关着。
+  // 老服务器、APK 直连阿里云 = 不会：照旧写「这门语言的 AI 聊天还在做」，学习锁里聊天那一项整天免。
+  // 第二轮（2026-11-21 傍晚，TALK.md「第二轮」C）：支线委托、口语题的 AI 发音点评也看服务器——它另说两样：questLangs（会用哪些语言做委托）、
+  // tipLangs（会用哪些语言写点评），和 talkLangs 在同一个地方问（云端模式 account.js 的 questLang / tipLang，中转服务的 /health）。
+  // 老服务器没有这两个字段 = 不会：委托人头上没有「?」、没有点评，和第一轮一样。
   // CL() 在学哪门语言（'' = 英语课：下面每一处英语课走的都是原来那一行）；coreLang：打包进来的 talk-core.js 认不认这门语言
   // （数句子、判完成的规则在它那里；它不认就当这门语言聊不了）
   const CL = () => (G && G.lang && typeof G.course === 'string' && G.course !== 'en' ? G.course : '');
   const coreLang = l => { const c = Core(); try { return !!(l && c && typeof c.langOk === 'function' && c.langOk(l) === l); } catch (e) { return false; } };
-  const langSrv = l => {
-    if (cloudOn()) { try { const A = ACC(); return !!(A && typeof A.talkLang === 'function' && A.talkLang(l)); } catch (e) { return false; } }
+  // k：'' 聊天（talkLangs）/ 'q' 委托（questLangs）/ 't' 发音点评（tipLangs）
+  const SRV_FN = { '': 'talkLang', q: 'questLang', t: 'tipLang' };
+  const langSrv = (l, k) => {
+    k = k || '';
+    if (cloudOn()) { try { const A = ACC(), f = A && A[SRV_FN[k]]; return typeof f === 'function' && !!f(l); } catch (e) { return false; } }
     if (direct()) return false;
-    return relayLangs().includes(l);
+    return relayLangs(k).includes(l);
   };
   const langTalk = () => { const l = CL(); return !!l && coreLang(l) && langSrv(l); };
   const langOff = () => !!(G && G.lang) && !langTalk();
+  // 别的课里委托开不开：能聊（上面那一条）+ 服务器会用这门语言做委托 + 课程包里有委托的内容（game.js 的 questLoc 查 course.json 的 QUESTS）。
+  // 英语课一直 true。给了 id：这一条在课程包里有没有、小步骤和 quests.js 是不是一样多（不一样多的界面和服务器对不上，不出）
+  function questLoc(id) {
+    const q = window.QUESTS && Object.prototype.hasOwnProperty.call(QUESTS.byId, id) ? QUESTS.byId[id] : null;
+    let loc = null; try { loc = q && G && G.questLoc ? G.questLoc(id) : null; } catch (e) { loc = null; }
+    return loc && Array.isArray(loc.steps) && loc.steps.length === q.steps.length ? loc : null;
+  }
+  function questOk(id) {
+    const l = CL();
+    if (!l) return !(G && G.lang);   // 英语课：照旧（在学别的语言、可是语言代码不认得：不出）
+    if (!langTalk() || !langSrv(l, 'q')) return false;
+    return id == null ? !!(G && G.questLoc) : !!questLoc(id);
+  }
+  // 别的课里口语题的 AI 发音点评出不出（game.js 的 aiTip 问）：服务器会用这门语言写点评才出
+  const tipOk = () => { const l = CL(); return l ? langSrv(l, 't') : !(G && G.lang); };
   const $ = s => document.querySelector(s);
   const LS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) { return ''; } };
   // 等老师评价最多几毫秒、HTTPS 请求超时（测试里改短：EchoTalk.cfg）
@@ -61,6 +82,8 @@
       'tk.r.few.c': '这次用语音说的{lang}句子不到 3 句{typed}，目标先不算完成。下次按住话筒说吧！',
       // 评语里「更好的说法」不进每日复习的课（日语：没有读音的句子打不了分）；大地图上和面前的人随便聊的目标（别的课）
       'tk.r.tips.only': '可以这样说更好：', 'tk.dyn.goal': '和 {name} 用{lang}随便聊聊：打个招呼，问 TA 一个问题，也回答 TA 的问题。',
+      // 第二轮：日语的「更好的说法」读得出来的才进复习——两条里只有一条进的时候，进的那条标 📅
+      'tk.r.tips.some': '可以这样说更好（带 📅 的那句明天的每日复习里会再练）：',
       'tk.err.offline': '现在没网，连上网再来聊吧', 'tk.err.auth': 'AI 密钥不对，请告诉家长', 'tk.err.quota': 'AI 额度用完了，请告诉家长', 'tk.err.busy': 'AI 有点忙，过一会儿再试',
       'tk.err.code': '家庭口令不对，请告诉家长', 'tk.err.network': '连不上 AI 聊天，过一会儿再试；一直不行就告诉家长', 'tk.err.daily': '今天的聊天时间用完了，明天再来吧！',
       'tk.err.nonpc': '没有这个岛民', 'tk.err.log': '聊天：{raw}', 'tk.err.conn': '连不上对话服务 {url}', 'tk.err.up': '连不上对话服务（{msg}）',
@@ -131,6 +154,7 @@
       'tk.e.quiet.p.c': 'Hold the mic and speak {lang}, and the islander will answer you.',
       'tk.r.few.c': 'You spoke fewer than 3 {lang} lines this time{typed}, so the goal does not count yet. Next time, hold the mic and talk!',
       'tk.r.tips.only': 'A better way to say it:', 'tk.dyn.goal': 'Chat with {name} in {lang}: say hello, ask them a question, and answer their questions.',
+      'tk.r.tips.some': 'A better way to say it (you\'ll practise the one marked 📅 in tomorrow\'s Daily review):',
       'tk.err.offline': 'You\'re offline. Connect to the internet, then come back to chat', 'tk.err.auth': 'The AI key is wrong. Please ask a parent or check Settings',
       'tk.err.quota': 'The AI credit has run out. Please ask a parent or check Settings', 'tk.err.busy': 'The AI is a bit busy. Try again in a moment',
       'tk.err.code': 'The family code is wrong. Please ask a parent', 'tk.err.network': 'Can\'t reach AI chat. Try again in a moment; if it keeps happening, ask a parent',
@@ -294,20 +318,30 @@
   // 老的中转服务没有这个字段 = 只会英语。问到的结果按服务地址记在 localStorage['echo-talk-langs']（下次打开不用等就知道，
   // 不然学习锁先按「这门语言聊不了」算，今天就免了）；每次打开游戏、换了服务地址、重新连上网都再问一次，变了就重画首页。
   // 英语课不问；云端模式（看账号的 talkLangs）、APK 直连（这一轮不做）也不问
-  const TLK = { key: 'echo-talk-langs', u: '', l: null, busy: null, busyU: '' };
-  function relayLangs() {
+  // 第二轮：同一次 /health 里还有 questLangs（委托）、tipLangs（发音点评），一起记着（q、t）；老的记录、老的中转服务没有 = 都不会
+  const TLK = { key: 'echo-talk-langs', u: '', l: null, q: null, t: null, busy: null, busyU: '' };
+  // k：'' 聊天 / 'q' 委托 / 't' 发音点评
+  function relayLangs(k) {
     const u = relayHttp(); if (!u) return [];
     if (TLK.u !== u) {
-      TLK.u = u; TLK.l = null;
-      try { const j = JSON.parse(LS(TLK.key) || 'null'); if (j && j.u === u && Array.isArray(j.l)) TLK.l = j.l.map(String); } catch (e) { /* 记的东西坏了：当没问过 */ }
+      TLK.u = u; TLK.l = TLK.q = TLK.t = null;
+      try {
+        const j = JSON.parse(LS(TLK.key) || 'null');
+        if (j && j.u === u && Array.isArray(j.l)) { TLK.l = j.l.map(String); TLK.q = Array.isArray(j.q) ? j.q.map(String) : null; TLK.t = Array.isArray(j.t) ? j.t.map(String) : null; }
+      } catch (e) { /* 记的东西坏了：当没问过 */ }
     }
-    return TLK.l || [];
+    return (k === 'q' ? TLK.q : k === 't' ? TLK.t : TLK.l) || [];
   }
-  // list：服务器说它会的语言（数组）；不是数组（老服务器）= 只会英语
-  function relayLangsSet(u, list) {
-    const l = (Array.isArray(list) ? list : []).map(String).filter(x => /^[a-z]{2,3}$/.test(x)).slice(0, 12), before = relayLangs().join(',');
-    TLK.u = u; TLK.l = l; LS(TLK.key, JSON.stringify({ u, l }));
-    if (l.join(',') === before) return;
+  // list：服务器说它会的语言（数组）；不是数组（老服务器）= 只会英语。
+  // more = { q 委托, t 发音点评 }：/health 问到的时候一起给（不是数组 = 不会）；不给 more（连接时服务器才说不会聊）= 这两样照原来记的
+  const langArr = list => (Array.isArray(list) ? list : []).map(String).filter(x => /^[a-z]{2,3}$/.test(x)).slice(0, 12);
+  function relayLangsSet(u, list, more) {
+    const now = () => [relayLangs(), relayLangs('q'), relayLangs('t')].map(a => a.join(',')).join('|'), before = now();
+    const l = langArr(list), q = more ? langArr(more.q) : TLK.u === u ? TLK.q || [] : [], t = more ? langArr(more.t) : TLK.u === u ? TLK.t || [] : [];
+    TLK.u = u; TLK.l = l; TLK.q = q; TLK.t = t;
+    // 记下来的样子：没有委托、没有点评的（老服务器）和第一轮一字不差（{ u, l }）
+    LS(TLK.key, JSON.stringify(Object.assign({ u, l }, q.length ? { q } : null, t.length ? { t } : null)));
+    if (now() === before) return;
     try { if (G && G.renderHome && !$('#home').hidden && $('#modal').hidden) G.renderHome(); } catch (e) { /* 还没启动 */ }
   }
   function relayAsk() {
@@ -316,7 +350,7 @@
     if (TLK.busy && TLK.busyU === u) return TLK.busy;
     const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 8000);
     TLK.busyU = u;
-    TLK.busy = fetch(u + '/health', { signal: ctl.signal }).then(r => (r.ok ? r.json() : null)).then(j => { if (j && typeof j === 'object') relayLangsSet(u, j.talkLangs); })
+    TLK.busy = fetch(u + '/health', { signal: ctl.signal }).then(r => (r.ok ? r.json() : null)).then(j => { if (j && typeof j === 'object') relayLangsSet(u, j.talkLangs, { q: j.questLangs, t: j.tipLangs }); })
       .catch(() => { /* 连不上：上次问到的先留着 */ }).then(() => { clearTimeout(tm); TLK.busy = null; });
     return TLK.busy;
   }
@@ -406,8 +440,14 @@
   // 点岛民的话看意思：中文界面翻成中文，英语界面翻成英文（英语课的英语界面照旧没有：就是在学这门语言）；
   // 界面语言就是在学的语言（中文界面学中文）也没有
   const canZh = () => (CL() ? CL() !== uiNow() : zhUi());
-  // 这门课的评语里「更好的说法」进不进每日复习：西语、中文进；日语先不进（没有读音的句子打不了分），只在评语里显示
-  const tipsToRev = () => CL() !== 'ja';
+  // 别的课的评语里「更好的说法」这一句进不进每日复习：西语、中文都进；语言模块有 readable 这条规矩的（现在只有日语，lang-ja.js）问它——
+  // 这句话里的汉字，课程的读音表（game.js 的 lexNow）加上它自带的词表都读得出来才进；认不全的只在评语里显示（复习是按读音打分的）。
+  // 是哪门语言的规矩写在语言模块里，这里不写
+  function tipToRev(text) {
+    const L = CL() && G ? G.lang : null;
+    if (!L || typeof L.readable !== 'function') return true;
+    try { return !!L.readable(String(text || ''), G.lexNow ? G.lexNow() : null); } catch (e) { return false; }
+  }
 
   function countLog(k, n) { if (!G) return; const L = G.dayLog(); L[k] = (L[k] || 0) + (n || 1); G.save(); }
   // AI 用量记进今天的日志（周报估算花费）：实时聊天 aiChatIn / aiChatOut（其中音频 aiChatAudioIn / aiChatAudioOut）；
@@ -622,14 +662,39 @@
   // 大地图上的支线委托（quests.js，world.js 调）：只把委托的 id 交给中转服务，人设、目标、小步骤由服务器按 id 从 quests.js 里读；
   // APK 直连时本机按同一份拼（talk-core 的 questNpc）。界面上的目标、步骤、词卡也读那一份。
   // onResult({ done, stars, said })：这段聊天有了结果就告诉大地图——关掉界面时说一次；评语在后台才到的，到了再说一次（以后一次为准）
+  // 别的课（TALK.md 第二轮）：连接多带一个 lang（服务器按 talk-core 的 questNpc(q, lang, loc) 拼人设，开场白、示范句、词换成这门语言的）；
+  // 界面上的目标说明还是 quests.js 的中文 / 英文那两份，示范句、词卡、开场白用课程包里这门语言的（questLoc），委托人的名字按这门课的名字牌写
   function openQuest(qid, look, onResult) {
     const q = window.QUESTS && Object.prototype.hasOwnProperty.call(QUESTS.byId, qid) ? QUESTS.byId[qid] : null;
     if (!q) return;
+    if (G && G.lang) {
+      const loc = questOk(qid) ? questLoc(qid) : null;
+      if (!loc) { if (G.toast) G.toast(tx('tk.lang.h')); return; }
+      const nm = G.termOf ? G.termOf('person', q.who) : q.who;
+      return open({
+        id: 'dyn', quest: q.id, name: nm, zh: nm, lookObj: look, voiceZh: '',
+        top: tx('tk.top.quest', { q: lbl(q) }), topic: q.en, goalZh: q.goalZh,
+        words: loc.words.map(w => w.t), wordsZh: loc.words.map(w => w.zh), wordsEn: loc.words.map(w => w.en), onResult,
+      });
+    }
     return open({
       id: 'dyn', quest: q.id, name: q.who, zh: q.who, lookObj: look, voiceZh: '',
       top: tx('tk.top.quest', { q: lbl(q) }), topic: q.en, goalZh: q.goalZh,
       words: q.words.map(w => w[0]), wordsZh: q.words.map(w => w[1]), onResult,
     });
+  }
+  // 别的课的委托：聊天界面要的那几样（目标、小步骤、开场白）。人设不在手机上拼——服务器按委托的 id 和语言自己拼。
+  // 小步骤 [中文说明（quests.js）, 这门语言的示范句（课程包）, { en: 英语原句 }]：英语界面拿英语原句当这一步的说明（就是要说的那句话的意思）
+  function questBase(q, cl) {
+    const loc = q ? questLoc(q.id) : null;
+    if (!loc) return null;
+    // 目标说明里的名字（Ms Rosa、Hello Island……）换成这门课的写法（课程包给了名字表才换，game.js 的 questNames）
+    const nm = s => { try { return G.questNames ? G.questNames(q.id, String(s || '')) : String(s || ''); } catch (e) { return String(s || ''); } };
+    return {
+      id: 'quest:' + q.id, quest: q.id, lang: cl, name: String(q.who || ''), goal: nm(q.goal), goalZh: nm(q.goalZh), opener: loc.opener,
+      goals: [{ steps: q.steps.slice(0, 4).map((s, k) => [s[0], loc.steps[k], { en: s[1] }]) }],
+      words: loc.words.map(w => w.t), wordsZh: loc.words.map(w => w.zh),
+    };
   }
   function result(c) {
     const f = c.npc && c.npc.onResult; if (typeof f !== 'function') return;
@@ -659,7 +724,10 @@
     if (cloudOn() && ACC() && !ACC().ask('talk', () => open(id))) return;
     const esc = G.esc, core = Core(), T = state(), cl = CL();
     // 地图上的人：目标、步骤按 talk-core 的临时人设（和服务器拼的一样）；委托按 quests.js 里那一条
-    const base = npc.quest ? core.questNpc(QUESTS.byId[npc.quest]) : npc.desc ? core.personNpc(npc.desc) : npc, mk = memKey(npc), lvl = chatLv(), goal = core.goalOf(base, core.goalIndex ? core.goalIndex(base, T.n[mk] || 0, lvl) : T.n[mk] || 0);   // lvl：按能力走时岛民按第几级说话、挑哪个目标（没有 = null，照旧）
+    // 别的课的委托：界面要的那几样自己拼（questBase：示范句、开场白是课程包里这门语言的）；课程包里没有这一条就不开
+    const qb = npc.quest && cl ? questBase(QUESTS.byId[npc.quest], cl) : null;
+    if (npc.quest && cl && !qb) return;
+    const base = qb || (npc.quest ? core.questNpc(QUESTS.byId[npc.quest]) : npc.desc ? core.personNpc(npc.desc) : npc), mk = memKey(npc), lvl = chatLv(), goal = core.goalOf(base, core.goalIndex ? core.goalIndex(base, T.n[mk] || 0, lvl) : T.n[mk] || 0);   // lvl：按能力走时岛民按第几级说话、挑哪个目标（没有 = null，照旧）
     // 别的课里地图上的人：示范句要是这门语言的——talk-core 拼出来的人不是这门语言就不显示示范句（不拿英语的例句教别的语言）
     if (cl && npc.desc && (!base || base.lang !== cl)) goal.steps.forEach(s => { s.en = ''; });
     // 目标：中文界面用中文的目标；别的界面语言用英文的（委托、岛民、地图上的人都有英文的 goal）。别的课里地图上的人：字表里那一句（说的是这门语言）
@@ -715,6 +783,7 @@
     // 别的课里地图上的人：p 里多一个 lang（这个人说哪门语言；课程的单元角色只发 id，语言由服务器按 id 查）
     if (npc.desc) { const d = npc.desc; q.set('p', b64(JSON.stringify(Object.assign({ name: d.name, g: d.g, kid: !!d.kid, role: d.role, island: d.island, place: d.place, lines: d.lines, words: d.words }, d.lang ? { lang: d.lang } : null)))); }
     if (npc.quest) q.set('quest', npc.quest);   // 委托：只发 id
+    if (npc.quest && cl) q.set('lang', cl);     // 别的课的委托：再告诉服务器是哪门语言（TALK.md 第二轮：quest=<id>&lang=<语言>）
     // 能力级别和界面语言：中转服务只认 0–5 和认得的语言代码，那一段「怎么说话」在服务器上拼。
     // 界面不是中文时不管有没有级别都发 ui（别把他说成中国学生、评语按界面语言写）；中文界面、按课本走的照旧不发
     if (lvl != null) q.set('lv', String(lvl));
@@ -790,6 +859,8 @@
         c.err = tx('tk.lang.h'); c.errCode = 'lang'; c.errWhy = 'lang';
         status('⚠️ ' + c.err);
         if (cloudOn()) { try { if (ACC()) ACC().refresh(); } catch (e) { /* 账号模块出错 */ } }
+        // 委托的连接被这样拒了：只把「会用这门语言做委托」改掉（聊天照原来记的）
+        else if (c.npc.quest) { relayLangsSet(relayHttp(), relayLangs(), { q: relayLangs('q').filter(x => x !== c.lang), t: relayLangs('t') }); relayAsk(); }
         else { relayLangsSet(relayHttp(), Array.isArray(m.supported) ? m.supported : relayLangs().filter(x => x !== c.lang)); relayAsk(); }
       }
       else if (m.type === 'error') {
@@ -905,11 +976,28 @@
   // 别的课：西语按词比（带重音的字母照样是字母）；日语、中文没有空格，去掉标点以后看这句话里有没有这个词
   // （西语不看重音符号：识别出来的字有时不带）
   const normL = (s, latin) => { s = String(s || '').normalize('NFKC').toLowerCase(); if (latin) s = s.normalize('NFD').replace(/\p{M}+/gu, ''); return s.replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); };
+  // 西语（2026-11-21 西语译者：照着示范句说一遍，121 张委托词卡里 43 张不变绿）：冠词不算词——卡片「la gorra」遇到「una gorra」、
+  // 「el dueño」遇到「al dueño」都要变绿；「del」「al」当成「de」「a」（卡片「al lado de」遇到「al lado del parque」）。
+  // 卡片和听到的话两边一样处理。带重音的「él」（他）不是冠词：先认冠词再去重音。卡片上的「…」「¿」「?」不是字母，本来就不算词
+  const ES_ART = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas']);
+  const esWords = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim().split(' ')
+    .filter(w => w && !ES_ART.has(w)).map(w => normL(w, true)).map(w => (w === 'del' ? 'de' : w === 'al' ? 'a' : w)).filter(Boolean);
+  // 这张词卡在这句话里说到了没有（别的课）：lang 是哪门语言，latin 是不是拉丁字母的语言
+  // 语言模块自己有 hasWord 这条规矩的（日语，lang-ja.js：按读音比——词卡写假名、识别结果写成汉字也要变绿）问它；它出错就照下面按写法比
+  function wordHit(w, text, lang, latin) {
+    const L = G && G.lang;
+    if (L && typeof L.hasWord === 'function') {
+      try { return !!L.hasWord(w, text, { lex: G.lexNow ? G.lexNow() : null, entry: G.entryOf ? G.entryOf(w) : null }); } catch (e) { /* 按写法比 */ }
+    }
+    if (lang === 'es') { const p = esWords(w).slice(0, 3).join(' '); return !!p && (' ' + esWords(text).join(' ') + ' ').includes(' ' + p + ' '); }
+    const sq = s => (latin ? ' ' + normL(s, true) + ' ' : normL(s).replace(/ /g, ''));
+    const p = latin ? ' ' + normL(w, true).split(' ').slice(0, 3).join(' ') + ' ' : sq(w);
+    return !!p.trim() && sq(text).includes(p);
+  }
   function markWordsL(c, text) {
-    const latin = G.lang.script === 'latin', sq = s => (latin ? ' ' + normL(s, true) + ' ' : normL(s).replace(/ /g, '')), t = sq(text);
+    const latin = G.lang.script === 'latin';
     (c.npc.words || []).forEach((w, k) => {
-      const p = latin ? ' ' + normL(w, true).split(' ').slice(0, 3).join(' ') + ' ' : sq(w);
-      if (p.trim() && t.includes(p)) { const el = document.querySelector('.tk-w[data-i="' + k + '"]'); if (el) el.classList.add('hit'); }
+      if (wordHit(w, text, c.lang, latin)) { const el = document.querySelector('.tk-w[data-i="' + k + '"]'); if (el) el.classList.add('hit'); }
     });
   }
   function markWords(c, text) {
@@ -1139,8 +1227,8 @@
       rec.taught = 1;
       // 老师给的「更好的说法」进每日复习（第三个参数是孩子的原话，复习时可以显示「你原来说的」）。
       // 第二个参数存成这句的中文意思：评语是按别的界面语言写的，解释就不是中文，不存
-      // 别的课：西语、中文照样进（复习时按这门语言的规则打分）；日语先不进（没有读音的句子打不了分），只在评语里显示
-      if (G.revAddFree && (!c.lang || tipsToRev())) ev.tips.forEach(t => G.revAddFree(t.better, c.ui === 'zh' ? t.zh : '', t.said));
+      // 别的课：西语、中文照样进（复习时按这门语言的规则打分）；日语一句一句看——读音表认得全的才进（tipToRev），认不全的只在评语里显示
+      if (G.revAddFree) ev.tips.forEach(t => { if (!c.lang || tipToRev(t.better)) G.revAddFree(t.better, c.ui === 'zh' ? t.zh : '', t.said); });
       remember(c.mk, ev);
     }
     // 连上过、服务器真出错，又没拿到老师的评价：今天的聊天这一项免了（没网、一开始就没连上的不算）
@@ -1199,6 +1287,9 @@
     const coins = r.coins;
     // 小步骤：中文界面照旧；别的界面语言没有步骤说明的（「第 n 步」）后面带上示范句
     const stepR = (s, k) => esc(stepTxt(s, k)) + (!zhUi() && !s.task && s.en ? ' <small>' + egHTML(s.en) + '</small>' : '');
+    // 「更好的说法」哪几句明天进每日复习（别的课一句一句看，tipToRev；英语课都进）：都进 / 都不进 / 只有一部分进，标题各一句
+    const inRev = ev ? ev.tips.map(t => !c.lang || tipToRev(t.better)) : [];
+    const tipsKey = inRev.every(Boolean) ? 'tk.r.tips' : inRev.some(Boolean) ? 'tk.r.tips.some' : 'tk.r.tips.only';
     let body;
     if (ev) {
       body = '<div class="tk-stars">' + '★'.repeat(ev.stars) + '<i>' + '★'.repeat(3 - ev.stars) + '</i></div>' +
@@ -1208,7 +1299,7 @@
         (ev.praise ? '<p>' + esc(ev.praise) + '</p>' : '') +
         (ev.ai ? '<p class="tk-ai-line">' + hx('tk.r.ai') + '</p>' : '') +
         (!ev.ai ? '<p class="tk-note">' + hx('tk.r.noai') + '</p>' : '') +
-        (ev.tips.length ? '<div class="tk-tips"><b>' + hx(c.lang && !tipsToRev() ? 'tk.r.tips.only' : 'tk.r.tips') + '</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
+        (ev.tips.length ? '<div class="tk-tips"><b>' + hx(tipsKey) + '</b>' + ev.tips.map((t, k) => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b>' + (tipsKey === 'tk.r.tips.some' && inRev[k] ? ' 📅' : '') + '<small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
         (coins ? '<p class="tk-coin">' + hx('tk.r.coins', { n: coins }) + '</p>' : '') +
         (c.npc.quest ? '<p class="tk-coin">' + (ev.done ? hx('tk.r.q.done', { name: c.npc.name }) : hx('tk.r.q.not')) + '</p>' : '');
     } else {
@@ -1310,11 +1401,24 @@
     if ((typeof navigator !== 'undefined' && navigator.onLine === false) || (cloudOn() && !(ACC() && ACC().signed()))) return '';
     const ui = uiNow(), k = ui + '|' + target + '|' + heard, core = Core();
     if (TIPS[k] !== undefined) return TIPS[k];
+    // 别的课（TALK.md 第二轮）：服务器会用这门语言写点评才问（tipOk；game.js 的 aiTip 也先问过），请求里多带一个 lang——
+    // 提示词由服务器按 talk-core 的 tipBody(target, heard, ui, lang) 拼。APK 直连在别的课里不走这里（tipOk 是 false）。英语课的请求一字不变
+    const cl = CL();
+    if (G && G.lang && !tipOk()) return '';
     const body = core.tipBody(target, heard, ui);
     let tip = '';
     try {
       if (direct()) { const r = await nativePost('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', JSON.stringify(body), 10000); if (r.ok) { const j = JSON.parse(r.text); textUse(j); tip = j.choices[0].message.content; } else noteAi('tip', r.text); }
-      else if (relayHttp()) { const r = await relayPost('/tip', { target, heard, ui: ui !== 'zh' ? ui : undefined }, 10000); if (r.ok) tip = JSON.parse(r.text).tip; else noteAi('tip', 'HTTP ' + r.status + ' ' + r.text); }
+      else if (relayHttp()) {
+        const r = await relayPost('/tip', { target, heard, ui: ui !== 'zh' ? ui : undefined, lang: cl || undefined }, 10000);
+        if (r.ok) tip = JSON.parse(r.text).tip;
+        // 别的课：服务器这时候才说不会用这门语言写点评（记着的是旧的）——不算 AI 出错，记下来以后不再问
+        else if (cl && r.status === 400 && /unsupported_lang|"(?:error|field)"\s*:\s*"lang"/.test(r.text)) {
+          if (cloudOn()) { try { if (ACC()) ACC().refresh(); } catch (e) { /* 账号模块出错 */ } }
+          else relayLangsSet(relayHttp(), relayLangs(), { q: relayLangs('q'), t: relayLangs('t').filter(x => x !== cl) });
+        }
+        else noteAi('tip', 'HTTP ' + r.status + ' ' + r.text);
+      }
     } catch (e) { tip = ''; }
     tip = core.tipText(tip, ui);
     TIPS[k] = tip;
@@ -1937,5 +2041,10 @@
     // 现在学的这门课能不能和岛民聊（英语课一直 true；别的课看服务器会不会，TALK.md §4）：game.js 的学习锁、每日任务、单元上的「聊这个单元」问它；
     // langAsk() 重新问一次网页版的中转服务（返回 Promise，问完了 langOk() 才是新的）
     langOk: () => !langOff(), langAsk: () => relayAsk(),
+    // 第二轮（TALK.md）：别的课里支线委托开不开（world.js 的 QL() 问；给了 id = 这一条在课程包里有没有）、口语题的 AI 发音点评出不出（game.js 的 aiTip 问）。
+    // 英语课都是 true
+    questOk: id => { try { return questOk(id); } catch (e) { return false; } }, tipOk: () => { try { return tipOk(); } catch (e) { return false; } },
+    // 测试用：别的课里一张词卡在一句话里说到了没有（markWordsL 用的同一个判断）
+    _wordHit: (w, text, lang) => wordHit(w, text, lang, lang === 'es'),
   };
 })();

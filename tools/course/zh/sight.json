@@ -1,0 +1,4240 @@
+{
+ "lang": "zh",
+ "lines": {
+  "It hides in the cave. Walk around inside. It has a long body like a snake.": {
+   "t": "它躲在山洞里。在里面多走走。它的身体长长的，像一条蛇。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它的",
+    "身体",
+    "长长的，",
+    "像",
+    "一条",
+    "蛇。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā de",
+    "shēn tǐ",
+    "cháng cháng de",
+    "xiàng",
+    "yì tiáo",
+    "shé"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It has a shell on its back.": {
+   "t": "它躲在山洞里。在里面多走走。它背上有一个壳。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "背上",
+    "有",
+    "一个",
+    "壳。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "bèi shang",
+    "yǒu",
+    "yí gè",
+    "ké"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Bug monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是虫系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "虫系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "chóng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Dragon monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是龙系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "龙系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "lóng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Fire monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是火系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "火系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "huǒ xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Flying monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是飞行系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "飞行系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "fēi xíng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Ghost monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是幽灵系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "幽灵系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "yōu líng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Grass monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是草系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "草系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "cǎo xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Kungfu monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是功夫系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "功夫系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "gōng fu xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Mind monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是心灵系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "心灵系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "xīn líng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Normal monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是普通系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "普通系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "pǔ tōng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Rock monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是岩石系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "岩石系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "yán shí xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Shadow monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是暗系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "暗系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "àn xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Spark monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是电系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "电系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "diàn xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is a Steel monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是钢系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "钢系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "gāng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is an Earth monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是大地系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "大地系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "dà dì xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is an Ice monster.": {
+   "t": "它躲在山洞里。在里面多走走。它是冰系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "冰系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "bīng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is big.": {
+   "t": "它躲在山洞里。在里面多走走。它很大。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "很",
+    "大。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "hěn",
+    "dà"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is blue.": {
+   "t": "它躲在山洞里。在里面多走走。它是蓝色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "蓝色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "lán sè de"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is green.": {
+   "t": "它躲在山洞里。在里面多走走。它是绿色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "绿色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "lǜ sè de"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is grey.": {
+   "t": "它躲在山洞里。在里面多走走。它是灰色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "灰色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "huī sè de"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is orange.": {
+   "t": "它躲在山洞里。在里面多走走。它是橙色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "橙色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "chéng sè de"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is round like a ball.": {
+   "t": "它躲在山洞里。在里面多走走。它圆圆的，像一个球。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "圆圆的，",
+    "像",
+    "一个",
+    "球。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "yuán yuán de",
+    "xiàng",
+    "yí gè",
+    "qiú"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is very small.": {
+   "t": "它躲在山洞里。在里面多走走。它非常小。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "非常",
+    "小。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "fēi cháng",
+    "xiǎo"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is white.": {
+   "t": "它躲在山洞里。在里面多走走。它是白色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "白色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "bái sè de"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It is yellow.": {
+   "t": "它躲在山洞里。在里面多走走。它是黄色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "是",
+    "黄色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "shì",
+    "huáng sè de"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It looks like a bird.": {
+   "t": "它躲在山洞里。在里面多走走。它看起来像一只鸟。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "看起来",
+    "像",
+    "一只",
+    "鸟。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì zhī",
+    "niǎo"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It looks like a bug.": {
+   "t": "它躲在山洞里。在里面多走走。它看起来像一只虫子。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "看起来",
+    "像",
+    "一只",
+    "虫子。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì zhī",
+    "chóng zi"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It looks like a fish.": {
+   "t": "它躲在山洞里。在里面多走走。它看起来像一条鱼。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "看起来",
+    "像",
+    "一条",
+    "鱼。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì tiáo",
+    "yú"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It looks like a little ghost.": {
+   "t": "它躲在山洞里。在里面多走走。它看起来像一个小幽灵。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "看起来",
+    "像",
+    "一个",
+    "小幽灵。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yí gè",
+    "xiǎo yōu líng"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It stands on two legs.": {
+   "t": "它躲在山洞里。在里面多走走。它用两条腿站着。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "用",
+    "两条",
+    "腿",
+    "站着。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "yòng",
+    "liǎng tiáo",
+    "tuǐ",
+    "zhàn zhe"
+   ]
+  },
+  "It hides in the cave. Walk around inside. It walks on four legs.": {
+   "t": "它躲在山洞里。在里面多走走。它用四条腿走路。",
+   "seg": [
+    "它",
+    "躲在",
+    "山洞里。",
+    "在",
+    "里面",
+    "多",
+    "走走。",
+    "它",
+    "用",
+    "四条",
+    "腿",
+    "走路。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "shān dòng li",
+    "zài",
+    "lǐ miàn",
+    "duō",
+    "zǒu zou",
+    "tā",
+    "yòng",
+    "sì tiáo",
+    "tuǐ",
+    "zǒu lù"
+   ]
+  },
+  "It hides in the seaweed. It has a long body like a snake.": {
+   "t": "它躲在海草里。它的身体长长的，像一条蛇。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它的",
+    "身体",
+    "长长的，",
+    "像",
+    "一条",
+    "蛇。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā de",
+    "shēn tǐ",
+    "cháng cháng de",
+    "xiàng",
+    "yì tiáo",
+    "shé"
+   ]
+  },
+  "It hides in the seaweed. It has a shell on its back.": {
+   "t": "它躲在海草里。它背上有一个壳。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "背上",
+    "有",
+    "一个",
+    "壳。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "bèi shang",
+    "yǒu",
+    "yí gè",
+    "ké"
+   ]
+  },
+  "It hides in the seaweed. It is a Ghost monster.": {
+   "t": "它躲在海草里。它是幽灵系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "幽灵系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "yōu líng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the seaweed. It is a Grass monster.": {
+   "t": "它躲在海草里。它是草系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "草系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "cǎo xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the seaweed. It is a Mind monster.": {
+   "t": "它躲在海草里。它是心灵系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "心灵系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "xīn líng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the seaweed. It is a Poison monster.": {
+   "t": "它躲在海草里。它是毒系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "毒系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "dú xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the seaweed. It is a Spark monster.": {
+   "t": "它躲在海草里。它是电系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "电系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "diàn xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the seaweed. It is a Steel monster.": {
+   "t": "它躲在海草里。它是钢系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "钢系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "gāng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the seaweed. It is a Water monster.": {
+   "t": "它躲在海草里。它是水系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "水系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "shuǐ xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the seaweed. It is an Earth monster.": {
+   "t": "它躲在海草里。它是大地系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "大地系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "dà dì xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the seaweed. It is an Ice monster.": {
+   "t": "它躲在海草里。它是冰系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "冰系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "bīng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the seaweed. It is big.": {
+   "t": "它躲在海草里。它很大。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "很",
+    "大。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "hěn",
+    "dà"
+   ]
+  },
+  "It hides in the seaweed. It is blue.": {
+   "t": "它躲在海草里。它是蓝色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "蓝色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "lán sè de"
+   ]
+  },
+  "It hides in the seaweed. It is green.": {
+   "t": "它躲在海草里。它是绿色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "绿色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "lǜ sè de"
+   ]
+  },
+  "It hides in the seaweed. It is red.": {
+   "t": "它躲在海草里。它是红色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "红色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "hóng sè de"
+   ]
+  },
+  "It hides in the seaweed. It is round like a ball.": {
+   "t": "它躲在海草里。它圆圆的，像一个球。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "圆圆的，",
+    "像",
+    "一个",
+    "球。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "yuán yuán de",
+    "xiàng",
+    "yí gè",
+    "qiú"
+   ]
+  },
+  "It hides in the seaweed. It is very small.": {
+   "t": "它躲在海草里。它非常小。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "非常",
+    "小。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "fēi cháng",
+    "xiǎo"
+   ]
+  },
+  "It hides in the seaweed. It is yellow.": {
+   "t": "它躲在海草里。它是黄色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "是",
+    "黄色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "shì",
+    "huáng sè de"
+   ]
+  },
+  "It hides in the seaweed. It looks like a bird.": {
+   "t": "它躲在海草里。它看起来像一只鸟。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "看起来",
+    "像",
+    "一只",
+    "鸟。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì zhī",
+    "niǎo"
+   ]
+  },
+  "It hides in the seaweed. It looks like a fish.": {
+   "t": "它躲在海草里。它看起来像一条鱼。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "看起来",
+    "像",
+    "一条",
+    "鱼。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì tiáo",
+    "yú"
+   ]
+  },
+  "It hides in the seaweed. It looks like a little ghost.": {
+   "t": "它躲在海草里。它看起来像一个小幽灵。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "看起来",
+    "像",
+    "一个",
+    "小幽灵。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yí gè",
+    "xiǎo yōu líng"
+   ]
+  },
+  "It hides in the seaweed. It walks on four legs.": {
+   "t": "它躲在海草里。它用四条腿走路。",
+   "seg": [
+    "它",
+    "躲在",
+    "海草里。",
+    "它",
+    "用",
+    "四条",
+    "腿",
+    "走路。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "hǎi cǎo li",
+    "tā",
+    "yòng",
+    "sì tiáo",
+    "tuǐ",
+    "zǒu lù"
+   ]
+  },
+  "It hides in the tall grass. It has a long body like a snake.": {
+   "t": "它躲在高高的草丛里。它的身体长长的，像一条蛇。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它的",
+    "身体",
+    "长长的，",
+    "像",
+    "一条",
+    "蛇。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā de",
+    "shēn tǐ",
+    "cháng cháng de",
+    "xiàng",
+    "yì tiáo",
+    "shé"
+   ]
+  },
+  "It hides in the tall grass. It has a shell on its back.": {
+   "t": "它躲在高高的草丛里。它背上有一个壳。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "背上",
+    "有",
+    "一个",
+    "壳。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "bèi shang",
+    "yǒu",
+    "yí gè",
+    "ké"
+   ]
+  },
+  "It hides in the tall grass. It is a Bug monster.": {
+   "t": "它躲在高高的草丛里。它是虫系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "虫系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "chóng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Dragon monster.": {
+   "t": "它躲在高高的草丛里。它是龙系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "龙系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "lóng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Fire monster.": {
+   "t": "它躲在高高的草丛里。它是火系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "火系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "huǒ xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Flying monster.": {
+   "t": "它躲在高高的草丛里。它是飞行系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "飞行系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "fēi xíng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Ghost monster.": {
+   "t": "它躲在高高的草丛里。它是幽灵系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "幽灵系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "yōu líng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Grass monster.": {
+   "t": "它躲在高高的草丛里。它是草系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "草系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "cǎo xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Kungfu monster.": {
+   "t": "它躲在高高的草丛里。它是功夫系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "功夫系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "gōng fu xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Mind monster.": {
+   "t": "它躲在高高的草丛里。它是心灵系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "心灵系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "xīn líng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Normal monster.": {
+   "t": "它躲在高高的草丛里。它是普通系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "普通系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "pǔ tōng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Poison monster.": {
+   "t": "它躲在高高的草丛里。它是毒系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "毒系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "dú xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Rock monster.": {
+   "t": "它躲在高高的草丛里。它是岩石系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "岩石系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "yán shí xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Shadow monster.": {
+   "t": "它躲在高高的草丛里。它是暗系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "暗系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "àn xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Spark monster.": {
+   "t": "它躲在高高的草丛里。它是电系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "电系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "diàn xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Steel monster.": {
+   "t": "它躲在高高的草丛里。它是钢系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "钢系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "gāng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is a Water monster.": {
+   "t": "它躲在高高的草丛里。它是水系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "水系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "shuǐ xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is an Earth monster.": {
+   "t": "它躲在高高的草丛里。它是大地系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "大地系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "dà dì xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is an Ice monster.": {
+   "t": "它躲在高高的草丛里。它是冰系的怪兽。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "冰系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "bīng xì de",
+    "guài shòu"
+   ]
+  },
+  "It hides in the tall grass. It is big.": {
+   "t": "它躲在高高的草丛里。它很大。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "很",
+    "大。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "hěn",
+    "dà"
+   ]
+  },
+  "It hides in the tall grass. It is blue.": {
+   "t": "它躲在高高的草丛里。它是蓝色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "蓝色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "lán sè de"
+   ]
+  },
+  "It hides in the tall grass. It is green.": {
+   "t": "它躲在高高的草丛里。它是绿色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "绿色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "lǜ sè de"
+   ]
+  },
+  "It hides in the tall grass. It is grey.": {
+   "t": "它躲在高高的草丛里。它是灰色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "灰色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "huī sè de"
+   ]
+  },
+  "It hides in the tall grass. It is orange.": {
+   "t": "它躲在高高的草丛里。它是橙色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "橙色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "chéng sè de"
+   ]
+  },
+  "It hides in the tall grass. It is round like a ball.": {
+   "t": "它躲在高高的草丛里。它圆圆的，像一个球。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "圆圆的，",
+    "像",
+    "一个",
+    "球。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "yuán yuán de",
+    "xiàng",
+    "yí gè",
+    "qiú"
+   ]
+  },
+  "It hides in the tall grass. It is very small.": {
+   "t": "它躲在高高的草丛里。它非常小。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "非常",
+    "小。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "fēi cháng",
+    "xiǎo"
+   ]
+  },
+  "It hides in the tall grass. It is white.": {
+   "t": "它躲在高高的草丛里。它是白色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "白色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "bái sè de"
+   ]
+  },
+  "It hides in the tall grass. It is yellow.": {
+   "t": "它躲在高高的草丛里。它是黄色的。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "是",
+    "黄色的。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "shì",
+    "huáng sè de"
+   ]
+  },
+  "It hides in the tall grass. It looks like a bird.": {
+   "t": "它躲在高高的草丛里。它看起来像一只鸟。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "看起来",
+    "像",
+    "一只",
+    "鸟。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì zhī",
+    "niǎo"
+   ]
+  },
+  "It hides in the tall grass. It looks like a bug.": {
+   "t": "它躲在高高的草丛里。它看起来像一只虫子。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "看起来",
+    "像",
+    "一只",
+    "虫子。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì zhī",
+    "chóng zi"
+   ]
+  },
+  "It hides in the tall grass. It looks like a fish.": {
+   "t": "它躲在高高的草丛里。它看起来像一条鱼。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "看起来",
+    "像",
+    "一条",
+    "鱼。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì tiáo",
+    "yú"
+   ]
+  },
+  "It hides in the tall grass. It looks like a little ghost.": {
+   "t": "它躲在高高的草丛里。它看起来像一个小幽灵。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "看起来",
+    "像",
+    "一个",
+    "小幽灵。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yí gè",
+    "xiǎo yōu líng"
+   ]
+  },
+  "It hides in the tall grass. It looks like a plant.": {
+   "t": "它躲在高高的草丛里。它看起来像一棵植物。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "看起来",
+    "像",
+    "一棵",
+    "植物。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì kē",
+    "zhí wù"
+   ]
+  },
+  "It hides in the tall grass. It stands on two legs.": {
+   "t": "它躲在高高的草丛里。它用两条腿站着。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "用",
+    "两条",
+    "腿",
+    "站着。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "yòng",
+    "liǎng tiáo",
+    "tuǐ",
+    "zhàn zhe"
+   ]
+  },
+  "It hides in the tall grass. It walks on four legs.": {
+   "t": "它躲在高高的草丛里。它用四条腿走路。",
+   "seg": [
+    "它",
+    "躲在",
+    "高高的",
+    "草丛里。",
+    "它",
+    "用",
+    "四条",
+    "腿",
+    "走路。"
+   ],
+   "r": [
+    "tā",
+    "duǒ zài",
+    "gāo gāo de",
+    "cǎo cóng li",
+    "tā",
+    "yòng",
+    "sì tiáo",
+    "tuǐ",
+    "zǒu lù"
+   ]
+  },
+  "It is high on a mountain. Go west from the town.": {
+   "t": "它在高高的山上。从小镇往西走。",
+   "seg": [
+    "它",
+    "在",
+    "高高的",
+    "山上。",
+    "从",
+    "小镇",
+    "往西",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "gāo gāo de",
+    "shān shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng xī",
+    "zǒu"
+   ]
+  },
+  "It is high on a mountain. It is far from the town. Walk through a hot cave first.": {
+   "t": "它在高高的山上。它离小镇很远。要先穿过一个很热的山洞。",
+   "seg": [
+    "它",
+    "在",
+    "高高的",
+    "山上。",
+    "它",
+    "离",
+    "小镇",
+    "很",
+    "远。",
+    "要",
+    "先",
+    "穿过",
+    "一个",
+    "很热的",
+    "山洞。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "gāo gāo de",
+    "shān shang",
+    "tā",
+    "lí",
+    "xiǎo zhèn",
+    "hěn",
+    "yuǎn",
+    "yào",
+    "xiān",
+    "chuān guò",
+    "yí gè",
+    "hěn rè de",
+    "shān dòng"
+   ]
+  },
+  "It is in a cave of ice. The way in is in the town.": {
+   "t": "它在一个冰洞里。入口就在小镇里。",
+   "seg": [
+    "它",
+    "在",
+    "一个",
+    "冰洞里。",
+    "入口",
+    "就在",
+    "小镇里。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí gè",
+    "bīng dòng li",
+    "rù kǒu",
+    "jiù zài",
+    "xiǎo zhèn li"
+   ]
+  },
+  "It is in a dark cave. It is far from the town. Walk along a cliff first.": {
+   "t": "它在一个很黑的山洞里。它离小镇很远。要先沿着悬崖走一段。",
+   "seg": [
+    "它",
+    "在",
+    "一个",
+    "很黑的",
+    "山洞里。",
+    "它",
+    "离",
+    "小镇",
+    "很",
+    "远。",
+    "要",
+    "先",
+    "沿着",
+    "悬崖",
+    "走",
+    "一段。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí gè",
+    "hěn hēi de",
+    "shān dòng li",
+    "tā",
+    "lí",
+    "xiǎo zhèn",
+    "hěn",
+    "yuǎn",
+    "yào",
+    "xiān",
+    "yán zhe",
+    "xuán yá",
+    "zǒu",
+    "yí duàn"
+   ]
+  },
+  "It is in a field of snow. It is far from the town. Walk through a cave of ice first.": {
+   "t": "它在一片雪地里。它离小镇很远。要先穿过一个冰洞。",
+   "seg": [
+    "它",
+    "在",
+    "一片",
+    "雪地里。",
+    "它",
+    "离",
+    "小镇",
+    "很",
+    "远。",
+    "要",
+    "先",
+    "穿过",
+    "一个",
+    "冰洞。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí piàn",
+    "xuě dì li",
+    "tā",
+    "lí",
+    "xiǎo zhèn",
+    "hěn",
+    "yuǎn",
+    "yào",
+    "xiān",
+    "chuān guò",
+    "yí gè",
+    "bīng dòng"
+   ]
+  },
+  "It is in a hot cave inside a mountain. The way in is in the town.": {
+   "t": "它在山里面的一个很热的山洞里。入口就在小镇里。",
+   "seg": [
+    "它",
+    "在",
+    "山",
+    "里面的",
+    "一个",
+    "很热的",
+    "山洞里。",
+    "入口",
+    "就在",
+    "小镇里。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shān",
+    "lǐ miàn de",
+    "yí gè",
+    "hěn rè de",
+    "shān dòng li",
+    "rù kǒu",
+    "jiù zài",
+    "xiǎo zhèn li"
+   ]
+  },
+  "It is in a tunnel. The way in is in the town.": {
+   "t": "它在一条隧道里。入口就在小镇里。",
+   "seg": [
+    "它",
+    "在",
+    "一条",
+    "隧道里。",
+    "入口",
+    "就在",
+    "小镇里。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yì tiáo",
+    "suì dào li",
+    "rù kǒu",
+    "jiù zài",
+    "xiǎo zhèn li"
+   ]
+  },
+  "It is in the woods. Go north from the town.": {
+   "t": "它在树林里。从小镇往北走。",
+   "seg": [
+    "它",
+    "在",
+    "树林里。",
+    "从",
+    "小镇",
+    "往北",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shù lín li",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng běi",
+    "zǒu"
+   ]
+  },
+  "It is on a beach. Go west from the town.": {
+   "t": "它在一片沙滩上。从小镇往西走。",
+   "seg": [
+    "它",
+    "在",
+    "一片",
+    "沙滩上。",
+    "从",
+    "小镇",
+    "往西",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí piàn",
+    "shā tān shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng xī",
+    "zǒu"
+   ]
+  },
+  "It is on a cliff by the sea. It is far from the town. Walk along a road first.": {
+   "t": "它在海边的悬崖上。它离小镇很远。要先走过一条路。",
+   "seg": [
+    "它",
+    "在",
+    "海边的",
+    "悬崖上。",
+    "它",
+    "离",
+    "小镇",
+    "很",
+    "远。",
+    "要",
+    "先",
+    "走过",
+    "一条",
+    "路。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "hǎi biān de",
+    "xuán yá shang",
+    "tā",
+    "lí",
+    "xiǎo zhèn",
+    "hěn",
+    "yuǎn",
+    "yào",
+    "xiān",
+    "zǒu guò",
+    "yì tiáo",
+    "lù"
+   ]
+  },
+  "It is on a path in the jungle. Go north from the town.": {
+   "t": "它在丛林里的一条小路上。从小镇往北走。",
+   "seg": [
+    "它",
+    "在",
+    "丛林里的",
+    "一条",
+    "小路上。",
+    "从",
+    "小镇",
+    "往北",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "cóng lín li de",
+    "yì tiáo",
+    "xiǎo lù shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng běi",
+    "zǒu"
+   ]
+  },
+  "It is on a road around the farms. Go east from the town.": {
+   "t": "它在绕着农田的一条路上。从小镇往东走。",
+   "seg": [
+    "它",
+    "在",
+    "绕着",
+    "农田的",
+    "一条",
+    "路上。",
+    "从",
+    "小镇",
+    "往东",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "rào zhe",
+    "nóng tián de",
+    "yì tiáo",
+    "lù shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng dōng",
+    "zǒu"
+   ]
+  },
+  "It is on a road by a river. Go north from the town.": {
+   "t": "它在河边的一条路上。从小镇往北走。",
+   "seg": [
+    "它",
+    "在",
+    "河边的",
+    "一条",
+    "路上。",
+    "从",
+    "小镇",
+    "往北",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "hé biān de",
+    "yì tiáo",
+    "lù shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng běi",
+    "zǒu"
+   ]
+  },
+  "It is on a road by the sea. Go east from the town.": {
+   "t": "它在海边的一条路上。从小镇往东走。",
+   "seg": [
+    "它",
+    "在",
+    "海边的",
+    "一条",
+    "路上。",
+    "从",
+    "小镇",
+    "往东",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "hǎi biān de",
+    "yì tiáo",
+    "lù shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng dōng",
+    "zǒu"
+   ]
+  },
+  "It is on a road. Go north from the town.": {
+   "t": "它在一条路上。从小镇往北走。",
+   "seg": [
+    "它",
+    "在",
+    "一条",
+    "路上。",
+    "从",
+    "小镇",
+    "往北",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yì tiáo",
+    "lù shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng běi",
+    "zǒu"
+   ]
+  },
+  "It is on a road. It is far from the town. Climb a mountain first.": {
+   "t": "它在一条路上。它离小镇很远。要先爬上一座山。",
+   "seg": [
+    "它",
+    "在",
+    "一条",
+    "路上。",
+    "它",
+    "离",
+    "小镇",
+    "很",
+    "远。",
+    "要",
+    "先",
+    "爬上",
+    "一座",
+    "山。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yì tiáo",
+    "lù shang",
+    "tā",
+    "lí",
+    "xiǎo zhèn",
+    "hěn",
+    "yuǎn",
+    "yào",
+    "xiān",
+    "pá shàng",
+    "yí zuò",
+    "shān"
+   ]
+  },
+  "It is on a road. It is far from the town. Walk through a tunnel first.": {
+   "t": "它在一条路上。它离小镇很远。要先穿过一条隧道。",
+   "seg": [
+    "它",
+    "在",
+    "一条",
+    "路上。",
+    "它",
+    "离",
+    "小镇",
+    "很",
+    "远。",
+    "要",
+    "先",
+    "穿过",
+    "一条",
+    "隧道。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yì tiáo",
+    "lù shang",
+    "tā",
+    "lí",
+    "xiǎo zhèn",
+    "hěn",
+    "yuǎn",
+    "yào",
+    "xiān",
+    "chuān guò",
+    "yì tiáo",
+    "suì dào"
+   ]
+  },
+  "It is on a road. It is far from the town. Walk through the woods first.": {
+   "t": "它在一条路上。它离小镇很远。要先穿过树林。",
+   "seg": [
+    "它",
+    "在",
+    "一条",
+    "路上。",
+    "它",
+    "离",
+    "小镇",
+    "很",
+    "远。",
+    "要",
+    "先",
+    "穿过",
+    "树林。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yì tiáo",
+    "lù shang",
+    "tā",
+    "lí",
+    "xiǎo zhèn",
+    "hěn",
+    "yuǎn",
+    "yào",
+    "xiān",
+    "chuān guò",
+    "shù lín"
+   ]
+  },
+  "It is on a sandy road. Go east from the town.": {
+   "t": "它在一条全是沙子的路上。从小镇往东走。",
+   "seg": [
+    "它",
+    "在",
+    "一条",
+    "全是",
+    "沙子的",
+    "路上。",
+    "从",
+    "小镇",
+    "往东",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yì tiáo",
+    "quán shì",
+    "shā zi de",
+    "lù shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng dōng",
+    "zǒu"
+   ]
+  },
+  "It is on an island. People there always get up and have breakfast on time.": {
+   "t": "它在一座岛上。那里的人总是准时起床、准时吃早饭。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "总是",
+    "准时",
+    "起床、",
+    "准时",
+    "吃",
+    "早饭。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "zǒng shì",
+    "zhǔn shí",
+    "qǐ chuáng",
+    "zhǔn shí",
+    "chī",
+    "zǎo fàn"
+   ]
+  },
+  "It is on an island. People there love English, maths and science.": {
+   "t": "它在一座岛上。那里的人很喜欢中文、数学和科学。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "很",
+    "喜欢",
+    "中文、",
+    "数学",
+    "和",
+    "科学。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "hěn",
+    "xǐ huan",
+    "zhōng wén",
+    "shù xué",
+    "hé",
+    "kē xué"
+   ]
+  },
+  "It is on an island. People there love birthday parties, cakes and balloons.": {
+   "t": "它在一座岛上。那里的人很喜欢生日派对、蛋糕和气球。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "很",
+    "喜欢",
+    "生日",
+    "派对、",
+    "蛋糕",
+    "和",
+    "气球。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "hěn",
+    "xǐ huan",
+    "shēng rì",
+    "pài duì",
+    "dàn gāo",
+    "hé",
+    "qì qiú"
+   ]
+  },
+  "It is on an island. People there love pens, pencils and rulers in every colour.": {
+   "t": "它在一座岛上。那里的人很喜欢各种颜色的钢笔、铅笔和尺子。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "很",
+    "喜欢",
+    "各种",
+    "颜色的",
+    "钢笔、",
+    "铅笔",
+    "和",
+    "尺子。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "hěn",
+    "xǐ huan",
+    "gè zhǒng",
+    "yán sè de",
+    "gāng bǐ",
+    "qiān bǐ",
+    "hé",
+    "chǐ zi"
+   ]
+  },
+  "It is on an island. People there love to talk about their father, mother and family.": {
+   "t": "它在一座岛上。那里的人很喜欢聊爸爸、妈妈和家人。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "很",
+    "喜欢",
+    "聊",
+    "爸爸、",
+    "妈妈",
+    "和",
+    "家人。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "hěn",
+    "xǐ huan",
+    "liáo",
+    "bà ba",
+    "mā ma",
+    "hé",
+    "jiā rén"
+   ]
+  },
+  "It is on an island. People there must follow many rules and be quiet.": {
+   "t": "它在一座岛上。那里的人要守很多规则，还要安静。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "要",
+    "守",
+    "很多",
+    "规则，",
+    "还",
+    "要",
+    "安静。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "yào",
+    "shǒu",
+    "hěn duō",
+    "guī zé",
+    "hái",
+    "yào",
+    "ān jìng"
+   ]
+  },
+  "It is on an island. People there play basketball and eat healthy food.": {
+   "t": "它在一座岛上。那里的人打篮球、吃健康的食物。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "打",
+    "篮球、",
+    "吃",
+    "健康的",
+    "食物。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "dǎ",
+    "lán qiú",
+    "chī",
+    "jiàn kāng de",
+    "shí wù"
+   ]
+  },
+  "It is on an island. People there say hello and good morning to everyone.": {
+   "t": "它在一座岛上。那里的人对大家说“你好”和“早上好”。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "对",
+    "大家",
+    "说“",
+    "你好”",
+    "和“",
+    "早上好”。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "duì",
+    "dà jiā",
+    "shuō",
+    "nǐ hǎo",
+    "hé",
+    "zǎo shang hǎo"
+   ]
+  },
+  "It is on an island. People there sing, dance and play chess in their clubs.": {
+   "t": "它在一座岛上。那里的人在社团里唱歌、跳舞、下棋。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "在",
+    "社团里",
+    "唱歌、",
+    "跳舞、",
+    "下棋。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "zài",
+    "shè tuán li",
+    "chàng gē",
+    "tiào wǔ",
+    "xià qí"
+   ]
+  },
+  "It is on an island. People there talk about pandas, tigers and monkeys.": {
+   "t": "它在一座岛上。那里的人常常聊熊猫、老虎和猴子。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "常常",
+    "聊",
+    "熊猫、",
+    "老虎",
+    "和",
+    "猴子。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "cháng cháng",
+    "liáo",
+    "xióng māo",
+    "lǎo hǔ",
+    "hé",
+    "hóu zi"
+   ]
+  },
+  "It is on an island. People there talk about sunny, rainy and snowy weather.": {
+   "t": "它在一座岛上。那里的人常常聊晴天、下雨天和下雪天。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "常常",
+    "聊",
+    "晴天、",
+    "下雨天",
+    "和",
+    "下雪天。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "cháng cháng",
+    "liáo",
+    "qíng tiān",
+    "xià yǔ tiān",
+    "hé",
+    "xià xuě tiān"
+   ]
+  },
+  "It is on an island. People there talk about the classroom, the library and the playground.": {
+   "t": "它在一座岛上。那里的人常常聊教室、图书馆和操场。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "人",
+    "常常",
+    "聊",
+    "教室、",
+    "图书馆",
+    "和",
+    "操场。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "rén",
+    "cháng cháng",
+    "liáo",
+    "jiào shì",
+    "tú shū guǎn",
+    "hé",
+    "cāo chǎng"
+   ]
+  },
+  "It is on an island. There are big jungle trees and tree houses there.": {
+   "t": "它在一座岛上。那里有丛林大树和树屋。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "丛林",
+    "大树",
+    "和",
+    "树屋。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "cóng lín",
+    "dà shù",
+    "hé",
+    "shù wū"
+   ]
+  },
+  "It is on an island. There are dark green pine trees and stone towers with clocks there.": {
+   "t": "它在一座岛上。那里有深绿色的松树和有钟的石塔。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "深绿色的",
+    "松树",
+    "和",
+    "有钟的",
+    "石塔。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "shēn lǜ sè de",
+    "sōng shù",
+    "hé",
+    "yǒu zhōng de",
+    "shí tǎ"
+   ]
+  },
+  "It is on an island. There are fruit trees and small shops there.": {
+   "t": "它在一座岛上。那里有果树和小商店。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "果树",
+    "和",
+    "小商店。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "guǒ shù",
+    "hé",
+    "xiǎo shāng diàn"
+   ]
+  },
+  "It is on an island. There are orange autumn trees and wooden farm houses there.": {
+   "t": "它在一座岛上。那里有橙色的秋天的树和农场的木头房子。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "橙色的",
+    "秋天的",
+    "树",
+    "和",
+    "农场的",
+    "木头",
+    "房子。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "chéng sè de",
+    "qiū tiān de",
+    "shù",
+    "hé",
+    "nóng chǎng de",
+    "mù tou",
+    "fáng zi"
+   ]
+  },
+  "It is on an island. There are palm trees and big tents there.": {
+   "t": "它在一座岛上。那里有棕榈树和大帐篷。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "棕榈树",
+    "和",
+    "大帐篷。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "zōng lǘ shù",
+    "hé",
+    "dà zhàng peng"
+   ]
+  },
+  "It is on an island. There are palm trees and white houses with red roofs there.": {
+   "t": "它在一座岛上。那里有棕榈树和红屋顶的白房子。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "棕榈树",
+    "和",
+    "红屋顶的",
+    "白房子。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "zōng lǘ shù",
+    "hé",
+    "hóng wū dǐng de",
+    "bái fáng zi"
+   ]
+  },
+  "It is on an island. There are pine trees with snow on them and wooden houses with snow on the roofs there.": {
+   "t": "它在一座岛上。那里的松树上有雪，木头房子的屋顶上也有雪。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里的",
+    "松树上",
+    "有",
+    "雪，",
+    "木头",
+    "房子的",
+    "屋顶上",
+    "也",
+    "有",
+    "雪。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ de",
+    "sōng shù shang",
+    "yǒu",
+    "xuě",
+    "mù tou",
+    "fáng zi de",
+    "wū dǐng shang",
+    "yě",
+    "yǒu",
+    "xuě"
+   ]
+  },
+  "It is on an island. There are round green trees and red brick buildings there.": {
+   "t": "它在一座岛上。那里有圆圆的绿树和红砖楼。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "圆圆的",
+    "绿树",
+    "和",
+    "红砖楼。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "yuán yuán de",
+    "lǜ shù",
+    "hé",
+    "hóng zhuān lóu"
+   ]
+  },
+  "It is on an island. There are round green trees and tall buildings there.": {
+   "t": "它在一座岛上。那里有圆圆的绿树和高楼。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "圆圆的",
+    "绿树",
+    "和",
+    "高楼。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "yuán yuán de",
+    "lǜ shù",
+    "hé",
+    "gāo lóu"
+   ]
+  },
+  "It is on an island. There are tall thin trees and round glass houses there.": {
+   "t": "它在一座岛上。那里有又高又细的树和圆圆的玻璃房子。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "又高",
+    "又细的",
+    "树",
+    "和",
+    "圆圆的",
+    "玻璃",
+    "房子。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "yòu gāo",
+    "yòu xì de",
+    "shù",
+    "hé",
+    "yuán yuán de",
+    "bō li",
+    "fáng zi"
+   ]
+  },
+  "It is on an island. There are trees like big pencils and houses in bright colours there.": {
+   "t": "它在一座岛上。那里有像大铅笔一样的树和彩色的房子。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "像",
+    "大铅笔",
+    "一样的",
+    "树",
+    "和",
+    "彩色的",
+    "房子。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "xiàng",
+    "dà qiān bǐ",
+    "yí yàng de",
+    "shù",
+    "hé",
+    "cǎi sè de",
+    "fáng zi"
+   ]
+  },
+  "It is on an island. There are trees like lollipops and houses like cakes there.": {
+   "t": "它在一座岛上。那里有像棒棒糖一样的树和像蛋糕一样的房子。",
+   "seg": [
+    "它",
+    "在",
+    "一座",
+    "岛上。",
+    "那里",
+    "有",
+    "像",
+    "棒棒糖",
+    "一样的",
+    "树",
+    "和",
+    "像",
+    "蛋糕",
+    "一样的",
+    "房子。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "yí zuò",
+    "dǎo shang",
+    "nà lǐ",
+    "yǒu",
+    "xiàng",
+    "bàng bàng táng",
+    "yí yàng de",
+    "shù",
+    "hé",
+    "xiàng",
+    "dàn gāo",
+    "yí yàng de",
+    "fáng zi"
+   ]
+  },
+  "It is out at sea. Go east from the town.": {
+   "t": "它在海上。从小镇往东走。",
+   "seg": [
+    "它",
+    "在",
+    "海上。",
+    "从",
+    "小镇",
+    "往东",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "hǎi shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng dōng",
+    "zǒu"
+   ]
+  },
+  "It is out at sea. Go south from the town.": {
+   "t": "它在海上。从小镇往南走。",
+   "seg": [
+    "它",
+    "在",
+    "海上。",
+    "从",
+    "小镇",
+    "往南",
+    "走。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "hǎi shang",
+    "cóng",
+    "xiǎo zhèn",
+    "wǎng nán",
+    "zǒu"
+   ]
+  },
+  "It is under the sea. Go out to sea and dive down.": {
+   "t": "它在海底。先到海上去，再潜下去。",
+   "seg": [
+    "它",
+    "在",
+    "海底。",
+    "先",
+    "到",
+    "海上",
+    "去，",
+    "再",
+    "潜下去。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "hǎi dǐ",
+    "xiān",
+    "dào",
+    "hǎi shang",
+    "qù",
+    "zài",
+    "qián xià qù"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It has a long body like a snake.": {
+   "t": "它在水面上游泳。去水上找它。它的身体长长的，像一条蛇。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它的",
+    "身体",
+    "长长的，",
+    "像",
+    "一条",
+    "蛇。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā de",
+    "shēn tǐ",
+    "cháng cháng de",
+    "xiàng",
+    "yì tiáo",
+    "shé"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It has a shell on its back.": {
+   "t": "它在水面上游泳。去水上找它。它背上有一个壳。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "背上",
+    "有",
+    "一个",
+    "壳。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "bèi shang",
+    "yǒu",
+    "yí gè",
+    "ké"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is a Ghost monster.": {
+   "t": "它在水面上游泳。去水上找它。它是幽灵系的怪兽。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "幽灵系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "yōu líng xì de",
+    "guài shòu"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is a Grass monster.": {
+   "t": "它在水面上游泳。去水上找它。它是草系的怪兽。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "草系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "cǎo xì de",
+    "guài shòu"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is a Mind monster.": {
+   "t": "它在水面上游泳。去水上找它。它是心灵系的怪兽。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "心灵系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "xīn líng xì de",
+    "guài shòu"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is a Poison monster.": {
+   "t": "它在水面上游泳。去水上找它。它是毒系的怪兽。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "毒系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "dú xì de",
+    "guài shòu"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is a Spark monster.": {
+   "t": "它在水面上游泳。去水上找它。它是电系的怪兽。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "电系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "diàn xì de",
+    "guài shòu"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is a Steel monster.": {
+   "t": "它在水面上游泳。去水上找它。它是钢系的怪兽。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "钢系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "gāng xì de",
+    "guài shòu"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is a Water monster.": {
+   "t": "它在水面上游泳。去水上找它。它是水系的怪兽。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "水系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "shuǐ xì de",
+    "guài shòu"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is an Earth monster.": {
+   "t": "它在水面上游泳。去水上找它。它是大地系的怪兽。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "大地系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "dà dì xì de",
+    "guài shòu"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is an Ice monster.": {
+   "t": "它在水面上游泳。去水上找它。它是冰系的怪兽。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "冰系的",
+    "怪兽。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "bīng xì de",
+    "guài shòu"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is big.": {
+   "t": "它在水面上游泳。去水上找它。它很大。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "很",
+    "大。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "hěn",
+    "dà"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is blue.": {
+   "t": "它在水面上游泳。去水上找它。它是蓝色的。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "蓝色的。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "lán sè de"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is green.": {
+   "t": "它在水面上游泳。去水上找它。它是绿色的。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "绿色的。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "lǜ sè de"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is red.": {
+   "t": "它在水面上游泳。去水上找它。它是红色的。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "红色的。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "hóng sè de"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is round like a ball.": {
+   "t": "它在水面上游泳。去水上找它。它圆圆的，像一个球。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "圆圆的，",
+    "像",
+    "一个",
+    "球。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "yuán yuán de",
+    "xiàng",
+    "yí gè",
+    "qiú"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is very small.": {
+   "t": "它在水面上游泳。去水上找它。它非常小。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "非常",
+    "小。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "fēi cháng",
+    "xiǎo"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It is yellow.": {
+   "t": "它在水面上游泳。去水上找它。它是黄色的。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "是",
+    "黄色的。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "shì",
+    "huáng sè de"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It looks like a bird.": {
+   "t": "它在水面上游泳。去水上找它。它看起来像一只鸟。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "看起来",
+    "像",
+    "一只",
+    "鸟。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì zhī",
+    "niǎo"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It looks like a fish.": {
+   "t": "它在水面上游泳。去水上找它。它看起来像一条鱼。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "看起来",
+    "像",
+    "一条",
+    "鱼。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yì tiáo",
+    "yú"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It looks like a little ghost.": {
+   "t": "它在水面上游泳。去水上找它。它看起来像一个小幽灵。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "看起来",
+    "像",
+    "一个",
+    "小幽灵。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "kàn qǐ lái",
+    "xiàng",
+    "yí gè",
+    "xiǎo yōu líng"
+   ]
+  },
+  "It swims on top of the water. Ride on the water to find it. It walks on four legs.": {
+   "t": "它在水面上游泳。去水上找它。它用四条腿走路。",
+   "seg": [
+    "它",
+    "在",
+    "水面上",
+    "游泳。",
+    "去",
+    "水上",
+    "找",
+    "它。",
+    "它",
+    "用",
+    "四条",
+    "腿",
+    "走路。"
+   ],
+   "r": [
+    "tā",
+    "zài",
+    "shuǐ miàn shang",
+    "yóu yǒng",
+    "qù",
+    "shuǐ shang",
+    "zhǎo",
+    "tā",
+    "tā",
+    "yòng",
+    "sì tiáo",
+    "tuǐ",
+    "zǒu lù"
+   ]
+  }
+ }
+}

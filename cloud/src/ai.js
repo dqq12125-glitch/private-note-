@@ -6,7 +6,7 @@ import { dsPost, EVAL_PATH, TTS_PATH, ProviderError } from './upstream.js';
 import { take, refund } from './quota.js';
 import { aiLimit } from './ratelimit.js';
 import { requireConsent } from './me.js';
-import { speechLang, talkLang, SPEECH_KNOWN } from './config.js';
+import { speechLang, talkLang, questLang, tipLang, noLang, SPEECH_KNOWN } from './config.js';
 
 const METER = { asr: 'asr', tip: 'aux', tts: 'aux', zh: 'aux', steps: 'aux', place: 'aux' };
 const GATE = { steps: 'steps', place: 'place' };
@@ -21,10 +21,12 @@ const H = {
       return { text: String((r.choices && r.choices[0] && r.choices[0].message && r.choices[0].message.content) || '').trim() };
     };
   },
+  // lang：别的语言的课的发音点评（这句话是哪门语言；没给 / en = 英语，和以前一字不差）。不在 tipLangs 里的：400（不扣次数、不连上游）
   async tip(R, j) {
-    const target = clean(j.target, 200), heard = clean(j.heard, 200);
+    const lang = tipLang(R.cfg, j.lang), cl = lang ? CORE.cleanText : clean;   // 别的语言留着这门语言的标点和重音符号
+    const target = cl(j.target, 200), heard = cl(j.heard, 200);
     if (!target || !heard) throw bad(target ? 'heard' : 'target');
-    const body = CORE.tipBody(target, heard, j.ui); body.model = R.cfg.ds.evalModel;
+    const body = CORE.tipBody(target, heard, j.ui, lang); body.model = R.cfg.ds.evalModel;
     return async () => ({ tip: CORE.parseTip(await dsPost(R, EVAL_PATH, body), j.ui) });
   },
   async tts(R, j) {
@@ -48,9 +50,11 @@ const H = {
     body.model = R.cfg.ds.evalModel;
     return async () => ({ zh: CORE.parseZh(await dsPost(R, EVAL_PATH, body)) });
   },
-  // npc 可以是别的语言的课的角色 id（talk-courses.js）；npc=dyn 时 lang 说地图上那个人说哪门语言（没给 = 英语）
+  // npc 可以是别的语言的课的角色 id（talk-courses.js）；npc=dyn 时 lang 说地图上那个人说哪门语言（没给 = 英语）；
+  // q（委托的 id）+ lang：别的语言的课里的委托（步骤的示范句是这门语言的；这门语言没有这条委托的译文：400 unsupported_lang）
   async steps(R, j) {
-    const npc = j.q ? questNpc(j.q) : j.npc === 'dyn' ? CORE.personNpc({ name: j.nm, lang: talkLang(R.cfg, j.lang) }) : npcById(j.npc);
+    const npc = j.q ? questNpc(j.q, questLang(R.cfg, j.lang), R.cfg.quests) : j.npc === 'dyn' ? CORE.personNpc({ name: j.nm, lang: talkLang(R.cfg, j.lang) }) : npcById(j.npc);
+    if (npc === undefined) throw noLang(R.cfg.questLangs);
     if (!npc) throw bad('npc', 'Unknown islander');
     const lang = talkLang(R.cfg, npc.lang), cl = lang ? CORE.cleanText : clean;   // 课程角色的语言服务器没开：400
     const turns = (Array.isArray(j.turns) ? j.turns : []).slice(-30).map(t => ({ who: t && t.who === 'you' ? 'you' : 'npc', text: cl(t && t.text, 300), typed: !!(t && t.typed) })).filter(t => t.text);

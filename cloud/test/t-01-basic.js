@@ -5,6 +5,7 @@ export default async function ({ A }) {
   const h = await A.api('GET', '/v1/health');
   ok(h.status === 200 && h.json.ok === true && h.json.version, 'health：200、ok、有版本号', h);
   eq([h.json.speechLangs, h.json.talkLangs], [['en', 'es', 'ja', 'zh'], ['en', 'es', 'ja', 'zh']], 'health：不用登录也给识别 / 合成、聊天会的语言（没登录的 App 要知道「只差登录」）');
+  eq([h.json.questLangs, h.json.tipLangs], [['en', 'es', 'ja', 'zh'], ['en', 'es', 'ja', 'zh']], 'health：也给支线委托（服务器上有译文的语言——这里是测试的小样）、AI 发音点评会的语言');
   const nf = await A.api('GET', '/v1/nope');
   eq([nf.status, nf.json && nf.json.error], [404, 'not_found'], '没有的路径：404 not_found');
   const mm = await A.api('GET', '/v1/auth/email/start');

@@ -40,6 +40,8 @@ export async function meView(R, U) {
     consent: consentView(U, R.now), features: features(R, U),
     speechLangs: R.cfg.speechLangs.slice(),   // 识别 / 合成认哪些语言（lang）；App 看这个决定别的语言的课走不走服务器，老服务器没有这个字段
     talkLangs: R.cfg.talkLangs.slice(),       // 和岛民聊天认哪些语言（TALK_LANGS）；App 看这个决定别的语言的课开不开聊天，老服务器没有这个字段 = 只会英语
+    questLangs: R.cfg.questLangs.slice(),     // 支线委托认哪些语言（QUEST_LANGS，还要服务器上有这门语言的委托译文）；老服务器没有这个字段 = 只有英语的委托
+    tipLangs: R.cfg.tipLangs.slice(),         // AI 发音点评认哪些语言（TIP_LANGS）；老服务器没有这个字段 = 只点评英语
     plan: pick.plan, subscription: subView(pick.ent, R.now),
     quota: quotaView(R.cfg, U, row, R.now),
   };

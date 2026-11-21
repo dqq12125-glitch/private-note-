@@ -1,4 +1,5 @@
-// 别的语言的课里「和岛民聊天」（tools/course/TALK.md §4，Playwright Chromium，约 1–2 分钟）：node tests/course-talk.test.js [--only=es,ja,zh,old,en]
+// 别的语言的课里「和岛民聊天」（tools/course/TALK.md §4 和「第二轮」C，Playwright Chromium，约 4–5 分钟）：node tests/course-talk.test.js [--only=es,ja,zh,old,en] [--real]
+// （--real：第 8 段的委托用正式的 tools/course/<语言>/quests.json，不用小样）
 // 不调真的 AI：中转服务是真的 server/relay.js（另起一个进程，钥匙是假的、钥匙文件指到不存在的地方），它连的「阿里云」是这里起的假上游——
 // 实时语音（松开话筒就「听到」排好的一句、response.create 就回排好的一句）和文字模型（打勾 / 翻译 / 评语，按请求的形状认）。
 // 游戏：本机小网站（游戏文件 + /packs/：真的课程源文件经 tools/course/build.js 出的 course.json + 几段假配音），和 tests/course.test.js 一样。
@@ -8,11 +9,20 @@
 //       岛民照着剧本说的开场白带读音、AI 标识和每天第一次的提示都在
 //     3 用假识别结果说几句：够数的算、不够数的 / 说了别的语言的 / 同一句再说一遍不算；打勾；说到的词卡变绿
 //     4 点气泡看意思（请求里带 lang 和 ui：中文界面翻成中文，英语界面翻成英文）、帮帮我
-//     5 结束 → 评语页：星星、步骤、表扬、「更好的说法」（西语、中文第二天进复习，日语不进）、金币；记录、岛民的记忆存在这门课的存档里；学习锁开了
+//     5 结束 → 评语页：星星、步骤、表扬、「更好的说法」（西语、中文第二天进复习；日语读音表认得全的那句进、认不全的只在评语里显示）、金币；
+//       记录、岛民的记忆存在这门课的存档里；学习锁开了；日语进了复习的那句排得进复习、按读音打得了分
 //     6 说到被欺负：安全标记、评语页的提醒、家长看全文要密码
 //     7 大地图上和面前的人聊：按钮写着这门语言，连接是 npc=dyn、p 里带 lang
+//     第二轮（TALK.md「第二轮」C；课程包里塞了 tests/course-r2-fixture.js 的小样：第一条委托的内容）：
+//     8 支线委托：委托人头上有「?」→ 按 A：请求是译文（下面是界面语言的意思，日语 / 中文标读音）→ 选项页（目标、奖励；按钮写着这门语言）→ 聊天：
+//       连接带 quest=<id>&lang=<语言>，目标说明按界面语言、示范句 / 词卡 / 开场白是课程包里这门语言的（带读音，词卡的意思去掉讲英语的括号），
+//       服务器拼的人设是这条委托的、说这门语言；打勾的请求带 q 和 lang → 评语页「委托完成了」→ 回地图道谢（译文）、奖励只给一次、存在这门课的存档里、
+//       「?」没了、委托本；西语的词卡不看冠词（la gorra / una gorra）
+//     9 AI 发音点评：口语题没念准，服务器的 tipLangs 有这门语言 → 请求带 lang，点评显示出来（标着 AI）
 //   old 老服务器（/health 没有 talkLangs）：聊天页「这门语言的 AI 聊天还在做」、学习锁整天免、没有聊天任务、打不开；记着「会」的旧结果问到以后改过来；
-//       服务器连接时说不会（lang）；云端模式看账号的 talkLangs；APK 直连 = 不会
+//       服务器连接时说不会（lang）；云端模式看账号的 talkLangs；APK 直连 = 不会；
+//       第二轮：服务器会聊、可是没有 questLangs / tipLangs（第一轮的服务器）→ 没有「?」、没有点评；老的课程包（没有 QUESTS）→ 没有「?」；
+//       云端模式看账号 / health 的 questLangs、tipLangs
 //   en  英语课（课程包模式 + 同一个中转服务）：聊天页、数句子、请求和以前一样（不带 lang / ui），不问 /health
 // 截图 tests/screenshots/ctalk-*.png（竖屏、横屏；要看图：字有没有挤出去、读音有没有压住别的字）
 'use strict';
@@ -27,6 +37,8 @@ const CB = require(path.join(ROOT, 'tools', 'course', 'build.js'));
 const PK = require(path.join(ROOT, 'packs.js'))._;
 const { key } = require(path.join(ROOT, 'tools', 'voice', 'key.js'));
 const TC = require(path.join(ROOT, 'talk-core.js'));
+const FX = require(path.join(__dirname, 'course-r2-fixture.js'));   // 第二轮的小样：第一条委托在三门语言里的内容
+const QS = require(path.join(ROOT, 'quests.js'));
 const { WebSocketServer } = require(path.join(ROOT, 'server', 'node_modules', 'ws'));
 const SHOTS = path.join(__dirname, 'screenshots');
 fs.mkdirSync(SHOTS, { recursive: true });
@@ -42,8 +54,9 @@ const UI = { es: 'zh', ja: 'zh', zh: 'en' };   // 每门课用哪种界面语言
 const SAY = {
   es: { ok: ['Soy simpático y divertido.', 'Mi mejor amiga es muy valiente.', 'Tengo el pelo corto y los ojos castaños.'], short: 'Sí.', other: '我的朋友很勇敢', worry: 'En la escuela me acosan y estoy muy triste.',
     tip: ['Mi amiga es valiente mucho', 'Mi amiga es muy valiente.', '「muy」放在形容词前面'] },
+  // tip2（第二轮）：第二条「更好的说法」里有读音表认不出来的汉字（醤油）——只在评语里显示，不进复习；第一条读得出来，进
   ja: { ok: ['ゆいさんは友だちです。', 'ゆいさんは一年生です。', '父は船長です。'], short: 'はい。', other: '我的朋友是学生', worry: 'がっこうでいじめられています。',
-    tip: ['ゆいさん友だちです', 'ゆいさんは友だちです。', '名字后面要加「は」'] },
+    tip: ['ゆいさん友だちです', 'ゆいさんは友だちです。', '名字后面要加「は」'], tip2: ['ちちは醤油すきです', '父は醤油が好きです。', '「すき」前面要加「が」'] },
   zh: { ok: ['我的名字叫小云。', '我姓林，我叫林小云。', '认识你我很高兴。'], short: '你好。', other: 'My name is Tom and I like it', worry: '同学总是打我，我很难过。',
     tip: ['我名字叫小云', '我的名字叫小云。', 'Add 的 after 我.'] },
 };
@@ -55,8 +68,8 @@ const OGG = fs.readFileSync(path.join(ROOT, 'assets', 'voice', 'f', fs.readdirSy
 function courseOf(lang) {
   try { return CB.build(lang, { check: true, lines: false }).course; } catch (e) { console.log('  ⚠ ' + lang + '：tools/course/check.js 没过，用 buildCourse 直接转：' + String(e.message).split('\n')[0]); return CB.buildCourse(lang, { lines: false }); }
 }
-function pack(lang, texts, course) {
-  const dir = path.join(TMP, 'packs', lang, VER); fs.mkdirSync(dir, { recursive: true });
+function pack(lang, texts, course, root) {
+  const dir = path.join(TMP, root || 'packs', lang, VER); fs.mkdirSync(dir, { recursive: true });
   const files = [];
   if (course) { const b = Buffer.from(JSON.stringify(course)); fs.writeFileSync(path.join(dir, 'course.json'), b); files.push({ name: 'course.json', kind: 'course', bytes: b.length, crc: PK.crcHex(new Uint8Array(b)) }); }
   const seen = new Set(), items = [];
@@ -67,12 +80,24 @@ function pack(lang, texts, course) {
   fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify({ fmt: 1, lang, ver: VER, voice: { fmt: 'ogg-opus', f: 'x', m: 'y', n: { f: items.length, m: 0 } }, files }));
   return files.reduce((s, f) => s + f.bytes, 0);
 }
-const C = {}, CAT = { fmt: 1, packs: {} };
-{ const b = pack('en', ['Hello!']); CAT.packs.en = { ver: VER, name: NAMES.en, bytes: b, core: b, course: false }; }
+// 两套课程包：/packs（塞了第二轮的小样：第一条委托的请求 / 感谢的译文、QUESTS、委托人的名字牌）、/packs0（原样：老的课程包，只有西语）
+const C = {}, CAT = { fmt: 1, packs: {} }, CAT0 = { fmt: 1, packs: {} };
+{ const b = pack('en', ['Hello!']); CAT.packs.en = { ver: VER, name: NAMES.en, bytes: b, core: b, course: false }; const b0 = pack('en', ['Hello!'], null, 'packs0'); CAT0.packs.en = { ver: VER, name: NAMES.en, bytes: b0, core: b0, course: false }; }
+// --real：委托用正式的翻译（tools/course/<语言>/quests.json，经 build.js 并进 LINES / QUESTS：17 条都有）走一遍同样的画面；平时用小样（结果固定）
+const REAL = process.argv.includes('--real');
+// 第一条委托在这门课里的样子（从 course.json 里读：小样和正式的翻译都一样读法）
+const QD = l => {
+  const q0 = QS.byId['q0-cap'], c = C[l], LN = en => FX.textOf((c.LINES || {})[en] || ''), who = ((c.TERMS || {}).person || {})['Ms Rosa'];
+  return { ask: q0.ask.map(a => LN(a[0])), thanks: q0.thanks.map(a => LN(a[0])), bye: LN(q0.bye[0]), who: who == null ? 'Ms Rosa' : FX.textOf(who) };
+};
 for (const l of LANGS) {
-  const c = C[l] = courseOf(l), b = pack(l, c.WORLDS[0].words.map(x => x[0]), c);
+  const plain = courseOf(l);
+  if (l === 'es') { const b0 = pack(l, plain.WORLDS[0].words.map(x => x[0]), JSON.parse(JSON.stringify(plain)), 'packs0'); CAT0.packs[l] = { ver: VER, name: NAMES[l], bytes: b0, core: b0, course: true }; }
+  const c = C[l] = REAL ? CB.build(l, { check: true, lines: false, quests: path.join(ROOT, 'tools', 'course', l, 'quests.json') }).course : FX.apply(plain, l, { quests: true }), Q = QD(l);
+  const b = pack(l, c.WORLDS[0].words.map(x => x[0]).concat(Q.ask, Q.thanks, [Q.bye]).filter(Boolean), c);
   CAT.packs[l] = { ver: VER, name: NAMES[l], bytes: b, core: b, course: true };
 }
+if (REAL) console.log('  （--real：委托的内容是正式的翻译：' + LANGS.map(l => l + ' ' + Object.keys(C[l].QUESTS || {}).length + ' 条').join('、') + '）');
 
 // ---------- 本机小网站 ----------
 const MIME = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css', json: 'application/json', ogg: 'audio/ogg', glb: 'model/gltf-binary', webp: 'image/webp', woff2: 'font/woff2', png: 'image/png', jpg: 'image/jpeg', bin: 'application/octet-stream', svg: 'image/svg+xml', txt: 'text/plain' };
@@ -80,8 +105,9 @@ const web = http.createServer((req, res) => {
   res.on('error', () => {});
   const u = decodeURIComponent(req.url.split('?')[0]);
   const send = (code, body, type) => { res.writeHead(code, { 'Content-Type': type || 'application/octet-stream', 'Cache-Control': 'no-store' }); res.end(body); };
-  if (u.startsWith('/packs/')) {
+  if (u.startsWith('/packs/') || u.startsWith('/packs0/')) {
     if (u === '/packs/catalog.json') return send(200, JSON.stringify(CAT), MIME.json);
+    if (u === '/packs0/catalog.json') return send(200, JSON.stringify(CAT0), MIME.json);
     const file = path.join(TMP, u);
     if (!file.startsWith(TMP) || !fs.existsSync(file)) return send(404, '');
     return send(200, fs.readFileSync(file), MIME[path.extname(file).slice(1)]);
@@ -93,15 +119,15 @@ const web = http.createServer((req, res) => {
 
 // ---------- 假的阿里云 ----------
 // UP.heard / UP.npc：排好的识别结果、岛民的话；UP.sys 文字模型收到的每个请求（kind：steps / zh / eval / other）；UP.ins / UP.voice / UP.items 实时语音收到的人设、音色、文字消息
-const UP = { heard: [], npc: [], sys: [], ins: [], voice: [], items: [], evalResp: null, stepsResp: [], zh: '', talks: 0 };
+const UP = { heard: [], npc: [], sys: [], ins: [], voice: [], items: [], evalResp: null, stepsResp: [], zh: '', tip: '', talks: 0 };
 const fakeHttp = http.createServer((req, res) => {
   let body = ''; req.on('data', c => { body += c; }); req.on('end', () => {
     let j = {}; try { j = JSON.parse(body); } catch (e) { j = {}; }
     const ms = Array.isArray(j.messages) ? j.messages : [], sys = String((ms[0] && ms[0].content) || ''), user = typeof (ms[1] && ms[1].content) === 'string' ? ms[1].content : '';
-    // 按请求的形状认是哪一种（提示词的写法是 talk-core 的事）：打勾 max_tokens 60 + JSON、翻译 max_tokens 160、评语 JSON 没有上限
-    const kind = !ms.length ? 'other' : j.max_tokens === 60 && j.response_format ? 'steps' : j.max_tokens === 160 && !j.response_format ? 'zh' : j.response_format && !j.max_tokens ? 'eval' : 'other';
+    // 按请求的形状认是哪一种（提示词的写法是 talk-core 的事）：打勾 max_tokens 60 + JSON、翻译 max_tokens 160、评语 JSON 没有上限、发音点评 max_tokens 80
+    const kind = !ms.length ? 'other' : j.max_tokens === 60 && j.response_format ? 'steps' : j.max_tokens === 160 && !j.response_format ? 'zh' : j.response_format && !j.max_tokens ? 'eval' : j.max_tokens === 80 && !j.response_format ? 'tip' : 'other';
     UP.sys.push({ kind, sys, user });
-    const content = kind === 'steps' ? JSON.stringify({ done: UP.stepsResp }) : kind === 'zh' ? UP.zh : kind === 'eval' ? JSON.stringify(UP.evalResp) : '';
+    const content = kind === 'steps' ? JSON.stringify({ done: UP.stepsResp }) : kind === 'zh' ? UP.zh : kind === 'eval' ? JSON.stringify(UP.evalResp) : kind === 'tip' ? UP.tip : '';
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ choices: [{ message: { content } }], output: { audio: { url: '' } } }));
   });
@@ -120,12 +146,14 @@ fakeWs.on('connection', ws => {
 });
 
 // ---------- 老服务器 / 说了会其实不会的服务器（只有 /health 和一个一连上就回 lang 错的 /talk）----------
-const STUB = { langs: undefined, hits: 0, talks: 0 };
+// 第二轮：STUB.quest / STUB.tip 给了才有 questLangs / tipLangs（不给 = 第一轮的服务器：会聊，可是不会做委托、不会写点评）；posts 记下发来的 POST（不该有）
+const STUB = { langs: undefined, quest: undefined, tip: undefined, hits: 0, talks: 0, posts: [] };
 const stubWs = new WebSocketServer({ noServer: true });
 const stub = http.createServer((req, res) => {
   const u = req.url.split('?')[0];
-  if (u === '/health') { STUB.hits++; res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); return res.end(JSON.stringify(Object.assign({ ok: true, model: 'x', code: false, npcs: [] }, STUB.langs ? { talkLangs: STUB.langs } : null))); }
-  res.writeHead(404); res.end();
+  if (u === '/health') { STUB.hits++; res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); return res.end(JSON.stringify(Object.assign({ ok: true, model: 'x', code: false, npcs: [] }, STUB.langs ? { talkLangs: STUB.langs } : null, STUB.quest ? { questLangs: STUB.quest } : null, STUB.tip ? { tipLangs: STUB.tip } : null))); }
+  if (req.method !== 'GET') STUB.posts.push(req.method + ' ' + u);
+  res.writeHead(404, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' }); res.end();
 });
 stub.on('upgrade', (req, socket, head) => stubWs.handleUpgrade(req, socket, head, ws => { STUB.talks++; ws.send(JSON.stringify({ type: 'error', code: 'lang', zh: '这里还不会用这门语言聊天' })); ws.close(); }));
 
@@ -159,6 +187,10 @@ const SAVE = () => ({
   // 对方那一半（talk-core.js、server/relay.js、talk-courses.js）到没到：没到的话这里说清楚等什么，后面三门语言的段落会跟着不过
   check(typeof TC.langOk === 'function' && LANGS.every(l => TC.langOk(l) === l) && TC.LANGS && LANGS.every(l => TC.LANGS[l] && typeof TC.LANGS[l].say === 'string'), '聊天核心 talk-core.js 认得 es / ja / zh（langOk、LANGS[lang].say）', Object.keys(TC).join(','));
   check(!!health && Array.isArray(health.talkLangs) && LANGS.every(l => health.talkLangs.includes(l)), '中转服务（真的 server/relay.js + 假上游）起来了，/health 的 talkLangs 有 es / ja / zh', health || relayOut.slice(-300));
+  // 第二轮：服务器那一半（questLangs / tipLangs、talk-courses.js 里三门语言的委托）到没到
+  const TCQ = (() => { try { return require(path.join(ROOT, 'talk-courses.js')).quests || {}; } catch (e) { return {}; } })();
+  check(!!health && Array.isArray(health.questLangs) && Array.isArray(health.tipLangs) && LANGS.every(l => health.questLangs.includes(l) && health.tipLangs.includes(l)) && LANGS.every(l => TCQ[l] && TCQ[l]['q0-cap']),
+    '第二轮：/health 的 questLangs、tipLangs 有 es / ja / zh，talk-courses.js 里有三门语言的委托', health && { q: health.questLangs, t: health.tipLangs, tc: Object.keys(TCQ) });
 
   const browser = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const errs = [];
@@ -177,8 +209,8 @@ const SAVE = () => ({
     p.on('dialog', d => d.accept('1234'));
     p.wsUrls = []; p.posts = [];
     p.on('websocket', ws => p.wsUrls.push(ws.url()));
-    p.on('request', r => { if (r.method() === 'POST' && /\/(zh|steps)(\?|$)/.test(r.url())) p.posts.push({ path: new URL(r.url()).pathname, body: r.postData() || '' }); });
-    await p.goto(BASE + '/index.html?packs=' + encodeURIComponent('/packs') + (o.talk ? '&talk=' + encodeURIComponent(o.talk) : ''));
+    p.on('request', r => { if (r.method() === 'POST' && /\/(zh|steps|tip)(\?|$)/.test(r.url())) p.posts.push({ path: new URL(r.url()).pathname, body: r.postData() || '' }); });
+    await p.goto(BASE + '/index.html?packs=' + encodeURIComponent('/' + (o.packs || 'packs')) + (o.talk ? '&talk=' + encodeURIComponent(o.talk) : ''));
     await homeUp(p);
     return { ctx, p };
   }
@@ -211,6 +243,42 @@ const SAVE = () => ({
   const endChat = async p => { await p.evaluate(() => EchoTalk.endIfOpen()); await p.waitForSelector('.tk-eval', { timeout: 8000 }).catch(() => {}); await W(p, 200); };
   const closeChat = async p => { await p.evaluate(() => { while (EchoTalk.isOpen()) EchoTalk.endIfOpen(); }); await W(p, 200); };
   const lastWs = p => new URL(p.wsUrls[p.wsUrls.length - 1].replace(/^ws/, 'http')).searchParams;
+  // 大地图上的小工具（第二轮：委托的测试用）。hook：记下渲染器每一帧拿到的画面信息（谁头上有「?」）；face(id)：站到这个人跟前、面朝 TA；
+  // dlgNow：对话框现在这一页（正文和名字牌不算读音 <rt>）；closeDlg：一直按 A 到对话结束（选项页选第二个「以后再说」）
+  const WT = p => {
+    const typed = async () => { for (let i = 0; i < 60; i++) { if (!(await p.evaluate(() => { const d = EchoWorld._debug().dlg; return !!(d && d.typing); }))) return; await W(p, 80); } };
+    const A = async () => { await typed(); await p.evaluate(() => document.querySelector('#world [data-act=wA].ba').click()); await W(p, 260); };
+    const dlgNow = async () => { await typed(); return p.evaluate(() => {
+      const box = document.querySelector('#w-dlg'); if (!box || box.hidden) return null;
+      const strip = el => { if (!el) return ''; const c = el.cloneNode(true); c.querySelectorAll('rt').forEach(x => x.remove()); return c.textContent.trim(); };
+      const en = box.querySelector('.d-en'), zh = box.querySelector('#d-zh');
+      return { en: strip(en), enHtml: en ? en.innerHTML : '', zh: zh ? zh.textContent.trim() : '', zhBtn: !!(zh && zh.tagName === 'BUTTON'), hear: !!box.querySelector('.d-hear'), name: strip(box.querySelector('.d-name')), btns: [...box.querySelectorAll('[data-act=wPick]')].map(b => b.textContent.trim()) };
+    }); };
+    const closeDlg = async () => {
+      for (let i = 0; i < 14 && await p.evaluate(() => !!EchoWorld._debug().dlg); i++) {
+        if (await p.$('#w-dlg [data-act=wPick]')) { await p.click('#w-dlg [data-act=wPick][data-i="1"]'); await W(p, 300); }
+        else if (await p.$('#w-dlg [data-act=wSkip]')) { await p.evaluate(() => document.querySelector('#w-dlg [data-act=wSkip]').click()); await W(p, 300); }   // 说话任务：跳过
+        else await A();
+      }
+    };
+    const hook = async () => { await p.evaluate(() => { EchoGame.closeModal(); const R = EchoWorld._debug().R; if (R && !R._q) { R._q = 1; const od = R.draw; R.draw = function (now, V) { window.__V = V; return od.call(R, now, V); }; } }); await W(p, 900); };
+    const marks = () => p.evaluate(() => Object.fromEntries((window.__V ? window.__V.npcs : []).map(q => [q.n.id, !!q.quest])));
+    const quests = () => p.evaluate(() => EchoWorld.quests());
+    const face = async id => {
+      const at = await p.evaluate(id => {
+        const d = EchoWorld._debug(), n = d.M.npcs.find(x => String(x.id) === id), WK = EchoMaps.WALK;
+        if (!n) return null;
+        for (const [dx, dy, dir] of [[0, 1, 'up'], [0, -1, 'down'], [1, 0, 'left'], [-1, 0, 'right']]) {
+          const x = n.x + dx, y = n.y + dy, c = d.M.grid[y] && d.M.grid[y][x];
+          if (c && WK.includes(c) && !d.M.npcs.some(m => m.x === x && m.y === y)) { d.PL.x = d.PL.fx = x; d.PL.y = d.PL.fy = y; d.PL.dir = dir; d.PL.moving = false; d.FL.x = d.FL.fx = x; d.FL.y = d.FL.fy = y; return { x, y, dir, name: n.name }; }
+        }
+        return null;
+      }, id);
+      await W(p, 200);
+      return at;
+    };
+    return { typed, A, dlgNow, closeDlg, hook, marks, quests, face };
+  };
 
   try {
     // ================= 三门语言各走一遍 =================
@@ -336,14 +404,18 @@ const SAVE = () => ({
 
       // ---------- 5 结束 → 评语 ----------
       const coins0 = await p.evaluate(() => EchoGame.S.coins);
-      UP.evalResp = { steps: steps.map(() => true), done: true, stars: 3, praise: zhUi ? '说得真清楚！' : 'You said it very clearly!', tips: [{ said: T.tip[0], better: T.tip[1], note: T.tip[2] }], memory: ['likes sea shells'], concern: false, concernWhy: '' };
+      UP.evalResp = { steps: steps.map(() => true), done: true, stars: 3, praise: zhUi ? '说得真清楚！' : 'You said it very clearly!', tips: [{ said: T.tip[0], better: T.tip[1], note: T.tip[2] }].concat(T.tip2 ? [{ said: T.tip2[0], better: T.tip2[1], note: T.tip2[2] }] : []), memory: ['likes sea shells'], concern: false, concernWhy: '' };
       await p.evaluate(() => { EchoGame.S.settings.learner = 'kid'; EchoGame.S.settings.gate = true; });
       await endChat(p);
       const ev = await p.evaluate(() => ({ txt: (document.querySelector('.tk-eval') || {}).innerText || '', tips: (document.querySelector('.tk-tips') || {}).innerText || '', stepsR: [...document.querySelectorAll('.tk-steps-r li')].map(l => l.textContent) }));
       check(/★★★/.test(ev.txt) && /每一步都做到了|every step/.test(ev.txt) && ev.txt.includes(UP.evalResp.praise) && ev.stepsR.length === steps.length && ev.stepsR.every(s => s.startsWith('✅')) && /金币|coin/.test(ev.txt) && /AI/.test(ev.txt),
         '评语页：3 星、每一步打勾、表扬、金币、「评语由 AI 生成」', ev.txt.slice(0, 220));
-      check(ev.tips.includes(T.tip[1]) && ev.tips.includes(T.tip[0]) && (L === 'ja' ? !/每日复习|Daily review/.test(ev.tips) : /每日复习|Daily review/.test(ev.tips)),
-        '「更好的说法」（' + T.tip[1] + '）' + (L === 'ja' ? '只在评语里显示，不说「明天复习」' : '写着明天的每日复习里会再练'), ev.tips);
+      check(ev.tips.includes(T.tip[1]) && ev.tips.includes(T.tip[0]) && /每日复习|Daily review/.test(ev.tips) && (L === 'ja') === /📅/.test(ev.tips),
+        '「更好的说法」（' + T.tip[1] + '）写着明天的每日复习里会再练' + (L === 'ja' ? '——日语两条里只有读得出来的那条进，标着 📅' : ''), ev.tips);
+      if (L === 'ja') {
+        const tv = await p.evaluate(() => [...document.querySelectorAll('.tk-tips > div')].map(d => d.textContent));
+        check(tv.length === 2 && tv[0].includes(T.tip[1]) && tv[0].includes('📅') && tv[1].includes(T.tip2[1]) && !tv[1].includes('📅'), '日语：读音表认得全的那句（' + T.tip[1] + '）标 📅；有认不出来的汉字的那句（' + T.tip2[1] + '）只在评语里显示', tv);
+      }
       await shot(p, L + '-eval');
       const st = await p.evaluate(([id, l]) => {
         const S = EchoGame.S, T = S.talk, r = T.log[0], fr = Object.values(S.rev.items).filter(e => e.k === 'free');
@@ -355,8 +427,20 @@ const SAVE = () => ({
       check(!!st.mem && st.mem.facts.includes('likes sea shells'), '岛民记住聊到的小事', st.mem);
       check(st.today.goals === 1 && st.today.done && st.quest === 1, '今天完成 1 个聊天小目标，每日任务「和岛民聊天」有进度', { today: st.today, quest: st.quest });
       check(st.gate.chatDone && st.gate.open && st.gate.exWhy === '', '学习锁：聊天这一项做完了，冒险解锁', st.gate);
-      if (L === 'ja') check(!st.free.length, '日语：「更好的说法」先不进每日复习', st.free);
-      else check(st.free.length === 1 && st.free[0].en === T.tip[1] && st.free[0].said === T.tip[0] && !!st.free[0].due, NAMES[L].zh + '：「更好的说法」第二天进每日复习（带着原话）', st.free);
+      check(st.free.length === 1 && st.free[0].en === T.tip[1] && st.free[0].said === T.tip[0] && !!st.free[0].due, NAMES[L].zh + '：「更好的说法」第二天进每日复习（带着原话）' + (L === 'ja' ? '——只有读得出来的那一句，认不全的那句（醤油）没进' : ''), st.free);
+      if (L === 'ja') {
+        // 进了复习的那句：到期以后排得进一轮复习（开口题），没有条目也按读音打得了分——识别结果写假名、写汉字都对，说错了不过
+        const rv = await p.evaluate(t => {
+          const S = EchoGame.S, d = new Date(), today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+          const e = Object.values(S.rev.items).find(x => x.k === 'free'), due0 = e.due;
+          e.due = today;
+          const qs = EchoGame.rev.build().filter(q => q.free), q = qs[0] || {}, sc = h => EchoGame.speech.bestScore(t, [h]).score;
+          e.due = due0;
+          return { n: qs.length, type: q.type, target: q.target, kana: sc('ゆいさんはともだちです'), kanji: sc('結衣さんは友達です'), wrong: sc('ゆいさんはせんせいです'), readable: [EchoLang.get('ja').readable(t), EchoLang.get('ja').readable('父は醤油が好きです。')] };
+        }, T.tip[1]);
+        check(rv.n === 1 && rv.type === 'sr_s' && rv.target === T.tip[1] && rv.kana >= 90 && rv.kanji >= 90 && rv.wrong < 85 && rv.readable[0] === true && rv.readable[1] === false,
+          '日语：进了复习的那句到期以后是一道开口题，按读音打分（听到假名 ' + rv.kana + ' 分、听到汉字 ' + rv.kanji + ' 分、说错 ' + rv.wrong + ' 分）', rv);
+      }
       check(!!st.saved && st.saved.log.length === 1 && st.saved.log[0].npc === npc.id && (!st.en || !(st.en.log || []).length), '聊天记录、岛民的记忆存在这门课的存档里（' + st.key + '），英语的存档里没有', { saved: !!st.saved, en: st.en });
       await p.evaluate(() => { EchoGame.S.settings.learner = 'open'; EchoGame.S.settings.gate = false; });
       await closeChat(p);
@@ -409,6 +493,153 @@ const SAVE = () => ({
         check((!X.en || dins.includes(X.en)) && !/Speak ONLY in English/.test(dins) && dins.includes(String(pj.name)), '服务器给这个人拼的人设说的是 ' + (X.en || L), dins.slice(0, 160));
         await shot(p, L + '-world-chat');
         await closeChat(p);
+      }
+
+      // ---------- 8 支线委托（第二轮；课程包里有第一条委托 q0-cap 的小样）----------
+      {
+        const q0 = QS.byId['q0-cap'], F = QD(L), tx = FX.textOf, QC = C[L].QUESTS['q0-cap'], rosa = tx(F.who), qName = zhUi ? q0.zh : q0.en;
+        // 目标说明：quests.js 的中文 / 英文那两份，里面的名字照课程包的名字表换成这门课的写法（英文那份里有「Ms Rosa」）
+        const goalExp = (QC.names || []).reduce((s, [a, b]) => s.split(a).join(b), zhUi ? q0.goalZh : q0.goal);
+        // 词卡的意思：中文界面是 quests.js 的中文（讲英语的括号去掉），英语界面是那个英语词
+        const wMean = w => (zhUi ? String(w[1]).replace(/\s*[（(][^（()）]*[A-Za-z][^（()）]*[）)]/g, '').trim() : w[2]);
+        const { A, dlgNow, closeDlg, hook, marks, quests, face } = WT(p);
+        await hook();
+        const state = () => p.evaluate(() => { const s = EchoGame.S; return { coins: s.coins, ball: (s.mon.bag.superball || 0), flag: s.world.flags['q:q0-cap'] || 0, quests: EchoGame.dayLog().quests || 0, goals: EchoGame.dayLog().chatGoals || 0 }; });
+        let mk = await marks(), qs = await quests();
+        const ok3 = await p.evaluate(() => [EchoTalk.questOk(), EchoTalk.questOk('q0-cap'), EchoTalk.questOk('q0-visitor')]);
+        // （小样的课程包只有这一条委托的内容；--real 17 条都有，第二条要先做完第一条所以还没有「?」）
+        check(mk['4'] === true && Object.values(mk).filter(Boolean).length === 1 && ok3[0] && ok3[1] && ok3[2] === REAL, '委托：服务器会（questLangs）、课程包里有这一条（QUESTS）→ 委托人头上有「?」' + (REAL ? '' : '；课程包里没有内容的别的委托不出'), { mk, ok3 });
+        const q0row = () => qs.find(q => q.id === 'q0-cap') || {};
+        check(qs.length === (REAL ? QS.list.length : 1) && q0row().state === 'open' && q0row().seen, '委托本（EchoWorld.quests()）：' + (REAL ? '17 条都在' : '只有课程包里有内容的这一条') + '，第一条能接', qs);
+        // 站到她跟前、面朝她
+        const at = await face('4');
+        const s0 = await state();
+        await A();
+        let d = await dlgNow();
+        const mean0 = zhUi ? q0.ask[0][1] : q0.ask[0][0];
+        check(!!at && !!d && d.en === tx(F.ask[0]) && d.zh === mean0 && d.name === rosa && d.hear && (L === 'es' ? !d.enHtml.includes('<ruby>') : d.enHtml.includes('<ruby>')),
+          '按 A：委托人说请求——' + NAMES[L].zh + '的译文（' + tx(F.ask[0]).slice(0, 16) + '…）' + (L === 'es' ? '' : '带读音') + '，下面是界面语言的意思，名字牌是这门课的写法（' + rosa + '）', d);
+        await shot(p, L + '-quest-ask');
+        await A(); d = await dlgNow(); const ask2 = d && d.en;
+        await A(); d = await dlgNow();
+        check(ask2 === tx(F.ask[1]) && !!d && d.en === tx(F.ask[2]), '第二、三句请求也是译文', [ask2, d && d.en]);
+        await A(); d = await dlgNow();
+        check(!!d && d.btns.length === 2 && d.btns[0].includes(NAME) && !/英语|English/.test(d.btns.join('')) && d.name.includes(qName) && d.zh.includes(goalExp) && (zhUi || REAL || goalExp.includes(rosa)) && /🎁/.test(d.zh) && d.en === '' && !d.hear,
+          '选项页：名字牌是委托的名字，下面是目标和奖励；按钮「用' + NAME + '帮 TA」（不写英语）；上面不放委托的英文名、没有 🔊', d);
+        await shot(p, L + '-quest-choice');
+        await p.setViewportSize({ width: 844, height: 390 }); await W(p, 400);
+        await shot(p, L + '-quest-choice-land');
+        const fit = await p.evaluate(() => [...document.querySelectorAll('#w-dlg [data-act=wPick]')].map(b => { const r = b.getBoundingClientRect(), s = b.querySelector('span') || b; return { in: r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight, cut: s.scrollWidth > b.clientWidth + 1 }; }));
+        await p.setViewportSize({ width: 390, height: 844 }); await W(p, 300);
+        const fit2 = await p.evaluate(() => [...document.querySelectorAll('#w-dlg [data-act=wPick]')].map(b => { const r = b.getBoundingClientRect(), s = b.querySelector('span') || b; return { in: r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight, cut: s.scrollWidth > b.clientWidth + 1 }; }));
+        check(fit.concat(fit2).every(f => f.in && !f.cut), '两个按钮横屏、竖屏都在屏幕里，字没被挤出去', { fit, fit2 });
+        // 用这门语言帮 TA → 聊天
+        UP.npc.push(tx(QC.opener));
+        await p.click('#w-dlg [data-act=wPick][data-i="0"]');
+        const opened = await p.waitForSelector('#tk-mic:not([disabled])', { timeout: 8000 }).then(() => true).catch(() => false);
+        await p.waitForFunction(() => document.querySelectorAll('#tk-log .tk-b.npc').length > 0 && !!document.querySelector('#tk-log .tk-b.npc')._text, null, { timeout: 6000 }).catch(() => {});
+        await W(p, 300);
+        const wq = opened ? lastWs(p) : new URLSearchParams();
+        check(opened && wq.get('quest') === 'q0-cap' && wq.get('lang') === L && wq.get('npc') === 'dyn' && !wq.has('p') && wq.get('ui') === ui, '聊天的连接：quest=q0-cap&lang=' + L + '（只发委托的 id 和语言，人设由服务器拼）', opened ? [...wq.entries()].map(e => e.join('=')).join('&') : relayOut.slice(-300));
+        if (opened) {
+          const ov = await p.evaluate(() => {
+            const strip = el => { const c = el.cloneNode(true); c.querySelectorAll('rt, small').forEach(x => x.remove()); return c.textContent.trim(); };
+            return { head: document.querySelector('.tk-head').innerText, goal: document.querySelector('.tk-gt').innerText,
+              steps: [...document.querySelectorAll('#tk-steps li span')].map(s => s.textContent), eg: [...document.querySelectorAll('#tk-steps li small')].map(s => { const c = s.cloneNode(true); c.querySelectorAll('rt').forEach(x => x.remove()); return { txt: c.textContent, html: s.innerHTML }; }),
+              words: [...document.querySelectorAll('.tk-words .tk-w')].map(b => ({ t: strip(b), html: b.innerHTML, mean: (b.querySelector('small') || {}).textContent || '' })),
+              npc: [...document.querySelectorAll('#tk-log .tk-b.npc')].map(b => ({ text: b._text || '', html: b.innerHTML })), mic: document.querySelector('#tk-mic').textContent, ai: (document.querySelector('#tk-ai') || {}).textContent || '' };
+          });
+          check(ov.head.includes(rosa) && ov.head.includes(qName) && ov.goal.includes(goalExp) && ov.mic.includes(NAME) && !!ov.ai, '聊天界面：委托人的名字（' + rosa + '）、委托的名字、目标说明按界面语言（里面的名字是这门课的写法），话筒写着' + NAME + '，AI 标识在', { head: ov.head, goal: ov.goal });
+          check(ov.steps.length === q0.steps.length && ov.steps.every((s, k) => s === (zhUi ? q0.steps[k][0] : q0.steps[k][1])) && ov.eg.length === q0.steps.length && ov.eg.every((e, k) => e.txt.includes(tx(QC.steps[k]))),
+            '小步骤：说明是 quests.js 的' + (zhUi ? '中文' : '英语原句') + '，示范句是课程包里' + NAMES[L].zh + '的那一句（' + tx(QC.steps[0]) + '）', { steps: ov.steps, eg: ov.eg.map(e => e.txt) });
+          check(ov.words.length === QC.words.length && ov.words.every((w, k) => w.t === tx(QC.words[k][0]) && w.mean === wMean(QC.words[k])) && !ov.words.some(w => /[（(].*[A-Za-z]/.test(w.mean) && zhUi),
+            '词卡：' + NAMES[L].zh + '的词，下面的意思按界面语言（' + wMean(QC.words[3]) + '——讲英语的括号去掉了）', ov.words.map(w => w.t + '|' + w.mean));
+          if (L === 'es') check(!ov.words.some(w => w.html.includes('<ruby>')) && !ov.eg.some(e => e.html.includes('<ruby>')), '西语：词卡、示范句不标读音');
+          else check(ov.words.filter(w => w.html.includes('<ruby>')).length >= 1 && ov.eg.every(e => e.html.includes('<ruby>')), NAMES[L].zh + '：词卡、示范句照课程包里写的读音标（<ruby>）', { w: ov.words.map(w => w.html).slice(0, 3), e: ov.eg[0].html });
+          const ob = ov.npc[0] || { text: '', html: '' };
+          check(ob.text === tx(QC.opener) && (L === 'es' ? !ob.html.includes('<ruby>') : ob.html.includes('<ruby>')), '委托人开口（假 AI 照着开场白说）' + (L === 'es' ? '' : '：带读音'), ob);
+          const ins = UP.ins[UP.ins.length - 1] || '', voice = UP.voice[UP.voice.length - 1], srvOpen = (TCQ[L] && TCQ[L]['q0-cap'] && TCQ[L]['q0-cap'].opener) || '\u0000';
+          check(ins.includes(q0.persona.slice(0, 80)) && (!X.en || ins.includes(X.en)) && ins.includes(srvOpen) && !/Speak ONLY in English/.test(ins) && /small game task/.test(ins) && /parent or a teacher/.test(ins),
+            '服务器拼的人设：这条委托的事实（quests.js 的英文）、说 ' + (X.en || L) + '、开场白是 talk-courses.js 里这门语言的，委托的规矩和安全规则都在', ins.slice(0, 220));
+          check(!!voice && !['Jennifer', 'Aiden', 'Mione'].includes(voice), '音色是这门语言的（' + voice + '）', voice);
+          // 说到词卡上的词：西语不看冠词（la gorra / una gorra）；日语按读音（词卡 ぼうし，听到的写成 帽子）
+          const first = { es: 'Es una gorra azul del dueño.', ja: '帽子の持ち主の名前は何ですか', zh: '他的帽子在哪里？' }[L];
+          await speak(p, first, []);
+          const hit = await p.evaluate(() => [...document.querySelectorAll('.tk-w.hit')].map(b => +b.dataset.i));
+          check(hit.includes(1), '说到词卡上的词（' + tx(QC.words[1][0]) + '；听到的是「' + first + '」）：卡片变绿' + (L === 'es' ? '——不看冠词' : L === 'ja' ? '——按读音比' : ''), hit);
+          await speak(p, tx(QC.steps[0]), [1]);
+          await p.waitForSelector('#tk-steps li.ok', { timeout: 4000 }).catch(() => {});
+          const sp = p.posts.filter(x => x.path === '/steps').map(x => JSON.parse(x.body)).pop() || {};
+          check(sp.q === 'q0-cap' && sp.lang === L && sp.npc === 'dyn' && await p.locator('#tk-steps li.ok').count() === 1, '打勾的请求带委托的 id 和语言（q = q0-cap、lang = ' + L + '），做到一步打一个勾', sp);
+          await shot(p, L + '-quest-chat');
+          await p.setViewportSize({ width: 844, height: 390 }); await W(p, 350);
+          await shot(p, L + '-quest-chat-land');
+          await p.setViewportSize({ width: 390, height: 844 }); await W(p, 250);
+          await speak(p, tx(QC.steps[1]), [1, 2]);
+          await speak(p, tx(QC.steps[2]), [1, 2, 3]);
+          UP.evalResp = { steps: [true, true, true], done: true, stars: 3, praise: zhUi ? '问得真清楚！' : 'You asked very clearly!', tips: [], memory: [], concern: false, concernWhy: '' };
+          await endChat(p);
+          const evq = await p.evaluate(() => ({ txt: (document.querySelector('.tk-eval') || {}).innerText || '', close: !!document.querySelector('.tk-eval [data-act=talk_close]'), again: !!document.querySelector('.tk-eval [data-act=talk_again]') }));
+          let s1 = await state();
+          check(/★★★/.test(evq.txt) && evq.txt.includes(rosa) && evq.close && !evq.again && s1.flag === 0 && s1.goals === s0.goals + 1, '评语页：3 星、「委托完成了，' + rosa + ' 有奖励给你」，只有「回去领奖励」；聊天目标 +1，奖励要回地图才给', { txt: evq.txt.slice(0, 160), s1 });
+          await shot(p, L + '-quest-eval');
+          await p.click('.tk-eval [data-act=talk_close]'); await W(p, 500);
+          d = await dlgNow(); s1 = await state();
+          check(!(await p.$('#tk-ov')) && !!d && d.en === tx(F.thanks[0]) && d.name === rosa && d.zh === (zhUi ? q0.thanks[0][1] : q0.thanks[0][0]), '回到地图：委托人道谢，是' + NAMES[L].zh + '的译文（下面是界面语言的意思）', d);
+          check(s1.flag === 3 && s1.ball === s0.ball + 2 && s1.coins === s0.coins + 50 + 25 && s1.quests === s0.quests + 1, '结果当场存好：world.flags["q:q0-cap"] = 3、金回声球 +2、金币 +50（另有聊天的 25）、今天完成 1 条', { s0, s1 });
+          await shot(p, L + '-quest-thanks');
+          await A(); d = await dlgNow();
+          check(!!d && d.en === tx(F.thanks[1]), '第二句感谢也是译文', d && d.en);
+          await closeDlg();
+          const sv = await p.evaluate(l => { EchoGame.flush(); return { own: (JSON.parse(localStorage.getItem('echo-island-v1@' + l)).world.flags || {})['q:q0-cap'] || 0, en: (JSON.parse(localStorage.getItem('echo-island-v1')).world.flags || {})['q:q0-cap'] || 0 }; }, L);
+          mk = await marks(); qs = await quests();
+          check(sv.own === 3 && sv.en === 0 && mk['4'] === false && q0row().state === 'done' && q0row().stars === 3, '存在这门课自己的存档里（英语的存档里没有）；「?」没了，委托本里是做完了、3 星', { sv, mk, q: q0row() });
+          // 再找她：先说一句近况（译文），不再给委托、不再给奖励
+          await A(); d = await dlgNow();
+          const s2a = await state();
+          check(!!d && d.en === tx(F.bye) && !d.btns.length, '做完以后再按 A：她说一句近况（译文），没有委托的选项', d);
+          await closeDlg();
+          const s2 = await state();
+          check(s2.coins === s1.coins && s2.ball === s1.ball && s2.flag === 3 && s2a.quests === s1.quests, '不能重做刷星：奖励只给一次', { s1, s2 });
+          // 委托本
+          await p.evaluate(() => document.querySelector('#world [data-act=wB]').click()); await W(p, 300);
+          await p.click('#sheet [data-act=wQuests]'); await W(p, 300);
+          const qsheet = await p.evaluate(() => document.querySelector('#sheet').innerText);
+          check(qsheet.includes(rosa) && qsheet.includes(qName) && qsheet.includes(NAME) && !/用英语|in English/.test(qsheet) && /★★★/.test(qsheet), '冒险菜单的委托本：这一条做完了（★★★），找谁写的是这门课的名字，说明里写的是' + NAME, qsheet.slice(0, 200));
+          await shot(p, L + '-quest-book');
+          await p.evaluate(() => EchoGame.closeModal());
+        }
+        // 西语的词卡不看冠词；别的语言照旧（日语的规矩在 lang-ja.js，tests/lang.test.js 查）
+        if (L === 'es') {
+          const wh = await p.evaluate(() => { const H = (w, t) => EchoTalk._wordHit(w, t, 'es'); return [H('la gorra', 'Tengo una gorra azul.'), H('el dueño', 'Conozco al dueño.'), H('al lado de', 'Vive al lado del parque.'), H('¿Dónde está…?', '¿Dónde está Ben ahora?'), H('las piernas', 'Tengo unas piernas largas'),
+            H('la gorra', 'Tengo un gorro.'), H('él', 'El perro es grande.'), H('él', 'Él es mi amigo.'), H('…', 'hola'), H('el nombre', 'Mi nombre es Ana')]; });
+          check(JSON.stringify(wh) === JSON.stringify([true, true, true, true, true, false, false, true, false, true]), '西语词卡变绿的判断：冠词不算词（la gorra / una gorra、el dueño / al dueño）、del / al 当成 de / a、「…」「¿」不算词；别的词不乱对（gorra ≠ gorro，él ≠ el）', wh);
+        }
+      }
+
+      // ---------- 9 AI 发音点评（第二轮）：口语题没念准，服务器会用这门语言写点评 → 请求带 lang，点评显示出来 ----------
+      {
+        const sent = C[L].WORLDS[0].sents[0][0], wrong = C[L].WORLDS[0].sents[1][0];
+        UP.tip = zhUi ? '你读的好像是另一句话，先点喇叭听一遍原句再读' : 'It sounds like a different sentence. Tap the speaker and listen first.';
+        UP.sys.length = 0;
+        await p.evaluate(([s, w]) => {
+          window.__heard = [w];
+          EchoTalk.listenOnce = async o => { const t = window.__heard.length ? window.__heard.shift() : ''; if (o.onState) o.onState(t); return { text: t, err: t ? null : 'no-speech', how: 'done' }; };
+          EchoGame.S.settings.mode = 'auto';
+          EchoWorld._debug().talk([{ who: 'Kai', en: s, zh: '', kind: 'speak', target: s }]);
+        }, [sent, wrong]);
+        await W(p, 400);
+        const tipOk = await p.evaluate(() => EchoTalk.tipOk());
+        await p.click('#w-dlg [data-act=wMic]');
+        const got = await p.waitForSelector('#w-heard .ai-tip', { timeout: 6000 }).then(() => true).catch(() => false);
+        const tp = p.posts.filter(x => x.path === '/tip').map(x => JSON.parse(x.body)).pop() || {}, ts = UP.sys.filter(x => x.kind === 'tip').pop() || { sys: '' };
+        const tipTxt = got ? await p.textContent('#w-heard .ai-tip') : '';
+        check(tipOk && got && tipTxt.includes(UP.tip) && /AI/.test(tipTxt), '口语题没念准：AI 发音点评显示出来（标着 AI）', tipTxt);
+        check(tp.target === sent && tp.heard === wrong && tp.lang === L && (zhUi ? tp.ui === undefined : tp.ui === ui), '点评的请求带 lang = ' + L + '（目标句子、听到的话、界面语言）', tp);
+        check(ts.sys.includes(sent) && ts.sys.includes(zhUi ? X.zh || '\u0000' : X.en || '\u0000') && !/初中英语发音老师|learner of English/.test(ts.sys), '服务器给点评的提示词说的是' + (zhUi ? X.zh : X.en) + '（不是英语的那一份）', ts.sys.slice(0, 120));
+        await shot(p, L + '-tip');
+        await p.evaluate(() => { EchoGame.S.settings.mode = 'self'; EchoGame.closeModal(); EchoGame.goHome('mon'); });
+        await W(p, 300);
       }
       await ctx.close();
     }
@@ -465,16 +696,85 @@ const SAVE = () => ({
         return r;
       }, OLD.replace(/^ws/, 'http'));
       check(dr.url === 'direct:' && dr.ok === false, 'APK 直连阿里云：别的课的聊天照旧关着', dr);
+
+      // 第二轮：服务器会聊（talkLangs），可是没有 questLangs / tipLangs（第一轮的服务器）→ 聊天照开，委托人头上没有「?」、口语题没有点评
+      STUB.langs = ['en', 'es']; STUB.quest = undefined; STUB.tip = undefined; STUB.posts.length = 0;
+      await p.evaluate(() => EchoTalk.langAsk());
+      await p.waitForFunction(() => EchoTalk.langOk(), null, { timeout: 6000 }).catch(() => {});
+      const r1 = await p.evaluate(() => ({ talk: EchoTalk.langOk(), quest: EchoTalk.questOk(), q0: EchoTalk.questOk('q0-cap'), tip: EchoTalk.tipOk(), cache: localStorage.getItem('echo-talk-langs') }));
+      check(r1.talk && !r1.quest && !r1.q0 && !r1.tip && Object.keys(JSON.parse(r1.cache)).join() === 'u,l', '第一轮的服务器（有 talkLangs，没有 questLangs / tipLangs）：聊天开着，委托和点评照旧关着（记下来的样子也和第一轮一样）', r1);
+      await p.evaluate(() => { EchoGame.S.settings.learner = 'open'; EchoGame.S.settings.gate = false; EchoGame.S.homeTab = 'mon'; EchoGame.goHome('mon'); });
+      await p.click('[data-act=wEnter]'); await W(p, 1300);
+      const wt = WT(p);
+      await wt.hook();
+      const mk0 = await wt.marks(), qs0 = await wt.quests();
+      check(Object.keys(mk0).length > 3 && !Object.values(mk0).some(Boolean) && qs0.length === 0, '……大地图上没有人头上有「?」，委托本是空的', { mk0, qs0 });
+      await wt.face('4'); await wt.A();
+      const d0 = await wt.dlgNow();
+      check(!!d0 && d0.en !== QD('es').ask[0] && !d0.btns.length, '……按 A：她说的是平常的话，不是委托', d0);
+      await wt.closeDlg();
+      const sent0 = C.es.WORLDS[0].sents[0][0], wrong0 = C.es.WORLDS[0].sents[1][0];
+      await p.evaluate(([s, w]) => {
+        window.__heard = [w];
+        EchoTalk.listenOnce = async o => { const t = window.__heard.length ? window.__heard.shift() : ''; if (o.onState) o.onState(t); return { text: t, err: t ? null : 'no-speech', how: 'done' }; };
+        EchoGame.S.settings.mode = 'auto';
+        EchoWorld._debug().talk([{ who: 'Kai', en: s, zh: '', kind: 'speak', target: s }]);
+      }, [sent0, wrong0]);
+      await W(p, 400);
+      await p.click('#w-dlg [data-act=wMic]'); await W(p, 1500);
+      const tip0 = await p.evaluate(() => ({ heard: (document.querySelector('#w-heard') || {}).textContent || '', tip: !!document.querySelector('#w-heard .ai-tip') }));
+      check(!!tip0.heard && !tip0.tip && !p.posts.some(x => x.path === '/tip') && !STUB.posts.some(x => /tip/.test(x)), '……口语题没念准：照旧没有 AI 点评，也不去问服务器', { tip0, posts: STUB.posts });
+      // 服务器后来会了（questLangs / tipLangs 有这门语言）：问到以后「?」就出来了（不用重新打开）
+      STUB.quest = ['en', 'es']; STUB.tip = ['en', 'es'];
+      await p.evaluate(() => { EchoGame.S.settings.mode = 'self'; EchoGame.closeModal(); });
+      await wt.closeDlg();
+      await p.evaluate(() => EchoTalk.langAsk());
+      await p.waitForFunction(() => EchoTalk.questOk('q0-cap') && EchoTalk.tipOk(), null, { timeout: 6000 }).catch(() => {});
+      await W(p, 900);
+      const mk1 = await wt.marks(), c1 = await p.evaluate(() => JSON.parse(localStorage.getItem('echo-talk-langs')));
+      check(mk1['4'] === true && c1.q.includes('es') && c1.t.includes('es'), '服务器后来说会了（/health 多了 questLangs / tipLangs）：记下来，委托人头上的「?」出来了', { mk1, c1 });
+      // 委托的连接被服务器拒了（lang）：照「还在做」说，只把委托改回不会，聊天照旧
+      await wt.face('4'); await wt.A(); await wt.A(); await wt.A(); await wt.A();
+      const talks0 = STUB.talks;
+      await p.click('#w-dlg [data-act=wPick][data-i="0"]').catch(() => {});
+      await p.waitForFunction(() => /还在做/.test((document.querySelector('#tk-status') || {}).textContent || ''), null, { timeout: 6000 }).catch(() => {});
+      const st4 = await p.evaluate(() => ({ status: (document.querySelector('#tk-status') || {}).textContent || '', err: EchoGame.dayLog().chatErr || '' }));
+      await closeChat(p); await W(p, 700);
+      STUB.quest = undefined;   // 重新问到的也是不会
+      await p.evaluate(() => EchoTalk.langAsk());
+      await p.waitForFunction(() => !EchoTalk.questOk(), null, { timeout: 6000 }).catch(() => {});
+      const r4 = await p.evaluate(() => ({ talk: EchoTalk.langOk(), quest: EchoTalk.questOk(), flag: EchoGame.S.world.flags['q:q0-cap'] || 0 }));
+      check(STUB.talks === talks0 + 1 && /这门语言的 AI 聊天还在做/.test(st4.status) && !st4.err && r4.talk && !r4.quest && !r4.flag, '委托的连接被服务器拒了（lang）：状态行写「还在做」、不记成连不上；之后委托按不会算，聊天照旧开着，委托没完成', { st4, r4 });
+      await wt.closeDlg();
       await ctx.close();
 
+      // 第二轮：老的课程包（course.json 里没有 QUESTS）+ 新的服务器 → 委托照旧不出
+      {
+        const c0 = await openGame({ talk: RELAY, packs: 'packs0' });
+        await toCourse(c0.p, L);
+        await c0.p.evaluate(() => EchoTalk.langAsk());
+        await c0.p.waitForFunction(() => EchoTalk.langOk(), null, { timeout: 6000 }).catch(() => {});
+        await c0.p.evaluate(() => { EchoGame.S.homeTab = 'mon'; EchoGame.goHome('mon'); });
+        await c0.p.click('[data-act=wEnter]'); await W(c0.p, 1300);
+        const w0 = WT(c0.p);
+        await w0.hook();
+        const r0 = await c0.p.evaluate(() => ({ talk: EchoTalk.langOk(), q0: EchoTalk.questOk('q0-cap'), tip: EchoTalk.tipOk() })), m0 = await w0.marks(), q0s = await w0.quests();
+        check(r0.talk && !r0.q0 && r0.tip && Object.keys(m0).length > 3 && !Object.values(m0).some(Boolean) && q0s.length === 0, '老的课程包（没有 QUESTS）+ 新的服务器：聊天、点评开着，委托照旧不出（没有「?」）', { r0, m0, q0s });
+        await c0.ctx.close();
+      }
+
       // 云端模式：看账号（GET /v1/me 的缓存）里的 talkLangs；老服务器没有这个字段、没登录 = 不会
-      for (const [me, exp, what] of [[{ plan: 'free', ageGroup: 'adult', features: {}, quota: { talk: { leftSec: 300, limitSec: 300 } }, talkLangs: ['en', 'es', 'ja', 'zh'] }, true, '账号里的 talkLangs 有这门语言：聊天开着'],
-        [{ plan: 'free', ageGroup: 'adult', features: {}, quota: { talk: { leftSec: 300, limitSec: 300 } }, speechLangs: ['en', 'es'] }, false, '老服务器（没有 talkLangs）：照旧「还在做」'], [null, false, '没登录（不知道服务器会不会）：照旧「还在做」']]) {
+      // 第二轮：委托、点评看账号的 questLangs / tipLangs（expQ）——第一条是第一轮的服务器（会聊，没有这两个字段），第二条是都有的
+      for (const [me, exp, what, expQ] of [[{ plan: 'free', ageGroup: 'adult', features: {}, quota: { talk: { leftSec: 300, limitSec: 300 } }, talkLangs: ['en', 'es', 'ja', 'zh'] }, true, '账号里的 talkLangs 有这门语言：聊天开着（没有 questLangs / tipLangs：委托、点评照旧关着）', false],
+        [{ plan: 'free', ageGroup: 'adult', features: {}, quota: { talk: { leftSec: 300, limitSec: 300 } }, talkLangs: ['en', 'es'], questLangs: ['en', 'es'], tipLangs: ['en', 'es'] }, true, '账号里 talkLangs、questLangs、tipLangs 都有这门语言：聊天、委托、点评都开着', true],
+        [{ plan: 'free', ageGroup: 'adult', features: {}, quota: { talk: { leftSec: 300, limitSec: 300 } }, speechLangs: ['en', 'es'] }, false, '老服务器（没有 talkLangs）：照旧「还在做」', false], [null, false, '没登录（不知道服务器会不会）：照旧「还在做」', false]]) {
         const c2 = await openGame({ init: me => { window.ECHO_CLOUD_URL = 'http://127.0.0.1:9'; if (me) { localStorage.setItem('echo-cloud-token', 'tok-test'); localStorage.setItem('echo-cloud-me', JSON.stringify(me)); } }, initArg: me });
         await toCourse(c2.p, L, { learner: 'kid', gate: true });
         await talkTab(c2.p);
-        const r = await c2.p.evaluate(() => ({ cloud: EchoCloud.on, tl: EchoAccount.talkLang('es'), en: EchoAccount.talkLang('en'), ok: EchoTalk.langOk(), home: document.querySelector('.tk-home').innerText, cards: document.querySelectorAll('.tk-home .tk-card').length, g: EchoGame.gate() }));
+        const r = await c2.p.evaluate(() => ({ cloud: EchoCloud.on, tl: EchoAccount.talkLang('es'), en: EchoAccount.talkLang('en'), ok: EchoTalk.langOk(), home: document.querySelector('.tk-home').innerText, cards: document.querySelectorAll('.tk-home .tk-card').length, g: EchoGame.gate(),
+          q: [EchoAccount.questLang('es'), EchoAccount.questLang('en'), EchoAccount.questLang('ja'), EchoTalk.questOk(), EchoTalk.questOk('q0-cap')], t: [EchoAccount.tipLang('es'), EchoAccount.tipLang('en'), EchoTalk.tipOk()] }));
         check(r.cloud && r.en === true && r.tl === exp && r.ok === exp && (exp ? r.cards === 8 && !/还在做/.test(r.home) && r.g.exWhy !== 'lang' : r.cards === 0 && /还在做/.test(r.home) && r.g.exWhy === 'lang'), '云端模式 · ' + what, { tl: r.tl, ok: r.ok, cards: r.cards, ex: r.g.exWhy });
+        check(JSON.stringify(r.q) === JSON.stringify([expQ, true, false, expQ, expQ]) && JSON.stringify(r.t) === JSON.stringify([expQ, true, expQ]), '云端模式 · 委托 / 点评' + (expQ ? '开着（EchoAccount.questLang / tipLang）' : '关着'), { q: r.q, t: r.t });
         if (exp) await shot(c2.p, 'cloud-home');
         await c2.ctx.close();
       }

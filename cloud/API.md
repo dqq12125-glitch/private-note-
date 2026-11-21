@@ -137,6 +137,8 @@ Response `200`:
   "features": { "talk": false, "place": false, "steps": false },
   "speechLangs": ["en", "es", "ja", "zh"],
   "talkLangs": ["en", "es", "ja", "zh"],
+  "questLangs": ["en", "es", "ja", "zh"],
+  "tipLangs": ["en", "es", "ja", "zh"],
   "plan": "free",
   "subscription": { "state": "none", "plan": null, "productId": null, "expiresAt": null, "graceUntil": null, "environment": null },
   "quota": {
@@ -164,6 +166,13 @@ Response `200`:
 - `talkLangs`: the languages this server can hold a voice chat in (`WS /v1/talk`, §8 **Chat language**), always starting with
   `"en"` (server config `TALK_LANGS`). A server without this field (older version) only chats in English: the app must then keep
   chat switched off in other courses.
+- `questLangs`: the languages in which this server can run side quests (`WS /v1/talk?quest=…&lang=…`, `POST /v1/steps` with
+  `q` + `lang`; §8 **Quests and pronunciation tips in other languages**), always starting with `"en"`. A language is listed only
+  when it is allowed by config (`QUEST_LANGS`, default: the same as `talkLangs`), is one of `talkLangs`, **and the server really
+  has the quest translations for it** (`talk-courses.js` → `quests`). A server without this field only has the English quests:
+  the app must then not offer quests in other courses.
+- `tipLangs`: the languages `POST /v1/tip` can comment on (`lang`), always starting with `"en"` (server config `TIP_LANGS`,
+  default: the same as `talkLangs`). A server without this field only comments on English.
 - `plan`: the plan in effect now: `"free"`, `"monthly"` or `"yearly"`. `subscription`: see §7.
 - `quota`: see §6.
 
@@ -297,6 +306,7 @@ first-message auth). Same parameters as the family relay:
 | `npc` | islander id from `talk-npcs.js` (English), a course character id from `talk-courses.js` (other courses, e.g. `es1-u1`, `ja1-u3`, `zh1-u8`), or `dyn` for a person on the map (then `p` is required) |
 | `p` | `dyn` only: base64url JSON `{name, g, kid, role, island, place, lines, words, lang}` (cleaned and length-limited on the server). `lang` is optional: `"es"` / `"ja"` / `"zh"` makes this person speak that language (see **Chat language**); absent or `"en"` = English, as before |
 | `quest` | side-quest id from `quests.js`; when present `npc` and `p` are ignored |
+| `lang` | with `quest` only: `"es"` / `"ja"` / `"zh"` = the quest in that course language (see **Quests and pronunciation tips in other languages**); absent or `"en"` = the English quest, as before. Ignored without `quest` (a character's language comes from its id or from `p.lang`) |
 | `g` | which goal (0–9) |
 | `lv` | placement level 0–5 (omit for book-track saves) |
 | `ui` | interface language `zh` / `en` |
@@ -308,7 +318,8 @@ instructions or goal text sent by the client is ignored.**
 
 Before the session the server checks, in this order, and on failure sends `{"type":"error",...}` then closes:
 auth → consent → rate → `npc` / `quest` / `p` valid (`bad_request`, `field: "npc"`) → the character's language is one of
-`me.talkLangs` (`bad_request`, `field: "lang"`, `reason: "unsupported_lang"`, `supported: [...]`, close `4400`) → another live
+`me.talkLangs` — for a quest with `lang`: one of `me.questLangs`, and that quest has a translation —
+(`bad_request`, `field: "lang"`, `reason: "unsupported_lang"`, `supported: [...]`, close `4400`) → another live
 talk session of this account (`conflict`, `reason: "live_session"`) → daily allowance (needs at least `TALK_MIN_START_SEC`,
 default 20 seconds, left: `quota`) → provider reachable (`provider`).
 
@@ -361,7 +372,8 @@ For courses in other languages (Spanish, Japanese, Mandarin Chinese). The langua
 - a course character (`npc=es1-u1` …) carries its language in `talk-courses.js` (generated from the course sources by
   `node tools/course/build.js --talk`); the client sends only the id, exactly as for English islanders;
 - a person on the map (`npc=dyn`) speaks the language in `p.lang`;
-- quests and the islanders of `talk-npcs.js` are English.
+- a quest (`quest=<id>`) is in the language given by `lang` (next section); without `lang` it is English;
+- the islanders of `talk-npcs.js` are English.
 
 Everything that depends on the language is decided on the server by `talk-core.js` from that one field: the rules and the
 example sentences in the instructions (same safety rules as English), the voice (a native voice of that language;
@@ -384,6 +396,36 @@ The provider's input transcription is not told a language (as for English). The 
   translate (the text's language is the `ui` language: Chinese → Chinese, English → English) the answer is `400 bad_request`,
   `field: "ui"`, not counted.
 
+#### Quests and pronunciation tips in other languages — `/v1/talk?quest=`, `/v1/steps`, `/v1/tip`
+
+Side quests (`quests.js`) are written in English. In another course the client adds `lang`:
+
+- `WS /v1/talk?quest=<id>&lang=<es|ja|zh>` and `POST /v1/steps` with `{ "q": "<id>", "lang": "es", … }`.
+  The quest giver's persona, the facts and the goal stay the English originals of `quests.js` (the facts must not change);
+  the opening line, the example sentence of each step and the useful words come from the server's translation table
+  (`talk-courses.js` → `quests[lang][id]`, generated by `node tools/course/build.js --talk` from
+  `tools/course/<lang>/quests.json`). `talk-core.js` (`questNpc(q, lang, loc)`) then gives the character that language, so the
+  rules, voice, evaluation and line counting are those of **Chat language** above, with the quest rules (the learner leads,
+  the character never says a step for them). Three sentences are added for these quests only: the facts are written in
+  English and must be told faithfully in the course language; wherever the original relies on English words or grammar
+  ("May I … please", "went", "the English classroom") the equivalents in the course language are used and accepted; and, when
+  the translation entry has a `names` list (`[[English name, course-language form], …]`, taken from the course's term table),
+  "Names in this chat, written in <Language> (use exactly these forms): …".
+- **Without `lang` (or with `"en"`) the quest is the English one and the provider request is byte-for-byte as before.**
+- `lang` must be one of `me.questLangs` (§4) and the quest must have a translation in that language; otherwise
+  `400 bad_request`, `field: "lang"`, `reason: "unsupported_lang"`, `supported: [questLangs…]` (socket: `error`, then close
+  `4400`), before anything is opened or counted. An unknown quest id is still `bad_request` with `field: "npc"`.
+- `POST /v1/tip` with `{ "target": "…", "heard": "…", "ui": "zh", "lang": "ja" }`: `lang` = the language of the sentence
+  (optional; absent or `"en"` = English, the provider request is exactly as before). The prompt then names that language;
+  Japanese and Chinese are compared by reading (kanji / kana spellings or same-sound characters produced by speech
+  recognition are not mistakes; no romaji, pinyin or phonetic symbols; no comments on Chinese tones); the comment is written
+  in the `ui` language (`"zh"` Chinese — also when absent or unknown —, `"en"` English). `target` / `heard` keep that
+  language's punctuation and accents. `lang` must be one of `me.tipLangs`; otherwise the same `400` (`supported: [tipLangs…]`),
+  not counted, provider not contacted.
+- Test hook (never in production): with `TEST_HOOKS=1`, `TEST_QUESTS` (JSON, the shape of `quests` in `talk-courses.js`:
+  `{ "es": { "<id>": { "opener": "…", "steps": ["…"], "words": ["…"], "names": [["Ben", "…"]] } } }`) is merged over the built-in
+  table, so tests can use sample translations. The family relay has the same hook.
+
 ### `WS /v1/asr-rt` — realtime transcription for speaking questions
 
 URL: `wss://<host>/v1/asr-rt` or `wss://<host>/v1/asr-rt?lang=<es|ja|zh|en>` (see **Speech language** below; absent = English,
@@ -404,10 +446,10 @@ All need a session, are metered (§6) and answer `503 provider` (not counted) wh
 | Endpoint | Request | Response `200` | Meter | Gated |
 | --- | --- | --- | --- | --- |
 | `POST /v1/asr` | `{ "audio": "<base64 WAV, 16 kHz mono 16-bit>", "lang": "es" }` (≤ 1.5 MB; `lang` optional) | `{ "text": "…" }` | asr | no |
-| `POST /v1/tip` | `{ "target": "…", "heard": "…", "ui": "en" }` | `{ "tip": "…" }` | aux | no |
+| `POST /v1/tip` | `{ "target": "…", "heard": "…", "ui": "en", "lang": "ja" }` (`lang` optional: see **Quests and pronunciation tips in other languages**) | `{ "tip": "…" }` | aux | no |
 | `POST /v1/tts` | `{ "text": "…", "g": "f"\|"m", "lang": "es" }` (`lang` optional) | `{ "url": "https://…" }` (provider's audio URL, expires within hours) | aux | no |
 | `POST /v1/zh` | `{ "text": "…", "lang": "es", "ui": "zh" }` (`lang`, `ui` optional: see **Chat language**) | `{ "zh": "…" }` | aux | no |
-| `POST /v1/steps` | `{ "npc": "…", "nm": "…", "lang": "es", "q": "…", "g": 0, "ui": "en", "turns": [{ "who": "you"\|"npc", "text": "…", "typed": false }] }` (`npc`: an islander or course character id, or `"dyn"` with `nm` and optional `lang`) | `{ "done": [0, 2] }` | aux | yes |
+| `POST /v1/steps` | `{ "npc": "…", "nm": "…", "lang": "es", "q": "…", "g": 0, "ui": "en", "turns": [{ "who": "you"\|"npc", "text": "…", "typed": false }] }` (`npc`: an islander or course character id, or `"dyn"` with `nm` and optional `lang`; or `q`: a quest id, with optional `lang` for a quest in another course language) | `{ "done": [0, 2] }` | aux | yes |
 | `POST /v1/place` | `{ "id": "<placement item id>", "lang": "en", "heard": "…" }` | `{ "score": 0\|1\|2 }` | aux | yes |
 
 Every `200` also has `"quota": { "meter": "…", "left": n }`. Field meanings and limits are the relay's
@@ -432,8 +474,9 @@ For courses in other languages. `lang` is one of the codes in `me.speechLangs` (
   `reason: "unsupported_lang"`, `supported: ["en", …]`. Checked before counting: not counted, the provider is not contacted.
 - Metering, rate limits, auth and consent rules are the same for every language (one call = one count on its meter).
 - This section is about recognition and synthesis only (`me.speechLangs`). Voice chat in other languages has its own switch
-  and rules (`me.talkLangs`, **Chat language** above: `/v1/talk`, `/v1/steps`, `/v1/zh`). `/v1/tip` is unchanged (English
-  prompts); `/v1/place` keeps its own `lang` (which question bank), as before.
+  and rules (`me.talkLangs`, **Chat language** above: `/v1/talk`, `/v1/steps`, `/v1/zh`); quests and `/v1/tip` have theirs
+  (`me.questLangs`, `me.tipLangs`, **Quests and pronunciation tips in other languages**). `/v1/place` keeps its own `lang`
+  (which question bank), as before.
 
 ## 9. Reporting an AI message
 
@@ -458,8 +501,8 @@ Wrong or missing admin token → `401 auth`.
 
 ## 10. Health
 
-`GET /v1/health` → `200 { "ok": true, "version": "…", "time": "…", "speechLangs": ["en", …], "talkLangs": ["en", …] }`. No authentication.
-The two language lists are the same as in `GET /v1/me` (§4); they are here so that an app that is not signed in can tell
+`GET /v1/health` → `200 { "ok": true, "version": "…", "time": "…", "speechLangs": ["en", …], "talkLangs": ["en", …], "questLangs": ["en", …], "tipLangs": ["en", …] }`. No authentication.
+The language lists are the same as in `GET /v1/me` (§4); they are here so that an app that is not signed in can tell
 "the server can do this language, the user only needs to sign in" from "the server cannot do this language".
 
 ## 11. Limits and CORS

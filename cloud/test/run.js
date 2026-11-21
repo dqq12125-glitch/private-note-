@@ -35,8 +35,14 @@ function build() {
   const models = { asrModel: 'qwen3-asr-flash', asrRtModel: 'qwen3-asr-flash-realtime' };
   const F = await startFakes(Object.assign({ jwks: K.jwks }, models));
   const dataKey = crypto.randomBytes(32).toString('base64');
+  // 别的语言的课里的委托用小样（quests-sample.cjs）：测试钩子 TEST_QUESTS 并到 talk-courses.js 的 quests 上（同一个 id 以它为准），
+  // 正式的译文来没来测试都一样。中文的 q1-stock 故意给一条空的：有这条委托、可是这门语言的译文不全
+  const QFX = (await import('node:module')).createRequire(import.meta.url)('./quests-sample.cjs');
+  const testQuests = Object.assign(QFX.testQuests(), { zh: Object.assign(QFX.plain('zh'), { 'q1-stock': { opener: '', steps: [], words: [] } }) });
+  // 日语的那条带一张名字表（build.js --talk 从这门课的 terms 里查出来、写进 talk-courses.js 的就是这个样子）；西语、中文的不带
+  testQuests.ja['q0-cap'] = Object.assign({}, testQuests.ja['q0-cap'], { names: [['Ms Rosa', 'ロサさん'], ['Hello Island', 'あいさつの島'], ['Ben', 'ベン'], ['Fisher Tom', 'つり人のトム']] });
   const base = {
-    ENVIRONMENT: 'test', TEST_HOOKS: '1', AUTH_PEPPER: 'test-pepper',
+    ENVIRONMENT: 'test', TEST_HOOKS: '1', AUTH_PEPPER: 'test-pepper', TEST_QUESTS: JSON.stringify(testQuests),
     DASHSCOPE_API_KEY: 'sk-fake-cloud-key', DS_HTTP_BASE: F.url, DS_WS_BASE: F.url.replace(/^http/, 'ws'),
     EMAIL_PROVIDER: 'resend', RESEND_API_KEY: 're_fake_key', RESEND_API_URL: F.url + '/resend/emails', EMAIL_FROM: 'Echo Island <noreply@example.test>',
     APPLE_BUNDLE_ID: 'com.example.echoisland', APPLE_PRODUCTS: JSON.stringify({ 'test.premium.monthly': 'monthly', 'test.premium.yearly': 'yearly' }),
@@ -49,7 +55,7 @@ function build() {
   const B = await startWorker(script, Object.assign({}, base, { TALK_SESSION_MAX_SEC: '3' }), rl);
 
   let n = 0;
-  const ctx = { A, B, F, P, K, key, models, dataKey, script, rl, startWorker, uniq: tag => (tag || 'u') + (++n) + '-' + Date.now().toString(36) + '@example.test' };
+  const ctx = { A, B, F, P, K, key, models, dataKey, script, rl, startWorker, QFX, testQuests, uniq: tag => (tag || 'u') + (++n) + '-' + Date.now().toString(36) + '@example.test' };
   // 邮箱注册 / 登录一条龙：发码 → 从假邮箱里读码 → 验证。返回 { token, me, created }
   ctx.signup = async (X, o) => {
     o = o || {};

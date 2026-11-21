@@ -1,7 +1,11 @@
-// 课程内容的检查：tools/course/<语言>/{syllabus.json, towns.json, units/*.json, lines.json}，格式见 tools/course/SPEC.md（台词翻译表 §8）
+// 课程内容的检查：tools/course/<语言>/{syllabus.json, towns.json, units/*.json, lines.json, quests.json, sight.json}，格式见 tools/course/SPEC.md（台词翻译表 §8）
 // 用法：node tools/course/check.js <语言> [--towns] [--units] [--quiet]
 //       node tools/course/check.js <语言> --lines [别的 lines.json 文件]   只查台词翻译表（测试用自己的小样文件）
+//       node tools/course/check.js <语言> --quests [文件] --sight [文件]    只查委托 / 今日目击的译文（可以和 --lines 一起写）
 //   有一条「错」就退出码 1；「提醒」只打印、不算失败
+// 委托 quests.json、今日目击的线索 sight.json（tools/course/TALK.md 第二轮 A；格式写在下面两个函数前面）：
+//   文件还没有：只提醒「还没有」，不算错（生成课程时就没有这两样）。正式的那份要翻全（缺的列出来，算错）；
+//   --quests / --sight 后面另给的文件是测试的小样，缺的只提醒。同一句英语原文在几张表里的译文不一样：算错
 'use strict';
 const fs = require('fs'), path = require('path');
 const lang = process.argv[2];
@@ -212,6 +216,74 @@ const PHS = s => (String(s).match(/\{[a-z0-9]+\}/g) || []);
 // 日语 / 中文里剩下的英文词：原文里大写开头的（人名、怪兽名、地名）可以留着，别的算没翻干净
 // 西语里剩下的英语：这些词西语里没有
 const EN_ONLY = new Set("the you your is are and with this that what where here there it its it's let's don't i'm can't won't please thank thanks hello yes of to in on at for from be will can have has".split(' '));
+// 一句译文、一个词的检查（台词翻译表、委托、今日目击共用）
+const val = v => (typeof v === 'string' ? { t: v } : v && typeof v === 'object' ? v : null);
+const kana = lang !== 'es';
+// 一句（或模板）的译文：holes = 必须正好出现一次的 {…}（模板的空），vars = {name} / {rival}（个数和原文一样）
+function one(w, v, en, holes, vars) {
+  const x = val(v);
+  if (!x || !str(x.t)) { E(w, '要写译文 t'); return; }
+  const texts = [x.t].concat(x.f != null ? [x.f] : []);
+  if (x.f != null && (!holes.length || lang !== 'es')) E(w, 'f（阴性的那一句）只有西语模板能写');
+  for (const t of texts) {
+    punct(w, t);
+    const got = PHS(t), want = holes.concat(vars);
+    for (const h of holes) { const n = got.filter(g => g === h).length; if (n !== 1) E(w, h + ' 要正好出现一次（现在 ' + n + ' 次）：' + t); }
+    for (const p of new Set(vars)) { const n = got.filter(g => g === p).length, m = vars.filter(g => g === p).length; if (n !== m) E(w, p + ' 要和原文一样出现 ' + m + ' 次（现在 ' + n + ' 次）：' + t); }
+    for (const g of got) if (!want.includes(g)) E(w, '多出来的 ' + g + '（原文里没有这个空）：' + t);
+    // 剩下的英语
+    const bare = t.replace(/\{[a-z0-9]+\}/g, ' ');
+    const names = new Set((String(en).match(/\b[A-Z][A-Za-z'-]*/g) || []).map(s => s.replace(/'s$/, '')));
+    if (kana) { for (const wd of bare.match(/[A-Za-z][A-Za-z'-]*/g) || []) if (!names.has(wd.replace(/'s$/, '')) && wd !== 'OK') E(w, '还有英文词「' + wd + '」（专有名词以外要翻）：' + t); }
+    else {
+      for (const wd of bare.toLowerCase().match(/[a-z][a-z'’]*/g) || []) if (EN_ONLY.has(wd.replace(/’/g, "'"))) E(w, '还有英语的「' + wd + '」：' + t);
+      // 和英语原文一样：一个词的（音符 Sol、人名、Hmm）可能本来就一样，只提醒；一句话一样算没翻
+      const bareEn = String(en).replace(/\{[a-z0-9]+\}/g, '').trim();
+      if (lower(t.replace(/\{[a-z0-9]+\}/g, '')) === lower(bareEn) && /[a-z]{2,}/.test(bareEn)) (/\s/.test(bareEn) ? E : Wn)(w, '和英语原文一样' + (/\s/.test(bareEn) ? '，没翻' : '（一个词，确认一下是不是本来就一样）') + '：' + t);
+    }
+  }
+  // 这句自己的意思（可选，SPEC §8.2）：译文改写过、原来的意思对不上了才写；只给整句（模板的意思游戏里跟着空换）
+  for (const k of ['zh', 'en']) {
+    if (x[k] == null) continue;
+    if (holes.length) { E(w, k + '（这句的意思）只给整句写，模板不写'); continue; }
+    if (!str(x[k])) { E(w, k + '（这句的意思）要写成一句话'); continue; }
+    if (k === 'zh' && !HAN.test(x[k])) E(w, 'zh 要写中文：' + x[k]);
+    if (k === 'en' && HAN.test(x[k])) E(w, 'en 里不能有中文：' + x[k]);
+    for (const p of new Set(vars)) if (PHS(x[k]).filter(g => g === p).length !== vars.filter(g => g === p).length) E(w, k + ' 里的 ' + p + ' 要和原文一样多：' + x[k]);
+  }
+  if (!kana) { if (x.seg != null || x.r != null) Wn(w, '西语不用写 seg / r'); return; }
+  if (!Array.isArray(x.seg) || !x.seg.every(str)) { E(w, '缺 seg（把 t 切成词块，§1）'); return; }
+  if (x.seg.join('') !== x.t) E(w, 'seg 接起来和 t 不一样：' + x.seg.join('|') + ' ≠ ' + x.t);
+  if (!Array.isArray(x.r) || x.r.length !== x.seg.length) { E(w, 'r 要和 seg 一样多（' + (Array.isArray(x.r) ? x.r.length : '不是数组') + ' / ' + x.seg.length + '）'); return; }
+  x.seg.forEach((s, i) => {
+    const ph = PHS(s);
+    if (ph.length) {
+      // 空（或 {name}）自己一块，后面最多跟标点；这一块的 r 就是那个空
+      if (ph.length > 1 || s.replace(ph[0], '').replace(/[\s、。，．,.!！?？;；:：「」『』（）()…〜～“”‘’"'«»《》]/g, '') !== '') E(w, '第 ' + (i + 1) + ' 块：' + ph[0] + ' 要自己一块（后面只能跟标点）：' + s);
+      if (x.r[i] !== ph[0]) E(w, '第 ' + (i + 1) + ' 块的 r 要写 ' + ph[0] + '：' + x.r[i]);
+      return;
+    }
+    reading(w + ' 第 ' + (i + 1) + ' 块', x.r[i], s);
+  });
+}
+function term(w, v) {
+  const x = val(v);
+  if (!x || !str(x.t)) { E(w, '要写译文 t'); return; }
+  if (x.g != null && !/^[mf]$/.test(x.g)) E(w, 'g 只能是 m 或 f');
+  if (x.g != null && lang !== 'es') Wn(w, 'g（阴性 / 阳性）只给西语用');
+  if (kana) { if (!str(x.r)) E(w, '缺读音 r（一个字符串）'); else reading(w, x.r, x.t); }
+  else if (x.r != null) Wn(w, '西语不用写 r');
+}
+const own = (o, k) => !!o && typeof o === 'object' && Object.prototype.hasOwnProperty.call(o, k);
+// 同一句英语原文在几张表里（台词翻译表、委托、今日目击）的译文要一样：生成课程时都并进 LINES（键是英语原文），不一样并不到一起
+const SAME = new Map();
+function same(en, v, w) {
+  const x = val(v);
+  if (!x || !str(x.t)) return;
+  const o = SAME.get(en);
+  if (!o) SAME.set(en, { t: x.t, w });
+  else if (o.t !== x.t) E(w, '和「' + o.w + '」是同一句英语原文，译文却不一样（生成时并不到一起）：' + x.t + ' ≠ ' + o.t);
+}
 function linesJson(fileArg) {
   const f = fileArg || path.join(DIR, 'lines.json');
   if (!fs.existsSync(f)) return;
@@ -221,69 +293,13 @@ function linesJson(fileArg) {
   const SRC = read(srcF); if (!SRC) return;
   if (J.lang != null && J.lang !== lang) E('lines.json', 'lang 要是 ' + lang);
   const LI = new Map(SRC.lines.map(x => [x.id, x])), TI = new Map(SRC.templates.map(x => [x.id, x]));
-  const val = v => (typeof v === 'string' ? { t: v } : v && typeof v === 'object' ? v : null);
-  const kana = lang !== 'es';
-  // 一句（或模板）的译文：holes = 必须正好出现一次的 {…}（模板的空），vars = {name} / {rival}（个数和原文一样）
-  function one(w, v, en, holes, vars) {
-    const x = val(v);
-    if (!x || !str(x.t)) { E(w, '要写译文 t'); return; }
-    const texts = [x.t].concat(x.f != null ? [x.f] : []);
-    if (x.f != null && (!holes.length || lang !== 'es')) E(w, 'f（阴性的那一句）只有西语模板能写');
-    for (const t of texts) {
-      punct(w, t);
-      const got = PHS(t), want = holes.concat(vars);
-      for (const h of holes) { const n = got.filter(g => g === h).length; if (n !== 1) E(w, h + ' 要正好出现一次（现在 ' + n + ' 次）：' + t); }
-      for (const p of new Set(vars)) { const n = got.filter(g => g === p).length, m = vars.filter(g => g === p).length; if (n !== m) E(w, p + ' 要和原文一样出现 ' + m + ' 次（现在 ' + n + ' 次）：' + t); }
-      for (const g of got) if (!want.includes(g)) E(w, '多出来的 ' + g + '（原文里没有这个空）：' + t);
-      // 剩下的英语
-      const bare = t.replace(/\{[a-z0-9]+\}/g, ' ');
-      const names = new Set((String(en).match(/\b[A-Z][A-Za-z'-]*/g) || []).map(s => s.replace(/'s$/, '')));
-      if (kana) { for (const wd of bare.match(/[A-Za-z][A-Za-z'-]*/g) || []) if (!names.has(wd.replace(/'s$/, '')) && wd !== 'OK') E(w, '还有英文词「' + wd + '」（专有名词以外要翻）：' + t); }
-      else {
-        for (const wd of bare.toLowerCase().match(/[a-z][a-z'’]*/g) || []) if (EN_ONLY.has(wd.replace(/’/g, "'"))) E(w, '还有英语的「' + wd + '」：' + t);
-        // 和英语原文一样：一个词的（音符 Sol、人名、Hmm）可能本来就一样，只提醒；一句话一样算没翻
-        const bareEn = String(en).replace(/\{[a-z0-9]+\}/g, '').trim();
-        if (lower(t.replace(/\{[a-z0-9]+\}/g, '')) === lower(bareEn) && /[a-z]{2,}/.test(bareEn)) (/\s/.test(bareEn) ? E : Wn)(w, '和英语原文一样' + (/\s/.test(bareEn) ? '，没翻' : '（一个词，确认一下是不是本来就一样）') + '：' + t);
-      }
-    }
-    // 这句自己的意思（可选，SPEC §8.2）：译文改写过、原来的意思对不上了才写；只给整句（模板的意思游戏里跟着空换）
-    for (const k of ['zh', 'en']) {
-      if (x[k] == null) continue;
-      if (holes.length) { E(w, k + '（这句的意思）只给整句写，模板不写'); continue; }
-      if (!str(x[k])) { E(w, k + '（这句的意思）要写成一句话'); continue; }
-      if (k === 'zh' && !HAN.test(x[k])) E(w, 'zh 要写中文：' + x[k]);
-      if (k === 'en' && HAN.test(x[k])) E(w, 'en 里不能有中文：' + x[k]);
-      for (const p of new Set(vars)) if (PHS(x[k]).filter(g => g === p).length !== vars.filter(g => g === p).length) E(w, k + ' 里的 ' + p + ' 要和原文一样多：' + x[k]);
-    }
-    if (!kana) { if (x.seg != null || x.r != null) Wn(w, '西语不用写 seg / r'); return; }
-    if (!Array.isArray(x.seg) || !x.seg.every(str)) { E(w, '缺 seg（把 t 切成词块，§1）'); return; }
-    if (x.seg.join('') !== x.t) E(w, 'seg 接起来和 t 不一样：' + x.seg.join('|') + ' ≠ ' + x.t);
-    if (!Array.isArray(x.r) || x.r.length !== x.seg.length) { E(w, 'r 要和 seg 一样多（' + (Array.isArray(x.r) ? x.r.length : '不是数组') + ' / ' + x.seg.length + '）'); return; }
-    x.seg.forEach((s, i) => {
-      const ph = PHS(s);
-      if (ph.length) {
-        // 空（或 {name}）自己一块，后面最多跟标点；这一块的 r 就是那个空
-        if (ph.length > 1 || s.replace(ph[0], '').replace(/[\s、。，．,.!！?？;；:：「」『』（）()…〜～“”‘’"'«»《》]/g, '') !== '') E(w, '第 ' + (i + 1) + ' 块：' + ph[0] + ' 要自己一块（后面只能跟标点）：' + s);
-        if (x.r[i] !== ph[0]) E(w, '第 ' + (i + 1) + ' 块的 r 要写 ' + ph[0] + '：' + x.r[i]);
-        return;
-      }
-      reading(w + ' 第 ' + (i + 1) + ' 块', x.r[i], s);
-    });
-  }
-  function term(w, v) {
-    const x = val(v);
-    if (!x || !str(x.t)) { E(w, '要写译文 t'); return; }
-    if (x.g != null && !/^[mf]$/.test(x.g)) E(w, 'g 只能是 m 或 f');
-    if (x.g != null && lang !== 'es') Wn(w, 'g（阴性 / 阳性）只给西语用');
-    if (kana) { if (!str(x.r)) E(w, '缺读音 r（一个字符串）'); else reading(w, x.r, x.t); }
-    else if (x.r != null) Wn(w, '西语不用写 r');
-  }
   const lines = J.lines && typeof J.lines === 'object' ? J.lines : {}, tpls = J.templates && typeof J.templates === 'object' ? J.templates : {}, terms = J.terms && typeof J.terms === 'object' ? J.terms : {};
   for (const [id, v] of Object.entries(lines)) {
     const s = LI.get(id);
     // 原文删了 / 改了（lines-src.json 重新生成过）：这一条用不上了，只提醒（生成课程时不带它）
     if (!s) { Wn('lines.json 台词 ' + id, 'lines-src.json 里没有这个 id（原文改了或删了，这条用不上，删掉它）'); continue; }
     one('lines.json 台词 ' + id, v, s.en, [], PHS(s.en));
+    same(s.en, v, 'lines.json 台词 ' + id);
   }
   for (const [id, v] of Object.entries(tpls)) {
     const s = TI.get(id), w = 'lines.json 模板 ' + id;
@@ -318,18 +334,111 @@ function linesJson(fileArg) {
   }
 }
 
-if (flags.has('--lines')) {
-  const fa = process.argv.slice(3).find(a => /\.json$/.test(a));
-  linesJson(fa ? path.resolve(fa) : null);
+// ---------- 支线委托 quests.json（TALK.md 第二轮 A1）：英语原文在仓库根目录的 quests.js ----------
+// { "lang": "ja", "quests": { 委托 id: { ask: [条目…], note: 条目, opener: 条目, steps: [条目…], words: [词…], thanks: [条目…], bye: 条目 } } }
+// 条目和 lines.json 的整句一样写（西语字符串；日语、中文 { t, seg, r }），词是 { t, r }（西语字符串）。
+// ask / steps / words / thanks 和 quests.js 一个对一个（个数、先后一样）；note 只有 quests.js 有旁白的那几条写。
+// 正式的那份（tools/course/<语言>/quests.json）每条委托都要有；--quests 另给的文件是测试的小样，缺的只提醒
+function questsJson(fileArg) {
+  const f = fileArg || path.join(DIR, 'quests.json'), sample = !!fileArg;
+  if (!fs.existsSync(f)) { Wn('quests.json', '还没有（这门课的支线委托照旧不开）'); return; }
+  const J = read(f); if (!J) return;
+  let Q = null;
+  try { Q = require(path.join(__dirname, '..', '..', 'quests.js')); } catch (e) { Q = null; }
+  if (!Q || !Array.isArray(Q.list)) { E('quests.json', '读不了仓库根目录的 quests.js（委托的英语原文）'); return; }
+  if (J.lang != null && J.lang !== lang) E('quests.json', 'lang 要是 ' + lang);
+  const T = J.quests && typeof J.quests === 'object' && !Array.isArray(J.quests) ? J.quests : null;
+  if (!T) { E('quests.json', '要写成 { "lang": "' + lang + '", "quests": { 委托 id: { ask, opener, steps, words, thanks, bye } } }'); return; }
+  const KEYS = ['ask', 'note', 'opener', 'steps', 'words', 'thanks', 'bye'];
+  for (const id of Object.keys(T)) if (!own(Q.byId, id)) Wn('quests.json ' + id, 'quests.js 里没有这条委托（id 写错了，或者原文删了；生成时不带它）');
+  const miss = [];
+  for (const q of Q.list) {
+    const w = 'quests.json ' + q.id, x = own(T, q.id) ? T[q.id] : null;
+    if (x == null) { miss.push(q.id); continue; }
+    if (typeof x !== 'object' || Array.isArray(x)) { E(w, '要写成 { ask, opener, steps, words, thanks, bye }'); continue; }
+    for (const k of Object.keys(x)) if (!KEYS.includes(k)) Wn(w, '多出来的字段 ' + k + '（只认 ' + KEYS.join(' / ') + '）');
+    // 对话框里的固定台词（请求、旁白、感谢、做完以后的那一句）：生成时并进 LINES，键是英语原文
+    const line = (w2, v, en) => { one(w2, v, en, [], PHS(en)); same(en, v, w2); };
+    // 聊天里的话（开场白、每一步的示范句）：只查写法，不进 LINES
+    const say = (w2, v, en) => one(w2, v, en, [], PHS(en));
+    const list = (k, src, each) => {
+      const a = x[k];
+      if (!Array.isArray(a)) { E(w, '缺 ' + k + '（一列，和 quests.js 的 ' + k + ' 一个对一个）'); return; }
+      if (a.length !== src.length) E(w, k + ' 要 ' + src.length + ' 条（和 quests.js 一样多、同样的先后），现在 ' + a.length + ' 条');
+      a.slice(0, src.length).forEach((v, i) => each(w + ' ' + k + ' 第 ' + (i + 1) + ' 条', v, src[i]));
+    };
+    list('ask', q.ask, (w2, v, s) => line(w2, v, s[0]));
+    if (q.note) { if (x.note == null) E(w, '缺 note（quests.js 这条有一页旁白）'); else line(w + ' note', x.note, q.note[0]); }
+    else if (x.note != null) Wn(w, 'quests.js 这条没有旁白，note 不用写（生成时不带它）');
+    if (x.opener == null) E(w, '缺 opener（聊天的开场白）'); else say(w + ' opener', x.opener, q.opener);
+    list('steps', q.steps, (w2, v, s) => say(w2, v, s[1]));
+    list('words', q.words, (w2, v) => term(w2, v));
+    list('thanks', q.thanks, (w2, v, s) => line(w2, v, s[0]));
+    if (x.bye == null) E(w, '缺 bye（做完以后再找 TA 时说的那一句）'); else line(w + ' bye', x.bye, q.bye[0]);
+  }
+  if (miss.length) (sample ? Wn : E)('quests.json', (sample ? '小样里没有的委托 ' : '还没翻的委托 ') + miss.length + ' 条（一共 ' + Q.list.length + ' 条' + (sample ? '' : '，都要有') + '）：' + miss.join('、'));
+}
+
+// ---------- 今日目击的线索 sight.json（TALK.md 第二轮 A2）：英语原句在 tools/course/sight-src.json ----------
+// { "lang": "es", "lines": { "<英语原句，一字不差当键>": 条目 } }，条目和 lines.json 的整句一样写。
+// 正式的那份每一句都要有；--sight 另给的文件是测试的小样，缺的只提醒。
+// 线索要是真的：方向、颜色最容易翻错，译文里找不到对应的说法时提醒一句（换了别的说法就确认一遍；地形、大小、属性名机器认不出来，要人看）
+const DIRS = {
+  es: { north: /\bnorte\b/i, south: /\bsur\b/i, east: /\beste\b/i, west: /\boeste\b/i },
+  ja: { north: /北|きた/, south: /南|みなみ/, east: /東|ひがし/, west: /西|にし/ },
+  zh: { north: /北/, south: /南/, east: /东/, west: /西/ },
+};
+const COLS = {
+  es: { blue: /azul/i, green: /verde/i, grey: /gris/i, orange: /naranja|anaranjad/i, white: /blanc[oa]/i, yellow: /amarill[oa]/i, red: /roj[oa]/i },
+  ja: { blue: /青|あお|ブルー/, green: /緑|みどり|グリーン/, grey: /灰|はいいろ|グレー|ねずみ/, orange: /オレンジ|だいだい|橙/, white: /白|しろ/, yellow: /黄|きいろ/, red: /赤|あか/ },
+  zh: { blue: /蓝/, green: /绿/, grey: /灰/, orange: /橙|橘/, white: /白/, yellow: /黄/, red: /红/ },
+};
+function sightJson(fileArg) {
+  const f = fileArg || path.join(DIR, 'sight.json'), sample = !!fileArg;
+  if (!fs.existsSync(f)) { Wn('sight.json', '还没有（这门课的今日目击照旧不开）'); return; }
+  const J = read(f); if (!J) return;
+  const srcF = path.join(__dirname, 'sight-src.json');
+  if (!fs.existsSync(srcF)) { E('sight.json', '没有 tools/course/sight-src.json（今日目击的英语原句）'); return; }
+  const SRC = read(srcF); if (!SRC) return;
+  const all = Array.isArray(SRC.lines) ? SRC.lines.filter(str) : [];
+  if (J.lang != null && J.lang !== lang) E('sight.json', 'lang 要是 ' + lang);
+  const T = J.lines && typeof J.lines === 'object' && !Array.isArray(J.lines) ? J.lines : null;
+  if (!T) { E('sight.json', '要写成 { "lang": "' + lang + '", "lines": { "英语原句": 译文 } }'); return; }
+  const known = new Set(all);
+  for (const en of Object.keys(T)) if (!known.has(en)) Wn('sight.json', 'sight-src.json 里没有这一句（键要和英语原句一字不差；原句改了就删掉它，生成时不带）：' + en);
+  const miss = [];
+  all.forEach((en, i) => {
+    if (!own(T, en)) { miss.push(en); return; }
+    const w = 'sight.json 第 ' + (i + 1) + ' 句「' + en + '」';
+    one(w, T[en], en, [], []);
+    same(en, T[en], w);
+    const x = val(T[en]), t = x && str(x.t) ? x.t : '';
+    if (!t) return;
+    for (const [k, re] of Object.entries(DIRS[lang])) if (new RegExp('\\bGo ' + k + '\\b').test(en) && !re.test(t)) Wn(w, '原句是往 ' + k + ' 走，译文里没找到这个方向（方向不能翻错）：' + t);
+    for (const [k, re] of Object.entries(COLS[lang])) if (new RegExp('\\b' + k + '\\b', 'i').test(en) && !re.test(t)) Wn(w, '原句里的颜色 ' + k + ' 在译文里没找到（颜色不能翻错）：' + t);
+  });
+  if (miss.length) (sample ? Wn : E)('sight.json', (sample ? '小样里没有的线索 ' : '还没翻的线索 ') + miss.length + ' 句（一共 ' + all.length + ' 句' + (sample ? '' : '，每一句都要有') + '）：' +
+    miss.slice(0, 20).join(' | ') + (miss.length > 20 ? ' | ……' : ''));
+}
+
+// 只查某几张表：--lines / --quests / --sight，后面可以跟一个 .json（测试的小样；不跟就是这门语言正式的那份）
+const ARGV = process.argv.slice(3), ONLY = ['--lines', '--quests', '--sight'].filter(x => flags.has(x));
+const fileAfter = flag => { const i = ARGV.indexOf(flag), a = i >= 0 ? ARGV[i + 1] : ''; return a && /\.json$/i.test(a) ? path.resolve(a) : null; };
+if (ONLY.length) {
+  // 老写法「--lines 文件」文件不一定紧跟在后面：只有 --lines 一个时照旧认参数里的第一个 .json
+  const any = ONLY.length === 1 ? ARGV.find(a => /\.json$/i.test(a)) : null;
+  if (flags.has('--lines')) linesJson(fileAfter('--lines') || (any ? path.resolve(any) : null));
+  if (flags.has('--quests')) questsJson(fileAfter('--quests') || (any ? path.resolve(any) : null));
+  if (flags.has('--sight')) sightJson(fileAfter('--sight') || (any ? path.resolve(any) : null));
   if (!flags.has('--quiet')) warn.forEach(x => console.log('提醒  ' + x));
   bad.forEach(x => console.log('错    ' + x));
-  console.log((bad.length ? '✗ ' : '✓ ') + lang + ' lines.json：' + bad.length + ' 处错，' + warn.length + ' 处提醒');
+  console.log((bad.length ? '✗ ' : '✓ ') + lang + ' ' + ONLY.map(x => x.slice(2) + '.json').join(' / ') + '：' + bad.length + ' 处错，' + warn.length + ' 处提醒');
   process.exit(bad.length ? 1 : 0);
 }
 const syl = syllabus();
 if (!flags.has('--units')) towns();
 if (!flags.has('--towns')) units(syl);
-if (!flags.has('--towns') && !flags.has('--units')) linesJson();
+if (!flags.has('--towns') && !flags.has('--units')) { linesJson(); questsJson(); sightJson(); }
 if (!flags.has('--quiet')) warn.forEach(x => console.log('提醒  ' + x));
 bad.forEach(x => console.log('错    ' + x));
 console.log((bad.length ? '✗ ' : '✓ ') + lang + '：' + bad.length + ' 处错，' + warn.length + ' 处提醒');

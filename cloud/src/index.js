@@ -30,7 +30,7 @@ async function route(R) {
   const want = (...ms) => { if (!ms.includes(m)) throw new HttpError(405, 'method', 'Method not allowed'); };
   const user = () => authUser(R);
 
-  if (p === '/v1/health') { want('GET', 'HEAD'); return json(200, { ok: true, version: VERSION, time: new Date(R.now).toISOString(), speechLangs: R.cfg.speechLangs, talkLangs: R.cfg.talkLangs }); }   // 两张语言表不用登录也给：没登录的人要知道「这门语言服务器会，只差登录」
+  if (p === '/v1/health') { want('GET', 'HEAD'); return json(200, { ok: true, version: VERSION, time: new Date(R.now).toISOString(), speechLangs: R.cfg.speechLangs, talkLangs: R.cfg.talkLangs, questLangs: R.cfg.questLangs, tipLangs: R.cfg.tipLangs }); }   // 几张语言表不用登录也给：没登录的人要知道「这门语言服务器会，只差登录」
   // 登录
   if (p === '/v1/auth/email/start') { want('POST'); return json(200, await emailStart(R, await body(R))); }
   if (p === '/v1/auth/email/verify') { want('POST'); return signedIn(R, await emailVerify(R, await body(R))); }

@@ -1,7 +1,7 @@
 // 配置：全部从 Worker 的环境变量（wrangler.toml 的 [vars] + `wrangler secret put` 的秘密）读，这里只放默认值。
 // 每个名字的说明在 cloud/README.md「配置和秘密」。数字（每天几分钟、多少次、限流……）都在这里或 wrangler.toml，不写死在逻辑里。
 import { HttpError } from './util.js';
-import { CORE } from './shared.js';
+import { CORE, questTable } from './shared.js';
 
 // Apple Root CA - G3 的 SHA-256 指纹（Apple 公布的根证书列表 support.apple.com/121728：ECDSA 384 位、SHA-384、
 // 序列号 2D C5 FC 88 D2 C5 4B 95、2039-04-30 到期）。App Store 签名数据（StoreKit 2 交易、服务器通知）的证书链最后一张必须是它。
@@ -51,10 +51,15 @@ export function config(env) {
   const bundleId = String(env.APPLE_BUNDLE_ID || '');
   const voicesIn = obj(env.TTS_VOICES, {}), ttsVoices = {};
   for (const k of Object.keys(DEF_TTS_VOICES)) ttsVoices[k] = Object.assign({}, DEF_TTS_VOICES[k], voicesIn[k] || {});
+  const testHooks = String(env.TEST_HOOKS || '') === '1' && !prod;
+  // 和岛民聊天（/v1/talk，连带 /v1/steps、/v1/zh）能用哪些语言：英语打头，只留 talk-core 认得的（CORE.LANGS）；GET /v1/me 的 talkLangs 就是它
+  const talkLangs = ['en'].concat(list(env.TALK_LANGS, 'en,es,ja,zh').filter((l, i, a) => l !== 'en' && !!CORE.langOk(l) && a.indexOf(l) === i));
+  // 别的语言的课里的委托译文（talk-courses.js 的 quests）；测试钩子 TEST_QUESTS（JSON，同样的形状）并上去——测试用小样，不用等正式的译文
+  const quests = questTable(testHooks ? obj(env.TEST_QUESTS, null) : null);
   c = {
     env: ENV, prod,
-    // 测试钩子（x-test-now 请求头改「现在」、上游不限主机）：只在 TEST_HOOKS=1 且不是正式环境时打开
-    testHooks: String(env.TEST_HOOKS || '') === '1' && !prod,
+    // 测试钩子（x-test-now 请求头改「现在」、上游不限主机、TEST_QUESTS 委托译文的小样）：只在 TEST_HOOKS=1 且不是正式环境时打开
+    testHooks,
     publicUrl: String(env.PUBLIC_URL || '').replace(/\/+$/, ''),
     company: String(env.COMPANY_NAME || 'Echo of Forest Pty Ltd'),
     privacyUrl: String(env.PRIVACY_URL || ''),
@@ -89,8 +94,13 @@ export function config(env) {
     asrRt: { maxSec: num(env.ASR_RT_MAX_SEC, 15), maxB64: num(env.ASR_RT_MAX_B64, 700000) },
     // 识别（/v1/asr、/v1/asr-rt）和合成（/v1/tts）能用哪些语言：英语打头，只留 SPEECH_KNOWN 里有的；GET /v1/me 的 speechLangs 就是它
     speechLangs: ['en'].concat(list(env.SPEECH_LANGS, 'en,es,ja,zh').filter((l, i, a) => l !== 'en' && Object.prototype.hasOwnProperty.call(SPEECH_KNOWN, l) && a.indexOf(l) === i)),
-    // 和岛民聊天（/v1/talk，连带 /v1/steps、/v1/zh）能用哪些语言：英语打头，只留 talk-core 认得的（CORE.LANGS）；GET /v1/me 的 talkLangs 就是它
-    talkLangs: ['en'].concat(list(env.TALK_LANGS, 'en,es,ja,zh').filter((l, i, a) => l !== 'en' && !!CORE.langOk(l) && a.indexOf(l) === i)),
+    talkLangs,
+    // 支线委托（/v1/talk?quest=&lang=、/v1/steps 的 q + lang）能用哪些语言：QUEST_LANGS（没配 = 和 talkLangs 一样），还要 talkLangs 里开着、
+    // 服务器上真有这门语言的委托译文（没有译文的语言不报，App 就不出「?」）；英语一直在。GET /v1/me、/v1/health 的 questLangs 就是它
+    questLangs: ['en'].concat(list(env.QUEST_LANGS, talkLangs.join(',')).filter((l, i, a) => l !== 'en' && talkLangs.includes(l) && !!quests[l] && Object.keys(quests[l]).length > 0 && a.indexOf(l) === i)),
+    // AI 发音点评（/v1/tip 的 lang）能用哪些语言：TIP_LANGS（没配 = 和 talkLangs 一样），只留 talk-core 认得的；英语一直在。tipLangs 就是它
+    tipLangs: ['en'].concat(list(env.TIP_LANGS, talkLangs.join(',')).filter((l, i, a) => l !== 'en' && !!CORE.langOk(l) && a.indexOf(l) === i)),
+    quests,
     // 阿里云百炼国际版（新加坡）。模型名、地址都是配置：国际版和北京区的模型列表不一样，上线前对着控制台核对（README）
     ds: {
       key: String(env.DASHSCOPE_API_KEY || ''),
@@ -154,10 +164,15 @@ export function speechLang(c, v, names) {
 // 聊天的语言（API.md §8「Chat language」）：v 是手机说的语言代码（npc=dyn 的 p.lang、/v1/steps 和 /v1/zh 的 lang）或者角色自己的 lang。
 // 没给 / '' / 'en' = 英语（返回 ''，一切照旧）；talk-core 认得、服务器开着的 → 这个代码；别的（不认得的、TALK_LANGS 关掉的）→ 400 bad_request
 // （field lang、reason unsupported_lang、supported 列出能用的），和识别 / 合成的 lang 一个样：不扣额度、不连上游
-export function talkLang(c, v) {
+export function talkLang(c, v) { return langIn(c.talkLangs, v); }
+// 委托的语言（/v1/talk?quest= 的 lang、/v1/steps 带 q 时的 lang）、发音点评的语言（/v1/tip 的 lang）：规矩和 talkLang 一样，各看各的那张表
+export function questLang(c, v) { return langIn(c.questLangs, v); }
+export function tipLang(c, v) { return langIn(c.tipLangs, v); }
+export const noLang = supported => new HttpError(400, 'bad_request', 'Unsupported language', { field: 'lang', reason: 'unsupported_lang', supported: supported.slice() });
+function langIn(langs, v) {
   if (v === undefined || v === null || v === '' || v === 'en') return '';
   const l = CORE.langOk(v);
-  if (!l || !c.talkLangs.includes(l)) throw new HttpError(400, 'bad_request', 'Unsupported language', { field: 'lang', reason: 'unsupported_lang', supported: c.talkLangs.slice() });
+  if (!l || !langs.includes(l)) throw noLang(langs);
   return l;
 }
 

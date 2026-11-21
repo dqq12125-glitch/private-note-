@@ -9,6 +9,8 @@
 // - 按能力走的学习者：手机在 /talk 上多发 lv（0–5）和 ui（界面语言代码），岛民「这一级怎么说话」由 talk-core 在这里拼
 // - 别的语言的课（西语 / 日语 / 中文，tools/course/TALK.md）：/talk 的 npc 可以是 ../talk-courses.js 里的角色 id，dyn 的 p 里可以带 lang；
 //   /steps 认课程角色、/zh 多收 lang 和 ui；/health 的 talkLangs 说这里会用哪些语言聊天（TALK_LANGS 可关，英语一直在）
+// - 第二轮：别的语言的课里的委托 /talk?quest=<id>&lang=<语言>、/steps 的 q + lang（人设还是 quests.js 的英文原文，开场白 / 示范句 / 词
+//   用 ../talk-courses.js 的 quests 里这门语言的那一条）；/tip 多收 lang（别的语言的发音点评）；/health 多 questLangs、tipLangs
 // 启动：cd server && npm install && node relay.js   （默认端口 8787；PORT 可改）
 'use strict';
 const http = require('http');
@@ -73,9 +75,28 @@ function talkLang(v) {
   const l = CORE.langOk(v);
   return l && TALK_LANGS.includes(l) ? l : null;
 }
-const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const own = (o, k) => !!o && typeof o === 'object' && Object.prototype.hasOwnProperty.call(o, k);
 // 岛民：先查英语的表，再查别的语言的课的角色（只认自己的键）
 const npcById = id => (own(NPCS.byId, id) ? NPCS.byId[id] : own(COURSES.byId, id) ? COURSES.byId[id] : undefined);
+// 别的语言的课里的委托译文（tools/course/TALK.md 第二轮）：talk-courses.js 的 quests——{ 语言: { 委托 id: { opener, steps, words } } }，
+// build.js --talk 从 tools/course/<语言>/quests.json 生成。测试钩子（和公开版服务器 cloud/ 同名）：TEST_HOOKS=1 时把 TEST_QUESTS（JSON，同样的形状）
+// 并上去，同一个 id 以它为准——测试用小样，不用等正式的译文；平时不用设
+const QUEST_L = (() => {
+  const out = {};
+  let extra = null;
+  if (cfg('TEST_HOOKS') === '1') { try { extra = JSON.parse(cfg('TEST_QUESTS') || 'null'); } catch (e) { extra = null; } }
+  for (const src of [COURSES.quests, extra]) {
+    if (!src || typeof src !== 'object') continue;
+    for (const l of Object.keys(src)) if (CORE.langOk(l) === l && src[l] && typeof src[l] === 'object') out[l] = Object.assign(out[l] || {}, src[l]);
+  }
+  return out;
+})();
+// 支线委托会用哪些语言：QUEST_LANGS（没配 = 和 TALK_LANGS 一样），还要 TALK_LANGS 里开着、这里真有这门语言的委托译文；英语一直在。/health 的 questLangs 就是它
+const QUEST_LANGS = ['en'].concat(String(cfg('QUEST_LANGS') || TALK_LANGS.join(',')).split(',').map(s => s.trim()).filter((l, i, a) => l !== 'en' && TALK_LANGS.includes(l) && own(QUEST_L, l) && Object.keys(QUEST_L[l]).length > 0 && a.indexOf(l) === i));
+// AI 发音点评（/tip 的 lang）会用哪些语言：TIP_LANGS（没配 = 和 TALK_LANGS 一样），只留 talk-core 认得的；英语一直在。/health 的 tipLangs 就是它
+const TIP_LANGS = ['en'].concat(String(cfg('TIP_LANGS') || TALK_LANGS.join(',')).split(',').map(s => s.trim()).filter((l, i, a) => l !== 'en' && !!CORE.langOk(l) && a.indexOf(l) === i));
+// 委托 / 点评的语言：规矩和 talkLang 一样（没给 / 'en' = 英语 ''；不认得的、没开的 → null），各看各的那张表
+const langIn = (langs, v) => { if (v === undefined || v === null || v === '' || v === 'en') return ''; const l = CORE.langOk(v); return l && langs.includes(l) ? l : null; };
 if (!KEY) { console.error('没有找到 DASHSCOPE_API_KEY（环境变量或 KEY_FILE / server/.env）'); process.exit(1); }
 
 // ---------- 用量（每台设备每天的秒数），存盘防重启清零 ----------
@@ -136,9 +157,15 @@ function personNpc(p) {
   return CORE.personNpc(d);
 }
 // 支线委托：只认 quests.js 里有的 id（没有这条就当没有这个岛民）
-function questNpc(id) {
+// 别的语言的课：langRaw 是手机说的语言代码（/talk 的 lang、/steps 的 lang）。没给 / en = 英语，和以前一字不差；
+// 这门语言这里不会（QUEST_LANGS）、或者这条委托没有这门语言的译文 → 'lang'（调用的地方回「lang」的错，不连阿里云）
+function questNpc(id, langRaw) {
   id = String(id || '');
-  return Object.prototype.hasOwnProperty.call(QUESTS.byId, id) ? CORE.questNpc(QUESTS.byId[id]) : null;
+  if (!own(QUESTS.byId, id)) return null;
+  const lang = langIn(QUEST_LANGS, langRaw);
+  if (lang === null) return 'lang';
+  if (!lang) return CORE.questNpc(QUESTS.byId[id]);
+  return (own(QUEST_L[lang], id) && CORE.questNpc(QUESTS.byId[id], lang, QUEST_L[lang][id])) || 'lang';
 }
 async function evaluate(npc, turns, o) {
   // 聊完后让文字模型给个温和的评价（中文），失败就不给（talk-core 的 session 再按小步骤和「开口说了几句」定完成没有）
@@ -162,7 +189,8 @@ const server = http.createServer((req, res) => {
   if (u.pathname === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     // talkLangs：这里会用哪些语言聊天（别的语言的课看它决定开不开聊天；老的中转服务没有这个字段 = 只会英语）
-    return res.end(JSON.stringify({ ok: true, model: MODEL, code: !!ACCESS_CODE, npcs: NPCS.list.map(n => n.id), talkLangs: TALK_LANGS }));
+    // questLangs / tipLangs：支线委托、AI 发音点评会用哪些语言（没有这两个字段 = 只有英语的）
+    return res.end(JSON.stringify({ ok: true, model: MODEL, code: !!ACCESS_CODE, npcs: NPCS.list.map(n => n.id), talkLangs: TALK_LANGS, questLangs: QUEST_LANGS, tipLangs: TIP_LANGS }));
   }
   if (u.pathname === '/logs') {
     if (ADMIN_TOKEN ? u.searchParams.get('token') !== ADMIN_TOKEN : !isLocal(req)) { res.writeHead(403); return res.end('forbidden'); }
@@ -227,11 +255,12 @@ function cloudHelp(u, req, res) {
       }
       if (u.pathname === '/steps') {   // 聊天中实时打勾
         // 别的语言的课：npc 可以是课程角色的 id；npc=dyn 时 lang 说那个人说哪门语言（没给 = 英语）
+        // q（委托的 id）+ lang：别的语言的课里的委托（这门语言这里不会、或者没有这条的译文：400 lang）
         const dl = !j.q && j.npc === 'dyn' ? talkLang(j.lang) : '';
         if (dl === null) return bad(400, 'lang');
-        const npc = j.q ? questNpc(j.q) : j.npc === 'dyn' ? CORE.personNpc({ name: j.nm, lang: dl }) : npcById(j.npc);
+        const npc = j.q ? questNpc(j.q, j.lang) : j.npc === 'dyn' ? CORE.personNpc({ name: j.nm, lang: dl }) : npcById(j.npc);
         if (!npc) return bad(400, 'npc');
-        if (talkLang(npc.lang) === null) return bad(400, 'lang');   // 课程角色的语言这里没开
+        if (npc === 'lang' || talkLang(npc.lang) === null) return bad(400, 'lang');   // 课程角色的语言这里没开
         const cl = npc.lang ? CORE.cleanText : clean;
         const turns = (Array.isArray(j.turns) ? j.turns : []).slice(-30).map(t => ({ who: t && t.who === 'you' ? 'you' : 'npc', text: cl(t && t.text, 300), typed: !!(t && t.typed) })).filter(t => t.text);
         const g = CORE.goalOf(npc, j.g), body = CORE.stepsBody(npc, g.i, turns, j.ui);   // ui：只认 talk-core 认得的界面语言
@@ -268,10 +297,13 @@ function cloudHelp(u, req, res) {
           res.writeHead(url ? 200 : 502, cors); return res.end(JSON.stringify(url ? { url } : { url: '', error: 'upstream', up: String(o.code || r.status).slice(0, 40) }));
         } finally { clearTimeout(tm); }
       }
-      const target = clean(j.target, 200), heard = clean(j.heard, 200);
+      // 别的语言的课的发音点评：lang = 这句话是哪门语言（没给 / en = 英语，和以前一字不差）；这里不会的（TIP_LANGS）→ 400 lang
+      const tl = langIn(TIP_LANGS, j.lang); if (tl === null) return bad(400, 'lang');
+      const tcl = tl ? CORE.cleanText : clean;   // 别的语言留着这门语言的标点和重音符号
+      const target = tcl(j.target, 200), heard = tcl(j.heard, 200);
       if (!target || !heard) return bad(400, 'text');
       // 点评的提示词在 talk-core（和 APK 直连同一份）：按界面语言 ui 写，没给 = 中文
-      const body = CORE.tipBody(target, heard, j.ui); body.model = EVAL_MODEL;
+      const body = CORE.tipBody(target, heard, j.ui, tl); body.model = EVAL_MODEL;
       const r = await call(body, EVAL_URL);   // 和 /zh、/steps 一样走 EVAL_URL（默认就是阿里云；测试里是假的上游）
       res.writeHead(200, cors); res.end(JSON.stringify({ tip: CORE.parseTip(r, j.ui) }));
     } catch (e) { res.writeHead(502, cors); res.end(JSON.stringify({ error: 'upstream', up: e.up || '' })); }
@@ -376,7 +408,8 @@ wss.on('connection', (cli, req) => {
   if (ACCESS_CODE && u.searchParams.get('code') !== ACCESS_CODE) return fail('家庭口令不对，请在设置里填好', 'code');
   // 带着 quest= 的是支线委托：按 id 从 quests.js 里拼人设，手机一起发来的 npc / p 都不看
   // 别的语言的课：npc 可以是 talk-courses.js 里的角色 id；dyn 的 p 里可以带 lang。这门语言这里没开 → 「lang」的错，不连阿里云
-  const npc = u.searchParams.get('quest') ? questNpc(u.searchParams.get('quest'))
+  // 别的语言的课里的委托：quest=<id>&lang=<语言>（没带 lang = 英语的委托，和以前一字不差）
+  const npc = u.searchParams.get('quest') ? questNpc(u.searchParams.get('quest'), u.searchParams.get('lang'))
     : u.searchParams.get('npc') === 'dyn' ? personNpc(u.searchParams.get('p')) : npcById(u.searchParams.get('npc'));
   if (!npc) return fail('没有这个岛民', 'npc');
   if (npc === 'lang' || talkLang(npc.lang) === null) return fail('这里还不会用这门语言聊天', 'lang');

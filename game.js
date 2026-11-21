@@ -672,6 +672,8 @@
       'g.push.l.chat.c': '🗣️ 和岛民聊天 {a} 段，用语音说了 {b} 句{lang}', 'g.rp.hb.look.c': ' · 看意思 {a} 次 · 帮帮我 {b} 次',
       // 一句有多长：日语、中文数的是字（西语和英语一样数词）
       'g.rp.ab.a.ch': '<p class="rp-ab">💪 <b>能力</b>（和上周比）：每句 {n} 个字', 'g.rp.hb.max.ch': '（最长一句 {n} 个字）', 'g.push.l.max.ch': '（最长一句 {n} 个字）',
+      // 第二轮（TALK.md）：别的课里今日目击的线索是这门语言的
+      'g.ach.sight1.d.c': '读懂{lang}线索，收服 1 只「今日目击」的怪兽',
 
       // —— 字表结束 ——
     },
@@ -1299,6 +1301,7 @@
       'g.adv.stop.pass.p.c': { one: 'There was no internet today (or chat could not connect), so you had {n} minute of adventure first. Get online and chat with islanders in {lang} to carry on.', other: 'There was no internet today (or chat could not connect), so you had {n} minutes of adventure first. Get online and chat with islanders in {lang} to carry on.' },
       'g.push.l.chat.c': '🗣️ Chats with islanders: {a}, lines of {lang} spoken: {b}', 'g.rp.hb.look.c': ' · Meanings looked up: {a} · "Help me" used: {b}',
       'g.rp.ab.a.ch': '<p class="rp-ab">💪 <b>Skills</b> (compared with last week): characters per line {n}', 'g.rp.hb.max.ch': ' (longest: {n} characters)', 'g.push.l.max.ch': ' (longest: {n} characters)',
+      'g.ach.sight1.d.c': 'Read the {lang} clues and catch 1 monster from Today\'s Sighting',
 
       // —— 字表结束 ——
     },
@@ -1353,8 +1356,55 @@
     LEX = EchoLang.lexicon(COURSE, [...ENTRY.values()]);
     // 台词翻译表（course.json 的 LINES / LINES_T / TERMS，tools/course/SPEC.md §8）：没有就是 null，写死的英语照 ENGINE.md §5 的过渡办法
     LTAB = window.EchoPacks && EchoPacks._ && EchoPacks._.lineTable ? EchoPacks._.lineTable(c) : null;
+    // 支线委托在这门语言里的开场白、示范句、词卡（course.json 的 QUESTS，tools/course/TALK.md 第二轮）：老的课程包没有 = null，委托照旧不出
+    CQ = c.QUESTS && typeof c.QUESTS === 'object' && !Array.isArray(c.QUESTS) ? c.QUESTS : null;
+    CQN = {};
   }
-  let LTAB = null;
+  let LTAB = null, CQ = null, CQN = {};
+  // ---------- 别的课的支线委托：这门语言的那几样（course.json 的 QUESTS）----------
+  // QUESTS[委托 id] = { opener 开场白, steps: [示范句…]（和 quests.js 的 steps 一步对一步）, words: [[这门语言的词, 中文, 英文]…] }；
+  // 句子、词可以是字符串，也可以带读音：{ t, r }（词）/ { t, seg, r }（句子）——两种都认。
+  // questLoc(id) → { opener, steps: [文字…], words: [{ t, zh, en }] }；带读音的顺手登记进条目表 ENTRY（标读音 ruby / rubyLine、朗读 say 就认得它）。
+  // 英语课、老的课程包、这一条没写 / 写得不对：null（world.js 的 QL() 就不出这条委托）
+  function questLoc(id) {
+    if (!LANG || !CQ || typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(CQ, id)) return null;
+    if (CQN[id] !== undefined) return CQN[id];
+    const q = CQ[id];
+    const one = (v, zh, en) => {
+      const x = typeof v === 'string' ? { t: v } : v && typeof v === 'object' && !Array.isArray(v) && typeof v.t === 'string' ? v : null, t = x ? x.t.trim() : '';
+      if (!t) return '';
+      const e = {};
+      if (Array.isArray(x.seg) && Array.isArray(x.r) && x.seg.length === x.r.length && x.seg.join('') === x.t) { e.seg = x.seg; e.r = x.r; }
+      else if (typeof x.r === 'string' && x.r.trim()) e.r = x.r;
+      if (en) e.en = String(en);
+      if (e.seg || e.r || zh || en) entryAdd(t, e, zh ? String(zh) : '');
+      return t;
+    };
+    let out = null;
+    if (q && typeof q === 'object' && Array.isArray(q.steps) && q.steps.length) {
+      const opener = one(q.opener), steps = q.steps.map(s => one(s));
+      // 词卡的意思：中文那份是 quests.js 里给学英语的人写的，有的带着讲英语的括号（「去了（go 的过去式）」）——带拉丁字母的括号部分去掉；
+      // 英文那份就是 quests.js 的那个英语词
+      const zhClean = s => String(s).replace(/\s*[（(][^（()）]*[A-Za-z][^（()）]*[）)]/g, '').trim();
+      const words = (Array.isArray(q.words) ? q.words : []).map(w => {
+        const a = Array.isArray(w) ? w : [w, w && w.zh, w && w.en], zh = typeof a[1] === 'string' ? zhClean(a[1]) : '', en = typeof a[2] === 'string' ? a[2] : '';
+        return { t: one(a[0], zh, en), zh, en };
+      }).filter(w => w.t);
+      // names（可以没有）：这条委托的英文原文里出现的名字在这门课里怎么写 [[英语名, 写法]…]（build.js 按台词翻译表的词配的）——
+      // 界面上的目标说明是 quests.js 的中文 / 英文那两份，里面的人名、地名照它换（questNames）
+      const names = (Array.isArray(q.names) ? q.names : []).filter(p => Array.isArray(p) && typeof p[0] === 'string' && p[0] && typeof p[1] === 'string' && p[1] && p[0] !== p[1]).map(p => [p[0], p[1]]);
+      if (opener && steps.every(Boolean)) out = { opener, steps, words, names };
+    }
+    return (CQN[id] = out);
+  }
+  // 委托的目标说明（quests.js 的 goal / goalZh）里的名字换成这门课的写法：整个名字才换、长的先配（「Fisher Tom」先于「Tom」）。
+  // 英语课、没有名字表：原样
+  function questNames(id, s) {
+    const loc = LANG ? questLoc(id) : null;
+    if (!loc || !loc.names.length || typeof s !== 'string') return s;
+    const m = new Map(loc.names), ks = [...m.keys()].sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    return s.replace(new RegExp('(^|[^A-Za-z])(' + ks.join('|') + ')(?![A-Za-z])', 'g'), (all, pre, k) => pre + m.get(k));
+  }
   // ---------- 读音（日语、中文：ENGINE.md §3「读音」）----------
   // E.ruby(原文) → HTML：找得到条目就按词块标读音（真的 <ruby>），找不到就原样（转义过）。西语、关掉了「读音」的、英语课都原样
   const rubyOn = () => !!LANG && LANG.script !== 'latin' && S.settings.ruby !== false;
@@ -2186,7 +2236,9 @@
   }
   // AI 老师点评：没说好（低于 90 分）时，把目标句子和听到的话交给 AI，给一句中文建议，接在「我听到」后面
   function aiTip(target, heard, el) {
-    if (LANG) return;   // 别的课：AI 发音点评的提示词还只会英语，这一步先关掉（ENGINE.md §4）
+    // 别的课（TALK.md 第二轮）：服务器会用这门语言写点评（它的 tipLangs 里有这门语言，talk.js 的 tipOk）才出，请求里带上语言；
+    // 不会（老服务器没有这个字段、APK 直连）：和以前一样没有点评
+    if (LANG && !(window.EchoTalk && EchoTalk.tipOk && EchoTalk.tipOk())) return;
     if (!heard || !el || !window.EchoTalk || !EchoTalk.aiTip) return;
     try { const L = dayLog(); L.tipN = (L.tipN || 0) + 1; } catch (e) { /* 周报用的计数 */ }
     EchoTalk.aiTip(target, heard).then(tip => { if (tip && el.isConnected && !el.querySelector('.ai-tip')) el.insertAdjacentHTML('beforeend', '<span class="ai-tip">💡 ' + esc(tip) + ' <i class="ai-mark" title="' + esc(tr('g.sr.aimark')) + '">AI</i></span>'); });   // AI 生成的点评标上「AI」
@@ -3343,6 +3395,19 @@
       (vb.old ? '<p class="tip">' + trh('g.unit.old', { b: bookShort(vb) }) + '</p>' : '') + '</div>' +
       BK.map((x, j) => x.book === vb.id ? worldHTML(x, NB + j, bookNode()) : '').join('');
   }
+  // 别的课的「今日目击」卡片（TALK.md 第二轮 C）：monsters.js 的首页在别的课里不放它（那一行还写着「别的语言的课先不出」），
+  // 这门课有线索的译文时（EchoSight.on()）在这里补上——和英语课同一个位置：「传说的线索」前面；没有那张卡片就放在「飞去哪」上面那行小提示前面。
+  // 今天的线索查不到译文、还没开始冒险：homeCard() 给的是空的，什么都不加。英语课不走这里
+  function sightHome() {
+    try {
+      const ES = window.EchoSight, box = $('#mon-home');
+      if (!LANG || !ES || !ES.on || !ES.on() || !box || !(S.world && S.world.started) || $('.sight', box)) return;   // 已经有这张卡片了（monsters.js 以后自己放的话）：不放第二张
+      const h = ES.homeCard();
+      if (!h) return;
+      const tips = $$(':scope > p.tip:not(.obj)', box), at = $(':scope > .mon-card.legends', box) || (tips.length >= 2 ? tips[tips.length - 2] : null);
+      if (at) at.insertAdjacentHTML('beforebegin', h); else box.insertAdjacentHTML('beforeend', h);
+    } catch (e) { console.error(e); }
+  }
   function renderHome() {
     renderTop();
     homeBars();   // AI 用不了的红条、有新版本
@@ -3356,7 +3421,7 @@
     $('#quiz-home').hidden = tab !== 'quiz';
     $('#talk-home').hidden = tab !== 'talk';
     if (tab === 'talk') { $('#talk-home').innerHTML = EchoTalk.homeHTML(); return; }
-    if (tab === 'mon') { $('#mon-home').innerHTML = MonsterGame.homeHTML(); MonsterGame.afterHome(); return; }
+    if (tab === 'mon') { $('#mon-home').innerHTML = MonsterGame.homeHTML(); if (LANG) sightHome(); MonsterGame.afterHome(); return; }
     const book = BK.length && S.book.view !== 'isle';
     const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">' + trh(LANG ? 'g.home.qv.course' : 'g.home.qv.book') + '</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">' + trh('g.home.qv.isle') + '</button></div>' : '';
     const cur = currentNode();
@@ -5045,6 +5110,10 @@
       lang: LANG, course: COURSE, entryOf, ruby: t => rb(t), meanText, learnLine,
       // rubyLine(原文)：聊天里的示范句、词卡、开场白（课程的 TALK 没带读音：按课程里写过的读音标，对不上的不标；talk.js 用）
       rubyLine: t => (LANG ? rubyLine(t) : esc(t)),
+      // 第二轮（TALK.md）：questLoc(委托 id) 这条委托在这门语言里的开场白、示范句、词卡（course.json 的 QUESTS；没有是 null）；
+      // lexNow() 整门课的读音表（talk.js 问日语模块「这句读不读得出来」时交给它）
+      // questNames(委托 id, 目标说明) 把说明里的名字换成这门课的写法（课程包给了名字表才换）
+      questLoc, questNames, lexNow: () => LEX,
       // 台词翻译表（tools/course/SPEC.md §8）：lineOf(英语原文, { zh, fill, swap }) → { t, seg, r, en, zh, mean } 或 null；courseWord(意思, 'zh'|'en') 把「英语」换成在学的语言
       lineOf, courseWord,
       // 画面上的名字（SPEC §8.1）：termOf(类别, 英文) 文字、termHTML(类别, 英文) 带读音的 HTML；英语课 / 没翻：英文

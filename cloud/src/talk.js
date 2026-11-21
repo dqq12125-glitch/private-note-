@@ -12,7 +12,7 @@ import { requireConsent } from './me.js';
 import { wsLimit } from './ratelimit.js';
 import { take, refund, talkOpen, talkBeat, talkClose, talkDrop, resetAt } from './quota.js';
 import { dsSocket, dsPost, EVAL_PATH } from './upstream.js';
-import { speechLang, talkLang } from './config.js';
+import { speechLang, talkLang, questLang, noLang } from './config.js';
 
 // 给学习者看的一句话（按这段的界面语言；没有的语言用英文）
 const SAY = {
@@ -85,8 +85,15 @@ const clock = R => () => R.now + (Date.now() - R.t0);
 // 按 id 拼人设：和 relay.js 一模一样的取法（quest 优先，其次 dyn + p，再次 npc）
 // 别的语言的课：npc 可以是 talk-courses.js 里的角色 id（npcById 先查英语的表、再查它）；dyn 的 p 里可以带 lang。
 // 语言服务器不认 / 没开（cfg.talkLangs）→ talkLang 抛 400（field lang、unsupported_lang）；cfg 没给时不查（只拼人设）
+// 委托（quest=<id>）：别的语言的课多带 lang=<语言>（没带 / en = 英语，和以前一字不差）。这门语言不在 cfg.questLangs 里、
+// 或者这条委托没有这门语言的译文 → 400 unsupported_lang（supported 是 questLangs）；没有这条委托照旧是「没有这个岛民」
 export function npcFrom(qs, cfg) {
-  if (qs.get('quest')) return questNpc(qs.get('quest'));
+  if (qs.get('quest')) {
+    const lang = cfg ? questLang(cfg, qs.get('lang')) : '';
+    const npc = questNpc(qs.get('quest'), lang, cfg && cfg.quests);
+    if (npc === undefined) throw noLang(cfg.questLangs);
+    return npc;
+  }
   if (qs.get('npc') === 'dyn') {
     const d = b64json(qs.get('p') || '');
     if (d && typeof d === 'object' && cfg) talkLang(cfg, d.lang);

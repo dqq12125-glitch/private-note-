@@ -123,7 +123,7 @@ The field commands said to monsters are done (templates): "¡{mon}, corta el ár
 
 ### Monster types (`terms.type`)
 
-fire **fuego**, water **agua**, grass **hierba** (not "planta"), electric **eléctrico**. Pattern: "{mon} es de tipo {type}." For other types in free text: hielo, roca, tierra, volador, fantasma, dragón, acero, veneno, bicho, psíquico, lucha, normal, oscuro.
+fire **fuego**, water **agua**, grass **hierba** (not "planta"), electric **eléctrico**. Pattern: "{mon} es de tipo {type}." For other types in free text: hielo, roca, tierra, volador, fantasma, dragón, acero, veneno, bicho, normal, and **kungfú** (Kungfu), **mente** (Mind), **sombra** (Shadow).
 
 ### Battle phrases
 
@@ -312,3 +312,124 @@ The radio-order options (Sol / Lluvia / Viento in different orders) stay as they
 | Use a Quiet Spray, and wild monsters will not hear you. | Usa un Spray Silencio y los monstruos salvajes no te van a oír. | ir a + infinitive |
 | Tickturtle, I am ready! (speak) | ¡Tickturtle, aquí estoy! | short, gender-free |
 | You are a true Champion! Take this. | ¡Tú sí sabes ganar! Toma esto. | gender-free |
+
+## 11. Side quests and Today's Sighting (round 2, 2026-11-21)
+
+Two new files, contract in `tools/course/TALK.md` (second round, part A):
+
+- **`quests.json`**: the 17 side quests of `quests.js` (`ask`, `note`, `opener`, the model sentence of each step, `words`, `thanks`, `bye`). The persona and the goal stay in English on the server, so every fact in a model sentence has to match the persona.
+- **`sight.json`**: the 157 clue lines of `tools/course/sight-src.json`. The clues are built from half-sentences, and each English half-sentence has exactly one Spanish form (table below). When the templates in `sighting.js` change, translate the new half-sentence once and reuse it.
+
+### Quest terms
+
+| English | Spanish | Note |
+| --- | --- | --- |
+| the owner (of the cap) | el dueño | "¿De quién?" for *whose* |
+| visitor | la visita | works for a man or a woman, as in the story lines |
+| island greeter / "you will be the greeter" | recibir a las visitas: "Yo recibo a las visitas de la isla", "tú me recibes" | no noun, so nothing agrees with the player |
+| my lines (what I have to say) | qué decir / lo que tengo que decir | |
+| lost and found | objetos perdidos | as in the story lines |
+| stationery store | la papelería | |
+| eraser | la goma de borrar | as in the story lines |
+| pencil box | el estuche | as in the story lines |
+| the list | la lista | |
+| duck / little pig | el pato / el cerdito | |
+| windmill | el molino (de viento) | |
+| farm gate, school gate | la puerta | same word as the puzzle gates |
+| by the river | cerca del río | course phrase *cerca de* |
+| next to / across from / behind | al lado de / enfrente de / detrás de | course phrases |
+| classroom | el salón (de clases) | "el salón de inglés" in quest q3-way (see `review.md`) |
+| on the second floor | en el segundo piso | as in the story lines |
+| school sports day | el día del deporte | lower case; the Sports Island event keeps "Día del Deporte" |
+| notice board | el tablero de avisos | |
+| PE room | el cuarto de deportes | |
+| a bad / better mark | una mala nota / una mejor nota (sacar una nota) | |
+| maths club, art club | el club de matemáticas, el club de arte | |
+| club show | la exposición del club | |
+| come for tea / tea time | venir a tomar el té / la hora del té | |
+| o'clock | en punto | "a las cuatro en punto" |
+| surprise party / party bag | la fiesta sorpresa / la bolsa de fiesta | |
+| noodles / beef noodles | los fideos / los fideos con carne | as in the story lines |
+| bowls of / glasses of | tazones de / vasos de | |
+| orange juice | el jugo de naranja | |
+| food stall | el puesto de comida | *puesto* is a unit 4 word |
+| Animal Park | Parque de Animales | as in the story lines |
+| the river road | el camino del río | |
+| mask (on Nightpaw's face) | la máscara | same word as Nightpaw's handbook line |
+| bin | el basurero | |
+| tree house | la casa del árbol; plural in the clues: casas en los árboles | |
+| City Garden | el Jardín de la Ciudad | new |
+| Snow Mountain | la Montaña de Nieve | new; same pattern as Campo de Nieve |
+| weather report | el pronóstico | as in the story lines |
+| the (weather) station | la Estación del Clima | `terms.place` |
+| ice lake | el lago de hielo | as in the story lines |
+| warm coat / gloves | el abrigo / los guantes | |
+| photo album | el álbum de fotos | |
+| fog | la niebla | |
+| my old partner (a monster) | mi viejo compañero | |
+| Mayor Tick, Coach Tom (inside a sentence) | el alcalde Tick, el entrenador Tom | lower-case title, as in §3 |
+
+Gender-neutral wording used for the player in the quests:
+
+- "You are a good trainer" → "Tú entrenas muy bien."
+- "A good trainer should have it" / "a good trainer like you" / "for a brave trainer" → "Es para alguien que cuida bien a los monstruos." / "Necesita a alguien como tú." / "para alguien valiente".
+- "You are a great greeter" → "¡Recibes muy bien a las visitas!"
+- "A good planner / helper gets…" → "Quien planea bien recibe…" / "Quien ayuda bien recibe…"
+- "You are good at this" / "good with time" → "Tú sabes hacer esto muy bien." / "Sabes organizar muy bien el tiempo."
+- "You were polite" → "Fuiste muy amable"; "ask politely" → "pedir amablemente".
+- "young trainer" → "joven"; "dear" → "cariño" (§9).
+- The learner's own line "¡Bienvenido a Isla Hola!" keeps the masculine, because it is said to a known man (the visitor Finn).
+
+Word cards (`words`): nouns carry their article, as in the course units (la gorra, los lápices). Verbs and phrases are written in the form the learner needs in this chat (sabes, almuerzas, fuiste, está comiendo). Sentence frames end in "…" like the unit words (voy a…, ¿Puedo…?, no…).
+
+### Sighting clues: one form per half-sentence
+
+| English | Spanish |
+| --- | --- |
+| It hides in the tall grass. | Se esconde en la hierba alta. |
+| It hides in the cave. Walk around inside. | Se esconde en la cueva. Tienes que caminar por adentro. |
+| It hides in the seaweed. | Se esconde en las algas. |
+| It swims on top of the water. Ride on the water to find it. | Va nadando sobre el agua. Tienes que ir por el agua para encontrarlo. |
+| It is a / an X monster. | Es un monstruo de tipo X. |
+| It is blue. (any colour) | Es de color azul. (rojo, naranja, amarillo, verde, blanco, gris) |
+| It is big. / It is very small. | Es grande. / Es muy pequeño. |
+| It walks on four legs. / It stands on two legs. | Camina en cuatro patas. / Se para en dos patas. |
+| It looks like a bird / a fish / a bug / a plant / a little ghost. | Parece un pájaro / un pez / un bicho / una planta / un fantasma pequeño. |
+| It has a long body like a snake. | Tiene el cuerpo largo como una serpiente. |
+| It has a shell on its back. | Tiene un caparazón en la espalda. (never "concha", §4) |
+| It is round like a ball. | Es redondo como una pelota. |
+| It is on an island. | Está en una isla. |
+| There are A and B there. | Allí hay A y B. (", y" when A already has a "y") |
+| People there … | Allí la gente … / Allí a la gente le encanta(n) … |
+| It is on a road / on a sandy road / on a road by the sea / by a river / around the farms. | Está en un camino / en un camino de arena / en un camino junto al mar / junto a un río / alrededor de las granjas. |
+| in the woods / on a beach / on a cliff by the sea / high on a mountain | en el bosque / en una playa / en un acantilado junto al mar / en lo alto de una montaña |
+| in a field of snow / on a path in the jungle / in a tunnel | en un campo de nieve / en un sendero de la selva / en un túnel |
+| in a cave / a dark cave / a cave of ice / a hot cave inside a mountain | en una cueva / una cueva oscura / una cueva de hielo / una cueva caliente dentro de una montaña |
+| out at sea / under the sea | en el mar / bajo el mar |
+| Go north (south, east, west) from the town. | Desde el pueblo, tienes que ir al norte (sur, este, oeste). |
+| The way in is in the town. | La entrada está en el pueblo. |
+| It is far from the town. | Está lejos del pueblo. |
+| Walk through … first. / Walk along … first. / Climb a mountain first. | Primero tienes que pasar por … / caminar por … (seguir un camino) / subir una montaña. |
+| Go out to sea and dive down. | Tienes que salir al mar y bajar al fondo. |
+
+Instructions to the player use **tienes que + infinitive**, not the imperative. The tú imperative has the same form as "it does" (camina, pasa, sube), and the sentence before it is always about the monster, so "Camina por adentro. Camina en cuatro patas." would read as two facts about the monster.
+
+Trees and houses in the island clue: palmeras; árboles como lápices grandes; árboles de otoño de color naranja; árboles redondos y verdes; árboles altos y delgados; pinos de color verde oscuro; árboles como dulces con palito (lollipops: no word works in every country); árboles grandes de la selva; árboles frutales; pinos con nieve. Casas blancas con techos rojos; casas de colores vivos; granjas con casas de madera; edificios de ladrillo rojo; casas redondas de vidrio; carpas grandes; torres de piedra con relojes; casas como pasteles; casas en los árboles; edificios altos; tiendas pequeñas; casas de madera con nieve en los techos.
+
+### The 17 monster types in the clues
+
+`terms.type` has four (fuego, agua, hierba, eléctrico). The other thirteen follow the list in §4, and the story line about lighting the cave now reads "un monstruo de tipo eléctrico, mente o fuego":
+
+| Type | Spanish | Type | Spanish |
+| --- | --- | --- | --- |
+| Normal | normal | Flying | volador |
+| Fire | fuego | Mind | mente |
+| Water | agua | Bug | bicho |
+| Grass | hierba | Rock | roca |
+| Spark | eléctrico | Ghost | fantasma |
+| Ice | hielo | Dragon | dragón |
+| Kungfu | kungfú | Shadow | sombra |
+| Poison | veneno | Steel | acero |
+| Earth | tierra | | |
+
+Decided by the lead on 2026-11-21: the game names these three types Kungfu, Mind and Shadow on purpose, so Spanish says **kungfú, mente, sombra** - never the type names another well-known monster series uses in Spanish. `sight.json` and the cave line in `lines.json` were changed to match.

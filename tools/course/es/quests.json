@@ -1,0 +1,343 @@
+{
+  "lang": "es",
+  "quests": {
+    "q0-cap": {
+      "ask": [
+        "¡Ay, no! Alguien dejó una gorra azul en la playa.",
+        "Yo conozco al dueño, pero hoy tengo las piernas cansadas.",
+        "¿Puedes devolver la gorra por mí? ¡Pregúntame por el dueño!"
+      ],
+      "opener": "¡Gracias, cariño! A ver, ¿qué quieres saber del dueño?",
+      "steps": [
+        "¿Cómo se llama el dueño?",
+        "¿Cómo es el dueño?",
+        "¿Dónde está ahora?"
+      ],
+      "words": ["¿De quién?", "la gorra", "el nombre", "¿Cómo es?", "¿Dónde?", "gracias"],
+      "thanks": [
+        "¡Encontraste a Ben! Está muy contento de tener su gorra otra vez.",
+        "Gracias por tu ayuda. ¡Toma esto, por favor!"
+      ],
+      "bye": "¡Hola otra vez, cariño! Ahora Ben lleva su gorra todos los días."
+    },
+    "q0-visitor": {
+      "ask": [
+        "¡Hola, hola! Esta tarde llega una visita en el barco.",
+        "Yo recibo a las visitas de la isla, ¡pero siempre olvido qué decir!",
+        "Vamos a practicar. Yo soy la visita y tú me recibes."
+      ],
+      "opener": "Bueno, ahora yo soy la visita. ¡Ejem! ¡Oh, qué isla tan bonita! ¿Hay alguien aquí?",
+      "steps": [
+        "¡Buenas tardes! ¡Bienvenido a Isla Hola!",
+        "¿Cómo te llamas?",
+        "¿De dónde eres?"
+      ],
+      "words": ["buenas tardes", "bienvenido a", "¿Cómo te llamas?", "¿De dónde eres?", "mucho gusto"],
+      "thanks": [
+        "Ahora recuerdo todo lo que tengo que decir. ¡Recibes muy bien a las visitas!",
+        "Un marinero me dio este huevo, pero ya estoy muy viejo para cuidarlo. ¡Es tuyo!"
+      ],
+      "bye": "¡Buenas tardes! ¿Ves? Ya recuerdo qué decir."
+    },
+    "q1-bag": {
+      "ask": [
+        "¡Ay, no! ¡No encuentro mi mochila!",
+        "En objetos perdidos hay tres mochilas, pero soy muy tímida para ir a preguntar.",
+        "¿Puedes ir por mí? ¡Pregúntame cómo es mi mochila!"
+      ],
+      "opener": "¡Gracias! ¿Qué quieres saber de mi mochila?",
+      "steps": [
+        "¿De qué color es tu mochila?",
+        "¿Qué hay dentro de tu mochila?",
+        "¿Qué dibujo hay en tu mochila?"
+      ],
+      "words": ["¿De qué color?", "la mochila", "dentro de tu mochila", "en tu mochila", "el estuche", "la estrella"],
+      "thanks": [
+        "¡Mi mochila rosa con la estrella amarilla! ¡La encontraste!",
+        "Esto estaba en mi mochila. Creo que es para monstruos. ¡Tómalo!"
+      ],
+      "bye": "¡Hola! Ahora siempre llevo mi mochila conmigo."
+    },
+    "q1-stock": {
+      "ask": [
+        "¡Hola! Hoy llegaron cajas nuevas a la papelería.",
+        "Pero no encuentro mis lentes y no puedo leer la lista.",
+        "Aquí está la lista. ¡Léela en español, por favor!"
+      ],
+      "note": "La lista dice: lápices rojos, doce. Reglas azules, ocho. Gomas de borrar amarillas, ninguna.",
+      "opener": "¡Gracias por tu ayuda! Primero, ¿cuántos lápices rojos hay?",
+      "steps": [
+        "Hay doce lápices rojos.",
+        "Hay ocho reglas azules.",
+        "No hay gomas de borrar amarillas."
+      ],
+      "words": ["hay", "doce", "ocho", "los lápices", "las reglas", "las gomas de borrar", "¿Cuántos?"],
+      "thanks": [
+        "Lápices, reglas y gomas de borrar. ¡Ahora sé qué hay en cada caja!",
+        "Tienes muy buena vista y una voz muy clara. Esto es para ti."
+      ],
+      "bye": "¡Hola! Encontré mis lentes. ¡Los tenía en la cabeza!"
+    },
+    "q2-photo": {
+      "ask": [
+        "¡Mira! Esta es una foto de mi familia.",
+        "Quiero escribir abajo el nombre de cada uno, pero todavía no sé escribir.",
+        "¿Puedes escribir por mí? ¡Pregúntame quiénes son!"
+      ],
+      "opener": "¡Aquí está mi foto! ¿Por quién quieres empezar?",
+      "steps": [
+        "¿Cuántas personas hay en la foto?",
+        "¿Quién es el hombre alto?",
+        "¿Quién es el bebé?"
+      ],
+      "words": ["¿Cuántas personas?", "¿Quién es?", "alto", "el papá", "la mamá", "el hermano", "la foto"],
+      "thanks": [
+        "Papá, mamá, Bobo y yo. ¡Ahora todos tienen nombre!",
+        "Encontré esta cosa brillante en el jardín. ¡Es para ti!"
+      ],
+      "bye": "¡Hola! Mi foto ya está en la pared. Todos pueden leer los nombres."
+    },
+    "q2-farm": {
+      "ask": [
+        "¡Ay, no! ¡La puerta estaba abierta y mis animales se escaparon!",
+        "Tú caminaste por toda la isla. Los viste, ¿verdad?",
+        "¡Dime dónde están y los traigo a casa!"
+      ],
+      "note": "Recuerdas: tres patos cerca del río y una vaca al lado del molino.",
+      "opener": "¡Gracias! Primero, mis patos. ¿Dónde están?",
+      "steps": [
+        "Hay tres patos cerca del río.",
+        "Hay una vaca al lado del molino.",
+        "¿Qué animal falta todavía?"
+      ],
+      "words": ["hay una", "hay tres", "los patos", "la vaca", "cerca del río", "al lado de", "el molino", "falta"],
+      "thanks": [
+        "Tres patos, una vaca y mi cerdito. ¡Todos están en casa!",
+        "Estas frutas son de mi granja. Les dan fuerza otra vez a los monstruos cansados."
+      ],
+      "bye": "¡Hola! Hoy la puerta está cerrada. ¡La revisé tres veces!"
+    },
+    "q3-way": {
+      "ask": [
+        "¡Hola! Estoy dibujando un mapa de la escuela para los estudiantes nuevos.",
+        "Pero siempre confundo los lugares. ¿Dónde está todo?",
+        "Tú caminas mucho por aquí. ¡Dime dónde están, por favor!"
+      ],
+      "note": "Recuerdas: la biblioteca está enfrente del gimnasio. El salón de español está en el segundo piso. El comedor está al lado de la biblioteca.",
+      "opener": "¡Genial! Primero, ¿dónde está la biblioteca?",
+      "steps": [
+        "La biblioteca está enfrente del gimnasio.",
+        "El salón de español está en el segundo piso.",
+        "El comedor está al lado de la biblioteca."
+      ],
+      "words": ["la biblioteca", "el gimnasio", "el comedor", "el salón", "enfrente de", "al lado de", "en el segundo piso"],
+      "thanks": [
+        "¡Mi mapa ya está listo! Los estudiantes nuevos no se van a perder.",
+        "Toma, esto es de la tienda de la escuela. ¡Gracias!"
+      ],
+      "bye": "¡Hola! Ahora todos usan mi mapa. Está en la puerta de la escuela."
+    },
+    "q3-fair": {
+      "ask": [
+        "¡Oye! La próxima semana es el día del deporte de la escuela.",
+        "Tengo que contarles el plan a todos, ¡pero todavía no lo tengo!",
+        "Tú entrenas muy bien. ¡Ayúdame a hacer el plan!"
+      ],
+      "opener": "¡Gracias! Primero, ¿qué día y a qué hora va a empezar el día del deporte?",
+      "steps": [
+        "Va a empezar el viernes a las nueve.",
+        "Vamos a reunirnos en el patio.",
+        "Todos van a traer agua y un sombrero."
+      ],
+      "words": ["va a empezar", "el viernes", "a las nueve", "vamos a…", "reunirnos", "el patio", "traer"],
+      "thanks": [
+        "El plan ya está en el tablero de avisos. ¡Todos están emocionados!",
+        "Este huevo estaba en el cuarto de deportes. Creo que le caes bien. ¡Cuídalo mucho!"
+      ],
+      "bye": "¡Oye! ¡No llegues tarde al día del deporte!"
+    },
+    "q4-maths": {
+      "ask": [
+        "Otra vez saqué una mala nota en matemáticas.",
+        "Las matemáticas son muy difíciles. Ya no quiero ir al club de matemáticas.",
+        "¿De verdad crees que tengo que ir? Dime por qué."
+      ],
+      "opener": "Mmm... No quiero ir. Las matemáticas no son para mí.",
+      "steps": [
+        "¿Por qué no te gustan las matemáticas?",
+        "Las matemáticas son útiles cuando vas de compras.",
+        "Los juegos de matemáticas también son divertidos.",
+        "Vamos a hacer la tarea de matemáticas juntos."
+      ],
+      "words": ["¿Por qué?", "porque", "útil", "interesante", "difícil", "juntos", "vamos a…"],
+      "thanks": [
+        "Fui al club de matemáticas, ¡y esta vez fue divertido!",
+        "Me diste buenas razones. Este regalo es para darte las gracias."
+      ],
+      "bye": "¡Hola! ¡Esta semana saqué una mejor nota en matemáticas!"
+    },
+    "q5-club": {
+      "ask": [
+        "¡Hola! Me encanta el club de ajedrez, pero quiero unirme a un club más.",
+        "Aquí hay muchísimos clubes. ¡No puedo elegir!",
+        "Hazme unas preguntas y dime qué club es el mejor para mí."
+      ],
+      "opener": "¡Muy bien! Hazme tus preguntas. ¿Qué quieres saber de mí?",
+      "steps": [
+        "¿Qué sabes hacer?",
+        "¿Qué te gusta hacer?",
+        "¿Cuándo estás libre?",
+        "Puedes unirte al club de arte porque sabes dibujar."
+      ],
+      "words": ["sabes", "no sabes", "el club", "unirte", "libre", "dibujar", "porque"],
+      "thanks": [
+        "Me uní al club, ¡y dibujé mi juego de ajedrez!",
+        "Hiciste muy buenas preguntas. Toma, ¡esto es para ti!"
+      ],
+      "bye": "¡Hola! ¡Ven a ver mis dibujos en la exposición del club!"
+    },
+    "q6-tea": {
+      "ask": [
+        "¡Ah, hola! El alcalde Tick quiere venir hoy a tomar el té.",
+        "Pero tengo el día muy ocupado. ¿Cuándo puede venir?",
+        "¡Pregúntame por mi día y busca una buena hora para los dos!"
+      ],
+      "opener": "Gracias, cariño. ¿Qué quieres saber de mi día?",
+      "steps": [
+        "¿Qué haces por la mañana?",
+        "¿A qué hora almuerzas?",
+        "¿Cuándo estás libre por la tarde?",
+        "Vamos a tomar el té a las cuatro en punto."
+      ],
+      "words": ["¿A qué hora?", "por la mañana", "por la tarde", "almuerzas", "libre", "en punto", "normalmente"],
+      "thanks": [
+        "El alcalde llegó a la hora perfecta y tomamos un té muy rico.",
+        "Sabes organizar muy bien el tiempo, cariño. Toma esto, por favor."
+      ],
+      "bye": "¡Hola, cariño! Es la hora del té. Ahora nunca llego tarde."
+    },
+    "q7-party": {
+      "ask": [
+        "¡Pst! Pronto es el cumpleaños de Pop, mi pequeño monstruo.",
+        "Quiero hacerle una fiesta sorpresa, pero soy malo para los planes.",
+        "Tú sabes hacer esto muy bien. ¡Ayúdame a planear la fiesta!"
+      ],
+      "opener": "¡Shh! Es un secreto. A ver, ¿qué quieres saber primero?",
+      "steps": [
+        "¿Cuándo es el cumpleaños de Pop?",
+        "Vamos a comer pastel y fideos.",
+        "Podemos regalarle un globo rojo a Pop.",
+        "La fiesta puede empezar a las tres."
+      ],
+      "words": ["¿Cuándo?", "el cumpleaños", "mayo", "el pastel", "los fideos", "el regalo", "el globo", "la fiesta"],
+      "thanks": [
+        "¡Sorpresa! A Pop le encantó la fiesta. ¡Bailó toda la tarde!",
+        "Quien planea bien recibe una bolsa de fiesta. ¡Aquí tienes!"
+      ],
+      "bye": "¡Feliz cumpleaños... ah, eres tú! ¡Pop te manda saludos!"
+    },
+    "q8-missing": {
+      "ask": [
+        "¡Hola! Esta mañana un monstruo pequeño se escapó del Parque de Animales.",
+        "Tú viniste por el camino del río. ¿Lo viste?",
+        "Aquí tenemos muchos monstruos. ¡Dime cómo es y voy a saber cuál es!"
+      ],
+      "note": "Recuerdas: un monstruo pequeño y gris con una máscara negra en la cara. Estaba comiendo de un basurero detrás de la casa del árbol.",
+      "opener": "¡Gracias por tu ayuda! Primero, ¿es grande o pequeño? ¿Y de qué color es?",
+      "steps": [
+        "Es pequeño y gris.",
+        "Tiene una máscara negra en la cara.",
+        "Está comiendo de un basurero.",
+        "Está detrás de la casa del árbol."
+      ],
+      "words": ["pequeño", "gris", "la máscara", "tiene", "está comiendo", "el basurero", "detrás de", "la casa del árbol"],
+      "thanks": [
+        "Lo encontramos detrás de la casa del árbol. ¡Ya está a salvo!",
+        "Dejó un huevo en su cama. Es para alguien que cuida bien a los monstruos. ¡Llévatelo!"
+      ],
+      "bye": "¡Hola! Nuestro Nightpaw está durmiendo. ¡Shh!"
+    },
+    "q9-guard": {
+      "ask": [
+        "¡Alto, por favor! El Jardín de la Ciudad cierra a las cinco.",
+        "¿Qué? ¿La pelota de tu monstruo está en el jardín?",
+        "Las reglas son las reglas. Pero si me lo pides amablemente y me das buenas razones, lo voy a pensar."
+      ],
+      "opener": "Buenas tardes. El jardín está cerrado. ¿En qué te puedo ayudar?",
+      "steps": [
+        "Perdón, ¿puedo entrar al jardín, por favor?",
+        "La pelota de mi monstruo está adentro.",
+        "Solo necesito dos minutos.",
+        "Voy a estar en silencio y no voy a correr."
+      ],
+      "words": ["perdón", "¿Puedo…?", "por favor", "porque", "solo", "voy a…", "no voy a…", "las reglas"],
+      "thanks": [
+        "Fuiste muy amable y respetaste todas las reglas. ¡Muy bien hecho!",
+        "Las palabras amables abren muchas puertas. Este es un regalo de la ciudad."
+      ],
+      "bye": "¡Hola! Recuerda: pide las cosas amablemente y la gente te va a escuchar."
+    },
+    "q10-order": {
+      "ask": [
+        "¡Te doy la bienvenida a mi puesto de comida! Hoy hay mucho trabajo.",
+        "El equipo del entrenador Tom tiene hambre, pero todavía está corriendo.",
+        "Tú puedes pedir por ellos. ¿Qué quiere el equipo?"
+      ],
+      "note": "La nota del equipo dice: tres tazones de fideos con carne y dos vasos de jugo de naranja.",
+      "opener": "¡Hola! ¿Qué quiere comer el equipo?",
+      "steps": [
+        "Queremos tres tazones de fideos con carne, por favor.",
+        "Y dos vasos de jugo de naranja, por favor.",
+        "¿Cuánto es todo?",
+        "¿Cuándo va a estar listo?"
+      ],
+      "words": ["queremos", "tazones de", "los fideos con carne", "vasos de", "el jugo de naranja", "¿Cuánto es?", "listo"],
+      "thanks": [
+        "El equipo se comió todo. ¡Te dan las gracias!",
+        "Quien ayuda bien recibe un regalo de la chef. ¡Disfrútalo!"
+      ],
+      "bye": "¡Hola! ¿Tienes hambre? ¡Mis fideos son los mejores de la isla!"
+    },
+    "q11-ski": {
+      "ask": [
+        "¡Hola! Mañana quiero ir a esquiar a la Montaña de Nieve.",
+        "Pero aquí el tiempo cambia muy rápido. ¿Es seguro?",
+        "Tú viste el pronóstico en la Estación del Clima. ¿Qué hago?"
+      ],
+      "note": "El pronóstico dice: mañana por la mañana, sol; por la tarde, mucha nieve.",
+      "opener": "¡Gracias! A ver, ¿qué tiempo va a hacer mañana?",
+      "steps": [
+        "Por la mañana va a hacer sol, pero por la tarde va a nevar mucho.",
+        "Ve a esquiar por la mañana.",
+        "Lleva un abrigo y guantes.",
+        "No te quedes en la montaña después del almuerzo."
+      ],
+      "words": ["hacer sol", "nevar mucho", "por la mañana", "ve a esquiar", "lleva", "no…", "el abrigo", "los guantes"],
+      "thanks": [
+        "Esquié con el sol de la mañana y volví a casa antes de la nieve. ¡Perfecto!",
+        "Encontré este huevo cerca del lago de hielo. Necesita a alguien como tú."
+      ],
+      "bye": "¡Hola! Ahora siempre miro el pronóstico antes de esquiar."
+    },
+    "q12-album": {
+      "ask": [
+        "Hola, joven. Este es mi viejo álbum de fotos.",
+        "La niebla de esta isla se lleva los recuerdos. Estoy olvidando mi mejor viaje.",
+        "Pregúntame despacio. Tal vez tus preguntas me ayudan a recordarlo."
+      ],
+      "opener": "Mmm... un viaje... hace mucho tiempo. ¿Qué me quieres preguntar?",
+      "steps": [
+        "¿Adónde fuiste en ese viaje?",
+        "¿Con quién fuiste?",
+        "¿Qué viste allí?",
+        "Fuiste a la cascada con tu monstruo. Viste un arcoíris y sacaste fotos."
+      ],
+      "words": ["¿Adónde fuiste?", "¿Quién?", "fuiste", "viste", "sacaste fotos", "la cascada", "el arcoíris", "el viaje"],
+      "thanks": [
+        "Ahora lo recuerdo todo: la cascada, el arcoíris, mi pequeño dragón.",
+        "Mi viejo compañero dejó este huevo para alguien valiente. Creo que brilla para ti."
+      ],
+      "bye": "Hola otra vez. Gracias a ti, todos los días les cuento mi historia a los niños."
+    }
+  }
+}

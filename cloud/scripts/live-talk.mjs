@@ -1,5 +1,6 @@
 // 实测别的语言的「和岛民聊天」（**会花钱：真的阿里云额度，三门语言聊一遍约几毛钱；跑之前先问老板**）
-//   cd cloud && node scripts/live-talk.mjs [es ja zh en]
+//   cd cloud && node scripts/live-talk.mjs [es ja zh en]          每门课第 1 单元的角色
+//   cd cloud && node scripts/live-talk.mjs es:q0-cap zh:q9-guard    支线委托（语言:委托 id），学习者说的是每一步的示范句；最后各试一次发音点评
 // 做法和 live-speech.mjs 一样：本机起同一份服务器程序（Miniflare），上游接真的阿里云；假邮件拿登录态。
 // 每门语言用这门课第 1 单元的角色（英语用 talk-npcs.js 的第一个）：
 //   岛民开口 → 学习者说两句（先让服务器合成这两句，再当成麦克风的声音送进去）→ 按「帮帮我」→ 小步骤打勾（/v1/steps）
@@ -52,19 +53,23 @@ const wavOf = (pcm, rate) => { const h = Buffer.alloc(44); h.write('RIFF', 0); h
   const me = (await A.api('GET', '/v1/me', { token: tk })).json;
   console.log('talkLangs', JSON.stringify(me.talkLangs), 'speechLangs', JSON.stringify(me.speechLangs));
 
-  for (const lang of ['es', 'ja', 'zh', 'en']) {
-    if (ONLY.length && !ONLY.includes(lang)) continue;
-    const npc = lang === 'en' ? NPCS.list[0] : COURSES.list.find(n => n.lang === lang);
+  const JOBS = ONLY.length ? ONLY : ['es', 'ja', 'zh', 'en'];
+  for (const job of JOBS) {
+    const lang = job.split(':')[0], qid = job.split(':')[1] || '';
+    const QL = qid ? (COURSES.quests && COURSES.quests[lang] && COURSES.quests[lang][qid]) : null;
+    if (qid && !QL) { console.log('✗ 没有这条委托的译文：' + job); continue; }
+    const npc = qid ? { id: qid, name: '委托 ' + qid } : lang === 'en' ? NPCS.list[0] : COURSES.list.find(n => n.lang === lang);
+    const says = qid ? QL.steps.slice() : SAY[lang];
     console.log('\n===== ' + lang + '：' + npc.id + '（' + npc.name + '）=====');
     // 学习者的两句：让服务器合成，转成 16 kHz
     const clips = [];
-    for (let i = 0; i < SAY[lang].length; i++) {
-      const r = await A.api('POST', '/v1/tts', { token: tk, body: lang === 'en' ? { text: SAY[lang][i], g: 'm' } : { text: SAY[lang][i], g: 'm', lang } });
+    for (let i = 0; i < says.length; i++) {
+      const r = await A.api('POST', '/v1/tts', { token: tk, body: lang === 'en' ? { text: says[i], g: 'm' } : { text: says[i], g: 'm', lang } });
       if (r.status !== 200) { console.log('✗ 合成学习者的话没成：', r.status, scrub(r.text).slice(0, 200)); continue; }
       const f0 = path.join(OUT, 'say-' + lang + '-' + i + '.wav'); fs.writeFileSync(f0, Buffer.from(await (await fetch(r.json.url)).arrayBuffer()));
       clips.push(pcmOf(wav16(f0, path.join(OUT, 'say-' + lang + '-' + i + '.16k.wav'))));
     }
-    const c = await A.ws('/v1/talk?npc=' + encodeURIComponent(npc.id) + '&name=Coco&g=0&lv=' + LV + '&ui=' + UI, { first: tk });
+    const c = await A.ws('/v1/talk?' + (qid ? 'quest=' + encodeURIComponent(qid) + '&lang=' + lang : 'npc=' + encodeURIComponent(npc.id)) + '&name=Coco&g=0&lv=' + LV + '&ui=' + UI, { first: tk });
     let audio = [], n = 0; const turns = [];
     const flush = tag => { const b = Buffer.concat(audio); audio = []; if (b.length) fs.writeFileSync(path.join(OUT, lang + '-' + tag + '.wav'), wavOf(b, 24000)); return +(b.length / 48000).toFixed(1); };
     c.ws.on('message', d => { let m; try { m = JSON.parse(String(d)); } catch (e) { return; } if (m.type === 'audio' && m.data) audio.push(Buffer.from(m.data, 'base64')); });
@@ -87,14 +92,14 @@ const wavOf = (pcm, rate) => { const h = Buffer.alloc(44); h.write('RIFF', 0); h
       const k = c.msgs.filter(m => m.type === 'you').length;
       c.send({ type: 'commit' });
       const you = await c.next(x => x.type === 'you' && c.msgs.filter(y => y.type === 'you').indexOf(x) >= k, 12000);
-      console.log('学习者说「' + SAY[lang][i] + '」→ 听成：' + (you ? you.text : '（没等到）'));
+      console.log('学习者说「' + says[i] + '」→ 听成：' + (you ? you.text : '（没等到）'));
       if (you && you.text) turns.push({ who: 'you', text: you.text });
       last = await npcSays('岛民回答') || last;
     }
     c.send({ type: 'help' });
     await npcSays('按了帮帮我');
     // 小步骤打勾、点气泡看意思
-    const st = await A.api('POST', '/v1/steps', { token: tk, body: { npc: npc.id, g: 0, ui: UI, turns } });
+    const st = await A.api('POST', '/v1/steps', { token: tk, body: qid ? { q: qid, lang, g: 0, ui: UI, turns } : { npc: npc.id, g: 0, ui: UI, turns } });
     console.log('小步骤打勾：', st.status, st.status === 200 ? JSON.stringify(st.json.done) : scrub(st.text).slice(0, 200));
     if (last) {
       const z = await A.api('POST', '/v1/zh', { token: tk, body: lang === 'en' ? { text: last } : { text: last, lang, ui: UI } });
@@ -106,6 +111,12 @@ const wavOf = (pcm, rate) => { const h = Buffer.alloc(44); h.write('RIFF', 0); h
     const use = c.msgs.filter(m => m.type === 'usage').reduce((a, m) => ({ in: a.in + m.in, out: a.out + m.out, ain: a.ain + m.ain, aout: a.aout + m.aout }), { in: 0, out: 0, ain: 0, aout: 0 });
     console.log('用量（token）：', JSON.stringify(use));
     c.close(); await sleep(500);
+    // 发音点评：把最后一句示范句当目标，听到的故意错一个词
+    if (lang !== 'en') {
+      const target = says[says.length - 1], heard = target.replace(/[\p{L}]+(?=[^\p{L}]*$)/u, lang === 'es' ? 'casa' : lang === 'ja' ? 'ねこ' : '苹果');
+      const tp = await A.api('POST', '/v1/tip', { token: tk, body: { target, heard, ui: UI, lang } });
+      console.log('发音点评（目标「' + target + '」，听到「' + heard + '」）：', tp.status, tp.status === 200 ? tp.json.tip : scrub(tp.text).slice(0, 200));
+    }
   }
   await A.dispose(); await F.close();
   process.exit(0);

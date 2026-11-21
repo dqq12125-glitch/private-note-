@@ -80,3 +80,40 @@
 3. es1-6 标题词 `la ropa` 不在词表里；es1-5 岛主是鹈鹕，表情是 🦢（没有鹈鹕的表情）。
 4. 词表里有、本单元句子和对话没用到的词：el garaje、el estante、sorprendido、ahora、mal、reír、llorar、la zanahoria、el maíz、pagar、la calle、los guantes、nunca。
 5. 「来我家」「你家里有什么」这类话题算不算问个人信息（人设里已写只聊虚构的家），请老板定。
+
+## 第二轮：支线委托和今日目击（2026-11-21）
+
+`quests.json`（17 条委托）和 `sight.json`（157 句线索）是译者自己写、自己复读的，**没有**另一个代理通读过，也没有母语的人看过。新定的词和线索的半句对照表在 `lines-glossary.md` §11。
+
+### 原文在西语里不成立、换了做法的
+
+1. **in / on（q1-bag）**：西语的 en 两个意思都管，「What is in your bag?」「What is on your bag?」照翻是同一句。第 2 步改成 `¿Qué hay dentro de tu mochila?`，第 3 步问图案 `¿Qué dibujo hay en tu mochila?`；词卡是 `dentro de tu mochila` / `en tu mochila`。
+2. **There is / There are（q2-farm、q1-stock）**：西语都是 hay。q2-farm 的两张词卡写成 `hay una` / `hay tres`（和示范句对得上），q1-stock 那一张就是 `hay`。
+3. **can（q5-club）**：会做某事是 saber（`¿Qué sabes hacer?`、`sabes dibujar`），可以做是 poder（`Puedes unirte al club de arte`）。词卡 can / can't 写成 `sabes` / `no sabes`。
+4. **will / be going to（q3-fair）、Let's（q4、q6、q7）、I will / I won't（q9）**：1 级只教 ir a + 动词原形，所以都是它：`Va a empezar…`、`Vamos a reunirnos…`、`Vamos a hacer la tarea…`、`Voy a estar en silencio y no voy a correr.`。词卡写成 `va a empezar`、`vamos a…`、`voy a…`、`no voy a…`。
+5. **Good evening（q9 开场白）**：花园五点关门，这个钟点西语说 `Buenas tardes`（Buenas noches 是天黑以后）。`Good day!`（q9 的 bye）没有对应的不分时段的说法，写成 `¡Hola!`。
+6. **May I / Could I … please（q9）**：`¿Puedo…, por favor?`。人设里写着要听到 "May I" 或 "Could I" 和 "please"——AI 说西语时会不会认 `¿Puedo…?` + `por favor`，要用真的 AI 试一次。
+7. **o'clock（q6）**：词卡写 `en punto`，示范句是 `Vamos a tomar el té a las cuatro en punto.`（别的委托里的「三点」「九点」只说 `a las tres`、`a las nueve`）。
+8. **in English（q1-stock 的请求）**：`¡Léela en español, por favor!`（学的是西语，照术语表 §5）。
+9. **the English classroom（q3-way）**：留成 `el salón de inglés`。人设在服务器上是英文原文，写的是 English classroom，岛民会照它问；`el inglés` 也是第 4 岛教的词。和主线不一样的地方：主线里这所学校上的是 `clase de español`。
+10. **went / saw / took photos（q12 的词卡）**：写成复述故事时要说的 `fuiste` / `viste` / `sacaste fotos`。游戏里这几张卡片下面的中文意思是 quests.js 的「去了（go 的过去式）」「看见了（see 的过去式）」，提到的是英语单词，在西语课里对不上——要不要另写意思请主会话定。
+11. **Don't（q11 的词卡）**：写成 `no…`。示范句 `No te quedes en la montaña…` 是否定命令式（大纲 2 级），这里当整块用。
+12. **greeter（q0-visitor）**：不用名词（anfitrión / anfitriona 要分男女），写成 `recibir a las visitas`。
+13. **how big is it（q8 开场白）**：`¿es grande o pequeño?`，入门的人答得上。
+14. **线索里对玩家说的话**（Walk around inside、Go north…、Walk through … first、Go out to sea and dive down）：不用命令式，用 `tienes que + 原形`。tú 的命令式和「它……」同形（camina、pasa、sube），前一句说的又总是怪兽，`Camina por adentro. Camina en cuatro patas.` 读起来像两句都在说怪兽。
+15. **It swims on top of the water**：写成 `Va nadando sobre el agua.`。`Nada sobre el agua.` 开头的 Nada 会被读成「什么都没有」。
+16. **线索里的 English, maths and science**：照术语表 §5 写成 `el español, las matemáticas y las ciencias`。
+17. **线索里的 the town**：一律 `el pueblo`。规则城那座岛主线里叫 `la ciudad`，但同一句英语只有一个译文，分不开。
+
+### 拿不太准、请母语的人再看的
+
+1. **属性名**：17 个里 4 个照 `terms.type`，13 个照术语表 §4 那一行（lucha、psíquico、oscuro……）。英语原文特意叫 Kungfu、Mind、Shadow，而 lucha、psíquico 正好也是另一个有名的怪兽系列在西语里的属性名。要不要换成 kungfú / mente / sombra，请老板定（要一起改 `lines.json` 里那一句 `un monstruo eléctrico, psíquico o de fuego`）。
+2. **各地说法不同的词**：`la papelería`（拉普拉塔一带说 librería）、`la goma de borrar`（墨西哥、哥伦比亚说 borrador）、`el cerdito`（chanchito、puerquito、cochinito）、`el basurero`（bote de basura、tacho、caneca）、`el tablero de avisos`（cartelera、pizarra de anuncios）、`tazones`（智利的 tazón 是大杯子，那边说 bol 或 plato hondo）、`el abrigo`、`el básquetbol`、`jugar ajedrez / jugar básquetbol`（不带 al，照 `lines.json`；课程里的 `jugar al tenis` 带 al）。
+3. **棒棒糖**：各国说法都不一样（paleta、chupetín、chupete、colombina……），线索里写成 `árboles como dulces con palito`。
+4. **`Se para en dos patas`**：pararse 当「站起来」是拉美的用法，西班牙人会读成「停下来」。
+5. **`la máscara`**（q8）：浣熊脸上那一圈更地道的说法是 antifaz；用 máscara 是因为手册里 Nightpaw 那一句已经这么写，也好认。
+6. **`Creo que le caes bien`**（q3-fair 的感谢）：口语的整块说法，对入门的人偏难；可以换成 `Creo que te quiere mucho`。
+7. **对老人用 tú**（q6 的 Mrs. Hands、q12 的 Grandpa Tang）：照术语表 §1（1 级不教 usted）。在不少地方对老人说 tú 显得不够客气。
+8. **偏长的示范句**：q11 第 1 步（14 个词）、q12 第 4 步（两句），原文也长；q6 第 4 步因为加了 `en punto` 有 9 个词。
+9. **hat（q3-fair）**：照字面写 `un sombrero`；运动会上孩子戴的更常是 `gorra`。这一步答什么都行，不影响完成。
+10. **词卡变绿**：聊天页按「卡片的前三个词连着出现」算说到。名词卡片照课程的规矩带冠词（`la gorra`、`los lápices`），学的人说 `una gorra`、`doce lápices` 时不会变绿；`al lado de`、`enfrente de` 遇到 `del` 也不会。照示范句说一遍，121 张里有 43 张不变绿。要改的话在界面那边比较时去掉开头的冠词、把 del / al 当成 de / a。

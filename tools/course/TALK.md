@@ -121,3 +121,97 @@ TalkCore.worried(turns)                       加西语、日语、中文的明�
   9. **服务器连接时才说不会**（中转服务 `code: "lang"`、cloud `reason: "unsupported_lang"`）：状态行写「还在做」，不记成聊天连不上（不写 `chatErr`、不亮首页红条）；网页版把记着的结果改掉、重新问一次，云端模式刷新一次账号。
   10. **字表**：`.c` 写法是别的课一律用的（不看聊天开没开），所以服务器不会的时候也有几句跟着从「英语」变成了这门语言的名字：设置里学习锁的说明（`g.set.gate.d`）、日报里「用语音说了 n 句英语」（`g.push.l.chat`）、周报「看中文 n 次」→「看意思」（`g.rp.hb.look`）、家长粘贴密钥那句不再说能聊天（`g.set.ai.off.d`）、向导那句不写是哪门语言（`ac.su.p1`）。别的行为（「还在做」、整天免、没有任务）没变。周报 / 日报里「每句 n 个词」「最长一句 n 个词」日语、中文写成「字」（`.ch`）。
   11. **没动的**：`talk.js` 里 APK 直连现场合成用的 `TTS_V`（Cherry / Ethan，见上面第 12 条）——不是聊天，这一轮没碰；APK 直连的聊天照合同是「不会」。
+
+
+---
+
+# 第二轮（2026-11-21 傍晚，老板：「都做好」）：支线委托、今日目击、AI 发音点评、日语的「更好的说法」进复习
+
+第一轮没做的四样，这一轮在西班牙语、日语、中文课里都打开。英语课照旧**一个字都不能变**。规矩和第一轮一样（§5 的最后一条）。
+
+## A. 内容（三个翻译，各管一门语言，互不相干）
+
+**A1. 委托** `tools/course/<语言>/quests.json`（新文件）。英语原文在 `quests.js`（17 条，格式看它开头的注释）。每条委托按 id 写：
+
+```json
+{ "lang": "ja", "quests": {
+  "q0-cap": {
+    "ask":    [ 条目, 条目, 条目 ],      // 和 quests.js 的 ask 一句对一句（句数一样、顺序一样）
+    "note":   条目,                      // quests.js 有 note 的才写
+    "opener": 条目,                      // 聊天的开场白
+    "steps":  [ 条目, … ],               // 和 steps 一步对一步：只写示范句（学的人要说的那句话）
+    "words":  [ 条目, … ],               // 和 words 一个对一个：这门语言里对应的词 / 短语
+    "thanks": [ 条目, … ],               // 和 thanks 一句对一句
+    "bye":    条目
+  }, … 17 条都要有 } }
+```
+
+「条目」和 `lines.json` 的整句一样写：西语是字符串；日语、中文是 `{ "t", "seg", "r" }`（`words` 里的单个词只要 `{ "t", "r" }`）。意思（中文 / 英文）不用写，游戏用 quests.js 里原来的那两份。
+- 委托的**事实不能改**：人名、东西、数量、地点、颜色、先后都照原文（服务器上的人设是英文的，岛民按人设里的事实回答；示范句问的、说的要和人设对得上）。人名、地名、怪兽名、道具名照这门课 `lines.json` 的 `terms` 里已经定的写法（`person` / `place` / `monster` / `item`）；没有的照 `lines-glossary.md` 的规矩新定，并且记进 glossary。
+- 示范句要是学的人说得出口的 1 级句子：短、用这门课教过的词和句型为主（`towns.json`、`units/`）。原文里用英语才成立的东西（拼写、英语的读音）换成这门语言里说得通的做法，并在 `review.md` 末尾记一笔。
+- 语体、地区用词、读音写法照这门课 `review.md`、`syllabus.json` 的约定，和已经翻好的 `lines.json` 一致。
+
+**A2. 今日目击的线索** `tools/course/<语言>/sight.json`（新文件）。英语原文在 `tools/course/sight-src.json`（主会话生成：模板拼得出来的每一句，约 157 句，每句是「一两句话的一条线索」）：
+
+```json
+{ "lang": "es", "lines": { "<英语原句，一字不差当键>": 条目, … 每一句都要有 } }
+```
+
+- 线索要**一定是真的**：方向（north / south…）、地形、颜色、大小、属性名、岛名不能翻错。岛名、地名、属性名用 `lines.json` 的 `terms`（`place` / `type`）里已经定的写法。
+- 同一种说法前后一致（"It hides in the tall grass." 这半句在几十句里出现，每次翻成一样的）。可以先写一张小对照表再拼，但交上来的是每个键一条完整的译文。
+
+**检查**（各自单独跑、看退出码）：`node tools/course/check.js <语言>`（另一个代理会让它认这两个新文件；它还没改好时至少保证 JSON 读得出来、条数对得上——自己写个小脚本核对条数、`seg` 接起来等于 `t`、`r` 和 `seg` 一样多）、`node tools/check-banned.js`。
+
+## B. 工具、聊天核心、服务器（一个代理）
+
+- `tools/course/check.js`：认 `quests.json`、`sight.json`（条数和 quests.js / sight-src.json 对得上、读音和词块的规矩同 lines.json、没翻的列出来）。
+- `tools/course/build.js <语言>`：
+  - 委托的 `ask` / `note` / `thanks` / `bye` 和目击的每一句并进 course.json 的 `LINES`（键是英语原文——这样游戏里现成的 `lineOf(英语原文)` 直接就能用），也进配音名单 `VOICE`（委托人按 `g` 的声音，目击是女声旁白）。和已有的键撞了：译文一样就算了，不一样要报错。
+  - course.json 多一项 `QUESTS`：`{ id: { opener, steps: [示范句…], words: [[这门语言的词, 中文, 英文]…] } }`（界面显示用；带读音的照 `TALK` 现在的样子，能给读音就给——`{ t, r }` / `{ t, seg, r }`，界面那边会认字符串和对象两种）。
+  - `--talk`：`talk-courses.js` 多一项 `quests: { es: { id: { opener, steps, words } }, ja: …, zh: … }`（服务器拼人设用，纯文字）。
+- `talk-core.js`：`questNpc(q, lang, loc)`（`loc` = 上面那一条里这条委托的 `{ opener, steps, words }`）：人设还是 quests.js 的英文原文，开场白、步骤的示范句、有用的词换成这门语言的；`QUEST_RULES` 和 `instructions()` 走别的语言那条路；没有 `lang` = 现在的结果一字不差。`tipBody(target, heard, ui, lang)`：发音点评说明这是哪门语言（日语、中文按读音说哪个词 / 哪个字没读对，不讲音标；说明用界面语言写）；没有 `lang` 一字不差。
+- 服务器（`cloud/` 和 `server/relay.js`）：`/v1/talk?quest=<id>&lang=<语言>`、`/v1/steps` 带 `q` + `lang`、`/v1/tip` 带 `lang`；不认的语言 400（同第一轮）。`GET /v1/me`、`GET /v1/health`（relay 的 `/health`）多两项 `questLangs`、`tipLangs`（配置 `QUEST_LANGS` / `TIP_LANGS`，默认和 `talkLangs` 一样；英语一直在）。文档、测试跟着改。**不部署。**
+
+## C. 游戏界面（一个代理）
+
+- **委托**：`world.js` 的 `QL()` 在别的课里——课程包的 course.json 有 `QUESTS`、服务器的 `questLangs` 有这门语言（云端模式看 `EchoAccount`，照 `talkLang` 的样子加 `questLang(lang)`；中转服务看 `/health`）时，照英语课一样出「?」、对话、聊天、奖励、委托本。对话框里的请求 / 感谢走现成的 `lineOf`（译文已经在 `LINES` 里）；聊天页的目标说明用 quests.js 的中文 / 英文那两份，示范句、词卡、开场白用 `QUESTS[id]` 的；连接带 `quest=<id>&lang=<语言>`。条件不够（老课程包、老服务器）：照旧没有「?」。
+- **今日目击**：`world.js` 的 `sightOn()` 在别的课里——course.json 的 `LINES` 里查得到线索的译文时打开。告示板、首页卡片、冒险菜单那一行的三条线索显示译文（`lineOf(线索的英语原文)`，带读音），下面「译」里是界面语言的意思（线索对象自己带的中文；英语界面给英语原文）；🔊 念译文（课程包里的配音）。哪一条查不到译文：这一天按「这门课还没有目击」算（不显示半英半译）。`sighting.js` 加 `EchoSight.linePairs()`：`[{ en, zh }]`，模板拼得出来的每一句和它的中文意思（`lines()` 照旧）。
+- **AI 发音点评**：别的课里服务器的 `tipLangs` 有这门语言时照英语课一样出（`aiTip` 带 `lang`）。
+- **日语的「更好的说法」进复习**：这句话里的汉字读音表（课程的 + `lang-ja.js` 自带的）都认得出来的才进（认不全的照旧只在评语里显示）；判断放在语言模块里（`lang-ja.js` 给一个函数），别在界面里写日语的规则。
+- 测试：`tests/course-talk.test.js` 加委托、点评、日语进复习；目击加在 `tests/course-lines.test.js` 或者新写一个（登记进 `tools/test-all.js`）；竖屏横屏截图自己看一遍。
+
+## D. 分工
+
+- 翻译（三个）：只写自己那门语言的 `quests.json`、`sight.json`，可以往自己那门语言的 `lines-glossary.md`、`review.md` 末尾加记录。别的都不动。
+- 工具 / 核心 / 服务器：`tools/course/build.js`、`tools/course/check.js`、`tools/course/lines.js`（要改才改）、`talk-core.js`、`talk-courses.js`（生成）、`cloud/src/**`、`cloud/API.md`、`cloud/README.md`、`cloud/test/**`、`server/relay.js`、`server/README.md`、`tests/talk.test.js`、`tests/cloud.test.js`、`tests/course-build.test.js`。
+- 界面：`world.js`、`talk.js`、`game.js`、`sighting.js`、`account.js`、`lang-ja.js`、`lang.js`（要改才改）、`tests/course-talk.test.js`、`tests/course-lines.test.js`、`tests/lang.test.js`、`tests/sighting.test.js`、新测试及登记、`tools/course/ENGINE.md`、`CLAUDE.md`（只改相关的几句）。
+- 翻译的文件没写完时，工具和界面两边用自己造的小样内容开发和测试；最后主会话拿真的内容整合。
+
+## 第二轮的改动记录
+
+- **2026-11-21 · 工具 / 核心 / 服务器这一边（B）**（做出来的样子，界面那边照这个用；和上面写的不完全一样的地方标了「改」）：
+  1. **`TalkCore.questNpc(q, lang, loc)`**：`loc` 可以直接给 course.json 的 `QUESTS[id]`（条目是字符串或 `{ t, … }`、词是 `[词, 中文, 英文]` 都认），也可以给 talk-courses.js 那种纯文字的。返回的角色带 `lang`、`quest`，`goals[0].steps` 是 `[中文说明, 这门语言的示范句]`（委托没有英文的步骤说明，`goalOf` 给出来没有 `task`），`words` / `wordsZh` / `wordsEn` 一个对一个（中文、英文意思照 quests.js）。`lang` 认得、可是 `loc` 没有或者不全（开场白、哪一步的示范句是空的）→ `null`。`lang` 是 `''` / `'en'` / 认不得的 → 英语的那一份（不看 `loc`）。
+  2. **`TalkCore.tipBody(target, heard, ui, lang)`**：`ui` 没给 = 中文写点评。`parseTip(j, ui)` 没变。
+  3. **course.json**：`QUESTS[id] = { opener, steps: [示范句…], words: [[词, 中文, 英文]…] }`——开场白 / 示范句是字符串（西语）或 `{ t, seg, r }`（日语、中文），词是字符串或 `{ t, r }`。**只有翻了的委托才有键**（正式的内容 17 条都有；小样只有一两条，界面按条看）。委托的 `ask` / `note` / `thanks` / `bye` 和每句线索在 `LINES` 里，键是英语原文（`lineOf(quests.js 的那一句)`）。没有 lines.json 只有这两样时，course.json 只有 `LINES`、没有 `LINES_T` / `TERMS`。
+  4. **小样怎么喂**（「改」：合同没写）：`CB.build(lang, { quests: 文件, sight: 文件 })`（`false` = 不带）。**给了 `lines`（小样或 `false`）又没给这两样时，不带正式的 `quests.json` / `sight.json`**——现有那些 `lines: false` / 小样的测试不会因为翻译交了稿就变样；只有什么都不给（正式生成）才带正式的。现成的小样在 `cloud/test/quests-sample.cjs`（`require` 它：`QUESTS[语言]`、`SIGHT[语言]`、`write(语言, 目录)` → `{ quests, sight }` 两个文件、`testQuests()`）：西语 `q0-cap`、`q1-stock`（有旁白），日语、中文 `q0-cap`，线索各两三句。`check.js <语言> --quests 文件 --sight 文件` 只查这两张；另给文件 = 小样，缺的只提醒（正式的那份缺了算错）。
+  5. **服务器**：`/v1/talk?quest=<id>&lang=<语言>`（中转服务 `/talk?quest=&lang=`）；`/v1/steps` 的 `{ q, lang }`；`/v1/tip` 的 `{ lang }`。不带 `lang` / `lang=en` = 英语，一字不差。`questLangs` / `tipLangs` 在 `GET /v1/me`、`GET /v1/health`、中转服务的 `/health` 里。**「改」：`questLangs` 只列服务器上真有委托译文的语言**（talk-courses.js 的 `quests` 里有它，还要 `talkLangs` 里开着）——译文没生成进去的服务器不会说自己会。出错：这门语言不在 `questLangs` / `tipLangs` 里、或者这条委托没有这门语言的译文 → cloud `400 bad_request`、`field: "lang"`、`reason: "unsupported_lang"`、`supported: [那张表]`（和聊天一个样）；中转服务 `/talk` 是 `{"type":"error","code":"lang"}`、`/steps` `/tip` 是 400 `{"error":"lang"}`。没有这条委托照旧是「没有这个岛民」。
+  6. **测试里给服务器喂小样**（「改」：合同没写）：两个服务器都认环境变量 `TEST_HOOKS=1` + `TEST_QUESTS='<JSON>'`（`{ 语言: { 委托 id: { opener, steps, words } } }`，纯文字；`JSON.stringify(require('../cloud/test/quests-sample.cjs').testQuests())` 就是），并到 talk-courses.js 的 `quests` 上（同一个 id 以它为准），`questLangs` 跟着有。cloud 只在不是正式环境时认。自己的小样要这个形状：`CB.questsPlain(语言, quests 文件)`。
+  7. 别的语言的委托的提示词比英语的委托多一条规矩：人设和事实是英文写的，说出来要用这门语言、照实说（人、东西、数、颜色、地点、先后不变）。评语的请求在步骤只有中文说明时多一句「步骤说明可能是中文」。课程角色（不是委托）的提示词一个字没动。
+  8. `talk-courses.js` 现在有 `quests`（哪门语言没有委托的译文就没有那个键）。**翻译改了 `quests.json` 要重跑 `node tools/course/build.js --talk`，再重新部署 `cloud/`**（和改聊天角色一样）。
+  9. **主会话傍晚追加的两样**（译者指出：人设是英文原文，岛民用别的语言说话时名字各译各的、有些条件靠英语才成立）：
+     - **名字表 `names`**：`[[英语名, 这门语言的写法]…]`——这条委托的英文原文（委托人、岛名、身份、`persona`、`goal`、`opener`）里出现的、这门课 `lines.json` 的 `terms`（`person` / `place` / `monster` / `item`）里定了写法的名字；整词、分大小写，长的先配（「Fisher Tom」先于「Tom」），和英语一样的写法不列，按出现的先后。`build.js` 把它放进 `talk-courses.js` 的 `quests[语言][id].names`，**也放进 course.json 的 `QUESTS[id].names`**（手机拿 `QUESTS[id]` 当 `loc` 拼出来的人设才和服务器的一样）；一个都没配上的那条没有这个键。`questNpc(q, lang, loc)` 有 `loc.names` 就在人设最后加一句 `Names in this chat, written in <语言> (use exactly these forms): Ben = 本; …`。**翻译改了 `lines.json` 里这些名字的写法，也要重跑 `--talk`、重新部署**。给了 `lines: false` 的小样课程没有名字表（查的是 `lines` 那一份的 `terms`）；`cloud/test/quests-sample.cjs` 的 `testQuests()` 也不带，两边还是对得上。
+     - **「原文是给英语课写的」那一段**：接在别的语言的委托的人设后面（`QUEST_RULES` 后面，英语的委托没有）——原文提到英语的词、拼写、语法（`May I` / `Could I` / `please`、`went` 这类过去式）的地方，岛民自己用这门语言里对应的说法，学的人用对应的说法也算（礼貌地请求就算 `May I … please`）；故事里说的 `English`（要说的语言、学科、`English classroom`）在这门课里指这门语言。
+- **2026-11-21 · 游戏界面这一边（C）**（第二轮做完时写的；上面「C」没写到、或者做出来不完全一样的地方。每个画面怎么走、开关在哪，写在 `tools/course/ENGINE.md` §4）：
+  1. **委托什么时候出**：三样都有——`EchoTalk.questOk()`（能聊 + 服务器的 `questLangs` 有这门语言）、course.json 有 `QUESTS[id]`（小步骤和 quests.js 一样多）、`ask` 的每一句在 `LINES` 里查得到。所以课程包里只翻了几条时只出那几条（按条看，和 B 的第 3 条对上了）。「服务器会不会」world.js 半秒问一次（头上的「?」每一帧都要画）。
+  2. **聊天界面不调 `questNpc(q, lang, loc)`**：连接只发 `quest` 和 `lang`，人设在服务器上；界面要的目标、小步骤、开场白手机上自己拼（talk.js 的 `questBase`，和 B 的 `questNpcL` 取的是同样的几样：前 4 步、`loc.steps`、`loc.opener`）。比它多一样：小步骤第 3 项放了 quests.js 的英语原句（`{ en }`），**英语界面**拿它当这一步的说明（B 的第 1 条：委托没有英文的步骤说明，原来会显示「Step n」）。
+  3. **目标说明里的名字**：quests.js 的 `goal` / `goalZh` 里的人名、地名照 course.json 的 `QUESTS[id].names`（B 的第 9 条）换成这门课的写法（game.js 的 `questNames`，选项页和聊天页都换）；没有名字表（`lines: false` 的小样）就是原样。
+  4. **请求 / 感谢下面那行意思**：走 `lineOf`。中文意思里夹着翻译表的词表里没有的人名时，`lineOf` 分不出它是名字还是英语单词，会把这句意思拿掉——委托的这几页（world.js 标 `zhOwn`）这时候照 quests.js 自己的中文显示（「意思用 quests.js 里原来的那两份」）。正式的内容里这些人名（Ben……）在 `terms.person` 里，走不到这一步。
+  5. **选项那一页**：英语课上面那行是委托的英文名（还念出来）；别的课里不放、没有 🔊（名字牌上已经是界面语言的委托名）。「以后再来」那句（"Not now. Please come back later."）翻译表里有就放译文，没有就只有下面那行界面文字。
+  6. **委托的连接被服务器拒了**（`lang` 的错）：状态行照第一轮写「还在做」；网页版只把记着的 `questLangs` 改掉（`echo-talk-langs` 多了 `q`、`t` 两项，没有的时候和第一轮记的一字不差），聊天照旧。
+  7. **词卡的意思**：中文那份去掉带拉丁字母的括号（「去了（go 的过去式）」→「去了」，主会话转的译者意见），英语界面用 `words[k][0]`（course.json 里的第 3 项）。**词卡变绿**：西语不看冠词、`del` / `al` 当 `de` / `a`（talk.js 的 `wordHit`——`lang-es.js` 不在这一轮界面能改的文件里，规矩先写在 talk.js）；日语按读音比（`lang-ja.js` 的 `hasWord`）；`lang-ja.js` 的自带读音表、量词表按日语译者列的补了（滝、手袋……、羽、頭）。
+  8. **今日目击**：`EchoSight.on()`（这门课有没有线索的译文：拿第 1 座岛一定拼得出来的两句试）+ 当天三条都查得到才出，否则 `state().st === 'off'`。意思走 `lineOf` 的 `mean`（`courseWord`：English / 英语 → 这门语言）；被 `lineOf` 拿掉的（「见到谁都说 hello 和 good morning」夹着英语）退回线索自己的中文——**这一句译者可以在 sight.json 里另写 `zh`**。进图的那句提示（"Something rare is close!"）不在 `sight-src.json` / `lines-src.json` 里：别的课只写界面语言那一句。
+  9. **首页的目击卡片**：`monsters.js` 不在界面这一轮能改的文件里，它的首页在别的课里不放这张卡片（`!E.lang`）——由 game.js 的 `sightHome()` 在 `renderHome` 里补在同一个位置。**没改的**：手册「出没地点」里「会出现在今日目击里」那一句（monsters.js `habitatHTML` 的 `!E.lang`），别的课里照旧不写；要改就是把这两处 `!E.lang` 换成问 `EchoSight.on()`。
+  10. **AI 发音点评**：`EchoTalk.tipOk()`（云端模式 `EchoAccount.tipLang`，中转服务 `/health` 的 `tipLangs`）；`/tip` 这时候才回 400 `lang`：不算 AI 出错、不挂红条，记下来不再问。APK 直连在别的课里没有点评（和聊天一样）。
+  11. **日语「更好的说法」进复习**：`EchoLang.get('ja').readable(句子, 读音表)`——用打分时把一句话换成读音的那一套，一处都读不出来的（读音表里没有的汉字、拉丁字母、别的符号）才不算，所以带拉丁字母名字的句子也不进。一句一句看：两条里只进一条时评语页的标题换一句、进的那条标 📅。**没做**：进了复习的这些句子题面上没有读音、🔊 不出声（没有条目的句子 `say()` 不念——第一轮进复习的西语、中文句子也一样）；要补的话是 game.js 出题的地方给 `say` 第 4 个参数。
+  12. **`.c` 写法**：`w.q.tip` / `w.q.help` / `w.q.st.open` / `w.q.intro`、`si.card.none` / `si.row.new` / `si.sheet.none` / `si.sheet.new` / `si.zh.aria` / `si.caught.read` / `si.tag.sub` / `si.sheet.sub`、`g.ach.sight1.d`。和第一轮一样，`.c` 是别的课一律用的：委托没开时冒险菜单的委托本里那句说明也从「用英语」变成了这门语言的名字（别的行为没变）。
+  13. **测试**：`tests/course-talk.test.js`（委托、点评、日语进复习）用的是真的 `server/relay.js` + 假上游，课程包里塞 `tests/course-r2-fixture.js` 的小样（直接塞进 course.json 的 `LINES` / `QUESTS` / `TERMS.person`，没走 B 第 4 条的文件）；`tests/course-sight.test.js` 新写。两个都能加 `--real`：用 `CB.build(lang, { lines: false, quests / sight: 正式的文件 })` 走一遍——交稿时三门语言都过。

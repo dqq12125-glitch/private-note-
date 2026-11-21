@@ -63,6 +63,14 @@ function loadData(edition) {
   const lines = new Set(SG.lines().concat(loadData('sales').EchoSight.lines()));
   const odd = [...lines].filter(s => /[^\x20-\x7e]/.test(s) || s.length > 130 || !/^It /.test(s) || !/[.!]$/.test(s));
   check0(lines.size > 100 && lines.size < 400 && !odd.length, '线索模板一共能拼出 ' + lines.size + ' 句（给 tools/voice/collect.js 提前配音），都是纯英文短句' + (odd.length ? '；不对的：' + odd.slice(0, 3).join(' | ') : ''));
+  // linePairs()：每一句和它的中文意思（别的语言的课翻译线索用，TALK.md 第二轮）；lines() 照旧是它英文的那一半；
+  // tools/course/sight-src.json（译者照着翻的原文）和两个版本拼得出来的句子一字不差——改了线索的模板要重新生成它
+  const SGS = loadData('sales').EchoSight, pairs = SG.linePairs().concat(SGS.linePairs()), pm = new Map(pairs.map(x => [x.en, x.zh]));
+  check0(JSON.stringify(SG.linePairs().map(x => x.en)) === JSON.stringify(SG.lines()) && JSON.stringify(SGS.linePairs().map(x => x.en)) === JSON.stringify(SGS.lines()) && pm.size === lines.size &&
+    pairs.every(x => typeof x.zh === 'string' && /^它/.test(x.zh) && /[。！]$/.test(x.zh) && pairs.filter(y => y.en === x.en).every(y => y.zh === x.zh)),
+  'linePairs()：' + pm.size + ' 句都带着中文意思（同一句英文只有一个意思），lines() 就是它的英文那一半');
+  const sightSrc = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'course', 'sight-src.json'), 'utf8')).lines; } catch (e) { return null; } })();
+  check0(!sightSrc || JSON.stringify(sightSrc) === JSON.stringify([...lines].sort()), sightSrc ? 'tools/course/sight-src.json（别的课翻译线索的原文）和模板拼得出来的 ' + lines.size + ' 句一字不差' : '（没有 tools/course/sight-src.json：不核对）');
   const src = fs.readFileSync(path.join(ROOT, 'sighting.js'), 'utf8');
   check0(!/\bE\.save\(\)/.test(src.slice(src.indexOf('function onStep'), src.indexOf('function ended'))) && !/E\.save\(\)/.test(src.slice(src.indexOf('function roll'), src.indexOf('// ---------- 三条线索'))),
     '每走一步、每天定目标都不调整份存档的 save()（跟着 world.js 的 savePos 存）');

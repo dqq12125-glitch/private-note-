@@ -511,3 +511,197 @@ The game's own phrasings are:
 | With nine badges, a flying monster can fly you to any town you visited. | バッジが九こあれば、飛べるモンスターが、行ったことのある町へ、どこにでも連れていってくれます。 | badges = 〜こ |
 | {mon}, climb the waterfall! (speak) | {mon}、たきを登って！ | |
 | Hmm, not quite. You can say: "{text}" | うーん、おしいです。こう言いましょう。「{text}」 | 「 sits at the end of the chunk before the slot |
+
+## 10. Side quests and Today's Sighting (2026-11-21)
+
+`quests.json` (17 quests from `quests.js`) and `sight.json` (the 157 clue sentences in `tools/course/sight-src.json`). The format is in `tools/course/TALK.md`, 第二轮 A. Whole sentences are `{ t, seg, r }` and follow every rule in §1 above; a word card is `{ t, r }`. Both files are files of record: edit them directly.
+
+**Sighting clues are built from half-sentences.** The same English half must have the same Japanese everywhere (the tables below). If you change one half, change it in every key that contains it.
+
+### Quest speakers
+
+| Quest | Speaker (name plate in `terms.person`) | In the lines |
+| --- | --- | --- |
+| q0-cap | Ms Rosa = ロサさん | わたし. The boy is ベンくん (`ben` = ベン). |
+| q0-visitor | Mr Costa = コスタさん | わたし. His job, "island greeter", is 島のおむかえ係. He plays フィン (Finn) in the chat; the name is only in the persona. |
+| q1-bag | Lucy = ルーシー | わたし |
+| q1-stock | Ms Pen = ペンさん | わたし |
+| q2-photo | Little Lucy = 小さなルーシー | わたし. Her baby brother Bobo is ボボ. |
+| q2-farm | Farmer Joe = 農家のジョー | わたし |
+| q3-way | Student Lily = 学生のリリー | わたし |
+| q3-fair | Coach Lee = リーコーチ | no pronoun needed |
+| q4-maths | Student Max = 学生のマックス | **ぼく** (a boy) |
+| q5-club | Chess Club Amy = チェス部のエイミー | わたし |
+| q6-tea | Mrs. Hands = ハンズさん | わたし. Mayor Tick is 町長のティックさん the first time, then 町長さん. |
+| q7-party | Balloon Clown = 風船のピエロ | わたし. His monster Pop is **ポップ** (new name). |
+| q8-missing | Zookeeper Tom = しいくいんのトム | The monster is ナイトポー (`terms.monster`). |
+| q9-guard | Officer Kim = けいさつかんのキム | — |
+| q10-order | Chef Mei = シェフのメイ | わたし. Coach Tom is トムコーチ. |
+| q11-ski | Skier Lily = スキーヤーのリリー | — |
+| q12-album | Grandpa Tang = タンおじいさん | わたし. The learner calls him おじいさん. |
+
+- Nobody says あなた. Where English says "you" or "dear", the Japanese leaves it out or says トレーナーさん ("Hello, young trainer" = こんにちは、小さなトレーナーさん, as in `lines.json`).
+- The model sentences (`steps`) are what the learner says: short です・ます sentences with no pronoun.
+- **English → 日本語**, as in §3: "read it to me in English" = 日本語で読んでください; "the English classroom" = 日本語の教室; the clue "People there love English, maths and science" = 日本語と数学と理科.
+
+### New words in the quests
+
+| English | Japanese (reading) |
+| --- | --- |
+| owner | 持ち主 (もちぬし) |
+| island greeter | 島のおむかえ係 (おむかえがかり) |
+| lines (to remember) | せりふ |
+| lost and found | 落とし物の係 (おとしもののかかり), as in `lines.json` |
+| pencil box | 筆箱 (ふでばこ) |
+| list / the team's note | リスト / メモ |
+| stationery store | ぶんぼうぐのお店 |
+| ducks / cow / little pig | あひる / 牛 (うし) / 小さなぶた |
+| farm / windmill | 農場 (のうじょう) / 風車 (ふうしゃ) |
+| gate (farm, school) | 門 (もん); it is open = 開いて (あいて), it is closed = しまって |
+| across from | 〜の向かい (むかい) |
+| school shop | 学校の売店 (ばいてん) |
+| sports day / plan | 運動会 / 予定 (よてい) |
+| notice board | けいじばん |
+| PE room | 体育の部屋 |
+| maths club | 数学部 (すうがくぶ) |
+| useful | 役に立ちます (やくにたちます) |
+| club (to join) | 部 (ぶ): 部に入ります |
+| club show | 部のショー |
+| free (has time) | 時間があります |
+| in the morning / in the afternoon | 午前 (ごぜん), 午前中 (ごぜんちゅう) / 午後 (ごご) |
+| usually | たいてい |
+| surprise party / party plan | サプライズパーティー / パーティーの計画 (けいかく) |
+| noodles / beef noodles | めん / ぎゅうにくめん |
+| party bag | パーティーのおみやげ |
+| Animal Park | 動物公園 (§5) |
+| river road | 川ぞいの道 (かわぞいのみち) |
+| tree house | **木の上の家** (きのうえのいえ), also in the clues |
+| black mask on its face | 顔に黒いマスクのようなもよう, as in Nightpaw's handbook line |
+| bin | ごみ箱 (ごみばこ) |
+| City Garden / the garden | 町の庭園 (まちのていえん) / 庭園 |
+| polite | ていねい; ask politely = ていねいにたのみます |
+| food stall | 屋台 (やたい) |
+| order (food) | 注文します (ちゅうもんします) |
+| Snow Mountain | 雪山 (ゆきやま) |
+| weather report | 天気よほう |
+| the (weather) station | きしょうだい (`terms.place`) |
+| heavy snow | 大雪 (おおゆき) |
+| warm coat / gloves | あたたかいコート / てぶくろ |
+| ice lake | 氷の湖 (こおりのみずうみ), as in `lines.json` |
+| photo album | 写真のアルバム |
+| fog | きり |
+| waterfall / rainbow | たき / にじ |
+| old partner | 昔のパートナー (むかしの) |
+
+### Counters used in the quests
+
+| What | Japanese (reading) |
+| --- | --- |
+| pencils, rulers | 十二本 (じゅうにほん), 八本 (はっぽん); how many = 何本 (なんぼん) |
+| bags | 三つ (みっつ) |
+| ducks | 三羽 (さんわ) |
+| cow | 一頭 (いっとう) |
+| little pig | 一ぴき (いっぴき) |
+| bowls / glasses | 三ばい (さんばい) / 二はい (にはい); the counter is written in kana |
+| times | 三回 (さんかい) |
+| minutes | 二分 (にふん) |
+| clock times | 三時 (さんじ), 四時 (よじ), 五時 (ごじ), 九時 (くじ) |
+
+### Clue 1: which island
+
+"It is on an island." = ある島にいます。
+
+- "People there …" = そこの人たちは、…
+- "There are X and Y there." = そこには、Xと、Yがあります。
+
+| English | Japanese |
+| --- | --- |
+| say hello and good morning to everyone | みんなに「こんにちは」や「おはようございます」と言います。 |
+| love pens, pencils and rulers in every colour | いろいろな色のペンやえんぴつやじょうぎが大好きです。 |
+| love to talk about their father, mother and family | お父さんやお母さん、家族の話が大好きです。 |
+| talk about the classroom, the library and the playground | 教室や図書室や校庭の話をします。 |
+| love English, maths and science | 日本語と数学と理科が大好きです。 |
+| sing, dance and play chess in their clubs | クラブで歌を歌って、ダンスやチェスをします。 |
+| always get up and have breakfast on time | いつも時間どおりに起きて、朝ごはんを食べます。 |
+| love birthday parties, cakes and balloons | たんじょうびパーティーやケーキや風船が大好きです。 |
+| talk about pandas, tigers and monkeys | パンダやトラやさるの話をします。 |
+| must follow many rules and be quiet | たくさんのきまりを守って、静かにします。 |
+| play basketball and eat healthy food | バスケをして、体にいい物を食べます。 |
+| talk about sunny, rainy and snowy weather | 晴れや雨や雪など、天気の話をします。 |
+
+| Trees | Japanese (reading) | Houses | Japanese (reading) |
+| --- | --- | --- | --- |
+| palm trees | ヤシの木 | white houses with red roofs | 赤い屋根 (やね) の白い家 |
+| trees like big pencils | 大きなえんぴつのような木 | houses in bright colours | 明るい色の家 |
+| orange autumn trees | オレンジ色の秋の木 | wooden farm houses | 木でできた農場の家 |
+| round green trees | 丸い緑の木 | red brick buildings | 赤いれんがの建物 |
+| tall thin trees | 高くて細い (ほそい) 木 | round glass houses | 丸いガラスの家 |
+| dark green pine trees | こい緑の松 (まつ) の木 | big tents | 大きなテント |
+| trees like lollipops | ペロペロキャンディーのような木 | stone towers with clocks | 時計のついた石のとう |
+| big jungle trees | ジャングルの大きな木 | houses like cakes | ケーキのような家 |
+| fruit trees | 果物の木 | tree houses | 木の上の家 |
+| pine trees with snow on them | 雪をかぶった松の木 | tall buildings | 高いビル |
+| | | small shops | 小さなお店 |
+| | | wooden houses with snow on the roofs | 屋根に雪が積もった (つもった) 木の家 |
+
+### Clue 2: what kind of place, and how to get there
+
+| English | Japanese (reading) |
+| --- | --- |
+| It is on a road. | 道にいます。 |
+| It is on a sandy road. | すなの道にいます。 |
+| It is on a road by the sea. / by a river. | 海のそばの道にいます。 / 川のそばの道にいます。 |
+| It is on a road around the farms. | 畑 (はたけ) のまわりの道にいます。 |
+| It is in the woods. | 森の中にいます。 |
+| It is on a beach. | ビーチにいます。 |
+| It is on a cliff by the sea. | 海のそばのがけにいます。 |
+| It is high on a mountain. | 高い山の上にいます。 |
+| It is in a field of snow. | 雪の野原 (のはら) にいます。 |
+| It is on a path in the jungle. | ジャングルの小道 (こみち) にいます。 |
+| It is in a dark cave. / in a cave of ice. | 暗いどうくつの中にいます。 / 氷のどうくつの中にいます。 |
+| It is in a hot cave inside a mountain. | 山の中の暑いどうくつにいます。 |
+| It is in a tunnel. | トンネルの中にいます。 |
+| It is out at sea. | **海の上**にいます。 |
+| It is under the sea. | **海の底** (そこ) にいます。 |
+| Go north / south / east / west from the town. | 町から北 (きた) / 南 (みなみ) / 東 (ひがし) / 西 (にし) へ行ってください。 |
+| The way in is in the town. | 入り口 (いりぐち) は町の中にあります。 |
+| Go out to sea and dive down. | 海に出て、もぐってください。 |
+| It is far from the town. | 町から遠いです。 |
+| Walk along a road / a cliff first. | まず、道を歩いてください。 / まず、がけの道を歩いてください。 |
+| Walk through the woods / a tunnel / a hot cave / a cave of ice first. | まず、森 / トンネル / 暑いどうくつ / 氷のどうくつを通って (とおって) ください。 |
+| Climb a mountain first. | まず、山に登ってください。 |
+
+"Hot" for a cave is 暑い (the air is hot), not 熱い.
+
+### Clue 3: where it hides, and one thing about it
+
+| English | Japanese |
+| --- | --- |
+| It hides in the tall grass. | 高い草の中にかくれています。 |
+| It hides in the cave. Walk around inside. | どうくつの中にかくれています。中を歩き回ってください。 |
+| It swims on top of the water. Ride on the water to find it. | 水の上を泳いでいます。水の上を進んで、さがしてください。 |
+| It hides in the seaweed. | かいそうの中にかくれています。 (かいそう in kana, as on the sea-floor sign) |
+| It is a Fire monster. | 火のモンスターです。 (pattern: 〈type〉のモンスターです。) |
+| It is big. / It is very small. | 体が大きいです。 / 体がとても小さいです。 |
+| It is blue. | 色は、青です。 (pattern: 色は、〈colour〉です。 The comma keeps 色は and はいいろ apart.) |
+| It walks on four legs. / It stands on two legs. | 四本 (よんほん) の足で歩きます。 / 二本 (にほん) の足で立ちます。 |
+| It looks like a bird / a fish / a bug / a plant / a little ghost. | 鳥 / 魚 / 虫 / 植物 (しょくぶつ) / 小さなおばけのように見えます。 |
+| It has a long body like a snake. | 体がへびのように長いです。 |
+| It is round like a ball. | ボールのように丸いです。 |
+| It has a shell on its back. | せなかにこうらがあります。 |
+
+**Type names in the clues.** The game's types are its own, so the Japanese follows the plain meaning of the English name and never borrows another monster series' Japanese type names (rule from the main session, 2026-11-21; the same table as §6):
+
+| English | Japanese (reading) | English | Japanese (reading) |
+| --- | --- | --- | --- |
+| Normal | ふつう | Bug | 虫 (むし) |
+| Fire | 火 (ひ) | Rock | 岩 (いわ) |
+| Water | 水 (みず) | Ghost | おばけ |
+| Grass | 草 (くさ) | Dragon | ドラゴン |
+| Spark | 電気 (でんき) | Shadow | **かげ** |
+| Ice | 氷 (こおり) | Steel | 鉄 (てつ) |
+| Kungfu | **カンフー** | Earth | 大地 (だいち) |
+| Poison | どく | Flying | 空 (そら) |
+| Mind | **心 (こころ)** | | |
+
+**Colours in the clues:** 赤 (あか), オレンジ, 黄色 (きいろ), 緑 (みどり), 青 (あお), 白 (しろ), はいいろ. If the game adds more: むらさき, ピンク, 茶色 (ちゃいろ), 黒 (くろ).
