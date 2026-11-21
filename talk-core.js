@@ -301,7 +301,9 @@
       { // 1 初级
         who: 'a beginner in ' + L + ' (about CEFR A1)',
         speak: 'Speak slowly and clearly. Use short, simple sentences of ' + n.sent1 + ', ' + X.tense1 + ', with very common words and the useful words listed below. At most 2 short sentences per turn (' + n.turn1 + '), ending with one simple question (' + e.qs + ', or a choice).',
-        answer: 'A short answer of a few words is fine at this level. Show the full sentence once in your reply (' + e.echo1 + ') and now and then invite them to say it (' + e.invite + '), but do not insist.',
+        // 2026-11-21 真的 AI 实测：例句原样写着「Show the full sentence (…)」时，模型会把例句套上去（学习者说「我叫小云」，它回「哦，你喜欢小云。我也喜欢！」）。
+        // 所以写明这只是个样子、什么时候才用，并且要照学习者真的说的话回答
+        answer: 'A short answer of a few words is fine at this level. When the learner answered with only a word or two, show it once as a full sentence in your reply (only a pattern: if they were telling you what they like, ' + e.echo1 + ') and now and then invite them to say it (' + e.invite + '), but do not insist. Always respond to what the learner actually said; never use an example sentence from these rules unless it truly fits what they said.',
         stuck: 'If the learner is silent, answers in another language, or seems stuck: ask again in simpler words and give a short model sentence they can copy (' + e.copy1 + '), then wait. Only if they are stuck two times in a row, you may add ONE short hint in the learner\'s own language ({OWN}), then go back to ' + L + '.',
         stuckSame: 'If the learner is silent or seems stuck: ask again in simpler words and give a short model sentence they can copy (' + e.copy1 + '), then wait.',
         fix: 'Do not explain grammar. If a mistake makes the meaning unclear, say the correct sentence once in a friendly way and move on.',
@@ -610,7 +612,8 @@
         : x => String(x || '').toLowerCase().replace(/[^a-z' ]/g, ' ').replace(/\s+/g, ' ').trim();
       const added = t => (L && L !== 'es' ? false : nm(t.better).startsWith(nm(t.said) + ' '));
       const tips = (Array.isArray(e.tips) ? e.tips : []).map(t => ({ said: String((t && t.said) || '').slice(0, 120), better: String((t && t.better) || '').slice(0, 120), zh: String((t && (t.zh || t.note)) || '').slice(0, w) }))
-        .filter(t => t.better && nm(t.better) !== nm(t.said) && !added(t)).slice(0, 2);
+        // 带空格线 / 省略号的不是一句能照着说的话（2026-11-21 真的 AI 实测出过「我姓______。」），不要
+        .filter(t => t.better && !/_{2,}|\.{3,}|…/.test(t.better) && nm(t.better) !== nm(t.said) && !added(t)).slice(0, 2);
       return {
         done: !!e.done, stars: Math.max(1, Math.min(3, e.stars | 0 || 1)), praise: String(e.praise || '').slice(0, w), tips,
         steps: Array.isArray(e.steps) ? e.steps.slice(0, 6).map(x => x === true || x === 'true' || x === 1) : [],
@@ -636,8 +639,17 @@
     const need = lv != null && lv <= 1 ? Math.max(1, n - 1) : lv != null && lv >= 4 ? n : n <= 2 ? n : n - 1;
     let done = n ? k >= need : !!ev.done, stars = n ? (k === n ? 3 : done ? 2 : 1) : ev.stars;
     if (voice < (lv === 0 ? 2 : 3)) { done = false; stars = 1; }
+    // 「更好的说法」只能改学生自己说的话。2026-11-21 真的 AI 实测：评语的模型有时把岛民说的那句当成学生的拿来改
+    // （said 是岛民的原话）——这种丢掉：said 出现在岛民的话里、学生的话里又没有的。别的照旧（模型把学生的话引得不太一样的不动）
+    let tips = ev ? ev.tips || [] : [];
+    if (tips.length) {
+      const nz = x => String(x || '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+      const mine = (turns || []).filter(t => t && t.who === 'you').map(t => nz(t.text)).filter(Boolean);
+      const theirs = (turns || []).filter(t => t && t.who !== 'you').map(t => nz(t.text)).filter(Boolean);
+      tips = tips.filter(t => { const q = nz(t && t.said); return !q || mine.some(s => s.includes(q) || q.includes(s)) || !theirs.some(s => s.includes(q)); });
+    }
     return {
-      done, stars, praise: ev ? ev.praise : '', tips: ev ? ev.tips || [] : [], steps: got, memory: ev ? ev.memory || [] : [],
+      done, stars, praise: ev ? ev.praise : '', tips, steps: got, memory: ev ? ev.memory || [] : [],
       concern: !!(ev && ev.concern) || worried(turns), concernWhy: ev ? ev.concernWhy || '' : '', voice, ai: !!(ev && ev.ai !== false),
     };
   }

@@ -55,6 +55,17 @@ async function coreTests() {
     check(others.every(x => /不算学生说的/.test(x)) && !/pelo corto|父と母|我姓林/.test(others.join('\n')), '西语、日语、中文的「可以这样说」也一样拿掉', others);
     check(tr(C.stepsBody(npc, 0, [{ who: 'npc', text: 'What can you say about cats?' }, { who: 'you', text: 'cats are nice animals' }])).includes('What can you say about cats?'), '平常的话里有 can / say 不受影响');
   }
+  // 「更好的说法」只改学生自己说的话：said 是岛民的原话的丢掉；带空格线 / 省略号的不是一句能照着说的话，也丢掉（2026-11-21 真的 AI 实测出过这两种）
+  {
+    const tt = [{ who: 'npc', text: 'Hi! Who is your best friend?' }, { who: 'you', text: 'I has a cat' }, { who: 'you', text: 'My friend are tall' }, { who: 'you', text: 'she is nice girl' }];
+    const evT = { done: false, stars: 1, praise: 'ok', steps: [], memory: [], tips: [{ said: 'Who is your best friend?', better: 'What is your best friend like?', zh: 'x' }, { said: 'I has a cat', better: 'I have a cat.', zh: 'y' }] };
+    const jt = C.judge(C.goalOf(npc, 0), tt, evT, [], null);
+    check(jt.tips.length === 1 && jt.tips[0].said === 'I has a cat', '评语：拿岛民的原话来「改」的那条丢掉，学生自己的那条留着', jt.tips);
+    const pe = C.parseEval({ choices: [{ message: { content: JSON.stringify({ done: false, stars: 1, praise: 'ok', steps: [], memory: [], tips: [{ said: 'I is Tom', better: 'I am ______.', zh: 'a' }, { said: 'I like play', better: 'I like to play ...', zh: 'b' }, { said: 'I has a cat', better: 'I have a cat.', zh: 'c' }] }) } }] });
+    check(pe.tips.length === 1 && pe.tips[0].better === 'I have a cat.', '评语：带空格线 / 省略号的「更好的说法」不要', pe.tips);
+    const TC = require('../talk-courses.js'), ins = l => C.instructions(TC.list.find(n => n.lang === l), 'Coco', { goal: 0, level: 1, ui: 'en' });
+    check(['es', 'ja', 'zh'].every(l => /only a pattern/.test(ins(l)) && /Always respond to what the learner actually said/.test(ins(l))) && !/only a pattern/.test(C.instructions(npc, 'Coco', { goal: 0, level: 1, ui: 'en' })), '别的语言 1 级：例句写明只是样子、要照学习者真的说的话回答（英语的那一份没动）');
+  }
   // judge：语音句不到 3 句不算完成；差 1 步也算完成 2 星；全做到 3 星
   const g = C.goalOf(npc, 0), v = t => ({ who: 'you', text: t });
   const three = [v('It is sunny today.'), v('I wear a T-shirt.'), v('I like to fly kites.')];
