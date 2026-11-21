@@ -1,6 +1,7 @@
 # TestFlight 的测试员：看状态、开带公开链接（邀请码）的外部测试组并送测试版审核（ios/scripts/asc-beta.mjs）。
 # 怎么跑：推一个标签——
 #   asc-status-<随便什么>   只看现在的状态，不改任何东西
+#   asc-wait-<随便什么>     苹果一次只审一个包：等在审的那个审完，再把最新的包放进组、送审，等它通过（一个任务最多等约 5 个半小时）
 #   asc-link-<随便什么>     建外部测试组「Friends」+ 公开链接，把最新的包加进去，送测试版审核（要老板点头才推这个标签）
 # 用的仓库密钥：ASC_KEY_ID、ASC_ISSUER_ID、ASC_KEY_P8（和上传 TestFlight 是同一把）；
 # 可选 ASC_REVIEW_FIRST / ASC_REVIEW_LAST / ASC_REVIEW_PHONE / ASC_REVIEW_EMAIL / ASC_FEEDBACK_EMAIL（苹果审核要的联系人，后台已经填过就不用）。
@@ -9,7 +10,7 @@ name: iOS testers
 
 on:
   push:
-    tags: ['asc-status-*', 'asc-link-*']
+    tags: ['asc-status-*', 'asc-link-*', 'asc-wait-*']
 
 permissions:
   contents: read
@@ -18,7 +19,7 @@ jobs:
   asc:
     name: App Store Connect (TestFlight testers)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 350
     steps:
       - name: Check out (shallow)
         uses: actions/checkout@v4
@@ -37,6 +38,7 @@ jobs:
         run: |
           case "$GITHUB_REF_NAME" in
             asc-link-*) act=link ;;
+            asc-wait-*) act=wait ;;
             *) act=status ;;
           esac
           node ios/scripts/asc-beta.mjs "$act"

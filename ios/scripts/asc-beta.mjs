@@ -32,11 +32,13 @@ function jwt() {
   const sig = crypto.sign('sha256', Buffer.from(head + '.' + body), { key: P8, dsaEncoding: 'ieee-p1363' });
   return head + '.' + body + '.' + b64u(sig);
 }
-const TOKEN = jwt();
+// 令牌 15 分钟过期：等审核的那个长任务要一直用，过 10 分钟换一张新的
+let TOKEN = jwt(), tokenAt = Date.now();
+const token = () => { if (Date.now() - tokenAt > 600000) { TOKEN = jwt(); tokenAt = Date.now(); } return TOKEN; };
 const seal = (label, text) => console.log('SEALED:' + label + ':' + crypto.publicEncrypt({ key: PUB, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' }, Buffer.from(String(text))).toString('base64'));
 // 出错时只报苹果给的错误码和标题（detail 里可能带邮箱之类，不打印）
 async function api(method, path, body) {
-  const r = await fetch('https://api.appstoreconnect.apple.com' + path, { method, headers: Object.assign({ Authorization: 'Bearer ' + TOKEN }, body ? { 'Content-Type': 'application/json' } : {}), body: body ? JSON.stringify(body) : undefined });
+  const r = await fetch('https://api.appstoreconnect.apple.com' + path, { method, headers: Object.assign({ Authorization: 'Bearer ' + token() }, body ? { 'Content-Type': 'application/json' } : {}), body: body ? JSON.stringify(body) : undefined });
   const text = await r.text(); let j = null; try { j = text ? JSON.parse(text) : null; } catch (e) { /* 不是 JSON */ }
   if (!r.ok) {
     const errs = ((j && j.errors) || []).map(e => (e.code || '') + ' ' + (e.title || '')).join(' | ');
@@ -138,8 +140,35 @@ async function link(app) {
   if (g.attributes.publicLink) seal('link ' + GROUP, g.attributes.publicLink); else console.log('公开链接还没生成（一般要等包通过测试版审核）');
 }
 
+// wait：苹果一次只审一个包。有包在审就等（5 分钟看一次，最多约 5 个半小时——GitHub 一个任务最长 6 小时）；
+// 没有包在审了就照 link 办（把最新的包放进组、送审），再等它审完；通过了要是还没开始测试就通知一下测试组。
+const IN_REVIEW = ['WAITING_FOR_BETA_REVIEW', 'IN_BETA_REVIEW'];
+const pause = ms => new Promise(r => setTimeout(r, ms));
+async function wait(app) {
+  const t0 = Date.now(), MAX = 5.5 * 3600000; let sent = false, last = '';
+  for (;;) {
+    const bs = await buildsOf(app.id), busy = bs.filter(b => IN_REVIEW.includes(b.beta.externalBuildState));
+    const line = bs.slice(0, 4).map(b => b.attributes.version + ' ' + b.beta.externalBuildState).join('；');
+    if (line !== last) { console.log(new Date().toISOString().slice(11, 16) + '  ' + line); last = line; }
+    if (!busy.length) {
+      const newest = bs.find(b => b.attributes.processingState === 'VALID' && !b.attributes.expired);
+      const st = newest && newest.beta.externalBuildState;
+      if (st === 'BETA_APPROVED' || st === 'IN_BETA_TESTING') {
+        if (st === 'BETA_APPROVED') { try { await api('POST', '/v1/buildBetaNotifications', { data: { type: 'buildBetaNotifications', relationships: { build: { data: { type: 'builds', id: newest.id } } } } }); console.log('已通知测试组开始测试'); } catch (e) { console.log('通知测试组：' + e.message); } }
+        console.log('✓ 最新的包 ' + newest.attributes.version + ' 已经通过测试版审核（' + st + '），公开链接现在能用了');
+        await link(app);   // 再核对一遍组里是不是只有它，顺带把公开链接打出来（加密的）
+        return;
+      }
+      if (sent) { console.log('送审以后状态是 ' + st + '，不是在审也不是通过：停下来让人看'); return; }
+      await link(app); sent = true;
+    }
+    if (Date.now() - t0 > MAX) { console.log('等了 5 个半小时还没审完：这个任务先结束，再推一个 asc-wait-<n> 标签接着等'); return; }
+    await pause(300000);
+  }
+}
+
 const act = process.argv[2] || 'status';
-appOf().then(app => (act === 'link' ? link(app) : status(app))).then(() => process.exit(0)).catch(e => { console.log('✗ ' + (e && e.message || e)); process.exit(1); });
+appOf().then(app => (act === 'link' ? link(app) : act === 'wait' ? wait(app) : status(app))).then(() => process.exit(0)).catch(e => { console.log('✗ ' + (e && e.message || e)); process.exit(1); });
 
 // 在老板电脑上把 SEALED 那一行解开（b64 = 冒号后面最后那一段）：
 //   node -e "const c=require('crypto'),fs=require('fs');console.log(c.privateDecrypt({key:fs.readFileSync('D:/Claude/echo-island-sales/_private/asc-out-key.pem'),padding:c.constants.RSA_PKCS1_OAEP_PADDING,oaepHash:'sha256'},Buffer.from(process.argv[1],'base64')).toString())" <b64>
