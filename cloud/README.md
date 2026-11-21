@@ -30,7 +30,7 @@
 | `src/report.js` | 举报、老板看举报、每天的清理 |
 | `src/email.js` | 发邮件的接口：`console`（本机）和 `resend` 两种实现，邮件内容 |
 | `src/ratelimit.js` | 限流 |
-| `src/shared.js` | 从仓库根目录引 `talk-core.js`、`talk-npcs.js`、`quests.js`、`placement-data.js`（打包时一起打进去，不复制） |
+| `src/shared.js` | 从仓库根目录引 `talk-core.js`、`talk-npcs.js`、`talk-courses.js`（别的语言的课的聊天角色）、`quests.js`、`placement-data.js`（打包时一起打进去，不复制） |
 | `test/` | 测试（见下面「测试」） |
 
 ## 架构和几个决定
@@ -51,7 +51,9 @@
 
 **存什么：** 不存聊天记录、录音；只有孩子在某句 AI 的话上按了「举报」，那段的最后几句（最多 8 句）存 90 天。登录码、会话、同意链接只存哈希；限流表里的 IP、邮箱也只存带密钥的哈希。Apple 的 refresh token（删号时撤销用）用 `DATA_KEY` 加密存。删号马上删光这个人的所有行。
 
-**和游戏共用的文件：** `src/shared.js` 直接 `import '../../talk-core.js'` 等四个文件，wrangler（esbuild）打包时当 CommonJS 一起打进去，`talk-core.js` 需要的 `i18n.js` 也跟着进去。这几个文件**一个字都没改**。所以实时聊天的人设和安全规则和家庭版中转服务一模一样（测试里两边同样的参数发给阿里云的 `session.update` 逐字比对），手机发来的人设、规矩一概不用。
+**和游戏共用的文件：** `src/shared.js` 直接 `import '../../talk-core.js'` 等五个文件，wrangler（esbuild）打包时当 CommonJS 一起打进去，`talk-core.js` 需要的 `i18n.js` 也跟着进去。这几个文件**一个字都没改**。所以实时聊天的人设和安全规则和家庭版中转服务一模一样（测试里两边同样的参数发给阿里云的 `session.update` 逐字比对），手机发来的人设、规矩一概不用。
+
+**别的语言的课和岛民聊天（2026-11-21，合同 `tools/course/TALK.md`）：** 西语 / 日语 / 中文课的聊天角色在仓库根目录的 `talk-courses.js`（`node tools/course/build.js --talk` 从课程源文件生成，**改了聊天角色要重新生成再部署**；`--talk --check` 核对是不是最新的）。手机照旧只发角色 id（形如 `es1-u1`）；地图上随便一个人（`npc=dyn`）在 `p` 里带 `lang`。角色上的 `lang` 决定一切，都在 `talk-core.js` 里：这门语言的规矩和例句、音色（`LANGS[语言].voices`：西语 Sonrisa / Bodega，日语 Ono Anna / Ryan，中文 Serena · Maia · Momo / Ryan——2026-11-21 对着真的实时模型试过，英语的 Jennifer 说西语走样）、评语、打勾、开口句数怎么数。服务器这边只多三样：`TALK_LANGS`（开着哪些语言，`GET /v1/me` 的 `talkLangs`）、不支持的语言回 400（不扣额度、不连阿里云）、`/v1/zh` 的 `lang` / `ui`。额度、限流、家长同意、举报都不分语言。英语的一切不变（`t-05`、`t-13` 逐字比对）。
 
 **App Store 的证书：** 签名数据的证书链最后一张必须是 Apple Root CA – G3。代码里放的是 Apple 公布的它的 **SHA-256 指纹**（`63 34 3A BF B8 9A 6A 03 EB B5 7E 9B 3F 5F A7 BE 7C 4F 5C 75 6F 30 17 B3 A8 C4 88 C3 65 3E 91 79`，来源：Apple 的根证书列表 support.apple.com/121728，ECDSA 384 位、序列号 2D C5 FC 88 D2 C5 4B 95、2039-04-30 到期）——只认这个指纹就等于只认这一张证书。证书文件本身这次没有下载；想把它也放进去：从 https://www.apple.com/certificateauthority/AppleRootCA-G3.cer 下载，先核对指纹（PowerShell：`(Get-FileHash AppleRootCA-G3.cer -Algorithm SHA256).Hash`），再把它的 base64 设成 `APPLE_ROOT_CERT_B64`，这样还会逐字节比对。不查证书吊销（OCSP 要联网，Apple 官方库关掉联网检查时也不查）。
 
@@ -63,10 +65,11 @@
 4. **阿里云国际版账号**（alibabacloud.com，不是 aliyun.com），开通 **Model Studio（百炼）新加坡**，建一把 API Key（新加坡和北京的 Key 不通用）。**上线前对着控制台核对**：
    - 实时语音模型名（默认 `qwen3.8-omni-flash-realtime`；文档说这个模型在新加坡要用工作空间专属域名 `{WorkspaceId}.ap-southeast-1.maas.aliyuncs.com`——那就把 `DS_HTTP_BASE` 设成 `https://{WorkspaceId}.ap-southeast-1.maas.aliyuncs.com`、`DS_WS_BASE` 设成 `wss://` 开头的同一个地址；也可以换文档里列的 `qwen3.5-omni-flash-realtime` 等）；
    - `qwen3-asr-flash-realtime`、`qwen3-asr-flash`、`qwen-plus`、`qwen3-tts-flash` 在新加坡都有；
-   - `talk-npcs.js` 里岛民用的音色（Serena、Tina、Aiden……）在国际版的实时模型里都有，没有的写进 `TALK_VOICE_MAP`（`{"老名字":"新名字"}`），不用改游戏文件；合成用的 `Cherry` / `Ethan` 同理（`TTS_VOICE_F` / `TTS_VOICE_M`）。
+   - 岛民用的音色在国际版的实时模型里有没有：英语的 Jennifer、Aiden、Mione（`talk-npcs.js`、`talk-core.js` 的 `VOICES`），别的语言的 Sonrisa、Bodega、Ono Anna、Ryan、Serena、Maia、Momo（`talk-core.js` 的 `LANGS`）。没有的写进 `TALK_VOICE_MAP`（`{"老名字":"新名字"}`），不用改游戏文件；合成用的音色同理（英语 `TTS_VOICE_F` / `TTS_VOICE_M`，别的语言 `TTS_VOICES`）。
    - 别的语言的课（西语 / 日语 / 中文）：`qwen3-asr-flash` 和 `qwen3-asr-flash-realtime` 认不认 `es` / `ja` / `zh` 这几个语言代码（实时识别的 `input_audio_transcription.language` 也是）、
-     `qwen3-tts-flash` 的 `language_type` 认不认 `Spanish` / `Japanese` / `Chinese`、`TTS_VOICES` 里的默认音色在国际版有没有、合不合适——**都还没在真的阿里云上试过**，
-     上线前每种语言各试一句识别、一句合成；哪门不行就先从 `SPEECH_LANGS` 去掉（App 会照旧让那门课用手机自带的识别 / 声音）。
+     `qwen3-tts-flash` 的 `language_type` 认不认 `Spanish` / `Japanese` / `Chinese`、`TTS_VOICES` 里的默认音色和聊天用的音色在国际版有没有、合不合适——
+     现在用的北京区 2026-11-21 都实测过（见「本机开发和测试」），**国际版还没试过**：换过去以前每种语言各试一句识别、一句合成、一段聊天；
+     哪门不行就先从 `SPEECH_LANGS`（识别 / 合成）或 `TALK_LANGS`（聊天）去掉（App 会照旧让那门课用手机自带的识别 / 声音、聊天写「还在做」）。
    - 每月预算和余额提醒（测试会花钱：先用少量额度在 TestFlight 上试）。
 5. **发邮件的服务：Resend**（resend.com）。验证发信域名（加 SPF / DKIM 记录，Cloudflare DNS 里点几下），建 API Key，`EMAIL_FROM` 设成 `Echo Island <no-reply@你的域名>`。换别家要改 `src/email.js`（加一个同样参数的函数）。
 6. **App Store Connect**（等苹果开发者账号批下来）：
@@ -106,10 +109,11 @@
 | `TALK_ASR_MODEL` | `qwen3-asr-flash-realtime` | 实时语音里转写孩子说的话 |
 | `ASR_RT_MODEL` / `ASR_MODEL` | `qwen3-asr-flash-realtime` / `qwen3-asr-flash` | 口语题的实时识别 / 整段识别 |
 | `EVAL_MODEL` | `qwen-plus` | 评价、打勾、点评、翻译、检测判分 |
-| `TTS_MODEL` / `TTS_VOICE_F` / `TTS_VOICE_M` | `qwen3-tts-flash` / `Cherry` / `Ethan` | 现场合成 |
-| `TALK_VOICE_MAP` | `{}` | 岛民音色改名 |
+| `TTS_MODEL` / `TTS_VOICE_F` / `TTS_VOICE_M` | `qwen3-tts-flash` / `Jennifer` / `Aiden` | 现场合成（英语；别的语言的音色在 `TTS_VOICES`） |
+| `TALK_VOICE_MAP` | `{}` | 岛民音色改名（`{"talk-core / talk-npcs 里的名字":"要换成的名字"}`，英语和别的语言的音色都能改，比如 `{"Ono Anna":"…"}`） |
+| `TALK_LANGS` | `en,es,ja,zh` | 和岛民聊天（`/v1/talk`，连带 `/v1/steps`、`/v1/zh` 的 `lang`）开着哪些语言（API.md §8「Chat language」）。只认 `talk-core.js` 的 `LANGS` 里有的，写别的会被忽略，英语一直在；`GET /v1/me` 的 `talkLangs` 就是它——App 看这个决定别的语言的课开不开聊天。某门语言聊起来不行，从这里去掉即可（改 `[vars]`，不用改 App）；和 `SPEECH_LANGS` 各管各的 |
 | `SPEECH_LANGS` | `en,es,ja,zh` | 口语题识别（`/v1/asr`、`/v1/asr-rt`）和现场合成（`/v1/tts`）认哪些语言（API.md §8 的 `lang`）。只认这四种，写别的会被忽略，英语一直在；`GET /v1/me` 的 `speechLangs` 就是它——App 看这个决定别的语言的课走不走服务器。某门语言的识别 / 合成上线后发现不行，从这里去掉即可（改 `[vars]`，不用改 App） |
-| `TTS_VOICES` | `{"es":{"f":"Cherry","m":"Ethan"},"ja":{"f":"Cherry","m":"Ethan"},"zh":{"f":"Cherry","m":"Ethan"}}` | 别的语言现场合成用的音色（女 `f` / 男 `m`；只写要改的那几个就行，英语照旧 `TTS_VOICE_F` / `TTS_VOICE_M`）。**默认值上线前要对着阿里云国际版 `qwen3-tts-flash` 的音色表核对**：这个音色在国际版有没有、支不支持这门语言、听起来合不合适，都还没验证 |
+| `TTS_VOICES` | `{"es":{"f":"Sonrisa","m":"Bodega"},"ja":{"f":"Ono Anna","m":"Ryan"},"zh":{"f":"Serena","m":"Ryan"}}` | 别的语言现场合成用的音色（女 `f` / 男 `m`；只写要改的那几个就行，英语照旧 `TTS_VOICE_F` / `TTS_VOICE_M`）。默认是说这门语言地道的那几个，和实时聊天用的同名；**2026-11-21 对着真的阿里云（北京区）实测过**：合成模型认这些名字，合成出来的西语 / 日语 / 中文识别一字不差。换国际版时再对着它的音色表核对一遍 |
 | `TALK_SESSION_MAX_SEC` | 600 | 每段聊天最长几秒 |
 | `TALK_WARN_SEC` | 60 | 还剩几秒时提醒 |
 | `TALK_MIN_START_SEC` | 20 | 今天剩下不到几秒就不让开新的一段 |
@@ -190,11 +194,13 @@ npm test               # 打包 + 假上游 + 两个本机 Worker，约 30 秒
 npm run dev            # 本机跑（wrangler dev --local）：先 npm run migrate:local，秘密写在 cloud/.dev.vars（不进仓库），EMAIL_PROVIDER=console 时登录码打印在终端
 ```
 
-**对着真的阿里云实测别的语言的识别 / 合成**（会花钱，先问老板；跑一遍约几分钱）：`node scripts/live-speech.mjs [en es ja zh]`。本机起同一份程序、上游接真的阿里云，每门语言合成两句（女声、男声）再整段识别、实时识别，用游戏自己的打分算分；钥匙只在进程里从钥匙文件读（`ECHO_KEY_FILE`），不打印。线上的服务器只能从 iPhone 用 Apple 登录，所以不直接打线上。2026-11-21 跑过（北京区）：四门语言全部对上，Cherry / Ethan 两个音色西语、日语、中文都能用，说完到出字约 0.5–1.3 秒；当天把带 `lang` 的版本部署到了线上。换国际版（`DS_HTTP_BASE` / `DS_WS_BASE`）或换模型以后要重跑。
+**对着真的阿里云实测别的语言的识别 / 合成**（会花钱，先问老板；跑一遍约几分钱）：`node scripts/live-speech.mjs [en es ja zh]`。本机起同一份程序、上游接真的阿里云，每门语言合成两句（女声、男声）再整段识别、实时识别，用游戏自己的打分算分；钥匙只在进程里从钥匙文件读（`ECHO_KEY_FILE`），不打印。线上的服务器只能从 iPhone 用 Apple 登录，所以不直接打线上。2026-11-21 跑过（北京区）：四门语言全部对上，当时用的 Cherry / Ethan 两个音色西语、日语、中文都能用，说完到出字约 0.5–1.3 秒；当天把带 `lang` 的版本部署到了线上。同一天又把别的语言合成的默认音色换成了说这门语言地道的（Sonrisa / Bodega、Ono Anna / Ryan、Serena / Ryan；对着真的阿里云实测过：合成模型认这些名字，合成出来的识别一字不差），这一版还没部署。换国际版（`DS_HTTP_BASE` / `DS_WS_BASE`）或换模型以后要重跑。
+
+**别的语言的聊天**（`/v1/talk` 的课程角色、`TALK_LANGS`）在本机只用假的阿里云测过（`test/t-13-talk-lang.js`：发给上游的 `session.update` 和 talk-core 拼的一字不差）；模型说这几门语言、这几个音色是 2026-11-21 对着真的阿里云单独试的（`tools/course/TALK.md` §0）。拼出来的整份提示词在真的模型上聊得怎么样，要部署以后在手机上试。
 
 `npm test`（`test/run.js`）：用 wrangler 打包（和部署的同一份 `dist/index.js`）→ 本机起假的阿里云（HTTP + WebSocket，记下服务器发了什么、回写好的事件）、假的 Resend（收邮件）、假的 Apple（JWKS、换 token、撤销）→ 自己造一套和 App Store 一样形状的证书链（用 Node 自带的 OpenSSL 核对过）→ 用 Miniflare（和线上一样的 workerd）起两个 Worker → 跑 `test/t-*.js`。仓库的全套测试里是 `tests/cloud.test.js`（照原样跑这个）。只跑几个：`node test/run.js talk iap`。
 
-测到的：两种登录、会话过期 / 往后推 / 退出、`/v1/me` 的修改规矩、计数和到上限、聊天额度快用完的提醒和到点收尾、免费 / 月付 / 年付的额度、本地零点重置、上游失败退回、孩子没同意被挡和整个同意流程、内购验签（正常、bundleId 不对、产品不对、环境不对、不认识的根、签名不对、叶子过期、内容被改、过期的交易、别人的订阅）和通知（宽限期、到期、退款、撤销退款、去重、按 appAccountToken 找主人）、删号删干净（含撤销 Apple 授权、没配钥匙时跳过）、举报和 90 天清理（定时任务）、和 `server/relay.js` 逐字比对 `session.update`、手机发的人设不用、限流、消息大小、正式环境的保护、cloud/ 里没有禁用词。
+测到的：两种登录、会话过期 / 往后推 / 退出、`/v1/me` 的修改规矩、计数和到上限、聊天额度快用完的提醒和到点收尾、免费 / 月付 / 年付的额度、本地零点重置、上游失败退回、孩子没同意被挡和整个同意流程、内购验签（正常、bundleId 不对、产品不对、环境不对、不认识的根、签名不对、叶子过期、内容被改、过期的交易、别人的订阅）和通知（宽限期、到期、退款、撤销退款、去重、按 appAccountToken 找主人）、删号删干净（含撤销 Apple 授权、没配钥匙时跳过）、举报和 90 天清理（定时任务）、和 `server/relay.js` 逐字比对 `session.update`（英语的岛民 / 课本角色 / 委托 / 地图上的人，和西语、日语、中文课的角色）、手机发的人设不用、限流、消息大小、正式环境的保护、cloud/ 里没有禁用词；别的语言的识别 / 合成（`t-12`）；别的语言的聊天（`t-13`：`talkLangs`、课程角色和 dyn 的 `lang`、音色、不支持的语言 400 不扣额度、评语和开口句数按这门语言、`/v1/steps`、`/v1/zh` 的 `lang` / `ui`、`TALK_LANGS`、`TALK_VOICE_MAP`）。
 
 ## 成本（按官方标价，不算赠送额度）
 

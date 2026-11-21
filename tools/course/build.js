@@ -7,6 +7,11 @@
 //   同一份输入生成的文件逐字节一样（不写时间、不依赖文件系统的顺序）。只有 8 个单元文件齐全的册才进 BOOKS。
 // 配音：VOICE 是这门课所有要提前配音的句子 { t, g, p }（t 是目标语言原文，不是读音；g 是声音 f / m；p 是先后：
 //   小镇在前、按岛，再按册、按单元），同一句（按 key.js 的 norm 算）只出现一次，g 合并。gen.py 和 tools/pack/build.js 读它。
+// 聊天角色表（tools/course/TALK.md §1）：
+//   node tools/course/build.js --talk [--check]
+//   → 仓库根目录的 talk-courses.js：三门语言 course.json 里 TALK 的每一条原样、外加 lang，给中转服务和公开版服务器按 id 查
+//     （手机只发角色 id，人设由服务器拼）。--talk --check 只核对它是不是最新的（不是最新退出码 1）。
+//     平常生成 course.json 时也顺手核对，不是最新就提醒一句。
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -321,10 +326,70 @@ function build(lang, o) {
   return { course, bytes: data.length, file, stats: stats(course) };
 }
 
-if (require.main === module) {
+// ---------- 聊天角色表 talk-courses.js（tools/course/TALK.md §1） ----------
+// 三门语言的 TALK 合成一份（先西语、再日语、再中文，各按单元的先后）。每条 = course.json 里 TALK 的那一条原样，id 后面多一个 lang
+const TALK_FILE = path.join(ROOT, 'talk-courses.js');
+function talkCourses() {
+  const keep = READINGS, list = [];
+  try {
+    for (const lang of LANGS) for (const t of buildCourse(lang, { lines: false }).TALK) list.push(Object.assign({ id: t.id, lang }, t));
+  } finally { READINGS = keep; }   // buildCourse 会顺手改读音表：这里只要 TALK，改回去
+  const ids = new Set();
+  for (const n of list) { if (ids.has(n.id)) throw new Error('聊天角色的 id 重复了：' + n.id); ids.add(n.id); }
+  return list;
+}
+// 文件的样子和 talk-npcs.js 一样：浏览器里 window.TALK_COURSES、Node 里 module.exports（esbuild 当 CommonJS 打包），加载时不碰 DOM。
+// 一个角色一行；同样的源文件生成出来逐字节一样
+function emitTalk(list) {
+  const langs = LANGS.filter(l => list.some(n => n.lang === l));
+  return [
+    '// 别的语言的课（西语 / 日语 / 中文）里能聊天的角色（AI 语音对话）。中转服务 server/relay.js 和公开版服务器 cloud/ 按 id 查这一份：',
+    '// 手机只发角色的 id，人设、目标、小步骤由服务器从这里读（和英语的 talk-npcs.js 一个道理），手机发来的人设一概不用。',
+    '// 每个角色 = 课程包 course.json 里 TALK 的那一条原样，外加 lang（哪门语言）；音色由 talk-core.js 按语言挑（voiceFor）。',
+    '// 游戏界面不加载这份文件（界面用课程包里的 TALK，两份是同一个源文件生成的）。',
+    '// **由 node tools/course/build.js --talk 从 tools/course/<语言>/units/*.json 的 talk 生成，不要手改**（--talk --check 核对是不是最新的）',
+    '(function (root) {',
+    '  const LIST = [',
+  ].concat(list.map(n => '    ' + JSON.stringify(n) + ','), [
+    '  ];',
+    '  const api = { langs: ' + JSON.stringify(langs) + ', list: LIST, byId: Object.fromEntries(LIST.map(n => [n.id, n])) };',
+    "  if (typeof module !== 'undefined' && module.exports) module.exports = api;",
+    '  else root.TALK_COURSES = api;',
+    "})(typeof window !== 'undefined' ? window : globalThis);",
+    '',
+  ]).join('\n');
+}
+// 仓库里那份是不是最新的（换行按 \n 比）
+function talkFresh(text) {
+  let cur = null;
+  try { cur = fs.readFileSync(TALK_FILE, 'utf8'); } catch (e) { cur = null; }
+  return cur != null && cur.replace(/\r\n/g, '\n') === (text == null ? emitTalk(talkCourses()) : text);
+}
+// 生成（或者只核对）：先过一遍 check.js，源文件有错不生成
+function buildTalk(o) {
+  o = o || {};
+  for (const lang of LANGS) {
+    const v = validate(lang);
+    if (!v.ok) throw new Error('课程源文件没过 tools/course/check.js，先改好再生成：\n' + v.out.trim());
+  }
+  const list = talkCourses(), text = emitTalk(list), fresh = talkFresh(text);
+  if (!o.check && !fresh) fs.writeFileSync(TALK_FILE, text);
+  return { list, text, fresh, file: TALK_FILE, bytes: Buffer.byteLength(text, 'utf8') };
+}
+
+if (require.main === module && process.argv.includes('--talk')) {
+  try {
+    const a = process.argv.slice(2), bad = a.filter(x => x !== '--talk' && x !== '--check');
+    if (bad.length) { console.error('用法：node tools/course/build.js --talk [--check]'); process.exit(2); }
+    const check = a.includes('--check'), r = buildTalk({ check });
+    const n = LANGS.map(l => l + ' ' + r.list.filter(x => x.lang === l).length).join('、');
+    if (check && !r.fresh) { console.error('✗ talk-courses.js 不是最新的（聊天角色的源文件改过）：跑 node tools/course/build.js --talk'); process.exit(1); }
+    console.log((check ? '✓ talk-courses.js 是最新的' : r.fresh ? '✓ talk-courses.js 本来就是最新的（没写文件）' : 'talk → talk-courses.js') + '：' + r.list.length + ' 个聊天角色（' + n + '）；' + r.bytes + ' 字节');
+  } catch (e) { console.error('course: ' + e.message); process.exit(1); }
+} else if (require.main === module) {
   try {
     const a = process.argv.slice(2), lang = a[0];
-    if (!LANGS.includes(lang)) { console.error('用法：node tools/course/build.js <es|ja|zh> [--check] [--out dist/course] [--readings 读音表.json]'); process.exit(2); }
+    if (!LANGS.includes(lang)) { console.error('用法：node tools/course/build.js <es|ja|zh> [--check] [--out dist/course] [--readings 读音表.json]\n      node tools/course/build.js --talk [--check]   （聊天角色表 talk-courses.js）'); process.exit(2); }
     const o = { check: false, out: '' };
     for (let i = 1; i < a.length; i++) {
       if (a[i] === '--check') o.check = true;
@@ -339,6 +404,10 @@ if (require.main === module) {
       s.books + ' 册 ' + s.units + ' 个单元、' + s.talk + ' 个聊天角色；' + r.bytes + ' 字节');
     if (r.course.LINES) console.log('  台词翻译表：整句 ' + s.lines + '、模板 ' + s.tpl + '、词 ' + s.terms);
     console.log('  配音 ' + s.voice + ' 句 → ' + s.clips + ' 段（女声 ' + s.f + '、男声 ' + s.m + '），一共 ' + s.chars + ' 个字符');
+    // 顺手核对聊天角色表（服务器按它拼人设）：不是最新只提醒，不拦
+    let fresh = true;
+    try { fresh = talkFresh(); } catch (e) { fresh = true; }
+    if (!fresh) console.log('  提醒：talk-courses.js 不是最新的（聊天角色改过，服务器还在用老的人设）：跑 node tools/course/build.js --talk');
   } catch (e) { console.error('course: ' + e.message); process.exit(1); }
 }
-module.exports = { build, buildCourse, readings, validate, stats, LANGS };
+module.exports = { build, buildCourse, readings, validate, stats, LANGS, talkCourses, emitTalk, talkFresh, buildTalk, TALK_FILE };

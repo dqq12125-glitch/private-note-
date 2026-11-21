@@ -39,6 +39,7 @@ export async function meView(R, U) {
     level: U.level == null ? null : U.level, tzOffsetMin: U.tz_min | 0, iapToken: U.iap_token, createdAt: isoOrNull(U.created_at),
     consent: consentView(U, R.now), features: features(R, U),
     speechLangs: R.cfg.speechLangs.slice(),   // 识别 / 合成认哪些语言（lang）；App 看这个决定别的语言的课走不走服务器，老服务器没有这个字段
+    talkLangs: R.cfg.talkLangs.slice(),       // 和岛民聊天认哪些语言（TALK_LANGS）；App 看这个决定别的语言的课开不开聊天，老服务器没有这个字段 = 只会英语
     plan: pick.plan, subscription: subView(pick.ent, R.now),
     quota: quotaView(R.cfg, U, row, R.now),
   };

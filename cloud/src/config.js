@@ -1,6 +1,7 @@
 // 配置：全部从 Worker 的环境变量（wrangler.toml 的 [vars] + `wrangler secret put` 的秘密）读，这里只放默认值。
 // 每个名字的说明在 cloud/README.md「配置和秘密」。数字（每天几分钟、多少次、限流……）都在这里或 wrangler.toml，不写死在逻辑里。
 import { HttpError } from './util.js';
+import { CORE } from './shared.js';
 
 // Apple Root CA - G3 的 SHA-256 指纹（Apple 公布的根证书列表 support.apple.com/121728：ECDSA 384 位、SHA-384、
 // 序列号 2D C5 FC 88 D2 C5 4B 95、2039-04-30 到期）。App Store 签名数据（StoreKit 2 交易、服务器通知）的证书链最后一张必须是它。
@@ -26,8 +27,9 @@ const DEF_RATE = {
 
 // 识别 / 合成认的语言（API.md §8 的 lang）：代码 → 阿里云合成的 language_type。只认这几种；SPEECH_LANGS 能关掉其中几种（英语一直在）
 export const SPEECH_KNOWN = { en: 'English', es: 'Spanish', ja: 'Japanese', zh: 'Chinese' };
-// 别的语言合成用的音色（英语照旧用 TTS_VOICE_F / TTS_VOICE_M）。默认值上线前要对着阿里云国际版的音色表核对（README），TTS_VOICES 可改
-const DEF_TTS_VOICES = { es: { f: 'Cherry', m: 'Ethan' }, ja: { f: 'Cherry', m: 'Ethan' }, zh: { f: 'Cherry', m: 'Ethan' } };
+// 别的语言合成用的音色（英语照旧用 TTS_VOICE_F / TTS_VOICE_M）：说这门语言地道的那几个，和实时聊天用的同名（tools/course/TALK.md §0）。
+// 2026-11-21 对着真的阿里云实测过：合成模型认这些名字，合成出来的西语 / 日语 / 中文识别一字不差。TTS_VOICES 可改
+const DEF_TTS_VOICES = { es: { f: 'Sonrisa', m: 'Bodega' }, ja: { f: 'Ono Anna', m: 'Ryan' }, zh: { f: 'Serena', m: 'Ryan' } };
 
 const num = (v, d) => (v === undefined || v === null || v === '' || !isFinite(+v) ? d : +v);
 const list = (v, d) => String(v == null || v === '' ? d : v).split(',').map(s => s.trim()).filter(Boolean);
@@ -87,6 +89,8 @@ export function config(env) {
     asrRt: { maxSec: num(env.ASR_RT_MAX_SEC, 15), maxB64: num(env.ASR_RT_MAX_B64, 700000) },
     // 识别（/v1/asr、/v1/asr-rt）和合成（/v1/tts）能用哪些语言：英语打头，只留 SPEECH_KNOWN 里有的；GET /v1/me 的 speechLangs 就是它
     speechLangs: ['en'].concat(list(env.SPEECH_LANGS, 'en,es,ja,zh').filter((l, i, a) => l !== 'en' && Object.prototype.hasOwnProperty.call(SPEECH_KNOWN, l) && a.indexOf(l) === i)),
+    // 和岛民聊天（/v1/talk，连带 /v1/steps、/v1/zh）能用哪些语言：英语打头，只留 talk-core 认得的（CORE.LANGS）；GET /v1/me 的 talkLangs 就是它
+    talkLangs: ['en'].concat(list(env.TALK_LANGS, 'en,es,ja,zh').filter((l, i, a) => l !== 'en' && !!CORE.langOk(l) && a.indexOf(l) === i)),
     // 阿里云百炼国际版（新加坡）。模型名、地址都是配置：国际版和北京区的模型列表不一样，上线前对着控制台核对（README）
     ds: {
       key: String(env.DASHSCOPE_API_KEY || ''),
@@ -145,6 +149,16 @@ export function speechLang(c, v, names) {
   if (names) { const k = Object.keys(SPEECH_KNOWN).find(x => SPEECH_KNOWN[x] === s); if (k) s = k; }
   if (!c.speechLangs.includes(s)) throw new HttpError(400, 'bad_request', 'Unsupported language', { field: 'lang', reason: 'unsupported_lang', supported: c.speechLangs.slice() });
   return s;
+}
+
+// 聊天的语言（API.md §8「Chat language」）：v 是手机说的语言代码（npc=dyn 的 p.lang、/v1/steps 和 /v1/zh 的 lang）或者角色自己的 lang。
+// 没给 / '' / 'en' = 英语（返回 ''，一切照旧）；talk-core 认得、服务器开着的 → 这个代码；别的（不认得的、TALK_LANGS 关掉的）→ 400 bad_request
+// （field lang、reason unsupported_lang、supported 列出能用的），和识别 / 合成的 lang 一个样：不扣额度、不连上游
+export function talkLang(c, v) {
+  if (v === undefined || v === null || v === '' || v === 'en') return '';
+  const l = CORE.langOk(v);
+  if (!l || !c.talkLangs.includes(l)) throw new HttpError(400, 'bad_request', 'Unsupported language', { field: 'lang', reason: 'unsupported_lang', supported: c.talkLangs.slice() });
+  return l;
 }
 
 // 一定要有的秘密：没有就 503（部署了但没配好时，别带着默认值跑）

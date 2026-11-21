@@ -12,9 +12,21 @@
   'use strict';
   let NPCS = window.TALK_NPCS;     // 别的语言的课：game.js 换成 course.json 的 TALK（useNpcs）
   const Core = () => window.TalkCore;
-  // 在学别的语言（tools/course/ENGINE.md §4）：服务器的人设、提示词还只会英语，和岛民聊天、委托这一步先关掉
-  const langOff = () => !!(G && G.lang);
   let G = null;                    // game.js 给的工具（S、save、toast、esc、openModal……）
+  // 在学别的语言（tools/course/ENGINE.md §4、tools/course/TALK.md §4）：这门语言能不能和岛民聊，看服务器会不会——
+  // 云端模式看 GET /v1/me 的 talkLangs（account.js 的 talkLang），网页版的中转服务看它 /health 回的 talkLangs（relayLangs，见下面）；
+  // 老服务器、APK 直连阿里云 = 不会：照旧写「这门语言的 AI 聊天还在做」，学习锁里聊天那一项整天免。支线委托、AI 发音点评这一轮照旧关着。
+  // CL() 在学哪门语言（'' = 英语课：下面每一处英语课走的都是原来那一行）；coreLang：打包进来的 talk-core.js 认不认这门语言
+  // （数句子、判完成的规则在它那里；它不认就当这门语言聊不了）
+  const CL = () => (G && G.lang && typeof G.course === 'string' && G.course !== 'en' ? G.course : '');
+  const coreLang = l => { const c = Core(); try { return !!(l && c && typeof c.langOk === 'function' && c.langOk(l) === l); } catch (e) { return false; } };
+  const langSrv = l => {
+    if (cloudOn()) { try { const A = ACC(); return !!(A && typeof A.talkLang === 'function' && A.talkLang(l)); } catch (e) { return false; } }
+    if (direct()) return false;
+    return relayLangs().includes(l);
+  };
+  const langTalk = () => { const l = CL(); return !!l && coreLang(l) && langSrv(l); };
+  const langOff = () => !!(G && G.lang) && !langTalk();
   const $ = s => document.querySelector(s);
   const LS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) { return ''; } };
   // 等老师评价最多几毫秒、HTTPS 请求超时（测试里改短：EchoTalk.cfg）
@@ -40,6 +52,15 @@
     zh: {
       // 别的语言的课（tools/course/ENGINE.md §4）
       'tk.lang.h': '这门语言的 AI 聊天还在做', 'tk.lang.p': '岛民现在还只会用英语聊天。这门语言的聊天做好以后会在这里打开；学习锁里「聊天」这一项先每天自动免掉。先去闯关练习、每日复习和怪兽冒险吧！',
+      // 别的语言的课、服务器会用这门语言聊的时候（tools/course/TALK.md §4）：原来写着「英语」「看中文」的句子的「.c」写法
+      // （i18n.js 的 variant：{lang} = 在学的语言的名字；英语课不走这几句）
+      'tk.prog.need.c': ' · 用语音说满 {n} 句{lang}，或者完成一个小目标', 'tk.h.book.c': '📗 课程单元 · {b}', 'tk.intro.h.c': '🗣️ 用{lang}和岛民聊天',
+      'tk.intro.p.c': '按住话筒说{lang}，松开就发出去；岛民会用自己的声音回答你。每段聊天有一个小目标，拆成几个小步骤，做到一步就打一个勾，完成了有金币！听不懂就点「💡 帮帮我」或者点岛民的话看意思。',
+      'tk.ready.mic.c': '按住话筒说{lang}，说完松开。点岛民说的话可以看意思。', 'tk.mic.c': '🎤 按住说{lang}', 'tk.type.ph.c': '打字聊天（{lang}）', 'tk.zh.tap.c': '点一下看意思',
+      'tk.toast.done.c': '🎉 今天的聊天任务完成了！（已开口说 {n} 句{lang}）', 'tk.e.quiet.p.c': '按住话筒说{lang}，岛民就会回答你。',
+      'tk.r.few.c': '这次用语音说的{lang}句子不到 3 句{typed}，目标先不算完成。下次按住话筒说吧！',
+      // 评语里「更好的说法」不进每日复习的课（日语：没有读音的句子打不了分）；大地图上和面前的人随便聊的目标（别的课）
+      'tk.r.tips.only': '可以这样说更好：', 'tk.dyn.goal': '和 {name} 用{lang}随便聊聊：打个招呼，问 TA 一个问题，也回答 TA 的问题。',
       'tk.err.offline': '现在没网，连上网再来聊吧', 'tk.err.auth': 'AI 密钥不对，请告诉家长', 'tk.err.quota': 'AI 额度用完了，请告诉家长', 'tk.err.busy': 'AI 有点忙，过一会儿再试',
       'tk.err.code': '家庭口令不对，请告诉家长', 'tk.err.network': '连不上 AI 聊天，过一会儿再试；一直不行就告诉家长', 'tk.err.daily': '今天的聊天时间用完了，明天再来吧！',
       'tk.err.nonpc': '没有这个岛民', 'tk.err.log': '聊天：{raw}', 'tk.err.conn': '连不上对话服务 {url}', 'tk.err.up': '连不上对话服务（{msg}）',
@@ -101,6 +122,15 @@
     },
     en: {
       'tk.lang.h': 'AI chat in this language is still being built', 'tk.lang.p': 'For now the islanders can only chat in English. Chat in this language will open here when it is ready; until then the "chat" part of the study lock is skipped every day. Try Practice, Daily review and the Monster Adventure!',
+      'tk.prog.need.c': { one: ' · Say {n} {lang} line aloud, or finish a chat goal', other: ' · Say {n} {lang} lines aloud, or finish a chat goal' },
+      'tk.h.book.c': '📗 Course units · {b}', 'tk.intro.h.c': '🗣️ Chat with islanders in {lang}',
+      'tk.intro.p.c': 'Hold the mic and speak {lang}, then let go to send. Each islander answers in their own voice. Every chat has a goal with a few small steps: you get a tick for each step, and coins when you finish! If you get stuck, tap "💡 Help me", or tap what the islander said to see what it means.',
+      'tk.ready.mic.c': 'Hold the mic and speak {lang}. Let go when you finish.', 'tk.mic.c': '🎤 Hold to speak {lang}', 'tk.type.ph.c': 'Type in {lang}',
+      'tk.zh.tap.c': 'Tap to see what it means',
+      'tk.toast.done.c': { one: '🎉 Today\'s chat task is done! (You said {n} {lang} line)', other: '🎉 Today\'s chat task is done! (You said {n} {lang} lines)' },
+      'tk.e.quiet.p.c': 'Hold the mic and speak {lang}, and the islander will answer you.',
+      'tk.r.few.c': 'You spoke fewer than 3 {lang} lines this time{typed}, so the goal does not count yet. Next time, hold the mic and talk!',
+      'tk.r.tips.only': 'A better way to say it:', 'tk.dyn.goal': 'Chat with {name} in {lang}: say hello, ask them a question, and answer their questions.',
       'tk.err.offline': 'You\'re offline. Connect to the internet, then come back to chat', 'tk.err.auth': 'The AI key is wrong. Please ask a parent or check Settings',
       'tk.err.quota': 'The AI credit has run out. Please ask a parent or check Settings', 'tk.err.busy': 'The AI is a bit busy. Try again in a moment',
       'tk.err.code': 'The family code is wrong. Please ask a parent', 'tk.err.network': 'Can\'t reach AI chat. Try again in a moment; if it keeps happening, ask a parent',
@@ -193,6 +223,11 @@
       '.tk-w.hit{background:#dcf5e6;color:#1f8650;box-shadow:0 2px 0 #9ed8b4}',
       '.tk-w.hit::before{content:"✓ "}',
       '.tk-b.npc.tap{cursor:pointer}',
+      // 别的语言的课（日语、中文）：示范句、词卡、开场白上面的读音——聊天界面里字小，读音放大一点才看得清（浏览器默认是一半大）
+      // 每块之间留一点空（中文的拼音比字宽，挨着会连成一串）
+      '.tk-ov rt{font-size:.66em;font-weight:400;line-height:1.2}',
+      '.tk-ov .tk-steps li small rt,.tk-ov .tk-w rt{font-size:.74em}',
+      '.tk-ov ruby{margin:0 .14em}',
       '.tk-b .tk-zh{display:block;margin-top:4px;padding-top:4px;border-top:1px dashed var(--line,#d3e6e2);color:var(--ink-2,#4a6478);font-size:14px}',
       '.tk-b.you.typed{background:#5f8f89}',
       '.tk-b.you.typed::after{content:" ⌨️";font-size:12px}',
@@ -255,6 +290,38 @@
     return d;
   }
 
+  // ---------- 别的语言的课：网页版的中转服务会用哪些语言聊（GET /health 的 talkLangs，tools/course/TALK.md §3、§4）----------
+  // 老的中转服务没有这个字段 = 只会英语。问到的结果按服务地址记在 localStorage['echo-talk-langs']（下次打开不用等就知道，
+  // 不然学习锁先按「这门语言聊不了」算，今天就免了）；每次打开游戏、换了服务地址、重新连上网都再问一次，变了就重画首页。
+  // 英语课不问；云端模式（看账号的 talkLangs）、APK 直连（这一轮不做）也不问
+  const TLK = { key: 'echo-talk-langs', u: '', l: null, busy: null, busyU: '' };
+  function relayLangs() {
+    const u = relayHttp(); if (!u) return [];
+    if (TLK.u !== u) {
+      TLK.u = u; TLK.l = null;
+      try { const j = JSON.parse(LS(TLK.key) || 'null'); if (j && j.u === u && Array.isArray(j.l)) TLK.l = j.l.map(String); } catch (e) { /* 记的东西坏了：当没问过 */ }
+    }
+    return TLK.l || [];
+  }
+  // list：服务器说它会的语言（数组）；不是数组（老服务器）= 只会英语
+  function relayLangsSet(u, list) {
+    const l = (Array.isArray(list) ? list : []).map(String).filter(x => /^[a-z]{2,3}$/.test(x)).slice(0, 12), before = relayLangs().join(',');
+    TLK.u = u; TLK.l = l; LS(TLK.key, JSON.stringify({ u, l }));
+    if (l.join(',') === before) return;
+    try { if (G && G.renderHome && !$('#home').hidden && $('#modal').hidden) G.renderHome(); } catch (e) { /* 还没启动 */ }
+  }
+  function relayAsk() {
+    const u = relayHttp();
+    if (!u || !CL() || cloudOn() || direct()) return Promise.resolve();
+    if (TLK.busy && TLK.busyU === u) return TLK.busy;
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 8000);
+    TLK.busyU = u;
+    TLK.busy = fetch(u + '/health', { signal: ctl.signal }).then(r => (r.ok ? r.json() : null)).then(j => { if (j && typeof j === 'object') relayLangsSet(u, j.talkLangs); })
+      .catch(() => { /* 连不上：上次问到的先留着 */ }).then(() => { clearTimeout(tm); TLK.busy = null; });
+    return TLK.busy;
+  }
+  window.addEventListener('online', () => { relayAsk(); });
+
   // ---------- AI 出错的原因（给口语打分、首页红条用：EchoTalk.lastErr()） ----------
   // offline 没网 / auth 密钥不对 / quota 额度用完或欠费 / busy 太频繁 / code 家庭口令不对 / network 其他连不上
   // （家长 2026-10-07，评估第 3 条：口语打分按这个分成「没网」和「密钥 / 额度」两类，首页红条、周报都用）
@@ -294,7 +361,7 @@
   }
 
   // 头像：people.js 的 portrait 要造型对象，名单里写的是造型名
-  const face = n => EchoPeople.portrait(n.lookObj || EchoPeople.LOOKS[n.look] || EchoPeople.LOOKS.clerk);
+  const face = n => EchoPeople.portrait(n.lookObj || EchoPeople.LOOKS[n.look] || (CL() && !n.look && lookPick(n)) || EchoPeople.LOOKS.clerk);
 
   // ---------- 存档里的聊天数据 S.talk ----------
   // log 最近的记录、done 每个岛民最好几星、days 今天拿过金币的（岛民:日期）、mem 岛民记得的事、n 和每个岛民聊过几次（轮换目标）、seen 今天算过的句子
@@ -310,6 +377,38 @@
   // 按能力走（做过能力检测、课程选了「按能力」）时岛民按第几级说话（game.js 的 chatLevel；没有 = null，一切照旧）；uiNow 界面语言
   const chatLv = () => { try { const v = G && G.chatLevel ? G.chatLevel() : null; return typeof v === 'number' ? v : null; } catch (e) { return null; } };
   const uiNow = () => { try { return (G && G.uiLang && G.uiLang()) || 'zh'; } catch (e) { return 'zh'; } };
+
+  // ---------- 别的语言的课里聊天用的小工具（tools/course/TALK.md §4；英语课一个都不走，走的还是原来那一行）----------
+  const langName = () => tx('pk.name.' + CL());   // 在学的语言叫什么（packs.js 的字表，按界面语言）
+  // 一句算不算「开口说的这门语言的句子」、这段聊天用语音说了几句、最后判完成没有：别的课多给 talk-core 一个语言（规则在 TALK.md §2 的表里）
+  const isLineOf = (text, lv) => { const l = CL(), c = Core(); return l ? c.isLine(text, lv, l) : c.isLine(text, lv); };
+  const voiceCnt = (turns, lv) => { const l = CL(), c = Core(); return l ? c.voiceLines(turns, lv, l) : c.voiceLines(turns, lv); };
+  const judgeOf = (g, turns, raw, live, lv) => { const l = CL(), c = Core(); return l ? c.judge(g, turns, raw, live, lv, l) : c.judge(g, turns, raw, live, lv); };
+  // 要学的那句话（示范句、词卡、照着剧本说出来的开场白）：日语、中文标读音（game.js 的 rubyLine：课程里写过读音的词才标）；
+  // 英语课、西语就是转义。岛民现场说的话不标
+  const rbl = t => (CL() && G.rubyLine ? G.rubyLine(t) : G.esc(t));
+  // 「例：……」里的示范句带读音（hx 会把参数转义，读音是 HTML：先放一个记号再换）
+  const egHTML = t => (CL() ? hx('tk.eg', { s: '\u0001' }).split('\u0001').join(rbl(t)) : hx('tk.eg', { s: t }));
+  // （课程角色的小步骤是 [中文说明, 这门语言的示范句, { en: 英文说明 }]：talk-core 的 goalOf 给出来 zh / en（示范句）/ task（英文说明），stepTxt 照旧用）
+  // 词卡下面的意思：中文界面给中文，别的界面给英文那份（课程角色的 wordsEn）；地图上的人没有，查课程里这个词的意思
+  function wordMean(npc, k) {
+    const zh = (npc.wordsZh || [])[k], en = (npc.wordsEn || [])[k], v = zhUi() ? zh : en;
+    if (v) return v;
+    try { return (G.meanText && G.meanText(npc.words[k])) || ''; } catch (e) { return ''; }
+  }
+  // 课程角色没有写造型：按性别、是不是孩子，从现成的造型里按 id 固定挑一个（同一个人每次一样）
+  const LOOK_POOL = { kf: ['kidF', 'studentF', 'girl'], km: ['kid', 'student', 'boy'], f: ['weather', 'nurse', 'granny', 'mom'], m: ['teacher', 'ranger', 'fisher', 'scientist'] };
+  function lookPick(n) {
+    const pool = LOOK_POOL[(n.kid ? 'k' : '') + (n.gender === 'm' ? 'm' : 'f')];
+    let h = 0; for (const ch of String(n.id || n.name || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return EchoPeople.LOOKS[pool[h % pool.length]] || null;
+  }
+  // 点岛民的话看意思：中文界面翻成中文，英语界面翻成英文（英语课的英语界面照旧没有：就是在学这门语言）；
+  // 界面语言就是在学的语言（中文界面学中文）也没有
+  const canZh = () => (CL() ? CL() !== uiNow() : zhUi());
+  // 这门课的评语里「更好的说法」进不进每日复习：西语、中文进；日语先不进（没有读音的句子打不了分），只在评语里显示
+  const tipsToRev = () => CL() !== 'ja';
+
   function countLog(k, n) { if (!G) return; const L = G.dayLog(); L[k] = (L[k] || 0) + (n || 1); G.save(); }
   // AI 用量记进今天的日志（周报估算花费）：实时聊天 aiChatIn / aiChatOut（其中音频 aiChatAudioIn / aiChatAudioOut）；
   // 文字模型（评价、打勾、翻译、点评）aiTextIn / aiTextOut —— 只有 APK 直连时数得到，网页版的花在中转服务那边
@@ -344,22 +443,25 @@
   // ---------- 首页的「和岛民聊天」 ----------
   function homeHTML() {
     if (langOff()) return '<section class="tk-home"><div class="tk-intro"><b>' + hx('tk.lang.h') + '</b><p>' + hx('tk.lang.p') + '</p></div></section>';
-    const esc = G.esc, T = state(), url = relayUrl(), core = Core(), t = today(), nc = concerns();
+    const esc = G.esc, T = state(), url = relayUrl(), core = Core(), t = today(), nc = concerns(), cl = CL();
     const card = (n, now) => {
       const best = T.done[n.id], g = core.goalOf(n, core.goalIndex ? core.goalIndex(n, T.n[n.id] || 0, chatLv()) : T.n[n.id] || 0);
       // 角色的中文名、话题和音色的中文是内容：英语界面只留英文名、英文话题，没有音色那一截
       const nz = gloss({ zh: n.zh }), tz = gloss({ zh: n.topicZh }), vz = gloss({ zh: n.voiceZh });
+      // 别的课：单元号按界面语言写（game.js 的 unitNo）；话题只写界面语言那一份（英文的话题不是要学的内容）
+      const un = n.unit ? (cl && G.unitNo ? esc(G.unitNo(n.unit)) : 'Unit ' + n.unit) : '';
       return '<button class="tk-card' + (now ? ' now' : '') + '" data-act="talk_open" data-npc="' + n.id + '">' +
         '<img src="' + face(n) + '" alt="">' +
-        '<span class="tk-t"><b>' + (n.unit ? '<em>Unit ' + n.unit + (now ? hx('tk.card.now') : '') + '</em> ' : '') + (nz != null ? esc(nz) + ' <small>' + esc(n.name) + '</small>' : esc(n.name)) + '</b>' +
-        '<span>' + (tz != null ? esc(tz) + ' · ' : '') + '<i>' + esc(n.topic) + '</i></span>' +
+        '<span class="tk-t"><b>' + (n.unit ? '<em>' + un + (now ? hx('tk.card.now') : '') + '</em> ' : '') + (nz != null && !(cl && nz === n.name) ? esc(nz) + ' <small>' + esc(n.name) + '</small>' : esc(n.name)) + '</b>' +
+        (cl ? '<span>' + esc(lbl({ zh: n.topicZh, en: n.topic })) + '</span>' : '<span>' + (tz != null ? esc(tz) + ' · ' : '') + '<i>' + esc(n.topic) + '</i></span>') +
         '<small>' + [vz != null ? '🔊 ' + esc(vz) : '', best ? '★'.repeat(best) : '', g.lv ? hx('tk.card.next', { lv: g.lv }) : ''].filter(Boolean).join(' · ') + '</small></span><span class="tk-go">🎙️</span></button>';
     };
     // 课本单元的聊天角色放前面，正在学的单元排第一个；后面是岛上的人
     // 只列正在学的这一册（别的册在闯关页每个单元上点「聊这个单元」）
     const cu = G.curUnit ? G.curUnit() : null, units = cu ? NPCS.list.filter(n => n.book === cu.book) : [], isle = NPCS.list.filter(n => !n.unit);
     const order = units.filter(n => n.unit === cu.n).concat(units.filter(n => n.unit !== cu.n));
-    const cards = (units.length ? '<h3 class="tk-h">' + hx('tk.h.book', { b: cu.bshort }) + '</h3>' + order.map(n => card(n, n.unit === cu.n)).join('') + '<h3 class="tk-h">' + hx('tk.h.isle') + '</h3>' : '') +
+    // 别的课只有单元角色（没有「岛上的人」那一栏）；课程不止一册时也只列正在学的这一册
+    const cards = (units.length ? '<h3 class="tk-h">' + hx('tk.h.book', { b: cu.bshort }) + '</h3>' + order.map(n => card(n, n.unit === cu.n)).join('') + (cl && !isle.length ? '' : '<h3 class="tk-h">' + hx('tk.h.isle') + '</h3>') : '') +
       isle.map(n => card(n, false)).join('');
     const acc = cloudOn() && ACC() ? ACC().strip() : '';   // 云端模式：登录送几分钟 / 今天还剩几分钟 + 会员（account.js）
     return '<section class="tk-home">' + acc +
@@ -501,12 +603,15 @@
   }
   const firstFree = c => () => c.pend.find(x => !x._item) || null;
   function dropPend(c, b) { c.pend = c.pend.filter(x => x !== b); }
-  function status(t) { const s = $('#tk-status'); if (s) s.textContent = t; }
+  // 别的课：这一行换了字可能多占一行（语言名长），对话那一栏跟着变矮——最新的一句留在看得见的地方
+  function status(t) { const s = $('#tk-status'); if (s) s.textContent = t; if (CL()) stick(); }
   const readyText = () => tx(MIC.ctx ? 'tk.ready.mic' : 'tk.ready.type');
 
   // 大地图上随便一个人：把名字、身份、所在的岛、他说过的话交给中转服务，由服务器拼出人设（安全规则服务器自己加）
   // top：聊天界面顶上那一行（已经按界面语言拼好）；目标、步骤用 talk-core 的 personNpc（和服务器拼的一样）
   function openPerson(d) {
+    // 别的课：告诉服务器这个人说哪门语言（连接参数 p 里的 lang，talk-core 的 personNpc 照它拼人设）
+    if (CL()) d = Object.assign({}, d, { lang: CL() });
     const npc = {
       id: 'dyn', name: d.name, zh: d.name, lookObj: d.lookObj, voiceZh: '',
       top: tx('tk.top.free', { isle: lbl({ zh: d.islandZh || '', en: d.island || '' }) }), topic: 'Free chat',
@@ -552,11 +657,15 @@
     if (!url) { configure(); return; }
     // 云端模式：没登录 / 年龄段没选 / 孩子还没有家长同意 / 今天的时间用完了 → 先弹那一页（account.js），弄好了再接着开这段聊天
     if (cloudOn() && ACC() && !ACC().ask('talk', () => open(id))) return;
-    const esc = G.esc, core = Core(), T = state();
+    const esc = G.esc, core = Core(), T = state(), cl = CL();
     // 地图上的人：目标、步骤按 talk-core 的临时人设（和服务器拼的一样）；委托按 quests.js 里那一条
     const base = npc.quest ? core.questNpc(QUESTS.byId[npc.quest]) : npc.desc ? core.personNpc(npc.desc) : npc, mk = memKey(npc), lvl = chatLv(), goal = core.goalOf(base, core.goalIndex ? core.goalIndex(base, T.n[mk] || 0, lvl) : T.n[mk] || 0);   // lvl：按能力走时岛民按第几级说话、挑哪个目标（没有 = null，照旧）
-    // 目标：中文界面用中文的目标；别的界面语言用英文的（委托、岛民、地图上的人都有英文的 goal）
-    const goalTx = lbl({ zh: goal.goalZh || npc.goalZh || '', en: goal.goal || npc.goal || '' }), zh = npc.wordsZh || [], mem = T.mem[mk] || null;
+    // 别的课里地图上的人：示范句要是这门语言的——talk-core 拼出来的人不是这门语言就不显示示范句（不拿英语的例句教别的语言）
+    if (cl && npc.desc && (!base || base.lang !== cl)) goal.steps.forEach(s => { s.en = ''; });
+    // 目标：中文界面用中文的目标；别的界面语言用英文的（委托、岛民、地图上的人都有英文的 goal）。别的课里地图上的人：字表里那一句（说的是这门语言）
+    const goalTx = cl && npc.desc ? tx('tk.dyn.goal', { name: npc.name, lang: langName() }) : lbl({ zh: goal.goalZh || npc.goalZh || '', en: goal.goal || npc.goal || '' }), zh = npc.wordsZh || [], mem = T.mem[mk] || null;
+    // 词卡下面的意思：英语课照旧（中文界面给中文，英语界面不给）；别的课按界面语言（wordMean）
+    const wm = k => (cl ? wordMean(npc, k) : gloss({ zh: zh[k] }) ? zh[k] : '');
     // 顶上：中文名 · 英文名（英语界面只有英文名）、话题（地图上的人 / 委托是拼好的 top）
     const nz = npc.zh === npc.name ? null : gloss({ zh: npc.zh }), top = npc.top != null ? npc.top : lbl({ zh: npc.topicZh, en: npc.topic });
     const ov = document.createElement('div');
@@ -567,8 +676,8 @@
       (cloudOn() ? '<span class="tk-min" id="tk-min" hidden></span>' : '') + '</div>' +
       '<button class="tk-x" data-act="talk_end" aria-label="' + hx('tk.end') + '">' + hx('tk.end') + '</button></div>' +
       '<div class="tk-goal"><div class="tk-gt">🎯 ' + (goal.lv ? '<em class="tk-lv">' + esc(goal.lv) + '</em> ' : '') + esc(goalTx) + '</div>' +
-      (goal.steps.length ? '<ol class="tk-steps" id="tk-steps">' + goal.steps.map((s, k) => '<li data-act="talk_step" data-i="' + k + '"><i>☐</i><span>' + esc(stepTxt(s, k)) + '</span>' + (s.en ? '<small hidden>' + hx('tk.eg', { s: s.en }) + '</small>' : '') + '</li>').join('') + '</ol>' : '') +
-      '<div class="tk-words">' + npc.words.map((w, k) => '<button type="button" class="tk-w" data-act="talk_word" data-i="' + k + '">' + esc(w) + (gloss({ zh: zh[k] }) ? '<small>' + esc(zh[k]) + '</small>' : '') + '</button>').join('') + '</div></div>' +
+      (goal.steps.length ? '<ol class="tk-steps" id="tk-steps">' + goal.steps.map((s, k) => '<li data-act="talk_step" data-i="' + k + '"><i>☐</i><span>' + esc(stepTxt(s, k)) + '</span>' + (s.en ? '<small hidden>' + egHTML(s.en) + '</small>' : '') + '</li>').join('') + '</ol>' : '') +
+      '<div class="tk-words">' + npc.words.map((w, k) => '<button type="button" class="tk-w" data-act="talk_word" data-i="' + k + '">' + rbl(w) + (wm(k) ? '<small>' + esc(wm(k)) + '</small>' : '') + '</button>').join('') + '</div></div>' +
       '<div class="tk-log" id="tk-log"></div>' +
       '<div class="tk-status" id="tk-status">' + hx('tk.st.conn') + '</div>' +
       '<div class="tk-ctl"><div class="tk-tools"><button type="button" id="tk-help" data-act="talk_help" disabled>' + hx('tk.help') + '</button><button type="button" id="tk-re" data-act="talk_replay" disabled>' + hx('tk.replay') + '</button><button type="button" id="tk-slow" data-act="talk_replay" data-slow="1" disabled>' + hx('tk.slow') + '</button></div>' +
@@ -580,6 +689,7 @@
     LAST = npc;
     // ui：这段聊天的界面语言（发给 AI：评语、打勾按它；「更好的说法」的解释是不是中文）
     C = { npc, base, mk, goal, level: lvl, ui: uiNow(), ws: null, bubble: null, holding: false, ready: false, ending: false, done: false, t0: Date.now(), turns: [], pend: [], live: null, ticks: goal.steps.map(() => false) };
+    if (cl) C.lang = cl;   // 别的课：这段聊天说的是哪门语言
     if (window.EchoMusic) EchoMusic.hold(true);   // 聊天时麦克风一直开着：背景音乐静音
     const c = C;
     progress();
@@ -602,7 +712,8 @@
     }
 
     const q = new URLSearchParams({ npc: npc.id, dev: devId(), name: (G.S.player && G.S.player.name) || '', g: String(goal.i) });
-    if (npc.desc) { const d = npc.desc; q.set('p', b64(JSON.stringify({ name: d.name, g: d.g, kid: !!d.kid, role: d.role, island: d.island, place: d.place, lines: d.lines, words: d.words }))); }
+    // 别的课里地图上的人：p 里多一个 lang（这个人说哪门语言；课程的单元角色只发 id，语言由服务器按 id 查）
+    if (npc.desc) { const d = npc.desc; q.set('p', b64(JSON.stringify(Object.assign({ name: d.name, g: d.g, kid: !!d.kid, role: d.role, island: d.island, place: d.place, lines: d.lines, words: d.words }, d.lang ? { lang: d.lang } : null)))); }
     if (npc.quest) q.set('quest', npc.quest);   // 委托：只发 id
     // 能力级别和界面语言：中转服务只认 0–5 和认得的语言代码，那一段「怎么说话」在服务器上拼。
     // 界面不是中文时不管有没有级别都发 ui（别把他说成中国学生、评语按界面语言写）；中文界面、按课本走的照旧不发
@@ -646,8 +757,10 @@
         if (c.bubble) { c.bubble.textContent += m.delta; stick(); }
       } else if (m.type === 'npc_done') {
         c.responding = false; if (m.text) c.turns.push({ who: 'npc', text: m.text });
-        // 说完的话可以点一下看中文（只有中文界面：英语界面就是在学这门语言，不翻译）
-        if (c.bubble && m.text) { c.bubble._text = m.text; if (zhUi()) { c.bubble.dataset.act = 'talk_zh'; c.bubble.classList.add('tap'); c.bubble.title = tx('tk.zh.tap'); } }
+        // 别的课：这句就是照着剧本说的开场白（一字不差）才标读音；岛民现场说的话不标
+        if (c.lang && c.bubble && m.text && m.text.replace(/\s+/g, '') === String(c.goal.opener || '').replace(/\s+/g, '')) { const h = rbl(c.goal.opener); if (h.includes('<ruby>')) c.bubble.innerHTML = h; }
+        // 说完的话可以点一下看中文（只有中文界面：英语界面就是在学这门语言，不翻译）；别的课点一下看意思（canZh）
+        if (c.bubble && m.text) { c.bubble._text = m.text; if (canZh()) { c.bubble.dataset.act = 'talk_zh'; c.bubble.classList.add('tap'); c.bubble.title = tx('tk.zh.tap'); } }
         // 云端模式（公开版）：每句 AI 的话后面一个小「⚑」举报（两家商店都要求 AI 生成的内容能举报）
         if (cloudOn() && c.bubble && m.text) c.bubble.insertAdjacentHTML('beforeend', '<button type="button" class="tk-rep" data-act="talk_report" data-k="' + (c.turns.length - 1) + '" title="' + hx('ac.t.report') + '" aria-label="' + hx('ac.t.report') + '">⚑</button>');
         c.bubble = null;
@@ -672,6 +785,13 @@
         c.turns.push({ who: 'you', text: m.text });
         heard(c, m.text);
       } else if (m.type === 'limit') { c.limitHit = true; status(m.zh); }
+      else if (m.type === 'error' && c.lang && !c.ready && (m.reason === 'unsupported_lang' || m.field === 'lang' || m.code === 'lang')) {
+        // 别的课：服务器说它不会用这门语言聊（记着的是旧的）——照「还在做」说，不算连不上；记下它现在会哪些、重新问一次
+        c.err = tx('tk.lang.h'); c.errCode = 'lang'; c.errWhy = 'lang';
+        status('⚠️ ' + c.err);
+        if (cloudOn()) { try { if (ACC()) ACC().refresh(); } catch (e) { /* 账号模块出错 */ } }
+        else { relayLangsSet(relayHttp(), Array.isArray(m.supported) ? m.supported : relayLangs().filter(x => x !== c.lang)); relayAsk(); }
+      }
       else if (m.type === 'error') {
         c.err = m.zh; c.errCode = m.code;
         if (c.ready && (m.code === 'upstream' || m.code === 'closed')) c.upErr = true;   // 连上以后服务器出错 / 断开
@@ -683,7 +803,7 @@
       else if (m.type === 'eval') { clearTimeout(c.evalTimer); finishWith(c, m.eval, m.sec, m.left, 'eval'); }
     };
     ws.onerror = () => {
-      if (c !== C || c.ending || c.ready) return;
+      if (c !== C || c.ending || c.ready || c.errCode === 'lang') return;
       // 直连（APK）的原因在 LASTERR 里（原生回的 HTTP 401 / 找不到服务器……）；中转服务没开时只知道「连不上」
       const le = LASTERR && Date.now() - LASTERR.at < 3000 ? LASTERR.why : '', why = noteErr(c, { code: 'net', zh: '', why: le });
       if (!le) errRaw(/^direct:/.test(url) ? '' : tx('tk.err.conn', { url }));
@@ -756,18 +876,20 @@
   function heard(c, text) {
     countLine(text);
     markWords(c, text);
-    if (/[㐀-鿿]/.test(text)) countLog('chatSaidZh');   // 说了中文（周报：中文句数）
+    // 说了中文（周报：中文句数）。别的课：学中文的不数；学日语的全是汉字、没有假名才算（汉字本来就是日语的字）
+    if (c.lang ? c.lang !== 'zh' && /[㐀-鿿]/.test(text) && !(c.lang === 'ja' && /[ぁ-ゖァ-ヺ]/.test(text)) : /[㐀-鿿]/.test(text)) countLog('chatSaidZh');
     checkSteps(c);
   }
   // 今天用语音说的英语句子：≥3 个英文词、不含中文；同一句话一天只算一次。说满 6 句弹一句
   function countLine(text) {
-    const core = Core();
-    if (!core.isLine(text, chatLv())) return false;   // 按能力走的入门 / 初级：1 个、2 个英文词就算一句
-    const T = state(), d = G.dayStr(), key = String(text).toLowerCase().replace(/[^a-z' ]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+    const core = Core(), cl = CL();
+    // 别的课：算不算一句按这门语言的规则（talk-core 的 isLine 第 3 个参数，TALK.md §2 的表）；同一句的键、一句有多长（西语几个词，日语、中文几个字）交给这门语言的模块
+    if (!(cl ? isLineOf(text, chatLv()) : core.isLine(text, chatLv()))) return false;   // 按能力走的入门 / 初级：1 个、2 个英文词就算一句
+    const T = state(), d = G.dayStr(), key = cl ? String(G.lang.key ? G.lang.key(text) : text).slice(0, 80) : String(text).toLowerCase().replace(/[^a-z' ]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
     if (!T.seen || T.seen.d !== d) T.seen = { d, h: [] };
     if (T.seen.h.includes(key)) return false;
     T.seen.h.push(key); if (T.seen.h.length > 80) T.seen.h.shift();
-    const L = G.dayLog(), before = L.voiceLines || 0, n = core.enWords(text).length;
+    const L = G.dayLog(), before = L.voiceLines || 0, n = cl ? (G.lang.countUnits ? G.lang.countUnits(text) : 1) : core.enWords(text).length;
     L.voiceLines = before + 1; L.voiceWords = (L.voiceWords || 0) + n;
     if (n > (L.voiceMax || 0)) { L.voiceMax = n; L.voiceBest = String(text).slice(0, 160); }   // 今天说的最长的一句（周报用）
     G.save();
@@ -780,7 +902,18 @@
   }
   const norm = s => String(s || '').toLowerCase().replace(/[’]/g, "'").replace(/[^a-z' ]/g, ' ').replace(/\s+/g, ' ').trim();
   // 孩子说到目标词：卡片变绿（四个词以上的短语对上前三个词就算）
+  // 别的课：西语按词比（带重音的字母照样是字母）；日语、中文没有空格，去掉标点以后看这句话里有没有这个词
+  // （西语不看重音符号：识别出来的字有时不带）
+  const normL = (s, latin) => { s = String(s || '').normalize('NFKC').toLowerCase(); if (latin) s = s.normalize('NFD').replace(/\p{M}+/gu, ''); return s.replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); };
+  function markWordsL(c, text) {
+    const latin = G.lang.script === 'latin', sq = s => (latin ? ' ' + normL(s, true) + ' ' : normL(s).replace(/ /g, '')), t = sq(text);
+    (c.npc.words || []).forEach((w, k) => {
+      const p = latin ? ' ' + normL(w, true).split(' ').slice(0, 3).join(' ') + ' ' : sq(w);
+      if (p.trim() && t.includes(p)) { const el = document.querySelector('.tk-w[data-i="' + k + '"]'); if (el) el.classList.add('hit'); }
+    });
+  }
   function markWords(c, text) {
+    if (c.lang) return markWordsL(c, text);
     const t = ' ' + norm(text) + ' ';
     (c.npc.words || []).forEach((w, k) => {
       let p = norm(w).split(' ').filter(Boolean); if (!p.length) return;
@@ -801,7 +934,8 @@
         return core.parseSteps(j, n);
       }
       if (relayHttp()) {
-        const r = await relayPost('/steps', { npc: c.npc.id, nm: c.npc.id === 'dyn' ? c.npc.name : undefined, q: c.npc.quest || undefined, g: c.goal.i, ui: c.ui !== 'zh' ? c.ui : undefined, turns: turns.map(t => ({ who: t.who, text: t.text, typed: !!t.typed })) }, 12000);
+        // 别的课：多带一个 lang（课程的单元角色服务器按 id 就知道语言；地图上的人只有名字，靠它知道这段聊的是哪门语言）
+        const r = await relayPost('/steps', { npc: c.npc.id, nm: c.npc.id === 'dyn' ? c.npc.name : undefined, q: c.npc.quest || undefined, g: c.goal.i, ui: c.ui !== 'zh' ? c.ui : undefined, lang: c.lang || undefined, turns: turns.map(t => ({ who: t.who, text: t.text, typed: !!t.typed })) }, 12000);
         if (!r.ok) { noteAi('steps', 'HTTP ' + r.status + ' ' + r.text); return []; }
         return (JSON.parse(r.text).done || []).map(x => x | 0).filter(x => x >= 0 && x < n);
       }
@@ -827,25 +961,28 @@
   }
 
   // ---------- 点岛民的话看中文（翻译一次就记住） ----------
+  // 别的课（TALK.md §3、§4）：请求里多带 lang（这句话是哪门语言）和 ui（翻成哪种界面语言：中文界面翻成中文，英语界面翻成英文），
+  // 回来的还在 zh 那一格里；记住的译文按界面语言分开。英语课的请求和以前一字不差
   const ZHC = {};
   async function translate(text) {
-    if (ZHC[text]) return ZHC[text];
+    const cl = CL(), ck = cl ? uiNow() + '|' + text : text;
+    if (ZHC[ck]) return ZHC[ck];
     const core = Core(); let zh = '';
     try {
       if (direct()) {
-        const r = await nativePost(core.EVAL_URL, JSON.stringify(core.zhBody(text)), 10000);
+        const r = await nativePost(core.EVAL_URL, JSON.stringify(cl ? core.zhBody(text, { lang: cl, ui: uiNow() }) : core.zhBody(text)), 10000);
         if (r.ok) { const j = JSON.parse(r.text); textUse(j); zh = core.parseZh(j); } else noteAi('zh', r.text);
       } else if (relayHttp()) {
-        const r = await relayPost('/zh', { text }, 10000);
+        const r = await relayPost('/zh', cl ? { text, lang: cl, ui: uiNow() } : { text }, 10000);
         if (r.ok) zh = String(JSON.parse(r.text).zh || ''); else noteAi('zh', 'HTTP ' + r.status + ' ' + r.text);
       }
     } catch (e) { zh = ''; }
     zh = String(zh || '').trim().slice(0, 200);
-    if (zh) ZHC[text] = zh;
+    if (zh) ZHC[ck] = zh;
     return zh;
   }
   async function showZh(b) {
-    if (!b || !b._text || b._busy || !zhUi()) return;   // 只翻成中文：别的界面语言不出这个
+    if (!b || !b._text || b._busy || !canZh()) return;   // 英语课只翻成中文：别的界面语言不出这个；别的课翻成界面语言
     let z = b.querySelector('.tk-zh');
     if (z && !z._fail) { z.hidden = !z.hidden; stick(); return; }
     if (z) z.remove();
@@ -972,13 +1109,13 @@
   }
   function settle(c, raw, sec, how) {
     const core = Core(), T = state(), npc = c.npc, L = G.dayLog();
-    const ev = core.judge(c.goal, c.turns, raw, c.ticks, c.level);
+    const ev = c.lang ? judgeOf(c.goal, c.turns, raw, c.ticks, c.level) : core.judge(c.goal, c.turns, raw, c.ticks, c.level);   // 别的课：数句子按这门语言的规则
     let rec = c.rec, coins = 0, newGoal = false;
     if (!rec) {
       rec = c.rec = {
         t: c.t0, npc: npc.id, nm: npc.id === 'dyn' ? npc.name : undefined, q: npc.quest || undefined, g: c.goal.i,
         turns: c.turns.slice(0, 40).map(t => t.typed ? { who: t.who, text: t.text, typed: 1 } : { who: t.who, text: t.text }),
-        eval: null, sec: sec != null ? sec : Math.round((Date.now() - c.t0) / 1000), voice: core.voiceLines(c.turns, c.level),
+        eval: null, sec: sec != null ? sec : Math.round((Date.now() - c.t0) / 1000), voice: c.lang ? voiceCnt(c.turns, c.level) : core.voiceLines(c.turns, c.level),
       };
       if (how !== 'eval') rec.late = how;   // 老师没来得及评价（timeout 超时 / lost 断开）
       T.log.unshift(rec); trimLog(T);
@@ -1002,7 +1139,8 @@
       rec.taught = 1;
       // 老师给的「更好的说法」进每日复习（第三个参数是孩子的原话，复习时可以显示「你原来说的」）。
       // 第二个参数存成这句的中文意思：评语是按别的界面语言写的，解释就不是中文，不存
-      if (G.revAddFree) ev.tips.forEach(t => G.revAddFree(t.better, c.ui === 'zh' ? t.zh : '', t.said));
+      // 别的课：西语、中文照样进（复习时按这门语言的规则打分）；日语先不进（没有读音的句子打不了分），只在评语里显示
+      if (G.revAddFree && (!c.lang || tipsToRev())) ev.tips.forEach(t => G.revAddFree(t.better, c.ui === 'zh' ? t.zh : '', t.said));
       remember(c.mk, ev);
     }
     // 连上过、服务器真出错，又没拿到老师的评价：今天的聊天这一项免了（没网、一开始就没连上的不算）
@@ -1060,7 +1198,7 @@
     const steps = c.goal.steps, typed = c.turns.some(t => t.who === 'you' && t.typed), voice = rec.voice;
     const coins = r.coins;
     // 小步骤：中文界面照旧；别的界面语言没有步骤说明的（「第 n 步」）后面带上示范句
-    const stepR = (s, k) => esc(stepTxt(s, k)) + (!zhUi() && !s.task && s.en ? ' <small>' + hx('tk.eg', { s: s.en }) + '</small>' : '');
+    const stepR = (s, k) => esc(stepTxt(s, k)) + (!zhUi() && !s.task && s.en ? ' <small>' + egHTML(s.en) + '</small>' : '');
     let body;
     if (ev) {
       body = '<div class="tk-stars">' + '★'.repeat(ev.stars) + '<i>' + '★'.repeat(3 - ev.stars) + '</i></div>' +
@@ -1070,7 +1208,7 @@
         (ev.praise ? '<p>' + esc(ev.praise) + '</p>' : '') +
         (ev.ai ? '<p class="tk-ai-line">' + hx('tk.r.ai') + '</p>' : '') +
         (!ev.ai ? '<p class="tk-note">' + hx('tk.r.noai') + '</p>' : '') +
-        (ev.tips.length ? '<div class="tk-tips"><b>' + hx('tk.r.tips') + '</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
+        (ev.tips.length ? '<div class="tk-tips"><b>' + hx(c.lang && !tipsToRev() ? 'tk.r.tips.only' : 'tk.r.tips') + '</b>' + ev.tips.map(t => '<div><s>' + esc(t.said) + '</s><br>→ <b>' + esc(t.better) + '</b><small>' + esc(t.zh) + '</small></div>').join('') + '</div>' : '') +
         (coins ? '<p class="tk-coin">' + hx('tk.r.coins', { n: coins }) + '</p>' : '') +
         (c.npc.quest ? '<p class="tk-coin">' + (ev.done ? hx('tk.r.q.done', { name: c.npc.name }) : hx('tk.r.q.not')) + '</p>' : '');
     } else {
@@ -1686,6 +1824,7 @@
     if (c !== null) LS('echo-talk-code', c.trim() || null);
     G.toast(tx('tk.cfg.now', { url: relayUrl() || tx('tk.cfg.none') }));
     if (G.renderHome) G.renderHome();
+    relayAsk();   // 别的课：换了服务地址，重新问它会不会用这门语言聊
   }
   const npcOf = r => NPCS.byId[r.npc] || { zh: r.nm || r.npc, name: r.nm || r.npc };
   // 记录里岛民的名字：中文界面用中文名，英语界面用英文名（中文名是内容）
@@ -1739,6 +1878,7 @@
   function init(api) {
     G = api;
     nspRefresh();   // iPhone：本机识别能不能用（不弹框）
+    relayAsk();     // 别的课（网页版）：问一次中转服务会不会用这门语言聊（英语课、云端模式、APK 直连不问）
     return {
       talk_open: t => open(t.dataset.npc),
       // 委托没完成点「再试一次」：接着聊，先不告诉大地图结果（again）
@@ -1753,11 +1893,12 @@
       talk_typeopen: () => typeOpen(true),
       talk_micfix: () => { try { EchoNative.openAppSettings(); } catch (e) {} },
       talk_zh: t => showZh(t),
-      talk_word: t => { const c = C, w = c && c.npc.words[+t.dataset.i]; if (w && G.say && !c.holding) { stopPlayback(); stopReplay(); G.say(w); } },
+      // 别的课：词卡、示范句是这门语言的话，不一定在课程的条目表里——say 的第 4 个参数让它照这门语言念（课程包里有配音放配音，没有用这门语言的声音）
+      talk_word: t => { const c = C, w = c && c.npc.words[+t.dataset.i]; if (w && G.say && !c.holding) { stopPlayback(); stopReplay(); if (c.lang) G.say(w, 0, '', true); else G.say(w); } },
       talk_step: t => {   // 点一个小步骤：亮出示范句、读一遍
         const c = C, s = c && c.goal.steps[+t.dataset.i]; if (!s) return;
         const sm = t.querySelector('small'); if (sm && sm.hidden) { sm.hidden = false; countLog('chatHint'); }
-        if (s.en && G.say && !c.holding) { stopPlayback(); stopReplay(); G.say(s.en); }
+        if (s.en && G.say && !c.holding) { stopPlayback(); stopReplay(); if (c.lang) G.say(s.en, 0, '', true); else G.say(s.en); }
       },
       talk_privacy: () => privacySheet(),
       talk_forget: () => { state().mem = {}; G.save(); G.toast(tx('tk.forgot')); },
@@ -1793,5 +1934,8 @@
     speechState: () => (NSP.st ? Object.assign({ off: NSP.off }, NSP.st) : { off: NSP.off, has: nspHas() }), speechRefresh: nspRefresh, srText,
     // 别的语言的课：换上这门课的聊天角色（game.js 的 courseUse，课程的 TALK）
     useNpcs: o => { if (o && o.list && o.byId) NPCS = o; },
+    // 现在学的这门课能不能和岛民聊（英语课一直 true；别的课看服务器会不会，TALK.md §4）：game.js 的学习锁、每日任务、单元上的「聊这个单元」问它；
+    // langAsk() 重新问一次网页版的中转服务（返回 Promise，问完了 langOk() 才是新的）
+    langOk: () => !langOff(), langAsk: () => relayAsk(),
   };
 })();

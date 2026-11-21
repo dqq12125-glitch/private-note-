@@ -6,6 +6,8 @@ import { ok, eq } from './lib.js';
 
 const LANGS = { es: 'Spanish', ja: 'Japanese', zh: 'Chinese' };
 const SAY = { es: 'Hola amigo', ja: 'こんにちは', zh: '你好' };
+// 别的语言合成的默认音色：说这门语言地道的那几个（2026-11-21 对着真的阿里云实测过，config.js 的 DEF_TTS_VOICES）
+const TTSV = { es: { f: 'Sonrisa', m: 'Bodega' }, ja: { f: 'Ono Anna', m: 'Ryan' }, zh: { f: 'Serena', m: 'Ryan' } };
 export default async function (C) {
   const { A, F } = C;
   const U = await C.signup(A, { age: 'child' });   // 孩子、没有家长同意：读句子的识别和合成不挡（和英语一样）
@@ -49,14 +51,14 @@ export default async function (C) {
   for (const l of Object.keys(LANGS)) {
     for (const g of ['f', 'm']) {
       x = await tts({ text: SAY[l], g, lang: l });
-      ok(x.r.status === 200 && x.r.json.url && x.ups.length === 1 && x.ups[0].raw === ttsBody(SAY[l], g === 'm' ? 'Ethan' : 'Cherry', LANGS[l]) && x.dn === 1,
-        "/v1/tts lang '" + l + "'（" + g + '）：language_type ' + LANGS[l] + '、这门语言的默认音色，算一次', x.ups[0] && x.ups[0].raw);
+      ok(x.r.status === 200 && x.r.json.url && x.ups.length === 1 && x.ups[0].raw === ttsBody(SAY[l], TTSV[l][g], LANGS[l]) && x.dn === 1,
+        "/v1/tts lang '" + l + "'（" + g + '）：language_type ' + LANGS[l] + '、这门语言的默认音色（' + TTSV[l][g] + '），算一次', x.ups[0] && x.ups[0].raw);
     }
   }
   x = await tts({ text: 'Hola', lang: 'Spanish' });
-  ok(x.r.status === 200 && x.ups[0] && x.ups[0].body.input.language_type === 'Spanish' && x.ups[0].body.input.voice === 'Cherry', "/v1/tts 也认 'Spanish' 这种写法（和以前的 'Chinese' 一样）", x.ups[0] && x.ups[0].body);
+  ok(x.r.status === 200 && x.ups[0] && x.ups[0].body.input.language_type === 'Spanish' && x.ups[0].body.input.voice === 'Sonrisa', "/v1/tts 也认 'Spanish' 这种写法（和以前的 'Chinese' 一样）", x.ups[0] && x.ups[0].body);
   x = await tts({ text: '你好', lang: 'Chinese' });
-  ok(x.r.status === 200 && x.ups[0] && x.ups[0].body.input.language_type === 'Chinese', "/v1/tts 以前的 'Chinese' 照样认（音色换成中文的那一个）", x.ups[0] && x.ups[0].body);
+  ok(x.r.status === 200 && x.ups[0] && x.ups[0].body.input.language_type === 'Chinese' && x.ups[0].body.input.voice === 'Serena', "/v1/tts 以前的 'Chinese' 照样认（音色换成中文的那一个）", x.ups[0] && x.ups[0].body);
   for (const v of ['fr', 'French', 'english', 'constructor']) {
     x = await tts({ text: 'Bonjour', lang: v });
     ok(x.r.status === 400 && x.r.json.field === 'lang' && x.r.json.reason === 'unsupported_lang' && !x.ups.length && x.dn === 0, '/v1/tts lang ' + JSON.stringify(v) + '：400，不连上游、不扣次数', x.r.json);
@@ -109,6 +111,6 @@ export default async function (C) {
     await X.api('POST', '/v1/tts', { token, body: { text: 'Hola', g: 'm', lang: 'es' } });
     await X.api('POST', '/v1/tts', { token, body: { text: 'Hello', g: 'f' } });
     const v = F.http.slice(h0).map(r => r.body.input.voice);
-    eq(v, ['VoiceEsF', 'Ethan', 'Jennifer'], 'TTS_VOICES 只改了西语女声：西语男声用默认、英语照旧');
+    eq(v, ['VoiceEsF', 'Bodega', 'Jennifer'], 'TTS_VOICES 只改了西语女声：西语男声用默认、英语照旧');
   } finally { await X.dispose(); }
 }

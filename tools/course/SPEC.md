@@ -95,6 +95,8 @@
 
 ## 6. 生成 `course.json`（`node tools/course/build.js <语言>`）
 
+另外 `node tools/course/build.js --talk` 把三门语言单元里的聊天角色（`talk`）写成仓库根目录的 `talk-courses.js`（服务器拼人设用，`tools/course/TALK.md` §1；`--talk --check` 只核对是不是最新的）。**改了哪个单元的 `talk` 都要重跑它，再重新部署服务器。**
+
 游戏里的代码读的是和英语一样的数组格式（`data.js` 的 `WORLDS` / `SCENES`、`book.js` 的 `BOOKS`），所以 `course.json` 就是「另一门语言的这几样东西」，多出来的读音、词块、英文意思放在每条最后那个对象里（game.js 的 `meanOf` 本来就读它）：
 
 ```json

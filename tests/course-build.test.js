@@ -20,6 +20,7 @@ const throws = f => { try { f(); return ''; } catch (e) { return e.message || St
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-course-'));
 const tmp2 = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-course-'));
 const NODE = process.execPath;
+const talkOf = {};   // 每门语言 course.json 里的 TALK（下面核对 talk-courses.js 用）
 try {
   for (const lang of CB.LANGS) {
     console.log('\n— ' + lang + ' —');
@@ -56,6 +57,7 @@ try {
       typeof t.kid === 'boolean' && t.name && t.zh && t.topic && t.topicZh && t.goal && t.goalZh && t.persona && t.opener && t.words.length >= 6 && t.words.length <= 8 &&
       t.wordsZh.length === t.words.length && t.wordsEn.length === t.words.length && t.goals.length === 1 && t.goals[0].steps.length >= 3 && t.goals[0].steps.length <= 4 &&
       t.goals[0].steps.every(s => s.length === 3 && s[0] && s[1] && s[2].en))), 'TALK：每个单元一个聊天角色（id、gender、topic / goal 中英、persona、opener、words / wordsZh / wordsEn、goals[0].steps = [[中文, 目标语言, {en}]]）');
+    talkOf[lang] = c.TALK;
     check(c.MAP.towns === 1 && JSON.stringify(c.MAP.books) === JSON.stringify(Object.fromEntries(c.BOOKS.list.map(b => [b.id, b.level]))) && c.MAP.mix.join() === '0.6,0.6,0.8,0.9,1,1' && c.MAP.kinds.length === 6 &&
       JSON.stringify(c.MAP.kinds[0]) === '{"listen":0.5,"fade":[4,6]}', 'MAP：towns 1、books 是 { 册 id: 级别 }、mix 和 kinds 和英语一样');
 
@@ -128,6 +130,62 @@ try {
       const s0 = c.WORLDS[0].sents[0];
       check(RD[norm(s0[0])] === s0[2].r.join(lang === 'zh' ? ' ' : ''), '句子的读音是 seg 对应的 r 接起来（日语直接接、中文用空格）');
     }
+  }
+
+  // ---- 4c. 聊天角色表 talk-courses.js（tools/course/TALK.md §1）：build.js --talk 生成，服务器按它拼人设 ----
+  {
+    console.log('\n— talk-courses.js（聊天角色表） —');
+    const file = path.join(ROOT, 'talk-courses.js');
+    const text = fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n') : '';
+    check(text !== '' && text === CB.emitTalk(CB.talkCourses()) && CB.talkFresh(), 'talk-courses.js 就是 build.js --talk 现在会生成的那一份（没手改、没过期）；不是的话跑 node tools/course/build.js --talk');
+    const TC = text ? require(file) : { langs: [], list: [], byId: {} };
+    const all = CB.LANGS.flatMap(l => (talkOf[l] || []).map(t => ({ lang: l, t })));
+    check(JSON.stringify(TC.langs) === JSON.stringify(CB.LANGS) && TC.list.length === all.length && all.length >= 24 &&
+      TC.list.every((n, i) => n.id === all[i].t.id && n.lang === all[i].lang && n.goals.length === all[i].t.goals.length && n.goals.every((g, k) => g.steps.length === all[i].t.goals[k].steps.length)),
+      '和三门语言 course.json 的 TALK 对得上：同样的先后、id、哪门语言、goals 的个数、每个目标几步（' + TC.list.length + ' 个角色）', TC.list.map(n => n.id).slice(0, 4));
+    check(TC.list.every((n, i) => { const rest = Object.assign({}, n); delete rest.lang; return JSON.stringify(rest) === JSON.stringify(all[i].t) && Object.keys(n).slice(0, 2).join() === 'id,lang'; }),
+      '每个角色 = TALK 的那一条原样，id 后面多一个 lang');
+    const en = require(path.join(ROOT, 'talk-npcs.js'));
+    check(Object.keys(TC.byId).length === TC.list.length && TC.list.every(n => TC.byId[n.id] === n && /^(es|ja|zh)\d+-u\d+$/.test(n.id) && n.id.startsWith(n.lang) && !Object.prototype.hasOwnProperty.call(en.byId, n.id) && n.id !== 'dyn' && !n.voice),
+      'byId 按 id 查得到；id 形如 es1-u1，和英语角色（talk-npcs.js）的不重；角色上不写音色（talk-core 按语言挑）');
+    // 命令行：--talk --check 核对；源文件一改就不是最新的（在拷出来的一份上试，不动仓库里的）
+    const run = (root, a) => spawnSync(NODE, [path.join(root, 'tools', 'course', 'build.js'), ...a], { encoding: 'utf8' });
+    const r0 = run(ROOT, ['--talk', '--check']);
+    check(r0.status === 0 && /是最新的/.test(r0.stdout), 'node tools/course/build.js --talk --check：仓库里这份是最新的', (r0.stdout + r0.stderr).slice(0, 200));
+    check(run(ROOT, ['--talk', 'es']).status === 2, '--talk 后面多写了别的参数：退出码 2');
+    const fake = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-talk-'));
+    try {
+      const cdir = path.join(fake, 'tools', 'course');
+      fs.mkdirSync(path.join(fake, 'tools', 'voice'), { recursive: true });
+      fs.copyFileSync(path.join(ROOT, 'tools', 'voice', 'key.js'), path.join(fake, 'tools', 'voice', 'key.js'));
+      fs.copyFileSync(path.join(ROOT, 'data.js'), path.join(fake, 'data.js'));
+      fs.mkdirSync(cdir, { recursive: true });
+      for (const f of ['check.js', 'build.js']) fs.copyFileSync(path.join(ROOT, 'tools', 'course', f), path.join(cdir, f));
+      for (const l of CB.LANGS) {
+        const real = path.join(ROOT, 'tools', 'course', l);
+        fs.mkdirSync(path.join(cdir, l, 'units'), { recursive: true });
+        for (const f of ['syllabus.json', 'towns.json']) fs.copyFileSync(path.join(real, f), path.join(cdir, l, f));
+        for (const f of fs.readdirSync(path.join(real, 'units'))) fs.copyFileSync(path.join(real, 'units', f), path.join(cdir, l, 'units', f));
+      }
+      const out = path.join(fake, 'talk-courses.js');
+      const a = run(fake, ['--talk', '--check']);
+      check(a.status === 1 && !fs.existsSync(out) && /不是最新的/.test(a.stderr), '还没有 talk-courses.js：--talk --check 退出码 1（不写文件）', (a.stdout + a.stderr).slice(0, 200));
+      const b = run(fake, ['--talk']);
+      check(b.status === 0 && fs.existsSync(out) && fs.readFileSync(out, 'utf8') === text && run(fake, ['--talk', '--check']).status === 0, '--talk 写出来的和仓库里的一字不差（同样的源文件逐字节一样），再 --check 就过了', (b.stdout + b.stderr).slice(0, 200));
+      const uf = path.join(cdir, 'ja', 'units', 'ja1-3.json'), u = JSON.parse(fs.readFileSync(uf, 'utf8'));
+      u.talk.persona += ' She likes green tea.';
+      fs.writeFileSync(uf, JSON.stringify(u));
+      const c1 = run(fake, ['--talk', '--check']), c2 = run(fake, ['ja', '--check']);
+      check(c1.status === 1 && /不是最新的/.test(c1.stderr) && fs.readFileSync(out, 'utf8') === text && c2.status === 0 && /提醒：talk-courses\.js 不是最新的/.test(c2.stdout),
+        '聊天角色的源文件改过：--talk --check 退出码 1（不动文件）；平常生成 course.json 时提醒一句', (c1.stderr + c2.stdout).slice(-300));
+      const d1 = run(fake, ['--talk']), now = fs.readFileSync(out, 'utf8');
+      check(d1.status === 0 && now !== text && now.includes('She likes green tea.') && run(fake, ['--talk', '--check']).status === 0 && !/提醒：talk-courses/.test(run(fake, ['ja', '--check']).stdout), '重新 --talk：文件跟上了，不再提醒');
+      const tf = path.join(cdir, 'es', 'towns.json'), towns = JSON.parse(fs.readFileSync(tf, 'utf8'));
+      towns[0].sents.pop();
+      fs.writeFileSync(tf, JSON.stringify(towns));
+      const e1 = run(fake, ['--talk']);
+      check(e1.status === 1 && /没过 tools\/course\/check\.js/.test(e1.stderr) && fs.readFileSync(out, 'utf8') === now, '源文件检查不过：--talk 不生成（退出码 1，文件不动）', e1.stderr.slice(0, 200));
+    } finally { fs.rmSync(fake, { recursive: true, force: true }); }
   }
 
   // ---- 5. 台词翻译表（tools/course/SPEC.md §8）：tests/course-lines-fixture.js 的小样 ----

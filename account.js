@@ -117,6 +117,8 @@
       // 首次设置向导（云端模式代替「粘贴 AI 密钥」那一页）
       'ac.su.tab': 'AI 账号', 'ac.su.title': 'AI 和账号',
       'ac.su.p1': '和岛民用英语聊天、给口语打分，是由<b>人工智能（AI）</b>完成的。AI 生成的内容在 App 里都标着「AI 生成」。',
+      // 别的语言的课（i18n.js 的 variant）：不写是哪门语言（这门语言的聊天服务器会不会，向导这时还不知道）
+      'ac.su.p1.c': '和岛民聊天、给口语打分，是由<b>人工智能（AI）</b>完成的。AI 生成的内容在 App 里都标着「AI 生成」。',
       'ac.su.p2': '<b>登录一个账号</b>（邮箱验证码，或者通过 Apple 登录），每天免费用 {n} 分钟 AI 聊天；想多用可以买会员。不用自己准备任何密钥。',
       'ac.su.p3': '现在登录、以后再登录都可以。不登录也能玩冒险、闯关和复习，只是不能用 AI。',
       'ac.su.kid': '给孩子用：请<b>家长</b>来登录。13 岁以下的孩子，第一次聊天前还要家长在邮件里按「同意」。',
@@ -194,6 +196,7 @@
       'ac.s.age': '👤 Choose your age group first', 'ac.s.account': '👤 Account',
       'ac.su.tab': 'AI account', 'ac.su.title': 'AI and your account',
       'ac.su.p1': 'Chatting with islanders in English and scoring speaking are done by <b>artificial intelligence (AI)</b>. AI-generated content is labelled "AI" in the app.',
+      'ac.su.p1.c': 'Chatting with islanders and scoring speaking are done by <b>artificial intelligence (AI)</b>. AI-generated content is labelled "AI" in the app.',
       'ac.su.p2': '<b>Sign in</b> (email code or Sign in with Apple) to get {n} minutes of AI chat free every day; Membership gives you more. You do not need any key of your own.',
       'ac.su.p3': 'You can sign in now or later. Without an account you can still play the adventure, levels and reviews, just without AI.',
       'ac.su.kid': 'For a child: a <b>parent</b> should sign in. For children under 13, a parent also taps "I agree" in an email before the first chat.',
@@ -213,10 +216,11 @@
   const FREE_MIN = 5;   // 只用在「登录送几分钟」的宣传句里（还没登录拿不到服务器的数）；登录以后一律显示 GET /v1/me 的数
   const MIN_START = 20; // 服务器 TALK_MIN_START_SEC 的默认值：今天剩的不到这么多秒，开聊会被 402 挡（API.md §8）
   const GATED = ['talk', 'place', 'steps'];
-  const K = { tok: 'echo-cloud-token', me: 'echo-cloud-me', apple: 'echo-cloud-apple' };
+  const K = { tok: 'echo-cloud-token', me: 'echo-cloud-me', apple: 'echo-cloud-apple', pub: 'echo-cloud-pub' };
   let G = null;
   const A = { me: null, at: 0, pend: null, pendF: '', nudged: false, again: false, form: { step: 'email', email: '', msg: '', busy: false }, prods: null, prodErr: '', canPay: true, buying: false, poll: 0 };
   try { A.me = JSON.parse(LS(K.me) || 'null'); } catch (e) { A.me = null; }
+  try { A.pub = JSON.parse(LS(K.pub) || 'null'); } catch (e) { A.pub = null; }   // 服务器不用登录也给的那几样（GET /v1/health），见 askPub
   const token = () => (CLOUD.on ? LS(K.tok) : '');
   const signed = () => !!token();
   const $ = s => document.querySelector(s);
@@ -302,7 +306,23 @@
     return Math.max(0, q.talk.leftSec | 0);
   }
   // 服务器能不能识别 / 合成这门语言（GET /v1/me 的 speechLangs，API.md §4）：老服务器没有这个字段、还没拿到账号信息 = 只当英语能用
-  const speechLang = c => !!(A.me && Array.isArray(A.me.speechLangs) && A.me.speechLangs.includes(String(c || '')));
+  // 没登录、或者缓存的账号信息还是老服务器给的（没有这个字段）：看 GET /v1/health 给的那一份（askPub，2026-11-21）——
+  // 不然没登录的人在别的课里看到的是「这门语言的 AI 聊天还在做」、口语题只能跳过，其实只差登录
+  const langList = k => (A.me && Array.isArray(A.me[k]) ? A.me[k] : A.pub && Array.isArray(A.pub[k]) ? A.pub[k] : []);
+  function askPub() {
+    if (!CLOUD.on) return Promise.resolve();
+    return call('GET', '/health', undefined, { noAuth: true, ms: 8000 }).then(r => {
+      if (!r.ok || !r.json) return;
+      const ok = v => (Array.isArray(v) ? v.map(String).filter(x => /^[a-z]{2,3}$/.test(x)).slice(0, 12) : null);
+      const pub = { speechLangs: ok(r.json.speechLangs), talkLangs: ok(r.json.talkLangs) }, before = JSON.stringify(A.pub);
+      A.pub = pub; LS(K.pub, JSON.stringify(pub));
+      if (JSON.stringify(pub) !== before) changed();
+    }, () => { /* 连不上：上次问到的先留着 */ });
+  }
+  const speechLang = c => langList('speechLangs').includes(String(c || ''));
+  // 服务器会不会用这门语言和岛民聊天（GET /v1/me 的 talkLangs，tools/course/TALK.md §3）：英语一直会；
+  // 老服务器没有这个字段、还没拿到账号信息（没登录）= 只会英语，别的课照旧写「这门语言的 AI 聊天还在做」
+  const talkLang = c => { const l = String(c || ''); return l === 'en' || langList('talkLangs').includes(l); };
   const freeMin = () => FREE_MIN;
   const planName = me => t('ac.plan.' + (me && /^(monthly|yearly)$/.test(me.plan) ? me.plan : 'free'));
 
@@ -767,7 +787,7 @@
 
   function init(api) {
     G = api;
-    if (CLOUD.on) setTimeout(boot, 300);
+    if (CLOUD.on) { setTimeout(boot, 300); setTimeout(askPub, 60); W.addEventListener('online', () => { askPub(); }); }
     if (!CLOUD.on) return {};
     return {
       ac_signin: () => { A.pend = null; A.pendF = ''; signInSheet(); },
@@ -796,7 +816,7 @@
   }
 
   W.EchoAccount = {
-    init, cfg: CFG, token, signed, me: () => A.me, refresh, talkLeft, speechLang, need, ask, nudge, fix, post, noteQuota, lost,
+    init, cfg: CFG, token, signed, me: () => A.me, refresh, talkLeft, speechLang, talkLang, need, ask, nudge, fix, post, noteQuota, lost,
     strip, settingsRow, gateWhy, failText, barText, barInfo, setupPage, setupSum, reportSheet, memberSheet, signInSheet, accountSheet,
     reconcile, planName: () => planName(A.me), MIN_START,
   };

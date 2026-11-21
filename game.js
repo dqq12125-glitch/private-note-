@@ -24,6 +24,11 @@
   if (LANG && I18N && I18N.variant) I18N.variant('.c', () => ({ lang: I18N.t('pk.name.' + COURSE) }));
   // 课程内容（单词、句子、对话）的意思：要学的语言是 COURSE（英语课和 gloss 一样；别的课英语界面给 en 那份、中文界面给中文）
   const glossC = o => (I18N ? I18N.gloss(o, COURSE) : (o && o.zh) || null);
+  // 这门课现在能不能和岛民聊（tools/course/TALK.md §4）：英语课一直能（连不连得上另说）；别的课看服务器会不会用这门语言聊
+  // （talk.js 的 langOk：云端模式看账号的 talkLangs，网页版看中转服务 /health 的 talkLangs；老服务器、APK 直连 = 不会，一切照旧）
+  const talkLang = () => { if (!LANG) return true; try { return !!(window.EchoTalk && EchoTalk.langOk && EchoTalk.langOk()); } catch (e) { return false; } };
+  // 聊天里一句话有多长：英语、西语数词；日语、中文数的是字——周报、日报里「每句 n 个词」「最长一句 n 个词」那几句换成「字」的写法（键后面加 .ch）
+  const CH = LANG && LANG.script !== 'latin' ? '.ch' : '';
   // ---------- 单词 / 句子的「意思」（规则只写在这里）----------
   // 条目是 data.js / book.js 的单词 [英文, 中文意思, 表情] 或句子 [英文, 中文意思]（对话 [问, 答, [错的答]] 没有意思）；
   // 复习本里聊天改过的句子是 { en, zh }。
@@ -652,6 +657,21 @@
       'g.intro.c.p1': '<p><b>🐲 怪兽冒险</b>：选一只怪兽当伙伴，用{lang}念咒语攻击，听懂对手的{lang}来防御。收服新怪兽、升级进化，打败 13 个区域的岛主拿徽章。</p>',
       'g.intro.c.p2': '<p><b>📚 闯关练习</b>：📗 课程单元和 13 座话题小岛。每通关一关送回声球，用来收服怪兽。</p>',
       'g.intro.c.p3': '<p><b>🗣️ 和岛民聊天</b>：这门语言的 AI 聊天还在做，做好了会在这里打开。剧情里的对话先用界面的语言显示。</p>',
+      // 和岛民聊天（tools/course/TALK.md §4，2026-11-21）：服务器会用这门语言聊的时候，学习锁、每日任务、周报、日报里说到「英语」的这几句
+      'g.intro.c.p3.on': '<p><b>🗣️ 和岛民聊天</b>：按住话筒，用{lang}和岛上的人真的聊天；聊完 AI 写评语，告诉你怎样说更好。</p>',
+      'g.qp.tk1.c': '用{lang}和岛民聊天，完成 1 个目标',
+      'g.res.gate.talk.c': '✅ 复习完成 · 再和岛民用{lang}聊一聊（已开口说 {n}/{need} 句）就能去冒险',
+      'g.set.gate.d.c': '开着时，每天先做完每日复习、用{lang}和岛民聊一聊（用语音说满 6 句，或者完成一个小目标），才能去怪兽冒险。关掉要家长密码，关过的天周报上会标出来；关着时冒险也不限时。',
+      'g.set.ai.off.d.c': '请家长在这里粘贴 AI 密钥（阿里云百炼的 API Key），只存在这台手机里。设好以后口语题会自动打分。',
+      'g.gate.chat.said.c': '和岛民聊天：今天开口说了 {n} 句{lang}',
+      'g.gate.chat.used.c': '用{lang}和岛民聊天：已开口说 <em class="gate-n">{a}/{b}</em> 句（{x}）',
+      'g.gate.chat.go.c': '用{lang}和岛民聊天：已开口说 <em class="gate-n">{a}/{b}</em> 句，或者完成一个小目标',
+      'g.gate.blk.used.c': '临时冒险时间用完了：连上网，用{lang}和岛民聊一聊就能接着玩',
+      'g.gate.blk.chat.c': '先用{lang}和岛民聊一聊：开口说满 {need} 句（现在 {n} 句），或者完成一个小目标',
+      'g.adv.stop.pass.p.c': '今天没网（或者聊天连不上），先让你冒险了 {n} 分钟。连上网，用{lang}和岛民聊一聊，就能接着冒险。',
+      'g.push.l.chat.c': '🗣️ 和岛民聊天 {a} 段，用语音说了 {b} 句{lang}', 'g.rp.hb.look.c': ' · 看意思 {a} 次 · 帮帮我 {b} 次',
+      // 一句有多长：日语、中文数的是字（西语和英语一样数词）
+      'g.rp.ab.a.ch': '<p class="rp-ab">💪 <b>能力</b>（和上周比）：每句 {n} 个字', 'g.rp.hb.max.ch': '（最长一句 {n} 个字）', 'g.push.l.max.ch': '（最长一句 {n} 个字）',
 
       // —— 字表结束 ——
     },
@@ -1265,6 +1285,20 @@
       'g.intro.c.p1': '<p><b>🐲 Monster Adventure</b>: pick a monster as your partner. Say spells in {lang} to attack, and understand your rival\'s {lang} to defend. Catch new monsters, grow them up, and beat the Isle Masters of 13 areas to win badges.</p>',
       'g.intro.c.p2': '<p><b>📚 Practice</b>: 📗 Course units and 13 topic islands. Each level you clear gives you Echo Balls to catch monsters.</p>',
       'g.intro.c.p3': '<p><b>🗣️ Chat with islanders</b>: AI chat in this language is still being built; it will open here when it is ready. Story dialogues are shown in your interface language for now.</p>',
+      // Chat with islanders in other courses (tools/course/TALK.md §4)
+      'g.intro.c.p3.on': '<p><b>🗣️ Chat with islanders</b>: hold the mic and really chat with the people on the islands in {lang}. After the chat, the AI writes comments and shows you better ways to say things.</p>',
+      'g.qp.tk1.c': 'Chat with an islander in {lang} and finish 1 goal',
+      'g.res.gate.talk.c': '✅ Review done · Now chat with islanders in {lang} ({n}/{need} lines spoken) to go on an adventure',
+      'g.set.gate.d.c': 'When it is on, each day you first finish the Daily review and chat with an islander in {lang} (say 6 sentences by voice, or finish one small goal). Then you can go on a Monster Adventure. Turning it off needs the parent PIN, and the days it was off show in the Weekly report. While it is off, adventure time has no limit either.',
+      'g.set.ai.off.d.c': 'Ask a parent to paste the AI key here (an Alibaba Cloud Bailian API key). It is kept only on this phone. After that, speaking questions are scored automatically.',
+      'g.gate.chat.said.c': { one: 'Chat with islanders: spoke {n} line of {lang} today', other: 'Chat with islanders: spoke {n} lines of {lang} today' },
+      'g.gate.chat.used.c': 'Chat with islanders in {lang}: spoke <em class="gate-n">{a}/{b}</em> lines ({x})',
+      'g.gate.chat.go.c': 'Chat with islanders in {lang}: spoke <em class="gate-n">{a}/{b}</em> lines, or finish a chat goal',
+      'g.gate.blk.used.c': 'Your temporary adventure time is up. Get online and chat with islanders in {lang} to keep playing',
+      'g.gate.blk.chat.c': 'First chat with islanders in {lang}: speak {need} lines (now {n}), or finish a chat goal',
+      'g.adv.stop.pass.p.c': { one: 'There was no internet today (or chat could not connect), so you had {n} minute of adventure first. Get online and chat with islanders in {lang} to carry on.', other: 'There was no internet today (or chat could not connect), so you had {n} minutes of adventure first. Get online and chat with islanders in {lang} to carry on.' },
+      'g.push.l.chat.c': '🗣️ Chats with islanders: {a}, lines of {lang} spoken: {b}', 'g.rp.hb.look.c': ' · Meanings looked up: {a} · "Help me" used: {b}',
+      'g.rp.ab.a.ch': '<p class="rp-ab">💪 <b>Skills</b> (compared with last week): characters per line {n}', 'g.rp.hb.max.ch': ' (longest: {n} characters)', 'g.push.l.max.ch': ' (longest: {n} characters)',
 
       // —— 字表结束 ——
     },
@@ -1308,7 +1342,7 @@
     window.WORLDS = c.WORLDS; window.SCENES = c.SCENES;
     window.BOOKS = c.BOOKS || { list: [] };
     W = c.WORLDS; BOOKS = window.BOOKS.list || []; BK = bkOf(BOOKS); NB = W.length; WX = W.concat(BK);
-    // 和岛民聊天的角色（这一步聊天关着，换上是为了别处查得到这门课的角色、不拿英语的）
+    // 和岛民聊天的角色：这门课的单元角色（服务器会用这门语言聊的时候聊天页列的就是它们，TALK.md §4；不会的时候聊天关着，别处也不拿英语的角色）
     const tl = Array.isArray(c.TALK) ? c.TALK : [];
     window.TALK_NPCS = { list: tl, byId: Object.fromEntries(tl.map(n => [n.id, n])) };
     if (window.EchoTalk && EchoTalk.useNpcs) EchoTalk.useNpcs(window.TALK_NPCS);
@@ -1348,6 +1382,52 @@
   }
   // 显示要学的那句话：别的课标读音，英语课就是 esc（一字不变）
   const rb = t => (LANG ? ruby(t) : esc(t));
+  // ---------- 聊天里要学的那几句的读音（tools/course/TALK.md §4：示范句、词卡、照着剧本说的开场白）----------
+  // 课程的 TALK 没带读音。条目表里有这句就照条目标（ruby）；没有就拿课程里写过读音的词块一段一段去对：
+  // · 只认课程里只有一种读法的写法（同一个写法写过两种读音的不标）；对不上的字不标——不猜；
+  // · 日语：一串汉字要整串对上才标（「三人」不拿「人」的读音去凑），前面带着 お / ご 的要连着它一起对上（お母さん 不拿「母」的读音）；
+  // · 中文：一个字一个字、一个词一个词对（先对最长的）。课程没教过的多音字可能标成课程里的那个读法——这一点知道，量很小。
+  // 岛民现场说的话不走这里（不硬标）。西语、关了「读音」、英语课：原样
+  const HANC = /[㐀-鿿豈-﫿々]/;
+  let RLEX = null;
+  function rubyLex() {
+    if (RLEX && RLEX.n === ENTRY.size) return RLEX;
+    const m = new Map(); let max = 1;
+    const add = (k, r) => {
+      k = String(k || '').replace(/^[\s「『（(“‘"']+/, '').replace(TAILP, ''); r = String(r || '').replace(TAILP, '').trim();
+      if (!k || !r || !HANC.test(k)) return;
+      if (m.has(k)) { if (m.get(k) !== r) m.set(k, ''); return; }
+      m.set(k, r); max = Math.max(max, Array.from(k).length);
+    };
+    ENTRY.forEach(e => {
+      if (Array.isArray(e.seg) && Array.isArray(e.r) && e.seg.length === e.r.length) e.seg.forEach((s, i) => add(s, e.r[i]));
+      else if (typeof e.r === 'string') add(e.t, e.r);
+    });
+    return (RLEX = { m, max, n: ENTRY.size });
+  }
+  function rubyLine(text) {
+    text = String(text == null ? '' : text);
+    if (!rubyOn()) return esc(text);
+    if (entryOf(text)) return ruby(text);
+    const X = rubyLex(), cs = Array.from(text), kana = LANG.script === 'kana', isH = k => k >= 0 && k < cs.length && HANC.test(cs[k]);
+    let out = '', i = 0;
+    while (i < cs.length) {
+      const han = isH(i);
+      if (!han && !(kana && /[ぁ-ゖァ-ヺ]/.test(cs[i]))) { out += esc(cs[i]); i++; continue; }
+      let j = i; while (isH(j)) j++;   // 从这里开始的这串汉字到哪里（不是汉字开头：j === i）
+      const pre = kana && han && i > 0 && /[おご]/.test(cs[i - 1]);
+      let hit = 0, r = '';
+      if (!pre) for (let len = Math.min(X.max, cs.length - i); len >= 1; len--) {
+        if (kana && (i + len < j || (isH(i + len - 1) && isH(i + len)))) continue;   // 日语：不能停在一串汉字中间
+        const v = X.m.get(cs.slice(i, i + len).join(''));
+        if (v) { hit = len; r = v; break; }
+      }
+      if (hit) { out += rubyPiece(cs.slice(i, i + hit).join(''), r); i += hit; }
+      else if (kana && han) { out += esc(cs.slice(i, j).join('')); i = j; }   // 这串汉字课程里没写过读音：整串不标
+      else { out += esc(cs[i]); i++; }
+    }
+    return out;
+  }
   // 排句子的块的读音（块和条目的 seg 一一对上时才有）
   function tileR(text, toks) {
     const e = entryOf(text);
@@ -1989,12 +2069,13 @@
   // g：对话角色的声音 'f' / 'm'；不传就用默认声音。朗读的时候把背景音乐压低，读完恢复
   // 只认最新的一句：新的一句打断旧的时，旧的那句晚一点才结束也不会提前把音乐放回来
   let duckTok = null;
-  function say(text, rate, g) {
+  // own（别的课才看）：这句本来就是这门语言的话（聊天里的示范句、词卡，talk.js 给），不在条目表里也照这门语言念
+  function say(text, rate, g, own) {
     if (!text) return Promise.resolve();
     // 别的课（ENGINE.md §5）：只念这门课的内容（条目表里有的、课程包里有配音的）；代码里写死的英语台词、喊话只给人看、不念——
     // 停一小会儿再算「读完」（和没有声音时一样），剧情、对战的节奏不变
     // 有台词翻译表（SPEC §8）的：念翻好的那句（课程包里有配音就放配音，没有用本机声音）
-    if (LANG && !entryOf(text) && !(PK() && packClip(text, g))) {
+    if (LANG && !own && !entryOf(text) && !(PK() && packClip(text, g))) {
       const ln = lineOf(text);
       if (!ln) return new Promise(res => setTimeout(res, Math.min(1500, 200 + String(text).length * 20)));
       text = ln.t;
@@ -2978,9 +3059,17 @@
   }
   function ensureQuests() {
     const t = dayStr();
-    if (S.quests.day === t && S.quests.list.length) return;
-    const r = seeded(t);
-    const talkOn = !LANG && !!(window.EchoTalk && EchoTalk.relayUrl());   // 别的课：AI 聊天还没有，不出「和岛民聊天」（ENGINE.md §4）
+    const canTalk = () => talkLang() && !!(window.EchoTalk && EchoTalk.relayUrl());   // 别的课：服务器不会用这门语言聊就不出「和岛民聊天」（ENGINE.md §5、TALK.md §4）
+    if (S.quests.day === t && S.quests.list.length) {
+      // 别的课：今天的任务是在还不知道服务器会不会用这门语言聊的时候排的（刚打开游戏还没问到、后来才登录）——现在知道能聊了，
+      // 把最后一个还没动过的任务换成「和岛民聊天」（英语课不走这里：它排任务时就知道）
+      if (LANG && !S.quests.list.some(q => q.id === 'tk1') && canTalk()) {
+        const idle = S.quests.list.map((q, k) => (!q.p && !q.claimed ? k : -1)).filter(k => k >= 0);
+        if (idle.length) { S.quests.list[idle[idle.length - 1]] = { id: 'tk1', p: 0, claimed: false }; save(); }
+      }
+      return;
+    }
+    const r = seeded(t), talkOn = canTalk();
     const pool = QPOOL.filter(q => (q.key !== 'review' || dueList().length >= 5) && q.key !== 'talk');
     // 连得上 AI 对话服务时，每天固定有一个「和岛民聊天」的任务：每天都真的开口用英语交流
     const picked = talkOn ? [{ id: 'tk1', p: 0, claimed: false }] : [], keys = new Set(talkOn ? ['talk'] : []);
@@ -3235,8 +3324,8 @@
       (unitTalk(u) ? '<button class="btn small sun" data-act="talk_open" data-npc="' + unitTalk(u).id + '">' + trh('g.unit.talk', { name: unitTalk(u).name }) + '</button>' : '') +
       (now ? '' : '<button class="btn small ghost" data-act="bookAt" data-i="' + (wi - NB) + '">' + trh('g.unit.setnow') + '</button>') + '</div>';
   }
-  function unitTalk(u) {   // 这个单元的 AI 聊天角色（连不上对话服务就不显示；别的课 AI 聊天还没有）
-    if (LANG || !window.EchoTalk || !EchoTalk.relayUrl() || !window.TALK_NPCS) return null;
+  function unitTalk(u) {   // 这个单元的 AI 聊天角色（连不上对话服务就不显示；别的课：服务器不会用这门语言聊也不显示）
+    if (!talkLang() || !window.EchoTalk || !EchoTalk.relayUrl() || !window.TALK_NPCS) return null;
     return window.TALK_NPCS.byId[u.book + '-u' + u.n] || null;
   }
   function bookNode() {   // 「开始」标在正在学的单元里第一关没拿星的地方
@@ -4468,9 +4557,9 @@
     else if (window.ECHO_APP && !S.micCheck && speakMode() === 'sr') setTimeout(checkSheet, 300);
   }
   function introSheet() {
-    const ln = LANG ? { lang: tr('pk.name.' + COURSE) } : null;   // 别的课：说的是那门语言、没有课本和 AI 聊天
+    const ln = LANG ? { lang: tr('pk.name.' + COURSE) } : null;   // 别的课：说的是那门语言、没有课本；AI 聊天看服务器会不会用这门语言聊（不会就照旧写「还在做」）
     openModal('<div class="big">🏝️</div><h2>' + tr('g.intro.h') + '</h2>' +
-      (LANG ? trh('g.intro.c.p1', ln) + trh('g.intro.c.p2') + trh('g.intro.c.p3') : trh('g.intro.p1') + trh('g.intro.p2') + trh('g.intro.p3')) + trh('g.intro.p4') +
+      (LANG ? trh('g.intro.c.p1', ln) + trh('g.intro.c.p2') + (talkLang() ? trh('g.intro.c.p3.on', ln) : trh('g.intro.c.p3')) : trh('g.intro.p1') + trh('g.intro.p2') + trh('g.intro.p3')) + trh('g.intro.p4') +
       envHTML() +
       '<div class="row"><button class="btn ghost" data-act="testVoice">' + tr('g.intro.voice') + '</button><button class="btn" data-act="introGo" data-focus>' + tr('g.intro.go') + '</button></div>', { locked: true });
   }
@@ -4954,6 +5043,8 @@
       // 在学的语言（ENGINE.md）：lang = LANG（英语课 null，各模块看它决定走不走别的语言的路）、course 语言代码、entryOf(原文) 条目、
       // ruby(原文) 标了读音的 HTML、meanText(原文) 课程内容的意思、learnLine(英语原文, 第几岛, 'sent'|'dlg') 写死的英语换成的课程句子（§5）
       lang: LANG, course: COURSE, entryOf, ruby: t => rb(t), meanText, learnLine,
+      // rubyLine(原文)：聊天里的示范句、词卡、开场白（课程的 TALK 没带读音：按课程里写过的读音标，对不上的不标；talk.js 用）
+      rubyLine: t => (LANG ? rubyLine(t) : esc(t)),
       // 台词翻译表（tools/course/SPEC.md §8）：lineOf(英语原文, { zh, fill, swap }) → { t, seg, r, en, zh, mean } 或 null；courseWord(意思, 'zh'|'en') 把「英语」换成在学的语言
       lineOf, courseWord,
       // 画面上的名字（SPEC §8.1）：termOf(类别, 英文) 文字、termHTML(类别, 英文) 带读音的 HTML；英语课 / 没翻：英文
@@ -5102,6 +5193,7 @@
   // 聊天：今天完成过一个聊天小目标，或者今天用语音说满 6 句英语（EchoTalk.today()：≥3 个英文词、不含中文；打字的不算）
   // 聊天这一项免掉的情况：
   //   - AI 聊天没开通（noai）、今天的聊天时长用完了（daily）：整天免（周报标 🟡）
+  //   - 别的语言的课、服务器不会用这门语言聊（lang：老服务器、APK 直连，talkLang()）：整天免；服务器会聊就和英语课一样要聊（TALK.md §4）
   //   - 没网、聊天连上以后服务器真出错了（chatFail，talk.js 只在这种时候记）：只临时放行 30 分钟，不写 gateOpen（周报标 📵）；
   //     30 分钟从第一次进大地图开始算；联网以后回首页 / 进出大地图时重新检查（又要聊天了）
   // 真的做完了（gateOpen）当天就一直开着（冒险里答错一题不会又锁上）；手机日期被往回调时不开
@@ -5130,7 +5222,11 @@
     const today = dayStr(), on = kidMode() && S.settings.gate !== false, L = dayLog();   // 「自己学」没有学习锁
     const back = !!(S.maxDay && today < S.maxDay);
     const due = dueList().length, revDone = due === 0 || (L.revSess || 0) > 0;
-    const tk = talkToday(), chatOn = !LANG && !!(window.EchoTalk && EchoTalk.relayUrl());   // 别的课：AI 聊天还没有，聊天这一项整天免（lang）
+    // 别的课：服务器不会用这门语言聊（老服务器、APK 直连）→ 聊天这一项整天免（lang）；会聊就和英语课一样要做（TALK.md §4）
+    const langNo = !!LANG && !talkLang();
+    const tk = talkToday(), chatOn = !langNo && !!(window.EchoTalk && EchoTalk.relayUrl());
+    // 今天早些时候按「这门语言聊不了」免过，现在能聊了（刚问到服务器、刚登录）：那次免的不算数了
+    if (!langNo && L.gateEx === 'lang') delete L.gateEx;
     // 没网：手机说没网；或者 Wi-Fi 连着但上不了网（最近 10 分钟 AI 报过「找不到服务器」、今天聊天也没连上过）
     const le = window.EchoTalk && EchoTalk.lastErr ? EchoTalk.lastErr() : null;
     const offline = navigator.onLine === false || (!!le && le.why === 'offline' && Date.now() - le.at < 10 * 60e3 && !L.chatConn);
@@ -5138,7 +5234,7 @@
     const chatFail = !!L.chatFail, chatDaily = !!L.chatDaily || cw === 'quota', chatDone = !!tk.done;
     // 今天的聊天时间用完了：真的开口说过 3 句以上才整天免；一直不说话把时间耗完的，只临时放行 30 分钟
     const dailyFull = chatDaily && (tk.voiceLines || 0) >= 3;
-    const exWhy = chatDone ? '' : LANG ? 'lang' : !chatOn ? 'noai' : cw === 'nosign' || cw === 'consent' ? cw : dailyFull ? 'daily' : '';
+    const exWhy = chatDone ? '' : langNo ? 'lang' : !chatOn ? 'noai' : cw === 'nosign' || cw === 'consent' ? cw : dailyFull ? 'daily' : '';
     const passWhy = chatDone || exWhy ? '' : offline ? 'offline' : chatFail ? 'fail' : chatDaily ? 'daily' : '';
     // 真的做完了就记下（学习锁关着也记：周报的 ✅ 和「学习日」看这个）
     if (!back && revDone && chatDone && !L.gateOpen) L.gateOpen = 1;
@@ -5551,10 +5647,10 @@
       sum('micDeny') ? tr('g.rp.f.mic', { n: sum('micDeny') }) : '',
     ].filter(Boolean).join(' · ');
     const pctS = x => (x == null ? '–' : pct(x) + '%');
-    const ability = trh('g.rp.ab.a', { n: W0.wpl == null ? '–' : r1(W0.wpl) }) + arrow(W0.wpl, W1.wpl, 0.2) +
+    const ability = trh('g.rp.ab.a' + CH, { n: W0.wpl == null ? '–' : r1(W0.wpl) }) + arrow(W0.wpl, W1.wpl, 0.2) +
       trh('g.rp.ab.b', { n: pctS(W0.first) }) + arrow(pct(W0.first), pct(W1.first), 2) + trh('g.rp.ab.c', { n: pctS(W0.week) }) + arrow(pct(W0.week), pct(W1.week), 2) + '</p>';
     const maxW = Math.max(0, ...L.map(x => x.voiceMax || 0));
-    const habit = trh('g.rp.hb.a', { n: sum('recall') }) + (sum('recallW') ? trh('g.rp.hb.w', { n: sum('recallW') }) : '') + trh('g.rp.hb.say', { h: sum('aided'), n: sum('voiceLines') }) + (maxW ? trh('g.rp.hb.max', { n: maxW }) : '') +
+    const habit = trh('g.rp.hb.a', { n: sum('recall') }) + (sum('recallW') ? trh('g.rp.hb.w', { n: sum('recallW') }) : '') + trh('g.rp.hb.say', { h: sum('aided'), n: sum('voiceLines') }) + (maxW ? trh('g.rp.hb.max' + CH, { n: maxW }) : '') +
       (sum('chatSaidZh') ? trh('g.rp.hb.zh', { n: sum('chatSaidZh') }) : '') + trh('g.rp.hb.look', { a: sum('chatZh') + sum('zhTaps'), b: sum('chatHelp') }) + '</p>';
     const hist = (S.weekly || []).slice(-6);
     const histLine = hist.length >= 2 ? trh('g.rp.hist', { a: hist.map(r => r.d).join(' · '), b: hist.map(r => r.rc || 0).join(' · ') }) : '';
@@ -5625,7 +5721,7 @@
     const lines = [status,
       tr('g.push.l.time', { a: m(x.learn), b: m(x.play) }),
       tr('g.push.l.rev', { a: x.review || 0, b: x.spoken || 0, c: x.recall || 0 }),
-      tr('g.push.l.chat', { a: x.chats || 0, b: x.voiceLines || 0 }) + (x.voiceMax ? tr('g.push.l.max', { n: x.voiceMax }) : '') + (x.chatGoals ? tr('g.push.l.goals', { n: x.chatGoals }) : ''),
+      tr('g.push.l.chat', { a: x.chats || 0, b: x.voiceLines || 0 }) + (x.voiceMax ? tr('g.push.l.max' + CH, { n: x.voiceMax }) : '') + (x.chatGoals ? tr('g.push.l.goals', { n: x.chatGoals }) : ''),
     ];
     const warn = [x.gateOff ? tr('g.push.w.off') : '', x.clockBack ? tr('g.push.w.back') : '', x.night ? tr('g.push.w.night') : '',
       x.aiKey ? (x.aiKeyWhy === 'quota' ? tr('g.push.w.quota') : x.aiKeyWhy === 'busy' ? tr('g.push.w.busy') : tr('g.push.w.auth')) : x.aiNoKey ? tr('g.push.w.nokey') : '',
@@ -5695,7 +5791,7 @@
   }
 
   // 测试用：课本出题来源、每日复习
-  window.EchoGame = { lineOf: (en, o) => lineOf(en, o), entryOf: t => entryOf(t), termOf: (c, en) => termOf(c, en), termHTML: (c, en) => termHTML(c, en), hintTx: (k, p) => hintTx(k, p), personOf: en => personOf(en),goUnit: wi => goUnit(wi), src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
+  window.EchoGame = { lineOf: (en, o) => lineOf(en, o), entryOf: t => entryOf(t), rubyLine: t => (LANG ? rubyLine(t) : esc(t)), termOf: (c, en) => termOf(c, en), termHTML: (c, en) => termHTML(c, en), hintTx: (k, p) => hintTx(k, p), personOf: en => personOf(en),goUnit: wi => goUnit(wi), src: z => src(z), dueList: () => dueList(), revAddFree: (en, zh) => revAddFree(en, zh), revRight: (q, r) => revRight(q, r), curIdx: () => curIdx(), curUnit: () => curUnit(), gate: () => gate(), dayLog: d => dayLog(d), reportSheet: () => reportSheet(), say: (t, r, g) => say(t, r, g), goHome: t => goHome(t), closeModal: () => closeModal(), get S() { return S; },
     // 走路只记位置、整份存档晚一点才存（见 savePos）：测试 / 工具要直接读 localStorage 里的位置、步数之前，先 flush() 一下
     flush: () => flushWalk() };
   // 测试用：打分（tests/review.test.js）、复习排期引擎、直接出指定的题（[题型, 编号, 第几条] 的列表）

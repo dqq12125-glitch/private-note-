@@ -1907,12 +1907,16 @@
     if (!n || !window.EchoTalk) return;
     const info = npcLook(n), w = E.W[M.z] || E.W[0];
     // 这个人原来说过的话（让 AI 说话的口气和内容跟他一致）；通用村民就用这座岛的句子
-    const own = (n.say || n.no || []).filter(q => Array.isArray(q) && typeof q[0] === 'string').map(q => fill(q[0]));
+    // 别的课（tools/course/TALK.md §4）：他说过的话是代码里的英语，换成台词翻译表里这门语言的那一句（没翻的不带）；名字用这门课的写法；
+    // 岛名（w.en 是这门语言的岛名）用小镇地图的英文名——人设是英文写的。说哪门语言由 talk.js 加在后面（lang）
+    const cl = !!E.lang;
+    const own0 = (n.say || n.no || []).filter(q => Array.isArray(q) && typeof q[0] === 'string');
+    const own = cl ? own0.map(q => ((E.lineOf && E.lineOf(q[0])) || {}).t || '').filter(Boolean) : own0.map(q => fill(q[0]));
     const lines = (own.length ? own : w.sents.slice(0, 3).map(q => q[0])).slice(0, 5);
     const kid = /kid|student/i.test(typeof n.look === 'string' ? n.look : '') || /kid/i.test(JSON.stringify(info.look || {}).slice(0, 80));
     EchoTalk.openPerson({
-      name: fill(info.name || 'Friend'), g: info.g === 'f' ? 'f' : 'm', kid, lookObj: info.look,
-      role: ROLE_EN[n.role] || ROLE_EN.talk, island: w.en.replace(/[!?]/g, '') + ' Island', islandZh: w.name,
+      name: cl ? T_('person', fill(info.name || 'Friend')) : fill(info.name || 'Friend'), g: info.g === 'f' ? 'f' : 'm', kid, lookObj: info.look,
+      role: ROLE_EN[n.role] || ROLE_EN.talk, island: cl ? ((EM.get('t' + M.z) || {}).en || 'Echo Island') : w.en.replace(/[!?]/g, '') + ' Island', islandZh: w.name,
       place: M.kind === 'inside' ? 'inside a house' : M.kind === 'town' ? 'in the town' : M.kind === 'route' ? 'on the road' : 'outdoors',
       // 聊天时建议用的词：一半是这座岛的，一半是课本正在学的单元（孩子在课上刚学的词，正好在聊天里用上）
       lines, words: [...w.words.slice(0, 4), ...((E.curUnit && E.curUnit()) || w).words.filter(q => q[0].split(' ').length <= 3).sort(() => Math.random() - .5).slice(0, 4)].map(q => q[0]),

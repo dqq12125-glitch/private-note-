@@ -28,17 +28,27 @@ KEY_FILE=D:/path/to/.env node relay.js    # 或者把 DASHSCOPE_API_KEY=... 写�
 | `ACCESS_CODE` | 空 | 家庭口令；设了以后要在游戏「设置服务」里填同样的口令，防止别人用你的额度 |
 | `ADMIN_TOKEN` | 空 | 看对话记录 `/logs?token=...`；没设只允许本机打开 `http://localhost:8787/logs` |
 | `ALLOWED_ORIGINS` | 本机、GitHub Pages、*.ts.net | 允许哪些网页连 |
-| `TTS_VOICES` | 西语 / 日语 / 中文都是 `Cherry`（女）/ `Ethan`（男） | 别的语言的课现场合成（`/tts` 带 `lang`）用的音色，`{"es":{"f":"…","m":"…"}}`；英语照旧 Jennifer / Aiden。默认值要对着阿里云的音色表核对 |
+| `TTS_VOICES` | 西语 `Sonrisa` / `Bodega`，日语 `Ono Anna` / `Ryan`，中文 `Serena` / `Ryan`（女 / 男） | 别的语言的课现场合成（`/tts` 带 `lang`）用的音色，`{"es":{"f":"…","m":"…"}}`；英语照旧 Jennifer / Aiden。默认是说这门语言地道的那几个，2026-11-21 对着真的阿里云实测过 |
+| `TALK_LANGS` | `en,es,ja,zh` | 和岛民聊天会用哪些语言（别的语言的课，见下面）。只认 `talk-core.js` 认得的，英语一直在；`/health` 的 `talkLangs` 就是它 |
 | `ASR_URL` / `TTS_URL` / `ASR_RT_URL` | 阿里云的地址 | 只给测试指到假的上游（`cloud/test/t-05-relay.js`），平时不用设 |
 
 口语题的识别（`/asr`、`/asr-rt?lang=`）和现场合成（`/tts`）可以带 `lang`：`es` / `ja` / `zh`（别的语言的课；`/tts` 也认 `Spanish` 这种写法），
 没带就是英语，发给阿里云的和以前一字不差；不认得的 `/asr`、`/tts` 回 400 `lang`，`/asr-rt` 直接断开。和公开版服务器 `cloud/` 同一套（`cloud/API.md` §8）。
 
+**别的语言的课和岛民聊天**（西语 / 日语 / 中文，2026-11-21，合同 `tools/course/TALK.md`；和 `cloud/` 同一套，`cloud/API.md` §8「Chat language」）：
+
+- `/talk?npc=<id>`：id 可以是 `../talk-courses.js` 里的课程角色（形如 `es1-u1`；先查英语的 `talk-npcs.js`，再查它）。`npc=dyn` 的 `p` 里可以带 `lang`（`es` / `ja` / `zh`）。
+  手机照旧只发 id，人设、这门语言的规矩和例句、音色（西语 Sonrisa / Bodega，日语 Ono Anna / Ryan，中文 Serena · Maia · Momo / Ryan）都由 `talk-core.js` 按角色的 `lang` 拼。
+- 这门语言这里没开（`TALK_LANGS`）、或者 `lang` 不认得：`/talk` 回 `{"type":"error","code":"lang"}` 后断开，不连阿里云、不算时长；`/steps`、`/zh` 回 400 `lang`。
+- `/steps`：`npc` 可以是课程角色的 id；`npc=dyn` 时多带 `lang`。`/zh`：多收 `lang`（这句话是哪门语言）和 `ui`（翻成 `zh` 中文 / `en` 英文），都不带 = 以前的行为（英文 → 中文）；已经是那门语言了回 400 `ui`。
+- `/health` 的 JSON 多一个 `talkLangs`（比如 `["en","es","ja","zh"]`）：游戏看它决定别的语言的课开不开聊天；老的中转服务没有这个字段 = 只会英语。
+- 没有 lang 的（英语的岛民、课本角色、委托、老的 dyn）发给阿里云的和以前一字不差。
+
 ## 放到服务器上给手机用
 
 手机上的游戏是 HTTPS（GitHub Pages），所以服务也必须是 `wss://`（有证书的域名），而且在国内能访问：
 
-1. 国内云服务器（例如阿里云轻量应用服务器）装 Node 20+，拷 `server/` 和 `talk-npcs.js`、`talk-core.js`、`quests.js`（保持相对位置：`server/relay.js` 读 `../talk-npcs.js`、`../talk-core.js`、`../quests.js`——大地图上的支线委托也是手机只发 id、人设在服务器这边读）。能力检测的口语问答题（`/place`）还要 `placement-data.js`（题库：手机只发题目的 id，评分要点在服务器这边查；没有这个文件时 `/place` 回 400，检测会把口语记成「未测」）。
+1. 国内云服务器（例如阿里云轻量应用服务器）装 Node 20+，拷 `server/` 和 `talk-npcs.js`、`talk-core.js`、`quests.js`（保持相对位置：`server/relay.js` 读 `../talk-npcs.js`、`../talk-core.js`、`../quests.js`——大地图上的支线委托也是手机只发 id、人设在服务器这边读）。`talk-core.js` 要的 `i18n.js` 也一起拷。别的语言的课要聊天还要 `talk-courses.js`（聊天角色表，`node tools/course/build.js --talk` 生成；没有这个文件时只有英语的角色，课程角色回「没有这个岛民」）。能力检测的口语问答题（`/place`）还要 `placement-data.js`（题库：手机只发题目的 id，评分要点在服务器这边查；没有这个文件时 `/place` 回 400，检测会把口语记成「未测」）。
 2. 设好 `DASHSCOPE_API_KEY`、`ACCESS_CODE`、`ADMIN_TOKEN`，用 pm2 / systemd 常驻。
 3. 用 Caddy 或 Nginx 反向代理到 8787 并自动申请证书（WebSocket 要开 Upgrade）。
 4. 手机上：游戏首页「和岛民聊天」→「设置服务」填 `wss://你的域名`，再填家庭口令。

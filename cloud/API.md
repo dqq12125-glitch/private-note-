@@ -136,6 +136,7 @@ Response `200`:
   },
   "features": { "talk": false, "place": false, "steps": false },
   "speechLangs": ["en", "es", "ja", "zh"],
+  "talkLangs": ["en", "es", "ja", "zh"],
   "plan": "free",
   "subscription": { "state": "none", "plan": null, "productId": null, "expiresAt": null, "graceUntil": null, "environment": null },
   "quota": {
@@ -160,6 +161,9 @@ Response `200`:
 - `speechLangs`: the languages this server accepts as `lang` on `/v1/asr`, `/v1/asr-rt` and `/v1/tts` (§8), always starting
   with `"en"`. A server without this field (older version) only does English: the app must then not send `lang` and must not use
   server recognition / synthesis for other courses.
+- `talkLangs`: the languages this server can hold a voice chat in (`WS /v1/talk`, §8 **Chat language**), always starting with
+  `"en"` (server config `TALK_LANGS`). A server without this field (older version) only chats in English: the app must then keep
+  chat switched off in other courses.
 - `plan`: the plan in effect now: `"free"`, `"monthly"` or `"yearly"`. `subscription`: see §7.
 - `quota`: see §6.
 
@@ -290,8 +294,8 @@ first-message auth). Same parameters as the family relay:
 
 | param | meaning |
 | --- | --- |
-| `npc` | islander id from `talk-npcs.js`, or `dyn` for a person on the map (then `p` is required) |
-| `p` | `dyn` only: base64url JSON `{name, g, kid, role, island, place, lines, words}` (cleaned and length-limited on the server) |
+| `npc` | islander id from `talk-npcs.js` (English), a course character id from `talk-courses.js` (other courses, e.g. `es1-u1`, `ja1-u3`, `zh1-u8`), or `dyn` for a person on the map (then `p` is required) |
+| `p` | `dyn` only: base64url JSON `{name, g, kid, role, island, place, lines, words, lang}` (cleaned and length-limited on the server). `lang` is optional: `"es"` / `"ja"` / `"zh"` makes this person speak that language (see **Chat language**); absent or `"en"` = English, as before |
 | `quest` | side-quest id from `quests.js`; when present `npc` and `p` are ignored |
 | `g` | which goal (0–9) |
 | `lv` | placement level 0–5 (omit for book-track saves) |
@@ -303,9 +307,10 @@ The server builds the islander's instructions itself (`talk-core.js`, same as th
 instructions or goal text sent by the client is ignored.**
 
 Before the session the server checks, in this order, and on failure sends `{"type":"error",...}` then closes:
-auth → consent → rate → `npc` / `quest` / `p` valid (`bad_request`, `field: "npc"`) → another live talk session of this
-account (`conflict`, `reason: "live_session"`) → daily allowance (needs at least `TALK_MIN_START_SEC`, default 20 seconds,
-left: `quota`) → provider reachable (`provider`).
+auth → consent → rate → `npc` / `quest` / `p` valid (`bad_request`, `field: "npc"`) → the character's language is one of
+`me.talkLangs` (`bad_request`, `field: "lang"`, `reason: "unsupported_lang"`, `supported: [...]`, close `4400`) → another live
+talk session of this account (`conflict`, `reason: "live_session"`) → daily allowance (needs at least `TALK_MIN_START_SEC`,
+default 20 seconds, left: `quota`) → provider reachable (`provider`).
 
 Client → server (JSON text messages, same as the relay):
 
@@ -349,6 +354,36 @@ Close codes: `1000` normal end; `4400` bad request; `4401` auth; `4402` quota; `
 Metering: wall-clock seconds from the moment the session is accepted until it ends, charged to the account.
 One live talk session per account at a time. Maximum session length `TALK_SESSION_MAX_SEC` (default 600 s).
 
+#### Chat language — `/v1/talk`, `/v1/steps`, `/v1/zh`
+
+For courses in other languages (Spanish, Japanese, Mandarin Chinese). The language of a chat is the language of its character:
+
+- a course character (`npc=es1-u1` …) carries its language in `talk-courses.js` (generated from the course sources by
+  `node tools/course/build.js --talk`); the client sends only the id, exactly as for English islanders;
+- a person on the map (`npc=dyn`) speaks the language in `p.lang`;
+- quests and the islanders of `talk-npcs.js` are English.
+
+Everything that depends on the language is decided on the server by `talk-core.js` from that one field: the rules and the
+example sentences in the instructions (same safety rules as English), the voice (a native voice of that language;
+`TALK_VOICE_MAP` can rename it), the final evaluation (`eval.tips[].better` is in the course language; `praise`, the tip
+explanation and `concernWhy` are in the `ui` language; `voice` counts lines spoken in the course language), and the live ticks.
+The provider's input transcription is not told a language (as for English). The messages on the socket are the same as for English.
+
+- **A character without a language (every English islander, quest and old `dyn` request) gets byte-for-byte the same provider
+  request as before.**
+- The language must be one of `me.talkLangs` (§4). Otherwise — a course character whose language is switched off, or a `lang`
+  that is not `"en"` / `"es"` / `"ja"` / `"zh"` (another code, wrong case, not a string) — the answer is `400 bad_request` with
+  `field: "lang"`, `reason: "unsupported_lang"`, `supported: ["en", …]` (on the socket: an `error` message with these fields,
+  then close `4400`). Checked before anything is opened or counted: no allowance is used and the provider is not contacted.
+- Allowance, rate limits, consent, reporting and the one-live-session rule are the same for every language.
+- `POST /v1/steps`: `npc` may be a course character id; with `npc: "dyn"` send the person's `lang` too (optional, same values
+  and the same `400` as above).
+- `POST /v1/zh`: `lang` = the language of `text` (optional; absent or `"en"` = English) and `ui` = the language to translate
+  into (`"zh"` Chinese, `"en"` English; absent or unknown = Chinese). With neither field the provider request is exactly as
+  before (English → Chinese). The answer field is still called `zh`, whatever the target language. When there is nothing to
+  translate (the text's language is the `ui` language: Chinese → Chinese, English → English) the answer is `400 bad_request`,
+  `field: "ui"`, not counted.
+
 ### `WS /v1/asr-rt` — realtime transcription for speaking questions
 
 URL: `wss://<host>/v1/asr-rt` or `wss://<host>/v1/asr-rt?lang=<es|ja|zh|en>` (see **Speech language** below; absent = English,
@@ -371,8 +406,8 @@ All need a session, are metered (§6) and answer `503 provider` (not counted) wh
 | `POST /v1/asr` | `{ "audio": "<base64 WAV, 16 kHz mono 16-bit>", "lang": "es" }` (≤ 1.5 MB; `lang` optional) | `{ "text": "…" }` | asr | no |
 | `POST /v1/tip` | `{ "target": "…", "heard": "…", "ui": "en" }` | `{ "tip": "…" }` | aux | no |
 | `POST /v1/tts` | `{ "text": "…", "g": "f"\|"m", "lang": "es" }` (`lang` optional) | `{ "url": "https://…" }` (provider's audio URL, expires within hours) | aux | no |
-| `POST /v1/zh` | `{ "text": "…" }` | `{ "zh": "…" }` | aux | no |
-| `POST /v1/steps` | `{ "npc": "…", "nm": "…", "q": "…", "g": 0, "ui": "en", "turns": [{ "who": "you"\|"npc", "text": "…", "typed": false }] }` | `{ "done": [0, 2] }` | aux | yes |
+| `POST /v1/zh` | `{ "text": "…", "lang": "es", "ui": "zh" }` (`lang`, `ui` optional: see **Chat language**) | `{ "zh": "…" }` | aux | no |
+| `POST /v1/steps` | `{ "npc": "…", "nm": "…", "lang": "es", "q": "…", "g": 0, "ui": "en", "turns": [{ "who": "you"\|"npc", "text": "…", "typed": false }] }` (`npc`: an islander or course character id, or `"dyn"` with `nm` and optional `lang`) | `{ "done": [0, 2] }` | aux | yes |
 | `POST /v1/place` | `{ "id": "<placement item id>", "lang": "en", "heard": "…" }` | `{ "score": 0\|1\|2 }` | aux | yes |
 
 Every `200` also has `"quota": { "meter": "…", "left": n }`. Field meanings and limits are the relay's
@@ -389,14 +424,16 @@ For courses in other languages. `lang` is one of the codes in `me.speechLangs` (
 - `/v1/asr`: the recognition language (`asr_options.language`). `/v1/asr-rt`: query parameter `?lang=`, the realtime
   recognition language (`input_audio_transcription.language`).
 - `/v1/tts`: the synthesis language (`language_type` `English` / `Spanish` / `Japanese` / `Chinese`) and a voice for that
-  language from server config (English keeps `TTS_VOICE_F` / `TTS_VOICE_M`; others `TTS_VOICES`). For compatibility `/v1/tts`
+  language from server config (English keeps `TTS_VOICE_F` / `TTS_VOICE_M`; others `TTS_VOICES`, by default native voices of
+  that language: Spanish `Sonrisa` / `Bodega`, Japanese `Ono Anna` / `Ryan`, Chinese `Serena` / `Ryan`). For compatibility `/v1/tts`
   also accepts the language names `"English"`, `"Spanish"`, `"Japanese"`, `"Chinese"` (the old `"Chinese"` now uses the
   Chinese voice from `TTS_VOICES`).
 - Anything else (another code, wrong case, a name on `/v1/asr`) → `400 bad_request` with `field: "lang"`,
   `reason: "unsupported_lang"`, `supported: ["en", …]`. Checked before counting: not counted, the provider is not contacted.
 - Metering, rate limits, auth and consent rules are the same for every language (one call = one count on its meter).
-- Only recognition and synthesis take this `lang`. Chat (`/v1/talk`), `tip`, `zh`, `steps` are unchanged (English prompts);
-  `/v1/place` keeps its own `lang` (which question bank), as before.
+- This section is about recognition and synthesis only (`me.speechLangs`). Voice chat in other languages has its own switch
+  and rules (`me.talkLangs`, **Chat language** above: `/v1/talk`, `/v1/steps`, `/v1/zh`). `/v1/tip` is unchanged (English
+  prompts); `/v1/place` keeps its own `lang` (which question bank), as before.
 
 ## 9. Reporting an AI message
 
@@ -421,7 +458,9 @@ Wrong or missing admin token → `401 auth`.
 
 ## 10. Health
 
-`GET /v1/health` → `200 { "ok": true, "version": "…", "time": "…" }`. No authentication.
+`GET /v1/health` → `200 { "ok": true, "version": "…", "time": "…", "speechLangs": ["en", …], "talkLangs": ["en", …] }`. No authentication.
+The two language lists are the same as in `GET /v1/me` (§4); they are here so that an app that is not signed in can tell
+"the server can do this language, the user only needs to sign in" from "the server cannot do this language".
 
 ## 11. Limits and CORS
 

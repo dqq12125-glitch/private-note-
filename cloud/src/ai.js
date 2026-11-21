@@ -6,7 +6,7 @@ import { dsPost, EVAL_PATH, TTS_PATH, ProviderError } from './upstream.js';
 import { take, refund } from './quota.js';
 import { aiLimit } from './ratelimit.js';
 import { requireConsent } from './me.js';
-import { speechLang, SPEECH_KNOWN } from './config.js';
+import { speechLang, talkLang, SPEECH_KNOWN } from './config.js';
 
 const METER = { asr: 'asr', tip: 'aux', tts: 'aux', zh: 'aux', steps: 'aux', place: 'aux' };
 const GATE = { steps: 'steps', place: 'place' };
@@ -38,15 +38,22 @@ const H = {
       return { url: String(url).replace(/^http:/, 'https:') };
     };
   },
+  // lang：这句话是哪门语言（别的语言的课；没给 = 英语）；ui：翻成哪种界面语言（zh 中文 / en 英文；没给、认不得 = 中文）。
+  // 都没给 = 和以前一字不差（英文 → 中文）。回答的字段名照旧叫 zh
   async zh(R, j) {
-    const body = CORE.zhBody(clean(j.text, 400)); if (!body) throw bad('text');
+    const lang = talkLang(R.cfg, j.lang);   // 不认得的、关掉的语言：400（不扣次数、不连上游）
+    const text = lang ? CORE.cleanText(j.text, 400) : clean(j.text, 400); if (!text) throw bad('text');
+    const body = CORE.zhBody(text, { lang, ui: j.ui });
+    if (!body) throw bad('ui', 'Nothing to translate: the text is already in that language');
     body.model = R.cfg.ds.evalModel;
     return async () => ({ zh: CORE.parseZh(await dsPost(R, EVAL_PATH, body)) });
   },
+  // npc 可以是别的语言的课的角色 id（talk-courses.js）；npc=dyn 时 lang 说地图上那个人说哪门语言（没给 = 英语）
   async steps(R, j) {
-    const npc = j.q ? questNpc(j.q) : j.npc === 'dyn' ? CORE.personNpc({ name: j.nm }) : npcById(j.npc);
+    const npc = j.q ? questNpc(j.q) : j.npc === 'dyn' ? CORE.personNpc({ name: j.nm, lang: talkLang(R.cfg, j.lang) }) : npcById(j.npc);
     if (!npc) throw bad('npc', 'Unknown islander');
-    const turns = (Array.isArray(j.turns) ? j.turns : []).slice(-30).map(t => ({ who: t && t.who === 'you' ? 'you' : 'npc', text: clean(t && t.text, 300), typed: !!(t && t.typed) })).filter(t => t.text);
+    const lang = talkLang(R.cfg, npc.lang), cl = lang ? CORE.cleanText : clean;   // 课程角色的语言服务器没开：400
+    const turns = (Array.isArray(j.turns) ? j.turns : []).slice(-30).map(t => ({ who: t && t.who === 'you' ? 'you' : 'npc', text: cl(t && t.text, 300), typed: !!(t && t.typed) })).filter(t => t.text);
     const g = CORE.goalOf(npc, j.g), body = CORE.stepsBody(npc, g.i, turns, j.ui);
     if (!body) return null;   // 只打了字：不用问 AI（和中转服务一样回空，不扣次数）
     body.model = R.cfg.ds.evalModel;

@@ -12,7 +12,7 @@ import { requireConsent } from './me.js';
 import { wsLimit } from './ratelimit.js';
 import { take, refund, talkOpen, talkBeat, talkClose, talkDrop, resetAt } from './quota.js';
 import { dsSocket, dsPost, EVAL_PATH } from './upstream.js';
-import { speechLang } from './config.js';
+import { speechLang, talkLang } from './config.js';
 
 // 给学习者看的一句话（按这段的界面语言；没有的语言用英文）
 const SAY = {
@@ -28,6 +28,7 @@ const SAY = {
   server: { zh: '服务器出了点问题', en: 'Something went wrong on the server.' },
   unavailable: { zh: '服务还没准备好', en: 'The service is not ready yet.' },
   lang: { zh: '服务器还不能识别这种语言', en: 'The server cannot recognise this language yet.' },
+  talkLang: { zh: '服务器还不会用这门语言聊天', en: 'The server cannot chat in this language yet.' },
 };
 const CLOSE = { 400: 4400, 401: 4401, 402: 4402, 403: 4403, 408: 4408, 409: 4409, 413: 4413, 429: 4429, 503: 4503 };
 
@@ -37,6 +38,7 @@ export function wsAccept(R, kind) {
   ws.accept();
   const qs = new URL(R.req.url).searchParams;
   const C = conn(R, ws, qs.get('ui'));
+  C.kind = kind;
   (kind === 'talk' ? talkRun : asrRun)(R, C, qs).catch(e => C.fail(e));
   return new Response(null, { status: 101, webSocket: client });
 }
@@ -49,7 +51,7 @@ function conn(R, ws, uiRaw) {
   C.fail = e => {
     if (C.closed) return;
     if (!(e instanceof HttpError)) { console.log('ws error', e && e.stack || e); e = new HttpError(500, 'server', 'Server error'); }
-    const say = (e.extra && e.extra.reason === 'unsupported_lang' && SAY.lang) || SAY[e.code] || SAY.server;
+    const say = (e.extra && e.extra.reason === 'unsupported_lang' && (C.kind === 'talk' ? SAY.talkLang : SAY.lang)) || SAY[e.code] || SAY.server;
     C.send(Object.assign({ type: 'error', code: e.code, status: e.status, zh: say[C.ui] || say.en, message: e.message }, e.extra));
     C.close(CLOSE[e.status] || 4500);
   };
@@ -81,16 +83,25 @@ const clock = R => () => R.now + (Date.now() - R.t0);
 
 // ---------- /v1/talk ----------
 // 按 id 拼人设：和 relay.js 一模一样的取法（quest 优先，其次 dyn + p，再次 npc）
-export function npcFrom(qs) {
+// 别的语言的课：npc 可以是 talk-courses.js 里的角色 id（npcById 先查英语的表、再查它）；dyn 的 p 里可以带 lang。
+// 语言服务器不认 / 没开（cfg.talkLangs）→ talkLang 抛 400（field lang、unsupported_lang）；cfg 没给时不查（只拼人设）
+export function npcFrom(qs, cfg) {
   if (qs.get('quest')) return questNpc(qs.get('quest'));
-  if (qs.get('npc') === 'dyn') { const d = b64json(qs.get('p') || ''); return d ? CORE.personNpc(d) : null; }
-  return npcById(qs.get('npc'));
+  if (qs.get('npc') === 'dyn') {
+    const d = b64json(qs.get('p') || '');
+    if (d && typeof d === 'object' && cfg) talkLang(cfg, d.lang);
+    return d ? CORE.personNpc(d) : null;
+  }
+  const npc = npcById(qs.get('npc'));
+  if (npc && cfg) talkLang(cfg, npc.lang);
+  return npc;
 }
 // 其余参数也照 relay.js 的规矩收（名字只留字母数字空格、目标 0–9、级别只认 0–5、界面语言只认 talk-core 认得的、记忆再过一遍 memOf）
-export function talkParams(qs) {
+// lang：这个角色的语言（别的语言的课里「改过的那句」是这门语言的，memOf 按它筛；没有 = 英语，照旧）
+export function talkParams(qs, lang) {
   const lvRaw = qs.get('lv');
   let memory = null;
-  try { memory = CORE.memOf(b64json(qs.get('m') || '')); } catch (e) { memory = null; }
+  try { memory = CORE.memOf(b64json(qs.get('m') || ''), lang); } catch (e) { memory = null; }
   return {
     player: (qs.get('name') || '').replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16),
     goal: Math.max(0, Math.min(9, parseInt(qs.get('g'), 10) || 0)),
@@ -105,9 +116,9 @@ async function talkRun(R, C, qs) {
   if (C.closed) return;
   requireConsent(R, U, 'talk');
   await wsLimit(R, U);
-  const npc = npcFrom(qs);
+  const npc = npcFrom(qs, R.cfg);   // 角色的语言服务器没开：400 unsupported_lang（还没开这段、不扣额度、不连上游）
   if (!npc) throw new HttpError(400, 'bad_request', 'Unknown islander', { field: 'npc' });
-  const P = talkParams(qs), T = R.cfg.talk, now = clock(R);
+  const P = talkParams(qs, npc.lang), T = R.cfg.talk, now = clock(R);
   const id = randId('t_', 12), live = await talkOpen(R, U, id);
   if (!live.ok) throw new HttpError(409, 'conflict', 'Another talk session is open', { reason: 'live_session' });
   if (C.closed) return talkDrop(R, id);
@@ -139,7 +150,7 @@ async function talkRun(R, C, qs) {
     const body = CORE.evalBody(n, turns, o);
     if (!body) return null;
     body.model = R.cfg.ds.evalModel;
-    try { return CORE.parseEval(await dsPost(R, EVAL_PATH, body, 15000), o && o.ui); } catch (e) { return null; }
+    try { return CORE.parseEval(await dsPost(R, EVAL_PATH, body, 15000), o && o.ui, n.lang); } catch (e) { return null; }
   };
   const S = CORE.session({
     npc, player: P.player, limitSec, leftSec: left, goal: P.goal, memory: P.memory, level: P.level, ui: P.ui,
