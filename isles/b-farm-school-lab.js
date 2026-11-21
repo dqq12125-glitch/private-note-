@@ -251,7 +251,8 @@
       { id: 'g2', fam: 'dad', ok: true, x: 14, y: 14, face: 'left', name: 'Man A', g: 'm', look: LK.gDad, role: 'story' },
       { id: 'g2b', fam: 'dad', x: 1, y: 16, face: 'right', name: 'Boy B', g: 'm', look: LK.gBro, role: 'story',
         no: ['No, I\'m not the dad. I\'m the brother! I don\'t have a cap.', '不，我不是爸爸，我是哥哥！我没有帽子。'] },
-      { id: 'g2c', x: 7, y: 13, face: 'down', name: 'Uncle Leo', g: 'm', look: LK.gUncle, role: 'trainer', sight: 1, types: ['ground', 'normal'], n: 2,
+      // 站在 (7,12) 朝下：踩上 (7,13) 那条过道就被他看见、要对战；打完他不挪，所以不能站在过道上（原来站 (7,13)，把去第三间的门封死了）
+      { id: 'g2c', x: 7, y: 12, face: 'down', name: 'Uncle Leo', g: 'm', look: LK.gUncle, role: 'trainer', sight: 1, types: ['ground', 'normal'], n: 2,
         lines: [['The dad? No, I\'m the uncle! My jacket is green!', '爸爸？不，我是叔叔！我的外套是绿色的！']],
         win: ['The dad has a blue jacket.', '爸爸穿蓝外套。'], after: [['I\'m the uncle. The dad is my brother.', '我是叔叔，爸爸是我哥哥。']] },
       // 第三间：找妹妹（两条小辫子、粉裙子）

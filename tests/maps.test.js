@@ -31,7 +31,8 @@ function reach(m, from, S) {
   m.warps.forEach(w => { if (!'^v<>'.includes(w.via)) return; const [dx, dy] = { '^': [0, 1], v: [0, -1], '<': [1, 0], '>': [-1, 0] }[w.via]; if ('~Dw'.includes(t(w.x + dx, w.y + dy))) wet.add(w.x + ',' + w.y); });
   const rocks = new Set((m.boulders || []).map(b => b.x + ',' + b.y));
   const block = new Set(m.npcs.filter(n => {
-    if (n.role === 'trainer' || n.showIf || n.hideIf || n.role === 'master') return false;
+    // 训练师算挡路（2026-11-21：家庭岛挑战馆的叔叔站在唯一的过道上，打赢了也不挪，弟弟卡死）：没被看见就走过去说话的话，他就一直站在原地
+    if (n.showIf || n.hideIf || n.role === 'master') return false;
     if (n.role === 'guard') return !(S.all || (n.badge != null ? S.badges >= n.badge : S.badges > m.z));
     return true;
   }).map(n => n.x + ',' + n.y));

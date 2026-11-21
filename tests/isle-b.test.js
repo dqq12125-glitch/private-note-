@@ -75,6 +75,10 @@ const H = require('./helpers');
   check((await flags())['t:i2G:g2c'], '找错人（绿外套的叔叔）要对战');
   await talk('g2');
   check(await gateOpen(1), '找对爸爸（黑帽子、蓝外套）→ 第二扇门开');
+  // 真的走过去（2026-11-21 弟弟卡在这里：叔叔原来站在唯一的过道上）：从第二间的起点走到第二扇门，进第三间
+  await t.tp(12, 16, 'up');
+  for (const [d, n] of [['up', 2], ['left', 1], ['up', 2], ['left', 2], ['down', 1], ['left', 1], ['left', 1], ['down', 3], ['left', 3], ['up', 2], ['right', 1], ['up', 2], ['left', 1], ['up', 2]]) { await t.walk(d, n); await t.idle(); }
+  check(await at(4, 10), '从第二间的起点走得到第二扇门，走进第三间（叔叔不挡路）');
   await talk('g3b');
   check(await at(4, 10) && !(await gateOpen(0)), '找错人（马尾的姐姐）被送回第三间的起点');
   await talk('g3');
