@@ -122,7 +122,7 @@
       'tk.sr.env': '✅ 口语自动打分：本机识别（用 iPhone 自带的语音识别在手机上听写，不用联网、不用登录；手机用不了时改用云端识别）',
       'tk.sr.chk.dev': '麦克风没问题！口语题用本机识别：在这台手机上听写，不用联网。', 'tk.sr.chk.cloud': '（口语识别：云端，要联网）',
       'tk.sr.rp': ' · 口语识别：本机 {a} 次、云端 {b} 次，本机说完约 {s} 秒出分',
-      'tk.pv.dev': '<li>iPhone 上的口语题先用 iPhone 自带的语音识别，<b>在这台手机上</b>把说的英语写成文字来打分，这段声音<b>不上传</b>；只有这台手机用不了本机识别（不支持、没允许）时，才按上面那样发出去识别。</li>',
+      'tk.pv.dev': '<li>iPhone 上的口语题先用 iPhone 自带的语音识别，<b>在这台手机上</b>把说的话写成文字来打分，认出来了这段声音就<b>不上传</b>；这台手机用不了本机识别（不支持、没允许），或者这一次没认出来时，这一句才按上面那样发出去识别。</li>',
       // 家长：设置服务、聊天记录、家长看看、家长须知
       'tk.cfg.why': '改 AI 密钥', 'tk.cfg.key': '家长设置：阿里云百炼 API Key（只存在这台手机里，用来和岛民聊天）\n已经设置过的话，留空就是不改；填 clear 删除',
       'tk.cfg.ok': '✅ 已连上阿里云，可以和岛民聊天了', 'tk.cfg.nokey': '还没有设置密钥',
@@ -198,7 +198,7 @@
       'tk.sr.env': '✅ Automatic speaking score: on-device recognition (the iPhone\'s own speech recognition writes down what you say on this phone; no internet or sign-in needed. If it can\'t be used, cloud recognition is used instead)',
       'tk.sr.chk.dev': 'The microphone works! Speaking questions use on-device recognition: it all happens on this phone, no internet needed.', 'tk.sr.chk.cloud': ' (Speech recognition: cloud, needs internet)',
       'tk.sr.rp': ' · Speech recognition: on device {a}, cloud {b}; on device the score comes about {s}s after you stop',
-      'tk.pv.dev': '<li>On iPhone, speaking questions first use the iPhone\'s own speech recognition to write down what was said <b>on this phone</b>; that audio is <b>not uploaded</b>. Only if this phone can\'t use on-device recognition (not supported, or not allowed) is it sent out for recognition as described above.</li>',
+      'tk.pv.dev': '<li>On iPhone, speaking questions first use the iPhone\'s own speech recognition to write down what was said <b>on this phone</b>; when that works, the audio is <b>not uploaded</b>. If this phone can\'t use on-device recognition (not supported, or not allowed), or it didn\'t catch that answer, that one answer is sent out for recognition as described above.</li>',
       'tk.cfg.why': 'Change the AI key', 'tk.cfg.key': 'Parent Settings: Alibaba Cloud Model Studio API key (kept only on this phone, used to chat with islanders)\nIf a key is already set, leave this empty to keep it; type clear to delete it',
       'tk.cfg.ok': '✅ Connected to Alibaba Cloud. You can chat with the islanders now', 'tk.cfg.nokey': 'No key set yet',
       'tk.cfg.url': 'Chat service address (for parents):\nfor example wss://your-server-domain ; to try it on this computer, use ws://localhost:8787\nLeave empty to go back to the default',

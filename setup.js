@@ -19,7 +19,7 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const sales = () => !!(D && D.sales);
   const nat = f => { try { return !!(window.EchoNative && typeof EchoNative[f] === 'function'); } catch (e) { return false; } };
-  const DOC_V = '2026-11-20.2';   // 隐私说明 / 同意书的版本：同意的记录里存这个，以后改了文书要重新同意（.2：同一天第二次改——iPhone 的口语题在手机上识别、声音不上传）
+  const DOC_V = '2026-11-22';   // 隐私说明 / 同意书的版本：同意的记录里存这个，以后改了文书要重新同意（2026-11-20.2：iPhone 的口语题在手机上识别、声音不上传；2026-11-22：改准——手机这一次没认出来时，这一句接着交给云端识别）
   const BASE_LOOK = P ? { boy: Object.assign({}, P.LOOKS.boy), girl: Object.assign({}, P.LOOKS.girl) } : {};   // 改造型之前的主角
   const BASE_STARTERS = window.MonsterGame ? MonsterGame.STARTERS.slice() : [];
 
