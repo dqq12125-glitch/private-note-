@@ -560,15 +560,18 @@
   const caughtN = () => ORDER.filter(id => COUNTED.has(id) && M().dex[id] === 'caught').length;
 
   // ---------- 基地（首页“怪兽冒险”标签） ----------
-  function homeHTML() {
+  // 首页「冒险」那一栏：top 放在最上面（每日任务卡片上面）的「继续冒险」和它下面那行 📍——2026-11-23 老板：「挪」（竖屏要往下滑才看得到这个主按钮；
+  // 学习锁锁着时是两个小任务 + 锁着的按钮）；body 是怪兽卡片和别的。homeHTML() 照旧给拼在一起的（别处用）
+  function homeHTML() { const p = homeParts(); return p.top + p.body; }
+  function homeParts() {
     const m = M(), esc = E.esc;
     if (!m.box.length) {
-      return '<section class="mon-card starter-pick new-game"><div class="ng-mons">' + STARTERS.map(id => '<span class="st-svg">' + svg(id) + '</span>').join('') + '</div>' +
+      return { top: '', body: '<section class="mon-card starter-pick new-game"><div class="ng-mons">' + STARTERS.map(id => '<span class="st-svg">' + svg(id) + '</span>').join('') + '</div>' +
         '<h2>' + hx('b.home.new.t') + '</h2><p>' + hx('b.home.new.p') + '</p>' +
-        '<button class="btn sun wide world-go" data-act="wEnter">' + hx('b.home.start') + '</button></section>';
+        '<button class="btn sun wide world-go" data-act="wEnter">' + hx('b.home.start') + '</button></section>' };
     }
     const L = lead(), s = SPECIES[L.sp], st = stats(L);
-    // 学习锁：锁着时两个小任务和锁着的按钮放在最上面，一眼就看到；开了就放在怪兽卡片下面
+    // 学习锁：锁着时两个小任务和锁着的按钮放在最上面，一眼就看到；开了「继续冒险」也在最上面（top），做完的学习锁卡片在怪兽卡片下面
     const g = E.gate ? E.gate() : { open: true }, lock = E.gateCard ? E.gateCard() : '';
     const lockedBtn = '<button class="btn wide world-go locked" data-act="wEnter">🔒 ' + (g.back ? hx('b.home.clock') : hx('b.home.steps', { n: g.steps || 1 })) + '</button>';
     // 现在该去哪、做什么（评估第 14 条）：冒险按钮下面一行小字
@@ -578,15 +581,17 @@
     // 要先学课本（挑战馆的门槛）时，后面跟一个「去闯关练习：七下 Unit 1 ›」，点了直接打开那个单元（world.js 的 wGoalHome → game.js goUnit）
     const goU = obj && obj.go === 'unit' && (E.WX || [])[obj.wi], goLab = goU ? (goU.bshort ? goU.bshort + ' ' : '') + (E.unitNo ? E.unitNo(goU.n) : 'Unit ' + goU.n) : '';   // 单元号：别的课按界面语言
     const objLine = objText ? '<p class="tip obj" style="margin-top:-4px">📍 ' + esc(objText) + (goLab && window.EchoI18n ? ' <button class="link obj-go" data-act="wGoalHome" data-w="' + obj.wi + '">' + EchoI18n.h('w.goal.go.home', { u: goLab }) + '</button>' : '') + '</p>' : '';
-    let h = g.open ? '' : lock + lockedBtn + objLine;
+    const place0 = EW && EW.placeLabel ? EW.placeLabel() : null;
+    const top = g.open ? '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? hx('b.home.continue') + (place0 ? ' · ' + place0.name : '') : hx('b.home.go')) + '</button>' + objLine
+      : lock + lockedBtn + objLine;
+    let h = '';
     h += '<section class="mon-card lead" style="--tc:' + TYPES[s.type].color + '"><div class="lead-mon">' + svgMon(L) + '</div><div class="lead-info">' +
       '<div class="lead-name"><b>' + (L.shiny ? '✨' : '') + E.esc(nm(L)) + '</b><span>' + subName(L) + '</span> ' + heartsHTML(L) + '</div>' +
       '<div class="chips">' + chips(L.sp) + '<span class="lvchip">Lv ' + L.lv + '</span></div>' +
       '<div class="xpbar"><i style="width:' + (L.xp / xpNeed(L.lv) * 100) + '%"></i></div>' +
       '<small>' + hx('b.home.stats', { hp: st.hp, atk: st.atk }) + ((s.evo || []).find(e => e.lv) ? hx('b.home.evo', { lv: s.evo.find(e => e.lv).lv }) : '') + '</small></div>' +
       '<div class="lead-btns"><button class="btn small ghost" data-act="mTeam">' + hx('b.home.mons', { n: m.box.length }) + '</button><button class="btn small ghost" data-act="mDex">' + hx('b.home.dex', { a: caughtN(), b: D.total }) + '</button><button class="btn small sun" data-act="mBalls">' + hx('b.home.balls', { n: m.balls }) + '</button></div></section>';
-    const place = EW && EW.placeLabel ? EW.placeLabel() : null;
-    if (g.open) h += lock + '<button class="btn sun wide world-go" data-act="wEnter">🗺️ ' + (ws.started ? hx('b.home.continue') + (place ? ' · ' + place.name : '') : hx('b.home.go')) + '</button>' + objLine;
+    if (g.open) h += lock;   // 学习锁开了：做完的那张卡片留在怪兽卡片下面（按钮已经在最上面）
     // 下一枚徽章要先打败哪个课本单元的 BOSS（评估第 10 条：挑战馆跟着课本进度开）
     const gn = ws.started && EW && EW.nextGymNeed ? safe(() => EW.nextGymNeed()) : null;
     if (gn && !gn.ok && gn.unitLabel) {
@@ -609,7 +614,7 @@
         '<button class="btn small ghost" data-act="wFly" data-z="' + z + '">' + E.W[z].icon + ' ' + ((EW && EW.townTag && safe(() => EW.townTag(z))) || isleName(z)) + (m.badges[z] ? ' 🏅' : '') + '</button>').join('') + '</div></section>';
     }
     h += '<p class="tip">' + hx('b.home.foot', { a: Object.keys(m.badges).length, b: E.W.length }) + '</p>';
-    return h;
+    return { top, body: h };
   }
 
   // ---------- 别的语言的课（tools/course/ENGINE.md §5）：写死的英语里「要开口说的那句」----------
@@ -2389,7 +2394,7 @@
       return mon;
     },
     ITEMS, itemCount, addItem, pcSheet, bagSheet, learnset, parseMove, stats,
-    homeHTML,
+    homeHTML, homeParts,
     stop: () => { writeBack(); stopBattle(); },
     battle: startBattle,
     _b: () => B,   // 测试用：当前战斗

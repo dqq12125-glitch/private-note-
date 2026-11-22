@@ -3485,10 +3485,17 @@
     $('#tabs').classList.toggle('three', talkOn);
     $('#quests').innerHTML = questHTML();
     $('#mon-home').hidden = tab !== 'mon';
+    const go = $('#mon-go'); if (go) { go.hidden = tab !== 'mon'; if (tab !== 'mon') go.innerHTML = ''; }
     $('#quiz-home').hidden = tab !== 'quiz';
     $('#talk-home').hidden = tab !== 'talk';
     if (tab === 'talk') { $('#talk-home').innerHTML = EchoTalk.homeHTML(); return; }
-    if (tab === 'mon') { $('#mon-home').innerHTML = MonsterGame.homeHTML(); if (LANG) sightHome(); MonsterGame.afterHome(); return; }
+    // 「冒险」栏：「继续冒险」和那行 📍 放在最上面的 #mon-go（每日任务卡片上面，2026-11-23 老板：「挪」），怪兽卡片和别的照旧在 #mon-home
+    if (tab === 'mon') {
+      const hp = MonsterGame.homeParts ? MonsterGame.homeParts() : { top: '', body: MonsterGame.homeHTML() };
+      if (go) { go.innerHTML = hp.top; go.hidden = !hp.top; }
+      $('#mon-home').innerHTML = go ? hp.body : hp.top + hp.body;
+      if (LANG) sightHome(); MonsterGame.afterHome(); return;
+    }
     const book = BK.length && S.book.view !== 'isle';
     const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">' + trh(LANG ? 'g.home.qv.course' : 'g.home.qv.book') + '</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">' + trh('g.home.qv.isle') + '</button></div>' : '';
     const cur = currentNode();

@@ -661,7 +661,7 @@ async function screens(view, tag, srv) {
     async home() {
       await boot(SAVE({ homeTab: 'mon' }));
       await W(300);
-      await cjkAt(p, T('首页 · 顶栏、标签、任务栏、怪兽冒险、页脚'), '#topbar, #tabs, #home-bars, #quests, #mon-home, #home > .foot');
+      await cjkAt(p, T('首页 · 顶栏、标签、任务栏、怪兽冒险、页脚'), '#topbar, #tabs, #home-bars, #mon-go, #quests, #mon-home, #home > .foot');
       await fitCheck(p, T('首页 · 怪兽冒险'), '#topbar, #home');
       await shot('home-mon', true);
       await tap(p, '#tabs [data-t=quiz]'); await W(300);
@@ -748,10 +748,10 @@ async function screens(view, tag, srv) {
       await boot(SAVE({ homeTab: 'mon', settings: { gate: true, pin: '' }, rev: { v: 1, items: { 'word:13:0': { k: 'word', w: 13, i: 0, b: 0, due: '2000-01-01', x: 1 } } } }));
       check(await p.isVisible('.gate-card'), T('学习锁：首页有学习锁卡片'));
       await cjkAt(p, T('学习锁卡片（还要复习、聊天）'), '.gate-card');
-      await fitCheck(p, T('学习锁卡片'), '#mon-home');
+      await fitCheck(p, T('学习锁卡片'), '#mon-go');   // 2026-11-23 起学习锁卡片和锁着的按钮在最上面的 #mon-go
       await E(() => document.querySelector('.gate-card').scrollIntoView({ block: 'center' })); await W(150);
       await shot('gate');
-      await tap(p, '#mon-home .world-go'); await W(400);   // 还没做完：拦住（提示条）
+      await tap(p, '#mon-go .world-go'); await W(400);   // 还没做完：拦住（提示条）
       await E(() => EchoGame.playQs([['lw', 13, 0]], true)); await W(400);
       await answer(); await tap(p, '#fb-btn'); await W(500);
       check(!!(await p.$('#result [data-act=gateTalk]')), T('学习锁：复习做完还差聊天，结果页主按钮是「去和岛民聊天」'));

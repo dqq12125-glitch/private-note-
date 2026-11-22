@@ -69,7 +69,7 @@ const known = (rec, q) => KNOWN.some(k => rec.screen.startsWith(k[0]) && q.k ===
     check(before === await t.E(() => JSON.stringify({ g: EchoGame.gate(), st: EchoGame.S.stars })), '点了不改学习锁、不改星星');
     // 首页「继续冒险」下面那行 📍 也有「去闯关练习」
     await t.home('mon'); await t.W(300);
-    check(await t.click('#mon-home .obj-go'), '首页 📍 那行有「去闯关练习」');
+    check(await t.click('#mon-go .obj-go'), '首页 📍 那行有「去闯关练习」（2026-11-23 起「继续冒险」和这行在最上面的 #mon-go）');
     await t.W(600);
     check(await t.E(() => !document.querySelector('#quiz-home').hidden && !!document.querySelector('.node.goal')), '首页点了也到那个单元');
     // ② HUD 上的 📍 那行：课本门槛时点了也直接去

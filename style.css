@@ -439,6 +439,9 @@ details.pre summary { font-weight: 800; cursor: pointer; }
 .tabs button { border: 0; border-radius: 12px; padding: 10px 6px; background: none; font-family: var(--f-display); font-size: 17px; font-weight: 700; color: var(--ink-2); }
 .tabs button.on { background: var(--card); color: var(--ink); box-shadow: 0 3px 0 var(--line); }
 .mon-home { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+/* 最上面的「继续冒险」（2026-11-23 老板：「挪」）：每日任务卡片上面；锁着时是学习锁的两个小任务 + 锁着的按钮 */
+.mon-go { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 12px; }
+.mon-go:empty, .mon-go[hidden] { display: none; }
 .mon-home:empty { display: none; }
 
 /* ---------- 怪兽基地 ---------- */
@@ -1210,9 +1213,9 @@ html:not([lang|="zh"]) .w-zone b { white-space: normal; font-size: 15px; line-he
   #home { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); column-gap: 16px; align-items: start; }
   #home > .tabs { grid-column: 1 / -1; }
   #home > .quests { grid-column: 1; grid-row: 2 / span 3; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 54px); max-height: calc(100vh - 62px); max-height: calc(100dvh - 62px - env(safe-area-inset-top, 0px)); overflow-y: auto; }
-  #home > :is(#mon-home, #talk-home, #quiz-home, .foot) { grid-column: 2; }
+  #home > :is(#mon-home, #mon-go, #talk-home, #quiz-home, .foot) { grid-column: 2; }
   /* 「继续冒险」和它下面那行 📍 放到怪兽卡片上面（2026-11-20 细节检查：横屏 iPhone 上要往下滑才看得到这个主按钮）；学习锁锁着时本来就在最上面 */
-  #mon-home > .world-go:not(.locked), #mon-home > .world-go:not(.locked) + .tip.obj { order: -1; }
+  #mon-home > .world-go:not(.locked), #mon-home > .world-go:not(.locked) + .tip.obj { order: -1; }   /* 2026-11-23 起按钮在 #mon-go 里，这条只管没有 #mon-go 的老页面 */
   .quests { padding: 10px 14px; }
   .quests .rev-card { padding: 10px 12px; margin-bottom: 8px; }
   .q-row { padding-block: 4px; }
