@@ -4108,17 +4108,51 @@
     el.style.left = left + 'px'; el.style.top = top + 'px';
     clearTimeout(RT.popT); RT.popT = setTimeout(() => { el.hidden = true; }, 9000);
   }
-  // 在捕获阶段先看一眼：点到的是学的语言的句子里的一个认得的词 → 弹卡片，这一下不再往下传（不翻页、不选答案、不弹整句翻译）；别的都照旧
+  // 怎么弹（2026-11-22 老板：「对话有点卡」）：第一版是在捕获阶段拦「点一下」，点到认得的词就弹卡、这一下不往下传——
+  //   可大地图对话框点一下是翻页、聊天里点岛民的话是看翻译、对话动画点一下也有用，点在字上（最常点的地方）十有八九碰到认得的词，
+  //   结果卡片一直弹、对话翻不过去，像卡住了。现在：
+  //   - HOLD_SEL 这几处「点一下本来就有用」：**按住一个词约半秒**才弹卡，轻点照旧（翻页 / 看翻译）；
+  //   - 别的地方（闯关题目、答完那一行、单词表 / 课前讲解的例句、求助的话：点一下本来没用）轻点、按住都弹。
+  //   按住弹了卡以后，松手跟着来的那一下 click 吞掉（不翻页、不把卡片关掉）。
+  const HOLD_SEL = '#w-dlg .d-en, #th-sub .ss-en, .tk-b';
+  const HOLD_MS = 450;
+  const tapBox = t => {
+    if (!tapOn() || !t || !t.closest) return null;
+    const box = t.closest(TAP_SEL);
+    if (!box) return null;
+    const ctl = t.closest('button, input, select, textarea, a, .opt');
+    return ctl && box.contains(ctl) ? null : box;   // 句子里面的按钮（🔊）照旧
+  };
+  const tapFind = (box, x, y) => { try { const h = tapText(box, x, y); return h ? tapLookup(h.text, h.at) : null; } catch (err) { return null; } };
+  let hold = null, held = 0;
+  window.addEventListener('pointerdown', e => {
+    if (hold) { clearTimeout(hold.t); hold = null; }
+    if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const box = tapBox(e.target);
+    if (!box) return;
+    const x = e.clientX, y = e.clientY;
+    hold = { x, y, t: setTimeout(() => { hold = null; const v = tapFind(box, x, y); if (v) { held = performance.now(); wordPop(v, x, y); } }, HOLD_MS) };
+  }, true);
+  // 手指挪开了（超过 10 像素：在滚动）、松手了、被系统收走了：不算按住
+  const holdOff = e => {
+    if (e.type === 'pointerup' && held) held = performance.now();   // 按住弹了卡：从松手算起，跟着来的 click 吞掉
+    if (!hold || (e.type === 'pointermove' && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) <= 10)) return;
+    clearTimeout(hold.t); hold = null;
+  };
+  ['pointermove', 'pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, holdOff, true));
+  // 安卓长按会弹系统菜单（复制 / 全选）：这几处不要
+  window.addEventListener('contextmenu', e => { if (tapBox(e.target)) e.preventDefault(); }, true);
   window.addEventListener('click', e => {
+    if (held) {
+      const fresh = performance.now() - held < 600;
+      held = 0;
+      if (fresh) { e.stopPropagation(); e.preventDefault(); return; }
+    }
     const pop = $('#wd-pop');
     if (pop && !pop.hidden && !pop.contains(e.target)) pop.hidden = true;
-    if (!tapOn() || !e.target || !e.target.closest) return;
-    const box = e.target.closest(TAP_SEL);
-    if (!box) return;
-    const ctl = e.target.closest('button, input, select, textarea, a, .opt');
-    if (ctl && box.contains(ctl)) return;   // 句子里面的按钮（🔊）照旧
-    let v = null;
-    try { const h = tapText(box, e.clientX, e.clientY); if (h) v = tapLookup(h.text, h.at); } catch (err) { v = null; }
+    const box = tapBox(e.target);
+    if (!box || box.matches(HOLD_SEL)) return;
+    const v = tapFind(box, e.clientX, e.clientY);
     if (!v) return;
     e.stopPropagation(); e.preventDefault();
     wordPop(v, e.clientX, e.clientY);

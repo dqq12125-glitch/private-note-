@@ -2213,6 +2213,8 @@ html.echo-ios .ac-in { font-size: 16px; }   /* 小于 16px 的输入框一点就
 .rt-steps li.done .rt-k { background: none; }
 .rt-go { margin-left: auto; color: var(--ink-3); font-weight: 800; }
 .rt-next { width: 100%; min-height: 44px; margin-bottom: 10px; border: 0; border-radius: 14px; background: #e6f5f3; color: var(--lagoon-d); font: inherit; font-weight: 800; text-align: left; padding: 8px 12px; }
+/* 按住一个词看意思（game.js 的 HOLD_SEL）：聊天气泡、对话动画字幕长按时不要选字、不弹系统菜单（大地图对话框在 #world 里，本来就不能选） */
+.tk-b, #th-sub .ss-en { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* 点一个词弹出的小卡 */
 .wd-pop { position: fixed; z-index: 80; display: flex; align-items: flex-start; gap: 10px; max-width: min(340px, calc(100vw - 16px)); background: var(--card); border-radius: 16px; padding: 10px 10px 10px 12px; box-shadow: 0 10px 30px rgba(9, 30, 45, .3), 0 0 0 2px var(--lagoon); animation: rise .18s ease-out; }
 .wd-pop[hidden] { display: none; }

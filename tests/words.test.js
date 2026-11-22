@@ -490,6 +490,45 @@ const SAVE = o => Object.assign({
       pp = await pop();
       check(!w1 || (!!pp && pp.w.toLowerCase() === w1.toLowerCase() && (await E(p, () => EchoGame.P().idx)) === q0.idx), '§10 闯关的跟读题里点「' + (w1 || '') + '」：弹小卡，题目没变', { pp, t: q0.t });
       await E(p, () => EchoGame.goHome('quiz')); await W(p, 200);
+      // §10 「点一下」本来就有用的地方（2026-11-22 老板：「对话有点卡」——大地图对话框点在字上翻不了页、一直弹卡）：
+      //   轻点照旧（翻页 / 聊天气泡看翻译），按住一个词约半秒才弹卡，松手那一下不翻页
+      await act(p, 'wEnter');
+      let inW = false;
+      for (let i = 0; i < 40 && !(inW = await E(p, () => !!(window.EchoWorld && EchoWorld._debug().M) && !document.querySelector('#world').hidden)); i++) await W(p, 150);
+      check(inW, '§10 进大地图');
+      for (let i = 0; i < 30 && await E(p, () => !!EchoWorld._debug().dlg); i++) { await E(p, () => { const s = document.querySelector('#w-dlg [data-act=wPick]'); (s || document.querySelector('#world [data-act=wA]')).click(); }); await W(p, 150); }
+      const dlgAt = () => E(p, () => { const d = EchoWorld._debug().dlg; return d ? d.i : -1; });
+      const typedOut = async () => { for (let i = 0; i < 40 && await E(p, () => !!(EchoWorld._debug().dlg && EchoWorld._debug().dlg.typing)); i++) await W(p, 100); };
+      const two = () => E(p, () => EchoWorld._debug().talk([{ who: 'Kai', en: 'Good morning! See you at school.', zh: '早上好！学校见。' }, { who: 'Kai', en: 'Bye!', zh: '再见！' }]));
+      await two(); await W(p, 200); await typedOut();
+      pt = await ptOf('#w-dlg .d-en', 'morning');
+      if (pt) { await p.mouse.click(pt.x, pt.y); await W(p, 300); }
+      check(!!pt && (await dlgAt()) === 1 && !(await pop()), '§10 大地图对话框：轻点字上的「morning」照旧翻到下一页，不弹卡', await dlgAt());
+      for (let i = 0; i < 5 && (await dlgAt()) >= 0; i++) { await E(p, () => document.querySelector('#world [data-act=wA]').click()); await W(p, 200); }
+      await two(); await W(p, 200); await typedOut();
+      pt = await ptOf('#w-dlg .d-en', 'morning');
+      if (pt) { await p.mouse.move(pt.x, pt.y); await p.mouse.down(); await W(p, 700); await p.mouse.up(); await W(p, 300); }
+      pp = await pop();
+      check(!!pt && !!pp && pp.w === 'good morning' && (await dlgAt()) === 0, '§10 大地图对话框：按住「morning」弹「good morning」，松手不翻页', { pp, i: await dlgAt() });
+      await shot(p, 'en-pop-dlg-zh-port');
+      const nb = await p.locator('#w-dlg .d-name').boundingBox();
+      await p.mouse.click(nb.x + 4, nb.y + nb.height / 2); await W(p, 300);
+      check(!(await pop()) && (await dlgAt()) === 1, '§10 再点一下对话框：小卡收起、翻到下一页', await dlgAt());
+      // 手指按住以后挪开（在滑）：不算按住
+      for (let i = 0; i < 5 && (await dlgAt()) >= 0; i++) { await E(p, () => document.querySelector('#world [data-act=wA]').click()); await W(p, 200); }
+      // 聊天气泡（点一下 = 看翻译）：轻点交给气泡自己，按住才弹卡、松手那一下不交给气泡
+      await E(p, () => { const b = document.createElement('div'); b.className = 'tk-b npc'; b.id = 'tkb-test'; b.textContent = 'Good morning! Do you like school?'; b.style.cssText = 'position:fixed;left:20px;top:120px;z-index:90;background:#fff;font-size:20px;padding:8px'; window.__bub = 0; b.addEventListener('click', () => { window.__bub++; }); document.body.appendChild(b); });
+      pt = await ptOf('#tkb-test', 'morning');
+      await p.mouse.click(pt.x, pt.y); await W(p, 300);
+      check((await E(p, () => window.__bub)) === 1 && !(await pop()), '§10 聊天气泡：轻点交给气泡（看翻译），不弹卡');
+      await p.mouse.move(pt.x, pt.y); await p.mouse.down(); await W(p, 700); await p.mouse.up(); await W(p, 300);
+      pp = await pop();
+      check(!!pp && pp.w === 'good morning' && (await E(p, () => window.__bub)) === 1, '§10 聊天气泡：按住弹卡，松手那一下不交给气泡', pp);
+      await E(p, () => { const e = document.getElementById('wd-pop'); if (e) e.hidden = true; });
+      await p.mouse.move(pt.x, pt.y); await p.mouse.down(); await W(p, 150); await p.mouse.move(pt.x, pt.y + 40); await W(p, 600); await p.mouse.up(); await W(p, 200);
+      check(!(await pop()), '§10 按下去以后手指挪开（在滑）：不弹卡');
+      await E(p, () => document.getElementById('tkb-test').remove());
+      await E(p, () => EchoGame.goHome('quiz')); await W(p, 300);
       // ---------- §11 朗读慢一点 ----------
       await act(p, 'settings'); await W(p, 300);
       check(await E(p, () => !!document.querySelector('#set-slow [data-act=setSlow][data-v="0"].on') && !!document.querySelector('#set-route')), '§11 设置里有「朗读速度：正常 / 慢」（默认正常）、「新手路线」');
