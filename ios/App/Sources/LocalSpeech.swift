@@ -30,8 +30,9 @@ import Speech
 //     （以前试过让模型看着答案打分，读错的也给过。）
 //   · 什么时候算说完由网页定（文字停住不变的计时 + 这里的出声 / 不出声），这里不等苹果的「最终结果」（它要等很久）。
 //   · 切到后台、网页重建：当场停，发 end。
-// 识别引擎（SpeechEngine）单独一层：现在是 SFSpeechRecognizer；以后换 iOS 26 的 SpeechAnalyzer / SpeechTranscriber，
-// 只要再写一个 SpeechEngine，权限顺序、收声音、事件、计时都不用动。
+// 识别引擎（SpeechEngine）单独一层，权限顺序、收声音、事件、计时都不归它管。现在用的是 HybridSpeechEngine（2026-11-22）：
+// iOS 26 上这门语言的新模型（SpeechAnalyzer + SpeechTranscriber）装好了就用新的（老的要等人说完才一下子出整句），
+// 没装好用 SFSpeechRecognizer、同时在后台装。回给网页的 engine 写着这一次用的哪个（角标 device:sa / device:sf）。
 
 // 常数（不归哪个线程管）
 enum SpeechConst {
@@ -48,6 +49,7 @@ struct SpeechOpts: Sendable {
     var ask = true
     var locale = SpeechConst.locale
     var rate = SpeechConst.rate
+    var engine = ""                                       // 调试用：'sf' = 只用 SFSpeechRecognizer（对比新老引擎）
 }
 
 // 收声音的那一头（交给识别请求）
@@ -78,6 +80,13 @@ protocol SpeechEngine: AnyObject {
     func end()
     // 扔掉，不要结果了
     func cancel()
+    // 网页这一次要哪个引擎（调试用：'sf' = 只用 SFSpeechRecognizer；'' = 照默认）。下一次 begin 之前调
+    func prefer(_ engine: String)
+}
+
+extension SpeechEngine {
+    // 只有 HybridSpeechEngine 理它（单元测试的假引擎不用写）
+    func prefer(_ engine: String) {}
 }
 
 // ---------- 现在的引擎：SFSpeechRecognizer，只在手机上识别 ----------
@@ -169,6 +178,328 @@ final class AppleSpeechEngine: SpeechEngine {
         task = nil
         request = nil
         recognizer = nil
+    }
+}
+
+// ---------- 网页送来的声音 → 识别要的格式（SpeechAnalyzer 自己不转换格式，格式不对不报错、只是什么都认不出来） ----------
+// 一段一段转（流式：采样率转换的中间状态留在 AVAudioConverter 里，所以每次喂完回 .noDataNow，不回 .endOfStream）
+final class PCMConvert {
+    private var conv: AVAudioConverter?
+    private var from: AVAudioFormat?
+    let to: AVAudioFormat
+
+    init(to: AVAudioFormat) {
+        self.to = to
+    }
+
+    // 转不了（格式不认、出错）→ nil；格式一样就原样返回
+    func convert(_ buf: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
+        if buf.format == to { return buf }
+        if conv == nil || from != buf.format {
+            conv = AVAudioConverter(from: buf.format, to: to)
+            from = buf.format
+        }
+        guard let c = conv, buf.format.sampleRate > 0 else { return nil }
+        let cap = AVAudioFrameCount((Double(buf.frameLength) * to.sampleRate / buf.format.sampleRate).rounded(.up)) + 64
+        guard let out = AVAudioPCMBuffer(pcmFormat: to, frameCapacity: cap) else { return nil }
+        var given = false
+        var err: NSError?
+        let st = c.convert(to: out, error: &err) { _, status in
+            if given {
+                status.pointee = .noDataNow
+                return nil
+            }
+            given = true
+            status.pointee = .haveData
+            return buf
+        }
+        if st == .error || err != nil { return nil }
+        return out.frameLength > 0 ? out : nil
+    }
+}
+
+// ---------- iOS 26 的新引擎：SpeechAnalyzer + SpeechTranscriber（2026-11-22，老板：「这个识别都是很慢的」） ----------
+// 老板的 iPhone 16 Pro（iOS 26.6.1）上 SFSpeechRecognizer 的本机识别要等人说完才一下子出整句（角标 991/4621/4622：开始听 1 秒、第一个字 4.6 秒）；
+// 苹果 WWDC25 说新的 SpeechTranscriber 的「临时结果」几乎一开口就出（有人在 iOS 26.5 上量到模型在内存里时 0.3–0.5 秒），中文、日语、西语、英语都有。
+// · 预设 .progressiveTranscription（苹果给实时语音用的：volatileResults + fastResults）。照样不给答案（它也没有 contextualStrings），打分还是网页的 scoreSpeech()。
+// · 模型是系统的资源，第一次要联网下（AssetInventory，苹果的服务器，不算 App 的大小）；没装好的语言这一次用老引擎，后台去装，装好了下次就用新的。
+// · modelRetention .processLifetime + 装好就 prepareToAnalyze 一次：模型一直留在内存里，每题不用重新加载。
+// · 网页判断说完、对上答案就叫停，和老引擎一样；临时结果（isFinal = false）和定下来的结果按苹果的例子拼：定下来的接在后面，临时的每次整段换掉。
+// 分析器的选项（模型留到 App 退出）。写成全局函数：哪个线程都能调
+@available(iOS 26.0, *)
+func analyzerOptions() -> SpeechAnalyzer.Options {
+    return SpeechAnalyzer.Options(priority: .userInitiated, modelRetention: .processLifetime)
+}
+
+@available(iOS 26.0, *)
+@MainActor
+final class AnalyzerSpeechEngine {
+    let name = "SpeechAnalyzer"
+    private var mapped: [String: Locale] = [:]      // 我们的写法（en-US）→ SpeechTranscriber 认的 Locale
+    private var ready: Set<String> = []             // 模型装好了的
+    private var asked: Set<String> = []             // 问过 / 正在问 / 正在装的
+    private var run: AnalyzerRun?
+
+    // 这门语言系统认不认、模型装没装；认但没装就在后台装；装好了预热一次。同一门语言只做一次（装失败了下次再试）
+    func prepare(_ id: String) {
+        if asked.contains(id) { return }
+        asked.insert(id)
+        Task { @MainActor in
+            guard let loc = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: id)) else { return }
+            self.mapped[id] = loc
+            let t = SpeechTranscriber(locale: loc, preset: .progressiveTranscription)
+            var st = await AssetInventory.status(forModules: [t])
+            if st == .unsupported { return }
+            if st != .installed {
+                do {
+                    if let req = try await AssetInventory.assetInstallationRequest(supporting: [t]) { try await req.downloadAndInstall() }
+                } catch {
+                    self.asked.remove(id)
+                    return
+                }
+                st = await AssetInventory.status(forModules: [t])
+            }
+            if st == .installed {
+                self.ready.insert(id)
+                await AnalyzerSpeechEngine.warm(loc)
+            } else {
+                self.asked.remove(id)
+            }
+        }
+    }
+
+    // 把模型读进内存（留到 App 退出）：第一题也快
+    nonisolated static func warm(_ loc: Locale) async {
+        let t = SpeechTranscriber(locale: loc, preset: .progressiveTranscription)
+        let a = SpeechAnalyzer(modules: [t], options: analyzerOptions())
+        let fmt = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [t])
+        try? await a.prepareToAnalyze(in: fmt)
+        await a.cancelAndFinishNow()
+    }
+
+    func canBegin(_ id: String) -> Bool {
+        return ready.contains(id) && mapped[id] != nil
+    }
+
+    func begin(locale id: String, onText: @escaping SpeechText, onError: @escaping SpeechError) -> SpeechBegin {
+        cancel()
+        guard let loc = mapped[id], ready.contains(id) else {
+            return SpeechBegin(sink: nil, error: "unavailable", message: "SpeechAnalyzer model is not ready for " + id)
+        }
+        let r = AnalyzerRun(locale: loc, onText: onText, onError: onError)
+        run = r
+        r.start()
+        return SpeechBegin(sink: r.sink(), error: "", message: "")
+    }
+
+    func end() {
+        run?.end()
+    }
+
+    func cancel() {
+        run?.cancel()
+        run = nil
+    }
+}
+
+// 一次识别：收声音（格式定下来之前先存着）、转格式、交给 SpeechAnalyzer、读结果
+@available(iOS 26.0, *)
+final class AnalyzerRun: @unchecked Sendable {
+    private let lock = NSLock()
+    private let locale: Locale
+    private let onText: SpeechText
+    private let onError: SpeechError
+    private let input: AsyncStream<AnalyzerInput>
+    private let cont: AsyncStream<AnalyzerInput>.Continuation
+    private var conv: PCMConvert?                    // 格式定下来以后才有
+    private var pending: [AVAudioPCMBuffer] = []     // 定下来以前送来的
+    private var analyzer: SpeechAnalyzer?
+    private var done = false
+    private var finalText = ""
+    private var volatileText = ""
+
+    init(locale: Locale, onText: @escaping SpeechText, onError: @escaping SpeechError) {
+        self.locale = locale
+        self.onText = onText
+        self.onError = onError
+        let (s, c) = AsyncStream.makeStream(of: AnalyzerInput.self)
+        input = s
+        cont = c
+    }
+
+    func sink() -> SpeechSink {
+        return { [weak self] buf in self?.push(buf) }
+    }
+
+    private func push(_ buf: AVAudioPCMBuffer) {
+        lock.lock()
+        defer { lock.unlock() }
+        if done { return }
+        guard let c = conv else {
+            if pending.count < 300 { pending.append(buf) }
+            return
+        }
+        if let out = c.convert(buf) { cont.yield(AnalyzerInput(buffer: out)) }
+    }
+
+    func start() {
+        Task { [self] in
+            let t = SpeechTranscriber(locale: locale, preset: .progressiveTranscription)
+            let a = SpeechAnalyzer(modules: [t], options: analyzerOptions())
+            guard let fmt = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [t]) else {
+                failed("SpeechAnalyzer format", "no compatible audio format")
+                return
+            }
+            lock.lock()
+            let stop = done
+            if !stop {
+                analyzer = a
+                let c = PCMConvert(to: fmt)
+                conv = c
+                for b in pending { if let out = c.convert(b) { cont.yield(AnalyzerInput(buffer: out)) } }
+                pending = []
+            }
+            lock.unlock()
+            if stop {
+                await a.cancelAndFinishNow()
+                return
+            }
+            // 先开始读结果，再开始分析（苹果的例子也是这个顺序）
+            Task { [self] in
+                do {
+                    for try await r in t.results {
+                        let piece = String(r.text.characters)
+                        lock.lock()
+                        if r.isFinal { finalText += piece; volatileText = "" } else { volatileText = piece }
+                        let all = finalText + volatileText, stop = done
+                        lock.unlock()
+                        if stop { return }
+                        let cb = onText
+                        LocalSpeech.onMain { cb(all, false) }
+                    }
+                    // 声音送完、全部定下来了：最后一次整句（网页多半已经自己叫停了）
+                    lock.lock()
+                    let all = finalText, stop = done
+                    lock.unlock()
+                    if !stop {
+                        let cb = onText
+                        LocalSpeech.onMain { cb(all, true) }
+                    }
+                } catch {
+                    failed(error)
+                }
+            }
+            do {
+                try await a.start(inputSequence: input)
+            } catch {
+                failed(error)
+            }
+        }
+    }
+
+    private func failed(_ error: Error) {
+        let ns = error as NSError
+        failed("SpeechAnalyzer " + ns.domain + " " + String(ns.code), ns.localizedDescription)
+    }
+
+    private func failed(_ code: String, _ message: String) {
+        lock.lock()
+        let stop = done
+        lock.unlock()
+        if stop { return }   // 自己叫停以后的「被取消」不算
+        let cb = onError
+        LocalSpeech.onMain { cb(code, message) }
+    }
+
+    // 不再有声音了：把已经送进去的认完
+    func end() {
+        lock.lock()
+        let a = analyzer
+        lock.unlock()
+        cont.finish()
+        if let a = a { Task { try? await a.finalizeAndFinishThroughEndOfInput() } }
+    }
+
+    // 扔掉
+    func cancel() {
+        lock.lock()
+        done = true
+        pending = []
+        let a = analyzer
+        lock.unlock()
+        cont.finish()
+        if let a = a { Task { await a.cancelAndFinishNow() } }
+    }
+}
+
+// ---------- 两个引擎一起：iOS 26 上这门语言的新模型装好了就用 SpeechAnalyzer，不然用 SFSpeechRecognizer（同时在后台装新模型） ----------
+// 权限照旧走 SFSpeechRecognizer 的「语音识别」权限（新引擎也是在手机上识别，权限的说明照样对）
+@MainActor
+final class HybridSpeechEngine: SpeechEngine {
+    private let old = AppleSpeechEngine()
+    private var newer: AnyObject?                    // iOS 26 才有：AnalyzerSpeechEngine
+    private var usingNew = false
+    private var want = ""
+    private(set) var name = "SFSpeechRecognizer"
+
+    init() {
+        if #available(iOS 26.0, *) {
+            let a = AnalyzerSpeechEngine()
+            newer = a
+            a.prepare(SpeechConst.locale)            // 英语开机就问、没装就装、装好了预热
+        }
+    }
+
+    func authorization() -> String { return old.authorization() }
+
+    func requestAuthorization(_ done: @escaping @MainActor @Sendable () -> Void) { old.requestAuthorization(done) }
+
+    func check(locale: String) -> (onDevice: Bool, available: Bool) {
+        if #available(iOS 26.0, *) {
+            if let a = newer as? AnalyzerSpeechEngine {
+                a.prepare(locale)                    // 别的语言的课：第一次问到时在后台装
+                if a.canBegin(locale) { return (true, true) }
+            }
+        }
+        return old.check(locale: locale)
+    }
+
+    func prefer(_ engine: String) { want = engine }
+
+    func begin(locale: String, short: Bool, onText: @escaping SpeechText, onError: @escaping SpeechError) -> SpeechBegin {
+        cancel()
+        if want != "sf" {
+            if #available(iOS 26.0, *) {
+                if let a = newer as? AnalyzerSpeechEngine, a.canBegin(locale) {
+                    let r = a.begin(locale: locale, onText: onText, onError: onError)
+                    if r.sink != nil {
+                        usingNew = true
+                        name = a.name
+                        return r
+                    }
+                }
+            }
+        }
+        usingNew = false
+        name = old.name
+        return old.begin(locale: locale, short: short, onText: onText, onError: onError)
+    }
+
+    func end() {
+        if usingNew {
+            if #available(iOS 26.0, *) {
+                if let a = newer as? AnalyzerSpeechEngine { a.end() }
+            }
+            return
+        }
+        old.end()
+    }
+
+    func cancel() {
+        old.cancel()
+        if #available(iOS 26.0, *) {
+            if let a = newer as? AnalyzerSpeechEngine { a.cancel() }
+        }
     }
 }
 
@@ -273,6 +604,7 @@ final class LocalSpeech {
         if let v = j["ask"] as? Bool { o.ask = v }
         if let v = j["locale"] as? String, SpeechConst.locales.contains(v) { o.locale = v }
         if let v = j["rate"] as? NSNumber, v.doubleValue >= 8000, v.doubleValue <= 48000 { o.rate = v.doubleValue }
+        if let v = j["engine"] as? String, v == "sf" { o.engine = v }
         return o
     }
 
@@ -356,6 +688,7 @@ final class LocalSpeech {
             reply(false, LocalSpeech.fail("background", "the app is in the background"))
             return
         }
+        engine.prefer(o.engine)
         let r = engine.begin(locale: o.locale, short: o.short,
                              onText: { [weak self] text, isFinal in self?.heard(sid, text, isFinal) },
                              onError: { [weak self] code, message in self?.failed(sid, code, message) })

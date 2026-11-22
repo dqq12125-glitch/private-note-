@@ -1787,14 +1787,16 @@
         let j = {}; try { j = JSON.parse(data || '{}') || {}; } catch (e) { j = {}; }
         if (done) { if (type === 'ok') stopNative(); return; }
         if (type !== 'ok') { fall(String(j.error || 'error')); return; }
-        nok = true; D.nok = now() - D.t0; D.nms = j.ms;
+        nok = true; D.nok = now() - D.t0; D.nms = j.ms; D.neng = j.engine || '';   // 原生用的哪个引擎（iOS 26 的 SpeechAnalyzer / 老的 SFSpeechRecognizer）
         NSP.st = Object.assign(NSP.st || { onDevice: true }, { auth: 'authorized' });   // 开起来了：语音识别的权限有了（下次不用等弹框那么久）
         q.forEach(feed); q = [];   // 开好以前录到的补发
         if (!D.micP) openMic();
         ready();
       };
       if (!asks) openMic();
-      try { N.speechStart(id, JSON.stringify({ short, long: !!o.long, locale: o.lang ? o.lang.apple : 'en-US', rate: 16000 })); } catch (e) { fall('error'); }
+      // engine：调试时 localStorage['echo-sr-engine'] = 'sf' 只用老引擎（和新的 SpeechAnalyzer 对比快慢）；平时不带
+      const eng = LS('echo-sr-engine') === 'sf' ? { engine: 'sf' } : null;
+      try { N.speechStart(id, JSON.stringify(Object.assign({ short, long: !!o.long, locale: o.lang ? o.lang.apple : 'en-US', rate: 16000 }, eng))); } catch (e) { fall('error'); }
     });
   }
   // 本机识别没认出字、云端又接不上：录好的声音不要了，麦克风照常预热着
@@ -1812,7 +1814,7 @@
       remic: D.remic || 0, stale: LM.stale };
     if (D.nerr) rec.nerr = D.nerr;
     // 本机识别那几样（试过本机才有）：开麦克风 / 原生开好用了几毫秒、送过去几段声音、原生说收到几段、有没有人声（w 网页 / n 原生 / - 没有）、这次打开 App 还用不用本机
-    if (D.fed != null) Object.assign(rec, { mic: ms(D.mic), nok: ms(D.nok), fed: D.fed, nfed: D.nfed == null ? null : D.nfed, vo: D.vo || '', off: NSP.off || '' });
+    if (D.fed != null) Object.assign(rec, { mic: ms(D.mic), nok: ms(D.nok), fed: D.fed, nfed: D.nfed == null ? null : D.nfed, vo: D.vo || '', off: NSP.off || '', neng: D.neng || '' });
     SRLOG.push(rec); if (SRLOG.length > 20) SRLOG.shift();
     if (r) r.eng = rec.eng;
     return r;

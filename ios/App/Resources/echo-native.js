@@ -257,7 +257,7 @@
         try {
           var s = W.EchoTalk && W.EchoTalk.lastSpeech ? W.EchoTalk.lastSpeech() : null, t = String(BOOT.beta);
           if (s) {
-            t += ' · ' + (s.eng || '?') + ' ' + (s.how || s.err || (s.ok ? 'ok' : '')) + (s.fell ? ' fell:' + s.fell : '') + (s.nerr ? ' ' + String(s.nerr).slice(0, 40) : '') +
+            t += ' · ' + (s.eng || '?') + (s.neng ? ':' + (/Analyzer/.test(s.neng) ? 'sa' : 'sf') : '') + ' ' + (s.how || s.err || (s.ok ? 'ok' : '')) + (s.fell ? ' fell:' + s.fell : '') + (s.nerr ? ' ' + String(s.nerr).slice(0, 40) : '') +
               ' ' + [s.listen, s.first, s.end].map(function (v) { return v == null ? '-' : v; }).join('/') + (s.wv != null ? ' say' + s.wv : '') +
               (s.fed != null ? ' fed' + s.fed + (s.nfed != null ? '/' + s.nfed : '') : '') + (s.vo ? ' v:' + s.vo : '') + (s.off ? ' off:' + s.off : '') +
               (s.remic ? ' re' + s.remic : '') + (s.stale ? ' st' + s.stale : '');

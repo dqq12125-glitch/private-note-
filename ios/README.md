@@ -193,7 +193,7 @@ TestFlight 的工作流先带着它签；苹果不肯（App ID 上没勾「Sign 
 - **什么时候算说完由网页定**（`talk.js` 的 `nativeListen`），不等苹果的「最终结果」：有字以后字停住不变 0.4 秒（单词）/ 0.6 秒（句子），并且原生说人已经不出声了（`voice` 事件；一直「在出声」最多再等 1.2 秒）；对上答案当场结束；最长 8 秒。
 - **声音**：和云端识别完全一样，网页 `getUserMedia` 时 `echo-native.js` 把 `navigator.audioSession` 换成 `play-and-record`，麦克风的轨道都停了换回 `playback`。原生不碰。
 - 切到后台、网页重建：当场停，发 `end`。来电 / Siri 打断由 WebKit 管网页的麦克风（声音断了原生就收不到 `speechFeed`，网页按计时结束）。
-- 识别引擎是单独一层（`SpeechEngine`）：以后换 iOS 26 的 `SpeechAnalyzer` / `SpeechTranscriber` 再写一个，权限顺序、收声音、事件不用动。
+- 识别引擎是单独一层（`SpeechEngine`），权限顺序、收声音、事件不归它管。2026-11-22 起是 `HybridSpeechEngine`：iOS 26 上这门语言的新模型（`SpeechAnalyzer` + `SpeechTranscriber`，预设 `.progressiveTranscription`：临时结果 + 快速结果）装好了就用新的，没装好用 `SFSpeechRecognizer`、同时在后台用 `AssetInventory` 装（系统的资源，第一次要联网）；装好就 `prepareToAnalyze` 一次，模型留到 App 退出（`modelRetention: .processLifetime`）。网页送来的 16kHz 浮点 PCM 由 `PCMConvert` 转成 `bestAvailableAudioFormat` 给的格式（新引擎自己不转，格式不对不报错、只是认不出来）。新引擎也不收答案（没有 `contextualStrings`）。`speechStart` 的回话 `engine` 写着这一次用的哪个，测试版角标是 `device:sa` / `device:sf`；调试时 `localStorage['echo-sr-engine'] = 'sf'` 只用老的（对比快慢）。老板 iPhone 16 Pro（iOS 26.6.1）上老引擎要等人说完才一下子出整句（11-22 的截图：开始听 1 秒、第一个字 4.6 秒）——新引擎快不快只能在真手机上看。
 - 权限：原生只弹「语音识别」（说明在 `Info.plist` 的 `NSSpeechRecognitionUsageDescription`，中文）；麦克风是网页的 `getUserMedia` 弹的。第一次（语音识别还没允许）网页等原生问完、回了 `ok` 才开麦克风，两个框不一起弹；平时两边一起开。拒绝了语音识别网页就安静地改走云端，不再问。
 
 都是异步的，第一个参数是网页给的编号，结果回 `window.__echoNative(编号, 'ok' / 'fail', JSON 文字)`；`'fail'` 一律是 `{"error":"短代号","message":"英文说明"}`。网页先看 `window.ECHO_IOS` 和 `typeof EchoNative.speechStart === 'function'`。

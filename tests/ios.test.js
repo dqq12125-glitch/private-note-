@@ -177,7 +177,7 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
     'diag() 还说这个包能不能通过 Apple 登录、订阅的两个商品编号（网页决定显不显示那个按钮）');
   check(/Store\.shared\.onEvent = \{[\s\S]{0,200}emit\("echo-iap"/.test(bridge), 'Transaction.updates 来的交易发事件 echo-iap 给网页（和 echo-mic、echo-backup-picked 一样的写法）');
   // 口语题的本机识别（LocalSpeech.swift）：过程走事件 echo-speech，三个方法的结果和别的异步方法一样回 window.__echoNative
-  check(/lazy var speech = LocalSpeech\(engine: AppleSpeechEngine\(\)\) \{[\s\S]{0,120}emit\("echo-speech"/.test(bridge) &&
+  check(/lazy var speech = LocalSpeech\(engine: HybridSpeechEngine\(\)\) \{[\s\S]{0,120}emit\("echo-speech"/.test(bridge) &&
     /case "speechStart":[\s\S]{0,200}speech\.start\(sid: id, opts: Bridge\.str\(a, 1\)\)[\s\S]{0,120}self\?\.callback\(gen, id, ok \? "ok" : "fail", Bridge\.json\(body\)\)/.test(bridge) &&
     /case "speechState":[\s\S]{0,120}callback\(h\.gen, Bridge\.int\(a, 0\), "ok", Bridge\.json\(speech\.state\(\)\)\)/.test(bridge) &&
     /case "speechStop":[\s\S]{0,160}speech\.stop\(reason: "stop"\)/.test(bridge) &&

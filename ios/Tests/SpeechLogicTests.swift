@@ -247,4 +247,52 @@ final class SpeechLogicTests: XCTestCase {
         XCTAssertEqual(st["engine"] as? String, "SFSpeechRecognizer")
         print("EchoIsland tests: on-device speech on this simulator: \(st["onDevice"] ?? "?"), available: \(st["available"] ?? "?"), auth: \(st["auth"] ?? "?")")
     }
+
+    // 调试选项 engine：只认 'sf'（只用老引擎），别的都当没给
+    func testEngineOption() {
+        XCTAssertEqual(LocalSpeech.opts("").engine, "")
+        XCTAssertEqual(LocalSpeech.opts(#"{"engine":"sf"}"#).engine, "sf")
+        XCTAssertEqual(LocalSpeech.opts(#"{"engine":"other"}"#).engine, "")
+    }
+
+    // 网页的声音（16kHz 浮点）→ 识别要的格式（SpeechAnalyzer 自己不转，格式不对不报错、只是什么都认不出来）：
+    // 同格式原样给；转成 16 位整数样本数不变、值对得上；转采样率一段段转、加起来的长度对
+    func testPcmConvert() throws {
+        let src = try XCTUnwrap(LocalSpeech.pcmBuffer(pcmB64([Int16](repeating: 8192, count: 1600)), rate: 16000))
+        let same = PCMConvert(to: src.format)
+        XCTAssertTrue(try XCTUnwrap(same.convert(src)) === src, "格式一样：原样返回")
+        let i16 = try XCTUnwrap(AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: false))
+        let c = PCMConvert(to: i16)
+        let out = try XCTUnwrap(c.convert(src))
+        XCTAssertEqual(out.format.commonFormat, .pcmFormatInt16)
+        XCTAssertEqual(out.frameLength, 1600, "同采样率：样本数不变")
+        let v = try XCTUnwrap(out.int16ChannelData)[0][800]
+        XCTAssertLessThanOrEqual(abs(Int(v) - 8192), 2, "0.25 → 8192")
+        // 16k → 48k：连着转 5 段（每段 0.1 秒），一共约 0.5 秒 = 24000 个样本（转换器里留着一点点没吐出来的）
+        let f48 = try XCTUnwrap(AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 48000, channels: 1, interleaved: false))
+        let up = PCMConvert(to: f48)
+        var n = 0
+        for _ in 0..<5 { n += Int(up.convert(src)?.frameLength ?? 0) }
+        XCTAssertGreaterThan(n, 23000); XCTAssertLessThanOrEqual(n, 24100)
+    }
+
+    // 两个引擎一起：权限走老的；调试选项 'sf' 一定用老的；不管新的装没装好，状态的形状和以前一样
+    @MainActor
+    func testHybridEngine() {
+        let h = HybridSpeechEngine()
+        XCTAssertEqual(h.authorization(), AppleSpeechEngine().authorization())
+        let s = LocalSpeech(engine: h) { _ in }
+        let st = s.state()
+        XCTAssertNotNil(st["onDevice"] as? Bool)
+        XCTAssertTrue(["SFSpeechRecognizer", "SpeechAnalyzer"].contains(st["engine"] as? String ?? ""))
+        XCTAssertEqual(h.name, "SFSpeechRecognizer", "还没开始过：名字是老引擎")
+        // 真的开一次只在给过语音识别权限时做（云上的模拟器一般没给，不弹框）
+        if h.authorization() == "authorized" {
+            h.prefer("sf")
+            _ = h.begin(locale: "en-US", short: true, onText: { _, _ in }, onError: { _, _ in })
+            XCTAssertEqual(h.name, "SFSpeechRecognizer", "'sf'：用老引擎")
+            h.cancel()
+        }
+        print("EchoIsland tests: hybrid engine state on this simulator: \(st)")
+    }
 }

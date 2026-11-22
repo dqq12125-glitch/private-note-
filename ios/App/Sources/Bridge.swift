@@ -45,7 +45,8 @@ final class Bridge: NSObject, WKScriptMessageHandler, UIDocumentPickerDelegate {
     // 「通过 Apple 登录」的面板挂在游戏画面的窗口上
     private lazy var apple = AppleSignIn { [weak self] in self?.host?.view.window }
     // 口语题的本机识别（LocalSpeech.swift，只管识别，声音由网页录了送来）：过程（边说边出的字、出声 / 不出声、停了）用事件 echo-speech 发给网页
-    private(set) lazy var speech = LocalSpeech(engine: AppleSpeechEngine()) { [weak self] detail in
+    // 引擎：iOS 26 上这门语言的新模型装好了用 SpeechAnalyzer，不然 SFSpeechRecognizer（HybridSpeechEngine，2026-11-22）
+    private(set) lazy var speech = LocalSpeech(engine: HybridSpeechEngine()) { [weak self] detail in
         self?.emit("echo-speech", "JSON.parse(" + Bridge.jsStr(Bridge.json(detail)) + ")")
     }
 
