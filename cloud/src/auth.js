@@ -31,7 +31,7 @@ export async function authUser(R, token) {
   const want = R.now + R.cfg.sessionDays * DAY;
   if (want - U.s_exp > DAY) R.ctx.waitUntil(DB.prepare('UPDATE sessions SET expires_at = ?2 WHERE hash = ?1').bind(hash, want).run().catch(() => {}));
   U.hash = hash; U.ents = b.results || [];
-  U.plan = planOf(R.cfg, U.ents, R.now).plan;
+  U.plan = planOf(R.cfg, U.ents, R.now, U).plan;
   return U;
 }
 

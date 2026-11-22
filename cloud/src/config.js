@@ -13,6 +13,9 @@ const DEF_PLANS = {
   free: { talkMin: 5, asrN: 400, auxN: 300 },
   monthly: { talkMin: 30, asrN: 1500, auxN: 1500 },
   yearly: { talkMin: 20, asrN: 1500, auxN: 1500 },
+  // 测试账号（TESTERS 里列着的，2026-11-22 老板：「给我们开无限 AI，我们要做测试」）：不是真的无限——留一道很高的上限，
+  // App 出了毛病一直调用时不至于一天把阿里云的钱烧光。App 上显示服务器给的数（「AI 今天还剩 240 分钟」）
+  tester: { talkMin: 240, asrN: 20000, auxN: 20000 },
 };
 const DEF_RATE = {
   emailPerAddrHour: 5,     // 同一个邮箱每小时最多发几次登录码
@@ -68,6 +71,8 @@ export function config(env) {
     dataKey: String(env.DATA_KEY || ''),
     origins: list(env.ALLOWED_ORIGINS, 'echoisland://localhost,https://appassets.androidplatform.net'),
     plans,
+    // 测试账号：账号 id（u_…）或邮箱，逗号隔开。放在 Worker 的秘密里（wrangler secret put TESTERS），不写进公开的仓库
+    testers: list(env.TESTERS, ''),
     rate: Object.assign({}, DEF_RATE, obj(env.RATE, {})),
     consentGated: list(env.CONSENT_GATED, 'talk,place,steps'),
     sessionDays: num(env.SESSION_DAYS, 180),

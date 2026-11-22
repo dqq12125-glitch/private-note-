@@ -51,7 +51,8 @@ function build() {
     RATE: JSON.stringify({ emailPerAddrHour: 3, emailPerIpHour: 10000, signinPerIpHour: 10000, reportPerUserDay: 3, consentPerUserDay: 5 }),
   };
   const rl = { RL_AI_USER: 20, RL_AI_IP: 100000, RL_WS_USER: 1000 };
-  const A = await startWorker(script, Object.assign({}, base, { ADMIN_TOKEN: 'admin-test-token', APPLE_TEAM_ID: 'TEAM123456', APPLE_SIGNIN_KEY_ID: 'KEY1234567', APPLE_SIGNIN_KEY: key.pem, DATA_KEY: dataKey }), rl);
+  // A 有两个测试账号（t-07 用）：一个按邮箱（大小写不一样也认）、一个账号 id 写成不存在的（不该误认别人）
+  const A = await startWorker(script, Object.assign({}, base, { TESTERS: 'Tester-A@Example.Test, u_nobody000000', ADMIN_TOKEN: 'admin-test-token', APPLE_TEAM_ID: 'TEAM123456', APPLE_SIGNIN_KEY_ID: 'KEY1234567', APPLE_SIGNIN_KEY: key.pem, DATA_KEY: dataKey }), rl);
   const B = await startWorker(script, Object.assign({}, base, { TALK_SESSION_MAX_SEC: '3' }), rl);
 
   let n = 0;

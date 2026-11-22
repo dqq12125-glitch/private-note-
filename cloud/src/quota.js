@@ -36,8 +36,15 @@ export function subView(e, now) {
     environment: e ? e.env : null,
   };
 }
+// 测试账号（config 的 testers：账号 id 一字不差，或者邮箱不分大小写）
+export function isTester(cfg, U) {
+  if (!U || !cfg.testers || !cfg.testers.length) return false;
+  const mail = U.email ? String(U.email).toLowerCase() : '';
+  return cfg.testers.some(t => t === U.id || (!!mail && t.toLowerCase() === mail));
+}
 // 几份订阅里挑一份：正在生效的里面每天聊天分钟最多的；都没生效就挑最近更新的那份（让 App 看到「已过期 / 已退款」）
-export function planOf(cfg, ents, now) {
+// U 给了、又是测试账号：档位是 tester（订阅照样显示它自己的那份）
+export function planOf(cfg, ents, now, U) {
   const rows = (ents || []).filter(Boolean);
   let best = null, bestMin = -1;
   for (const e of rows) {
@@ -45,8 +52,9 @@ export function planOf(cfg, ents, now) {
     const m = cfg.plans[e.plan].talkMin;
     if (m > bestMin) { best = e; bestMin = m; }
   }
+  const last = best || rows.slice().sort((a, b) => b.updated_at - a.updated_at)[0] || null;
+  if (isTester(cfg, U)) return { plan: 'tester', ent: last };
   if (best) return { plan: best.plan, ent: best };
-  const last = rows.slice().sort((a, b) => b.updated_at - a.updated_at)[0] || null;
   return { plan: 'free', ent: last };
 }
 export function caps(cfg, plan) {

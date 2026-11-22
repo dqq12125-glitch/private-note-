@@ -173,7 +173,7 @@ Response `200`:
   the app must then not offer quests in other courses.
 - `tipLangs`: the languages `POST /v1/tip` can comment on (`lang`), always starting with `"en"` (server config `TIP_LANGS`,
   default: the same as `talkLangs`). A server without this field only comments on English.
-- `plan`: the plan in effect now: `"free"`, `"monthly"` or `"yearly"`. `subscription`: see §7.
+- `plan`: the plan in effect now: `"free"`, `"monthly"` or `"yearly"`; `"tester"` for accounts listed in the server's `TESTERS` secret (our own test accounts: a very high daily allowance, still counted; the app shows it like the free plan's name but with the server's numbers). `subscription`: see §7.
 - `quota`: see §6.
 
 ### `PATCH /v1/me`

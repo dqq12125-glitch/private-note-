@@ -93,6 +93,7 @@
 | `RESEND_API_KEY` | Resend 的 API Key | Resend 控制台 |
 | `DATA_KEY` | 加密 Apple refresh token 的钥匙（32 字节 base64） | 同上 |
 | `APPLE_SIGNIN_KEY` | Sign in with Apple 的 `.p8` 内容 | PowerShell：`Get-Content AuthKey_XXXX.p8 -Raw \| npx wrangler secret put APPLE_SIGNIN_KEY` |
+| `TESTERS` | 我们自己的测试账号：账号 id（`u_…`）或邮箱，逗号隔开。这些账号的档位是 `tester`（`src/config.js` 的 `DEF_PLANS.tester`：每天聊 240 分钟、识别 20000 次、别的 20000 次——很高但不是无限，App 出毛病时不至于烧光预算；用量照样记） | 账号 id 用 `npx wrangler d1 execute echo-island --remote --config wrangler.toml --command "SELECT id, created_at FROM users"` 查；改了不用重新部署代码 |
 
 **普通配置**（`wrangler.toml` 的 `[vars]`；不写就用 `src/config.js` 里的默认值）：
 

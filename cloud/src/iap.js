@@ -63,7 +63,7 @@ export async function iapApple(R, U) {
   }
   await store(R, row, U.id, true);
   U.ents = (await R.env.DB.prepare('SELECT * FROM entitlements WHERE user_id = ?1').bind(U.id).all()).results || [];
-  U.plan = planOf(R.cfg, U.ents, R.now).plan;
+  U.plan = planOf(R.cfg, U.ents, R.now, U).plan;
   const mine = U.ents.find(e => e.otid === row.otid);
   return json(200, { subscription: subView(mine, R.now), me: await meView(R, U) });
 }

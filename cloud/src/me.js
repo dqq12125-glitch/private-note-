@@ -33,7 +33,7 @@ export function features(R, U) {
 
 export async function meView(R, U) {
   const row = await usageRow(R, U.id, dayOf(R.now, U.tz_min));
-  const pick = planOf(R.cfg, U.ents, R.now);
+  const pick = planOf(R.cfg, U.ents, R.now, U);
   return {
     id: U.id, email: U.email || null, apple: !!U.apple_sub, ageGroup: U.age_group || null, ui: U.ui || null,
     level: U.level == null ? null : U.level, tzOffsetMin: U.tz_min | 0, iapToken: U.iap_token, createdAt: isoOrNull(U.created_at),
