@@ -350,16 +350,15 @@ final class AnalyzerRun: @unchecked Sendable {
                 failed("SpeechAnalyzer format", "no compatible audio format")
                 return
             }
-            lock.lock()
-            let stop = done
-            if !stop {
+            let stop: Bool = lock.withLock {
+                if done { return true }
                 analyzer = a
                 let c = PCMConvert(to: fmt)
                 conv = c
                 for b in pending { if let out = c.convert(b) { cont.yield(AnalyzerInput(buffer: out)) } }
                 pending = []
+                return false
             }
-            lock.unlock()
             if stop {
                 await a.cancelAndFinishNow()
                 return
@@ -369,18 +368,16 @@ final class AnalyzerRun: @unchecked Sendable {
                 do {
                     for try await r in t.results {
                         let piece = String(r.text.characters)
-                        lock.lock()
-                        if r.isFinal { finalText += piece; volatileText = "" } else { volatileText = piece }
-                        let all = finalText + volatileText, stop = done
-                        lock.unlock()
+                        let (all, stop): (String, Bool) = lock.withLock {
+                            if r.isFinal { finalText += piece; volatileText = "" } else { volatileText = piece }
+                            return (finalText + volatileText, done)
+                        }
                         if stop { return }
                         let cb = onText
                         LocalSpeech.onMain { cb(all, false) }
                     }
                     // 声音送完、全部定下来了：最后一次整句（网页多半已经自己叫停了）
-                    lock.lock()
-                    let all = finalText, stop = done
-                    lock.unlock()
+                    let (all, stop): (String, Bool) = lock.withLock { (finalText, done) }
                     if !stop {
                         let cb = onText
                         LocalSpeech.onMain { cb(all, true) }
