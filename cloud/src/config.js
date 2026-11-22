@@ -13,9 +13,9 @@ const DEF_PLANS = {
   free: { talkMin: 5, asrN: 400, auxN: 300 },
   monthly: { talkMin: 30, asrN: 1500, auxN: 1500 },
   yearly: { talkMin: 20, asrN: 1500, auxN: 1500 },
-  // 测试账号（TESTERS 里列着的，2026-11-22 老板：「给我们开无限 AI，我们要做测试」）：不是真的无限——留一道很高的上限，
-  // App 出了毛病一直调用时不至于一天把阿里云的钱烧光。App 上显示服务器给的数（「AI 今天还剩 240 分钟」）
-  tester: { talkMin: 240, asrN: 20000, auxN: 20000 },
+  // 测试账号（TESTERS 里列着的，2026-11-22 老板：「给我们开无限 AI，我们要做测试」，又说一遍「无限 AI」）：
+  // 聊天每天 1440 分钟（一整天，用不完）、识别和别的各 100 万次 = 不限。用量照样记（每段聊天最长 10 分钟、每分钟限流照旧）
+  tester: { talkMin: 1440, asrN: 1000000, auxN: 1000000 },
 };
 const DEF_RATE = {
   emailPerAddrHour: 5,     // 同一个邮箱每小时最多发几次登录码

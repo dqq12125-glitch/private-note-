@@ -44,12 +44,12 @@ export default async function (C) {
   // ---------- 测试账号（TESTERS）：档位 tester，额度很高；买了月付也还是 tester ----------
   const TS = await C.signup(A, { age: 'adult', email: 'tester-a@example.test' });
   const mt = await me(TS);
-  eq([mt.plan, mt.quota.talk.limitSec, mt.quota.asr.limit, mt.quota.aux.limit], ['tester', 14400, 20000, 20000], '测试账号（TESTERS 里的邮箱，大小写不一样）：档位 tester，每天聊 240 分钟、识别 20000、别的 20000');
+  eq([mt.plan, mt.quota.talk.limitSec, mt.quota.asr.limit, mt.quota.aux.limit], ['tester', 86400, 1000000, 1000000], '测试账号（TESTERS 里的邮箱，大小写不一样）：档位 tester，每天聊 1440 分钟（一整天）、识别 100 万、别的 100 万');
   const rt = await post(TS, signJws(mkTx(TS), P.good));
-  ok(rt.status === 200 && rt.json.subscription.plan === 'monthly' && rt.json.me.plan === 'tester' && rt.json.me.quota.talk.limitSec === 14400, '测试账号买了月付：订阅照样记着，档位还是 tester', rt.json.me.plan);
+  ok(rt.status === 200 && rt.json.subscription.plan === 'monthly' && rt.json.me.plan === 'tester' && rt.json.me.quota.talk.limitSec === 86400, '测试账号买了月付：订阅照样记着，档位还是 tester', rt.json.me.plan);
   const take3 = [];
   for (let i = 0; i < 3; i++) take3.push((await A.api('POST', '/v1/tts', { token: TS.token, body: { text: 'Hi there number ' + (i + 1), g: 'f' } })).status);
-  ok(take3.every(s => s === 200) && (await me(TS)).quota.aux.used === 3 && (await me(TS)).quota.aux.left === 19997, '测试账号照样记用量（别的 AI 调用用了 3 次，还剩 19997）', take3);
+  ok(take3.every(s => s === 200) && (await me(TS)).quota.aux.used === 3 && (await me(TS)).quota.aux.left === 999997, '测试账号照样记用量（别的 AI 调用用了 3 次，还剩 999997）', take3);
   eq((await me(F0)).plan, 'free', '别的账号不受影响（TESTERS 里写了一个不存在的 id 也不会误认）');
   // 聊天 ready 里的 leftSec 跟着档位
   const NPCS = (await import('../../talk-npcs.js')).default;
