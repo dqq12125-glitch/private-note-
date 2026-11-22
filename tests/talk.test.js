@@ -66,6 +66,14 @@ async function coreTests() {
     const TC = require('../talk-courses.js'), ins = l => C.instructions(TC.list.find(n => n.lang === l), 'Coco', { goal: 0, level: 1, ui: 'en' });
     check(['es', 'ja', 'zh'].every(l => /only a pattern/.test(ins(l)) && /Always respond to what the learner actually said/.test(ins(l))) && !/only a pattern/.test(C.instructions(npc, 'Coco', { goal: 0, level: 1, ui: 'en' })), '别的语言 1 级：例句写明只是样子、要照学习者真的说的话回答（英语的那一份没动）');
   }
+  // 「求助的话」照做（tools/course/WORDS.md 第 8 条，2026-11-22）：英语角色、委托、别的语言的角色和委托的提示词里都有、只有一条，说的是这门语言
+  {
+    const T = require('../talk-courses.js'), Q = require('../quests.js'), one = (x, L) => (x.match(/do exactly that first/g) || []).length === 1 && x.includes('(in ' + L + ' or in another language)');
+    const all = [[C.instructions(npc, 'Coco', { goal: 0 }), 'English'], [C.instructions(npc, 'Coco', { goal: 0, level: 0, ui: 'zh' }), 'English'], [C.instructions(C.questNpc(Q.list[0]), 'Coco', { goal: 0, level: 2, ui: 'en' }), 'English'],
+      [C.instructions(T.list.find(n => n.lang === 'es'), 'Coco', { goal: 0, level: 0, ui: 'zh' }), 'Spanish'], [C.instructions(T.list.find(n => n.lang === 'ja'), 'Coco', { goal: 0, level: 1, ui: 'en' }), 'Japanese'],
+      [C.instructions(C.questNpc(Q.list[0], 'zh', T.quests.zh[Q.list[0].id]), 'Coco', { goal: 0, level: 1, ui: 'en' }), 'Mandarin Chinese']];
+    check(all.every(([x, L]) => one(x, L)), '求助的话（听不懂、再说一遍、慢一点、怎么说、什么意思）照做：英语角色 / 委托、西语 / 日语角色、中文委托的提示词里各有一条');
+  }
   // judge：语音句不到 3 句不算完成；差 1 步也算完成 2 星；全做到 3 星
   const g = C.goalOf(npc, 0), v = t => ({ who: 'you', text: t });
   const three = [v('It is sunny today.'), v('I wear a T-shirt.'), v('I like to fly kites.')];

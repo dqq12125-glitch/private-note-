@@ -15,6 +15,11 @@
 //   每条另有 names（可以没有）：[[英语名, 这门语言的写法]…]——这条委托的英文原文里出现的、台词翻译表 terms 里定了写法的名字（见 questNames）。
 //   文件不存在就没有这几样（和以前一字不差）。--quests / --sight 换一份（测试的小样）；build(lang, { quests, sight })：文件 / false 不带；
 //   给了 lines（小样或 false）又没给这两样时不带正式的（见 extraFile）。
+// 课前讲解和求助的话（WORDS.md §12）：有 tools/course/<语言>/lessons.json 就并进 course.json 的 LESSONS（原样，加 v: 1），help 进配音名单；
+//   --lessons 换一份（测试的小样）；build(lang, { lessons })。英语：node tools/course/build.js --lessons-en [--check] → 根目录的 lessons-en.js
+// 发音入门（tools/course/WORDS.md §4）：有 tools/course/<语言>/primer.json 就并进 course.json 的 PRIMER（原样，加 v: 1），
+//   只有例词的 t 进配音名单（女声，排在小镇后面；格子自己的 say 不进，游戏里用本机声音念，见 buildPrimer）。--primer 换一份（测试的小样）；build(lang, { primer })：文件 / false 不带；
+//   哪一份的规矩和委托一样（extraFile：给了 lines 的测试不带正式的）。
 // 聊天角色表（tools/course/TALK.md §1）：
 //   node tools/course/build.js --talk [--check]
 //   → 仓库根目录的 talk-courses.js：三门语言 course.json 里 TALK 的每一条原样、外加 lang，给中转服务和公开版服务器按 id 查
@@ -299,6 +304,63 @@ function buildExtra(lang, o) {
   }
   return out;
 }
+// ---------- 发音入门（tools/course/WORDS.md §4）：<语言>/primer.json → course.json 的 PRIMER（原样，加 v: 1） ----------
+// 哪一份和委托 / 今日目击一样（extraFile）：o.primer 给了文件就用它（测试的小样），false 不带；没给时平常用正式的那份，测试（给了 o.lines）不带正式的。
+// 配音（主会话 2026-11-22 定，WORDS.md 改动记录）：只有例词（ex[].t，女声）进配音名单，排在小镇后面（零基础的人最先用到）；
+// 格子自己的 say（一个假名、一个字母名、一个汉字）不进——单个音提前合成 / 云端合成都念不准（本机合成多出尾音，云端偶尔冒出几秒乱话），
+// 游戏里点格子先用手机自带的声音念（game.js 的 sayUnit）。例词的读音（readings.json，gen.py 纠正读法用）用它自己的 r
+function buildPrimer(lang, o) {
+  const f = extraFile(lang, o, 'primer');
+  if (!f || !fs.existsSync(f)) return null;
+  const J = readJson(f), voice = [];
+  let cells = 0;
+  for (const s of Array.isArray(J.sections) ? J.sections : []) {
+    for (const it of Array.isArray(s.items) ? s.items : []) {
+      if (!it || typeof it !== 'object') continue;
+      cells++;
+      for (const x of Array.isArray(it.ex) ? it.ex : []) if (x && typeof x.t === 'string' && x.t.trim()) voice.push({ t: x.t, r: rjoin(x.r) });
+    }
+  }
+  return { PRIMER: Object.assign({}, J, { v: 1 }), voice, n: { sections: Array.isArray(J.sections) ? J.sections.length : 0, cells, ex: voice.length } };
+}
+// ---------- 课前讲解、求助的话（tools/course/WORDS.md §7 §8 §12）：<语言>/lessons.json → course.json 的 LESSONS（原样，加 v: 1） ----------
+// 哪一份和发音入门一样（extraFile：o.lessons 给小样、false 不带；给了 lines 的测试不带正式的）。
+// 配音：求助的话（help[].t，整句，女声）排在发音入门的例词后面；句型的例句是这一课里原样有的句子，本来就有配音，不另加。
+// 读音（readings.json）：日语中文用 help 自己的 r
+function buildLessons(lang, o) {
+  const f = extraFile(lang, o, 'lessons');
+  if (!f || !fs.existsSync(f)) return null;
+  const J = readJson(f), voice = [];
+  for (const h of Array.isArray(J.help) ? J.help : []) if (h && typeof h.t === 'string' && h.t.trim()) voice.push({ t: h.t, r: lang === 'es' ? undefined : rjoin(h.r) });
+  return { LESSONS: Object.assign({}, J, { v: 1 }), voice, n: { help: voice.length, towns: Object.keys(J.towns || {}).length, units: Object.keys(J.units || {}).length } };
+}
+// 英语的课前讲解和求助的话：tools/course/en/lessons.json → 仓库根目录的 lessons-en.js（window.LESSONS_EN，也是 Node 模块；index.html 加载）。
+// 英语课没有课程包，所以单独生成一个文件；求助的话由 tools/voice/collect.js 收去配音。同样的输入逐字节一样
+const LESSONS_EN_FILE = path.join(ROOT, 'lessons-en.js'), LESSONS_EN_SRC = path.join(__dirname, 'en', 'lessons.json');
+function emitLessonsEn(J) {
+  const L = Object.assign({}, J, { v: 1 });
+  return [
+    '// 英语课的「📘 这一课学什么」（每个小镇的课前讲解）和「🆘 求助的话」（tools/course/WORDS.md 第 7、8、12 条）。',
+    '// 别的语言的课在课程包的 course.json 里（LESSONS）；英语课没有课程包，游戏读这里的 window.LESSONS_EN。',
+    '// **由 node tools/course/build.js --lessons-en 从 tools/course/en/lessons.json 生成，不要手改**（--lessons-en --check 核对是不是最新的）',
+    '(function (root) {',
+    '  const LESSONS = ' + JSON.stringify(L) + ';',
+    "  if (typeof module !== 'undefined' && module.exports) module.exports = LESSONS;",
+    '  else root.LESSONS_EN = LESSONS;',
+    "})(typeof window !== 'undefined' ? window : globalThis);",
+    '',
+  ].join('\n');
+}
+function buildLessonsEn(o) {
+  o = o || {};
+  const r = spawnSync(process.execPath, [path.join(__dirname, 'check.js'), 'en', '--lessons', '--quiet'], { encoding: 'utf8' });
+  if (r.status !== 0) throw new Error('tools/course/en/lessons.json 没过 tools/course/check.js：\n' + ((r.stdout || '') + (r.stderr || '')).trim());
+  const text = emitLessonsEn(readJson(LESSONS_EN_SRC));
+  let cur = null; try { cur = fs.readFileSync(LESSONS_EN_FILE, 'utf8').replace(/\r\n/g, '\n'); } catch (e) { cur = null; }
+  const fresh = cur === text;
+  if (!o.check && !fresh) fs.writeFileSync(LESSONS_EN_FILE, text);
+  return { text, fresh, file: LESSONS_EN_FILE, bytes: Buffer.byteLength(text, 'utf8') };
+}
 // 怪兽：手册的顺序、选伙伴的三只、学招表（monsters.js）、进化（在沙箱里加载，和 tools/course/lines.js 一样）
 function dexInfo() {
   const SB = require('./lines.js').sandbox();
@@ -318,6 +380,8 @@ function buildCourse(lang, o) {
   const src = loadSources(lang), isl = readIslands(), V = voiceList();
   const LN = buildLines(lang, linesFile(lang, o));
   const EX = buildExtra(lang, o);
+  const PR = buildPrimer(lang, o);
+  const LS = buildLessons(lang, o);
   if (!Array.isArray(src.towns) || src.towns.length !== 13) throw new Error('towns.json 要 13 个小镇');
   const cn = lang === 'zh';
 
@@ -342,6 +406,10 @@ function buildCourse(lang, o) {
     t.dlgs.forEach(x => { V.add(x.q.t, ['f', 'm'], rjoin(x.q.r)); V.add(x.a.t, ['f', 'm'], rjoin(x.a.r)); x.wrong.forEach(w => V.add(w.t, ['f', 'm'], rjoin(w.r))); });
     t.scene.lines.forEach(l => V.add(l.t, [t.scene.cast[l.who][2] === 'm' ? 'm' : 'f'], rjoin(l.r)));
   });
+  // 发音入门（WORDS.md §4）：排在小镇后面（零基础的人最先用到；第 0 岛还是最前面）
+  if (PR) PR.voice.forEach(e => V.add(norm(e.t), ['f'], e.r));
+  // 求助的话（WORDS.md §8）：紧接着发音入门（学完发音马上学这几句）
+  if (LS) LS.voice.forEach(e => V.add(norm(e.t), ['f'], e.r));
   // 台词翻译表：开场和第 1 组岛的剧情、选伙伴、拿到道具、地名排在小镇后面（一开始就用到），别的排在课本后面
   // （配音念的字不带表情符号：和英语一样按 key.js 的 norm，key 本来就不算表情）
   if (LN) LN.voice.early.forEach(e => V.add(norm(e.t), e.g, e.r));
@@ -403,9 +471,13 @@ function buildCourse(lang, o) {
   }
   // 有委托的译文才有 QUESTS（聊天页显示用：开场白、每一步的示范句、词卡）
   if (EX.QUESTS) course.QUESTS = EX.QUESTS;
+  // 有 primer.json 才有 PRIMER（发音入门的页面：原样 + v: 1；没有的时候 course.json 和以前一字不差）
+  if (PR) course.PRIMER = PR.PRIMER;
+  // 有 lessons.json 才有 LESSONS（课前讲解、求助的话：原样 + v: 1）
+  if (LS) course.LESSONS = LS.LESSONS;
   course.VOICE = V.fin();
   READINGS = V.rd();
-  EXTRA = EX.n;
+  EXTRA = Object.assign({}, EX.n, { primer: PR ? PR.n : null, lessons: LS ? LS.n : null });
   return course;
 }
 
@@ -434,11 +506,12 @@ function build(lang, o) {
     const r = spawnSync(process.execPath, [path.join(__dirname, 'check.js'), lang, '--lines', path.resolve(o.lines), '--quiet'], { encoding: 'utf8' });
     if (r.status !== 0) throw new Error('台词翻译表没过 tools/course/check.js：\n' + ((r.stdout || '') + (r.stderr || '')).trim());
   }
-  // 另外给的委托 / 今日目击的译文（测试的小样）：也先过检查（小样可以不全，缺的只提醒）
-  for (const k of ['quests', 'sight']) {
+  // 另外给的委托 / 今日目击的译文、发音入门、课前讲解（测试的小样）：也先过检查（小样可以不全，缺的只提醒）
+  const WHAT = { quests: '委托的译文', sight: '今日目击的译文', primer: '发音入门', lessons: '课前讲解' };
+  for (const k of Object.keys(WHAT)) {
     if (!o[k]) continue;
     const r = spawnSync(process.execPath, [path.join(__dirname, 'check.js'), lang, '--' + k, path.resolve(o[k]), '--quiet'], { encoding: 'utf8' });
-    if (r.status !== 0) throw new Error((k === 'quests' ? '委托的译文' : '今日目击的译文') + '没过 tools/course/check.js：\n' + ((r.stdout || '') + (r.stderr || '')).trim());
+    if (r.status !== 0) throw new Error(WHAT[k] + '没过 tools/course/check.js：\n' + ((r.stdout || '') + (r.stderr || '')).trim());
   }
   const course = buildCourse(lang, o);
   const data = Buffer.from(JSON.stringify(course) + '\n', 'utf8');
@@ -451,7 +524,7 @@ function build(lang, o) {
     // 每句配音的读音表放在 course.json 旁边（不进课程包）：tools/voice/gen.py 读它，让日语 TTS 念课程写的读音
     fs.writeFileSync(path.join(dir, 'readings.json'), JSON.stringify(READINGS));
   }
-  return { course, bytes: data.length, file, stats: Object.assign(stats(course), { sight: EXTRA.sight }) };
+  return { course, bytes: data.length, file, stats: Object.assign(stats(course), { sight: EXTRA.sight, primer: EXTRA.primer, lessons: EXTRA.lessons }) };
 }
 
 // ---------- 聊天角色表 talk-courses.js（tools/course/TALK.md §1） ----------
@@ -530,7 +603,15 @@ function buildTalk(o) {
   return { list, quests, text, fresh, file: TALK_FILE, bytes: Buffer.byteLength(text, 'utf8') };
 }
 
-if (require.main === module && process.argv.includes('--talk')) {
+if (require.main === module && process.argv.includes('--lessons-en')) {
+  try {
+    const a = process.argv.slice(2), bad = a.filter(x => x !== '--lessons-en' && x !== '--check');
+    if (bad.length) { console.error('用法：node tools/course/build.js --lessons-en [--check]'); process.exit(2); }
+    const check = a.includes('--check'), r = buildLessonsEn({ check });
+    if (check && !r.fresh) { console.error('✗ lessons-en.js 不是最新的（tools/course/en/lessons.json 改过）：跑 node tools/course/build.js --lessons-en'); process.exit(1); }
+    console.log((check ? '✓ lessons-en.js 是最新的' : r.fresh ? '✓ lessons-en.js 本来就是最新的（没写文件）' : 'lessons → lessons-en.js') + '：' + r.bytes + ' 字节（改了求助的话要再跑 node tools/voice/collect.js 配音）');
+  } catch (e) { console.error('course: ' + e.message); process.exit(1); }
+} else if (require.main === module && process.argv.includes('--talk')) {
   try {
     const a = process.argv.slice(2), bad = a.filter(x => x !== '--talk' && x !== '--check');
     if (bad.length) { console.error('用法：node tools/course/build.js --talk [--check]'); process.exit(2); }
@@ -543,7 +624,7 @@ if (require.main === module && process.argv.includes('--talk')) {
 } else if (require.main === module) {
   try {
     const a = process.argv.slice(2), lang = a[0];
-    if (!LANGS.includes(lang)) { console.error('用法：node tools/course/build.js <es|ja|zh> [--check] [--out dist/course] [--readings 读音表.json] [--lines 小样.json] [--quests 小样.json] [--sight 小样.json]\n      node tools/course/build.js --talk [--check]   （聊天角色表 talk-courses.js）'); process.exit(2); }
+    if (!LANGS.includes(lang)) { console.error('用法：node tools/course/build.js <es|ja|zh> [--check] [--out dist/course] [--readings 读音表.json] [--lines 小样.json] [--quests 小样.json] [--sight 小样.json] [--primer 小样.json]\n      node tools/course/build.js --talk [--check]   （聊天角色表 talk-courses.js）'); process.exit(2); }
     const o = { check: false, out: '' };
     for (let i = 1; i < a.length; i++) {
       if (a[i] === '--check') o.check = true;
@@ -552,6 +633,8 @@ if (require.main === module && process.argv.includes('--talk')) {
       else if (a[i] === '--lines') { o.lines = a[++i]; if (!o.lines) throw new Error('--lines 后面要跟一个 lines.json'); }
       else if (a[i] === '--quests') { o.quests = a[++i]; if (!o.quests) throw new Error('--quests 后面要跟一个 quests.json'); }
       else if (a[i] === '--sight') { o.sight = a[++i]; if (!o.sight) throw new Error('--sight 后面要跟一个 sight.json'); }
+      else if (a[i] === '--primer') { o.primer = a[++i]; if (!o.primer) throw new Error('--primer 后面要跟一个 primer.json'); }
+      else if (a[i] === '--lessons') { o.lessons = a[++i]; if (!o.lessons) throw new Error('--lessons 后面要跟一个 lessons.json'); }
       else throw new Error('不认识的参数 ' + a[i]);
     }
     const r = build(lang, o), s = r.stats;
@@ -560,6 +643,8 @@ if (require.main === module && process.argv.includes('--talk')) {
       s.books + ' 册 ' + s.units + ' 个单元、' + s.talk + ' 个聊天角色；' + r.bytes + ' 字节');
     if (r.course.LINES) console.log('  台词翻译表：整句 ' + s.lines + '、模板 ' + s.tpl + '、词 ' + s.terms);
     if (s.quests || s.sight) console.log('  支线委托的译文 ' + s.quests + ' 条、今日目击的线索 ' + s.sight + ' 句（请求 / 感谢 / 线索都算在上面的整句里）');
+    if (s.lessons) console.log('  课前讲解 LESSONS：小镇 ' + s.lessons.towns + '、单元 ' + s.lessons.units + '；求助的话 ' + s.lessons.help + ' 句（进了配音名单）');
+    if (s.primer) console.log('  发音入门 PRIMER：' + s.primer.sections + ' 段、' + s.primer.cells + ' 格、例词配音 ' + s.primer.ex + ' 句（格子自己的 say 用本机声音念，不配音）');
     console.log('  配音 ' + s.voice + ' 句 → ' + s.clips + ' 段（女声 ' + s.f + '、男声 ' + s.m + '），一共 ' + s.chars + ' 个字符');
     // 顺手核对聊天角色表（服务器按它拼人设）：不是最新只提醒，不拦
     let fresh = true;
@@ -567,4 +652,4 @@ if (require.main === module && process.argv.includes('--talk')) {
     if (!fresh) console.log('  提醒：talk-courses.js 不是最新的（聊天角色改过，服务器还在用老的人设）：跑 node tools/course/build.js --talk');
   } catch (e) { console.error('course: ' + e.message); process.exit(1); }
 }
-module.exports = { build, buildCourse, readings, validate, stats, LANGS, talkCourses, talkQuests, questsPlain, questNames, emitTalk, talkFresh, buildTalk, TALK_FILE };
+module.exports = { build, buildCourse, readings, validate, stats, LANGS, talkCourses, talkQuests, questsPlain, questNames, emitTalk, talkFresh, buildTalk, TALK_FILE, buildLessonsEn, emitLessonsEn, LESSONS_EN_FILE };

@@ -59,6 +59,7 @@
   - 首页的卡片：monsters.js 的首页在别的课里不放它，game.js 的 `sightHome()` 在 `renderHome` 里补在同一个位置（「传说的线索」前面）。**还没改的**：手册「出没地点」里「会出现在今日目击里」那一句（monsters.js `habitatHTML`）别的课里照旧不写。
 - 课本那一套：「适用于沪教版词汇」的说法、按日期猜学到哪、销售版只开本学年——都只属于英语课；别的课所有单元都开放，叫「课程单元」。
 - 挑战馆的单元门槛：课程的单元没那么多，要求的单元数不超过现有的。
+- **单词表、单词卡、我的单词本、发音入门、日语罗马字**（2026-11-22，合同 `tools/course/WORDS.md` 第一部分）：四个画面英语课、别的课是同一套代码（game.js `wordList` / `openCards` / `wordBook` / `primerSheet`），词和句子的读音走 `rb()` / `rubyLine`、意思走 `meanOf`、朗读走 `say()`；状态读复习本（键 `word:编号:第几个`）；存档 `seenCards`、`primerSeen` 跟着这门课的存档。发音入门只在 course.json 有 `PRIMER` 时才有（`build.js` 从 `tools/course/<语言>/primer.json` 并进来，只有例词进 `VOICE`）；格子自己的音先用本机声音（`sayUnit`，见 WORDS.md 改动记录）。日语的罗马字是 `lang-ja.js` 的 `romaji(假名, { block })` / `romajiWords`（按词分开写），只在这四样里显示（开关 `S.settings.romaji`）。第二部分（WORDS.md 第 7–11 条）：课前讲解和求助的话是 course.json 的 `LESSONS`（`build.js` 从 `tools/course/<语言>/lessons.json` 并进来，help 进 `VOICE`；英语课是根目录生成的 `lessons-en.js`），game.js `lessonSheet` / `helpSheet` / `routeCard` / 点词看意思（`tapLookup`：西语去冠词、`lang-es.js` 的 `inflect` 配词形；日语中文按 seg 词块、再按最长匹配课程的词）/ 朗读慢一点（`slowOn`）。
 
 ## 5. 大地图和对战里写死的英语句子：台词翻译表（2026-11-21）
 

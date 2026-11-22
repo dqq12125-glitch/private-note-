@@ -1,0 +1,313 @@
+{
+  "lang": "ja",
+  "sections": [
+    {
+      "id": "hira",
+      "title": { "zh": "平假名", "en": "Hiragana" },
+      "intro": {
+        "zh": "日语有平假名、片假名两套字，读音一样：あ 和 ア 都念 a。先认平假名（每格的大字），片假名是小字；点一格就能听。例词里的汉字都标着假名读音。",
+        "en": "Japanese has two sets of letters, hiragana and katakana, and they sound the same: あ and ア are both \"a\". Learn hiragana first (the big letter in each box); the small one is katakana. Tap a box to hear it. Kanji in the example words always come with a kana reading."
+      },
+      "layout": "grid",
+      "cols": 5,
+      "items": [
+        { "t": "あ", "sub": "ア", "rom": "a", "say": "あ",
+          "ex": [ { "t": "雨", "r": "あめ", "zh": "雨", "en": "rain", "pic": "🌧️" } ] },
+        { "t": "い", "sub": "イ", "rom": "i", "say": "い" },
+        { "t": "う", "sub": "ウ", "rom": "u", "say": "う" },
+        { "t": "え", "sub": "エ", "rom": "e", "say": "え" },
+        { "t": "お", "sub": "オ", "rom": "o", "say": "お" },
+
+        { "t": "か", "sub": "カ", "rom": "ka", "say": "か",
+          "ex": [ { "t": "かさ", "r": "かさ", "zh": "伞", "en": "umbrella", "pic": "☂️" } ] },
+        { "t": "き", "sub": "キ", "rom": "ki", "say": "き" },
+        { "t": "く", "sub": "ク", "rom": "ku", "say": "く" },
+        { "t": "け", "sub": "ケ", "rom": "ke", "say": "け" },
+        { "t": "こ", "sub": "コ", "rom": "ko", "say": "こ" },
+
+        { "t": "さ", "sub": "サ", "rom": "sa", "say": "さ",
+          "ex": [ { "t": "さる", "r": "さる", "zh": "猴子", "en": "monkey", "pic": "🐒" } ] },
+        { "t": "し", "sub": "シ", "rom": "shi", "say": "し" },
+        { "t": "す", "sub": "ス", "rom": "su", "say": "す" },
+        { "t": "せ", "sub": "セ", "rom": "se", "say": "せ" },
+        { "t": "そ", "sub": "ソ", "rom": "so", "say": "そ" },
+
+        { "t": "た", "sub": "タ", "rom": "ta", "say": "た",
+          "ex": [ { "t": "たまご", "r": "たまご", "zh": "鸡蛋", "en": "egg", "pic": "🥚" } ] },
+        { "t": "ち", "sub": "チ", "rom": "chi", "say": "ち" },
+        { "t": "つ", "sub": "ツ", "rom": "tsu", "say": "つ",
+          "zh": "tsu：像英语 cats 末尾的 ts。", "en": "tsu: like the \"ts\" at the end of \"cats\"." },
+        { "t": "て", "sub": "テ", "rom": "te", "say": "て" },
+        { "t": "と", "sub": "ト", "rom": "to", "say": "と" },
+
+        { "t": "な", "sub": "ナ", "rom": "na", "say": "な",
+          "ex": [ { "t": "夏", "r": "なつ", "zh": "夏天", "en": "summer", "pic": "🌻" } ] },
+        { "t": "に", "sub": "ニ", "rom": "ni", "say": "に" },
+        { "t": "ぬ", "sub": "ヌ", "rom": "nu", "say": "ぬ" },
+        { "t": "ね", "sub": "ネ", "rom": "ne", "say": "ね" },
+        { "t": "の", "sub": "ノ", "rom": "no", "say": "の" },
+
+        { "t": "は", "sub": "ハ", "rom": "ha", "say": "は",
+          "zh": "当助词用时念 wa，比如 わたしは（watashi wa）。", "en": "As a grammar word it is read wa, as in わたしは (watashi wa).",
+          "ex": [ { "t": "はさみ", "r": "はさみ", "zh": "剪刀", "en": "scissors", "pic": "✂️" } ] },
+        { "t": "ひ", "sub": "ヒ", "rom": "hi", "say": "ひ" },
+        { "t": "ふ", "sub": "フ", "rom": "fu", "say": "ふ",
+          "zh": "fu：上下嘴唇轻轻吹气，牙齿不碰嘴唇。", "en": "fu: blow gently through your lips, without biting your lip." },
+        { "t": "へ", "sub": "ヘ", "rom": "he", "say": "へ",
+          "zh": "当助词「往……」用时念 e，比如 がっこうへ。", "en": "As a grammar word meaning \"to (a place)\" it is read e, as in がっこうへ." },
+        { "t": "ほ", "sub": "ホ", "rom": "ho", "say": "ほ" },
+
+        { "t": "ま", "sub": "マ", "rom": "ma", "say": "ま",
+          "ex": [ { "t": "まど", "r": "まど", "zh": "窗户", "en": "window", "pic": "🪟" } ] },
+        { "t": "み", "sub": "ミ", "rom": "mi", "say": "み" },
+        { "t": "む", "sub": "ム", "rom": "mu", "say": "む" },
+        { "t": "め", "sub": "メ", "rom": "me", "say": "め" },
+        { "t": "も", "sub": "モ", "rom": "mo", "say": "も" },
+
+        { "t": "や", "sub": "ヤ", "rom": "ya", "say": "や",
+          "ex": [ { "t": "山", "r": "やま", "zh": "山", "en": "mountain", "pic": "⛰️" } ] },
+        null,
+        { "t": "ゆ", "sub": "ユ", "rom": "yu", "say": "ゆ" },
+        null,
+        { "t": "よ", "sub": "ヨ", "rom": "yo", "say": "よ" },
+
+        { "t": "ら", "sub": "ラ", "rom": "ra", "say": "ら",
+          "zh": "ら 行：舌尖在上牙后面轻轻弹一下，不是英语的 r，也不是 l。", "en": "The ら row: tap the tip of your tongue once behind your top teeth. It is not quite an English r or l.",
+          "ex": [ { "t": "からい", "r": "からい", "zh": "辣", "en": "spicy", "pic": "🌶️" } ] },
+        { "t": "り", "sub": "リ", "rom": "ri", "say": "り" },
+        { "t": "る", "sub": "ル", "rom": "ru", "say": "る" },
+        { "t": "れ", "sub": "レ", "rom": "re", "say": "れ" },
+        { "t": "ろ", "sub": "ロ", "rom": "ro", "say": "ろ" },
+
+        { "t": "わ", "sub": "ワ", "rom": "wa", "say": "わ",
+          "ex": [ { "t": "わたし", "r": "わたし", "zh": "我", "en": "I; me", "pic": "🙋" } ] },
+        null,
+        null,
+        null,
+        { "t": "を", "sub": "ヲ", "rom": "o", "say": "を",
+          "zh": "只当助词用，念 o，和 お 一样。", "en": "Only used as a grammar word. It sounds the same as お (o)." },
+
+        { "t": "ん", "sub": "ン", "rom": "n", "say": "ん",
+          "zh": "用鼻子出声，自己占一拍，比如 ほん（ho-n）。", "en": "A sound through the nose that takes a whole beat, as in ほん (ho-n)." },
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "daku",
+      "title": { "zh": "浊音和半浊音：が、ぱ", "en": "Dots and circles: が, ぱ" },
+      "intro": {
+        "zh": "假名右上角加两点「゛」，音变浊（念的时候喉咙会振动）：か ka → が ga，さ sa → ざ za，た ta → だ da，は ha → ば ba。は 行加一个小圈「゜」，就变成 p：ぱ pa。",
+        "en": "Two dots 「゛」 at the top right make a voiced sound (your throat buzzes): か ka → が ga, さ sa → ざ za, た ta → だ da, は ha → ば ba. A small circle 「゜」 on the は row turns it into p: ぱ pa."
+      },
+      "layout": "grid",
+      "cols": 5,
+      "items": [
+        { "t": "が", "sub": "ガ", "rom": "ga", "say": "が" },
+        { "t": "ぎ", "sub": "ギ", "rom": "gi", "say": "ぎ" },
+        { "t": "ぐ", "sub": "グ", "rom": "gu", "say": "ぐ" },
+        { "t": "げ", "sub": "ゲ", "rom": "ge", "say": "げ" },
+        { "t": "ご", "sub": "ゴ", "rom": "go", "say": "ご",
+          "ex": [ { "t": "ごはん", "r": "ごはん", "zh": "米饭", "en": "cooked rice", "pic": "🍚" } ] },
+
+        { "t": "ざ", "sub": "ザ", "rom": "za", "say": "ざ" },
+        { "t": "じ", "sub": "ジ", "rom": "ji", "say": "じ" },
+        { "t": "ず", "sub": "ズ", "rom": "zu", "say": "ず" },
+        { "t": "ぜ", "sub": "ゼ", "rom": "ze", "say": "ぜ" },
+        { "t": "ぞ", "sub": "ゾ", "rom": "zo", "say": "ぞ",
+          "ex": [ { "t": "ぞう", "r": "ぞう", "zh": "大象", "en": "elephant", "pic": "🐘" } ] },
+
+        { "t": "だ", "sub": "ダ", "rom": "da", "say": "だ" },
+        { "t": "ぢ", "sub": "ヂ", "rom": "ji", "say": "ぢ",
+          "zh": "念法和 じ 一样，很少用。", "en": "Sounds the same as じ. Rarely used." },
+        { "t": "づ", "sub": "ヅ", "rom": "zu", "say": "づ",
+          "zh": "念法和 ず 一样，很少用。", "en": "Sounds the same as ず. Rarely used." },
+        { "t": "で", "sub": "デ", "rom": "de", "say": "で",
+          "ex": [ { "t": "電話", "r": "でんわ", "zh": "电话", "en": "phone call", "pic": "📞" } ] },
+        { "t": "ど", "sub": "ド", "rom": "do", "say": "ど" },
+
+        { "t": "ば", "sub": "バ", "rom": "ba", "say": "ば",
+          "ex": [ { "t": "かばん", "r": "かばん", "zh": "书包", "en": "bag", "pic": "🎒" } ] },
+        { "t": "び", "sub": "ビ", "rom": "bi", "say": "び" },
+        { "t": "ぶ", "sub": "ブ", "rom": "bu", "say": "ぶ" },
+        { "t": "べ", "sub": "ベ", "rom": "be", "say": "べ" },
+        { "t": "ぼ", "sub": "ボ", "rom": "bo", "say": "ぼ" },
+
+        { "t": "ぱ", "sub": "パ", "rom": "pa", "say": "ぱ" },
+        { "t": "ぴ", "sub": "ピ", "rom": "pi", "say": "ぴ",
+          "ex": [ { "t": "えんぴつ", "r": "えんぴつ", "zh": "铅笔", "en": "pencil", "pic": "✏️" } ] },
+        { "t": "ぷ", "sub": "プ", "rom": "pu", "say": "ぷ" },
+        { "t": "ぺ", "sub": "ペ", "rom": "pe", "say": "ぺ" },
+        { "t": "ぽ", "sub": "ポ", "rom": "po", "say": "ぽ" }
+      ]
+    },
+    {
+      "id": "yoon",
+      "title": { "zh": "拗音：きゃ、しゅ、ちょ", "en": "Joined sounds: きゃ, しゅ, ちょ" },
+      "intro": {
+        "zh": "小的 ゃ、ゅ、ょ 跟在 き、し、ち 这些 i 结尾的字后面，和前面的字拼成一个音，只占一拍：き＋ゃ＝きゃ kya。小字要写小：写成大的 や 就是两拍（きや kiya）。",
+        "en": "A small ゃ, ゅ or ょ after a letter ending in i (き, し, ち…) joins it into one sound, one beat: き + ゃ = きゃ kya. Keep it small: with a full-size や it is two beats (きや kiya)."
+      },
+      "layout": "grid",
+      "cols": 3,
+      "items": [
+        { "t": "きゃ", "sub": "キャ", "rom": "kya", "say": "きゃ" },
+        { "t": "きゅ", "sub": "キュ", "rom": "kyu", "say": "きゅ" },
+        { "t": "きょ", "sub": "キョ", "rom": "kyo", "say": "きょ",
+          "ex": [ { "t": "教室", "r": "きょうしつ", "zh": "教室", "en": "classroom", "pic": "🏫" } ] },
+
+        { "t": "しゃ", "sub": "シャ", "rom": "sha", "say": "しゃ",
+          "ex": [ { "t": "写真", "r": "しゃしん", "zh": "照片", "en": "photo", "pic": "📷" } ] },
+        { "t": "しゅ", "sub": "シュ", "rom": "shu", "say": "しゅ",
+          "ex": [ { "t": "宿題", "r": "しゅくだい", "zh": "作业", "en": "homework", "pic": "📝" } ] },
+        { "t": "しょ", "sub": "ショ", "rom": "sho", "say": "しょ" },
+
+        { "t": "ちゃ", "sub": "チャ", "rom": "cha", "say": "ちゃ",
+          "ex": [ { "t": "お茶", "r": "おちゃ", "zh": "茶", "en": "tea", "pic": "🍵" } ] },
+        { "t": "ちゅ", "sub": "チュ", "rom": "chu", "say": "ちゅ" },
+        { "t": "ちょ", "sub": "チョ", "rom": "cho", "say": "ちょ" },
+
+        { "t": "にゃ", "sub": "ニャ", "rom": "nya", "say": "にゃ" },
+        { "t": "にゅ", "sub": "ニュ", "rom": "nyu", "say": "にゅ" },
+        { "t": "にょ", "sub": "ニョ", "rom": "nyo", "say": "にょ" },
+
+        { "t": "ひゃ", "sub": "ヒャ", "rom": "hya", "say": "ひゃ",
+          "ex": [ { "t": "百", "r": "ひゃく", "zh": "一百", "en": "hundred", "pic": "💯" } ] },
+        { "t": "ひゅ", "sub": "ヒュ", "rom": "hyu", "say": "ひゅ" },
+        { "t": "ひょ", "sub": "ヒョ", "rom": "hyo", "say": "ひょ" },
+
+        { "t": "みゃ", "sub": "ミャ", "rom": "mya", "say": "みゃ" },
+        { "t": "みゅ", "sub": "ミュ", "rom": "myu", "say": "みゅ" },
+        { "t": "みょ", "sub": "ミョ", "rom": "myo", "say": "みょ" },
+
+        { "t": "りゃ", "sub": "リャ", "rom": "rya", "say": "りゃ" },
+        { "t": "りゅ", "sub": "リュ", "rom": "ryu", "say": "りゅ" },
+        { "t": "りょ", "sub": "リョ", "rom": "ryo", "say": "りょ",
+          "ex": [ { "t": "旅行", "r": "りょこう", "zh": "旅行", "en": "trip", "pic": "🧳" } ] },
+
+        { "t": "ぎゃ", "sub": "ギャ", "rom": "gya", "say": "ぎゃ" },
+        { "t": "ぎゅ", "sub": "ギュ", "rom": "gyu", "say": "ぎゅ",
+          "ex": [ { "t": "ぎゅうにゅう", "r": "ぎゅうにゅう", "zh": "牛奶", "en": "milk", "pic": "🥛" } ] },
+        { "t": "ぎょ", "sub": "ギョ", "rom": "gyo", "say": "ぎょ" },
+
+        { "t": "じゃ", "sub": "ジャ", "rom": "ja", "say": "じゃ" },
+        { "t": "じゅ", "sub": "ジュ", "rom": "ju", "say": "じゅ" },
+        { "t": "じょ", "sub": "ジョ", "rom": "jo", "say": "じょ",
+          "ex": [ { "t": "じょうぎ", "r": "じょうぎ", "zh": "尺子", "en": "ruler", "pic": "📏" } ] },
+
+        { "t": "びゃ", "sub": "ビャ", "rom": "bya", "say": "びゃ" },
+        { "t": "びゅ", "sub": "ビュ", "rom": "byu", "say": "びゅ" },
+        { "t": "びょ", "sub": "ビョ", "rom": "byo", "say": "びょ",
+          "ex": [ { "t": "病院", "r": "びょういん", "zh": "医院", "en": "hospital", "pic": "🏥" } ] },
+
+        { "t": "ぴゃ", "sub": "ピャ", "rom": "pya", "say": "ぴゃ" },
+        { "t": "ぴゅ", "sub": "ピュ", "rom": "pyu", "say": "ぴゅ" },
+        { "t": "ぴょ", "sub": "ピョ", "rom": "pyo", "say": "ぴょ" }
+      ]
+    },
+    {
+      "id": "beat",
+      "title": { "zh": "长音、促音、拨音", "en": "Long sounds, small っ and ん" },
+      "intro": {
+        "zh": "日语按「拍」念：一个假名一拍，每拍差不多一样长，像拍手。长音、小的 っ、ん 也各占一拍，少了这一拍就成了另一个词。拗音（きゃ）两个字合起来只算一拍。",
+        "en": "Japanese is spoken in beats: one kana, one beat, each about the same length, like clapping. A long sound, a small っ and ん each take a beat too; drop it and you get a different word. A joined sound like きゃ is only one beat."
+      },
+      "layout": "list",
+      "items": [
+        { "t": "おばあさん", "sub": "お・ば・あ・さ・ん", "rom": "obaasan", "say": "おばあさん",
+          "zh": "长音：把前一个音拉长一拍。a 音后面加 あ，i 音后面加 い，u 音后面加 う。おばあさん（奶奶）5 拍，少一拍的 おばさん 是「阿姨」。",
+          "en": "Long sound: stretch the sound before it for one more beat. After an a-sound add あ, after i add い, after u add う. おばあさん (grandma) has 5 beats; with one beat less, おばさん means \"aunt\".",
+          "ex": [
+            { "t": "お母さん", "r": "おかあさん", "zh": "妈妈", "en": "mother", "pic": "👩" },
+            { "t": "おじいさん", "r": "おじいさん", "zh": "爷爷", "en": "grandfather", "pic": "👴" },
+            { "t": "ふうせん", "r": "ふうせん", "zh": "气球", "en": "balloon", "pic": "🎈" }
+          ] },
+        { "t": "えいご", "sub": "え・い・ご", "rom": "eigo", "say": "えいご",
+          "zh": "e 音后面的 い、o 音后面的 う，一般不单独念，而是把前面的音拉长：えいご（英语）念 eego，ありがとう 念 arigatoo。",
+          "en": "An い after an e-sound, or an う after an o-sound, usually just makes that sound long: えいご (English) sounds like \"eego\", ありがとう like \"arigatoo\".",
+          "ex": [
+            { "t": "先生", "r": "せんせい", "zh": "老师", "en": "teacher", "pic": "👩‍🏫" },
+            { "t": "時計", "r": "とけい", "zh": "钟", "en": "clock", "pic": "🕒" },
+            { "t": "お父さん", "r": "おとうさん", "zh": "爸爸", "en": "father", "pic": "👨" }
+          ] },
+        { "t": "きっぷ", "sub": "き・っ・ぷ", "rom": "kippu", "say": "きっぷ",
+          "zh": "小的 っ：停一拍、不出声，再念后面的音；罗马字把后面的辅音写两遍。きっぷ（票）是 3 拍。",
+          "en": "Small っ: pause for one beat without a sound, then say the next sound. In romaji the next consonant is written twice. きっぷ (ticket) has 3 beats.",
+          "ex": [
+            { "t": "すっぱい", "r": "すっぱい", "zh": "酸", "en": "sour", "pic": "🍋" },
+            { "t": "ちょっと", "r": "ちょっと", "zh": "有点；一点", "en": "a little", "pic": "🤏" }
+          ] },
+        { "t": "ほん", "sub": "ほ・ん", "rom": "hon", "say": "ほん",
+          "zh": "ん：用鼻子出声，自己占一拍，别吞掉。ほん（书）是 2 拍。",
+          "en": "ん: a sound through the nose that takes a whole beat. Don't swallow it. ほん (book) has 2 beats.",
+          "ex": [
+            { "t": "こんにちは", "r": "こんにちは", "zh": "你好", "en": "hello", "pic": "👋" },
+            { "t": "電車", "r": "でんしゃ", "zh": "电车", "en": "train", "pic": "🚃" },
+            { "t": "信号", "r": "しんごう", "zh": "红绿灯", "en": "traffic light", "pic": "🚦" }
+          ] },
+        { "t": "がっこう", "sub": "が・っ・こ・う", "rom": "gakkou", "say": "がっこう",
+          "zh": "一起数拍子：がっこう（学校）是 4 拍，念 gakkoo。拗音只算一拍：りょ・う・り 是 3 拍。每拍念得一样长。",
+          "en": "Count the beats together: がっこう (school) is 4 beats and sounds like \"gakkoo\". A joined sound counts as one: りょ・う・り is 3 beats. Give every beat the same length.",
+          "ex": [
+            { "t": "料理", "r": "りょうり", "zh": "做菜", "en": "cooking", "pic": "🍳" },
+            { "t": "ゆうびんきょく", "r": "ゆうびんきょく", "zh": "邮局", "en": "post office", "pic": "📮" }
+          ] }
+      ]
+    },
+    {
+      "id": "kata",
+      "title": { "zh": "片假名的用法", "en": "Using katakana" },
+      "intro": {
+        "zh": "片假名和平假名读音一样（第一张表里的小字），主要用来写外来词（从别的语言借来的词）和外国人的名字。片假名的长音写成一条线「ー」。念的时候照日语的拍子念，别照英语念。",
+        "en": "Katakana sounds just like hiragana (the small letters in the first chart). It is used mostly for words borrowed from other languages and for foreign names. A long sound is a dash 「ー」; say these words in Japanese beats, not the English way."
+      },
+      "layout": "list",
+      "items": [
+        { "t": "パン", "sub": "ぱん", "rom": "pan", "say": "パン",
+          "zh": "外来词用片假名写，读音和平假名一样：パ＝ぱ。パン 是面包。",
+          "en": "Borrowed words are written in katakana, with the same sounds as hiragana: パ = ぱ. パン means bread.",
+          "ex": [
+            { "t": "ペン", "r": "ペン", "zh": "笔", "en": "pen", "pic": "🖊️" },
+            { "t": "ピアノ", "r": "ピアノ", "zh": "钢琴", "en": "piano", "pic": "🎹" }
+          ] },
+        { "t": "ノート", "sub": "のーと", "rom": "nooto", "say": "ノート",
+          "zh": "「ー」把前一个音拉长一拍：ノート（笔记本）是 no-o-to 3 拍。",
+          "en": "「ー」 stretches the sound before it by one beat: ノート (notebook) is no-o-to, 3 beats.",
+          "ex": [
+            { "t": "ゲーム", "r": "ゲーム", "zh": "游戏", "en": "game", "pic": "🎮" }
+          ] },
+        { "t": "ケーキ", "sub": "けーき", "rom": "keeki", "say": "ケーキ",
+          "zh": "ケーキ（蛋糕）念 ke-e-ki，是长长的 e，不念英语 cake 的音。",
+          "en": "ケーキ (cake) is ke-e-ki, with a long e. It doesn't sound like the English \"cake\".",
+          "ex": [
+            { "t": "カレー", "r": "カレー", "zh": "咖喱", "en": "curry", "pic": "🍛" }
+          ] },
+        { "t": "ジュース", "sub": "じゅーす", "rom": "juusu", "say": "ジュース",
+          "zh": "小的 ャ、ュ、ョ 和平假名一样拼成一拍：ジュ・ー・ス（果汁）是 3 拍。",
+          "en": "A small ャ, ュ or ョ joins the letter before it, just like in hiragana: ジュ・ー・ス (juice) is 3 beats.",
+          "ex": [
+            { "t": "シャワー", "r": "シャワー", "zh": "淋浴", "en": "shower", "pic": "🚿" }
+          ] },
+        { "t": "カメラ", "sub": "かめら", "rom": "kamera", "say": "カメラ",
+          "zh": "每个假名一拍，都带元音：カ・メ・ラ（相机）；テスト 是 te-su-to 3 拍。",
+          "en": "Every kana is one beat with its own vowel: カ・メ・ラ (camera). テスト is te-su-to, 3 beats.",
+          "ex": [
+            { "t": "テスト", "r": "テスト", "zh": "考试", "en": "test", "pic": "💯" },
+            { "t": "バナナ", "r": "バナナ", "zh": "香蕉", "en": "banana", "pic": "🍌" }
+          ] },
+        { "t": "サッカー", "sub": "さっかー", "rom": "sakkaa", "say": "サッカー",
+          "zh": "小的 ッ 和 っ 一样，停一拍：サッカー（足球）是 4 拍。",
+          "en": "Small ッ works like っ: pause for one beat. サッカー (soccer) has 4 beats.",
+          "ex": [
+            { "t": "クッキー", "r": "クッキー", "zh": "饼干", "en": "cookie", "pic": "🍪" },
+            { "t": "ヘルメット", "r": "ヘルメット", "zh": "头盔", "en": "helmet", "pic": "⛑️" }
+          ] },
+        { "t": "トム", "sub": "とむ", "rom": "tomu", "say": "トム",
+          "zh": "外国人的名字也用片假名，按日语的音来写：Tom 写成 トム（to-mu）。",
+          "en": "Foreign names are written in katakana too, with Japanese sounds: Tom becomes トム (to-mu)." }
+      ]
+    }
+  ]
+}

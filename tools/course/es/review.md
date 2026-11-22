@@ -117,3 +117,43 @@
 8. **偏长的示范句**：q11 第 1 步（14 个词）、q12 第 4 步（两句），原文也长；q6 第 4 步因为加了 `en punto` 有 9 个词。
 9. **hat（q3-fair）**：照字面写 `un sombrero`；运动会上孩子戴的更常是 `gorra`。这一步答什么都行，不影响完成。
 10. **词卡变绿**：聊天页按「卡片的前三个词连着出现」算说到。名词卡片照课程的规矩带冠词（`la gorra`、`los lápices`），学的人说 `una gorra`、`doce lápices` 时不会变绿；`al lado de`、`enfrente de` 遇到 `del` 也不会。照示范句说一遍，121 张里有 43 张不变绿。要改的话在界面那边比较时去掉开头的冠词、把 del / al 当成 de / a。
+
+## 发音入门 primer.json（2026-11-22）
+
+四段，顺序是元音 → 字母表 → 不一样的发音 → 重音：五个元音（5 条）、字母表（27 个字母，4 列 28 格，最后一格 null）、和英语 / 拼音不一样的发音（17 条）、重音（5 条）。say 54 个 + 例词 88 个 = 142。作者自己写、自己复读，没有另一个代理通读，也没有母语的人听过。
+
+### 怎么写的
+
+- 例词照抄课程 `words` 的 `t` / `zh` / `en` / `pic`（带冠词，和单词表同一份配音）。课程里没有的只有 3 个：`el kiwi`（w 没有教过的词）、`el taxi`（x 读 ks）、`el juguete`（gue；课程句子里出现过）。
+- 列表的 `rom` 写的是 `say` 念的那个词（点一下就知道念的是什么）；重音那一段的 `rom` 按音节分开、重读的大写（`man·ZA·na`）。字母表的 `rom` 和 `say` 是字母名。
+- `say` 里有几个课程没教过的词：元音 `oso`、`sí`、`tú`；`Miguel`（gue）、`México`（x）、`chocolate`、`zapato`、`gimnasio`、`patio` 等。都是 TTS 念得对的普通词；`papá, papa` 是一段里念两个词（带逗号）。
+- 读法一律拉美：ce / ci / z 读 s，没讲西班牙的 th；ll = y，提了阿根廷、乌拉圭读 sh。
+
+### 拿不准、请母语的人再看的
+
+1. **字母名**照 RAE 现在的叫法（uve、uve doble、ye）。拉美很多学校和大人还说 be larga / be alta、ve corta / ve chica、doble ve / doble u、i griega，所以在 b、v、w、y 的格子里各加了一句「也叫……」。要不要把 v 的主名直接写成 ve corta，请老板定。
+2. **多加了一条「p · t · k 不送气」**（WORDS.md 的清单里没有）：说英语、说中文的人都容易把 p t k 送气，对中文的人说「像拼音的 b、d、g」最好懂。嫌多可以删。
+3. **和汉语的类比**都是近似：j ≈ 拼音 h、e ≈「诶」的开头、ñ ≈「尼亚」连读、ch「不卷舌」、单个 r ≈「很快的 d」。英文那边单个 r 用美式 butter 的 tt 打比方，英式英语的人不一定有这个音。
+4. **x 读 ks**：`el examen` 在口语里常读成 [eˈsamen]，配音按 [ek-] 读也对。没有用 `la excursión`（x 在辅音前更常读 s）。
+5. **gue / gui 那一条提了 ü（pingüino）**，课程里没有这个词，只写在说明里、不配音。
+6. `la pared`、`el reloj` 词尾的 d / j 在拉美口语里很弱：`la pared` 放在重音例词里（看拼写的规矩用），`el reloj` 没用。
+
+## 课前讲解和求助的话 lessons.json（2026-11-22）
+
+求助的话 12 句；13 个小镇、8 个 1 级单元各 4 个句型（共 84 个，例句 158 句，全是那一课 `sents` / 对话问答里原样的句子）、提醒 41 条（es1-7 只有 1 条）。作者自己写、自己复读，没有另一个代理通读，也没有母语的人看过。
+
+### 怎么写的
+
+- 每个句型都有空 `___`，zh / en 的空和句型一样多；问句型（`¿Sabes ___?`）配一问一答两句例句。
+- 提醒只挑这一课真用到、新手最容易错的：阴阳性、¿¡、es / está、del / al、gustar / gustan、科目和「一类动物」要带冠词、tener 说年龄和冷热、hace mucho calor 不说 muy、el agua、月份小写、日期不用序数、过去时换词尾。
+- 单元已有 `grammar`，句型和提醒不重讲变位表，补的是用法：es1-4 补了 review 上面「caro / barato 一会儿 ser 一会儿 estar」那一条（平时 es、今天 está）；es1-3 补了 Es tranquilo / está nervioso 和 por / porque；es1-7 补了 visitar / ayudar 后面的人要加 a。
+- 求助的话一律 tú、不带要跟着说话人变的形容词（不用 Soy principiante / nuevo）。「换简单的说法」写成 `¿Puedes decirlo con otras palabras?`；「这个用西语怎么说」直接用第 1 岛的原句 `¿Cómo se dice esto en español?`（有现成配音）。
+
+### 拿不准、请母语的人再看的
+
+1. **求助的话里的「对 / 不对」**写成 `Sí, eso es.` / `No, no es eso.`（回答「你是不是想说……」）。如果界面想要的是学的人反问「我说得对吗？」，可以换成 `¿Está bien así?`。
+2. **`Perdón.` 当「对不起」**：拉美说错话、挤过去、打断人都用它；真心道歉更常说 `Lo siento.`（1 级第 8 单元才出现）。没收 `Lo siento`，免得和「我去不了」的整块说法混。
+3. **第 8 岛提醒里的 `alta`**（la jirafa es alta）和第 3 岛提醒里的 `cerca de la puerta`、第 10 岛的 `el agua fría`、第 12 岛的 `voy → fui` 对照是为了讲规矩自己造的短语，不在课程句子里（提醒里不点读、不配音）。
+4. **第 4 岛提醒「科目前面要带 el / la」**：`clase de ciencias`、`tarea de inglés` 这种 de 后面的不带，提醒里只说了「喜欢哪门课、哪门课难」时要带，没展开。
+5. **第 5 岛「Sabe tocar ___」的第二句例句**是 `Luis toca la guitarra en el club.`（没有 sabe），用来对比 tocar；要严格「例句就是句型本身」可以只留第一句。
+

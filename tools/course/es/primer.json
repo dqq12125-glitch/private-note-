@@ -1,0 +1,309 @@
+{
+  "lang": "es",
+  "sections": [
+    {
+      "id": "vowels",
+      "title": { "zh": "五个元音", "en": "The five vowels" },
+      "intro": {
+        "zh": "西语只有五个元音：a、e、i、o、u。不管在哪个词里，每个元音都读一样，短而清楚，不拖长、不拐弯。西语怎么写就怎么读，学会这五个音，大部分的词都能念出来。",
+        "en": "Spanish has only five vowel sounds: a, e, i, o, u. Each one sounds the same in every word: short and clear, never stretched or sliding into another sound. Spanish is read the way it is written, so these five sounds take you a long way."
+      },
+      "layout": "list",
+      "items": [
+        { "t": "a", "sub": "A", "rom": "mamá", "say": "mamá",
+          "zh": "像汉语「啊」，嘴张大，短短的。",
+          "en": "Like the a in 'father', but short.",
+          "ex": [
+            { "t": "el mapa", "zh": "地图", "en": "map", "pic": "🗺️" },
+            { "t": "la casa", "zh": "房子；家", "en": "house", "pic": "🏠" }
+          ] },
+        { "t": "e", "sub": "E", "rom": "bebé", "say": "bebé",
+          "zh": "像「诶」的开头，不滑成 ei；不读拼音 e 的「鹅」。",
+          "en": "Like the e in 'bed'. Don't slide into 'ay'.",
+          "ex": [
+            { "t": "el elefante", "zh": "大象", "en": "elephant", "pic": "🐘" },
+            { "t": "verde", "zh": "绿色的", "en": "green", "pic": "🟢" }
+          ] },
+        { "t": "i", "sub": "I", "rom": "sí", "say": "sí",
+          "zh": "像「衣」，嘴角往两边拉。",
+          "en": "Like the ee in 'see', but short.",
+          "ex": [
+            { "t": "el libro", "zh": "书", "en": "book", "pic": "📘" },
+            { "t": "la silla", "zh": "椅子", "en": "chair", "pic": "🪑" }
+          ] },
+        { "t": "o", "sub": "O", "rom": "oso", "say": "oso",
+          "zh": "像「哦」，嘴唇圆，不滑成 ou。",
+          "en": "Like the o in 'no', but pure and short, with no 'w' at the end.",
+          "ex": [
+            { "t": "el mono", "zh": "猴子", "en": "monkey", "pic": "🐒" },
+            { "t": "el otoño", "zh": "秋天", "en": "autumn", "pic": "🍂" }
+          ] },
+        { "t": "u", "sub": "U", "rom": "tú", "say": "tú",
+          "zh": "像「乌」，嘴唇圆、往前。",
+          "en": "Like the oo in 'food', but short.",
+          "ex": [
+            { "t": "azul", "zh": "蓝色的", "en": "blue", "pic": "🔵" },
+            { "t": "la nube", "zh": "云", "en": "cloud", "pic": "☁️" }
+          ] }
+      ]
+    },
+    {
+      "id": "abc",
+      "title": { "zh": "字母表", "en": "The alphabet" },
+      "intro": {
+        "zh": "西语有 27 个字母，比英语多一个 ñ。每个字母都有自己的名字，拼写名字、问「怎么写」时会用到。点一下听字母名。",
+        "en": "Spanish has 27 letters, one more than English: ñ. Each letter has a name, used when you spell a word. Tap a letter to hear its name."
+      },
+      "layout": "grid",
+      "cols": 4,
+      "items": [
+        { "t": "a", "sub": "A", "rom": "a", "say": "a",
+          "ex": [ { "t": "la abuela", "zh": "奶奶；外婆", "en": "grandma", "pic": "👵" } ] },
+        { "t": "b", "sub": "B", "rom": "be", "say": "be",
+          "zh": "也叫 be larga、be alta。", "en": "Also called 'be larga' or 'be alta'.",
+          "ex": [ { "t": "el barco", "zh": "船", "en": "boat", "pic": "⛵" } ] },
+        { "t": "c", "sub": "C", "rom": "ce", "say": "ce",
+          "ex": [ { "t": "el conejo", "zh": "兔子", "en": "rabbit", "pic": "🐰" } ] },
+        { "t": "d", "sub": "D", "rom": "de", "say": "de",
+          "ex": [ { "t": "los dientes", "zh": "牙齿", "en": "teeth", "pic": "🦷" } ] },
+        { "t": "e", "sub": "E", "rom": "e", "say": "e",
+          "ex": [ { "t": "la escuela", "zh": "学校", "en": "school", "pic": "🏫" } ] },
+        { "t": "f", "sub": "F", "rom": "efe", "say": "efe",
+          "ex": [ { "t": "la fiesta", "zh": "派对；聚会", "en": "party", "pic": "🎉" } ] },
+        { "t": "g", "sub": "G", "rom": "ge", "say": "ge",
+          "ex": [ { "t": "el globo", "zh": "气球", "en": "balloon", "pic": "🎈" } ] },
+        { "t": "h", "sub": "H", "rom": "hache", "say": "hache",
+          "zh": "不发音。", "en": "Silent.",
+          "ex": [ { "t": "el hospital", "zh": "医院", "en": "hospital", "pic": "🏥" } ] },
+        { "t": "i", "sub": "I", "rom": "i", "say": "i",
+          "ex": [ { "t": "el invierno", "zh": "冬天", "en": "winter", "pic": "⛄" } ] },
+        { "t": "j", "sub": "J", "rom": "jota", "say": "jota",
+          "ex": [ { "t": "la jirafa", "zh": "长颈鹿", "en": "giraffe", "pic": "🦒" } ] },
+        { "t": "k", "sub": "K", "rom": "ka", "say": "ka",
+          "zh": "只在外来词里。", "en": "Only in borrowed words.",
+          "ex": [ { "t": "el kilo", "zh": "公斤", "en": "kilo", "pic": "⚖️" } ] },
+        { "t": "l", "sub": "L", "rom": "ele", "say": "ele",
+          "ex": [ { "t": "el león", "zh": "狮子", "en": "lion", "pic": "🦁" } ] },
+        { "t": "m", "sub": "M", "rom": "eme", "say": "eme",
+          "ex": [ { "t": "la manzana", "zh": "苹果", "en": "apple", "pic": "🍎" } ] },
+        { "t": "n", "sub": "N", "rom": "ene", "say": "ene",
+          "ex": [ { "t": "la naranja", "zh": "橙子", "en": "orange", "pic": "🍊" } ] },
+        { "t": "ñ", "sub": "Ñ", "rom": "eñe", "say": "eñe",
+          "zh": "英语里没有这个字母。", "en": "Not in the English alphabet.",
+          "ex": [ { "t": "la montaña", "zh": "山", "en": "mountain", "pic": "⛰️" } ] },
+        { "t": "o", "sub": "O", "rom": "o", "say": "o",
+          "ex": [ { "t": "los ojos", "zh": "眼睛", "en": "eyes", "pic": "👀" } ] },
+        { "t": "p", "sub": "P", "rom": "pe", "say": "pe",
+          "ex": [ { "t": "el pan", "zh": "面包", "en": "bread", "pic": "🍞" } ] },
+        { "t": "q", "sub": "Q", "rom": "cu", "say": "cu",
+          "zh": "后面总跟着 u：que、qui。", "en": "Always followed by u: que, qui.",
+          "ex": [ { "t": "quiero", "zh": "我想要", "en": "I want", "pic": "🙋" } ] },
+        { "t": "r", "sub": "R", "rom": "erre", "say": "erre",
+          "ex": [ { "t": "rojo", "zh": "红色的", "en": "red", "pic": "🔴" } ] },
+        { "t": "s", "sub": "S", "rom": "ese", "say": "ese",
+          "ex": [ { "t": "el sol", "zh": "太阳", "en": "sun", "pic": "☀️" } ] },
+        { "t": "t", "sub": "T", "rom": "te", "say": "te",
+          "ex": [ { "t": "el tomate", "zh": "西红柿", "en": "tomato", "pic": "🍅" } ] },
+        { "t": "u", "sub": "U", "rom": "u", "say": "u",
+          "ex": [ { "t": "la uva", "zh": "葡萄", "en": "grape", "pic": "🍇" } ] },
+        { "t": "v", "sub": "V", "rom": "uve", "say": "uve",
+          "zh": "很多拉美人叫它 ve corta、ve chica。", "en": "Many Latin Americans call it 've corta' or 've chica'.",
+          "ex": [ { "t": "la vaca", "zh": "奶牛", "en": "cow", "pic": "🐮" } ] },
+        { "t": "w", "sub": "W", "rom": "uve doble", "say": "uve doble",
+          "zh": "也叫 doble ve、doble u；只在外来词里。", "en": "Also 'doble ve' or 'doble u'. Only in borrowed words.",
+          "ex": [ { "t": "el kiwi", "zh": "猕猴桃", "en": "kiwi", "pic": "🥝" } ] },
+        { "t": "x", "sub": "X", "rom": "equis", "say": "equis",
+          "ex": [ { "t": "el examen", "zh": "考试", "en": "test", "pic": "📝" } ] },
+        { "t": "y", "sub": "Y", "rom": "ye", "say": "ye",
+          "zh": "也叫 i griega。", "en": "Also called 'i griega'.",
+          "ex": [ { "t": "la playa", "zh": "海滩", "en": "beach", "pic": "🏖️" } ] },
+        { "t": "z", "sub": "Z", "rom": "zeta", "say": "zeta",
+          "ex": [ { "t": "los zapatos", "zh": "鞋", "en": "shoes", "pic": "👞" } ] },
+        null
+      ]
+    },
+    {
+      "id": "sounds",
+      "title": { "zh": "和英语、拼音不一样的发音", "en": "Sounds that differ from English" },
+      "intro": {
+        "zh": "这些字母的读法和英语、汉语拼音不一样，最容易念错。这里用拉美的读法：ce、ci 和 z 都读 s。",
+        "en": "These letters sound different from English (and from Chinese pinyin), so they are easy to get wrong. We use Latin American pronunciation: ce, ci and z all sound like s."
+      },
+      "layout": "list",
+      "items": [
+        { "t": "c", "sub": "ca co cu", "rom": "casa", "say": "casa",
+          "zh": "c 在 a、o、u 前面读 k。",
+          "en": "Before a, o, u, c sounds like k.",
+          "ex": [
+            { "t": "la computadora", "zh": "电脑", "en": "computer", "pic": "💻" },
+            { "t": "el cuaderno", "zh": "本子", "en": "notebook", "pic": "📓" }
+          ] },
+        { "t": "c", "sub": "ce ci", "rom": "cien", "say": "cien",
+          "zh": "c 在 e、i 前面读 s（拉美的读法）。",
+          "en": "Before e and i, c sounds like s (Latin American Spanish).",
+          "ex": [
+            { "t": "la cena", "zh": "晚饭", "en": "dinner", "pic": "🍲" },
+            { "t": "las ciencias", "zh": "科学", "en": "science", "pic": "🧪" }
+          ] },
+        { "t": "z", "sub": "za zo zu", "rom": "zapato", "say": "zapato",
+          "zh": "z 也读 s，不读拼音的 z，也不读英语的 z。",
+          "en": "z also sounds like s, never like the English z in 'zoo'.",
+          "ex": [
+            { "t": "la zanahoria", "zh": "胡萝卜", "en": "carrot", "pic": "🥕" },
+            { "t": "el zoológico", "zh": "动物园", "en": "zoo", "pic": "🦓" }
+          ] },
+        { "t": "g", "sub": "ga go gu", "rom": "gato", "say": "gato",
+          "zh": "g 在 a、o、u 前面像英语 go 的 g。",
+          "en": "Before a, o, u, g sounds like the g in 'go'.",
+          "ex": [
+            { "t": "el amigo", "zh": "朋友（男生）", "en": "friend (boy)", "pic": "👦" },
+            { "t": "la tortuga", "zh": "乌龟", "en": "turtle", "pic": "🐢" }
+          ] },
+        { "t": "g", "sub": "ge gi", "rom": "gimnasio", "say": "gimnasio",
+          "zh": "g 在 e、i 前面读得和 j 一样（看下一条）。",
+          "en": "Before e and i, g sounds like Spanish j (see the next line).",
+          "ex": [
+            { "t": "la geografía", "zh": "地理", "en": "geography", "pic": "🌍" },
+            { "t": "inteligente", "zh": "聪明的", "en": "smart", "pic": "🧠" }
+          ] },
+        { "t": "j", "sub": "ja je ji jo ju", "rom": "jugo", "say": "jugo",
+          "zh": "j 就像拼音的 h（「喝」的声母），从喉咙出气；不读英语的 j。",
+          "en": "j is a breathy h from the back of the throat, never the English j in 'jam'.",
+          "ex": [
+            { "t": "el ajedrez", "zh": "国际象棋", "en": "chess", "pic": "♟️" },
+            { "t": "el espejo", "zh": "镜子", "en": "mirror", "pic": "🪞" }
+          ] },
+        { "t": "h", "sub": "hola = ola", "rom": "hola", "say": "hola",
+          "zh": "h 不发音：hola 读起来就是 ola。",
+          "en": "h is always silent: hola sounds just like 'ola'.",
+          "ex": [
+            { "t": "el helado", "zh": "冰淇淋", "en": "ice cream", "pic": "🍦" },
+            { "t": "el hermano", "zh": "哥哥；弟弟", "en": "brother", "pic": "👦" },
+            { "t": "hoy", "zh": "今天", "en": "today", "pic": "📅" }
+          ] },
+        { "t": "ll · y", "sub": "lla = ya", "rom": "lluvia", "say": "lluvia",
+          "zh": "ll 和 y 在拉美大多读一样，像英语 yes 的 y；阿根廷、乌拉圭读得像 sh，也对。",
+          "en": "In most of Latin America, ll and y sound the same, like the y in 'yes'. In Argentina and Uruguay they sound more like 'sh'.",
+          "ex": [
+            { "t": "el pollo", "zh": "鸡肉", "en": "chicken", "pic": "🍗" },
+            { "t": "amarillo", "zh": "黄色的", "en": "yellow", "pic": "🟡" },
+            { "t": "ayer", "zh": "昨天", "en": "yesterday", "pic": "📆" }
+          ] },
+        { "t": "r", "rom": "pero", "say": "pero",
+          "zh": "单个 r（不在词首）：舌尖在上牙后面轻轻弹一下，像很快的 d。",
+          "en": "A single r inside a word is one quick tap of the tongue, like the tt in American 'butter'.",
+          "ex": [
+            { "t": "el pájaro", "zh": "鸟", "en": "bird", "pic": "🐦" },
+            { "t": "la tarea", "zh": "作业", "en": "homework", "pic": "📒" }
+          ] },
+        { "t": "rr", "rom": "perro", "say": "perro",
+          "zh": "rr 和词首的 r 是大舌音：舌尖连着抖几下。pero（但是）和 perro（狗）不一样。",
+          "en": "rr, and r at the start of a word, is a rolled r: the tongue tip trills. pero (but) and perro (dog) are different words.",
+          "ex": [
+            { "t": "el arroz", "zh": "米饭；大米", "en": "rice", "pic": "🍚" },
+            { "t": "el regalo", "zh": "礼物", "en": "gift", "pic": "🎁" }
+          ] },
+        { "t": "ñ", "sub": "ña ñe ñi ño ñu", "rom": "piñata", "say": "piñata",
+          "zh": "ñ 像拼音 ni 和后面的元音连成一个音：ña 像很快地读「尼亚」。",
+          "en": "ñ sounds like the ny in 'canyon'.",
+          "ex": [
+            { "t": "la piña", "zh": "菠萝", "en": "pineapple", "pic": "🍍" },
+            { "t": "el cumpleaños", "zh": "生日", "en": "birthday", "pic": "🎂" }
+          ] },
+        { "t": "qu", "sub": "que qui", "rom": "parque", "say": "parque",
+          "zh": "que、qui 读 ke、ki，中间的 u 不发音。",
+          "en": "In que and qui the u is silent: they sound like 'keh' and 'kee'.",
+          "ex": [
+            { "t": "la chaqueta", "zh": "夹克；外套", "en": "jacket", "pic": "🧥" },
+            { "t": "tranquilo", "zh": "安静的；沉稳的", "en": "calm", "pic": "😌" }
+          ] },
+        { "t": "gu", "sub": "gue gui", "rom": "Miguel", "say": "Miguel",
+          "zh": "gue、gui 里的 u 也不发音，g 照样像 go 的 g；要读出 u 就写成 ü（pingüino）。",
+          "en": "In gue and gui the u is silent and g stays hard, as in 'go'. To pronounce the u, it is written ü (pingüino).",
+          "ex": [
+            { "t": "la guitarra", "zh": "吉他", "en": "guitar", "pic": "🎸" },
+            { "t": "el juguete", "zh": "玩具", "en": "toy", "pic": "🧸" }
+          ] },
+        { "t": "b · v", "sub": "ba = va", "rom": "voleibol", "say": "voleibol",
+          "zh": "b 和 v 读法完全一样：两片嘴唇轻轻碰一下，像英语 boy 的 b；v 不咬下唇。",
+          "en": "b and v sound exactly the same, like the b in 'boy'. Don't touch your teeth to your lip for v.",
+          "ex": [
+            { "t": "el bebé", "zh": "婴儿；宝宝", "en": "baby", "pic": "👶" },
+            { "t": "el viento", "zh": "风", "en": "wind", "pic": "🌬️" }
+          ] },
+        { "t": "x", "rom": "México", "say": "México",
+          "zh": "x 一般读 ks；México、mexicano 里的 x 读得像 j。",
+          "en": "x usually sounds like ks, but in México and mexicano it sounds like j.",
+          "ex": [
+            { "t": "el examen", "zh": "考试", "en": "test", "pic": "📝" },
+            { "t": "el taxi", "zh": "出租车", "en": "taxi", "pic": "🚕" }
+          ] },
+        { "t": "ch", "sub": "cha che chi cho chu", "rom": "chocolate", "say": "chocolate",
+          "zh": "ch 像英语 chair 的 ch；舌头不卷（拼音的 ch 要卷舌）。",
+          "en": "ch sounds like the ch in 'chair'.",
+          "ex": [
+            { "t": "la leche", "zh": "牛奶", "en": "milk", "pic": "🥛" },
+            { "t": "la noche", "zh": "晚上", "en": "night", "pic": "🌃" }
+          ] },
+        { "t": "p · t · k", "rom": "patio", "say": "patio",
+          "zh": "p、t 和 k 的音（c、qu）不送气，嘴前不喷气，听起来像拼音的 b、d、g。",
+          "en": "p, t and the k sound (c, qu) have no puff of air, softer than in English 'pen', 'top', 'cat'.",
+          "ex": [
+            { "t": "el piano", "zh": "钢琴", "en": "piano", "pic": "🎹" },
+            { "t": "el tenis", "zh": "网球", "en": "tennis", "pic": "🎾" },
+            { "t": "la cama", "zh": "床", "en": "bed", "pic": "🛏️" }
+          ] }
+      ]
+    },
+    {
+      "id": "stress",
+      "title": { "zh": "重音和重音符号", "en": "Stress and accent marks" },
+      "intro": {
+        "zh": "每个词都有一个音节读得重一点（下面用大写字母标出来）。重音在哪儿看拼写就知道：先看词的最后一个字母。",
+        "en": "Every word has one syllable said a bit stronger (shown in capitals below). The spelling tells you which one: look at the last letter."
+      },
+      "layout": "list",
+      "items": [
+        { "t": "manzana", "sub": "a e i o u · n · s", "rom": "man·ZA·na", "say": "manzana",
+          "zh": "以元音（a e i o u）或 n、s 结尾的词，重音在倒数第二个音节。",
+          "en": "Words ending in a vowel, n or s: stress the second-to-last syllable.",
+          "ex": [
+            { "t": "la mochila", "zh": "书包", "en": "backpack", "pic": "🎒" },
+            { "t": "el examen", "zh": "考试", "en": "test", "pic": "📝" },
+            { "t": "las tijeras", "zh": "剪刀", "en": "scissors", "pic": "✂️" }
+          ] },
+        { "t": "bailar", "sub": "l · r · d · z …", "rom": "bai·LAR", "say": "bailar",
+          "zh": "以别的辅音（l、r、d、z……）结尾的词，重音在最后一个音节。",
+          "en": "Words ending in any other consonant (l, r, d, z…): stress the last syllable.",
+          "ex": [
+            { "t": "el hospital", "zh": "医院", "en": "hospital", "pic": "🏥" },
+            { "t": "el color", "zh": "颜色", "en": "color", "pic": "🎨" },
+            { "t": "la pared", "zh": "墙", "en": "wall", "pic": "🧱" }
+          ] },
+        { "t": "música", "sub": "á é í ó ú", "rom": "MÚ·si·ca", "say": "música",
+          "zh": "不照这两条规矩的词，在重读的元音上写重音符号 á é í ó ú。",
+          "en": "When a word breaks these rules, the stressed vowel gets an accent mark: á é í ó ú.",
+          "ex": [
+            { "t": "el lápiz", "zh": "铅笔", "en": "pencil", "pic": "✏️" },
+            { "t": "el autobús", "zh": "公交车", "en": "bus", "pic": "🚌" },
+            { "t": "el sofá", "zh": "沙发", "en": "sofa", "pic": "🛋️" }
+          ] },
+        { "t": "papá · papa", "rom": "pa·PÁ · PA·pa", "say": "papá, papa",
+          "zh": "重音符号能分开两个词：papá 是爸爸，papa 是土豆；sí（是）和 si（如果）、tú（你）和 tu（你的）也一样。",
+          "en": "An accent mark can change the word: papá (dad), papa (potato). Also sí (yes) / si (if), tú (you) / tu (your).",
+          "ex": [
+            { "t": "el papá", "zh": "爸爸", "en": "dad", "pic": "👨" },
+            { "t": "la papa", "zh": "土豆", "en": "potato", "pic": "🥔" }
+          ] },
+        { "t": "¿…? ¡…!", "rom": "¿Cómo estás?", "say": "¿Cómo estás?",
+          "zh": "问句和感叹句开头写倒过来的 ¿ ¡，结尾写 ? !，一开始就知道用什么语气。疑问词带重音符号：qué、cómo、dónde。",
+          "en": "Questions and exclamations start with an upside-down ¿ or ¡ and end with ? or !, so you know the tone from the start. Question words carry an accent: qué, cómo, dónde.",
+          "ex": [
+            { "t": "¿Por qué?", "zh": "为什么？", "en": "Why?", "pic": "❓" },
+            { "t": "¿Cuánto cuesta?", "zh": "多少钱？", "en": "How much is it?", "pic": "💲" },
+            { "t": "¡Claro que sí!", "zh": "当然可以！", "en": "Of course!", "pic": "✅" }
+          ] }
+      ]
+    }
+  ]
+}

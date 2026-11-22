@@ -3,6 +3,7 @@
 //   剧情和岛民台词：各文件里「英文, 中文」成对写的地方（带 {rival} 这类占位符的是运行时拼的，跳过）
 //   支线委托：quests.js 里委托人在对话框里说的固定台词（请求、感谢、做完以后的那一句，按委托人的性别）、旁白、委托的英文名
 //   今日目击：sighting.js 的告示板线索（模板拼得出来的每一句）
+//   求助的话：lessons-en.js 的 help（tools/course/WORDS.md §8）
 // 用法：node tools/voice/collect.js
 // 输出每句 { t: 文字, g: ['f'|'m', …], p: 来源顺序 }。p 是课程包（tools/pack/SPEC.md §2）排「先用到的在前」用的：0 最先用到；
 // 不影响 key（文件名还是 t 的哈希），gen.py 不看它。顺序按下面 GROUP 的先后，同一组里按收集到的先后；一句出现在好几处时取最靠前的那处
@@ -64,6 +65,13 @@ for (const q of (ctx.window.QUESTS || { list: [] }).list) {
 grp = GROUP.towns;   // 对话动画和话题小镇一组
 for (const s of ctx.window.SCENES || []) {
   (s.lines || []).forEach(l => { const c = s.cast[l[0]]; add(l[1], c && c[2] === 'm' ? ['m'] : c && c[2] === 'f' ? ['f'] : null); });
+}
+// 英语课的「🆘 求助的话」（lessons-en.js，tools/course/WORDS.md §8：由 tools/course/build.js --lessons-en 生成）：整句，女声，和话题小镇一组（零基础一开始就用到）。
+// 课前讲解里句型的例句是这一课里原样有的句子，上面已经收过了
+if (fs.existsSync(path.join(ROOT, 'lessons-en.js'))) {
+  const lctx = { window: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'lessons-en.js'), 'utf8'), lctx, { filename: 'lessons-en.js' });
+  for (const h of ((lctx.window.LESSONS_EN || {}).help || [])) add(h && h.t, ['f']);
 }
 
 // monsters.js 里的辅助招式英文名和各属性对应的辅助招式

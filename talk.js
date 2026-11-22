@@ -99,7 +99,7 @@
       // 聊天界面
       'tk.ready.mic': '按住话筒说英语，说完松开。点岛民说的话可以看中文。', 'tk.ready.type': '打字聊天：写好按「发送」。',
       'tk.top.free': '自由聊天 · {isle}', 'tk.top.quest': '📋 委托 · {q}', 'tk.end': '结束', 'tk.eg': '例：{s}', 'tk.step': '第 {n} 步', 'tk.st.conn': '正在连接……',
-      'tk.help': '💡 帮帮我', 'tk.replay': '🔁 再听一遍', 'tk.slow': '🐢 慢一点', 'tk.mic': '🎤 按住说英语', 'tk.mic.on': '🔴 正在听……松开发送',
+      'tk.sos': '求助的话', 'tk.help': '💡 帮帮我', 'tk.replay': '🔁 再听一遍', 'tk.slow': '🐢 慢一点', 'tk.mic': '🎤 按住说英语', 'tk.mic.on': '🔴 正在听……松开发送',
       'tk.typeopen': '⌨️ 麦克风用不了？点这里打字', 'tk.type.ph': '打字聊天（英文）', 'tk.send': '发送', 'tk.typenote': '打字的话不算「开口说」的句数，也不给金币',
       'tk.st.nomic': '用不了麦克风（没给权限或不支持），可以先打字聊。', 'tk.micfix': '🎤 去设置里打开麦克风', 'tk.st.badurl': '服务地址不对：{url}', 'tk.zh.tap': '点一下看中文',
       'tk.st.short': '按住久一点再说哦。', 'tk.st.think': '岛民在想……', 'tk.st.notyet': '还没连上，等一下再发。',
@@ -170,7 +170,7 @@
       'tk.ai.spoken': 'Please note: what the islanders say, and their voices, are made by AI.', 'tk.ai.bubble': '🤖 {s}', 'tk.ai.title': 'The islanders\' words and voices are made by AI',
       'tk.ready.mic': 'Hold the mic and speak English. Let go when you finish.', 'tk.ready.type': 'Typing chat: write your message and tap "Send".',
       'tk.top.free': 'Free chat · {isle}', 'tk.top.quest': '📋 Request · {q}', 'tk.end': 'End', 'tk.eg': 'e.g. {s}', 'tk.step': 'Step {n}', 'tk.st.conn': 'Connecting…',
-      'tk.help': '💡 Help me', 'tk.replay': '🔁 Hear it again', 'tk.slow': '🐢 Slower', 'tk.mic': '🎤 Hold to speak English', 'tk.mic.on': '🔴 Listening… let go to send',
+      'tk.sos': 'Phrases for help', 'tk.help': '💡 Help me', 'tk.replay': '🔁 Hear it again', 'tk.slow': '🐢 Slower', 'tk.mic': '🎤 Hold to speak English', 'tk.mic.on': '🔴 Listening… let go to send',
       'tk.typeopen': '⌨️ Mic not working? Tap here to type', 'tk.type.ph': 'Type in English', 'tk.send': 'Send', 'tk.typenote': 'Typed lines don\'t count as spoken lines and don\'t earn coins',
       'tk.st.nomic': 'Can\'t use the microphone (no permission, or not supported). You can type for now.', 'tk.micfix': '🎤 Turn on the mic in Settings', 'tk.st.badurl': 'Wrong service address: {url}',
       'tk.zh.tap': 'Tap to translate',
@@ -748,7 +748,9 @@
       '<div class="tk-words">' + npc.words.map((w, k) => '<button type="button" class="tk-w" data-act="talk_word" data-i="' + k + '">' + rbl(w) + (wm(k) ? '<small>' + esc(wm(k)) + '</small>' : '') + '</button>').join('') + '</div></div>' +
       '<div class="tk-log" id="tk-log"></div>' +
       '<div class="tk-status" id="tk-status">' + hx('tk.st.conn') + '</div>' +
-      '<div class="tk-ctl"><div class="tk-tools"><button type="button" id="tk-help" data-act="talk_help" disabled>' + hx('tk.help') + '</button><button type="button" id="tk-re" data-act="talk_replay" disabled>' + hx('tk.replay') + '</button><button type="button" id="tk-slow" data-act="talk_replay" data-slow="1" disabled>' + hx('tk.slow') + '</button></div>' +
+      '<div class="tk-ctl"><div class="tk-tools"><button type="button" id="tk-help" data-act="talk_help" disabled>' + hx('tk.help') + '</button><button type="button" id="tk-re" data-act="talk_replay" disabled>' + hx('tk.replay') + '</button><button type="button" id="tk-slow" data-act="talk_replay" data-slow="1" disabled>' + hx('tk.slow') + '</button>' +
+        // 🆘 求助的话（tools/course/WORDS.md §8）：点开是一张表，点一句先听、再自己说出来（不替他发出去）；按钮的事在 game.js（sosList）
+        (G && G.helpOn && G.helpOn() ? '<button type="button" id="tk-sos" data-act="sosList" aria-label="' + hx('tk.sos') + '">🆘</button>' : '') + '</div>' +
       '<button class="tk-mic" id="tk-mic" disabled>' + hx('tk.mic') + '</button>' +
       '<button type="button" class="tk-typeopen" id="tk-typeopen" data-act="talk_typeopen" hidden>' + hx('tk.typeopen') + '</button>' +
       '<form class="tk-type" id="tk-type" hidden><input id="tk-in" maxlength="200" autocomplete="off" placeholder="' + hx('tk.type.ph') + '"><button class="btn">' + hx('tk.send') + '</button></form>' +

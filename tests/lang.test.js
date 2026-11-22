@@ -496,5 +496,37 @@ check(lexZ.map.get('一点')[0] === 'yi dian' && lexZ.map.get('银行')[0] === '
 check(L.lexicon('es', course).n === 0 && L.lexicon('xx', course).n === 0, 'lexicon：西语和不认识的语言是空表');
 check(ZH._.parsePy('yìdiǎnr').map(x => x.s + (x.r ? 'r' : '')).join(' ') === 'yi dianr' && ZH._.parsePy("nǚ'ér").map(x => x.s).join(' ') === 'nv er' && ZH._.parsePy('Wáng lǎoshī').map(x => x.s).join(' ') === 'wang lao shi', 'zh 拼音解析：连写、儿化、隔音符号、ü、大写');
 
+// ======================= 5. 日语的罗马字（tools/course/WORDS.md §5：单词表、单词卡、单词本、发音入门里多一行） =======================
+// 平文式：shi chi tsu fu ji；ん 在元音和 y 前写 n'；促音双写下一个辅音（っち → tch）；长音一律双写（ー 照前一个元音），不用长音符号
+console.log('— 日语罗马字');
+{
+  const RO = [
+    ['すし', 'sushi'], ['ちず', 'chizu'], ['つくえ', 'tsukue'], ['ふじさん', 'fujisan'], ['じかん', 'jikan'], ['はなぢ', 'hanaji'], ['つづく', 'tsuzuku'],
+    ['きっぷ', 'kippu'], ['いっしょ', 'issho'], ['ちょっと', 'chotto'], ['まっちゃ', 'matcha'],
+    ['きんようび', "kin'youbi"], ['せんえん', "sen'en"], ['ほんや', "hon'ya"], ['しんぶん', 'shinbun'],
+    ['ラーメン', 'raamen'], ['コーヒー', 'koohii'], ['パーティー', 'paatii'], ['おかあさん', 'okaasan'], ['がっこう', 'gakkou'], ['せんせい', 'sensei'],
+    ['きょう', 'kyou'], ['しゃしん', 'shashin'], ['じゃがいも', 'jagaimo'], ['りょこう', 'ryokou'], ['にゃあ', 'nyaa'],
+    ['ファン', 'fan'], ['チェック', 'chekku'], ['ディズニー', 'dizunii'], ['ヴァイオリン', 'vaiorin'],
+    ['こんにちは', 'konnichiwa'], ['こんばんは', 'konbanwa'], ['がっこう、すき。', 'gakkou, suki.'], ['あっ', 'a'], ['', ''],
+  ];
+  const bad = RO.filter(([k, want]) => JA.romaji(k) !== want).map(([k, want]) => k + ' → ' + JA.romaji(k) + '（要 ' + want + '）');
+  check(typeof JA.romaji === 'function' && !bad.length, 'ja romaji：' + RO.length + ' 条（shi / chi / tsu / fu / ji、n\'、促音、长音双写、拗音、外来语、こんにちは）', bad);
+  check(RO.every(([k]) => /^[a-z' ,.?!]*$/.test(JA.romaji(k))), 'ja romaji：结果只有 a–z、\' 和标点（没有长音符号）');
+  check(JA.romaji('わたしは', { block: true }) === 'watashiwa' && JA.romaji('わたしは') === 'watashiha' && JA.romaji('がっこうへ', { block: true }) === 'gakkoue' && JA.romaji('はは', { block: true }) === 'haha',
+    'ja romaji：一句话里的一块（block）块尾的助词 は / へ 写 wa / e；单独的词照写；はは 不算助词');
+  check(JA.romaji('ほんを') === "hon'o" && JA.romaji('学校') === '学校' && JA.romaji('ゃ') === 'ya', 'ja romaji：を 写 o（前面的 ん 写 n\'）；汉字原样留着（调用的人自己不显示）');
+  check(typeof ES.romaji !== 'function' && typeof ZH.romaji !== 'function', 'romaji 只有日语有');
+  // 按词分开写（主会话 11-22：「零基础的人看不出词在哪断」）：known = 课程认得的词的读音
+  const K = new Set(['せんせい', 'しま', 'わたし', 'きいろ', 'いろ', 'がっこう', 'いち', 'ねん', 'はる', 'こんにち']);
+  const RW = [
+    ['たなかせんせい', { block: true }, 'tanaka sensei'], ['しまに', { block: true }, 'shima ni'], ['わたしは', { block: true }, 'watashi wa'], ['がっこうへ', { block: true }, 'gakkou e'],
+    ['おはようございます', { whole: true }, 'ohayou gozaimasu'], ['ありがとうございます', { whole: true }, 'arigatou gozaimasu'],
+    ['はると', { block: true }, 'haruto'], ['いちねんせい', { block: true }, 'ichinensei'], ['たべます', { block: true }, 'tabemasu'], ['きいろ', { whole: true }, 'kiiro'],
+    ['こんにちは', { whole: true }, 'konnichiwa'], ['こんにちは', { block: true }, 'konnichiwa'], ['ですか', { block: true }, 'desu ka'],
+  ];
+  const rbad = RW.filter(([k, o, want]) => JA.romajiWords(k, K, o) !== want).map(([k, o, want]) => k + ' → ' + JA.romajiWords(k, K, o) + '（要 ' + want + '）');
+  check(typeof JA.romajiWords === 'function' && !rbad.length, 'ja romajiWords：按词分开写（tanaka sensei、shima ni、ohayou gozaimasu）；人名 はると、词干 たべます、きいろ、こんにちは 不乱切（' + RW.length + ' 条）', rbad);
+}
+
 console.log((fails ? 'FAIL ' + fails : 'PASS') + '（' + total + ' 项）');
 if (fails) process.exitCode = 1;

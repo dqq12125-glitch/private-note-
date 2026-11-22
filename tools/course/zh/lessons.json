@@ -1,0 +1,475 @@
+{
+  "lang": "zh",
+  "help": [
+    { "t": "我听不懂。", "r": "wǒ tīng bu dǒng.", "zh": "", "en": "I don't understand.",
+      "use": { "zh": "别人说的话你听不懂的时候说。", "en": "Say this when you don't understand what someone said." } },
+    { "t": "请再说一遍。", "r": "qǐng zài shuō yí biàn.", "zh": "", "en": "Please say that again.",
+      "use": { "zh": "想再听一次的时候说。", "en": "Ask someone to say it one more time." } },
+    { "t": "请说慢一点。", "r": "qǐng shuō màn yì diǎn.", "zh": "", "en": "Please speak a little more slowly.",
+      "use": { "zh": "别人说得太快的时候说。", "en": "Use this when someone speaks too fast." } },
+    { "t": "请说简单一点。", "r": "qǐng shuō jiǎn dān yì diǎn.", "zh": "", "en": "Please say it more simply.",
+      "use": { "zh": "话太难了，请对方换个简单的说法。", "en": "Ask for easier words when something is too hard." } },
+    { "t": "这个用中文怎么说？", "r": "zhè ge yòng zhōng wén zěn me shuō?", "zh": "", "en": "How do you say this in Chinese?",
+      "use": { "zh": "指着一个东西，问它用中文叫什么。", "en": "Point at something to ask what it is called in Chinese." } },
+    { "t": "这是什么意思？", "r": "zhè shì shén me yì si?", "zh": "", "en": "What does this mean?",
+      "use": { "zh": "听到或者看到不懂的词时问。也可以先说那个词，再问「是什么意思？」。", "en": "Ask about a word you don't know. You can also say the word first, then shì shén me yì si?" } },
+    { "t": "我说得对不对？", "r": "wǒ shuō de duì bu duì?", "zh": "", "en": "Did I say it right?",
+      "use": { "zh": "说完一句话，想知道自己说得对不对的时候问。", "en": "Ask this after you say something, to check if it was right." } },
+    { "t": "对，没错。", "r": "duì, méi cuò.", "zh": "", "en": "Yes, that's right.",
+      "use": { "zh": "对方说对了、你同意的时候说。", "en": "Say this when something is right or you agree." } },
+    { "t": "不对，不是这个。", "r": "bú duì, bú shì zhè ge.", "zh": "", "en": "No, that's not the one.",
+      "use": { "zh": "对方说错了、猜得不对的时候说。", "en": "Say this when something is wrong, or someone guessed the wrong thing." } },
+    { "t": "谢谢你！", "r": "xiè xie nǐ!", "zh": "", "en": "Thank you!",
+      "use": { "zh": "别人帮了你，说一声谢谢。", "en": "Say thanks when someone helps you." } },
+    { "t": "对不起，我说错了。", "r": "duì bu qǐ, wǒ shuō cuò le.", "zh": "", "en": "Sorry, I said it wrong.",
+      "use": { "zh": "自己说错了的时候说，然后再说一次。", "en": "Say this when you make a mistake, then try again." } },
+    { "t": "我刚开始学中文。", "r": "wǒ gāng kāi shǐ xué zhōng wén.", "zh": "", "en": "I've just started learning Chinese.",
+      "use": { "zh": "告诉对方你是新手，请他说得简单一点。", "en": "Tell people you are a beginner, so they speak simply." } }
+  ],
+  "towns": {
+    "0": {
+      "can": { "zh": "能打招呼、说自己的名字，问别人叫什么、是不是学生。", "en": "I can say hello, tell people my name, and ask someone's name and whether they are a student." },
+      "intro": { "zh": "这是第一课：认识新朋友。你会学打招呼、说自己叫什么，用「是」说「我是学生」，在句子最后加「吗」来问问题。", "en": "This is your first lesson: meeting new friends. You learn to say hello and tell people your name. You use shì to say who you are, and add ma at the end to ask a question." },
+      "patterns": [
+        { "p": "我叫___。", "r": "wǒ jiào ___.", "zh": "", "en": "My name is ___.",
+          "note": { "zh": "说自己的名字。问别人就说：你叫什么名字？", "en": "Say your name. To ask someone else: nǐ jiào shén me míng zi?" },
+          "ex": ["你叫什么名字？", "我叫小明。"] },
+        { "p": "我是___。", "r": "wǒ shì ___.", "zh": "", "en": "I am a ___.",
+          "note": { "zh": "「是」把两个名词连起来，跟谁说都不变：我是、你是、他是。", "en": "shì links two nouns, like am / is / are. It never changes: wǒ shì, nǐ shì, tā shì." },
+          "ex": ["我是学生。", "我们是同学。"] },
+        { "p": "你是___吗？", "r": "nǐ shì ___ ma?", "zh": "", "en": "Are you a ___?",
+          "note": { "zh": "句子最后加「吗」就是问句，别的字不用动。回答「是」或者「不是」。", "en": "Add ma to the end and the sentence becomes a yes/no question; nothing else moves. Answer shì (yes) or bú shì (no)." },
+          "ex": ["你是学生吗？", "是，我是学生。"] },
+        { "p": "他是我的___。", "r": "tā shì wǒ de ___.", "zh": "", "en": "He is my ___.",
+          "note": { "zh": "「的」放在人后面，说是谁的：我的朋友、你的名字。", "en": "de after a person shows whose it is: wǒ de péng you (my friend), nǐ de míng zi (your name)." },
+          "ex": ["他是我的朋友。", "他是我的同学。"] }
+      ],
+      "tips": [
+        { "zh": "中文没有 a / an，名词也不加 -s，动词不跟着人变：我是学生，我们是同学。", "en": "Chinese has no 'a' or 'an', nouns have no plural -s, and verbs never change: wǒ shì xué sheng (I am a student), wǒ men shì tóng xué (we are classmates)." },
+        { "zh": "说感觉、样子不用「是」，用「很」：很高兴认识你。不说「是高兴」。", "en": "For feelings and descriptions, use hěn instead of shì: hěn gāo xìng rèn shi nǐ (nice to meet you). Never shì gāo xìng." }
+      ]
+    },
+    "1": {
+      "can": { "zh": "能问「这是什么？」，说文具叫什么、有几个、什么颜色、放在哪里。", "en": "I can ask what something is, and say what school things are called, how many there are, what colour they are and where they are." },
+      "intro": { "zh": "这座岛上到处是文具。你会用「这」「那」指东西，用「数字 + 量词」说有几个，还会说东西是什么颜色、在哪里。", "en": "This island is full of school things. You point with zhè (this) and nà (that), count with a number plus a measure word, and say what colour things are and where they are." },
+      "patterns": [
+        { "p": "这是___。", "r": "zhè shì ___.", "zh": "", "en": "This is ___.",
+          "note": { "zh": "「这」指近的，「那」指远的。问：这是什么？", "en": "zhè is for things near you, nà for things further away. To ask: zhè shì shén me? (What is this?)" },
+          "ex": ["这是什么？", "这是一支铅笔。"] },
+        { "p": "我有___本书。", "r": "wǒ yǒu ___ běn shū.", "zh": "", "en": "I have ___ books.",
+          "note": { "zh": "数字和东西中间要加量词：书用「本」，笔用「支」，剪刀用「把」。二在量词前面说「两」：两本书。", "en": "Put a measure word between the number and the thing: běn for books, zhī for pens, bǎ for scissors. 'Two' before a measure word is liǎng, not èr." },
+          "ex": ["我有两本书。", "你有几支笔？"] },
+        { "p": "___是什么颜色？", "r": "___ shì shén me yán sè?", "zh": "", "en": "What colour is ___?",
+          "note": { "zh": "回答说「是 + 颜色 + 的」：是黄色的。", "en": "Answer with shì + colour + de: shì huáng sè de (It's yellow)." },
+          "ex": ["你的书包是什么颜色？", "是黄色的。"] },
+        { "p": "___在___上。", "r": "___ zài ___ shang.", "zh": "", "en": "___ is on ___.",
+          "note": { "zh": "「上」「里」放在地方后面：桌子上、书包里。", "en": "shang (on) and li (in) come after the place: zhuō zi shang (on the desk), shū bāo li (in the schoolbag)." },
+          "ex": ["书在桌子上。", "在书包里。"] }
+      ],
+      "tips": [
+        { "zh": "大家都知道说的是什么东西，「的」后面的名词可以不说：是丽丽的（丽丽的铅笔），是蓝色的。", "en": "If everyone knows what you mean, drop the thing after de: shì Lì li de (it's Lili's), shì lán sè de (it's blue)." },
+        { "zh": "绿 lǜ 里的 ü：先说 i，再把嘴唇圆起来。它和「路 lù」不一样。", "en": "lǜ (green) has the ü sound: say 'ee', then round your lips. It is not the same as lù (road)." }
+      ]
+    },
+    "2": {
+      "can": { "zh": "能介绍家里的人，问「他是谁？」，说家里有几口人。", "en": "I can introduce my family, ask who someone is, and say how many people are in my family." },
+      "intro": { "zh": "这一课看家里的照片、介绍家人。你会用「谁」问人，用「有」「没有」说家里有什么人，用「几」问有几个。", "en": "In this lesson you look at family photos and introduce your family. You ask about people with shéi (who), say who is in your family with yǒu (have) and méi yǒu (don't have), and ask how many with jǐ." },
+      "patterns": [
+        { "p": "这是我___。", "r": "zhè shì wǒ ___.", "zh": "", "en": "This is my ___.",
+          "note": { "zh": "家里的人前面常常不加「的」：我爸爸、我妈妈、我家。", "en": "With family members you usually drop de: wǒ bà ba (my dad), wǒ jiā (my family, my home)." },
+          "ex": ["这是我爸爸。", "对，这是我妈妈。"] },
+        { "p": "___是谁？", "r": "___ shì shéi?", "zh": "", "en": "Who is ___?",
+          "note": { "zh": "「谁」就放在答案的位置，句子的顺序不变。", "en": "shéi (who) sits where the answer will go; the word order doesn't change." },
+          "ex": ["他是谁？", "他是我哥哥。"] },
+        { "p": "我有一个___。", "r": "wǒ yǒu yí gè ___.", "zh": "", "en": "I have a / an ___.",
+          "note": { "zh": "「有」的否定只能说「没有」，不说「不有」。", "en": "The 'not' form of yǒu is always méi yǒu, never bù yǒu." },
+          "ex": ["我有一个哥哥。", "我没有妹妹。"] },
+        { "p": "我家有___口人。", "r": "wǒ jiā yǒu ___ kǒu rén.", "zh": "", "en": "There are ___ people in my family.",
+          "note": { "zh": "数家里的人用量词「口」。「几」问不太大的数：你家有几口人？", "en": "Count family members with the measure word kǒu (mouth). jǐ asks 'how many' when the number is small." },
+          "ex": ["你家有几口人？", "我家有五口人。"] }
+      ],
+      "tips": [
+        { "zh": "「都」放在动词前面，不放在最后：爸爸和妈妈都是老师。", "en": "dōu (both, all) goes before the verb, not at the end: bà ba hé mā ma dōu shì lǎo shī (Dad and Mum are both teachers)." },
+        { "zh": "哥哥、弟弟、姐姐、妹妹分大小。这些叠字的词，第二个字读得又短又轻。", "en": "Chinese has separate words for older and younger: gē ge (older brother), dì di (younger brother), jiě jie (older sister), mèi mei (younger sister). The second syllable of these doubled words is short and light." }
+      ]
+    },
+    "3": {
+      "can": { "zh": "能问学校里的地方在哪里，说在什么旁边、在几楼，还能约朋友一起去。", "en": "I can ask where places in a school are, say what they are next to or which floor they are on, and ask a friend to go with me." },
+      "intro": { "zh": "这一课在学校里找地方。你会用「在」说人和地方在哪里，用「有」说一个地方有什么，用「吧」约朋友一起去。", "en": "In this lesson you find your way around a school. You use zài to say where people and places are, yǒu to say what is in a place, and ba to suggest going somewhere together." },
+      "patterns": [
+        { "p": "___在哪里？", "r": "___ zài nǎ lǐ?", "zh": "", "en": "Where is ___?",
+          "note": { "zh": "问人或者地方在哪里，回答也用「在」：她在办公室。", "en": "Ask where a person or a place is. Answer with zài too: tā zài bàn gōng shì (She's in the office)." },
+          "ex": ["王老师在哪里？", "她在办公室。"] },
+        { "p": "___在___旁边。", "r": "___ zài ___ páng biān.", "zh": "", "en": "___ is next to ___.",
+          "note": { "zh": "「旁边」「后面」放在地方后面，和英语的顺序相反。楼层说「在二楼」。", "en": "Words like páng biān (next to) and hòu miàn (behind) come after the place, the opposite of English. For floors, say zài èr lóu (on the second floor)." },
+          "ex": ["图书馆在食堂旁边。", "在图书馆后面。"] },
+        { "p": "___里有___。", "r": "___ li yǒu ___.", "zh": "", "en": "In ___ there is ___.",
+          "note": { "zh": "说一个地方有什么：地方放在最前面，再说「有」。", "en": "To say what is in a place, put the place first, then yǒu (there is)." },
+          "ex": ["教室里有一台电脑。", "教室里有电脑吗？"] },
+        { "p": "我们去___吧。", "r": "wǒ men qù ___ ba.", "zh": "", "en": "Let's go to ___.",
+          "note": { "zh": "句子最后加「吧」，就是建议大家一起做。", "en": "ba at the end turns a sentence into a suggestion, like 'let's'." },
+          "ex": ["我们去操场吧。"] }
+      ],
+      "tips": [
+        { "zh": "一个词和「不 + 这个词」放在一起，也是问句，不用「吗」：大不大？中间的「不」读得轻。", "en": "A word plus its 'not' form also makes a question, without ma: dà bu dà? (Is it big?) The bu in the middle is light." },
+        { "zh": "-n 和 -ng 是不同的音：门 mén 是 -n，操场 cāo chǎng 是 -ng。-ng 像英语 sing 的结尾。", "en": "-n and -ng make different words. mén (door) ends in -n; cāo chǎng (playground) ends in -ng, like the end of 'sing'." }
+      ]
+    },
+    "4": {
+      "can": { "zh": "能说喜欢什么课、最喜欢什么课，说一门课难不难、有没有意思。", "en": "I can say which subjects I like and like best, and say whether a subject is hard or interesting." },
+      "intro": { "zh": "这一课聊学校的课。你会用「喜欢」「最喜欢」「不喜欢」说自己的喜好，用「有点难」「很有意思」说感觉。", "en": "This lesson is about school subjects. You say what you like with xǐ huan (like), zuì xǐ huan (like best) and bù xǐ huan (don't like), and say how a subject feels: yǒu diǎn nán (a bit hard) or hěn yǒu yì si (interesting)." },
+      "patterns": [
+        { "p": "你喜欢什么___？", "r": "nǐ xǐ huan shén me ___?", "zh": "", "en": "What ___ do you like?",
+          "note": { "zh": "「什么」放在名词前面：什么课。回答时把「什么」换成你的答案。", "en": "shén me (what) goes before the noun: shén me kè (which class). In the answer, just swap shén me for your answer." },
+          "ex": ["你喜欢什么课？", "我喜欢音乐课。"] },
+        { "p": "我最喜欢___。", "r": "wǒ zuì xǐ huan ___.", "zh": "", "en": "I like ___ best.",
+          "note": { "zh": "「最」放在「喜欢」前面。", "en": "zuì (most) goes right before xǐ huan." },
+          "ex": ["你最喜欢什么课？", "我最喜欢美术。"] },
+        { "p": "___有点难。", "r": "___ yǒu diǎn nán.", "zh": "", "en": "___ is a bit hard.",
+          "note": { "zh": "「有点」放在形容词前面，多半说不太好的感觉；好的感觉用「很」。", "en": "yǒu diǎn (a bit) goes before a describing word, usually for something not so nice. For good things, use hěn." },
+          "ex": ["数学有点难。", "美术课很有意思。"] },
+        { "p": "___教我们___。", "r": "___ jiāo wǒ men ___.", "zh": "", "en": "___ teaches us ___.",
+          "note": { "zh": "问老师是谁就说：谁教你们音乐？这里的「教」读 jiāo。", "en": "To ask who the teacher is: shéi jiāo nǐ men yīn yuè? (Who teaches you music?)" },
+          "ex": ["谁教你们音乐？", "王老师教我们音乐。"] }
+      ],
+      "tips": [
+        { "zh": "「不」本来读 bù，后面是第四声时读 bú：不是 bú shì。不喜欢、不难还是 bù。这门课的拼音照读出来的写。", "en": "bù (not) becomes bú before a 4th tone: bú shì (is not). Before other tones it stays bù: bù xǐ huan (don't like), bù nán (not hard). This course writes the tone you actually say." },
+        { "zh": "中文没有一个词正好是 yes。回答「…吗？」，就把动词再说一遍：喜欢。不喜欢。", "en": "There is no single word for 'yes'. To answer a ma question, repeat the verb: xǐ huan (yes, I like it) or bù xǐ huan (no)." }
+      ]
+    },
+    "5": {
+      "can": { "zh": "能说自己会什么、不会什么、爱好是什么，约朋友一起玩。", "en": "I can say what I can and can't do and what my hobbies are, and invite a friend to join me." },
+      "intro": { "zh": "这一课在社团里聊爱好。你会用「会」说学会的本领，用「想」说想做的事，用「一起…吧」约朋友。", "en": "This lesson is about clubs and hobbies. You use huì for skills you have learned, xiǎng for things you want to do, and yì qǐ … ba to invite a friend." },
+      "patterns": [
+        { "p": "你会___吗？", "r": "nǐ huì ___ ma?", "zh": "", "en": "Can you ___?",
+          "note": { "zh": "「会」说学会的本领。回答：会，或者不会（bú huì）。", "en": "huì is for skills you have learned. Answer huì (yes) or bú huì (no)." },
+          "ex": ["你会弹钢琴吗？", "我不会游泳。"] },
+        { "p": "我会___，也会___。", "r": "wǒ huì ___, yě huì ___.", "zh": "", "en": "I can ___, and I can ___ too.",
+          "note": { "zh": "「也」放在动词前面，不放在句子最后。", "en": "yě (also, too) goes before the verb, never at the end." },
+          "ex": ["我会唱歌，也会跳舞。"] },
+        { "p": "我们一起___吧！", "r": "wǒ men yì qǐ ___ ba!", "zh": "", "en": "Let's ___ together!",
+          "note": { "zh": "「一起」放在动词前面。句子最后也可以说「好吗？」。", "en": "yì qǐ (together) goes before the verb. You can also end with hǎo ma? (OK?)" },
+          "ex": ["我们一起打篮球吧！", "我们一起踢足球，好吗？"] },
+        { "p": "我想___。", "r": "wǒ xiǎng ___.", "zh": "", "en": "I want to ___.",
+          "note": { "zh": "「想 + 动词」说想做的事：我想学打鼓。", "en": "xiǎng + a verb says what you want to do: wǒ xiǎng xué dǎ gǔ (I want to learn the drums)." },
+          "ex": ["你想参加什么社团？", "想，我想学打鼓。"] }
+      ],
+      "tips": [
+        { "zh": "玩球、弹乐器用的动词不一样：打篮球、踢足球、弹钢琴、弹吉他、打鼓。", "en": "Different games and instruments take different verbs: dǎ (hit) for basketball and drums, tī (kick) for football, tán (pluck) for piano and guitar." },
+        { "zh": "「每天」「常常」放在动词前面：他每天弹吉他。", "en": "Words for how often, like měi tiān (every day) and cháng cháng (often), go before the verb: tā měi tiān tán jí tā (He plays the guitar every day)." }
+      ]
+    },
+    "6": {
+      "can": { "zh": "能问和说时间，说自己每天几点做什么、在哪里做。", "en": "I can ask and tell the time, and say when and where I do things every day." },
+      "intro": { "zh": "这一课从早上到晚上说一天的事。你会说「几点」「几点半」「几点几分」，还会把时间放在动词前面：我六点起床。", "en": "This lesson follows a day from morning to night. You learn to tell the time with diǎn (o'clock), bàn (half past) and fēn (minutes), and to put the time before the verb: wǒ liù diǎn qǐ chuáng (I get up at six)." },
+      "patterns": [
+        { "p": "现在___点。", "r": "xiàn zài ___ diǎn.", "zh": "", "en": "It's ___ o'clock now.",
+          "note": { "zh": "半点说「七点半」，几分说「八点十分」。问：现在几点？", "en": "Half past seven is qī diǎn bàn; ten past eight is bā diǎn shí fēn. To ask: xiàn zài jǐ diǎn?" },
+          "ex": ["现在几点？", "现在七点半。"] },
+        { "p": "我___点起床。", "r": "wǒ ___ diǎn qǐ chuáng.", "zh": "", "en": "I get up at ___.",
+          "note": { "zh": "时间放在动词前面，不放在句子最后。", "en": "The time goes before the verb, never at the end of the sentence." },
+          "ex": ["我每天六点起床。", "你几点起床？"] },
+        { "p": "我在___吃午饭。", "r": "wǒ zài ___ chī wǔ fàn.", "zh": "", "en": "I have lunch in ___.",
+          "note": { "zh": "「在 + 地方」也放在动词前面。", "en": "zài + a place also goes before the verb." },
+          "ex": ["你在哪里吃午饭？", "我在食堂吃午饭。"] },
+        { "p": "我___，然后___。", "r": "wǒ ___, rán hòu ___.", "zh": "", "en": "I ___, then I ___.",
+          "note": { "zh": "「然后」把两件事按先后连起来。", "en": "rán hòu (then) joins two things in the order they happen." },
+          "ex": ["我做作业，然后看书。"] }
+      ],
+      "tips": [
+        { "zh": "大的时间说在前面：下午四点、晚上九点。", "en": "The bigger time word comes first: xià wǔ sì diǎn = 4 pm (word for word: 'afternoon four o'clock')." },
+        { "zh": "z 舌头平着（早饭 zǎo fàn），zh 舌尖往上卷（闹钟 nào zhōng）。读错了意思会变：早 zǎo 和找 zhǎo 不一样。", "en": "z is said with a flat tongue (zǎo fàn, breakfast); zh with the tongue tip curled up (nào zhōng, alarm clock). Mixing them changes the word: zǎo (early) and zhǎo (to look for)." }
+      ]
+    },
+    "7": {
+      "can": { "zh": "能问和说几月几号、星期几、几岁，会说生日祝福、送礼物。", "en": "I can ask and say the date, the day of the week and someone's age, wish someone a happy birthday and give a present." },
+      "intro": { "zh": "这一课是一个生日派对。你会说几月几号、星期几、几岁，还会说「祝你生日快乐！」，送上礼物。", "en": "This lesson is a birthday party. You learn to say the date, the day of the week and someone's age, to say zhù nǐ shēng rì kuài lè! (Happy birthday!) and to give a present." },
+      "patterns": [
+        { "p": "今天___月___号。", "r": "jīn tiān ___ yuè ___ hào.", "zh": "", "en": "Today is month ___, day ___.",
+          "note": { "zh": "日期从大到小说：先说月，再说号。月份就是数字 + 月：五月。", "en": "Dates go from big to small: month first, then day. Months are just numbers: wǔ yuè (month five) is May." },
+          "ex": ["今天几月几号？", "今天五月十六号。"] },
+        { "p": "明天星期___。", "r": "míng tiān xīng qī ___.", "zh": "", "en": "Tomorrow is ___ (day of the week).",
+          "note": { "zh": "星期一到星期六是「星期 + 数字」，星期天不用数字。问：明天星期几？", "en": "Monday to Saturday are xīng qī + one to six; Sunday is xīng qī tiān. To ask: míng tiān xīng qī jǐ?" },
+          "ex": ["明天星期几？", "明天星期六。"] },
+        { "p": "___几岁了？", "r": "___ jǐ suì le?", "zh": "", "en": "How old is ___ now?",
+          "note": { "zh": "问年纪说「几岁」。句子最后的「了」说的是「现在到这个年纪了」。", "en": "Ask about age with jǐ suì (how many years). The le at the end means 'has now turned'." },
+          "ex": ["宝宝几岁了？", "宝宝一岁了。"] },
+        { "p": "这是送给你的___。", "r": "zhè shì sòng gěi nǐ de ___.", "zh": "", "en": "This is a ___ for you.",
+          "note": { "zh": "送礼物的时候说。收到礼物就说：谢谢！", "en": "Say this when you give a present. When you get one, say xiè xie!" },
+          "ex": ["这是送给你的礼物。", "对，送给你的！"] }
+      ],
+      "tips": [
+        { "zh": "说日期、星期、年纪，常常不用「是」：今天五月十六号，明天星期六，她六岁。", "en": "With dates, days and ages you can leave out shì: jīn tiān wǔ yuè shí liù hào (Today is the 16th of May)." },
+        { "zh": "说话用「号」，写在纸上常常用「日」：五月十六日。", "en": "In speech the day of the month is hào; in writing you will often see rì instead." }
+      ]
+    },
+    "8": {
+      "can": { "zh": "能说动物的名字、有几只，说它们什么样、喜欢吃什么。", "en": "I can name animals, say how many there are, and say what they are like and what they eat." },
+      "intro": { "zh": "这一课认识动物朋友。你会用量词「只」「条」数动物，用「很 + 形容词」说它们什么样，还会说它们喜欢吃什么。", "en": "In this lesson you meet animal friends. You count animals with the measure words zhī and tiáo, describe them with hěn plus a describing word, and say what they like to eat." },
+      "patterns": [
+        { "p": "我家有一只___。", "r": "wǒ jiā yǒu yì zhī ___.", "zh": "", "en": "We have a ___ at home.",
+          "note": { "zh": "大多数动物用「只」，鱼用「条」（长长的东西用「条」）。", "en": "Most animals take the measure word zhī. Fish take tiáo, the measure word for long, thin things." },
+          "ex": ["我家有一只小狗。", "河里有三条鱼。"] },
+        { "p": "___很___。", "r": "___ hěn ___.", "zh": "", "en": "___ is very ___.",
+          "note": { "zh": "说什么样子不用「是」，用「很」。这里的「很」常常只是连起来，不一定是「非常」。", "en": "To describe something, use hěn, not shì. Here hěn is often just a link word, not a strong 'very'." },
+          "ex": ["熊猫很可爱。", "大象的鼻子很长。"] },
+        { "p": "___喜欢吃___。", "r": "___ xǐ huan chī ___.", "zh": "", "en": "___ like(s) to eat ___.",
+          "note": { "zh": "「喜欢」后面可以直接说动词：喜欢吃。问：猴子喜欢吃什么？", "en": "xǐ huan can go straight before another verb: xǐ huan chī (like to eat). To ask: hóu zi xǐ huan chī shén me?" },
+          "ex": ["猴子喜欢吃什么？", "猴子喜欢吃香蕉。"] }
+      ],
+      "tips": [
+        { "zh": "鱼 yú 是 ü 的音：写成 yu，读的时候把嘴唇圆起来说 i，不是英语的 you。", "en": "yú (fish) has the ü sound. It is written yu, but you say 'ee' with rounded lips, not like English 'you'." },
+        { "zh": "「跑得很快」是「动词 + 得 + 怎么样」，说做得怎么样。现在整句跟着说就行。", "en": "pǎo de hěn kuài (runs fast) is verb + de + how well. For now, just copy the whole phrase." }
+      ]
+    },
+    "9": {
+      "can": { "zh": "能问「我可以…吗？」，说一个地方要做什么、不可以做什么。", "en": "I can ask for permission, and say what you must and mustn't do in a place." },
+      "intro": { "zh": "这座岛上到处是规则。你会用「可以」问能不能做，用「要」说一定要做的事，用「不要」「不可以」说不能做的事。", "en": "This island is full of rules. You use kě yǐ to ask if you may do something, yào for things you must do, and bú yào or bù kě yǐ for things you must not do." },
+      "patterns": [
+        { "p": "我可以___吗？", "r": "wǒ kě yǐ ___ ma?", "zh": "", "en": "May I ___?",
+          "note": { "zh": "回答：可以，或者不可以；也可以说「不行」。", "en": "Answer kě yǐ (yes, you may) or bù kě yǐ (no). bù xíng also means 'no, that's not OK'." },
+          "ex": ["我可以进来吗？", "可以，请进。"] },
+        { "p": "这里不可以___。", "r": "zhè lǐ bù kě yǐ ___.", "zh": "", "en": "You can't ___ here.",
+          "note": { "zh": "说一个地方的规则。", "en": "Use it to say what is not allowed in a place." },
+          "ex": ["这里不可以跑。", "这里可以拍照吗？"] },
+        { "p": "请不要___。", "r": "qǐng bú yào ___.", "zh": "", "en": "Please don't ___.",
+          "note": { "zh": "叫别人别做一件事，加「请」更客气。口语里也说「别」：别忘了！", "en": "Asks someone not to do something; qǐng makes it polite. In speech you also hear bié: bié wàng le! (Don't forget!)" },
+          "ex": ["请不要踩草地。", "上课的时候不要玩手机。"] },
+        { "p": "___以前要___。", "r": "___ yǐ qián yào ___.", "zh": "", "en": "Before ___, you must ___.",
+          "note": { "zh": "这里的「要」是「一定要做」。", "en": "Here yào means 'must'." },
+          "ex": ["吃饭以前要洗手。", "图书馆里要安静。"] }
+      ],
+      "tips": [
+        { "zh": "「以前」「的时候」放在事情后面，和英语相反：吃饭以前，上课的时候。", "en": "yǐ qián (before) and de shí hou (when) come after the action, the opposite of English: chī fàn yǐ qián = before eating; shàng kè de shí hou = when in class." },
+        { "zh": "别把「会」和「可以」弄混：「会」是学会的本领（我会游泳），「可以」是允许（我可以进来吗？）。", "en": "Don't mix them up: huì is for skills you've learned (wǒ huì yóu yǒng, I can swim); kě yǐ is for permission (wǒ kě yǐ jìn lai ma? May I come in?)." }
+      ]
+    },
+    "10": {
+      "can": { "zh": "能说想吃什么、想喝什么，点一碗、一杯，说好不好吃，还能说怎么去学校。", "en": "I can say what I'd like to eat and drink, order a bowl or a glass of something, say if it tastes good, and say how I get to school." },
+      "intro": { "zh": "这一课说吃的和运动。你会用「想」「要」点吃的、喝的，用「碗」「杯」说多少，用「怎么」问怎么去一个地方。", "en": "This lesson is about food and sport. You order with xiǎng (would like) and yào (want), count with wǎn (bowl) and bēi (glass), and ask how to get somewhere with zěn me (how)." },
+      "patterns": [
+        { "p": "我想吃___。", "r": "wǒ xiǎng chī ___.", "zh": "", "en": "I'd like to eat ___.",
+          "note": { "zh": "喝的东西说「想喝」。问：你想吃什么？", "en": "For drinks, say xiǎng hē. To ask: nǐ xiǎng chī shén me?" },
+          "ex": ["你想吃什么？", "我想吃饺子。"] },
+        { "p": "我要一碗___。", "r": "wǒ yào yì wǎn ___.", "zh": "", "en": "I'll have a bowl of ___.",
+          "note": { "zh": "点东西常说「我要」。量词就是装它的东西：一碗、一杯。", "en": "When ordering, people often say wǒ yào (I'll have). The measure word is the container: yì wǎn (a bowl), yì bēi (a glass)." },
+          "ex": ["我要一碗面条。", "早上我喝一杯牛奶。"] },
+        { "p": "这个___真好吃！", "r": "zhè ge ___ zhēn hǎo chī!", "zh": "", "en": "This ___ is really tasty!",
+          "note": { "zh": "「好吃」说吃的东西。「真」比「很」更像在感叹。", "en": "hǎo chī is for tasty food. zhēn (really) sounds more excited than hěn." },
+          "ex": ["这个饺子真好吃！", "很好吃！"] },
+        { "p": "你怎么去___？", "r": "nǐ zěn me qù ___?", "zh": "", "en": "How do you get to ___?",
+          "note": { "zh": "回答的时候，怎么去放在「去」前面：骑自行车去。", "en": "In the answer, the way you travel goes before qù: qí zì xíng chē qù (go by bike)." },
+          "ex": ["你怎么去学校？", "我骑自行车去学校。"] }
+      ],
+      "tips": [
+        { "zh": "「一」的声调跟着后面的字变：一碗 yì wǎn、一杯 yì bēi，可是一个 yí gè。", "en": "The tone of yī (one) changes with the next syllable: yì wǎn, yì bēi, but yí gè (before a 4th tone)." },
+        { "zh": "乒乓球 pīng pāng qiú：两个 -ng 都要读出来，像英语 sing 的结尾。", "en": "pīng pāng qiú (table tennis): say both -ng endings, like the end of 'sing'." }
+      ]
+    },
+    "11": {
+      "can": { "zh": "能问天气、说天气，说哪个季节冷、哪个季节热，提醒别人带雨伞。", "en": "I can ask about and describe the weather, say which seasons are hot or cold, and remind someone to take an umbrella." },
+      "intro": { "zh": "这一课说天气和四季。你会用「怎么样」问天气，用「会」说明天的天气，用「很」「有点」说冷热。", "en": "This lesson is about the weather and the four seasons. You ask about the weather with zěn me yàng, talk about tomorrow with huì (will), and say how hot or cold it is with hěn (very) and yǒu diǎn (a bit)." },
+      "patterns": [
+        { "p": "___天气怎么样？", "r": "___ tiān qì zěn me yàng?", "zh": "", "en": "What's the weather like ___?",
+          "note": { "zh": "「怎么样」放在最后，问情况怎么样。", "en": "zěn me yàng (how is it) goes at the end and asks what something is like." },
+          "ex": ["今天天气怎么样？", "今天很冷，风很大。"] },
+        { "p": "明天会___。", "r": "míng tiān huì ___.", "zh": "", "en": "Tomorrow it will ___.",
+          "note": { "zh": "「会」也能说以后可能发生的事。以前学的「会」是本领。", "en": "huì can also mean 'will', for things that may happen. Earlier you met huì for skills." },
+          "ex": ["明天会下雪。", "明天会下雪吗？"] },
+        { "p": "___很热，___很冷。", "r": "___ hěn rè, ___ hěn lěng.", "zh": "", "en": "___ is hot, ___ is cold.",
+          "note": { "zh": "说天气也用「很」，不用「是」。觉得不太舒服的时候说「有点冷」。", "en": "Weather words also use hěn, not shì. For 'a bit cold', say yǒu diǎn lěng." },
+          "ex": ["夏天很热，冬天很冷。", "春天很暖和。"] },
+        { "p": "别忘了___！", "r": "bié wàng le ___!", "zh": "", "en": "Don't forget ___!",
+          "note": { "zh": "提醒别人的时候说。", "en": "Use it to remind someone." },
+          "ex": ["别忘了带雨伞！"] }
+      ],
+      "tips": [
+        { "zh": "「下雨了」的「了」说的是变化：刚才没下，现在下了。它不是过去式。先整句跟着说。", "en": "In xià yǔ le (it's raining now), le marks a change: it wasn't raining before. It is not a past tense. Just copy the whole phrase for now." },
+        { "zh": "雨 yǔ、雪 xuě 都是 ü 的音。在 j、q、x、y 后面不写两点，读的还是 ü。", "en": "yǔ (rain) and xuě (snow) both have the ü sound. After j, q, x and y the two dots are dropped, but it's still ü." }
+      ]
+    },
+    "12": {
+      "can": { "zh": "能说昨天去了哪里、做了什么，问别人去没去过一个地方。", "en": "I can say where I went and what I did, and ask if someone has ever been somewhere." },
+      "intro": { "zh": "这一课讲一个难忘的日子。中文的动词没有过去式：做完的事在动词后面加「了」，以前有过的经历加「过」，说怎么去的用「是…的」。", "en": "This lesson is about a day to remember. Chinese verbs have no past tense. Add le after a verb for something you did, guo for something you have done before, and use shì … de to say how you went." },
+      "patterns": [
+        { "p": "昨天我去了___。", "r": "zuó tiān wǒ qù le ___.", "zh": "", "en": "Yesterday I went to ___.",
+          "note": { "zh": "「了」放在动词后面，说事情做完了；「昨天」告诉你是过去的事。", "en": "le after the verb shows the action is done; the time word zuó tiān (yesterday) tells you it's in the past." },
+          "ex": ["昨天我去了海边。", "我捡了很多贝壳。"] },
+        { "p": "你去过___吗？", "r": "nǐ qù guo ___ ma?", "zh": "", "en": "Have you ever been to ___?",
+          "note": { "zh": "回答：去过，或者没去过。", "en": "Answer qù guo (yes, I have) or méi qù guo (no, never)." },
+          "ex": ["你去过海边吗？", "去过，我很喜欢海边。"] },
+        { "p": "我是坐___去的。", "r": "wǒ shì zuò ___ qù de.", "zh": "", "en": "I went by ___.",
+          "note": { "zh": "事情已经发生了，想说是怎么去的，就用「是…的」把它包起来。", "en": "When it has already happened and you want to say how you went, wrap it in shì … de." },
+          "ex": ["我是坐火车去的。", "你们是怎么去的？"] },
+        { "p": "我第一次___。", "r": "wǒ dì yī cì ___.", "zh": "", "en": "I ___ for the first time.",
+          "note": { "zh": "「第一次」放在动词前面。「第一」的「一」不变调。", "en": "dì yī cì (the first time) goes before the verb. In dì yī (first), yī keeps its 1st tone." },
+          "ex": ["那天我第一次放风筝。"] }
+      ],
+      "tips": [
+        { "zh": "没做的事，用「没 + 动词」，不加「了」：我没去。没有过的经历说「没 + 动词 + 过」：没放过。", "en": "For something that didn't happen, use méi + verb and drop le: wǒ méi qù (I didn't go). For 'never', say méi + verb + guo: méi fàng guo (have never flown a kite)." },
+        { "zh": "「了」说那一次做了，「过」说以前有过：我去了海边（那天去了），我去过海边（以前去过）。", "en": "le: you did it that time (wǒ qù le hǎi biān, I went to the beach). guo: you have done it at some point before (wǒ qù guo hǎi biān, I have been to the beach)." }
+      ]
+    }
+  },
+  "units": {
+    "zh1-1": {
+      "patterns": [
+        { "p": "你会说___吗？", "r": "nǐ huì shuō ___ ma?", "zh": "", "en": "Can you speak ___?",
+          "note": { "zh": "「会说 + 语言」说会哪种语言。不会就说：我不会说中文。", "en": "huì shuō + a language = can speak it. If not: wǒ bú huì shuō zhōng wén." },
+          "ex": ["你会说中文吗？", "我不会说中文。"] },
+        { "p": "___，你呢？", "r": "___, nǐ ne?", "zh": "", "en": "___. And you?",
+          "note": { "zh": "说完自己，加「你呢？」把同样的问题问对方，不用再说一遍。", "en": "After talking about yourself, add nǐ ne? to ask the same thing back, with no need to repeat the question." },
+          "ex": ["我是新同学，你呢？", "我会说英语，你呢？"] },
+        { "p": "他不是___，他是___。", "r": "tā bú shì ___, tā shì ___.", "zh": "", "en": "He isn't a ___; he's a ___.",
+          "note": { "zh": "「是」的否定是「不是」，读 bú shì。", "en": "The 'not' form of shì is bú shì." },
+          "ex": ["他不是老师，他是学生。", "不是，他是我的朋友。"] },
+        { "p": "请问，你是___吗？", "r": "qǐng wèn, nǐ shì ___ ma?", "zh": "", "en": "Excuse me, are you ___?",
+          "note": { "zh": "问不认识的人以前先说「请问」，很客气。", "en": "Start with qǐng wèn (excuse me, may I ask) before asking someone you don't know. It sounds polite." },
+          "ex": ["请问，你是陈大山吗？", "是，我是陈大山。"] }
+      ],
+      "tips": [
+        { "zh": "中国人的名字姓在前面：林小雨的姓是林。叫人的时候，「老师」放在姓后面：王老师。", "en": "Chinese names put the family name first: in Lín Xiǎo Yǔ, Lín is the family name. Titles come after the name: Wáng lǎo shī (Teacher Wang)." },
+        { "zh": "数数的时候「一」不变调，读 yī：一，二，三。", "en": "When you count, yī (one) keeps its 1st tone: yī, èr, sān." }
+      ]
+    },
+    "zh1-2": {
+      "patterns": [
+        { "p": "___多少钱？", "r": "___ duō shao qián?", "zh": "", "en": "How much is ___?",
+          "note": { "zh": "指着东西问价钱。全部加起来问：一共多少钱？", "en": "Point at something to ask its price. For the total: yí gòng duō shao qián?" },
+          "ex": ["这个多少钱？", "一共多少钱？"] },
+        { "p": "一个___两块钱。", "r": "yí gè ___ liǎng kuài qián.", "zh": "", "en": "One ___ costs two yuan.",
+          "note": { "zh": "「九块五」就是九块五毛，后面的「毛」常常不说。", "en": "jiǔ kuài wǔ means 9.50: the word for the tenths, máo, is usually left off." },
+          "ex": ["一个苹果两块钱。", "这本书九块五。"] },
+        { "p": "我买___个___。", "r": "wǒ mǎi ___ gè ___.", "zh": "", "en": "I'll buy ___ ___.",
+          "note": { "zh": "大家都知道买什么的时候，只说数字和量词就行：我买四个。", "en": "If it's clear what you're buying, just say the number and the measure word: wǒ mǎi sì gè (I'll buy four)." },
+          "ex": ["我买三个橘子。", "我买四个。"] },
+        { "p": "___贵不贵？", "r": "___ guì bu guì?", "zh": "", "en": "Is ___ expensive?",
+          "note": { "zh": "回答：不贵，很便宜；或者很贵。", "en": "Answer bú guì, hěn pián yi (not expensive, it's cheap) or hěn guì (very expensive)." },
+          "ex": ["草莓贵不贵？", "不贵，很便宜。"] }
+      ],
+      "tips": [
+        { "zh": "十一到九十九照着算就行：十二 = 十 + 二，二十 = 二 × 十，五十五 = 五 × 十 + 五。一百读 yì bǎi。", "en": "Numbers up to 99 are built like sums: shí èr = 10 + 2 = 12, èr shí = 2 × 10 = 20, wǔ shí wǔ = 55. A hundred is yì bǎi." },
+        { "zh": "在小店里，大家叫店主「老板」，很自然，不是不礼貌。", "en": "In small shops people call the shopkeeper lǎo bǎn (boss). It's friendly and normal, not rude." }
+      ]
+    },
+    "zh1-3": {
+      "patterns": [
+        { "p": "___在___下面。", "r": "___ zài ___ xià miàn.", "zh": "", "en": "___ is under ___.",
+          "note": { "zh": "「下面」「后面」「旁边」都放在地方后面：椅子下面、门后面。", "en": "Position words like xià miàn (under), hòu miàn (behind) and páng biān (next to) come after the place: yǐ zi xià miàn (under the chair)." },
+          "ex": ["帽子在椅子下面。", "垃圾桶在门后面。"] },
+        { "p": "___里有什么？", "r": "___ li yǒu shén me?", "zh": "", "en": "What is in ___?",
+          "note": { "zh": "回答时想多说一样，用「还有」。", "en": "To add one more thing in your answer, use hái yǒu (and also)." },
+          "ex": ["你的房间里有什么？", "有一张床，还有一个柜子。"] },
+        { "p": "___是谁的？", "r": "___ shì shéi de?", "zh": "", "en": "Whose is ___?",
+          "note": { "zh": "回答：是我的，或者是你的。", "en": "Answer shì wǒ de (it's mine) or shì nǐ de (it's yours)." },
+          "ex": ["这个紫色的帽子是谁的？", "是我的。"] },
+        { "p": "我找___。", "r": "wǒ zhǎo ___.", "zh": "", "en": "I'm looking for ___.",
+          "note": { "zh": "「找」一个字就是 look for，后面直接说东西。", "en": "zhǎo means 'look for' all in one word; the thing comes straight after it." },
+          "ex": ["你找什么？", "我找我的玩具。"] }
+      ],
+      "tips": [
+        { "zh": "量词跟着东西的样子走：平的用「张」（一张床），有把手、靠背的用「把」（一把椅子）。", "en": "Measure words follow the shape: zhāng for flat things (yì zhāng chuáng, a bed), bǎ for things with a handle or a back (yì bǎ yǐ zi, a chair)." },
+        { "zh": "「上」「里」直接跟在名词后面时读得轻：床上 chuáng shang，柜子里 guì zi li。", "en": "When shang (on) and li (in) attach straight to a noun, they are said lightly: chuáng shang (on the bed), guì zi li (in the cupboard)." }
+      ]
+    },
+    "zh1-4": {
+      "patterns": [
+        { "p": "请给我___。", "r": "qǐng gěi wǒ ___.", "zh": "", "en": "Please give me ___.",
+          "note": { "zh": "先叫「服务员」，再说要什么。", "en": "Call the waiter first with fú wù yuán, then say what you want." },
+          "ex": ["请给我菜单。", "服务员，请给我一杯水。"] },
+        { "p": "你想喝___还是___？", "r": "nǐ xiǎng hē ___ hái shi ___?", "zh": "", "en": "Would you like ___ or ___ to drink?",
+          "note": { "zh": "回答只说你选的那个；两个都行就说「都可以」。", "en": "Answer with just the one you choose. If either is fine, say dōu kě yǐ." },
+          "ex": ["你想喝茶还是果汁？", "都可以。"] },
+        { "p": "这个___太___了。", "r": "zhè ge ___ tài ___ le.", "zh": "", "en": "This ___ is too ___.",
+          "note": { "zh": "觉得不满意的时候说。好吃就说「真好吃」，好喝就说「真好喝」。", "en": "Use it when something isn't right. If it's good, say zhēn hǎo chī (really tasty), or zhēn hǎo hē for drinks." },
+          "ex": ["这个汤太咸了。", "这个菜太辣了。"] },
+        { "p": "我不吃___。", "r": "wǒ bù chī ___.", "zh": "", "en": "I don't eat ___.",
+          "note": { "zh": "说自己不吃的东西。别人问「你吃…吗？」，回答「吃」或者「不吃」。", "en": "Say what you don't eat. To answer nǐ chī … ma?, just say chī (yes) or bù chī (no)." },
+          "ex": ["我不吃牛肉。", "不吃，我吃鸡蛋。"] }
+      ],
+      "tips": [
+        { "zh": "「还」放在动词前面，是「再要一些」的意思：我还要一份饺子。", "en": "hái before a verb means 'more' or 'also': wǒ hái yào yí fèn jiǎo zi (I'd like another serving of dumplings)." },
+        { "zh": "吃的、喝的，量词常常就是装它的东西：一碗、一杯、一盘；一份是一个人的量。", "en": "For food and drink, the measure word is often the container: yì wǎn (a bowl), yì bēi (a glass), yì pán (a plate). yí fèn is one serving." }
+      ]
+    },
+    "zh1-5": {
+      "patterns": [
+        { "p": "从___到___", "r": "cóng ___ dào ___", "zh": "", "en": "from ___ to ___",
+          "note": { "zh": "说从开始到结束，放在动词前面。", "en": "Gives the start and the end; it goes before the verb." },
+          "ex": ["我们从星期一到星期五上学。", "图书馆从九点到五点开门。"] },
+        { "p": "我每天___。", "r": "wǒ měi tiān ___.", "zh": "", "en": "I ___ every day.",
+          "note": { "zh": "「每个星期六」这样的说法，后面常常加「都」。", "en": "With phrases like měi gè xīng qī liù (every Saturday), people often add dōu before the verb." },
+          "ex": ["我每天早上七点起床。", "我每个星期六都和朋友游泳。"] },
+        { "p": "___你有时间吗？", "r": "___ nǐ yǒu shí jiān ma?", "zh": "", "en": "Are you free ___?",
+          "note": { "zh": "约朋友以前先问有没有时间。时间词也可以放在「你」前面。", "en": "Ask this before you invite a friend. The time word can come before nǐ." },
+          "ex": ["明天下午你有时间吗？", "有，我们去公园吧。"] },
+        { "p": "你们星期几有___课？", "r": "nǐ men xīng qī jǐ yǒu ___ kè?", "zh": "", "en": "Which days do you have ___ class?",
+          "note": { "zh": "「星期几」问哪一天。回答直接说星期几。", "en": "xīng qī jǐ asks which day. Just answer with the day." },
+          "ex": ["你们星期几有体育课？", "星期二和星期四。"] }
+      ],
+      "tips": [
+        { "zh": "几个时间词放在一起，大的在前：星期一上午，星期天上午。", "en": "When time words stack up, the bigger one comes first: xīng qī yī shàng wǔ = Monday morning." },
+        { "zh": "「先」放在动词前面，说先做的事：我先洗手。", "en": "xiān (first) goes before the verb: wǒ xiān xǐ shǒu (I wash my hands first)." }
+      ]
+    },
+    "zh1-6": {
+      "patterns": [
+        { "p": "我想买一件___。", "r": "wǒ xiǎng mǎi yí jiàn ___.", "zh": "", "en": "I'd like to buy a ___.",
+          "note": { "zh": "衣服的量词：上衣、外套用「件」，裤子、裙子用「条」，一对鞋子、袜子用「双」。", "en": "Clothes have their own measure words: jiàn for tops and coats, tiáo for trousers and skirts, shuāng for a pair of shoes or socks." },
+          "ex": ["我想买一件衬衫。", "我要一双蓝色的鞋子。"] },
+        { "p": "能不能___一点？", "r": "néng bu néng ___ yì diǎn?", "zh": "", "en": "Could it be a bit ___?",
+          "note": { "zh": "「能不能」客气地问行不行。在小店里可以这样讲价。", "en": "néng bu néng politely asks if something is possible. In small shops you can use it to ask for a lower price." },
+          "ex": ["能不能便宜一点？", "太贵了，能不能便宜一点？"] },
+        { "p": "我要___，不要___。", "r": "wǒ yào ___, bú yào ___.", "zh": "", "en": "I'll take ___, not ___.",
+          "note": { "zh": "「这件」「那件」：「这」「那」后面也要加量词。", "en": "Keep the measure word after zhè and nà: zhè jiàn (this one), nà jiàn (that one)." },
+          "ex": ["我要这件，不要那件。", "你要这件还是那件？"] },
+        { "p": "___很漂亮，可是有点___。", "r": "___ hěn piào liang, kě shì yǒu diǎn ___.", "zh": "", "en": "___ is pretty, but a bit ___.",
+          "note": { "zh": "先说好的地方，再用「可是」说不满意的地方。", "en": "Say the good point first, then the problem after kě shì (but)." },
+          "ex": ["这件外套很漂亮，可是有点贵。", "很漂亮，可是有点长。"] }
+      ],
+      "tips": [
+        { "zh": "「太…了」比「有点」更强：太贵了，是贵得不想买；有点贵，是稍微贵一些。", "en": "tài … le (too …) is stronger than yǒu diǎn (a bit): tài guì le = far too expensive; yǒu diǎn guì = a little expensive." }
+      ]
+    },
+    "zh1-7": {
+      "patterns": [
+        { "p": "坐___去___", "r": "zuò ___ qù ___", "zh": "", "en": "take the ___ to ___",
+          "note": { "zh": "公交车、船、出租车用「坐」，自行车用「骑」。", "en": "Use zuò (sit) for things you ride inside, like a bus, a boat or a taxi; use qí (ride) for a bike." },
+          "ex": ["我们坐公交车去市场。", "我们坐出租车去码头吧。"] },
+        { "p": "___离___很近。", "r": "___ lí ___ hěn jìn.", "zh": "", "en": "___ is near ___.",
+          "note": { "zh": "问远不远：……离……远不远？", "en": "To ask if it's far: … lí … yuǎn bu yuǎn?" },
+          "ex": ["码头离学校很近。", "你家离学校远不远？"] },
+        { "p": "去___要多长时间？", "r": "qù ___ yào duō cháng shí jiān?", "zh": "", "en": "How long does it take to get to ___?",
+          "note": { "zh": "回答：要 + 时间：要二十分钟、要半个小时。", "en": "Answer with yào + the time: yào èr shí fēn zhōng (twenty minutes)." },
+          "ex": ["去沙滩要多长时间？", "要二十分钟。"] },
+        { "p": "先___，再___。", "r": "xiān ___, zài ___.", "zh": "", "en": "First ___, then ___.",
+          "note": { "zh": "说两步怎么走，一步一步来。", "en": "Use it to give two steps in order." },
+          "ex": ["先坐公交车，再走路。"] }
+      ],
+      "tips": [
+        { "zh": "说多长时间用「小时」「分钟」，说几点用「点」「分」：三点和三个小时不一样。", "en": "For how long, use xiǎo shí (hours) and fēn zhōng (minutes). For clock times, use diǎn and fēn: sān diǎn is three o'clock, sān gè xiǎo shí is three hours." },
+        { "zh": "「离」说两个地方远不远，「从…到…」说从哪里到哪里。", "en": "lí is for how far apart two places are; cóng … dào … is for a trip from one place to another." }
+      ]
+    },
+    "zh1-8": {
+      "patterns": [
+        { "p": "___你去哪里了？", "r": "___ nǐ qù nǎ lǐ le?", "zh": "", "en": "Where did you go ___?",
+          "note": { "zh": "问过去的事，「了」也可以放在句子最后。", "en": "When asking about the past, le can also go at the end of the question." },
+          "ex": ["上个周末你去哪里了？", "我去了海边。"] },
+        { "p": "我___了很多___。", "r": "wǒ ___ le hěn duō ___.", "zh": "", "en": "I ___ a lot of ___.",
+          "note": { "zh": "「了」紧跟在动词后面，后面再说多少、什么。", "en": "le comes right after the verb, then how much and what." },
+          "ex": ["我们吃了很多水果。", "我在花园里种了很多花。"] },
+        { "p": "___好玩吗？", "r": "___ hǎo wán ma?", "zh": "", "en": "Was ___ fun?",
+          "note": { "zh": "问别人过得怎么样。回答：很好玩，或者很开心。", "en": "Ask how something went. Answer hěn hǎo wán (lots of fun) or hěn kāi xīn (very happy)." },
+          "ex": ["上个周末好玩吗？", "很好玩，我很开心。"] },
+        { "p": "他们已经___了。", "r": "tā men yǐ jīng ___ le.", "zh": "", "en": "They have already ___.",
+          "note": { "zh": "「已经…了」说事情已经做完了。", "en": "yǐ jīng … le means it is already done." },
+          "ex": ["他们已经回家了。"] }
+      ],
+      "tips": [
+        { "zh": "回答「…了吗？」：做了就说「动词 + 了」（吃了），没做就说「没有」。", "en": "To answer a … le ma? question, say the verb + le if you did it (chī le, yes I have), or méi yǒu if you didn't." },
+        { "zh": "「了」跟着动作走。说过去的感觉、样子不用「了」：上个周末很好玩！", "en": "le goes with actions. Describing how things were doesn't need it: shàng gè zhōu mò hěn hǎo wán! (Last weekend was fun!)" }
+      ]
+    }
+  }
+}

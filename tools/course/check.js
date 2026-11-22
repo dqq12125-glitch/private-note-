@@ -2,6 +2,8 @@
 // 用法：node tools/course/check.js <语言> [--towns] [--units] [--quiet]
 //       node tools/course/check.js <语言> --lines [别的 lines.json 文件]   只查台词翻译表（测试用自己的小样文件）
 //       node tools/course/check.js <语言> --quests [文件] --sight [文件]    只查委托 / 今日目击的译文（可以和 --lines 一起写）
+//       node tools/course/check.js <语言> --primer [文件]                   只查发音入门 primer.json（tools/course/WORDS.md §4；测试用自己的小样）
+//       node tools/course/check.js <语言|en> --lessons [文件]               只查课前讲解和求助的话 lessons.json（WORDS.md §12；英语只有这一样）
 //   有一条「错」就退出码 1；「提醒」只打印、不算失败
 // 委托 quests.json、今日目击的线索 sight.json（tools/course/TALK.md 第二轮 A；格式写在下面两个函数前面）：
 //   文件还没有：只提醒「还没有」，不算错（生成课程时就没有这两样）。正式的那份要翻全（缺的列出来，算错）；
@@ -10,7 +12,8 @@
 const fs = require('fs'), path = require('path');
 const lang = process.argv[2];
 const flags = new Set(process.argv.slice(3));
-if (!/^(es|ja|zh)$/.test(lang || '')) { console.error('用法：node tools/course/check.js <es|ja|zh>'); process.exit(2); }
+// 英语只有课前讲解 lessons.json 要查（node tools/course/check.js en --lessons）
+if (!/^(es|ja|zh)$/.test(lang || '') && !(lang === 'en' && flags.has('--lessons'))) { console.error('用法：node tools/course/check.js <es|ja|zh>   （英语：node tools/course/check.js en --lessons）'); process.exit(2); }
 const DIR = path.join(__dirname, lang);
 const bad = [], warn = [];
 const E = (w, m) => bad.push(w + '：' + m), Wn = (w, m) => warn.push(w + '：' + m);
@@ -421,8 +424,171 @@ function sightJson(fileArg) {
     miss.slice(0, 20).join(' | ') + (miss.length > 20 ? ' | ……' : ''));
 }
 
-// 只查某几张表：--lines / --quests / --sight，后面可以跟一个 .json（测试的小样；不跟就是这门语言正式的那份）
-const ARGV = process.argv.slice(3), ONLY = ['--lines', '--quests', '--sight'].filter(x => flags.has(x));
+// ---------- 发音入门 primer.json（tools/course/WORDS.md §4）----------
+// { "lang": "ja", "sections": [ { id, title: { zh, en }, intro: { zh, en }, layout: "grid" | "list", cols（grid 才写）, items: [格子 / 行…] } ] }
+// 格子：{ t 大字, sub 小字, rom 下面那行, say 点了念什么, zh / en 一句说明（可选）, ex: [ { t, r（日语中文）, zh, en, pic } ]（可选的例词） }；grid 里空格子写 null。
+// 查：格式；grid 的格子数是 cols 的倍数；日语 rom 只有 a–z 和 '；中文 rom 是带声调的拼音（不用数字，整格一个声调都没有的提醒一句：轻声、声母可以这样）；
+// 例词的读音规矩和 lines.json 一样（reading）；例词（要提前配音的只有它们，格子的 say 用本机声音念）超过约 250 个提醒。文件还没有：只提醒，不算错
+const PRIMER_MAX = 250;
+function primerJson(fileArg) {
+  const f = fileArg || path.join(DIR, 'primer.json');
+  if (!fs.existsSync(f)) { Wn('primer.json', '还没有（这门课没有「发音入门」）'); return; }
+  const J = read(f); if (!J) return;
+  const w0 = 'primer.json';
+  if (!J || typeof J !== 'object' || Array.isArray(J)) { E(w0, '要写成 { "lang": "' + lang + '", "sections": [ … ] }'); return; }
+  if (J.lang !== lang) E(w0, 'lang 要是 ' + lang);
+  if (!Array.isArray(J.sections) || !J.sections.length) { E(w0, '要有 sections（至少一段）'); return; }
+  const ids = new Set(), lang2 = o => o && typeof o === 'object' && str(o.zh) && str(o.en);
+  let says = 0;
+  J.sections.forEach((s, si) => {
+    const w = w0 + ' 第 ' + (si + 1) + ' 段' + (s && str(s.id) ? '（' + s.id + '）' : '');
+    if (!s || typeof s !== 'object') { E(w, '要写成 { id, title, intro, layout, items }'); return; }
+    if (!str(s.id) || !/^[a-z0-9_-]+$/i.test(s.id)) E(w, 'id 要写（字母、数字、- 和 _）');
+    else if (ids.has(s.id)) E(w, 'id 重复了：' + s.id); else ids.add(s.id);
+    if (!lang2(s.title)) E(w, 'title 要有 zh 和 en');
+    if (!lang2(s.intro)) E(w, 'intro 要有 zh 和 en（两三句说明）');
+    if (lang2(s.title) && HAN.test(s.title.en)) Wn(w, 'title.en 里有汉字（英语界面会看到）：' + s.title.en);
+    if (s.layout !== 'grid' && s.layout !== 'list') { E(w, 'layout 要是 grid 或 list'); return; }
+    if (!Array.isArray(s.items) || !s.items.length) { E(w, 'items 要有内容'); return; }
+    if (s.layout === 'grid') {
+      if (!Number.isInteger(s.cols) || s.cols < 1 || s.cols > 10) E(w, 'grid 要写 cols（1–10）');
+      else if (s.items.length % s.cols) E(w, 'grid 的格子数（' + s.items.length + '）要是 cols（' + s.cols + '）的倍数，空格子写 null');
+    } else if (s.cols != null) Wn(w, 'list 不用写 cols');
+    if (s.items.every(x => x == null)) E(w, '一个格子都没有（全是 null）');
+    s.items.forEach((it, i) => {
+      const x = w + ' 第 ' + (i + 1) + ' 格';
+      if (it == null) { if (s.layout !== 'grid') E(x, 'list 里不能有 null（空格子只给 grid 用）'); return; }
+      if (typeof it !== 'object' || Array.isArray(it)) { E(x, '要写成 { t, sub, rom, say }'); return; }
+      if (!str(it.t)) E(x, '缺 t（大字）');
+      for (const k of ['sub', 'rom', 'zh', 'en']) if (it[k] != null && typeof it[k] !== 'string') E(x, k + ' 要是字符串');
+      if (!str(it.say)) E(x, '缺 say（点了念什么）');
+      if (str(it.rom)) {
+        if (lang === 'ja' && !/^[a-z']+$/.test(it.rom)) E(x, '日语的 rom 只能有 a–z 和 \'：' + it.rom);
+        if (lang === 'zh') {
+          if (/\d/.test(it.rom)) E(x, '拼音用声调符号，不用数字：' + it.rom);
+          else if (!/^[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüńňǹḿ' ]+$/.test(it.rom)) E(x, 'rom 要是拼音（字母和声调符号）：' + it.rom);
+          else if (!TONE.test(it.rom)) Wn(x, 'rom 一个声调都没有（轻声、单独的声母可以这样）：' + it.rom);
+        }
+      }
+      if (str(it.say)) {
+        if (lang === 'ja' && /[A-Za-z]/.test(it.say)) Wn(x, 'say 里有拉丁字母（日语写假名，TTS 才念得对）：' + it.say);
+        if (lang === 'zh' && !HAN.test(it.say)) Wn(x, 'say 里没有汉字（中文写一个例字，TTS 才念得对）：' + it.say);
+      }
+      if (it.zh != null && str(it.zh) && lang !== 'zh' && !HAN.test(it.zh)) Wn(x, 'zh 不像中文：' + it.zh);
+      // en 是英语界面看的说明：里面可以引着要学的字（「一 before a 4th tone…」），但得是英语写的
+      if (str(it.en) && !/[A-Za-z]{2,}/.test(it.en)) E(x, 'en 要用英语写：' + it.en);
+      if (it.ex != null) {
+        if (!Array.isArray(it.ex)) { E(x, 'ex 要是一列例词'); return; }
+        it.ex.forEach((e, k) => {
+          const y = x + ' 例词 ' + (k + 1);
+          if (!e || typeof e !== 'object' || !str(e.t)) { E(y, '缺 t'); return; }
+          says++;
+          if (!str(e.en)) E(y, '缺英文意思 en');
+          if (lang !== 'zh' && !str(e.zh)) E(y, '缺中文意思 zh');
+          if (e.pic != null && typeof e.pic !== 'string') E(y, 'pic 要是字符串（一个表情）');
+          reading(y, e.r, e.t);
+        });
+      }
+    });
+  });
+  if (says > PRIMER_MAX) Wn(w0, '例词一共 ' + says + ' 个，超过约 ' + PRIMER_MAX + ' 个：例词都要提前配音、打进课程包（格子自己的 say 用本机声音念，不算）');
+}
+
+// ---------- 课前讲解、求助的话 lessons.json（tools/course/WORDS.md §12）----------
+// { lang, help: [ { t, r（日语中文）, zh, en, use: { zh, en } } ], towns: { "0"…"12": { can, intro, patterns: [ { p, r, zh, en, note, ex: [原文…] } ], tips: [ { zh, en } ] } }, units: { 单元 id: { patterns, tips } } }
+// 查：格式；towns 13 个都要有，别的语言 units 8 个一册都要有（英语不写 units）；句型 2–4 个、提醒 0–2 条、help 8–12 句；
+// 例句 ex 要和这一课 sents / dlgs（问 / 答）里的一句一字不差（错的选项也算有，只提醒）；日语中文的 p / help 要有读音 r（规矩同 lines.json，___ 原样留着）；
+// 中文课的 zh（中文意思）可以是空的（意思就是原文本身），别的课都要有。文件还没有：只提醒，不算错
+function lessonContent() {
+  // 每一课的句子：英语读 data.js 的 13 个小镇；别的课读 towns.json 和 units/
+  const L = { towns: [], units: {} };
+  if (lang === 'en') {
+    const ctx = { window: {} };
+    try { require('vm').runInNewContext(fs.readFileSync(path.join(__dirname, '..', '..', 'data.js'), 'utf8'), ctx); } catch (e) { E('lessons.json', '读不了 data.js：' + e.message); return null; }
+    L.towns = (ctx.window.WORLDS || []).map(w => ({ sents: w.sents.map(s => s[0]), dlgs: w.dlgs.flatMap(d => [d[0], d[1]]), wrong: w.dlgs.flatMap(d => d[2] || []) }));
+    return L;
+  }
+  const T = read(path.join(DIR, 'towns.json'));
+  if (!Array.isArray(T)) return null;
+  const one = u => ({ sents: (u.sents || []).map(s => s.t), dlgs: (u.dlgs || []).flatMap(d => [d.q && d.q.t, d.a && d.a.t]), wrong: (u.dlgs || []).flatMap(d => (d.wrong || []).map(x => x.t)) });
+  L.towns = T.map(one);
+  const ud = path.join(DIR, 'units');
+  if (fs.existsSync(ud)) for (const f of fs.readdirSync(ud).filter(f => /\.json$/.test(f)).sort()) { const u = read(path.join(ud, f)); if (u && u.book) L.units[u.book + '-' + u.n] = one(u); }
+  // 只有 8 个单元齐全的册才进课程（build.js 一样）
+  const by = {};
+  Object.keys(L.units).forEach(k => { const b = k.split('-')[0]; by[b] = (by[b] || 0) + 1; });
+  Object.keys(L.units).forEach(k => { if (by[k.split('-')[0]] !== 8) delete L.units[k]; });
+  return L;
+}
+function lessonsJson(fileArg) {
+  const f = fileArg || path.join(DIR, 'lessons.json'), sample = !!fileArg;
+  if (!fs.existsSync(f)) { Wn('lessons.json', '还没有（这门课没有「这一课学什么」和「求助的话」）'); return; }
+  const J = read(f); if (!J) return;
+  const w0 = 'lessons.json';
+  if (!J || typeof J !== 'object' || Array.isArray(J)) { E(w0, '要写成 { "lang": "' + lang + '", "help": […], "towns": {…} }'); return; }
+  if (J.lang !== lang) E(w0, 'lang 要是 ' + lang);
+  const C = lessonContent(); if (!C) return;
+  const two = (w, o, k) => { if (!o || typeof o !== 'object' || !str(o.zh) || !str(o.en)) E(w, k + ' 要有 zh 和 en'); else if (!/[A-Za-z]{2,}/.test(o.en)) E(w, k + '.en 要用英语写：' + o.en); };
+  const meanZh = (w, v) => { if (lang === 'zh') { if (v != null && typeof v !== 'string') E(w, 'zh 要是字符串（中文课可以是空的）'); } else if (!str(v)) E(w, '缺中文意思 zh'); };
+  const rd = (w, r, t) => {   // 日语中文的读音：___ 两边原样留着，查的时候拿掉
+    if (lang !== 'ja' && lang !== 'zh') { if (r != null) Wn(w, lang === 'es' ? '西语不用写 r' : '英语不用写 r'); return; }
+    if (!str(r)) { E(w, '缺读音 r'); return; }
+    if (/_{3}/.test(t) && !/_{3}/.test(r)) Wn(w, '句型里有 ___，读音里没有：' + r);
+    reading(w, r.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim(), t.replace(/_+/g, ''));
+  };
+  // help
+  if (!Array.isArray(J.help) || !J.help.length) E(w0, '要有 help（求助的话，8–12 句）');
+  else {
+    if (J.help.length < 8 || J.help.length > 12) Wn(w0, 'help 要 8–12 句，现在 ' + J.help.length);
+    J.help.forEach((h, i) => {
+      const w = w0 + ' help 第 ' + (i + 1) + ' 句';
+      if (!h || !str(h.t)) { E(w, '缺 t'); return; }
+      meanZh(w, h.zh);
+      if (!str(h.en)) E(w, '缺 en');
+      two(w, h.use, 'use');
+      punct(w, h.t);
+      rd(w, h.r, h.t);
+    });
+    dup(w0 + ' help', J.help, h => h && lower(h.t), '句子 ');
+  }
+  // 一课：can / intro（只有小镇）、patterns、tips
+  const lesson = (w, x, c, town) => {
+    if (!x || typeof x !== 'object' || Array.isArray(x)) { E(w, '要写成 { ' + (town ? 'can, intro, ' : '') + 'patterns, tips }'); return; }
+    if (town) { two(w, x.can, 'can'); two(w, x.intro, 'intro'); }
+    if (!Array.isArray(x.patterns) || x.patterns.length < 2 || x.patterns.length > 4) E(w, 'patterns 要 2–4 个，现在 ' + (Array.isArray(x.patterns) ? x.patterns.length : '没有'));
+    (Array.isArray(x.patterns) ? x.patterns : []).forEach((p, i) => {
+      const y = w + ' 句型 ' + (i + 1);
+      if (!p || !str(p.p)) { E(y, '缺 p（句型本身，空的地方写 ___）'); return; }
+      meanZh(y, p.zh);
+      if (!str(p.en)) E(y, '缺 en');
+      two(y, p.note, 'note');
+      rd(y, p.r, p.p);
+      if (!Array.isArray(p.ex) || p.ex.length < 1 || p.ex.length > 2) E(y, 'ex 要 1–2 句');
+      (Array.isArray(p.ex) ? p.ex : []).forEach((t, k) => {
+        if (!str(t)) { E(y, '例句 ' + (k + 1) + ' 要是一句原文（字符串）'); return; }
+        if (c.sents.includes(t) || c.dlgs.includes(t)) return;
+        if (c.wrong.includes(t)) { Wn(y, '例句 ' + (k + 1) + ' 是对话里错的选项（不是对的回答），确认一下：' + t); return; }
+        E(y, '例句 ' + (k + 1) + ' 在这一课的 sents / dlgs 里找不到一字不差的一句（要原样抄，读音、意思、配音都从那一句来）：' + t);
+      });
+    });
+    if (x.tips != null && (!Array.isArray(x.tips) || x.tips.length > 2)) E(w, 'tips 要 0–2 条');
+    (Array.isArray(x.tips) ? x.tips : []).forEach((t, i) => two(w + ' 提醒 ' + (i + 1), t, '提醒'));
+  };
+  const T = J.towns && typeof J.towns === 'object' ? J.towns : {};
+  const tm = [];
+  for (let i = 0; i < C.towns.length; i++) { if (!own(T, String(i))) { tm.push(i); continue; } lesson(w0 + ' 小镇 ' + i, T[String(i)], C.towns[i], true); }
+  Object.keys(T).forEach(k => { if (!/^\d+$/.test(k) || +k >= C.towns.length) Wn(w0, 'towns 里多出来的键 ' + k); });
+  if (tm.length) (sample ? Wn : E)(w0, 'towns 还没有：' + tm.join('、') + '（13 个都要有）');
+  if (lang === 'en') { if (J.units != null) Wn(w0, '英语不写 units（课本单元已经有语法讲解）'); return; }
+  const U = J.units && typeof J.units === 'object' ? J.units : {};
+  const um = Object.keys(C.units).filter(k => !own(U, k));
+  Object.keys(C.units).forEach(k => { if (own(U, k)) lesson(w0 + ' 单元 ' + k, U[k], C.units[k], false); });
+  Object.keys(U).forEach(k => { if (!own(C.units, k)) Wn(w0, 'units 里的 ' + k + ' 不是这门课的单元（只认 8 个齐全的册）'); });
+  if (um.length) (sample ? Wn : E)(w0, 'units 还没有：' + um.join('、'));
+}
+
+// 只查某几张表：--lines / --quests / --sight / --primer / --lessons，后面可以跟一个 .json（测试的小样；不跟就是这门语言正式的那份）
+const ARGV = process.argv.slice(3), ONLY = ['--lines', '--quests', '--sight', '--primer', '--lessons'].filter(x => flags.has(x));
 const fileAfter = flag => { const i = ARGV.indexOf(flag), a = i >= 0 ? ARGV[i + 1] : ''; return a && /\.json$/i.test(a) ? path.resolve(a) : null; };
 if (ONLY.length) {
   // 老写法「--lines 文件」文件不一定紧跟在后面：只有 --lines 一个时照旧认参数里的第一个 .json
@@ -430,6 +596,8 @@ if (ONLY.length) {
   if (flags.has('--lines')) linesJson(fileAfter('--lines') || (any ? path.resolve(any) : null));
   if (flags.has('--quests')) questsJson(fileAfter('--quests') || (any ? path.resolve(any) : null));
   if (flags.has('--sight')) sightJson(fileAfter('--sight') || (any ? path.resolve(any) : null));
+  if (flags.has('--primer')) primerJson(fileAfter('--primer') || (any ? path.resolve(any) : null));
+  if (flags.has('--lessons')) lessonsJson(fileAfter('--lessons') || (any ? path.resolve(any) : null));
   if (!flags.has('--quiet')) warn.forEach(x => console.log('提醒  ' + x));
   bad.forEach(x => console.log('错    ' + x));
   console.log((bad.length ? '✗ ' : '✓ ') + lang + ' ' + ONLY.map(x => x.slice(2) + '.json').join(' / ') + '：' + bad.length + ' 处错，' + warn.length + ' 处提醒');
@@ -438,7 +606,7 @@ if (ONLY.length) {
 const syl = syllabus();
 if (!flags.has('--units')) towns();
 if (!flags.has('--towns')) units(syl);
-if (!flags.has('--towns') && !flags.has('--units')) { linesJson(); questsJson(); sightJson(); }
+if (!flags.has('--towns') && !flags.has('--units')) { linesJson(); questsJson(); sightJson(); primerJson(); lessonsJson(); }
 if (!flags.has('--quiet')) warn.forEach(x => console.log('提醒  ' + x));
 bad.forEach(x => console.log('错    ' + x));
 console.log((bad.length ? '✗ ' : '✓ ') + lang + '：' + bad.length + ' 处错，' + warn.length + ' 处提醒');

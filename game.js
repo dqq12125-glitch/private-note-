@@ -186,7 +186,28 @@
       // 别的课的单元号（英语课照课本写 Unit 3，不走这个键）
       'g.unit.no': '第 {n} 单元', 'g.ev.bookat.c': '📍 现在学 {b} 第 {n} 单元，冒险里会多出它的题', 'g.ev.gram.h.c': '第 {n} 单元语法：{t}', 'g.ev.gram.h0.c': '第 {n} 单元语法',
       'g.unit.old': '{b}的新教材还没出版（预计 2027 年春季），现在先用旧版教材的单元，新书出来后会换掉。',
-      'g.det.count': ' 共 {n} 题，3 颗心。', 'g.det.best': '最好成绩：', 'g.det.scene': '🎬 先看对话动画', 'g.det.pre': '📖 先预习一下（点一句就能听）',
+      'g.det.count': ' 共 {n} 题，3 颗心。', 'g.det.best': '最好成绩：', 'g.det.scene': '🎬 先看对话动画',
+      // 单词表、单词卡、我的单词本、发音入门（tools/course/WORDS.md）
+      'g.wd.btn': '📖 单词表', 'g.wd.h': '单词表', 'g.wd.gram': '这一单元的语法：{t}', 'g.wd.cards': '▶ 用单词卡过一遍', 'g.wd.roma': '罗马字',
+      'g.wd.roma.on': '显示', 'g.wd.roma.off': '不显示', 'g.wd.words': '单词（{n}）', 'g.wd.sents': '常用句子（{n}）', 'g.wd.say': '听一听', 'g.wd.none': '这一课没有单词',
+      'g.wd.legend': '🆕 还没练过 · 🔁 在复习 · ✅ 已掌握　点 🔊 听发音', 'g.wd.st.new': '还没练过', 'g.wd.st.rev': '在复习', 'g.wd.st.ok': '已掌握', 'g.wd.back': '← 返回',
+      'g.wc.n': '第 {i} / {n} 张', 'g.wc.skip': '跳过，直接闯关', 'g.wc.go': '我认识了，开始闯关', 'g.wc.done': '✓ 看完了', 'g.wc.prev': '上一张', 'g.wc.next': '下一张',
+      'g.wc.say': '再听一遍', 'g.wc.gram': '语法要点', 'g.wc.swipe': '← → 翻页，也可以左右滑',
+      'g.wb.btn': '📒 我的单词本（学过 {n} 个词）', 'g.wb.h': '📒 我的单词本', 'g.wb.all': '一共', 'g.wb.rev': '在复习', 'g.wb.ok': '已掌握',
+      'g.wb.f.all': '全部', 'g.wb.f.rev': '🔁 在复习', 'g.wb.f.ok': '✅ 已掌握', 'g.wb.q': '🔍 找词或意思', 'g.wb.tap': '点一个词看例句',
+      'g.wb.empty': '还没有学过的词。去闯关练习里过一关，学过的词就会出现在这里。', 'g.wb.none': '没有找到这样的词', 'g.wb.more': '再显示 {n} 个', 'g.wb.noex': '这一课的句子里没有用到这个词',
+      'g.pr.btn': '🔤 发音入门', 'g.pr.h': '🔤 发音入门', 'g.pr.card': '先学发音和文字（约 10 分钟）', 'g.pr.card.go': '开始', 'g.pr.card.no': '不用了',
+      'g.pr.tap': '点一格听发音；带小圆点的还有例词', 'g.pr.ex': '例词', 'g.pr.next': '下一段 →', 'g.pr.done': '✓ 学完了',
+      // 第二部分：零基础怎么学（WORDS.md 第 7–11 条）
+      'g.wd.slow': '慢慢念一遍',
+      'g.ls.btn': '📘 这一课学什么', 'g.ls.h': '这一课学什么', 'g.ls.can': '学完能做什么', 'g.ls.pats': '句型', 'g.ls.tips': '提醒',
+      'g.ls.next': '下一步：认识单词 →', 'g.ls.go': '开始闯关 →',
+      'g.hp.h': '🆘 求助的话', 'g.hp.tab': '🆘 求助的话', 'g.hp.tip': '听不懂、说不出来的时候就说这几句。点 🔊 先听，再自己说出来。',
+      'g.rt.h': '🧭 新手路线', 'g.rt.n': '{a} / {b}', 'g.rt.primer': '发音入门：先认字、学发音', 'g.rt.lesson': '{t}：这一课学什么', 'g.rt.cards': '用单词卡认识这一课的词',
+      'g.rt.l14': '第 1–4 关：听和说', 'g.rt.scene': '看对话动画', 'g.rt.l57': '第 5–7 关：对话和 BOSS', 'g.rt.adv': '去冒险：到大地图上用学过的话', 'g.rt.chat': '和岛民聊一次天',
+      'g.rt.next': '下一课：第 {n} 岛 {t}',
+      'g.set.slow': '朗读速度', 'g.set.slow.off': '正常', 'g.set.slow.on': '🐢 慢', 'g.set.slow.d': '慢：配音放慢一点（声音不变调）。每个 🔊 旁边的 🐢 只放慢那一次。',
+      'g.set.route': '新手路线', 'g.set.route.d': '首页最上面一步一步教你怎么学（打通第 3 岛以后就不再显示）。',
       'g.det.later': '再想想', 'g.det.go': '开始闯关',
       'g.play.norev': '今天没有要复习的题，太棒了！', 'g.play.boss': '{name} 挡住了去路！听懂它的话，<b>大声说出</b>正确的回答来攻击它。', 'g.play.fight': '⚔️ 迎战！',
       'g.play.combo': '🔥 {n} 连击', 'g.play.xpx': ' · 经验 ×{m}',
@@ -817,7 +838,28 @@
       'g.unit.cur': 'Learning now: <b>{u}</b>', 'g.unit.guess': ' (guessed from the date)', 'g.unit.change': 'Change',
       'g.unit.no': 'Unit {n}', 'g.ev.bookat.c': '📍 Now studying {b} Unit {n}. Its questions will also show up in Monster Adventure.', 'g.ev.gram.h.c': 'Unit {n} grammar: {t}', 'g.ev.gram.h0.c': 'Unit {n} grammar',
       'g.unit.old': 'The new {b} textbook is not out yet (expected in spring 2027). For now these are the units of the old textbook. They will change when the new book comes out.',
-      'g.det.count': { one: ' {n} question, 3 hearts.', other: ' {n} questions, 3 hearts.' }, 'g.det.best': 'Best: ', 'g.det.scene': '🎬 Watch the Theatre first', 'g.det.pre': '📖 Preview first (tap a line to hear it)',
+      'g.det.count': { one: ' {n} question, 3 hearts.', other: ' {n} questions, 3 hearts.' }, 'g.det.best': 'Best: ', 'g.det.scene': '🎬 Watch the Theatre first',
+      // Word list, word cards, my word book, sounds and letters (tools/course/WORDS.md)
+      'g.wd.btn': '📖 Word list', 'g.wd.h': 'Word list', 'g.wd.gram': 'Grammar in this unit: {t}', 'g.wd.cards': '▶ Go through them with word cards', 'g.wd.roma': 'Romaji',
+      'g.wd.roma.on': 'Show', 'g.wd.roma.off': 'Hide', 'g.wd.words': 'Words ({n})', 'g.wd.sents': 'Useful sentences ({n})', 'g.wd.say': 'Listen', 'g.wd.none': 'No words in this lesson',
+      'g.wd.legend': '🆕 not practised · 🔁 in review · ✅ learned · tap 🔊 to listen', 'g.wd.st.new': 'Not practised yet', 'g.wd.st.rev': 'In review', 'g.wd.st.ok': 'Learned', 'g.wd.back': '← Back',
+      'g.wc.n': 'Card {i} of {n}', 'g.wc.skip': 'Skip, start the level', 'g.wc.go': 'I know them. Start!', 'g.wc.done': '✓ Done', 'g.wc.prev': 'Previous card', 'g.wc.next': 'Next card',
+      'g.wc.say': 'Listen again', 'g.wc.gram': 'Grammar point', 'g.wc.swipe': '← → to turn, or swipe',
+      'g.wb.btn': { one: '📒 My word book ({n} word learned)', other: '📒 My word book ({n} words learned)' }, 'g.wb.h': '📒 My word book', 'g.wb.all': 'Words', 'g.wb.rev': 'In review', 'g.wb.ok': 'Learned',
+      'g.wb.f.all': 'All', 'g.wb.f.rev': '🔁 In review', 'g.wb.f.ok': '✅ Learned', 'g.wb.q': '🔍 Find a word or meaning', 'g.wb.tap': 'Tap a word to see an example',
+      'g.wb.empty': 'No words yet. Clear a practice level and the words you learn will show up here.', 'g.wb.none': 'No words like that', 'g.wb.more': 'Show {n} more', 'g.wb.noex': 'No sentence in this lesson uses this word',
+      'g.pr.btn': '🔤 Sounds and letters', 'g.pr.h': '🔤 Sounds and letters', 'g.pr.card': 'Learn the sounds and letters first (about 10 minutes)', 'g.pr.card.go': 'Start', 'g.pr.card.no': 'No thanks',
+      'g.pr.tap': 'Tap a box to hear it. Boxes with a dot have example words.', 'g.pr.ex': 'Example words', 'g.pr.next': 'Next →', 'g.pr.done': '✓ Finished',
+      // Part two: how to learn from zero (WORDS.md 7–11)
+      'g.wd.slow': 'Say it slowly',
+      'g.ls.btn': '📘 What you learn here', 'g.ls.h': 'What you learn here', 'g.ls.can': 'After this lesson you can', 'g.ls.pats': 'Sentence patterns', 'g.ls.tips': 'Watch out',
+      'g.ls.next': 'Next: meet the words →', 'g.ls.go': 'Start the level →',
+      'g.hp.h': '🆘 Phrases for help', 'g.hp.tab': '🆘 Phrases for help', 'g.hp.tip': 'Say these when you don\'t understand or don\'t know what to say. Tap 🔊 to listen first, then say it yourself.',
+      'g.rt.h': '🧭 Beginner\'s path', 'g.rt.n': '{a} / {b}', 'g.rt.primer': 'Sounds and letters first', 'g.rt.lesson': '{t}: what you learn here', 'g.rt.cards': 'Meet the words with word cards',
+      'g.rt.l14': 'Levels 1–4: listen and speak', 'g.rt.scene': 'Watch the Theatre', 'g.rt.l57': 'Levels 5–7: dialogues and the BOSS', 'g.rt.adv': 'Go on an adventure and use what you learned', 'g.rt.chat': 'Chat with an islander once',
+      'g.rt.next': 'Next lesson: Island {n}, {t}',
+      'g.set.slow': 'Reading speed', 'g.set.slow.off': 'Normal', 'g.set.slow.on': '🐢 Slow', 'g.set.slow.d': 'Slow: recordings play a little slower (same pitch). The 🐢 next to each 🔊 slows down just that one time.',
+      'g.set.route': 'Beginner\'s path', 'g.set.route.d': 'Step-by-step steps at the top of the home page (hidden after you clear Island 3).',
       'g.det.later': 'Not now', 'g.det.go': 'Start',
       'g.play.norev': 'Nothing to review today. Great!', 'g.play.boss': '{name} blocks the way! Understand what it says, then <b>say</b> the right answer aloud to attack.', 'g.play.fight': '⚔️ Fight!',
       'g.play.combo': '🔥 {n} combo', 'g.play.xpx': ' · XP ×{m}',
@@ -1359,8 +1401,15 @@
     // 支线委托在这门语言里的开场白、示范句、词卡（course.json 的 QUESTS，tools/course/TALK.md 第二轮）：老的课程包没有 = null，委托照旧不出
     CQ = c.QUESTS && typeof c.QUESTS === 'object' && !Array.isArray(c.QUESTS) ? c.QUESTS : null;
     CQN = {};
+    // 发音入门（tools/course/WORDS.md §4，course.json 的 PRIMER）：有一段有格子才算有；老的课程包没有 = null（不出入口、不出首页卡片）
+    PRIMER = c.PRIMER && Array.isArray(c.PRIMER.sections) && c.PRIMER.sections.some(s => s && Array.isArray(s.items) && s.items.some(Boolean)) ?
+      Object.assign({}, c.PRIMER, { sections: c.PRIMER.sections.filter(s => s && Array.isArray(s.items) && s.items.some(Boolean) && (s.layout === 'grid' || s.layout === 'list')) }) : null;
+    // 课前讲解、求助的话（WORDS.md 第 7、8、12 条，course.json 的 LESSONS）：老的课程包没有 = null
+    LESSONS = c.LESSONS && typeof c.LESSONS === 'object' ? c.LESSONS : null;
+    DICT = null;
   }
-  let LTAB = null, CQ = null, CQN = {};
+  // 英语课的课前讲解和求助的话在 lessons-en.js（window.LESSONS_EN）；别的课在 courseUse 里换成 course.json 的
+  let LTAB = null, CQ = null, CQN = {}, PRIMER = null, LESSONS = LANG ? null : window.LESSONS_EN || null, DICT = null;
   // ---------- 别的课的支线委托：这门语言的那几样（course.json 的 QUESTS）----------
   // QUESTS[委托 id] = { opener 开场白, steps: [示范句…]（和 quests.js 的 steps 一步对一步）, words: [[这门语言的词, 中文, 英文]…] }；
   // 句子、词可以是字符串，也可以带读音：{ t, r }（词）/ { t, seg, r }（句子）——两种都认。
@@ -1617,6 +1666,13 @@
       // from 按能力走时从第几个课本单元开始（前面的已免修）、hist 最近 6 次的结果、run 做到一半的那次（暂停）、seen 做过的题（下次先出没做过的）、
       // skip 哪天说了「以后再测」、card 哪天把首页的卡片关了
       place: { lang: 'en', who: '', know: -1, lv: -1, auto: -1, adj: 0, talk: -1, cap: 0, sk: {}, at: '', from: -1, hist: [], run: null, seen: [], skip: '', card: '' },
+      // 单词卡（tools/course/WORDS.md §2）：哪个小镇 / 单元（WX 的编号）看过单词卡了 → 哪天；看过的第 1 关不再先弹单词卡
+      // （开关在 settings.cards：true / false / 没有 = 开着，见 cardsOn；日语的罗马字开关 settings.romaji：没有 = 开着——这两个不放在这里，和 ruby 一样）
+      seenCards: {},
+      primerSeen: '',      // 发音入门（WORDS.md §4）看过 / 首页卡片点了「不用了」的日期（'' = 还没有：这门课还没有星时首页给一张卡片）
+      // 课前讲解「这一课学什么」（WORDS.md §7）：哪个小镇 / 单元看过了 → 哪天（看过的第 1 关不再先弹讲解）。
+      // 新手路线（§9）的开关 settings.route、点词看意思（§10）的开关 settings.wordTap、朗读慢一点（§11）settings.slow 都不放在这里（没有 = 照默认）
+      seenLesson: {},
     };
   }
   function merge(base, o) {
@@ -2111,10 +2167,13 @@
       if (onFail) onFail(); else silent(res, text);
     };
     a.src = url;
-    a.playbackRate = (rate || S.settings.rate) < 0.75 ? 0.75 : 1;
+    // 设置「朗读速度：慢」（WORDS.md §11）：没特意给语速的配音以 0.8 倍速放，音高不变
+    a.playbackRate = (rate || S.settings.rate) < 0.75 ? 0.75 : !rate && slowOn() ? 0.8 : 1;
+    try { a.preservesPitch = true; } catch (e) { /* 老浏览器没有 */ }
     startPlaying();
     const pr = a.play();
-    if (pr && pr.catch) pr.catch(() => { if (!done) toast(tr('g.tts.tap')); fin(); });
+    // 被下一句打断（AbortError：翻单词卡、连着点 🔊 时上一句还没放完）不是「要点一下才能出声」，不提示
+    if (pr && pr.catch) pr.catch(e => { if (!done && !(e && e.name === 'AbortError')) toast(tr('g.tts.tap')); fin(); });
   }
   // g：对话角色的声音 'f' / 'm'；不传就用默认声音。朗读的时候把背景音乐压低，读完恢复
   // 只认最新的一句：新的一句打断旧的时，旧的那句晚一点才结束也不会提前把音乐放回来
@@ -2189,7 +2248,7 @@
     u.lang = v ? v.lang : LANG ? LANG.asr.web : 'en-US';
     // 找不到对应性别的声音时，用音调区分两个角色
     if (g && genderOf(v) !== g) u.pitch = g === 'm' ? 0.75 : 1.3;
-    u.rate = rate || S.settings.rate;
+    u.rate = rate || (slowOn() ? Math.min(S.settings.rate, 0.8) : S.settings.rate);   // 「朗读速度：慢」：本机声音 0.8
     let done = false;
     const fin = () => { if (done) return; done = true; endPlaying(); res(); };
     u.onend = fin;
@@ -3246,7 +3305,9 @@
     const chest = '<button class="chest-btn ' + (ready ? 'ready' : '') + '" data-act="chest" ' + (ready ? '' : 'disabled') + '><span class="ch">' + (opened ? '📭' : '🎁') + '</span><span><b>' + trh(opened ? 'g.home.chest.open' : ready ? 'g.home.chest.ready' : 'g.home.chest') + '</b><br><small>' + trh(opened ? 'g.home.chest.tmr' : 'g.home.chest.how') + '</small></span></button>';
     // 能力检测的卡片（placement.js）：还没测过的存档在这里给一张（不强拉进去）；做到一半的显示「继续」
     const pc = window.EchoPlace && EchoPlace.homeCard ? EchoPlace.homeCard() : '';
-    return pc + revCard() + '<div class="q-head"><h3>' + trh('g.home.tasks') + '</h3><small>' + trh('g.home.reset', { n: hrs }) + '</small></div>' + rows + chest;
+    // 新手路线（WORDS.md §9）在最上面；它开着时发音入门的卡片不另出（路线的第 ① 步就是它）
+    const rt = routeCard();
+    return rt + pc + (rt ? '' : primerCard()) + revCard() + '<div class="q-head"><h3>' + trh('g.home.tasks') + '</h3><small>' + trh('g.home.reset', { n: hrs }) + '</small></div>' + rows + chest;
   }
   const OFFS = [0, -56, -78, -34, 38, 76, 0];
   // 小岛 / 课本单元的名字（按界面语言）：小岛 isleName（你好岛 / Crayon Island），单元 unitTxt（七上 Unit 1 友谊 / 7A Unit 1 Friendship）
@@ -3268,7 +3329,9 @@
     const sc = window.SCENES && window.SCENES[wi], seen = S.scenes[wi];
     const scBtn = sc ? '<button class="scene-btn" data-act="scene" data-w="' + wi + '"><span class="sb-ico">🎬</span><span class="sb-t"><b>' + trh('g.home.scene', { t: gloss({ zh: sc.title }) || isleName(wi) }) + '</b><small>' +
       trh(seen && seen.watched ? 'g.home.scene.seen' : 'g.home.scene.new') + '</small></span><span class="sb-go">▶</span></button>' : '';
-    return '<section class="world' + (isUnit(wi) ? ' unit' + (wi - NB === curIdx() ? ' now' : '') : '') + '" id="w' + wi + '" style="--wc:' + w.color + '">' + head + '<div class="path">' + scBtn + nodes + '</div></section>';
+    // 小岛：头下面一排「📖 单词表」（课本单元的在 unitHead 的那一排里）
+    const wl = isUnit(wi) ? '' : '<div class="u-bar">' + (lessonOf(wi) ? '<button class="btn small ghost" data-act="lesson" data-w="' + wi + '">' + trh('g.ls.btn') + '</button>' : '') + '<button class="btn small" data-act="wordList" data-w="' + wi + '">' + trh('g.wd.btn') + '</button></div>';
+    return '<section class="world' + (isUnit(wi) ? ' unit' + (wi - NB === curIdx() ? ' now' : '') : '') + '" id="w' + wi + '" style="--wc:' + w.color + '">' + head + wl + '<div class="path">' + scBtn + nodes + '</div></section>';
   }
   // ---------- 课本单元（适用于沪教版词汇；不叫「同步」，也不说「配套」：评估「必须改」第 6 条） ----------
   // 销售版只开放买了的那个学年的册（2026-10-08 评审：卖的是「本学年」，下一学年的内容包另买）：
@@ -3373,6 +3436,8 @@
     return '<div class="w-head"><span class="w-ico">' + u.icon + '</span><div><div class="w-no">' + esc(u.bshort) + ' · ' + esc(unitNo(u.n)) + (now ? trh('g.unit.now') : '') + free + '</div><h2>' + esc(u.en) + (zt != null ? ' <small>' + esc(zt) + '</small>' : '') + '</h2><p class="w-en">' + esc(u.key) + '</p></div>' +
       '<span class="w-stars">★ ' + tot + '/21</span></div>' +
       '<div class="u-bar">' + (gt != null ? '<button class="link" data-act="bookGram" data-w="' + wi + '">' + trh('g.unit.gram', { t: gt }) + '</button>' : '') +
+      (lessonOf(wi) ? '<button class="btn small ghost" data-act="lesson" data-w="' + wi + '">' + trh('g.ls.btn') + '</button>' : '') +
+      '<button class="btn small" data-act="wordList" data-w="' + wi + '">' + trh('g.wd.btn') + '</button>' +
       (unitTalk(u) ? '<button class="btn small sun" data-act="talk_open" data-npc="' + unitTalk(u).id + '">' + trh('g.unit.talk', { name: unitTalk(u).name }) + '</button>' : '') +
       (now ? '' : '<button class="btn small ghost" data-act="bookAt" data-i="' + (wi - NB) + '">' + trh('g.unit.setnow') + '</button>') + '</div>';
   }
@@ -3425,7 +3490,8 @@
     const book = BK.length && S.book.view !== 'isle';
     const seg = BK.length ? '<div class="seg qv"><button class="' + (book ? 'on' : '') + '" data-act="quizView" data-v="book">' + trh(LANG ? 'g.home.qv.course' : 'g.home.qv.book') + '</button><button class="' + (book ? '' : 'on') + '" data-act="quizView" data-v="isle">' + trh('g.home.qv.isle') + '</button></div>' : '';
     const cur = currentNode();
-    $('#map').innerHTML = seg + (book ? bookHTML() : W.map((w, wi) => worldHTML(w, wi, cur)).join(''));
+    // 最上面一排：📒 我的单词本、🔤 发音入门（WORDS.md §3 §4）
+    $('#map').innerHTML = wordsBar() + seg + (book ? bookHTML() : W.map((w, wi) => worldHTML(w, wi, cur)).join(''));
     if (RT.scrollCur) {
       RT.scrollCur = false;
       const n = $('.node.cur');
@@ -3479,12 +3545,7 @@
     // 听音选义 / 听句选意：这一关的内容在界面语言里没有意思时，出的是「选听到的英文」（makeQ 的 q.ear），标签跟着换
     const ear = t => (t === 'lw' && meanOf(w.words[0]) == null) || (t === 'lm' && meanOf(w.sents[0]) == null);
     const types = [...new Set(r.mix.map(m => m[0]))].map(t => '<span class="tag">' + (ear(t) ? trh('g.cue.' + t + '.tag') : TYPE_TAG[t]) + '</span>').join('');
-    // 预习：英文 + 界面语言里的意思（没有就只有英文；单词带图）
-    let items;
-    if (li <= 1) items = w.words.map(x => { const m = meanOf(x); return [x[0], x[2] + (m != null ? ' ' + m : '')]; });
-    else if (li <= 3) items = w.sents.map(x => [x[0], meanOf(x) || '']);
-    else items = w.dlgs.map(x => [x[0] + ' → ' + x[1], '']);
-    const pre = items.map(([en, zh]) => '<button class="pre-item" data-act="sayText" data-t="' + esc(en.replace(' → ', ' ... ')) + '">🔊 <b>' + rb(en) + '</b><span>' + esc(zh) + '</span></button>').join('');
+    // 原来收起来的「先预习一下」换成「📖 单词表」按钮（WORDS.md §1：打开这个小镇 / 单元的单词表，关上回到这里）
     openModal(
       '<div class="big">' + (r.boss ? w.boss.emoji : r.icon) + '</div>' +
       '<h2>' + esc(wxName(wi)) + ' · ' + (r.boss ? 'BOSS ' + esc(bossName(w.boss)) : r.name) + '</h2>' +
@@ -3492,9 +3553,584 @@
       '<div class="lv-types">' + types + '</div>' +
       (st ? '<p>' + trh('g.det.best') + '<span class="n-stars" style="font-size:18px">' + starStr(st) + '</span></p>' : '') +
       (li === 4 && window.SCENES && window.SCENES[wi] ? '<button class="btn sun wide" data-act="scene" data-w="' + wi + '">' + trh('g.det.scene') + '</button>' : '') +
-      '<details class="pre"><summary>' + trh('g.det.pre') + '</summary><div class="pre-list">' + pre + '</div></details>' +
+      '<button class="btn ghost wide wd-open" data-act="wordList" data-w="' + wi + '" data-l="' + li + '">' + trh('g.wd.btn') + '</button>' +
       '<div class="row"><button class="btn ghost" data-act="close">' + trh('g.det.later') + '</button><button class="btn" data-act="start" data-w="' + wi + '" data-l="' + li + '" data-focus>' + trh('g.det.go') + '</button></div>'
     );
+  }
+
+  // ---------- 单词表、先认识再闯关（单词卡）、我的单词本、发音入门（tools/course/WORDS.md，2026-11-22）----------
+  // 老板：「应该做一个单词表出来的，不然完全的新手根本不懂那个语言，怎么学习呢？」英语课也有前三样；发音入门只给别的语言的课（course.json 有 PRIMER 才有）。
+  // 单词的状态读复习本（S.rev.items，键和 revKey 一样：'word:' + 编号 + ':' + 第几个）：在复习本里、还有到期日 = 🔁 在复习；在复习本里、掌握了 = ✅ 已掌握；
+  // 不在复习本里：这个小镇 / 单元拿过星 = ✅（小岛的题答对了本来就不进复习本，拿过星就算学过了——单词本「拿过星的小镇 / 单元的全部单词」也这么算），没拿过 = 🆕 还没练过
+  const wdKey = (wi, i) => 'word:' + wi + ':' + i;
+  const wxStarred = wi => range(7).some(l => (S.stars[wi + '-' + l] || 0) > 0);
+  function wdState(wi, i) {
+    const e = S.rev.items[wdKey(wi, i)];
+    if (e) return e.due ? 'rev' : 'ok';
+    return wxStarred(wi) ? 'ok' : 'new';
+  }
+  const WD_ICON = { new: '🆕', rev: '🔁', ok: '✅' };
+  const wdBadge = st => '<span class="wd-st st-' + st + '" title="' + esc(tr('g.wd.st.' + st)) + '" aria-label="' + esc(tr('g.wd.st.' + st)) + '">' + WD_ICON[st] + '</span>';
+  const SAY_BTN = (t, act) => '<button class="spk mini wd-say" data-act="' + (act || 'wdSay') + '" data-t="' + esc(t) + '" aria-label="' + esc(tr('g.wd.say')) + '">' + SPK + '</button>';
+  // 界面语言那一份（数据里 { zh, en } 的说明）：界面语言没有就英文，中文界面没有就不显示（不拿英文顶）
+  const uiPick = o => { if (!o) return ''; const l = I18N ? I18N.lang() : 'zh'; return typeof o[l] === 'string' && o[l] ? o[l] : l === 'zh' ? '' : o.en || ''; };
+  // ---------- 日语的罗马字（WORDS.md §5）：只在这四样里多一行；单词表顶上的开关 S.settings.romaji（没有 = 开着）----------
+  const romaOn = () => COURSE === 'ja' && !!LANG && typeof LANG.romaji === 'function' && S.settings.romaji !== false;
+  const RO_TAIL = /[、。！？!?，,…]+$/;
+  // 按词分开写（主会话 2026-11-22）：这门课认得的词的读音（平假名）——课程里每个词的读音、句子每个词块去掉块尾助词的读音、读音表（LEX）里的读音。
+  // lang-ja.js 的 romajiWords 拿它从左往右按最长的切（田中先生 → tanaka sensei，島に → shima ni，おはようございます → ohayou gozaimasu）
+  let RKN = null;
+  function romaKnown() {
+    if (RKN && RKN.n === ENTRY.size && RKN.wx === WX) return RKN.s;
+    const s = new Set(), hira = x => String(x || '').replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/[\s　、。！？!?「」『』，,.…〜～]+/g, '');
+    const PART = /(から|まで|より|には|では|は|が|を|に|で|と|も|へ|の|や|か|ね|よ)$/;
+    const add = r => { r = hira(r); if (r.length >= 2 && !/[㐀-鿿々]/.test(r)) s.add(r); };
+    WX.forEach(w => (w.words || []).forEach(it => { const g = glossObj(it); if (g && typeof g.r === 'string') add(g.r); }));
+    ENTRY.forEach(e => { if (Array.isArray(e.seg) && Array.isArray(e.r)) e.r.forEach(r => { const h = hira(r); add(PART.test(h) ? h.replace(PART, '') : h); }); });
+    if (LEX && LEX.map) LEX.map.forEach(rs => (rs || []).forEach(add));
+    RKN = { s, n: ENTRY.size, wx: WX };
+    return s;
+  }
+  // 一个词 / 一句话的罗马字：按条目的读音，按词分开写（词的 r 是一串：切得开才切；句子按 seg 一块一块再切，块尾的标点照搬）；还剩汉字、读不出来的不显示（''）
+  function romaOf(text, r0) {
+    if (!romaOn()) return '';
+    const e = entryOf(text), K = romaKnown(), RW = (r, o) => (LANG.romajiWords ? LANG.romajiWords(r, K, o) : LANG.romaji(r, o && o.whole ? undefined : { block: true }));
+    let out = '';
+    if (r0) out = RW(String(r0).replace(RO_TAIL, ''), { whole: true }) + LANG.romaji((RO_TAIL.exec(String(r0)) || [''])[0]);
+    else if (e && Array.isArray(e.seg) && Array.isArray(e.r) && e.seg.length === e.r.length) out = e.r.map((r, k) => RW(String(r).replace(RO_TAIL, ''), { block: true }) + LANG.romaji((RO_TAIL.exec(e.seg[k]) || [''])[0])).join(' ');
+    else if (e && typeof e.r === 'string') out = RW(e.r.replace(RO_TAIL, ''), { whole: true }) + LANG.romaji((RO_TAIL.exec(e.r) || [''])[0]);
+    else if (/^[ぁ-ゖァ-ヺー\s、。！？]+$/.test(String(text))) out = RW(String(text).replace(RO_TAIL, ''), { whole: true }) + LANG.romaji((RO_TAIL.exec(String(text)) || [''])[0]);
+    out = out.replace(/\s+([,.?!])/g, '$1').replace(/\s+/g, ' ').trim();
+    return /^[\x20-\x7e]+$/.test(out) ? out : '';
+  }
+  const romaHTML = (text, r0) => { const r = romaOf(text, r0); return r ? '<span class="wd-rom" lang="ja-Latn">' + esc(r) + '</span>' : ''; };
+  // ---------- 例句：这一课 sents 里第一句含这个词的（英语、西语按词，日语中文按子串）；没有 → null ----------
+  const wdToks = s => String(s).toLowerCase().normalize('NFC').replace(/[’‘]/g, "'").replace(/[¿¡.,!?;:"“”()«»…—–]/g, ' ').split(/\s+/).filter(Boolean);
+  function wdExample(w, word) {
+    const ss = (w && w.sents) || [];
+    if (!LANG || LANG.script === 'latin') {
+      const need = wdToks(word);
+      if (!need.length) return null;
+      return ss.find(s => { const t = wdToks(s[0]); for (let i = 0; i + need.length <= t.length; i++) if (need.every((x, k) => t[i + k] === x)) return true; return false; }) || null;
+    }
+    const core = String(word).replace(/[\s、。！？!?「」]/g, '');
+    return core ? ss.find(s => String(s[0]).includes(core)) || null : null;
+  }
+  function wdExHTML(w, word) {
+    const s = wdExample(w, word);
+    if (!s) return '';
+    const m = meanOf(s);
+    return '<div class="wd-ex"><div class="wd-ex-t"><span>' + rb(s[0]) + '</span>' + SAYS(s[0]) + '</div>' + romaHTML(s[0]) + (m ? '<small>' + esc(m) + '</small>' : '') + '</div>';
+  }
+  // 一个词（单词表、单词本）：图、词（读音）、罗马字、意思、状态、🔊；ex = 例句直接画出来；attrs = 整行的属性（单词本：点一下展开例句）
+  function wdRow(wi, i, ex, attrs) {
+    const w = WX[wi], it = w.words[i], m = meanOf(it), st = wdState(wi, i);
+    return '<div class="wd-row" data-st="' + st + '"' + (attrs || '') + '><span class="wd-pic" aria-hidden="true">' + esc(it[2] || '') + '</span>' +
+      '<div class="wd-main"><div class="wd-w"><b>' + rb(it[0]) + '</b>' + wdBadge(st) + '</div>' + romaHTML(it[0]) + (m != null && m !== '' ? '<div class="wd-m">' + esc(m) + '</div>' : '') + (ex ? wdExHTML(w, it[0]) : '') + '</div>' +
+      SAYS(it[0]) + '</div>';
+  }
+  function sentRow(s) {
+    const m = meanOf(s);
+    return '<div class="wd-row wd-srow"><div class="wd-main"><div class="wd-s">' + rb(s[0]) + '</div>' + romaHTML(s[0]) + (m ? '<div class="wd-m">' + esc(m) + '</div>' : '') + '</div>' + SAYS(s[0]) + '</div>';
+  }
+  // 标题：小镇 / 单元名。别的课：这门课的写法做大字 + 界面语言的名字做小字（和 world.js townTag 一个排法）
+  function wdTitle(wi) {
+    const w = WX[wi];
+    if (isUnit(wi)) {
+      const zt = LANG ? glossC({ zh: w.zh, en: w.x && w.x.en }) : gloss({ zh: w.zh });
+      return '<small class="wd-no">' + esc(w.bshort + ' · ' + unitNo(w.n)) + '</small><h2>' + (LANG ? '<span class="pl-c"><b>' + rubyLine(w.en) + '</b>' + (zt ? '<small>' + esc(zt) + '</small>' : '') + '</span>' : esc(w.en) + (zt ? ' <small>' + esc(zt) + '</small>' : '')) + '</h2>';
+    }
+    const no = '<small class="wd-no">' + trh('g.home.isle.no', { n: wi + 1 }) + '</small>';
+    if (LANG) return no + '<h2><span class="pl-c"><b>' + rubyLine(w.en) + '</b><small>' + esc(isleName(wi)) + '</small></span></h2>';
+    return no + '<h2>' + esc(isleName(wi)) + ' <small>' + esc(w.en) + '</small></h2>';
+  }
+  // 单元的语法（标题 + 说明，按界面语言；英语课的语法讲解只有中文，英语界面就没有）
+  function wdGram(w) {
+    if (!w || !w.grammar) return null;
+    const ge = (LANG && w.grammar.en) || {};
+    const t = LANG ? glossC({ zh: w.grammar.title, en: ge.title }) : gloss({ zh: w.grammar.title });
+    const p = LANG ? glossC({ zh: w.grammar.tip, en: ge.tip }) : gloss({ zh: w.grammar.tip });
+    return t == null && p == null ? null : { t: t || '', p: p || '' };
+  }
+
+  // ---------- 📖 单词表（WORDS.md §1）----------
+  // back：关上以后回到哪——{ li } 关卡详情、'menu' 大地图的冒险菜单；没有就只有「关闭」
+  function wordList(wi, back) {
+    const w = WX[wi];
+    if (!w) return;
+    RT.wl = { wi, back: back || null };
+    const g = isUnit(wi) ? wdGram(w) : null, ws = w.words || [], ss = w.sents || [];
+    const gram = g ? '<div class="wd-gram"><b>' + trh('g.wd.gram', { t: g.t }) + '</b>' + (g.p ? '<p>' + esc(g.p) + '</p>' : '') + '</div>' : '';
+    const tog = COURSE === 'ja' && LANG && LANG.romaji ? '<div class="wd-tog"><span>' + trh('g.wd.roma') + '</span><div class="seg"><button class="' + (S.settings.romaji !== false ? 'on' : '') + '" data-act="wdRoma" data-v="1">' + trh('g.wd.roma.on') + '</button><button class="' + (S.settings.romaji === false ? 'on' : '') + '" data-act="wdRoma" data-v="0">' + trh('g.wd.roma.off') + '</button></div></div>' : '';
+    // 顶上：📘 这一课学什么（有课前讲解的才有，§7）、▶ 用单词卡过一遍、罗马字开关
+    const tools = (lessonOf(wi) ? '<button class="link wd-ls" data-act="lesson" data-w="' + wi + '" data-from="list">' + trh('g.ls.btn') + ' ›</button>' : '') +
+      '<div class="wd-tools">' + (ws.length ? '<button class="btn small" data-act="wcOpen" data-w="' + wi + '">' + trh('g.wd.cards') + '</button>' : '') + tog + '</div>';
+    openModal('<div class="wd-head"><span class="w-ico" style="background:' + esc(w.color || '') + '">' + esc(w.icon || '') + '</span><div class="wd-ht"><small class="wd-k">' + trh('g.wd.h') + '</small>' + wdTitle(wi) + '</div></div>' + gram + tools +
+      '<p class="wd-legend">' + trh('g.wd.legend') + '</p>' +
+      '<h3 class="wd-h">' + trh('g.wd.words', { n: ws.length }) + '</h3><div class="wd-list">' + (ws.length ? ws.map((it, i) => wdRow(wi, i, true)).join('') : '<p class="wd-legend">' + trh('g.wd.none') + '</p>') + '</div>' +
+      (ss.length ? '<details class="pre wd-sents"><summary>' + trh('g.wd.sents', { n: ss.length }) + '</summary><div class="wd-list wd-slist">' + ss.map(sentRow).join('') + '</div></details>' : '') +
+      '<div class="row">' + (back ? '<button class="btn ghost" data-act="wdBack">' + trh('g.wd.back') + '</button>' : '') + '<button class="btn" data-act="close" data-focus>' + trh('g.close') + '</button></div>');
+  }
+
+  // ---------- 先认识再闯关：单词卡（WORDS.md §2）----------
+  // 第一次点开一个小镇 / 单元的第 1 关（这一关没有星、这一课没看过单词卡）：先一张一张认识这一课的词，再开考。看过（看完或跳过）记 S.seenCards[编号] = 日期。
+  // 开关 S.settings.cards：true 开、false 关、没有 = 开着——只是自动化测试的浏览器（navigator.webdriver）里没写就当关着、网址带 ?nocards 也关：
+  // 好多老测试自己写存档、点第 1 关就开考，不能因为这个改流程（tests/helpers.js 造的存档写着 cards: false；新测试写 cards: true）
+  const cardsOn = () => S.settings.cards === true || (S.settings.cards !== false && !navigator.webdriver && !/[?&]nocards\b/.test(location.search));
+  const cardsFirst = (wi, li) => li === 0 && cardsOn() && !!WX[wi] && (WX[wi].words || []).length > 0 && !((S.stars[wi + '-0'] || 0) > 0) && !(S.seenCards || {})[wi];
+  function cardsSeen(wi) { if (!S.seenCards || typeof S.seenCards !== 'object') S.seenCards = {}; if (!S.seenCards[wi]) { S.seenCards[wi] = dayStr(); save(); } }
+  // 开始一关：第一次进第 1 关先看「这一课学什么」（§7）、再过一遍单词卡，再开考
+  function levelGo(wi, li) {
+    if (lessonFirst(wi, li)) { lessonSheet(wi, { li }); return; }
+    if (cardsFirst(wi, li)) { openCards(wi, { li }); return; }
+    startLevel(wi, li);
+  }
+  // o.li：看完开始哪一关（从「开始闯关」来的）；o.list：从单词表来的（看完回单词表，o.back 是单词表自己的 back）
+  function openCards(wi, o) {
+    const w = WX[wi]; if (!w) return;
+    o = o || {};
+    const g = isUnit(wi) ? wdGram(w) : null;
+    RT.wc = { wi, k: 0, list: (g ? [{ g }] : []).concat((w.words || []).map((_, i) => ({ i }))), li: o.li != null ? o.li : null, list0: !!o.list, back: o.back || null };
+    primeTTS(); ac();
+    cardShow();
+  }
+  function cardShow() {
+    const c = RT.wc; if (!c) return;
+    const w = WX[c.wi], n = c.list.length, cur = c.list[c.k], last = c.k === n - 1;
+    const dots = '<div class="wc-dots" aria-hidden="true">' + c.list.map((x, k) => '<i class="' + (k === c.k ? 'on' : k < c.k ? 'past' : '') + '"></i>').join('') + '</div>';
+    let body;
+    if (cur.g) body = '<div class="wc-card gram" id="wc-card"><div class="wc-pic">📐</div><div class="wc-tag">' + trh('g.wc.gram') + '</div><h3>' + esc(cur.g.t) + '</h3>' + (cur.g.p ? '<p class="wc-tip">' + esc(cur.g.p) + '</p>' : '') + '</div>';
+    else {
+      const it = w.words[cur.i], m = meanOf(it), ro = romaOf(it[0]);
+      body = '<div class="wc-card" id="wc-card"><div class="wc-pic" aria-hidden="true">' + esc(it[2] || '') + '</div><div class="wc-word">' + rb(it[0]) + '</div>' +
+        (ro ? '<div class="wc-rom" lang="ja-Latn">' + esc(ro) + '</div>' : '') + (m != null && m !== '' ? '<div class="wc-mean">' + esc(m) + '</div>' : '') +
+        '<div class="wc-says"><button class="spk wc-say" data-act="wcSay" aria-label="' + esc(tr('g.wc.say')) + '">' + SPK + '</button>' +
+        '<button class="slow wc-slow" data-act="wcSlow" aria-label="' + esc(tr('g.wd.slow')) + '"><span>🐢</span>' + trh('g.play.slow') + '</button></div></div>';
+    }
+    const top = '<div class="wc-top"><span class="wc-n">' + trh('g.wc.n', { i: c.k + 1, n }) + '</span>' + (c.li != null ? '<button class="link wc-skip" data-act="wcSkip">' + trh('g.wc.skip') + '</button>' : '<button class="link wc-skip" data-act="wcEnd">' + trh('g.wd.back') + '</button>') + '</div>';
+    const fin = c.li != null ? '<button class="btn sun" data-act="wcGo" data-focus>' + trh('g.wc.go') + '</button>' : '<button class="btn" data-act="wcEnd" data-focus>' + trh('g.wc.done') + '</button>';
+    openModal('<div class="wc" id="wc">' + top + dots + body + '<p class="wc-hint">' + trh('g.wc.swipe') + '</p></div>' +
+      '<div class="row wc-nav"><button class="btn ghost" data-act="wcPrev"' + (c.k ? '' : ' disabled') + ' aria-label="' + esc(tr('g.wc.prev')) + '">←</button>' +
+      (last ? fin : '<button class="btn" data-act="wcNext" data-focus aria-label="' + esc(tr('g.wc.next')) + '">→</button>') + '</div>');
+    // 出现时自动念一遍（女声）；再点 🔊 是男声（没有男声的配音就是女声，packClip / clipUrl 自己会退）
+    if (!cur.g) { const word = w.words[cur.i][0]; setTimeout(() => { if (RT.wc === c && c.list[c.k] === cur && $('#wc')) say(word, undefined, 'f'); }, 120); }
+  }
+  function cardStep(d) {
+    const c = RT.wc; if (!c || !$('#wc')) return;
+    const k = c.k + d;
+    if (k < 0 || k >= c.list.length) return;
+    c.k = k; SFX.tap(); cardShow();
+  }
+  // 看完 / 跳过：记一笔；从「开始闯关」来的开考，从单词表来的回单词表
+  function cardEnd(go) {
+    const c = RT.wc; if (!c) return;
+    RT.wc = null;
+    cardsSeen(c.wi);
+    if (c.li != null) { closeModal(); if (go) startLevel(c.wi, c.li); return; }
+    if (c.list0) wordList(c.wi, c.back); else closeModal();
+  }
+  // 单词卡：左右滑翻页（手机上手指、电脑上按住鼠标拖都行；#wc 的 touch-action 只让上下滚，横着滑归这里）
+  let wcSw = null;
+  document.addEventListener('pointerdown', e => { wcSw = RT.wc && e.target && e.target.closest && e.target.closest('#wc') ? { x: e.clientX, y: e.clientY } : null; }, true);
+  document.addEventListener('pointerup', e => {
+    const s = wcSw; wcSw = null;
+    if (!s || !RT.wc || !$('#wc')) return;
+    const dx = e.clientX - s.x, dy = e.clientY - s.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) cardStep(dx < 0 ? 1 : -1);
+  }, true);
+
+  // ---------- 📒 我的单词本（WORDS.md §3）----------
+  // 学过的词 = 复习本里的词（k === 'word'）+ 拿过星的小镇 / 单元的全部单词。按小镇 / 单元分组，新的在上（这一组的词最近一次进复习本 / 复习的日期，
+  // 一样的按编号从大到小）；同一个写法只算一次（留最上面那组的）。每门课各自一本（跟着这门课的存档走）
+  const wdNorm = t => String(t == null ? '' : t).toLowerCase().normalize('NFC').trim();
+  function bookWords() {
+    const by = new Map();
+    const add = (wi, i) => { const w = WX[wi]; if (!w || !w.words || !w.words[i]) return; if (!by.has(wi)) by.set(wi, new Set()); by.get(wi).add(i); };
+    for (const e of Object.values(S.rev.items || {})) if (e && e.k === 'word') add(e.w, e.i);
+    WX.forEach((w, wi) => { if (wxStarred(wi)) (w.words || []).forEach((_, i) => add(wi, i)); });
+    const dateOf = wi => { let d = ''; by.get(wi).forEach(i => { const e = S.rev.items[wdKey(wi, i)], x = e ? e.seen || e.c || '' : ''; if (x > d) d = x; }); return d; };
+    const seen = new Set(), out = [];
+    [...by.keys()].map(wi => ({ wi, d: dateOf(wi) })).sort((a, b) => b.d.localeCompare(a.d) || b.wi - a.wi).forEach(g => {
+      const items = [...by.get(g.wi)].sort((a, b) => a - b).filter(i => { const k = wdNorm(WX[g.wi].words[i][0]); if (seen.has(k)) return false; seen.add(k); return true; }).map(i => ({ wi: g.wi, i, st: wdState(g.wi, i) }));
+      if (items.length) out.push({ wi: g.wi, items });
+    });
+    return out;
+  }
+  const bookCount = () => bookWords().reduce((s, g) => s + g.items.length, 0);
+  const WB_STEP = 240;   // 一次画多少个词（玩了几年的单词本有几千个词：先画这么多，「再显示」接着画）
+  function wordBook() {
+    RT.wb = RT.wb || { f: 'all', q: '', n: 1 };
+    RT.wb.n = 1;
+    const all = bookWords(), flat = all.flatMap(g => g.items), nr = flat.filter(x => x.st === 'rev').length;
+    const stat = (n, k) => '<div class="stat"><b>' + n + '</b><small>' + trh(k) + '</small></div>';
+    openModal('<h2>' + trh('g.wb.h') + '</h2>' +
+      (flat.length ? '<div class="r-stats wb-stats">' + stat(flat.length, 'g.wb.all') + stat(nr, 'g.wb.rev') + stat(flat.length - nr, 'g.wb.ok') + '</div>' +
+        '<div class="seg wb-f">' + ['all', 'rev', 'ok'].map(f => '<button class="' + (RT.wb.f === f ? 'on' : '') + '" data-act="wbF" data-f="' + f + '">' + trh('g.wb.f.' + f) + '</button>').join('') + '</div>' +
+        '<input id="wb-q" class="wb-q" type="search" autocomplete="off" spellcheck="false" placeholder="' + esc(tr('g.wb.q')) + '" aria-label="' + esc(tr('g.wb.q')) + '" value="' + esc(RT.wb.q) + '">' +
+        '<p class="wd-legend">' + trh('g.wb.tap') + '</p><div id="wb-list" class="wb-list"></div>'
+        : '<p>' + trh('g.wb.empty') + '</p>') +
+      '<div class="row"><button class="btn" data-act="close">' + trh('g.close') + '</button></div>');
+    if (flat.length) wbList(all);
+  }
+  function wbList(all) {
+    const box = $('#wb-list'); if (!box || !RT.wb) return;
+    all = all || bookWords();
+    const f = RT.wb.f, q = wdNorm(RT.wb.q);
+    const hit = x => {
+      if (f !== 'all' && x.st !== f) return false;
+      if (!q) return true;
+      const it = WX[x.wi].words[x.i], m = meanOf(it);
+      return wdNorm(it[0]).includes(q) || (m != null && wdNorm(m).includes(q)) || (romaOn() && romaOf(it[0]).replace(/[\s']+/g, '').includes(q.replace(/[\s']+/g, '')));
+    };
+    let left = WB_STEP * RT.wb.n, more = 0, html = '';
+    for (const g of all) {
+      const xs = g.items.filter(hit);
+      if (!xs.length) continue;
+      const take = xs.slice(0, Math.max(0, left));
+      more += xs.length - take.length; left -= take.length;
+      if (!take.length) continue;
+      html += '<section class="wb-g"><h3>' + esc(WX[g.wi].icon || '') + ' ' + esc(wxName(g.wi)) + ' <small>' + xs.length + '</small></h3><div class="wd-list">' +
+        take.map(x => wdRow(x.wi, x.i, false, ' data-act="wbOpen" data-w="' + x.wi + '" data-i="' + x.i + '" role="button" tabindex="0"')).join('') + '</div></section>';
+    }
+    box.innerHTML = html ? html + (more ? '<button class="btn small ghost wb-more" data-act="wbMore">' + trh('g.wb.more', { n: more }) + '</button>' : '') : '<p class="wd-legend">' + trh('g.wb.none') + '</p>';
+  }
+
+  // ---------- 🔤 发音入门（WORDS.md §4）：course.json 的 PRIMER（只有西语、日语、中文的课，课程包里有才有）----------
+  // 全新开始的人（这门课的存档里还没有任何星、没看过）首页给一张卡片；看过 / 点了「不用了」记 S.primerSeen = 日期
+  const primerNew = () => !!PRIMER && !S.primerSeen && !Object.values(S.stars || {}).some(v => v > 0);
+  function primerCard() {
+    if (!primerNew()) return '';
+    const secs = PRIMER.sections.slice(0, 4).map(s => lbl(s.title)).filter(Boolean).join(' · ');
+    return '<div class="pr-card"><span class="pr-ico" aria-hidden="true">🔤</span><div class="pr-ct"><b>' + trh('g.pr.card') + '</b><small>' + esc(secs) + '</small></div>' +
+      '<div class="pr-cb"><button class="btn small sun" data-act="primer">' + trh('g.pr.card.go') + '</button><button class="link" data-act="primerNo">' + trh('g.pr.card.no') + '</button></div></div>';
+  }
+  // 发音入门的格子 / 行自己念的那个音（一个假名、一个字母名、一个例字）：先用手机自带的声音念（主会话 2026-11-22 实测：单个音提前合成、云端合成都念不准——
+  // 本机合成多出尾音、云端偶尔冒出几秒乱话；整词没这个问题，所以例词照常走 say()，课程包里有配音）。
+  // 按这门课的语言挑本机声音：ja-JP / zh-CN / es-MX → es-US → es-ES，都没有再挑同一门语言别的地区；稍慢一点（0.8）。
+  // 设置「只用配音」、本机声音坏过、这台设备没有这门语言的声音：退回 say()（课程包里有就放，没有就云端合成 → 本机）
+  const PR_LOC = { ja: ['ja-JP'], zh: ['zh-CN'], es: ['es-MX', 'es-US', 'es-ES'] };
+  function unitVoice() {
+    if (!TTS.ok || !LANG || S.settings.tts === 'online' || RT.ttsBroken) return null;
+    voicesNow();
+    let all = [];
+    try { all = speechSynthesis.getVoices() || []; } catch (e) { all = []; }
+    const lc = s => String(s || '').replace('_', '-').toLowerCase();
+    for (const loc of PR_LOC[COURSE] || []) { const v = all.find(x => lc(x.lang) === loc.toLowerCase()); if (v) return v; }
+    return all.find(x => LANG.tts.web.test(String(x.lang || ''))) || null;
+  }
+  // rate：🐢 这一次放慢时给；不给 = 0.8（设置「朗读速度：慢」时 0.7）
+  function sayUnit(text, rate) {
+    if (!text) return Promise.resolve();
+    const v = unitVoice();
+    if (!v) return say(text, rate, 'f', true);
+    const m = MUS(), tok = {};
+    if (m) { if (!duckTok) m.duck(true); duckTok = tok; }
+    return new Promise(res => {
+      stopListening();
+      try { speechSynthesis.cancel(); } catch (e) { /* 忽略 */ }
+      if (RT.audio) RT.audio.pause();
+      RT.sayId = (RT.sayId || 0) + 1;
+      const u = new SpeechSynthesisUtterance(text);
+      u.voice = v; u.lang = v.lang; u.rate = rate || (slowOn() ? 0.7 : 0.8);
+      let done = false;
+      const fin = () => { if (done) return; done = true; res(); };
+      u.onend = fin;
+      // 真失败了（不是被下一句打断）：这次起不用本机声音，这一句改走 say()
+      u.onerror = e => { if (!done && e && e.error && !/interrupted|canceled/.test(e.error)) { done = true; RT.ttsBroken = true; say(text, undefined, 'f', true).then(res); return; } fin(); };
+      setTimeout(fin, 1800 + String(text).length * 250);
+      speechSynthesis.speak(u);
+    }).then(() => { if (m && duckTok === tok) { duckTok = null; m.duck(false); } });
+  }
+  // 例词带读音：日语有汉字的整词标一个 <ruby>；中文拼音的音节数和汉字数一样就一个字一个字标；「读音」设置关了不标
+  function prRuby(x) {
+    const t = String(x.t || ''), r = typeof x.r === 'string' ? x.r.trim() : '';
+    if (!r || !LANG || LANG.script === 'latin' || S.settings.ruby === false || r === t) return esc(t);
+    if (LANG.script === 'kana') return /[㐀-鿿々]/.test(t) ? '<ruby>' + esc(t) + '<rt>' + esc(r) + '</rt></ruby>' : esc(t);
+    const cs = Array.from(t), syl = r.split(/\s+/), hs = cs.filter(c => /[㐀-鿿]/.test(c));
+    if (hs.length !== syl.length) return '<ruby>' + esc(t) + '<rt>' + esc(r) + '</rt></ruby>';
+    let k = 0;
+    return cs.map(c => (/[㐀-鿿]/.test(c) ? '<ruby>' + esc(c) + '<rt>' + esc(syl[k++]) + '</rt></ruby>' : esc(c))).join('');
+  }
+  function primerSheet(si) {
+    if (!PRIMER) return;
+    // 最后一段是「🆘 求助的话」（WORDS.md §8：学完发音马上学这几句；这门课有 lessons 才有）
+    const hp = helpList().length > 0, secs = PRIMER.sections, nAll = secs.length + (hp ? 1 : 0), k = Math.max(0, Math.min(nAll - 1, si | 0)), s = secs[k];
+    RT.pr = { k };
+    if (!S.primerSeen) { S.primerSeen = dayStr(); save(); }
+    const tabs = '<div class="seg wrap pr-tabs">' + secs.map((x, j) => '<button class="' + (j === k ? 'on' : '') + '" data-act="prSec" data-s="' + j + '">' + esc(lbl(x.title)) + '</button>').join('') +
+      (hp ? '<button class="' + (k === secs.length ? 'on' : '') + '" data-act="prSec" data-s="' + secs.length + '">' + trh('g.hp.tab') + '</button>' : '') + '</div>';
+    const foot = '<div class="row">' + (k < nAll - 1 ? '<button class="btn ghost" data-act="close">' + trh('g.close') + '</button><button class="btn" data-act="prSec" data-s="' + (k + 1) + '" data-focus>' + trh('g.pr.next') + '</button>' : '<button class="btn" data-act="close" data-focus>' + trh('g.pr.done') + '</button>') + '</div>';
+    if (!s) { openModal('<h2 class="pr-h">' + trh('g.pr.h') + ' <small>' + esc(tr('pk.name.' + COURSE)) + '</small></h2>' + tabs + '<div class="pr-sec"><h3>' + trh('g.hp.h') + '</h3>' + helpHTML() + '</div>' + foot); return; }
+    const head = it => '<b>' + esc(it.t) + '</b>' + (it.sub ? '<small>' + esc(it.sub) + '</small>' : '') + (it.rom && it.rom !== it.t ? '<i>' + esc(it.rom) + '</i>' : '');
+    const ex = it => (Array.isArray(it.ex) && it.ex.length ? ' has-ex' : '');
+    const body = s.layout === 'grid'
+      ? '<div class="pr-grid" style="--cols:' + Math.max(1, Math.min(10, s.cols | 0 || 5)) + '">' + s.items.map((it, j) => (it == null ? '<span class="pr-cell empty" aria-hidden="true"></span>' : '<button class="pr-cell' + ex(it) + '" data-act="prSay" data-s="' + k + '" data-i="' + j + '">' + head(it) + '</button>')).join('') + '</div>'
+      : '<div class="pr-list">' + s.items.map((it, j) => (it == null ? '' : '<button class="pr-row' + ex(it) + '" data-act="prSay" data-s="' + k + '" data-i="' + j + '"><span class="pr-rt">' + head(it) + '</span>' + (uiPick(it) ? '<span class="pr-note">' + esc(uiPick(it)) + '</span>' : '') + '</button>')).join('') + '</div>';
+    openModal('<h2 class="pr-h">' + trh('g.pr.h') + ' <small>' + esc(tr('pk.name.' + COURSE)) + '</small></h2>' + tabs +
+      '<div class="pr-sec"><h3>' + esc(lbl(s.title)) + '</h3><p>' + esc(lbl(s.intro)) + '</p><p class="wd-legend">' + trh('g.pr.tap') + '</p>' + body + '<div class="pr-ex" id="pr-ex" hidden></div></div>' + foot);
+  }
+  // 点了一格：念它，下面那块写说明和例词（词、读音、罗马字、意思、图、🔊）
+  function prEx(it) {
+    const box = $('#pr-ex'); if (!box) return;
+    const note = uiPick(it), exs = Array.isArray(it.ex) ? it.ex.filter(x => x && x.t) : [];
+    // 上面一行：这一格（大字、小字、罗马字 / 拼音）、🐢 再慢慢念一遍（本机声音）、说明
+    box.innerHTML = '<div class="pr-ex-h"><b>' + esc(it.t) + '</b>' + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '') + (it.rom && it.rom !== it.t ? ' <i>' + esc(it.rom) + '</i>' : '') + SLOW_BTN(it.say, 'prSlowU') + (note ? '<span>' + esc(note) + '</span>' : '') + '</div>' +
+      (exs.length ? '<small class="pr-ex-k">' + trh('g.pr.ex') + '</small><div class="wd-list">' + exs.map(x => {
+        const m = LANG ? glossC({ zh: x.zh || '', en: x.en }) : null;
+        return '<div class="wd-row"><span class="wd-pic" aria-hidden="true">' + esc(x.pic || '') + '</span><div class="wd-main"><div class="wd-w"><b>' + prRuby(x) + '</b></div>' +
+          (LANG && LANG.script === 'kana' ? romaHTML(x.t, x.r || x.t) : '') + (m ? '<div class="wd-m">' + esc(m) + '</div>' : '') + '</div>' + SAYS(x.t, 'prSayEx', 'prSlowEx') + '</div>';
+      }).join('') + '</div>' : '');
+    box.hidden = false;
+    try { box.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }); } catch (e) { /* 忽略 */ }
+  }
+  // ---------- 第二部分：零基础怎么学（tools/course/WORDS.md 第 7–11 条，2026-11-22）----------
+  // 新加的「自动弹出 / 首页卡片 / 点词弹卡」在自动化测试的浏览器里没写开关就当关着（和单词卡一样：好多老测试自己写存档，不能因为这个改流程）
+  const autoOff = () => !!navigator.webdriver || /[?&]nocards\b/.test(location.search);
+  // 🐢 只这一次放慢（单词表、单词卡、课前讲解、发音入门、求助的话里每个 🔊 旁边）
+  const SLOW_BTN = (t, act) => '<button class="slow mini wd-slow" data-act="' + (act || 'wdSlow') + '" data-t="' + esc(t) + '" aria-label="' + esc(tr('g.wd.slow')) + '"><span>🐢</span></button>';
+  const SAYS = (t, act, slowAct) => '<span class="wd-says">' + SAY_BTN(t, act) + SLOW_BTN(t, slowAct) + '</span>';
+
+  // ---------- 📘 这一课学什么（课前讲解，§7）：英语课读 lessons-en.js，别的课读 course.json 的 LESSONS ----------
+  // 小镇按编号（"0"–"12"）；课本单元按单元 id（es1-1……，英语的课本单元没有：已经有语法讲解）
+  function lessonOf(wi) {
+    const L = LESSONS, w = WX[wi];
+    if (!L || !w) return null;
+    if (isUnit(wi)) return LANG && L.units ? L.units[w.book + '-' + w.n] || null : null;
+    return L.towns ? L.towns[String(wi)] || null : null;
+  }
+  // 例句（这一课 sents / dlgs 里原样有的那一句）的意思：别的课从条目表找；英语课只有 sents 有意思，dlgs 的问 / 答没有（不显示空行）
+  function lessonMean(w, t) {
+    if (LANG) { const e = entryOf(t); return e ? glossC({ zh: e.zh || '', en: e.en }) : null; }
+    const s = (w.sents || []).find(x => x[0] === t);
+    return s ? meanOf(s) : null;
+  }
+  // 句型本身：空的地方（___）画成一个空格子；日语有汉字时下面写读音、中文下面写拼音，日语再一行罗马字
+  function patternHTML(p) {
+    const blank = h => h.replace(/_{2,}/g, '<span class="ls-blank">___</span>');
+    let h = '<div class="ls-p">' + blank(esc(p.p)) + '</div>';
+    const r = typeof p.r === 'string' ? p.r.trim() : '';
+    if (LANG && r && (LANG.script === 'han' || /[㐀-鿿々]/.test(p.p))) h += '<div class="ls-r">' + blank(esc(r)) + '</div>';
+    if (LANG && r && romaOn()) { const ro = LANG.romaji(r.replace(/_{2,}/g, ' ___ ')); if (/^[\x20-\x7e]+$/.test(ro)) h += '<span class="wd-rom" lang="ja-Latn">' + blank(esc(ro)) + '</span>'; }
+    return h;
+  }
+  // o.li：从「开始闯关」来的（第一次进第 1 关：讲解 → 单词卡 → 开考）；o.back：关上回到哪（单词表）
+  function lessonSheet(wi, o) {
+    const w = WX[wi], L = lessonOf(wi);
+    if (!w || !L) return;
+    o = o || {};
+    RT.ls = { wi, li: o.li != null ? o.li : null, back: o.back || null };
+    const nextCards0 = RT.ls.li != null && cardsFirst(wi, RT.ls.li);
+    lessonSeen(wi);   // 看过就记一笔（第一次进第 1 关不再先弹这一页）
+    const g = isUnit(wi) ? wdGram(w) : null;
+    const pats = (L.patterns || []).map(p => {
+      const m = uiPick({ zh: p.zh, en: p.en }), note = uiPick(p.note);
+      const exs = (p.ex || []).map(t => { const mm = lessonMean(w, t); return '<div class="wd-ex ls-ex"><div class="wd-ex-t"><span>' + rb(t) + '</span>' + SAYS(t) + '</div>' + romaHTML(t) + (mm ? '<small>' + esc(mm) + '</small>' : '') + '</div>'; }).join('');
+      return '<div class="ls-pat">' + patternHTML(p) + (m ? '<div class="wd-m">' + blankTxt(m) + '</div>' : '') + (note ? '<p class="ls-note">' + esc(note) + '</p>' : '') + exs + '</div>';
+    }).join('');
+    const tips = (L.tips || []).map(t => uiPick(t)).filter(Boolean).map(t => '<div class="ls-tip">💡 ' + esc(t) + '</div>').join('');
+    const can = uiPick(L.can), intro = uiPick(L.intro);
+    const first = RT.ls.li != null, nextCards = nextCards0;
+    openModal('<div class="wd-head"><span class="w-ico" style="background:' + esc(w.color || '') + '">' + esc(w.icon || '') + '</span><div class="wd-ht"><small class="wd-k">' + trh('g.ls.h') + '</small>' + wdTitle(wi) + '</div></div>' +
+      (can ? '<div class="ls-can"><b>' + trh('g.ls.can') + '</b><span>' + esc(can) + '</span></div>' : '') +
+      (intro ? '<p class="ls-intro">' + esc(intro) + '</p>' : '') +
+      (pats ? '<h3 class="wd-h">' + trh('g.ls.pats') + '</h3><div class="ls-pats">' + pats + '</div>' : '') +
+      (g ? '<div class="wd-gram"><b>' + trh('g.wd.gram', { t: g.t }) + '</b>' + (g.p ? '<p>' + esc(g.p) + '</p>' : '') + '</div>' : '') +
+      (tips ? '<h3 class="wd-h">' + trh('g.ls.tips') + '</h3>' + tips : '') +
+      (first ? '' : '<div class="wd-tools"><button class="btn small ghost" data-act="wordList" data-w="' + wi + '">' + trh('g.wd.btn') + '</button></div>') +
+      '<div class="row ls-foot">' + (first
+        ? '<button class="btn ghost" data-act="lsSkip">' + trh('g.wc.skip') + '</button><button class="btn sun" data-act="lsNext" data-focus>' + trh(nextCards ? 'g.ls.next' : 'g.ls.go') + '</button>'
+        : (o.back ? '<button class="btn ghost" data-act="lsBack">' + trh('g.wd.back') + '</button>' : '') + '<button class="btn" data-act="lsDone" data-focus>' + trh('g.close') + '</button>') + '</div>');
+  }
+  // 意思里的 ___ 也画成空格子
+  const blankTxt = s => esc(s).replace(/_{2,}/g, '<span class="ls-blank">___</span>');
+  const lessonSeen = wi => { if (!S.seenLesson || typeof S.seenLesson !== 'object') S.seenLesson = {}; if (!S.seenLesson[wi]) { S.seenLesson[wi] = dayStr(); save(); } };
+  // 第一次进第 1 关：先看这一页（和单词卡同一个开关，WORDS.md §7「同一次先认识再闯关」）
+  const lessonFirst = (wi, li) => li === 0 && cardsOn() && !!lessonOf(wi) && !((S.stars[wi + '-0'] || 0) > 0) && !(S.seenLesson || {})[wi];
+
+  // ---------- 🆘 求助的话（§8）：发音入门的最后一段、聊天页的 🆘、单独一张表 ----------
+  const helpList = () => (LESSONS && Array.isArray(LESSONS.help) ? LESSONS.help.filter(h => h && typeof h.t === 'string' && h.t) : []);
+  // 一句：这门语言（日语有汉字时下面写读音、中文写拼音，日语一行罗马字）、意思、什么时候用、🔊 🐢。
+  // 意思按界面语言；中文课的中文意思是空的（就是原文本身），中文界面只写「什么时候用」
+  function helpRow(h) {
+    const r = typeof h.r === 'string' ? h.r.trim() : '', m = uiPick({ zh: h.zh, en: h.en }), use = uiPick(h.use);
+    const rl = LANG && r && (LANG.script === 'han' || /[㐀-鿿々]/.test(h.t)) ? '<div class="ls-r">' + esc(r) + '</div>' : '';
+    const ro = LANG && r && romaOn() ? romaHTML(h.t, r) : '';
+    return '<div class="wd-row hp-row"><div class="wd-main"><div class="wd-s">' + rb(h.t) + '</div>' + rl + ro + (m ? '<div class="wd-m">' + esc(m) + '</div>' : '') + (use ? '<small class="hp-use">' + esc(use) + '</small>' : '') + '</div>' + SAYS(h.t, 'hpSay', 'hpSlow') + '</div>';
+  }
+  const helpHTML = () => '<p class="wd-legend">' + trh('g.hp.tip') + '</p><div class="wd-list hp-list">' + helpList().map(helpRow).join('') + '</div>';
+  function helpSheet() {
+    if (!helpList().length) return;
+    openModal('<h2>' + trh('g.hp.h') + '</h2>' + helpHTML() + '<div class="row"><button class="btn" data-act="close" data-focus>' + trh('g.close') + '</button></div>');
+  }
+
+  // ---------- 🧭 新手路线（§9）：还没打通第 3 个小镇的人，首页最上面一张卡片 ----------
+  // 开关 S.settings.route：true 开、false 关、没有 = 照默认（自动化测试的浏览器里关；能力检测 / 「学过多少」是 2 级以上的人关）
+  const routeOn = () => S.settings.route === true || (S.settings.route !== false && !autoOff() && !(S.place && S.place.lv >= 2));
+  const cleared = z => (S.stars[z + '-6'] || 0) > 0;
+  // 第 z 岛的几步：[id, 做完没有, 能不能走（聊天连不上就没有这一步）]
+  function routeSteps(z) {
+    const st = l => (S.stars[z + '-' + l] || 0) > 0, chat = !!(window.EchoTalk && EchoTalk.relayUrl && EchoTalk.relayUrl()) && talkLang();
+    const sc = window.SCENES && window.SCENES[z];
+    return [
+      LANG && PRIMER && z === 0 ? ['primer', !!S.primerSeen] : null,
+      lessonOf(z) ? ['lesson', !!(S.seenLesson || {})[z]] : null,
+      ['cards', !!(S.seenCards || {})[z] || st(0)],
+      ['l14', st(0) && st(1) && st(2) && st(3)],
+      sc ? ['scene', !!(S.scenes[z] && S.scenes[z].watched)] : null,
+      ['l57', st(4) && st(5) && st(6)],
+      z === 0 ? ['adv', !!(S.mon && (S.mon.box || []).length && S.world && S.world.started)] : null,
+      z === 0 && chat ? ['chat', !!((S.talk && S.talk.log && S.talk.log.length) || Object.keys((S.talk && S.talk.done) || {}).length)] : null,
+    ].filter(Boolean);
+  }
+  function routeCard() {
+    if (!routeOn() || !W.length || cleared(Math.min(2, W.length - 1))) return '';
+    const z = Math.max(0, W.findIndex((w, i) => !cleared(i)));
+    const steps = routeSteps(0), all = steps.every(s => s[1]);
+    // 第 1 岛的几步全打勾以后：收成一行「下一课：第 2 岛 ……」，点了去那座岛的闯关练习
+    if (z > 0 || all) return '<button class="rt-next" data-act="rtGo" data-s="next" data-z="' + z + '">🧭 ' + trh('g.rt.next', { n: z + 1, t: isleName(z) }) + ' ›</button>';
+    const n = steps.filter(s => s[1]).length;
+    return '<div class="rt-card"><div class="rt-h"><b>' + trh('g.rt.h') + '</b><small>' + trh('g.rt.n', { a: n, b: steps.length }) + '</small></div><ol class="rt-steps">' +
+      steps.map(([id, done], k) => '<li class="' + (done ? 'done' : '') + '"><button data-act="rtGo" data-s="' + id + '" data-z="0"><span class="rt-k">' + (done ? '✅' : (k + 1)) + '</span><span>' + trh('g.rt.' + id, { t: isleName(0) }) + '</span><span class="rt-go">›</span></button></li>').join('') + '</ol></div>';
+  }
+  // 去闯关练习里的第 z 岛，亮一下第 li 关
+  function goIsle(z, li) {
+    S.book.view = 'isle'; save();
+    goHome('quiz');
+    const n = $('#w' + z + ' .node[data-l="' + li + '"]');
+    if (n) { n.classList.add('goal'); setTimeout(() => n.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' }), 250); setTimeout(() => n.classList.remove('goal'), 6000); }
+  }
+  function routeGo(id, z) {
+    const first = ls => { for (const l of ls) if (!((S.stars[z + '-' + l] || 0) > 0)) return l; return ls[ls.length - 1]; };
+    if (id === 'primer') primerSheet(0);
+    else if (id === 'lesson') lessonSheet(z);
+    else if (id === 'cards') openCards(z, {});
+    else if (id === 'l14') goIsle(z, first([0, 1, 2, 3]));
+    else if (id === 'scene') openScene(z);
+    else if (id === 'l57' || id === 'next') goIsle(z, id === 'next' ? first([0, 1, 2, 3, 4, 5, 6]) : first([4, 5, 6]));
+    else if (id === 'adv') goHome('mon');
+    else if (id === 'chat') goHome('talk');
+  }
+
+  // ---------- 👆 点一个词看意思（§10）：学的语言的句子里点一个词，弹一张小卡（词、读音、意思、🔊）----------
+  // 查的是这门课学过的词（所有小镇和单元的 words；日语另加每个词的读音）。西语按空格切、去掉标点，冠词去掉、词形照 lang-es.js 的 inflect 配；
+  // 日语中文用这句话的 seg 词块（块尾的助词去掉再查），没有 seg 的按最长匹配课程里的词。查不到不弹（不猜）。
+  // 开关 S.settings.wordTap：没有 = 开着（自动化测试的浏览器里关）
+  const tapOn = () => S.settings.wordTap === true || (S.settings.wordTap !== false && !autoOff());
+  // 哪些地方：大地图对话框的那一句、闯关题目上的那一句（遮起来的不算）、答完以后那一行、对话动画的字幕、聊天的气泡、单词表 / 课前讲解的例句、求助的话
+  const TAP_SEL = '#w-dlg .d-en:not(.hid), #st:not(.mask), #hl:not(.blur), #fb-d, #th-sub .ss-en:not(.muted), .tk-b, .wd-ex-t > span, .wd-s';
+  const ES_ART = /^(el|la|los|las|un|una|unos|unas|lo)\s+/;
+  function dict() {
+    if (DICT && DICT.wx === WX) return DICT;
+    const m = new Map(), latin = !LANG || LANG.script === 'latin', fold = LANG && LANG._ && LANG._.fold;
+    const put = (k, v) => { k = String(k || '').trim(); if (k && !m.has(k)) m.set(k, v); };
+    WX.forEach((w, wi) => (w.words || []).forEach((it, i) => {
+      const t = String(it[0]), v = { wi, i };
+      if (latin) {
+        const lo = t.toLowerCase().normalize('NFC').replace(/[¿¡.,!?;:"“”()]/g, '').replace(/\s+/g, ' ').trim();
+        put(lo, v);
+        if (LANG) { const b = lo.replace(ES_ART, ''); put(b, v); if (fold) put(fold(b), v); }
+      } else {
+        put(t.replace(/[、。！？!?「」]/g, ''), v);
+        const g = glossObj(it);
+        if (COURSE === 'ja' && g && typeof g.r === 'string' && Array.from(g.r).length >= 2) put(g.r, v);
+      }
+    }));
+    let max = 1; m.forEach((v, k) => { max = Math.max(max, Array.from(k).length); });
+    return (DICT = { m, max, wx: WX });
+  }
+  // 容器里看得见的字（读音 <rt> 不算）和点到的那个字在里面的位置
+  function tapText(box, x, y) {
+    let node = null, off = 0;
+    if (document.caretRangeFromPoint) { const r = document.caretRangeFromPoint(x, y); if (r) { node = r.startContainer; off = r.startOffset; } }
+    else if (document.caretPositionFromPoint) { const r = document.caretPositionFromPoint(x, y); if (r) { node = r.offsetNode; off = r.offset; } }
+    if (!node || !box.contains(node) || node.nodeType !== 3) return null;
+    // 点到读音上：算成那个 <ruby> 的字的开头
+    const rt = node.parentElement && node.parentElement.closest('rt');
+    const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+    let text = '', at = -1;
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const inRt = n.parentElement && n.parentElement.closest('rt');
+      if (rt && at < 0 && inRt === rt) at = text.length - 1;
+      if (inRt) continue;
+      if (n === node) at = text.length + Math.min(off, n.data.length - 1);
+      text += n.data;
+    }
+    if (rt) { const ru = rt.closest('ruby'), base = ru ? (ru.textContent || '').replace(rt.textContent || '', '') : ''; const k = base ? text.indexOf(base) : -1; at = k >= 0 ? k : at; }
+    return at >= 0 && at < text.length ? { text, at } : null;
+  }
+  function tapLookup(text, at) {
+    const D = dict(), get = k => (k ? D.m.get(k) : null);
+    if (!LANG || LANG.script === 'latin') {
+      const re = /[A-Za-zÀ-ÿñÑ'’-]+/g, toks = [];
+      let mm; while ((mm = re.exec(text))) toks.push({ w: mm[0].toLowerCase().replace(/’/g, "'"), s: mm.index, e: mm.index + mm[0].length });
+      const k = toks.findIndex(t => at >= t.s && at < t.e);
+      if (k < 0) return null;
+      // 词组（good morning、buenos días）：点到的词在里面的最长那一段
+      for (let len = Math.min(4, toks.length); len >= 1; len--) for (let a = Math.max(0, k - len + 1); a <= k && a + len <= toks.length; a++) {
+        const ph = toks.slice(a, a + len).map(t => t.w).join(' '), v = get(ph);
+        if (v && (len > 1 || !LANG || !ES_ART.test(ph + ' '))) return v;
+      }
+      const w = toks[k].w;
+      if (!LANG) { for (const s of ['s', 'es', 'ed', 'd', 'ing']) if (w.endsWith(s) && w.length - s.length >= 3) { const v = get(w.slice(0, -s.length)) || (s === 'ing' ? get(w.slice(0, -3) + 'e') : null); if (v) return v; } return null; }
+      const fold = LANG._ && LANG._.fold, infl = LANG._ && LANG._.inflect;
+      if (fold) { const v = get(fold(w)); if (v) return v; }
+      if (infl && fold) { const fw = fold(w); for (const [key, v] of D.m) if (!/\s/.test(key) && key.length >= 3 && infl(fw, fold(key))) return v; }
+      return null;
+    }
+    // 日语、中文：先按这句话的 seg 词块
+    const plain = text, e = entryOf(plain.trim());
+    const tryBlock = b => {
+      b = String(b || '').replace(/^[「『（(]+/, '').replace(/[\s、。！？!?「」』）)…〜～]+$/, '');
+      let v = get(b); if (v) return v;
+      if (COURSE === 'ja') { const c = b.replace(/(から|まで|より|には|では|は|が|を|に|で|と|も|へ|の|や|か|ね|よ)$/, ''); if (c !== b && (v = get(c))) return v; }
+      return null;
+    };
+    if (e && Array.isArray(e.seg) && e.seg.join('') === e.t) {
+      const base = plain.indexOf(e.t);
+      if (base >= 0) { let pos = base; for (const s of e.seg) { if (at >= pos && at < pos + s.length) { const v = tryBlock(s); if (v) return v; break; } pos += s.length; } }
+    }
+    // 没有 seg（或者块整个查不到）：盖住点到的那个字的、课程里最长的词
+    const cs = Array.from(plain);
+    let best = null, bl = 0;
+    for (let s = Math.max(0, at - D.max + 1); s <= at; s++) for (let len = Math.min(D.max, cs.length - s); len > bl && s + len > at; len--) { const v = get(cs.slice(s, s + len).join('')); if (v) { best = v; bl = len; break; } }
+    return best;
+  }
+  function wordPop(v, x, y) {
+    const it = WX[v.wi] && WX[v.wi].words[v.i]; if (!it) return;
+    let el = $('#wd-pop');
+    if (!el) { el = document.createElement('div'); el.id = 'wd-pop'; el.className = 'wd-pop'; el.setAttribute('role', 'dialog'); document.body.appendChild(el); }
+    const m = meanOf(it);
+    el.innerHTML = '<span class="wd-pic" aria-hidden="true">' + esc(it[2] || '') + '</span><div class="wd-main"><div class="wd-w"><b>' + rb(it[0]) + '</b></div>' + romaHTML(it[0]) + (m != null && m !== '' ? '<div class="wd-m">' + esc(m) + '</div>' : '') + '</div>' +
+      SAYS(it[0]) + '<button class="wd-pop-x" data-act="wdPopX" aria-label="' + esc(tr('g.close')) + '">✕</button>';
+    el.hidden = false;
+    const r = el.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+    const left = Math.max(8, Math.min(vw - r.width - 8, x - r.width / 2)), top = y + 24 + r.height < vh - 8 ? y + 24 : Math.max(8, y - r.height - 16);
+    el.style.left = left + 'px'; el.style.top = top + 'px';
+    clearTimeout(RT.popT); RT.popT = setTimeout(() => { el.hidden = true; }, 9000);
+  }
+  // 在捕获阶段先看一眼：点到的是学的语言的句子里的一个认得的词 → 弹卡片，这一下不再往下传（不翻页、不选答案、不弹整句翻译）；别的都照旧
+  window.addEventListener('click', e => {
+    const pop = $('#wd-pop');
+    if (pop && !pop.hidden && !pop.contains(e.target)) pop.hidden = true;
+    if (!tapOn() || !e.target || !e.target.closest) return;
+    const box = e.target.closest(TAP_SEL);
+    if (!box) return;
+    const ctl = e.target.closest('button, input, select, textarea, a, .opt');
+    if (ctl && box.contains(ctl)) return;   // 句子里面的按钮（🔊）照旧
+    let v = null;
+    try { const h = tapText(box, e.clientX, e.clientY); if (h) v = tapLookup(h.text, h.at); } catch (err) { v = null; }
+    if (!v) return;
+    e.stopPropagation(); e.preventDefault();
+    wordPop(v, e.clientX, e.clientY);
+  }, true);
+
+  // ---------- 🐢 朗读慢一点（§11）：设置「朗读速度：正常 / 慢」S.settings.slow；没有 = 零基础（第 0 级）慢、别的正常 ----------
+  const slowOn = () => S.settings.slow === true || (S.settings.slow == null && !!S.place && S.place.lv === 0);
+
+  // 闯关练习页最上面：📒 我的单词本（学过 n 个词）、🔤 发音入门（这门课有才有）
+  function wordsBar() {
+    return '<div class="wd-bar"><button class="btn small ghost" data-act="wordBook">' + trh('g.wb.btn', { n: bookCount() }) + '</button>' +
+      (PRIMER ? '<button class="btn small ghost" data-act="primer">' + trh('g.pr.btn') + '</button>' : '') + '</div>';
   }
 
   // ---------- 闯关 ----------
@@ -4389,6 +5025,10 @@
       ['auto', 'device', 'online'].map(m => '<button class="' + ((st.tts || 'auto') === m ? 'on' : '') + '" data-act="setTts" data-m="' + m + '">' + tr('g.set.tts.' + m) + '</button>').join('') +
       '</div><small>' + tr('g.set.tts.d') + '</small></div>' +
       (voices ? '<div class="set"><label for="set-voice">' + tr('g.set.voice') + '</label><select id="set-voice">' + voices + '</select></div>' : '') +
+      // 朗读速度（WORDS.md §11）：慢 = 配音 0.8 倍速（音高不变）、本机声音 0.8；零基础（第 0 级）默认是慢
+      '<div class="set" id="set-slow"><label>' + trh('g.set.slow') + '</label><div class="seg"><button class="' + (slowOn() ? '' : 'on') + '" data-act="setSlow" data-v="0">' + trh('g.set.slow.off') + '</button><button class="' + (slowOn() ? 'on' : '') + '" data-act="setSlow" data-v="1">' + trh('g.set.slow.on') + '</button></div><small>' + trh('g.set.slow.d') + '</small></div>' +
+      // 新手路线（§9）：首页最上面那张卡片
+      '<div class="set" id="set-route"><label>' + trh('g.set.route') + '</label><div class="seg"><button class="' + (routeOn() ? 'on' : '') + '" data-act="setRoute" data-v="1">' + trh('g.set.on') + '</button><button class="' + (routeOn() ? '' : 'on') + '" data-act="setRoute" data-v="0">' + trh('g.set.off') + '</button></div><small>' + trh('g.set.route.d') + '</small></div>' +
       (window.ECHO_APP ? '<div class="set"><label>' + tr('g.set.sc.app') + '</label><small>' + tr('g.set.sc.app.d') + '</small></div>' :
       '<div class="set"><label>' + tr('g.set.sc.mode') + '</label><div class="seg">' +
       ['auto', 'self'].map(m => '<button class="' + (st.mode === m ? 'on' : '') + '" data-act="setMode" data-m="' + m + '">' + tr('g.set.mode.' + m) + '</button>').join('') +
@@ -4709,8 +5349,75 @@
       if (m === 'open' && (ps.has || ps.native)) parentOk(tr('place.who.pin'), go); else go();
     },
     setOrient: t => { S.settings.orient = t.dataset.m; save(); applyOrient(); settingsSheet(); },
-    start: t => { closeModal(); startLevel(num(t, 'w'), num(t, 'l')); },
-    go: t => { const wi = num(t, 'w'), li = num(t, 'l'); if (!isUnlocked(wi, li)) { goHome(); return; } startLevel(wi, li); },
+    // 开始一关：第一次进第 1 关先看单词卡（levelGo，WORDS.md §2）
+    start: t => { closeModal(); levelGo(num(t, 'w'), num(t, 'l')); },
+    go: t => { const wi = num(t, 'w'), li = num(t, 'l'); if (!isUnlocked(wi, li)) { goHome(); return; } levelGo(wi, li); },
+    // ---- 单词表、单词卡、我的单词本、发音入门（WORDS.md）----
+    // 单词表：小镇 / 单元卡片上、关卡详情里（data-l：关上回关卡详情）、大地图冒险菜单里（data-from="menu"：关上回菜单）
+    wordList: t => { SFX.tap(); wordList(num(t, 'w'), t.dataset.from === 'menu' ? 'menu' : t.dataset.l != null ? { li: num(t, 'l') } : null); },
+    wdBack: () => {
+      const b = RT.wl && RT.wl.back, wi = RT.wl ? RT.wl.wi : -1;
+      if (b === 'menu' && ACT.wMenu) { ACT.wMenu(); return; }
+      if (b && b.li != null && WX[wi]) { levelSheet(wi, b.li); return; }
+      closeModal();
+    },
+    wdSay: t => say(t.dataset.t),
+    wdRoma: t => { S.settings.romaji = t.dataset.v === '1'; save(); if (RT.wl) wordList(RT.wl.wi, RT.wl.back); },
+    wcOpen: t => openCards(num(t, 'w'), { list: true, back: RT.wl ? RT.wl.back : null }),
+    wcNext: () => cardStep(1),
+    wcPrev: () => cardStep(-1),
+    wcSay: () => { const c = RT.wc, cur = c && c.list[c.k]; if (cur && cur.i != null) say(WX[c.wi].words[cur.i][0], undefined, 'm'); },
+    wcSkip: () => cardEnd(true),
+    wcGo: () => cardEnd(true),
+    wcEnd: () => cardEnd(false),
+    wordBook: () => { SFX.tap(); wordBook(); },
+    wbF: t => { if (!RT.wb) return; RT.wb.f = t.dataset.f; RT.wb.n = 1; $$('#sheet .wb-f button').forEach(b => b.classList.toggle('on', b.dataset.f === RT.wb.f)); wbList(); },
+    wbMore: () => { if (!RT.wb) return; RT.wb.n++; wbList(); },
+    // 单词本里点一个词：展开 / 收起例句
+    wbOpen: t => {
+      const row = t.closest('.wd-row'), main = row && row.querySelector('.wd-main');
+      if (!main) return;
+      const old = main.querySelector('.wd-ex, .wd-noex');
+      if (old) { old.remove(); row.classList.remove('open'); return; }
+      const w = WX[num(t, 'w')], it = w && w.words[num(t, 'i')];
+      if (!it) return;
+      main.insertAdjacentHTML('beforeend', wdExHTML(w, it[0]) || '<div class="wd-noex">' + trh('g.wb.noex') + '</div>');
+      row.classList.add('open');
+    },
+    primer: () => { SFX.tap(); const was = primerNew(); primerSheet(RT.pr ? RT.pr.k : 0); if (was && !$('#home').hidden) renderHome(); },
+    primerNo: () => { S.primerSeen = dayStr(); save(); renderHome(); },
+    prSec: t => primerSheet(num(t, 's')),
+    prSay: t => {
+      const s = PRIMER && PRIMER.sections[num(t, 's')], it = s && s.items[num(t, 'i')];
+      if (!it) return;
+      $$('#sheet .pr-cell.on, #sheet .pr-row.on').forEach(b => b.classList.remove('on'));
+      t.classList.add('on');
+      sayUnit(it.say);
+      prEx(it);
+    },
+    prSayEx: t => say(t.dataset.t, undefined, 'f', true),
+    // ---- 第二部分（WORDS.md 第 7–11 条）----
+    // 🐢 只这一次放慢：单词表 / 单词本 / 课前讲解的词和句子、单词卡、发音入门的例词和格子、求助的话
+    wdSlow: t => say(t.dataset.t, 0.6),
+    wcSlow: () => { const c = RT.wc, cur = c && c.list[c.k]; if (cur && cur.i != null) say(WX[c.wi].words[cur.i][0], 0.6, 'f'); },
+    prSlowEx: t => say(t.dataset.t, 0.6, 'f', true),
+    prSlowU: t => sayUnit(t.dataset.t, 0.6),
+    hpSay: t => say(t.dataset.t, undefined, 'f', true),
+    hpSlow: t => say(t.dataset.t, 0.6, 'f', true),
+    // 📘 这一课学什么：小镇 / 单元卡片上、单词表顶上（data-from="list"：关上回单词表）、新手路线
+    lesson: t => { SFX.tap(); lessonSheet(num(t, 'w'), t.dataset.from === 'list' ? { back: 'list' } : {}); },
+    lsDone: () => { RT.ls = null; closeModal(); },
+    lsBack: () => { const L = RT.ls; RT.ls = null; if (L && RT.wl && RT.wl.wi === L.wi) wordList(L.wi, RT.wl.back); else closeModal(); },
+    // 第一次进第 1 关：讲解看完 → 单词卡（没看过的话）→ 开考；「跳过，直接闯关」两样都记一笔
+    lsNext: () => { const L = RT.ls; RT.ls = null; if (!L || L.li == null) { closeModal(); return; } if (cardsFirst(L.wi, L.li)) { openCards(L.wi, { li: L.li }); return; } closeModal(); startLevel(L.wi, L.li); },
+    lsSkip: () => { const L = RT.ls; RT.ls = null; if (!L || L.li == null) { closeModal(); return; } cardsSeen(L.wi); closeModal(); startLevel(L.wi, L.li); },
+    // 🆘 求助的话（聊天页的 🆘 也是它）
+    sosList: () => { SFX.tap(); helpSheet(); },
+    // 🧭 新手路线：点一步就去那里
+    rtGo: t => { SFX.tap(); routeGo(t.dataset.s, num(t, 'z')); },
+    setRoute: t => { S.settings.route = t.dataset.v === '1'; save(); settingsSheet(); },
+    setSlow: t => { S.settings.slow = t.dataset.v === '1'; save(); settingsSheet(); },
+    wdPopX: () => { const el = $('#wd-pop'); if (el) el.hidden = true; },
     close: () => { if ($('#restbtn') && $('#restbtn').disabled) return; closeModal(); },
     // 第一次打开：看完说明，开口模式下接着做「麦克风 + 网络 + 密钥」小检查
     introGo: () => { S.seenIntro = true; save(); closeModal(); primeTTS(); ac(); if (speakMode() === 'sr' && !S.micCheck) setTimeout(checkSheet, 200); },
@@ -4877,6 +5584,8 @@
   document.addEventListener('toggle', e => { if (e.target && e.target.id === 'set-parent') RT.parentOpen = e.target.open; }, true);
   document.addEventListener('input', e => {
     if (e.target.id === 'set-rate') { S.settings.rate = +e.target.value; $('#rate-v').textContent = S.settings.rate.toFixed(2); save(); }
+    // 我的单词本的搜索框：按词或意思找（日语也认罗马字），边打边找
+    if (e.target.id === 'wb-q' && RT.wb) { RT.wb.q = e.target.value; RT.wb.n = 1; wbList(); }
   });
   document.addEventListener('change', e => {
     if (e.target.id === 'set-voice') { S.settings.voice = e.target.value; pickVoice(); save(); say('Hello! How are you?'); }
@@ -4896,6 +5605,8 @@
       if (/^\d$/.test(e.key)) { e.preventDefault(); pinKey(e.key); return; }
       if (e.key === 'Backspace') { e.preventDefault(); ACT.pinDel(); return; }
     }
+    // 单词卡：← → 翻页
+    if (!$('#modal').hidden && RT.wc && $('#wc') && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { e.preventDefault(); cardStep(e.key === 'ArrowRight' ? 1 : -1); return; }
     if (!$('#modal').hidden) { if (e.key === 'Escape' && !RT.modalLocked) closeModal(); return; }
     if (!P || $('#play').hidden) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
@@ -5143,6 +5854,8 @@
       // 大地图上的支线委托（world.js）：chatKeyBad() 聊天是不是因为密钥 / 额度聊不了（'auth' / 'quota' / ''）；
       // advBonus() 冒险限时开着没有、今天「多学换时间」换了几分钟、最多几分钟（完成委托算一个聊天目标，也换 10 分钟）
       chatKeyBad, advBonus: () => { const pi = playInfo(); return { on: pi.on, bonus: pi.bonus, max: pi.c.max || 0 }; },
+      // 🆘 求助的话（tools/course/WORDS.md §8）：这门课有没有（talk.js 的聊天页有才放 🆘 按钮，按钮是 data-act="sosList"）
+      helpOn: () => helpList().length > 0,
     };
     Object.assign(ACT, MonsterGame.init(api), window.EchoWorld ? EchoWorld.init(api, MonsterGame) : {}, window.EchoTalk ? EchoTalk.init(api) : {}, {
       tab: t => { S.homeTab = t.dataset.t; save(); renderHome(); window.scrollTo(0, 0); },

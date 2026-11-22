@@ -2059,3 +2059,178 @@ html.echo-ios .ac-in { font-size: 16px; }   /* 小于 16px 的输入框一点就
 }
 /* 普通对话：名字牌挂在框的上沿，第一行字往下让一点，不贴着名字牌（2026-11-20 细节检查） */
 .w-dlg:not(.task) .d-row { padding-top: 6px; }
+
+/* ---------- 单词表、单词卡、我的单词本、发音入门（tools/course/WORDS.md，2026-11-22） ---------- */
+/* 闯关练习页最上面一排：📒 我的单词本、🔤 发音入门 */
+.wd-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+.wd-bar .btn { flex: 1 1 auto; min-height: 44px; white-space: normal; }
+.wd-open { min-height: 48px; }
+.sheet p.w-menu-words { text-align: center; margin: -4px 0 0; }
+.w-menu-words .link { min-height: 40px; font-weight: 800; color: var(--lagoon-d); text-decoration: none; }
+/* 单词表 */
+.wd-head { display: flex; align-items: center; gap: 12px; }
+.wd-head .w-ico { color: #fff; }
+.wd-ht { min-width: 0; }
+.wd-ht .wd-k { display: block; font-size: 12px; font-weight: 800; color: var(--lagoon); letter-spacing: .04em; }
+.wd-ht .wd-no { display: block; font-size: 12px; color: var(--ink-3); margin-bottom: 6px; }
+.wd-ht h2 { line-height: 1.5; overflow-wrap: anywhere; }
+.wd-ht h2 small { font-size: 15px; font-weight: 600; color: var(--ink-2); }
+.wd-ht h2 .pl-c b { font-weight: 700; }
+.wd-ht h2 .pl-c small { font-size: 13px; }
+.wd-gram { background: var(--card); border-radius: 14px; padding: 10px 12px; box-shadow: 0 3px 0 var(--line); }
+.wd-gram p { font-size: 14px; margin-top: 4px; }
+.wd-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.wd-tools > .btn { min-height: 44px; }
+.wd-tog { display: flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 800; color: var(--ink-2); }
+.wd-tog .seg button { flex: none; padding: 6px 12px; min-height: 40px; }
+.sheet p.wd-legend { font-size: 12px; color: var(--ink-3); line-height: 1.45; }
+.wd-h { margin: 0; font-size: 16px; }
+.wd-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.wd-row { display: flex; align-items: flex-start; gap: 10px; background: var(--card); border-radius: 14px; padding: 8px 8px 8px 10px; box-shadow: 0 3px 0 var(--line); min-width: 0; }
+.wd-row[data-act] { cursor: pointer; }
+.wd-row.open { box-shadow: 0 3px 0 var(--lagoon); }
+.wd-pic { font-size: 30px; line-height: 1.3; width: 38px; text-align: center; flex: none; }
+.wd-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wd-w { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.wd-w b { font-family: var(--f-display); font-size: 22px; font-weight: 600; line-height: 1.75; overflow-wrap: anywhere; }
+.wd-st { font-size: 14px; line-height: 1; }
+.wd-rom { display: block; font-size: 13px; line-height: 1.35; color: var(--lagoon-d); font-style: italic; overflow-wrap: anywhere; }
+.wd-m { font-size: 14px; color: var(--ink-2); line-height: 1.4; }
+.wd-s { font-family: var(--f-display); font-size: 17px; line-height: 1.85; overflow-wrap: anywhere; }
+.wd-ex { margin-top: 4px; padding: 4px 4px 6px 8px; border-radius: 10px; background: var(--foam); font-size: 14px; }
+.wd-ex-t { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+.wd-ex-t span { font-family: var(--f-display); font-size: 16px; line-height: 1.85; overflow-wrap: anywhere; min-width: 0; }
+.wd-ex small { color: var(--ink-3); display: block; line-height: 1.4; }
+.wd-ex .spk.mini { width: 40px; height: 40px; border-radius: 12px; flex: none; }
+.wd-say { flex: none; }
+.wd-noex { font-size: 13px; color: var(--ink-3); margin-top: 4px; }
+/* 我的单词本 */
+.wb-stats .stat { text-align: center; }
+.wb-q { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 10px 12px; min-height: 44px; border: 2px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); }
+.wb-q:focus { outline: none; border-color: var(--lagoon); }
+.wb-list { display: flex; flex-direction: column; gap: 12px; }
+.wb-g h3 { margin: 0 0 8px; font-size: 16px; }
+.wb-g h3 small { color: var(--ink-3); font-weight: 600; }
+.wb-more { align-self: center; min-height: 44px; }
+.wd-sents summary { min-height: 40px; line-height: 40px; }
+.wd-slist { margin-top: 8px; }
+/* 单词卡：一次一张，左右滑（横着滑归 game.js，上下照样能滚） */
+.wc { display: flex; flex-direction: column; gap: 10px; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.wc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.wc-n { font-size: 13px; font-weight: 800; color: var(--ink-3); }
+.wc-skip { min-height: 40px; padding: 8px 4px; font-weight: 800; }
+.wc-dots { display: flex; gap: 3px; justify-content: center; }
+.wc-dots i { flex: 1 1 0; max-width: 10px; height: 8px; border-radius: 4px; background: var(--line); }
+.wc-dots i.past { background: #a9d6d2; }
+.wc-dots i.on { background: var(--lagoon); }
+.wc-card { background: var(--card); border-radius: 22px; padding: 18px 14px; box-shadow: 0 5px 0 var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; min-height: 300px; }
+.wc-pic { font-size: 84px; line-height: 1.15; }
+.wc-word { font-family: var(--f-display); font-size: 40px; font-weight: 700; line-height: 1.7; overflow-wrap: anywhere; max-width: 100%; }
+.wc-rom { font-size: 17px; color: var(--lagoon-d); font-style: italic; }
+.wc-mean { font-size: 20px; color: var(--ink-2); font-weight: 700; }
+.wc-card .spk { width: 72px; height: 72px; border-radius: 22px; margin-top: 8px; }
+.wc-card .spk svg { width: 36px; height: 36px; }
+.wc-card.gram h3 { margin: 0; font-size: 20px; }
+.wc-tag { font-size: 12px; font-weight: 800; color: var(--lagoon); }
+.sheet .wc-tip { text-align: left; max-height: 38vh; overflow: auto; font-size: 15px; -webkit-user-select: text; user-select: text; }
+.sheet p.wc-hint { text-align: center; font-size: 12px; color: var(--ink-3); }
+.wc-nav [data-act=wcPrev], .wc-nav [data-act=wcNext] { font-size: 26px; line-height: 1; }
+.wc-nav [data-act=wcPrev] { flex: 0 0 32%; }
+/* 首页的卡片「先学发音和文字」 */
+.pr-card { display: flex; align-items: center; gap: 10px; background: #fff7e0; border-radius: 16px; padding: 10px 12px; box-shadow: 0 3px 0 #f1dca0; margin-bottom: 10px; flex-wrap: wrap; }
+.pr-ico { font-size: 30px; line-height: 1; }
+.pr-ct { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 2px; }
+.pr-ct small { color: var(--ink-2); font-size: 12px; }
+.pr-cb { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.pr-cb .btn { min-height: 40px; }
+.pr-cb .link { min-height: 40px; }
+/* 发音入门 */
+.sheet h2.pr-h small { font-size: 15px; font-weight: 600; color: var(--ink-3); }
+.pr-tabs button { flex: 1 0 auto; white-space: nowrap; min-height: 40px; }
+.pr-sec { display: flex; flex-direction: column; gap: 8px; }
+.pr-sec h3 { margin: 0; font-size: 19px; }
+.pr-grid { display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); gap: 6px; }
+.pr-cell { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 64px; min-width: 0; padding: 6px 2px; border: 2px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: 0 3px 0 var(--line); overflow: hidden; }
+.pr-cell b { font-family: var(--f-display); font-size: 24px; line-height: 1.15; font-weight: 600; max-width: 100%; overflow-wrap: anywhere; }
+.pr-cell small { font-size: 12px; line-height: 1.2; color: var(--ink-3); max-width: 100%; overflow-wrap: anywhere; }
+.pr-cell i { font-size: 12px; line-height: 1.2; font-style: normal; color: var(--lagoon-d); font-weight: 800; max-width: 100%; overflow-wrap: anywhere; }
+.pr-cell.empty { border: 0; background: none; box-shadow: none; }
+.pr-cell.has-ex::after, .pr-row.has-ex::after { content: ""; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--sun-d); }
+.pr-cell.on, .pr-row.on { border-color: var(--lagoon); background: #dff1ef; }
+.pr-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.pr-row { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 2px; text-align: left; padding: 8px 18px 8px 12px; border: 2px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: 0 3px 0 var(--line); min-height: 44px; min-width: 0; color: var(--ink); }
+.pr-rt { display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap; }
+.pr-rt b { font-family: var(--f-display); font-size: 22px; font-weight: 600; overflow-wrap: anywhere; }
+.pr-rt small { color: var(--ink-3); font-size: 13px; }
+.pr-rt i { font-style: normal; color: var(--lagoon-d); font-weight: 800; font-size: 14px; }
+.pr-note { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.pr-ex { background: var(--card); border-radius: 14px; padding: 10px; box-shadow: 0 3px 0 var(--lagoon); display: flex; flex-direction: column; gap: 6px; }
+.pr-ex[hidden] { display: none; }
+.pr-ex-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.pr-ex-h b { font-family: var(--f-display); font-size: 22px; }
+.pr-ex-h small { color: var(--ink-3); }
+.pr-ex-h i { font-style: normal; color: var(--lagoon-d); font-weight: 800; }
+.pr-ex-h span { flex-basis: 100%; font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+.pr-ex .wd-row { box-shadow: none; background: var(--foam); }
+.pr-ex-k { font-size: 12px; color: var(--ink-3); font-weight: 800; }
+/* ---------- 第二部分（WORDS.md 第 7–11 条）：🐢、课前讲解、求助的话、新手路线、点词小卡 ---------- */
+/* 🔊 和 🐢 上下摞着（不占行宽） */
+.wd-says { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
+.slow.mini { width: 44px; height: 36px; border-radius: 12px; box-shadow: 0 3px 0 var(--line); font-size: 18px; padding: 0; }
+.wd-ex .wd-says { gap: 4px; }
+.wd-ex .slow.mini { width: 40px; height: 32px; font-size: 16px; }
+.ls-foot .btn { font-size: 16px; padding: 12px 8px; line-height: 1.25; }
+/* 没有读音（英语、西语）的句子不用给 <rt> 留那么高的行 */
+.wd-s:not(:has(ruby)), .wd-ex-t > span:not(:has(ruby)) { line-height: 1.45; }
+.wc-says { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.wc-says .spk { margin-top: 0; }
+.wc-slow { width: 72px; height: 72px; border-radius: 22px; }
+.wd-ls { align-self: flex-start; min-height: 40px; padding: 8px 2px; font-weight: 800; color: var(--lagoon-d); text-decoration: none; font-size: 15px; }
+/* 课前讲解 */
+.ls-can { display: flex; flex-direction: column; gap: 2px; background: #e6f5f3; border-radius: 14px; padding: 10px 12px; }
+.ls-can b { font-size: 13px; color: var(--lagoon-d); }
+.ls-can span { font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.5; }
+.sheet p.ls-intro { font-size: 15px; }
+.ls-pats { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.ls-pat { background: var(--card); border-radius: 16px; padding: 10px 12px; box-shadow: 0 3px 0 var(--line); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ls-p { font-family: var(--f-display); font-size: 22px; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.ls-r { font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
+.ls-blank { display: inline-block; min-width: 2.2em; border-bottom: 3px solid var(--sun-d); color: transparent; line-height: 1; margin: 0 2px; vertical-align: baseline; }
+.sheet p.ls-note { font-size: 14px; line-height: 1.55; }
+.ls-tip { background: #fff7e0; border-radius: 12px; padding: 8px 12px; font-size: 14px; line-height: 1.55; color: var(--ink-2); box-shadow: 0 2px 0 #f1dca0; }
+/* 求助的话 */
+.hp-row .wd-s { font-size: 19px; }
+.hp-use { font-size: 12px; color: var(--ink-3); line-height: 1.4; }
+/* 新手路线 */
+.rt-card { background: var(--card); border-radius: 16px; padding: 10px 12px; box-shadow: 0 3px 0 var(--line); margin-bottom: 10px; border: 2px solid #bfe3df; }
+.rt-h { display: flex; justify-content: space-between; align-items: baseline; }
+.rt-h small { color: var(--ink-3); font-weight: 800; }
+.rt-steps { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rt-steps button { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 40px; border: 0; background: none; padding: 4px 2px; text-align: left; font: inherit; font-size: 15px; color: var(--ink); border-radius: 10px; }
+.rt-steps button:hover { background: var(--foam); }
+.rt-k { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #dff1ef; color: var(--lagoon-d); font-weight: 800; font-size: 13px; flex: none; }
+.rt-steps li.done button { color: var(--ink-3); }
+.rt-steps li.done .rt-k { background: none; }
+.rt-go { margin-left: auto; color: var(--ink-3); font-weight: 800; }
+.rt-next { width: 100%; min-height: 44px; margin-bottom: 10px; border: 0; border-radius: 14px; background: #e6f5f3; color: var(--lagoon-d); font: inherit; font-weight: 800; text-align: left; padding: 8px 12px; }
+/* 点一个词弹出的小卡 */
+.wd-pop { position: fixed; z-index: 80; display: flex; align-items: flex-start; gap: 10px; max-width: min(340px, calc(100vw - 16px)); background: var(--card); border-radius: 16px; padding: 10px 10px 10px 12px; box-shadow: 0 10px 30px rgba(9, 30, 45, .3), 0 0 0 2px var(--lagoon); animation: rise .18s ease-out; }
+.wd-pop[hidden] { display: none; }
+.wd-pop-x { position: absolute; top: -12px; right: -12px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--ink); color: #fff; font-size: 14px; }
+/* 横屏：单词表、单词本、发音入门的行两列；单词卡左图右字 */
+@media (orientation: landscape) and (max-height: 600px) {
+  .wd-list, .pr-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wc { gap: 6px; }
+  .wc-card { min-height: 0; padding: 10px 16px; }
+  .wc-card:not(.gram) { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "pic word say" "pic rom say" "pic mean say"; column-gap: 18px; row-gap: 0; text-align: left; align-items: center; justify-items: start; }
+  .wc-card:not(.gram) .wc-pic { grid-area: pic; font-size: 64px; }
+  .wc-card:not(.gram) .wc-word { grid-area: word; font-size: 34px; }
+  .wc-card:not(.gram) .wc-rom { grid-area: rom; }
+  .wc-card:not(.gram) .wc-mean { grid-area: mean; }
+  .wc-card:not(.gram) .wc-says { grid-area: say; margin: 0; flex-direction: column; gap: 6px; }
+  .wc-card:not(.gram) .wc-says .spk, .wc-card:not(.gram) .wc-says .slow { width: 56px; height: 56px; }
+  .ls-pats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sheet .wc-tip { max-height: 34vh; }
+  .sheet p.wc-hint { display: none; }
+  .pr-cell { min-height: 54px; }
+}

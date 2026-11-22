@@ -1,0 +1,518 @@
+{
+  "lang": "ja",
+  "help": [
+    { "t": "わかりません。", "r": "わかりません", "zh": "我听不懂。／我不知道。", "en": "I don't understand. / I don't know.",
+      "use": { "zh": "听不懂，或者不知道怎么回答的时候说。", "en": "Say this when you don't understand, or don't know the answer." } },
+    { "t": "もう一度おねがいします。", "r": "もういちどおねがいします", "zh": "请再说一遍。", "en": "Once more, please.",
+      "use": { "zh": "没听清，想让对方再说一遍的时候说。", "en": "Say this when you didn't catch it and want to hear it again." } },
+    { "t": "ゆっくりおねがいします。", "r": "ゆっくりおねがいします", "zh": "请说慢一点。", "en": "Slowly, please.",
+      "use": { "zh": "对方说得太快、跟不上的时候说。", "en": "Say this when someone is talking too fast for you." } },
+    { "t": "かんたんな日本語でおねがいします。", "r": "かんたんなにほんごでおねがいします", "zh": "请用简单的日语说。", "en": "In easy Japanese, please.",
+      "use": { "zh": "对方用的词太难，想让他换个简单说法的时候说。", "en": "Say this when the words are too hard and you want an easier way of saying it." } },
+    { "t": "どういう意味ですか？", "r": "どういういみですか", "zh": "是什么意思？", "en": "What does it mean?",
+      "use": { "zh": "听到不认识的词：先把那个词照着说一遍，再问这一句。", "en": "When you hear a word you don't know, repeat the word first, then ask this." } },
+    { "t": "日本語で何と言いますか？", "r": "にほんごでなんといいますか", "zh": "用日语怎么说？", "en": "How do you say it in Japanese?",
+      "use": { "zh": "想说一个词却不会：先用你会的语言说出那个词，再问这一句。", "en": "When you don't know a word, say it in your own language first, then ask this." } },
+    { "t": "はい、そうです。", "r": "はいそうです", "zh": "对，是的。", "en": "Yes, that's right.",
+      "use": { "zh": "对方问“是不是”，答案是“是”的时候说。", "en": "Say this when someone checks something with you and they are right." } },
+    { "t": "いいえ、ちがいます。", "r": "いいえちがいます", "zh": "不，不对。", "en": "No, that's not right.",
+      "use": { "zh": "对方说得不对，或者你想说“不是”的时候说。", "en": "Say this when something isn't right or isn't true." } },
+    { "t": "ちょっと待ってください。", "r": "ちょっとまってください", "zh": "请等一下。", "en": "Just a moment, please.",
+      "use": { "zh": "想一想怎么说、需要一点时间的时候说。", "en": "Say this when you need a moment to think about what to say." } },
+    { "t": "すみません。", "r": "すみません", "zh": "不好意思。／对不起。", "en": "Excuse me. / Sorry.",
+      "use": { "zh": "想叫住别人、打断别人，或者说错了道歉的时候都能用。", "en": "Use it to get someone's attention, to interrupt, or to say sorry." } },
+    { "t": "ありがとうございます。", "r": "ありがとうございます", "zh": "谢谢。", "en": "Thank you.",
+      "use": { "zh": "别人帮了你、教了你的时候说。对朋友只说「ありがとう」也行。", "en": "Say this when someone helps you or teaches you something. With friends, the short form 'arigatou' is fine." } },
+    { "t": "日本語を勉強しています。", "r": "にほんごをべんきょうしています", "zh": "我在学日语。", "en": "I'm learning Japanese.",
+      "use": { "zh": "告诉对方你还在学日语，他就会说得简单、慢一些。", "en": "Tell people you are a learner, so they speak more simply and slowly." } }
+  ],
+  "towns": {
+    "0": {
+      "can": { "zh": "能用日语打招呼、说自己的名字、问别人的名字，介绍朋友。", "en": "Greet people, say your name, ask someone's name and introduce a friend." },
+      "intro": {
+        "zh": "这是你第一次在岛上和人见面。先学几句问候：早上、白天、晚上说法不一样。再学日语最基本的一句「AはBです」（A 是 B），用它说名字、说自己是谁。",
+        "en": "You're meeting people on the island for the first time. First learn the greetings for morning, daytime and evening. Then learn the most basic Japanese sentence, 'A wa B desu' (A is B), and use it to say your name and who you are."
+      },
+      "patterns": [
+        { "p": "はじめまして、___です。", "r": "はじめまして___です", "zh": "初次见面，我是___。", "en": "How do you do? I'm ___.",
+          "note": { "zh": "第一次见面时这样介绍自己，___ 里放你的名字。说完常常再加一句「よろしくおねがいします」（请多关照），对方会回「こちらこそ」（我才要请你关照）。", "en": "Use this the first time you meet someone, with your name in the blank. People usually add 'yoroshiku onegaishimasu' (nice to meet you), and the other person answers 'kochira koso' (likewise)." },
+          "ex": ["はじめまして、ゆいです。", "はるとです。よろしくおねがいします。"] },
+        { "p": "___は___です。", "r": "___は___です", "zh": "___是___。", "en": "___ is ___.",
+          "note": { "zh": "日语最基本的一句。「は」在这里念 wa，不念 ha。说自己时男孩子常用「ぼくは」，女孩子和大人用「わたしは」；介绍别人用「こちらは」（这位是）。", "en": "The most basic Japanese sentence. The little word after the topic is written 'ha' but read 'wa' here. Boys often say 'boku wa' for 'I'; girls and adults say 'watashi wa'. To introduce someone, start with 'kochira wa' (this is)." },
+          "ex": ["ぼくははるとです。", "こちらは友だちのそうたくんです。"] },
+        { "p": "___ですか？", "r": "___ですか", "zh": "是___吗？", "en": "Is it ___? / Are you ___?",
+          "note": { "zh": "把「です」换成「ですか」就是问句，词的顺序不用变，像中文句尾加“吗”。回答「はい、___です」（是）或「いいえ、___です」（不是，是……）。", "en": "Add 'ka' after 'desu' and it becomes a question; the word order stays the same. Answer 'hai, ___ desu' (yes) or 'iie, ___ desu' (no, it's ___)." },
+          "ex": ["ゆいさんは先生ですか？", "いいえ、学生です。"] },
+        { "p": "お名前は何ですか？", "r": "おなまえはなんですか", "zh": "你叫什么名字？", "en": "What's your name?",
+          "note": { "zh": "问名字的客气说法，名前 前面的「お」表示客气。也可以只说「お名前は？」。回答只要说「___です」。", "en": "A polite way to ask someone's name; the 'o' in front makes it polite. You can shorten it to 'o-namae wa?'. Answer with your name + 'desu'." },
+          "ex": ["お名前は何ですか？", "はじめまして。お名前は？"] }
+      ],
+      "tips": [
+        { "zh": "日语的“是”（です）放在句子最后。中文说“我是晴人”，日语说「ぼくは はると です」，顺序是“我／晴人／是”。", "en": "In Japanese, 'desu' (is) comes at the very end. Not 'I am Haruto' but 'boku wa Haruto desu', which is literally 'I / Haruto / am'." },
+        { "zh": "日语很少说“你”。叫别人用「名字＋さん」（叫男孩子也可以用「くん」），但说自己的名字不加さん：说「ゆいです」，不说「ゆいさんです」。", "en": "Japanese rarely uses a word for 'you'. Call people by name + 'san' ('kun' for boys), but never add 'san' to your own name: say 'Yui desu', not 'Yui-san desu'." }
+      ]
+    },
+    "1": {
+      "can": { "zh": "能问“这是什么”“是谁的”“什么颜色”，叫大家一起收拾东西。", "en": "Ask what something is, whose it is and what colour it is, and get everyone to tidy up together." },
+      "intro": {
+        "zh": "在教室里认文具和颜色。重点是「これ・それ・あれ」：东西离谁近，就用哪一个。还会学「わたしの」（我的）这种说法。",
+        "en": "In the classroom you'll learn school things and colours. The key words are 'kore / sore / are' (this / that / that over there): which one you use depends on who the thing is close to. You'll also learn 'watashi no' (mine)."
+      },
+      "patterns": [
+        { "p": "これは何ですか？", "r": "これはなんですか", "zh": "这是什么？", "en": "What is this?",
+          "note": { "zh": "これ＝离我近的，それ＝离你近的，あれ＝离我们俩都远的。别人指着你手里的东西问「それは何ですか？」，你要用「これは…」回答。", "en": "'Kore' = this (near me), 'sore' = that (near you), 'are' = that over there (far from us both). If someone points at the thing in your hand and asks about 'sore', you answer with 'kore'." },
+          "ex": ["それは何ですか？", "これははさみです。"] },
+        { "p": "___はだれのですか？", "r": "___はだれのですか", "zh": "___是谁的？", "en": "Whose is ___?",
+          "note": { "zh": "「の」像中文的“的”：わたしの＝我的，先生の＝老师的。回答「___のです」（是___的）。", "en": "'No' works like the English 's: 'watashi no' = mine, 'sensei no' = the teacher's. Answer '___ no desu' (it's ___'s)." },
+          "ex": ["このペンはだれのですか？", "それはわたしのです。"] },
+        { "p": "___は何色ですか？", "r": "___はなにいろですか", "zh": "___是什么颜色的？", "en": "What colour is ___?",
+          "note": { "zh": "何色 念「なにいろ」。回答只说颜色加「です」就行：「黒です」。颜色放在东西前面用「赤い・青い・白い・黒い」：赤い本（红色的书）。", "en": "'Nani-iro' means 'what colour'. Just answer with the colour + 'desu': 'kuro desu' (it's black). Before a noun, use 'akai / aoi / shiroi / kuroi': 'akai hon' = a red book." },
+          "ex": ["そのかばんは何色ですか？", "黒です。"] },
+        { "p": "いっしょに___ましょう！", "r": "いっしょに___ましょう", "zh": "一起___吧！", "en": "Let's ___ together!",
+          "note": { "zh": "「〜ましょう」是“……吧”，招呼大家一起做。答应就说「はい」，再把那个词说一遍。", "en": "'-mashou' means 'let's'. Use it to get everyone doing something together. To agree, say 'hai' and repeat the verb." },
+          "ex": ["いっしょにかたづけましょう！", "はい、かたづけましょう！"] }
+      ],
+      "tips": [
+        { "zh": "「これ」和「この」别混：これ 自己就是“这个”，この 后面一定要跟东西（このペン）。不能说「これペン」。それ／その、あれ／あの 也一样。", "en": "Don't mix up 'kore' and 'kono'. 'Kore' stands alone (this one); 'kono' must have a noun after it ('kono pen', this pen). The same goes for 'sore / sono' and 'are / ano'." },
+        { "zh": "ペン、ノート 这种从外语来的词用片假名写。念法和英语不一样，每个假名占一拍：ノート 念 no-o-to。", "en": "Borrowed words like 'pen' and 'nooto' (notebook) are written in katakana. Say them the Japanese way, one beat per letter: 'no-o-to', not English 'note'." }
+      ]
+    },
+    "2": {
+      "can": { "zh": "能介绍家人，说家里有几口人、有几个兄弟姐妹、谁几岁。", "en": "Introduce your family: how many people there are, your brothers and sisters, and how old they are." },
+      "intro": {
+        "zh": "看着一张家庭照片，学怎么问“这是谁”、怎么数人。日语数人有特别的读法：一个人 ひとり，两个人 ふたり。",
+        "en": "Looking at a family photo, you'll learn to ask 'Who is this?' and to count people. Counting people has special words: 'hitori' (one person) and 'futari' (two people)."
+      },
+      "patterns": [
+        { "p": "___はだれですか？", "r": "___はだれですか", "zh": "___是谁？", "en": "Who is ___?",
+          "note": { "zh": "看照片问人用这句。回答「___です」；是自己的家人就说「妹の___です」（是我妹妹___）。", "en": "Use this for people in a photo. Answer '___ desu'. For your own family, say for example 'imouto no Hana desu' (it's my little sister Hana)." },
+          "ex": ["この人はだれですか？", "妹のはなです。"] },
+        { "p": "___が一人います。", "r": "___がひとりいます", "zh": "有一个___。", "en": "I have one ___.",
+          "note": { "zh": "说家里有谁用「います」。数人：一人 ひとり、二人 ふたり，三个人起是“数字＋にん”：三人 さんにん、四人 よにん。", "en": "Use 'imasu' (there is) for people. Counting people: 'hitori' (1), 'futari' (2), then number + 'nin': 'sannin' (3), 'yonin' (4)." },
+          "ex": ["弟が一人います。", "はい、妹が二人います。"] },
+        { "p": "何人家族ですか？", "r": "なんにんかぞくですか", "zh": "你家有几口人？", "en": "How many people are in your family?",
+          "note": { "zh": "回答「___人家族です」：四人家族です（四口人）。注意 四人 念「よにん」，不念「よんにん」。", "en": "Answer '___-nin kazoku desu': 'yonin kazoku desu' (a family of four). Four people is 'yonin', not 'yonnin'." },
+          "ex": ["何人家族ですか？", "四人家族です。"] },
+        { "p": "___は何さいですか？", "r": "___はなんさいですか", "zh": "___几岁？", "en": "How old is ___?",
+          "note": { "zh": "回答「___さいです」。注意读法：一さい いっさい、八さい はっさい、十さい じゅっさい。", "en": "Answer '___-sai desu'. Watch the sound changes: 'issai' (1), 'hassai' (8), 'jussai' (10)." },
+          "ex": ["お兄さんは何さいですか？", "十五さいです。"] }
+      ],
+      "tips": [
+        { "zh": "数量放在后面：中文说“一个弟弟”，日语说「弟が一人います」，顺序是“弟弟／一个人／有”。", "en": "The number comes after the person: not 'one little brother' but 'otouto ga hitori imasu', literally 'little brother / one person / there is'." },
+        { "zh": "说“有人”用「います」，说“有东西”用「あります」（第 3 岛学）。说「弟があります」是错的。", "en": "'Imasu' is for people (and animals); 'arimasu' is for things (Island 3). Don't use 'arimasu' for your brother!" }
+      ]
+    },
+    "3": {
+      "can": { "zh": "能问学校里的地方在哪里、在几楼，说某个地方有什么。", "en": "Ask where places are in a school and on which floor, and say what is in a place." },
+      "intro": {
+        "zh": "在学校里找路：图书室、医务室、厕所在哪儿？这一课学「ここ・そこ・あそこ」（这里、那里、那边）、楼层的说法，还有「〜に〜があります」（某处有某物）。",
+        "en": "Finding your way around school: where are the library, the nurse's room and the toilet? You'll learn 'koko / soko / asoko' (here / there / over there), how to say floors, and '... ni ... ga arimasu' (there is ... in ...)."
+      },
+      "patterns": [
+        { "p": "___はどこですか？", "r": "___はどこですか", "zh": "___在哪里？", "en": "Where is ___?",
+          "note": { "zh": "问地方最好用的一句，前面加「すみません」更礼貌。回答「___です」：あそこです（在那边）。ここ＝这里，そこ＝你那里，あそこ＝那边。", "en": "The handiest question for finding a place; start with 'sumimasen' (excuse me) to be polite. Answer '___ desu'. 'Koko' = here, 'soko' = there (near you), 'asoko' = over there." },
+          "ex": ["すみません、トイレはどこですか？", "トイレはあそこです。"] },
+        { "p": "___は何階ですか？", "r": "___はなんがいですか", "zh": "___在几楼？", "en": "What floor is ___ on?",
+          "note": { "zh": "楼层说“数字＋階”。回答只说「___階です」就行：三階です（在三楼）。", "en": "Floors are number + 'kai'. Just answer '___-kai desu': 'sangai desu' (it's on the third floor)." },
+          "ex": ["音楽室は何階ですか？", "三階です。"] },
+        { "p": "___に___があります。", "r": "___に___があります", "zh": "在___有___。", "en": "In ___ there is ___.",
+          "note": { "zh": "先说地方加「に」，再说东西加「が」，最后是「あります」（有）。问有没有就说「ありますか？」。", "en": "Say the place + 'ni' first, then the thing + 'ga', then 'arimasu' (there is). To ask, say 'arimasu ka?'." },
+          "ex": ["教室に時計があります。", "教室に地図がありますか？"] },
+        { "p": "___のとなりです。", "r": "___のとなりです", "zh": "在___旁边。", "en": "It's next to ___.",
+          "note": { "zh": "位置的说法是“地方＋の＋位置”：となり（旁边）、前（前面）、上（上面）。", "en": "Say the place + 'no' + a position word: 'tonari' (next to), 'mae' (in front of), 'ue' (on top of)." },
+          "ex": ["かいだんのとなりです。", "しょくどうは図書室の前です。"] }
+      ],
+      "tips": [
+        { "zh": "「図書室の前」（图书室的前面）和中文的顺序一样，先说地方、再说位置，很好记。英语正好反过来（in front of the library）。", "en": "Position words come after the place: 'toshoshitsu no mae' is literally 'the library's front', the reverse of English 'in front of the library'." },
+        { "zh": "楼层有几个读法会变：一階 いっかい、三階 さんがい、六階 ろっかい、十階 じゅっかい，问「何階」念 なんがい。听的时候留心。", "en": "Some floor numbers change sound: 'ikkai' (1st), 'sangai' (3rd), 'rokkai' (6th), 'jukkai' (10th), and 'nangai' (which floor?). Listen carefully." }
+      ]
+    },
+    "4": {
+      "can": { "zh": "能说喜欢、不太喜欢什么科目，说说一门课难不难、有没有意思。", "en": "Say which subjects you like or don't really like, and whether a class is hard or interesting." },
+      "intro": {
+        "zh": "聊学校的科目。这一课学「〜が好きです」（喜欢……）和它的否定，还有几个说感想的词：おもしろい（有意思）、むずかしい（难）、かんたん（简单）。",
+        "en": "Talking about school subjects. You'll learn '... ga suki desu' (I like ...) and how to say you don't really like something, plus words for your opinion: 'omoshiroi' (interesting), 'muzukashii' (hard) and 'kantan' (easy)."
+      },
+      "patterns": [
+        { "p": "好きな___は何ですか？", "r": "すきな___はなんですか", "zh": "你喜欢的___是什么？", "en": "What's your favourite ___?",
+          "note": { "zh": "「好きな＋东西」＝喜欢的东西：好きな科目（喜欢的科目）。也可以直接问「___は好きですか？」（喜欢___吗？）。", "en": "'Suki na' + noun = the ... you like: 'suki na kamoku' (favourite subject). You can also ask '___ wa suki desu ka?' (Do you like ___?)." },
+          "ex": ["好きな科目は何ですか？", "体育は好きですか？"] },
+        { "p": "___が好きです。", "r": "___がすきです", "zh": "我喜欢___。", "en": "I like ___.",
+          "note": { "zh": "喜欢的东西放在「が」前面。特别喜欢就说「大好きです」。", "en": "Put the thing you like before 'ga'. If you really love it, say 'daisuki desu'." },
+          "ex": ["わたしは音楽が好きです。", "はい、大好きです！"] },
+        { "p": "___はあまり好きじゃないです。", "r": "___はあまりすきじゃないです", "zh": "不太喜欢___。", "en": "I don't really like ___.",
+          "note": { "zh": "「じゃないです」＝不是。「あまり」后面一定接否定，意思是“不太……”。直接说「きらいです」（讨厌）太重，日本人常用这句。", "en": "'Ja nai desu' makes it negative, and 'amari' (not very) always goes with a negative. It's much softer than saying you hate something." },
+          "ex": ["体育はあまり好きじゃないです。", "いいえ、あまり好きじゃないです。"] },
+        { "p": "___はおもしろいです。", "r": "___はおもしろいです", "zh": "___很有意思。", "en": "___ is interesting.",
+          "note": { "zh": "说感想的词：おもしろい（有意思）、むずかしい（难）、やさしい（和蔼）、かんたん（简单）。前面加「ちょっと」＝有点，「とても」＝非常。", "en": "Opinion words: 'omoshiroi' (interesting), 'muzukashii' (hard), 'yasashii' (kind), 'kantan' (easy). Put 'chotto' (a bit) or 'totemo' (very) in front." },
+          "ex": ["理科のじゅぎょうはおもしろいです。", "数学はちょっとむずかしいです。"] }
+      ],
+      "tips": [
+        { "zh": "「好き」在日语里不是动词，是说“喜欢的状态”，所以喜欢的东西后面用「が」：音楽が好きです。说成「音楽を好きです」是新手最常见的错。", "en": "'Suki' isn't a verb like 'like'; it describes a feeling. So the thing you like takes 'ga', not 'o': 'ongaku ga suki desu'." },
+        { "zh": "形容词有两种：おもしろい、むずかしい 这种「い」结尾的，直接加「です」；好き、かんたん 这种，否定要说「じゃないです」。先听熟，变法到 1 级第 5 单元再系统学。", "en": "There are two kinds of describing words. Ones ending in 'i', like 'omoshiroi', just add 'desu'. Others, like 'suki' and 'kantan', use 'ja nai desu' for 'not'. You'll learn all the forms in Level 1, Unit 5." }
+      ]
+    },
+    "5": {
+      "can": { "zh": "能说自己的爱好和会做的事，夸别人做得好，约朋友一起做。", "en": "Talk about your hobbies and what you can do, praise others, and invite a friend to join you." },
+      "intro": {
+        "zh": "聊爱好和社团。这一课正式开始学动词：ひきます（弹）、見ます（看）、します（做）。还会学怎么约朋友：「いっしょに〜ませんか？」",
+        "en": "Talking about hobbies and clubs. This is where action words (verbs) really start: 'hikimasu' (play an instrument), 'mimasu' (watch) and 'shimasu' (do). You'll also learn to invite a friend: 'issho ni ... masen ka?'"
+      },
+      "patterns": [
+        { "p": "わたしのしゅみは___です。", "r": "わたしのしゅみは___です", "zh": "我的爱好是___。", "en": "My hobby is ___.",
+          "note": { "zh": "问别人：「しゅみは何ですか？」。回答把爱好放在「です」前面。", "en": "To ask someone, say 'shumi wa nan desu ka?'. Answer with your hobby before 'desu'." },
+          "ex": ["しゅみは何ですか？", "わたしのしゅみは料理です。"] },
+        { "p": "___ができますか？", "r": "___ができますか", "zh": "你会___吗？", "en": "Can you ___?",
+          "note": { "zh": "会做的事后面加「が」，再加「できます」（会、能）。会一点说「少しできます」。夸别人做得好：「絵が上手ですね！」", "en": "Put 'ga' after the skill and add 'dekimasu' (can do). 'Sukoshi dekimasu' = I can a little. To praise someone: 'e ga jouzu desu ne!' (you draw so well!)." },
+          "ex": ["ピアノができますか？", "はい、少しできます。"] },
+        { "p": "___をひきます。", "r": "___をひきます", "zh": "弹___。", "en": "I play ___ (an instrument).",
+          "note": { "zh": "表示动作的词（动词）放在最后，前面的东西加「を」（念 o）：ギターをひきます（弹吉他），えいがを見ます（看电影）。", "en": "The action word (verb) goes last, and the thing you do it to takes 'o': 'gitaa o hikimasu' (I play the guitar), 'eiga o mimasu' (I watch films)." },
+          "ex": ["ぼくはギターをひきます。", "いいえ、ピアノをひきます。"] },
+        { "p": "いっしょに___ませんか？", "r": "いっしょに___ませんか", "zh": "一起___好吗？", "en": "Shall we ___ together?",
+          "note": { "zh": "约朋友：把动词的「ます」换成「ませんか」。答应就说「いいですね！___ましょう」（好啊，……吧）。", "en": "To invite someone, change '-masu' to '-masen ka'. To say yes: 'ii desu ne! ... mashou' (sounds good, let's!)." },
+          "ex": ["いっしょにサッカーをしませんか？", "いいですね。しましょう！"] }
+      ],
+      "tips": [
+        { "zh": "动词总在句子最后：中文“我弹吉他”，日语「ぼくは ギターを ひきます」，顺序是“我／吉他／弹”。", "en": "The verb always comes last: 'boku wa gitaa o hikimasu' is literally 'I / guitar / play'." },
+        { "zh": "「〜ませんか」字面上是否定（不……吗？），其实是客气的邀请，不是在问“你不去吗”。", "en": "'-masen ka' looks negative ('won't you...?'), but it's really a polite invitation, not a question about why you aren't doing it." }
+      ]
+    },
+    "6": {
+      "can": { "zh": "能问时间、说几点，说自己一天几点做什么。", "en": "Ask and tell the time, and describe your day: when you get up, go out and come home." },
+      "intro": {
+        "zh": "说一天的作息：几点起床、几点上学、几点回家。重点是钟点的读法和「〜時に」（在几点）。",
+        "en": "Your daily routine: when you get up, go to school and come home. The key points are saying clock times and '... ji ni' (at ... o'clock)."
+      },
+      "patterns": [
+        { "p": "今何時ですか？", "r": "いまなんじですか", "zh": "现在几点？", "en": "What time is it now?",
+          "note": { "zh": "回答「___時です」，半点说「___時半です」。几个特别的读法：四時 よじ、七時 しちじ、九時 くじ。", "en": "Answer '___-ji desu'; for half past, add 'han'. Watch these: 'yoji' (4:00), 'shichiji' (7:00), 'kuji' (9:00)." },
+          "ex": ["今何時ですか？", "七時半です。"] },
+        { "p": "___時に___ます。", "r": "___じに___ます", "zh": "___点___。", "en": "At ___ o'clock, I ___.",
+          "note": { "zh": "钟点后面加「に」，动词放最后：六時に起きます（六点起床）。问别人就说「何時に___ますか？」。", "en": "Put 'ni' after the time and the verb at the end: 'rokuji ni okimasu' (I get up at six). To ask, say 'nanji ni ... masu ka?'." },
+          "ex": ["毎朝六時に起きます。", "何時にねますか？"] },
+        { "p": "___へ行きます。", "r": "___へいきます", "zh": "去___。", "en": "I go to ___.",
+          "note": { "zh": "去哪里用「へ」，这里念 e。回家常说「家に帰ります」，用「に」也可以。", "en": "The place you go to takes 'e' (written with the letter for 'he' but read 'e'). For going home, people often say 'ie ni kaerimasu' with 'ni'." },
+          "ex": ["八時に学校へ行きます。", "四時に家に帰ります。"] },
+        { "p": "___から___までです。", "r": "___から___までです", "zh": "从___到___。", "en": "From ___ to ___.",
+          "note": { "zh": "「から」＝从，「まで」＝到，时间、地方都能用。只问到几点：「何時までですか？」", "en": "'Kara' = from, 'made' = until. They work for times and places. 'Nanji made desu ka?' = until what time?" },
+          "ex": ["学校は八時半から三時半までです。", "図書室は何時までですか？"] }
+      ],
+      "tips": [
+        { "zh": "「毎朝」「毎日」「今」后面不加「に」，只有具体的钟点才加：毎朝六時に起きます。", "en": "Words like 'maiasa' (every morning), 'mainichi' (every day) and 'ima' (now) don't take 'ni'. Only clock times do: 'maiasa rokuji ni okimasu'." },
+        { "zh": "「です」「ます」最后的 u 常常轻得听不见：起きます 听起来像 o-ki-mas。跟读时别把 su 念得太重。", "en": "The final 'u' in 'desu' and '-masu' is often almost silent: 'okimasu' sounds like 'okimas'. Don't stress it when you repeat." }
+      ]
+    },
+    "7": {
+      "can": { "zh": "能问生日、日期和星期几，祝别人生日快乐、送礼物。", "en": "Ask about birthdays, dates and days of the week, say happy birthday and give a present." },
+      "intro": {
+        "zh": "生日派对！这一课学月份、日期、星期的说法，还有「おめでとう」（恭喜）和送礼物时说的话。日期有不少特别的读法，要多听。",
+        "en": "A birthday party! You'll learn months, dates and days of the week, plus 'omedetou' (congratulations) and what to say when you give a present. Many dates have special readings, so listen carefully."
+      },
+      "patterns": [
+        { "p": "たんじょうびはいつですか？", "r": "たんじょうびはいつですか", "zh": "你的生日是什么时候？", "en": "When is your birthday?",
+          "note": { "zh": "「いつ」＝什么时候。回答「___月___日です」。", "en": "'Itsu' = when. Answer with the month and the day + 'desu'." },
+          "ex": ["たんじょうびはいつですか？", "四月八日です。"] },
+        { "p": "今日は何月何日ですか？", "r": "きょうはなんがつなんにちですか", "zh": "今天是几月几号？", "en": "What's the date today?",
+          "note": { "zh": "月份很规则（一月 いちがつ、二月 にがつ……），只有三个要特别记：四月 しがつ、七月 しちがつ、九月 くがつ。", "en": "Months are regular ('ichigatsu', 'nigatsu'...), except for three: 'shigatsu' (April), 'shichigatsu' (July) and 'kugatsu' (September)." },
+          "ex": ["今日は何月何日ですか？", "七月二十日です。"] },
+        { "p": "___は何曜日ですか？", "r": "___はなんようびですか", "zh": "___是星期几？", "en": "What day of the week is ___?",
+          "note": { "zh": "星期：月曜日（一）、火曜日（二）、水曜日（三）、木曜日（四）、金曜日（五）、土曜日（六）、日曜日（天）。“在星期几”加「に」：土曜日に。", "en": "Days of the week end in 'youbi': 'getsuyoubi' (Monday) to 'nichiyoubi' (Sunday). 'On Saturday' is 'doyoubi ni'." },
+          "ex": ["パーティーは何曜日ですか？", "土曜日にパーティーをします。"] },
+        { "p": "___さいになります。", "r": "___さいになります", "zh": "（我）要满___岁了。", "en": "I'm turning ___.",
+          "note": { "zh": "「〜になります」＝变成、到。祝生日说「たんじょうび、おめでとう！」；送礼物说「これ、プレゼントです。どうぞ。」", "en": "'... ni narimasu' means 'become / turn'. For a birthday, say 'tanjoubi, omedetou!'. When you give a present, say 'kore, purezento desu. douzo.' (this is for you)." },
+          "ex": ["何さいになりますか？", "十三さいになります。"] }
+      ],
+      "tips": [
+        { "zh": "日期是这一课最难的：1 号到 10 号和 20 号有自己的读法——一日 ついたち、二日 ふつか、三日 みっか、四日 よっか、五日 いつか、六日 むいか、七日 なのか、八日 ようか、九日 ここのか、十日 とおか、二十日 はつか。别的日子是“数字＋にち”。", "en": "Dates are the hard part: the 1st to the 10th and the 20th have their own words: 'tsuitachi' (1st), 'futsuka', 'mikka', 'yokka', 'itsuka', 'muika', 'nanoka', 'youka', 'kokonoka', 'tooka' (10th) and 'hatsuka' (20th). Other days are number + 'nichi'." },
+        { "zh": "数细长的东西（蜡烛、笔、瓶子）用「〜本」，读音会变：一本 いっぽん、三本 さんぼん、十本 じゅっぽん。和中文的“根、支”一样，日语数东西要看形状换量词。", "en": "Japanese counts things with counter words. Long thin things (candles, pens, bottles) use 'hon', and the sound changes: 'ippon' (1), 'sanbon' (3), 'juppon' (10)." }
+      ]
+    },
+    "8": {
+      "can": { "zh": "能说动物在哪里、有几只，说说动物长什么样。", "en": "Say where animals are and how many there are, and describe what they look like." },
+      "intro": {
+        "zh": "到岛上看动物。这一课学「〜に〜がいます」（某处有动物）、数动物的「〜ひき」，还有「ぞうは鼻が長いです」这种说特点的句子。",
+        "en": "Time to visit the animals! You'll learn '... ni ... ga imasu' (there is an animal in ...), the counter 'hiki' for animals, and sentences like 'zou wa hana ga nagai desu' (elephants have long noses)."
+      },
+      "patterns": [
+        { "p": "___に___がいます。", "r": "___に___がいます", "zh": "在___有___（动物或人）。", "en": "In ___ there is ___ (an animal or person).",
+          "note": { "zh": "动物和人用「います」：公園に犬がいます（公园里有狗）。问在哪里：「___はどこにいますか？」，回答「___にいます」。", "en": "Use 'imasu' for animals and people: 'kouen ni inu ga imasu' (there's a dog in the park). To ask where: '___ wa doko ni imasu ka?'" },
+          "ex": ["公園に犬がいます。", "ライオンはどこにいますか？"] },
+        { "p": "___は何びきいますか？", "r": "___はなんびきいますか", "zh": "有几只___？", "en": "How many ___ are there?",
+          "note": { "zh": "数小动物用「〜ひき」，读音会变：一ぴき いっぴき、三びき さんびき、六ぴき ろっぴき、十ぴき じゅっぴき；二ひき、四ひき、五ひき 不变。数量放在「が」后面：ねこが三びきいます。", "en": "Small animals are counted with 'hiki', and the sound changes: 'ippiki' (1), 'sanbiki' (3), 'roppiki' (6), 'juppiki' (10); 'nihiki', 'yonhiki' and 'gohiki' stay regular. The number goes after 'ga': 'neko ga sanbiki imasu'." },
+          "ex": ["うさぎは何びきいますか？", "ねこが三びきいます。"] },
+        { "p": "___は___が長いです。", "r": "___は___がながいです", "zh": "___的___很长。", "en": "___ has a long ___.",
+          "note": { "zh": "说动物的特点：先说动物加「は」，再说哪个部位加「が」：ぞうは鼻が長いです（大象鼻子长）。", "en": "To describe a feature, say the animal + 'wa', then the body part + 'ga': 'zou wa hana ga nagai desu' (elephants have long noses)." },
+          "ex": ["ぞうは鼻が長いです。", "馬は足が速いです。"] },
+        { "p": "どんな動物が好きですか？", "r": "どんなどうぶつがすきですか", "zh": "你喜欢什么样的动物？", "en": "What kind of animals do you like?",
+          "note": { "zh": "「どんな＋东西」＝什么样的。回答「___が好きです」。夸动物可爱：「かわいいですね」。", "en": "'Donna' + noun = what kind of ... Answer '___ ga suki desu'. To say an animal is cute: 'kawaii desu ne'." },
+          "ex": ["どんな動物が好きですか？"] }
+      ],
+      "tips": [
+        { "zh": "说“有”要分清：活的（人、动物）用「います」，东西用「あります」。「犬があります」是错的。", "en": "'Imasu' is for living things (people, animals); 'arimasu' is for objects. 'Inu ga arimasu' is wrong; say 'inu ga imasu'." },
+        { "zh": "和中文一样，名词没有单数复数：ねこ 可以是一只，也可以是很多只。要说几只，就在后面加数量：ねこが三びき。", "en": "Japanese nouns have no plural: 'neko' can be one cat or many cats. To say how many, add the number after it: 'neko ga sanbiki' (three cats)." }
+      ]
+    },
+    "9": {
+      "can": { "zh": "能看懂、说出学校和马路上的规则，问“可以……吗”。", "en": "Understand and state rules at school and on the road, and ask 'May I ...?'" },
+      "intro": {
+        "zh": "每个地方都有规则。这一课学四个“尾巴”：〜てください（请）、〜ないでください（请不要）、〜てもいいですか（可以吗）、〜てはいけません（不可以）。前面的动词怎么变先不管，整句记住就好。",
+        "en": "Every place has rules. You'll learn four endings: '-te kudasai' (please do), '-naide kudasai' (please don't), '-te mo ii desu ka' (may I?) and '-te wa ikemasen' (you must not). Don't worry yet about how the verb changes; learn each sentence as a whole."
+      },
+      "patterns": [
+        { "p": "___てください。", "r": "___てください", "zh": "请___。", "en": "Please ___.",
+          "note": { "zh": "请别人做事。动词要先变成「〜て」的样子（有的是「〜で」），这一课整句记就行：止まってください（请停下）、静かにしてください（请安静）。", "en": "Ask someone to do something. The verb changes to a '-te' form (sometimes '-de'); for now just learn the whole phrase: 'tomatte kudasai' (please stop)." },
+          "ex": ["信号が赤です。止まってください。", "図書室では静かにしてください。"] },
+        { "p": "___ないでください。", "r": "___ないでください", "zh": "请不要___。", "en": "Please don't ___.",
+          "note": { "zh": "请别人不要做：走らないでください（请不要跑）。前面加「すみません」更客气。", "en": "Ask someone not to do something: 'hashiranaide kudasai' (please don't run). Put 'sumimasen' first to sound softer." },
+          "ex": ["ろうかを走らないでください。", "すみません、ここでは飲まないでください。"] },
+        { "p": "___てもいいですか？", "r": "___てもいいですか", "zh": "可以___吗？", "en": "May I ___?",
+          "note": { "zh": "问能不能做。可以：「はい、いいですよ」「はい、どうぞ」；不行：「いいえ、だめです」。", "en": "Ask for permission. Yes: 'hai, ii desu yo' or 'hai, douzo'. No: 'iie, dame desu'." },
+          "ex": ["ここで写真をとってもいいですか？", "はい、いいですよ。"] },
+        { "p": "___てはいけません。", "r": "___てはいけません", "zh": "不可以___。", "en": "You must not ___.",
+          "note": { "zh": "说规定“不许做”，比「〜ないでください」严。这里的「は」也念 wa。", "en": "This states a rule, and sounds stricter than '-naide kudasai'. The 'ha' here is read 'wa' too." },
+          "ex": ["じゅぎょう中にスマホを使ってはいけません。"] }
+      ],
+      "tips": [
+        { "zh": "「で」表示在哪儿“做”：ここで写真をとります（在这里拍照）、図書室では静かに（在图书室里要安静）。只说在哪儿“有”用「に」：教室に時計があります。", "en": "'De' marks where an action happens: 'koko de shashin o torimasu' (I take photos here). Where something simply is uses 'ni': 'kyoushitsu ni tokei ga arimasu'." },
+        { "zh": "「だめです」很直接，说规则、对朋友可以用；当面拒绝别人的请求，常说「すみません、ちょっと…」。", "en": "'Dame desu' (no, not allowed) is very direct. It's fine for rules and friends, but to turn down someone's request politely, people often say 'sumimasen, chotto...'." }
+      ]
+    },
+    "10": {
+      "can": { "zh": "能说早饭吃什么、喝什么，常做什么运动，什么对身体好。", "en": "Say what you eat and drink, what sports you play, and what's good for your health." },
+      "intro": {
+        "zh": "吃饭和运动。这一课学「〜を食べます」「〜を飲みます」「〜をします」，用「と」把两样东西连起来，还学动词的否定「〜ません」。",
+        "en": "Food and sport. You'll learn '... o tabemasu' (eat), '... o nomimasu' (drink) and '... o shimasu' (play / do), join two things with 'to' (and), and make verbs negative with '-masen'."
+      },
+      "patterns": [
+        { "p": "___を食べます。", "r": "___をたべます", "zh": "吃___。", "en": "I eat ___.",
+          "note": { "zh": "吃的东西后面加「を」（念 o），动词放最后。喝是「___を飲みます」。两样东西用「と」连：パンとたまご（面包和鸡蛋）。", "en": "The food takes 'o', and the verb goes last. 'Drink' is '... o nomimasu'. Join two things with 'to': 'pan to tamago' (bread and eggs)." },
+          "ex": ["朝ごはんに何を食べますか？", "ごはんとたまごを食べます。"] },
+        { "p": "___をします。", "r": "___をします", "zh": "做___（运动）。", "en": "I play / do ___.",
+          "note": { "zh": "大多数运动用「します」（做）：テニスをします（打网球）、バスケをします（打篮球）。", "en": "Most sports use 'shimasu' (do): 'tenisu o shimasu' (I play tennis), 'basuke o shimasu' (I play basketball)." },
+          "ex": ["毎週テニスをします。", "どんなスポーツをしますか？"] },
+        { "p": "あまり___ません。", "r": "あまり___ません", "zh": "不太___。", "en": "I don't ___ much.",
+          "note": { "zh": "动词的否定：ます → ません（します → しません）。「あまり〜ません」＝不太……。", "en": "To make a verb negative, change '-masu' to '-masen' ('shimasu' -> 'shimasen'). 'Amari ... masen' = not much." },
+          "ex": ["野球はあまりしません。"] },
+        { "p": "___は体にいいです。", "r": "___はからだにいいです", "zh": "___对身体好。", "en": "___ is good for your body.",
+          "note": { "zh": "体 念「からだ」，「いいです」＝好。说吃的、运动对身体好就用这句。", "en": "'Karada' means body, and 'ii desu' means good. Use it for healthy food or exercise." },
+          "ex": ["野菜は体にいいです。"] }
+      ],
+      "tips": [
+        { "zh": "「と」只能连名词：パンとたまご。中文的“和”、英语的 and 能连两句话、两个动作，日语的「と」不行。", "en": "'To' (and) only joins nouns: 'pan to tamago'. Unlike English 'and', it can't join two sentences or two actions." },
+        { "zh": "「を」写出来和「お」是两个字，念起来一样，都念 o。", "en": "The particle 'o' has its own letter (often spelled 'wo' in romaji), but it sounds just like 'o'." }
+      ]
+    },
+    "11": {
+      "can": { "zh": "能说今天、明天的天气，聊季节和喜欢的原因。", "en": "Talk about today's and tomorrow's weather, and about the seasons and why you like one." },
+      "intro": {
+        "zh": "聊天气是开始聊天的好办法。这一课学「どうですか」（怎么样）、句尾的「ね」和「よ」，还有用「〜から」说原因。",
+        "en": "Weather is a great way to start a chat. You'll learn 'dou desu ka' (how is it?), the sentence endings 'ne' and 'yo', and how to give a reason with 'kara' (because)."
+      },
+      "patterns": [
+        { "p": "___の天気はどうですか？", "r": "___のてんきはどうですか", "zh": "___天气怎么样？", "en": "How's the weather ___?",
+          "note": { "zh": "「どうですか」＝怎么样。回答可以只说天气：くもりです（阴天）、晴れです（晴天）、雨です（下雨）。", "en": "'Dou desu ka' = how is it? You can answer with just the weather: 'kumori desu' (cloudy), 'hare desu' (sunny), 'ame desu' (rainy)." },
+          "ex": ["今日の天気はどうですか？", "くもりです。"] },
+        { "p": "___ですね。", "r": "___ですね", "zh": "___啊。（想让对方同意）", "en": "___, isn't it?",
+          "note": { "zh": "句尾加「ね」，是想让对方同意：今日は寒いですね（今天好冷啊）。对方回答「ええ、本当に寒いですね」。", "en": "Adding 'ne' at the end invites the other person to agree, like 'isn't it?'. The answer often repeats it: 'ee, hontou ni samui desu ne' (yes, it's really cold)." },
+          "ex": ["今日はいい天気ですね。", "ええ、本当に寒いですね。"] },
+        { "p": "___ですよ。", "r": "___ですよ", "zh": "___哦。（告诉对方不知道的事）", "en": "___, you know.",
+          "note": { "zh": "句尾加「よ」，是告诉对方一件他可能不知道的事：あしたは雨ですよ（明天要下雨哦）。", "en": "Adding 'yo' tells the other person something they may not know, like 'you know' or 'I'm telling you'." },
+          "ex": ["あしたは雨ですよ。", "いいえ、晴れですよ。"] },
+        { "p": "___からです。", "r": "___からです", "zh": "因为___。", "en": "Because ___.",
+          "note": { "zh": "问原因用「どうして___ですか？」。回答先说原因，最后加「からです」：アイスがおいしいからです（因为冰淇淋好吃）。", "en": "Ask why with 'doushite ... desu ka?'. Answer with the reason + 'kara desu': 'aisu ga oishii kara desu' (because ice cream is tasty)." },
+          "ex": ["どうして夏が好きですか？", "アイスがおいしいからです。"] }
+      ],
+      "tips": [
+        { "zh": "「ね」和「よ」意思不一样：ね＝“对吧？”，说对方也知道的事；よ＝“告诉你哦”，说对方不知道的事。用反了听起来会怪。", "en": "'Ne' = 'isn't it?' (something you both know); 'yo' = 'I'm telling you' (news for them). Mixing them up sounds odd." },
+        { "zh": "说天气常常只用名词加「です」：雨です（下雨）、晴れです（晴天）、くもりです（阴天），不一定要动词。", "en": "For weather, Japanese often just uses a noun + 'desu': 'ame desu' (it's rainy), 'hare desu' (it's sunny). You don't always need a verb." }
+      ]
+    },
+    "12": {
+      "can": { "zh": "能讲昨天、暑假做了什么：去了哪里、和谁去的、过得怎么样。", "en": "Tell what you did yesterday or in the holidays: where you went, who with, and how it was." },
+      "intro": {
+        "zh": "最后一座岛讲回忆。这一课学过去的说法：动词 〜ました、名词 〜でした、「い」结尾的形容词 〜かったです。",
+        "en": "The last island is about memories. You'll learn the past: verbs end in '-mashita', nouns in 'deshita', and describing words ending in 'i' change to '-katta desu'."
+      },
+      "patterns": [
+        { "p": "___ました。", "r": "___ました", "zh": "___了。（做过的事）", "en": "I ___ (in the past).",
+          "note": { "zh": "过去的事：ます → ました。行きます → 行きました（去了），見ます → 見ました（看了）。", "en": "For the past, change '-masu' to '-mashita': 'ikimasu' (go) -> 'ikimashita' (went), 'mimasu' (see) -> 'mimashita' (saw)." },
+          "ex": ["写真をたくさんとりました。", "水族館で大きい魚を見ました。"] },
+        { "p": "___ませんでした。", "r": "___ませんでした", "zh": "没___。（过去没做）", "en": "I didn't ___.",
+          "note": { "zh": "过去的否定：ません → ませんでした。見ませんでした（没看）。", "en": "The past negative: '-masen' -> '-masen deshita'. 'Mimasen deshita' = I didn't see it." },
+          "ex": ["花火を見ましたか？", "いいえ、見ませんでした。"] },
+        { "p": "___と___へ行きました。", "r": "___と___へいきました", "zh": "和___去了___。", "en": "I went with ___ to ___.",
+          "note": { "zh": "「と」＝和谁一起，「へ」＝去哪里。问的时候：「だれと行きましたか？」（和谁去的？）「どこへ行きましたか？」（去哪儿了？）", "en": "'To' = with someone, 'e' = to a place. To ask: 'dare to ikimashita ka?' (who did you go with?) and 'doko e ikimashita ka?' (where did you go?)." },
+          "ex": ["家族と海へ行きました。", "だれと行きましたか？"] },
+        { "p": "___はどうでしたか？", "r": "___はどうでしたか", "zh": "___怎么样？（过去的事）", "en": "How was ___?",
+          "note": { "zh": "「でした」是「です」的过去：雨でした（那天下雨）。「い」结尾的形容词把 い 换成「かったです」：楽しい → 楽しかったです（很开心）。", "en": "'Deshita' is the past of 'desu': 'ame deshita' (it was rainy). Describing words ending in 'i' change to '-katta desu': 'tanoshii' -> 'tanoshikatta desu' (it was fun)." },
+          "ex": ["夏休みはどうでしたか？", "とても楽しかったです。"] }
+      ],
+      "tips": [
+        { "zh": "日语没有 go → went 这种不规则的变化：所有动词都是 〜ます → 〜ました，只在句尾变。", "en": "There are no irregular past forms like go / went: every verb simply changes '-masu' to '-mashita' at the end." },
+        { "zh": "「楽しかったです」不能说成「楽しいでした」：「い」结尾的形容词自己变过去（い → かった），后面的「です」不变。", "en": "Don't say 'tanoshii deshita'. Describing words ending in 'i' change themselves ('-i' -> '-katta'), and 'desu' stays as it is: 'tanoshikatta desu'." }
+      ]
+    }
+  },
+  "units": {
+    "ja1-1": {
+      "patterns": [
+        { "p": "こちらは___です。", "r": "こちらは___です", "zh": "这位是___。", "en": "This is ___.",
+          "note": { "zh": "介绍别人用「こちら」，比「この人」客气。介绍朋友常说「友だちの___です」（是我的朋友___）。", "en": "Use 'kochira' to introduce someone; it's more polite than 'kono hito'. For a friend, say 'tomodachi no ___ desu' (this is my friend ___)." },
+          "ex": ["こちらは友だちのひなさんです。", "友だちのそうたくんです。"] },
+        { "p": "___は何年生ですか？", "r": "___はなんねんせいですか", "zh": "___几年级？", "en": "What year is ___ in?",
+          "note": { "zh": "回答「___年生です」：一年生 いちねんせい、二年生 にねんせい。问别人的弟弟妹妹要说「弟さん」「妹さん」。", "en": "Answer '___-nensei desu': 'ichinensei' (first year), 'ninensei' (second year). For someone else's brother or sister, say 'otouto-san' / 'imouto-san'." },
+          "ex": ["はるとくんの弟さんは何年生ですか？", "弟は二年生です。"] },
+        { "p": "___のお仕事は何ですか？", "r": "___のおしごとはなんですか", "zh": "___做什么工作？", "en": "What does ___ do for work?",
+          "note": { "zh": "问别人家人的工作说「お仕事」，加「お」更客气。回答说自己的家人用「母は」「父は」：母はパン屋さんです。", "en": "When asking about someone's family, use 'o-shigoto', the polite word for job. Answer about your own family with 'haha wa' / 'chichi wa': 'haha wa panya-san desu' (my mother runs a bakery)." },
+          "ex": ["お母さんのお仕事は何ですか？", "母はパン屋さんです。"] },
+        { "p": "___は？", "r": "___は", "zh": "___呢？", "en": "And ___?",
+          "note": { "zh": "先说了自己的情况，再问对方同样的事，只说「名字＋は？」就够了，像中文的“……呢？”。", "en": "After saying something about yourself, ask the same thing back with just the name + 'wa?', like 'And you?'." },
+          "ex": ["ぼくは一年生です。あおいさんは？", "わたしも一年生です。"] }
+      ],
+      "tips": [
+        { "zh": "「わたしは」常常省掉：大家都知道在说自己时，直接说「一年生です」就行。一直说「わたしは」反而有点生硬。", "en": "'Watashi wa' (I) is often left out. When it's clear you're talking about yourself, just say 'ichinensei desu'. Saying 'watashi wa' every time sounds stiff." },
+        { "zh": "当着本人的面说「あの人」「この人」不太客气；介绍在场的人用「こちら」，名字后面加「さん」。", "en": "'Ano hito' (that person) can sound rude when the person is right there. Use 'kochira' to introduce them, and add 'san' to their name." }
+      ]
+    },
+    "ja1-2": {
+      "patterns": [
+        { "p": "___はいくらですか？", "r": "___はいくらですか", "zh": "___多少钱？", "en": "How much is ___?",
+          "note": { "zh": "问价钱。东西离谁近，照样分「これ・それ・あれ」。回答「___円です」。", "en": "Ask the price. Choose 'kore / sore / are' by where the thing is. Answer '___ en desu'." },
+          "ex": ["これはいくらですか？", "それは百円です。"] },
+        { "p": "___を二つください。", "r": "___をふたつください", "zh": "请给我两个___。", "en": "Two ___, please.",
+          "note": { "zh": "数东西要看形状：一般的东西用 一つ・二つ・三つ（ひとつ・ふたつ・みっつ）；纸这种扁的用「〜まい」（五まい）；笔、瓶子这种长的用「〜本」（一本 いっぽん、二本 にほん）。", "en": "Counters depend on shape: most things use 'hitotsu, futatsu, mittsu'; flat things like paper use 'mai' ('gomai', five sheets); long things like pens and bottles use 'hon' ('ippon', 'nihon')." },
+          "ex": ["おにぎりを二つください。", "紙を五まいください。"] },
+        { "p": "全部でいくらですか？", "r": "ぜんぶでいくらですか", "zh": "一共多少钱？", "en": "How much is it altogether?",
+          "note": { "zh": "「全部で」＝一共。付钱时说「はい、千円です」（给您一千日元），找回来的钱叫「おつり」。", "en": "'Zenbu de' = in total. When you pay, say 'hai, sen en desu' (here's 1,000 yen). Your change is 'otsuri'." },
+          "ex": ["全部でいくらですか？", "全部で八百円です。"] },
+        { "p": "どちらが___ですか？", "r": "どちらが___ですか", "zh": "哪一个更___？", "en": "Which one is more ___?",
+          "note": { "zh": "两样东西里挑一个用「どちら」，三样以上用「どれ」。问句里用「が」，回答也用「が」：こちらが高いです。", "en": "Use 'dochira' to choose between two things and 'dore' for three or more. The question uses 'ga', and so does the answer: 'kochira ga takai desu'." },
+          "ex": ["どちらが高いですか？", "こちらが高いです。"] }
+      ],
+      "tips": [
+        { "zh": "店员说「いらっしゃいませ」（欢迎光临）不用回答，点个头，直接说要什么就行。", "en": "When shop staff say 'irasshaimase' (welcome), you don't need to reply. Just nod and say what you want." },
+        { "zh": "大数字按“万”来数，和中文一样：10000 是「一万」（いちまん）。说英语的人要特别记这个单位。", "en": "Big numbers are counted in 'man' (10,000): 10,000 yen is 'ichiman en', not 'ten thousand'. English has no single word for this unit, so take care." }
+      ]
+    },
+    "ja1-3": {
+      "patterns": [
+        { "p": "___の中に何がありますか？", "r": "___のなかになにがありますか", "zh": "___里有什么？", "en": "What's in ___?",
+          "note": { "zh": "问一个地方有什么。问句里「何」后面用「が」，回答也用「が」：ノートとペンがあります。", "en": "Ask what's in a place. 'Nani' takes 'ga' in the question, and the answer uses 'ga' too: 'nooto to pen ga arimasu'." },
+          "ex": ["かばんの中に何がありますか？", "ノートとペンがあります。"] },
+        { "p": "___や___があります。", "r": "___や___があります", "zh": "有___、___什么的。", "en": "There are ___, ___ and other things.",
+          "note": { "zh": "「と」是全部列出来，「や」只是举几个例子、还有别的：本やノート（书啊、笔记本什么的）。", "en": "'To' lists everything; 'ya' gives a few examples and suggests there's more: 'hon ya nooto' (books, notebooks and so on)." },
+          "ex": ["つくえの上に本やノートがあります。", "森や橋があります。"] },
+        { "p": "___と___のあいだにあります。", "r": "___と___のあいだにあります", "zh": "在___和___中间。", "en": "It's between ___ and ___.",
+          "note": { "zh": "两个地方用「と」连起来，再加「のあいだ」（的中间）。", "en": "Join the two places with 'to', then add 'no aida' (between)." },
+          "ex": ["ゆうびんきょくは病院と駅のあいだにあります。", "駅と病院のあいだです。"] },
+        { "p": "___にだれがいますか？", "r": "___にだれがいますか", "zh": "___有谁？", "en": "Who is in ___?",
+          "note": { "zh": "问人用「だれが」，动词用「います」。回答「___がいます」。", "en": "Ask about people with 'dare ga' and 'imasu'. Answer '___ ga imasu'." },
+          "ex": ["部屋にだれがいますか？", "弟がいます。"] }
+      ],
+      "tips": [
+        { "zh": "两种说法重点不同：「ペンはつくえの上にあります」回答“笔在哪儿”；「つくえの上にペンがあります」是说“桌上有什么”。看对方问的是哪个来选。", "en": "'Pen wa tsukue no ue ni arimasu' answers 'Where is the pen?'. 'Tsukue no ue ni pen ga arimasu' tells what is on the desk. Choose the one that fits the question." },
+        { "zh": "「となり」和「よこ」都是“旁边”：となり 多指挨着的同类东西（房子挨房子、人挨人），よこ 只是说在侧面。", "en": "'Tonari' and 'yoko' both mean 'next to'. 'Tonari' is for two things of the same kind side by side (two houses, two people); 'yoko' just means 'at the side of'." }
+      ]
+    },
+    "ja1-4": {
+      "patterns": [
+        { "p": "___で行きます。", "r": "___でいきます", "zh": "坐___去。", "en": "I go by ___.",
+          "note": { "zh": "交通工具后面加「で」：バスで、電車で、自転車で。走着去说「歩いて行きます」，不加で。问怎么去：「何で行きますか？」（何 念 なん）。", "en": "The vehicle takes 'de': 'basu de' (by bus), 'densha de' (by train). On foot is 'aruite ikimasu', with no 'de'. To ask how: 'nan de ikimasu ka?'" },
+          "ex": ["学校へ何で行きますか？", "バスで行きます。"] },
+        { "p": "昨日は何をしましたか？", "r": "きのうはなにをしましたか", "zh": "昨天你做了什么？", "en": "What did you do yesterday?",
+          "note": { "zh": "回答用「〜ました」；和谁一起用「と」：友だちと音楽を聞きました（和朋友听了音乐）。", "en": "Answer with '-mashita'. 'With someone' is 'to': 'tomodachi to ongaku o kikimashita' (I listened to music with a friend)." },
+          "ex": ["昨日は何をしましたか？", "友だちと音楽を聞きました。"] },
+        { "p": "何曜日に___ますか？", "r": "なんようびに___ますか", "zh": "你星期几___？", "en": "On which day do you ___?",
+          "note": { "zh": "星期后面加「に」。回答时前面重复的话可以省掉，只说「土曜日にします」。", "en": "Days of the week take 'ni'. In the answer you can drop the repeated part: 'doyoubi ni shimasu' (I do it on Saturday)." },
+          "ex": ["何曜日にせんたくをしますか？", "土曜日にします。"] },
+        { "p": "___まで何分ですか？", "r": "___までなんぷんですか", "zh": "到___要几分钟？", "en": "How many minutes to ___?",
+          "note": { "zh": "分钟的读法会变：一分 いっぷん、三分 さんぷん、十分 じゅっぷん；二分 にふん、五分 ごふん。", "en": "Minutes change sound: 'ippun' (1), 'sanpun' (3), 'juppun' (10); but 'nifun' (2), 'gofun' (5)." },
+          "ex": ["駅まで何分ですか？", "歩いて十分です。"] }
+      ],
+      "tips": [
+        { "zh": "一句话可以有好几块，顺序比较自由，但动词一定在最后：「八時十分に バスで 学校へ 行きます」。每块后面的小词说明这块是干什么的：に（时间）、で（交通）、へ（方向）。", "en": "A sentence can have several chunks in a fairly free order, as long as the verb comes last. The little word after each chunk shows its job: 'ni' (time), 'de' (how you go), 'e' (where to)." },
+        { "zh": "星期的汉字很好记：月火水木金土日 加上「曜日」，就是星期一到星期天：月曜日 げつようび……日曜日 にちようび。", "en": "The days are named after the moon, fire, water, wood, metal, earth and sun, + 'youbi': 'getsuyoubi' (Monday) ... 'nichiyoubi' (Sunday)." }
+      ]
+    },
+    "ja1-5": {
+      "patterns": [
+        { "p": "___はどうですか？", "r": "___はどうですか", "zh": "___怎么样？", "en": "How is ___?",
+          "note": { "zh": "问感想。问过去的事用「どうでしたか？」。回答用形容词：とてもおいしいです。", "en": "Ask for someone's opinion. For something in the past, use 'dou deshita ka?'. Answer with a describing word: 'totemo oishii desu' (it's very tasty)." },
+          "ex": ["このラーメンはどうですか？", "とてもおいしいです。"] },
+        { "p": "どんな___が好きですか？", "r": "どんな___がすきですか", "zh": "你喜欢什么样的___？", "en": "What kind of ___ do you like?",
+          "note": { "zh": "「どんな」后面接东西，问的是种类。回答直接说「___が好きです」。", "en": "'Donna' + noun asks what kind. Answer '___ ga suki desu'." },
+          "ex": ["どんな食べ物が好きですか？", "ラーメンが好きです。"] },
+        { "p": "___ですが、___です。", "r": "___ですが___です", "zh": "___，但是___。", "en": "It's ___, but ___.",
+          "note": { "zh": "一句话后面加「が」，意思是“但是”，用来说一好一坏：高いですが、おいしいです（贵是贵，但好吃）。", "en": "'Ga' after a sentence means 'but'. Use it for a minus and a plus: 'takai desu ga, oishii desu' (it's pricey, but tasty)." },
+          "ex": ["ここのカレーは高いですが、おいしいです。", "小さいですが、きれいな町です。"] },
+        { "p": "ちょっと___です。", "r": "ちょっと___です", "zh": "有点___。", "en": "It's a little ___.",
+          "note": { "zh": "「とても」＝非常，「ちょっと」＝有点。说不太好的事加「ちょっと」，听起来柔和：ちょっとからいです。", "en": "'Totemo' = very, 'chotto' = a little. 'Chotto' makes a complaint sound softer: 'chotto karai desu' (it's a bit spicy)." },
+          "ex": ["はい、ちょっとからいです。", "このスープはちょっと冷たいです。"] }
+      ],
+      "tips": [
+        { "zh": "「熱い」和「暑い」都念 あつい：熱い 是东西烫（熱いお茶），暑い 是天气热。听的时候看前后文。", "en": "'Atsui' has two meanings with different kanji: hot to the touch (hot tea) and hot weather. They sound the same, so listen to the context." },
+        { "zh": "日本人说“不好”常常说得很软：「あまりよくなかったです」「ちょっと…」，很少直接说「まずい」（难吃）。", "en": "Japanese people soften bad opinions: 'amari yoku nakatta desu' (it wasn't very good) or just 'chotto...'. They rarely say 'mazui' (it tastes bad) to your face." }
+      ]
+    },
+    "ja1-6": {
+      "patterns": [
+        { "p": "___は時間がありますか？", "r": "___はじかんがありますか", "zh": "___有空吗？", "en": "Are you free ___?",
+          "note": { "zh": "约人之前先问有没有空。有空：「はい、あります」；没空：「すみません、___は用事があります」（那天有事）。", "en": "Before inviting someone, ask if they're free. Yes: 'hai, arimasu'. No: 'sumimasen, ___ wa youji ga arimasu' (sorry, I have something on)." },
+          "ex": ["週末は時間がありますか？", "すみません、土曜日は用事があります。"] },
+        { "p": "何時に会いましょうか？", "r": "なんじにあいましょうか", "zh": "我们几点见面好呢？", "en": "What time shall we meet?",
+          "note": { "zh": "「〜ましょうか」是和对方商量；定下来就说「〜ましょう」。在哪儿见面用「で」：駅の前で会いましょう。", "en": "'-mashou ka' asks the other person to decide with you; '-mashou' settles it. The meeting place takes 'de': 'eki no mae de aimashou' (let's meet in front of the station)." },
+          "ex": ["何時に会いましょうか？", "駅の前で三時に会いましょう。"] },
+        { "p": "___へ___に行きます。", "r": "___へ___にいきます", "zh": "去___做___。", "en": "I go to ___ to ___.",
+          "note": { "zh": "「買い物」「散歩」这种表示活动的词，直接加「に」：買い物に行きます（去买东西）。问去做什么：「何をしに行きますか？」", "en": "Activity words like 'kaimono' (shopping) and 'sanpo' (a walk) just add 'ni': 'kaimono ni ikimasu' (I go shopping). To ask what for: 'nani o shi ni ikimasu ka?'" },
+          "ex": ["図書館へ何をしに行きますか？", "朝、公園へ散歩に行きます。"] },
+        { "p": "残念ですが、また今度。", "r": "ざんねんですがまたこんど", "zh": "真遗憾，那下次吧。", "en": "That's a shame. Maybe next time.",
+          "note": { "zh": "拒绝邀请以后加上这句，对方就知道你不是不想去。", "en": "Add this after saying no, so the other person knows you'd still like to go another time." },
+          "ex": ["残念ですが、また今度。"] }
+      ],
+      "tips": [
+        { "zh": "听到「日曜日はちょっと…」这种没说完的话，就是在拒绝，不要再追问为什么。", "en": "If someone says 'nichiyoubi wa chotto...' and stops, it means no. Don't ask them why." },
+        { "zh": "「〜たいです」说的是自己想做（或者问对方想不想做）；说别人想做什么，日语要换别的说法，2 级再学。", "en": "'-tai desu' is for what you want (or for asking what the listener wants). For what someone else wants, Japanese uses a different form, which comes in Level 2." }
+      ]
+    },
+    "ja1-7": {
+      "patterns": [
+        { "p": "もう一度言ってください。", "r": "もういちどいってください", "zh": "请再说一遍。", "en": "Please say that again.",
+          "note": { "zh": "听不懂时最有用的一句。还可以说「ゆっくり話してください」（请说慢一点）。", "en": "The most useful phrase when you don't catch something. You can also say 'yukkuri hanashite kudasai' (please speak slowly)." },
+          "ex": ["もう一度言ってください。", "ゆっくり話してください。"] },
+        { "p": "今、何をしていますか？", "r": "いまなにをしていますか", "zh": "你现在在做什么？", "en": "What are you doing now?",
+          "note": { "zh": "打电话时常问这一句。回答用「〜ています」：本を読んでいます（在看书）。", "en": "A common question on the phone. Answer with '-te imasu': 'hon o yonde imasu' (I'm reading a book)." },
+          "ex": ["今、何をしていますか？", "本を読んでいます。"] },
+        { "p": "___てから、___ます。", "r": "___てから___ます", "zh": "___以后，再___。", "en": "After ___, I ___.",
+          "note": { "zh": "先做的事用て形再加「から」，后面接后做的事：手をあらってから、ごはんを食べます（洗了手再吃饭）。", "en": "Put the first action in the te-form + 'kara', then the next action: 'te o aratte kara, gohan o tabemasu' (I wash my hands, then I eat)." },
+          "ex": ["手をあらってから、ごはんを食べます。", "宿題をしてから、遊びます。"] },
+        { "p": "___ましょうか？", "r": "___ましょうか", "zh": "要我___吗？", "en": "Shall I ___?",
+          "note": { "zh": "主动帮忙：まどを開けましょうか？（我来开窗吧？）。要就说「はい、___てください」。", "en": "Offer to help: 'mado o akemashou ka?' (shall I open the window?). To accept, say 'hai, ... te kudasai'." },
+          "ex": ["まどを開けましょうか？", "はい、開けてください。"] }
+      ],
+      "tips": [
+        { "zh": "两种「ください」别混：要东西是“名词＋をください”（水をください），请人做事是“て形＋ください”（待ってください）。", "en": "There are two kinds of 'kudasai'. For a thing: noun + 'o kudasai' ('mizu o kudasai', water, please). For an action: te-form + 'kudasai' ('matte kudasai', please wait)." },
+        { "zh": "「〜ています」这一课先当“正在做”记；以后还会学到它表示状态（住在……、知道……），到时候别奇怪。", "en": "For now, '-te imasu' means 'doing right now'. Later you'll also see it for states (living somewhere, knowing something), so don't be surprised." }
+      ]
+    },
+    "ja1-8": {
+      "patterns": [
+        { "p": "___てもいいですか？", "r": "___てもいいですか", "zh": "可以___吗？", "en": "May I ___?",
+          "note": { "zh": "回答的几种说法：可以——「はい、いいですよ」「はい、どうぞ」；不行——「すみません、___てはいけません」或「いいえ、___ないでください」。说不行时先说「すみません」更客气。", "en": "Ways to answer. Yes: 'hai, ii desu yo' / 'hai, douzo'. No: 'sumimasen, ... te wa ikemasen' or 'iie, ... naide kudasai'. Starting a no with 'sumimasen' makes it softer." },
+          "ex": ["ここで食べてもいいですか？", "すみません、入ってはいけません。"] },
+        { "p": "まず___て、それから___ました。", "r": "まず___てそれから___ました", "zh": "先___，然后___了。", "en": "First I ___, then I ___.",
+          "note": { "zh": "讲经过时加上顺序词更清楚：まず（首先）、それから（然后）、最後に（最后）。", "en": "Order words make a story clear: 'mazu' (first), 'sorekara' (then), 'saigo ni' (finally)." },
+          "ex": ["まず売店へ行って、それから公園で休みました。", "最後に、みんなで写真をとりました。"] },
+        { "p": "___てから、何をしましたか？", "r": "___てからなにをしましたか", "zh": "___以后，做了什么？", "en": "What did you do after ___?",
+          "note": { "zh": "「〜てから」（……以后）第 7 单元学过，这里用来问接下来做了什么。", "en": "You met '-te kara' (after ...) in Unit 7. Here it asks what came next." },
+          "ex": ["山に登ってから、何をしましたか？", "おべんとうを食べました。"] },
+        { "p": "___は何をしますか？", "r": "___はなにをしますか", "zh": "___你做什么？", "en": "What do you do ___?",
+          "note": { "zh": "___ 里放时间：休みの日は（休息日）、週末は（周末）。问平时的习惯用「〜ます」；问某一天做过什么用「〜ました」。", "en": "Put a time in the blank: 'yasumi no hi wa' (on days off), 'shuumatsu wa' (at the weekend). Use '-masu' for what you usually do, and '-mashita' for what you did on one particular day." },
+          "ex": ["休みの日は何をしますか？", "友だちと公園で遊びます。"] }
+      ],
+      "tips": [
+        { "zh": "按字面记就不会弄反：「〜てもいいですか」是“做了也行吗？”，「〜てはいけません」是“做了的话不行”。", "en": "Think of the literal meaning and you won't mix them up: '-te mo ii desu ka' is 'Is it OK even if I do it?', and '-te wa ikemasen' is 'If you do it, it's no good.'" },
+        { "zh": "「〜てはいけません」很硬，像告示牌上的规定；当面请别人别做，用「〜ないでください」更客气。", "en": "'-te wa ikemasen' sounds like a rule on a sign. Face to face, '-naide kudasai' is more polite." }
+      ]
+    }
+  }
+}

@@ -1,0 +1,305 @@
+{
+  "lang": "en",
+  "help": [
+    { "t": "Sorry, I don't understand.", "zh": "对不起，我听不懂。", "en": "I don't know what you mean.",
+      "use": { "zh": "听不懂、看不懂的时候说。", "en": "Say this when you don't understand." } },
+    { "t": "Can you say that again, please?", "zh": "请你再说一遍，好吗？", "en": "Please say it one more time.",
+      "use": { "zh": "没听清、想再听一遍的时候说。", "en": "Say this when you didn't hear well and want to hear it again." } },
+    { "t": "Slowly, please.", "zh": "请说慢一点。", "en": "Please speak more slowly.",
+      "use": { "zh": "对方说得太快、跟不上的时候说。", "en": "Say this when someone speaks too fast for you." } },
+    { "t": "Can you say it another way?", "zh": "你能换个说法吗？", "en": "Please say it with other, easier words.",
+      "use": { "zh": "听了两遍还是不懂，请对方换简单的词再说一次。", "en": "Say this when you still don't understand after you hear it twice." } },
+    { "t": "What does this word mean?", "zh": "这个词是什么意思？", "en": "Please tell me the meaning of this word.",
+      "use": { "zh": "听到、看到不认识的词时问。也可以直接把那个词放进去：What does tidy mean?", "en": "Ask this about a new word. You can also put the word in: What does tidy mean?" } },
+    { "t": "How do you say this in English?", "zh": "这个用英语怎么说？", "en": "What is the English word for this?",
+      "use": { "zh": "想说一样东西却不会说时，指着它问；也可以把 this 换成中文，例如 How do you say 书包 in English?", "en": "Point at a thing and ask. You can also say the word in your own language in place of this." } },
+    { "t": "I'm learning English.", "zh": "我在学英语。", "en": "English is new for me.",
+      "use": { "zh": "告诉对方你是新手，请他说简单一点、慢一点。", "en": "Tell people you are new to English, so they speak more simply." } },
+    { "t": "I don't know.", "zh": "我不知道。", "en": "I have no answer.",
+      "use": { "zh": "不知道答案的时候说。说一句总比不说话好。", "en": "Say this when you don't have the answer. It is better than saying nothing." } },
+    { "t": "Yes.", "zh": "是的。／对。", "en": "That's right.",
+      "use": { "zh": "同意、或者对方说对了的时候说。", "en": "Say this when you agree or when something is right." } },
+    { "t": "No.", "zh": "不是。／不对。", "en": "That's not right.",
+      "use": { "zh": "不同意、或者不对的时候说。不想要别人给的东西时，说 No, thank you. 更客气。", "en": "Say this when you don't agree or something is wrong. When you don't want something, No, thank you. is more polite." } },
+    { "t": "Thank you.", "zh": "谢谢你。", "en": "Thanks.",
+      "use": { "zh": "别人帮了你、给了你东西的时候说。", "en": "Say this when someone helps you or gives you something." } },
+    { "t": "Sorry.", "zh": "对不起。", "en": "I'm sorry.",
+      "use": { "zh": "做错了事、说错了话，或者不小心碰到别人的时候说。", "en": "Say this when you make a mistake or bump into someone." } }
+  ],
+  "towns": {
+    "0": {
+      "can": { "zh": "会打招呼、说自己叫什么、问别人好不好，还会说谢谢和再见。", "en": "You can say hello, tell people your name, ask how they are, and say thank you and goodbye." },
+      "intro": { "zh": "在这座岛上你会认识新朋友。先学见面最常说的几句话：打招呼、问名字、问「你好吗」。这些话天天都用得上。", "en": "On this island you meet new friends. First you learn what people say when they meet: hello, names and How are you? You will use these words every day." },
+      "patterns": [
+        { "p": "My name is ___.", "zh": "我的名字是___。", "en": "Tell people your name.",
+          "note": { "zh": "空里填你的名字。别人问 What's your name?（你叫什么名字？）就这样回答。What's 就是 What is。", "en": "Put your name in the blank. Use it to answer What's your name? (What's means What is.)" },
+          "ex": ["What's your name?", "My name is Li Ming."] },
+        { "p": "This is my ___.", "zh": "这是我的___。", "en": "Introduce a person you know.",
+          "note": { "zh": "给别人介绍一个人时说 This is……，空里可以填 friend（朋友）再加名字。", "en": "Use This is to introduce one person. You can put friend and a name in the blank." },
+          "ex": ["This is my friend Tom."] },
+        { "p": "Good ___!", "zh": "___好！", "en": "Say hello at a time of day.",
+          "note": { "zh": "中午以前说 Good morning，下午说 Good afternoon，晚上见面说 Good evening。后面可以加名字。", "en": "Say Good morning before lunch, Good afternoon after lunch and Good evening at night. You can add a name after it." },
+          "ex": ["Good morning, Ms Wang!"] },
+        { "p": "I'm fine, ___.", "zh": "我很好，___。", "en": "Answer when someone asks how you are.",
+          "note": { "zh": "别人问 How are you?（你好吗？）就这样回答。空里填 thank you 或 thanks（thanks 更随便一点）。", "en": "Use it to answer How are you? Put thank you or thanks in the blank. Thanks is more casual." },
+          "ex": ["How are you?", "I'm fine, thank you."] }
+      ],
+      "tips": [
+        { "zh": "Good night 不是「晚上好」，是晚上分开、睡觉前说的「晚安」。晚上见面打招呼要说 Good evening。", "en": "Good night is not a hello. Say it when you leave at night or go to bed. To say hello at night, say Good evening." },
+        { "zh": "有几句话有固定的回答：别人说 Nice to meet you.，你说 Nice to meet you, too.（too 是「也」）；别人说 Thank you!，你说 You're welcome.（不客气）。", "en": "Some sentences have a set answer. Nice to meet you. → Nice to meet you, too. Thank you! → You're welcome." }
+      ]
+    },
+    "1": {
+      "can": { "zh": "会问「这个用英语怎么说」，会说文具的名字和颜色，还会问东西是不是你的、在哪里。", "en": "You can ask what things are called in English, say their names and colours, and ask whose they are and where they are." },
+      "intro": { "zh": "这一课在书桌旁边：钢笔、尺子、书包、钥匙。你会学着问这是什么、什么颜色、是不是你的、放在哪里。", "en": "This lesson is about things on your desk: pens, rulers, bags and keys. You learn to ask what a thing is, what colour it is, if it is yours, and where it is." },
+      "patterns": [
+        { "p": "It's a ___.", "zh": "它是（一个）___。", "en": "Say what a thing is.",
+          "note": { "zh": "回答 What's this?（这是什么？）。不知道英语怎么说的东西，就问 What's this in English?", "en": "Use it to answer What's this? If you don't know the English word, ask What's this in English?" },
+          "ex": ["What's this in English?", "It's a ruler."] },
+        { "p": "What colour is ___?", "zh": "___是什么颜色？", "en": "Ask about the colour of a thing.",
+          "note": { "zh": "回答用 It's 加颜色：It's yellow.", "en": "Answer with It's and a colour: It's yellow." },
+          "ex": ["What colour is it?", "It's yellow."] },
+        { "p": "Is this your ___?", "zh": "这是你的___吗？", "en": "Ask if a thing belongs to someone.",
+          "note": { "zh": "是就说 Yes, it is.，不是就说 No, it isn't.。东西离得远就用 that：Is that your cap?", "en": "Answer Yes, it is. or No, it isn't. For a thing far away, use that: Is that your cap?" },
+          "ex": ["Is this your pencil?", "Yes, it is."] },
+        { "p": "Where is my ___?", "zh": "我的___在哪里？", "en": "Ask where a thing is.",
+          "note": { "zh": "回答用 in（在……里面）或 on（在……上面）：The key is in the bag.", "en": "Answer with in or on: The key is in the bag." },
+          "ex": ["Where is my schoolbag?", "It's on the desk."] }
+      ],
+      "tips": [
+        { "zh": "说一样东西，前面别忘了 a：It's a ruler.（中文常常不说「一个」，英语不能省）。颜色前面不加 a：It's yellow.", "en": "When you name one thing, put a before it: It's a ruler. Don't put a before a colour: It's yellow." },
+        { "zh": "回答时用问句里的词：Is this……? 答 Yes, it is.；Are you……? 答 Yes, I am.。别把 it 和 I 弄混。", "en": "Answer with the words from the question. Is this ...? → Yes, it is. Are you ...? → Yes, I am." }
+      ]
+    },
+    "2": {
+      "can": { "zh": "会介绍家里人，会问「他 / 她是谁」，会说家里有几口人。", "en": "You can talk about your family, ask who someone is, and say how many people are in your family." },
+      "intro": { "zh": "这一课看着照片介绍家人：爸爸、妈妈、爷爷奶奶、表兄弟姐妹。你会学着问这是谁，也会说自己家里有谁。", "en": "In this lesson you look at photos and talk about your family. You learn to ask who people are and say who is in your family." },
+      "patterns": [
+        { "p": "Who is ___?", "zh": "___是谁？", "en": "Ask about a person.",
+          "note": { "zh": "问男的用 he，问女的用 she。回答：She is my mother. / He's my father.", "en": "Use he for a man or boy and she for a woman or girl. Answer: She is my mother." },
+          "ex": ["Who is she?", "She is my mother."] },
+        { "p": "These are my ___.", "zh": "这些是我的___。", "en": "Show two or more people.",
+          "note": { "zh": "一个人用 This is，两个以上用 These are，后面的词加 s：grandparents、cousins。离得远的用 Those are。", "en": "For one person say This is. For two or more say These are and add s: grandparents. For people far away, say Those are." },
+          "ex": ["These are my grandparents.", "Those are my cousins."] },
+        { "p": "I have a ___.", "zh": "我有一个___。", "en": "Say who is in your family.",
+          "note": { "zh": "问别人就说 Do you have a……?，回答 Yes, I do. 或 No, I don't.", "en": "To ask, say Do you have a ...? Answer Yes, I do. or No, I don't." },
+          "ex": ["I have a little brother.", "Do you have a brother?"] },
+        { "p": "There are ___.", "zh": "有___（个）。", "en": "Say how many.",
+          "note": { "zh": "回答 How many……?（有多少……？），空里填数字。", "en": "Use it to answer How many ...? Put a number in the blank." },
+          "ex": ["How many people are there in your family?", "There are four."] }
+      ],
+      "tips": [
+        { "zh": "「他」和「她」说出来一样，英语却分得很清楚：男的 he，女的 she。Is this your sister? 要答 Yes, she is.（不是 he，也不是 it）。", "en": "He is for a man or boy. She is for a woman or girl. Is this your sister? → Yes, she is. (not he or it)" },
+        { "zh": "英语的 brother 不分哥哥弟弟，sister 不分姐姐妹妹。要说清楚就加词：a little brother 是弟弟，a big sister 是姐姐。", "en": "A brother can be older or younger, and so can a sister. To be clear, say little brother or big sister." }
+      ]
+    },
+    "3": {
+      "can": { "zh": "会介绍学校里有什么，会问路，会说一个地方在哪里：旁边、对面、后面、几楼。", "en": "You can say what is in your school, ask the way, and say where a place is: next to, across from, behind, which floor." },
+      "intro": { "zh": "欢迎来到校园！这一课认识教室、图书馆、操场、食堂这些地方。你会学着问「……在哪里」，也会给别人指路。", "en": "Welcome to school! In this lesson you learn places like the classroom, library and playground. You learn to ask where a place is and tell others the way." },
+      "patterns": [
+        { "p": "Where is the ___?", "zh": "___在哪里？", "en": "Ask where a place is.",
+          "note": { "zh": "问不认识的人，先说 Excuse me（打扰一下）。回答说位置：next to（在……旁边）、across from（在……对面）、behind（在……后面）。", "en": "Say Excuse me first when you ask someone you don't know. Answer with next to, across from or behind." },
+          "ex": ["Where is the library?", "It's next to the dining hall."] },
+        { "p": "There is a ___.", "zh": "有一个___。", "en": "Say what is in a place.",
+          "note": { "zh": "一个用 There is，两个以上用 There are。", "en": "For one thing say There is. For two or more say There are." },
+          "ex": ["There is a big playground in our school.", "There are forty desks in my classroom."] },
+        { "p": "Is there a ___?", "zh": "有___吗？", "en": "Ask if a place has something.",
+          "note": { "zh": "回答 Yes, there is. 或 No, there isn't.", "en": "Answer Yes, there is. or No, there isn't." },
+          "ex": ["Is there a lab in your school?", "Yes, there is."] },
+        { "p": "Our classroom is on the ___ floor.", "zh": "我们的教室在___楼。", "en": "Say which floor a room is on.",
+          "note": { "zh": "楼层用 first（一）、second（二）、third（三），前面要有 the。", "en": "Use first, second or third, with the before it." },
+          "ex": ["Our classroom is on the second floor.", "Which floor is your classroom on?"] }
+      ],
+      "tips": [
+        { "zh": "中文说「图书馆旁边」，地方在前；英语反过来，先说位置词再说地方：next to the library、behind the gym。", "en": "Say the position word first, then the place: next to the library, behind the gym." },
+        { "zh": "「我们学校有一个大操场」，英语常说 There is a big playground in our school.：There is 放最前面，地方放到最后。", "en": "To say a place has something, start with There is and put the place at the end: There is a big playground in our school." }
+      ]
+    },
+    "4": {
+      "can": { "zh": "会说最喜欢哪门课、为什么喜欢，还会说星期几上什么课。", "en": "You can say your favourite subject and why you like it, and say which day you have a class." },
+      "intro": { "zh": "这一课聊学校里的科目：英语、数学、科学、音乐。你会说自己喜欢什么课、觉得它怎么样，也会问别人。", "en": "This lesson is about school subjects like English, maths, science and music. You learn to say which subjects you like and what you think of them, and to ask others." },
+      "patterns": [
+        { "p": "My favourite subject is ___.", "zh": "我最喜欢的科目是___。", "en": "Say the subject you like most.",
+          "note": { "zh": "回答 What's your favourite subject?。也可以说 I like PE best.", "en": "Use it to answer What's your favourite subject? You can also say I like PE best." },
+          "ex": ["What's your favourite subject?", "My favourite subject is science."] },
+        { "p": "Because it's ___.", "zh": "因为它___。", "en": "Give a reason.",
+          "note": { "zh": "回答 Why……?（为什么）时用 Because 开头。空里填 fun（好玩）、relaxing（让人放松）、interesting（有趣）。", "en": "Start with Because to answer a Why question. Put a word like fun, relaxing or interesting in the blank." },
+          "ex": ["Why do you like music?", "Because it's relaxing."] },
+        { "p": "We have art on ___.", "zh": "我们___有美术课。", "en": "Say which day you have a class.",
+          "note": { "zh": "空里填星期几，前面用 on：on Friday。问别人：When do you have music?（你们什么时候上音乐课？）", "en": "Put a day in the blank, with on before it: on Friday. To ask, say When do you have music?" },
+          "ex": ["We have art on Friday.", "When do you have music?"] },
+        { "p": "Do you like ___?", "zh": "你喜欢___吗？", "en": "Ask if someone likes something.",
+          "note": { "zh": "喜欢就说 Yes, I do.，不喜欢就说 No, I don't.", "en": "Answer Yes, I do. or No, I don't." },
+          "ex": ["Do you like maths?", "Yes, I do."] }
+      ],
+      "tips": [
+        { "zh": "Do you……? 的问题要用 do 回答：Yes, I do. / No, I don't.。不说 Yes, I like.，也不说 Yes, it is.", "en": "Answer a Do you ...? question with do: Yes, I do. Don't say Yes, I like. or Yes, it is." },
+        { "zh": "English（英语）、Chinese（语文）和星期几（Friday）的第一个字母一直大写；maths、music、art 这些科目不用大写。", "en": "English, Chinese and the days of the week always start with a capital letter. Other subjects like maths, music and art don't." }
+      ]
+    },
+    "5": {
+      "can": { "zh": "会说自己会做什么、不会做什么，会问别人会不会，还会说想参加哪个社团。", "en": "You can say what you can and can't do, ask what others can do, and say which club you want to join." },
+      "intro": { "zh": "学校的社团在招新人：音乐社、美术社、国际象棋社、游泳社。你会学着说自己会什么，再挑一个想参加的社团。", "en": "The school clubs want new members: music, art, chess and swimming. You learn to say what you can do and choose a club to join." },
+      "patterns": [
+        { "p": "I can ___.", "zh": "我会___。", "en": "Say what you are able to do.",
+          "note": { "zh": "不会就说 can't：He can't play the piano.（他不会弹钢琴）", "en": "If you are not able to, say can't: He can't play the piano." },
+          "ex": ["I can play the guitar.", "He can't play the piano."] },
+        { "p": "Can you ___?", "zh": "你会___吗？", "en": "Ask what someone can do.",
+          "note": { "zh": "回答 Yes, I can. 或 No, I can't.；会一点点就说 Yes, a little.", "en": "Answer Yes, I can. or No, I can't. If you can do it a bit, say Yes, a little." },
+          "ex": ["Can you swim?", "Yes, I can."] },
+        { "p": "I want to join the ___ club.", "zh": "我想参加___社。", "en": "Say which club you want.",
+          "note": { "zh": "回答 What club do you want to join?（你想参加什么社团？）", "en": "Use it to answer What club do you want to join?" },
+          "ex": ["What club do you want to join?", "I want to join the music club."] }
+      ],
+      "tips": [
+        { "zh": "can 后面的动作永远用原样，说别人也不加 s：She can dance very well.（不说 She can dances）", "en": "After can, the action word never changes, even with he or she: She can dance very well. (not can dances)" },
+        { "zh": "弹乐器要加 the：play the guitar、play the piano、play the drums；下棋不加：play chess。", "en": "With music instruments, say play the: play the guitar. With games, there is no the: play chess." }
+      ]
+    },
+    "6": {
+      "can": { "zh": "会问几点、说钟点，会说自己每天几点起床、吃饭、上学、睡觉。", "en": "You can ask and tell the time, and say when you get up, eat, go to school and go to bed." },
+      "intro": { "zh": "这一课讲一天的生活：起床、刷牙、吃早饭、上学、做作业、睡觉。你会学着说几点做什么，还会用「总是」「从不」这样的词。", "en": "This lesson is about your day: getting up, breakfast, school, homework and bed. You learn to say what time you do things, and words like always and never." },
+      "patterns": [
+        { "p": "What time do you ___?", "zh": "你几点___？", "en": "Ask what time someone does something.",
+          "note": { "zh": "回答用 at 加钟点：at six thirty（六点半）。", "en": "Answer with at and a time: at six thirty." },
+          "ex": ["What time do you usually get up?", "I usually get up at six thirty."] },
+        { "p": "It's ___.", "zh": "现在___（几点）。", "en": "Tell the time.",
+          "note": { "zh": "回答 What time is it now?（现在几点？）。整点说 seven o'clock；半点说 seven thirty 或 half past seven。", "en": "Use it to answer What time is it now? For 7:00, say seven o'clock. For 7:30, say seven thirty or half past seven." },
+          "ex": ["What time is it now?", "It's half past seven."] },
+        { "p": "I always ___.", "zh": "我总是___。", "en": "Say how often you do something.",
+          "note": { "zh": "always（总是）、usually（通常）、never（从不）放在动作前面；但遇到 is 要放在 is 后面：He is never late for school.", "en": "Put always, usually or never before the action word. But with is, put it after is: He is never late for school." },
+          "ex": ["I always eat breakfast at seven.", "He is never late for school."] }
+      ],
+      "tips": [
+        { "zh": "几点钟前面用 at：at seven、at half past nine。早上、晚上用 in the：in the morning、in the evening。", "en": "Use at with clock times: at seven. Use in the with parts of the day: in the morning, in the evening." },
+        { "zh": "说一件事或者他、她每天做什么，动作要加 s：School starts at eight o'clock.；说 I 和 you 不加：I go to bed at half past nine.", "en": "With he, she or one thing, add s to the action word: School starts at eight o'clock. With I and you, there is no s: I go to bed at half past nine." }
+      ]
+    },
+    "7": {
+      "can": { "zh": "会问生日、说日期，会问别人多大，会祝生日快乐、送礼物、请人吃蛋糕。", "en": "You can ask about birthdays, say dates and ages, say happy birthday, give a gift and offer cake." },
+      "intro": { "zh": "今天有人过生日！这一课学怎么问生日是哪天、今年几岁，怎么送礼物、请大家吃蛋糕。", "en": "It's someone's birthday today! In this lesson you learn to ask when a birthday is and how old people are, and to give gifts and share cake." },
+      "patterns": [
+        { "p": "My birthday is on ___.", "zh": "我的生日是___。", "en": "Say the date of your birthday.",
+          "note": { "zh": "日期前面用 on，先说月份再说几号：on May 2nd。", "en": "Use on before a date. Say the month first, then the day: on May 2nd." },
+          "ex": ["When is your birthday?", "My birthday is on May 2nd."] },
+        { "p": "I'm ___ years old.", "zh": "我___岁。", "en": "Say your age.",
+          "note": { "zh": "回答 How old are you?（你多大了？）。years old 可以省掉：I'm thirteen.", "en": "Use it to answer How old are you? You can leave out years old: I'm thirteen." },
+          "ex": ["How old are you?", "I'm thirteen years old."] },
+        { "p": "This gift is for ___.", "zh": "这份礼物是给___的。", "en": "Give someone a gift.",
+          "note": { "zh": "送礼物时说。收到礼物的人说 Thank you so much!（太谢谢了！）", "en": "Say this when you give a gift. The other person says Thank you so much!" },
+          "ex": ["This gift is for you.", "Thank you so much!"] },
+        { "p": "Would you like some ___?", "zh": "你想要一些___吗？", "en": "Offer food or a drink.",
+          "note": { "zh": "请别人吃东西、喝东西时问。要就说 Yes, please.，不要就说 No, thank you.", "en": "Ask this when you offer food or a drink. Answer Yes, please. or No, thank you." },
+          "ex": ["Would you like some cake?", "Yes, please."] }
+      ],
+      "tips": [
+        { "zh": "日期要读成「第几」：2nd 读 second，5th 读 fifth（不读 two、five）。月份的第一个字母大写：May、October。", "en": "Say dates with second, third, fifth and so on: May 2nd is May second. Months start with a capital letter: May, October." },
+        { "zh": "别人说 Happy birthday!，回答 Thank you!，不说 You too!（过生日的是你，不是对方）。", "en": "When someone says Happy birthday!, say Thank you! Don't say You too! It is your birthday, not theirs." }
+      ]
+    },
+    "8": {
+      "can": { "zh": "会说喜欢什么动物、为什么喜欢，还会说动物来自哪里、吃什么。", "en": "You can say which animals you like and why, where they are from, and what they eat." },
+      "intro": { "zh": "我们去动物园！熊猫、考拉、大象、海豚……这一课你会说喜欢哪种动物、为什么喜欢，也会说说它们从哪里来。", "en": "Let's go to the zoo! Pandas, koalas, elephants, dolphins... You learn to say which animals you like and why, and where they come from." },
+      "patterns": [
+        { "p": "I like ___.", "zh": "我喜欢___。", "en": "Say which animal you like.",
+          "note": { "zh": "回答 What animal do you like?。说喜欢一种动物，名字后面加 s：I like pandas.", "en": "Use it to answer What animal do you like? Add s to the animal: I like pandas." },
+          "ex": ["What animal do you like?", "I like pandas."] },
+        { "p": "Because they're ___.", "zh": "因为它们___。", "en": "Say why you like them.",
+          "note": { "zh": "回答 Why do you like……?。空里填 cute（可爱）、smart（聪明）、strong（强壮）。they're 就是 they are。", "en": "Use it to answer Why do you like ...? Put cute, smart or strong in the blank. They're means they are." },
+          "ex": ["Why do you like koalas?", "Because they're very cute."] },
+        { "p": "They're from ___.", "zh": "它们来自___。", "en": "Say where animals come from.",
+          "note": { "zh": "回答 Where are……from?（……来自哪里？）。地名的第一个字母大写：Africa、Australia。", "en": "Use it to answer Where are ... from? Place names start with a capital letter: Africa, Australia." },
+          "ex": ["Where are lions from?", "They're from Africa."] },
+        { "p": "Let's ___.", "zh": "我们___吧。", "en": "Ask friends to do something together.",
+          "note": { "zh": "Let's 后面直接跟动作。同意就说 Great idea!（好主意！）", "en": "Put an action word after Let's. If you agree, say Great idea!" },
+          "ex": ["Let's see the pandas first.", "Great idea!"] }
+      ],
+      "tips": [
+        { "zh": "说「熊猫这种动物」，英语用复数：pandas、koalas、elephants。说它们用 they，不用 it：They're from Africa.", "en": "To talk about a kind of animal, use more than one: pandas, koalas. Then use they, not it: They're from Africa." },
+        { "zh": "很多个用 are，一个用 is：Elephants are smart animals.。Are giraffes tall? 要答 Yes, they are.（不说 Yes, it is.）", "en": "Use are for more than one and is for one: Elephants are smart animals. Are giraffes tall? → Yes, they are." }
+      ]
+    },
+    "9": {
+      "can": { "zh": "会说规则：要做什么、不许做什么，会问「我们可以……吗？」「我们必须……吗？」", "en": "You can talk about rules: what you must do and what you can't do. You can ask Can we ...? and Do we have to ...?" },
+      "intro": { "zh": "没有规矩，不成方圆。这一课说学校和家里的规矩：不能在走廊里跑、上课别迟到、要穿校服。你会说规则，也会问规则。", "en": "No rules, no order. This lesson is about rules at school and at home: don't run, don't be late, wear a uniform. You learn to say rules and ask about them." },
+      "patterns": [
+        { "p": "Don't ___.", "zh": "不要___。", "en": "Tell someone not to do something.",
+          "note": { "zh": "Don't 后面跟动作：Don't run in the hallways.（不要在走廊里跑）", "en": "Put an action word after Don't." },
+          "ex": ["Don't run in the hallways.", "Don't be late for class."] },
+        { "p": "We must ___.", "zh": "我们必须___。", "en": "Say what you have to do.",
+          "note": { "zh": "不许做的事用 can't：We can't eat in the classroom.", "en": "For things you are not allowed to do, use can't: We can't eat in the classroom." },
+          "ex": ["We must wear a uniform.", "We can't eat in the classroom."] },
+        { "p": "Can we ___?", "zh": "我们可以___吗？", "en": "Ask if something is OK to do.",
+          "note": { "zh": "回答 Yes, we can. 或 No, we can't.", "en": "Answer Yes, we can. or No, we can't." },
+          "ex": ["Can we bring phones to school?", "No, we can't."] },
+        { "p": "I have to ___.", "zh": "我必须___。", "en": "Say what you need to do.",
+          "note": { "zh": "问别人：Do you have to……? 回答 Yes, we do. 或 No, we don't.", "en": "To ask, say Do you have to ...? Answer Yes, we do. or No, we don't." },
+          "ex": ["What do you have to do at home?", "I have to wash the dishes."] }
+      ],
+      "tips": [
+        { "zh": "叫别人做什么，句子直接用动作开头，不用说 you：Listen to the teacher carefully.、Keep quiet in the library.", "en": "To tell someone what to do, start with the action word. You don't say you: Listen to the teacher carefully." },
+        { "zh": "late（迟到的）说的是样子，不是动作，所以前面要加 be：Don't be late for class.（不说 Don't late）", "en": "Late is not an action word, so you need be: Don't be late for class. (not Don't late)" }
+      ]
+    },
+    "10": {
+      "can": { "zh": "会点吃的（I'd like……），会说多久运动一次，还会约朋友一起运动。", "en": "You can order food with I'd like, say how often you exercise, and ask friends to play sports with you." },
+      "intro": { "zh": "想身体好，就要多运动、吃得健康。这一课你会在饭店点吃的，会说一周运动几次，还会约朋友放学后打球。", "en": "To keep fit, exercise and eat well. In this lesson you order food, say how often you exercise, and ask friends to play ball games after school." },
+      "patterns": [
+        { "p": "I'd like some ___.", "zh": "我想要一些___。", "en": "Order food politely.",
+          "note": { "zh": "点餐、买东西时说。I'd like 就是 I would like，比 I want 客气；后面再加 please 更客气：I'd like some dumplings, please.", "en": "Say this when you order food or buy something. I'd like means I would like. It is more polite than I want. Add please to be even more polite." },
+          "ex": ["What would you like to eat?", "I'd like some beef noodles."] },
+        { "p": "How often do you ___?", "zh": "你多久___一次？", "en": "Ask how many times someone does something.",
+          "note": { "zh": "回答：once a week（一周一次）、twice a week（一周两次）、three times a week（一周三次）。", "en": "Answer with once a week, twice a week, three times a week, and so on." },
+          "ex": ["How often do you exercise?", "I exercise three times a week."] },
+        { "p": "Let's play ___.", "zh": "我们去打___吧。", "en": "Ask friends to play a sport.",
+          "note": { "zh": "同意就说 That sounds good.（听起来不错）", "en": "If you agree, say That sounds good." },
+          "ex": ["Let's play basketball after school.", "That sounds good."] }
+      ],
+      "tips": [
+        { "zh": "I'd like（我想要）和 I like（我喜欢）只差一个 'd，意思不一样。点餐说 I'd like some dumplings.；说爱好才说 I like……。", "en": "I'd like and I like are different. I'd like means you want it now: I'd like some dumplings. I like means you enjoy it." },
+        { "zh": "球类前面不加 the：play basketball、play football、play ping-pong（弹乐器才加 the：play the piano）。", "en": "With ball games, don't use the: play basketball, play football. (With music instruments you do: play the piano.)" }
+      ]
+    },
+    "11": {
+      "can": { "zh": "会问天气、说天气，会说自己和家人「正在做什么」。", "en": "You can ask and talk about the weather, and say what you and others are doing now." },
+      "intro": { "zh": "晴天还是雨天？这一课学说天气：晴、多云、下雨、下雪、冷、热。你还会说「我正在……」，告诉别人你现在在做什么。", "en": "Rain or shine? In this lesson you talk about the weather: sunny, cloudy, raining, snowing, hot and cold. You also learn to say what you are doing right now." },
+      "patterns": [
+        { "p": "It's ___.", "zh": "天气___。", "en": "Say what the weather is like.",
+          "note": { "zh": "说天气用 It's 开头：It's cloudy.。问天气就说 How's the weather today?", "en": "Start with It's: It's cloudy. To ask, say How's the weather today?" },
+          "ex": ["How's the weather today?", "It's sunny and warm."] },
+        { "p": "I'm ___.", "zh": "我正在___。", "en": "Say what you are doing now.",
+          "note": { "zh": "回答 What are you doing?（你在做什么？）。空里填「动作 + ing」：watching TV、doing my homework。", "en": "Use it to answer What are you doing? Put an -ing word in the blank: watching TV, doing my homework." },
+          "ex": ["What are you doing?", "I'm watching TV."] },
+        { "p": "What's ___ doing?", "zh": "___在做什么？", "en": "Ask what another person is doing now.",
+          "note": { "zh": "回答用 He's 或 She's 加「动作 + ing」：He's reading a newspaper.", "en": "Answer with He's or She's and an -ing word: He's reading a newspaper." },
+          "ex": ["What's your father doing?", "He's reading a newspaper."] }
+      ],
+      "tips": [
+        { "zh": "中文说「正在」就够了，英语要两样都有：am / is / are 加上「动作 + ing」。I'm watching TV.（不说 I watching TV，也不说 I watch TV）", "en": "For things happening now, you need two parts: am, is or are, and an -ing word. I'm watching TV. (not I watching TV)" },
+        { "zh": "晴天、多云说的是样子：It's sunny.、It's cloudy.；下雨、下雪是正在发生的事，用 ing：It's raining.、It's snowing.", "en": "Say It's sunny and It's cloudy. For rain and snow that are falling now, say It's raining and It's snowing." }
+      ]
+    },
+    "12": {
+      "can": { "zh": "会讲过去的事：昨天、上周末去了哪里、做了什么、玩得怎么样。", "en": "You can talk about the past: where you went, what you did, and how it was." },
+      "intro": { "zh": "还记得上周末吗？这一课学讲已经过去的事：去了海滩、看望了爷爷奶奶、拍了很多照片。说过去的事，英语的动作要变样子。", "en": "Do you remember last weekend? In this lesson you talk about things that are over: a trip to the beach, a visit to your grandparents, lots of photos. For the past, English action words change." },
+      "patterns": [
+        { "p": "What did you do ___?", "zh": "你___做了什么？", "en": "Ask what someone did.",
+          "note": { "zh": "空里填时间：yesterday（昨天）、last weekend（上周末）。回答要用过去的说法：I visited my grandparents.", "en": "Put a time in the blank: yesterday, last weekend. Answer in the past: I visited my grandparents." },
+          "ex": ["What did you do last weekend?", "I visited my grandparents."] },
+        { "p": "I went to ___.", "zh": "我去了___。", "en": "Say where you went.",
+          "note": { "zh": "went 是 go（去）过去的样子。回答 Where did you go?（你去了哪里？）", "en": "Went is the past of go. Use it to answer Where did you go?" },
+          "ex": ["Where did you go on vacation?", "I went to Hainan."] },
+        { "p": "It was ___.", "zh": "（那）很___。", "en": "Say how something was.",
+          "note": { "zh": "回答 How was……?（……怎么样？）。空里填 great（棒极了）、fun（好玩）。", "en": "Use it to answer How was ...? Put great or fun in the blank." },
+          "ex": ["How was your trip?", "It was great!"] },
+        { "p": "Did you ___?", "zh": "你___了吗？", "en": "Ask if someone did something.",
+          "note": { "zh": "回答 Yes, I did. 或 No, I didn't.", "en": "Answer Yes, I did. or No, I didn't." },
+          "ex": ["Did you see any cows?", "Yes, I did."] }
+      ],
+      "tips": [
+        { "zh": "中文加个「了」就表示过去，动作本身不变；英语要把动作换成过去的样子：visit → visited。很多常用的不加 ed，要一个个记：go → went，see → saw，eat → ate，take → took，buy → bought。", "en": "For the past, English changes the action word: visit → visited. Some common words change in their own way: go → went, see → saw, eat → ate, take → took, buy → bought." },
+        { "zh": "Did 问句里，动作变回原样：Did you go to the farm?（不说 Did you went）。回答也用 did：Yes, I did.", "en": "After Did, use the normal action word: Did you go to the farm? (not Did you went) Answer with did: Yes, I did." }
+      ]
+    }
+  }
+}

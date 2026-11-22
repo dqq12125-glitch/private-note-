@@ -35,9 +35,11 @@ try {
     // 有正式的台词翻译表（tools/course/<语言>/lines.json）时 MAP 后面多 LINES / LINES_T / TERMS（下面「台词翻译表」那一段专门测）
     // 第二轮：有正式的委托译文（quests.json）时 VOICE 前面多 QUESTS；只有 quests.json / sight.json、没有 lines.json 时 LINES 也有（下面「委托和今日目击」那一段专门测）
     const LN3 = ['LINES', 'LINES_T', 'TERMS'], has = f => fs.existsSync(path.join(ROOT, 'tools', 'course', lang, f));
-    check(Object.keys(c).filter(k => !LN3.includes(k) && k !== 'QUESTS').join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,VOICE' && (has('lines.json') ? LN3.every(k => k in c) : !['LINES_T', 'TERMS'].some(k => k in c)) &&
-      ('QUESTS' in c) === has('quests.json') && (has('lines.json') || has('quests.json') || has('sight.json') || !('LINES' in c)),
-      '顶层字段：fmt lang name WORLDS SCENES BOOKS TALK MAP VOICE（有 lines.json 才有 LINES / LINES_T / TERMS，有 quests.json 才有 QUESTS）', Object.keys(c));
+    // 2026-11-22 单词表那一轮（tools/course/WORDS.md）：有 primer.json 才有 PRIMER（发音入门），有 lessons.json 才有 LESSONS（课前讲解、求助的话）
+    const OPT = ['QUESTS', 'PRIMER', 'LESSONS'];
+    check(Object.keys(c).filter(k => !LN3.includes(k) && !OPT.includes(k)).join() === 'fmt,lang,name,WORLDS,SCENES,BOOKS,TALK,MAP,VOICE' && (has('lines.json') ? LN3.every(k => k in c) : !['LINES_T', 'TERMS'].some(k => k in c)) &&
+      ('QUESTS' in c) === has('quests.json') && ('PRIMER' in c) === has('primer.json') && (!('LESSONS' in c) || has('lessons.json')) && (has('lines.json') || has('quests.json') || has('sight.json') || !('LINES' in c)),
+      '顶层字段：fmt lang name WORLDS SCENES BOOKS TALK MAP VOICE（有 lines.json 才有 LINES / LINES_T / TERMS，有 quests.json 才有 QUESTS，有 primer.json 才有 PRIMER，有 lessons.json 才可能有 LESSONS）', Object.keys(c));
     check(c.WORLDS.length === 13 && c.SCENES.length === 13, '13 个小镇、13 段小剧场');
     const ctx = { window: {} };
     require('vm').runInNewContext(fs.readFileSync(path.join(ROOT, 'data.js'), 'utf8'), ctx);

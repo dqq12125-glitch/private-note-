@@ -91,7 +91,8 @@
       'w.err.load': '大地图的画面载入出错：{msg}', 'w.err.draw': '大地图的画面画不出来：{msg}',
       'w.err.fall1': '新画风连着两次没画成，这一次先用经典画面', 'w.err.fall2': '3D 画面连着两次没画成，这一次先用流畅模式',
       'w.gfx.fall1': '新画风出了点问题，先换成经典画面', 'w.gfx.fall2': '3D 画面出了点问题，先换成流畅模式',
-      'w.menu.title': '冒险菜单', 'w.menu.goal': '现在要做', 'w.goal.go.unit': '▶ 点这里去闯关练习：{u}', 'w.goal.go.map': '▶ 点这里回到地图，照左上角的 📍 走', 'w.goal.go.home': '去闯关练习：{u} ›', 'w.menu.badges': '🏅 徽章 {a} / {b}', 'w.menu.spray': ' · 🧴 还剩 {n} 步',
+      'w.menu.words': '📖 这座岛的单词表',
+      'w.menu.title': '冒险菜单', 'w.menu.goal': '现在要做','w.goal.go.unit': '▶ 点这里去闯关练习：{u}', 'w.goal.go.map': '▶ 点这里回到地图，照左上角的 📍 走', 'w.goal.go.home': '去闯关练习：{u} ›', 'w.menu.badges': '🏅 徽章 {a} / {b}', 'w.menu.spray': ' · 🧴 还剩 {n} 步',
       'w.menu.team': '🐾 我的队伍', 'w.menu.bag': '🎒 背包', 'w.menu.dex': '📖 手册', 'w.menu.skills': '🌟 回声技能', 'w.menu.quests': '📋 委托',
       'w.menu.help': '❓ 怎么玩', 'w.menu.settings': '⚙️ 设置', 'w.menu.home': '🏠 回首页', 'w.menu.go': '继续冒险',
       'w.help.title': '怎么玩', 'w.help.pad': '◀▲▼▶ 左下角方向键走路', 'w.help.joy': '🕹️ 左半边屏幕按住拖动走路（设置里可以换成方向键）',
@@ -170,7 +171,8 @@
       'w.err.load': 'Error loading the map view: {msg}', 'w.err.draw': 'The map view could not be drawn: {msg}',
       'w.err.fall1': 'The new look failed twice in a row. Using the classic look for now', 'w.err.fall2': 'The 3D view failed twice in a row. Using Smooth mode (2D) for now',
       'w.gfx.fall1': 'The new look had a problem. Switched to the classic look for now', 'w.gfx.fall2': 'The 3D view had a problem. Switched to Smooth mode (2D) for now',
-      'w.menu.title': 'Adventure Menu', 'w.menu.goal': 'What to do now', 'w.goal.go.unit': '▶ Tap to go to Practice: {u}', 'w.goal.go.map': '▶ Tap to go back to the map and follow the 📍 at the top left', 'w.goal.go.home': 'Go to Practice: {u} ›', 'w.menu.badges': '🏅 Badges {a} / {b}', 'w.menu.spray': { one: ' · 🧴 {n} step left', other: ' · 🧴 {n} steps left' },
+      'w.menu.words': '📖 Word list for this island',
+      'w.menu.title': 'Adventure Menu', 'w.menu.goal': 'What to do now','w.goal.go.unit': '▶ Tap to go to Practice: {u}', 'w.goal.go.map': '▶ Tap to go back to the map and follow the 📍 at the top left', 'w.goal.go.home': 'Go to Practice: {u} ›', 'w.menu.badges': '🏅 Badges {a} / {b}', 'w.menu.spray': { one: ' · 🧴 {n} step left', other: ' · 🧴 {n} steps left' },
       'w.menu.team': '🐾 My Team', 'w.menu.bag': '🎒 Bag', 'w.menu.dex': '📖 Monsters', 'w.menu.skills': '🌟 Skills', 'w.menu.quests': '📋 Requests',
       'w.menu.help': '❓ Help', 'w.menu.settings': '⚙️ Settings', 'w.menu.home': '🏠 Home', 'w.menu.go': 'Keep exploring',
       'w.help.title': 'How to play', 'w.help.pad': '◀▲▼▶ Walk with the arrow pad at the bottom left', 'w.help.joy': '🕹️ Walk by holding and dragging on the left half of the screen (you can switch to arrow keys in Settings)',
@@ -2677,6 +2679,8 @@
       '<p>' + hx('w.menu.badges', { a: Object.keys(m.badges).length, b: E.W.length }) + ' · 💰 ' + E.S.coins + (WS().repel > 0 ? hx('w.menu.spray', { n: WS().repel }) : '') + '</p>' +
       '<div class="w-menu-grid"><button class="btn ghost" data-act="mTeam">' + hx('w.menu.team') + '</button><button class="btn ghost" data-act="mBag">' + hx('w.menu.bag') + '</button><button class="btn ghost" data-act="mDex">' + hx('w.menu.dex') + '</button><button class="btn ghost" data-act="wSkills">' + hx('w.menu.skills') + '</button><button class="btn ghost" data-act="wQuests">' + hx('w.menu.quests') + (qn ? ' <b style="color:#b36b00">' + qn + '</b>' : '') + '</button>' +
       '<button class="btn ghost" data-act="wHelp">' + hx('w.menu.help') + '</button><button class="btn ghost" data-act="settings">' + hx('w.menu.settings') + '</button><button class="btn ghost" data-act="wExit">' + hx('w.menu.home') + '</button></div>' +
+      // 现在这座岛的单词表（game.js 的 wordList，tools/course/WORDS.md §1）：放在按钮格子下面一行，不挤格子；关上回到这个菜单
+      (E.W[langIsle()] ? '<p class="w-menu-words"><button class="link" data-act="wordList" data-w="' + langIsle() + '" data-from="menu">' + hx('w.menu.words') + '</button></p>' : '') +
       '<button class="btn wide" data-act="close">' + hx('w.menu.go') + '</button>');
   }
   function helpSheet() {

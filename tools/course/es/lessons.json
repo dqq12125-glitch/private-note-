@@ -1,0 +1,558 @@
+{
+  "lang": "es",
+  "help": [
+    { "t": "No entiendo.", "zh": "我听不懂。", "en": "I don't understand.",
+      "use": { "zh": "没听懂对方说什么的时候说。", "en": "Say this when you don't understand what someone said." } },
+    { "t": "¿Puedes repetir, por favor?", "zh": "请再说一遍，好吗？", "en": "Can you say that again, please?",
+      "use": { "zh": "想再听一遍的时候说。", "en": "Say this when you want to hear it again." } },
+    { "t": "Más despacio, por favor.", "zh": "请说慢一点。", "en": "Slower, please.",
+      "use": { "zh": "对方说得太快、跟不上的时候说。", "en": "Say this when someone talks too fast." } },
+    { "t": "¿Puedes decirlo con otras palabras?", "zh": "能换个说法吗？", "en": "Can you say it another way?",
+      "use": { "zh": "句子太长、词太难，请对方说得简单一点。", "en": "Say this when the words are too hard and you want something simpler." } },
+    { "t": "¿Cómo se dice esto en español?", "zh": "这个用西班牙语怎么说？", "en": "How do you say this in Spanish?",
+      "use": { "zh": "不知道一个东西叫什么时，指着它问；也可以把 esto 换成你会说的中文或英语的词。", "en": "Point at something and ask. You can also put an English word in place of esto." } },
+    { "t": "¿Qué significa eso?", "zh": "那是什么意思？", "en": "What does that mean?",
+      "use": { "zh": "听到一个不认识的词时问。", "en": "Ask this when you hear a word you don't know." } },
+    { "t": "Sí, eso es.", "zh": "对，就是这个意思。", "en": "Yes, that's it.",
+      "use": { "zh": "对方猜对了你想说的话，或者问你「是不是这个意思」时说。", "en": "Say this when someone guesses what you mean, or asks if they got it right." } },
+    { "t": "No, no es eso.", "zh": "不对，不是这个。", "en": "No, that's not it.",
+      "use": { "zh": "对方理解错了的时候说，然后再说一遍。", "en": "Say this when someone got it wrong, then try again." } },
+    { "t": "Un momento, por favor.", "zh": "请等一下。", "en": "One moment, please.",
+      "use": { "zh": "要想一想、找一个词的时候说，对方就会等你。", "en": "Say this when you need time to think of a word." } },
+    { "t": "Estoy aprendiendo español.", "zh": "我正在学西班牙语。", "en": "I'm learning Spanish.",
+      "use": { "zh": "告诉对方你刚开始学，他就会说得慢一点、简单一点。", "en": "Tell people you're a learner, so they speak slowly and simply." } },
+    { "t": "¡Muchas gracias!", "zh": "非常感谢！", "en": "Thank you very much!",
+      "use": { "zh": "别人帮了你、教了你一句话的时候说。", "en": "Say this when someone helps you or teaches you something." } },
+    { "t": "Perdón.", "zh": "对不起。", "en": "Sorry.",
+      "use": { "zh": "说错了、不小心打断别人，或者请别人让一让的时候说。", "en": "Say this when you make a mistake, interrupt someone, or need to get past." } }
+  ],
+  "towns": {
+    "0": {
+      "can": { "zh": "能用西语打招呼、说自己叫什么、问别人好不好。", "en": "Greet people, say your name, and ask how someone is." },
+      "intro": {
+        "zh": "第一课在岛上认识新朋友。先学几句整块的话：你好、再见、我叫……、你好吗、很高兴认识你。不用拆开讲语法，整句记住就能用。",
+        "en": "In your first lesson you meet new friends on the island. Learn a few whole phrases: hello, goodbye, my name is…, how are you, nice to meet you. No grammar yet. Just learn each phrase as one piece."
+      },
+      "patterns": [
+        { "p": "Me llamo ___.", "zh": "我叫___。", "en": "My name is ___.",
+          "note": { "zh": "说自己的名字，后面直接加名字。问别人叫什么：¿Cómo te llamas?", "en": "Say your name right after Me llamo. To ask someone's name: ¿Cómo te llamas?" },
+          "ex": ["¿Cómo te llamas?", "Me llamo Ana."] },
+        { "p": "Estoy ___, gracias.", "zh": "我___，谢谢。", "en": "I'm ___, thank you.",
+          "note": { "zh": "别人问 ¿Cómo estás?（你好吗？）时这样回答。空里填 bien（好）或 muy bien（很好）。想反问对方就加一句 ¿Y tú?（你呢？）", "en": "Answer ¿Cómo estás? (How are you?) like this. Fill in bien (fine) or muy bien (very well). Add ¿Y tú? (And you?) to ask back." },
+          "ex": ["¿Cómo estás hoy?", "Estoy bien, gracias."] },
+        { "p": "¡Mucho gusto, ___!", "zh": "很高兴认识你，___！", "en": "Nice to meet you, ___!",
+          "note": { "zh": "第一次认识一个人时说，后面可以加他的名字。对方回答 Igualmente（我也是）。", "en": "Say this when you meet someone for the first time. The answer is Igualmente (Likewise)." },
+          "ex": ["¡Mucho gusto, Luis!", "Igualmente."] },
+        { "p": "¡Buenos días, ___!", "zh": "___，早上好！", "en": "Good morning, ___!",
+          "note": { "zh": "早上说 Buenos días，下午说 Buenas tardes，晚上说 Buenas noches。走的时候说 ¡Adiós, hasta mañana!（再见，明天见！）", "en": "Morning: Buenos días. Afternoon: Buenas tardes. Evening: Buenas noches. When you leave: ¡Adiós, hasta mañana! (Bye, see you tomorrow!)" },
+          "ex": ["¡Buenos días, maestra!"] }
+      ],
+      "tips": [
+        { "zh": "西语的名词分阴阳性（像分「男」「女」）：男生朋友是 el amigo，女生朋友是 la amiga。-o 结尾的多半是阳性，-a 结尾的多半是阴性，前面的 el / la 也跟着变：Ella es mi amiga Sofía。先成对记住，以后再细讲。",
+          "en": "Spanish nouns are masculine or feminine: a friend who is a boy is el amigo, a friend who is a girl is la amiga. Words ending in -o are usually masculine and -a usually feminine, and el / la change too: Ella es mi amiga Sofía. Learn them in pairs for now." },
+        { "zh": "西语的问句前后都有问号，开头那个是倒过来的：¿Cómo estás?；感叹句也一样：¡Hola!。看到 ¿ 就知道这句要用问句的语调读。",
+          "en": "Spanish questions have a question mark at both ends, and the first one is upside down: ¿Cómo estás? Exclamations too: ¡Hola! When you see ¿, read the sentence as a question." }
+      ]
+    },
+    "1": {
+      "can": { "zh": "能问「这是什么」「什么颜色」「在哪儿」，说出文具和颜色。", "en": "Ask what something is, what color it is, and where it is." },
+      "intro": {
+        "zh": "这一课在教室里收拾文具。你会学到常用的文具和颜色，还要学会问：这是什么？什么颜色？在哪儿？不知道怎么说时，也有一句话可以问。",
+        "en": "In this lesson you tidy up your school things. Learn the names of school things and colors, and ask: What is this? What color is it? Where is it? There's also a question for when you don't know a word."
+      },
+      "patterns": [
+        { "p": "Es un ___.", "zh": "这是一个___。", "en": "It's a ___.",
+          "note": { "zh": "回答 ¿Qué es esto?（这是什么？）。阳性的词（el lápiz）用 un，阴性的词（la regla）用 una：Es una regla。", "en": "Answer ¿Qué es esto? (What is this?). Use un for masculine words (el lápiz) and una for feminine words (la regla): Es una regla." },
+          "ex": ["¿Qué es esto?", "Es un lápiz."] },
+        { "p": "¿De qué color es ___?", "zh": "___是什么颜色的？", "en": "What color is ___?",
+          "note": { "zh": "问颜色。回答用 es + 颜色：Es verde。东西是好几个就用 son：Son negras。", "en": "Ask about color. Answer with es + color: Es verde. For more than one thing, use son: Son negras." },
+          "ex": ["¿De qué color es tu mochila?", "Mi mochila es azul."] },
+        { "p": "¿Dónde está ___?", "zh": "___在哪儿？", "en": "Where is ___?",
+          "note": { "zh": "问东西在哪儿。回答 Está en + 地方：Está en la mochila。好几样东西用 están。", "en": "Ask where something is. Answer Está en + place: Está en la mochila. For more than one thing, use están." },
+          "ex": ["¿Dónde está la regla?", "Está en la mochila."] },
+        { "p": "¿Cómo se dice ___ en español?", "zh": "___用西班牙语怎么说？", "en": "How do you say ___ in Spanish?",
+          "note": { "zh": "不知道一个东西叫什么时，指着它问，空里填 esto（这个）。", "en": "Point at something you can't name and ask. Put esto (this) in the blank." },
+          "ex": ["¿Cómo se dice esto en español?"] }
+      ],
+      "tips": [
+        { "zh": "颜色放在名词后面，还要跟着名词变：la regla roja（红尺子）、el lápiz amarillo（黄铅笔）、las tijeras negras（黑剪刀）。azul、verde 不分阴阳，复数加 -es / -s：azules、verdes。",
+          "en": "Colors go after the noun and change with it: la regla roja (red ruler), el lápiz amarillo (yellow pencil), las tijeras negras (black scissors). Azul and verde are the same for both genders; for plural add -es / -s: azules, verdes." },
+        { "zh": "中文的「是」和「在」，西语分成两个词：说「是什么、什么颜色」用 es（Es azul），说「在哪儿」用 está（Está en la mochila）。不要说成 Es en la mochila。",
+          "en": "English uses \"is\" for both, but Spanish has two verbs here: es for what something is or its color (Es azul), and está for where it is (Está en la mochila). Don't say Es en la mochila." }
+      ]
+    },
+    "2": {
+      "can": { "zh": "能介绍家里人，说「他 / 她是谁」，说有几个兄弟姐妹、宝宝几岁。", "en": "Introduce your family, say who someone is, and talk about brothers, sisters and age." },
+      "intro": {
+        "zh": "这一课一起看全家福。学会用 Esta es mi familia 介绍家人，用 ¿Quién es…? 问是谁，用 tener 说「有」，也用它说几岁。",
+        "en": "In this lesson you look at a family photo. Learn Esta es mi familia to introduce your family, ¿Quién es…? to ask who someone is, and tener for \"have\" and for age."
+      },
+      "patterns": [
+        { "p": "Ella es mi ___.", "zh": "她是我的___。", "en": "She is my ___.",
+          "note": { "zh": "介绍家里的女性。介绍男性换成 Él es mi ___：Él es mi abuelo。问是谁：¿Quién es ella? / ¿Quién es él?", "en": "Introduce a woman or girl in your family. For a man or boy, say Él es mi ___: Él es mi abuelo. To ask who: ¿Quién es ella? / ¿Quién es él?" },
+          "ex": ["¿Quién es ella?", "Ella es mi mamá."] },
+        { "p": "Tengo un ___.", "zh": "我有一个___。", "en": "I have a ___.",
+          "note": { "zh": "tener 是「有」：tengo（我有）、tienes（你有）、tiene（他 / 她有）。阴性的词用 una：Tengo una hermana menor。", "en": "Tener means \"have\": tengo (I have), tienes (you have), tiene (he / she has). Use una for feminine words: Tengo una hermana menor." },
+          "ex": ["¿Tienes hermanos?", "Sí, tengo un hermano."] },
+        { "p": "Tiene ___ años.", "zh": "他 / 她___岁。", "en": "He / She is ___ years old.",
+          "note": { "zh": "说年龄用 tener（有几年），不用「是」。一岁说 un año，两岁以上说 años。问：¿Cuántos años tiene?", "en": "Spanish uses tener (have) for age, not \"be\". One year is un año; two or more is años. To ask: ¿Cuántos años tiene?" },
+          "ex": ["¿Cuántos años tiene el bebé?", "Tiene un año."] },
+        { "p": "Estos son mis ___.", "zh": "这些是我的___。", "en": "These are my ___.",
+          "note": { "zh": "介绍好几个人，mi 变成 mis：mi primo → mis primos。只回答「是谁」时可以省掉 estos：Son mis abuelos。", "en": "For more than one person, mi becomes mis: mi primo → mis primos. In a short answer you can drop estos: Son mis abuelos." },
+          "ex": ["Estos son mis primos.", "Son mis abuelos."] }
+      ],
+      "tips": [
+        { "zh": "hermano 不分哥哥弟弟，hermana 不分姐姐妹妹。要说清楚就加 mayor（大的）或 menor（小的）：mi hermana menor（我妹妹）。primo 也不分堂、表，tío 叔叔、舅舅都是它。",
+          "en": "Hermano can be an older or younger brother. To be exact, add mayor (older) or menor (younger): mi hermana menor (my younger sister). Primo is any cousin, and tío is any uncle." },
+        { "zh": "一群人里只要有男的，就用阳性复数：mis abuelos 是「爷爷和奶奶」，mis hermanos 可以是「哥哥和妹妹」，mis primos 是「表兄弟姐妹」。",
+          "en": "For a mixed group, Spanish uses the masculine plural: mis abuelos means grandpa and grandma, mis hermanos can be brothers and sisters, and mis primos can be all your cousins." }
+      ]
+    },
+    "3": {
+      "can": { "zh": "能问学校里的地方在哪儿，说「在……旁边 / 附近 / 对面」，说哪里有什么。", "en": "Ask where places in school are, say next to / near / across from, and say what there is." },
+      "intro": {
+        "zh": "这一课在学校里转一圈：图书馆、食堂、操场、体育馆……学会问在哪儿、用方位词回答，再用 hay 说「有」。",
+        "en": "In this lesson you walk around the school: library, cafeteria, playground, gym… Learn to ask where places are, answer with place words, and use hay to say \"there is\"."
+      },
+      "patterns": [
+        { "p": "Está al lado del ___.", "zh": "在___旁边。", "en": "It's next to the ___.",
+          "note": { "zh": "回答 ¿Dónde está…?。别的方位词用法一样：cerca de（附近）、enfrente de（对面），后面接地方。", "en": "Answer ¿Dónde está…? with this. Other place words work the same way: cerca de (near), enfrente de (across from), then the place." },
+          "ex": ["¿Dónde está la biblioteca?", "Está al lado del comedor."] },
+        { "p": "Hay ___.", "zh": "有___。", "en": "There is / There are ___.",
+          "note": { "zh": "hay 是「有」，一个、好几个都用 hay，不变。说在哪儿有，后面加 en + 地方。问有什么：¿Qué hay…?", "en": "Hay means \"there is\" and \"there are\"; it never changes. Add en + place to say where. To ask: ¿Qué hay…?" },
+          "ex": ["Hay un mapa grande en la pared.", "Hay diez computadoras en el laboratorio."] },
+        { "p": "¿Está abierta la ___?", "zh": "___开着吗？", "en": "Is the ___ open?",
+          "note": { "zh": "estar 也说「现在的样子」：开着 abierta，关着 cerrada。la biblioteca 是阴性，所以用 abierta；阳性的地方用 abierto。", "en": "Estar also tells how something is right now: abierta (open), cerrada (closed). La biblioteca is feminine, so it's abierta; for a masculine place, abierto." },
+          "ex": ["¿Está abierta la biblioteca?", "Sí, está abierta."] },
+        { "p": "Mi escuela es ___.", "zh": "我的学校___。", "en": "My school is ___.",
+          "note": { "zh": "说学校是什么样用 es：grande（大）、bonita（漂亮）。问别人：¿Cómo es tu escuela?", "en": "Use es to say what your school is like: grande (big), bonita (pretty). To ask: ¿Cómo es tu escuela?" },
+          "ex": ["¿Cómo es tu escuela?", "Es grande y bonita."] }
+      ],
+      "tips": [
+        { "zh": "de 碰到 el 要合写成 del：al lado del comedor（不写 de el）。a 碰到 el 合成 al。la 不合写：cerca de la puerta。",
+          "en": "De + el always becomes del: al lado del comedor (never de el). A + el becomes al. With la nothing changes: cerca de la puerta." },
+        { "zh": "hay 说「某处有什么」（Hay un mapa en la pared），está 说「一个说过的东西在哪儿」（El mapa está en la pared）。hay 后面跟 un / una 或数字，不跟 el / la。",
+          "en": "Hay says what there is (Hay un mapa en la pared). Está says where a known thing is (El mapa está en la pared). After hay, use un / una or a number, not el / la." }
+      ]
+    },
+    "4": {
+      "can": { "zh": "能说喜欢 / 不喜欢哪门课、最喜欢哪门、为什么。", "en": "Say which subjects you like or don't like, your favorite one, and why." },
+      "intro": {
+        "zh": "这一课聊学校的科目。学会用 me gusta 说喜欢，用 porque 说原因，用 fácil / difícil 说难不难。",
+        "en": "In this lesson you talk about school subjects. Learn me gusta for things you like, porque for reasons, and fácil / difícil for easy and hard."
+      },
+      "patterns": [
+        { "p": "Me gusta ___.", "zh": "我喜欢___。", "en": "I like ___.",
+          "note": { "zh": "说喜欢一样东西。不喜欢就在前面加 no：No me gusta…。问别人：¿Te gusta…?", "en": "Say you like one thing. To say you don't, put no in front: No me gusta… To ask: ¿Te gusta…?" },
+          "ex": ["Me gusta mucho la música.", "¿Te gusta el arte?"] },
+        { "p": "Me gustan ___.", "zh": "我喜欢___（好几个）。", "en": "I like ___ (plural).",
+          "note": { "zh": "喜欢的东西是复数（las matemáticas、los gatos）时，gusta 要变成 gustan。", "en": "When the thing you like is plural (las matemáticas, los gatos), gusta becomes gustan." },
+          "ex": ["¿Te gustan las matemáticas?", "No, no me gustan."] },
+        { "p": "Mi materia favorita es ___.", "zh": "我最喜欢的课是___。", "en": "My favorite subject is ___.",
+          "note": { "zh": "问别人最喜欢哪门课：¿Cuál es tu materia favorita?", "en": "To ask someone: ¿Cuál es tu materia favorita?" },
+          "ex": ["¿Cuál es tu materia favorita?", "Mi materia favorita es el arte."] },
+        { "p": "Me gusta ___ porque es ___.", "zh": "我喜欢___，因为它___。", "en": "I like ___ because it's ___.",
+          "note": { "zh": "porque（因为）后面说原因。问原因用 ¿Por qué…?，分开写、带重音符号。", "en": "Give a reason after porque (because). To ask why, say ¿Por qué…?, written as two words with an accent." },
+          "ex": ["Me gusta la educación física porque es divertida.", "¿Por qué te gusta la historia?"] }
+      ],
+      "tips": [
+        { "zh": "me gusta 的意思其实是「……让我喜欢」，喜欢的东西才是句子的主角，所以它是复数时动词跟着变成 gustan。和中文的「我喜欢」顺序正好反过来。",
+          "en": "Me gusta really means \"it pleases me\". The thing you like is the subject, so when it's plural the verb becomes gustan. That's the other way round from English \"I like\"." },
+        { "zh": "说喜欢哪门课、哪门课难，科目前面要带 el / la / las：Me gusta la música，不说 Me gusta música。中文没有这个词，最容易忘。",
+          "en": "When you say you like a subject or it's hard, keep el / la / las in front: Me gusta la música, not Me gusta música. English has no \"the\" here, so it's easy to forget." }
+      ]
+    },
+    "5": {
+      "can": { "zh": "能问别人会不会做某事，说自己会什么、喜欢做什么、想参加哪个社团。", "en": "Ask if someone can do something, say what you can do and like doing, and which club you want to join." },
+      "intro": {
+        "zh": "这一课挑社团。学会用 saber 说「会」（会游泳、会弹钢琴），用 me gusta + 动词说喜欢做什么，用 quiero 说想做什么。",
+        "en": "In this lesson you pick a club. Learn saber for skills (can swim, can play the piano), me gusta + a verb for what you like doing, and quiero for what you want."
+      },
+      "patterns": [
+        { "p": "¿Sabes ___?", "zh": "你会___吗？", "en": "Can you ___?",
+          "note": { "zh": "问会不会一样本事。saber 后面直接跟动词原形（-ar / -er / -ir 结尾的样子）。回答：Sí, sé… / No, no sé…", "en": "Ask about a skill. Put the verb's base form (ending in -ar / -er / -ir) right after saber. Answer: Sí, sé… / No, no sé…" },
+          "ex": ["¿Tú sabes nadar?", "Sí, sé nadar muy bien."] },
+        { "p": "Sabe tocar ___.", "zh": "他 / 她会弹___。", "en": "He / She can play ___.",
+          "note": { "zh": "弹乐器用 tocar：tocar el piano、tocar la guitarra。踢球、下棋用的是另一个词 jugar。", "en": "For instruments use tocar: tocar el piano, tocar la guitarra. For sports and games, Spanish uses a different verb, jugar." },
+          "ex": ["Mi hermana sabe tocar el piano.", "Luis toca la guitarra en el club."] },
+        { "p": "Me gusta ___.", "zh": "我喜欢___（做某事）。", "en": "I like ___ (doing something).",
+          "note": { "zh": "me gusta 后面也能直接加动词原形：Me gusta leer。喜欢两件事也还是 gusta，不用 gustan。问别人：¿Qué te gusta hacer?", "en": "You can put a verb right after me gusta: Me gusta leer. Even with two activities it stays gusta, not gustan. To ask: ¿Qué te gusta hacer?" },
+          "ex": ["¿Qué te gusta hacer?", "Me gusta leer y dibujar."] },
+        { "p": "Quiero unirme al club de ___.", "zh": "我想加入___社。", "en": "I want to join the ___ club.",
+          "note": { "zh": "quiero（我想）+ 动词原形 = 我想做某事。问别人：¿Quieres unirte…?（me 换成 te）", "en": "Quiero (I want) + a base verb = I want to do something. To ask someone: ¿Quieres unirte…? (me becomes te)" },
+          "ex": ["Quiero unirme al club de ajedrez.", "¿Quieres unirte al club de baile?"] }
+      ],
+      "tips": [
+        { "zh": "西语动词跟着「谁」变样子：sé（我会）、sabes（你会）、sabe（他 / 她会）；nado（我游）、nada（他 / 她游）。所以常常不用说 yo、tú：Sé nadar 就是「我会游泳」。",
+          "en": "Spanish verbs change with the person: sé (I can), sabes (you can), sabe (he / she can); nado (I swim), nada (he / she swims). So yo and tú are often left out: Sé nadar means \"I can swim\"." },
+        { "zh": "否定只要在动词前面加 no：No sé cocinar（我不会做饭）。回答时常听到两个 no：No, no sé——第一个是「不」，第二个是「不会」的「不」。",
+          "en": "To say \"not\", put no before the verb: No sé cocinar (I can't cook). In answers you often hear two: No, no sé. The first means \"no\", the second means \"not\"." }
+      ]
+    },
+    "6": {
+      "can": { "zh": "能问几点，说几点做什么，讲自己一天的作息。", "en": "Ask the time, say when you do things, and describe your day." },
+      "intro": {
+        "zh": "这一课过一天：起床、洗澡、吃饭、坐车、睡觉。学会说钟点，用 a las… 说几点做事，还会遇到 me levanto 这种带 me 的动词。",
+        "en": "In this lesson you go through a day: get up, shower, eat, take the bus, go to bed. Learn to tell the time, use a las… for when you do things, and meet verbs with me, like me levanto."
+      },
+      "patterns": [
+        { "p": "Son las ___.", "zh": "___点了。", "en": "It's ___ (the time).",
+          "note": { "zh": "回答 ¿Qué hora es?。只有一点用单数：Es la una；别的钟点都是 Son las…。半点加 y media，一刻加 y cuarto。", "en": "Answer ¿Qué hora es? Only one o'clock is singular: Es la una. All other hours are Son las… Add y media for half past and y cuarto for quarter past." },
+          "ex": ["¿Qué hora es?", "Son las siete y media."] },
+        { "p": "Me levanto a las ___.", "zh": "我___点起床。", "en": "I get up at ___.",
+          "note": { "zh": "说几点做某事用 a las + 钟点（一点是 a la una）。问别人：¿A qué hora…?", "en": "To say when you do something, use a las + time (one o'clock is a la una). To ask: ¿A qué hora…?" },
+          "ex": ["¿A qué hora te levantas?", "Me levanto a las seis."] },
+        { "p": "Me ___ por la mañana.", "zh": "我早上___。", "en": "I ___ in the morning.",
+          "note": { "zh": "带 me 的动词是「给自己做」：me ducho（我洗澡）、me lavo los dientes（我刷牙）、me acuesto（我上床睡觉）。问别人时 me 换成 te：¿A qué hora te levantas?", "en": "Verbs with me are things you do to yourself: me ducho (I shower), me lavo los dientes (I brush my teeth), me acuesto (I go to bed). For you, me becomes te: ¿A qué hora te levantas?" },
+          "ex": ["Me ducho por la mañana."] },
+        { "p": "Voy en ___.", "zh": "我坐___去。", "en": "I go by ___.",
+          "note": { "zh": "说怎么去用 en + 交通工具：en autobús。问别人：¿Cómo vas a la escuela?", "en": "Say how you travel with en + vehicle: en autobús. To ask: ¿Cómo vas a la escuela?" },
+          "ex": ["¿Cómo vas a la escuela?", "Voy en autobús."] }
+      ],
+      "tips": [
+        { "zh": "说「早上」「晚上」：单独说用 por la mañana / por la noche；跟在钟点后面要用 de：a las nueve de la noche（晚上九点）。",
+          "en": "Morning and night: on their own, say por la mañana / por la noche. After a time, use de: a las nueve de la noche (9 p.m.)." },
+        { "zh": "吃早饭、吃午饭在西语里各是一个动词：desayuno（我吃早饭）、almuerzo（我吃午饭），不用说「吃 + 早饭」。",
+          "en": "Spanish has one verb for each meal: desayuno (I have breakfast), almuerzo (I have lunch). You don't need \"eat\" or \"have\"." }
+      ]
+    },
+    "7": {
+      "can": { "zh": "能问和说生日是哪天、谁满几岁，说派对在哪天、在哪儿。", "en": "Ask and say when a birthday is and how old someone turns, and say when and where a party is." },
+      "intro": {
+        "zh": "这一课去参加生日派对。学会说日期（几月几号），用 cumplir 说「满几岁」，再说派对在哪天、在哪儿。",
+        "en": "In this lesson you go to a birthday party. Learn to say dates, use cumplir for turning an age, and say when and where the party is."
+      },
+      "patterns": [
+        { "p": "Mi cumpleaños es el ___ de ___.", "zh": "我的生日是___号，在___月。", "en": "My birthday is the ___ of ___.",
+          "note": { "zh": "问：¿Cuándo es tu cumpleaños? 西语先说几号、再说几月，中间加 de：el doce de mayo（五月十二号）。", "en": "To ask: ¿Cuándo es tu cumpleaños? Say the day first, then de and the month: el doce de mayo (May 12)." },
+          "ex": ["¿Cuándo es tu cumpleaños?", "Mi cumpleaños es el doce de mayo."] },
+        { "p": "___ cumple ___ años.", "zh": "___满___岁。", "en": "___ turns ___.",
+          "note": { "zh": "过生日「满几岁」用 cumplir。问：¿Cuántos años cumple…?", "en": "Use cumplir for turning an age on a birthday. To ask: ¿Cuántos años cumple…?" },
+          "ex": ["¿Cuántos años cumple Lucía?", "Diego cumple once años."] },
+        { "p": "La fiesta es ___.", "zh": "派对在___。", "en": "The party is ___.",
+          "note": { "zh": "说活动在哪天、在哪儿，用 es（不用 está）：La fiesta es el sábado、Es en la casa de Pablo。问：¿Dónde es la fiesta?", "en": "For when or where an event happens, use es (not está): La fiesta es el sábado, Es en la casa de Pablo. To ask: ¿Dónde es la fiesta?" },
+          "ex": ["La fiesta es el sábado.", "Es en la casa de Pablo."] },
+        { "p": "Este regalo es para ___.", "zh": "这个礼物是给___的。", "en": "This present is for ___.",
+          "note": { "zh": "para = 给（某人）。「给你」说 para ti，不说 para tú。", "en": "Para means \"for\" someone. \"For you\" is para ti, not para tú." },
+          "ex": ["Este regalo es para ti.", "¡Un regalo para ti!"] }
+      ],
+      "tips": [
+        { "zh": "西语的月份和星期都小写：mayo、junio、el sábado。英语要大写，西语不用。",
+          "en": "Months and days of the week are lowercase in Spanish: mayo, junio, el sábado. No capitals, unlike English." },
+        { "zh": "日期直接用普通的数字：el doce de mayo，不用「第十二」。只有每月一号常说 el primero。",
+          "en": "Dates use plain numbers: el doce de mayo, not \"the twelfth\". Only the 1st is often el primero." }
+      ]
+    },
+    "8": {
+      "can": { "zh": "能说动物长什么样、住在哪儿、吃什么，说喜欢哪些动物。", "en": "Describe animals: what they look like, where they live and what they eat, and say which ones you like." },
+      "intro": {
+        "zh": "这一课去看动物。学会用 ¿Cómo es…? 问长什么样，用 Es grande、Tiene cuatro patas 描述，再用 vive / come 说住哪儿、吃什么。",
+        "en": "In this lesson you visit animals. Learn ¿Cómo es…? to ask what an animal is like, describe it with Es grande and Tiene cuatro patas, and use vive / come for where it lives and what it eats."
+      },
+      "patterns": [
+        { "p": "Es ___ y ___.", "zh": "它又___又___。", "en": "It's ___ and ___.",
+          "note": { "zh": "回答 ¿Cómo es…?（……长什么样？）。两个形容词中间用 y（和）连起来。", "en": "Answer ¿Cómo es…? (What is … like?). Join two describing words with y (and)." },
+          "ex": ["¿Cómo es el león?", "Es grande y fuerte."] },
+        { "p": "Tiene ___.", "zh": "它有___。", "en": "It has ___.",
+          "note": { "zh": "说身上有什么也用 tener：Tiene cuatro patas。「长颈鹿脖子长」西语说成「长颈鹿有长脖子」：La jirafa tiene el cuello largo。", "en": "Use tener for body parts too: Tiene cuatro patas. \"The giraffe has a long neck\" is La jirafa tiene el cuello largo." },
+          "ex": ["¿Cuántas patas tiene el caballo?", "Tiene cuatro patas."] },
+        { "p": "Vive en ___.", "zh": "它住在___。", "en": "It lives in ___.",
+          "note": { "zh": "vive（住）、come（吃）是说「它」时的样子：El conejo come zanahorias（兔子吃胡萝卜）。", "en": "Vive (lives) and come (eats) are the forms for \"it\": El conejo come zanahorias (Rabbits eat carrots)." },
+          "ex": ["¿Dónde vive el pez?", "Vive en el agua."] },
+        { "p": "Me gustan los ___.", "zh": "我喜欢___。", "en": "I like ___.",
+          "note": { "zh": "说喜欢一类动物，用复数：Me gustan los gatos。问别人：¿Qué animales te gustan?", "en": "To say you like a kind of animal, use the plural: Me gustan los gatos. To ask: ¿Qué animales te gustan?" },
+          "ex": ["¿Qué animales te gustan?", "Me gustan los gatos."] }
+      ],
+      "tips": [
+        { "zh": "形容词跟着动物变：一只 el mono divertido，好几只 los monos divertidos；la jirafa 是阴性，就说 alta，不说 alto。grande、fuerte 这种 -e 结尾的不分阴阳，复数加 s。",
+          "en": "Describing words match the animal: el mono divertido, los monos divertidos. La jirafa is feminine, so alta, not alto. Words ending in -e, like grande and fuerte, are the same for both; add -s for plural." },
+        { "zh": "说「猫（这一类动物）」也要带 los / las：Me gustan los gatos。中文直接说「我喜欢猫」，西语不能省掉 los。",
+          "en": "Even for a kind of animal in general, keep los / las: Me gustan los gatos. English just says \"I like cats\", but Spanish needs los." }
+      ]
+    },
+    "9": {
+      "can": { "zh": "能说哪里可以 / 不可以做什么、必须做什么，礼貌地问「我可以……吗」。", "en": "Say what you can and can't do somewhere, what you must do, and ask \"Can I…?\" politely." },
+      "intro": {
+        "zh": "这一课学学校里和马路上的规矩。学会 no se puede（不能）、hay que（要）、tenemos que（我们得），还有举手问 ¿Puedo…?（我可以……吗？）",
+        "en": "In this lesson you learn rules at school and on the street: no se puede (you can't), hay que (you have to), tenemos que (we have to), and ¿Puedo…? (Can I…?) to ask for permission."
+      },
+      "patterns": [
+        { "p": "No se puede ___.", "zh": "不能___。", "en": "You can't ___ (here).",
+          "note": { "zh": "说一个地方的规定，不说是谁。后面跟动词原形。问能不能：¿Se puede…? 不行就答 No, no se puede。", "en": "State a rule for a place, without saying who. Use the base verb after it. To ask: ¿Se puede…? If not: No, no se puede." },
+          "ex": ["No se puede correr en el pasillo.", "¿Se puede correr en el pasillo?"] },
+        { "p": "Hay que ___.", "zh": "要___。", "en": "You have to ___.",
+          "note": { "zh": "说大家都该做的事，后面跟动词原形：Hay que hacer fila（要排队）。", "en": "Say what everyone should do, with the base verb: Hay que hacer fila (You have to wait in line)." },
+          "ex": ["Hay que hacer fila para el almuerzo.", "Hay que estar en silencio."] },
+        { "p": "¿Puedo ___?", "zh": "我可以___吗？", "en": "Can I ___?",
+          "note": { "zh": "请求允许，加 por favor 更有礼貌。可以就答 Sí, puedes（你可以）。", "en": "Ask for permission; add por favor to be polite. Yes is Sí, puedes (You can)." },
+          "ex": ["¿Puedo ir al baño, por favor?", "Sí, claro, puedes ir."] },
+        { "p": "Tenemos que ___.", "zh": "我们得___。", "en": "We have to ___.",
+          "note": { "zh": "tener que + 动词原形 = 必须做。我得说 tengo que，我们得说 tenemos que。", "en": "Tener que + base verb = must. I have to: tengo que. We have to: tenemos que." },
+          "ex": ["Tenemos que llevar el uniforme."] }
+      ],
+      "tips": [
+        { "zh": "叫一个朋友做某事，常直接用动词「他」的样子：Levanta la mano（举手）、Cruza la calle（过马路）。和 levanta（他举）写法一样，靠语气分。",
+          "en": "To tell one friend to do something, Spanish often uses the he / she form of the verb: Levanta la mano (Raise your hand), Cruza la calle (Cross the street). It looks like levanta (he raises); the tone tells you." },
+        { "zh": "la regla 有两个意思：学文具那一课里是「尺子」，这一课是「规则」。是同一个词，看上下文就知道。",
+          "en": "La regla has two meanings: \"ruler\" in the school things lesson and \"rule\" here. It's the same word; the context tells you which." }
+      ]
+    },
+    "10": {
+      "can": { "zh": "能说玩什么运动、邀请别人一起玩，说吃什么喝什么，在两样里选一样。", "en": "Talk about sports, invite a friend to play, say what you eat and drink, and choose between two things." },
+      "intro": {
+        "zh": "这一课讲运动和吃饭。学会用 jugar al… 说玩什么球，用 ¿Quieres…? 邀请别人，用 como（我吃）和 tomo（我喝）说吃喝。",
+        "en": "In this lesson: sports and food. Learn jugar al… for playing a sport, ¿Quieres…? to invite someone, and como (I eat) and tomo (I drink) for meals."
+      },
+      "patterns": [
+        { "p": "Juego al ___.", "zh": "我打___。", "en": "I play ___.",
+          "note": { "zh": "玩运动、打球用 jugar al + 运动：al tenis、al voleibol（a + el 合成 al）。", "en": "For sports use jugar al + sport: al tenis, al voleibol (a + el becomes al)." },
+          "ex": ["Juego al tenis con mi hermana.", "¿Te gusta jugar al voleibol?"] },
+        { "p": "¿Quieres ___?", "zh": "你想___吗？", "en": "Do you want to ___?",
+          "note": { "zh": "邀请别人一起做事，后面跟动词原形。答应说 ¡Sí, vamos!（好，走吧！）", "en": "Invite someone, with a base verb after it. To say yes: ¡Sí, vamos! (Yes, let's go!)" },
+          "ex": ["¿Quieres jugar al voleibol?", "¡Sí, vamos!"] },
+        { "p": "Como ___ y tomo ___.", "zh": "我吃___，喝___。", "en": "I eat ___ and drink ___.",
+          "note": { "zh": "吃用 comer（como），喝在拉美常用 tomar（tomo）。问别人：¿Qué comes…?", "en": "Eat is comer (como). For drink, Latin America usually says tomar (tomo). To ask: ¿Qué comes…?" },
+          "ex": ["¿Qué comes en el desayuno?", "Como pan y tomo leche."] },
+        { "p": "¿Quieres ___ o ___?", "zh": "你要___还是___？", "en": "Do you want ___ or ___?",
+          "note": { "zh": "o = 还是 / 或者。回答时直接说你要的那样，加 por favor。", "en": "O means \"or\". Answer with the one you want, plus por favor." },
+          "ex": ["¿Quieres jugo o agua?", "Agua, por favor."] }
+      ],
+      "tips": [
+        { "zh": "agua（水）是阴性词，前面却用 el：el agua。因为它以重读的 a 开头，la agua 念起来会连成一团。形容词还是用阴性：el agua fría。",
+          "en": "Agua (water) is feminine, but it takes el: el agua. It starts with a stressed a, so la agua would run together. Describing words stay feminine: el agua fría." },
+        { "zh": "tomar 是个万能词：tomo agua（我喝水）、tomo el autobús（我坐公交车）。拉美说「喝」多用 tomar，beber 也对，只是听起来正式一点。",
+          "en": "Tomar is a handy verb: tomo agua (I drink water), tomo el autobús (I take the bus). In Latin America people usually say tomar for \"drink\"; beber is also right but sounds more formal." }
+      ]
+    },
+    "11": {
+      "can": { "zh": "能问天气，说冷热晴雨风雪，说自己冷不冷，说最喜欢哪个季节。", "en": "Ask about the weather, describe it, say if you feel cold, and name your favorite season." },
+      "intro": {
+        "zh": "这一课看天气。西语说天气大多用 hace（hace calor、hace frío），正在下雨说 está lloviendo；自己觉得冷要说 tengo frío。",
+        "en": "In this lesson you talk about the weather. Spanish uses hace for most weather (hace calor, hace frío) and está lloviendo for \"it's raining\". When you feel cold, say tengo frío."
+      },
+      "patterns": [
+        { "p": "Hace ___.", "zh": "天气___。", "en": "It's ___ (weather).",
+          "note": { "zh": "回答 ¿Qué tiempo hace?（天气怎么样？）：Hace sol（出太阳）、hace calor（热）、hace frío（冷）、hace viento（刮风）。", "en": "Answer ¿Qué tiempo hace? (What's the weather like?): Hace sol (sunny), hace calor (hot), hace frío (cold), hace viento (windy)." },
+          "ex": ["¿Qué tiempo hace?", "Hace sol y calor."] },
+        { "p": "Tengo ___.", "zh": "我觉得___。", "en": "I feel ___ (cold / hot).",
+          "note": { "zh": "说自己冷、热用 tener：Tengo frío、Tengo calor。说天气才用 hace：Hace frío。不要说 Estoy frío。", "en": "For your own body, use tener: Tengo frío (I'm cold), Tengo calor (I'm hot). Use hace only for the weather: Hace frío. Don't say Estoy frío." },
+          "ex": ["¿Tienes frío?", "Sí, tengo mucho frío."] },
+        { "p": "En ___ hace ___.", "zh": "___（季节）天气___。", "en": "In ___, it's ___.",
+          "note": { "zh": "说某个季节通常的天气。季节前面用 en，不加 el：en invierno、en verano。", "en": "Say what a season is usually like. Use en with no el: en invierno, en verano." },
+          "ex": ["En invierno hace frío y nieva.", "¿Nieva aquí en invierno?"] },
+        { "p": "Mi estación favorita es ___.", "zh": "我最喜欢的季节是___。", "en": "My favorite season is ___.",
+          "note": { "zh": "问别人：¿Cuál es tu estación favorita? 季节：la primavera（春）、el verano（夏）、el otoño（秋）、el invierno（冬）。", "en": "To ask: ¿Cuál es tu estación favorita? Seasons: la primavera, el verano, el otoño, el invierno." },
+          "ex": ["¿Cuál es tu estación favorita?", "Mi estación favorita es la primavera."] }
+      ],
+      "tips": [
+        { "zh": "下雨、下雪不用 hace，有自己的动词：llueve（下雨）、nieva（下雪）。「现在正在下」说 Está lloviendo，「常常下、会下」说 llueve / nieva。",
+          "en": "Rain and snow don't use hace; they have their own verbs: llueve (it rains), nieva (it snows). For right now, say Está lloviendo; in general, say llueve / nieva." },
+        { "zh": "hace calor 里的 calor 是名词（热气），所以「很热」说 hace mucho calor，不说 muy calor。tengo mucho frío 也一样。",
+          "en": "In hace calor, calor is a noun (heat), so \"very hot\" is hace mucho calor, not muy calor. Same with tengo mucho frío." }
+      ]
+    },
+    "12": {
+      "can": { "zh": "能讲昨天或上周末去了哪儿、做了什么、怎么样。", "en": "Tell where you went, what you did and how it was, yesterday or last weekend." },
+      "intro": {
+        "zh": "这一课讲一件已经过去的事。先把几个过去的说法当整块记：fui（我去了）、vimos（我们看到了）、comí（我吃了）、fue（那是……）。时间词 ayer（昨天）、el sábado pasado（上星期六）放在句首。",
+        "en": "In this lesson you tell about something that already happened. Learn a few past forms as whole pieces: fui (I went), vimos (we saw), comí (I ate), fue (it was). Put time words like ayer (yesterday) or el sábado pasado (last Saturday) at the start."
+      },
+      "patterns": [
+        { "p": "Fui a ___.", "zh": "我去了___。", "en": "I went to ___.",
+          "note": { "zh": "问：¿Adónde fuiste?（你去哪儿了？）。去的地方是阳性要合写成 al：Fui al zoológico。", "en": "To ask: ¿Adónde fuiste? (Where did you go?). With a masculine place, a + el becomes al: Fui al zoológico." },
+          "ex": ["Ayer fui a la playa con mi familia.", "Fui al zoológico."] },
+        { "p": "Vimos ___.", "zh": "我们看到了___。", "en": "We saw ___.",
+          "note": { "zh": "说「我们……了」，动词多是 -mos 结尾：vimos（看到了）、visitamos（参观了）、sacamos（拍了）、hicimos（做了）。", "en": "For \"we did\", the verb usually ends in -mos: vimos (saw), visitamos (visited), sacamos (took), hicimos (made / did)." },
+          "ex": ["Vimos un barco muy grande.", "Por la noche vimos las estrellas."] },
+        { "p": "Comí ___.", "zh": "我吃了___。", "en": "I ate ___.",
+          "note": { "zh": "问：¿Qué comiste?（你吃了什么？）。说「我……了」常是 -í 或 -é 结尾、重音在最后：comí、saqué。", "en": "To ask: ¿Qué comiste? (What did you eat?). For \"I did\", the verb often ends in -í or -é with the stress at the end: comí, saqué." },
+          "ex": ["¿Qué comiste en la playa?", "Comí un helado de mango."] },
+        { "p": "¡Fue ___!", "zh": "（那）真___！", "en": "It was ___!",
+          "note": { "zh": "说那件事怎么样：¡Fue increíble!（太棒了！）、¡Fue muy divertido!（很好玩！）。问：¿Cómo fue…?", "en": "Say how it was: ¡Fue increíble! (It was amazing!), ¡Fue muy divertido! (It was really fun!). To ask: ¿Cómo fue…?" },
+          "ex": ["¿Cómo fue el viaje?", "¡Fue muy divertido!"] }
+      ],
+      "tips": [
+        { "zh": "中文说过去的事加「了」，西语是动词自己换样子：como（我吃）→ comí（我吃了），voy（我去）→ fui（我去了）。重音符号也要念出来：comí 的重音在最后。",
+          "en": "English uses past forms like ate and went; Spanish changes the verb too: como (I eat) → comí (I ate), voy (I go) → fui (I went). Say the accent: comí is stressed at the end." },
+        { "zh": "「上星期六」是 el sábado pasado，pasado（过去的）放在后面。",
+          "en": "\"Last Saturday\" is el sábado pasado; pasado (past) comes after the day." }
+      ]
+    }
+  },
+  "units": {
+    "es1-1": {
+      "patterns": [
+        { "p": "¿Cómo es tu ___?", "zh": "你的___是什么样的人？", "en": "What is your ___ like?",
+          "note": { "zh": "问一个人的性格和样子。问对方自己说 ¿Cómo eres tú?。回答时形容词跟着那个人变：Es muy divertida（她）。", "en": "Ask what someone is like. To ask the person you're talking to: ¿Cómo eres tú? In the answer, the describing word matches the person: Es muy divertida (she)." },
+          "ex": ["¿Cómo es tu mejor amiga?", "Es muy divertida y amable."] },
+        { "p": "Tiene el pelo ___.", "zh": "他 / 她的头发___。", "en": "He / She has ___ hair.",
+          "note": { "zh": "说头发用 tener + el pelo + 形容词，「头发长」西语说成「有长头发」。两个形容词用 y 连。", "en": "For hair, use tener + el pelo + describing word. Join two describing words with y." },
+          "ex": ["Mi amiga Sofía es rubia y tiene el pelo largo.", "Mi hermana tiene el pelo corto y rizado."] },
+        { "p": "¿Eres ___ o ___?", "zh": "你是___还是___？", "en": "Are you ___ or ___?",
+          "note": { "zh": "o = 还是。让对方在两个特点里选一个。", "en": "O means \"or\". Let someone pick one of two traits." },
+          "ex": ["¿Eres tranquilo o divertido?"] },
+        { "p": "Soy nuevo en ___.", "zh": "我刚来___。", "en": "I'm new at ___.",
+          "note": { "zh": "新来的人介绍自己。女生说 Soy nueva。后面接着说名字：Me llamo…", "en": "Introduce yourself as a newcomer. A girl says Soy nueva. Then give your name: Me llamo…" },
+          "ex": ["¿Eres nuevo en la escuela?", "Sí, soy nuevo. Me llamo Pablo."] }
+      ],
+      "tips": [
+        { "zh": "西语没有「的」那样的 's：「路易斯的眼睛」说 los ojos de Luis，东西在前，人放在 de 后面。",
+          "en": "Spanish has no 's: \"Luis's eyes\" is los ojos de Luis. The thing comes first, then de and the person." },
+        { "zh": "el mejor amigo 是「最好的朋友」；两个人互为最好的朋友，mejor 也要变复数：Somos mejores amigos。",
+          "en": "El mejor amigo is \"best friend\". For two best friends, mejor becomes plural too: Somos mejores amigos." }
+      ]
+    },
+    "es1-2": {
+      "patterns": [
+        { "p": "¿Qué hay en ___?", "zh": "___里有什么？", "en": "What's in the ___?",
+          "note": { "zh": "问一个房间里有什么。回答用 Hay + 东西，好几样用 y 连起来。", "en": "Ask what a room has. Answer with Hay + things, joined with y." },
+          "ex": ["¿Qué hay en la cocina?", "Hay una mesa y cuatro sillas."] },
+        { "p": "¿Hay un ___ en tu casa?", "zh": "你家有___吗？", "en": "Is there a ___ in your home?",
+          "note": { "zh": "问有没有，句子和平常一样，只是语调往上扬。回答 Sí, hay… / No, no hay…", "en": "To ask if there is one, use the same words with a rising tone. Answer Sí, hay… / No, no hay…" },
+          "ex": ["¿Hay un jardín en tu casa?", "Sí, hay un jardín pequeño."] },
+        { "p": "¿Cuántos ___ hay?", "zh": "有几个___？", "en": "How many ___ are there?",
+          "note": { "zh": "问数量。阳性的东西用 cuántos，阴性的用 cuántas：¿Cuántas sillas hay?", "en": "Ask how many. Use cuántos for masculine things and cuántas for feminine things: ¿Cuántas sillas hay?" },
+          "ex": ["¿Cuántos cuartos hay?", "Hay tres cuartos."] },
+        { "p": "Mi casa tiene ___.", "zh": "我家有___。", "en": "My home has ___.",
+          "note": { "zh": "列出家里有哪些房间。列举时房间前面可以不加冠词，最后一个前面用 y。", "en": "List the rooms in your home. In a list you can leave out the articles; put y before the last one." },
+          "ex": ["Mi casa tiene cocina, sala y dos cuartos."] }
+      ],
+      "tips": [
+        { "zh": "en 一个词管「在……里」「在……上」：en la mochila（书包里）、en la pared（墙上）。想说清楚才用 dentro de（里面）、encima de（上面）。",
+          "en": "En covers in, on and at: en la mochila (in the bag), en la pared (on the wall). Use dentro de or encima de only when you need to be exact." },
+        { "zh": "不是所有 -a 结尾的词都是阴性：el sofá（沙发）是阳性，说 el sofá、un sofá。学过的 el mapa、el día 也是这样。",
+          "en": "Not every word ending in -a is feminine: el sofá is masculine (el sofá, un sofá), just like el mapa and el día." }
+      ]
+    },
+    "es1-3": {
+      "patterns": [
+        { "p": "Tengo miedo de ___.", "zh": "我害怕___。", "en": "I'm afraid of ___.",
+          "note": { "zh": "看到别人不对劲，先问 ¿Qué te pasa?（你怎么了？）。害怕什么就放在 de 后面。", "en": "If someone looks upset, ask ¿Qué te pasa? (What's wrong?). Put what you're afraid of after de." },
+          "ex": ["¿Qué te pasa?", "Tengo miedo de la tormenta."] },
+        { "p": "Está ___, pero ___.", "zh": "他 / 她___，但是___。", "en": "He / She is ___, but ___.",
+          "note": { "zh": "两种心情一起说，用 pero 连。两个形容词都跟着那个人变：Sofía → cansada、contenta。", "en": "Give two feelings at once with pero. Both words match the person: Sofía → cansada, contenta." },
+          "ex": ["¿Cómo está Sofía?", "Está cansada, pero contenta."] },
+        { "p": "No estoy ___, solo estoy ___.", "zh": "我没___，只是___。", "en": "I'm not ___, I'm just ___.",
+          "note": { "zh": "让别人放心：solo = 只是。", "en": "Use this to put someone's mind at rest: solo means \"just\"." },
+          "ex": ["No estoy enfermo, solo estoy cansado."] },
+        { "p": "Tengo mucha ___.", "zh": "我很___（饿 / 渴）。", "en": "I'm very ___ (hungry / thirsty).",
+          "note": { "zh": "hambre、sed 是名词，「很饿」说 mucha hambre，不说 muy hambre。sueño、miedo 是阳性：mucho sueño、mucho miedo。", "en": "Hambre and sed are nouns, so \"very hungry\" is mucha hambre, not muy hambre. Sueño and miedo are masculine: mucho sueño, mucho miedo." },
+          "ex": ["¿Tienes hambre?", "Sí, tengo mucha hambre."] }
+      ],
+      "tips": [
+        { "zh": "同一个形容词，用 es 是「平时就是这样」，用 está 是「现在这样」：Es tranquilo, pero hoy está nervioso（他平时很沉稳，今天却有点紧张）。",
+          "en": "With the same word, es means how someone usually is and está means how they are right now: Es tranquilo, pero hoy está nervioso (He's a calm person, but today he's nervous)." },
+        { "zh": "porque 后面跟一整句话（porque tiene sueño）；只说一样东西时用 por：nerviosos por el examen（因为考试而紧张）。",
+          "en": "Porque is followed by a whole sentence (porque tiene sueño). For just a thing, use por: nerviosos por el examen (nervous about the test)." }
+      ]
+    },
+    "es1-4": {
+      "patterns": [
+        { "p": "Cuesta ___ monedas.", "zh": "___个硬币。", "en": "It costs ___ coins.",
+          "note": { "zh": "回答一样东西多少钱。好几样一起问，就用 cuestan 回答：Cuestan quince monedas。", "en": "Give the price of one thing. For several things, answer with cuestan: Cuestan quince monedas." },
+          "ex": ["¿Cuánto cuesta este mango?", "Cuesta diez monedas."] },
+        { "p": "Son ___ monedas.", "zh": "一共___个硬币。", "en": "That's ___ coins.",
+          "note": { "zh": "算总数：问 ¿Cuánto es todo?（一共多少？），回答用 Son…；也可以在后面加 en total。", "en": "For the total: ask ¿Cuánto es todo? (How much is it all?), answer with Son… You can add en total." },
+          "ex": ["¿Cuánto es todo?", "Son treinta y cinco monedas."] },
+        { "p": "Quiero ___ kilos de ___.", "zh": "我要___公斤___。", "en": "I want ___ kilos of ___.",
+          "note": { "zh": "de 后面的东西不加 el / la，一般用复数：dos kilos de naranjas。", "en": "After de, don't use el / la, and the food is usually plural: dos kilos de naranjas." },
+          "ex": ["Quiero dos kilos de naranjas, por favor.", "¿Cuántos kilos quieres?"] },
+        { "p": "Aquí tienes ___.", "zh": "给你___。", "en": "Here's ___.",
+          "note": { "zh": "把东西递给别人时说。只说 Aquí tienes 就是「给你」。", "en": "Say this when you hand something over. Aquí tienes on its own means \"Here you are\"." },
+          "ex": ["Aquí tienes las monedas.", "Gracias. Aquí tienes tu bolsa."] }
+      ],
+      "tips": [
+        { "zh": "说贵、便宜：一样东西平时就贵用 es（Este mango es muy caro）；今天特别便宜用 está / están（Las papas están baratas hoy）。和上一单元 es / está 的分法一样。",
+          "en": "For prices: es for how it usually is (Este mango es muy caro), está / están for today only (Las papas están baratas hoy). It's the same es / está idea as the last unit." },
+        { "zh": "西语的否定可以叠在一起：No, nada más（不用了，别的都不要），no 和 nada 一起用不是「负负得正」。",
+          "en": "Spanish stacks negatives: No, nada más means \"No, nothing else\". The two negatives don't cancel out." }
+      ]
+    },
+    "es1-5": {
+      "patterns": [
+        { "p": "Voy a ___.", "zh": "我去___。", "en": "I'm going to ___.",
+          "note": { "zh": "回答 ¿Adónde vas?（你去哪儿？）。问「去哪儿」用 adónde，问「在哪儿」才用 dónde。", "en": "Answer ¿Adónde vas? (Where are you going?). Use adónde for \"where to\" and dónde for \"where is\"." },
+          "ex": ["¿Adónde vas?", "Voy al mercado."] },
+        { "p": "Perdón, ¿dónde está ___?", "zh": "请问，___在哪儿？", "en": "Excuse me, where is ___?",
+          "note": { "zh": "问路先说 Perdón（打扰一下），这里不是「对不起」的意思。", "en": "Start with Perdón (Excuse me). Here it doesn't mean \"sorry\"." },
+          "ex": ["Perdón, ¿dónde está el hospital?", "Está al lado de la plaza."] },
+        { "p": "Camina todo derecho hasta ___.", "zh": "一直往前走到___。", "en": "Go straight ahead to ___.",
+          "note": { "zh": "hasta = 到（某处为止）。只说「一直走」就是 Camina todo derecho。", "en": "Hasta means \"up to\" a place. \"Go straight\" on its own is Camina todo derecho." },
+          "ex": ["Camina todo derecho hasta el puente.", "Camina todo derecho."] },
+        { "p": "Dobla a la ___.", "zh": "向___转。", "en": "Turn ___.",
+          "note": { "zh": "derecha 是右，izquierda 是左。注意 derecho（直走）和 derecha（右边）只差一个字母。", "en": "Derecha is right, izquierda is left. Careful: derecho (straight) and derecha (right) differ by one letter." },
+          "ex": ["Dobla a la derecha en la esquina.", "Dobla a la izquierda."] }
+      ],
+      "tips": [
+        { "zh": "走路去说 a pie，不说 en pie；坐车、骑车才用 en：en bicicleta、en autobús。",
+          "en": "On foot is a pie, not en pie. With vehicles, use en: en bicicleta, en autobús." },
+        { "zh": "voy a 后面跟地方是「我去……」（Voy a la playa）；跟动词原形是「我打算……」（Voy a volar mi cometa），下一单元会学。",
+          "en": "Voy a + place means \"I'm going to (a place)\": Voy a la playa. Voy a + base verb means \"I'm going to (do something)\": Voy a volar mi cometa. You'll learn that next unit." }
+      ]
+    },
+    "es1-6": {
+      "patterns": [
+        { "p": "Llevo ___.", "zh": "我穿着___。", "en": "I'm wearing ___.",
+          "note": { "zh": "回答 ¿Qué llevas hoy?。帽子、眼镜也用 llevar：Lleva un sombrero（他戴着帽子）。", "en": "Answer ¿Qué llevas hoy? Llevar also works for hats and glasses: Lleva un sombrero (He's wearing a hat)." },
+          "ex": ["¿Qué llevas hoy?", "Llevo una camiseta roja y pantalones negros."] },
+        { "p": "Prefiero ___.", "zh": "我更喜欢___。", "en": "I prefer ___.",
+          "note": { "zh": "回答 ¿Cuál prefieres?（你更喜欢哪个？）。指着近的说 esta，远一点的说 esa。", "en": "Answer ¿Cuál prefieres? (Which do you prefer?). Point to a near one with esta, a farther one with esa." },
+          "ex": ["¿Cuál prefieres, esta o esa?", "Prefiero esa."] },
+        { "p": "¿Me prestas ___?", "zh": "___借我一下好吗？", "en": "Can I borrow ___?",
+          "note": { "zh": "向朋友借东西（直译「你借给我___吗？」）。答应就说 Claro, aquí tienes。", "en": "Ask a friend to lend you something (literally \"Will you lend me ___?\"). To say yes: Claro, aquí tienes." },
+          "ex": ["¿Me prestas tu suéter?", "Claro, aquí tienes."] },
+        { "p": "Hace frío, por eso llevo ___.", "zh": "天冷，所以我穿着___。", "en": "It's cold, so I'm wearing ___.",
+          "note": { "zh": "por eso = 所以，前面说原因，后面说结果。", "en": "Por eso means \"so\": the reason comes first, then the result." },
+          "ex": ["Hace frío, por eso llevo una bufanda."] }
+      ],
+      "tips": [
+        { "zh": "刚说过的东西不用再说一遍：la falda rosada o la morada（粉裙子还是紫的那条），la 留着，名词省掉。",
+          "en": "You can drop a noun you just said: la falda rosada o la morada (the pink skirt or the purple one). Keep la, drop the noun." },
+        { "zh": "有些衣物西语总用复数：los pantalones（一条裤子）、los lentes（一副眼镜），所以颜色也用复数：Mis pantalones son grises。",
+          "en": "Some clothes are always plural: los pantalones (pants), los lentes (glasses). So the color is plural too: Mis pantalones son grises." }
+      ]
+    },
+    "es1-7": {
+      "patterns": [
+        { "p": "Los lunes ___.", "zh": "每个星期一___。", "en": "On Mondays, ___.",
+          "note": { "zh": "星期前面用 los = 每个星期几，经常做的事；只说某一天用 el：el sábado（这个星期六）。", "en": "Los + day means every week on that day. For one particular day, use el: el sábado (this Saturday)." },
+          "ex": ["Los lunes estudio español en la escuela.", "¿Qué estudias los lunes?"] },
+        { "p": "Hoy es ___.", "zh": "今天星期___。", "en": "Today is ___.",
+          "note": { "zh": "回答 ¿Qué día es hoy?（今天星期几？）。这里星期前面不加 el：Hoy es miércoles。", "en": "Answer ¿Qué día es hoy? (What day is it today?). No el here: Hoy es miércoles." },
+          "ex": ["¿Qué día es hoy?", "Hoy es miércoles."] },
+        { "p": "A veces ___.", "zh": "有时候___。", "en": "Sometimes ___.",
+          "note": { "zh": "频率词放在句首最简单：Siempre…、A veces…。nunca 放在动词前面就不用再加 no：Nunca juego tarde。", "en": "The easiest place for how-often words is the start: Siempre…, A veces… If nunca goes before the verb, you don't need no: Nunca juego tarde." },
+          "ex": ["A veces aprendemos canciones nuevas.", "No, a veces desayuno en la escuela."] },
+        { "p": "¿A qué hora empieza ___?", "zh": "___几点开始？", "en": "What time does ___ start?",
+          "note": { "zh": "回答用 Empieza a las…。empezar 变成 empieza，e 变 ie。", "en": "Answer with Empieza a las… Notice empezar becomes empieza (e → ie)." },
+          "ex": ["¿A qué hora empieza la clase?", "Empieza a las ocho."] }
+      ],
+      "tips": [
+        { "zh": "看望、帮助的对象是人时，前面要加 a：Visitamos a nuestros abuelos、Siempre ayudo a mi mamá。是地方就不加：visitamos el museo。中文、英语都没有这个 a。",
+          "en": "When you visit or help a person, add a before them: Visitamos a nuestros abuelos, Siempre ayudo a mi mamá. For a place, no a: visitamos el museo. English has no word here." }
+      ]
+    },
+    "es1-8": {
+      "patterns": [
+        { "p": "¿Quieres ___ con nosotros?", "zh": "你想和我们一起___吗？", "en": "Do you want to ___ with us?",
+          "note": { "zh": "邀请别人加入。答应时可以接着说自己要做什么：Voy a preparar…", "en": "Invite someone to join you. When you accept, you can add what you'll do: Voy a preparar…" },
+          "ex": ["¿Quieres ir de pícnic con nosotros?", "¡Claro que sí! Voy a preparar sándwiches."] },
+        { "p": "Lo siento, no puedo. ___.", "zh": "抱歉，我去不了。___。", "en": "Sorry, I can't. ___.",
+          "note": { "zh": "空里放一句理由：Tengo clase（我有课）、Voy a…（我要去……）。", "en": "Put a reason in the blank: Tengo clase (I have class), Voy a… (I'm going to…)." },
+          "ex": ["Lo siento, no puedo. Voy a visitar a mi abuela.", "Lo siento, no puedo. Tengo clase."] },
+        { "p": "No voy a ___ porque ___.", "zh": "我不打算___，因为___。", "en": "I'm not going to ___ because ___.",
+          "note": { "zh": "不打算做某事，no 放在 voy 前面：No voy a ir。", "en": "To say you won't do something, put no before voy: No voy a ir." },
+          "ex": ["No voy a ir al parque porque va a llover."] },
+        { "p": "¿Qué planes tienes para ___?", "zh": "___你有什么安排？", "en": "What are your plans for ___?",
+          "note": { "zh": "问别人的安排，空里放时间：el fin de semana（周末）、el sábado。", "en": "Ask about someone's plans; put a time in the blank: el fin de semana (the weekend), el sábado." },
+          "ex": ["¿Qué planes tienes para el fin de semana?"] }
+      ],
+      "tips": [
+        { "zh": "Vamos a… 有两个意思：「我们打算……」，或者邀请「我们去……吧」：¿Vamos al lago más tarde?（晚点去湖边好吗？）。听语气就知道。",
+          "en": "Vamos a… can mean \"we're going to…\" or \"let's…\": ¿Vamos al lago más tarde? (Shall we go to the lake later?). The tone tells you which." },
+        { "zh": "「谢谢你邀请我」说 Gracias por invitarme：me 接在动词原形后面，写成一个词。",
+          "en": "\"Thanks for inviting me\" is Gracias por invitarme. Me is joined to the end of the base verb as one word." }
+      ]
+    }
+  }
+}

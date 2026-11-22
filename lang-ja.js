@@ -539,6 +539,114 @@
   const MIN = [2, 4, 6];
   const minUnits = level => { const v = L.lvOk(level); return v === 0 ? MIN[0] : v === 1 ? MIN[1] : MIN[2]; };
 
+  // ---------- 罗马字（单词表、单词卡、我的单词本、发音入门里多一行，tools/course/WORDS.md §5）----------
+  // 平假名、片假名 → 平文式（赫本式）罗马字，只用 a–z 和 '（不用长音符号，输入法打得出来、和 primer.json 的 rom 一个写法）：
+  // · し shi、ち chi、つ tsu、ふ fu、じ / ぢ ji、ず / づ zu、を o、ゐ i、ゑ e；拗音 きゃ kya、しゃ sha、ちゃ cha、じゃ ja……；
+  //   外来语的写法 ファ fa、ティ ti、ディ di、チェ che、シェ she、ジェ je、ウィ wi、ヴァ va……；
+  // · ん 在元音和 y 前面写 n'（きんようび kin'youbi、ほんや hon'ya），别处写 n（しんぶん shinbun）；
+  // · 促音 っ 双写下一个辅音（きっぷ kippu、いっしょ issho），下一个是 ch 时写 t（まっちゃ matcha）；后面没有辅音的 っ 不写；
+  // · 长音：ー 照前一个元音双写（ラーメン raamen、コーヒー koohii）；假名写出来的长音照写（おかあさん okaasan、がっこう gakkou、せんせい sensei）——
+  //   全文统一「双写」，不用 ā ō 这种长音符号；
+  // · 「こんにちは」「こんばんは」最后的 は 写 wa；o.block（一句话里的一块，文节）：块尾的 は / へ（助词）写 wa / e（はは 这种词本身不算）。
+  //   一块写成一个词，不把助词拆开（わたしは → watashiwa）；
+  // · 标点：、→ ,  。→ .  ？→ ?  ！→ !  ・ 和空格 → 空格；「」『』（）去掉；别的字（汉字、拉丁字母）原样留着（调用的人看结果里还有没有非 ASCII 的字）
+  const RM1 = {
+    'あ': 'a', 'い': 'i', 'う': 'u', 'え': 'e', 'お': 'o', 'か': 'ka', 'き': 'ki', 'く': 'ku', 'け': 'ke', 'こ': 'ko',
+    'さ': 'sa', 'し': 'shi', 'す': 'su', 'せ': 'se', 'そ': 'so', 'た': 'ta', 'ち': 'chi', 'つ': 'tsu', 'て': 'te', 'と': 'to',
+    'な': 'na', 'に': 'ni', 'ぬ': 'nu', 'ね': 'ne', 'の': 'no', 'は': 'ha', 'ひ': 'hi', 'ふ': 'fu', 'へ': 'he', 'ほ': 'ho',
+    'ま': 'ma', 'み': 'mi', 'む': 'mu', 'め': 'me', 'も': 'mo', 'や': 'ya', 'ゆ': 'yu', 'よ': 'yo',
+    'ら': 'ra', 'り': 'ri', 'る': 'ru', 'れ': 're', 'ろ': 'ro', 'わ': 'wa', 'ゐ': 'i', 'ゑ': 'e', 'を': 'o', 'ん': 'n',
+    'が': 'ga', 'ぎ': 'gi', 'ぐ': 'gu', 'げ': 'ge', 'ご': 'go', 'ざ': 'za', 'じ': 'ji', 'ず': 'zu', 'ぜ': 'ze', 'ぞ': 'zo',
+    'だ': 'da', 'ぢ': 'ji', 'づ': 'zu', 'で': 'de', 'ど': 'do', 'ば': 'ba', 'び': 'bi', 'ぶ': 'bu', 'べ': 'be', 'ぼ': 'bo',
+    'ぱ': 'pa', 'ぴ': 'pi', 'ぷ': 'pu', 'ぺ': 'pe', 'ぽ': 'po', 'ゔ': 'vu',
+    'ぁ': 'a', 'ぃ': 'i', 'ぅ': 'u', 'ぇ': 'e', 'ぉ': 'o', 'ゃ': 'ya', 'ゅ': 'yu', 'ょ': 'yo', 'ゎ': 'wa', 'ゕ': 'ka', 'ゖ': 'ke',
+  };
+  // 两个假名一个音（拗音、外来语）：先查这张表
+  const RM2 = {
+    'しゃ': 'sha', 'しゅ': 'shu', 'しぇ': 'she', 'しょ': 'sho', 'ちゃ': 'cha', 'ちゅ': 'chu', 'ちぇ': 'che', 'ちょ': 'cho',
+    'じゃ': 'ja', 'じゅ': 'ju', 'じぇ': 'je', 'じょ': 'jo', 'ぢゃ': 'ja', 'ぢゅ': 'ju', 'ぢょ': 'jo',
+    'ふぁ': 'fa', 'ふぃ': 'fi', 'ふぇ': 'fe', 'ふぉ': 'fo', 'ふゅ': 'fyu', 'てぃ': 'ti', 'でぃ': 'di', 'とぅ': 'tu', 'どぅ': 'du', 'てゅ': 'tyu', 'でゅ': 'dyu',
+    'うぃ': 'wi', 'うぇ': 'we', 'うぉ': 'wo', 'ゔぁ': 'va', 'ゔぃ': 'vi', 'ゔぇ': 've', 'ゔぉ': 'vo', 'いぇ': 'ye',
+    'つぁ': 'tsa', 'つぃ': 'tsi', 'つぇ': 'tse', 'つぉ': 'tso', 'くぁ': 'kwa', 'ぐぁ': 'gwa',
+  };
+  const RM_P = { '、': ', ', '，': ', ', '。': '. ', '．': '. ', '？': '? ', '！': '! ', '・': ' ', '　': ' ', '〜': '~', '～': '~' };
+  function romaji(kana, o) {
+    let s = String(kana == null ? '' : kana).normalize('NFKC');
+    s = s.replace(/[ァ-ヶ]/g, c => (c === 'ヵ' ? 'ゕ' : c === 'ヶ' ? 'ゖ' : String.fromCharCode(c.charCodeAt(0) - 0x60)));
+    s = s.replace(/(んにち|んばん)は(?=$|[\s、。！？!?,.])/g, '$1わ');
+    if (o && o.block && s.length > 1 && !/はは$/.test(s)) s = s.replace(/は$/, 'わ').replace(/へ$/, 'え');
+    // 先切成音（一个或两个假名），再接起来
+    const us = [];
+    for (let i = 0; i < s.length;) {
+      const two = s.substr(i, 2), c = s[i];
+      if (RM2[two]) { us.push({ r: RM2[two] }); i += 2; continue; }
+      // き + ゃゅょ → kya / kyu / kyo（i 段的假名 + 小的 ゃゅょ）
+      if (RM1[c] && /i$/.test(RM1[c]) && /^[ゃゅょ]$/.test(s[i + 1] || '') && RM1[c].length >= 2) { us.push({ r: RM1[c].slice(0, -1) + RM1[s[i + 1]] }); i += 2; continue; }
+      if (c === 'っ' || c === 'ー' || c === 'ん') { us.push({ k: c }); i++; continue; }
+      if (RM1[c]) { us.push({ r: RM1[c] }); i++; continue; }
+      if (/[「」『』（）()［］[\]【】〈〉《》"“”]/.test(c)) { i++; continue; }
+      us.push({ r: RM_P[c] != null ? RM_P[c] : c, raw: true }); i++;
+    }
+    let out = '';
+    for (let k = 0; k < us.length; k++) {
+      const u = us[k], nx = us[k + 1];
+      if (u.k === 'っ') { const m = nx && !nx.raw && nx.r && /^[bcdfghjklmpqrstvwxz]/.exec(nx.r); if (m) out += m[0] === 'c' ? 't' : m[0]; continue; }
+      if (u.k === 'ー') { if (/[aeiou]$/.test(out)) out += out.slice(-1); continue; }
+      if (u.k === 'ん') { out += nx && !nx.raw && nx.r && /^[aeiouy]/.test(nx.r) ? "n'" : 'n'; continue; }
+      out += u.r;
+    }
+    return out.replace(/\s+([,.?!])/g, '$1').replace(/\s+/g, ' ').trim();
+  }
+  // ---------- 按词分开写的罗马字（主会话 2026-11-22：「零基础的人看不出词在哪断」）----------
+  // romajiWords(假名, known, o)：known = 这门课认得的词的读音（平假名的 Set，game.js 从课程的词、句子的词块、读音表拼出来）。
+  // 从左往右按最长的认得的词切（3 个假名以上；2 个的只在后面只剩助词 / ます です 这种时才算，免得「いち・ねん・せい」乱切），
+  // 认得的词后面的助词（は が を に で と も へ の……）单独写（しまに → shima ni，わたしは → watashi wa）；ます / です / ございます / さん 这种
+  // 接在认得的词后面才分开（おはようございます → ohayou gozaimasu），接在认不得的词干后面就粘着（たべます → tabemasu）；认不得的字粘在前一个词上（词尾变化）。
+  // o.whole（一个词 / 短语，没有 seg）：只有整个都切成认得的词才切，不然照原样（きいろ 不会切成 ki iro）；
+  // o.block（句子里的一个词块）：整块的读音本身不算认得的词（known 里有整块也照样往里切），切不开的部分照原样粘着
+  const RW_AUX = new Set(['ございます', 'ください', 'です', 'でした', 'でしょう', 'ます', 'ました', 'ません', 'ませんでした', 'さん', 'くん', 'ちゃん', 'さま', 'たち']);
+  const RW_BASE = new Set(['おはよう', 'ありがとう', 'すみません', 'さようなら', 'よろしく', 'おねがい', 'どうぞ', 'どうも']);
+  const RW_PART = ['から', 'まで', 'より', 'には', 'では', 'とは', 'にも', 'でも', 'とも', 'は', 'が', 'を', 'に', 'で', 'と', 'も', 'へ', 'の', 'や', 'か', 'ね', 'よ'];
+  const RW_P2 = new Set(['は', 'が', 'を', 'に', 'で', 'も', 'へ', 'の', 'には', 'では', 'から', 'まで']);
+  const RW_DENY = new Set(['こんにち', 'こんばん']);   // こんにちは / こんばんは 不切成 konnichi wa
+  function romajiWords(kana, known, o) {
+    const s = toHira(String(kana == null ? '' : kana).normalize('NFKC')).replace(/[\s　]+/g, '');
+    if (!s) return '';
+    o = o || {};
+    const kn = w => !RW_DENY.has(w) && ((known && known.has(w)) || RW_AUX.has(w) || RW_BASE.has(w));
+    // 2 个假名的词（しま、ぼく）只在一块的开头、后面正好只剩一个常见助词 / ます です 时才切——はると（人名）不会切成 haru to
+    const restOk = r => RW_P2.has(r) || RW_AUX.has(r);
+    const wordAt = i => {
+      for (let k = Math.min(14, s.length - i); k >= 2; k--) {
+        if ((o.whole || o.block) && i === 0 && k === s.length) continue;   // 整个本身不算（读音表里有这一整块 / 这个词自己的读音）
+        const w = s.substr(i, k);
+        if (!kn(w) || /^[ぁぃぅぇぉゃゅょゎっー]/.test(w)) continue;
+        if (k === 2 && !RW_AUX.has(w) && !RW_BASE.has(w) && (i !== 0 || !restOk(s.slice(i + k)))) continue;
+        return k;
+      }
+      return 0;
+    };
+    const toks = [];
+    let i = 0, whole = true;
+    while (i < s.length) {
+      const last = toks[toks.length - 1], k = wordAt(i);
+      if (k) {
+        const w = s.substr(i, k);
+        if (RW_AUX.has(w) && last && !last.known) { if (!last.part) { last.t += w; last.glued = true; } else toks.push({ t: w, known: true }); whole = false; }
+        else toks.push({ t: w, known: true });
+        i += k; continue;
+      }
+      // 认得的词后面的助词单独写（一个词 / 短语整个的时候不拆：こんにちは）
+      const p = !o.whole && last && last.known && RW_PART.find(x => s.startsWith(x, i) && (i + x.length === s.length || wordAt(i + x.length)));
+      if (p) { toks.push({ t: p, part: true }); i += p.length; continue; }
+      whole = false;
+      if (last && !last.part) { last.t += s[i]; last.glued = true; } else toks.push({ t: s[i] });
+      i++;
+    }
+    if (o.whole && (!whole || toks.length < 2 || toks.some(t => t.glued || (!t.known && !t.part)))) return romaji(s);
+    return toks.map((t, k) => (t.part ? (t.t === 'は' ? 'wa' : t.t === 'へ' ? 'e' : romaji(t.t)) : romaji(t.t, { block: k === toks.length - 1 }))).join(' ');
+  }
+
   const mod = {
     code: 'ja',
     name: { zh: '日语', en: 'Japanese', self: '日本語' },
@@ -637,6 +745,8 @@
     date: (mo, d) => countWays(+mo || 1, '月')[0] + countWays(+d || 1, '日')[0],
     count: (n, c) => countWays(+n || 0, c),
     lexPairs,
+    // 罗马字（见上面 romaji 的注释）：romaji(假名, { block: 一句话里的一块 })；romajiWords(假名, 认得的词的读音 Set, { whole }) 按词分开写
+    romaji, romajiWords,
     _: { nz, morae, fold, foldP, conv: (h, ctx) => conv(hearNorm(h), lookOf(ctx, null)), partial, infl, core, countWays, jaNum, pairsOf, builtin },
   };
   if (L) L.reg('ja', mod);
