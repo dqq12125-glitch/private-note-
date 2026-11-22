@@ -2176,9 +2176,9 @@ html.echo-ios .ac-in { font-size: 16px; }   /* 小于 16px 的输入框一点就
 /* ---------- 第二部分（WORDS.md 第 7–11 条）：🐢、课前讲解、求助的话、新手路线、点词小卡 ---------- */
 /* 🔊 和 🐢 上下摞着（不占行宽） */
 .wd-says { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
-.slow.mini { width: 44px; height: 36px; border-radius: 12px; box-shadow: 0 3px 0 var(--line); font-size: 18px; padding: 0; }
+.slow.mini { width: 44px; height: 40px; border-radius: 12px; box-shadow: 0 3px 0 var(--line); font-size: 18px; padding: 0; }
 .wd-ex .wd-says { gap: 4px; }
-.wd-ex .slow.mini { width: 40px; height: 32px; font-size: 16px; }
+.wd-ex .slow.mini { width: 40px; height: 40px; font-size: 16px; }
 .ls-foot .btn { font-size: 16px; padding: 12px 8px; line-height: 1.25; }
 /* 没有读音（英语、西语）的句子不用给 <rt> 留那么高的行 */
 .wd-s:not(:has(ruby)), .wd-ex-t > span:not(:has(ruby)) { line-height: 1.45; }
@@ -2210,6 +2210,9 @@ html.echo-ios .ac-in { font-size: 16px; }   /* 小于 16px 的输入框一点就
 .rt-steps button:hover { background: var(--foam); }
 .rt-k { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #dff1ef; color: var(--lagoon-d); font-weight: 800; font-size: 13px; flex: none; }
 .rt-steps li.done button { color: var(--ink-3); }
+/* 新手路线收紧（2026-11-22）：做完的收成一行，接下来那一步亮一点，后面还有几步一行小字 */
+.rt-steps .rt-done, .rt-steps .rt-more { color: var(--ink-3); font-size: 13px; font-weight: 700; padding: 2px 4px; }
+.rt-steps li.now button { background: var(--foam); font-weight: 800; }
 .rt-steps li.done .rt-k { background: none; }
 .rt-go { margin-left: auto; color: var(--ink-3); font-weight: 800; }
 .rt-next { width: 100%; min-height: 44px; margin-bottom: 10px; border: 0; border-radius: 14px; background: #e6f5f3; color: var(--lagoon-d); font: inherit; font-weight: 800; text-align: left; padding: 8px 12px; }

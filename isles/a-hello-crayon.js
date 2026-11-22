@@ -433,7 +433,7 @@
       '#T...TTTTTTTT..TTTTTTTTT...TT#',
       '#T,,,TTTTTTTT..TTTTTTTTT,,,TT#',
       '#T,1,TTT............TTTT,,,TT#',
-      '#T,,,TT..F....Z....F..TT,2,TT#',
+      '#T,,,TT..F....Z....F..TT,,,TT#',   // 这里以前多写了一个「2」（第二个林务员莫，北边出口那个才是真的；2026-11-22 复查）
       '#T,,,TT...o...........TT,,,TT#',
       '#T...TTTTTTTTTTTTTTTTTTT...TT#',
       '#T...TTTTTTTTTTTTTTTTTTTLLLTT#',
@@ -661,10 +661,14 @@
   // 小凯：腼腆的男孩想要第一只怪兽
   async function kaiCatch(C) {
     const E = C.E, MG = C.MG, pl = C.pl;
-    const k = C.spawn({ look: P.LOOKS.kai, name: 'Kai', x: pl.x, y: pl.y + 3, face: 'up', id: 'kai' });
+    // 小凯从主角下面走上来：下面几格不是路（树、告示牌——触发的那一行很宽，下面的路窄）就从近一点的地方出来，不穿树（2026-11-22 复查）
+    const okT = (x, y) => EM.WALK.includes(C.tile(x, y)) && !C.npc(n => n.x === x && n.y === y);
+    let d = 3;
+    while (d > 1 && !Array.from({ length: d }, (_, i) => okT(pl.x, pl.y + 1 + i)).every(Boolean)) d--;
+    const k = C.spawn({ look: P.LOOKS.kai, name: 'Kai', x: pl.x, y: pl.y + d, face: 'up', id: 'kai' });
     await C.talk([{ who: '???', emo: '💬', en: 'W-wait... please wait!', zh: '等、等一下……请等一下！' }]);
     C.facePlayer('down');
-    await C.walk(k, 'up', 2, 260);
+    if (d > 1) await C.walk(k, 'up', d - 1, 260);
     const K = (en, zh, x) => kai(en, zh, x);
     await C.talk([
       K('H-hi. I... I am Kai.', '你、你好。我……我叫小凯。'),
@@ -672,7 +676,8 @@
       K('But I want a monster friend. Monsters listen to clear words, right?', '可是我想要一个怪兽朋友。怪兽喜欢听清楚的话，对吧？'),
       K('My uncle gave me an Echo Ball. Can you... come with me into the grass?', '舅舅给了我一个回声球。你能……陪我去草丛里吗？'),
     ]);
-    const wild = C.spawn({ mon: 'owlet', x: k.x + 1, y: k.y - 1, face: 'left' });
+    const side = okT(k.x + 1, k.y - 1) ? 1 : okT(k.x - 1, k.y - 1) ? -1 : 1;   // 怪兽出在路上那一边（两边都是树就照旧右边）
+    const wild = C.spawn({ mon: 'owlet', x: k.x + side, y: k.y - 1, face: side > 0 ? 'left' : 'right' });
     await C.alert(k);
     await C.talk([
       K('Oh! A monster! What do I say? What do I say?', '啊！一只怪兽！我该说什么？该说什么？'),
@@ -687,7 +692,10 @@
       K('I will go home and tell my uncle. See you!', '我要回家告诉舅舅。回头见！'),
     ]);
     C.set('z1kai');
-    await C.walk(k, 'down', 4, 170);
+    // 原路走回去（以前一律往下走 4 格，路窄的地方会穿过树）
+    let back = 0;
+    while (back < 4 && okT(k.x, k.y + back + 1)) back++;
+    if (back) await C.walk(k, 'down', back, 170);
     C.remove(k);
     E.save();
   }

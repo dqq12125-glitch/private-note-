@@ -1533,7 +1533,15 @@
     while (performance.now() - t0 < ms) { await new Promise(r => setTimeout(r, 30)); if (LM.last > t0) return true; }
     return false;
   }
-  async function lmOpen() {
+  // 同一时间只开一次（复查 2026-11-22：听的时候的「不出声重开」和下一题点话筒撞在一起，会开出两个麦克风，后开好的把先开的那个顶掉、
+  // 先开的没人关，或者把正在听的那一题的 sink 清掉）。开着的那一次没完，再来要的人拿同一个结果
+  let lmP = null;
+  function lmOpen() {
+    if (lmP) return lmP;
+    lmP = lmOpen1().finally(() => { lmP = null; });
+    return lmP;
+  }
+  async function lmOpen1() {
     clearTimeout(LM.t);
     if (LM.stream && LM.stream.active && LM.ctx && LM.ctx.state !== 'closed') {
       if (LM.ctx.state !== 'running') { try { await LM.ctx.resume(); } catch (e) {} }
@@ -1728,7 +1736,7 @@
         D.micP = lmOpen();
         D.micP.then(m => {
           if (m.err) { if (!done) end({ text: '', err: m.err, why: m.why, how: 'mic' }); return; }
-          if (done && !D.pre) { lmRelease(); return; }   // 麦克风开好以前就结束了
+          if (done && !D.pre) { if (!LM.sink) lmRelease(); return; }   // 麦克风开好以前就结束了（被下一题接走了就别碰）
           mic = m; if (D.mic == null) D.mic = now() - D.t0;
           m.sink = sink;   // 已经改走云端的：sink 只往 D.pre 里存
           ready();
@@ -1937,7 +1945,8 @@
         if (q > 1000 && !remic) {
           remic = true; D.remic = (D.remic || 0) + 1;
           const h = LM.sink; lmShut();
-          lmOpen().then(m => { if (m.err) { if (!done) finish('nodata'); return; } if (done) { lmRelease(); return; } m.sink = h; });
+          // 开好时这一题已经结束了：麦克风要是没被下一题接走（sink 还空着）就照常预热着、15 秒后关；被接走了就别碰
+          lmOpen().then(m => { if (m.err) { if (!done) finish('nodata'); return; } if (done) { if (!LM.sink) lmRelease(); return; } m.sink = h; });
         } else if (q > 1500 && remic && !voiced) finish('nodata');
       }, 200);
       // 本机识别录好的声音（没认出字才到这里）：先按原来的顺序补进来，再接着录。里面已经有人声就显示「识别中」，不叫人再说一遍

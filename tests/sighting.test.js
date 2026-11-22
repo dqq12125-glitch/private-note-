@@ -480,7 +480,7 @@ const PAGE_TOOLS = () => {
   await flee();
   // 传说怪兽正在这张地图上等着：不抢戏
   await setSight(Object.assign({}, TARGET, { need: 4 }));
-  await E(() => { EchoWorld._debug().M.npcs.push({ id: 'tmpL', role: 'mlegend', mon: 'wishstar', x: 1, y: 1, face: 'down', home: 'down', seed: 0, sight: 0, temp: true }); });
+  await E(() => { EchoWorld._debug().M.npcs.push({ id: 'tmpL', role: 'mlegend', mon: 'wishstar', x: 1, y: 1, face: 'down', home: 'down', seed: 0, sight: 0, temp: true, far: true }); });   // far：测试硬放在树角里的，「人都走得到」的检查不管它
   await stand(',');
   n = await pace(7);
   check(n === 0, '传说怪兽在这张地图上的时候：目击的怪兽不出来');

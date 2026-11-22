@@ -259,7 +259,8 @@
       { id: 'g3', fam: 'sis', ok: true, x: 2, y: 6, face: 'down', name: 'Girl A', g: 'f', look: LK.gSis, role: 'story' },
       { id: 'g3b', fam: 'sis', x: 15, y: 10, face: 'left', name: 'Girl B', g: 'f', look: LK.gBigSis, role: 'story',
         no: ['No, I\'m the big sister. I have a ponytail, not pigtails!', '不，我是姐姐。我扎的是马尾，不是两条小辫子！'] },
-      { id: 'g3c', x: 12, y: 8, face: 'left', name: 'Cousin Amy', g: 'f', look: LK.gCousin, role: 'trainer', sight: 1, types: ['fairy', 'normal'], n: 2, lv: 1,
+      // 表妹站 (12,7) 朝下（2026-11-22 复查：以前站 (12,8)，和姐姐 (15,10) 一起把墙上的妹妹照片 (14,8) 围死了，提示说的「对着照片按 A 再听一遍」用不了）
+      { id: 'g3c', x: 12, y: 7, face: 'down', name: 'Cousin Amy', g: 'f', look: LK.gCousin, role: 'trainer', sight: 1, types: ['fairy', 'normal'], n: 2, lv: 1,
         lines: [['I have pigtails too! But I\'m the cousin, and my dress is yellow!', '我也扎两条小辫子！可我是表妹，我的裙子是黄色的！']],
         win: ['The little sister has a pink dress.', '妹妹穿粉色的裙子。'], after: [['I\'m the cousin. My mom is the aunt.', '我是表妹，我妈妈是阿姨。']] },
     ],
@@ -1416,7 +1417,8 @@
       RS('I heard a miner is waiting at the tunnel. See you, {name}!', '听说有个矿工在隧道口等着。回头见，{name}！'),
     ]);
     const r = C.npc(q => q.id === 'rv3');
-    if (r) { await C.walk(r, 'down', 2, 150); C.remove(r); }
+    // 从五班的门走出去：下 1、左 1、下 1（门在第 4 列；以前直接往下 2 格，第二步撞进墙里——2026-11-22 复查）
+    if (r) { await C.walk(r, 'down', 1, 150); await C.walk(r, 'left', 1, 150); await C.walk(r, 'down', 1, 150); C.remove(r); }
     C.note(tx('ib.n3.miner2'));
   }
   // 小凯来学校看你
@@ -1439,7 +1441,11 @@
       K('I\'m going to Clock Island next. See you there!', '我接下来要去作息岛，到时候见！'),
       L.speak(C, 'See you, Kai!', '跟小凯说再见：See you, Kai!'),
     ]);
-    await C.walk(n, 'right', 3, 170);
+    // 往没有主角的那一边走开，能走几格走几格（以前一律往右 3 格，主角站在他右边时会从主角身上穿过去——2026-11-22 复查）
+    const away = C.pl.x > n.x ? -1 : 1, freeT = (x, y) => EM.WALK.includes(C.tile(x, y)) && !C.npc(q => q !== n && q.x === x && q.y === y) && !(C.pl.x === x && C.pl.y === y);
+    let go = 0;
+    while (go < 3 && freeT(n.x + away * (go + 1), n.y)) go++;
+    if (go) await C.walk(n, away > 0 ? 'right' : 'left', go, 170);
     C.set('kai3');
   }
 

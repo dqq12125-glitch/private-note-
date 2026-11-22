@@ -343,7 +343,36 @@
     ws.map = M.id; ws.z = M.z; ws.x = PL.x; ws.y = PL.y; ws.dir = PL.dir; ws.arrive = null;
     if (full || !E.savePos) E.save(); else E.savePos();
   }
+  // ---------- 测试用的检查：地图上看得见的人都走得到吗 ----------
+  // 2026-11-22 老板「挡住了」：剧情临时放进五班的低语，被门口的课桌挡在教室里，剧情卡住。地图检查（tests/maps.test.js）
+  // 只查地图上写好的人，剧情里加的、挪过位置的人查不到。window.__echoAudit 为真时（只有测试打开），每 0.4 秒趁没有对话、
+  // 没有剧情在跑的时候看一遍：从这张图的门和出口走（墙、家具、别的人挡路；水、冰、台阶、小树、裂石、大石头都算能过——
+  // 只抓「被墙和东西围死」这一种，不管还没拿到回声技能），每个看得见的人旁边至少有一格走得到（隔着柜台 Q 能说话、far 的不算）。
+  // 走不到的记进 window.__auditFails（每个地图、每个人记一次）。挑战馆（room G）有机关门，不查
+  let auditT = 0;
+  function auditPeople() {
+    if (!window.__echoAudit || !M || !M.npcs || busy || dlg || !$('modal').hidden || (M.def && M.def.room === 'G')) return;
+    // 机关门 / 笼子门（|）也算能过：剧情和机关会打开（嘘声团基地的笼子里关着的怪兽、门后的神兽是设计成先走不到的）
+    const pass = (x, y) => { const t = tile(x, y); return (EM.WALK.includes(t) || 'L~DwInbO|'.includes(t)) && !npcAt(x, y); };
+    // 从门和出口走（玩家真的从那里进来；测试常常直接传送到人旁边，从主角站的地方走会把「围死的屋子」也算成走得到）
+    const seeds = [];
+    for (const w of M.warps || []) for (const [dx, dy] of [[0, 0]].concat(Object.values(DIRS))) if (pass(w.x + dx, w.y + dy)) seeds.push([w.x + dx, w.y + dy]);
+    if (!seeds.length) seeds.push([PL.x, PL.y]);
+    const seen = new Set(seeds.map(s => s[0] + ',' + s[1])), q = seeds.slice();
+    while (q.length) {
+      const [x, y] = q.shift();
+      for (const [dx, dy] of Object.values(DIRS)) { const nx = x + dx, ny = y + dy, k = nx + ',' + ny; if (!seen.has(k) && pass(nx, ny)) { seen.add(k); q.push([nx, ny]); } }
+    }
+    const fails = window.__auditFails = window.__auditFails || [];
+    for (const n of M.npcs) {
+      if (!npcVisible(n) || n.far) continue;
+      const ok = Object.values(DIRS).some(([dx, dy]) => seen.has((n.x + dx) + ',' + (n.y + dy)) || (tile(n.x + dx, n.y + dy) === 'Q' && seen.has((n.x + dx * 2) + ',' + (n.y + dy * 2))));
+      const key = M.id + ':' + n.id;
+      if (!ok && !fails.some(f => f.key === key)) fails.push({ key, map: M.id, id: n.id, name: n.name || '', x: n.x, y: n.y, temp: !!n.temp, at: PL.x + ',' + PL.y });
+    }
+  }
   function loadMap(id, how) {
+    if (window.__echoAudit && !auditT) auditT = setInterval(() => { try { auditPeople(); } catch (e) { /* 只是测试用的检查 */ } }, 400);
     M = EM.get(id) || EM.get('t0');
     const vw = $('w-view');
     if (vw) { vw.querySelectorAll('canvas').forEach(c => { c.style.filter = ''; }); const nt = $('w-note'); if (nt) nt.hidden = true; }
@@ -2832,7 +2861,8 @@
     _debug: () => ({ M, PL, FL, dlg, busy, R, perf, gl: GL, goMap: (id, how) => goMap(id, how), battle: (kind, o) => battle(kind, o || {}),
       // 测试用：假装进大地图是在 d 这一天（检查过了零点回首页）；回声技能 / 徽章判断；重赛出题有没有换成课本
       fakeDay: d => { adv.day = d; }, adv, skillOpen: k => skillOpen(k), hasBadge: z => hasBadge(z), recentSrc: () => !!srcBak, debug: DEBUG,
-      talk: (pages, done) => talk(pages, done) }),   // 测试用：直接放一段对话（说话任务 / 选回答，tests/apk.test.js）
+      talk: (pages, done) => talk(pages, done),   // 测试用：直接放一段对话（说话任务 / 选回答，tests/apk.test.js）
+      audit: () => { const was = window.__echoAudit; window.__echoAudit = true; try { auditPeople(); } finally { window.__echoAudit = was; } return (window.__auditFails || []).slice(); } }),
     _art: ART,
     signLabel: L => signLabel(L),   // 房子的招牌（world3d.js、world3d-open.js 也用）
     townTag: z => townTag(z),       // 别的课：第 z 座岛的地名牌 HTML（这门课的地名 + 界面语言的小字；没翻 / 英语课 null）——monsters.js 首页「飞去哪」

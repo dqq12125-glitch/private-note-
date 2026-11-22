@@ -217,10 +217,10 @@
       'X_X_____X_X______X_X_______X_X',
       'X_X_ff__X_X_ff___X_X__1____X_X',
       'X_X_____X____________XXXXX_X_X',
-      'X_XXXX__XXXXXXXX_XXXXX___X___X',
+      'X_XXXX__XXXXXXXX_XXXXX4__X___X',   // 4 号团员挪到红按钮那一小块的角上（以前站在这一小块唯一的入口 (23,13)，打完也不挪，红按钮和仓库永远到不了——2026-11-22 复查）
       'X______3_______X_X_____Z_X_X_X',
       'XXXXXXXX_XXXXX_X_X_XXXXXXX_X_X',
-      'X________X___X___X_____4___X_X',
+      'X________X___X___X_________X_X',
       'X_XXXXXX_X_X_XXXXXXXXXXXXXXX_X',
       'X________X_X________________oX',
       'XXXXXXXXXXXXXXXX_XXXXXXXXXXXXX',
@@ -232,7 +232,7 @@
       1: TR('Hush Crew', 'grunt', 'm', 'down', 3, GRUNT_TYPES, ['Shh! Animals are noisy. We put them in cages!', '嘘！动物太吵了，我们把它们关进笼子！'], ['Shh... You win.', '嘘……你赢了。'], ['The boss is upstairs. Shh!', '老大在楼上。嘘！']),
       2: TR('Hush Crew', 'gruntF', 'f', 'down', 2, GRUNT_TYPES, ['How did you find our base?', '你是怎么找到我们基地的？'], ['Shh... Nobody can pass the locked door anyway!', '嘘……反正没人能通过那扇锁着的门！'], ['Only we know the password. Shh!', '只有我们知道口令。嘘！']),
       3: TR('Hush Crew', 'grunt', 'm', 'right', 4, GRUNT_TYPES, ['Quiet, kid! Monsters in cages are quiet monsters.', '安静，小孩！关在笼子里的怪兽才安静。'], ['Shh... not so loud!', '嘘……别那么大声！'], ['I forgot the password again...', '我又把口令忘了……']),
-      4: TR('Hush Crew', 'gruntF', 'f', 'left', 4, GRUNT_TYPES, ['The storage room is ours! Go away!', '仓库是我们的！走开！'], ['Shh... there is a red button somewhere...', '嘘……某个地方有个红色按钮……'], ['Don\'t push the red button!', '别按那个红色按钮！']),
+      4: TR('Hush Crew', 'gruntF', 'f', 'down', 4, GRUNT_TYPES, ['The storage room is ours! Go away!', '仓库是我们的！走开！'], ['Shh... there is a red button somewhere...', '嘘……某个地方有个红色按钮……'], ['Don\'t push the red button!', '别按那个红色按钮！']),
     },
     marks: [[['A machine with a big red button.', '一台机器，上面有个大大的红色按钮。']]],
     markKinds: ['statue'],
@@ -547,7 +547,10 @@
     ]);
     const res = await L.hushFight(C, n, 'whisper', { types: ['poison', 'dark', 'bug'], lines: [['Shh... Then show me how strong your voice is.', '嘘……那就让我看看你的声音有多强。']], win: ['My cages... Fine. Take your little friends.', '我的笼子……算了，把你的小朋友们带走吧。'] });
     if (res !== 'win') return;
-    await C.walk(n, 'down', 3, 180);
+    // 往下能走几格走几格（最多 3 格；以前固定 3 格，第二格起是墙——2026-11-22 复查）
+    let dn = 0;
+    while (dn < 3 && WALK.includes(C.tile(n.x, n.y + dn + 1)) && !C.npc(q => q !== n && q.x === n.x && q.y === n.y + dn + 1) && !(C.pl.x === n.x && C.pl.y === n.y + dn + 1)) dn++;
+    if (dn) await C.walk(n, 'down', dn, 180);
     C.remove(n);
     C.openGate('all', true);
     await C.talk([nar('Click, click, click! All the cages are open!', '咔嗒、咔嗒、咔嗒！所有的笼子都打开了！')]);

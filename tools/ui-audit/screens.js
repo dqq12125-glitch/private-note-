@@ -107,6 +107,20 @@ function screens() {
   add({ id: 'settings-parent', grp: 'home', primary: P_SHEET, async setup(t) { await t.boot(SV(t)); await t.home('quiz'); await t.act('settings'); await t.W(300); await t.E(() => { const d = document.querySelector('#set-parent'); if (d) { d.open = true; d.scrollIntoView({ block: 'start' }); } }); await t.W(300); } });
   add({ id: 'pin-pad', grp: 'home', primary: ['#sheet [data-act=pinKey]', '#sheet [data-act=pinDel]'], async setup(t) { await t.boot(SV(t)); await t.home('quiz'); await t.act('settings'); await t.W(300); await t.E(() => { const d = document.querySelector('#set-parent'); if (d) d.open = true; const b = document.querySelector('#sheet [data-act=bakRestore]'); if (b) b.click(); }); await t.W(400); } });
   add({ id: 'report', grp: 'home', primary: P_SHEET, async setup(t) { await t.boot(SV(t)); await t.act('report'); await t.W(400); } });
+  // 2026-11-22 零基础学习路线（tools/course/WORDS.md）：单词表、单词卡、我的单词本、这一课学什么、求助的话、新手路线、点词弹出的小卡
+  add({ id: 'words-list', grp: 'words', primary: P_SHEET.concat(['#sheet [data-act=wcOpen]']), async setup(t) { await t.boot(SV(t)); await t.act('wordList', { w: '0' }); await t.W(400); } });
+  add({ id: 'words-cards', grp: 'words', primary: ['#sheet [data-act=wcNext]', '#sheet [data-act=wcSkip]', '#sheet [data-act=wcSay]', '#sheet [data-act=wcEnd]'], async setup(t) { await t.boot(SV(t)); await t.act('wcOpen', { w: '0' }); await t.W(400); } });
+  add({ id: 'words-book', grp: 'words', primary: P_SHEET, async setup(t) { await t.boot(SV(t)); await t.act('wordBook'); await t.W(400); } });
+  add({ id: 'words-lesson', grp: 'words', primary: P_SHEET.concat(['#sheet [data-act=lsDone]']), async setup(t) { await t.boot(SV(t)); await t.act('lesson', { w: '0' }); await t.W(400); } });
+  add({ id: 'words-help', grp: 'words', primary: P_SHEET, async setup(t) { await t.boot(SV(t)); await t.act('sosList'); await t.W(400); } });
+  add({ id: 'words-route', grp: 'words', primary: ['#quests [data-act=rtGo]', '[data-act=wEnter]'], async setup(t) { await t.boot(SV(t)); await t.E(() => { EchoGame.S.settings.route = true; EchoGame.goHome('mon'); }); await t.W(500); } });
+  add({ id: 'words-pop', grp: 'words', primary: ['#wd-pop [data-act=wdPopX]'], async setup(t) {
+    await t.boot(SV(t)); await t.E(() => { EchoGame.S.settings.wordTap = true; }); await t.act('wordList', { w: '0' }); await t.W(400);
+    const pt = await t.E(() => { const s = document.querySelector('#sheet .wd-ex-t > span'); if (!s) return null; s.scrollIntoView({ block: 'center' }); const r = document.createRange(); r.selectNodeContents(s); const b = r.getClientRects()[0]; return b && { x: b.left + 6, y: b.top + b.height / 2 }; });
+    if (!pt) throw new Error('单词表里没有例句');
+    await t.p.mouse.click(pt.x, pt.y); await t.W(400);
+    if (!(await t.E(() => { const e = document.getElementById('wd-pop'); return !!e && !e.hidden; }))) throw new Error('点例句的第一个词没有弹出小卡');
+  } });
   add({ id: 'home-dex', grp: 'home', primary: P_SHEET, async setup(t) { await t.boot(SV(t)); await t.act('mDex'); await t.W(600); } });
   add({ id: 'home-team', grp: 'home', primary: P_SHEET, async setup(t) { await t.boot(SV(t)); await t.act('mTeam'); await t.W(500); } });
   add({ id: 'mon-summary', grp: 'home', primary: P_SHEET, async setup(t) { await t.boot(SV(t)); await t.act('mSum', { u: 'm1' }); await t.W(500); } });

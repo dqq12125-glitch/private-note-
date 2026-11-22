@@ -238,12 +238,15 @@ final class AnalyzerSpeechEngine {
     private var mapped: [String: Locale] = [:]      // 我们的写法（en-US）→ SpeechTranscriber 认的 Locale
     private var ready: Set<String> = []             // 模型装好了的
     private var asked: Set<String> = []             // 问过 / 正在问 / 正在装的
+    private var tries: [String: Int] = [:]          // 这次打开 App 装过几次（装失败了最多再试一次，不每题都去装）
+    private var broken: Set<String> = []            // 这次打开 App 新引擎出过错的语言：退回老引擎（复查 2026-11-22）
     private var run: AnalyzerRun?
 
-    // 这门语言系统认不认、模型装没装；认但没装就在后台装；装好了预热一次。同一门语言只做一次（装失败了下次再试）
+    // 这门语言系统认不认、模型装没装；认但没装就在后台装；装好了预热一次。同一门语言只做一次（装失败了最多再试一次）
     func prepare(_ id: String) {
-        if asked.contains(id) { return }
+        if asked.contains(id) || (tries[id] ?? 0) >= 2 { return }
         asked.insert(id)
+        tries[id] = (tries[id] ?? 0) + 1
         Task { @MainActor in
             guard let loc = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: id)) else { return }
             self.mapped[id] = loc
@@ -278,15 +281,21 @@ final class AnalyzerSpeechEngine {
     }
 
     func canBegin(_ id: String) -> Bool {
-        return ready.contains(id) && mapped[id] != nil
+        return ready.contains(id) && mapped[id] != nil && !broken.contains(id)
     }
 
     func begin(locale id: String, onText: @escaping SpeechText, onError: @escaping SpeechError) -> SpeechBegin {
         cancel()
-        guard let loc = mapped[id], ready.contains(id) else {
+        guard let loc = mapped[id], canBegin(id) else {
             return SpeechBegin(sink: nil, error: "unavailable", message: "SpeechAnalyzer model is not ready for " + id)
         }
-        let r = AnalyzerRun(locale: loc, onText: onText, onError: onError)
+        // 新引擎出错（格式拿不到、开不起来、模型被系统清掉……）：这次打开 App 这门语言改用老引擎，
+        // 不然网页那边连着两次出错就把本机识别整个关了（NSP.off = 'fails'），没登录的人口语题就只剩「没听清」
+        let onError2: SpeechError = { [weak self] code, message in
+            self?.broken.insert(id)
+            onError(code, message)
+        }
+        let r = AnalyzerRun(locale: loc, onText: onText, onError: onError2)
         run = r
         r.start()
         return SpeechBegin(sink: r.sink(), error: "", message: "")

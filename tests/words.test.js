@@ -451,14 +451,16 @@ const SAVE = o => Object.assign({
       await p.reload(); await homeUp(p);
       // ---------- §9 新手路线 ----------
       await E(p, () => { EchoGame.S.homeTab = 'mon'; EchoGame.goHome('mon'); }); await W(p, 300);
-      const rt = () => E(p, () => { const c = document.querySelector('#quests .rt-card'); return c ? { first: document.getElementById('quests').firstElementChild === c, steps: [...c.querySelectorAll('[data-act=rtGo]')].map(b => b.dataset.s + (b.closest('li').classList.contains('done') ? '✓' : '')), n: c.querySelector('.rt-h small').textContent } : null; });
+      // 卡片（2026-11-22 收紧）：做完的收成一行「✅ 已完成 n 步」，没做的只列接下来 3 步，后面还有几步一行小字
+      const rt = () => E(p, () => { const c = document.querySelector('#quests .rt-card'); return c ? { first: document.getElementById('quests').firstElementChild === c, steps: [...c.querySelectorAll('[data-act=rtGo]')].map(b => b.dataset.s), done: (c.querySelector('.rt-done') || {}).textContent || '', more: (c.querySelector('.rt-more') || {}).textContent || '', now: (c.querySelector('li.now [data-act=rtGo]') || { dataset: {} }).dataset.s || '', n: c.querySelector('.rt-h small').textContent } : null; });
       let r = await rt();
-      check(!!r && r.first && r.steps.map(s => s.replace('✓', '')).join() === 'lesson,cards,l14,scene,l57,adv,chat' && r.steps.includes('adv✓'), '§9 新手路线：首页最上面一张卡片，英语课没有「发音入门」这一步；已经开始冒险的那一步打了勾', r);
+      check(!!r && r.first && r.steps.join() === 'lesson,cards,l14' && r.now === 'lesson' && /已完成 1 步/.test(r.done) && /后面还有 3 步/.test(r.more) && r.n === '1 / 7',
+        '§9 新手路线：首页最上面一张卡片，英语课没有「发音入门」这一步；开始冒险的那一步做完了（收进「已完成 1 步」），只列接下来 3 步、后面还有 3 步', r);
       await shot(p, 'en-route-zh-port');
       await p.click('#quests [data-act=rtGo][data-s=lesson]'); await W(p, 300);
       check(await E(p, () => document.querySelectorAll('#sheet .ls-pat').length > 0), '§9 点「这一课学什么」那一步：打开第 1 岛的课前讲解');
       await act(p, 'lsDone'); await E(p, () => EchoGame.goHome('mon')); await W(p, 200);
-      r = await rt(); check(r.steps.includes('lesson✓'), '§9 看过以后那一步打勾', r);
+      r = await rt(); check(!r.steps.includes('lesson') && /已完成 2 步/.test(r.done) && r.now === 'cards' && r.n === '2 / 7', '§9 看过以后那一步收进「已完成」，下一步亮着', r);
       await p.click('#quests [data-act=rtGo][data-s=l14]'); await W(p, 500);
       check(await E(p, () => !document.getElementById('quiz-home').hidden && !!document.querySelector('#w0 .node.goal[data-l="0"]')), '§9 点「第 1–4 关」：到闯关练习的第 1 岛，第 1 关亮一圈');
       await E(p, () => { const S = EchoGame.S; for (let l = 0; l < 7; l++) S.stars['0-' + l] = 2; S.scenes[0] = { watched: 1 }; S.seenCards[0] = 'x'; S.talk.log = [{ npc: 'x' }]; EchoGame.goHome('mon'); }); await W(p, 300);

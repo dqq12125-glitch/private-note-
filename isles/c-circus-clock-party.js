@@ -410,8 +410,8 @@
       '#..MMmM.=.........=...2......STSSSSSS#',
       '#....=..=..3......=......JJJJSSSS~~~~~',
       '#T...====.........=......JJJJSSSS~~~~~',
-      '#T......=.GGGGG...=......JJjJSSSS~~~~~',
-      '#.......=.GGGGG...=........=.SS==5==Z~',
+      '#T......=.GGGGG...=......JJjJSSS5~~~~~',   // 爸爸站在码头旁边的沙地上（以前站在码头正中间，挡住码头尽头和「海星号」的牌子——2026-11-22 复查）
+      '#.......=.GGGGG...=........=.SS=====Z~',
       '#..HHHH.=.GGGGG...=........=.SSSS~~~~~',
       '#..HHHH.=.GGgGG...=........==SS6S~~~~~',
       '#..HHhH.=...=.....=.........=SSSS~~~~~',
@@ -1140,9 +1140,13 @@
   // 钟山山顶：闷雷的静音机器，导师欧瑞帮你；打赢以后醒狮出现
   async function rumble6(C) {
     const pl = C.pl, rb = C.npc(n => n.id === 'rumble6'), O = S('Orion', 'orion', 'm'), R = S('Admin Rumble', 'rumble', 'm');
-    const o = C.spawn({ look: LK.orion, name: 'Orion', g: 'm', x: pl.x - 2, y: pl.y + 1, face: 'up', id: 'orion6' });
+    // 欧瑞出在主角旁边能站人的地方（2026-11-22 复查：以前固定出在左下两格，主角从山口右边进来时那里是岩石，欧瑞会出在石头里、穿石头走）
+    const free = (x, y) => EM.WALK.includes(C.tile(x, y)) && !C.npc(n => n.x === x && n.y === y) && !(x === pl.x && y === pl.y);
+    const at = [[-2, 1], [2, 1], [-2, 0], [2, 0], [-1, 1], [1, 1], [0, 1], [-1, 0], [1, 0]].map(([dx, dy]) => ({ x: pl.x + dx, y: pl.y + dy })).find(q => free(q.x, q.y)) || { x: pl.x, y: pl.y + 1 };
+    const o = C.spawn({ look: LK.orion, name: 'Orion', g: 'm', x: at.x, y: at.y, face: 'up', id: 'orion6' });
     await C.talk([O('{name}! Wait!', '{name}！等一下！')]);
-    await C.walk(o, 'right', 1, 160);
+    const toward = at.x < pl.x ? 1 : at.x > pl.x ? -1 : 0;   // 往主角那边走一步（那一格能站人才走）
+    if (toward && Math.abs(at.x - pl.x) > 1 && free(at.x + toward, at.y)) await C.walk(o, toward > 0 ? 'right' : 'left', 1, 160);
     C.faceEach(o);
     await C.talk([
       O("It's me, Orion. I study old words and old legends.", '是我，欧瑞。我研究古老的词语和传说。'),
@@ -1178,7 +1182,10 @@
       O('It wants to see your power. Talk to it when you are ready.', '它想看看你的力量。准备好了，就去和它说话。'),
       O('I must go now. The story of Echodrake is not over... See you again!', '我得走了。回声龙的故事还没有结束……后会有期！'),
     ]);
-    await C.walk(o, 'down', 3, 130);
+    // 走开：往下能走几格走几格（最多 3 格；以前固定 3 格，会走进岩石）
+    let dn = 0;
+    while (dn < 3 && free(o.x, o.y + dn + 1)) dn++;
+    if (dn) await C.walk(o, 'down', dn, 130);
     C.remove(o);
   }
 
@@ -1230,7 +1237,9 @@
       const id = C.map.id;
       if (id === 't6') { if (!C.flag('c6call')) return () => call6(C); if (C.flag('c6grunt') && !C.flag('ch6')) return () => askNote(C); return null; }
       if (id === 'i6A' && C.flag('c6call') && !C.flag('c6grunt')) return () => tower6(C);
-      if (id === 'i6G') { g6.r = 0; if (!C.gateOpen(0)) return () => note6(C); return null; }
+      // 进馆（包括 App 关了再打开、接着上次的位置）：钟从头拨、第 1 / 2 道门关回去，人要是在门里面就回起点
+      // （2026-11-22 复查：以前 App 在馆中间被关掉，再打开时人还在里面、门全关着，出不去也拨不了钟）
+      if (id === 'i6G') { g6.r = 0; if (!C.gateOpen(0)) return () => { if (C.pl.y < 9) C.teleport(7, 12, 'up'); note6(C); }; return null; }
       if (id === 'd6b') {
         C.filter('sepia(.28) saturate(1.2)');
         if (!C.flag('c6rumble') && !C.npc(n => n.id === 'rumble6')) return () => { C.spawn({ look: LK.rumble, name: 'Admin Rumble', g: 'm', x: 16, y: 15, face: 'up', id: 'rumble6' }); };

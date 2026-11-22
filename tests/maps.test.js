@@ -67,6 +67,48 @@ function reach(m, from, S) {
   return seen;
 }
 const has = (s, x, y) => s.has(x + ',' + y);
+// 有大石头的地图：真的推一遍（2026-11-22 复查：勇气之路 v2 的两条窄道里，大石头推到岸边就推不动了——前面是水——正好堵死路口，
+// 冠军赛永远到不了；reach() 把大石头当成「有大力推就能走」，查不出来）。状态 = 主角的位置 + 每块石头的位置；
+// 推石头的规矩和 world.js tryMove 一样：石头只能往前滚到能走的地上（不是水、不是出口、上面没人）。其余照 reach()（技能全有）
+function pushReach(m, from, done) {
+  const t = (x, y) => (m.grid[y] && m.grid[y][x]) || '#';
+  const home = new Set((m.boulders || []).map(b => b.x + ',' + b.y));
+  const people = new Set(m.npcs.filter(n => !(n.showIf || n.hideIf || n.role === 'master' || n.role === 'guard')).map(n => n.x + ',' + n.y));
+  const warps = new Set(m.warps.map(w => w.x + ',' + w.y));
+  const base = (x, y) => { const c = t(x, y); return c === 'O' && home.has(x + ',' + y) ? ':' : c; };   // 石头推走以后原来那格是地
+  const ground = (x, y) => MAPS.WALK.includes(base(x, y));
+  const walk = (x, y, dy) => {
+    const c = base(x, y);
+    if (people.has(x + ',' + y)) return false;
+    if (MAPS.WALK.includes(c) || 'nb|~D'.includes(c)) return true;
+    if (c === 'w') return dy !== 0;
+    return false;
+  };
+  const start = (m.boulders || []).map(b => b.x + ',' + b.y).sort();
+  const key = (x, y, B) => x + ',' + y + '|' + B.join(';');
+  const seen = new Set([key(from.x, from.y, start)]), q = [[from.x, from.y, start]], spots = new Set([from.x + ',' + from.y]);
+  let n = 0;
+  while (q.length) {
+    if (++n > 400000) return null;   // 太多了：不查（打印一句）
+    const [x, y, B] = q.shift();
+    for (const [dx, dy] of DIRS) {
+      let nx = x + dx, ny = y + dy, nB = B;
+      if (t(nx, ny) === 'L') { if (dy !== 1) continue; ny += 1; }
+      const bi = B.indexOf(nx + ',' + ny);
+      if (bi >= 0) {
+        const bx = nx + dx, by = ny + dy, bk = bx + ',' + by;
+        if (!ground(bx, by) || B.includes(bk) || people.has(bk) || warps.has(bk)) continue;
+        nB = B.slice(); nB[bi] = bk; nB.sort();
+      } else if (!walk(nx, ny, dy)) continue;
+      while (t(nx, ny) === 'I' && walk(nx + dx, ny + dy, dy) && !B.includes((nx + dx) + ',' + (ny + dy))) { nx += dx; ny += dy; }
+      const k = key(nx, ny, nB);
+      if (seen.has(k)) continue;
+      seen.add(k); spots.add(nx + ',' + ny); q.push([nx, ny, nB]);
+      if (done && done(spots)) return spots;   // 要查的都到了：不用再推
+    }
+  }
+  return spots;
+}
 // 室内「一整片地板走不到」的例外（要写原因）
 const SEALED_OK = {
   d11a: '气象塔 1 楼右上角 7 格在训练师（g2，站在过道尽头）身后，是空的死角：没有出口、道具、人',
@@ -108,6 +150,8 @@ for (const id of ids) {
     for (const d of m.dives.concat(m.surfaces)) if (!has(R, d.x, d.y)) bad(id, '从 ' + how + ' 到不了潜海点/浮上点 @' + d.x + ',' + d.y);
     for (const o of m.picks.concat(m.hidden || [])) if (!has(R, o.x, o.y)) bad(id, '从 ' + how + ' 捡不到道具 @' + o.x + ',' + o.y);
     for (const s of m.signs) if (!near(R, s.x, s.y)) bad(id, '告示牌走不到 @' + s.x + ',' + s.y);
+    // 地上的标记（Z：雕像、石板、照片、牌子……按 A 读的）也要有一格能站着读（2026-11-22 复查：神殿第 3 块石板、雪路的雪人牌子四面是墙）
+    if (how === arrivals[0] && !(m.def && m.def.room === 'G')) for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) if (m.grid[y][x] === 'Z' && !near(R, x, y) && !DIRS.some(([dx, dy]) => m.grid[y + dy] && m.grid[y + dy][x + dx] === 'Q' && has(R, x + dx * 2, y + dy * 2))) bad(id, '标记 Z 走不到旁边，读不了 @' + x + ',' + y);
     for (const n of m.npcs) {
       const counter = DIRS.some(([dx, dy]) => m.grid[n.y + dy] && m.grid[n.y + dy][n.x + dx] === 'Q' && has(R, n.x + dx * 2, n.y + dy * 2));
       if (!near(R, n.x, n.y) && !counter && !n.far) bad(id, '人物 ' + n.role + (n.name ? ' ' + n.name : '') + ' 走不到 @' + n.x + ',' + n.y);
@@ -115,6 +159,12 @@ for (const id of ids) {
     for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) if (m.grid[y][x] === 'P' && !near(R, x, y)) bad(id, '电脑走不到');
     // 室内：能站的地板都要走得到（2026-11-22 老板「挡住了」：教学楼 2 楼五班的门口正对着一张课桌，整间教室进不去，
     // 剧情里低语就站在里面——她是剧情里临时加的人，地图上没写，上面查人物的那条查不出来）
+    // 有大石头：真的推着走，每个出口还要到得了（见 pushReach）
+    if ((m.boulders || []).length && how === arrivals[0]) {
+      const PR = pushReach(m, p, S => m.warps.every(w => warpReached(S, m, w)));
+      if (!PR) console.log('  （' + id + ' 的大石头状态太多，没推着查）');
+      else for (const w of m.warps) if (!warpReached(PR, m, w)) bad(id, '大石头真的推一遍以后，从 ' + how + ' 走不到出口 ' + m.grid[w.y][w.x] + '→' + w.to + ' @' + w.x + ',' + w.y + '（石头会不会推到路口就推不动了？）');
+    }
     // 只算「一整片」走不到的地板（连在一起 6 格以上，像一间屋子）：柜台后面、人站着围起来的一两格是正常的；挑战馆（room G）有机关门，不查；
     // 冰面（I）只能停在撞上东西的地方，不算
     if (m.kind === 'inside' && how === arrivals[0] && !(m.def && m.def.room === 'G') && !SEALED_OK[id]) {

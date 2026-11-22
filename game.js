@@ -206,6 +206,7 @@
       'g.rt.h': '🧭 新手路线', 'g.rt.n': '{a} / {b}', 'g.rt.primer': '发音入门：先认字、学发音', 'g.rt.lesson': '{t}：这一课学什么', 'g.rt.cards': '用单词卡认识这一课的词',
       'g.rt.l14': '第 1–4 关：听和说', 'g.rt.scene': '看对话动画', 'g.rt.l57': '第 5–7 关：对话和 BOSS', 'g.rt.adv': '去冒险：到大地图上用学过的话', 'g.rt.chat': '和岛民聊一次天',
       'g.rt.next': '下一课：第 {n} 岛 {t}',
+      'g.rt.done': '已完成 {n} 步', 'g.rt.more': '后面还有 {n} 步',
       'g.set.slow': '朗读速度', 'g.set.slow.off': '正常', 'g.set.slow.on': '🐢 慢', 'g.set.slow.d': '慢：配音放慢一点（声音不变调）。每个 🔊 旁边的 🐢 只放慢那一次。',
       'g.set.route': '新手路线', 'g.set.route.d': '首页最上面一步一步教你怎么学（打通第 3 岛以后就不再显示）。',
       'g.det.later': '再想想', 'g.det.go': '开始闯关',
@@ -858,6 +859,7 @@
       'g.rt.h': '🧭 Beginner\'s path', 'g.rt.n': '{a} / {b}', 'g.rt.primer': 'Sounds and letters first', 'g.rt.lesson': '{t}: what you learn here', 'g.rt.cards': 'Meet the words with word cards',
       'g.rt.l14': 'Levels 1–4: listen and speak', 'g.rt.scene': 'Watch the Theatre', 'g.rt.l57': 'Levels 5–7: dialogues and the BOSS', 'g.rt.adv': 'Go on an adventure and use what you learned', 'g.rt.chat': 'Chat with an islander once',
       'g.rt.next': 'Next lesson: Island {n}, {t}',
+      'g.rt.done': '{n} done', 'g.rt.more': '{n} more after these',
       'g.set.slow': 'Reading speed', 'g.set.slow.off': 'Normal', 'g.set.slow.on': '🐢 Slow', 'g.set.slow.d': 'Slow: recordings play a little slower (same pitch). The 🐢 next to each 🔊 slows down just that one time.',
       'g.set.route': 'Beginner\'s path', 'g.set.route.d': 'Step-by-step steps at the top of the home page (hidden after you clear Island 3).',
       'g.det.later': 'Not now', 'g.det.go': 'Start',
@@ -3988,9 +3990,13 @@
     const steps = routeSteps(0), all = steps.every(s => s[1]);
     // 第 1 岛的几步全打勾以后：收成一行「下一课：第 2 岛 ……」，点了去那座岛的闯关练习
     if (z > 0 || all) return '<button class="rt-next" data-act="rtGo" data-s="next" data-z="' + z + '">🧭 ' + trh('g.rt.next', { n: z + 1, t: isleName(z) }) + ' ›</button>';
-    const n = steps.filter(s => s[1]).length;
-    return '<div class="rt-card"><div class="rt-h"><b>' + trh('g.rt.h') + '</b><small>' + trh('g.rt.n', { a: n, b: steps.length }) + '</small></div><ol class="rt-steps">' +
-      steps.map(([id, done], k) => '<li class="' + (done ? 'done' : '') + '"><button data-act="rtGo" data-s="' + id + '" data-z="0"><span class="rt-k">' + (done ? '✅' : (k + 1)) + '</span><span>' + trh('g.rt.' + id, { t: isleName(0) }) + '</span><span class="rt-go">›</span></button></li>').join('') + '</ol></div>';
+    // 做完的收成一行「✅ 已完成 n 步」，没做的只列接下来 3 步（2026-11-22 细节检查：7 步全列出来时竖屏的「继续冒险」被挤下去约 480 像素、
+    // 小手机横屏后面几步要滚着看）。做完的那几样别处都还能打开（单词表、单词卡、关卡、对话动画）
+    const idx = steps.map((s, k) => [s[0], s[1], k]), done = idx.filter(s => s[1]), todo = idx.filter(s => !s[1]), shown = todo.slice(0, 3);
+    return '<div class="rt-card"><div class="rt-h"><b>' + trh('g.rt.h') + '</b><small>' + trh('g.rt.n', { a: done.length, b: steps.length }) + '</small></div><ol class="rt-steps">' +
+      (done.length ? '<li class="rt-done">✅ ' + trh('g.rt.done', { n: done.length }) + '</li>' : '') +
+      shown.map(([id, , k], j) => '<li class="' + (j === 0 ? 'now' : '') + '"><button data-act="rtGo" data-s="' + id + '" data-z="0"><span class="rt-k">' + (k + 1) + '</span><span>' + trh('g.rt.' + id, { t: isleName(0) }) + '</span><span class="rt-go">›</span></button></li>').join('') +
+      (todo.length > shown.length ? '<li class="rt-more">' + trh('g.rt.more', { n: todo.length - shown.length }) + '</li>' : '') + '</ol></div>';
   }
   // 去闯关练习里的第 z 岛，亮一下第 li 关
   function goIsle(z, li) {
@@ -4126,6 +4132,9 @@
   const tapFind = (box, x, y) => { try { const h = tapText(box, x, y); return h ? tapLookup(h.text, h.at) : null; } catch (err) { return null; } };
   let hold = null, held = 0;
   window.addEventListener('pointerdown', e => {
+    // 每一下新的按压先忘掉上一次「按住弹了卡」：安卓长按会弹系统菜单（被我们拦了）、iOS 长按可能以 pointercancel 收尾，
+    // 那一次后面没有 click，held 一直留着，下一下普通的点就会被吞掉（又像「对话卡住」）——复查 2026-11-22
+    held = 0;
     if (hold) { clearTimeout(hold.t); hold = null; }
     if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
     const box = tapBox(e.target);

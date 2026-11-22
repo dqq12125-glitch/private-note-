@@ -17,6 +17,8 @@ async function open(o) {
   let fails = 0;
   p.on('pageerror', e => { errs.push(e.message); console.log('  [err]', e.message, (e.stack || '').split(/\n/)[1]); });
   p.on('console', m => { if (m.type() === 'error') console.log('  [cerr]', m.text()); });
+  // 地图上看得见的人都走得到吗（world.js 的 auditPeople，2026-11-22 五班门口的课桌把剧情里的低语围死在教室里）：done() 里查
+  if (o.audit !== false) await p.addInitScript(() => { window.__echoAudit = true; });
   await p.goto(PAGE);
   const W = ms => p.waitForTimeout(ms);
   const t = {
@@ -117,6 +119,10 @@ async function open(o) {
     shot: name => p.screenshot({ path: path.join(out, name + '.png') }),
     async done() {
       t.check(!errs.length, '没有报错' + (errs.length ? '：' + errs.slice(0, 3).join(' | ') : ''));
+      if (o.audit !== false) {
+        const af = await p.evaluate(() => window.__auditFails || []).catch(() => []);
+        t.check(!af.length, '地图上看得见的人都能从门口走到旁边（剧情里放的人没被墙和东西围死）' + (af.length ? '：' + af.slice(0, 5).map(f => f.map + ' ' + (f.name || f.id) + ' @' + f.x + ',' + f.y).join(' | ') : ''));
+      }
       console.log(fails ? 'FAIL ' + fails : 'PASS');
       if (fails) process.exitCode = 1;
       await b.close();
