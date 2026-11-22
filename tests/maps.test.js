@@ -67,6 +67,10 @@ function reach(m, from, S) {
   return seen;
 }
 const has = (s, x, y) => s.has(x + ',' + y);
+// 室内「一整片地板走不到」的例外（要写原因）
+const SEALED_OK = {
+  d11a: '气象塔 1 楼右上角 7 格在训练师（g2，站在过道尽头）身后，是空的死角：没有出口、道具、人',
+};
 const near = (s, x, y) => DIRS.some(([dx, dy]) => has(s, x + dx, y + dy));
 // 走得到这个出口吗：能踩上去的出口格要站上去；门、洞口要站在下面
 const warpReached = (R, m, w) => MAPS.WALK.includes(m.grid[w.y][w.x]) ? has(R, w.x, w.y) : has(R, w.x, w.y + 1);
@@ -109,6 +113,21 @@ for (const id of ids) {
       if (!near(R, n.x, n.y) && !counter && !n.far) bad(id, '人物 ' + n.role + (n.name ? ' ' + n.name : '') + ' 走不到 @' + n.x + ',' + n.y);
     }
     for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) if (m.grid[y][x] === 'P' && !near(R, x, y)) bad(id, '电脑走不到');
+    // 室内：能站的地板都要走得到（2026-11-22 老板「挡住了」：教学楼 2 楼五班的门口正对着一张课桌，整间教室进不去，
+    // 剧情里低语就站在里面——她是剧情里临时加的人，地图上没写，上面查人物的那条查不出来）
+    // 只算「一整片」走不到的地板（连在一起 6 格以上，像一间屋子）：柜台后面、人站着围起来的一两格是正常的；挑战馆（room G）有机关门，不查；
+    // 冰面（I）只能停在撞上东西的地方，不算
+    if (m.kind === 'inside' && how === arrivals[0] && !(m.def && m.def.room === 'G') && !SEALED_OK[id]) {
+      const lost = new Set();
+      for (let y = 0; y < m.H; y++) for (let x = 0; x < m.W; x++) if (MAPS.WALK.includes(m.grid[y][x]) && m.grid[y][x] !== 'I' && !has(R, x, y)) lost.add(x + ',' + y);
+      const seen = new Set();
+      for (const k of lost) {
+        if (seen.has(k)) continue;
+        const part = [], q = [k]; seen.add(k);
+        while (q.length) { const c = q.pop(); part.push(c); const [cx, cy] = c.split(',').map(Number); for (const [dx, dy] of DIRS) { const n = (cx + dx) + ',' + (cy + dy); if (lost.has(n) && !seen.has(n)) { seen.add(n); q.push(n); } } }
+        if (part.length >= 6) bad(id, '有一片 ' + part.length + ' 格的地板从 ' + how + ' 走不到（门口被东西挡住了？）：' + part.slice(0, 8).join(' '));
+      }
+    }
   }
   if (m.kind === 'town') ['C', 'M', 'G'].forEach(L => { if (!m.buildings[L]) bad(id, '缺少建筑 ' + L); });
   if (m.kind === 'route' && !(m.def && m.def.noGrass) && !m.grid.some(r => r.includes(',') || r.includes('~'))) bad(id, '道路上没有草丛也没有水');
