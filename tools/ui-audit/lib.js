@@ -314,8 +314,8 @@ function AUDIT(a) {
         if (!hit) return;
         const kp = sel(T.el) + '|' + sel(P.el); if (seenPair.has(kp)) return;
         if (inside(P.el, hit) && !T.el.contains(hit)) {
-          // 框在字上面：字被盖住。粘在滚动内容上面的顶栏、答完题弹上来的反馈条盖住下面的题目是本意
-          if (P.sticky || P.el.closest('#fb')) return;
+          // 框在字上面：字被盖住。粘在滚动内容上面的顶栏、答完题弹上来的反馈条盖住下面的题目、点一个词弹出的小卡（#wd-pop，弹在点到的地方）是本意
+          if (P.sticky || P.el.closest('#fb') || P.el.closest('#wd-pop')) return;
           // 字在一层铺满屏幕的东西下面（弹窗的黑底、聊天界面），被那一层里的框盖住：本来就看不见，不算
           let under = false; for (let e = hit; e && e !== document.body; e = e.parentElement) { const qq = e.getBoundingClientRect(), s = getComputedStyle(e); if ((s.position === 'fixed' || s.position === 'absolute') && qq.width * qq.height >= VW * VH * 0.9 && !e.contains(T.el)) { under = true; break; } }
           if (under) return;

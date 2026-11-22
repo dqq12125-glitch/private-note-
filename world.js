@@ -559,6 +559,21 @@
     const o = objective();
     g.hidden = !o;
     g.textContent = o ? '📍 ' + o.zh : '';
+    placeNote();
+  }
+  // 提示条（剧情、挑战馆的说明）放在左上角地名和「📍 现在要做」那一块的下面（2026-11-22 细节检查：样式里固定往下 60 像素，
+  // 英语界面这一块高一点，提示条压住了「现在要做」那一行 9 像素）。只在左右也重叠时才往下挪（横屏提示条在正中间，不用挪）
+  function placeNote() {
+    const n = $('w-note'), v = $('w-view');
+    if (!n || n.hidden || !v) return;
+    n.style.top = '';
+    const nr = n.getBoundingClientRect(), vr = v.getBoundingClientRect();
+    let low = 0;
+    for (const el of document.querySelectorAll('#world .w-hud .w-zone, #world #w-goal:not([hidden])')) {
+      const r = el.getBoundingClientRect();
+      if (r.width && r.right > nr.left && r.left < nr.right) low = Math.max(low, r.bottom);
+    }
+    if (low && low + 4 > nr.top) n.style.top = Math.round(low + 4 - vr.top) + 'px';
   }
 
   // ---------- 移动 ----------
@@ -1704,7 +1719,7 @@
     // 画面上方的小提示条（挑战馆机关用：现在要踩什么颜色、红灯绿灯……）
     // 整个画面加滤镜（颜色被偷走的岛：grayscale(1)）；换地图会自动清掉
     filter: css => { $('w-view').querySelectorAll('canvas').forEach(c => { c.style.filter = css || ''; }); },
-    note: html => { const n = $('w-note'); if (!n) return; if (!html) { n.hidden = true; return; } n.innerHTML = html; n.hidden = false; },
+    note: html => { const n = $('w-note'); if (!n) return; if (!html) { n.hidden = true; return; } n.innerHTML = html; n.hidden = false; placeNote(); },
     setOver: (x, y, ch) => { if (M.over && M.over[y]) M.over[y][x] = ch; },
     over: (x, y) => (M.over && M.over[y] && M.over[y][x]) || '',
     goMap: (id, how) => goMap(id, how),
@@ -1829,6 +1844,7 @@
   function resize() {
     if (R) { try { R.resize(); } catch (e) { if (R.kind !== '2d' && !GL.bad) GL.bad = 'resize'; } }   // 排不了（画面坏了）：下一帧重建
     const v = $('w-view'); if (v) { fitted.w = v.clientWidth; fitted.h = v.clientHeight; }
+    placeNote();   // 转屏以后提示条重新放到地名下面
   }
   function fitCheck() { const v = $('w-view'); if (!v) return; const w = v.clientWidth, h = v.clientHeight; if (w > 0 && h > 0 && (w !== fitted.w || h !== fitted.h)) resize(); }
   // ---------- 画面丢了 / 画不出来以后的恢复（评估第 15 条）----------
