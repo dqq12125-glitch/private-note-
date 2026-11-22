@@ -1519,13 +1519,26 @@
   // 返回 { text, err, how, why }：err 是 network / no-speech / not-allowed / audio-capture / aborted / busy / service-not-allowed；
   // why 是出错的细分原因（offline / auth / quota / busy / code / network；麦克风的是浏览器报的错误名，比如 NotAllowedError）
   const ASR_RT = 'qwen3-asr-flash-realtime';
-  const LM = { stream: null, ctx: null, node: null, rate: 16000, sink: null, t: 0 };
+  // last：最近一次收到麦克风声音的时刻（AudioWorklet 一直在送，不管有没有人在听）；at：这次打开的时刻；stale：预热着的麦克风不出声、重开过几次（这次打开 App）
+  const LM = { stream: null, ctx: null, node: null, rate: 16000, sink: null, t: 0, last: 0, at: 0, stale: 0 };
   const RTA = { fails: 0 };   // 实时识别连续失败几次就先不用了（这次打开游戏）
+  // 麦克风这会儿还给不给声音（2026-11-22 老板的截图：对战里点话筒等了 5 秒「没听清」，角标 fed0 v:-——
+  // 预热着的麦克风在 iPhone 上放过别的声音以后，流还「开着」，可一点声音都不送了）。最近 0.3 秒有声音进来就算；
+  // 刚 resume 的要一会儿才来：最多再等 ms 毫秒
+  async function lmFlowing(ms) {
+    const tr = LM.stream && LM.stream.getAudioTracks ? LM.stream.getAudioTracks()[0] : null;
+    if (!tr || tr.readyState !== 'live' || tr.muted) return false;
+    const t0 = performance.now();
+    if (t0 - LM.last < 300) return true;
+    while (performance.now() - t0 < ms) { await new Promise(r => setTimeout(r, 30)); if (LM.last > t0) return true; }
+    return false;
+  }
   async function lmOpen() {
     clearTimeout(LM.t);
     if (LM.stream && LM.stream.active && LM.ctx && LM.ctx.state !== 'closed') {
       if (LM.ctx.state !== 'running') { try { await LM.ctx.resume(); } catch (e) {} }
-      return LM;
+      if (await lmFlowing(300)) return LM;
+      LM.stale++;   // 不出声了：关掉重开
     }
     lmShut();
     let stream, ctx;
@@ -1537,10 +1550,12 @@
     } catch (e) { try { stream.getTracks().forEach(t => t.stop()); } catch (er) {} try { ctx && ctx.close(); } catch (er) {} return { err: 'audio-capture', why: (e && e.name) || 'audio' }; }
     const node = new AudioWorkletNode(ctx, 'tk-cap');
     ctx.createMediaStreamSource(stream).connect(node);
-    node.port.onmessage = e => { if (LM.sink) LM.sink(e.data); };
-    Object.assign(LM, { stream, ctx, node, rate: ctx.sampleRate, sink: null });
+    node.port.onmessage = e => { LM.last = performance.now(); if (LM.sink) LM.sink(e.data); };
+    Object.assign(LM, { stream, ctx, node, rate: ctx.sampleRate, sink: null, at: performance.now() });
     return LM;
   }
+  // 正在听的时候麦克风不出声：多久没有新的声音了（从这次打开、或者最后一次收到声音算起）
+  const lmQuiet = () => (LM.node ? performance.now() - Math.max(LM.last, LM.at) : 0);
   function lmRelease() { LM.sink = null; clearTimeout(LM.t); LM.t = setTimeout(lmShut, 15000); }
   function lmShut() {
     clearTimeout(LM.t); LM.sink = null;
@@ -1692,7 +1707,7 @@
         if (preN < mic.rate * PRE_SEC) { pre.push(d); preN += d.length; }
         if (done) return;   // 已经改走云端：只存着，等 cloudListen 接手
         let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
-        if (Math.sqrt(sum / d.length) > 0.02) loudN += d.length;
+        if (Math.sqrt(sum / d.length) > 0.02) { loudN += d.length; if (D.wv == null && started) D.wv = now() - D.t0; }   // wv：网页量到开始出声的时刻（角标的 say）
         pend.push(d); pendN += d.length;
         if (pendN >= mic.rate * 0.1) {
           const f = new Float32Array(pendN); let p = 0; pend.forEach(c => { f.set(c, p); p += c.length; });
@@ -1714,7 +1729,7 @@
         D.micP.then(m => {
           if (m.err) { if (!done) end({ text: '', err: m.err, why: m.why, how: 'mic' }); return; }
           if (done && !D.pre) { lmRelease(); return; }   // 麦克风开好以前就结束了
-          mic = m; D.mic = now() - D.t0;
+          mic = m; if (D.mic == null) D.mic = now() - D.t0;
           m.sink = sink;   // 已经改走云端的：sink 只往 D.pre 里存
           ready();
         });
@@ -1745,10 +1760,18 @@
           finish('error');
         } else if (d.kind === 'end') finish('end-' + (d.reason || 'end'));   // 原生自己停了（切后台、最终结果是空的……）
       };
+      // 麦克风开着却不出声（lmOpen 查过了，可也有听到一半才断的）：关掉重开一次，接着用同一个 sink；这次识别里只重开一次
+      const reMic = () => { D.remic = (D.remic || 0) + 1; if (mic) mic.sink = null; mic = null; lmShut(); openMic(); };
       // 每 50 毫秒看一眼：说完了没有、太久没有
       const check = () => {
         if (done) return;
         const t = now(), since = t - started;
+        // 1 秒一点声音都没进来：重开麦克风；重开了 1.5 秒还是没有 → 按「没听清」回（不卡 5 秒、也不改走云端——云端也是这个麦克风）
+        if (mic && !text) {
+          const q = lmQuiet();
+          if (q > 1000 && !D.remic) { reMic(); return; }
+          if (q > 1500 && D.remic) { end({ text: '', err: 'no-speech', how: 'nodata' }); return; }
+        }
         if (since > (o.maxMs || 8000)) { finish('max'); return; }
         if (!text) { if (since > (o.long ? 7000 : 5000) && !voice) finish('silence'); return; }
         const still = t - chg;
@@ -1783,8 +1806,10 @@
   // 记一次识别的计时（只在内存里，最近 20 次）：listen 点了到开始听、first 第一个字、end 结束、lag 最后一个字变了到结束（说完以后等了多久）
   function srNote(D, r) {
     const now = performance.now(), ms = v => (v == null ? null : Math.round(v));
+    // wv：网页量到开始出声（第一个字出来得慢，是识别慢还是人开口晚，看它）；remic：这次听到一半麦克风不出声、重开了几次；stale：预热着的麦克风不出声、开口前重开过几次（这次打开 App 一共）
     const rec = { at: D.at, eng: D.eng || '', short: D.short, how: (r && r.how) || '', ok: !!(r && r.text), err: (r && r.err) || '', fell: D.fell || '',
-      listen: ms(D.listen), first: ms(D.first), voice: ms(D.voice), end: ms(now - D.t0), lag: D.chg ? ms(now - D.chg) : null, ready: ms(D.ready), nms: D.nms == null ? null : D.nms };
+      listen: ms(D.listen), first: ms(D.first), voice: ms(D.voice), wv: ms(D.wv), end: ms(now - D.t0), lag: D.chg ? ms(now - D.chg) : null, ready: ms(D.ready), nms: D.nms == null ? null : D.nms,
+      remic: D.remic || 0, stale: LM.stale };
     if (D.nerr) rec.nerr = D.nerr;
     // 本机识别那几样（试过本机才有）：开麦克风 / 原生开好用了几毫秒、送过去几段声音、原生说收到几段、有没有人声（w 网页 / n 原生 / - 没有）、这次打开 App 还用不用本机
     if (D.fed != null) Object.assign(rec, { mic: ms(D.mic), nok: ms(D.nok), fed: D.fed, nfed: D.nfed == null ? null : D.nfed, vo: D.vo || '', off: NSP.off || '' });
@@ -1833,6 +1858,7 @@
     let dead = RTA.fails >= 3;
     return new Promise(resolve => {
       const full = () => (texts.join(' ') + ' ' + cur).replace(/\s+/g, ' ').trim();
+      let wd = 0;   // 麦克风不出声的看门狗（下面 mic.sink 之后才开）
       const fail = d => { if (dead) return; dead = true; RTA.fails++; if (d) noteAi('asr-rt', d); };
       const heard = () => {
         const t = full(); if (!t) return;
@@ -1859,7 +1885,7 @@
       }, o.lang && o.lang.cloud);
       const finish = async why => {
         if (done) return; done = true;
-        clearTimeout(grace); SR.stop = null; lmRelease();
+        clearTimeout(grace); clearInterval(wd); SR.stop = null; lmRelease();
         // 本机先判断说完了，但实时识别还没把这一段认完（刚连上 / 网慢，服务器还压着没处理的声音）：
         // 最多再等 2.5 秒它的「认完了」——只拿到半句就交卷会被当成说错
         const settled = () => texts.length && !inSpeech;
@@ -1895,10 +1921,23 @@
         let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
         const loud = Math.sqrt(sum / d.length) > 0.02, now = performance.now();
         // 本机的停顿判断只是保底：实时识别正常时它会先结束；不正常时停 1.1 秒就整段识别
-        if (loud) { voiced++; quiet = 0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > (o.long ? 2600 : dead ? 1100 : 1800)) finish('silence'); }
+        if (loud) { voiced++; quiet = 0; if (D.wv == null) D.wv = now - D.t0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > (o.long ? 2600 : dead ? 1100 : 1800)) finish('silence'); }
         if (now - t0 > (o.maxMs || 8000)) finish('max');
         else if (voiced < 3 && now - t0 > 5000) finish('silence');
       };
+      // 麦克风不出声（2026-11-22）：上面的计时都在收到声音时才跑，一点声音都没有就会一直等。每 0.2 秒看一眼：
+      // 1 秒没有新的声音 → 重开一次麦克风（接着用同一个 sink）；重开了 1.5 秒还是没有 → 按没听清结束；兜底：超过最长时间 1.5 秒照样结束
+      let remic = false;
+      wd = setInterval(() => {
+        if (done) { clearInterval(wd); return; }
+        if (performance.now() - t0 > (o.maxMs || 8000) + 1500) { finish('max'); return; }
+        const q = lmQuiet();
+        if (q > 1000 && !remic) {
+          remic = true; D.remic = (D.remic || 0) + 1;
+          const h = LM.sink; lmShut();
+          lmOpen().then(m => { if (m.err) { if (!done) finish('nodata'); return; } if (done) { lmRelease(); return; } m.sink = h; });
+        } else if (q > 1500 && remic && !voiced) finish('nodata');
+      }, 200);
       // 本机识别录好的声音（没认出字才到这里）：先按原来的顺序补进来，再接着录。里面已经有人声就显示「识别中」，不叫人再说一遍
       const pre = D.pre; D.pre = null;
       if (pre) pre.forEach(d => mic.sink(d));
@@ -2037,6 +2076,8 @@
     today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG, nativeCall,
     // iPhone 的本机识别：口语题现在会不会先用它、最近一次 / 最近 20 次识别的计时（只在内存里）、给设置页 / 小检查 / 周报的话
     localSR, lastSpeech: () => (SRLOG.length ? Object.assign({}, SRLOG[SRLOG.length - 1]) : null), speechLog: () => SRLOG.map(x => Object.assign({}, x)),
+    // 测试用：装成 iPhone 上「麦克风开着、一点声音都不送」（截掉 AudioWorklet 送来的声音；重开麦克风是新的一份，不受影响）
+    _micMute: () => { if (LM.node) LM.node.port.onmessage = null; },
     speechState: () => (NSP.st ? Object.assign({ off: NSP.off }, NSP.st) : { off: NSP.off, has: nspHas() }), speechRefresh: nspRefresh, srText,
     // 别的语言的课：换上这门课的聊天角色（game.js 的 courseUse，课程的 TALK）
     useNpcs: o => { if (o && o.list && o.byId) NPCS = o; },

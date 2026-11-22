@@ -194,6 +194,44 @@ function fakeCloud() {
   a = await E(() => { const F = window.__fakeNative.speech; return { okAt: Object.values(F.okAt)[0], micAt: (window.__micAt || [])[0], fed: F.feeds.length }; });
   check(a.micAt >= a.okAt && a.fed >= 1, '第一次：原生问完权限、回了 ok 才开麦克风', a);
 
+  // ---------- 1b. 麦克风开着却一点声音都不送（2026-11-22 老板的截图：对战里等了 5 秒「没听清」，角标 fed0 v:-） ----------
+  // 预热着的麦克风（说完留 15 秒）在 iPhone 上放过别的声音以后会这样：开口前查一下，不出声就重开
+  await load(BASE(), { fake: { speech: { state: ON, start: 'ok', startMs: 100, script: [] } } });
+  target = await question(0);
+  await fake({ speech: { script: [[300, 'partial', target]] } });
+  await p.click('#mic');
+  check(await until(() => E(() => window.EchoGame.P().answered), 40, 50), '1b 第一题照常说对（麦克风预热着）');
+  target = await question(1);
+  await fake({ speech: { script: [[400, 'partial', target]] } });
+  let m0 = await E(() => window.__micOpens || 0);
+  await E(() => window.EchoTalk._micMute()); await W(500);   // 不出声有一会儿了（刚断的 0.3 秒内还算在出声，听的时候的看门狗管）
+  let t1 = Date.now();
+  await p.click('#mic');
+  check(await until(() => E(() => window.EchoGame.P().answered), 60, 50), '1b 预热的麦克风不出声了：开口前发现、重开，照样说对就过');
+  s = await last();
+  check((await E(() => window.__micOpens)) === m0 + 1 && s.stale >= 1 && !s.remic && s.fed > 0 && Date.now() - t1 < 2500, '1b 重开了一次麦克风（stale 记着），声音照常送给原生，没白等 5 秒：' + (Date.now() - t1) + ' 毫秒', s);
+  // 听到一半麦克风断了声音：1 秒没有新的声音就重开一次，接着听
+  target = await question(2);
+  await fake({ speech: { script: [[2600, 'partial', target]] } });
+  m0 = await E(() => window.__micOpens || 0);
+  await p.click('#mic'); await W(350);
+  await E(() => window.EchoTalk._micMute());
+  check(await until(() => E(() => window.EchoGame.P().answered), 80, 50), '1b 听到一半麦克风不出声：重开以后接着听，说对就过');
+  s = await last();
+  check((await E(() => window.__micOpens)) === m0 + 1 && s.remic === 1, '1b 听的时候重开了一次（remic 1，角标显示 re1）', s);
+  // 重开了还是不出声：1.5 秒后按「没听清」回（不等 5 秒、不卡住）
+  target = await question(3);
+  await fake({ speech: { script: [] } });
+  t1 = Date.now();
+  await p.click('#mic'); await W(350);
+  await E(() => { window.__muteIv = setInterval(() => window.EchoTalk._micMute(), 15); });   // 之后不管重开几次都不出声
+  check(await until(() => E(() => { const s = window.EchoTalk.lastSpeech(); return s && s.how === 'nodata'; }), 100, 50), '1b 重开了还是一点声音都没有：按没听清结束');
+  const tNo = Date.now() - t1;
+  await W(200);
+  a = await E(() => ({ hint: document.querySelector('#mic-hint').textContent, miss: window.EchoGame.P().miss, answered: window.EchoGame.P().answered }));
+  check(tNo < 4000 && /没听清/.test(a.hint) && a.miss === 1 && !a.answered, '1b 点话筒后不到 4 秒就提示「没听清」、算一次尝试（以前一点声音都没有时要等 5 秒以上）：' + tNo + ' 毫秒', a);
+  await E(() => clearInterval(window.__muteIv));
+
   // ---------- 2. 读错了不给过 ----------
   target = await question(1); w = words(target);
   const wrong = 'my dog is very big and brown today';
@@ -395,6 +433,22 @@ function fakeCloud() {
   check(await until(() => E(() => window.EchoGame.P().answered), 80, 100), '安卓：口语题照旧走阿里云实时识别，过了');
   c = await calls(); s = await last();
   check(c.includes('wsOpen') && s.eng === 'cloud' && !s.fell && (await L()).asrN === 1 && !(await L()).srDev, '安卓：连了实时识别、算 AI 用量、周报的本机计数没有', { c: c.filter(x => /ws|speech/.test(x)), s });
+  // 云端那条路：听的时候麦克风不出声（以前这条路的计时都在收到声音时才跑，会一直等）：1 秒后重开，接着听
+  target = await question(1);
+  await E(t => localStorage.setItem('__cloudSay', t), target);
+  let mc = await E(() => window.__micOpens || 0);
+  await E(() => window.EchoTalk._micMute()); await W(500);   // 预热的那个不出声有一会儿了：开口前就该发现
+  await p.click('#mic');
+  check(await until(() => E(() => window.EchoGame.P().answered), 80, 100), '安卓 / 云端：预热的麦克风不出声 → 开口前重开，照样过');
+  check((await E(() => window.__micOpens)) === mc + 1 && (await last()).stale >= 1, '安卓 / 云端：重开了一次', await last());
+  target = await question(2);
+  await E(t => localStorage.setItem('__cloudSay', t), target);
+  mc = await E(() => window.__micOpens || 0);
+  await E(() => { const F = window.__fakeNative, on = F.onWsOpen; F.onWsOpen = (id, url, cb) => { on(id, url, cb); setTimeout(() => window.EchoTalk._micMute(), 30); F.onWsOpen = on; }; });   // 连上的那一下就断声音
+  await p.click('#mic');
+  check(await until(() => E(() => window.EchoGame.P().answered), 80, 100), '安卓 / 云端：听的时候麦克风不出声 → 1 秒后重开，接着听，过了');
+  s = await last();
+  check((await E(() => window.__micOpens)) === mc + 1 && s.remic === 1, '安卓 / 云端：听的时候重开了一次（remic 1）', s);
   await E(() => { window.EchoGame.closeModal(); window.EchoGame.reportSheet(); }); await W(300);
   check(!/口语识别：本机/.test(await p.textContent('#sheet')), '安卓的周报诊断一行和以前一样（没有本机识别那一截）');
   // iPhone 的假桥、但不是 App（没有 ECHO_IOS）：也不用本机识别

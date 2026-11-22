@@ -251,14 +251,16 @@
       document.body.appendChild(d);
       // 版本号后面跟上最近一次口语识别的情况（talk.js 的 EchoTalk.lastSpeech()）：哪个引擎、怎么结束的、为什么改走云端、原生的错误代号、
       // 点了到开始听 / 第一个字 / 结束各多少毫秒；本机识别那几样：fed 送过去几段声音 / 原生说收到几段，v: 有没有人声（w 网页量到、n 原生说出声、- 都没有），
-      // off: 这次打开 App 不再用本机识别的原因。老板截图里带着它，不用连电脑也知道识别卡在哪一步
+      // off: 这次打开 App 不再用本机识别的原因。老板截图里带着它，不用连电脑也知道识别卡在哪一步。
+      // 2026-11-22 加：say 网页量到开始出声的毫秒（第一个字出来得慢，是识别慢还是开口晚）；re 听到一半麦克风不出声、重开了几次；st 开口前发现预热的麦克风不出声、重开过几次
       setInterval(function () {
         try {
           var s = W.EchoTalk && W.EchoTalk.lastSpeech ? W.EchoTalk.lastSpeech() : null, t = String(BOOT.beta);
           if (s) {
             t += ' · ' + (s.eng || '?') + ' ' + (s.how || s.err || (s.ok ? 'ok' : '')) + (s.fell ? ' fell:' + s.fell : '') + (s.nerr ? ' ' + String(s.nerr).slice(0, 40) : '') +
-              ' ' + [s.listen, s.first, s.end].map(function (v) { return v == null ? '-' : v; }).join('/') +
-              (s.fed != null ? ' fed' + s.fed + (s.nfed != null ? '/' + s.nfed : '') : '') + (s.vo ? ' v:' + s.vo : '') + (s.off ? ' off:' + s.off : '');
+              ' ' + [s.listen, s.first, s.end].map(function (v) { return v == null ? '-' : v; }).join('/') + (s.wv != null ? ' say' + s.wv : '') +
+              (s.fed != null ? ' fed' + s.fed + (s.nfed != null ? '/' + s.nfed : '') : '') + (s.vo ? ' v:' + s.vo : '') + (s.off ? ' off:' + s.off : '') +
+              (s.remic ? ' re' + s.remic : '') + (s.stale ? ' st' + s.stale : '');
           }
           if (d.textContent !== t) d.textContent = t;
         } catch (e) { /* 只是给人看的一行字 */ }
