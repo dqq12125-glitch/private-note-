@@ -59,12 +59,17 @@ const wavOf = (pcm, rate) => { const h = Buffer.alloc(44); h.write('RIFF', 0); h
     const QL = qid ? (COURSES.quests && COURSES.quests[lang] && COURSES.quests[lang][qid]) : null;
     if (qid && !QL) { console.log('✗ 没有这条委托的译文：' + job); continue; }
     const npc = qid ? { id: qid, name: '委托 ' + qid } : lang === 'en' ? NPCS.list[0] : COURSES.list.find(n => n.lang === lang);
-    const says = qid ? QL.steps.slice() : SAY[lang];
+    const says = (qid ? QL.steps.slice() : SAY[lang]).slice();
+    // TALK_ACCENT='这门语言的一句'：再加一句「带英语口音」的（用英语的音色念这门语言的话，像刚学的人）放在最前面——
+    // 2026-11-22 老板在西语课里说「Soy Jack…」被听成了法语，标准发音的合成声音测不出来
+    const accent = process.env.TALK_ACCENT && lang !== 'en' ? process.env.TALK_ACCENT : '';
+    if (accent) says.unshift(accent);
     console.log('\n===== ' + lang + '：' + npc.id + '（' + npc.name + '）=====');
     // 学习者的两句：让服务器合成，转成 16 kHz
     const clips = [];
     for (let i = 0; i < says.length; i++) {
-      const r = await A.api('POST', '/v1/tts', { token: tk, body: lang === 'en' ? { text: says[i], g: 'm' } : { text: says[i], g: 'm', lang } });
+      const en = lang === 'en' || (accent && i === 0);
+      const r = await A.api('POST', '/v1/tts', { token: tk, body: en ? { text: says[i], g: 'm' } : { text: says[i], g: 'm', lang } });
       if (r.status !== 200) { console.log('✗ 合成学习者的话没成：', r.status, scrub(r.text).slice(0, 200)); continue; }
       const f0 = path.join(OUT, 'say-' + lang + '-' + i + '.wav'); fs.writeFileSync(f0, Buffer.from(await (await fetch(r.json.url)).arrayBuffer()));
       clips.push(pcmOf(wav16(f0, path.join(OUT, 'say-' + lang + '-' + i + '.16k.wav'))));

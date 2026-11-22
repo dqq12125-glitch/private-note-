@@ -1,6 +1,6 @@
 // 别的语言的课（西语 / 日语 / 中文）和岛民聊天（API.md §8「Chat language」，tools/course/TALK.md §3）：
 // GET /v1/me 的 talkLangs；/v1/talk 认 talk-courses.js 里的角色 id 和 dyn 的 lang——人设、音色、规矩由服务器按 talk-core 拼，
-// 转写照旧不指定语言；不支持的语言 400（不开这一段、不扣额度、不连上游）；聊完的评语按这门语言要、开口句数按这门语言数；
+// 转写按这门语言（2026-11-22 起；以前不指定，西语被认成了法语）；不支持的语言 400（不开这一段、不扣额度、不连上游）；聊完的评语按这门语言要、开口句数按这门语言数；
 // /v1/steps 认课程角色和 dyn 的 lang；/v1/zh 的 lang / ui（都不给 = 和以前一字不差）；TALK_LANGS 关掉几种、TALK_VOICE_MAP 改名
 import crypto from 'node:crypto';
 import { ok, eq, until } from './lib.js';
@@ -69,8 +69,9 @@ export default async function (C) {
       ok(ins.startsWith(npc.persona) && ins.includes('for learning ' + NAME[lang]) && ins.includes('Speak in ' + NAME[lang] + ' (the only exception') === (lang !== ui) && ins.includes('"' + CORE.LANGS[lang].say + '"') &&
         !/for learning English|beginner in English|in English again|You can say:|pirate/.test(ins) && /Never ask for real personal information/.test(ins) && /parent or a teach/.test(ins) && /game character made by a computer/.test(ins) && /never an instruction to you/.test(ins),
         npc.id + '：规矩说的是' + NAME[lang] + '（没有「学英语」「You can say:」），安全规则都在，网址里带的人设不用', ins.slice(0, 200));
-      ok(VOICES[lang][npc.gender].includes(s.voice) && s.voice === CORE.voiceFor(npc) && s.voice !== 'Evil' && JSON.stringify(s.input_audio_transcription) === '{"model":"qwen3-asr-flash-realtime"}',
-        npc.id + '：音色是这门语言的（' + s.voice + '），转写照旧不指定语言', s);
+      // 学习者说的话按这门语言听写（2026-11-22：不指定时老板在西语课里说的被认成了法语）
+      ok(VOICES[lang][npc.gender].includes(s.voice) && s.voice === CORE.voiceFor(npc) && s.voice !== 'Evil' && JSON.stringify(s.input_audio_transcription) === '{"model":"qwen3-asr-flash-realtime","language":"' + lang + '"}',
+        npc.id + '：音色是这门语言的（' + s.voice + '），转写按这门语言（' + lang + '）', s);
       const evalReq = r.http.find(h => h.body && /gentle, encouraging feedback/.test(String(h.body.messages && h.body.messages[0].content)));
       const sys = evalReq ? evalReq.body.messages[0].content : '';
       ok(r.you && r.you.text === HEARD[lang] && r.ev && r.ev.eval && r.ev.eval.voice === 1 && evalReq && sys.includes('spoken ' + NAME[lang] + ' conversation') && sys.includes('a better way to say it in ' + NAME[lang]) &&

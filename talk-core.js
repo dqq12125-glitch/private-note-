@@ -850,7 +850,10 @@
       o.up({ type: 'session.update', session: {
         modalities: ['text', 'audio'], voice: voiceFor(o.npc), instructions: instructions(o.npc, o.player, { goal: goal.i, memory: mem, level: o.level, ui: o.ui }),
         input_audio_format: 'pcm', output_audio_format: 'pcm',
-        input_audio_transcription: { model: 'qwen3-asr-flash-realtime' },   // 不强制英语：说中文就显示中文，孩子一看就知道
+        // 英语课不强制英语：说中文就显示中文，孩子一看就知道。
+        // 别的语言的课按这门语言听写（2026-11-22 老板在西语课里说「Soy Jack…」，不指定语言被听成了法语「Soit Jack, il doit.」——
+        // 岛民自己听的是声音、回得对，可气泡、开口句数、小步骤打勾看的都是这段文字）
+        input_audio_transcription: lang ? { model: 'qwen3-asr-flash-realtime', language: lang } : { model: 'qwen3-asr-flash-realtime' },
         turn_detection: null,
       } });
       // 让岛民先开口（开场白写在 instructions 里，这里只是游戏的提示）

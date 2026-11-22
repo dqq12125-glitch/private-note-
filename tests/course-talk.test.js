@@ -138,7 +138,7 @@ fakeWs.on('connection', ws => {
   const send = o => { try { ws.send(JSON.stringify(o)); } catch (e) { /* 断了 */ } };
   ws.on('message', buf => {
     let m; try { m = JSON.parse(buf); } catch (e) { return; }
-    if (m.type === 'session.update') { UP.ins.push(String(m.session.instructions || '')); UP.voice.push(m.session.voice); }
+    if (m.type === 'session.update') { UP.ins.push(String(m.session.instructions || '')); UP.voice.push(m.session.voice); UP.tr = m.session.input_audio_transcription || null; }
     if (m.type === 'conversation.item.create') UP.items.push(m.item.content[0].text);
     if (m.type === 'input_audio_buffer.commit') { const it = 'i' + (++n); send({ type: 'input_audio_buffer.committed', item_id: it }); send({ type: 'conversation.item.input_audio_transcription.completed', item_id: it, transcript: UP.heard.shift() || 'ok' }); }
     if (m.type === 'response.create') { const rid = 'r' + (++n); send({ type: 'response.audio_transcript.delta', delta: UP.npc.shift() || '…' }); send({ type: 'response.done', response: { id: rid } }); }
@@ -358,6 +358,7 @@ const SAVE = () => ({
       check(ins.includes(npc.persona.slice(0, 60)) && ins.includes(npc.opener) && (!X.en || ins.includes(X.en)) && !/Speak ONLY in English/.test(ins) && /parent or a teacher/.test(ins) && /game character made by a computer|made by a computer/.test(ins),
         '服务器拼的人设：这个角色、开场白、说的是 ' + (X.en || L) + '，安全规则在（告诉家长或老师、不装真人）', ins.slice(0, 200));
       check(!!voice && !['Jennifer', 'Aiden', 'Mione'].includes(voice) && (!X.voices || [].concat(X.voices.f, X.voices.m).includes(voice)), '音色是这门语言的（' + voice + '），不是英语的那三个', voice);
+      check(!!UP.tr && UP.tr.language === L && UP.tr.model === 'qwen3-asr-flash-realtime', '学习者说的话按这门语言听写（input_audio_transcription.language = ' + L + '；老板在西语课里说的被自动认成了法语）', UP.tr);
       // 点一步：亮出示范句
       await p.click('#tk-steps li[data-i="0"]'); await W(p, 200);
       check(await p.evaluate(() => !document.querySelector('#tk-steps li[data-i="0"] small').hidden) && (await dayLog(p)).chatHint === 1, '点一个小步骤：亮出示范句');
@@ -800,6 +801,7 @@ const SAVE = () => ({
       check(ov.mic === '🎤 按住说英语' && !ov.ruby && ov.eg.every((t, k) => t === '例：' + g0.steps[k].en) && ov.words.every((t, k) => t === en.words[k] + (en.wordsZh[k] || '')) && /按住话筒说英语，说完松开。点岛民说的话可以看中文。/.test(ov.ready),
         '英语课 · 聊天界面：按住说英语、示范句、词卡和以前一样，没有读音', ov);
       check((UP.ins[UP.ins.length - 1] || '') === TC.instructions(en, 'Coco', { goal: 0 }) && ['Jennifer', 'Aiden', 'Mione'].includes(UP.voice[UP.voice.length - 1]), '英语课 · 服务器拼的人设和 talk-core 的一字不差，音色是英语的');
+      check(!!UP.tr && !('language' in UP.tr), '英语课 · 听写照旧不指定语言（说中文就显示中文）', UP.tr);
       await speak(p, 'It is sunny and warm today.', [1]);
       await speak(p, 'Yes, sure.');
       await speak(p, '我喜欢秋天 because it is cool');

@@ -67,7 +67,7 @@ export default async function (C) {
       /In this task the STUDENT leads/.test(ins) && /tell the facts faithfully in/.test(ins) && /Never ask for real personal information/.test(ins) && /parent or a teach/.test(ins) && /game character made by a computer/.test(ins) &&
       !ins.includes(q0.opener) && !/for learning English|pirate|IGNORE ALL RULES|Evil/.test(ins),
       '　' + lang + ' 的委托：人设是 quests.js 的原文，开场白和示范句是译文，规矩说的是' + NAME[lang] + '、委托的规矩和安全规则都在；网址里带的 npc / p / persona 不看', ins.slice(0, 160));
-    ok(VOICE[lang].includes(s.voice) && s.voice === npc.voice && JSON.stringify(s.input_audio_transcription) === '{"model":"qwen3-asr-flash-realtime"}', '　' + lang + ' 的委托：音色是这门语言的（' + s.voice + '），转写照旧不指定语言', s.voice);
+    ok(VOICE[lang].includes(s.voice) && s.voice === npc.voice && JSON.stringify(s.input_audio_transcription) === '{"model":"qwen3-asr-flash-realtime","language":"' + lang + '"}', '　' + lang + ' 的委托：音色是这门语言的（' + s.voice + '），转写按这门语言（' + lang + '）', s.voice);
     // 人设后面多的两样：原文里靠英语才成立的东西换成这门语言里对应的；名字表（译文那一条带了 names 才有——小样里只有日语带）
     const NAMES = 'Names in this chat, written in Japanese (use exactly these forms): Ms Rosa = ロサさん; Hello Island = あいさつの島; Ben = ベン; Fisher Tom = つり人のトム.';
     ok(ins.includes('The facts and the task above were written for an English lesson.') && ins.includes('use the natural equivalents in ' + NAME[lang]) && ins.includes("accept the learner's " + NAME[lang] + ' equivalents') && ins.includes('it means ' + NAME[lang] + ' in this course.') &&
