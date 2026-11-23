@@ -776,7 +776,23 @@ const SAVE = o => Object.assign({
           check(n === want && !r.over.length, '第 ' + (k + 1) + ' 段「' + r.hs + '」（' + s.layout + '）：' + n + ' 个都画出来了、字没挤出格子', r);
           // 点第一个带例词的格子
           const j = s.items.findIndex(it => it && it.ex && it.ex.length);
-          if (j >= 0) { await p.click('#sheet [data-act=prSay][data-i="' + j + '"]'); await W(p, 300); check(await E(p, () => !document.getElementById('pr-ex').hidden && document.querySelectorAll('#pr-ex .wd-row').length > 0), '  点「' + s.items[j].t + '」：下面出例词'); }
+          if (j >= 0) {
+            await E(p, () => { document.getElementById('sheet').scrollTop = 0; });
+            // 先把这一格滚到看得见的地方（真的人也是看见了才点），记下点之前滚到哪
+            const y0 = await E(p, j => { const sh = document.getElementById('sheet'), t = sh.querySelector('[data-act=prSay][data-i="' + j + '"]'); t.scrollIntoView({ block: 'center' }); return sh.scrollTop; }, j);
+            await p.click('#sheet [data-act=prSay][data-i="' + j + '"]'); await W(p, 700);
+            check(await E(p, () => !document.getElementById('pr-ex').hidden && document.querySelectorAll('#pr-ex .wd-row').length > 0), '  点「' + s.items[j].t + '」：下面出例词');
+            // 2026-11-24 老板：「点一下就滑到最底下了」——例词出在点的那一格下面（那一排的后面、占满整排），点的那一格还在屏幕里，
+            // 例词没被贴底的按钮挡住（太长放不下时那一格贴着上沿）
+            const fit = await E(p, j => {
+              const sh = document.getElementById('sheet'), t = sh.querySelector('[data-act=prSay][data-i="' + j + '"]'), box = document.getElementById('pr-ex'), foot = sh.querySelector(':scope > .row:last-child');
+              const tr = t.getBoundingClientRect(), br = box.getBoundingClientRect(), sr = sh.getBoundingClientRect(), fr = foot.getBoundingClientRect();
+              const row = [...t.parentElement.children].filter(c => c !== box && Math.abs(c.getBoundingClientRect().top - tr.top) < 2);
+              return { inside: box.parentElement === t.parentElement, after: box.previousElementSibling === row[row.length - 1], gap: Math.round(br.top - tr.bottom), tTop: Math.round(tr.top - sr.top), boxEnd: Math.round(Math.min(fr.top, sr.bottom) - br.bottom), full: br.width >= t.parentElement.getBoundingClientRect().width - 2, y: Math.round(sh.scrollTop), left: Math.round(sh.scrollHeight - sh.clientHeight - sh.scrollTop) };
+            }, j);
+            check(fit.inside && fit.after && fit.gap >= 0 && fit.gap <= 16 && fit.full && fit.tTop >= 0 && (fit.boxEnd >= 0 || fit.tTop <= 12), '  例词出在点的那一格下面（占满整排），点的那一格还在屏幕里、例词没被下面的按钮挡住（点之前滚在 ' + Math.round(y0) + '，点之后 ' + fit.y + '）', fit);
+            if (k <= 2) await shot(p, L + '-primer-real-' + (k + 1) + '-tap-port');   // 点完那一下的样子（没有滚回顶上）
+          }
           const end = await E(p, () => { const sh = document.getElementById('sheet'); sh.scrollTop = sh.scrollHeight; const last = [...document.querySelectorAll('#sheet .pr-grid > *, #sheet .pr-list > *, #pr-ex:not([hidden])')].pop(), b = document.querySelector('#sheet > .row'); const lr = last.getBoundingClientRect(), br = b.getBoundingClientRect(); return { ok: lr.bottom <= br.top + 2 && br.bottom <= innerHeight + 1 && sh.scrollWidth <= sh.clientWidth + 1, lr: Math.round(lr.bottom), bt: Math.round(br.top) }; });
           check(end.ok, '  滚到底：最后一格看得见、下面的按钮在屏幕里、不横着滚', end);
           if (k <= 2) { await E(p, () => { document.getElementById('sheet').scrollTop = 0; }); await shot(p, L + '-primer-real-' + (k + 1) + '-port'); }

@@ -3912,18 +3912,47 @@
       '<div class="pr-sec"><h3>' + esc(lbl(s.title)) + '</h3><p>' + esc(lbl(s.intro)) + '</p><p class="wd-legend">' + trh('g.pr.tap') + '</p>' + body + '<div class="pr-ex" id="pr-ex" hidden></div></div>' + foot);
   }
   // 点了一格：念它，下面那块写说明和例词（词、读音、罗马字、意思、图、🔊）
-  function prEx(it) {
+  // t：点的那一格。说明和例词就出在它下面——格子表是它那一排的下面（占满整排），列表是它那一行的下面（横屏两列时也是那一排的下面）。
+  // 2026-11-24 老板：「这里点一下就滑到最底下了，能不能做得更符合人机工学」——以前这一块固定在整张表的最下面，点一格整页滚到底，
+  // 再点下一格要自己滑回来。现在手指不用挪：只在例词被贴底的按钮挡住时往上滚一点（prFit），点的那一格不会滚出屏幕
+  function prEx(it, t) {
     const box = $('#pr-ex'); if (!box) return;
     const note = uiPick(it), exs = Array.isArray(it.ex) ? it.ex.filter(x => x && x.t) : [];
-    // 上面一行：这一格（大字、小字、罗马字 / 拼音）、🐢 再慢慢念一遍（本机声音）、说明
-    box.innerHTML = '<div class="pr-ex-h"><b>' + esc(it.t) + '</b>' + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '') + (it.rom && it.rom !== it.t ? ' <i>' + esc(it.rom) + '</i>' : '') + SLOW_BTN(it.say, 'prSlowU') + (note ? '<span>' + esc(note) + '</span>' : '') + '</div>' +
+    // 上面一行。格子表：这一格（大字、小字、罗马字 / 拼音）、🐢 再慢慢念一遍（本机声音）、说明；
+    // 列表：字和说明就写在上面点的那一行里，这里不重复，只留一个「🐢 慢慢念一遍」
+    const inRow = !!(t && t.classList && t.classList.contains('pr-row'));
+    box.innerHTML = (inRow
+      ? '<div class="pr-ex-h"><button class="btn small ghost pr-ex-slow" data-act="prSlowU" data-t="' + esc(it.say) + '">🐢 ' + trh('g.wd.slow') + '</button></div>'
+      : '<div class="pr-ex-h"><b>' + esc(it.t) + '</b>' + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '') + (it.rom && it.rom !== it.t ? ' <i>' + esc(it.rom) + '</i>' : '') + SLOW_BTN(it.say, 'prSlowU') + (note ? '<span>' + esc(note) + '</span>' : '') + '</div>') +
       (exs.length ? '<small class="pr-ex-k">' + trh('g.pr.ex') + '</small><div class="wd-list">' + exs.map(x => {
         const m = LANG ? glossC({ zh: x.zh || '', en: x.en }) : null;
         return '<div class="wd-row"><span class="wd-pic" aria-hidden="true">' + esc(x.pic || '') + '</span><div class="wd-main"><div class="wd-w"><b>' + prRuby(x) + '</b></div>' +
           (LANG && LANG.script === 'kana' ? romaHTML(x.t, x.r || x.t) : '') + (m ? '<div class="wd-m">' + esc(m) + '</div>' : '') + '</div>' + SAYS(x.t, 'prSayEx', 'prSlowEx') + '</div>';
       }).join('') + '</div>' : '');
+    if (t && t.parentElement) {
+      try {
+        const par = t.parentElement, kids = [...par.children].filter(c => c !== box), cs = getComputedStyle(par);
+        const cols = Math.max(1, cs.display === 'grid' ? cs.gridTemplateColumns.split(' ').filter(Boolean).length : 1);
+        const k = kids.indexOf(t), last = kids[Math.min(kids.length - 1, (Math.floor(k / cols) + 1) * cols - 1)] || t;
+        last.after(box);
+      } catch (e) { /* 放不进去：留在原来的地方（表的最下面） */ }
+    }
     box.hidden = false;
-    try { box.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }); } catch (e) { /* 忽略 */ }
+    prFit(box, t);
+  }
+  // 例词那一块要看得全：被弹窗底下贴着的那排按钮挡住了才往上滚，滚多少算多少，而且点的那一格留在屏幕里；本来就看得全的不动
+  function prFit(box, t) {
+    const sh = $('#sheet'); if (!sh) return;
+    requestAnimationFrame(() => {
+      if (!box.isConnected || box.hidden) return;
+      const sr = sh.getBoundingClientRect(), foot = sh.querySelector(':scope > .row:last-child'), fr = foot ? foot.getBoundingClientRect() : null;
+      const bottom = Math.min(sr.bottom, innerHeight, fr && fr.top > sr.top ? fr.top : sr.bottom) - 8, top = Math.max(sr.top, 0) + 8;
+      const br = box.getBoundingClientRect(), tr0 = (t && t.isConnected ? t : box).getBoundingClientRect();
+      let dy = 0;
+      if (br.bottom > bottom) dy = Math.min(br.bottom - bottom, tr0.top - top);
+      else if (tr0.top < top) dy = tr0.top - top;
+      if (Math.abs(dy) > 2) sh.scrollBy({ top: dy, behavior: reduced ? 'auto' : 'smooth' });
+    });
   }
   // ---------- 第二部分：零基础怎么学（tools/course/WORDS.md 第 7–11 条，2026-11-22）----------
   // 新加的「自动弹出 / 首页卡片 / 点词弹卡」在自动化测试的浏览器里没写开关就当关着（和单词卡一样：好多老测试自己写存档，不能因为这个改流程）
@@ -5686,7 +5715,7 @@
       $$('#sheet .pr-cell.on, #sheet .pr-row.on').forEach(b => b.classList.remove('on'));
       t.classList.add('on');
       sayUnit(it.say);
-      prEx(it);
+      prEx(it, t);
     },
     prSayEx: t => say(t.dataset.t, undefined, 'f', true),
     // ---- 第二部分（WORDS.md 第 7–11 条）----
