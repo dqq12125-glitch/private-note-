@@ -125,9 +125,10 @@ const fakeHttp = http.createServer((req, res) => {
     let j = {}; try { j = JSON.parse(body); } catch (e) { j = {}; }
     const ms = Array.isArray(j.messages) ? j.messages : [], sys = String((ms[0] && ms[0].content) || ''), user = typeof (ms[1] && ms[1].content) === 'string' ? ms[1].content : '';
     // 按请求的形状认是哪一种（提示词的写法是 talk-core 的事）：打勾 max_tokens 60 + JSON、翻译 max_tokens 160、评语 JSON 没有上限、发音点评 max_tokens 80
-    const kind = !ms.length ? 'other' : j.max_tokens === 60 && j.response_format ? 'steps' : j.max_tokens === 160 && !j.response_format ? 'zh' : j.response_format && !j.max_tokens ? 'eval' : j.max_tokens === 80 && !j.response_format ? 'tip' : 'other';
-    UP.sys.push({ kind, sys, user });
-    const content = kind === 'steps' ? JSON.stringify({ done: UP.stepsResp }) : kind === 'zh' ? UP.zh : kind === 'eval' ? JSON.stringify(UP.evalResp) : kind === 'tip' ? UP.tip : '';
+    // 整段识别（qwen3-asr-flash：聊天里最后的听写结果一直没来时，把那一句的声音整段再认一遍）：回 UP.asr，记下指定的语言
+    const kind = /asr/i.test(String(j.model || '')) ? 'asr' : !ms.length ? 'other' : j.max_tokens === 60 && j.response_format ? 'steps' : j.max_tokens === 160 && !j.response_format ? 'zh' : j.response_format && !j.max_tokens ? 'eval' : j.max_tokens === 80 && !j.response_format ? 'tip' : 'other';
+    UP.sys.push({ kind, sys, user, lang: kind === 'asr' ? (j.asr_options || {}).language : undefined });
+    const content = kind === 'asr' ? UP.asr || '' : kind === 'steps' ? JSON.stringify({ done: UP.stepsResp }) : kind === 'zh' ? UP.zh : kind === 'eval' ? JSON.stringify(UP.evalResp) : kind === 'tip' ? UP.tip : '';
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ choices: [{ message: { content } }], output: { audio: { url: '' } } }));
   });
@@ -140,7 +141,15 @@ fakeWs.on('connection', ws => {
     let m; try { m = JSON.parse(buf); } catch (e) { return; }
     if (m.type === 'session.update') { UP.ins.push(String(m.session.instructions || '')); UP.voice.push(m.session.voice); UP.tr = m.session.input_audio_transcription || null; }
     if (m.type === 'conversation.item.create') UP.items.push(m.item.content[0].text);
-    if (m.type === 'input_audio_buffer.commit') { const it = 'i' + (++n); send({ type: 'input_audio_buffer.committed', item_id: it }); send({ type: 'conversation.item.input_audio_transcription.completed', item_id: it, transcript: UP.heard.shift() || 'ok' }); }
+    if (m.type === 'input_audio_buffer.commit') {
+      const it = 'i' + (++n), h = UP.heard.shift();
+      send({ type: 'input_audio_buffer.committed', item_id: it });
+      // { live, late, lateMs }：只给边说边出的字（没有最后的结果）；late 给了就过 lateMs 毫秒再补最后的结果
+      if (h && typeof h === 'object') {
+        send({ type: 'conversation.item.input_audio_transcription.delta', item_id: it, text: '', stash: h.live });
+        if (h.late) setTimeout(() => send({ type: 'conversation.item.input_audio_transcription.completed', item_id: it, transcript: h.late }), h.lateMs || 6000);
+      } else send({ type: 'conversation.item.input_audio_transcription.completed', item_id: it, transcript: h || 'ok' });
+    }
     if (m.type === 'response.create') { const rid = 'r' + (++n); send({ type: 'response.audio_transcript.delta', delta: UP.npc.shift() || '…' }); send({ type: 'response.done', response: { id: rid } }); }
   });
 });
@@ -641,6 +650,38 @@ const SAVE = () => ({
         await shot(p, L + '-tip');
         await p.evaluate(() => { EchoGame.S.settings.mode = 'self'; EchoGame.closeModal(); EchoGame.goHome('mon'); });
         await W(p, 300);
+      }
+      // ---------- 10 最后的听写结果一直没来（2026-11-24 老板的截图：说的是「¿De dónde eres?」，岛民听懂了，气泡停在边说边出的「te donde eres」）----------
+      {
+        const X10 = { es: ['te donde eres tu', '¿De dónde eres tú?', 'me gusta mucho esta isla', 'Me gusta mucho esta isla.'], ja: ['きょうはいいてんきです', '今日はいい天気です。', 'わたしはがくせいです', '私は学生です。'], zh: ['今天天气很好', '今天天气很好。', '我喜欢这个小岛', '我喜欢这个小岛。'] }[L];
+        UP.heard.length = 0; UP.npc.length = 0; UP.npc.push(npc.opener);
+        await p.evaluate(() => { try { EchoTalk.endIfOpen(); } catch (e) { /* 没开着 */ } }); await W(p, 300);
+        await talkTab(p);
+        const ok10 = await openChat(p, npc.id);
+        await p.waitForFunction(() => document.querySelectorAll('#tk-log .tk-b.npc').length > 0, null, { timeout: 6000 }).catch(() => {});
+        const lastYou = () => p.evaluate(() => { const b = [...document.querySelectorAll('#tk-log .tk-b.you')].pop(); return b ? { text: b.textContent, wait: b.classList.contains('wait'), dim: +getComputedStyle(b).opacity } : null; });
+        const hold = async () => { await p.locator('#tk-mic').dispatchEvent('pointerdown'); await W(p, 900); await p.locator('#tk-mic').dispatchEvent('pointerup'); };
+        const vl = async () => (await dayLog(p)).voiceLines || 0;
+        // ① 只有边说边出的字：先淡着显示；岛民答完 3 秒还没来，把这一句的声音整段再认一遍（按这门语言），换成带标点的那句，照常算一句
+        const v0 = await vl(), a0 = UP.sys.filter(x => x.kind === 'asr').length;
+        UP.asr = X10[1]; UP.heard.push({ live: X10[0] }); UP.npc.push('…');
+        await hold(); await W(p, 700);
+        const mid = await lastYou();
+        await W(p, 4500);
+        const fin = await lastYou(), v1 = await vl(), asr = UP.sys.filter(x => x.kind === 'asr');
+        check(ok10 && !!mid && mid.text === X10[0] && mid.wait && mid.dim < 1, '10 最后的听写结果没来：气泡先显示边说边出的字「' + X10[0] + '」，淡着（还没定）', mid);
+        check(!!fin && fin.text === X10[1] && !fin.wait && v1 === v0 + 1 && asr.length === a0 + 1 && asr[asr.length - 1].lang === L, '10 岛民答完 3 秒：这一句的声音整段再认一遍（语言 ' + L + '），气泡换成「' + X10[1] + '」，照常算一句开口', { fin, v0, v1, asr: asr.length - a0, lang: (asr[asr.length - 1] || {}).lang });
+        // ② 整段也没认出来：就用边说边出的字定下来、算一句；最后的结果晚到了只把字改对，不再数一遍
+        UP.asr = ''; UP.heard.push({ live: X10[2], late: X10[3], lateMs: 7000 }); UP.npc.push('…');
+        await hold(); await W(p, 5300);
+        const soft = await lastYou(), v2 = await vl();
+        await W(p, 2600);
+        const late = await lastYou(), v3 = await vl();
+        check(!!soft && soft.text === X10[2] && !soft.wait && v2 === v1 + 1, '10 整段也没认出来：用边说边出的字定下来（「' + X10[2] + '」），算一句', { soft, v1, v2 });
+        check(!!late && late.text === X10[3] && v3 === v2, '10 最后的结果晚到了：只把字改成「' + X10[3] + '」，不再数一遍', { late, v2, v3 });
+        UP.evalResp = { steps: [], done: false, stars: 1, praise: '', tips: [], memory: [], concern: false, concernWhy: '' };
+        await endChat(p);
+        await p.evaluate(() => { EchoGame.closeModal(); EchoGame.goHome('mon'); }); await W(p, 200);
       }
       await ctx.close();
     }

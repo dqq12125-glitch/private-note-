@@ -253,6 +253,7 @@
       '.tk-ov .tk-steps li small rt,.tk-ov .tk-w rt{font-size:.74em}',
       '.tk-ov ruby{margin:0 .14em}',
       '.tk-b .tk-zh{display:block;margin-top:4px;padding-top:4px;border-top:1px dashed var(--line,#d3e6e2);color:var(--ink-2,#4a6478);font-size:14px}',
+      '.tk-b.you.wait{opacity:.72}',   // 还没定下来的字（正在说、或者在等最后的听写结果）：淡一点
       '.tk-b.you.typed{background:#5f8f89}',
       '.tk-b.you.typed::after{content:" ⌨️";font-size:12px}',
       '.tk-tools{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}',
@@ -529,7 +530,8 @@
       await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' })));
       const src = ctx.createMediaStreamSource(MIC.stream);
       const node = new AudioWorkletNode(ctx, 'tk-cap');
-      node.port.onmessage = e => { if (MIC.on) { MIC.buf.push(e.data); MIC.len += e.data.length; if (MIC.len >= MIC.rate / 10) flushMic(); } };
+      // MIC.rec：这一次按住说的话另存一份（最多 30 秒），最后的听写结果一直不来时拿它整段再认一遍（settleHeard）
+      node.port.onmessage = e => { if (MIC.on) { MIC.buf.push(e.data); MIC.len += e.data.length; if (MIC.rec && MIC.recLen < MIC.rate * 30) { MIC.rec.push(e.data); MIC.recLen += e.data.length; } if (MIC.len >= MIC.rate / 10) flushMic(); } };
       src.connect(node);   // 不接到扬声器，免得回声
       MIC.node = node;
       return true;
@@ -840,6 +842,9 @@
         // 一个字都没听到的气泡（没出声 / 杂音）：等 5 秒，字还没来就删掉（正在按着说的那个不删）
         const empty = c.pend.filter(b => !b._has && b !== c.live);
         if (empty.length) setTimeout(() => empty.forEach(b => { if (!b._has && b !== c.live) { b.remove(); dropPend(c, b); } }), 5000);
+        // 边说边出的字有了，可最后的结果一直没来：岛民答完再等 3 秒还没来，就自己定下来（settleHeard）
+        const half = c.pend.filter(b => b._has && b !== c.live && b.classList.contains('wait'));
+        if (half.length) setTimeout(() => half.forEach(b => settleHeard(c, b)), 3000);
         if (!c.ending) status(readyText());
       }
       else if (m.type === 'you_item') {   // 松开话筒那一段的编号：给还没编号的最早那个气泡
@@ -851,8 +856,17 @@
       }
       else if (m.type === 'you') {
         if (m.item) { c.items = c.items || new Set(); if (c.items.has(m.item)) return; c.items.add(m.item); }
+        // 这一段等不到结果、已经自己定下来了（settleHeard）：晚到的结果只把字改对，不再数一遍
+        const sb = m.item && c.soft ? c.soft[m.item] : null;
+        if (sb) {
+          delete c.soft[m.item];
+          if (sb.isConnected) sb.textContent = m.text;
+          if (sb._turn) sb._turn.text = m.text;
+          markWords(c, m.text); checkSteps(c); stick();
+          return;
+        }
         const p = youBubble(c, m.item, firstFree(c));
-        if (p) { p.textContent = m.text; p._has = true; p.classList.remove('wait'); dropPend(c, p); stick(); } else bubble('you', m.text);
+        if (p) { p.textContent = m.text; p._has = true; p._pcm = null; p.classList.remove('wait'); dropPend(c, p); stick(); } else bubble('you', m.text);
         c.turns.push({ who: 'you', text: m.text });
         heard(c, m.text);
       } else if (m.type === 'limit') { c.limitHit = true; status(m.zh); }
@@ -899,7 +913,7 @@
       if (c.responding) { wsSend({ type: 'cancel' }); c.responding = false; }
       if (MIC.ctx && MIC.ctx.state === 'suspended') MIC.ctx.resume();
       if (OUT.ctx && OUT.ctx.state === 'suspended') OUT.ctx.resume();
-      MIC.buf = []; MIC.len = 0; MIC.on = true; c.pressAt = Date.now();
+      MIC.buf = []; MIC.len = 0; MIC.rec = []; MIC.recLen = 0; MIC.on = true; c.pressAt = Date.now();
       mic.classList.add('on'); mic.textContent = tx('tk.mic.on');
       // 一按下就出现自己的气泡，说的话边说边冒出来
       c.live = bubble('you wait', '🎤 …'); c.pend.push(c.live);
@@ -909,7 +923,9 @@
       c.holding = false; MIC.on = false; flushMic();
       mic.classList.remove('on'); mic.textContent = tx('tk.mic');
       const b = c.live; c.live = null;
+      const rec = MIC.rec ? { chunks: MIC.rec, len: MIC.recLen, rate: MIC.rate } : null; MIC.rec = null;
       if (Date.now() - c.pressAt < 400) { wsSend({ type: 'commit' }); if (b) { b.remove(); dropPend(c, b); } status(tx('tk.st.short')); return; }
+      if (b) b._pcm = rec;   // 这一句的声音跟着气泡走，最后的结果到了就扔掉
       wsSend({ type: 'commit' });
       if (b && !b._has) b.textContent = '……';
       status(tx('tk.st.think'));
@@ -945,6 +961,32 @@
     if (focus) { const i = $('#tk-in'); if (i) i.focus(); }
   }
 
+  // 学习者的气泡等不到最后的听写结果（2026-11-24 老板的截图：他说「¿De dónde eres?」，岛民听懂了、答了，可气泡停在边说边出的
+  // 「te donde eres」——没有标点、没有重音，是还没定下来的字；这一句也没算进开口句数）。实时听写偶尔不给最后那一下。
+  // 岛民答完 3 秒还没来：别的课把这一句的声音整段再认一遍（和口语题同一个整段识别，按这门语言，出来的带标点和重音），
+  // 认不出来、英语课（英语课的听写不指定语言，说中文要显示中文）就用边说边出的字。定下来以后照常算句数、词卡、打勾；
+  // 最后的结果晚到了只改字（上面 'you' 那一段的 c.soft）。服务器那边的记录里没有这一句（评语、句数以服务器的为准时会少算它）
+  async function settleHeard(c, b) {
+    if (c !== C || c.ending || !b.isConnected || !b.classList.contains('wait') || b._settling) return;
+    b._settling = true;
+    let text = '';
+    const pcm = b._pcm, lang = c.lang && G.lang && G.lang.asr ? G.lang.asr.cloud : '';
+    if (lang && pcm && pcm.len > pcm.rate * 0.3 && cloudSR()) {
+      try { const r = await wholeAsr(pcm.chunks, pcm.len, pcm.rate, lang); text = (r && r.text) || ''; } catch (e) { text = ''; }
+    }
+    b._settling = false;
+    if (c !== C || !b.isConnected || !b.classList.contains('wait')) return;   // 等的时候最后的结果到了
+    text = String(text || b.textContent || '').trim();
+    if (!text) return;
+    b.textContent = text; b.classList.remove('wait'); b._pcm = null; dropPend(c, b);
+    const turn = { who: 'you', text };
+    b._turn = turn;
+    // 这一句是在岛民那句回答之前说的：插在它前面（打勾的模型按先后看）
+    c.turns.splice(c.turns.length && c.turns[c.turns.length - 1].who === 'npc' ? c.turns.length - 1 : c.turns.length, 0, turn);
+    if (b._item) { c.soft = c.soft || {}; c.soft[b._item] = b; }
+    heard(c, text);
+    stick();
+  }
   // 孩子用语音说了一句（识别结果）：算句数、目标词卡片变绿、实时打勾
   function heard(c, text) {
     countLine(text);
