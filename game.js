@@ -207,6 +207,16 @@
       'g.rt.l14': '第 1–4 关：听和说', 'g.rt.scene': '看对话动画', 'g.rt.l57': '第 5–7 关：对话和 BOSS', 'g.rt.adv': '去冒险：到大地图上用学过的话', 'g.rt.chat': '和岛民聊一次天',
       'g.rt.next': '下一课：第 {n} 岛 {t}',
       'g.rt.done': '已完成 {n} 步', 'g.rt.more': '后面还有 {n} 步',
+      // 一步一步学：单词小课（tools/course/STARTER.md）
+      'g.mn.row': '🌱 一步一步学', 'g.mn.row.done': '学完了', 'g.mn.node': '第 {k} 节小课', 'g.mn.chip': '🌱 {k} / {n}',
+      'g.mn.new': '新词', 'g.mn.got': '记住了，下一步 →', 'g.mn.mw.ty': '看意思选词', 'g.mn.mw.t': '这是哪个词？',
+      'g.mn.fb.wrong': '没关系，再认一认，等一下再问你一次', 'g.mn.say.soft': '没关系，多听几遍，先往下学',
+      'g.mn.res.t': '学会了 {n} 个新词！', 'g.mn.res.sub': '{name} · 小课 {k} / {n}', 'g.mn.res.rev': '这几个词明天会出现在每日复习里。',
+      'g.mn.res.next': '下一节小课 →', 'g.mn.res.go': '小课学完了，开始闯关 →', 'g.mn.res.again': '再学一遍',
+      'g.mn.ask.h': '先一步一步学', 'g.mn.ask.p': '这一课有 {w} 个新词。先上 {n} 节小课：每节只学三四个，约 3 分钟，先教后练、答错不扣心。学完再来闯关就不难了。',
+      'g.mn.ask.go': '开始第 {k} 节小课', 'g.mn.ask.skip': '我学过了，直接闯关', 'g.mn.ls.next': '开始第 1 节小课 →',
+      'g.rt.mini': '上小课：每节学三四个新词',
+      'g.set.starter': '一步一步学', 'g.set.starter.d': '给零基础的人：每一课闯关以前先上几节小课，每节只学三四个新词，先教后练、答错不扣心。',
       'g.set.slow': '朗读速度', 'g.set.slow.off': '正常', 'g.set.slow.on': '🐢 慢', 'g.set.slow.d': '慢：配音放慢一点（声音不变调）。每个 🔊 旁边的 🐢 只放慢那一次。',
       'g.set.route': '新手路线', 'g.set.route.d': '首页最上面一步一步教你怎么学（打通第 3 岛以后就不再显示）。',
       'g.det.later': '再想想', 'g.det.go': '开始闯关',
@@ -860,6 +870,16 @@
       'g.rt.l14': 'Levels 1–4: listen and speak', 'g.rt.scene': 'Watch the Theatre', 'g.rt.l57': 'Levels 5–7: dialogues and the BOSS', 'g.rt.adv': 'Go on an adventure and use what you learned', 'g.rt.chat': 'Chat with an islander once',
       'g.rt.next': 'Next lesson: Island {n}, {t}',
       'g.rt.done': '{n} done', 'g.rt.more': '{n} more after these',
+      // Step by step: mini word lessons (tools/course/STARTER.md)
+      'g.mn.row': '🌱 Step by step', 'g.mn.row.done': 'Done', 'g.mn.node': 'Mini lesson {k}', 'g.mn.chip': '🌱 {k} / {n}',
+      'g.mn.new': 'New word', 'g.mn.got': 'Got it. Next →', 'g.mn.mw.ty': 'Pick the word', 'g.mn.mw.t': 'Which word is it?',
+      'g.mn.fb.wrong': 'That\'s OK. Look again. You\'ll get this one again soon', 'g.mn.say.soft': 'That\'s OK. Listen a few more times and keep going',
+      'g.mn.res.t': { one: 'You learned {n} new word!', other: 'You learned {n} new words!' }, 'g.mn.res.sub': '{name} · Mini lesson {k} of {n}', 'g.mn.res.rev': 'These words will come back in tomorrow\'s Daily review.',
+      'g.mn.res.next': 'Next mini lesson →', 'g.mn.res.go': 'Mini lessons done. Start the levels →', 'g.mn.res.again': 'Do it again',
+      'g.mn.ask.h': 'Learn step by step first', 'g.mn.ask.p': 'This lesson has {w} new words. Take {n} mini lessons first: 3 or 4 words each, about 3 minutes. Each word is taught, then practised, and a wrong answer never costs a heart. The levels will be easy after that.',
+      'g.mn.ask.go': 'Start mini lesson {k}', 'g.mn.ask.skip': 'I know these. Go to the levels', 'g.mn.ls.next': 'Start mini lesson 1 →',
+      'g.rt.mini': 'Mini lessons: 3 or 4 new words each',
+      'g.set.starter': 'Step by step', 'g.set.starter.d': 'For complete beginners: before the levels of each lesson you take a few mini lessons. Each one teaches only 3 or 4 new words, practises them right away, and a wrong answer never costs a heart.',
       'g.set.slow': 'Reading speed', 'g.set.slow.off': 'Normal', 'g.set.slow.on': '🐢 Slow', 'g.set.slow.d': 'Slow: recordings play a little slower (same pitch). The 🐢 next to each 🔊 slows down just that one time.',
       'g.set.route': 'Beginner\'s path', 'g.set.route.d': 'Step-by-step steps at the top of the home page (hidden after you clear Island 3).',
       'g.det.later': 'Not now', 'g.det.go': 'Start',
@@ -1675,6 +1695,8 @@
       // 课前讲解「这一课学什么」（WORDS.md §7）：哪个小镇 / 单元看过了 → 哪天（看过的第 1 关不再先弹讲解）。
       // 新手路线（§9）的开关 settings.route、点词看意思（§10）的开关 settings.wordTap、朗读慢一点（§11）settings.slow 都不放在这里（没有 = 照默认）
       seenLesson: {},
+      // 一步一步学（tools/course/STARTER.md）：n[小镇 / 单元编号] = 学完几节小课；skip[编号] = 说了「我学过了，直接闯关」。开关 settings.starter 不放在这里（没有 = 照默认）
+      mini: { n: {}, skip: {} },
     };
   }
   function merge(base, o) {
@@ -3341,7 +3363,8 @@
       trh(seen && seen.watched ? 'g.home.scene.seen' : 'g.home.scene.new') + '</small></span><span class="sb-go">▶</span></button>' : '';
     // 小岛：头下面一排「📖 单词表」（课本单元的在 unitHead 的那一排里）
     const wl = isUnit(wi) ? '' : '<div class="u-bar">' + (lessonOf(wi) ? '<button class="btn small ghost" data-act="lesson" data-w="' + wi + '">' + trh('g.ls.btn') + '</button>' : '') + '<button class="btn small" data-act="wordList" data-w="' + wi + '">' + trh('g.wd.btn') + '</button></div>';
-    return '<section class="world' + (isUnit(wi) ? ' unit' + (wi - NB === curIdx() ? ' now' : '') : '') + '" id="w' + wi + '" style="--wc:' + w.color + '">' + head + wl + '<div class="path">' + scBtn + nodes + '</div></section>';
+    // 🌱 一步一步学的那一排（开着、或者这一课学过至少一节小课才有）
+    return '<section class="world' + (isUnit(wi) ? ' unit' + (wi - NB === curIdx() ? ' now' : '') : '') + '" id="w' + wi + '" style="--wc:' + w.color + '">' + head + wl + miniRow(wi) + '<div class="path">' + scBtn + nodes + '</div></section>';
   }
   // ---------- 课本单元（适用于沪教版词汇；不叫「同步」，也不说「配套」：评估「必须改」第 6 条） ----------
   // 销售版只开放买了的那个学年的册（2026-10-08 评审：卖的是「本学年」，下一学年的内容包另买）：
@@ -3698,6 +3721,8 @@
   function cardsSeen(wi) { if (!S.seenCards || typeof S.seenCards !== 'object') S.seenCards = {}; if (!S.seenCards[wi]) { S.seenCards[wi] = dayStr(); save(); } }
   // 开始一关：第一次进第 1 关先看「这一课学什么」（§7）、再过一遍单词卡，再开考
   function levelGo(wi, li) {
+    // 开着「一步一步学」、这一课的小课还没学完：先问一句（tools/course/STARTER.md）
+    if (li === 0 && miniFirst(wi)) { miniAsk(wi, li); return; }
     if (lessonFirst(wi, li)) { lessonSheet(wi, { li }); return; }
     if (cardsFirst(wi, li)) { openCards(wi, { li }); return; }
     startLevel(wi, li);
@@ -3935,7 +3960,8 @@
     const w = WX[wi], L = lessonOf(wi);
     if (!w || !L) return;
     o = o || {};
-    RT.ls = { wi, li: o.li != null ? o.li : null, back: o.back || null };
+    // o.mini：从「一步一步学」来的（第一节小课之前先看这一页；下一步是小课，不是单词卡）
+    RT.ls = { wi, li: o.li != null ? o.li : null, back: o.back || null, mini: !!o.mini };
     const nextCards0 = RT.ls.li != null && cardsFirst(wi, RT.ls.li);
     lessonSeen(wi);   // 看过就记一笔（第一次进第 1 关不再先弹这一页）
     const g = isUnit(wi) ? wdGram(w) : null;
@@ -3946,7 +3972,7 @@
     }).join('');
     const tips = (L.tips || []).map(t => uiPick(t)).filter(Boolean).map(t => '<div class="ls-tip">💡 ' + esc(t) + '</div>').join('');
     const can = uiPick(L.can), intro = uiPick(L.intro);
-    const first = RT.ls.li != null, nextCards = nextCards0;
+    const first = RT.ls.li != null || RT.ls.mini, nextCards = nextCards0;
     openModal('<div class="wd-head"><span class="w-ico" style="background:' + esc(w.color || '') + '">' + esc(w.icon || '') + '</span><div class="wd-ht"><small class="wd-k">' + trh('g.ls.h') + '</small>' + wdTitle(wi) + '</div></div>' +
       (can ? '<div class="ls-can"><b>' + trh('g.ls.can') + '</b><span>' + esc(can) + '</span></div>' : '') +
       (intro ? '<p class="ls-intro">' + esc(intro) + '</p>' : '') +
@@ -3955,7 +3981,8 @@
       (tips ? '<h3 class="wd-h">' + trh('g.ls.tips') + '</h3>' + tips : '') +
       (first ? '' : '<div class="wd-tools"><button class="btn small ghost" data-act="wordList" data-w="' + wi + '">' + trh('g.wd.btn') + '</button></div>') +
       '<div class="row ls-foot">' + (first
-        ? '<button class="btn ghost" data-act="lsSkip">' + trh('g.wc.skip') + '</button><button class="btn sun" data-act="lsNext" data-focus>' + trh(nextCards ? 'g.ls.next' : 'g.ls.go') + '</button>'
+        ? (RT.ls.mini ? '<button class="btn ghost" data-act="close">' + trh('g.det.later') + '</button>' : '<button class="btn ghost" data-act="lsSkip">' + trh('g.wc.skip') + '</button>') +
+          '<button class="btn sun" data-act="lsNext" data-focus>' + trh(RT.ls.mini ? 'g.mn.ls.next' : nextCards ? 'g.ls.next' : 'g.ls.go') + '</button>'
         : (o.back ? '<button class="btn ghost" data-act="lsBack">' + trh('g.wd.back') + '</button>' : '') + '<button class="btn" data-act="lsDone" data-focus>' + trh('g.close') + '</button>') + '</div>');
   }
   // 意思里的 ___ 也画成空格子
@@ -3991,7 +4018,8 @@
     return [
       LANG && PRIMER && z === 0 ? ['primer', !!S.primerSeen] : null,
       lessonOf(z) ? ['lesson', !!(S.seenLesson || {})[z]] : null,
-      ['cards', !!(S.seenCards || {})[z] || st(0)],
+      // 开着「一步一步学」：这一步是上小课（每节 3 个新词），不是翻一遍单词卡
+      starterOn() && miniN(z) ? ['mini', miniLeft(z) === 0 || !!MN().skip[z] || st(0)] : ['cards', !!(S.seenCards || {})[z] || st(0)],
       ['l14', st(0) && st(1) && st(2) && st(3)],
       sc ? ['scene', !!(S.scenes[z] && S.scenes[z].watched)] : null,
       ['l57', st(4) && st(5) && st(6)],
@@ -4025,6 +4053,7 @@
     if (id === 'primer') primerSheet(0);
     else if (id === 'lesson') lessonSheet(z);
     else if (id === 'cards') openCards(z, {});
+    else if (id === 'mini') miniGo(z, null);
     else if (id === 'l14') goIsle(z, first([0, 1, 2, 3]));
     else if (id === 'scene') openScene(z);
     else if (id === 'l57' || id === 'next') goIsle(z, id === 'next' ? first([0, 1, 2, 3, 4, 5, 6]) : first([4, 5, 6]));
@@ -4195,6 +4224,164 @@
   // ---------- 🐢 朗读慢一点（§11）：设置「朗读速度：正常 / 慢」S.settings.slow；没有 = 零基础（第 0 级）慢、别的正常 ----------
   const slowOn = () => S.settings.slow === true || (S.settings.slow == null && !!S.place && S.place.lv === 0);
 
+  // ---------- 🌱 一步一步学：单词小课（tools/course/STARTER.md，2026-11-24）----------
+  // 老板：「完全没基础的情况下有点难学……可以让人真的从 0 开始学」。原来一座岛 12 个新词翻一遍单词卡就开考（四选一、错 3 次失败）。
+  // 现在闯关前面加几节小课：每节 3 个新词，先教（教学卡）后练（两个里选 → 这一节的词里选 → 看意思选词 → 跟读），答错不扣心、过两题再问。
+  // 小课借闯关的画面（#play、P、renderQ / onPick / 话筒那一套）：P.mini = { k 第几节（从 0 数）, n 共几节 }，题目带 q.mini。
+  // 开关 S.settings.starter：true 开、false 关、没有 = 零基础（第 0 级）开（自动化测试的浏览器里没写就当关着，和单词卡一样）
+  const starterOn = () => S.settings.starter === true || (S.settings.starter == null && !autoOff() && !!S.place && S.place.lv === 0);
+  const MN = () => {
+    if (!S.mini || typeof S.mini !== 'object') S.mini = {};
+    if (!S.mini.n || typeof S.mini.n !== 'object') S.mini.n = {};
+    if (!S.mini.skip || typeof S.mini.skip !== 'object') S.mini.skip = {};
+    return S.mini;
+  };
+  // 这一课的词按顺序 3 个一节；最后只剩 1 个就并进上一节（13 个词 = 3 + 3 + 3 + 4）
+  function miniGroups(wi) {
+    const n = ((WX[wi] || {}).words || []).length, gs = [];
+    for (let i = 0; i < n; i += 3) gs.push(range(Math.min(3, n - i)).map(k => i + k));
+    if (gs.length > 1 && gs[gs.length - 1].length === 1) gs[gs.length - 2].push(gs.pop()[0]);
+    return gs;
+  }
+  const miniN = wi => miniGroups(wi).length;
+  const miniDone = wi => Math.min(miniN(wi), MN().n[wi] | 0);
+  const miniLeft = wi => miniN(wi) - miniDone(wi);
+  // 点第 1 关时要不要先问「先一步一步学」：开着、这一课的小课没学完、没说过「我学过了」、第 1 关还没拿过星
+  const miniFirst = wi => starterOn() && miniLeft(wi) > 0 && !MN().skip[wi] && !((S.stars[wi + '-0'] || 0) > 0);
+  // 小课的一步。tc 教学卡（图、词、读音、意思，自动念一遍）；lw 听音选意思、mw 看意思选词：选项是 pool（这一课里的词的编号）里的词，
+  // 意思一样的（看意思选词：写法一样的）不放在一起；sr_w 跟读（和闯关的一样，只是两次没读准就往下走）
+  function miniQ(type, wi, i, pool) {
+    const w = WX[wi], it = w.words[i], q = { type, kind: 'word', w: wi, i, mini: true, en: it[0], zh: it[1], em: it[2], mean: meanOf(it), audio: it[0] };
+    if (type === 'sr_w') q.target = it[0];
+    if (type !== 'lw' && type !== 'mw') return q;
+    const mk = x => (type === 'mw' || q.mean == null ? wdNorm(x[0]) : LANG ? meanKey(x) : x[1]);
+    const seen = new Set([mk(it)]), ds = [];
+    (pool || []).forEach(j => { const o = w.words[j]; if (j === i || !o || seen.has(mk(o))) return; seen.add(mk(o)); ds.push(o); });
+    // 一个能当错误选项的都没有（这一节只有一个词、意思撞了）：从这一课别的词里找一个
+    if (!ds.length) distract(w.words, i, 1, mk).forEach(o => ds.push(o));
+    if (type === 'lw') {
+      const ms = ds.map(meanOf), ear = q.mean == null || ms.some(m => m == null);
+      if (ear) q.ear = true;
+      q.opts = shuffle([{ c: true, e: it[2], t: ear ? it[0] : q.mean }, ...ds.map((o, k) => ({ e: o[2], t: ear ? o[0] : ms[k] }))]);
+    } else { q.audio = null; q.opts = shuffle([{ c: true, t: it[0] }, ...ds.map(o => ({ t: o[0] }))]); }   // 看意思选词：不先念（念了就成了听音选词），选完再念
+    return q;
+  }
+  // 第 k 节小课的步骤（一个新词在一节里出现 5、6 次：教 → 马上认 → 听音选意思 → 看意思选词 → 跟读 → 小测）
+  function buildMini(wi, k) {
+    const w = WX[wi], gs = miniGroups(wi), g = gs[k] || [], prev = k > 0 ? gs[k - 1] : [], qs = [];
+    if (!w || !g.length) return qs;
+    const Q = (t, i, pool) => qs.push(miniQ(t, wi, i, pool));
+    // ① 热身：上一节的词听两个
+    shuffle(prev).slice(0, 2).forEach(i => Q('lw', i, prev));
+    // ② 一个一个教，教完马上认一次：第 1 个词两个里选（另一个是上一节的词；第一节没有上一节，就用下一个要教的），后面的在这一节教过的词里选
+    g.forEach((i, n) => { Q('tc', i); Q('lw', i, n ? g.slice(0, n + 1) : [i, prev.length ? prev[prev.length - 1] : g[1]]); });
+    // ③ 混着来：听音选意思（最后教的那个刚问过，不再问）→ 看意思选词（没有意思也没有图的词换成听音选）→ 跟读
+    shuffle(g.slice(0, -1)).forEach(i => Q('lw', i, g));
+    shuffle(g).forEach(i => Q(meanOf(w.words[i]) != null || w.words[i][2] ? 'mw' : 'lw', i, g));
+    g.forEach(i => Q('sr_w', i));
+    // ④ 小测：这一节的词每个再听一次，选项里混着上一节的词（最多 4 个选项）
+    shuffle(g).forEach(i => Q('lw', i, [i].concat(shuffle(prev.concat(g).filter(j => j !== i)).slice(0, 3))));
+    return qs;
+  }
+  function startMini(wi, k) {
+    const qs = buildMini(wi, k);
+    if (!qs.length) return;
+    primeTTS(); ac();
+    // li 写 0（别处按 RECIPES[P.li] 读的不出错）；小课没有红心，hearts 一直是 3
+    P = { wi, li: 0, mini: { k, n: miniN(wi) }, review: false, qs, idx: 0, total: qs.length, hearts: 3, combo: 0, maxCombo: 0, correct: 0, xp: 0, lost: 0, hits: 0, boss: false, bossMax: 0, revived: false, aidedN: 0, recall: 0 };
+    show('play');
+    renderHearts();
+    $('#p-combo').textContent = '';
+    $('#p-boss').innerHTML = '';
+    renderQ();
+  }
+  // 小课里选错了：不扣心、不记错题；这一题过两题再问一次（选项重新打乱），同一题最多再问两次
+  function miniAgain(q) {
+    const n = (q.again || 0) + 1;
+    if (n > 2) return;
+    P.qs.splice(Math.min(P.qs.length, P.idx + 3), 0, Object.assign({}, q, { again: n, opts: q.opts ? shuffle(q.opts) : q.opts }));
+    P.total = P.qs.length;
+  }
+  // 学完一节：记进度；这一节的词按「新学的」进每日复习（第 1 格、明天到期，占每天新进的名额，和课本新学的一样）；
+  // 一座岛的小课都学完了：第 1 关不再先弹单词卡（S.seenCards）
+  function miniFinish() {
+    hideFb();
+    const wi = P.wi, k = P.mini.k, n = P.mini.n, g = miniGroups(wi)[k] || [], M = MN(), first = (M.n[wi] | 0) <= k, today = dayStr();
+    if (first) M.n[wi] = k + 1;
+    // 这座岛学过的小课里的词，还不在复习本里的都试着放进去（当天新进的名额满了没进去的，下次学这座岛的小课时补上）
+    miniGroups(wi).slice(0, M.n[wi] | 0).forEach(gr => gr.forEach(i => {
+      const q = { kind: 'word', w: wi, i }, key = revKey(q);
+      if (S.rev.items[key] || !revNewOk()) return;
+      const e = revNew(q, key); e.b = 1; e.due = addDays(today, 1); e.x = 0;
+      dayLog().fresh = (dayLog().fresh || 0) + 1;
+    }));
+    revTrim();
+    const tmr = addDays(today, 1), inRev = g.some(i => (S.rev.items[revKey({ kind: 'word', w: wi, i })] || {}).due === tmr);
+    const all = miniLeft(wi) === 0;
+    if (all) { if (!S.seenCards || typeof S.seenCards !== 'object') S.seenCards = {}; if (!S.seenCards[wi]) S.seenCards[wi] = today; }
+    const xp = P.xp + 10, coins = first ? 5 : 2, before = lvInfo(S.xp).lv;
+    S.xp += xp; S.coins += coins;
+    const after = lvInfo(S.xp).lv;
+    if (after > before) S.coins += 20;
+    S.stats.maxCombo = Math.max(S.stats.maxCombo, P.maxCombo);
+    qProg('combo', P.maxCombo, true);
+    dayLog().mini = (dayLog().mini || 0) + 1;
+    const newDay = markToday();
+    save();
+    renderTop();
+    const next = all
+      ? '<button class="btn sun wide" data-act="go" data-w="' + wi + '" data-l="0" data-focus>' + trh('g.mn.res.go') + '</button>'
+      : '<button class="btn wide" data-act="mini" data-w="' + wi + '" data-k="' + (k + 1) + '" data-focus>' + trh('g.mn.res.next') + '</button>';
+    $('#result').innerHTML =
+      '<div class="r-hero"><div class="big" style="font-size:64px">🌱</div><h1 class="r-title">' + trh('g.mn.res.t', { n: g.length }) + '</h1>' +
+      '<p class="r-sub">' + trh('g.mn.res.sub', { name: wxName(wi), k: k + 1, n }) + '</p></div><div class="r-body">' +
+      // 这一节学会的词：一个词一个小牌子（图、词、意思），点一下念一遍
+      '<div class="mn-learned">' + g.map(i => { const it = WX[wi].words[i], m = meanOf(it); return '<button class="mn-w" data-act="wdSay" data-t="' + esc(it[0]) + '"><span aria-hidden="true">' + esc(it[2] || '') + '</span><b>' + rb(it[0]) + '</b>' + (m != null && m !== '' ? '<small>' + esc(m) + '</small>' : '') + '</button>'; }).join('') + '</div>' +
+      (inRev ? '<p class="r-sub" style="margin:0">' + trh('g.mn.res.rev') + '</p>' : '') +
+      '<div class="r-stats"><div class="stat xp"><b>+' + xp + '</b><small>' + trh('g.res.xp') + '</small></div><div class="stat cn"><b>+' + coins + '</b><small>' + trh('g.res.coins') + '</small></div><div class="stat cb"><b>' + P.maxCombo + '</b><small>' + trh('g.res.combo') + '</small></div></div>' +
+      '<div class="r-actions">' + next + '<div class="row" style="display:flex;gap:10px"><button class="btn ghost" style="flex:1" data-act="home">' + trh('g.res.map') + '</button>' +
+      '<button class="btn ghost" style="flex:1" data-act="mini" data-w="' + wi + '" data-k="' + k + '">' + trh('g.mn.res.again') + '</button></div></div></div>';
+    show('result');
+    SFX.win();
+    confetti(all ? 160 : 70);
+    const f = $('#result [data-focus]') || $('#result button');
+    if (f) setTimeout(() => f.focus({ preventScroll: true }), 100);
+    setTimeout(() => {
+      if (newDay) toast(tr('g.res.streak', { n: S.streak }), 'gold');
+      checkAch();
+      if (after > before) {
+        confetti(200);
+        openModal('<div class="big">🎖️</div>' + trh('g.res.lvup', { lv: after, title: titleOf(after) }) + '<button class="btn sun wide" data-act="close" data-focus>' + trh('g.res.yay') + '</button>');
+      }
+    }, 1700);
+  }
+  // 去上第 k 节（不给 = 下一节没学的）。只能上学过的和下一节；第一节之前先看「这一课学什么」（有、而且没看过）
+  function miniGo(wi, k) {
+    const n = miniN(wi);
+    if (!WX[wi] || !n) return;
+    const d = miniDone(wi);
+    k = Math.max(0, Math.min(k == null || isNaN(k) ? d : k, d, n - 1));
+    if (k === 0 && d === 0 && lessonOf(wi) && !(S.seenLesson || {})[wi]) { lessonSheet(wi, { mini: true }); return; }
+    closeModal();
+    startMini(wi, k);
+  }
+  // 开着「一步一步学」、小课没学完就点了第 1 关：先问一句（不锁关卡——说「我学过了」就照常闯关，以后这一课不再问）
+  function miniAsk(wi, li) {
+    const d = miniDone(wi);
+    openModal('<div class="big">🌱</div><h2>' + trh('g.mn.ask.h') + '</h2><p>' + trh('g.mn.ask.p', { w: (WX[wi].words || []).length, n: miniN(wi) }) + '</p>' +
+      '<button class="btn sun wide" data-act="mini" data-w="' + wi + '" data-focus>' + trh('g.mn.ask.go', { k: d + 1 }) + '</button>' +
+      '<div class="row"><button class="btn ghost" data-act="close">' + trh('g.det.later') + '</button><button class="btn ghost" data-act="miniSkip" data-w="' + wi + '" data-l="' + li + '">' + trh('g.mn.ask.skip') + '</button></div>');
+  }
+  // 小镇 / 单元卡片上的一排：🌱 一步一步学 ① ② ③ ④（开着、或者学过至少一节才显示）
+  function miniRow(wi) {
+    const n = miniN(wi), d = miniDone(wi);
+    if (!n || !(starterOn() || d > 0)) return '';
+    return '<div class="mn-row"><span class="mn-t">' + trh('g.mn.row') + '</span>' + range(n).map(k =>
+      '<button class="mn-node ' + (k < d ? 'done' : k === d ? 'cur' : 'lock') + '" data-act="mini" data-w="' + wi + '" data-k="' + k + '"' + (k > d ? ' disabled' : '') +
+      ' aria-label="' + esc(tr('g.mn.node', { k: k + 1 })) + '">' + (k < d ? '✓' : k + 1) + '</button>').join('') +
+      (d >= n ? '<span class="mn-ok">' + trh('g.mn.row.done') + '</span>' : '') + '</div>';
+  }
+
   // 闯关练习页最上面：📒 我的单词本（学过 n 个词）、🔤 发音入门（这门课有才有）
   function wordsBar() {
     return '<div class="wd-bar"><button class="btn small ghost" data-act="wordBook">' + trh('g.wb.btn', { n: bookCount() }) + '</button>' +
@@ -4231,6 +4418,8 @@
     return '<div class="boss-hp" id="bosshp"><span class="be">' + b.emoji + '</span><span class="bn">' + esc(bossName(b)) + '</span><div class="hp"><i style="width:' + pct + '%"></i></div></div>';
   }
   function renderHearts() {
+    // 小课没有红心：这里写「🌱 第几节 / 共几节」
+    if (P.mini) { $('#p-hearts').innerHTML = '<span class="mn-chip">' + trh('g.mn.chip', { k: P.mini.k + 1, n: P.mini.n }) + '</span>'; return; }
     $('#p-hearts').innerHTML = range(3).map(i => '<span class="' + (i < P.hearts ? '' : 'lost') + '">❤️</span>').join('');
   }
   function showCombo() {
@@ -4282,7 +4471,8 @@
     // 界面语言里没有意思时：P.cue（cueMode）= 'pic' 看图说 / 'hear' 先念一遍再看首字母说，格数按 fadeFor 换过；blind 的算法不变
     const t = q.type, srm = speakMode() === 'sr', it = itemOfQ(q);
     P.cue = cueMode(meanOf(it), it, q.kind, true);
-    P.fade = t === 'sp' ? 2 : /^sr_/.test(t) ? fadeFor(q, true) : t === 'bt' && srm ? Math.min(1, fadeFor(q, true)) : 0;
+    // 小课（q.mini）：跟读一直看着全文，不撤提示
+    P.fade = q.mini ? 0 : t === 'sp' ? 2 : /^sr_/.test(t) ? fadeFor(q, true) : t === 'bt' && srm ? Math.min(1, fadeFor(q, true)) : 0;
     P.aided = false;
     P.blind = t === 'sp' || P.fade >= 2 || (t === 'bt' && P.fade >= 1);
     hideFb();
@@ -4290,13 +4480,18 @@
     $('#p-prog').style.width = (P.idx / P.total * 100) + '%';
     // 撤了提示的跟读题不再叫「跟读」：看首字母说 / 凭记忆说 / 改正说法
     const FADE_LABEL = { 1: trh('g.fade.1'), 2: trh('g.fade.2'), 3: trh('g.fade.3') };
-    let h = '<div class="q-type">' + ((/^sr_/.test(t) && FADE_LABEL[P.fade]) || (q.ear ? trh('g.cue.' + t + '.ty') : TYPE_LABEL[q.type])) + '</div>';
+    let h = '<div class="q-type">' + (t === 'tc' ? trh('g.mn.new') : t === 'mw' ? trh('g.mn.mw.ty') : (/^sr_/.test(t) && FADE_LABEL[P.fade]) || (q.ear ? trh('g.cue.' + t + '.ty') : TYPE_LABEL[q.type])) + '</div>';
     const hintRow = '<div class="say-row"><button class="btn small ghost" data-act="hint" id="hintbtn">' + trh('g.play.hint') + '</button></div>';
     const said = P.fade === 3 ? (S.rev.items[revKey(q)] || {}).said || '' : '';
     // 意思那一行（qMean：中文界面照旧是 q.zh；界面语言里没有意思就不显示）
     const mean = qMean(q), meanDiv = mean != null ? '<div class="say-zh">' + esc(mean) + '</div>' : '';
     const slow = '<span>🐢</span>' + trh('g.play.slow');
-    if (t === 'lw') h += '<h2 class="q-title">' + trh(q.ear ? 'g.cue.lw.t' : 'g.q.lw.t') + '</h2>' + audioBlock() + optsHTML(q, q.ear ? 'en' : '');
+    // 小课的两样（tools/course/STARTER.md）：tc 教学卡——图、词（读音、罗马字）、意思，自动念一遍，点「记住了」往下走；mw 看意思（和图）选词
+    if (t === 'tc') h += '<div class="q-main"><div class="say-card tc-card">' + (q.em ? '<div class="say-emoji">' + q.em + '</div>' : '') + '<div class="say-text">' + rb(q.en) + '</div>' + romaHTML(q.en) + meanDiv +
+      '<div class="say-row"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.play') + '">' + SPK + '</button><button class="slow" data-act="saySlow" aria-label="' + trh('g.play.slowplay') + '">' + slow + '</button></div></div></div>' +
+      '<button class="btn wide" data-act="tcNext" id="tc-next">' + trh('g.mn.got') + '</button>';
+    else if (t === 'mw') h += '<h2 class="q-title">' + trh('g.mn.mw.t') + '</h2><div class="mw-cue">' + (q.em ? '<span class="say-emoji">' + q.em + '</span>' : '') + (mean != null && mean !== '' ? '<b>' + esc(mean) + '</b>' : '') + '</div>' + optsHTML(q, 'en', true);
+    else if (t === 'lw') h += '<h2 class="q-title">' + trh(q.ear ? 'g.cue.lw.t' : 'g.q.lw.t') + '</h2>' + audioBlock() + optsHTML(q, q.ear ? 'en' : '');
     else if (t === 'ls') h += '<h2 class="q-title">' + trh('g.q.ls.t') + '</h2>' + audioBlock() + optsHTML(q, 'en');
     else if (t === 'lm') h += '<h2 class="q-title">' + trh(q.ear ? 'g.cue.lm.t' : 'g.q.lm.t') + '</h2>' + audioBlock() + optsHTML(q, q.ear ? 'en' : '', true);
     else if (t === 'lr') h += '<h2 class="q-title">' + trh('g.q.lr.t') + '</h2>' + audioBlock() +
@@ -4334,6 +4529,7 @@
     // 例外：界面语言里没有意思、换成「先听一遍，再看首字母说」的（cueMode 'hear'，格数 1）就念这一遍——再听要点提示，算带提示
     const once = P.cue === 'hear' && P.fade === 1;
     if (t !== 'sp' && (once || !(P.fade && (t === 'sr_w' || t === 'sr_s')))) setTimeout(() => { if (P && P.q === q) say(q.audio); }, 380);
+    if (t === 'tc') { const b = $('#tc-next'); if (b) setTimeout(() => { if (P && P.q === q) b.focus({ preventScroll: true }); }, 60); }
   }
   // 撤了提示的题：亮出答案（marks：每个词说对没有，标绿 / 标红）
   function showAnswer(marks) {
@@ -4378,6 +4574,17 @@
 
   // 答对了。带着提示答对的（点过提示、看过原文、第 2 次才说对）：不算 Perfect、不加连击、经验减半、复习里不升格（明天再考），新学的按「弱」进复习
   function good(speak, perfect) {
+    // 小课：不进复习本（学完一节，这一节的词一起按「新学的」进，miniFinish）；每日任务、听说的次数照常算
+    if (P.mini) {
+      P.correct++; P.combo++; P.maxCombo = Math.max(P.maxCombo, P.combo);
+      const gain = Math.round((speak ? (perfect ? 8 : 6) : 4) * mult());
+      P.xp += gain;
+      if (speak) { S.stats.spoken++; qProg('spoken', 1); if (perfect) { S.stats.perfect++; qProg('perfect', 1); } logSpk(P.tries === 0); }
+      else { S.stats.listen++; qProg('listen', 1); }
+      SFX.ok(P.combo);
+      showCombo();
+      return gain;
+    }
     const aided = !!P.aided || (speak && P.tries > 0);
     P.aided = aided;
     P.correct++;
@@ -4401,6 +4608,8 @@
   // 周报「一次说对的比例」：开口题做完一道记一次（spkQ），第一次就不带提示说对的记 spk1
   function logSpk(first) { const L = dayLog(); L.spkQ = (L.spkQ || 0) + 1; if (first) L.spk1 = (L.spk1 || 0) + 1; }
   function bad() {
+    // 小课：不扣心、不记错题，过两题再问一次
+    if (P.mini) { P.combo = 0; P.lost++; SFX.bad(); buzz(120); showCombo(); miniAgain(P.q); return; }
     P.combo = 0; P.hearts--; P.lost++;
     addWrong(P.q);
     SFX.bad(); buzz(120);
@@ -4435,11 +4644,14 @@
       else b.classList.add('dim');
     });
     const hl = $('#hl'); if (hl) hl.classList.remove('blur');
-    if (o.c) { const g = good(false); showFb(true, praise() + tr('g.fb.xp', { n: g }) + (P.aided ? tr('g.fb.peek') : ''), detailOf(q)); }
-    else {
+    if (o.c) {
+      const g = good(false);
+      showFb(true, praise() + tr('g.fb.xp', { n: g }) + (P.aided ? tr('g.fb.peek') : ''), detailOf(q));
+      if (q.type === 'mw') setTimeout(() => say(q.en), 250);   // 看意思选词：选对了念一遍这个词
+    } else {
       bad();
-      showFb(false, tr('g.fb.wrong'), trh('g.fb.ans') + detailOf(q));
-      setTimeout(() => say(q.type === 'lr' ? q.en : q.audio), 300);
+      showFb(false, tr(P.mini ? 'g.mn.fb.wrong' : 'g.fb.wrong'), trh('g.fb.ans') + detailOf(q));
+      setTimeout(() => say(q.type === 'lr' ? q.en : q.audio || q.en), 300);
     }
   }
   // 听音排句
@@ -4511,7 +4723,7 @@
     if (r.score >= 60) passSpeak(r.score, true, r.marks);
     else {
       P.tries++;
-      if (P.tries + P.miss >= 3) failSpeak(r.marks);
+      if (P.tries + P.miss >= sayMax()) failSpeak(r.marks);
       else { SFX.bad(); $('#mic-hint').textContent = tr(masked ? 'g.fb.retry.mem' : 'g.fb.retry.red') + tr('g.fb.try', { n: P.tries + P.miss + 1 }); }
     }
   }
@@ -4520,7 +4732,7 @@
     const hint = $('#mic-hint'); if (!hint || !P) return;
     if (res.fail === 'unheard') {
       P.miss++;
-      if (P.tries + P.miss >= 3) {
+      if (P.tries + P.miss >= sayMax()) {
         if (P.q.type === 'bt') { P.btChoose = true; btReveal(true); hint.textContent = tr('g.fb.bt.unheard'); return; }
         failSpeak(); return;
       }
@@ -4531,6 +4743,8 @@
     hint.textContent = failHint(res);
     if (aiDown()) { const sk = $('#p-skip'); if (sk) sk.hidden = false; }
   }
+  // 口语题最多说几次：闯关 3 次；小课的跟读 2 次（没读准就先往下走，见 failSpeak）
+  const sayMax = () => (P && P.mini ? 2 : 3);
   function passSpeak(score, measured, marks) {
     const q = P.q;
     P.answered = true;
@@ -4538,10 +4752,18 @@
     const perfect = measured && score >= 85 && !P.aided;
     showAnswer(marks);
     const g = good(true, perfect);
-    showFb(true, tr(P.aided ? (P.review ? 'g.fb.pass.aid.rev' : 'g.fb.pass.aid') : perfect ? 'g.fb.perfect' : score >= 75 ? 'g.fb.good' : 'g.fb.pass') + tr('g.fb.xp', { n: g }), detailOf(q));
+    // 小课里第 2 次才读对的不说「有提示，经验减半」（小课不减经验、也不进复习）
+    showFb(true, tr(P.aided && !P.mini ? (P.review ? 'g.fb.pass.aid.rev' : 'g.fb.pass.aid') : perfect ? 'g.fb.perfect' : score >= 75 ? 'g.fb.good' : 'g.fb.pass') + tr('g.fb.xp', { n: g }), detailOf(q));
   }
   function failSpeak(marks) {
     const q = P.q;
+    // 小课：两次没读准（或没听清）就先往下走——亮出答案、再念一遍，不记错题（跟读是练习，不是考试；分数照实显示过了）
+    if (P.mini) {
+      P.answered = true; P.combo = 0; showCombo(); logSpk(false); showAnswer(marks);
+      showFb(null, tr('g.mn.say.soft'), detailOf(q));
+      setTimeout(() => say(q.target || q.en), 300);
+      return;
+    }
     P.answered = true;
     P.combo = 0; showCombo();
     addWrong(q);
@@ -4556,7 +4778,7 @@
     stopListening();
     P.answered = true;
     P.combo = 0; showCombo();
-    const q = P.q, ai = speakMode() === 'sr';
+    const q = P.q, ai = speakMode() === 'sr' && !P.mini;   // 小课里跳过跟读：不欠着、不进复习
     if (ai) { revLater(q); const L = dayLog(); L.aiSkip = (L.aiSkip || 0) + 1; }
     showAnswer();
     btReveal(false);
@@ -4623,7 +4845,7 @@
     if (!P || P.answered) return;
     if (v === 0) {
       P.tries++;
-      if (P.tries >= 3) { failSpeak(); return; }
+      if (P.tries >= sayMax()) { failSpeak(); return; }
       toast(tr('g.play.rate.again') + (canRecord() && P.q.type !== 'bt' ? tr('g.play.rate.rerec') : ''));
       say(P.q.target);
       if (canRecord() && P.q.type !== 'bt' && speakMode() === 'self') { $('#self').hidden = true; setMic(false, tr('g.play.rerec')); }
@@ -4707,6 +4929,7 @@
   }
 
   function finish() {
+    if (P.mini) { miniFinish(); return; }   // 小课有自己的结算（tools/course/STARTER.md）
     hideFb();
     const acc = P.correct / P.total;
     const stars = P.lost === 0 && acc >= 0.9 ? 3 : acc >= 0.7 ? 2 : 1;
@@ -5097,6 +5320,8 @@
       '<div class="set" id="set-slow"><label>' + trh('g.set.slow') + '</label><div class="seg"><button class="' + (slowOn() ? '' : 'on') + '" data-act="setSlow" data-v="0">' + trh('g.set.slow.off') + '</button><button class="' + (slowOn() ? 'on' : '') + '" data-act="setSlow" data-v="1">' + trh('g.set.slow.on') + '</button></div><small>' + trh('g.set.slow.d') + '</small></div>' +
       // 新手路线（§9）：首页最上面那张卡片
       '<div class="set" id="set-route"><label>' + trh('g.set.route') + '</label><div class="seg"><button class="' + (routeOn() ? 'on' : '') + '" data-act="setRoute" data-v="1">' + trh('g.set.on') + '</button><button class="' + (routeOn() ? '' : 'on') + '" data-act="setRoute" data-v="0">' + trh('g.set.off') + '</button></div><small>' + trh('g.set.route.d') + '</small></div>' +
+      // 一步一步学（tools/course/STARTER.md）：闯关以前先上小课。零基础（第 0 级）默认开
+      '<div class="set" id="set-starter"><label>' + trh('g.set.starter') + '</label><div class="seg"><button class="' + (starterOn() ? 'on' : '') + '" data-act="setStarter" data-v="1">' + trh('g.set.on') + '</button><button class="' + (starterOn() ? '' : 'on') + '" data-act="setStarter" data-v="0">' + trh('g.set.off') + '</button></div><small>' + trh('g.set.starter.d') + '</small></div>' +
       (window.ECHO_APP ? '<div class="set"><label>' + tr('g.set.sc.app') + '</label><small>' + tr('g.set.sc.app.d') + '</small></div>' :
       '<div class="set"><label>' + tr('g.set.sc.mode') + '</label><div class="seg">' +
       ['auto', 'self'].map(m => '<button class="' + (st.mode === m ? 'on' : '') + '" data-act="setMode" data-m="' + m + '">' + tr('g.set.mode.' + m) + '</button>').join('') +
@@ -5477,7 +5702,7 @@
     lsDone: () => { RT.ls = null; closeModal(); },
     lsBack: () => { const L = RT.ls; RT.ls = null; if (L && RT.wl && RT.wl.wi === L.wi) wordList(L.wi, RT.wl.back); else closeModal(); },
     // 第一次进第 1 关：讲解看完 → 单词卡（没看过的话）→ 开考；「跳过，直接闯关」两样都记一笔
-    lsNext: () => { const L = RT.ls; RT.ls = null; if (!L || L.li == null) { closeModal(); return; } if (cardsFirst(L.wi, L.li)) { openCards(L.wi, { li: L.li }); return; } closeModal(); startLevel(L.wi, L.li); },
+    lsNext: () => { const L = RT.ls; RT.ls = null; if (L && L.mini) { closeModal(); startMini(L.wi, 0); return; } if (!L || L.li == null) { closeModal(); return; } if (cardsFirst(L.wi, L.li)) { openCards(L.wi, { li: L.li }); return; } closeModal(); startLevel(L.wi, L.li); },
     lsSkip: () => { const L = RT.ls; RT.ls = null; if (!L || L.li == null) { closeModal(); return; } cardsSeen(L.wi); closeModal(); startLevel(L.wi, L.li); },
     // 🆘 求助的话（聊天页的 🆘 也是它）
     sosList: () => { SFX.tap(); helpSheet(); },
@@ -5571,7 +5796,15 @@
       openModal('<h2>' + trh('g.ev.quit.h') + '</h2><p>' + trh('g.ev.quit.p') + '</p><div class="row"><button class="btn ghost" data-act="home">' + trh('g.ev.quit.yes') + '</button><button class="btn" data-act="close" data-focus>' + trh('g.ev.quit.no') + '</button></div>');
     },
     home: () => { closeModal(); goHome(); },
-    retry: () => { closeModal(); const p = P; if (!p) { goHome(); return; } if (p.review) startLevel(0, 0, true); else startLevel(p.wi, p.li); },
+    retry: () => { closeModal(); const p = P; if (!p) { goHome(); return; } if (p.mini) startMini(p.wi, p.mini.k); else if (p.review) startLevel(0, 0, true); else startLevel(p.wi, p.li); },
+    // ---- 🌱 一步一步学：单词小课（tools/course/STARTER.md）----
+    // 小镇 / 单元卡片上的 ① ② ③、「先一步一步学」的弹窗、小课结算页的「下一节」「再学一遍」、新手路线
+    mini: t => { SFX.tap(); miniGo(num(t, 'w'), t.dataset.k != null ? num(t, 'k') : null); },
+    // 「我学过了，直接闯关」：这一课以后不再问
+    miniSkip: t => { const wi = num(t, 'w'), li = t.dataset.l != null ? num(t, 'l') : 0; MN().skip[wi] = 1; save(); closeModal(); levelGo(wi, li); },
+    // 教学卡的「记住了，下一步」
+    tcNext: () => { if (!P || !P.q || P.q.type !== 'tc' || P.answered) return; P.answered = true; SFX.tap(); onNext(); },
+    setStarter: t => { S.settings.starter = t.dataset.v === '1'; save(); settingsSheet(); },
     revive: () => {
       if (!P || S.coins < 30 || P.revived) return;
       S.coins -= 30; P.revived = true; P.hearts = 2; save(); renderHearts(); closeModal(); SFX.coin();

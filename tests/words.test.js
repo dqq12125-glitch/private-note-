@@ -734,6 +734,27 @@ const SAVE = o => Object.assign({
       check(L !== 'ja' || (bk.length >= 1 && bk.some(h => noRt(h) === w0.words[1][0])), '日语单词本：用罗马字也找得到（' + (L === 'ja' ? JA.romaji(w0.words[1][3].r) : '') + '）', bk.slice(0, 3));
       await shot(p, L + '-book-' + ui + '-port');
       await act(p, 'close');
+      // ---------- 一步一步学（tools/course/STARTER.md）：别的课的小课——教学卡的词标读音（日语、中文）、日语多一行罗马字、有界面语言的意思，念的是课程包里的配音 ----------
+      await E(p, () => { window.__keys.length = 0; EchoGame.S.settings.starter = true; EchoGame.S.seenLesson[0] = 'x'; });
+      await act(p, 'mini', { w: '0', k: '0' }); await W(p, 800);
+      const tc = await E(p, () => { const P = EchoGame.P(), c = document.querySelector('#p-body .tc-card'); return c && P && P.mini ? { word: c.querySelector('.say-text').innerHTML, rom: (c.querySelector('.wd-rom') || {}).textContent || '', mean: (c.querySelector('.say-zh') || {}).textContent || '', keys: window.__keys.slice(), n: P.total, hud: document.getElementById('p-hearts').textContent } : null; });
+      check(!!tc && noRt(tc.word) === w0.words[0][0] && (L === 'ja' ? tc.rom === JA.romaji(w0.words[0][3].r) : !tc.rom) && !!tc.mean && tc.keys.some(k => k.startsWith(key(w0.words[0][0]) + '/')) && /🌱 1 \//.test(tc.hud),
+        '小课（一步一步学）：教学卡「' + w0.words[0][0] + '」' + (L === 'ja' ? '有罗马字 ' + (tc || {}).rom : '') + '、有意思（' + (tc || {}).mean + '），念的是课程包里的配音', tc);
+      const hasR = w0.words.slice(0, 3).some(x => x[3] && x[3].r && x[3].r !== x[0]);
+      if (L !== 'es' && hasR) {
+        // 读音：这一节 3 个词里有带读音的，教学卡 / 选项上要标出来（走到看意思选词那一步，选项是词）
+        let rubySeen = /<ruby>/.test((tc || {}).word || '');
+        for (let k = 0; k < 30 && !rubySeen; k++) {
+          const c = await E(p, () => { const P = EchoGame.P(); return P && P.q ? { t: P.q.type, ok: (P.q.opts || []).findIndex(o => o.c), html: document.getElementById('p-body').innerHTML } : null; });
+          if (!c) break;
+          if (/<ruby>/.test(c.html) && (c.t === 'tc' || c.t === 'mw')) { rubySeen = true; break; }
+          if (c.t === 'tc') await p.click('#tc-next'); else if (c.t === 'sr_w') { await act(p, 'rate', { v: '2' }); await W(p, 80); await p.click('#fb-btn'); } else { await p.click('#p-body .opt[data-i="' + c.ok + '"]'); await W(p, 80); await p.click('#fb-btn'); }
+          await W(p, 150);
+        }
+        check(rubySeen, '小课：带读音的词在教学卡 / 选项上标了读音（<ruby>）');
+        await shot(p, L + '-mini-' + ui + '-port');
+      } else await shot(p, L + '-mini-' + ui + '-port');
+      await E(p, () => { EchoGame.S.settings.starter = undefined; EchoGame.goHome('quiz'); }); await W(p, 300);
       const en = await E(p, () => { const s = JSON.parse(localStorage.getItem('echo-island-v1')); return { seen: s.seenCards, primer: s.primerSeen }; });
       check(!Object.keys(en.seen || {}).length && !en.primer, '英语课的存档里没有这门课的单词卡、发音入门记录（每门课各自一份）', en);
       await ctx.close();
