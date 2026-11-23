@@ -2,7 +2,7 @@
 //   node tests/words.test.js [--only=en,p2,ja,zh,es,real]
 //   第二部分：en 里第一次进第 1 关先出「这一课学什么」（例句一字不差、对话里的问答不显示空的意思行）再单词卡；英语界面 / 横屏的课前讲解、求助的话；
 //   p2（英语课）：求助的话那张表、聊天页的 🆘、新手路线（每一步、打勾、点了去那里、收成「下一课」、第 3 岛以后不出）、点词看意思（例句、闯关题目、
-//   点外面收起、查不到不弹）、朗读慢一点（0.8 倍速、🐢 这一次 0.75、零基础默认慢）；ja / zh / es：用正式的 lessons.json——课前讲解（读音、拼音、罗马字、意思）、
+//   点外面收起、查不到不弹）、朗读慢一点（0.8 倍速、🐢 这一次 0.6、零基础默认慢）；ja / zh / es：用正式的 lessons.json——课前讲解（读音、拼音、罗马字、意思）、
 //   发音入门最后一段是求助的话（🔊 放课程包里的那句）、日语例句里点「先生」弹小卡、罗马字按词分开（ohayou gozaimasu、tanaka sensei）
 // 自己起本机小网站（游戏文件 + /packs/ 课程包小样）。英语课是老模式（配音在 assets/voice，放了哪段看 <audio> 的地址）；
 // 别的课的课程内容是 tools/course/build.js 对真的源文件出的 course.json，发音入门用这里造的小样（每门语言两段、几格），配音是借来的一段假字节，
@@ -542,7 +542,8 @@ const SAVE = o => Object.assign({
       await p.click('#sheet .wd-list > .wd-row:first-child [data-act=wdSay]'); await W(p, 300);
       await p.click('#sheet .wd-list > .wd-row:first-child [data-act=wdSlow]'); await W(p, 300);
       const rates = await E(p, () => window.__rates.slice());
-      check(rates[0] === 0.8 && rates[1] === 0.75, '§11 「慢」：配音 0.8 倍速放；🐢 只这一次放慢（0.75）', rates);
+      // 🐢 是 0.6（2026-11-23 老板：「慢速，并不慢」——以前被夹成 0.75，和「慢」的 0.8 几乎一样）
+      check(rates[0] === 0.8 && Math.abs(rates[1] - 0.6) < 0.001, '§11 「慢」：配音 0.8 倍速放；🐢 只这一次放慢到 0.6，明显比「慢」还慢', rates);
       await shot(p, 'en-list-slow-zh-port');
       await act(p, 'close');
       await ctx.close();

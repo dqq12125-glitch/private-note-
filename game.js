@@ -2169,9 +2169,15 @@
       if (onFail) onFail(); else silent(res, text);
     };
     a.src = url;
-    // 设置「朗读速度：慢」（WORDS.md §11）：没特意给语速的配音以 0.8 倍速放，音高不变
-    a.playbackRate = (rate || S.settings.rate) < 0.75 ? 0.75 : !rate && slowOn() ? 0.8 : 1;
-    try { a.preservesPitch = true; } catch (e) { /* 老浏览器没有 */ }
+    // 语速，音高不变：点了 🐢（给的语速比 0.75 慢，各处是 0.6 / 对话动画 0.65）就照它放，最慢 0.5；
+    // 没特意给语速时，设置「朗读速度：慢」（WORDS.md §11）是 0.8，不然 1。
+    // （2026-11-23 老板：「慢速，并不慢」——以前 🐢 的 0.6 被夹成 0.75，零基础默认又是 0.8，两个几乎一样）
+    const want = rate || S.settings.rate, r = want < 0.75 ? Math.max(0.5, want) : !rate && slowOn() ? 0.8 : 1;
+    // iPhone：换 src 以后加载时会把 playbackRate 换回 defaultPlaybackRate，两个都设，开始放的时候再对一次
+    try { a.defaultPlaybackRate = r; } catch (e) { /* 老浏览器没有 */ }
+    a.playbackRate = r;
+    a.onplaying = () => { if (Math.abs(a.playbackRate - r) > 0.01) a.playbackRate = r; };
+    try { a.preservesPitch = true; a.webkitPreservesPitch = true; } catch (e) { /* 老浏览器没有 */ }
     startPlaying();
     const pr = a.play();
     // 被下一句打断（AbortError：翻单词卡、连着点 🔊 时上一句还没放完）不是「要点一下才能出声」，不提示
