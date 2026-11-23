@@ -1544,8 +1544,12 @@
   async function lmOpen1() {
     clearTimeout(LM.t);
     if (LM.stream && LM.stream.active && LM.ctx && LM.ctx.state !== 'closed') {
-      if (LM.ctx.state !== 'running') { try { await LM.ctx.resume(); } catch (e) {} }
-      if (await lmFlowing(300)) return LM;
+      // 本来就在跑的：声音每 8 毫秒来一次，0.3 秒没来就是不送了，只再等一小会儿（主线程刚忙完的话，积着的消息这时候会到）；
+      // 刚叫醒（resume）的要一会儿才来，等久一点。2026-11-24 复查：以前一律再等 0.3 秒才重开，重开好的时候点话筒已经过去近半秒，
+      // 一点就说的人头半秒的声音丢了（tests/speech.test.js 1b：识别结果先到了，声音一段都还没送过去）
+      const was = LM.ctx.state === 'running';
+      if (!was) { try { await LM.ctx.resume(); } catch (e) {} }
+      if (await lmFlowing(was ? 60 : 300)) return LM;
       LM.stale++;   // 不出声了：关掉重开
     }
     lmShut();
@@ -1908,7 +1912,8 @@
         if (sock) { try { sock.send(JSON.stringify({ type: 'session.finish' })); } catch (e) {} setTimeout(() => sock.close(), 400); }
         const t = full();
         if (t && !partial) return resolve({ text: t, err: null, ms: Math.round(performance.now() - t0), how: why });
-        if (voiced < 3 || len < rate * 0.3) return resolve(t ? { text: t, err: null, how: why } : { text: '', err: why === 'user' ? 'aborted' : 'no-speech' });
+        // how 也带上（只给角标 / speechLog 看：云端这条路没出字时分得清是没人说话 silence、到时间了 max、还是麦克风不出声 nodata）
+        if (voiced < 3 || len < rate * 0.3) return resolve(t ? { text: t, err: null, how: why } : { text: '', err: why === 'user' ? 'aborted' : 'no-speech', how: why });
         // 实时识别没认完（或者没连上）：录好的整段重新识别；整段也失败就用手上的半句
         if (o.onState) o.onState(tx('tk.asr.busy'));
         const w = await wholeAsr(chunks, len, rate, o.lang && o.lang.cloud);

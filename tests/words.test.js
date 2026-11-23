@@ -223,13 +223,14 @@ const SAVE = o => Object.assign({
   });
   const lastPlay = p => E(p, () => window.__plays[window.__plays.length - 1] || '');
   // 一个词在页面上的位置（点它用）：sel 里第一个含这个词的字（不算读音 <rt>）
-  const ptAt = (p, sel, word) => E(p, ([sel, word]) => {
+  // tail：点在这个词最后一个字的右半边（caretRangeFromPoint 这时给的是这个字后面的缝，2026-11-24 复查）
+  const ptAt = (p, sel, word, tail) => E(p, ([sel, word, tail]) => {
     for (const box of document.querySelectorAll(sel)) {
       const w = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
-      for (let n = w.nextNode(); n; n = w.nextNode()) { const i = n.data.toLowerCase().indexOf(word.toLowerCase()); if (i >= 0 && !(n.parentElement && n.parentElement.closest('rt'))) { const rg = document.createRange(); rg.setStart(n, i); rg.setEnd(n, i + word.length); const b = rg.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; } }
+      for (let n = w.nextNode(); n; n = w.nextNode()) { const i = n.data.toLowerCase().indexOf(word.toLowerCase()); if (i >= 0 && !(n.parentElement && n.parentElement.closest('rt'))) { const rg = document.createRange(); rg.setStart(n, tail ? i + word.length - 1 : i); rg.setEnd(n, i + word.length); const b = rg.getBoundingClientRect(); return { x: b.left + b.width * (tail ? 0.8 : 0.5), y: b.top + b.height / 2 }; } }
     }
     return null;
-  }, [sel, word]);
+  }, [sel, word, !!tail]);
   // 点词弹出来的小卡：词、意思（没弹是 null）
   const popOf = p => E(p, () => { const e = document.getElementById('wd-pop'); return e && !e.hidden ? { w: e.querySelector('.wd-w b').textContent, h: e.querySelector('.wd-w b').innerHTML, m: (e.querySelector('.wd-m') || {}).textContent || '' } : null; });
 
@@ -483,6 +484,12 @@ const SAVE = o => Object.assign({
       pt = await ptOf('#sheet .wd-ex-t > span', 'Wang');
       if (pt) { await p.mouse.click(pt.x, pt.y); await W(p, 300); }
       check(!!pt && !(await pop()), '§10 点课程里没有的词（Wang）：不弹（不猜）');
+      // 点在词尾最后一个字母的右半边（2026-11-24 复查：以前算成后面的标点 / 空格，不弹；中文日语的单字词会点成后面那个词）
+      pt = await ptAt(p, '#sheet .wd-ex-t > span', 'morning', true);
+      if (pt) { await p.mouse.click(pt.x, pt.y); await W(p, 300); }
+      pp = await pop();
+      check(!!pt && !!pp && pp.w === 'good morning', '§10 点在「morning」最后一个字母的右半边：照样弹「good morning」', pp);
+      await act(p, 'wdPopX');
       await act(p, 'close');
       await E(p, () => EchoGame.playQs([['sr_s', 0, 0]])); await W(p, 400);
       const q0 = await E(p, () => ({ t: EchoGame.P().q.target, idx: EchoGame.P().idx }));
@@ -544,6 +551,18 @@ const SAVE = o => Object.assign({
       const rates = await E(p, () => window.__rates.slice());
       // 🐢 是 0.6（2026-11-23 老板：「慢速，并不慢」——以前被夹成 0.75，和「慢」的 0.8 几乎一样）
       check(rates[0] === 0.8 && Math.abs(rates[1] - 0.6) < 0.001, '§11 「慢」：配音 0.8 倍速放；🐢 只这一次放慢到 0.6，明显比「慢」还慢', rates);
+      // 开着「慢」，带着语速来的（对战的题目 0.9、「听一下答案」/ 大地图「再听一遍」0.8、对话动画照设置的 0.9）也不比 0.8 快
+      // （2026-11-24 复查：以前这几处照正常速度放，再听一遍反而比第一遍快）
+      const w0en = await E(p, () => WORLDS[0].words[0][0]);
+      await E(p, () => { window.__rates.length = 0; });
+      for (const r of [0.9, 0.8, 0.75]) { await E(p, ([t, r]) => { EchoGame.say(t, r); }, [w0en, r]); await W(p, 300); }
+      const rates2 = await E(p, () => window.__rates.slice());
+      check(rates2.length === 3 && rates2.every(r => r === 0.8), '§11 「慢」：带着 0.9 / 0.8 / 0.75 的语速来的也按 0.8 放', rates2);
+      await E(p, () => { EchoGame.S.settings.slow = false; window.__rates.length = 0; });
+      for (const r of [0.9, undefined]) { await E(p, ([t, r]) => { EchoGame.say(t, r == null ? undefined : r); }, [w0en, r == null ? null : r]); await W(p, 300); }
+      const rates3 = await E(p, () => window.__rates.slice());
+      check(rates3.length === 2 && rates3.every(r => r === 1), '§11 「正常」：配音照旧按原速放', rates3);
+      await E(p, () => { EchoGame.S.settings.slow = true; });
       await shot(p, 'en-list-slow-zh-port');
       await act(p, 'close');
       await ctx.close();
@@ -638,6 +657,17 @@ const SAVE = o => Object.assign({
         check(!sw || (!!pp && pp.w.replace(/せんせい/, '') === '先生' && /<ruby>/.test(pp.h) && pp.m === sw[1]), '§10 日语例句里点「先生」：弹出「先生（せんせい）老师」', pp);
         if (pp) await shot(p, 'ja-pop-zh-port');
         await act(p, 'wdPopX');
+        // 没有空格的文字：点在「先生」最后一个字的右半边算「先生」，不算后面那个字（2026-11-24 复查：以前浏览器给的是这个字后面的缝，
+        // 就点成了后面的词、或者什么都不弹）。用一行不带读音标注的字试（带读音的每个词自己一个节点，本来就碰不到这个毛病）
+        if (sw) {
+          await E(p, () => { const d = document.createElement('div'); d.className = 'wd-s'; d.id = 'tail-test'; d.textContent = 'これは先生です'; d.style.cssText = 'position:fixed;left:20px;top:60px;z-index:9999;background:#fff;font-size:28px;padding:8px'; document.body.appendChild(d); });
+          const pt2 = await ptAt(p, '#tail-test', '先生', true);
+          if (pt2) { await p.mouse.click(pt2.x, pt2.y); await W(p, 300); }
+          const pp2 = await popOf(p);
+          check(!!pt2 && !!pp2 && pp2.w.replace(/せんせい/, '') === '先生', '§10 日语：点在「先生」最后一个字的右半边，弹的还是「先生」', pp2);
+          await act(p, 'wdPopX');
+          await E(p, () => { const d = document.getElementById('tail-test'); if (d) d.remove(); });
+        }
         await p.click('#sheet [data-act=wdRoma][data-v="0"]'); await W(p, 250);
         const off = await E(p, () => ({ n: document.querySelectorAll('#sheet .wd-rom').length, s: EchoGame.S.settings.romaji }));
         await p.click('#sheet [data-act=wdRoma][data-v="1"]'); await W(p, 250);

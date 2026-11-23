@@ -2170,9 +2170,11 @@
     };
     a.src = url;
     // 语速，音高不变：点了 🐢（给的语速比 0.75 慢，各处是 0.6 / 对话动画 0.65）就照它放，最慢 0.5；
-    // 没特意给语速时，设置「朗读速度：慢」（WORDS.md §11）是 0.8，不然 1。
+    // 别的时候，设置「朗读速度：慢」（WORDS.md §11）是 0.8，不然 1。
     // （2026-11-23 老板：「慢速，并不慢」——以前 🐢 的 0.6 被夹成 0.75，零基础默认又是 0.8，两个几乎一样）
-    const want = rate || S.settings.rate, r = want < 0.75 ? Math.max(0.5, want) : !rate && slowOn() ? 0.8 : 1;
+    // 2026-11-24 复查：以前「慢」只管没给语速的那几处；对战的题目和「听一下答案」、大地图对话框的「再听一遍」、对话动画的台词
+    // 都带着 0.8–0.9 的语速来，结果照正常速度放——开着「慢」，再听一遍反而比第一遍快。现在开着「慢」的时候一律不比 0.8 快
+    const want = rate || S.settings.rate, r = want < 0.75 ? Math.max(0.5, want) : slowOn() ? 0.8 : 1;
     // iPhone：换 src 以后加载时会把 playbackRate 换回 defaultPlaybackRate，两个都设，开始放的时候再对一次
     try { a.defaultPlaybackRate = r; } catch (e) { /* 老浏览器没有 */ }
     a.playbackRate = r;
@@ -2256,7 +2258,7 @@
     u.lang = v ? v.lang : LANG ? LANG.asr.web : 'en-US';
     // 找不到对应性别的声音时，用音调区分两个角色
     if (g && genderOf(v) !== g) u.pitch = g === 'm' ? 0.75 : 1.3;
-    u.rate = rate || (slowOn() ? Math.min(S.settings.rate, 0.8) : S.settings.rate);   // 「朗读速度：慢」：本机声音 0.8
+    u.rate = slowOn() ? Math.min(rate || S.settings.rate, 0.8) : rate || S.settings.rate;   // 「朗读速度：慢」：本机声音最快 0.8（特意给了语速的也一样）
     let done = false;
     const fin = () => { if (done) return; done = true; endPlaying(); res(); };
     u.onend = fin;
@@ -4063,6 +4065,16 @@
     if (document.caretRangeFromPoint) { const r = document.caretRangeFromPoint(x, y); if (r) { node = r.startContainer; off = r.startOffset; } }
     else if (document.caretPositionFromPoint) { const r = document.caretPositionFromPoint(x, y); if (r) { node = r.offsetNode; off = r.offset; } }
     if (!node || !box.contains(node) || node.nodeType !== 3) return null;
+    // caret…FromPoint 给的是离手指最近的那条「字缝」：点在一个字的右半边，给的是这个字后面的缝（偏移多 1）。
+    // 不管的话：英语点词尾最后一个字母的右半边落到空格上、不弹；中文日语的单字词有一半会点成后面那个词（2026-11-24 复查，Chromium、WebKit 都这样）。
+    // 前一个字的框里包着这个点，就算点的是前一个字
+    if (off > 0) {
+      try {
+        const cr = document.createRange(); cr.setStart(node, off - 1); cr.setEnd(node, off);
+        const cb = cr.getBoundingClientRect();
+        if (cb.width > 0 && x >= cb.left && x < cb.right && y >= cb.top && y <= cb.bottom) off--;
+      } catch (e) { /* 量不出来：照旧 */ }
+    }
     // 点到读音上：算成那个 <ruby> 的字的开头
     const rt = node.parentElement && node.parentElement.closest('rt');
     const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
