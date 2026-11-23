@@ -679,6 +679,22 @@ const SAVE = () => ({
         const late = await lastYou(), v3 = await vl();
         check(!!soft && soft.text === X10[2] && !soft.wait && v2 === v1 + 1, '10 整段也没认出来：用边说边出的字定下来（「' + X10[2] + '」），算一句', { soft, v1, v2 });
         check(!!late && late.text === X10[3] && v3 === v2, '10 最后的结果晚到了：只把字改成「' + X10[3] + '」，不再数一遍', { late, v2, v3 });
+        // ③ 听写和现成的示范句是同一句、只差写法或一个容易听混的辅音：照示范句显示（只管拉丁字母的语言；别的话不动）
+        if (L === 'es') {
+          const egs = await p.evaluate(() => [...document.querySelectorAll('#tk-steps li small')].map(s => s.textContent.replace(/^(例：|e\.g\. )/, '').trim()).filter(Boolean));
+          const fold = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+          const swap = { d: 't', t: 'd', b: 'p', p: 'b', g: 'c', c: 'g', s: 'z', m: 'n', n: 'm', l: 'r', r: 'l' };
+          const P10 = egs.find(s => fold(s).split(' ').length >= 3 && /[dtbpgcsmnlr]/.test(fold(s))) || '';
+          const fw = fold(P10).split(' '), wi = fw.findIndex(w => /[dtbpgcsmnlr]/.test(w));
+          const near = fw.slice(); if (wi >= 0) near[wi] = near[wi].replace(/[dtbpgcsmnlr]/, ch => swap[ch]);
+          const far = fw.slice(); if (wi >= 0) far[wi] = 'xyz';
+          const two = near.slice(); { const w2 = two.findIndex((w, k) => k !== wi && /[dtbpgcsmnlr]/.test(w)); if (w2 >= 0) two[w2] = two[w2].replace(/[dtbpgcsmnlr]/, ch => swap[ch]); }
+          const said = [];
+          for (const h of [near.join(' '), fold(P10), far.join(' '), two.join(' ')]) { UP.npc.push('…'); await speak(p, h); said.push((await lastYou()).text); }
+          check(!!P10 && wi >= 0 && said[0] === P10 && near.join(' ') !== fold(P10), '10 听写只差一个容易听混的辅音（「' + near.join(' ') + '」）：气泡照示范句显示「' + P10 + '」', said);
+          check(said[1] === P10, '10 听写只差大小写、标点、重音符号（「' + fold(P10) + '」）：气泡照示范句显示', said[1]);
+          check(said[2] === far.join(' ') && (two.join(' ') === near.join(' ') || said[3] === two.join(' ')), '10 差得多的（换了一个词、两个词都不一样）：照听到的显示，不往示范句上靠', said.slice(2));
+        }
         UP.evalResp = { steps: [], done: false, stars: 1, praise: '', tips: [], memory: [], concern: false, concernWhy: '' };
         await endChat(p);
         await p.evaluate(() => { EchoGame.closeModal(); EchoGame.goHome('mon'); }); await W(p, 200);

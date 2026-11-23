@@ -856,6 +856,7 @@
       }
       else if (m.type === 'you') {
         if (m.item) { c.items = c.items || new Set(); if (c.items.has(m.item)) return; c.items.add(m.item); }
+        m.text = snapHeard(c, m.text);   // 和这段聊天里现成的一句话只差写法 / 一个容易听混的辅音：照现成的那句显示
         // 这一段等不到结果、已经自己定下来了（settleHeard）：晚到的结果只把字改对，不再数一遍
         const sb = m.item && c.soft ? c.soft[m.item] : null;
         if (sb) {
@@ -976,7 +977,7 @@
     }
     b._settling = false;
     if (c !== C || !b.isConnected || !b.classList.contains('wait')) return;   // 等的时候最后的结果到了
-    text = String(text || b.textContent || '').trim();
+    text = snapHeard(c, String(text || b.textContent || '').trim());
     if (!text) return;
     b.textContent = text; b.classList.remove('wait'); b._pcm = null; dropPend(c, b);
     const turn = { who: 'you', text };
@@ -1037,6 +1038,38 @@
     const sq = s => (latin ? ' ' + normL(s, true) + ' ' : normL(s).replace(/ /g, ''));
     const p = latin ? ' ' + normL(w, true).split(' ').slice(0, 3).join(' ') + ' ' : sq(w);
     return !!p.trim() && sq(text).includes(p);
+  }
+  // 气泡里显示的字：听写出来的和这段聊天里现成的一句话（小步骤的示范句、词卡）是同一句、只差写法（大小写、标点、重音符号），
+  // 或者只有一个词差一个容易听混的辅音——照现成的那句显示（2026-11-24 老板：「AI 听出来了，但是识别错了」：他说「¿De dónde eres?」，
+  // 岛民听懂了，气泡是「te donde eres」）。
+  // 为什么不让听写的模型看着这几句话听（corpus.text）：实测它管用（说得快、有杂音时「¡Hey, dónde eres?」能听回「¿De dónde eres?」），
+  // 可声音不清楚时它会把给它看的那几句话整段照抄出来——学的人没说的话进了气泡，句数和打勾也跟着算，不行。
+  // 这里只改写法、不猜话：词数要一样，最多一个词不一样，而且那个词只差一个字母、是下面这几对里的；只管拉丁字母的语言（西语）
+  const CONF = ['td', 'pb', 'cg', 'kg', 'qg', 'bv', 'sz', 'sc', 'zc', 'mn', 'lr'];
+  const confusable = (a, b) => {
+    if (a.length !== b.length) return false;
+    let d = -1;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) { if (d >= 0) return false; d = i; }
+    return d >= 0 && (CONF.includes(a[d] + b[d]) || CONF.includes(b[d] + a[d]));
+  };
+  function snapHeard(c, text) {
+    try {
+      if (!c || !c.lang || !G || !G.lang || G.lang.script !== 'latin') return text;
+      const hw = normL(text, true).split(' ').filter(Boolean);
+      if (!hw.length) return text;
+      const known = [...new Set(((c.goal && c.goal.steps) || []).map(s => s && s.en).concat(c.npc.words || []).filter(p => typeof p === 'string' && p))];
+      let near = '';
+      for (const p of known) {
+        const pw = normL(p, true).split(' ').filter(Boolean);
+        if (pw.length !== hw.length) continue;
+        let diff = 0, ok = true;
+        for (let i = 0; i < pw.length && ok; i++) { if (pw[i] === hw[i]) continue; if (pw.length >= 2 && confusable(pw[i], hw[i])) diff++; else ok = false; }
+        if (!ok || diff > 1) continue;
+        if (!diff) return p;   // 同一句，只差写法
+        near = near || p;
+      }
+      return near || text;
+    } catch (e) { return text; }
   }
   function markWordsL(c, text) {
     const latin = G.lang.script === 'latin';
