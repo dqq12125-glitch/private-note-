@@ -264,6 +264,16 @@ function fakeCloud() {
   c = await E(() => window.__fakeNative.speech.log.filter(x => x.m === 'speechStart').map(x => x.opts));
   check(c.every(o => !('units' in o) && !('target' in o)), '这句话有几个词也不交给原生', c);
   await W(300);
+  // 零基础（能力检测 0 级）的存档：题目把 patient 交过去，多等的是 3 秒
+  await E(() => { window.EchoGame.S.place = Object.assign(window.EchoGame.S.place || {}, { lv: 0 }); });
+  await fake({ speech: { script: [[50, 'voice', 1], [100, 'partial', 'my dog'], [300, 'voice', 0]] } });
+  await E(() => { window.EchoTalk.lastSpeech().lack = 0; });
+  await p.click('#mic');
+  await until(() => E(() => { const s = window.EchoTalk.lastSpeech(); return s && s.how === 'done' && s.lack === 3000; }), 100, 50);
+  s = await last();
+  check(w.length < 4 || (s.lack === 3000 && s.lag >= 3150 && s.lag < 3800), '零基础的存档：同样只听到 2 个词，多等到不出声满 3 秒（' + s.lag + ' 毫秒，角标 w' + s.lack + '）', s);
+  await E(() => { delete window.EchoGame.S.place.lv; });
+  await W(300);
 
   // ---------- 3. 说完的计时：单词 0.4 秒、句子 0.6 秒、还在出声多等、一直没说话、被打断 ----------
   await E(() => { window.EchoGame.closeModal(); window.EchoGame.goHome(); });
@@ -307,6 +317,15 @@ function fakeCloud() {
   check(x.s.lag >= 580 && x.s.lag < 850 && !x.s.lack, '听到的词够数（说错了也一样）：还是 0.6 秒，不多等（' + x.s.lag + ' 毫秒）', x.s);
   x = await listen([[100, 'partial', 'apple']], { short: true, units: 1 });
   check(x.s.lag >= 380 && x.s.lag < 650, '单词：还是 0.4 秒（' + x.s.lag + ' 毫秒）', x.s);
+  // 零基础 / 入门 / 初级（patient）：再多等一半——差得多 3 秒、只差一个词 2 秒（老板第二张截图：想下一个词想了 1.4 秒以上）
+  x = await listen([[50, 'voice', 1], [100, 'partial', HALF], [300, 'voice', 0]], { units: 6, patient: true });
+  check(x.r.text === HALF && x.s.lag >= 3150 && x.s.lag < 3700 && x.s.lack === 3000, '零基础：听到的差得多，不出声满 3 秒才结束（' + x.s.lag + ' 毫秒）', x.s);
+  x = await listen([[50, 'voice', 1], [100, 'partial', HALF], [300, 'voice', 0], [2700, 'voice', 1], [3300, 'partial', WHOLE], [3500, 'voice', 0]], { units: 6, patient: true });
+  check(x.r.text === WHOLE, '零基础：停了 2.4 秒才接着说（平常的档已经交卷了）：没掐断', x);
+  x = await listen([[50, 'voice', 1], [100, 'partial', 'Sí, soy ánimo, me llamo'], [300, 'voice', 0]], { units: 6, patient: true });
+  check(x.s.lag >= 2100 && x.s.lag < 2600 && x.s.lack === 1950, '零基础：只差一个词等 2 秒（' + x.s.lag + ' 毫秒）', x.s);
+  x = await listen([[50, 'voice', 1], [100, 'partial', 'I like it'], [300, 'voice', 0]], { units: 3, patient: true });
+  check(x.s.lag >= 580 && x.s.lag < 850 && !x.s.lack, '零基础：说够数了还是 0.6 秒', x.s);
   x = await listen([[50, 'voice', 1], [100, 'partial', HALF], [300, 'voice', 0], [700, 'partial', WHOLE]], { units: 6, match: 1 });
   check(x.r.text === WHOLE && x.s.how === 'match', '多等的时候说对了：照样当场结束', x.s);
   x = await listen([[100, 'partial', 'I like'], [250, 'end', 'background']], {});

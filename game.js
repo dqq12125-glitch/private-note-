@@ -2411,7 +2411,9 @@
       // 日语：识别结果爱把假名写成汉字，字数比课程里写的少，按六成算
       const un = tg.length ? Math.min.apply(null, tg.map(x => (LANG ? LANG.countUnits(x) : x.trim().split(/\s+/).length))) : 0;
       const units = LANG && LANG.script === 'kana' ? Math.ceil(un * 0.6) : un;
-      return EchoTalk.listenOnce(Object.assign({ onState: onInterim, units, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => (LANG ? LANG.short(x, entryOf(x)) : x.trim().split(/\s+/).length <= 2)) },
+      // patient：零基础（朗读默认放慢的人）、按能力走的入门和初级两档——中间想词的时间更长，talk.js 再多等一半
+      const patient = slowOn() || (!!S.place && S.place.lv === 0) || (PLV() != null && PLV() <= 1);
+      return EchoTalk.listenOnce(Object.assign({ onState: onInterim, units, patient, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => (LANG ? LANG.short(x, entryOf(x)) : x.trim().split(/\s+/).length <= 2)) },
         opts && opts.maxMs ? { maxMs: opts.maxMs } : null, opts && opts.long ? { long: true } : null, lo)).then(r => {
         RT.listening = false;
         r = r || {};

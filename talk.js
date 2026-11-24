@@ -1774,7 +1774,10 @@
     const exp = o && o.units > 0 ? o.units : 0;
     if (!exp || !text) return 0;
     const got = count(text);
-    return got >= exp ? 0 : got >= exp * 0.8 ? 1300 : 2000;
+    // o.patient（game.js：零基础、入门和初级两档）：再放宽一半——只差一点 2 秒，差得多 3 秒。
+    // 2026-11-24 老板第二张截图（还是老规则的包）：「Mis amigos son divertidos」后面想了至少 1.4 秒才要说「y curiosos」，2 秒对零基础偏紧
+    const k = o.patient ? 1.5 : 1;
+    return got >= exp ? 0 : Math.round((got >= exp * 0.8 ? 1300 : 2000) * k);
   }
   function nativeListen(o, D) {
     return new Promise(resolve => {
@@ -1960,7 +1963,9 @@
   async function listenOnce(o) {
     o = Object.assign({}, o);
     // 长句子慢慢念 8 秒不够：按这句话有几个词放宽（一个词约 1 秒，最多 15 秒）；调用的地方自己给了 maxMs 的不动
-    if (!o.maxMs && o.units > 5) o.maxMs = Math.min(15000, 3000 + o.units * 1000);
+    // o.patient（零基础、入门和初级）：念得慢、中间还要想词——3 个词以上就放宽，一个词约 1.5 秒，最多 18 秒
+    if (!o.maxMs && o.patient && o.units > 2) o.maxMs = Math.min(18000, 4000 + o.units * 1500);
+    else if (!o.maxMs && o.units > 5) o.maxMs = Math.min(15000, 3000 + o.units * 1000);
     const D = { at: Date.now(), t0: performance.now(), short: !!o.short, eng: '', fell: '' };
     let r = null;
     if (localSR() && !C) r = await nativeListen(o, D);
@@ -2059,7 +2064,7 @@
         let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
         const loud = Math.sqrt(sum / d.length) > 0.02, now = performance.now();
         // 本机的停顿判断只是保底：实时识别正常时它会先结束；不正常时停 1.1 秒就整段识别
-        if (loud) { voiced++; quiet = 0; if (D.wv == null) D.wv = now - D.t0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > (o.long ? 2600 : dead ? 1100 : lackWait(o, full(), cnt) ? 2600 : 1800)) finish('silence'); }
+        if (loud) { voiced++; quiet = 0; if (D.wv == null) D.wv = now - D.t0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > (o.long ? 2600 : dead ? 1100 : lackWait(o, full(), cnt) ? Math.max(2600, lackWait(o, full(), cnt) + 600) : 1800)) finish('silence'); }
         if (now - t0 > (o.maxMs || 8000)) finish('max');
         else if (voiced < 3 && now - t0 > 5000) finish('silence');
       };
