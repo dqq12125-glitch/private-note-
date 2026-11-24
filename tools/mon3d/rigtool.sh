@@ -2,8 +2,9 @@
 #   bash tools/mon3d/rigtool.sh grid <id> [yaw] [thick]  → art/hy3d/grid/<id>.png（坐标网格参考图，按 yaw/thick 摆正后）
 #   bash tools/mon3d/rigtool.sh rig <id>                  → 读 tools/mon3d/rigs/<id>.json 绑骨骼做动作导出 art/mon3d/<id>.glb，再出检查图 art/mon3d/check/<id>.png
 B=/d/Claude/tools/blender-5.2.1-windows-x64/blender.exe
-R=D:/Claude/echo-island
-cd /d/Claude/echo-island
+# 仓库在哪：这个脚本往上两层（以前写死 D:/Claude/echo-island，那是旧的工作副本；现在的在 C:/Claude/echo-island）。Blender 要 Windows 写法的路径（cygpath -m）
+cd "$(dirname "$0")/../.." || exit 1
+R=$(cygpath -m "$(pwd)" 2>/dev/null || pwd)
 mkdir -p art/hy3d/grid art/mon3d/check
 case "$1" in
   grid) "$B" -b --factory-startup --python tools/blender/gridview.py -- $R/art/hy3d/$2_raw.glb $R/art/hy3d/grid/$2.png ${3:-0} ${4:-1} 2>&1 | grep -E "Traceback|Error" | head -5; ls art/hy3d/grid/$2.png ;;
