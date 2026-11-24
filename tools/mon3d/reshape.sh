@@ -23,7 +23,8 @@ done
 LOG="art/hy3d/reshape-$TAG.log"; OUT="art/hy3d/reshape-$TAG.txt"
 echo "reshape $TAG：${#ids[@]} 只，种子 $SEEDS，明暗 $K，及格线 $MIN" | tee -a "$LOG"
 $PY tools/mon3d/puff.py "${ids[@]}" --src=src1 --out=puff --k="$K" >> "$LOG" 2>&1 || { echo "puff 出错，看 $LOG"; exit 1; }
-$PY tools/mon3d/gen.py "${ids[@]}" --src=puff --notex --pca --seeds="$SEEDS" --tag="$TAG" >> "$LOG" 2>&1
+# --ok：够及格线就不再试别的种子（省一半时间）；--skipdone：已经有这个标签的白模的不重做（中断了接着跑）
+$PY tools/mon3d/gen.py "${ids[@]}" --src=puff --notex --pca --seeds="$SEEDS" --tag="$TAG" --ok="$MIN" --skipdone >> "$LOG" 2>&1
 # 「shape <id> <面数> faces seed <种子> thick <厚度> <秒> s」
 ok=()
 for id in "${ids[@]}"; do

@@ -62,7 +62,8 @@ if '--noshape' not in sys.argv:
             else:
                 e = m.bounds[1] - m.bounds[0]; ratio = float(min(e) / max(e))
             if best is None or ratio > best[0]: best = (ratio, m, sd)
-            if ratio >= (0.5 if '--pca' in sys.argv else 0.25): break
+            # --ok=0.42：厚度到这个数就不再试别的种子（不写：--pca 时 0.5，不然 0.25）
+            if ratio >= float(opt.get('ok', 0.5 if '--pca' in sys.argv else 0.25)): break
             print('  flat', i, 'seed', sd, round(ratio, 2), flush=True)
         mesh = best[1]
         mesh = FloaterRemover()(mesh); mesh = DegenerateFaceRemover()(mesh); mesh = FaceReducer()(mesh, max_facenum=60000)
