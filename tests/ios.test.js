@@ -320,6 +320,14 @@ const diff = (a, b) => ({ onlyLeft: [...a].filter(x => !b.includes(x)), onlyRigh
     check(pk.includes('packs.js') && plain.includes('packs.js') && CW.requiredFiles(true).includes('packs.js') && !CW.requiredFiles(true).includes('assets/voice/index.json') &&
       CW.requiredFiles(false).includes('assets/voice/index.json'), '必备文件：老模式要 assets/voice/index.json；课程包模式不要它、要 packs.js');
     check(pk.includes('assets/voice/zh/ai-notice.ogg') === plain.includes('assets/voice/zh/ai-notice.ogg'), '课程包模式只拿掉英语配音那三样（assets/voice/zh 照旧）');
+    // 安卓的 copyWeb 在给了 ECHO_PACKS_URL 时拿掉同样的三样：名单一字不差，按真的文件列表比一遍（家庭版、销售版各一次）
+    const gPacks = quoted((gradle.match(/def PACKS_EXCLUDE = \[([^\]\n]+)\]/) || [])[1] || '');
+    check(same(gPacks, CW.PACKS_EXCLUDE) && /if \(PACKS_URL\) exclude PACKS_EXCLUDE/.test(copyWeb), 'build.gradle 的 PACKS_EXCLUDE 和 copy-web.mjs 的一字不差，只在给了 ECHO_PACKS_URL 时用', { gradle: gPacks, ios: CW.PACKS_EXCLUDE });
+    for (const ed of ['family', 'sales']) {
+      const mine = CW.webFiles(ed, { salesDir: path.join(IOS, '.sales-web'), packs: true }).filter(f => !(ed === 'sales' && CW.SALES_SWAP.includes(f.rel) && f.src.includes('.sales-web'))).map(f => f.rel).sort();
+      const g = gradleFiles(ed === 'sales').filter(r => !gPacks.some(p => ant(p).test(r)));
+      check(JSON.stringify(mine) === JSON.stringify(g), ed + '（课程包模式）：copy-web.mjs 复制的文件和 Gradle 的 copyWeb 一模一样（' + mine.length + ' 个）', diff(mine, g));
+    }
     const cwSrc = read('ios/scripts/copy-web.mjs');
     check(/process\.env\.ECHO_PACKS_URL/.test(cwSrc) && /requiredFiles\(packs\)/.test(cwSrc), 'copy-web.mjs 看环境变量 ECHO_PACKS_URL（和 make-config.mjs 同一个）决定配音进不进包');
   }

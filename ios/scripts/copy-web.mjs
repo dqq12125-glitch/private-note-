@@ -26,7 +26,7 @@ export const INCLUDE = ['index.html', '*.js', 'style.css', 'assets/**', 'vendor/
 // 销售版换掉的三个文件（从 build-dex.js --sales 生成的目录里拿）
 export const SALES_SWAP = ['dex.js', 'assets/mon3d/index.json', 'assets/mon2d/index.json'];
 
-// 课程包模式不进包的配音（packs.js 从网上下载）
+// 课程包模式不进包的配音（packs.js 从网上下载）。安卓 android/app/build.gradle 的 PACKS_EXCLUDE 要和这里一字不差（tests/ios.test.js 核对）
 export const PACKS_EXCLUDE = ['assets/voice/f/**', 'assets/voice/m/**', 'assets/voice/index.json'];
 export const packsExcluded = rel => PACKS_EXCLUDE.some(p => matches(rel, p));
 

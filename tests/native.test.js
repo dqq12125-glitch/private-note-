@@ -84,6 +84,33 @@ check(/'pages\/\*\*'/.test(gradle), '打包时带上 pages/（隐私说明、同
 check(/public boolean setPin\(String p\) \{ return SALES && pin\.set\(p\); \}/.test(java) && /, SALES\);/.test(java),
   '只有销售版能在手机上设家长密码（PinGuard 的 allowSet = SALES）');
 check(/public String edition\(\) \{ return SALES \? "sales" : "family"; \}/.test(java), 'EchoNative.edition() 告诉网页是哪个版本');
+// 公开测试版：-PECHO_CLOUD_URL / -PECHO_PACKS_URL（云端模式、课程包模式），不是秘密，没给就是空字符串
+check(/project\.findProperty\('ECHO_CLOUD_URL'\)/.test(gradle) && /project\.findProperty\('ECHO_PACKS_URL'\)/.test(gradle)
+  && /buildConfigField 'String', 'CLOUD_URL', q\(CLOUD_URL\)/.test(gradle) && /buildConfigField 'String', 'PACKS_URL', q\(PACKS_URL\)/.test(gradle),
+  'build.gradle：-PECHO_CLOUD_URL / -PECHO_PACKS_URL 进 BuildConfig.CLOUD_URL / PACKS_URL（没给 = 空字符串）');
+check(/if \(CLOUD_URL && !okEchoUrl\(CLOUD_URL\)\) throw new GradleException/.test(gradle) && /if \(PACKS_URL && !okEchoUrl\(PACKS_URL\)\) throw new GradleException/.test(gradle),
+  '两个网址写错就报错停下');
+{
+  // 网址的认法要和 ios/scripts/make-config.mjs 的 cloudUrlOf / packsUrlOf 一样：把 build.gradle 里的正则抠出来，用同一批网址和 iPhone 那边比
+  const rx = (gradle.match(/def okEchoUrl = \{ String u -> u ==~ '([^\n]+)' \}/) || [])[1];
+  const re = rx && new RegExp('^' + rx.replace(/\\\\/g, '\\') + '$');
+  const iosRx = fs.readFileSync(path.join(ROOT, 'ios/scripts/make-config.mjs'), 'utf8');
+  const iosOk = u => /^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?(\/[A-Za-z0-9._~\/-]*)?$/.test(u);
+  check(!!re && iosRx.includes('/^https:\\/\\/[A-Za-z0-9.-]+(:\\d{1,5})?(\\/[A-Za-z0-9._~\\/-]*)?$/'), 'build.gradle 的网址正则能抠出来，make-config.mjs 里还是它对应的那一条');
+  const samples = ['https://echo-api.restaurantweb.com.au', 'https://echo-packs.restaurantweb.com.au', 'https://x.example:8443/packs', 'http://localhost:8787', 'http://127.0.0.1:9',
+    'http://packs.example.com', 'ftp://x', 'https://x.example/?v=1', 'javascript:alert(1)', 'https://', 'https://a b.example', 'http://localhost.evil.com'];
+  const bad = re ? samples.filter(u => re.test(u) !== iosOk(u)) : samples;
+  check(!bad.length, '安卓和 iPhone 对同一批网址（好的、写错的）认法一样' + (bad.length ? '（对不上：' + bad.join(' ') + '）' : ''));
+}
+check(/def PACKS_EXCLUDE = \['assets\/voice\/f\/\*\*', 'assets\/voice\/m\/\*\*', 'assets\/voice\/index\.json'\]/.test(gradle) && /if \(PACKS_URL\) exclude PACKS_EXCLUDE/.test(gradle),
+  '课程包模式（给了 ECHO_PACKS_URL）copyWeb 才拿掉配音；没给就不动');
+check(/\(BuildConfig\.CLOUD_URL\.isEmpty\(\) \? "" : "window\.ECHO_CLOUD_URL=" \+ jsStr\(BuildConfig\.CLOUD_URL\)/.test(java)
+  && /\(BuildConfig\.PACKS_URL\.isEmpty\(\) \? "" : "window\.ECHO_PACKS_URL=" \+ jsStr\(BuildConfig\.PACKS_URL\)/.test(java),
+  'MainActivity 启动脚本：有网址才设 window.ECHO_CLOUD_URL / ECHO_PACKS_URL（用 jsStr，不加新的桥方法）');
+check(/`ECHO_CLOUD_URL`/.test(readme) && /`ECHO_PACKS_URL`/.test(readme) && /-PECHO_EDITION=sales -PECHO_CLOUD_URL=https:\/\/echo-api\.restaurantweb\.com\.au -PECHO_PACKS_URL=https:\/\/echo-packs\.restaurantweb\.com\.au/.test(readme),
+  'android/README.md 写了两个属性和公开测试版的打包命令');
+check(!/networkSecurityConfig|usesCleartextTraffic/.test(manifest) && !/Content-Security-Policy/i.test(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')),
+  '外壳没有网络安全配置、页面没有 CSP：网页的 fetch / WebSocket 能直接连云端服务器和课程包站');
 
 // ---------- 3. 用 JDK 真跑 PinGuard / BackupNames ----------
 const jdks = [process.env.JAVA_HOME, 'D:/Claude/tools/android/jdk-17.0.20.1+1'].filter(Boolean);

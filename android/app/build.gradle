@@ -18,6 +18,19 @@ if (!(EDITION in ['family', 'sales'])) throw new GradleException('ECHO_EDITION m
 def SALES = EDITION == 'sales'
 logger.lifecycle('ECHO_EDITION: ' + EDITION + (SALES ? ' (no key, no baked parent PIN, no relay - the parent sets them up on the phone)' : ''))
 
+// 公开测试版（和 iPhone 的 TestFlight 版一样，2026-11-24）：销售版再加两个可选的网址（不是秘密，两个版本都能给）：
+//   -PECHO_CLOUD_URL=https://域名   公开版服务器（cloud/）：给了 = 「云端模式」，网页登录账号、走服务器的 AI（account.js 的 EchoCloud）
+//   -PECHO_PACKS_URL=https://域名   课程包放在网上的地址：给了 = 「课程包模式」，配音不进安装包，选了语言再下载（packs.js 的 EchoPacks）
+// 写法和 ios/scripts/make-config.mjs 的 cloudUrlOf / packsUrlOf 一样：https://域名[:端口][/路径]，本机试的 http://localhost / 127.0.0.1 也行，不带查询参数
+// （环境变量 ORG_GRADLE_PROJECT_ECHO_CLOUD_URL / ORG_GRADLE_PROJECT_ECHO_PACKS_URL 同样有效）。不给 = 和以前一样
+def okEchoUrl = { String u -> u ==~ '(?:https://[A-Za-z0-9.-]+(?::\\d{1,5})?(?:/[A-Za-z0-9._~/-]*)?|http://(?:localhost|127\\.0\\.0\\.1)(?::\\d{1,5})?(?:/[A-Za-z0-9._~/-]*)?)' }
+def CLOUD_URL = (project.findProperty('ECHO_CLOUD_URL') ?: '').toString().trim().replaceAll('/+$', '').replaceAll('/v1$', '')
+if (CLOUD_URL && !okEchoUrl(CLOUD_URL)) throw new GradleException('ECHO_CLOUD_URL must be https://host[/path] (http://localhost[:port] for local tests), no query string.')
+def PACKS_URL = (project.findProperty('ECHO_PACKS_URL') ?: '').toString().trim().replaceAll('/+$', '')
+if (PACKS_URL && !okEchoUrl(PACKS_URL)) throw new GradleException('ECHO_PACKS_URL must be https://host[/path] (http://localhost[:port] for local tests), no query string.')
+logger.lifecycle('ECHO_CLOUD_URL: ' + (CLOUD_URL ? 'cloud-mode build (the web app signs in and uses AI through ' + CLOUD_URL + ')' : 'not set (not a cloud-mode build)'))
+logger.lifecycle('ECHO_PACKS_URL: ' + (PACKS_URL ? 'pack-mode build (voices are not in the package; the app downloads the course pack from ' + PACKS_URL + ')' : 'not set (voices are in the package)'))
+
 // 百炼密钥：家长 2026-10-07 定的——家庭版密钥照旧打进 APK。echo.properties 的 KEY_FILE 指向一个写着
 // DASHSCOPE_API_KEY=... 的文件（游戏专用的那把，不和别的项目共用），这里读出来写进 BuildConfig.DASHSCOPE_KEY。
 // 手机「设置 → AI」里粘贴的密钥优先（存在 SharedPreferences，装新版不用重填）；两个都没有时游戏提示「没有密钥」。
@@ -92,6 +105,9 @@ android {
         // 销售版只开放买了的学年的课本（卖的是「本学年」，下一学年另买内容包）：-PECHO_BOOKS=hj7a,hj7b，不写就是七上、七下。家庭版全部开放
         buildConfigField 'String', 'BOOKS', q(SALES ? (project.findProperty('ECHO_BOOKS') ?: 'hj7a,hj7b').toString().trim() : '')
         buildConfigField 'String', 'VER_URL', q(SALES ? '' : cfg.getProperty('VER_URL', 'https://dqq12125-glitch.github.io/private-note-/version.json'))
+        // 云端模式 / 课程包模式的网址（不是秘密；空 = 不是这个模式）。MainActivity 把它们交给网页（window.ECHO_CLOUD_URL / ECHO_PACKS_URL）
+        buildConfigField 'String', 'CLOUD_URL', q(CLOUD_URL)
+        buildConfigField 'String', 'PACKS_URL', q(PACKS_URL)
         buildConfigField 'String', 'DASHSCOPE_KEY', q(bakedKey)
         buildConfigField 'String', 'PARENT_PIN_SALT', q(PIN_SALT)
         buildConfigField 'String', 'PARENT_PIN_HASH', q(pinHash)
@@ -161,11 +177,14 @@ tasks.register('salesWeb', Exec) {
     workingDir webRoot
     commandLine 'node', 'tools/build-dex.js', '--sales=' + salesDir.absolutePath
 }
+// 课程包模式（给了 ECHO_PACKS_URL）不进包的配音：packs.js 从网上下载。要和 ios/scripts/copy-web.mjs 的 PACKS_EXCLUDE 一字不差（tests/ios.test.js 核对）
+def PACKS_EXCLUDE = ['assets/voice/f/**', 'assets/voice/m/**', 'assets/voice/index.json']
 tasks.register('copyWeb', Sync) {
     if (SALES) dependsOn 'salesWeb'
     from(webRoot) {
         include 'index.html', '*.js', 'style.css', 'assets/**', 'vendor/**', 'isles/**', 'pages/**'
         exclude 'android/**', 'server/**', 'tools/**', 'tests/**', 'art/**', 'node_modules/**', 'package*.json'
+        if (PACKS_URL) exclude PACKS_EXCLUDE
         if (SALES) {
             exclude 'dex.js', 'assets/mon3d/index.json', 'assets/mon2d/index.json'
             reservedIds.each { id -> exclude "assets/mon3d/${id}.glb", "assets/mon2d/${id}.webp", "assets/mon3d/${id}_*", "assets/mon2d/${id}_*" }

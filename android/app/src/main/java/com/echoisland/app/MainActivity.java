@@ -163,7 +163,10 @@ public class MainActivity extends Activity {
                 .build();
 
         // 页面一开始就告诉游戏：AI 对话服务的地址和家庭口令（打包时从 android/echo.properties 读进来）
+        // 公开测试版另给两个网址（打包时 -PECHO_CLOUD_URL / -PECHO_PACKS_URL，空 = 不是这个模式，就不写）：account.js / packs.js 从 window.ECHO_CLOUD_URL / ECHO_PACKS_URL 读
         final String js = "window.ECHO_APP=1;window.ECHO_TALK_URL=" + jsStr(BuildConfig.TALK_URL) + ";" +
+                (BuildConfig.CLOUD_URL.isEmpty() ? "" : "window.ECHO_CLOUD_URL=" + jsStr(BuildConfig.CLOUD_URL) + ";") +
+                (BuildConfig.PACKS_URL.isEmpty() ? "" : "window.ECHO_PACKS_URL=" + jsStr(BuildConfig.PACKS_URL) + ";") +
                 "try{if(" + jsStr(BuildConfig.TALK_CODE) + "&&!localStorage.getItem('echo-talk-code'))localStorage.setItem('echo-talk-code'," + jsStr(BuildConfig.TALK_CODE) + ")}catch(e){}";
         final boolean docStart = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT);
         if (docStart) WebViewCompat.addDocumentStartJavaScript(w, js, Collections.singleton(ORIGIN));

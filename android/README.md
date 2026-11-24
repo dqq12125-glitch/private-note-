@@ -51,6 +51,25 @@ cat classes*.dex | grep -a -o -E 'sk-[A-Za-z0-9]{20,}' | wc -l       # 0
 cat classes*.dex | grep -a -o -E '[0-9a-f]{64}' | wc -l              # 0（家庭版是 1：那就是家长密码的哈希）
 ```
 
+### 公开测试版：销售版 + 云端模式 + 课程包模式（2026-11-24）
+
+和 iPhone 的 TestFlight 版同一套：销售版（没有密钥、没有打包的家长密码），再加两个**可选**的网址（不是秘密，两个版本都能给；写法和 `ios/scripts/make-config.mjs` 的 `cloudUrlOf` / `packsUrlOf` 一样：`https://域名[:端口][/路径]`，本机试的 `http://localhost[:端口]` 也行，不带查询参数，写错就报错停下）：
+
+| 属性（`-P…`，或环境变量 `ORG_GRADLE_PROJECT_…`） | 作用 |
+| --- | --- |
+| `ECHO_CLOUD_URL` | 公开版服务器（`cloud/`）。给了 = **云端模式**：网页登录账号、AI 走服务器，不问密钥（`account.js` 的 `EchoCloud.on`）。打进 `BuildConfig.CLOUD_URL`，原生在页面一开始设 `window.ECHO_CLOUD_URL`（末尾的 `/` 和 `/v1` 去掉） |
+| `ECHO_PACKS_URL` | 课程包放在网上的地址。给了 = **课程包模式**：配音不进安装包（`copyWeb` 不复制 `assets/voice/f/**`、`assets/voice/m/**`、`assets/voice/index.json`，和 `ios/scripts/copy-web.mjs` 的 `PACKS_EXCLUDE` 一字不差），选了语言再下载（`packs.js` 的 `EchoPacks.on`）。打进 `BuildConfig.PACKS_URL`，原生设 `window.ECHO_PACKS_URL` |
+
+不给就和以前一样：`BuildConfig` 里是空字符串、页面里没有这两个变量、复制的文件一个不少。没有新的原生桥方法。打包时会打出一行说这是不是云端 / 课程包的包。
+
+```bash
+# 公开测试版（正式签名，发给人装）；iPhone 测试版用的就是这两个地址，课本默认 hj7a,hj7b
+gradle assembleRelease -PECHO_EDITION=sales -PECHO_CLOUD_URL=https://echo-api.restaurantweb.com.au -PECHO_PACKS_URL=https://echo-packs.restaurantweb.com.au
+# 模拟器上看（调试包，WebView 能用开发者工具连）：同样的参数，任务换成 assembleDebug
+```
+
+网页的 `fetch` / `WebSocket` 直接从 WebView 连这两个站：外壳没有网络安全配置、`shouldInterceptRequest` 只接管 `appassets.androidplatform.net`、`index.html` 没有 CSP，所以不用改外壳；服务器那边要放行来源 `https://appassets.androidplatform.net`（课程包站是 `Access-Control-Allow-Origin: *`）。
+
 打完销售版以后照常 `gradle assembleRelease`（不带参数）就是家庭版。打正式包（release）前 `checkReleaseConfig` 会检查，不对就**报错停下**：
 
 - **正式签名**：`STORE_FILE` / `STORE_PASSWORD` 没填或签名文件找不到 → 停下。以前会悄悄改用调试签名，那样的包装不上去（签名不同），只能卸载重装，存档就丢了。签名文件和 `echo.properties` 要另外备份两处（网盘 + U 盘）。
@@ -82,7 +101,7 @@ APK 里没有家长密码时 `hasPin()` 是 false、`checkPin()` 一律 false—
 ## 原生桥 `window.EchoNative`
 
 只在 APK 里有（网页版、自动化测试里没有，测试用 `tests/fake-native.js` 模拟）。所有方法都是同步调用（在 WebView 的桥线程上跑），返回值是 boolean / 字符串；
-返回 JSON 的方法要 `JSON.parse`。页面一开始原生会设 `window.ECHO_APP = 1`、`window.ECHO_TALK_URL`。
+返回 JSON 的方法要 `JSON.parse`。页面一开始原生会设 `window.ECHO_APP = 1`、`window.ECHO_TALK_URL`（打包时给了 `ECHO_CLOUD_URL` / `ECHO_PACKS_URL` 的还有 `window.ECHO_CLOUD_URL` / `window.ECHO_PACKS_URL`）。
 
 **AI 连接（直连阿里云，带密钥）**
 
