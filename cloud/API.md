@@ -139,6 +139,7 @@ Response `200`:
   "talkLangs": ["en", "es", "ja", "zh"],
   "questLangs": ["en", "es", "ja", "zh"],
   "tipLangs": ["en", "es", "ja", "zh"],
+  "genLangs": ["en", "es", "ja", "zh"],
   "plan": "free",
   "subscription": { "state": "none", "plan": null, "productId": null, "expiresAt": null, "graceUntil": null, "environment": null },
   "quota": {
@@ -173,6 +174,9 @@ Response `200`:
   the app must then not offer quests in other courses.
 - `tipLangs`: the languages `POST /v1/tip` can comment on (`lang`), always starting with `"en"` (server config `TIP_LANGS`,
   default: the same as `talkLangs`). A server without this field only comments on English.
+- `genLangs`: the languages `POST /v1/gen` can write practice sentences in (`lang`), always starting with `"en"` (server config
+  `GEN_LANGS`, default: the same as `talkLangs`). A server without this field (older version) **cannot generate**: the app must
+  not call `/v1/gen` and keeps using the course's own sentences.
 - `plan`: the plan in effect now: `"free"`, `"monthly"` or `"yearly"`; `"tester"` for accounts listed in the server's `TESTERS` secret (our own test accounts: effectively unlimited — 1440 chat minutes a day and a million of each count — still counted; the app shows it like the free plan's name but with the server's numbers). `subscription`: see §7.
 - `quota`: see §6.
 
@@ -239,7 +243,7 @@ Three meters, each counted per user per **quota day**:
 | --- | --- | --- | --- | --- |
 | `talk` | seconds of wall-clock time on `WS /v1/talk` | 5 min | 30 min | 20 min |
 | `asr` | each `POST /v1/asr` and each `WS /v1/asr-rt` connection (speech-recognition clips) | 400 | 1,500 | 1,500 |
-| `aux` | each `POST /v1/tip`, `/v1/tts`, `/v1/zh`, `/v1/steps`, `/v1/place` | 300 | 1,500 | 1,500 |
+| `aux` | each `POST /v1/tip`, `/v1/gen`, `/v1/tts`, `/v1/zh`, `/v1/steps`, `/v1/place` | 300 | 1,500 | 1,500 |
 
 (All numbers are server config `PLANS`; the app shows what `GET /v1/me` says, never its own copy.)
 
@@ -447,6 +451,7 @@ All need a session, are metered (§6) and answer `503 provider` (not counted) wh
 | --- | --- | --- | --- | --- |
 | `POST /v1/asr` | `{ "audio": "<base64 WAV, 16 kHz mono 16-bit>", "lang": "es" }` (≤ 1.5 MB; `lang` optional) | `{ "text": "…" }` | asr | no |
 | `POST /v1/tip` | `{ "target": "…", "heard": "…", "ui": "en", "lang": "ja" }` (`lang` optional: see **Quests and pronunciation tips in other languages**) | `{ "tip": "…" }` | aux | no |
+| `POST /v1/gen` | `{ "lang": "es", "ui": "zh", "band": 1, "n": 6, "dlg": 1, "focus": [{ "t": "…", "m": "…", "why": "weak" }], "known": ["…"], "avoid": ["…"] }` (only `focus` is required: see **Practice sentences** below) | `{ "s": [{ "t": "…", "m": "…", "f": 0 }], "d": [{ "q": "…", "qm": "…", "a": "…", "am": "…", "x": ["…", "…"], "xm": ["…", "…"], "f": 0 }] }` | aux | no |
 | `POST /v1/tts` | `{ "text": "…", "g": "f"\|"m", "lang": "es" }` (`lang` optional) | `{ "url": "https://…" }` (provider's audio URL, expires within hours) | aux | no |
 | `POST /v1/zh` | `{ "text": "…", "lang": "es", "ui": "zh" }` (`lang`, `ui` optional: see **Chat language**) | `{ "zh": "…" }` | aux | no |
 | `POST /v1/steps` | `{ "npc": "…", "nm": "…", "lang": "es", "q": "…", "g": 0, "ui": "en", "turns": [{ "who": "you"\|"npc", "text": "…", "typed": false }] }` (`npc`: an islander or course character id, or `"dyn"` with `nm` and optional `lang`; or `q`: a quest id, with optional `lang` for a quest in another course language) | `{ "done": [0, 2] }` | aux | yes |
@@ -456,6 +461,41 @@ Every `200` also has `"quota": { "meter": "…", "left": n }`. Field meanings an
 (`server/relay.js`): texts are cleaned and cut (`target`/`heard` 200, `zh` 400, `place.heard` 500, turns 30 × 300).
 `/v1/place` looks the question and rubric up by `id`; unknown id → `400 bad_request` (`field: "id"`).
 `/v1/steps` with no spoken (non-typed) learner turn answers `{ "done": [] }` without calling the AI and without counting (as the relay).
+
+### Practice sentences — `POST /v1/gen`
+
+"Made for you": new practice sentences written for the learner's level around the words they need to practise now. The app sends
+**data only**; the prompt is built on the server from the cleaned data (`talk-core.js`, `genIn` / `genBody`), so the app cannot
+write its own prompt. The model's answer is checked item by item (`parseGen`): a sentence that is not in the course language,
+too long for the band, whose meaning is not in the `ui` language or that contains an unsuitable word is dropped.
+
+Request fields (everything is cleaned and cut; unknown fields are ignored):
+
+| Field | Meaning | Limits |
+| --- | --- | --- |
+| `lang` | the language being learned; absent, `""` or `"en"` = English | must be one of `me.genLangs` |
+| `ui` | the language the meanings are written in: `"zh"` or `"en"` (other values → `"zh"`). When it is the same as `lang` the meanings are `""` | |
+| `band` | difficulty band `0`–`4` (0 absolute beginner … 4 about CEFR B1) | otherwise `0` |
+| `n` | how many practice sentences to write | `3`–`8`, otherwise `6` |
+| `dlg` | how many question-and-reply pairs to write besides | `0`–`3`, otherwise `0` |
+| `focus` | **required**: the words to practise, each a string or `{ "t": word, "m": meaning, "why": "weak"\|"new"\|"ok" }` | up to 8 (more are ignored), each word ≤ 40 characters after cleaning, duplicates dropped; at least one must survive |
+| `known` | other words the learner has learned | up to 50 |
+| `avoid` | sentences from the last round, not to be repeated | up to 10, each ≤ 120 characters |
+
+Response `200`: `s` = practice sentences `{ t, m, f }` (`t` the sentence in the course language, `m` its meaning in `ui`, `f` the
+index into the cleaned `focus` list of the word it uses, `-1` when it cannot be told); `d` = question-and-reply pairs
+`{ q, qm, a, am, x, xm, f }` (`x` = two or three other replies that do not answer the question, `xm` their meanings); `d` is
+`[]` when `dlg` is `0` or no pair passed the check. Plus `quota`. Generated sentences may still contain mistakes: the app uses
+them for this round only (they do not go into the daily review).
+
+- Costs one `aux`. Not gated by parent consent (the request carries course vocabulary and a difficulty band, no free text from the child).
+- `lang` not in `me.genLangs` → `400 bad_request` with `field: "lang"`, `reason: "unsupported_lang"`, `supported: [genLangs…]`
+  (same shape as `/v1/tip`).
+- No usable word in `focus` → `400 bad_request`, `field: "focus"`.
+- Both are checked before counting: not counted, the provider is not contacted.
+- The provider fails, or none of the model's sentences passes the check (`s` would be empty) → `503 provider`, **not counted**
+  (the unit is refunded). Generation takes 4–10 s with the real model; the provider call is allowed up to 25 s, so give the request
+  at least 30 s on the client.
 
 ### Speech language (`lang`) — `/v1/asr`, `/v1/asr-rt`, `/v1/tts`
 
@@ -501,7 +541,7 @@ Wrong or missing admin token → `401 auth`.
 
 ## 10. Health
 
-`GET /v1/health` → `200 { "ok": true, "version": "…", "time": "…", "speechLangs": ["en", …], "talkLangs": ["en", …], "questLangs": ["en", …], "tipLangs": ["en", …] }`. No authentication.
+`GET /v1/health` → `200 { "ok": true, "version": "…", "time": "…", "speechLangs": ["en", …], "talkLangs": ["en", …], "questLangs": ["en", …], "tipLangs": ["en", …], "genLangs": ["en", …] }`. No authentication.
 The language lists are the same as in `GET /v1/me` (§4); they are here so that an app that is not signed in can tell
 "the server can do this language, the user only needs to sign in" from "the server cannot do this language".
 

@@ -1,4 +1,4 @@
-// 按次计的 AI 调用：/v1/asr、/tip、/tts、/zh、/steps、/place。做法和中转服务（server/relay.js 的 cloudHelp）一样：
+// 按次计的 AI 调用：/v1/asr、/tip、/gen、/tts、/zh、/steps、/place。做法和中转服务（server/relay.js 的 cloudHelp）一样：
 // 提示词都在 talk-core.js 里拼，手机只发数据（题目按 id 查、岛民按 id 查），不能自己写提示词。API.md §8
 import { HttpError, bad, json, clean, readJson } from './util.js';
 import { CORE, npcById, questNpc, placeBank } from './shared.js';
@@ -6,9 +6,10 @@ import { dsPost, EVAL_PATH, TTS_PATH, ProviderError } from './upstream.js';
 import { take, refund } from './quota.js';
 import { aiLimit } from './ratelimit.js';
 import { requireConsent } from './me.js';
-import { speechLang, talkLang, questLang, tipLang, noLang, SPEECH_KNOWN } from './config.js';
+import { speechLang, talkLang, questLang, tipLang, genLang, noLang, SPEECH_KNOWN } from './config.js';
 
-const METER = { asr: 'asr', tip: 'aux', tts: 'aux', zh: 'aux', steps: 'aux', place: 'aux' };
+const METER = { asr: 'asr', tip: 'aux', gen: 'aux', tts: 'aux', zh: 'aux', steps: 'aux', place: 'aux' };
+const GEN_MS = 25000;   // 出题的上游超时（毫秒）：真模型要 4–10 秒，别的调用还是 dsPost 默认的 12 秒
 const GATE = { steps: 'steps', place: 'place' };
 
 // 每个调用：先看输入对不对（不对不扣次数）→ 扣一次 → 调上游（失败退回）
@@ -28,6 +29,19 @@ const H = {
     if (!target || !heard) throw bad(target ? 'heard' : 'target');
     const body = CORE.tipBody(target, heard, j.ui, lang); body.model = R.cfg.ds.evalModel;
     return async () => ({ tip: CORE.parseTip(await dsPost(R, EVAL_PATH, body), j.ui) });
+  },
+  // 为你出的题：手机只发数据（要练的词、难度档、学过的词、上一轮的句子），提示词只由 talk-core 的 genBody 按洗过的数据拼，手机写不了。
+  // 语言不在 genLangs 里：400 unsupported_lang；没有一个能用的要练的词：400 focus（都不扣次数、不连上游）。
+  // 出题要 4–10 秒：这一个调用的上游超时放到 25 秒。模型回的东西一条条核对过，一条能用的都没有就按上游出错算（退回次数）
+  async gen(R, j) {
+    const lang = genLang(R.cfg, j && j.lang);
+    const o = CORE.genIn(Object.assign({}, j, { lang: lang || 'en' })); if (!o) throw bad('focus', 'Need at least one word to practise');
+    const body = CORE.genBody(o); body.model = R.cfg.ds.evalModel;
+    return async () => {
+      const out = CORE.parseGen(await dsPost(R, EVAL_PATH, body, GEN_MS), o);
+      if (!out || !out.s.length) throw new ProviderError('gen');
+      return { s: out.s, d: out.d };
+    };
   },
   async tts(R, j) {
     const text = clean(j.text, 300); if (!text) throw bad('text');

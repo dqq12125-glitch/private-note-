@@ -2254,6 +2254,17 @@ html.echo-ios .ac-in { font-size: 16px; }   /* 小于 16px 的输入框一点就
 .mn-w span { font-size: 22px; line-height: 1; }
 .mn-w b { font-family: var(--f-display); font-size: 18px; }
 .mn-w small { color: var(--ink-2); font-size: 14px; }
+/* 🎯 为你出的题（tools/course/ADAPT.md）：首页卡片借「今日复习」的样子换个颜色；AI 写的句子题型那一行后面一个「AI 生成」小牌子；结算页里这一轮错过的词标红 */
+.rev-card.ad-card { background: linear-gradient(135deg, #e6f1ff, #eafaf1); box-shadow: 0 4px 0 #c9dcf0; }
+.rev-card.ad-card em { background: var(--lagoon, #1f9e9a); }
+.ad-chip { color: #1d5e9a; }
+.ai-tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #e6f1ff; color: #1d5e9a; font-size: 12px; font-weight: 800; letter-spacing: 0; vertical-align: 1px; white-space: nowrap; }
+.ad-spin { animation: adSpin 1.6s ease-in-out infinite; }
+@keyframes adSpin { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18) rotate(8deg); } }
+@media (prefers-reduced-motion: reduce) { .ad-spin { animation: none; } }
+.mn-w.ad-miss { background: #ffecec; box-shadow: 0 3px 0 #f3c4c4; }
+.mn-w.ad-miss b { color: #c0392b; }
+.ad-note { font-size: 13px; }
 @media (orientation: landscape) and (max-height: 600px) {
   /* 教学卡：左边图和词，右边「记住了」；看意思选词：左边意思，右边选项 */
   #p-body[data-q=tc] { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); column-gap: 18px; align-items: center; }

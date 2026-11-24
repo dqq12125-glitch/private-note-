@@ -23,6 +23,8 @@ export async function startFakes(o) {
       if (raw.includes('failupstream')) return send(res, 500, { code: 'Throttling', message: 'fake failure' });
       const sys = String((body.messages[0] && body.messages[0].content) || '');
       if (body.model === o.asrModel) return send(res, 200, chat('I like apples'));
+      // 为你出的题（/v1/gen、/gen）：回 F.genReply（测试先设好的一段 JSON 文字；没设 = 一句不是 JSON 的话）
+      if (/write short practice sentences/.test(sys)) return send(res, 200, chat(F.genReply != null ? F.genReply : 'sorry, no sentences today'));
       if (/打勾/.test(sys)) return send(res, 200, chat('{"done":[1,3]}'));
       if (/level check/.test(sys)) return send(res, 200, chat('{"score":2}'));
       if (/打分|gentle, encouraging feedback/.test(sys)) return send(res, 200, chat(JSON.stringify({ steps: [true, true, true], done: true, stars: 3, praise: 'Great job', tips: [], memory: ['likes apples'], concern: false, concernWhy: '' })));

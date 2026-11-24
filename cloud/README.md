@@ -26,7 +26,7 @@
 | `src/iap.js` / `src/jws.js` / `src/x509.js` | 订阅：验 App Store 的签名数据（证书链到 Apple Root CA – G3）、服务器通知 V2；Apple 身份令牌；client_secret |
 | `src/quota.js` | 三种计量、按用户时区过日子、实时聊天的开始 / 心跳 / 结算 |
 | `src/talk.js` | WebSocket：`/v1/talk` 实时语音聊天、`/v1/asr-rt` 实时识别 |
-| `src/ai.js` / `src/upstream.js` | 按次计的 AI 调用（asr、tip、tts、zh、steps、place）、连阿里云 |
+| `src/ai.js` / `src/upstream.js` | 按次计的 AI 调用（asr、tip、gen、tts、zh、steps、place）、连阿里云 |
 | `src/report.js` | 举报、老板看举报、每天的清理 |
 | `src/email.js` | 发邮件的接口：`console`（本机）和 `resend` 两种实现，邮件内容 |
 | `src/ratelimit.js` | 限流 |
@@ -117,6 +117,7 @@
 | `TALK_LANGS` | `en,es,ja,zh` | 和岛民聊天（`/v1/talk`，连带 `/v1/steps`、`/v1/zh` 的 `lang`）开着哪些语言（API.md §8「Chat language」）。只认 `talk-core.js` 的 `LANGS` 里有的，写别的会被忽略，英语一直在；`GET /v1/me` 的 `talkLangs` 就是它——App 看这个决定别的语言的课开不开聊天。某门语言聊起来不行，从这里去掉即可（改 `[vars]`，不用改 App）；和 `SPEECH_LANGS` 各管各的 |
 | `QUEST_LANGS` | 和 `TALK_LANGS` 一样 | 别的语言的课里的支线委托（`/v1/talk?quest=&lang=`、`/v1/steps` 的 `q` + `lang`）开着哪些语言。还要 `TALK_LANGS` 里开着、**服务器上真有这门语言的委托译文**（`talk-courses.js` 的 `quests`）才算；英语一直在。`GET /v1/me`、`/v1/health` 的 `questLangs` 就是它——App 看这个决定别的语言的课出不出委托的「?」 |
 | `TIP_LANGS` | 和 `TALK_LANGS` 一样 | AI 发音点评（`/v1/tip` 的 `lang`）开着哪些语言。只认 `talk-core.js` 认得的，英语一直在；`tipLangs` 就是它。和聊天各管各的（聊天关掉了某门语言，点评可以照开） |
+| `GEN_LANGS` | 和 `TALK_LANGS` 一样 | 「为你出的题」（`POST /v1/gen` 的 `lang`，API.md §8「Practice sentences」）开着哪些语言。只认 `talk-core.js` 认得的，英语一直在；`GET /v1/me`、`/v1/health` 的 `genLangs` 就是它——App 看这个决定出不出题，没有这个字段的老服务器 = 不会出题。和聊天、点评各管各的；出题的上游超时是 25 秒（别的 AI 调用 12 秒），一次算一个 `aux` |
 | `TEST_QUESTS` | 空 | **只给测试用**（`TEST_HOOKS=1` 而且不是正式环境才认）：委托译文的小样，JSON，形状和 `talk-courses.js` 的 `quests` 一样，并到它上面（同一个 id 以小样为准）。`test/quests-sample.cjs` 是现成的小样 |
 | `SPEECH_LANGS` | `en,es,ja,zh` | 口语题识别（`/v1/asr`、`/v1/asr-rt`）和现场合成（`/v1/tts`）认哪些语言（API.md §8 的 `lang`）。只认这四种，写别的会被忽略，英语一直在；`GET /v1/me` 的 `speechLangs` 就是它——App 看这个决定别的语言的课走不走服务器。某门语言的识别 / 合成上线后发现不行，从这里去掉即可（改 `[vars]`，不用改 App） |
 | `TTS_VOICES` | `{"es":{"f":"Sonrisa","m":"Bodega"},"ja":{"f":"Ono Anna","m":"Ryan"},"zh":{"f":"Serena","m":"Ryan"}}` | 别的语言现场合成用的音色（女 `f` / 男 `m`；只写要改的那几个就行，英语照旧 `TTS_VOICE_F` / `TTS_VOICE_M`）。默认是说这门语言地道的那几个，和实时聊天用的同名；**2026-11-21 对着真的阿里云（北京区）实测过**：合成模型认这些名字，合成出来的西语 / 日语 / 中文识别一字不差。换国际版时再对着它的音色表核对一遍 |

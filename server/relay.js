@@ -11,6 +11,7 @@
 //   /steps 认课程角色、/zh 多收 lang 和 ui；/health 的 talkLangs 说这里会用哪些语言聊天（TALK_LANGS 可关，英语一直在）
 // - 第二轮：别的语言的课里的委托 /talk?quest=<id>&lang=<语言>、/steps 的 q + lang（人设还是 quests.js 的英文原文，开场白 / 示范句 / 词
 //   用 ../talk-courses.js 的 quests 里这门语言的那一条）；/tip 多收 lang（别的语言的发音点评）；/health 多 questLangs、tipLangs
+// - 为你出的题：/gen（要练的词 + 难度档 → 新写的练习句，提示词在 ../talk-core.js 的 genBody）；/health 多 genLangs（GEN_LANGS）
 // 启动：cd server && npm install && node relay.js   （默认端口 8787；PORT 可改）
 'use strict';
 const http = require('http');
@@ -96,6 +97,8 @@ const QUEST_LANGS = ['en'].concat(String(cfg('QUEST_LANGS') || TALK_LANGS.join('
 // AI 发音点评（/tip 的 lang）会用哪些语言：TIP_LANGS（没配 = 和 TALK_LANGS 一样），只留 talk-core 认得的；英语一直在。/health 的 tipLangs 就是它
 const TIP_LANGS = ['en'].concat(String(cfg('TIP_LANGS') || TALK_LANGS.join(',')).split(',').map(s => s.trim()).filter((l, i, a) => l !== 'en' && !!CORE.langOk(l) && a.indexOf(l) === i));
 // 委托 / 点评的语言：规矩和 talkLang 一样（没给 / 'en' = 英语 ''；不认得的、没开的 → null），各看各的那张表
+// 为你出的题（/gen 的 lang）会用哪些语言：GEN_LANGS（没配 = 和 TALK_LANGS 一样），只留 talk-core 认得的；英语一直在。/health 的 genLangs 就是它
+const GEN_LANGS = ['en'].concat(String(cfg('GEN_LANGS') || TALK_LANGS.join(',')).split(',').map(s => s.trim()).filter((l, i, a) => l !== 'en' && !!CORE.langOk(l) && a.indexOf(l) === i));
 const langIn = (langs, v) => { if (v === undefined || v === null || v === '' || v === 'en') return ''; const l = CORE.langOk(v); return l && langs.includes(l) ? l : null; };
 if (!KEY) { console.error('没有找到 DASHSCOPE_API_KEY（环境变量或 KEY_FILE / server/.env）'); process.exit(1); }
 
@@ -190,7 +193,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     // talkLangs：这里会用哪些语言聊天（别的语言的课看它决定开不开聊天；老的中转服务没有这个字段 = 只会英语）
     // questLangs / tipLangs：支线委托、AI 发音点评会用哪些语言（没有这两个字段 = 只有英语的）
-    return res.end(JSON.stringify({ ok: true, model: MODEL, code: !!ACCESS_CODE, npcs: NPCS.list.map(n => n.id), talkLangs: TALK_LANGS, questLangs: QUEST_LANGS, tipLangs: TIP_LANGS }));
+    return res.end(JSON.stringify({ ok: true, model: MODEL, code: !!ACCESS_CODE, npcs: NPCS.list.map(n => n.id), talkLangs: TALK_LANGS, questLangs: QUEST_LANGS, tipLangs: TIP_LANGS, genLangs: GEN_LANGS }));
   }
   if (u.pathname === '/logs') {
     if (ADMIN_TOKEN ? u.searchParams.get('token') !== ADMIN_TOKEN : !isLocal(req)) { res.writeHead(403); return res.end('forbidden'); }
@@ -208,7 +211,7 @@ const server = http.createServer((req, res) => {
         (r.eval && r.eval.tips.length ? '<div class="t">建议：' + r.eval.tips.map(t => esc(t.said) + ' → ' + esc(t.better) + '（' + esc(t.zh) + '）').join('；') + '</div>' : '') + '</div>').join('') : '<p>这一天没有对话。</p>');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);
   }
-  const helpPath = /^\/(asr|tip|tts|zh|steps|place)$/.test(u.pathname);
+  const helpPath = /^\/(asr|tip|gen|tts|zh|steps|place)$/.test(u.pathname);
   if (req.method === 'OPTIONS' && helpPath) {   // 跨域预检（GitHub Pages 上的网页版连家里的中转服务）
     let ok = false; try { ok = !!req.headers.origin && okOrigin(req.headers.origin); } catch (e) {}
     res.writeHead(ok ? 204 : 403, ok ? { 'Access-Control-Allow-Origin': req.headers.origin, 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400' } : {});
@@ -234,8 +237,8 @@ function cloudHelp(u, req, res) {
   req.on('data', c => { size += c.length; if (size > 3e6) { req.destroy(); return; } body += c; });
   req.on('end', async () => {
     let j; try { j = JSON.parse(body); } catch (e) { return bad(400, 'json'); }
-    const call = async (b, url) => {
-      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+    const call = async (b, url, ms) => {   // ms：这一次的超时（毫秒），不给 = 12 秒；出题要 4–10 秒，/gen 给 25 秒
+      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms || 12000);
       try {
         const r = await fetch(url || CORE.EVAL_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(b), signal: ctl.signal });
         const o = await r.json();
@@ -296,6 +299,14 @@ function cloudHelp(u, req, res) {
           const o = await r.json(), url = o.output && o.output.audio && o.output.audio.url;
           res.writeHead(url ? 200 : 502, cors); return res.end(JSON.stringify(url ? { url } : { url: '', error: 'upstream', up: String(o.code || r.status).slice(0, 40) }));
         } finally { clearTimeout(tm); }
+      }
+      if (u.pathname === '/gen') {   // 为你出的题：手机只发数据（要练的词、难度档、学过的词、上一轮的句子），提示词只由 talk-core 的 genBody 按洗过的数据拼
+        const gl = langIn(GEN_LANGS, j.lang); if (gl === null) return bad(400, 'lang');   // 这里不会的语言（GEN_LANGS）
+        const o = CORE.genIn(Object.assign({}, j, { lang: gl || 'en' })); if (!o) return bad(400, 'focus');   // 一个能用的要练的词都没有
+        const body = CORE.genBody(o); body.model = EVAL_MODEL;
+        const out = CORE.parseGen(await call(body, EVAL_URL, 25000), o);
+        if (!out || !out.s.length) { const e = new Error('upstream'); e.up = 'gen'; throw e; }   // 模型回的一条能用的都没有：和上游出错一样
+        res.writeHead(200, cors); return res.end(JSON.stringify({ s: out.s, d: out.d }));
       }
       // 别的语言的课的发音点评：lang = 这句话是哪门语言（没给 / en = 英语，和以前一字不差）；这里不会的（TIP_LANGS）→ 400 lang
       const tl = langIn(TIP_LANGS, j.lang); if (tl === null) return bad(400, 'lang');

@@ -360,6 +360,45 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       const rv = await p.evaluate(() => { const P = EchoGame.P(); return P ? { review: P.review, type: P.q.type, en: P.q.en, body: document.querySelector('#p-body').innerText } : null; });
       check(rv && rv.review && rv.en === wW[0], '每日复习：出的是这门语言的那道题（' + wW[0] + '）', rv);
       await p.evaluate(() => EchoGame.goHome('quiz'));
+      // ---------- 5b 为你出的题（tools/course/ADAPT.md）：AI 照要练的词现写的这门语言的句子 ----------
+      // 意思按界面语言给（中文课的界面是英语）；日语最后一句有读音表认不得的汉字：不能出成开口题
+      const AG = {
+        es: { s: [['Mi amigo es muy bueno.', '我的朋友很好。'], ['Hola, buenos días, amigo.', '你好，早上好，朋友。'], ['Gracias, hasta luego, amigo.', '谢谢，回头见，朋友。'], ['Buenas noches, mi amigo.', '晚安，我的朋友。']] },
+        ja: { s: [['ねこがすきです。', '我喜欢猫。'], ['これはわたしのほんです。', '这是我的书。'], ['いぬもすきですか。', '你也喜欢狗吗？'], ['憂鬱な颱風です。', '是让人忧郁的台风。']] },
+        zh: { s: [['我喜欢我的朋友。', 'I like my friends.'], ['你好，你是学生吗？', 'Hello, are you a student?'], ['谢谢你，再见。', 'Thank you, goodbye.'], ['我们是好朋友。', 'We are good friends.']] },
+      }[L];
+      const gen = { s: AG.s.map(([t, m], k) => ({ t, m, f: k % 2 })), d: [] };
+      const ad = await p.evaluate(gen => {
+        EchoGame.S.stars['0-0'] = 2;   // 第一座岛算学过
+        const plan = EchoGame.adapt.plan();
+        EchoGame.adapt.go(gen);
+        const P = EchoGame.P();
+        return { raw: plan.raw, types: P.qs.map(q => (q.gen ? 'AI:' : '') + q.type), ai: P.qs.filter(q => q.gen).map(q => q.type + '|' + q.en), entry: gen.s.map(s => !!EchoGame.entryOf(s.t)) };
+      }, gen);
+      await W(p, 400);
+      check(ad.raw.lang === L && ad.raw.focus.length >= 4 && ad.raw.focus.every(f => f.t && f.m) && ad.raw.ui === (L === 'zh' ? 'en' : 'zh'), '为你出的题：交给 AI 的是这门课的词和它们在界面语言里的意思（lang ' + L + '）', ad.raw);
+      check(ad.entry.every(Boolean) && ad.ai.length === 4, 'AI 写的 4 句都出成了题，也登记进了条目表（朗读、读音、打分认得它们）', ad);
+      check(L === 'es' ? ad.ai.some(t => /^lo\|/.test(t)) : !ad.ai.some(t => /^lo\|/.test(t)), L === 'es' ? '西语：有排句子' : NAME + '：AI 写的句子不出成排句子（没有分好的词块）', ad.ai);
+      if (L === 'ja') check(ad.ai.some(t => t === 'lm|憂鬱な颱風です。') && !ad.ai.some(t => /^sr_s\|憂鬱/.test(t)), '日语：读音表认不全的句子不出成开口题（打不了分）', ad.ai);
+      // 把这一轮做完：选择题点对的、排句子按顺序点、开口题照着说（假识别）
+      let aiSay = null, aiLm = null;
+      for (let k = 0; k < 30; k++) {
+        const st = await p.evaluate(() => { const P = EchoGame.P(); return !document.getElementById('result').hidden || !P || !P.q ? null : { t: P.q.type, gen: !!P.q.gen, target: P.q.target || null, ok: (P.q.opts || []).findIndex(o => o.c), opts: (P.q.opts || []).map(o => o.t), n: (P.q.tokens || []).length }; });
+        if (!st) break;
+        if (/^sr_/.test(st.t)) {
+          await say(p, st.target); await mic(p);
+          if (st.gen && !aiSay) aiSay = await p.evaluate(() => ({ s: +(document.querySelector('#score b') || {}).textContent, fb: document.getElementById('fb').classList.contains('ok'), tag: !!document.querySelector('#p-body .ai-tag') }));
+        } else if (st.t === 'lo') { for (let i = 0; i < st.n; i++) { await p.click('#lo-bank .tile[data-i="' + i + '"]'); await W(p, 30); } await p.click('#lo-check'); await W(p, 100); }
+        else { if (st.gen && st.t === 'lm' && !aiLm) aiLm = st; await p.click('#p-body .opt[data-i="' + st.ok + '"]'); await W(p, 100); }
+        await next(p);
+      }
+      check(aiLm && aiLm.opts.length >= 3 && aiLm.opts.every(t => AG.s.some(s => s[1] === t)), 'AI 写的句子的听句选意：选项是界面语言里的意思', aiLm);
+      check(aiSay && aiSay.s === 100 && aiSay.fb && aiSay.tag, 'AI 写的句子跟读：照着说 100 分（这门语言的打分认得这句话），带「AI 生成」的牌子', aiSay);
+      const adEnd = await p.evaluate(() => ({ res: !document.getElementById('result').hidden, free: Object.keys(EchoGame.S.rev.items).filter(k => /^free:|-1/.test(k)), n: EchoGame.S.adapt.n, last: EchoGame.S.adapt.last.length }));
+      check(adEnd.res && !adEnd.free.length && adEnd.n === 1 && adEnd.last === 4, '做完一轮：AI 写的句子不进复习本，记下了这一轮的 4 句', adEnd);
+      await shot(p, L + '-adapt-result');
+      await W(p, 1900);
+      await p.evaluate(() => { EchoGame.closeModal(); EchoGame.goHome('quiz'); });
       // ---------- 6 大地图 ----------
       await p.evaluate(() => { const S = EchoGame.S; Object.assign(S.settings, { gfx: '2d', mode: 'self' }); S.homeTab = 'mon'; S.world.started = true; S.world.flags = Object.assign(S.world.flags || {}, { 's:intro': 1, 's:mom': 1, 's:starter': 1, 's:rival1': 1, 's:expshare': 1 }); S.world.map = 't0'; S.world.x = -1; S.world.y = -1; S.mon.box = [{ uid: 'u0', sp: 'tidalfin', lv: 10, xp: 0 }]; S.mon.team = ['u0']; S.mon.balls = 10; EchoGame.flush(); });
       await p.evaluate(() => { localStorage.setItem('echo-island-v1@' + EchoPacks.course(), JSON.stringify(EchoGame.S)); });

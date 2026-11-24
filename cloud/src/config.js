@@ -105,6 +105,8 @@ export function config(env) {
     questLangs: ['en'].concat(list(env.QUEST_LANGS, talkLangs.join(',')).filter((l, i, a) => l !== 'en' && talkLangs.includes(l) && !!quests[l] && Object.keys(quests[l]).length > 0 && a.indexOf(l) === i)),
     // AI 发音点评（/v1/tip 的 lang）能用哪些语言：TIP_LANGS（没配 = 和 talkLangs 一样），只留 talk-core 认得的；英语一直在。tipLangs 就是它
     tipLangs: ['en'].concat(list(env.TIP_LANGS, talkLangs.join(',')).filter((l, i, a) => l !== 'en' && !!CORE.langOk(l) && a.indexOf(l) === i)),
+    // 为你出的题（/v1/gen 的 lang）能用哪些语言：GEN_LANGS（没配 = 和 talkLangs 一样），只留 talk-core 认得的；英语一直在。genLangs 就是它
+    genLangs: ['en'].concat(list(env.GEN_LANGS, talkLangs.join(',')).filter((l, i, a) => l !== 'en' && !!CORE.langOk(l) && a.indexOf(l) === i)),
     quests,
     // 阿里云百炼国际版（新加坡）。模型名、地址都是配置：国际版和北京区的模型列表不一样，上线前对着控制台核对（README）
     ds: {
@@ -173,6 +175,8 @@ export function talkLang(c, v) { return langIn(c.talkLangs, v); }
 // 委托的语言（/v1/talk?quest= 的 lang、/v1/steps 带 q 时的 lang）、发音点评的语言（/v1/tip 的 lang）：规矩和 talkLang 一样，各看各的那张表
 export function questLang(c, v) { return langIn(c.questLangs, v); }
 export function tipLang(c, v) { return langIn(c.tipLangs, v); }
+// 为你出的题的语言（/v1/gen 的 lang）：同样的规矩，看 genLangs
+export function genLang(c, v) { return langIn(c.genLangs, v); }
 export const noLang = supported => new HttpError(400, 'bad_request', 'Unsupported language', { field: 'lang', reason: 'unsupported_lang', supported: supported.slice() });
 function langIn(langs, v) {
   if (v === undefined || v === null || v === '' || v === 'en') return '';

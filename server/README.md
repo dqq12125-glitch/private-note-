@@ -32,6 +32,7 @@ KEY_FILE=D:/path/to/.env node relay.js    # 或者把 DASHSCOPE_API_KEY=... 写�
 | `TALK_LANGS` | `en,es,ja,zh` | 和岛民聊天会用哪些语言（别的语言的课，见下面）。只认 `talk-core.js` 认得的，英语一直在；`/health` 的 `talkLangs` 就是它 |
 | `QUEST_LANGS` | 和 `TALK_LANGS` 一样 | 别的语言的课里的支线委托会用哪些语言。还要 `TALK_LANGS` 里开着、这里真有这门语言的委托译文（`../talk-courses.js` 的 `quests`）才算，英语一直在；`/health` 的 `questLangs` 就是它 |
 | `TIP_LANGS` | 和 `TALK_LANGS` 一样 | AI 发音点评（`/tip` 的 `lang`）会用哪些语言。只认 `talk-core.js` 认得的，英语一直在；`/health` 的 `tipLangs` 就是它 |
+| `GEN_LANGS` | 和 `TALK_LANGS` 一样 | 「为你出的题」（`/gen` 的 `lang`）会用哪些语言。只认 `talk-core.js` 认得的，英语一直在；`/health` 的 `genLangs` 就是它。老的中转服务没有这个字段 = 不会出题 |
 | `ASR_URL` / `TTS_URL` / `ASR_RT_URL` | 阿里云的地址 | 只给测试指到假的上游（`cloud/test/t-05-relay.js`），平时不用设 |
 | `TEST_HOOKS` / `TEST_QUESTS` | 空 | 只给测试用：`TEST_HOOKS=1` 时把 `TEST_QUESTS`（JSON，形状和 `talk-courses.js` 的 `quests` 一样）并到委托的译文上，测试不用等正式的译文（`cloud/test/quests-sample.cjs` 是现成的小样）。平时不用设 |
 
@@ -55,6 +56,15 @@ KEY_FILE=D:/path/to/.env node relay.js    # 或者把 DASHSCOPE_API_KEY=... 写�
 - `/tip` 多收 `lang`（这句话是哪门语言；日语、中文按读音比，点评用 `ui` 那门界面语言写）。不带就是英语的点评，一字不差。
 - 这门语言这里不会（`QUEST_LANGS` / `TIP_LANGS`）、`lang` 不认得、这条委托没有这门语言的译文：`/talk` 回 `{"type":"error","code":"lang"}` 后断开，不连阿里云；`/steps`、`/tip` 回 400 `lang`。没有这条委托照旧是 `npc` 的错。
 - `/health` 的 JSON 多两个：`questLangs`（会做委托的语言，只列真有译文的）、`tipLangs`（会点评的语言）。老的中转服务没有这两个字段 = 只有英语的。
+
+**为你出的题**（2026-11-24，`talk-core.js` 的 `genIn` / `genBody` / `parseGen`；和 `cloud/` 同一套，`cloud/API.md` §8「Practice sentences」）：
+
+- `POST /gen`，请求 `{ lang?, ui?, band?, n?, dlg?, focus, known?, avoid? }`：手机只发数据（要练的词、难度档、学过的词、上一轮的句子），提示词由 `genBody` 按洗过的数据拼，手机写不了。
+  `focus` 必填（最多 8 个词、每个 ≤ 40 字；`known` 最多 50 个、`avoid` 最多 10 句；`band` 0–4、`n` 3–8、`dlg` 0–3，超出范围按默认）。
+- 回 `{ "s": [{ t, m, f }], "d": [{ q, qm, a, am, x, xm, f }] }`，模型回的每一条都核对过（不是这门语言的、太长的、意思不是界面语言的、带不合适的词的不要）。
+- `lang` 这里不会（`GEN_LANGS`）：400 `lang`；一个能用的要练的词都没有：400 `focus`；上游出错、或者核对完一句能用的都没有：502 `{"error":"upstream"}`。
+- 出题要 4–10 秒：这一个调用的上游超时是 25 秒（别的是 12 秒）。
+- `/health` 多 `genLangs`。
 
 ## 放到服务器上给手机用
 

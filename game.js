@@ -216,6 +216,13 @@
       'g.mn.ask.h': '先一步一步学', 'g.mn.ask.p': '这一课有 {w} 个新词。先上 {n} 节小课：每节只学三四个，约 3 分钟，先教后练、答错不扣心。学完再来闯关就不难了。',
       'g.mn.ask.go': '开始第 {k} 节小课', 'g.mn.ask.skip': '我学过了，直接闯关', 'g.mn.ls.next': '开始第 1 节小课 →',
       'g.rt.mini': '上小课：每节学三四个新词',
+      'g.ad.card.t': '为你出的题', 'g.ad.card.ai': '按你的水平和最近错的词，AI 现写一轮新题', 'g.ad.card.local': '按你的水平和最近错的词，挑一轮题',
+      'g.ad.load.h': '正在为你出题……', 'g.ad.load.p': '看你最近哪些词还不熟，照着它们写几句新的练习句，大约要 10 秒。', 'g.ad.load.skip': '不等了，先做现成的题',
+      'g.ad.chip': '🎯 为你出的题', 'g.ad.tag': 'AI 生成', 'g.ad.none': '先学几个词再来：上一节小课，或者闯一关。', 'g.ad.toast.local': 'AI 现在出不了新句子，这一轮先用课程里的题',
+      'g.ad.res.t': '答对 {a} / {n}', 'g.ad.res.up': '做得很好！下一轮会难一点。', 'g.ad.res.down': '有点难？下一轮会容易一点。', 'g.ad.res.keep': '难度正合适，下一轮接着练。',
+      'g.ad.res.focus': '这一轮重点练的词（红的是这一轮错过的，明天复习还会出）', 'g.ad.res.again': '再来一轮',
+      'g.ad.res.ai': '带「AI 生成」的句子是 AI 照你要练的词现写的，偶尔会有不自然的地方。', 'g.ad.res.noai': '这一轮是课程里现成的题（AI 现在出不了新句子）。',
+      'g.ad.fb.fail': '这句先放一放',
       'g.set.starter': '一步一步学', 'g.set.starter.d': '给零基础的人：每一课闯关以前先上几节小课，每节只学三四个新词，先教后练、答错不扣心。',
       'g.set.slow': '朗读速度', 'g.set.slow.off': '正常', 'g.set.slow.on': '🐢 慢', 'g.set.slow.d': '慢：配音放慢一点（声音不变调）。每个 🔊 旁边的 🐢 只放慢那一次。',
       'g.set.route': '新手路线', 'g.set.route.d': '首页最上面一步一步教你怎么学（打通第 3 岛以后就不再显示）。',
@@ -879,6 +886,13 @@
       'g.mn.ask.h': 'Learn step by step first', 'g.mn.ask.p': 'This lesson has {w} new words. Take {n} mini lessons first: 3 or 4 words each, about 3 minutes. Each word is taught, then practised, and a wrong answer never costs a heart. The levels will be easy after that.',
       'g.mn.ask.go': 'Start mini lesson {k}', 'g.mn.ask.skip': 'I know these. Go to the levels', 'g.mn.ls.next': 'Start mini lesson 1 →',
       'g.rt.mini': 'Mini lessons: 3 or 4 new words each',
+      'g.ad.card.t': 'Made for you', 'g.ad.card.ai': 'A fresh round written by AI for your level and the words you keep missing', 'g.ad.card.local': 'A round picked for your level and the words you keep missing',
+      'g.ad.load.h': 'Writing your questions…', 'g.ad.load.p': 'Looking at the words you are still unsure of and writing a few new practice sentences with them. This takes about 10 seconds.', 'g.ad.load.skip': 'Skip the wait and use ready-made questions',
+      'g.ad.chip': '🎯 Made for you', 'g.ad.tag': 'AI-generated', 'g.ad.none': 'Learn a few words first: take a mini lesson or play a level.', 'g.ad.toast.local': 'AI cannot write new sentences right now. This round uses questions from the course.',
+      'g.ad.res.t': '{a} of {n} right', 'g.ad.res.up': 'Well done! The next round will be a little harder.', 'g.ad.res.down': 'A bit hard? The next round will be a little easier.', 'g.ad.res.keep': 'This level suits you. Keep going next round.',
+      'g.ad.res.focus': 'Words this round focused on (red = missed this round; they will come back in tomorrow\'s review)', 'g.ad.res.again': 'Another round',
+      'g.ad.res.ai': 'Sentences marked "AI-generated" were written by AI around the words you need to practise. Now and then one may sound a little unnatural.', 'g.ad.res.noai': 'This round used questions from the course (AI could not write new sentences just now).',
+      'g.ad.fb.fail': 'Let\'s leave this one for now',
       'g.set.starter': 'Step by step', 'g.set.starter.d': 'For complete beginners: before the levels of each lesson you take a few mini lessons. Each one teaches only 3 or 4 new words, practises them right away, and a wrong answer never costs a heart.',
       'g.set.slow': 'Reading speed', 'g.set.slow.off': 'Normal', 'g.set.slow.on': '🐢 Slow', 'g.set.slow.d': 'Slow: recordings play a little slower (same pitch). The 🐢 next to each 🔊 slows down just that one time.',
       'g.set.route': 'Beginner\'s path', 'g.set.route.d': 'Step-by-step steps at the top of the home page (hidden after you clear Island 3).',
@@ -1697,6 +1711,9 @@
       seenLesson: {},
       // 一步一步学（tools/course/STARTER.md）：n[小镇 / 单元编号] = 学完几节小课；skip[编号] = 说了「我学过了，直接闯关」。开关 settings.starter 不放在这里（没有 = 照默认）
       mini: { n: {}, skip: {} },
+      // 🎯 为你出的题（tools/course/ADAPT.md）：band 难度档 0–4（null = 还没做过，按能力检测的级别起）、n 做过几轮、
+      // hist 最近几轮 [{ d 日期, ok 不带提示答对几题, n 共几题, ai 有没有 AI 写的句子, band }]、last 上一轮 AI 写的句子（下一轮别重复）
+      adapt: { band: null, n: 0, hist: [], last: [] },
     };
   }
   function merge(base, o) {
@@ -3343,7 +3360,7 @@
     const pc = window.EchoPlace && EchoPlace.homeCard ? EchoPlace.homeCard() : '';
     // 新手路线（WORDS.md §9）在最上面；它开着时发音入门的卡片不另出（路线的第 ① 步就是它）
     const rt = routeCard();
-    return rt + pc + (rt ? '' : primerCard()) + revCard() + '<div class="q-head"><h3>' + trh('g.home.tasks') + '</h3><small>' + trh('g.home.reset', { n: hrs }) + '</small></div>' + rows + chest;
+    return rt + pc + (rt ? '' : primerCard()) + revCard() + adCard() + '<div class="q-head"><h3>' + trh('g.home.tasks') + '</h3><small>' + trh('g.home.reset', { n: hrs }) + '</small></div>' + rows + chest;
   }
   const OFFS = [0, -56, -78, -34, 38, 76, 0];
   // 小岛 / 课本单元的名字（按界面语言）：小岛 isleName（你好岛 / Crayon Island），单元 unitTxt（七上 Unit 1 友谊 / 7A Unit 1 Friendship）
@@ -4415,6 +4432,242 @@
       (d >= n ? '<span class="mn-ok">' + trh('g.mn.row.done') + '</span>' : '') + '</div>';
   }
 
+  // ---------- 🎯 为你出的题：按水平和最近的表现现出一轮题（tools/course/ADAPT.md，2026-11-24）----------
+  // 老板：「你可以根据学生基础来出题，然后题目也是 AI 根据学生表现生成的」。
+  // 一轮 8 题上下：先是最近老错的 / 刚学的词（课程里现成的题、现成的配音），再是 AI 照这几个词现写的新句子（听句选意、排句子、跟读、一问一答）。
+  // 「表现」看复习本：错过、格子低的词是「弱」，还没进复习本 / 刚进来的是「新」；难度档 S.adapt.band（0–4）从能力检测的级别起，
+  // 每一轮按「不带提示答对的比例」升降一档。AI 出不了（没网、云端模式没登录、老服务器）就全用课程里现成的题——照样是按表现挑的。
+  // AI 写的句子只当这一轮的练习，**不进每日复习**（AI 写的可能有错，不让人反复背）；答错了记回它练的那个词（降一格、今天再复习）。
+  // 借闯关的画面：P.adapt = { band, ai 这一轮有没有 AI 写的, focus, miss }；题目带 q.ad，AI 写的另带 q.gen 和 q.fw（练的是哪个词）。没有红心。
+  // 开关 S.settings.adapt：true 开、false 关、没有 = 开（自动化测试的浏览器里没写就当关着，和单词卡一样）
+  const adaptOn = () => S.settings.adapt === true || (S.settings.adapt == null && !autoOff());
+  const AD = () => {
+    if (!S.adapt || typeof S.adapt !== 'object') S.adapt = { band: null, n: 0, hist: [], last: [] };
+    const a = S.adapt;
+    if (!Array.isArray(a.hist)) a.hist = [];
+    if (!Array.isArray(a.last)) a.last = [];
+    return a;
+  };
+  // AI 写的句子 → 界面语言里的意思（dlgMean 先查它：英语课的对话本来没有意思）。只在内存里，这次打开游戏有效
+  const AIM = new Map();
+  // 学过的词：通过过关卡（有星）的小镇 / 单元的全部单词、上过的小课里的、复习本里的
+  function adLearned() {
+    const out = new Map(), add = (wi, i) => { const w = WX[wi], it = w && w.words && w.words[i]; if (it && it[0] && !out.has(wi + ':' + i)) out.set(wi + ':' + i, { wi, i, it }); };
+    WX.forEach((w, wi) => {
+      if (!w || !Array.isArray(w.words)) return;
+      if (range(7).some(l => S.stars[wi + '-' + l] > 0)) w.words.forEach((_, i) => add(wi, i));
+      else miniGroups(wi).slice(0, miniDone(wi)).forEach(g => g.forEach(i => add(wi, i)));
+    });
+    Object.values(S.rev.items).forEach(e => { if (e && e.k === 'word') add(e.w, e.i); });
+    return [...out.values()];
+  }
+  const adReady = () => adLearned().length >= 4;
+  // 难度档 0–4：没做过就按能力检测的级别（没测过：过过关的算 1，不然 0）；做过以后按表现升降（adaptFinish）
+  const adBase = () => Math.max(0, Math.min(4, S.place && typeof S.place.lv === 'number' && S.place.lv >= 0 ? S.place.lv : Object.keys(S.stars || {}).some(k => S.stars[k] > 0) ? 1 : 0));
+  const adBand = () => { const b = AD().band; return typeof b === 'number' && b >= 0 && b <= 4 ? Math.floor(b) : adBase(); };
+  // 这一轮练什么：focus 重点练的词（弱的在前，再是新学的，不够拿学过的补到 5–6 个），known 别的学过的词（和重点词同一课的在前，最多 40 个）；
+  // raw 是交给 AI 的那份数据（EchoTalk.genQuiz → talk-core 的 genIn：只有词、意思、难度档，没有名字之类的个人信息）
+  function adPlan() {
+    const A = AD(), all = adLearned(), st = x => S.rev.items['word:' + x.wi + ':' + x.i] || null;
+    const weak = [], fresh = [], rest = [];
+    all.forEach(x => {
+      const e = st(x);
+      if (e && e.due && (e.x | 0) >= 1 && ((e.b | 0) <= 1 || (e.x | 0) >= 2)) weak.push(x);
+      else if (!e || (e.due && (e.b | 0) <= 1)) fresh.push(x);
+      else rest.push(x);
+    });
+    weak.sort((a, b) => ((st(b).x | 0) - (st(a).x | 0)) || ((st(a).b | 0) - (st(b).b | 0)));
+    const band = adBand(), nf = band <= 1 ? 5 : 6, focus = [];
+    const take = (list, why, max) => list.slice(0, max).forEach(x => { if (focus.length < nf) focus.push(Object.assign({ why }, x)); });
+    take(weak, 'weak', 3);
+    take(shuffle(fresh), 'new', Math.max(2, nf - focus.length - 1));
+    take(shuffle(rest), 'ok', nf);
+    take(shuffle(fresh.concat(weak)).filter(x => !focus.some(f => f.wi === x.wi && f.i === x.i)), 'ok', nf);
+    const inF = new Set(focus.map(x => x.wi + ':' + x.i)), units = new Set(focus.map(x => x.wi));
+    const others = all.filter(x => !inF.has(x.wi + ':' + x.i));
+    const known = shuffle(others.filter(x => units.has(x.wi))).concat(shuffle(others.filter(x => !units.has(x.wi)))).slice(0, 40);
+    const raw = { lang: COURSE, ui: I18N ? I18N.lang() : 'zh', band, n: 6, dlg: band >= 3 ? 2 : band >= 1 ? 1 : 0,
+      focus: focus.map(x => ({ t: x.it[0], m: meanOf(x.it) || '', why: x.why })), known: known.map(x => x.it[0]), avoid: A.last.slice(0, 8) };
+    return { band, focus, known, raw };
+  }
+  // 课程里现成的词题：听音选意思 lw / 看意思选词 mw / 跟读 sr_w。错误选项从这一轮别的词里挑（可以跨小镇，所以不用 miniQ）
+  function adWordQ(type, f, pool) {
+    const it = f.it, q = { type, kind: 'word', w: f.wi, i: f.i, ad: true, en: it[0], zh: it[1], em: it[2], mean: meanOf(it), audio: it[0] };
+    if (type === 'mw' && !((q.mean != null && q.mean !== '') || it[2])) type = q.type = 'lw';   // 没有意思也没有图：看意思选词出不了
+    const mk = x => (type === 'mw' || q.mean == null ? wdNorm(x[0]) : LANG ? meanKey(x) : x[1]);
+    const seen = new Set([mk(it)]), ds = [];
+    if (type !== 'sr_w') shuffle(pool).forEach(p => { if (ds.length >= 3 || seen.has(mk(p.it))) return; seen.add(mk(p.it)); ds.push(p.it); });
+    if (type === 'sr_w' || !ds.length) { q.type = 'sr_w'; q.target = it[0]; return q; }
+    if (type === 'lw') {
+      const ms = ds.map(meanOf), ear = q.mean == null || ms.some(m => m == null);
+      if (ear) q.ear = true;
+      q.opts = shuffle([{ c: true, e: it[2], t: ear ? it[0] : q.mean }, ...ds.map((o, k) => ({ e: o[2], t: ear ? o[0] : ms[k] }))]);
+    } else { q.audio = null; q.opts = shuffle([{ c: true, t: it[0] }, ...ds.map(o => ({ t: o[0] }))]); }
+    return q;
+  }
+  // AI 写的一句话：记下意思；别的课另外登记进条目表（朗读 say、标读音、打分都靠条目表认得这句话）
+  function adReg(t, m) {
+    if (!t) return;
+    if (m) AIM.set(t, m);
+    if (LANG) entryAdd(t, m && !zhUi() ? { en: m } : null, m && zhUi() ? m : '');
+  }
+  // AI 写的句子出成题：听句选意 lm（别的选项是这一轮别的句子的意思；没有意思就选听到的那句）/ 排句子 lo / 跟读 sr_s。出不成 → null
+  function adSentQ(type, e, all, fw) {
+    const q = { type, kind: 'sent', w: -1, i: -1, ad: true, gen: true, fw: fw || null, en: e.t, zh: zhUi() ? e.m || '' : '', mean: e.m || null, audio: e.t };
+    if (type === 'lm') {
+      const ear = !e.m, seen = new Set([ear ? wdNorm(e.t) : e.m]), ds = [];
+      shuffle(all).forEach(o => { const k = ear ? wdNorm(o.t) : o.m; if (ds.length >= 3 || !k || seen.has(k)) return; seen.add(k); ds.push(o); });
+      if (ds.length < 2) return null;
+      if (ear) q.ear = true;
+      q.opts = shuffle([{ c: true, t: ear ? e.t : e.m }, ...ds.map(o => ({ t: ear ? o.t : o.m }))]);
+    } else if (type === 'lo') {
+      q.tokens = tokens(e.t);
+      if (q.tokens.length < 3) return null;
+      q.bank = shuffle(range(q.tokens.length));
+      if (LANG) q.tokR = tileR(e.t, q.tokens);
+    } else q.target = e.t;
+    return q;
+  }
+  // AI 写的一问一答：听问选答 lr / 说出回答 sr_d
+  function adDlgQ(type, d, fw) {
+    const q = { type, kind: 'dlg', w: -1, i: -1, ad: true, gen: true, fw: fw || null, prompt: d.q, en: d.a, audio: d.q };
+    if (type === 'lr') q.opts = shuffle([{ c: true, t: d.a }, ...d.x.map(t => ({ t }))]);
+    else q.target = d.a;
+    return q;
+  }
+  // 课程里现成的句子（AI 出不了、出得太少时补上）：先挑带着重点词的，再挑重点词那几课的
+  function adLocalSents(plan, n, noSpeak) {
+    const fw = plan.focus.map(x => wdNorm(x.it[0])), cand = [];
+    [...new Set(plan.focus.map(x => x.wi))].forEach(wi => ((WX[wi] && WX[wi].sents) || []).forEach((it, i) => { const t = wdNorm(it[0]); cand.push({ wi, i, hit: fw.some(w => w && t.includes(w)) ? 1 : 0, r: Math.random() }); }));
+    cand.sort((a, b) => b.hit - a.hit || a.r - b.r);
+    const cyc = noSpeak ? ['lm', 'lo'] : ['lm', 'lo', 'sr_s'];
+    return cand.slice(0, n).map((c, k) => Object.assign(makeQ(cyc[k % cyc.length], c.wi, c.i), { ad: true }));
+  }
+  // 一轮的题：① 热身——弱的词（没有就新学的）各一题；② AI 现写的句子和一问一答；AI 的句子不到 3 句就拿课程里的句子补
+  function adBuild(plan, gen) {
+    const F = plan.focus, pool = F.concat(plan.known), qs = [], band = plan.band;
+    const noSpeak = ((navigator.onLine === false && !localSR()) || aiDown()) && speakMode() === 'sr';   // 打不了分：不出开口题（和每日复习一样）
+    const order = F.filter(x => x.why === 'weak').concat(F.filter(x => x.why === 'new'), F.filter(x => x.why === 'ok'));
+    const wt = ['lw', 'mw', noSpeak ? 'lw' : 'sr_w'];
+    order.slice(0, 3).forEach((x, k) => qs.push(adWordQ(wt[k % 3], x, pool.filter(p => p !== x))));
+    const SS = gen && Array.isArray(gen.s) ? gen.s : [], DD = gen && Array.isArray(gen.d) ? gen.d : [];
+    const latin = !LANG || LANG.script === 'latin';
+    // 日语：读音表认不全的句子打不了分（lang-ja.js 的 readable），不出成开口题
+    const sayOk = t => { if (noSpeak) return false; try { return !(LANG && typeof LANG.readable === 'function' && !LANG.readable(t, LEX)); } catch (e) { return false; } };
+    const fwOf = f => (f >= 0 && F[f] ? { wi: F[f].wi, i: F[f].i } : null);
+    const cyc = band >= 2 ? ['lm', 'sr_s', 'lo', 'sr_s', 'lm', 'sr_s'] : ['lm', 'lo', 'sr_s', 'lm', 'lo', 'sr_s'];
+    SS.forEach(e => adReg(e.t, e.m));
+    SS.forEach((e, k) => {
+      const want = cyc[k % cyc.length], tries = [want, 'lm', 'lo', 'sr_s'].filter((t, j, a) => a.indexOf(t) === j).filter(t => (t !== 'lo' || latin) && (t !== 'sr_s' || sayOk(e.t)));
+      for (const t of tries) { const q = adSentQ(t, e, SS.filter(o => o !== e), fwOf(e.f)); if (q) { qs.push(q); break; } }
+    });
+    DD.forEach((d, k) => {
+      adReg(d.q, d.qm); adReg(d.a, d.am); d.x.forEach((t, j) => adReg(t, d.xm && d.xm[j]));
+      qs.push(adDlgQ(k === 1 && sayOk(d.a) ? 'sr_d' : 'lr', d, fwOf(d.f)));
+    });
+    if (SS.length < 3) adLocalSents(plan, 5 - SS.length, noSpeak).forEach(q => qs.push(q));
+    return qs.filter(Boolean);
+  }
+  // AI 写的句子没有现成的配音：趁做前面几题的时候一句句先合成好（同一句只合成一次，talk.js 记着地址）
+  function adWarm(qs) {
+    try {
+      if (!cloudOk() || !window.EchoTalk || !EchoTalk.cloudTTS) return;
+      if (LANG && !(EchoTalk.speechLang && EchoTalk.speechLang(LANG.tts.cloud, 'tts'))) return;
+    } catch (e) { return; }
+    const list = [...new Set(qs.filter(q => q.gen).flatMap(q => [q.audio, q.target, q.kind === 'dlg' ? q.en : null]).filter(Boolean))];
+    (async () => { for (const t of list) { if (!P || !P.adapt) return; try { await EchoTalk.cloudTTS(t, undefined, LANG ? LANG.tts.cloud : undefined); } catch (e) { /* 到时候用本机声音 */ } } })();
+  }
+  // 开始一轮：能问 AI 就先等它出题（最多 26 秒，可以点「不等了」），等的时候关掉了弹窗 = 不做了
+  let adTok = 0;
+  async function adaptStart() {
+    if (!adReady()) { toast(tr('g.ad.none')); return; }
+    primeTTS(); ac();
+    const plan = adPlan(), tok = ++adTok;
+    let gen = null, asked = false;
+    if (window.EchoTalk && EchoTalk.genQuiz && EchoTalk.genOk && EchoTalk.genOk()) {
+      asked = true;
+      openModal('<div class="big ad-spin">🎯</div><h2>' + trh('g.ad.load.h') + '</h2><p>' + trh('g.ad.load.p') + '</p><button class="btn ghost wide" data-act="adaptSkip" id="ad-wait">' + trh('g.ad.load.skip') + '</button>');
+      gen = await Promise.race([
+        Promise.resolve().then(() => EchoTalk.genQuiz(plan.raw)).catch(() => null),
+        new Promise(r => { RT.adSkip = () => r(null); }),
+        new Promise(r => setTimeout(() => r(null), 26000)),
+      ]);
+      RT.adSkip = null;
+      if (tok !== adTok || !$('#ad-wait')) return;   // 等的时候关了弹窗、去了别处、又点了一次：不做了
+      closeModal();
+    }
+    adaptGo(plan, gen, asked);
+  }
+  function adaptGo(plan, gen, asked) {
+    const qs = adBuild(plan, gen);
+    if (!qs.length) { toast(tr('g.ad.none')); return; }
+    const ai = qs.some(q => q.gen);
+    if (asked && !ai) toast(tr('g.ad.toast.local'));
+    P = { wi: plan.focus[0].wi, li: 0, adapt: { band: plan.band, ai, focus: plan.focus, miss: {} }, review: false, qs, idx: 0, total: qs.length, hearts: 3, combo: 0, maxCombo: 0, correct: 0, xp: 0, lost: 0, hits: 0, boss: false, bossMax: 0, revived: false, aidedN: 0, recall: 0 };
+    if (ai) adWarm(qs);
+    show('play');
+    renderHearts();
+    $('#p-combo').textContent = '';
+    $('#p-boss').innerHTML = '';
+    renderQ();
+  }
+  // AI 写的句子答错了 / 没读准：不进复习本，记回它练的那个词（降一格、今天再复习；这个词还不在复习本里就按错题记进去）
+  function adMiss(q) {
+    if (!q || !q.fw) return;
+    revMiss({ kind: 'word', w: q.fw.wi, i: q.fw.i });
+    if (P && P.adapt) P.adapt.miss[q.fw.wi + ':' + q.fw.i] = 1;
+  }
+  // 结算：按「不带提示答对的比例」调下一轮的难度档（85% 以上难一档，不到一半容易一档；最高比起点高两档）
+  function adaptFinish() {
+    hideFb();
+    const A = AD(), ad = P.adapt, clean = Math.max(0, P.correct - P.aidedN), rate = P.total ? clean / P.total : 0, today = dayStr();
+    const nb = rate >= 0.85 ? Math.min(4, adBase() + 2, ad.band + 1) : rate < 0.5 ? Math.max(0, ad.band - 1) : ad.band;
+    const dir = nb > ad.band ? 'up' : nb < ad.band ? 'down' : 'keep';
+    A.band = nb; A.n = (A.n | 0) + 1;
+    A.hist.push({ d: today, ok: clean, n: P.total, ai: ad.ai ? 1 : 0, band: ad.band }); if (A.hist.length > 8) A.hist.splice(0, A.hist.length - 8);
+    if (ad.ai) A.last = P.qs.filter(q => q.gen && q.kind === 'sent').map(q => q.en).slice(0, 8);
+    // 课程里现成的词题答错了也算这一轮错过的词
+    P.qs.forEach(q => { if (!q.gen && q.kind === 'word' && q.adBad) ad.miss[q.w + ':' + q.i] = 1; });
+    const xp = P.xp + 10, coins = 3, before = lvInfo(S.xp).lv;
+    S.xp += xp; S.coins += coins;
+    const after = lvInfo(S.xp).lv;
+    if (after > before) S.coins += 20;
+    S.stats.maxCombo = Math.max(S.stats.maxCombo, P.maxCombo);
+    qProg('combo', P.maxCombo, true);
+    dayLog().adapt = (dayLog().adapt || 0) + 1;
+    const newDay = markToday();
+    save();
+    renderTop();
+    $('#result').innerHTML =
+      '<div class="r-hero"><div class="big" style="font-size:64px">🎯</div><h1 class="r-title">' + trh('g.ad.res.t', { a: P.correct, n: P.total }) + '</h1>' +
+      '<p class="r-sub">' + trh('g.ad.res.' + dir) + '</p></div><div class="r-body">' +
+      '<p class="r-sub" style="margin:0">' + trh('g.ad.res.focus') + '</p>' +
+      '<div class="mn-learned">' + ad.focus.map(f => { const it = f.it, m = meanOf(it); return '<button class="mn-w' + (ad.miss[f.wi + ':' + f.i] ? ' ad-miss' : '') + '" data-act="wdSay" data-t="' + esc(it[0]) + '"><span aria-hidden="true">' + esc(it[2] || '') + '</span><b>' + rb(it[0]) + '</b>' + (m != null && m !== '' ? '<small>' + esc(m) + '</small>' : '') + '</button>'; }).join('') + '</div>' +
+      '<p class="r-sub ad-note" style="margin:0">' + trh(ad.ai ? 'g.ad.res.ai' : 'g.ad.res.noai') + '</p>' +
+      '<div class="r-stats"><div class="stat xp"><b>+' + xp + '</b><small>' + trh('g.res.xp') + '</small></div><div class="stat cn"><b>+' + coins + '</b><small>' + trh('g.res.coins') + '</small></div><div class="stat cb"><b>' + P.maxCombo + '</b><small>' + trh('g.res.combo') + '</small></div></div>' +
+      '<div class="r-actions"><button class="btn sun wide" data-act="adapt" data-focus>' + trh('g.ad.res.again') + '</button>' +
+      '<button class="btn ghost wide" data-act="home">' + trh('g.res.map') + '</button></div></div>';
+    show('result');
+    SFX.win();
+    confetti(rate >= 0.85 ? 140 : 60);
+    const f = $('#result [data-focus]') || $('#result button');
+    if (f) setTimeout(() => f.focus({ preventScroll: true }), 100);
+    setTimeout(() => {
+      if (newDay) toast(tr('g.res.streak', { n: S.streak }), 'gold');
+      checkAch();
+      if (after > before) {
+        confetti(200);
+        openModal('<div class="big">🎖️</div>' + trh('g.res.lvup', { lv: after, title: titleOf(after) }) + '<button class="btn sun wide" data-act="close" data-focus>' + trh('g.res.yay') + '</button>');
+      }
+    }, 1700);
+  }
+  // 首页任务栏里的一张卡片（今日复习下面）。学过的词不到 4 个不出（先去上小课 / 闯一关）
+  function adCard() {
+    if (!adaptOn() || !adReady()) return '';
+    let ai = false; try { ai = !!(window.EchoTalk && EchoTalk.genOk && EchoTalk.genOk()); } catch (e) { ai = false; }
+    return '<button class="rev-card ad-card" data-act="adapt"><span>🎯</span><div><b>' + trh('g.ad.card.t') + '</b><small>' + trh(ai ? 'g.ad.card.ai' : 'g.ad.card.local') + '</small></div><em>' + trh('g.home.start') + '</em></button>';
+  }
+
   // 闯关练习页最上面：📒 我的单词本（学过 n 个词）、🔤 发音入门（这门课有才有）
   function wordsBar() {
     return '<div class="wd-bar"><button class="btn small ghost" data-act="wordBook">' + trh('g.wb.btn', { n: bookCount() }) + '</button>' +
@@ -4453,6 +4706,7 @@
   function renderHearts() {
     // 小课没有红心：这里写「🌱 第几节 / 共几节」
     if (P.mini) { $('#p-hearts').innerHTML = '<span class="mn-chip">' + trh('g.mn.chip', { k: P.mini.k + 1, n: P.mini.n }) + '</span>'; return; }
+    if (P.adapt) { $('#p-hearts').innerHTML = '<span class="mn-chip ad-chip">' + trh('g.ad.chip') + '</span>'; return; }   // 为你出的题也没有红心
     $('#p-hearts').innerHTML = range(3).map(i => '<span class="' + (i < P.hearts ? '' : 'lost') + '">❤️</span>').join('');
   }
   function showCombo() {
@@ -4507,7 +4761,7 @@
     const t = q.type, srm = speakMode() === 'sr', it = itemOfQ(q);
     P.cue = cueMode(meanOf(it), it, q.kind, true);
     // 小课（q.mini）：跟读一直看着全文，不撤提示
-    P.fade = q.mini ? 0 : t === 'sp' ? 2 : /^sr_/.test(t) ? fadeFor(q, true) : t === 'bt' && srm ? Math.min(1, fadeFor(q, true)) : 0;
+    P.fade = q.mini || q.gen ? 0 : t === 'sp' ? 2 : /^sr_/.test(t) ? fadeFor(q, true) : t === 'bt' && srm ? Math.min(1, fadeFor(q, true)) : 0;
     P.aided = false;
     P.blind = t === 'sp' || P.fade >= 2 || (t === 'bt' && P.fade >= 1);
     hideFb();
@@ -4515,7 +4769,7 @@
     $('#p-prog').style.width = (P.idx / P.total * 100) + '%';
     // 撤了提示的跟读题不再叫「跟读」：看首字母说 / 凭记忆说 / 改正说法
     const FADE_LABEL = { 1: trh('g.fade.1'), 2: trh('g.fade.2'), 3: trh('g.fade.3') };
-    let h = '<div class="q-type">' + (t === 'tc' ? trh('g.mn.new') : t === 'mw' ? trh('g.mn.mw.ty') : (/^sr_/.test(t) && FADE_LABEL[P.fade]) || (q.ear ? trh('g.cue.' + t + '.ty') : TYPE_LABEL[q.type])) + '</div>';
+    let h = '<div class="q-type">' + (t === 'tc' ? trh('g.mn.new') : t === 'mw' ? trh('g.mn.mw.ty') : (/^sr_/.test(t) && FADE_LABEL[P.fade]) || (q.ear ? trh('g.cue.' + t + '.ty') : TYPE_LABEL[q.type])) + (q.gen ? ' <span class="ai-tag">' + trh('g.ad.tag') + '</span>' : '') + '</div>';
     const hintRow = '<div class="say-row"><button class="btn small ghost" data-act="hint" id="hintbtn">' + trh('g.play.hint') + '</button></div>';
     const said = P.fade === 3 ? (S.rev.items[revKey(q)] || {}).said || '' : '';
     // 意思那一行（qMean：中文界面照旧是 q.zh；界面语言里没有意思就不显示）
@@ -4626,6 +4880,23 @@
       showCombo();
       return gain;
     }
+    // 为你出的题里 AI 写的句子（q.gen）：不进复习本（AI 写的可能有错）。不带提示答对了，它练的那个词要是今天到期，就算复习过一次（和冒险里碰到一样，revRight）
+    if (P.adapt && P.q.gen) {
+      const aid = !!P.aided || (speak && P.tries > 0);
+      P.aided = aid; P.correct++;
+      if (aid) P.aidedN++; else { P.combo++; P.maxCombo = Math.max(P.maxCombo, P.combo); }
+      perfect = perfect && !aid;
+      let g = Math.round((speak ? (perfect ? 20 : 15) : 10) * mult());
+      if (aid) g = Math.max(1, Math.round(g / 2));
+      P.xp += g;
+      if (speak) { S.stats.spoken++; qProg('spoken', 1); if (perfect) { S.stats.perfect++; qProg('perfect', 1); } logSpk(!aid); }
+      else { S.stats.listen++; qProg('listen', 1); }
+      const fq = P.q.fw ? { kind: 'word', w: P.q.fw.wi, i: P.q.fw.i } : null;
+      if (fq && !aid && S.rev.items[revKey(fq)]) revRight(fq, false, false);
+      SFX.ok(P.combo);
+      showCombo();
+      return g;
+    }
     const aided = !!P.aided || (speak && P.tries > 0);
     P.aided = aided;
     P.correct++;
@@ -4651,6 +4922,8 @@
   function bad() {
     // 小课：不扣心、不记错题，过两题再问一次
     if (P.mini) { P.combo = 0; P.lost++; SFX.bad(); buzz(120); showCombo(); miniAgain(P.q); return; }
+    // 为你出的题：没有红心。课程里现成的题照常记错题；AI 写的句子不进复习本，记回它练的那个词（adMiss）
+    if (P.adapt) { P.combo = 0; P.lost++; if (P.q.gen) adMiss(P.q); else { P.q.adBad = true; addWrong(P.q); } SFX.bad(); buzz(120); showCombo(); return; }
     P.combo = 0; P.hearts--; P.lost++;
     addWrong(P.q);
     SFX.bad(); buzz(120);
@@ -4670,7 +4943,7 @@
   }
   // 对话里一句话（问句、答句、错误选项）在界面语言里的意思。别的课的课程内容每句都带着意思；英语课的对话没写意思 → null（什么都不多显示）。
   // 2026-11-24 老板在西语课的「听问选答」里：「是不是写一下翻译比较好，我是纯初学者」——以前这类题从头到尾没有一句意思
-  const dlgMean = t => { try { const m = LANG ? meanText(t) : null; return m != null && m !== '' ? m : null; } catch (e) { return null; } };
+  const dlgMean = t => { try { if (AIM.has(t)) return AIM.get(t); const m = LANG ? meanText(t) : null; return m != null && m !== '' ? m : null; } catch (e) { return null; } };
   function detailOf(q) {
     // 对话题：问句 → 答句，下面一行是它们的意思（别的课才有，dlgMean）
     if (q.kind === 'dlg') { const mq = dlgMean(q.prompt), ma = dlgMean(q.en); return '<b>' + rb(q.prompt) + '</b> → ' + rb(q.en) + (mq || ma ? '<small class="fb-mean">' + esc(mq || '…') + ' → ' + esc(ma || '…') + '</small>' : ''); }
@@ -4789,7 +5062,7 @@
     if (aiDown()) { const sk = $('#p-skip'); if (sk) sk.hidden = false; }
   }
   // 口语题最多说几次：闯关 3 次；小课的跟读 2 次（没读准就先往下走，见 failSpeak）
-  const sayMax = () => (P && P.mini ? 2 : 3);
+  const sayMax = () => (P && (P.mini || (P.adapt && P.adapt.band <= 1)) ? 2 : 3);   // 为你出的题：入门、初级两档也是 2 次
   function passSpeak(score, measured, marks) {
     const q = P.q;
     P.answered = true;
@@ -4809,6 +5082,14 @@
       setTimeout(() => say(q.target || q.en), 300);
       return;
     }
+    // 为你出的题里 AI 写的句子：没读准不进复习本，记回它练的那个词；亮出答案、再念一遍，往下走
+    if (q.gen) {
+      P.answered = true; P.combo = 0; showCombo(); P.lost++; adMiss(q); logSpk(false); showAnswer(marks);
+      showFb(false, tr('g.ad.fb.fail'), detailOf(q));
+      setTimeout(() => say(q.target || q.en), 300);
+      return;
+    }
+    if (P.adapt) q.adBad = true;
     P.answered = true;
     P.combo = 0; showCombo();
     addWrong(q);
@@ -4823,7 +5104,7 @@
     stopListening();
     P.answered = true;
     P.combo = 0; showCombo();
-    const q = P.q, ai = speakMode() === 'sr' && !P.mini;   // 小课里跳过跟读：不欠着、不进复习
+    const q = P.q, ai = speakMode() === 'sr' && !P.mini && !q.gen;   // 小课里跳过跟读：不欠着、不进复习
     if (ai) { revLater(q); const L = dayLog(); L.aiSkip = (L.aiSkip || 0) + 1; }
     showAnswer();
     btReveal(false);
@@ -4975,6 +5256,7 @@
 
   function finish() {
     if (P.mini) { miniFinish(); return; }   // 小课有自己的结算（tools/course/STARTER.md）
+    if (P.adapt) { adaptFinish(); return; }   // 为你出的题也是（tools/course/ADAPT.md）
     hideFb();
     const acc = P.correct / P.total;
     const stars = P.lost === 0 && acc >= 0.9 ? 3 : acc >= 0.7 ? 2 : 1;
@@ -5843,13 +6125,16 @@
       openModal('<h2>' + trh('g.ev.quit.h') + '</h2><p>' + trh('g.ev.quit.p') + '</p><div class="row"><button class="btn ghost" data-act="home">' + trh('g.ev.quit.yes') + '</button><button class="btn" data-act="close" data-focus>' + trh('g.ev.quit.no') + '</button></div>');
     },
     home: () => { closeModal(); goHome(); },
-    retry: () => { closeModal(); const p = P; if (!p) { goHome(); return; } if (p.mini) startMini(p.wi, p.mini.k); else if (p.review) startLevel(0, 0, true); else startLevel(p.wi, p.li); },
+    retry: () => { closeModal(); const p = P; if (!p) { goHome(); return; } if (p.adapt) adaptStart(); else if (p.mini) startMini(p.wi, p.mini.k); else if (p.review) startLevel(0, 0, true); else startLevel(p.wi, p.li); },
     // ---- 🌱 一步一步学：单词小课（tools/course/STARTER.md）----
     // 小镇 / 单元卡片上的 ① ② ③、「先一步一步学」的弹窗、小课结算页的「下一节」「再学一遍」、新手路线
     mini: t => { SFX.tap(); miniGo(num(t, 'w'), t.dataset.k != null ? num(t, 'k') : null); },
     // 「我学过了，直接闯关」：这一课以后不再问
     miniSkip: t => { const wi = num(t, 'w'), li = t.dataset.l != null ? num(t, 'l') : 0; MN().skip[wi] = 1; save(); closeModal(); levelGo(wi, li); },
     // 教学卡的「记住了，下一步」
+    // 🎯 为你出的题：开始一轮；等 AI 出题的时候点「不等了」
+    adapt: () => { SFX.tap(); adaptStart(); },
+    adaptSkip: () => { if (RT.adSkip) RT.adSkip(); },
     tcNext: () => { if (!P || !P.q || P.q.type !== 'tc' || P.answered) return; P.answered = true; SFX.tap(); onNext(); },
     setStarter: t => { S.settings.starter = t.dataset.v === '1'; save(); settingsSheet(); },
     revive: () => {
@@ -6930,6 +7215,8 @@
     rev: { pick: revPick, right: revRight, wrong: revWrong, miss: revMiss, build: () => buildReview(), due: () => dueList(), day: () => revDay(), fade: fadeOf, cue: cueText, addFree: revAddFree, trim: revTrim, key: revKey,
       K: { GAP, REV_N, REV_MAX, REV_NEW, REV_BACKLOG, REV_FIELD } },
     playQs: (list, review) => startLevel(NB, 0, !!review, list.map(([t, w, i]) => makeQ(t, w, i))),
+    // 🎯 为你出的题（测试用）：plan 这一轮练什么、go(gen) 直接用给好的 AI 结果开始一轮（不问 AI）、start 和点卡片一样、state 存档里的那一块
+    adapt: { plan: () => adPlan(), go: gen => adaptGo(adPlan(), gen || null, false), start: () => adaptStart(), state: () => AD(), ready: () => adReady(), band: () => adBand() },
     P: () => P,
     // 测试用（tests/gate.test.js）：学习锁、冒险时间、家长密码、周报、每周记录、日报推送
     T: {

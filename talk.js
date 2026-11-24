@@ -1524,6 +1524,30 @@
     } catch (e) { /* 判不了 */ }
     return null;
   }
+  // ---------- 为你出的题（game.js 的「为你出的题」，tools/course/ADAPT.md）：按要练的词，让文字模型现写几句新的练习句 ----------
+  // 和上面的点评、检测判分走同一条路：APK 直连阿里云（talk-core 的 genBody）；网页版走中转服务的 /gen、云端模式走 /v1/gen——
+  // 手机只发数据（在学哪门语言、界面语言、难度档、要练的词、学过的词），出题的要求由服务器按 talk-core 拼。
+  // 不管从哪条路回来的，都再用 talk-core 的 genCheck 核对一遍（不是这门语言的、太长的、意思不对的不要）。
+  // 出不了（没网、云端模式没登录、老服务器没有这条路、这门语言它不会、超时、回的不合规矩）→ null：game.js 改用课程里现成的题，不报错、不算 AI 出错
+  const GEN = { off: {} };   // 这次打开 App 记着：哪个服务器的哪门语言出不了题（老服务器回 404、不会这门语言回 400）
+  const genOk = () => { try { return !!(Core() && Core().genBody) && !(typeof navigator !== 'undefined' && navigator.onLine === false) && (direct() || (!!relayHttp() && !(cloudOn() && !(ACC() && ACC().signed())))); } catch (e) { return false; } };
+  async function genQuiz(raw) {
+    const core = Core(), o = core && core.genIn ? core.genIn(raw) : null;
+    if (!o || !genOk()) return null;
+    try {
+      if (direct()) {
+        const r = await nativePost(core.EVAL_URL, JSON.stringify(core.genBody(o)), 25000);
+        if (!r.ok) return null;
+        const j = JSON.parse(r.text); textUse(j);
+        return core.parseGen(j, o);
+      }
+      const key = relayHttp() + '|' + o.lang;
+      if (GEN.off[key]) return null;
+      const r = await relayPost('/gen', o, 25000);
+      if (!r.ok) { if (r.status === 404 || (r.status === 400 && /lang/.test(r.text))) GEN.off[key] = 1; return null; }
+      return core.genCheck(JSON.parse(r.text), o);
+    } catch (e) { return null; }
+  }
   // ---------- 别的语言的课（es / ja / zh）的 AI 识别、合成：能不能带上这门语言（API.md §8 的 lang） ----------
   // 语言代码 ↔ 合成的 language_type（LANG.asr.cloud 'es' 和 LANG.tts.cloud 'Spanish' 两种写法都认）
   const SPL = { en: 'English', es: 'Spanish', ja: 'Japanese', zh: 'Chinese' };
@@ -2187,7 +2211,7 @@
     });
   }
   window.EchoTalk = {
-    init, homeHTML, open, openPerson, openQuest, blocked, errText: errTxt, relayUrl, cloudSR, listenOnce, aiTip, placeJudge, cloudTTS, speechLang, keyTest, get AI_LABEL() { return aiLabel(); }, stopListen: () => SR.stop && SR.stop(),
+    init, homeHTML, open, openPerson, openQuest, blocked, errText: errTxt, relayUrl, cloudSR, listenOnce, aiTip, placeJudge, genQuiz, genOk, cloudTTS, speechLang, keyTest, get AI_LABEL() { return aiLabel(); }, stopListen: () => SR.stop && SR.stop(),
     today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG, nativeCall,
     // iPhone 的本机识别：口语题现在会不会先用它、最近一次 / 最近 20 次识别的计时（只在内存里）、给设置页 / 小检查 / 周报的话
     localSR, lastSpeech: () => (SRLOG.length ? Object.assign({}, SRLOG[SRLOG.length - 1]) : null), speechLog: () => SRLOG.map(x => Object.assign({}, x)),
