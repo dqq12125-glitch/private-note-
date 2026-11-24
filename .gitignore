@@ -22,3 +22,7 @@ dl/
 dist/
 # wrangler / miniflare cache written by tests/account.test.js (request metadata incl. location; never commit)
 .wrangler/
+
+# Python 编译出来的缓存
+__pycache__/
+*.pyc

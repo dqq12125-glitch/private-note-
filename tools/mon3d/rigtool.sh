@@ -8,6 +8,6 @@ R=$(cygpath -m "$(pwd)" 2>/dev/null || pwd)
 mkdir -p art/hy3d/grid art/mon3d/check
 case "$1" in
   grid) "$B" -b --factory-startup --python tools/blender/gridview.py -- $R/art/hy3d/$2_raw.glb $R/art/hy3d/grid/$2.png ${3:-0} ${4:-1} 2>&1 | grep -E "Traceback|Error" | head -5; ls art/hy3d/grid/$2.png ;;
-  rig) "$B" -b --factory-startup --python tools/blender/monrig.py -- $2 2>&1 | grep -E "RIG|EXPORT|PARTS|CUTBASE|Traceback|Error" | head -8
+  rig) "$B" -b --factory-startup --python tools/blender/monrig.py -- $2 2>&1 | grep -E "RIG|LOOSE|EXPORT|PARTS|CUTBASE|Traceback|Error" | head -8
        "$B" -b --factory-startup --python tools/blender/animsheet.py -- $R/art/mon3d/$2.glb $R/art/mon3d/check/$2.png mini 2>&1 | grep -E "Traceback" | head -3; ls art/mon3d/check/$2.png ;;
 esac

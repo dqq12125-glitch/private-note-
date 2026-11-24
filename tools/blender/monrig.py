@@ -216,6 +216,20 @@ def build(id_, spec):
     bpy.ops.object.parent_set(type='ARMATURE_AUTO')
     empty = [v for v in obj.data.vertices if not v.groups]
     print('RIG', id_, 'faces', len(obj.data.polygons), 'unweighted verts', len(empty))
+    if empty:
+        # 飘着的小零件（和身体不连着、里面也没有骨头，比如头顶迸出来的小星星）热扩散算不出权重，
+        # 放着不管它们会停在原地、身体倒下了还悬在半空：整个挂到离它最近的那根骨头上
+        from mathutils.geometry import intersect_point_line
+        segs = [(b.name, arm.matrix_world @ b.head_local, arm.matrix_world @ b.tail_local) for b in ad.bones if b.use_deform]
+        for v in empty:
+            p = obj.matrix_world @ v.co
+            best, bd = None, 1e9
+            for name, h, t in segs:
+                q, k = intersect_point_line(p, h, t); k = min(1.0, max(0.0, k))
+                d = (p - (h + (t - h) * k)).length
+                if d < bd: best, bd = name, d
+            (obj.vertex_groups.get(best) or obj.vertex_groups.new(name=best)).add([v.index], 1.0, 'REPLACE')
+        print('LOOSE', id_, len(empty), 'verts → nearest bone')
     make_anims(arm, spec)
     # 导出
     out = os.path.join(ROOT, 'art', 'mon3d'); os.makedirs(out, exist_ok=True)

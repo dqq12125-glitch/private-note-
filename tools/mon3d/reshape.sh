@@ -1,17 +1,18 @@
 #!/bin/bash
 # 把「纸片一样扁」的怪兽重新生成成立体的（2026-11-24，老板：「怪物的模型还是像纸片人一样」）。
 #   bash tools/mon3d/reshape.sh <标签> <id> [id ...]           形状用补了明暗的图（puff.py），贴图用原画
-#   SEEDS=7,1,3 K=1.6 MIN=0.40 bash tools/mon3d/reshape.sh p2 <id> ...   换种子、明暗重一点、及格线
+#   SEEDS=7,1,3 K=1.6 MIN=0.40 PAINT=0.25 bash tools/mon3d/reshape.sh p2 <id> ...   换种子、明暗重一点、及格线、多薄以下不贴图
 # 一步步：① 原画（art/gemini/cut2，没有就用 cut）抄到 art/gemini/src1 ② puff.py 补明暗 → art/gemini/puff
 #        ③ gen.py 生成形状（每只最多试 SEEDS 这几个种子，按主成分量厚度，挑最厚的）→ art/hy3d/<id>_shape_<标签>.glb
-#        ④ 厚度够 MIN 的才贴图（用原画）→ art/hy3d/<id>_raw_<标签>.glb
+#        ④ 厚度够 PAINT 的才贴图（用原画）→ art/hy3d/<id>_raw_<标签>.glb
 # 不动 art/hy3d/<id>_raw.glb、不绑骨骼、不发布：出来的先看过，再换上去（见 tools/mon3d/RESHAPE.md）。
-# 结果记在 art/hy3d/reshape-<标签>.txt：每只一行「id 厚度 种子 ok / flat」
+# 结果记在 art/hy3d/reshape-<标签>.txt：每只一行「id 厚度 种子 ok / thin / flat」
+#   ok 够 MIN；thin 在 PAINT 和 MIN 之间（这个数是「最薄 / 最长」，蛇、长尾巴的偏低不等于扁——也贴图，贴完渲侧面看一眼）；flat 不到 PAINT，不贴
 PY=/d/Claude/tools/hy3d/Scripts/python
 cd "$(dirname "$0")/../.." || exit 1
 TAG="$1"; shift
 [ -z "$TAG" ] || [ $# -eq 0 ] && { echo "用法：bash tools/mon3d/reshape.sh <标签> <id> [id ...]"; exit 2; }
-SEEDS="${SEEDS:-21,42,5}"; K="${K:-1.0}"; MIN="${MIN:-0.40}"
+SEEDS="${SEEDS:-21,42,5}"; K="${K:-1.0}"; MIN="${MIN:-0.40}"; PAINT="${PAINT:-0.25}"
 mkdir -p art/gemini/src1 art/gemini/puff
 ids=()
 for id in "$@"; do
@@ -31,9 +32,11 @@ for id in "${ids[@]}"; do
   line=$(grep -a "^shape $id " "$LOG" | tail -1)
   th=$(echo "$line" | sed -n 's/.* thick \([0-9.]*\) .*/\1/p'); sd=$(echo "$line" | sed -n 's/.* seed \([0-9]*\) .*/\1/p')
   if [ -z "$th" ]; then echo "$id - - fail" >> "$OUT"; continue; fi
-  if awk "BEGIN{exit !($th >= $MIN)}"; then echo "$id $th $sd ok" >> "$OUT"; ok+=("$id"); else echo "$id $th $sd flat" >> "$OUT"; fi
+  if awk "BEGIN{exit !($th >= $MIN)}"; then echo "$id $th $sd ok" >> "$OUT"; ok+=("$id")
+  elif awk "BEGIN{exit !($th >= $PAINT)}"; then echo "$id $th $sd thin" >> "$OUT"; ok+=("$id")
+  else echo "$id $th $sd flat" >> "$OUT"; fi
 done
-echo "形状做完：够厚的 ${#ok[@]} 只 / ${#ids[@]} 只" | tee -a "$LOG"
+echo "形状做完：要贴图的 ${#ok[@]} 只 / ${#ids[@]} 只（ok 和 thin；flat 的不贴）" | tee -a "$LOG"
 [ ${#ok[@]} -eq 0 ] && exit 0
 $PY tools/mon3d/gen.py "${ok[@]}" --noshape --src=src1 --tag="$TAG" >> "$LOG" 2>&1
 echo "贴图做完：$(grep -a -c "^paint " "$LOG") 只" | tee -a "$LOG"
