@@ -201,11 +201,15 @@ TestFlight 的工作流先带着它签；苹果不肯（App ID 上没勾「Sign 
 | 方法 | 说明 |
 | --- | --- |
 | `speechState(id)` | 现在能不能用，**不弹任何框**：`ok {auth:'authorized'/'notDetermined'/'denied'/'restricted', mic:'granted'/'denied'/'blocked', onDevice, available, locale:'en-US', engine:'SFSpeechRecognizer', listening}` |
-| `speechStart(id, opts)` | 开始一次识别。`opts` 是 JSON 文字 `{short, long, ask, locale, rate}`（`ask:false` 不弹权限框，自测页用；`rate` 是送来的声音的采样率，默认 16000）。识别任务建好了就回 `ok {listening:true, sid:id, ms, locale, short, rate, engine}`；不行回 `fail`：`unavailable`（没有本机识别）/ `denied`、`restricted`（语音识别没允许）/ `busy`（正在弹权限框）/ `not-asked`（`ask:false` 又还没问过）/ `cancelled`（弹框时网页叫停了）/ `background`（App 在后台）。上一次没停的先停掉（`end`，`replaced`） |
+| `speechStart(id, opts)` | 开始一次识别。`opts` 是 JSON 文字 `{short, long, ask, locale, rate, prearm}`（`ask:false` 不弹权限框，自测页用；`rate` 是送来的声音的采样率，默认 16000；`prearm:false` 这一次不用提前备好的分析器，见下面「提前备好」）。回的 `ok` 里多一个 `pre`：这一次用的是不是提前备好的。识别任务建好了就回 `ok {listening:true, sid:id, ms, locale, short, rate, engine}`；不行回 `fail`：`unavailable`（没有本机识别）/ `denied`、`restricted`（语音识别没允许）/ `busy`（正在弹权限框）/ `not-asked`（`ask:false` 又还没问过）/ `cancelled`（弹框时网页叫停了）/ `background`（App 在后台）。上一次没停的先停掉（`end`，`replaced`） |
 | `speechFeed(sid, base64)` | 一段声音：16 位有符号、小端、单声道 PCM（采样率是 `speechStart` 的 `rate`），base64。一秒约 10 段，**不回话**（和 `wsSend` 一样）；编号不对、已经停了、解不开的一律不管。原生换成 32 位浮点单声道交给识别，顺便量出声 / 不出声 |
 | `speechStop(id)` | 停：`ok {stopped:true/false}`。正在弹权限框的，答完了也不开 |
 
 **事件** `echo-speech`（`e.detail.sid` = `speechStart` 的编号，`t` = 开始以后几毫秒）：`partial` / `final` `{text}`（到目前为止听到的整句）、`voice` `{on}`（送来的声音开始 / 停止出声，只在变的时候发）、`error` `{code, message, fed}`、`end` `{reason: stop / final / error / background / page / replaced, fed}`（`fed` = 收到几段声音）。
+
+**提前备好下一次（2026-11-24，老板：「说话那里还是有点卡，给它做到很丝滑」）**：他的角标两次都是「第一个字 2.03 秒」，不管什么时候开口——每道题都新建一个 `SpeechAnalyzer`，它自己要一秒多才开始出结果。苹果的文档说 `prepareToAnalyze(in:)`「让分析器以最小的启动延迟开始工作」、分析是「声音来了就接着做」，所以 `AnalyzerSpeechEngine.arm()` 在上一题一收尾（`cancel()`）、模型刚装好预热完、回到前台时，就把下一题的分析器建好、`prepareToAnalyze`、`start(inputSequence:)` 开始等声音；`begin()` 有备好的就直接拿来用（`adopt` 接上回调），没有 / 备的时候已经出错的就照老办法现建。切到后台把备好的扔掉（系统可能把识别的资源收走）。备好的没用上就坏了 3 次，这次打开 App 不再备。角标：`sa+` 这一次用的是备好的，`sa!` 网页把它关了。**没在真手机上量过快了多少**（云上的模拟器没有本机识别的模型）：老板装了新包以后看角标里第二个数（第一个字的毫秒）。
+
+网页的保险（`talk.js`）：新引擎出声 3.5 秒、说了不止半秒还一个字没有 → 不等到最长时间，这一句马上改走云端（录好的声音一起交过去，角标 `fell:notext`）；用的是备好的分析器就先把它关了（之后 `speechStart` 带 `prearm:false`），不算进「连着两次没认出来」。
 
 网页那边（`talk.js` 的 `nativeListen`）：麦克风和 `speechStart` 一起开（第一次要弹语音识别的框时，等原生回了再开麦克风），原生回 `ok` 以前录到的先存着、回了一起补发，之后边录边送。**不让学的人卡住**：本机这一次没认出字，除了学的人自己点了停（`aborted`，提示「停了」）和真的没说话（网页没量到人声、原生也没说出声 → 「没听清」），一律同一次里接着走云端识别——用同一个麦克风，录好的声音一起交过去，不用再说一遍；云端也用不了（没有密钥 / 没登录）就按「没听清」回（本机已经记成用不了时照旧走「先跳过 / 请登录」）。原因记在 `fell`（`unavailable` / `denied` / `restricted` / `busy` / `timeout` / `error` / `notext` / `end-<reason>`……）。`unavailable` / `denied` / `restricted` 这次打开 App 记住（回到前台再问一次 `speechState`，打开了就又用本机）；别的原因连着两次也记住（`off = 'fails'`，这次打开 App 不再试本机）。麦克风被拒和云端一样弹「去打开」。每次识别的计时（点了到开始听、第一个字、结束、最后一个字到结束、用的哪个）和本机那几样（送了几段 `fed`、原生说收到几段 `nfed`、有没有人声 `vo`、`off`）留在内存里：`EchoTalk.lastSpeech()` / `EchoTalk.speechLog()`（最近 20 次，不上传），TestFlight 包的版本角标显示最近一次的；周报诊断一行有「口语识别：本机 n 次、云端 m 次，本机说完约 x 秒出分」。调试时 `localStorage['echo-sr'] = 'cloud'` 可以临时只用云端（界面上没有开关；第一版出事那晚的临时包每次打开都写这个值，`echo-native.js` 第一次打开时清掉一次，记号 `echo-sr-v2`）。
 

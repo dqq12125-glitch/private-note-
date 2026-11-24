@@ -66,7 +66,7 @@ function fakeMic() {
   const srv = await serve();
   const HOST = 'http://echo.localhost:' + srv.address().port;
   const PAGE = HOST + '/index.html?edition=sales';
-  const b = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] },
+  const b = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required', '--disable-audio-output', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] },
     process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const ctx = await b.newContext({ viewport: { width: 412, height: 915 } });
   const outside = [];

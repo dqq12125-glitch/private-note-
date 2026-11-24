@@ -254,11 +254,12 @@
       // off: 这次打开 App 不再用本机识别的原因。老板截图里带着它，不用连电脑也知道识别卡在哪一步。
       // 2026-11-22 加：say 网页量到开始出声的毫秒（第一个字出来得慢，是识别慢还是开口晚）；re 听到一半麦克风不出声、重开了几次；st 开口前发现预热的麦克风不出声、重开过几次
       // 2026-11-24 加：w 听到的比这句话少、多等了多少毫秒才算说完（talk.js 的 lackWait）
+      // 同一天加：sa+ 这一次用的是提前备好的分析器（LocalSpeech.swift 的 arm：点话筒以前就建好、预热好）；sa! 备好的出过「有声音不出字」，这次打开 App 不再用
       setInterval(function () {
         try {
           var s = W.EchoTalk && W.EchoTalk.lastSpeech ? W.EchoTalk.lastSpeech() : null, t = String(BOOT.beta);
           if (s) {
-            t += ' · ' + (s.eng || '?') + (s.neng ? ':' + (/Analyzer/.test(s.neng) ? 'sa' : 'sf') : '') + ' ' + (s.how || s.err || (s.ok ? 'ok' : '')) + (s.fell ? ' fell:' + s.fell : '') + (s.nerr ? ' ' + String(s.nerr).slice(0, 40) : '') +
+            t += ' · ' + (s.eng || '?') + (s.neng ? ':' + (/Analyzer/.test(s.neng) ? 'sa' : 'sf') + (s.pre ? '+' : '') + (s.noPre ? '!' : '') : '') + ' ' + (s.how || s.err || (s.ok ? 'ok' : '')) + (s.fell ? ' fell:' + s.fell : '') + (s.nerr ? ' ' + String(s.nerr).slice(0, 40) : '') +
               ' ' + [s.listen, s.first, s.end].map(function (v) { return v == null ? '-' : v; }).join('/') + (s.wv != null ? ' say' + s.wv : '') +
               (s.fed != null ? ' fed' + s.fed + (s.nfed != null ? '/' + s.nfed : '') : '') + (s.vo ? ' v:' + s.vo : '') + (s.off ? ' off:' + s.off : '') +
               (s.remic ? ' re' + s.remic : '') + (s.stale ? ' st' + s.stale : '') + (s.lack ? ' w' + s.lack : '');

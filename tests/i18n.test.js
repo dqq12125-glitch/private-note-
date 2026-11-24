@@ -426,7 +426,7 @@ function serve() {
 async function wizard(view, tag) {
   const { chromium } = require('playwright');
   const srv = await serve();
-  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
+  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--disable-audio-output', '--use-fake-device-for-media-stream'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const p = await (await b.newContext({ viewport: view })).newPage();
   p.setDefaultTimeout(6000);
   const errs = []; p.on('pageerror', e => errs.push(e.message));
@@ -546,7 +546,7 @@ const secs = t => ((Date.now() - t) / 1000).toFixed(1) + ' 秒';
 async function screens(view, tag, srv) {
   const { chromium } = require('playwright');
   const HOST = 'http://echo.localhost:' + srv.address().port;
-  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
+  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--disable-audio-output', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   // 一个页面：外面的网址一律挡掉（在线发音、版本检查），只留本机；用 echo.localhost：talk.js 不去连本机 8787 的中转服务
   async function mk(inits) {
     const ctx = await b.newContext({ viewport: view });

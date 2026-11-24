@@ -256,7 +256,7 @@ function installFakeEchoNative(opts) {
         if (S.speech.active) spEnd(S.speech.active, 'replaced');
         setTimeout(() => {
           S.speech.active = id; S.speech.sessions++; S.speech.okAt[id] = Date.now();
-          ok(id, { listening: true, sid: id, ms: S.speech.startMs, locale: op.locale || 'en-US', short: !!op.short, rate: op.rate || 16000, engine: 'SFSpeechRecognizer' });
+          ok(id, { listening: true, sid: id, ms: S.speech.startMs, locale: op.locale || 'en-US', short: !!op.short, rate: op.rate || 16000, engine: S.speech.engine || 'SFSpeechRecognizer', pre: !!S.speech.pre });   // engine / pre：装成 iOS 26 的新引擎、用的是提前备好的分析器
           const t0 = Date.now();
           (S.speech.script || []).forEach(([ms, kind, v]) => spT.push(setTimeout(() => {
             if (S.speech.active !== id) return;

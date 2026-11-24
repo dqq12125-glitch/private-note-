@@ -261,7 +261,7 @@ async function uiTests() {
   const web = await staticServer();
   // 用 echo.localhost 而不是 127.0.0.1：没有密钥时 talk.js 才不会去连本机 8787 的中转服务（要测「AI 聊天没开通」）
   const URLP = 'http://echo.localhost:' + web.address().port + '/index.html?art=proc';
-  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
+  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--disable-audio-output', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const ctx = await b.newContext({ viewport: { width: 412, height: 915 } });
   await ctx.addInitScript(FAKE);
   // 外面的网址一律挡掉（在线发音、版本检查），只留本机

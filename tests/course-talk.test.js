@@ -201,7 +201,7 @@ const SAVE = () => ({
   check(!!health && Array.isArray(health.questLangs) && Array.isArray(health.tipLangs) && LANGS.every(l => health.questLangs.includes(l) && health.tipLangs.includes(l)) && LANGS.every(l => TCQ[l] && TCQ[l]['q0-cap']),
     '第二轮：/health 的 questLangs、tipLangs 有 es / ja / zh，talk-courses.js 里有三门语言的委托', health && { q: health.questLangs, t: health.tipLangs, tc: Object.keys(TCQ) });
 
-  const browser = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
+  const browser = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--disable-audio-output', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const errs = [];
   // 打开游戏（英语存档）。o.talk：对话服务的地址；o.init：页面脚本跑之前要做的事
   async function openGame(o) {

@@ -15,7 +15,8 @@ import Speech
 // 给网页四个异步方法（Bridge.callAsync → 这里 → window.__echoNative(id, 'ok' / 'fail', JSON 文字)）和一个事件：
 //   speechState(id)          现在能不能用：{auth, mic, onDevice, available, locale, engine, listening}。不弹任何框
 //   speechStart(id, opts)    开始一次识别。opts 是 JSON 文字：{short 单词 / 短语, long 说几句话, ask 要不要弹权限框（默认要）, locale（默认 en-US）,
-//                            rate 送来的声音的采样率（默认 16000）}。第一次会弹「语音识别」的系统框；识别任务建好了就回 ok {listening, sid, ms, locale, engine}；
+//                            rate 送来的声音的采样率（默认 16000）, prearm 用不用提前备好的分析器（默认用）}。
+//                            第一次会弹「语音识别」的系统框；识别任务建好了就回 ok {listening, sid, ms, locale, engine, pre 这一次是不是提前备好的}；
 //                            不行回 fail {error, message}：unavailable 这台手机这门语言没有本机识别 / denied、restricted 没给语音识别的权限 /
 //                            busy 正在弹权限框 / not-asked 还没问过权限（ask:false 时）/ cancelled 弹框时网页叫停了 / background App 在后台
 //   speechFeed(sid, base64)  一段声音：16 位有符号、小端、单声道的 PCM（采样率是 speechStart 给的 rate），base64。一秒约 10 段。
@@ -50,6 +51,7 @@ struct SpeechOpts: Sendable {
     var locale = SpeechConst.locale
     var rate = SpeechConst.rate
     var engine = ""                                       // 调试用：'sf' = 只用 SFSpeechRecognizer（对比新老引擎）
+    var prearm = true                                     // 用不用「提前备好」的分析器（网页发现它有声音不出字以后给 false）
 }
 
 // 收声音的那一头（交给识别请求）
@@ -82,11 +84,17 @@ protocol SpeechEngine: AnyObject {
     func cancel()
     // 网页这一次要哪个引擎（调试用：'sf' = 只用 SFSpeechRecognizer；'' = 照默认）。下一次 begin 之前调
     func prefer(_ engine: String)
+    // 用不用「提前备好」的分析器（见 AnalyzerSpeechEngine.arm）。下一次 begin 之前调
+    func prearm(_ on: Bool)
+    // 刚才那一次 begin 用的是不是提前备好的（回给网页，角标上的 sa+）
+    var prearmed: Bool { get }
 }
 
 extension SpeechEngine {
-    // 只有 HybridSpeechEngine 理它（单元测试的假引擎不用写）
+    // 只有 HybridSpeechEngine 理它们（单元测试的假引擎不用写）
     func prefer(_ engine: String) {}
+    func prearm(_ on: Bool) {}
+    var prearmed: Bool { return false }
 }
 
 // ---------- 现在的引擎：SFSpeechRecognizer，只在手机上识别 ----------
@@ -241,6 +249,50 @@ final class AnalyzerSpeechEngine {
     private var tries: [String: Int] = [:]          // 这次打开 App 装过几次（装失败了最多再试一次，不每题都去装）
     private var broken: Set<String> = []            // 这次打开 App 新引擎出过错的语言：退回老引擎（复查 2026-11-22）
     private var run: AnalyzerRun?
+    // —— 提前备好下一次（2026-11-24，老板：「说话那里还是有点卡，给它做到很丝滑」）——
+    // 角标上两次都是「第一个字 2.03 秒」，不管人什么时候开口：每道题都新建一个分析器，它自己要一秒多才开始出结果。
+    // 苹果的文档：prepareToAnalyze「让分析器以最小的启动延迟开始工作」，分析是「声音来了就接着做」。所以上一题一收尾就把下一题的
+    // 分析器建好、预热、开始等声音；点话筒时直接拿来用，声音一进去就出字。备好的那个出了错 / 被扔了就照老办法现建一个。
+    private var spare: AnalyzerRun?
+    private var spareLocale = ""
+    private var spareFails = 0                      // 备好的没用上就坏了几次（3 次以后这次打开 App 不再备）
+    private var lastLocale = ""                     // 最近一次识别的语言：收尾以后给它备下一次
+    private var prearmOn = true
+    private(set) var usedSpare = false              // 刚才那一次用的是不是备好的
+    private var observers: [NSObjectProtocol] = []
+
+    init() {
+        // 切到后台：备好的扔掉（系统可能把识别的资源收走，留着的那个会变成「有声音不出字」）；回到前台再备
+        observers.append(NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.dropSpare() }
+        })
+        observers.append(NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { if let me = self { me.arm(me.lastLocale) } }
+        })
+    }
+
+    func setPrearm(_ on: Bool) {
+        prearmOn = on
+        if !on { dropSpare() }
+    }
+
+    private func dropSpare() {
+        spare?.cancel()
+        spare = nil
+        spareLocale = ""
+    }
+
+    // 给这门语言备好下一次。已经备着的、正在后台的、关掉了的不做
+    func arm(_ id: String) {
+        guard prearmOn, spareFails < 3, !id.isEmpty, canBegin(id), let loc = mapped[id] else { return }
+        if UIApplication.shared.applicationState == .background { return }
+        if let s = spare, spareLocale == id, s.alive { return }
+        dropSpare()
+        let r = AnalyzerRun(locale: loc)
+        spare = r
+        spareLocale = id
+        r.start()
+    }
 
     // 这门语言系统认不认、模型装没装；认但没装就在后台装；装好了预热一次。同一门语言只做一次（装失败了最多再试一次）
     func prepare(_ id: String) {
@@ -265,6 +317,11 @@ final class AnalyzerSpeechEngine {
             if st == .installed {
                 self.ready.insert(id)
                 await AnalyzerSpeechEngine.warm(loc)
+                // 第一题也用备好的。英语是开机就问的：它装好得晚，也别把学的人正在用的那门语言（别的语言的课）挤掉
+                if self.lastLocale.isEmpty || self.lastLocale == id || id != SpeechConst.locale {
+                    self.lastLocale = id
+                    self.arm(id)
+                }
             } else {
                 self.asked.remove(id)
             }
@@ -285,7 +342,9 @@ final class AnalyzerSpeechEngine {
     }
 
     func begin(locale id: String, onText: @escaping SpeechText, onError: @escaping SpeechError) -> SpeechBegin {
-        cancel()
+        run?.cancel()                                // 上一次没收尾的扔掉（不动备好的那个）
+        run = nil
+        usedSpare = false
         guard let loc = mapped[id], canBegin(id) else {
             return SpeechBegin(sink: nil, error: "unavailable", message: "SpeechAnalyzer model is not ready for " + id)
         }
@@ -295,10 +354,29 @@ final class AnalyzerSpeechEngine {
             self?.broken.insert(id)
             onError(code, message)
         }
-        let r = AnalyzerRun(locale: loc, onText: onText, onError: onError2)
-        run = r
-        r.start()
-        return SpeechBegin(sink: r.sink(), error: "", message: "")
+        lastLocale = id
+        // 有备好的就用它（备的时候已经坏了的不用，记一次）；没有就现建一个
+        var r: AnalyzerRun?
+        if prearmOn, let s = spare, spareLocale == id {
+            spare = nil
+            spareLocale = ""
+            if s.adopt(onText: onText, onError: onError2) {
+                r = s
+                usedSpare = true
+            } else {
+                s.cancel()
+                spareFails += 1
+            }
+        }
+        let use: AnalyzerRun
+        if let s = r {
+            use = s
+        } else {
+            use = AnalyzerRun(locale: loc, onText: onText, onError: onError2)
+            use.start()
+        }
+        run = use
+        return SpeechBegin(sink: use.sink(), error: "", message: "")
     }
 
     func end() {
@@ -306,8 +384,10 @@ final class AnalyzerSpeechEngine {
     }
 
     func cancel() {
+        let had = run != nil
         run?.cancel()
         run = nil
+        if had { arm(lastLocale) }                   // 这一题收尾了：给下一题备好
     }
 }
 
@@ -316,24 +396,44 @@ final class AnalyzerSpeechEngine {
 final class AnalyzerRun: @unchecked Sendable {
     private let lock = NSLock()
     private let locale: Locale
-    private let onText: SpeechText
-    private let onError: SpeechError
+    private var onText: SpeechText?                  // 提前备好的那种：被拿去用（adopt）以前是空的
+    private var onError: SpeechError?
+    private let spare: Bool                          // 提前备好的：先预热，再开始等声音
     private let input: AsyncStream<AnalyzerInput>
     private let cont: AsyncStream<AnalyzerInput>.Continuation
     private var conv: PCMConvert?                    // 格式定下来以后才有
     private var pending: [AVAudioPCMBuffer] = []     // 定下来以前送来的
     private var analyzer: SpeechAnalyzer?
     private var done = false
+    private var dead = false                         // 还没人用就出错了
     private var finalText = ""
     private var volatileText = ""
 
-    init(locale: Locale, onText: @escaping SpeechText, onError: @escaping SpeechError) {
+    init(locale: Locale, onText: SpeechText? = nil, onError: SpeechError? = nil) {
         self.locale = locale
         self.onText = onText
         self.onError = onError
+        spare = onText == nil
         let (s, c) = AsyncStream.makeStream(of: AnalyzerInput.self)
         input = s
         cont = c
+    }
+
+    // 还能用（没被扔掉、备的时候没出错）
+    var alive: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return !done && !dead
+    }
+
+    // 提前备好的被拿去用了：接上回调。备的时候已经出过错、或者已经扔掉的 → false（调用的地方另开一个新的）
+    func adopt(onText: @escaping SpeechText, onError: @escaping SpeechError) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        if done || dead { return false }
+        self.onText = onText
+        self.onError = onError
+        return true
     }
 
     func sink() -> SpeechSink {
@@ -372,23 +472,24 @@ final class AnalyzerRun: @unchecked Sendable {
                 await a.cancelAndFinishNow()
                 return
             }
+            // 提前备好的：先把这一个分析器预热好（苹果文档：prepareToAnalyze 让第一批结果来得更快）。这一步在点话筒以前做，不占答题的时间；
+            // 现建的不单独预热（它一开始分析自己就会做，声音已经在排队了）
+            if spare { try? await a.prepareToAnalyze(in: fmt) }
             // 先开始读结果，再开始分析（苹果的例子也是这个顺序）
             Task { [self] in
                 do {
                     for try await r in t.results {
                         let piece = String(r.text.characters)
-                        let (all, stop): (String, Bool) = lock.withLock {
+                        let (all, stop, cb): (String, Bool, SpeechText?) = lock.withLock {
                             if r.isFinal { finalText += piece; volatileText = "" } else { volatileText = piece }
-                            return (finalText + volatileText, done)
+                            return (finalText + volatileText, done, onText)
                         }
                         if stop { return }
-                        let cb = onText
-                        LocalSpeech.onMain { cb(all, false) }
+                        if let cb = cb { LocalSpeech.onMain { cb(all, false) } }
                     }
                     // 声音送完、全部定下来了：最后一次整句（网页多半已经自己叫停了）
-                    let (all, stop): (String, Bool) = lock.withLock { (finalText, done) }
-                    if !stop {
-                        let cb = onText
+                    let (all, stop, cb): (String, Bool, SpeechText?) = lock.withLock { (finalText, done, onText) }
+                    if !stop, let cb = cb {
                         LocalSpeech.onMain { cb(all, true) }
                     }
                 } catch {
@@ -411,10 +512,11 @@ final class AnalyzerRun: @unchecked Sendable {
     private func failed(_ code: String, _ message: String) {
         lock.lock()
         let stop = done
+        let cb = onError
+        if cb == nil { dead = true }   // 提前备好的、还没人用就坏了：记下，adopt 时不给
         lock.unlock()
         if stop { return }   // 自己叫停以后的「被取消」不算
-        let cb = onError
-        LocalSpeech.onMain { cb(code, message) }
+        if let cb = cb { LocalSpeech.onMain { cb(code, message) } }
     }
 
     // 不再有声音了：把已经送进去的认完
@@ -471,6 +573,19 @@ final class HybridSpeechEngine: SpeechEngine {
     }
 
     func prefer(_ engine: String) { want = engine }
+
+    func prearm(_ on: Bool) {
+        if #available(iOS 26.0, *) {
+            if let a = newer as? AnalyzerSpeechEngine { a.setPrearm(on) }
+        }
+    }
+
+    var prearmed: Bool {
+        if #available(iOS 26.0, *) {
+            if usingNew, let a = newer as? AnalyzerSpeechEngine { return a.usedSpare }
+        }
+        return false
+    }
 
     func begin(locale: String, short: Bool, onText: @escaping SpeechText, onError: @escaping SpeechError) -> SpeechBegin {
         cancel()
@@ -611,6 +726,7 @@ final class LocalSpeech {
         if let v = j["locale"] as? String, SpeechConst.locales.contains(v) { o.locale = v }
         if let v = j["rate"] as? NSNumber, v.doubleValue >= 8000, v.doubleValue <= 48000 { o.rate = v.doubleValue }
         if let v = j["engine"] as? String, v == "sf" { o.engine = v }
+        if let v = j["prearm"] as? Bool { o.prearm = v }
         return o
     }
 
@@ -695,6 +811,7 @@ final class LocalSpeech {
             return
         }
         engine.prefer(o.engine)
+        engine.prearm(o.prearm)
         let r = engine.begin(locale: o.locale, short: o.short,
                              onText: { [weak self] text, isFinal in self?.heard(sid, text, isFinal) },
                              onError: { [weak self] code, message in self?.failed(sid, code, message) })
@@ -707,7 +824,8 @@ final class LocalSpeech {
         run.meter = VoiceMeter { on in LocalSpeech.onMain { me.v?.voice(sid, on) } }
         cur = run
         // 识别任务建好了就回 ok：网页把这之前录好、存着的声音一起补过来
-        reply(true, ["listening": true, "sid": sid, "ms": LocalSpeech.ms(t0), "locale": o.locale, "short": o.short, "rate": o.rate, "engine": engine.name])
+        // pre：这一次用的是不是提前备好的分析器（角标上的 sa+）
+        reply(true, ["listening": true, "sid": sid, "ms": LocalSpeech.ms(t0), "locale": o.locale, "short": o.short, "rate": o.rate, "engine": engine.name, "pre": engine.prearmed])
     }
 
     // 网页送来一段声音。不认识的编号、已经停了的、解不开的：不管（不回话）

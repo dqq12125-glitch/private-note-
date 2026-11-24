@@ -6,7 +6,7 @@ const PAGE = 'file://' + path.join(__dirname, '..', 'index.html') + '?music';
 let fails = 0;
 const check = (ok, what) => { console.log((ok ? '✓ ' : '✗ ') + what); if (!ok) fails++; };
 (async () => {
-  const b = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
+  const b = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required', '--disable-audio-output'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
   p.setDefaultTimeout(8000);
   const errs = [];

@@ -469,7 +469,7 @@ function staticServer() {
 async function uiTests() {
   const web = await staticServer();
   const URLP = 'http://127.0.0.1:' + web.address().port + '/index.html';
-  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
+  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--disable-audio-output', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const ctx = await b.newContext({ viewport: { width: 412, height: 915 } });
   await ctx.addInitScript(FAKE);
   const p = await ctx.newPage();

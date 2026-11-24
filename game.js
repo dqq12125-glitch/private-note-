@@ -2397,6 +2397,22 @@
   // 不认（老服务器、还没登录拿不到账号信息）时 iPhone 的本机识别又用不了，口语题按「AI 用不了」走（先跳过、进复习，ENGINE.md §6）
   const langSrv = () => !!LANG && !!(window.EchoTalk && EchoTalk.speechLang && EchoTalk.speechLang(LANG.asr.cloud, 'asr'));
   const langNoCloud = () => !!LANG && cloudOn() && !localSR() && !langSrv();
+  // 正在听的时候，亮着的话筒（哪个画面的都是 .mic.on）跟着声音大小鼓起一圈：一开口就看得到反应，不用等识别出字
+  // （2026-11-24 老板：「说话那里还是有点卡」——手机出第一个字要一两秒，这之前画面一动不动）。响度是 talk.js 量的（EchoTalk.level()），
+  // 这里每一帧把它写成话筒上的 --lv（0–1）：往上跟得快、往下落得慢。不听了就停、把 --lv 拿掉
+  function micMeter() {
+    if (RT.meter || reduced || !window.EchoTalk || !EchoTalk.level || !window.requestAnimationFrame) return;
+    RT.meter = true;
+    let lv = 0;
+    (function f() {
+      const on = RT.listening;
+      const want = on ? Math.max(0, Math.min(1, (EchoTalk.level() - 0.012) / 0.07)) : 0;
+      lv = want > lv ? lv + (want - lv) * 0.6 : lv * 0.88;
+      $$('.mic.on').forEach(m => m.style.setProperty('--lv', lv.toFixed(3)));
+      if (on) requestAnimationFrame(f);
+      else { RT.meter = false; $$('.mic').forEach(m => m.style.removeProperty('--lv')); }
+    })();
+  }
   function recognizeRaw(onInterim, targets, opts) {
     if (langNoCloud() && S.settings.mode !== 'self') { aiNote('nokey'); return Promise.resolve({ alts: [], err: 'nokey', fail: 'nokey', why: 'lang' }); }
     // 云端模式还没登录：不开麦克风，走「AI 用不了」那条路；第一次碰到时弹一次「登录，每天免费用 AI」（不是报错）
@@ -2404,6 +2420,7 @@
     if (cloudOn() && S.settings.mode !== 'self' && aiNoKey() && !localSR()) { RT.cloudAsked = true; aiNote('nokey'); if (ACC()) ACC().nudge(); return Promise.resolve({ alts: [], err: 'nokey', fail: 'nokey', why: 'signin' }); }
     if (cloudSR() || localSR()) {
       RT.listening = true;
+      micMeter();
       const tg = (targets || []).filter(Boolean);
       // 别的课：识别的语言（本机 / 云端）、「短的」怎么算、聊天里数词的办法都交给 LANG；云端模式里服务器不认这门语言就不许改走云端识别（noCloud）
       const lo = LANG ? { lang: LANG.asr, head: LANG.head, count: LANG.countUnits, noCloud: cloudOn() && !langSrv() } : null;

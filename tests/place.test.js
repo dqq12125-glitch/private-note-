@@ -298,7 +298,7 @@ const PORTRAIT = { width: 390, height: 844 }, LAND = { width: 844, height: 390 }
 async function browserTests() {
   const { chromium } = require('playwright');
   const FN = require('./fake-native');
-  const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+  const b = await chromium.launch(Object.assign({ args: ['--disable-audio-output'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const errs = [];
   const newPage = async (url, init) => {
     const ctx = await b.newContext({ viewport: PORTRAIT });

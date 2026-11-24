@@ -70,7 +70,7 @@ function keepFake() {
 (async () => {
   const srv = await serve();
   const PAGE = 'http://echo.localhost:' + srv.address().port + '/index.html';
-  const b = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] },
+  const b = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required', '--disable-audio-output', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] },
     process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const ctx = await b.newContext({ viewport: { width: 412, height: 915 } });
   let ver = { code: 400, name: '20261010-abc1234', url: 'https://example.com/echo-island.apk', notes: '新的冒险' };

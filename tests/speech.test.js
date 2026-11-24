@@ -110,7 +110,7 @@ function fakeCloud() {
 (async () => {
   const srv = await serve();
   const PAGE = 'http://echo.localhost:' + srv.address().port + '/index.html';
-  const b = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream'] },
+  const b = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--disable-audio-output'] },
     process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   let cloudHits = 0;
   async function newPage(native) {
@@ -332,6 +332,17 @@ function fakeCloud() {
   check(x.r.text === 'I like' && x.s.how === 'end-background', '原生自己停了（切后台）：已经听到的字照样打分，不会停在「请说……」', x);
   x = await listen([[100, 'partial', 'Hello'], [200, 'final', 'Hello there']], {});
   check(x.r.text === 'Hello there' && x.s.how === 'final', '原生给了最终结果：用它', x);
+  // 开口了、字还没出来：那一行从「请说」换成「在听」，EchoTalk.level() 给得出响度（话筒跟着它动）；听完了响度归零（2026-11-24 老板：「说话那里还是有点卡」）
+  x = await E(async () => {
+    Object.assign(window.__fakeNative.speech, { script: [[900, 'partial', 'I like it']] });
+    const states = [], pr = window.EchoTalk.listenOnce({ match: () => false, onState: t => states.push(t) });
+    await new Promise(r => setTimeout(r, 600));
+    const lv = window.EchoTalk.level();
+    await pr; await new Promise(r => setTimeout(r, 60));
+    return { states, lv, after: window.EchoTalk.level() };
+  });
+  check(/请说/.test(x.states[0]) && /在听/.test(x.states[1]) && x.states[2] === 'I like it', '一开口（字还没出来）那一行就从「请说」换成「在听」', x.states);
+  check(x.lv > 0.05 && x.after === 0, '正在听的时候 EchoTalk.level() 给得出响度，听完归零', { lv: x.lv, after: x.after });
   await E(() => window.__micLevel(0));
   x = await listen([], { short: true });
   check(x.r.err === 'no-speech' && x.s.how === 'silence' && x.s.vo === '-' && !x.s.fell && x.ms >= 4900 && x.ms < 6500, '真的没说话（网页没量到人声、原生也没说出声）：5 秒结束，算「没听清」，不改走云端', { r: x.r, s: x.s, ms: x.ms });
@@ -406,6 +417,28 @@ function fakeCloud() {
   await E(() => { window.__fakeNative.calls.length = 0; });
   await p.click('#mic');
   check(await until(() => E(() => window.EchoGame.P().answered), 80, 100) && !(await calls()).includes('speechStart'), '第三题直接走云端（不再先试本机）');
+  // 新引擎（SpeechAnalyzer）有声音不出字（2026-11-24 加「提前备好的分析器」时的保险）：出声 3.5 秒还一个字没有 → 不等到最长时间，这一句马上改走云端；
+  // 用的是提前备好的（pre）就先把它关掉（下一次 speechStart 带 prearm:false），不算进「连着两次没认出来」
+  await load(BASE(), { fake: { net: 'ok', speech: { state: ON, start: 'ok', engine: 'SpeechAnalyzer', pre: true, script: [[50, 'voice', 1]] } } });
+  target = await question(0);
+  await E(t => localStorage.setItem('__cloudSay', t), target);
+  let tStuck = Date.now();
+  await p.click('#mic'); await W(900);
+  a = await E(() => ({ lv: +document.querySelector('#mic').style.getPropertyValue('--lv'), heard: document.querySelector('#heard').textContent }));
+  check(a.lv > 0.3 && /在听/.test(a.heard), '闯关画面：正在听的话筒跟着声音鼓起来（--lv），那一行写着「在听」', a);
+  const okStuck = await until(() => E(() => window.EchoGame.P().answered), 100, 100);
+  tStuck = Date.now() - tStuck;
+  s = await last();
+  check(okStuck && s.eng === 'cloud' && s.fell === 'notext' && s.stuck === 1 && s.pre === 1 && tStuck > 3300 && tStuck < 6800, '新引擎出声 3.5 秒不出字：不干等到 8 秒，这一句改走云端，过了（' + tStuck + ' 毫秒）', s);
+  check(await E(() => window.EchoTalk.localSR() && !window.EchoTalk.speechState().off), '只关掉「提前备好」，本机识别下一题照样先试（不算一次失败）', await E(() => window.EchoTalk.speechState()));
+  check(await E(() => !document.querySelector('#mic') || document.querySelector('#mic').style.getPropertyValue('--lv') === ''), '听完了话筒上的 --lv 拿掉');
+  target = await question(1);
+  await fake({ speech: { pre: false, script: [[150, 'partial', target]] } });
+  await p.click('#mic');
+  await until(() => E(() => window.EchoGame.P().answered), 80, 100);
+  s = await last();
+  a = await E(() => window.__fakeNative.speech.log.filter(x => x.m === 'speechStart').slice(-1)[0].opts);
+  check(s.eng === 'device' && a && a.prearm === false && s.noPre === 1, '下一题还是本机识别，speechStart 带着 prearm:false（这次打开 App 不再用提前备好的）', { s, a });
   // 本机这一次没认出字、云端又用不了（没有密钥）：按「没听清」回，有提示、算一次尝试，不停在「请说……」
   await load(BASE(), { fake: { key: '', speech: { state: ON, start: 'ok', script: [[100, 'voice', 1], [250, 'end', 'final']] } } });
   await question(0);

@@ -255,6 +255,13 @@ final class SpeechLogicTests: XCTestCase {
         XCTAssertEqual(LocalSpeech.opts(#"{"engine":"other"}"#).engine, "")
     }
 
+    // prearm：默认用提前备好的分析器；网页给 false 才不用（写错类型的当没给）
+    func testPrearmOption() {
+        XCTAssertTrue(LocalSpeech.opts("").prearm)
+        XCTAssertFalse(LocalSpeech.opts(#"{"prearm":false}"#).prearm)
+        XCTAssertTrue(LocalSpeech.opts(#"{"prearm":"no"}"#).prearm)
+    }
+
     // 网页的声音（16kHz 浮点）→ 识别要的格式（SpeechAnalyzer 自己不转，格式不对不报错、只是什么都认不出来）：
     // 同格式原样给；转成 16 位整数样本数不变、值对得上；转采样率一段段转、加起来的长度对
     func testPcmConvert() throws {

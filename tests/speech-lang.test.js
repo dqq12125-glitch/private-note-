@@ -132,7 +132,7 @@ const SAVE = () => ({
 (async () => {
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const BASE = 'http://127.0.0.1:' + server.address().port;
-  const browser = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
+  const browser = await chromium.launch(Object.assign({ args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--disable-audio-output'] }, process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const errs = [];
   const W = (p, ms) => p.waitForTimeout(ms);
   const homeUp = p => p.waitForFunction(() => window.EchoGame && EchoGame.S && !document.getElementById('home').hidden, null, { timeout: 25000 });

@@ -117,7 +117,7 @@
       'tk.r.late.h': '聊完啦！这段聊天算数 👍', 'tk.r.late.p': '这次评语没来得及写完（可能是网络慢），不过你开口说的句子已经记下来了。',
       'tk.r.concern': '💛 如果你遇到了难过或者不安全的事，记得马上告诉爸爸妈妈或者老师。',
       // 口语题的识别
-      'tk.asr.say': '🎤 请说……', 'tk.asr.busy': '🎧 识别中……',
+      'tk.asr.say': '🎤 请说……', 'tk.asr.hear': '🎤 在听……', 'tk.asr.busy': '🎧 识别中……',
       // 口语题用的是哪个识别（iPhone 的本机识别 / 云端识别）：设置页、开口前的小检查、周报诊断一行、家长须知。不写是哪家的
       'tk.sr.env': '✅ 口语自动打分：本机识别（用 iPhone 自带的语音识别在手机上听写，不用联网、不用登录；手机用不了时改用云端识别）',
       'tk.sr.chk.dev': '麦克风没问题！口语题用本机识别：在这台手机上听写，不用联网。', 'tk.sr.chk.cloud': '（口语识别：云端，要联网）',
@@ -194,7 +194,7 @@
       'tk.r.q.not': '📋 Request not done yet: do all the small steps, then try again',
       'tk.r.late.h': 'Chat over! This chat counts 👍', 'tk.r.late.p': 'There was no time to finish the comments (maybe the network is slow), but the lines you said have been saved.',
       'tk.r.concern': '💛 If something sad or unsafe is happening to you, tell a parent or a teacher right away.',
-      'tk.asr.say': '🎤 Speak now…', 'tk.asr.busy': '🎧 Recognising…',
+      'tk.asr.say': '🎤 Speak now…', 'tk.asr.hear': '🎤 Listening…', 'tk.asr.busy': '🎧 Recognising…',
       'tk.sr.env': '✅ Automatic speaking score: on-device recognition (the iPhone\'s own speech recognition writes down what you say on this phone; no internet or sign-in needed. If it can\'t be used, cloud recognition is used instead)',
       'tk.sr.chk.dev': 'The microphone works! Speaking questions use on-device recognition: it all happens on this phone, no internet needed.', 'tk.sr.chk.cloud': ' (Speech recognition: cloud, needs internet)',
       'tk.sr.rp': ' · Speech recognition: on device {a}, cloud {b}; on device the score comes about {s}s after you stop',
@@ -1619,7 +1619,10 @@
   // why 是出错的细分原因（offline / auth / quota / busy / code / network；麦克风的是浏览器报的错误名，比如 NotAllowedError）
   const ASR_RT = 'qwen3-asr-flash-realtime';
   // last：最近一次收到麦克风声音的时刻（AudioWorklet 一直在送，不管有没有人在听）；at：这次打开的时刻；stale：预热着的麦克风不出声、重开过几次（这次打开 App）
-  const LM = { stream: null, ctx: null, node: null, rate: 16000, sink: null, t: 0, last: 0, at: 0, stale: 0 };
+  const LM = { stream: null, ctx: null, node: null, rate: 16000, sink: null, t: 0, last: 0, at: 0, stale: 0, lv: 0 };
+  // 正在听的时候麦克风这一小块有多响（均方根，说话一般 0.03–0.1）：界面上的话筒跟着它动——一开口就有反应，不用等识别出字（2026-11-24 老板：「说话那里还是有点卡」）
+  const rmsOf = d => { let x = 0; for (let i = 0; i < d.length; i++) x += d[i] * d[i]; return d.length ? Math.sqrt(x / d.length) : 0; };
+  const micLevel = () => (LM.sink && performance.now() - LM.last < 250 ? LM.lv : 0);
   const RTA = { fails: 0 };   // 实时识别连续失败几次就先不用了（这次打开游戏）
   // 麦克风这会儿还给不给声音（2026-11-22 老板的截图：对战里点话筒等了 5 秒「没听清」，角标 fed0 v:-——
   // 预热着的麦克风在 iPhone 上放过别的声音以后，流还「开着」，可一点声音都不送了）。最近 0.3 秒有声音进来就算；
@@ -1661,7 +1664,7 @@
     } catch (e) { try { stream.getTracks().forEach(t => t.stop()); } catch (er) {} try { ctx && ctx.close(); } catch (er) {} return { err: 'audio-capture', why: (e && e.name) || 'audio' }; }
     const node = new AudioWorkletNode(ctx, 'tk-cap');
     ctx.createMediaStreamSource(stream).connect(node);
-    node.port.onmessage = e => { LM.last = performance.now(); if (LM.sink) LM.sink(e.data); };
+    node.port.onmessage = e => { LM.last = performance.now(); if (LM.sink) { LM.lv = rmsOf(e.data); LM.sink(e.data); } };
     Object.assign(LM, { stream, ctx, node, rate: ctx.sampleRate, sink: null, at: performance.now() });
     return LM;
   }
@@ -1748,7 +1751,7 @@
   // · 每次识别的计时（点了到开始听、第一个字、结束、最后一个字到结束）和本机那几样（送了几段声音、有没有人声）留在内存里：
   //   EchoTalk.lastSpeech() / speechLog()，不上传；测试版的版本角标显示最近一次的（echo-native.js 的 addBeta）。
   // · 想对比时可以临时关掉本机识别：localStorage['echo-sr'] = 'cloud'（只给调试用，界面上没有开关）。
-  const NSP = { st: null, off: '', fails: 0 };
+  const NSP = { st: null, off: '', fails: 0, noPre: false };
   const SRLOG = [];
   const nspHas = () => { try { const N = window.EchoNative; return !!(window.ECHO_IOS && N && typeof N.speechStart === 'function' && typeof N.speechState === 'function' && typeof N.speechStop === 'function'); } catch (e) { return false; } };
   const nspUsable = st => !!st && st.onDevice !== false && st.auth !== 'denied' && st.auth !== 'restricted';
@@ -1784,7 +1787,7 @@
       const N = window.EchoNative, id = ++nid, now = () => performance.now();
       const short = !!o.short, need = o.long ? 1500 : short ? 400 : 600;
       let done = false, nok = false, mic = null, started = 0, text = '', chg = 0, voice = false, voiceOff = 0, tick = 0, tm = 0, raw = '';
-      let pend = [], pendN = 0, q = [], preN = 0, loudN = 0;
+      let pend = [], pendN = 0, q = [], preN = 0, loudN = 0, heardTold = false;
       const segs = [], pre = [], st = { pos: 0 };
       D.eng = 'device'; D.fed = 0;
       // 别的语言的课：第一个词、有几个词交给 LANG（o.head / o.count；日语、中文没有空格）
@@ -1806,11 +1809,12 @@
         resolve(r);
       };
       // 本机没认出字：改走云端（null）。麦克风接着录，录到的存进 D.pre（cloudListen 接手时一起交过去）；「没有 / 不允许」、连着两次没认出来记住
-      const fall = code => {
+      const fall = (code, soft) => {
         if (done) return; done = true;
         stopNative(); cleanup();
         D.fell = code || 'error'; D.vo = vo(); D.pre = pre;
         if (code === 'unavailable' || code === 'denied' || code === 'restricted') NSP.off = code;
+        else if (soft) { /* 不算进「连着两次没认出来」（见 check 里的 stuck） */ }
         else if (code !== 'end-background' && ++NSP.fails >= 2) NSP.off = 'fails';
         resolve(null);
       };
@@ -1831,7 +1835,12 @@
         if (preN < mic.rate * PRE_SEC) { pre.push(d); preN += d.length; }
         if (done) return;   // 已经改走云端：只存着，等 cloudListen 接手
         let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
-        if (Math.sqrt(sum / d.length) > 0.02) { loudN += d.length; if (D.wv == null && started) D.wv = now() - D.t0; }   // wv：网页量到开始出声的时刻（角标的 say）
+        if (Math.sqrt(sum / d.length) > 0.02) {
+          loudN += d.length;
+          if (D.wv == null && started) D.wv = now() - D.t0;   // wv：网页量到开始出声的时刻（角标的 say）
+          // 出声满 0.15 秒、字还没出来：那一行从「请说」换成「在听」（字出来以前也看得出手机听到了）
+          if (!heardTold && started && !text && loudN >= mic.rate * 0.15) { heardTold = true; if (o.onState) o.onState(tx('tk.asr.hear')); }
+        }
         pend.push(d); pendN += d.length;
         if (pendN >= mic.rate * 0.1) {
           const f = new Float32Array(pendN); let p = 0; pend.forEach(c => { f.set(c, p); p += c.length; });
@@ -1898,7 +1907,17 @@
           if (q > 1500 && D.remic) { end({ text: '', err: 'no-speech', how: 'nodata' }); return; }
         }
         if (since > (o.maxMs || 8000)) { finish('max'); return; }
-        if (!text) { if (since > (o.long ? 7000 : 5000) && !voice) finish('silence'); return; }
+        if (!text) {
+          // 新引擎（边说边出字的那个）：人已经出声 3.5 秒、说了不止半秒，还一个字没有——它多半没在出结果。别干等到最长时间：
+          // 这一句马上改走云端（录好的声音一起交过去）。用的是「提前备好」的分析器就先把它关了（这次打开 App 不再用），不算进「连着两次没认出来」
+          if (/Analyzer/.test(D.neng || '') && D.wv != null && t - D.t0 - D.wv > 3500 && mic && loudN >= mic.rate * 0.6) {
+            D.stuck = 1;
+            if (D.npre && !NSP.noPre) { NSP.noPre = true; fall('notext', true); } else fall('notext');
+            return;
+          }
+          if (since > (o.long ? 7000 : 5000) && !voice) finish('silence');
+          return;
+        }
         const still = t - chg;
         const lack = lackWait(o, text, nUnits), old = still >= need && (!voice || still >= need + 1200);
         if (!lack) { if (old) finish('done'); return; }
@@ -1919,6 +1938,7 @@
         if (done) { if (type === 'ok') stopNative(); return; }
         if (type !== 'ok') { fall(String(j.error || 'error')); return; }
         nok = true; D.nok = now() - D.t0; D.nms = j.ms; D.neng = j.engine || '';   // 原生用的哪个引擎（iOS 26 的 SpeechAnalyzer / 老的 SFSpeechRecognizer）
+        D.npre = !!j.pre;   // 这一次用的是不是提前备好的分析器（角标的 sa+）
         NSP.st = Object.assign(NSP.st || { onDevice: true }, { auth: 'authorized' });   // 开起来了：语音识别的权限有了（下次不用等弹框那么久）
         q.forEach(feed); q = [];   // 开好以前录到的补发
         if (!D.micP) openMic();
@@ -1927,7 +1947,8 @@
       if (!asks) openMic();
       // engine：调试时 localStorage['echo-sr-engine'] = 'sf' 只用老引擎（和新的 SpeechAnalyzer 对比快慢）；平时不带
       const eng = LS('echo-sr-engine') === 'sf' ? { engine: 'sf' } : null;
-      try { N.speechStart(id, JSON.stringify(Object.assign({ short, long: !!o.long, locale: o.lang ? o.lang.apple : 'en-US', rate: 16000 }, eng))); } catch (e) { fall('error'); }
+      // prearm：提前备好的分析器出过「有声音不出字」以后，这次打开 App 不再用它（老的壳子不认这一项）
+      try { N.speechStart(id, JSON.stringify(Object.assign({ short, long: !!o.long, locale: o.lang ? o.lang.apple : 'en-US', rate: 16000 }, eng, NSP.noPre ? { prearm: false } : null))); } catch (e) { fall('error'); }
     });
   }
   // 本机识别没认出字、云端又接不上：录好的声音不要了，麦克风照常预热着
@@ -1946,7 +1967,7 @@
     if (D.lack) rec.lack = D.lack;   // 听到的比这句话少、多等了（lackWait 的毫秒数；角标的 w）
     if (D.nerr) rec.nerr = D.nerr;
     // 本机识别那几样（试过本机才有）：开麦克风 / 原生开好用了几毫秒、送过去几段声音、原生说收到几段、有没有人声（w 网页 / n 原生 / - 没有）、这次打开 App 还用不用本机
-    if (D.fed != null) Object.assign(rec, { mic: ms(D.mic), nok: ms(D.nok), fed: D.fed, nfed: D.nfed == null ? null : D.nfed, vo: D.vo || '', off: NSP.off || '', neng: D.neng || '' });
+    if (D.fed != null) Object.assign(rec, { mic: ms(D.mic), nok: ms(D.nok), fed: D.fed, nfed: D.nfed == null ? null : D.nfed, vo: D.vo || '', off: NSP.off || '', neng: D.neng || '', pre: D.npre ? 1 : 0, stuck: D.stuck || 0, noPre: NSP.noPre ? 1 : 0 });
     SRLOG.push(rec); if (SRLOG.length > 20) SRLOG.shift();
     if (r) r.eng = rec.eng;
     return r;
@@ -2219,7 +2240,7 @@
     init, homeHTML, open, openPerson, openQuest, blocked, errText: errTxt, relayUrl, cloudSR, listenOnce, aiTip, placeJudge, genQuiz, genOk, cloudTTS, speechLang, keyTest, get AI_LABEL() { return aiLabel(); }, stopListen: () => SR.stop && SR.stop(),
     today, endIfOpen, concerns, isOpen: () => !!C, lastErr: () => LASTERR, NEED, cfg: CFG, nativeCall,
     // iPhone 的本机识别：口语题现在会不会先用它、最近一次 / 最近 20 次识别的计时（只在内存里）、给设置页 / 小检查 / 周报的话
-    localSR, lastSpeech: () => (SRLOG.length ? Object.assign({}, SRLOG[SRLOG.length - 1]) : null), speechLog: () => SRLOG.map(x => Object.assign({}, x)),
+    localSR, level: micLevel, lastSpeech: () => (SRLOG.length ? Object.assign({}, SRLOG[SRLOG.length - 1]) : null), speechLog: () => SRLOG.map(x => Object.assign({}, x)),
     // 测试用：装成 iPhone 上「麦克风开着、一点声音都不送」（截掉 AudioWorklet 送来的声音；重开麦克风是新的一份，不受影响）
     _micMute: () => { if (LM.node) LM.node.port.onmessage = null; },
     speechState: () => (NSP.st ? Object.assign({ off: NSP.off }, NSP.st) : { off: NSP.off, has: nspHas() }), speechRefresh: nspRefresh, srText,

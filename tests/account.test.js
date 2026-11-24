@@ -98,7 +98,7 @@ function serve() {
   const codeFor = email => { const m = F.mails.slice().reverse().find(x => x.to && x.to[0] === email); const r = m && /\b(\d{6})\b/.exec(m.text); return r ? r[1] : ''; };
 
   // ---------- 浏览器 ----------
-  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] },
+  const b = await chromium.launch(Object.assign({ args: ['--use-fake-ui-for-media-stream', '--disable-audio-output', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] },
     process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}));
   const VIEW = { port: { width: 390, height: 844 }, land: { width: 844, height: 390 } };
   const SAVE = o => JSON.stringify({ seenIntro: true, micCheck: 'skip', homeTab: o.tab || 'talk', coins: 321, book: { at: 2 },
