@@ -103,4 +103,8 @@ node tools/mon3d/fxcheck.js --pairs <id>:<id>
 - 试过 `cv2.inpaint`：抹出一道道扇形的印子；颜色要是连最外面的黑边一起取，背后会发黑。
 - 只适合正面朝着看的人画的那种。侧着画的（骨骼文件里 `yaw` 是 ±90 的）别用：它们模型的「背面」是身子的另一侧，花纹该留着。
 - 抹掉的只是画上去的脸；脸的鼓包（鼻子、嘴的起伏）还在形状里，凑近看得出一点。
-- **别的怪兽没查**：这一批以外的三百多只里，正面画的应该还有不少背后带脸的。要查：每只从背后渲一张、挑出带脸的、跑 `backfix.py`、重新绑骨骼发布。
+- **别的怪兽也查了一遍**（同一晚）：其余 334 只每只从正背后渲一张（6 路同时渲，4 分半），拼成 12 页分给三个便宜模型的助手逐页挑，挑出疑似 25 只、拿不准 15 只；这 40 只放大了再看，确认 24 只背后带脸，同样改了、重新绑骨骼发布（正面三个角度的对比数字都没变，`fxcheck.js` 没有报错）：
+  `cakecastle echobell gemmy hotpot ironpup lamppost lotusfin lullaby nightsquid orbitpod puffball rocketmoth skyballoon starstone sunrooster timesprout twirlflame blackbelt buzzbee ironhorn bloomtail jadehorn magmaking mythowl`。
+  改之前的母版留在 `art/hy3d/<id>_raw_prebf.glb`。带脸的比想的少（背后本来就是真后背的占绝大多数），问题主要在原来那批纸片上。
+- 没改的：`kickball`（背后是一圈点，不算脸；抹了反而成一团灰）；侧着画的蛇和鱼（`kelplet`、`mythserpent`：另一侧有眼睛是对的）；有条纹的（热气球、陀螺）抹完中间的条纹是糊的，比背后一张脸强，但不好看——要好看得照着条纹的方向补，没做。
+- 用旧版骨骼的 7 只（`rigs_v1`：`bubbly echodrake moonbunny songlet sprouty twigling zappy`）`art/hy3d/<id>_raw.glb` 比发布的模型新、对不上，查背后要渲 `art/mon3d/<id>.glb`（转 180°）；这 7 只背后都正常。
