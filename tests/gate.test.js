@@ -335,7 +335,17 @@ const base = o => Object.assign({ seenIntro: true, homeTab: 'mon', player: { gen
 
   // ---------- 每日宝箱：先开冒险奖品（world.js 的 chestPrize：进化曲 / 蛋 / 稀有色蛋）----------
   await E(() => { const S = window.EchoGame.S; S.quests.list.forEach(q => { q.claimed = true; }); S.quests.chest = false; window.__cp = 0; EchoWorld.chestPrize = () => (window.__cp++, { prize: '💎', kind: 'stone', id: 'x', html: '<h2>开出进化曲：测试石！</h2>' }); window.EchoGame.goHome('mon'); });
-  await tap('#quests [data-act=chest]'); await W(1800);   // 宝箱一直在晃（不「稳定」），直接点
+  // 晃的时候按钮和 🎁 要留在原地（2026-11-24 老板的 iPhone 横屏：后写的同名动画带着「往左挪半个身位」，🎁 跑到屏幕外面去了）
+  const sway = sel => E(s => new Promise(res => {
+    const b = document.querySelector(s), c = b.parentElement; let worst = 0, n = 0;
+    (function f() { const r = b.getBoundingClientRect(), q = c.getBoundingClientRect(); worst = Math.max(worst, q.left - r.left, r.right - q.right); if (++n < 40) requestAnimationFrame(f); else res(Math.round(worst)); })();
+  }), sel);
+  const swayBtn = await sway('#quests .chest-btn.ready');
+  check(swayBtn < 12, '宝箱能开时按钮只是晃一晃，不挪出卡片', swayBtn);
+  await tap('#quests [data-act=chest]');   // 宝箱一直在晃（不「稳定」），直接点
+  const swayBig = await sway('#chestbig');
+  check(swayBig < 12, '开宝箱弹窗里的 🎁 在弹窗正中晃，不挪出去', swayBig);
+  await W(1800);
   check(/开出进化曲：测试石/.test(await sheet()) && await E(() => window.__cp) === 1, '每日宝箱先开冒险奖品（进化曲 / 蛋）');
   await p.click('#chestok').catch(() => {});
 

@@ -72,6 +72,16 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
   await p.reload(); await W(500);
   const card = await p.textContent('.rev-card').catch(() => '');
   check(/今日复习 2 题/.test(card) && /1 道错题/.test(card), '首页显示今日复习', card.trim());
+  // 聊天里改过的句子在第 0 格时只算「聊天里的」，不再又算一遍「错题」（2026-11-24 老板的截图：「17 道错题 + -3 道学过的 + 5 句聊天里的」）
+  const cardMix = await p.evaluate(() => {
+    const G = window.EchoGame, keep = JSON.stringify(G.S.rev.items);
+    G.S.rev.items['free:t1'] = { k: 'free', en: 'I like to read books.', zh: '我喜欢看书。', b: 0, due: '2000-01-01', x: 0 };
+    G.S.rev.items['free:t2'] = { k: 'free', en: 'She goes to school by bus.', zh: '她坐公共汽车上学。', b: 0, due: '2000-01-01', x: 0 };
+    G.goHome(); const t = document.querySelector('.rev-card').textContent;
+    G.S.rev.items = JSON.parse(keep); G.goHome();
+    return t;
+  });
+  check(/今日复习 4 题/.test(cardMix) && /1 道错题/.test(cardMix) && /1 道学过的/.test(cardMix) && /2 句聊天里的/.test(cardMix) && !/-\d/.test(cardMix), '今日复习卡片：三样加起来正好、没有负数', cardMix.trim());
   await p.screenshot({ path: path.join(out, 'book-revcard.png') });
   await p.click('.rev-card'); await W(300);
   check(await p.isVisible('#modal [data-act=startReview]'), '每日复习弹窗');

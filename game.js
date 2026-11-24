@@ -3150,8 +3150,9 @@
     }));
   }
   function revSummary() {
-    const d = dueList(), wrong = d.filter(([, e]) => !e.b).length, chat = d.filter(([, e]) => e.k === 'free').length;
-    return { n: d.length, wrong, chat, old: d.length - wrong - chat };
+    // 聊天里改过的句子只算进「聊天里的」：以前它在格子 0 时又算了一遍「错题」，「学过的」就被减成负数（首页写出「+ -3 道学过的」）
+    const d = dueList(), chat = d.filter(([, e]) => e.k === 'free').length, wrong = d.filter(([, e]) => e.k !== 'free' && !e.b).length;
+    return { n: d.length, wrong, chat, old: Math.max(0, d.length - wrong - chat) };
   }
   function revCard() {   // 首页上方：今天的复习
     const r = revSummary();
