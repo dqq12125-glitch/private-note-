@@ -55,6 +55,8 @@
 - 西语入门档：句子都对、都只用了给的词（Soy nuevo. / Me llamo Ana. / Tú eres mi amigo.），但词太少时句子会很像（Soy nuevo. / Yo soy nuevo.）。
 - 英语档 2、日语档 1、中文档 1（英语界面）：句子和意思都对，一问一答的错答句是通顺但答非所问的句子。
 - 第一版核对规则把「一问一答里的答句和练习句撞了」的整段刷掉，改成只在这一段里不重复。
+- 词少的时候它会写出意思一样的一对（Soy nuevo. / Yo soy nuevo.，意思都是「我是新来的。」）：`genCheck` 里意思和前面留下的某一句一样的不要（只留前面那句）；这样留下的不到 3 句时，手机拿课程里的句子补。
+- **服务器这条路**：`cd cloud && node scripts/live-gen.mjs es zh 0 --worker`——本机起一份和线上一样的服务器程序、上游接真的阿里云，登录一个临时账号走 `POST /v1/gen` 再走 `/v1/tts`：出题 4.0 秒、扣一次 `aux`（剩 299），合成 1.3 秒。线上（`echo-api.restaurantweb.com.au`）2026-11-24 已部署，`/v1/health` 的 `genLangs` 是 en / es / ja / zh；线上只能从 iPhone 用 Apple 登录，没有用登录态直接打过线上的 `/v1/gen`。
 
 ## 没做的、要知道的
 

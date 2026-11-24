@@ -57,6 +57,7 @@ function coreTests() {
     { t: 'La casa es bonita.', m: '房子很漂亮。', f: 99 },                              // f 乱写：按词找
     { t: 'el gato es grande', m: '猫很大', f: 0 },                                       // 和第一句一样
     { t: 'Gato.', m: '猫。', f: 0 },                                                     // 只有一个词
+    { t: 'Este gato es grande.', m: '这只猫很大。', f: 0 },                              // 意思和第一句一样
     { t: 'Visita http://x.example ahora.', m: '现在去看。', f: 0 },                      // 网址
     'not an object', null,
   ], d: [
@@ -64,7 +65,7 @@ function coreTests() {
     { q: '¿Dónde está el gato?', qm: '猫在哪里？', a: 'Está en casa.', am: '在家。', x: ['Sí.'], xm: ['是。'] },   // 错的答句不够两句
   ] };
   const r = C.genCheck(out, raw);
-  check(r && r.s.map(x => x.t).join('|') === 'El gato es grande.|La casa es bonita.' && r.s[0].f === 0 && r.s[1].f === 3, 'genCheck：十二条里只留合规矩的两句；练的是哪个词认不出来就按词找', r && r.s);
+  check(r && r.s.map(x => x.t).join('|') === 'El gato es grande.|La casa es bonita.' && r.s[0].f === 0 && r.s[1].f === 3, 'genCheck：十三条里只留合规矩的两句（意思和前面一样的也不要）；练的是哪个词认不出来就按词找', r && r.s);
   check(r.d.length === 1 && r.d[0].a === 'Sí, tengo un perro.' && r.d[0].x.length === 2 && r.d[0].xm[1] === '你好，谢谢。' && r.d[0].f === 1, 'genCheck：一问一答留一段（错的答句不够两句的不要）', r.d);
   check(C.parseGen({ choices: [{ message: { content: JSON.stringify(out) } }] }, raw).s.length === 2 && C.parseGen({ choices: [{ message: { content: 'sorry' } }] }, raw) === null && C.parseGen({}, raw) === null, 'parseGen：不是 JSON → null');
   const en = C.genCheck({ s: [{ t: 'I eat an apple every day.', m: '', f: 0 }, { t: 'She likes green apples.' }, { t: '我吃苹果。', m: '' }] }, { lang: 'en', ui: 'en', band: 2, focus: ['apple'] });

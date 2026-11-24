@@ -923,11 +923,15 @@
     const fOf = (f, t) => { if (typeof f === 'number' && f === Math.floor(f) && f >= 0 && f < o.focus.length) return f; const n = genNorm(t); return fk.findIndex(k => n.includes(k)); };
     // dlg：一问一答里的句子可以和上面的练习句撞（「你喜欢猫吗？——我喜欢猫。」很自然），只在这一段里不重复
     const line = (v, dlg) => { const t = genText(v, o.lang, maxC), u = t ? lineUnits(t, o.lang) : 0; return t && u >= 1 && u <= maxU && (dlg || !seen.has(genNorm(t))) ? t : ''; };
-    const s = [], dl = [];
+    const s = [], dl = [], seenM = new Set();
     (Array.isArray(d.s) ? d.s : []).forEach(x => {
       if (!x || typeof x !== 'object' || s.length >= o.n) return;
       const t = line(x.t), m = t ? genMean(x.m, o.ui, o.lang) : null;
       if (!t || m === null || lineUnits(t, o.lang) < 2) return;
+      // 意思和前面留下的某一句一样（真模型在词少的时候会写出「Soy nuevo.」「Yo soy nuevo.」这种一对）：只留前面那句
+      const mk = genNorm(m);
+      if (mk && seenM.has(mk)) return;
+      if (mk) seenM.add(mk);
       seen.add(genNorm(t)); s.push({ t, m, f: fOf(x.f, t) });
     });
     (Array.isArray(d.d) ? d.d : []).forEach(x => {
