@@ -2222,6 +2222,15 @@ html.echo-ios .ac-in { font-size: 16px; }   /* 小于 16px 的输入框一点就
 .rt-steps li.done .rt-k { background: none; }
 .rt-go { margin-left: auto; color: var(--ink-3); font-weight: 800; }
 .rt-next { width: 100%; min-height: 44px; margin-bottom: 10px; border: 0; border-radius: 14px; background: #e6f5f3; color: var(--lagoon-d); font: inherit; font-weight: 800; text-align: left; padding: 8px 12px; }
+/* ---------- 对话题（听问选答、说出回答、BOSS）的意思：问句下面、每个选项下面、答完那一条里（game.js 的 dlgMean，别的课才有）---------- */
+.q-m { text-align: center; font-size: 15px; color: var(--ink-2); line-height: 1.4; }
+.q-m[hidden], .opt .o-m[hidden] { display: none; }
+.q-m2 { display: block; margin-top: 4px; font-size: 14px; color: var(--ink-2); line-height: 1.4; }
+.opt .o-m { display: block; font-size: 13px; font-weight: 400; color: var(--ink-2); line-height: 1.35; }
+.opts.list .opt:has(.o-m:not([hidden])) { flex-wrap: wrap; row-gap: 2px; }
+.opts.list .opt .o-m { flex-basis: 100%; padding-left: 30px; }
+.fb .fb-mean { display: block; font-size: 13px; color: var(--ink-2); line-height: 1.35; margin-top: 2px; }
+.q-links .link + .link { margin-left: 14px; }
 /* ---------- 🌱 一步一步学：单词小课（tools/course/STARTER.md）---------- */
 /* 小镇 / 单元卡片上的一排：🌱 一步一步学 ① ② ③ ④ */
 .mn-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; padding: 8px 12px; background: #eaf7ee; border-radius: 16px; }

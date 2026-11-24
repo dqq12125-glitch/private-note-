@@ -301,8 +301,26 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       // lr 听问选答
       q = await cur();
       check(q.type === 'lr' && q.opts.some(o => o.c && o.t === w0.dlgs[0][1]), '听问选答：选项是课程里的回答', q);
-      await p.click('#p-body .opt[data-i="' + q.opts.findIndex(o => o.c) + '"]'); await W(p, 250);
+      // 意思（2026-11-24 老板：「是不是写一下翻译比较好，我是纯初学者」）：答之前藏着、有「看意思」可以点；答完问句和每个选项下面都亮出来，下面那一条里也有
+      const lrMean = () => p.evaluate(() => {
+        const vis = e => !!e && !e.hidden && e.getClientRects().length > 0, P = EchoGame.P(), mOf = t => { const e = EchoGame.entryOf(t); return e ? [e.zh || '', e.en || ''] : ['', '']; };
+        return { qm: vis(document.querySelector('#p-body .q-m')), qmT: (document.querySelector('#p-body .q-m') || {}).textContent || '', om: [...document.querySelectorAll('#p-body .opt .o-m')].map(e => (vis(e) ? e.textContent : '')),
+          btn: !!document.querySelector('#p-body [data-act=revealMean]'), fb: (document.querySelector('#fb-d .fb-mean') || {}).textContent || '', want: { q: mOf(P.q.prompt), a: mOf(P.q.en), opts: P.q.opts.map(o => mOf(o.t)) } };
+      });
+      const lr0 = await lrMean();
+      check(lr0.btn && !lr0.qm && lr0.om.length === q.opts.length && lr0.om.every(t => !t), '听问选答：答之前不显示意思，有「看意思」可以点', lr0);
+      // 横着拿手机答这一题（老板的截图就是横屏）：答完选对的那一项多了一行意思，不能被下面那一条盖住
+      const vpLr = p.viewportSize(); await p.setViewportSize({ width: 844, height: 390 }); await W(p, 400);
+      await p.click('#p-body .opt[data-i="' + q.opts.findIndex(o => o.c) + '"]'); await W(p, 900);
       check(await fbOk(p) === 'ok', '听问选答：选对了');
+      const land = await p.evaluate(() => { const b = document.querySelector('#fb-btn').getBoundingClientRect(), r = document.querySelector('#p-body .opt.right').getBoundingClientRect(), f = document.getElementById('fb').getBoundingClientRect(), top = (document.querySelector('#play .p-top') || document.body).getBoundingClientRect(); return { ok: b.bottom <= innerHeight + 1 && r.top >= top.bottom - 2 && r.bottom <= f.top + 2, rTop: Math.round(r.top), rBot: Math.round(r.bottom), fbTop: Math.round(f.top), head: Math.round(top.bottom) }; });
+      check(land.ok, '听问选答（横屏）：答完，选对的那一项（带着意思）没被下面那一条盖住，「继续」在屏幕里', land);
+      await shot(p, L + '-lr-mean-land');
+      await p.setViewportSize(vpLr); await W(p, 400);
+      const lr1 = await lrMean();
+      check(lr1.qm && lr1.want.q.includes(lr1.qmT) && !!lr1.qmT && lr1.om.every((t, k) => !!t && lr1.want.opts[k].includes(t)) && lr1.want.q.some(m => m && lr1.fb.includes(m)) && lr1.want.a.some(m => m && lr1.fb.includes(m)),
+        '听问选答：答完，问句下面、每个选项下面、下面那一条里都有界面语言的意思（' + lr1.qmT + ' → ' + lr1.fb + '）', lr1);
+      await shot(p, L + '-lr-mean');
       await next(p);
       // sr_d 说出回答：错（另一句）、半对、对——分数和 Node 里一样
       q = await cur();

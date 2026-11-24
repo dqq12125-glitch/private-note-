@@ -161,7 +161,7 @@
       'g.cue.lw.t': '听一听，选出你听到的词', 'g.cue.lm.t': '听句子，选出你听到的那一句', 'g.cue.pic.t': '看图，凭记忆用英语说出来',
       'g.cue.hear.w': '先听一遍，再看首字母说出这个词', 'g.cue.hear.s': '先听一遍，再看首字母说出整句话',
       'g.q.lw.t': '听一听，选出正确的意思', 'g.q.ls.t': '听一听，选出你听到的英文', 'g.q.lm.t': '听句子，选出正确的中文意思',
-      'g.q.lr.t': '对方这样说，你该怎么回答？', 'g.q.see.long': '看原文（先试着只用耳朵听）', 'g.q.see': '看原文',
+      'g.q.lr.t': '对方这样说，你该怎么回答？', 'g.q.see.long': '看原文（先试着只用耳朵听）', 'g.q.see': '看原文', 'g.q.mean': '看意思',
       'g.q.lo.t': '听句子，按顺序点出单词', 'g.q.check': '检查', 'g.q.rep.t': '先听，再大声跟读',
       'g.q.fix.t': '这句话可以说得更好：直接说出正确的英文', 'g.q.mem.t': '看中文，凭记忆用英语说出来',
       'g.q.cue.w': '看首字母提示，说出这个词', 'g.q.cue.s': '看首字母提示，说出整句话', 'g.q.said': '你原来说的：<s>{s}</s>',
@@ -825,7 +825,7 @@
       'g.cue.lw.t': 'Listen and choose the word you hear', 'g.cue.lm.t': 'Listen and choose the sentence you hear', 'g.cue.pic.t': 'Look at the picture and say it in English from memory',
       'g.cue.hear.w': 'Listen once, then use the first letters to say this word', 'g.cue.hear.s': 'Listen once, then use the first letters to say the whole sentence',
       'g.q.lw.t': 'Listen and choose the right meaning', 'g.q.ls.t': 'Listen and choose the English you hear', 'g.q.lm.t': 'Listen and choose what the sentence means',
-      'g.q.lr.t': 'What should you say back?', 'g.q.see.long': 'Show the words (try with just your ears first)', 'g.q.see': 'Show the words',
+      'g.q.lr.t': 'What should you say back?', 'g.q.see.long': 'Show the words (try with just your ears first)', 'g.q.see': 'Show the words', 'g.q.mean': 'Show the meaning',
       'g.q.lo.t': 'Listen, then tap the words in order', 'g.q.check': 'Check', 'g.q.rep.t': 'Listen, then say it aloud after the voice',
       'g.q.fix.t': 'This can be said better: say the right English', 'g.q.mem.t': 'Look at the meaning and say it in English from memory',
       'g.q.cue.w': 'Use the first letters to say this word', 'g.q.cue.s': 'Use the first letters to say the whole sentence', 'g.q.said': 'You said: <s>{s}</s>',
@@ -4462,10 +4462,12 @@
   const mult = () => P.combo >= 10 ? 3 : P.combo >= 5 ? 2 : P.combo >= 3 ? 1.5 : 1;
 
   const audioBlock = () => '<div class="q-audio"><button class="spk" data-act="say" aria-label="' + trh('g.play.play') + '">' + SPK + '</button><button class="slow" data-act="saySlow" aria-label="' + trh('g.play.slowplay') + '"><span>🐢</span>' + trh('g.play.slow') + '</button></div>';
+  // 对话题（听问选答、BOSS）每个选项下面一行意思：答完才亮出来（showFb），或者点了「看意思」（revealMean，算带提示）；别的课才有（dlgMean）
   function optsHTML(q, cls, list) {
+    const om = o => { const m = q.kind === 'dlg' ? dlgMean(o.t) : null; return m ? '<small class="o-m" hidden>' + esc(m) + '</small>' : ''; };
     return '<div class="opts ' + (list ? 'list' : '') + '">' + q.opts.map((o, i) =>
       '<button class="opt ' + (cls || '') + '" data-act="' + (q.type === 'bt' ? 'btOpt' : 'pick') + '" data-i="' + i + '"><span class="k">' + (i + 1) + '</span>' +
-      (o.e ? '<span class="o-e">' + o.e + '</span>' : '') + '<span class="o-t">' + rb(o.t) + '</span></button>').join('') + '</div>';
+      (o.e ? '<span class="o-e">' + o.e + '</span>' : '') + '<span class="o-t">' + rb(o.t) + '</span>' + om(o) + '</button>').join('') + '</div>';
   }
   function micHTML(q) {
     const mode = speakMode();
@@ -4515,6 +4517,9 @@
     // 意思那一行（qMean：中文界面照旧是 q.zh；界面语言里没有意思就不显示）
     const mean = qMean(q), meanDiv = mean != null ? '<div class="say-zh">' + esc(mean) + '</div>' : '';
     const slow = '<span>🐢</span>' + trh('g.play.slow');
+    // 对话题（听问选答、说出回答、BOSS）：对方那句话的意思（别的课才有）。听问选答 / BOSS 先藏着：答完亮出来，或者点「看意思」（算带提示）
+    const pm = q.kind === 'dlg' ? dlgMean(q.prompt) : null, pmDiv = pm ? '<div class="q-m" hidden>' + esc(pm) + '</div>' : '';
+    const pmBtn = pm || (q.opts || []).some(o => dlgMean(o.t)) ? ' <button class="link" data-act="revealMean">' + trh('g.q.mean') + '</button>' : '';
     // 小课的两样（tools/course/STARTER.md）：tc 教学卡——图、词（读音、罗马字）、意思，自动念一遍，点「记住了」往下走；mw 看意思（和图）选词
     if (t === 'tc') h += '<div class="q-main"><div class="say-card tc-card">' + (q.em ? '<div class="say-emoji">' + q.em + '</div>' : '') + '<div class="say-text">' + rb(q.en) + '</div>' + romaHTML(q.en) + meanDiv +
       '<div class="say-row"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.play') + '">' + SPK + '</button><button class="slow" data-act="saySlow" aria-label="' + trh('g.play.slowplay') + '">' + slow + '</button></div></div></div>' +
@@ -4524,7 +4529,7 @@
     else if (t === 'ls') h += '<h2 class="q-title">' + trh('g.q.ls.t') + '</h2>' + audioBlock() + optsHTML(q, 'en');
     else if (t === 'lm') h += '<h2 class="q-title">' + trh(q.ear ? 'g.cue.lm.t' : 'g.q.lm.t') + '</h2>' + audioBlock() + optsHTML(q, q.ear ? 'en' : '', true);
     else if (t === 'lr') h += '<h2 class="q-title">' + trh('g.q.lr.t') + '</h2>' + audioBlock() +
-      '<div class="hidden-line blur" id="hl">' + rb(q.prompt) + '</div><div style="text-align:center"><button class="link" data-act="reveal">' + trh('g.q.see.long') + '</button></div>' + optsHTML(q, 'en', true);
+      '<div class="hidden-line blur" id="hl">' + rb(q.prompt) + '</div>' + pmDiv + '<div class="q-links" style="text-align:center"><button class="link" data-act="reveal">' + trh('g.q.see.long') + '</button>' + pmBtn + '</div>' + optsHTML(q, 'en', true);
     else if (t === 'lo') h += '<h2 class="q-title">' + trh('g.q.lo.t') + '</h2>' + audioBlock() +
       '<div class="lo-ans" id="lo-ans"></div><div class="lo-bank" id="lo-bank">' + q.bank.map(i => '<button class="tile" data-act="tile" data-i="' + i + '">' + tileTxt(q, i) + '</button>').join('') + '</div>' +
       '<button class="btn wide" data-act="loCheck" id="lo-check" disabled>' + trh('g.q.check') + '</button>';
@@ -4536,17 +4541,17 @@
       (said ? '<div class="say-zh">' + trh('g.q.said', { s: said }) + '</div>' : '') + (mean ? meanDiv : '') +
       '<div class="say-text mask" id="st">' + esc(cueText(q.target, P.fade === 1 ? 1 : 2)) + '</div>' + hintRow + '</div></div>' + qSide(micHTML(q));
     else if (t === 'sr_d') h += '<h2 class="q-title">' + trh(P.fade >= 2 ? 'g.q.dlg.mem' : 'g.q.dlg.t') + '</h2>' +
-      '<div class="q-main"><div class="bubble-row"><span class="be">🧑‍🏫</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.hearq') + '">' + SPK + '</button><span>' + rb(q.prompt) + '</span></div></div></div>' +
+      '<div class="q-main"><div class="bubble-row"><span class="be">🧑‍🏫</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.hearq') + '">' + SPK + '</button><span>' + rb(q.prompt) + '</span></div>' + (pm ? '<small class="q-m2">' + esc(pm) + '</small>' : '') + '</div></div>' +
       '<div class="say-card"><div class="say-zh">' + trh('g.q.you') + '</div>' + (P.fade
         ? '<div class="say-text mask" id="st">' + esc(cueText(q.target, P.fade, true)) + '</div>' + hintRow
-        : '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div><div class="say-row"><button class="spk mini" data-act="sayT" aria-label="' + trh('g.play.model') + '">' + SPK + '</button><button class="slow" data-act="sayTSlow">' + slow + '</button></div>') + '</div></div>' + qSide(micHTML(q));
+        : '<div class="say-text" id="st">' + wordsHTML(q.target) + '</div>' + (dlgMean(q.target) ? '<div class="say-zh">' + esc(dlgMean(q.target)) + '</div>' : '') + '<div class="say-row"><button class="spk mini" data-act="sayT" aria-label="' + trh('g.play.model') + '">' + SPK + '</button><button class="slow" data-act="sayTSlow">' + slow + '</button></div>') + '</div></div>' + qSide(micHTML(q));
     else if (t === 'sp') h += '<h2 class="q-title">' + trh('g.q.sp.t') + '</h2>' +
       '<div class="q-main"><div class="say-card"><div class="say-emoji">' + q.em + '</div>' + meanDiv + '<div class="say-text mask" id="st">' + esc(cueText(q.target, 2)) + '</div>' +
       hintRow + '</div></div>' + qSide(micHTML(q));
     else if (t === 'bt') {
       const b = WX[P.wi].boss, hide = P.fade >= 1;
       h += '<div class="q-main"><div class="bubble-row"><span class="be">' + b.emoji + '</span><div class="bubble"><div class="say-row" style="justify-content:flex-start"><button class="spk mini" data-act="say" aria-label="' + trh('g.play.again') + '">' + SPK + '</button><button class="slow" data-act="saySlow">' + slow + '</button></div>' +
-        '<div class="hidden-line blur" id="hl">' + rb(q.prompt) + '</div><button class="link" data-act="reveal">' + trh('g.q.see') + '</button></div></div>' +
+        '<div class="hidden-line blur" id="hl">' + rb(q.prompt) + '</div>' + pmDiv + '<button class="link" data-act="reveal">' + trh('g.q.see') + '</button></div></div>' +
         '<p class="say-zh" style="text-align:center;margin:0">' + trh(hide ? 'g.q.bt.mem' : srm ? 'g.q.bt.sr' : 'g.q.bt.self') + '</p></div>' +
         (hide ? optsHTML(q, 'en', true).replace('<div class="opts', '<div id="bt-opts" hidden class="opts') + '<div style="text-align:center"><button class="link" data-act="btShow" id="bt-show">' + trh('g.q.bt.show') + '</button></div>' : optsHTML(q, 'en', true)) +
         qSide(srm ? micHTML(q) : '<div class="self" id="self" hidden></div>');
@@ -4587,6 +4592,9 @@
     $('#fb-t').textContent = title;
     $('#fb-d').innerHTML = detail || '';
     $('#fb-btn').textContent = btn || tr('g.shell.next');
+    $$('#p-body .o-m, #p-body .q-m').forEach(e => { e.hidden = false; });   // 答完了：对话题的问句和每个选项的意思亮出来
+    $$('#p-body [data-act=reveal], #p-body [data-act=revealMean]').forEach(b => b.remove());   // 「看原文」「看意思」答完就不用了
+    { const h = $('#hl'); if (h) h.classList.remove('blur'); }
     $('#p-prog').style.width = ((P.idx + 1) / P.total * 100) + '%';
     setTimeout(() => $('#fb-btn').focus({ preventScroll: true }), 60);
     // 标出对错的选项 / 排好的句子不要被反馈条盖住（横屏时屏幕矮，最常见）：往上滚一点，但别把它滚到顶栏下面
@@ -4656,8 +4664,12 @@
     bar.style.position = 'relative';
     bar.appendChild(d);
   }
+  // 对话里一句话（问句、答句、错误选项）在界面语言里的意思。别的课的课程内容每句都带着意思；英语课的对话没写意思 → null（什么都不多显示）。
+  // 2026-11-24 老板在西语课的「听问选答」里：「是不是写一下翻译比较好，我是纯初学者」——以前这类题从头到尾没有一句意思
+  const dlgMean = t => { try { const m = LANG ? meanText(t) : null; return m != null && m !== '' ? m : null; } catch (e) { return null; } };
   function detailOf(q) {
-    if (q.kind === 'dlg') return '<b>' + rb(q.prompt) + '</b> → ' + rb(q.en);
+    // 对话题：问句 → 答句，下面一行是它们的意思（别的课才有，dlgMean）
+    if (q.kind === 'dlg') { const mq = dlgMean(q.prompt), ma = dlgMean(q.en); return '<b>' + rb(q.prompt) + '</b> → ' + rb(q.en) + (mq || ma ? '<small class="fb-mean">' + esc(mq || '…') + ' → ' + esc(ma || '…') + '</small>' : ''); }
     const m = qMean(q);   // 界面语言里没有意思：只给英文
     return '<b>' + rb(q.en) + '</b>' + (m != null ? ' · ' + esc(m) : '');
   }
@@ -5784,6 +5796,8 @@
     sayText: t => say(t.dataset.t),
     // 看原文：听力题变成了读的题，算带提示（经验减半、复习里不升格）
     reveal: t => { const h = $('#hl'); if (h) h.classList.remove('blur'); t.remove(); if (P && !P.answered) P.aided = true; },
+    // 「看意思」（对话题，别的课）：对方那句话和每个选项的意思都亮出来（原文也一起），算带提示
+    revealMean: t => { if (!P || P.answered) return; P.aided = true; const h = $('#hl'); if (h) h.classList.remove('blur'); $$('#p-body .o-m, #p-body .q-m').forEach(e => { e.hidden = false; }); const r = $('#p-body [data-act=reveal]'); if (r) r.remove(); t.remove(); },
     btShow: () => btReveal(true),
     pick: t => onPick(num(t, 'i')),
     tile: t => onTile(num(t, 'i'), false),
