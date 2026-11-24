@@ -95,6 +95,15 @@ function fakeCloud() {
       cb(id, 'message', JSON.stringify({ type: 'conversation.item.input_audio_transcription.text', text: t, stash: '' }));
       cb(id, 'message', JSON.stringify({ type: 'conversation.item.input_audio_transcription.completed', transcript: t }));
     }, 120);
+    // 句子中间停了一下又接着说：第一段认完以后过 __cloudSay2Ms 毫秒，服务器说「又开始说话了」，再认出 __cloudSay2
+    const t2 = localStorage.getItem('__cloudSay2'), ms2 = +localStorage.getItem('__cloudSay2Ms') || 0;
+    if (t2) setTimeout(() => {
+      cb(id, 'message', JSON.stringify({ type: 'input_audio_buffer.speech_started' }));
+      setTimeout(() => {
+        cb(id, 'message', JSON.stringify({ type: 'conversation.item.input_audio_transcription.text', text: t2, stash: '' }));
+        cb(id, 'message', JSON.stringify({ type: 'conversation.item.input_audio_transcription.completed', transcript: t2 }));
+      }, 150);
+    }, 120 + ms2);
   };
 }
 
@@ -245,12 +254,23 @@ function fakeCloud() {
   check(s.lag >= 550 && s.lag < 900, '句子：字停住 0.6 秒才算说完（' + s.lag + ' 毫秒）', s);
   c = await E(() => window.__fakeNative.speech.log.filter(x => x.m === 'speechStart').map(x => x.opts));
   check(c.every(o => !('target' in o) && !('answer' in o) && !('hints' in o) && !JSON.stringify(o).includes(words(target)[1])), '交给原生的只有 short / long / locale：答案不交给识别（诚实打分）', c);
+  // 这句话有几个词只管「等多久算说完」：题目更长、只听到 2 个词 → 多等，不是 0.6 秒就交卷；几个词也不交给原生
+  await W(400);
+  await fake({ speech: { script: [[50, 'voice', 1], [100, 'partial', 'my dog'], [300, 'voice', 0]] } });
+  await p.click('#mic');
+  await until(() => E(() => { const s = window.EchoTalk.lastSpeech(); return s && s.how === 'done' && s.lack; }), 80, 50);
+  s = await last();
+  check(w.length < 4 || (s.lack === 2000 && s.lag >= 2150 && s.lag < 2800), '题目（' + w.length + ' 个词）只听到 2 个词：多等到不出声满 2 秒（' + s.lag + ' 毫秒，角标 w' + s.lack + '）', s);
+  c = await E(() => window.__fakeNative.speech.log.filter(x => x.m === 'speechStart').map(x => x.opts));
+  check(c.every(o => !('units' in o) && !('target' in o)), '这句话有几个词也不交给原生', c);
+  await W(300);
 
   // ---------- 3. 说完的计时：单词 0.4 秒、句子 0.6 秒、还在出声多等、一直没说话、被打断 ----------
   await E(() => { window.EchoGame.closeModal(); window.EchoGame.goHome(); });
   const listen = (script, o) => E(async ([script, o]) => {
     Object.assign(window.__fakeNative.speech, { script });
     const t0 = performance.now(), states = [];
+    if (o.match === 1) o = Object.assign({}, o, { match: t => /Pablo/.test(t) });   // match: 1 = 听到 Pablo 就算对上
     const r = await window.EchoTalk.listenOnce(Object.assign({ match: () => false, onState: t => states.push(t) }, o));
     const A = window.EchoGame.A;
     return { r, ms: Math.round(performance.now() - t0), s: window.EchoTalk.lastSpeech(), last: states[states.length - 1], hint: A.hint({ fail: A.failOf(r), why: r.why }) };
@@ -269,6 +289,26 @@ function fakeCloud() {
   check(x.r.text === 'I like to apples', '停顿以后手机的识别从头另起一段（「apples」）：前面那段留着、拼在一起', x.r);
   x = await listen([[100, 'partial', 'I lie'], [500, 'partial', 'I like']], {});
   check(x.r.text === 'I like', '平常的改字（第一个词没变）：不当成另起一段', x.r);
+  // 说到一半停下来想词（2026-11-24 老板在西语「说出回答」里：6 个词的句子听到 4 个、停了不到 1 秒就交卷了）。units = 这句话大约几个词
+  const HALF = 'Sí, soy ánimo, me', WHOLE = 'Sí, soy ánimo, me llamo Pablo';
+  x = await listen([[50, 'voice', 1], [100, 'partial', 'Sí, soy'], [400, 'partial', HALF], [500, 'voice', 0], [1500, 'voice', 1], [2100, 'partial', WHOLE], [2300, 'voice', 0]], { units: 6 });
+  check(x.r.text === WHOLE && x.s.how === 'done' && x.s.lack === 2000, '听到 4 个词（这句话 6 个）、停了 1 秒又接着说：没掐断，后半句也听到了', x);
+  check(x.s.lag >= 580 && x.s.lag < 900, '说够数了：照原来的 0.6 秒结束（' + x.s.lag + ' 毫秒）', x.s);
+  x = await listen([[50, 'voice', 1], [100, 'partial', HALF], [300, 'voice', 0]], { units: 6 });
+  check(x.r.text === HALF && x.s.how === 'done' && x.s.lag >= 2150 && x.s.lag < 2700 && x.s.lack === 2000, '听到的差得多、后面真的不说了：不出声满 2 秒才结束（' + x.s.lag + ' 毫秒）', x);
+  x = await listen([[50, 'voice', 1], [100, 'partial', 'Sí, soy ánimo, me llamo'], [300, 'voice', 0]], { units: 6 });
+  check(x.s.lag >= 1450 && x.s.lag < 1950 && x.s.lack === 1300, '只差一个词（6 个里听到 5 个）：等 1.3 秒（' + x.s.lag + ' 毫秒）', x.s);
+  // 手机出字比声音晚：接着说了（原生说出声了）、字还没出来，这时又停一下——字是停了很久了，可人刚停，不能算说完
+  x = await listen([[50, 'voice', 1], [100, 'partial', HALF], [300, 'voice', 0], [1200, 'voice', 1], [2300, 'voice', 0], [2900, 'partial', WHOLE]], { units: 6 });
+  check(x.r.text === WHOLE, '接着说的那几个字晚到（字停了 2 秒多、人才刚停）：等到了', x);
+  x = await listen([[100, 'partial', HALF]], { units: 6 });
+  check(x.r.text === HALF && x.s.lag >= 1950 && x.s.lag < 2500, '原生没说过出不出声：按字停住的时间算，2 秒（' + x.s.lag + ' 毫秒）', x.s);
+  x = await listen([[50, 'voice', 1], [100, 'partial', 'I like it'], [300, 'voice', 0]], { units: 3 });
+  check(x.s.lag >= 580 && x.s.lag < 850 && !x.s.lack, '听到的词够数（说错了也一样）：还是 0.6 秒，不多等（' + x.s.lag + ' 毫秒）', x.s);
+  x = await listen([[100, 'partial', 'apple']], { short: true, units: 1 });
+  check(x.s.lag >= 380 && x.s.lag < 650, '单词：还是 0.4 秒（' + x.s.lag + ' 毫秒）', x.s);
+  x = await listen([[50, 'voice', 1], [100, 'partial', HALF], [300, 'voice', 0], [700, 'partial', WHOLE]], { units: 6, match: 1 });
+  check(x.r.text === WHOLE && x.s.how === 'match', '多等的时候说对了：照样当场结束', x.s);
   x = await listen([[100, 'partial', 'I like'], [250, 'end', 'background']], {});
   check(x.r.text === 'I like' && x.s.how === 'end-background', '原生自己停了（切后台）：已经听到的字照样打分，不会停在「请说……」', x);
   x = await listen([[100, 'partial', 'Hello'], [200, 'final', 'Hello there']], {});
@@ -449,6 +489,24 @@ function fakeCloud() {
   check(await until(() => E(() => window.EchoGame.P().answered), 80, 100), '安卓 / 云端：听的时候麦克风不出声 → 1 秒后重开，接着听，过了');
   s = await last();
   check((await E(() => window.__micOpens)) === mc + 1 && s.remic === 1, '安卓 / 云端：听的时候重开了一次（remic 1）', s);
+  // 云端那条路也一样：听到的比这句话少，服务器说「这一段完了」以后多等一会儿
+  const cloudListen = (say, say2, ms2, o) => E(async ([say, say2, ms2, o]) => {
+    window.EchoGame.closeModal();
+    localStorage.setItem('__cloudSay', say);
+    if (say2) { localStorage.setItem('__cloudSay2', say2); localStorage.setItem('__cloudSay2Ms', String(ms2)); } else localStorage.removeItem('__cloudSay2');
+    const t0 = performance.now();
+    const r = await window.EchoTalk.listenOnce(Object.assign({ match: () => false }, o));
+    localStorage.removeItem('__cloudSay2');
+    return { r, ms: Math.round(performance.now() - t0), s: window.EchoTalk.lastSpeech() };
+  }, [say, say2 || '', ms2 || 0, o || {}]);
+  let y = await cloudListen('Sí, soy ánimo, me', 'llamo Pablo', 1000, { units: 6 });
+  check(y.r.text === 'Sí, soy ánimo, me llamo Pablo' && y.s.eng === 'cloud' && y.s.lack === 2000, '安卓 / 云端：听到 4 个词（这句话 6 个）、停 1 秒又接着说：没掐断', y);
+  y = await cloudListen('Sí, soy ánimo, me', '', 0, { units: 6 });
+  check(y.r.text === 'Sí, soy ánimo, me' && y.s.lag >= 1300 && y.s.lag < 2300, '安卓 / 云端：后面真的不说了，多等 1.4 秒结束（' + y.s.lag + ' 毫秒）', y);
+  y = await cloudListen('I like it', '', 0, { units: 3 });
+  check(y.r.text === 'I like it' && y.s.lag >= 450 && y.s.lag < 1000 && !y.s.lack, '安卓 / 云端：词够数，还是等 0.5 秒（' + y.s.lag + ' 毫秒）', y);
+  y = await cloudListen('I like', 'it', 1000, {});
+  check(y.r.text === 'I like', '安卓 / 云端：不知道这句话多长（没给 units）：和以前一样', y);
   await E(() => { window.EchoGame.closeModal(); window.EchoGame.reportSheet(); }); await W(300);
   check(!/口语识别：本机/.test(await p.textContent('#sheet')), '安卓的周报诊断一行和以前一样（没有本机识别那一截）');
   // iPhone 的假桥、但不是 App（没有 ECHO_IOS）：也不用本机识别

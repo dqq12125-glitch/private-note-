@@ -1742,11 +1742,21 @@
   }
   // 本机识别一次：→ { text, err, how }；本机没认出字、要改走云端时 → null（D.fell 写着原因；D.micP 是开麦克风的那一次、D.pre 是已经录好的声音，云端接着用）
   const PRE_SEC = 20;   // 给云端接着用的声音最多存多少秒
+  // 说到一半停下来想下一个词的人别掐断（2026-11-24，老板在西语「说出回答」里：「这个我都没说完，他就停止识别了」——
+  // 这句话 6 个词，听到 4 个，停了不到 1 秒就交卷了）。o.units：这句话大约有几个词（game.js 按题目算的，**只管等多久，不交给识别**）。
+  // 听到的够数 → 0（照原来的 0.4 / 0.6 秒）；只差一点（八成以上）→ 1300；差得多 → 2000：不出声要满这么多毫秒才算说完。
+  // 说对了照样当场结束（o.match）；真的只想说这么多的，等这一会儿、或者自己点一下话筒
+  function lackWait(o, text, count) {
+    const exp = o && o.units > 0 ? o.units : 0;
+    if (!exp || !text) return 0;
+    const got = count(text);
+    return got >= exp ? 0 : got >= exp * 0.8 ? 1300 : 2000;
+  }
   function nativeListen(o, D) {
     return new Promise(resolve => {
       const N = window.EchoNative, id = ++nid, now = () => performance.now();
       const short = !!o.short, need = o.long ? 1500 : short ? 400 : 600;
-      let done = false, nok = false, mic = null, started = 0, text = '', chg = 0, voice = false, tick = 0, tm = 0, raw = '';
+      let done = false, nok = false, mic = null, started = 0, text = '', chg = 0, voice = false, voiceOff = 0, tick = 0, tm = 0, raw = '';
       let pend = [], pendN = 0, q = [], preN = 0, loudN = 0;
       const segs = [], pre = [], st = { pos: 0 };
       D.eng = 'device'; D.fed = 0;
@@ -1841,6 +1851,7 @@
           if (d.kind === 'final') finish('final');
         } else if (d.kind === 'voice') {
           voice = !!d.on;
+          if (!voice) voiceOff = now();
           if (voice && D.voice == null) D.voice = now() - D.t0;
         } else if (d.kind === 'error') {
           D.nerr = String(d.code || '');   // 比如 kAFAssistantErrorDomain 1101（手机上没有识别模型）；1110 是「没听到说话」
@@ -1862,7 +1873,13 @@
         if (since > (o.maxMs || 8000)) { finish('max'); return; }
         if (!text) { if (since > (o.long ? 7000 : 5000) && !voice) finish('silence'); return; }
         const still = t - chg;
-        if (still >= need && (!voice || still >= need + 1200)) finish('done');
+        const lack = lackWait(o, text, nUnits), old = still >= need && (!voice || still >= need + 1200);
+        if (!lack) { if (old) finish('done'); return; }
+        if (old) D.lack = lack;   // 照原来的规矩这时候已经交卷了（角标的 w：这一次多等过）
+        // 听到的比这句话少：字停住、并且不出声，两样都满 wait 毫秒才算说完。
+        // 只看字停没停不行：手机出字比声音晚（新引擎晚 1 秒多），人接着说了、字还没出来，这时再停一下就被当成说完了
+        const wait = Math.max(need, lack), sil = voice ? 0 : voiceOff ? t - voiceOff : still;
+        if (still >= wait && (voice ? still >= wait + 1200 : sil >= wait)) finish('done');
       };
       window.addEventListener('echo-speech', onEv);
       SR.stop = userStop;
@@ -1899,6 +1916,7 @@
     const rec = { at: D.at, eng: D.eng || '', short: D.short, how: (r && r.how) || '', ok: !!(r && r.text), err: (r && r.err) || '', fell: D.fell || '',
       listen: ms(D.listen), first: ms(D.first), voice: ms(D.voice), wv: ms(D.wv), end: ms(now - D.t0), lag: D.chg ? ms(now - D.chg) : null, ready: ms(D.ready), nms: D.nms == null ? null : D.nms,
       remic: D.remic || 0, stale: LM.stale };
+    if (D.lack) rec.lack = D.lack;   // 听到的比这句话少、多等了（lackWait 的毫秒数；角标的 w）
     if (D.nerr) rec.nerr = D.nerr;
     // 本机识别那几样（试过本机才有）：开麦克风 / 原生开好用了几毫秒、送过去几段声音、原生说收到几段、有没有人声（w 网页 / n 原生 / - 没有）、这次打开 App 还用不用本机
     if (D.fed != null) Object.assign(rec, { mic: ms(D.mic), nok: ms(D.nok), fed: D.fed, nfed: D.nfed == null ? null : D.nfed, vo: D.vo || '', off: NSP.off || '', neng: D.neng || '' });
@@ -1916,7 +1934,9 @@
   // o.onState(文字)：「🎤 请说……」和边说边出来的文字；o.match(文字) → true 就立刻结束；o.short：单词/短语（停顿等得短一点）
   // iPhone 上先试本机识别（nativeListen），不行再走下面的云端识别（cloudListen）。返回值多一个 eng：'device' 本机 / 'cloud' 云端
   async function listenOnce(o) {
-    o = o || {};
+    o = Object.assign({}, o);
+    // 长句子慢慢念 8 秒不够：按这句话有几个词放宽（一个词约 1 秒，最多 15 秒）；调用的地方自己给了 maxMs 的不动
+    if (!o.maxMs && o.units > 5) o.maxMs = Math.min(15000, 3000 + o.units * 1000);
     const D = { at: Date.now(), t0: performance.now(), short: !!o.short, eng: '', fell: '' };
     let r = null;
     if (localSR() && !C) r = await nativeListen(o, D);
@@ -1947,6 +1967,7 @@
     let dead = RTA.fails >= 3;
     return new Promise(resolve => {
       const full = () => (texts.join(' ') + ' ' + cur).replace(/\s+/g, ' ').trim();
+      const cnt = o.count || (s => s.split(' ').filter(Boolean).length);
       let wd = 0;   // 麦克风不出声的看门狗（下面 mic.sink 之后才开）
       const fail = d => { if (dead) return; dead = true; RTA.fails++; if (d) noteAi('asr-rt', d); };
       const heard = () => {
@@ -1966,8 +1987,11 @@
           if (m.type === 'conversation.item.input_audio_transcription.text') { cur = (m.text || '') + (m.stash || ''); heard(); }
           else if (m.type === 'conversation.item.input_audio_transcription.completed') {
             RTA.fails = 0; inSpeech = false; texts.push(m.transcript || ''); cur = ''; heard();
-            // 说完一段：稍等一下，孩子没接着说就结束（句子中间停顿了会接着识别下一段）
-            clearTimeout(grace); grace = setTimeout(() => finish('done'), o.short ? 200 : o.long ? 1500 : 500);
+            // 说完一段：稍等一下，孩子没接着说就结束（句子中间停顿了会接着识别下一段）。
+            // 听到的比这句话少（lackWait）：多等一会儿——服务器是停了 vad 毫秒才说「这一段完了」的，这里补到一共不出声 lack 毫秒
+            const lack = lackWait(o, full(), cnt), vad = o.short ? 400 : o.long ? 1000 : 600;
+            if (lack) D.lack = lack;
+            clearTimeout(grace); grace = setTimeout(() => finish('done'), Math.max(o.short ? 200 : o.long ? 1500 : 500, lack - vad));
           } else if (m.type === 'input_audio_buffer.speech_started') { inSpeech = true; clearTimeout(grace); }
           else if (m.type === 'error') fail(JSON.stringify(m.error || m).slice(0, 200));
         } else if (type === 'error' || type === 'closed') fail(type === 'error' ? String(data || '') : '');
@@ -2011,7 +2035,7 @@
         let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
         const loud = Math.sqrt(sum / d.length) > 0.02, now = performance.now();
         // 本机的停顿判断只是保底：实时识别正常时它会先结束；不正常时停 1.1 秒就整段识别
-        if (loud) { voiced++; quiet = 0; if (D.wv == null) D.wv = now - D.t0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > (o.long ? 2600 : dead ? 1100 : 1800)) finish('silence'); }
+        if (loud) { voiced++; quiet = 0; if (D.wv == null) D.wv = now - D.t0; } else if (voiced >= 3) { if (!quiet) quiet = now; else if (now - quiet > (o.long ? 2600 : dead ? 1100 : lackWait(o, full(), cnt) ? 2600 : 1800)) finish('silence'); }
         if (now - t0 > (o.maxMs || 8000)) finish('max');
         else if (voiced < 3 && now - t0 > 5000) finish('silence');
       };

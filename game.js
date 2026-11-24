@@ -2390,7 +2390,11 @@
       const tg = (targets || []).filter(Boolean);
       // 别的课：识别的语言（本机 / 云端）、「短的」怎么算、聊天里数词的办法都交给 LANG；云端模式里服务器不认这门语言就不许改走云端识别（noCloud）
       const lo = LANG ? { lang: LANG.asr, head: LANG.head, count: LANG.countUnits, noCloud: cloudOn() && !langSrv() } : null;
-      return EchoTalk.listenOnce(Object.assign({ onState: onInterim, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => (LANG ? LANG.short(x, entryOf(x)) : x.trim().split(/\s+/).length <= 2)) },
+      // units：这句话大约有几个词（几个答案里最短的那个）。只给 talk.js 定「等多久算说完」用（听到的比它少就多等一会儿，别把说到一半想词的人掐断），不交给识别。
+      // 日语：识别结果爱把假名写成汉字，字数比课程里写的少，按六成算
+      const un = tg.length ? Math.min.apply(null, tg.map(x => (LANG ? LANG.countUnits(x) : x.trim().split(/\s+/).length))) : 0;
+      const units = LANG && LANG.script === 'kana' ? Math.ceil(un * 0.6) : un;
+      return EchoTalk.listenOnce(Object.assign({ onState: onInterim, units, match: tg.length ? t => tg.some(x => earlyMatch(x, t)) : null, short: tg.length > 0 && tg.every(x => (LANG ? LANG.short(x, entryOf(x)) : x.trim().split(/\s+/).length <= 2)) },
         opts && opts.maxMs ? { maxMs: opts.maxMs } : null, opts && opts.long ? { long: true } : null, lo)).then(r => {
         RT.listening = false;
         r = r || {};
