@@ -92,6 +92,8 @@
       'w.err.fall1': '新画风连着两次没画成，这一次先用经典画面', 'w.err.fall2': '3D 画面连着两次没画成，这一次先用流畅模式',
       'w.gfx.fall1': '新画风出了点问题，先换成经典画面', 'w.gfx.fall2': '3D 画面出了点问题，先换成流畅模式',
       'w.menu.words': '📖 这座岛的单词表',
+      // 别的课里岛主不接受挑战时，那句话下面的意思（界面语言；原来那一页的中文夹着英文，别的课里显示不出来）
+      'w.gym.need.gl': '先去「📚 闯关练习」打通 {u} 的 BOSS 关，再来挑战我！（已打通 {a} / {b} 个单元）',
       'w.menu.title': '冒险菜单', 'w.menu.goal': '现在要做','w.goal.go.unit': '▶ 点这里去闯关练习：{u}', 'w.goal.go.map': '▶ 点这里回到地图，照左上角的 📍 走', 'w.goal.go.home': '去闯关练习：{u} ›', 'w.menu.badges': '🏅 徽章 {a} / {b}', 'w.menu.spray': ' · 🧴 还剩 {n} 步',
       'w.menu.team': '🐾 我的队伍', 'w.menu.bag': '🎒 背包', 'w.menu.dex': '📖 手册', 'w.menu.skills': '🌟 回声技能', 'w.menu.quests': '📋 委托',
       'w.menu.help': '❓ 怎么玩', 'w.menu.settings': '⚙️ 设置', 'w.menu.home': '🏠 回首页', 'w.menu.go': '继续冒险',
@@ -172,6 +174,7 @@
       'w.err.fall1': 'The new look failed twice in a row. Using the classic look for now', 'w.err.fall2': 'The 3D view failed twice in a row. Using Smooth mode (2D) for now',
       'w.gfx.fall1': 'The new look had a problem. Switched to the classic look for now', 'w.gfx.fall2': 'The 3D view had a problem. Switched to Smooth mode (2D) for now',
       'w.menu.words': '📖 Word list for this island',
+      'w.gym.need.gl': 'First beat the BOSS level of {u} in "📚 Practice", then come back and challenge me! ({a} of {b} units done)',
       'w.menu.title': 'Adventure Menu', 'w.menu.goal': 'What to do now','w.goal.go.unit': '▶ Tap to go to Practice: {u}', 'w.goal.go.map': '▶ Tap to go back to the map and follow the 📍 at the top left', 'w.goal.go.home': 'Go to Practice: {u} ›', 'w.menu.badges': '🏅 Badges {a} / {b}', 'w.menu.spray': { one: ' · 🧴 {n} step left', other: ' · 🧴 {n} steps left' },
       'w.menu.team': '🐾 My Team', 'w.menu.bag': '🎒 Bag', 'w.menu.dex': '📖 Monsters', 'w.menu.skills': '🌟 Skills', 'w.menu.quests': '📋 Requests',
       'w.menu.help': '❓ Help', 'w.menu.settings': '⚙️ Settings', 'w.menu.home': '🏠 Home', 'w.menu.go': 'Keep exploring',
@@ -751,7 +754,8 @@
       if (!ln) return false;
       // zhOwn（支线委托的请求 / 感谢，TALK.md 第二轮：意思用 quests.js 里原来的那一份）：中文意思里夹着委托里的人名（Ben、Finn……，名字牌的词表里没有），
       // lineOf 分不出它是名字还是英语单词、把这句意思拿掉了——这种页照用这一页自己的中文（说到「英语」的照样换成这门语言）
-      pg.en = ln.t; pg.gl = ln.mean || (pg.zhOwn && zhUi && pg.zh ? cw(pg.zh, true) : null); pg.tl = true;
+      // glOwn：这一页自己带着界面语言的意思（岛主不接受挑战那一页：要去哪、做到第几个了——不是译文的直译，照它显示）
+      pg.en = ln.t; pg.gl = pg.glOwn || ln.mean || (pg.zhOwn && zhUi && pg.zh ? cw(pg.zh, true) : null); pg.tl = true;
       return true;
     };
     const plain = () => { pg.en = uiText; pg.ui = ''; pg.hideEn = false; pg.plain = true; };
@@ -1151,7 +1155,10 @@
         // @i18n-content 拼的是下面那页台词的中文意思（中文界面才显示）
         const miss = g.missing.length > 3 ? g.missing.slice(0, 3).join('、') + ' 等 ' + g.missing.length + ' 个单元' : g.missing.join('、');
         talk([P(b.hello, '我是' + b.name + '！', { emo: b.emoji }),
-          P('Come back after you beat Unit ' + g.unitN + '!', '先去「📚 闯关练习」打败课本 ' + miss + ' 的 BOSS 关，再来挑战我！（课本 BOSS ' + g.done + '/' + g.need + '）', { emo: b.emoji, zhKeep: true })]);
+          // glOwn（别的课才有，见 langPage）：这一页的意思用界面语言另写的那句——上面这句中文夹着「BOSS」和单元名，别的课里 lineOf 当成没换干净的英语、
+          // 整句意思不显示，学的人只看到一句「¡Primero gana la Unidad 1 y luego vuelve!」，不知道要去哪（2026-11-24 老板的截图）
+          P('Come back after you beat Unit ' + g.unitN + '!', '先去「📚 闯关练习」打败课本 ' + miss + ' 的 BOSS 关，再来挑战我！（课本 BOSS ' + g.done + '/' + g.need + '）',
+            Object.assign({ emo: b.emoji, zhKeep: true }, E.lang ? { glOwn: tx('w.gym.need.gl', { u: g.unitLabel, a: g.done, b: g.need }) } : null))]);
         // @i18n-content-end
         return;
       }

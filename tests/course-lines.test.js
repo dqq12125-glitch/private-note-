@@ -456,6 +456,23 @@ const CJK = /[぀-ヿ㐀-鿿]/;
       else check(!/["“”]/.test(g.hud) && !/Where is|library\?/.test(g.hud) && (zhUi ? g.hud.includes('用' + NAMES[L].zh + '问一问图书馆在哪儿') : g.hud.includes('in ' + NAMES[L].en + ' where the library is')),
         'HUD：引着的原句没有译文 → 不引英语，换成「用' + NAME + '问一问」的说法（st.step.3.lib.q）', g);
       await shot(p, L + '-goal-q');
+      // ---------- 7 岛主不接受挑战（要先打通课程单元的 BOSS）：译文下面要有界面语言的意思 ----------
+      // 2026-11-24 老板的截图：西语课里只有一句「¡Primero gana la Unidad 1 y luego vuelve!」，下面什么都没有——原来那句中文夹着「BOSS」和单元名，
+      // lineOf 当成没换干净的英语、整句意思不显示，学的人不知道要去哪。有这一句的译文才查（小样只有西语有，--real 三门都有）
+      if (tr(L, 'Come back after you beat Unit 1!')) {
+        await relaunch(p, L, { settings: { gfx: '2d' }, stars: {}, world: { started: true, map: 't0', x: -1, y: -1, visited: { 0: 1 }, flags: FL0 }, mon: { badges: {} } });
+        await p.click('[data-act=wEnter]'); await W(p, 1200); await shut();
+        await p.evaluate(() => EchoWorld._debug().goMap('i0G')); await W(p, 900); await shut();
+        const at7 = await p.evaluate(() => { const d = EchoWorld._debug(), n = d.M.npcs.find(x => x.role === 'leader'); if (!n) return null; d.PL.x = d.PL.fx = n.x; d.PL.y = d.PL.fy = n.y + 1; d.PL.dir = 'up'; d.PL.moving = false; d.FL.x = d.FL.fx = n.x; d.FL.y = d.FL.fy = n.y + 2; return { x: n.x, y: n.y, map: d.M.id }; });
+        await W(p, 200); await A(p); await W(p, 300);
+        let d7 = await dlgNow(p);
+        for (let k = 0; k < 3 && d7.en && !/1/.test(d7.en); k++) { await A(p); await W(p, 300); d7 = await dlgNow(p); }
+        const t7 = T(L, 'Come back after you beat Unit 1!');
+        check(!!at7 && at7.map === 'i0G' && noRt(d7.enHtml) === t7, '岛主不接受挑战：说的是译文（' + t7 + '）', { at7, d7 });
+        check(zhUi ? /闯关练习/.test(d7.zh) && /BOSS/.test(d7.zh) && d7.zh.includes('0 / 1') && !d7.zhBtn : /Practice/.test(d7.zh) && /0 of 1/.test(d7.zh) && !d7.zhBtn, '岛主不接受挑战：下面有界面语言的意思——要去「闯关练习」打通哪个单元的 BOSS、做到第几个了（直接显示，不收成「译」）', d7.zh);
+        await shot(p, L + '-gym-need');
+        await shut();
+      }
       await p.evaluate(() => EchoGame.goHome());
       await ctx.close();
     }

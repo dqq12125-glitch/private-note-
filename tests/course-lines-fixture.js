@@ -33,6 +33,8 @@ const ES = {
     '{rival} wants to be the English Champion!': '¡{rival} quiere ser el campeón!',
   },
   templates: {
+    // 岛主不接受挑战那一句：它的中文意思夹着「BOSS」和单元名，别的课里靠这一页自己带的界面语言的意思（world.js 的 glOwn）
+    'Come back after you beat Unit {n}!': '¡Primero gana la Unidad {n} y luego vuelve!',
     '{mon} is a {type} monster. Will you take it?': '{mon} es de tipo {type}. ¿Te lo llevas?',
     '{mon}, be my partner!': '¡{mon}, sé mi compañero!',
     "{mon}, let's surf!": '¡{mon}, vamos a surfear!',
